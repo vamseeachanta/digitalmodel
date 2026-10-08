@@ -108,7 +108,8 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
     if any(v.screening for v in values.values()):
         if list(values) != [None]:  # a labelling slip must not take an irregular sea out of the verdict
             return CaseCheck(rid, "NOT_EVALUATED", f"regular-wave screening requested on a seeded case "
-                                                   f"({len(values)} seeds); check the case's wave kind")
+                                                   f"(documents keyed {sorted(values)}); check the case's wave "
+                                                   f"kind")
         return _screening(row, values)
     if list(values) == [None]:
         return _single(row, values[None])

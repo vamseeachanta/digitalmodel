@@ -37,6 +37,7 @@ SIGNIFICANT_DEFINITION = ("API RP 16Q (1993) 3.3.2 significant range interpreted
 JOINT_LENGTH_M = 27.432
 STATION_KINDS = ("excluded", "hot_spot", "coupling", "body")
 _ARC_TOL = 1e-6
+_ON_TOL = 1e-4  # a result point this close to a coupling or exclusion boundary is on it (stored-arc rounding)
 
 
 def stress_range_limit_ksi(saf: float) -> float:
@@ -92,9 +93,10 @@ def merge_stress_range(doc: dict[str, Any], supp: dict[str, Any]) -> dict[str, A
     in place; a /2 document also adds the significant range ``zz_range_sig`` on the same axis."""
     if supp.get("schema") not in (SCHEMA, SCHEMA_SIG):
         raise ValueError(f"unsupported stress-range schema {supp.get('schema')!r}")
-    if supp.get("theta_check_ok") is False:
-        raise ValueError(f"theta reconstruction check failed (max relative deviation "
-                         f"{supp.get('theta_check_max_rel')}); the significant range is not used")
+    if supp["schema"] == SCHEMA_SIG and supp.get("theta_check_ok") is not True:
+        raise ValueError(f"theta reconstruction check not passed (theta_check_ok {supp.get('theta_check_ok')!r}, "
+                         f"max relative deviation {supp.get('theta_check_max_rel')}); the significant range is "
+                         "not used")
     rgs = doc["channels"]["w5"].setdefault("range_graphs", {})
     for ln, s in supp["lines"].items():
         rg = rgs.setdefault(ln, {})
@@ -169,6 +171,8 @@ def theta_histories(h0, h90, h180, *, thetas: Iterable[float] = THETAS_DEG) -> d
 
 def significant_over_theta(histories: Mapping[float, Any]) -> tuple[float, float, float]:
     """(largest significant range over ``theta``, its ``theta``, largest span max - min over ``theta``)."""
+    if not histories:
+        raise ValueError("no theta position given")
     best, at, span = None, None, 0.0
     for th, h in sorted(histories.items()):
         tp = turning_points(h)
@@ -200,7 +204,8 @@ def coupling_positions(sections_m: Sequence[float], joint_length_m: float = JOIN
 def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joint_length_m: float = JOINT_LENGTH_M,
                       exclude_below_m: float, exclude_above_m: float | None = None,
                       hot_spot_m: float | None = None, hot_spot_tol_m: float = 1.0,
-                      pup_side_couplings_m: Sequence[float] = (), pup_side_tol_m: float = 1.0) -> list[str]:
+                      pup_side_couplings_m: Sequence[float] = (), pup_side_tol_m: float = 1.0,
+                      coupling_tol_m: float | None = None) -> list[str]:
     """Kind of each result point for CR-10 (``STATION_KINDS``), in this order of precedence:
 
     ``excluded`` - arc below ``exclude_below_m`` (the tension-ring / telescopic-joint section) or above
@@ -213,12 +218,26 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
     beside CR-10, never governing; ``ValueError`` if no point lies within ``hot_spot_tol_m``);
     ``coupling`` - the nearest result point on each side of a coupling (:func:`coupling_positions`);
     ``body`` - every other point on the joint body.
+
+    A point within ``_ON_TOL`` (0.1 mm, rounding of stored arcs) of a coupling is on it. Two points on an exclusion
+    boundary are its two sides and the excluded side's point is excluded. With ``coupling_tol_m`` a coupling inside
+    the kept span with no result point within that distance is refused (``ValueError``); a neighbour farther away
+    is not taken as the coupling's station.
     """
     a = [float(x) for x in arcs]
     kinds = ["body"] * len(a)
     for i, x in enumerate(a):
-        if x < exclude_below_m - _ARC_TOL or (exclude_above_m is not None and x > exclude_above_m + _ARC_TOL):
+        if x < exclude_below_m - _ON_TOL or (exclude_above_m is not None and x > exclude_above_m + _ON_TOL):
             kinds[i] = "excluded"
+    # two result points on an exclusion boundary are its two sides (arcs ascend from End A): the first on
+    # exclude_below_m is the excluded section's, the last on exclude_above_m is the component below the last joint
+    on_lo = [i for i, x in enumerate(a) if abs(x - exclude_below_m) <= _ON_TOL]
+    if len(on_lo) > 1:
+        kinds[on_lo[0]] = "excluded"
+    if exclude_above_m is not None:
+        on_hi = [i for i, x in enumerate(a) if abs(x - exclude_above_m) <= _ON_TOL]
+        if len(on_hi) > 1:
+            kinds[on_hi[-1]] = "excluded"
     if hot_spot_m is not None:
         cand = [i for i in range(len(a)) if kinds[i] != "excluded"]
         near = min(cand, key=lambda i: abs(a[i] - hot_spot_m)) if cand else None
@@ -226,14 +245,19 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
             raise ValueError(f"no result point within {hot_spot_tol_m} m of the hot spot at {hot_spot_m} m")
         kinds[near] = "hot_spot"
     couplings = coupling_positions(sections_m, joint_length_m)
+    kept_arcs = [x for x, k in zip(a, kinds) if k != "excluded"]
     for c in couplings:
         # every point on the coupling (duplicates included, one per side of a section boundary); else the nearest
         # point (all duplicates at that arc) on each side
-        idxs = [i for i, x in enumerate(a) if abs(x - c) <= _ARC_TOL]
+        idxs = [i for i, x in enumerate(a) if abs(x - c) <= _ON_TOL]
         if not idxs:
             below = [x for x in a if x < c]
             above = [x for x in a if x > c]
             near = ([max(below)] if below else []) + ([min(above)] if above else [])
+            if coupling_tol_m is not None:
+                near = [x for x in near if abs(x - c) <= coupling_tol_m]
+                if not near and kept_arcs and min(kept_arcs) <= c <= max(kept_arcs):
+                    raise ValueError(f"coupling at {c:.3f} m: no result point within {coupling_tol_m} m")
             idxs = [i for i, x in enumerate(a) if x in near]
         for idx in idxs:
             if kinds[idx] == "body":
@@ -264,6 +288,8 @@ def extract_significant(model, ofx, *, lines: Iterable[str] = LINES, thetas: Ite
     import numpy as np
 
     thetas = [float(t) for t in thetas]
+    if not thetas:
+        raise ValueError("no theta position given")
     period = period if period is not None else ofx.Period(1)
     out: dict[str, Any] = {"schema": SCHEMA_SIG, "variable": VAR, "radial_position": "outer",
                            "definition": SIGNIFICANT_DEFINITION,
@@ -279,6 +305,9 @@ def extract_significant(model, ofx, *, lines: Iterable[str] = LINES, thetas: Ite
             specs = [ofx.TimeHistorySpecification(line, VAR, ofx.oeLine(ArcLength=x, RadialPos=ofx.rpOuter,
                                                                             Theta=t)) for t in want]
             h = np.asarray(ofx.GetMultipleTimeHistories(specs, period), dtype=float)
+            if h.ndim != 2 or h.shape[1] != len(want) or not np.all(np.isfinite(h)):
+                raise ValueError(f"{ln} arc {x} m: ZZ stress histories at theta {want} are malformed or not "
+                                 f"finite (shape {h.shape})")
             hs = theta_histories(h[:, 0], h[:, 1], h[:, 2], thetas=thetas)
             if len(want) == 4:
                 rec = theta_histories(h[:, 0], h[:, 1], h[:, 2], thetas=[45.0])[45.0]

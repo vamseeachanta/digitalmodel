@@ -178,7 +178,7 @@ def _doc(arcs, sig=None, mx=None):
     if sig is not None:
         line["zz_range_sig"] = list(sig)
         line["theta_sig_deg"] = [0.0] * len(arcs)
-    merge_stress_range(doc, {"schema": SCHEMA_SIG, "lines": {"Riser": line}})
+    merge_stress_range(doc, {"schema": SCHEMA_SIG, "theta_check_ok": True, "lines": {"Riser": line}})
     return doc
 
 
@@ -420,6 +420,93 @@ def test_extract_significant_against_a_fake_model():
     assert bad["theta_check_ok"] is False
     unchecked = extract_significant({"Riser": _FakeLine(arcs)}, ofx, check_every=0)
     assert unchecked["theta_check_ok"] is False  # nothing checked is not a pass
+
+
+# ---------------------------------------------------------------- review r2 (PR #2292) regressions
+
+
+@pytest.mark.parametrize("pup", [False, True])
+def test_duplicates_on_the_exclusion_boundaries_keep_the_excluded_side_out(pup):
+    # one result point per side at 18.288 m (barrel | pup) and at the last-joint end (joint | adaptor)
+    end = sum(SECTIONS)
+    secs = SECTIONS + [1.351, 1.599]
+    arcs = [17.78, 18.288, 18.288, 18.796, 19.812, 21.336, 30.0, end, end, end + 1.0]
+    st = {"sections_m": secs, "joint_length_m": JOINT, "exclude_below_m": 18.288, "exclude_above_m": end,
+          "hot_spot_m": 18.796, **({"pup_side_couplings_m": [18.288]} if pup else {})}
+    kinds = classify_stations(arcs, **st)
+    assert kinds[0] == "excluded" and kinds[1] == "excluded"  # barrel side
+    assert kinds[2] == "coupling"  # pup side of the 18.288 m boundary
+    assert kinds[7] == "coupling" and kinds[8] == "excluded" and kinds[9] == "excluded"  # joint | adaptor
+    sig = [1.0, 300e3, 10e3, 5e3, 5e3, 5e3, 5e3, 5e3, 300e3, 300e3]
+    r = evaluate_case({None: _doc(arcs, sig=sig)}, ROW, {**IRR, "cr10_stations": st})
+    assert r.u == pytest.approx(10.0 / COUPLING_MPA)
+
+
+@pytest.mark.parametrize("flag", ["absent", None])
+def test_a_significant_document_without_a_passed_theta_check_is_refused(flag):
+    line = {"arc_m": [0.0, 1.0], "zz_range_max": [1.0, 2.0], "zz_range_sig": [0.5, 1.0]}
+    supp = {"schema": SCHEMA_SIG, "lines": {"Riser": line}}
+    if flag != "absent":
+        supp["theta_check_ok"] = flag
+    with pytest.raises(ValueError):
+        merge_stress_range({"channels": {"w5": {"range_graphs": {}}}}, supp)
+
+
+def test_a_non_finite_direct_45_channel_fails_extraction():
+    from digitalmodel.drilling_riser.postprocess.stress_range import extract_significant
+
+    class NanOfx(_FakeOfx):
+        def hist(self, arc, theta):
+            h = super().hist(arc, theta)
+            return np.full_like(h, np.nan) if theta == 45.0 else h
+
+    arcs = [0.0, 5.0]
+    with pytest.raises(ValueError, match="arc"):
+        extract_significant({"Riser": _FakeLine(arcs)}, NanOfx(arcs, np.arange(0.0, 60.0, 0.1)), check_every=1)
+
+
+def test_an_empty_theta_selection_is_refused():
+    from digitalmodel.drilling_riser.postprocess.stress_range import extract_significant
+
+    arcs = [0.0]
+    with pytest.raises(ValueError):
+        extract_significant({"Riser": _FakeLine(arcs)}, _FakeOfx(arcs, np.arange(0.0, 60.0, 0.1)), thetas=[])
+    with pytest.raises(ValueError):
+        significant_over_theta({})
+
+
+def test_an_empty_significant_channel_is_not_evaluated():
+    ctx = {"stress_line": "Riser", "wave_kind": "irregular"}
+    one = evaluate_case({None: _doc([], sig=[])}, ROW, ctx)
+    assert one.status in ("NOT_EVALUATED",)
+    seeds = {s: _doc([], sig=[]) for s in range(1, 3)}
+    assert evaluate_case(seeds, ROW, ctx, seeds_expected=2).status == "NOT_EVALUATED"
+
+
+def test_a_coupling_far_from_every_result_point_is_refused():
+    # coupling at 33.528 m; nearest points 25.0 and 45.0 m are more than the coupling tolerance away
+    with pytest.raises(ValueError):
+        classify_stations([18.796, 21.336, 25.0, 45.0, 60.96], **{**STATIONS, "coupling_tol_m": 2.0})
+
+
+def test_a_point_a_rounding_error_off_a_coupling_is_on_it():
+    # every coupling up to 33.528 m has a point on it (21.336 one 2e-5 m off), so its neighbours stay body
+    kinds = classify_stations([18.796, 20.828, 21.33602, 22.352, 27.432, 30.0, 33.528], **STATIONS)
+    assert kinds[2] == "coupling" and kinds[1] == "body" and kinds[3] == "body" and kinds[5] == "body"
+
+
+def test_seed_mean_refuses_different_allowables_or_hot_spots():
+    a = _doc(ARCS, sig=[1.0, 1.0, 1.0, 10e3, 1.0])
+    other_row_ctx = {**IRR, "cr10_stations": {**STATIONS, "hot_spot_m": 19.812}}
+    from digitalmodel.drilling_riser.postprocess.checks import cr10_station_mean, evaluate_doc
+    from digitalmodel.drilling_riser.postprocess.channels import w5
+
+    v1 = evaluate_doc(w5(a), ROW, IRR)
+    v2 = evaluate_doc(w5(a), ROW, other_row_ctx)
+    from digitalmodel.drilling_riser.postprocess.checks import NotEvaluated
+
+    with pytest.raises(NotEvaluated):
+        cr10_station_mean({1: v1, 2: v2})
 
 
 # ---------------------------------------------------------------- W04: pup-side station of the 18.288 m coupling

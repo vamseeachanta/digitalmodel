@@ -294,7 +294,9 @@ def _cr10_hot_spot(series, kinds, hot_spot_m, cap_of) -> dict[str, Any] | None:
 def _cr10_governing(stations: list[dict], line: str, detail: dict, *, screening: bool,
                     combine: str | None) -> CheckValue:
     """The station with the largest utilisation, with the largest per kind in ``detail["by_kind"]``. A non-finite
-    value at any station leaves CR-10 NOT_EVALUATED (``max`` would otherwise skip it silently)."""
+    value at any station, or no station at all, leaves CR-10 NOT_EVALUATED."""
+    if not stations:
+        raise NotEvaluated("CR-10: no station on the stress-range axis")
     bad = [s["arc_m"] for s in stations if not (math.isfinite(s["demand"]) and math.isfinite(s["u"]))]
     if bad:
         raise NotEvaluated(f"CR-10: stress range not finite at {len(bad)} station(s), first at arc {bad[0]} m")
@@ -314,9 +316,14 @@ def cr10_station_mean(values: dict) -> CheckValue:
     seed MEAN at each station, then the station with the largest mean utilisation governs (the extremes keep the
     Gumbel fit). Every seed must hold the same stations (``NotEvaluated`` otherwise)."""
     seeds = list(values)
-    grids = {tuple((round(s["arc_m"], 6), s["kind"]) for s in values[k].detail["station_values"]) for k in seeds}
+    grids = {tuple((round(s["arc_m"], 6), s["kind"], round(s["allowable"], 9))
+                   for s in values[k].detail["station_values"]) for k in seeds}
     if len(grids) != 1:
-        raise NotEvaluated("CR-10 seed mean: the seeds do not hold the same stations")
+        raise NotEvaluated("CR-10 seed mean: the seeds do not hold the same stations and allowables")
+    hot_arcs = {None if values[k].detail.get("hot_spot") is None else round(values[k].detail["hot_spot"]["arc_m"], 6)
+                for k in seeds}
+    if len(hot_arcs) != 1:
+        raise NotEvaluated("CR-10 seed mean: the seeds do not report the hot spot at the same arc")
     first = values[seeds[0]]
     n = len(seeds)
     stations = []
