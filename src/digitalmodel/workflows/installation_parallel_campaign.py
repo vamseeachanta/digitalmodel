@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 from contextlib import contextmanager
 import copy
+from dataclasses import asdict
 import hashlib
 import json
 import os
@@ -19,6 +20,7 @@ import yaml
 
 from digitalmodel.solvers.orcaflex.orcaflex_parallel_analysis import OrcaFlexParallelAnalysis
 from digitalmodel.workflows import installation_campaign as campaign
+from digitalmodel.workflows.campaign_state import classify_stop
 
 
 _THREAD_VARIABLES = ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS',
@@ -148,6 +150,7 @@ class InstallationCasePool(OrcaFlexParallelAnalysis):
 
 def _merge_wave(summary, indices, results):
     by_index = {}
+    failed = []
     for result in results:
         index = int(result['file_path'])
         if index not in indices or index in by_index:
@@ -159,20 +162,30 @@ def _merge_wave(summary, indices, results):
         if result.get('status') != 'success' or row.get('status') != 'COMPLETED':
             row.update(status='FAILED', error=result.get('error', 'Missing or failed worker result'))
             summary['status'] = 'stopped'
+            failed.append(index)
         row['worker_cpu_affinity'] = result.get('observed_cpu_affinity')
         summary['cases'][index] = row
+    return failed
 
 
-def _waves(root, summary, config, workers, case_indices=None):
+def _waves(root, summary, config, workers, case_indices=None, continue_untouched=False):
+    """Continue untouched cases only with the caller's explicit authority.
+
+    workspace-hub#3973: Keep authorized campaigns running. An all-failed wave
+    still stops because it may indicate a shared failure requiring diagnosis.
+    """
     selected = set(case_indices) if case_indices is not None else None
     pending = [row['index'] for row in summary['cases']
                if row['status'] != 'COMPLETED'
                and (selected is None or row['index'] in selected)]
     summary['selected_indices'] = pending
     started = time.perf_counter()
+    reason = None
+    isolated_failures = False
     for offset in range(0, len(pending), workers):
         if (root / 'STOP_AFTER_WAVE').exists():
             summary['status'] = 'paused'
+            reason = 'paused by STOP_AFTER_WAVE'
             break
         indices = pending[offset:offset + workers]
         summary['status'] = 'running'
@@ -182,20 +195,32 @@ def _waves(root, summary, config, workers, case_indices=None):
         wave_config = dict(config, rows={i: summary['cases'][i] for i in indices})
         pool = InstallationCasePool(num_threads=workers, use_processes=True)
         results = pool.process_files_parallel([str(i) for i in indices], wave_config)
-        _merge_wave(summary, indices, results.get('results', []))
+        failed = _merge_wave(summary, indices, results.get('results', []))
+        if failed and len(failed) == len(indices):
+            reason = f'every case in wave {offset // workers + 1} failed (possible shared failure)'
+        elif failed and continue_untouched:
+            isolated_failures = True
+            summary['status'] = 'running'
         summary['invocation_seconds'] = time.perf_counter() - started
         campaign._save(root, summary)
         if summary['status'] == 'stopped':
             break
     else:
-        summary['status'] = 'selected_cases_complete'
+        summary['status'] = ('completed_with_isolated_failures' if isolated_failures
+                             else 'selected_cases_complete')
+    statuses = {'COMPLETED': 'completed', 'FAILED': 'failed', 'RUNNING': 'running'}
+    record = asdict(classify_stop(reason, [
+        dict(id=str(row['index']), status=statuses.get(row['status'], 'unrun'))
+        for row in summary['cases']]))
+    record['disposition'] = record['disposition'].value
+    summary['stop_record'] = dict(record, continue_untouched=continue_untouched)
     campaign._save(root, summary)
     return summary
 
 
 def run_parallel_campaign(study_dir, output_root, *, source_campaign, workers=3,
                           cpus, extraction, solver_version='11.6c', timeout_seconds=14400,
-                          case_indices=None):
+                          case_indices=None, continue_untouched=False):
     """Run only unfinished cases after a separately verified serial handover."""
     _validate_resources(workers, cpus)
     timeout = campaign._validate_timeout(timeout_seconds)
@@ -214,7 +239,8 @@ def run_parallel_campaign(study_dir, output_root, *, source_campaign, workers=3,
             'inner_batch_workers': 1, 'thread_environment': {k: os.environ[k] for k in _THREAD_VARIABLES}}
         config = dict(manifest=manifest, root=str(root), study=str(study), cpus=list(cpus),
                       extraction=extraction, solver_version=solver_version, timeout_seconds=timeout)
-        return _waves(root, summary, config, workers, case_indices)
+        return _waves(root, summary, config, workers, case_indices,
+                      continue_untouched=continue_untouched)
 
 
 def main():
@@ -223,6 +249,8 @@ def main():
     parser.add_argument('output_root', type=Path)
     parser.add_argument('--source-campaign', required=True, type=Path)
     parser.add_argument('--case-indices', help='Optional explicit comma-separated subset; other rows remain unchanged')
+    parser.add_argument('--continue-untouched', action='store_true',
+                        help='Authorize later waves after isolated case failures')
     parser.add_argument('--workers', type=int, default=3)
     parser.add_argument('--cpus', required=True, help='Explicit comma-separated logical CPU IDs')
     parser.add_argument('--extraction-config', required=True, type=Path)
@@ -236,9 +264,10 @@ def main():
         source_campaign=args.source_campaign, workers=args.workers,
         cpus=[int(cpu) for cpu in args.cpus.split(',')], extraction=extraction,
         solver_version=args.solver_version, timeout_seconds=args.timeout_seconds,
-        case_indices=None if args.case_indices is None else [int(i) for i in args.case_indices.split(',')])
+        case_indices=None if args.case_indices is None else [int(i) for i in args.case_indices.split(',')],
+        continue_untouched=args.continue_untouched)
     print(json.dumps({'status': result['status'], 'campaign': str(args.output_root / 'campaign.json')}))
-    return 1 if result['status'] == 'stopped' else 0
+    return {'stopped': 1, 'completed_with_isolated_failures': 2}.get(result['status'], 0)
 
 
 if __name__ == '__main__':
