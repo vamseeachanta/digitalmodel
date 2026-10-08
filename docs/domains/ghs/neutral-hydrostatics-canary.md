@@ -63,3 +63,15 @@ The containment_qualified field is always false. On Windows, the standard-librar
 Runtime paths are validated lexically and compared after Windows case/path normalization. A trailing separator on a distinct directory is valid; the contract does not claim a unique canonical spelling or resolve every physical NTFS alias. Those physical identities require the later host preflight.
 
 The box height of 4 m is a declared case assumption. All three test immersions are below that top; hydrostatics at those depths do not measure total height or certify closure. Source line references use a coarse maximum of byte_count+1 LF slots, allowing the final empty slot after a terminal newline. They do not verify actual line contents; native format qualification must ground each locator.
+
+## Windows sentinel qualification
+
+The separate containment addendum authorizes a fixed-purpose experiment with harmless Python processes. Its public entry point is qualification.qualify(output_root, profile=None); it accepts a fresh output directory and the fixed qualification timing profile, never a solver executable, arbitrary script or command string.
+
+Qualification observes normal parent exit, timeout, controller death before and after resume, attempted breakaway, unrelated-process survival, a deliberately retained second job handle, and abnormal child exit. A successful experiment is labeled sentinel_containment_passed; it leaves licensed_execution_verified and ghs_launch_allowed false. It does not change the existing synthetic containment_qualified field or enable run_approved_capture.
+
+The experiment persists a single-flight attempt marker in the current user's local application-data namespace, independent of output directory. An unresolved attempt blocks another invocation. Do not delete an unresolved marker to retry: establish the complete owned process identities and their termination first. A never-resumed process has no executing watchdog, and an incomplete identity record cannot prove that no process launched.
+
+Native observations apply to the recorded helper/sentinel/interpreter hashes and Windows/account/job context. Linux injected tests do not qualify Windows, and a saved qualification result is not an approval credential. Vendor helper behavior, usable entitlement, diagnostic capture, trusted approval storage and reviewed geometry remain requirements of the later licensed capture packet.
+
+Raw qualification evidence stays in the operator's private output location. Only the allowlisted public_summary representation is suitable for review as source-neutral evidence; raw paths, process identities and account details must not be copied into public reports.
