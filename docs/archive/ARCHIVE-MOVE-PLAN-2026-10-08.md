@@ -15,6 +15,14 @@ directory named in code no longer excludes everything under it. The branch was
 also brought up to date with `main` (base `9aa78711`), so the rule-match count
 moves from 1,424 to 1,471 independently of the rule change.
 
+Revision 4 (2026-10-08) applies the owner's round-6 decision D01: neither of
+the two groups flagged in revision 3 counts as a reference. A pattern in a
+hygiene sweep (the published-page path scan) is not consumer evidence, and a
+filename shared by more than one tracked path counts only when path-qualified.
+The branch was brought up to date with `main` (base `74d26949`). The move set
+is copied to the archive store and removed from git in a separate change; this
+change remains the review record.
+
 ## Why this replaces PR #2146
 
 PR #2146 (`chore/slim-20260922`) selected its files against the 2026-09-22
@@ -59,7 +67,9 @@ CSV columns:
 - `referenced`, `ref_count` — whether the file basename appears in any other
   tracked text file (`git grep -l -I -F <basename>`), and in how many.
 - `ref_count_noncandidate` — references from files that are not themselves
-  candidates.
+  candidates. Since revision 3 the committed manifest files in `docs/archive/`
+  name every candidate, so this count is at least 1 for every row and is no
+  longer a selection signal; selection uses the `src/`/`tests/` evidence only.
 - `first_ref_path` — first referencing path, preferring a non-candidate.
 - `in_pr2146` — whether PR #2146 also deleted this path.
 - `model_yaml_kind` — `orcaflex-native`, `orcawave` or `spec` when the file is a
@@ -94,11 +104,19 @@ Applied to `git ls-files` (tracked files only; no Git LFS in this repository):
     `os.path.join`, `joinpath`, including constants imported from another
     module under `src/` or `tests/`);
   - `filename` — the exact filename appears as a whole token (not as part of a
-    longer name);
+    longer name) and no other tracked file has that filename (revision 4). A
+    filename shared by several tracked files counts only when path-qualified:
+    a trailing path of two or more segments that ends exactly one tracked file
+    appears in the text (recorded as `path` evidence with the qualifier as
+    `matched`);
   - `glob` — a `glob`, `rglob`, `iterdir`, `os.listdir`, `os.scandir`,
     `os.walk` or `glob.glob` call, or a glob literal in a config or fixture,
     is anchored on a directory that resolves statically to a repo path, and the
-    pattern matches the file. Only the matching files are excluded.
+    pattern matches the file. Only the matching files are excluded. Patterns in
+    a hygiene sweep listed in `HYGIENE_SCANS` (revision 4:
+    `tests/legal/test_published_pages_have_no_internal_paths.py`, which scans
+    every published page for absolute paths) are not evidence; pages that sweep
+    names explicitly still count.
 
   A bare directory mention (a directory constant that is never read by
   pattern, a comment, or prose naming a folder) excludes nothing. Patterns
@@ -107,69 +125,65 @@ Applied to `git ls-files` (tracked files only; no Git LFS in this repository):
   under any directory of depth 4 or more named in code; that rule removed
   476 files (1,021,816,411 bytes) and is retired.
 
-## Totals at base commit `9aa78711` (`main` at `1226c7b1` plus this branch)
+## Totals at base commit `74d26949` (`main` at `a35bb887` plus this branch)
 
-1,471 tracked files match the extension/size rule; 521 of them
-(837,553,641 blob bytes) are explicitly read by `src/` or `tests/` and are
-removed from the list. 950 candidates remain.
+1,471 tracked files match the extension/size rule; 66 of them
+(85,467,617 blob bytes) are explicitly read by `src/` or `tests/` and are
+removed from the list. 1,405 candidates remain.
 
 Exclusions by evidence:
 
 | Evidence | Files | Blob bytes |
 |---|---|---|
-| `path` (repo path in text, or a resolved path expression) | 13 | 29,615,363 |
-| `filename` (exact filename token) | 183 | 180,571,891 |
-| `glob` (resolved pattern) | 325 | 627,366,387 |
-| **Total excluded** | **521** | **837,553,641** |
+| `path` (repo path in text, a resolved path expression, or a path-qualified shared filename) | 13 | 29,615,363 |
+| `filename` (exact filename token, filename unique among tracked files) | 41 | 33,906,706 |
+| `glob` (resolved pattern outside a hygiene sweep) | 12 | 21,945,548 |
+| **Total excluded** | **66** | **85,467,617** |
 
-Two evidence groups are flagged for the owner (see *Sensitivity* below):
-
-| Flagged group | Files | Blob bytes |
-|---|---|---|
-| `glob` from `docs/**/*.html` — `tests/legal/test_published_pages_have_no_internal_paths.py` scans every HTML page under `docs/` for internal paths (a publication-hygiene sweep, not a data input) | 314 | 608,060,258 |
-| `filename` on a name shared by several tracked files (for example `benchmark_report.html` ×19, `spec.yml` ×12, `report.html` ×11, `index.html` ×4) — mostly output names that code writes | 142 | 146,665,185 |
+Revision 3 excluded 521 files (837,553,641 B). The two groups released by D01
+were the published-page sweep (314 files, 608,060,258 B) and filenames shared
+by several tracked files (142 files, 146,665,185 B).
 
 Effect on the folders the revision-2 rule excluded wholesale:
 
 | Folder | Moves (files, MiB) | Still excluded (files, MiB) | Remaining exclusion evidence |
 |---|---|---|---|
-| `docs/domains/orcawave/L00_validation_wamit/` | 18, 0.6 | 213, 396.0 | HTML sweep and generic `benchmark_*.html` names |
-| `docs/domains/orcaflex/pipeline/` | 38, 64.1 | 18, 187.7 | HTML sweep, `index.html`, one explicit path (`…/24in_pipeline/monolithic/basefile/vessel_end_winch.yml`) |
+| `docs/domains/orcawave/L00_validation_wamit/` | 231, 396.6 | 0, 0.0 | — |
+| `docs/domains/orcaflex/pipeline/` | 55, 250.6 | 1, 1.2 | one explicit path (`…/24in_pipeline/monolithic/basefile/vessel_end_winch.yml`) |
 | `docs/domains/orcaflex/risers/` | 43, 86.4 | 0, 0.0 | — |
-| `docs/domains/orcawave/L01_aqwa_benchmark/` | 14, 0.5 | 34, 7.1 | explicit filenames and paths |
+| `docs/domains/orcawave/L01_aqwa_benchmark/` | 47, 5.3 | 1, 2.2 | one explicit path (`orcawave_001_ship_raos_rev2.xlsx`) |
 
 Remaining candidates:
 
 | Top-level folder | Files | Blob bytes |
 |---|---|---|
-| `docs/` | 854 | 1,053,793,999 |
+| `docs/` | 1,309 | 1,805,880,023 |
 | `examples/` | 87 | 50,167,742 |
 | `scripts/` | 2 | 1,165,388 |
 | `config/` | 3 | 657,140 |
 | `references/` | 4 | 236,723 |
-| **Total** | **950** | **1,106,020,992** (on-disk 1,111,319,856) |
+| **Total** | **1,405** | **1,858,107,016** (on-disk 1,866,839,555) |
 
 | Class | Files | Blob bytes |
 |---|---|---|
-| solver-inputs | 301 | 795,901,071 |
+| solver-inputs | 332 | 888,196,814 |
+| html-report-renders | 470 | 676,308,437 |
 | documentation-images | 553 | 203,416,172 |
 | office-documents | 50 | 90,185,593 |
-| html-report-renders | 46 | 16,518,156 |
 
 ## Deduplication by blob SHA-256
 
 | Measure | Value |
 |---|---|
-| Candidate files | 950 |
-| Unique blobs (distinct content) | 821 |
-| Duplicate groups (content held by 2 or more paths) | 87 |
-| Duplicate files (copies beyond the first in each group) | 129 |
-| Blob bytes, all paths | 1,106,020,992 |
-| Blob bytes, one copy per unique blob | 1,016,494,231 |
-| **Bytes saved by keeping one copy per unique content** | **89,526,761** (8.1 %) |
+| Candidate files | 1,405 |
+| Unique blobs (distinct content) | 1,259 |
+| Duplicate groups (content held by 2 or more paths) | 95 |
+| Duplicate files (copies beyond the first in each group) | 146 |
+| Blob bytes, all paths | 1,858,107,016 |
+| Blob bytes, one copy per unique blob | 1,749,943,555 |
+| **Bytes saved by keeping one copy per unique content** | **108,163,461** (5.8 %) |
 
-Duplicate copies by class: documentation images 101 files (50,663,132 bytes),
-solver inputs 14 (24,693,532), office documents 14 (14,170,097). The largest groups are training CAD/mesh files held twice or three
+The largest groups are training CAD/mesh files held twice or three
 times under the AQWA examples, and draft office documents and result plots
 duplicated across the legacy API RP 2RD guide folders; the 20 largest groups
 are listed in the summary JSON (`dedup_top_groups`).
@@ -229,10 +243,10 @@ data; the inventory records which capabilities a file exercises.
 | Features held by exactly one file | 665 (key 565; value 57; section 43) |
 | Files that contribute a feature no other file has | 72 |
 | Greedy feature cover (files that together carry every feature) | 167 |
-| Model YAML among the 950 candidates | 84 |
-| Candidates holding a unique feature | 0 |
-| Features found only in candidate files | 23 |
-| **Candidates kept in the repository for those features** | **4** (13,450,956 blob bytes) |
+| Model YAML among the 1,405 candidates | 109 |
+| Candidates holding a unique feature | 6 |
+| Features found only in candidate files | 124 |
+| **Candidates kept in the repository for those features** | **11** (42,036,638 blob bytes) |
 
 Files with unique features, by area:
 
@@ -260,31 +274,30 @@ Files with unique features, by area:
 | `docs/domains/orcaflex/structures/` | 1 | 1 | 0 |
 | **Total** | **72** | **665** | **0** |
 
-The 23 candidate-only features are line contents settings
+The 124 candidate-only features include line contents settings
 (`ContentsMethod` with the `uniform` option, `ContentsDensity`,
 `ContentsPressure`, `ContentsFlowRate`, `ContentsTemperature`, axial contents
-inertia), a variable-data bending connection stiffness table, line connection
-bending stiffness, decoupled lateral/axial seabed friction, the ESDU wind
-spectrum with its latitude, sea-state RAOs on a vessel type, and drawing
-settings (pens, node discs). No candidate holds a feature unique to one file;
-these 23 are shared among candidates and absent from every file staying in the
-repository. The four candidates that together carry them are listed in the
-inventory JSON (`candidates_kept_for_feature`) and flagged `keep_for_feature`
-in the CSV. Compared with revision 2, the four unique-feature model files
-(spec structure classes `reference`, `regional`, and the training and mooring
-specs) are no longer candidates: each is named `spec.yml`, a filename that
-appears in `src/` (see *Sensitivity*).
+inertia), bending connection stiffness, decoupled lateral/axial seabed
+friction, the ESDU and full-field wind options, sea-state RAOs on a vessel
+type, 3D seabed data, multibody added mass and damping, Rayleigh damping,
+turbine controller settings, API RP 1111 line-type checks, the `reference` and
+`regional` spec structure classes, and drawing settings. They are absent from
+every file staying in the repository. The 11 candidates that together carry
+them are listed in the inventory JSON (`candidates_kept_for_feature`) and
+flagged `keep_for_feature` in the CSV: the four model files kept in revision 3
+plus seven `spec.yml` files that revision 3 excluded on the shared filename
+`spec.yml` and that D01 returns to the candidate list (six of them hold a
+feature unique to one file).
 
 **How every unique feature stays reachable.**
 
-1. The 4 `keep_for_feature` candidates stay in the repository as library
-   inputs; they are not moved. 23 features would otherwise exist only in the
+1. The 11 `keep_for_feature` candidates stay in the repository as library
+   inputs; they are not moved. 124 features would otherwise exist only in the
    archive.
-2. 3,028 of the 3,112 model YAML files are not candidates (below the 1 MB
+2. 3,003 of the 3,112 model YAML files are not candidates (below the 1 MB
    gate, or explicitly read by `src/` or `tests/`) and stay where they are. The
-   80 model YAML candidates proposed to move carry no feature that is absent
-   from the files staying in the repository, and none of them holds a unique
-   feature.
+   98 model YAML candidates proposed to move carry no feature that is absent
+   from the files staying in the repository.
 3. `model-yaml-feature-inventory-2026-10-08.json` is the query index: for every
    feature it records how many files carry it, and for each file with a unique
    feature, which ones. A module that needs an example of a capability (for
@@ -300,56 +313,38 @@ appears in `src/` (see *Sensitivity*).
 
 | Measure | Value |
 |---|---|
-| Candidates | 950 |
-| Kept for model features | 4 (13,450,956 blob bytes) |
-| Proposed to move | 946 (1,092,570,036 blob bytes) |
-| Unique blobs to store on `/mnt/ace` | 817 (1,003,043,275 bytes) |
-| Duplicate copies not stored again | 129 (89,526,761 bytes) |
+| Candidates | 1,405 |
+| Kept for model features | 11 (42,036,638 blob bytes) |
+| Proposed to move | 1,394 (1,816,070,378 blob bytes) |
+| Unique blobs to store on `/mnt/ace` | 1,249 (1,715,309,069 bytes) |
+| Duplicate copies not stored again | 145 (100,761,309 bytes) |
 
-Comparison with revision 2:
+Comparison with earlier revisions:
 
-| Measure | Rev 2 (dir rule, base `c4563b11`) | Rev 2 rule on base `9aa78711` | Rev 3 (explicit refs, base `9aa78711`) |
+| Measure | Rev 2 (dir rule, base `c4563b11`) | Rev 3 (explicit refs, base `9aa78711`) | Rev 4 (D01, base `74d26949`) |
 |---|---|---|---|
 | Rule matches | 1,424 | 1,471 | 1,471 |
-| Excluded by reference | 476 files, 1,021,816,411 B | 477 files, 1,021,839,065 B | 521 files, 837,553,641 B |
-| Candidates | 948 files, 920,998,000 B | 994 files, 921,735,568 B | 950 files, 1,106,020,992 B |
-| Unique blobs / dedup saving | 810 / 85,333,930 B | 856 / 85,333,930 B | 821 / 89,526,761 B |
-| Kept for model features | 7 files, 27,547,468 B | 7 files, 27,547,468 B | 4 files, 13,450,956 B |
-| Move set | 941 files, 893,450,532 B | 987 files, 894,188,100 B | 946 files, 1,092,570,036 B |
-| Unique blobs to store | 803, 808,116,602 B | 849, 808,854,170 B | 817, 1,003,043,275 B |
+| Excluded by reference | 476 files, 1,021,816,411 B | 521 files, 837,553,641 B | 66 files, 85,467,617 B |
+| Candidates | 948 files, 920,998,000 B | 950 files, 1,106,020,992 B | 1,405 files, 1,858,107,016 B |
+| Unique blobs / dedup saving | 810 / 85,333,930 B | 821 / 89,526,761 B | 1,259 / 108,163,461 B |
+| Kept for model features | 7 files, 27,547,468 B | 4 files, 13,450,956 B | 11 files, 42,036,638 B |
+| Move set | 941 files, 893,450,532 B | 946 files, 1,092,570,036 B | 1,394 files, 1,816,070,378 B |
+| Unique blobs to store | 803, 808,116,602 B | 817, 1,003,043,275 B | 1,249, 1,715,309,069 B |
 
-The file count excluded rises (477 → 521) while the bytes fall (1.02 GB →
-0.84 GB): the exact-filename rule now counts any filename, not only names
-unique among tracked files, so many small generic outputs are excluded, while
-the large directory trees are no longer excluded wholesale.
+## Sensitivity (resolved by owner decision D01)
 
-## Sensitivity (owner decision required)
+Revision 3 flagged two evidence groups that followed the C02 rule literally
+but did not show that code needs the file as an input: the published-page
+sweep in `tests/legal/test_published_pages_have_no_internal_paths.py`
+(314 files) and filenames shared by several tracked files, mostly names that
+code writes (`benchmark_*.html`, `report.html`, `index.html`, `spec.yml`;
+142 files). D01 (2026-10-08) decided that neither counts as a reference;
+revision 4 implements that decision as described under *Selection rule*.
 
-Two evidence groups follow the C02 rule literally but do not show that code
-needs the file as an input:
+## How the move runs (copy and git removal in a separate change)
 
-1. **HTML sweep.** `tests/legal/test_published_pages_have_no_internal_paths.py`
-   reads `docs/**/*.html` to check published pages for internal paths. Moving
-   a page removes it from the check; it does not break the check. These 314
-   files (608,060,258 B) include 571 MiB of the 584 MiB still excluded from the
-   OrcaWave validation and OrcaFlex pipeline folders.
-2. **Shared filenames.** 142 files (146,665,185 B) are excluded only because
-   their filename, shared by several tracked files, appears in `src/` or
-   `tests/` — mostly names that code writes (`benchmark_report.html`,
-   `benchmark_*.html`, `report.html`, `index.html`) and `spec.yml`.
-
-If the owner treats both groups as not referenced, the move set grows by up to
-456 files and 754,725,443 B before deduplication and feature keep (the four
-unique-feature `spec.yml` files would then return as candidates and be kept
-for their features). The generator records the evidence kind, matched pattern
-and source file for every exclusion, so either group can be released without
-re-deriving the rule.
-
-## How the move will run (later, after owner review)
-
-1. **Owner review of the list.** The owner marks the rows to move. Rows with
-   `keep_for_feature = True` stay. Rows with `ref_count_noncandidate > 0` are
-   excluded by default unless the owner decides otherwise for that row.
+1. **Owner review of the list.** D01 (2026-10-08) approves the move set: every
+   candidate row except those with `keep_for_feature = True`, which stay.
 2. **Refresh against `main`.** Re-run the generator (read-only) on the
    then-current `main` and drop any approved row whose `sha256_blob` changed,
    whose path no longer exists, that is now referenced from `src/` or `tests/`,
@@ -362,8 +357,10 @@ re-deriving the rule.
    name. Any mismatch stops the move.
 5. **Record.** Write the blob map rows of the approved paths to
    `/mnt/ace/digitalmodel/MANIFEST.blob-map.tsv` (tab-separated: repo-relative
-   path, `sha256_blob`, bytes, `blob_path`) and keep the same file in the
-   repository, so every original path resolves to its blob from either side.
+   path, `sha256_blob`, bytes, `blob_path`) and one line per stored blob to
+   `/mnt/ace/digitalmodel/MANIFEST.sha256.tsv` (`sha256`, bytes, `blob_path`), and
+   keep the same files in the repository, so every original path resolves to
+   its blob from either side.
 6. **Registry in the repository** (PR #2146 mechanism; there are no
    per-file stub files):
    - `data/inputs.yaml` — machine-readable pointer: archive root

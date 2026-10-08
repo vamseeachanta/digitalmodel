@@ -148,6 +148,59 @@ def test_unanchored_pattern_is_not_evidence():
     assert r == {}
 
 
+# Owner decision D01 (2026-10-08): a sweep that only scans files for hygiene is not a
+# consumer, and a filename shared by more than one tracked path is ambiguous unless
+# the reference is path-qualified.
+
+SHARED = ["docs/r1/report.html", "docs/r2/report.html", "docs/r3/sub/report.html"]
+
+
+def test_hygiene_scan_glob_is_not_a_reference():
+    code = ('from pathlib import Path\n'
+            'REPO = Path(__file__).resolve().parents[2]\n'
+            'DOCS = REPO / "docs"\n'
+            'PAGES = sorted(DOCS.rglob("*.pdf"))\n')
+    src = "tests/legal/test_published_pages_have_no_internal_paths.py"
+    assert src in ac.HYGIENE_SCANS
+    r = ac.explicit_references({src: code}, CANDS, TRACKED + [src])
+    assert r == {}
+    # the same pattern from any other source is still evidence
+    r = ac.explicit_references({"tests/legal/test_other.py": code}, CANDS, TRACKED)
+    assert set(r) == {"docs/x/y/z/w/lonely.pdf", "docs/x/y/z/w/sub/lonelier.pdf"}
+
+
+def test_hygiene_scan_explicit_path_still_counts():
+    src = "tests/legal/test_published_pages_have_no_internal_paths.py"
+    r = ac.explicit_references({src: f'PAGES = ("{D}/model.dat",)\n'}, CANDS, TRACKED + [src])
+    assert set(r) == {f"{D}/model.dat"} and r[f"{D}/model.dat"]["evidence"] == "path"
+
+
+def test_shared_bare_filename_is_not_a_reference():
+    tracked = TRACKED + SHARED
+    r = ac.explicit_references({"src/pkg/mod.py": 'out = outdir / "report.html"\n'},
+                               CANDS + SHARED, tracked)
+    assert r == {}
+
+
+def test_shared_filename_counts_when_path_qualified():
+    tracked = TRACKED + SHARED
+    r = ac.explicit_references({"tests/test_a.py": '# compare against r2/report.html\n'},
+                               CANDS + SHARED, tracked)
+    assert set(r) == {"docs/r2/report.html"}
+    assert r["docs/r2/report.html"]["evidence"] == "path"
+    # a qualifier that still matches several paths stays ambiguous
+    r = ac.explicit_references({"tests/test_a.py": 'x = "docs/report.html"\n'},
+                               CANDS + SHARED, tracked)
+    assert r == {}
+
+
+def test_filename_shared_with_a_non_candidate_is_ambiguous():
+    # basename uniqueness is over all tracked files, not candidates only
+    tracked = TRACKED + ["src/pkg/named_only.png"]
+    r = ac.explicit_references({"src/pkg/mod.py": "# reads named_only.png\n"}, CANDS, tracked)
+    assert r == {}
+
+
 def test_glob_match_semantics():
     assert ac.glob_match("a/*.sim", "a/run.sim")
     assert not ac.glob_match("a/*.sim", "a/sub/run.sim")

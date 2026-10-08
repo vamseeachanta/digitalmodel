@@ -110,6 +110,20 @@ def blob_map(rows):
 #   glob     - a glob / rglob / iterdir / listdir / walk pattern in code, anchored on a
 #              resolvable repo directory, matches it (only the matching files).
 # A bare directory mention is not evidence for anything under it.
+#
+# Owner decision D01 (2026-10-08) narrows two forms further:
+#   - a pattern in a hygiene sweep (HYGIENE_SCANS) is not evidence: such a sweep scans
+#     whatever exists for a defect and consumes nothing; its explicit paths still count;
+#   - a filename shared by more than one tracked path is ambiguous: it counts only when
+#     path-qualified, i.e. a trailing path of two or more segments that names exactly
+#     the files it matches (a full repo path is the limiting case).
+
+# source file -> reason its glob/rglob patterns are not consumer evidence
+HYGIENE_SCANS = {
+    "tests/legal/test_published_pages_have_no_internal_paths.py":
+        "DOCS_ROOT.rglob('*.html') sweeps every published page for absolute paths; "
+        "pages it names explicitly still count",
+}
 
 GLOB_CHARS = set("*?[")
 _PATH_CLASSES = {"Path", "PurePath", "PosixPath", "PurePosixPath", "WindowsPath", "PureWindowsPath"}
@@ -392,13 +406,34 @@ def explicit_references(code_texts, candidates, tracked):
         return modules[p]
     ctx["module"] = module
 
+    tracked_base_count = collections.Counter(os.path.basename(p) for p in tracked)
+
+    def qualified(p, text):
+        """Shortest trailing path of p (two or more segments) that appears in text as a
+        whole token and that no other tracked file ends with; None if there is none."""
+        parts = p.split("/")
+        for k in range(2, len(parts) + 1):
+            suf = "/".join(parts[-k:])
+            if re.search(r"(?<![A-Za-z0-9_.\-])" + re.escape(suf) + r"(?![A-Za-z0-9_\-])", text) \
+                    and sum(t == suf or t.endswith("/" + suf) for t in tracked) == 1:
+                return suf
+        return None
+
     patterns = []
     for src in sorted(code_texts):
         text = code_texts[src].replace("\\\\", "/").replace("\\", "/")
         if name_re is not None:
             for b in set(name_re.findall(text)):
+                shared = tracked_base_count[b] > 1
                 for p in by_base[b]:
-                    add(p, "path" if p in text else "filename", p if p in text else b, src)
+                    if p in text:
+                        add(p, "path", p, src)
+                    elif not shared:
+                        add(p, "filename", b, src)
+                    else:
+                        suf = qualified(p, text)
+                        if suf:
+                            add(p, "path", suf, src)
         if src in py_files:
             mod = module(src)
             if mod is not None:
@@ -406,13 +441,13 @@ def explicit_references(code_texts, candidates, tracked):
                     for kind, p in mod.scan():
                         if kind == "path" and p in cand_set:
                             add(p, "path", p, src)
-                        elif kind == "glob":
+                        elif kind == "glob" and src not in HYGIENE_SCANS:
                             patterns.append((p, src))
                 except RecursionError:
                     pass
         else:
             for tok in _TEXT_TOKEN.findall(text):
-                if GLOB_CHARS & set(tok) and "/" in tok:
+                if GLOB_CHARS & set(tok) and "/" in tok and src not in HYGIENE_SCANS:
                     p = repo.anchor(tok)
                     if p is not None:
                         patterns.append((p, src))
