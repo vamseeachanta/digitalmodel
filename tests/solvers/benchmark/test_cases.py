@@ -85,9 +85,16 @@ def test_parse_mapdl_fingerprint(tmp_path):
 
 
 def test_parse_mapdl_elapsed():
-    text = "junk\n Elapsed time spent computing solution     =      12.345\n" \
-        " Elapsed Time (sec) =         98.700       Date =  10/08/2026\n"
-    assert cases.parse_mapdl_elapsed(text) == {"solution_s": 12.345, "total_s": 98.7}
+    # format as written by MAPDL 2026 R1 (v261)
+    text = (
+        "Elapsed time spent obtaining a license            :        1.8 seconds\n"
+        "Elapsed time spent computing solution             :       30.5 seconds\n"
+        "Elapsed time in equation solver                :       27.4 seconds\n"
+        "|        Elapsed Time (sec) =         50.585       Date  =  10/08/2026   |\n"
+    )
+    assert cases.parse_mapdl_elapsed(text) == {
+        "licence_s": 1.8, "solution_s": 30.5, "equation_solver_s": 27.4,
+        "total_s": 50.585}
 
 
 def _fake_motorbike(root: Path) -> Path:

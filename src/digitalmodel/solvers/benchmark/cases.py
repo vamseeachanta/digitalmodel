@@ -201,13 +201,17 @@ def parse_mapdl_fingerprint(path: Path) -> dict:
 
 
 def parse_mapdl_elapsed(text: str) -> dict:
+    patterns = {
+        "licence_s": r"Elapsed time spent obtaining a license\s*[:=]\s*([\d.]+)",
+        "solution_s": r"Elapsed time spent computing solution\s*[:=]\s*([\d.]+)",
+        "equation_solver_s": r"Elapsed time in equation solver\s*[:=]\s*([\d.]+)",
+        "total_s": r"Elapsed Time \(sec\)\s*[:=]\s*([\d.]+)",
+    }
     out = {}
-    m = re.search(r"Elapsed time spent computing solution\s*=\s*([\d.]+)", text)
-    if m:
-        out["solution_s"] = float(m.group(1))
-    m = re.search(r"Elapsed Time \(sec\)\s*=\s*([\d.]+)", text)
-    if m:
-        out["total_s"] = float(m.group(1))
+    for key, pattern in patterns.items():
+        m = re.search(pattern, text)
+        if m:
+            out[key] = float(m.group(1))
     return out
 
 
