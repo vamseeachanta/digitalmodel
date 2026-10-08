@@ -153,6 +153,23 @@ def test_resolve_variants_dedupes_and_expands_all():
     assert cases.resolve_variants(["default"], cores=8) == ["default"]
 
 
+def test_pack_folder_imports_standalone_with_stdlib_only():
+    """Linux CFD hosts load the pack without the digitalmodel package."""
+    import subprocess
+    import sys
+
+    solvers_dir = Path(cases.__file__).resolve().parents[1]
+    code = (
+        "import sys; sys.path.insert(0, sys.argv[1]);"
+        "import benchmark.solvers as s, benchmark.compare;"
+        "assert 'digitalmodel' not in sys.modules; print(sorted(s.CASES))"
+    )
+    out = subprocess.run([sys.executable, "-I", "-c", code, str(solvers_dir)],
+                         capture_output=True, text=True, timeout=60)
+    assert out.returncode == 0, out.stderr
+    assert "openfoam" in out.stdout
+
+
 def test_solver_module_imports_without_solvers_and_lists_every_case():
     from digitalmodel.solvers.benchmark import solvers
 

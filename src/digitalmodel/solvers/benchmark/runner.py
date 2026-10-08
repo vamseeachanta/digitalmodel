@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
-from digitalmodel.solvers.benchmark import env
+from . import env
 
 PACK_VERSION = "1"
 
@@ -183,7 +183,7 @@ def run_pack(cases, work_root: Path, *, machine_label: str, repeats: int = 3,
              warmup: int = 1, load_sampler=env.sample_cpu_load,
              allow_busy: bool = False, keep: bool = False,
              cores: int | None = None) -> dict:
-    from digitalmodel.solvers.benchmark.cases import resolve_variants
+    from .cases import resolve_variants
 
     work_root = Path(work_root)
     work_root.mkdir(parents=True, exist_ok=True)

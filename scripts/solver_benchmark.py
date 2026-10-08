@@ -34,10 +34,18 @@ import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+_SRC = Path(__file__).resolve().parents[1] / "src"
+sys.path.insert(0, str(_SRC))
 
-from digitalmodel.solvers.benchmark import compare, runner  # noqa: E402
-from digitalmodel.solvers.benchmark.solvers import CASES  # noqa: E402
+try:
+    from digitalmodel.solvers.benchmark import compare, runner
+    from digitalmodel.solvers.benchmark.solvers import CASES
+except ImportError:
+    # Linux CFD hosts need only the stdlib OpenFOAM leg: load the pack folder
+    # on its own when the full digitalmodel package cannot import.
+    sys.path.insert(0, str(_SRC / "digitalmodel" / "solvers"))
+    from benchmark import compare, runner  # type: ignore[no-redef]
+    from benchmark.solvers import CASES  # type: ignore[no-redef]
 
 
 def _run(args) -> int:

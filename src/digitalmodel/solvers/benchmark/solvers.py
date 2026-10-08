@@ -20,8 +20,8 @@ import sys
 import time
 from pathlib import Path
 
-from digitalmodel.solvers.benchmark import cases
-from digitalmodel.solvers.benchmark.runner import Case
+from . import cases
+from .runner import Case
 
 _now = time.perf_counter
 
