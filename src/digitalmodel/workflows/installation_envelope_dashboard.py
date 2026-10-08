@@ -194,7 +194,7 @@ function renderFrame(){
   byId('frame-label').textContent=`NOW ${frame.now_s} s · forecast to ${frame.now_s+120} s`;
   byId('demo-label').textContent=`SIMULATED DEMO: Hs ${s.hs_m} m / Tp ${s.tp_s} s · ${s.source_label}`;
   byId('charts').replaceChildren(...frame.channels.map(c=>drawChart(c,frame)));
-  byId('mode-notice').textContent=forecastMode==='wave_preview'?'SIMULATED WAVE PREVIEW INPUT — conditional load forecast; offshore wave prediction not validated':'History-only autoregression: inputs end at NOW; future observations are held out.';
+  byId('mode-notice').textContent=forecastMode==='wave_preview'?'SIMULATED WAVE PREVIEW INPUT — conditional load forecast; offshore wave prediction not validated':'History-only autoregression: inputs end at NOW; future observations are held out; offshore forecast accuracy not validated.';
   byId('forecast-utilization').textContent=utilizationText(frame);
   drawGrid();
 }
