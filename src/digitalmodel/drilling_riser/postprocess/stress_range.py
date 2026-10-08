@@ -208,6 +208,25 @@ def coupling_positions(sections_m: Sequence[float], joint_length_m: float = JOIN
     return sorted(out)
 
 
+SPLIT_MARK = " #"  # campaign.split_at_couplings names the pieces of a riser section "<name> #<k>"
+
+
+def joint_sections(sections: Sequence[Mapping[str, Any]]) -> tuple[list[float], list[str]]:
+    """Section lengths and names for :func:`coupling_positions` from the line's sections (``line_type``,
+    ``length_m``): consecutive pieces of one section split by ``campaign.split_at_couplings`` (``coupling_segment_m``)
+    are merged back, so the split points are not taken as couplings."""
+    lengths: list[float] = []
+    names: list[str] = []
+    for s in sections:
+        name = str(s["line_type"]).split(SPLIT_MARK)[0]
+        if names and name == names[-1] and SPLIT_MARK in str(s["line_type"]):
+            lengths[-1] += float(s["length_m"])
+        else:
+            lengths.append(float(s["length_m"]))
+            names.append(name)
+    return lengths, names
+
+
 def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joint_length_m: float = JOINT_LENGTH_M,
                       exclude_below_m: float, exclude_above_m: float | None = None,
                       hot_spot_m: float | None = None, hot_spot_tol_m: float = 1.0,
@@ -366,6 +385,7 @@ def extract_significant(model, ofx, *, lines: Iterable[str] = LINES, thetas: Ite
 
 
 __all__ = ["JOINT_LENGTH_M", "KEY", "KEY_SIG", "LINES", "SCHEMA", "SCHEMA_SIG", "SIGNIFICANT_DEFINITION",
-           "STATION_KINDS", "THETAS_DEG", "classify_stations", "coupling_positions", "extract", "extract_significant",
+           "SPLIT_MARK", "STATION_KINDS", "THETAS_DEG", "classify_stations", "coupling_positions", "extract",
+           "extract_significant", "joint_sections",
            "merge_stress_range", "range_over_theta", "significant_over_theta", "significant_range",
            "stress_range_limit_ksi", "theta_histories", "turning_points"]
