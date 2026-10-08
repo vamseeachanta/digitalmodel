@@ -42,7 +42,7 @@
     "hit_class": "directory metadata only",
     "qualified_reference_established": false
   },
-  "ws014_followup": {
+  "workstation_followup": {
     "observed_at_utc": "2026-09-13T03:40:00Z",
     "desktop_process_ids_unchanged": true,
     "newer_cli_transcript_found": false,

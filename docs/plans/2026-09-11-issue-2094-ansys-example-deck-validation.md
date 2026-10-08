@@ -45,7 +45,7 @@ The allowable stresses already embedded in the decks are unchanged by this plan.
 
 ### LLM Wiki pages consulted
 
-- `pages/acma-tool/notes/ansys-apdl-macros.md` — records the in-house macro library and its
+- `pages/<client>-tool/notes/ansys-apdl-macros.md` — records the in-house macro library and its
   existing validation workbook practice; confirms the firm's own convention is to keep a
   recorded answer beside a model.
 - `domains/analysis/pages/validated-model-index.md` — records that the three example decks

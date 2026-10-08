@@ -69,16 +69,46 @@
       ]
     }
   ],
-  "not_resealed": [
-    {
-      "path": "docs/plans/evidence/2026-09-13-issue-2094-response-resource-intel.json",
-      "status": "identifier fragment retained pending owner decision",
-      "reason": "Its digest is bound inside the canonical result-matrix package (examples/ansys/analysis-evidence/manifest.json) and intake.json. Every matrix revision r1-r6 carries it, so a re-seal changes all six package hashes, two hash-bound source constants and the private retained r6 snapshot that the strict replay test pins."
-    },
-    {
-      "path": "docs/plans/2026-09-11-issue-2094-ansys-example-deck-validation.md",
-      "status": "identifier fragment retained pending owner decision",
-      "reason": "Bound by docs/plans/evidence/2026-09-12-issue-2094-acceptance-legal.json, which is itself bound inside the same matrix package lineage. The fragment is also present in this file on main."
-    }
-  ]
+  "not_resealed": [],
+  "redacted_public_copies": {
+    "decision": "Owner decision M04 (consolidation board r4): option (b), redact the public copies only",
+    "summary": "The two files below carried an identifier fragment and are bound inside the r1-r6 result-matrix lineage. The public copies are redacted; the r1-r6 manifest pins, the hash-bound source constants and the private retained r6 snapshot are NOT rewritten. The lineage digests listed here are HISTORICAL: they refer to the original bytes, which are retained in the private data repository. A public checkout therefore no longer reproduces these historical digests from these two paths; the private copy does.",
+    "original_bytes_location": "private repository vamseeachanta/digitalmodel-data, data/public-repo-removals/digitalmodel-2114-redaction/files/<original repository path> (SHA-256 recorded in data/public-repo-removals/digitalmodel-2114-redaction/record.json)",
+    "files": [
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2094-response-resource-intel.json",
+        "redaction": "one JSON key renamed: the workstation-name prefix of the follow-up key is replaced with the neutral word 'workstation'; no value changed",
+        "historical": {
+          "sha256": "374d0d0a5af2493887086dde82355cf4d9cf25f5b199b226542521afe228be20",
+          "git_blob_sha1": "f26fee45249d9d5bb6212b62929a7948f619abdb",
+          "pinned_by": [
+            "examples/ansys/analysis-evidence/manifest.json (matrix revisions r1-r6)",
+            "examples/ansys/analysis-evidence/intake.json",
+            "private retained r6 snapshot (derived/r6/matrix.json)"
+          ]
+        },
+        "public_redacted": {
+          "sha256": "5d27d1ffa2dd938ae9114a3e9094a37f658dbadb1d4ca4bb2b700dab1ef488c6",
+          "git_blob_sha1": "b91f45db76ce6b87e3dbae5bd6865207eb7a368a"
+        }
+      },
+      {
+        "path": "docs/plans/2026-09-11-issue-2094-ansys-example-deck-validation.md",
+        "redaction": "one wiki page path: the organisation-name prefix is replaced with the placeholder <client>; no other text changed",
+        "historical": {
+          "sha256": "e7876be200f24eaae9dc48897ed7920b0240a08ebd845ca487e5faf7a01d86b9",
+          "git_blob_sha1": "e013eadd7ca23d13f536da01a8b805a05699b6c3",
+          "pinned_by": [
+            "docs/plans/evidence/2026-09-12-issue-2094-acceptance-legal.json (itself bound inside the r1-r6 matrix lineage)"
+          ]
+        },
+        "public_redacted": {
+          "sha256": "2767518bd4fdf53f1288e07664843e4b44a3948efb626ed357f42e13daf61969",
+          "git_blob_sha1": "88943e779293774927c68e84c2231ebdb8bd2a4d"
+        }
+      }
+    ],
+    "also_retained_privately": "The pre-redaction bytes of docs/reports/2026-09-12-padeye-pressure-preparation.html (sha256 df6a798c02d945d817cece246774625fabea0c725682c15aba555ce7d994dddc, the 'old' digest in the resealed list above) are kept in the same private folder.",
+    "verification": "No test pins the public digest of either file directly. The strict retained-corpus replay (tests/ansys/test_cylinder_refinement_replay.py::test_retained_n4_exact_replay, ANSYS_REPLAY_REQUIRE_CORPUS=1) passes unchanged against the private snapshot, and tests/ansys passes in full."
+  }
 }
