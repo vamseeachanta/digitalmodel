@@ -234,6 +234,14 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
     a = [float(x) for x in arcs]
     if not all(math.isfinite(x) for x in a) or any(y < x - _ARC_TOL for x, y in zip(a, a[1:])):
         raise ValueError("the arc-length axis is not finite and non-decreasing")
+    # End B is taken from the section geometry (below), so the geometry must cover every result point and the
+    # exclusion boundary: sections that stop short would make an interior coupling "End B" and drop its upper side
+    end_b = float(sum(float(v) for v in sections_m))
+    if list(sections_m) and a and a[-1] > end_b + _ON_TOL:
+        raise ValueError(f"result point at {a[-1]} m lies beyond End B ({end_b} m from the section geometry)")
+    if exclude_above_m is not None and list(sections_m) and exclude_above_m > end_b + _ON_TOL:
+        raise ValueError(f"exclude_above_m {exclude_above_m} m lies beyond End B ({end_b} m from the section "
+                         f"geometry)")
     kinds = ["body"] * len(a)
     for i, x in enumerate(a):
         if x < exclude_below_m - _ON_TOL or (exclude_above_m is not None and x > exclude_above_m + _ON_TOL):
@@ -261,7 +269,7 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
         if on_c:  # the hot spot must not take a coupling's own station
             raise ValueError(f"the hot-spot point at {a[near]} m lies on the coupling at {on_c[0]} m")
     # upper end of the kept span: the exclusion boundary, else End B of the line (from the section geometry)
-    top = exclude_above_m if exclude_above_m is not None else float(sum(float(v) for v in sections_m))
+    top = exclude_above_m if exclude_above_m is not None else end_b
     for c in couplings:
         # every point on the coupling (duplicates included, one per side of a section boundary); else the nearest
         # point (all duplicates at that arc) on each side

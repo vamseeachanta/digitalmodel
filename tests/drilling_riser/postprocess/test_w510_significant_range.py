@@ -563,6 +563,29 @@ def test_the_end_b_coupling_keeps_its_inward_station_without_exclude_above():
     assert r.status == "FAIL" and r.u == pytest.approx(50.0 / COUPLING_MPA)
 
 
+def test_result_points_beyond_the_section_geometry_are_refused():
+    # M01 confirmation review of e8f2c78d: End B is taken from sum(sections_m); sections that stop short of the
+    # line would turn an interior coupling into "End B" and drop its upper-side station (FAIL -> PASS)
+    st = {"sections_m": [10.0, 10.0], "joint_length_m": JOINT, "exclude_below_m": 10.0, "coupling_tol_m": 1.0}
+    with pytest.raises(ValueError, match="beyond End B"):
+        classify_stations([9.5, 10.5, 19.5, 20.5], **st)
+    r = evaluate_case({None: _doc([9.5, 10.5, 19.5, 20.5], sig=[1.0, 1.0, 1.0, 50e3])}, ROW,
+                      {"stress_line": "Riser", "wave_kind": "irregular", "cr10_stations": st})
+    assert r.status != "PASS"
+
+
+def test_an_exclusion_boundary_beyond_the_section_geometry_is_refused():
+    st = {"sections_m": [10.0, 10.0], "joint_length_m": JOINT, "exclude_below_m": 10.0, "exclude_above_m": 25.0,
+          "coupling_tol_m": 1.0}
+    with pytest.raises(ValueError, match="beyond End B"):
+        classify_stations([9.5, 10.5, 19.5], **st)
+
+
+def test_points_at_end_b_within_rounding_are_accepted():
+    st = {"sections_m": [10.0, 10.0], "joint_length_m": JOINT, "exclude_below_m": 10.0, "coupling_tol_m": 1.0}
+    assert classify_stations([9.5, 10.5, 15.0, 19.5, 20.0 + 5e-5], **st)[-1] == "coupling"
+
+
 def test_a_saf_detail_with_no_station_kind_is_not_evaluated():
     row = {**ROW, "limit": {**ROW["limit"], "saf": {**ROW["limit"]["saf"], "riser flange weld": 5.0}}}
     r = evaluate_case({None: _doc(ARCS, sig=[1.0, 1.0, 1.0, 25e3, 1.0])}, row, IRR)
