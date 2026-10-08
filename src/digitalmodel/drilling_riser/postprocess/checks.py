@@ -360,6 +360,11 @@ def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
     kind_key, basis = CR10_BASIS[wave]
     line = ctx.get("stress_line", "Riser")
     series = range_series(w, line, "zz_range", kind_key)
+    arcs = [a for a, _ in series]
+    if not all(isinstance(a, (int, float)) and math.isfinite(a) for a in arcs) or \
+            any(y < x - 1e-6 for x, y in zip(arcs, arcs[1:])):
+        raise NotEvaluated(f"CR-10: the arc-length axis of range_graphs.{line} is missing, not finite or not "
+                           "non-decreasing")
     limits = _cr10_limits(row)
     detail: dict[str, Any] = {"basis": basis, "wave_kind": wave, "line": line,
                               "channel": f"range_graphs.{line}.zz_range_{kind_key}",

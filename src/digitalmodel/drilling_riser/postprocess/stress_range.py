@@ -97,14 +97,21 @@ def merge_stress_range(doc: dict[str, Any], supp: dict[str, Any]) -> dict[str, A
         raise ValueError(f"theta reconstruction check not passed (theta_check_ok {supp.get('theta_check_ok')!r}, "
                          f"max relative deviation {supp.get('theta_check_max_rel')}); the significant range is "
                          "not used")
+    keys = [KEY] + ([KEY_SIG] if supp["schema"] == SCHEMA_SIG else [])
+    for ln, s in supp["lines"].items():  # validate every line before changing the document
+        for k in keys:
+            if k not in s:
+                raise ValueError(f"{ln}: {supp['schema']} document has no {k}")
+            if len(s[k]) != len(s["arc_m"]):
+                raise ValueError(f"{ln}: {k} has {len(s[k])} values for {len(s['arc_m'])} arc lengths")
     rgs = doc["channels"]["w5"].setdefault("range_graphs", {})
     for ln, s in supp["lines"].items():
         rg = rgs.setdefault(ln, {})
         rg[AXIS] = list(s["arc_m"])
-        keys = [KEY] + ([KEY_SIG] if supp["schema"] == SCHEMA_SIG and KEY_SIG in s else [])
+        if KEY_SIG not in keys and rg.get("axis_of", {}).get(KEY_SIG) == AXIS:  # never leave it on a new axis
+            rg.pop(KEY_SIG, None)
+            rg["axis_of"].pop(KEY_SIG, None)
         for k in keys:
-            if len(s[k]) != len(s["arc_m"]):
-                raise ValueError(f"{ln}: {k} has {len(s[k])} values for {len(s['arc_m'])} arc lengths")
             rg[k] = list(s[k])
             rg.setdefault("axis_of", {})[k] = AXIS
     return doc
@@ -225,6 +232,8 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
     is not taken as the coupling's station.
     """
     a = [float(x) for x in arcs]
+    if not all(math.isfinite(x) for x in a) or any(y < x - _ARC_TOL for x, y in zip(a, a[1:])):
+        raise ValueError("the arc-length axis is not finite and non-decreasing")
     kinds = ["body"] * len(a)
     for i, x in enumerate(a):
         if x < exclude_below_m - _ON_TOL or (exclude_above_m is not None and x > exclude_above_m + _ON_TOL):
@@ -254,10 +263,13 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
             below = [x for x in a if x < c]
             above = [x for x in a if x > c]
             near = ([max(below)] if below else []) + ([min(above)] if above else [])
-            if coupling_tol_m is not None:
-                near = [x for x in near if abs(x - c) <= coupling_tol_m]
-                if not near and kept_arcs and min(kept_arcs) <= c <= max(kept_arcs):
-                    raise ValueError(f"coupling at {c:.3f} m: no result point within {coupling_tol_m} m")
+            if coupling_tol_m is not None and kept_arcs and min(kept_arcs) <= c <= max(kept_arcs):
+                # each side whose nearest point is kept needs it within the tolerance (an excluded side is not
+                # evaluated; a side beyond the grid has no point)
+                for x in near:
+                    if x in kept_arcs and abs(x - c) > coupling_tol_m:
+                        raise ValueError(f"coupling at {c:.3f} m: nearest result point on one side is "
+                                         f"{abs(x - c):.3f} m away (limit {coupling_tol_m} m)")
             idxs = [i for i, x in enumerate(a) if x in near]
         for idx in idxs:
             if kinds[idx] == "body":

@@ -12,6 +12,7 @@ k x joint length; SAF per station (coupling weld 3.0, joint body 1.245).
 
 from __future__ import annotations
 
+import json
 import math
 
 import numpy as np
@@ -20,6 +21,7 @@ import pytest
 from digitalmodel.drilling_riser.global_model.fatigue_channels import half_cycles
 from digitalmodel.drilling_riser.postprocess.checks import KSI_KPA
 from digitalmodel.drilling_riser.postprocess.evaluate import STATUSES, evaluate_case, summarise
+from digitalmodel.drilling_riser.postprocess.stress_range import SCHEMA as SCHEMA_W501
 from digitalmodel.drilling_riser.postprocess.stress_range import (
     SCHEMA_SIG,
     SIGNIFICANT_DEFINITION,
@@ -178,7 +180,8 @@ def _doc(arcs, sig=None, mx=None):
     if sig is not None:
         line["zz_range_sig"] = list(sig)
         line["theta_sig_deg"] = [0.0] * len(arcs)
-    merge_stress_range(doc, {"schema": SCHEMA_SIG, "theta_check_ok": True, "lines": {"Riser": line}})
+    supp = ({"schema": SCHEMA_SIG, "theta_check_ok": True} if sig is not None else {"schema": SCHEMA_W501})
+    merge_stress_range(doc, {**supp, "lines": {"Riser": line}})
     return doc
 
 
@@ -507,6 +510,35 @@ def test_seed_mean_refuses_different_allowables_or_hot_spots():
 
     with pytest.raises(NotEvaluated):
         cr10_station_mean({1: v1, 2: v2})
+
+
+# ---------------------------------------------------------------- review r3 (PR #2292) regressions
+
+
+def test_a_significant_document_without_the_significant_channel_is_refused_before_any_change():
+    doc = _doc(ARCS, sig=[1.0, 1.0, 1.0, 10e3, 1.0])
+    before = json.dumps(doc, sort_keys=True)
+    supp = {"schema": SCHEMA_SIG, "theta_check_ok": True,
+            "lines": {"Riser": {"arc_m": [0.0, 1.0], "zz_range_max": [1.0, 2.0]}}}
+    with pytest.raises(ValueError):
+        merge_stress_range(doc, supp)
+    assert json.dumps(doc, sort_keys=True) == before
+
+
+def test_each_kept_side_of_a_coupling_needs_a_point_within_the_tolerance():
+    # coupling at 21.336 m: 20.828 m within 3 m below, nearest above 25.0 m is 3.66 m away
+    with pytest.raises(ValueError):
+        classify_stations([18.796, 20.828, 25.0, 27.432, 33.528], **{**STATIONS, "coupling_tol_m": 3.0})
+
+
+@pytest.mark.parametrize("arcs", [[18.796, 19.812, float("nan"), 21.336, 45.0],
+                                  [18.796, 19.812, 21.336, 20.0, 45.0]])
+def test_a_malformed_arc_axis_is_not_evaluated(arcs):
+    with pytest.raises(ValueError):
+        classify_stations(arcs, **STATIONS)
+    for ctx in (IRR, {"stress_line": "Riser", "wave_kind": "irregular"}):
+        r = evaluate_case({None: _doc(arcs, sig=[1.0, 1.0, 1.0, 1.0, 1.0])}, ROW, ctx)
+        assert r.status == "NOT_EVALUATED", ctx
 
 
 # ---------------------------------------------------------------- W04: pup-side station of the 18.288 m coupling
