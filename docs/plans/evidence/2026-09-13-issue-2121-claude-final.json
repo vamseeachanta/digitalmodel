@@ -1,0 +1,112 @@
+{
+  "findings": [
+    {
+      "id": "D1",
+      "severity": "MAJOR",
+      "defect": "The B1 feasibility hold is the single gate that decides whether B1 produces a deck set or stops at a report, and it specifies no method, no admissible evidence class, no quantitative pass rule and no adjudicator. The plan states the register \"will distinguish exact-field interpolation estimates from FE displacement error, B-bar alternatives, nodal extrapolation, averaging and axial variation\", which correctly concedes that an interpolation estimate does not bound Galerkin plus recovery error, and then names nothing that could close that gap without the licensed solver, which B1 forbids. Consequently both outcomes are unfalsifiable as written: feasibility can be declared on an unbounded a priori assertion, or withheld indefinitely, and the reviewer of the B1 artifact has no stated criterion against which to judge the register. This is material to the present scope, because the bounded work being approved consists almost entirely of this register and whatever it authorises.",
+      "correction": "State in the plan the admissible offline evidence for the register and the rule that closes it. Concretely: (a) an independent non-vendor axisymmetric solve of the identical meshes (N=4,8,16) and the identical recovery rule, using an open implementation such as a purpose-written 8-node axisymmetric element or an established open-source FE library, compared against the Lame reference at the three radial stations, with the observed convergence rate reported and required to match the expected order; (b) a documented per-response, per-mesh predicted error derived from that study, recorded in the case proposal before any band is frozen; (c) an explicit pass rule, for example predicted error at N=16 no greater than the candidate band divided by a stated margin factor, with the factor recorded; (d) the named adjudicator of the register, distinct from the producer, and the statement that an inconclusive register is a stop, not a proceed. Record the offline study's code and outputs with hashes as B1 artifacts."
+    },
+    {
+      "id": "D2",
+      "severity": "MAJOR",
+      "defect": "The freeze rule is one-sided. Table 2 limits \"will remain candidate outer limits until that register supports their feasibility\", and nothing constrains the register from relaxing a band to whatever the chosen element, mesh and recovery rule can achieve. No adequacy floor, no engineering-significance basis and no margin requirement are stated, and the only amendment gate in the plan applies to changes made after the checkpoint, not to the initial freeze at the checkpoint. Table 2's caption concedes the limits are \"engineering choices rather than code-prescribed allowables\" without constraining the choice. The failure mode is a verification criterion determined by the capability of the method it is meant to judge, which is the same defect class this repository recorded three separate times at issue 1633 (README: threshold derived from the data it judges, inputs derived from the threshold, data derived from the threshold). Because the whole B1 output is these criteria, a self-satisfying band would propagate unchallenged into B2 and into the 189 qualified keys.",
+      "correction": "Require each frozen band to be justified against two independent quantities and to record both: the predicted error from the D1 study (feasibility) and a separately stated verification-adequacy requirement expressed in the response's own units and reasoned from what the benchmark is meant to detect (feasibility must not supply this number). Record the margin ratio between them for every response and mesh. State that any candidate band loosened relative to the value in the reviewed Table 2 or in candidate_criteria constitutes a material change requiring an amended reviewed basis and matching user approval before B1 continues, not only after the checkpoint. State that a band that can only be met by relaxation below the adequacy requirement is a stop, and that the outcome is a reviewed feasibility report recommending a different element or recovery definition."
+    },
+    {
+      "id": "D3",
+      "severity": "MINOR",
+      "defect": "The legal-scan receipt does not establish the hard gate over these blobs. In 2026-09-13-issue-2121-verification.json the recorded stdout shows the scan running against /d/ws/_coordination/solver-legal-padeye-parametric/digitalmodel, a mirror named for the separate padeye task, and the record supplies no file inventory or digest for the mirror's contents, so the PASS cannot be bound to the ten staged 2121 blobs. The scope note itself states \"scanner root-resolution defect prevents a reliable live-root scan\" and \"No owner deny list present\", the latter being ambiguous between \"the repository has none\" and \"the operative ruleset was not applied\". Independently, docs/plans/README.md records at issue 1965 that this same scanner is fail-open per workspace-hub 3804 and was observed PASSing over a live leak, so a bare PASS from it is documented-unreliable in this repository. Direct inspection of the eleven bundled files found no client identifiers, hostnames or secrets, so the substantive exposure appears low; the defect is that the evidence does not support the claim.",
+      "correction": "Re-run the scan so the scanned set is provably the staged set: record the mirror's per-file path and sha256 inventory alongside the scan output, and show it matches the ten blob digests. State explicitly whether a repository-level deny list exists at digitalmodel and, if it exists, that it was applied. Given the recorded fail-open defect, add the repo-local detector pattern already adopted for issue 1965 rather than relying on the shared scanner PASS alone, and cite workspace-hub 3804 in the receipt so a later reader knows the PASS is qualified."
+    },
+    {
+      "id": "D4",
+      "severity": "MINOR",
+      "defect": "Candidate status is labelled inconsistently across the artifacts, so two load-bearing numeric commitments sit outside the hold that is supposed to govern them. The hold text scopes the caveat to Table 2 only. The auxiliary-station bands are stated in the prose of the comparator section in firm terms, \"At N=16, stress differences from the midplane will satisfy the expected-zero stress band; ur differences and uz deviations from linearity in y will satisfy max(0.01x|the applicable analytic displacement|,1e-9 mm)\", and are declared mandatory for qualification, yet the disposition record at A6 asserts \"Auxiliary band remains candidate subject to B1 feasibility\" and the case proposal lists them under candidate_criteria. The element likewise appears as a firm entry in Table 1, captioned only as proposed inputs, while the hold text implies it is provisional by requiring an amended basis for \"Changing element, mesh, response location or tolerance after that checkpoint\". The plan states \"Any discrepancy with this plan will stop implementation until reconciled\", so this labelling mismatch would itself trigger a stop.",
+      "correction": "Apply one candidate marker consistently. Move the auxiliary-station bands into Table 2 or annotate them in place as candidate and subject to the same hold, and mark the Table 1 formulation row as candidate pending the register. Enumerate explicitly, in one list, every item the checkpoint may alter (element, KEYOPT set, mesh levels, station radii and axial stations, response definitions and extraction/averaging rule, and each band), and state that alteration of the element or the response set requires re-review before deck generation, since those change the artifact the user approved rather than merely its tolerances."
+    },
+    {
+      "id": "D5",
+      "severity": "MINOR",
+      "defect": "Checker independence is defeated by the plan's own publication. The plan requires that \"A distinct provider/session will receive only the physics statement, boundary conditions and source references, without the producer implementation\", but this plan document publishes the complete producer comparator, including A, B, sigma_r, sigma_theta, ur and uz in closed form, the von Mises recomputation, the three competing axial branches with their exact expressions, and the equilibrium identities; the case proposal publishes the 21 response names, component mapping, units and recovery rule. A checker briefed with \"source references\" that include the plan, or that simply reads the repository, reproduces the producer's derivation rather than deriving independently, and the mutation tests then inherit the producer's assumptions, which is precisely the failure the mechanism exists to prevent. The brief itself is not defined as an artifact.",
+      "correction": "Define the checker brief as a distinct, hashed artifact containing only the geometry, material constants, loading, boundary conditions, requested station list and the vendor source references, and state explicitly that the plan's comparator section, the case proposal's response_definitions and any repository path containing them are excluded from the brief. Record the brief's sha256 and the checker's derivation hash in the register before any comparison, alongside the producer hash the plan already requires."
+    },
+    {
+      "id": "D6",
+      "severity": "MINOR",
+      "defect": "The stress recovery rule is undefined at exactly the point where it governs the outcome. Both the plan and the case proposal specify \"extrapolated nodal components averaged over selected adjacent elements in the full homogeneous mesh\" without stating the selection set. The set is not incidental: at an interior corner node it is four elements, at a radial-face midside node two, and at a surface corner node one, and it is the single-element case at r=a and r=b that produced the surface radial-stress error that forced the element change in the first place. The feasibility register is supposed to assess recovery error, but with the averaging set unspecified the register has no fixed object to assess and its conclusion cannot be tied to what the extractor will later implement.",
+      "correction": "State the selection rule explicitly for each of the three radial stations and both node types, for example arithmetic average of all elements sharing the node, or the single adjacent element at a free surface with the extrapolation scheme named, and record it as a frozen field in the case proposal's recovery entry rather than as prose. Require the D1 offline study to use that exact rule, and add a B1 test asserting that the extractor's selection set for each station matches the recorded rule at all three meshes."
+    },
+    {
+      "id": "D7",
+      "severity": "MINOR",
+      "defect": "The disposition record misstates which tree each review examined. docs/plans/evidence/2026-09-13-issue-2121-review-dispositions.json carries a single reviewed_prior_tree of 4a249ab7126c40fe6025e14096bb258a80c5cfcb, which is the R1 tree reviewed by both claude-r1 and codex-r1, yet the same file now contains an r2_dispositions block answering A1 through A10, which were raised against 1104526c2f8fc330f898b3b09911c1ca2beb0636 per the claude-r2 and codex-r2 receipts. current_review still reads \"pending final exact-current review after R2 inline corrections\" while R2 has landed. A reader cannot determine from the record which findings were raised against which artifact state, which is the traceability the record exists to provide, and R2 finding A9 already asked for this field to be updated.",
+      "correction": "Replace the single reviewed_prior_tree with a per-round list recording, for each round, the provider, the tree or revision reviewed, the receipt path and its sha256, and the findings disposed. Set current_review to name the revision actually under review rather than a pending state, and update it when each round lands."
+    },
+    {
+      "id": "D8",
+      "severity": "MINOR",
+      "defect": "The exact-query equality rule is underspecified in a way that admits a silent key collision. The plan specifies \"finite strings will normalize trailing zeros without float conversion\" and the case proposal repeats it as \"Stage A finite exact decimal strings; normalize trailing zeros without float conversion\". Trailing-zero normalisation is only well defined on the fractional part: applied literally to an integer string it maps \"60\" to \"6\", collapsing t=60 mm onto t=6 mm. The plan's own worked examples exercise only the positive direction, 60, 60.0 and 60.000 to one key, and the negative examples given are 61 and 7.51, neither of which probes the integer case. Exponent forms are also unaddressed. For a lookup whose entire contract is exactness and refusal, and which is expected to reuse an existing Stage A implementation without modifying it, the rule as restated here does not pin the behaviour it delegates.",
+      "correction": "State the canonicalisation in terms of decimal semantics rather than string editing, for example exact decimal parse with no binary float conversion followed by normalisation of the fractional part only, with the integer part preserved. Add B1 tests asserting that '60' and '6' are distinct keys, that '60', '60.0' and '60.000' are one key, that an exponent form is either canonicalised consistently or refused with the chosen behaviour stated, and that a mismatched unit refuses rather than converts. Verify these against the unchanged Stage A implementation rather than assuming them."
+    },
+    {
+      "id": "D9",
+      "severity": "MINOR",
+      "defect": "The source register retains a superseded entry whose recorded semantics contradict the proposed formulation. docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json keeps PLANE182-v242 with recorded_facts keyopt1 \"0 selective reduced integration B-bar\", while the plan has moved to PLANE183 with KEYOPT(1)=0, where that option selects the 8-node quadrilateral rather than an integration scheme. Both entries are present with no supersession marker, the plan's primary-reference list no longer cites PLANE182, and the plan designates this file as the register that \"will support the cited input facts\" for generator and checker consumption. A consumer reading KEYOPT semantics from the register can take the PLANE182 meaning for a PLANE183 deck.",
+      "correction": "Mark the PLANE182-v242 entry superseded with the revision at which the element changed and a note that its KEYOPT(1) semantics do not apply to PLANE183, or remove it and retain only its digest in the review history. Add the PLANE183 KEYOPT semantics as named strings in the PLANE183-v242 recorded_facts, matching the plan text, so the register states one unambiguous meaning per option."
+    },
+    {
+      "id": "D10",
+      "severity": "MINOR",
+      "defect": "Nine of the 189 production keys restate the applied boundary condition rather than a solved response. sigma_r_inner has analytic value exactly minus p, which is the traction the deck applies at r=a, so comparing its recovered value against the analytic reference at the 1 percent band tests the stress extrapolation and averaging path, not the solution. The plan acknowledges the adjacent point for equilibrium, \"Global radial FSUM will not establish pressure equilibrium; separate analytic inner/outer traction checks will be required\", but never states that those traction checks are what verifies the applied load, nor that sigma_r_inner carries a different evidentiary weight from the other responses. A downstream consumer querying that key receives a number indistinguishable in status from sigma_theta_inner, which is genuinely solved.",
+      "correction": "Record in the response-definition entries that sigma_r_inner is a boundary-condition echo whose agreement evidences stress recovery rather than the solution, and define the separate analytic inner-surface traction check concretely, for example comparison of the recovered inner-face nodal force resultant against p times the inner surface area of the axisymmetric slice, as the check that establishes the applied load. Keep the key queryable but carry the distinction in its definition so the lookup does not present it as independent verification."
+    }
+  ],
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "8a64b15171a26702f8333006f722790bef7fe64033ce00aebb11383526cdc020"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "d8eef421644f4fcd257085df6b9994d95ca1286d63fc11d395ee0805cba59716"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-case-proposal.json",
+      "sha256": "cde7dba2452146553fdd1d6dd6272a857750d757bdb51a0a0f6dfd2755ec70fb"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-claude-r1.json",
+      "sha256": "4602d8a8e9026afd4791256d8d629521d8f08d14379af117eb1202d46a33bc83"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-claude-r2.json",
+      "sha256": "b536f6a18ac577418b3e5d860859f624cebaf6c8c8a1f4fad93e2c2ed34d742d"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-codex-r1.json",
+      "sha256": "914fe133ef042be97f0f90994109e9ecd79bbcd4b540238ff79715100ed3ad03"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-codex-r2.json",
+      "sha256": "3310dcc5e281ad0d504c2604d42d5d907a43f57a050a8d67e4bdc52ea7e8d14e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-resource-intel.json",
+      "sha256": "5ae40fbe794ef3521362de400f648e5e66dcbde860ddcdeb7641c4c98a6c7a92"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-review-dispositions.json",
+      "sha256": "c4aa8e67cfa92881b5f23343fefcec85c4f493ef9d06bad742de24f016660ecc"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "94ff7daab2b5015b24f2d598109e50ed90670ce2e0649aa3f7d70b747fecdf07"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-verification.json",
+      "sha256": "f960397de61a25b844ef5b9e1d793b6c3f33de9ba25f9e823e17d37849c57b03"
+    }
+  ],
+  "reviewed_revision": "3848892a39fb02e925b37fbda95a4a83f3a864d4",
+  "verdict": "MAJOR"
+}

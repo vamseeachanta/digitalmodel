@@ -1,0 +1,74 @@
+{
+  "schema": "ansys-native-binding-preparation-checkpoint-1",
+  "observed_utc": "2026-09-14T18:45:25.9852385Z",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "base_commit": "d66d4c78afa18db203725bf4dfbdb5476d609c2d",
+  "status": "IMPLEMENTED_OFFLINE_REVIEW_PENDING_NOT_NATIVE_READY",
+  "authorization": "Standing user non-destructive analysis lifecycle instruction; no self-applied approval label",
+  "files": [
+    {
+      "sha256": "5aa0740fc133ddab55b35d3fa22b53b72bef37a5fe919d3718b1295bc505670e",
+      "path": "docs/plans/2026-09-14-issue-2121-native-bindings.html"
+    },
+    {
+      "sha256": "8c8d65db4283d298846c16a9b1a81e5416a67965489908fee28c9ffc31821b6f",
+      "path": "src/digitalmodel/ansys/cylinder_runtime_bundle.py"
+    },
+    {
+      "sha256": "9f362c251343e53f60e2fef0c20e2f052c45d22c879371185190ef384ff0c367",
+      "path": "tests/ansys/test_cylinder_runtime_bundle.py"
+    }
+  ],
+  "verification": {
+    "test_count": 124,
+    "failures": 0,
+    "scope": "Runtime bundle, preparation, canary/boundaries, adapter and reference provenance; native opt-in disabled",
+    "legal_exit_code": 0,
+    "junit_sha256": "087b26bc65b77b0a876fb8e30c49572ffb7b5a605274cb1f47ef635b6005b653",
+    "legal_receipt_sha256": "99c2c4d1abf3c453d227dd85cca965ef189f58cf49a9f1cfe3ea7c3c92e3e6fe"
+  },
+  "preserved": {
+    "not_evaluated": 256,
+    "matrix_revision": "r2",
+    "matrix_path": "examples/ansys/analysis-evidence/manifest.json",
+    "matrix_manifest_sha256": "8926a4362f33ced3460b23a542e03539bf5c872b8d3617515477a1e4ac86b552",
+    "responses": 350,
+    "cases": 12,
+    "original_benchmark_manifest_sha256": "ea69920aad1d84a17ce37aacabcfc2308ac33eb99c4155d6b7b6421e9192f8c1"
+  },
+  "review": {
+    "inline_disposition": "Copy set clarified as all21; test-only root seam; execution consumers enumerated; per-file Git byte checks and canonical digest defined. Corrected plan remains exact-current review pending.",
+    "provider_receipt_sha256": "78e8760614b7fced4df58e900ee4c71aaa33574d28dcf8510aa854cf14e92b35",
+    "provider_status": "API429 session limit observed18:37UTC; provider reports reset16:20America/Chicago; no retry loop or waiver",
+    "plan_r2": "MAJOR; bundlea296891782cc97ef18b32070f6fc1fdeb28e9c4ffd3428b57762a59bde57f30f",
+    "plan_r1": "MAJOR; bundle91ab9270f606a48239af6ea4a5510d3708642c6a702ae73fb571c4b2531e1581",
+    "current_code_review_gate": "Real successor preparation and native use remain held until exact-current Claude review and supported blocking findings resolved",
+    "claude_current_code": "NOT_PERFORMED_PROVIDER_UNAVAILABLE",
+    "codex_current_code": "MINOR; exact source8c8d65db andtest9f362c25; no primary functional blocker. Retained-alias unlink-failure flag branch lacks focused regression. Not reciprocal Claude substitution.",
+    "codex_receipt_sha256": "0b00987bafb27872914c49890768a7fd1252215afe65ffe0ba3b9f1ffe37f777"
+  },
+  "execution": {
+    "native_attempts_added": 0,
+    "real_successor_generated": false,
+    "frozen_checker_reinvoked": false,
+    "qualified_rows_added": 0
+  },
+  "next": [
+    "Review exact committed code and corrected plan with Claude when available",
+    "Generate immutable successor from reviewed runtime source inventory and verify retained reference without new checker invocation",
+    "Bind actual execution operator, distinct independent engineering checker and shared-seat reservation from existing ownership records",
+    "Integrate reviewed production authority/preflight/adjudication and enforce isolated product environment before native execution"
+  ],
+  "limitations": [
+    "Local configuration currently informational; writing JSON is not enforcement",
+    "Licence availability snapshot is not reservation or entitlement",
+    "No new numerical result or qualified reuse delivered by this preparation"
+  ],
+  "local_evidence": [
+    "SOLVERS-PM-ANSYS-factual-bindings-2026-09-14.json",
+    "SOLVERS-PM-ANSYS-execution-config-2026-09-14.json",
+    "SOLVERS-PM-ANSYS-seat-route-observation.json",
+    "SOLVERS-PM-runtime-binding-tests.xml",
+    "SOLVERS-PM-runtime-binding-legal.json"
+  ]
+}

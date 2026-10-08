@@ -1,0 +1,50 @@
+{
+  "baseline": "97a152c33e54c397f3d82802b860ef4a06c68c47",
+  "observed_utc": "2026-09-14T02:03:56Z",
+  "scope": "Read-only planning discovery; no runtime defect or new result asserted",
+  "sources": [
+    {
+      "path": "src/digitalmodel/ansys/pressure_vessel.py",
+      "sha256": "081064599f9e32c36344beb8cbe948710d29f531eef7b9b4f40bf2e8eb4fbd11"
+    },
+    {
+      "path": "examples/ansys/pressure-vessel/pv.inp",
+      "sha256": "8d94ee1ad2ee626503cf3990bfe5a426b8e38a433e90eae064afb553566ee8f0"
+    },
+    {
+      "path": "examples/ansys/pressure-vessel/golden/PROVENANCE.json",
+      "sha256": "e06207a24a19ca50ea308b1f663cfe86347f6231b3e67780cd93d99d63e08aa6"
+    },
+    {
+      "path": "tests/ansys/golden_acceptance.py",
+      "sha256": "54590021d55a668fc4557bfc8d98077a6c22f5f9085a1a68a49d14db63c5c301"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_intake.py",
+      "sha256": "5d7a8c5a3765f238f65277b7a57b1db789b90be6f27c1acf2284b813dfd9aa1a"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_lookup.py",
+      "sha256": "c1d29198f818e3b1063f3194dfe54a9c2bea023a84ffd5c2088b7eb245ea4e92"
+    },
+    {
+      "path": "docs/standards/analysis-parametric-lookup-criteria.html",
+      "sha256": "1cebe3d4c8577b9795e67024a05a58bda7514c5d2334bea7d39f281f96af5bd0"
+    },
+    {
+      "path": "docs/plans/2026-09-13-issue-2117-padeye-parametric.html",
+      "sha256": "17f6d2c9bf1f2d2afb8bbcda453bf9c2d7c5d65f2ab7910795311dcc8fe93e19"
+    }
+  ],
+  "drive_query": "ANSYS thick cylinder pressure verification",
+  "drive_matches": 0,
+  "drive_coverage": "Five configured indexes unreachable; available literature catalog returned no matches; source absence is not established",
+  "catalog_query": "ansys|pressure.vessel|padeye",
+  "catalog_matches": 0,
+  "catalog_scope": [
+    "llm-wiki:data/data-source-catalog.yml",
+    "llm-wiki:data/domain-database-index.yml"
+  ],
+  "registration_status": "unresolved; no new catalog identity assigned",
+  "provider_review": "pending exact-current Claude and independent Codex plan review"
+}
