@@ -289,13 +289,11 @@ def _with_alerts(screen, outcome_override=None):
     return screen
 
 
-def test_alert_scoring_rendered_without_preview_benchmark():
-    """Preview-bearing payloads are rejected (see test_installation_report_integrity), so no benchmark table is issued."""
+def test_alert_scoring_rendered():
+    """Alert scoring is issued. Preview rejection is tested in test_installation_report_integrity."""
     html = mudmat.render_html(summary(), config={}, screening=_with_alerts(payload()))
     for text in ('Selected after inspection', '0.120', 'miss', 'hits 0, misses 1, false alarms 0, correct negatives 0'):
         assert text in html
-    for text in ('Conditional wave-preview benchmark', 'supplied future waves', 'Wave-preview RMSE'):
-        assert text not in html
 
 
 @pytest.mark.parametrize('defect', ['outcome', 'observed', 'probability'])

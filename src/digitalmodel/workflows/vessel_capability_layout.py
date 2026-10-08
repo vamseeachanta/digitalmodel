@@ -76,8 +76,14 @@ def event_audit_coverage_errors(summary):
 
 def _method(summary):
     diagram=_workflow()
+    covered=bool(summary.get('event_audits')) and not event_audit_coverage_errors(summary)
     audit=('The source audit records completed generation, model, simulation and trace checks and recomputed tension-event durations. '
-        if summary.get('event_audits') and not event_audit_coverage_errors(summary) else 'Verification by a source event audit is not established in the supplied snapshot. ')
+        if covered else 'Verification by a source event audit is not established in the supplied snapshot. ')
+    count_only=sum(1 for a in summary.get('event_audits') or [] if isinstance(a,dict) and a.get('audited_channels') is None)
+    if covered and count_only:
+        audit+=(f'For {count_only} retained audit{"s" if count_only>1 else ""} the audited channel identities are not recorded '
+                '(channel identities are not recorded in audits produced before audited_channels existed); the verified channel count '
+                'equals the number of effective-tension channels in the result row, which establishes the count, not the identities. ')
     return _section(4,'Analysis methodology','<p>The retained source report contains the campaign snapshot and numerical demand. '+audit+
         'This presentation reuses that snapshot and does not repeat the audit or invoke a solver.</p>'+diagram+
         '<p class="caption">Figure 4-1. Evidence workflow; qualification remains separate from recorded demand.</p>'

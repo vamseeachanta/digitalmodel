@@ -13,6 +13,7 @@ from digitalmodel.workflows.installation_partial_report import (
     _grid, _envelope_table, _case_details, _sling_rows, _table,
 )
 from digitalmodel.workflows.installation_workflow_schematic import workflow_schematic
+from digitalmodel.workflows.vessel_capability_layout import reject_wave_preview
 
 
 def dashboard_parts(document):
@@ -31,12 +32,15 @@ def dashboard_parts(document):
         raise ValueError('Dashboard chart function changed')
     caption = ("const figureCaption=document.createElement('p');figureCaption.className='caption';"
                "figureCaption.textContent=`Figure 5-${frame.channels.findIndex(c=>c.id===channel.id)+2}. ${channel.label}: "
-               "recorded history and selected 120 s preview/forecast mode, with NOW divider.`;holder.append(figureCaption);return holder;")
+               "recorded history and 120 s history-only forecast, with NOW divider.`;holder.append(figureCaption);return holder;")
     script = script.replace('return holder;', caption)
     return styles[0], '<section>' + grid + '</section><section>' + live + '</section>', script
 
 
 def _validate_sources(summary, payload, digest):
+    # This HTML edition and the PDF edition render the same payload (installation_replay_report); both must
+    # reject preview-bearing payloads until preview timing checks exist, before any output is written.
+    reject_wave_preview(payload)
     if payload.get('provenance', {}).get('summary', {}).get('sha256') != digest:
         raise ValueError('Payload source-summary digest mismatch')
     actual = {row['index']: row for row in summary['cases']}
@@ -80,25 +84,6 @@ def _findings(payload):
     return result
 
 
-def _forecast_rows(payload):
-    demo, snapshot = payload['demo'], payload.get('snapshot', {})
-    scenarios = demo.get('scenarios', [demo])
-    scenario = next((s for s in scenarios if all(s[k] == snapshot.get(k) for k in ('hs_m', 'tp_s'))), scenarios[0])
-    frame = next((f for f in scenario['frames'] if f['now_s'] == snapshot.get('now_s')), scenario['frames'][0])
-    rows = []
-    for channel in frame['channels']:
-        metrics = channel.get('wave_preview_metrics')
-        if channel['id'] == 'wave_elevation' or not metrics:
-            continue
-        methods = metrics.get('120', metrics)
-        value = methods['oracle_wave_fir']['rmse']
-        baseline = min(methods['persistence']['rmse'], methods['history_mean']['rmse'])
-        rows.append([escape(channel['label']), f"{scenario['hs_m']:g} / {scenario['tp_s']:g}",
-                     f"{frame['now_s']:g}", f'{value:.3f}', f'{baseline:.3f}', escape(channel['units']),
-                     'Lower observed RMSE' if value < baseline else 'No advantage over best naive baseline'])
-    return rows
-
-
 def _cover(config, created):
     from digitalmodel.workflows.installation_report_layout import report_cover
     return report_cover(dict({'revision':'R7'},**config), created)
@@ -107,8 +92,6 @@ def _cover(config, created):
 def _introduction_summary(summary, payload):
     counts = Counter(row['status'] for row in payload['cases'])
     findings = ''.join(f'<li>{escape(item)}</li>' for item in _findings(payload))
-    forecast = _table(['Load channel', 'Hs (m) / Tp (s)', 'Forecast origin (s)', 'Conditional RMSE',
-                       'Best naive RMSE', 'RMSE unit', 'Comparison'], _forecast_rows(payload))
     return f'''<section id="section-1"><h2>1 Introduction</h2><p>The analysis evaluates installation demand for the modelled jumper arrangement
 and establishes sampled Hs–Tp envelopes against declared project assumptions. A simulated two-minute monitoring demonstration is integrated
 with the engineering results. The deep-zone arrangement and prescribed vessel-motion condition define the scope; other installation stages remain unqualified.</p></section>
@@ -116,9 +99,7 @@ with the engineering results. The deep-zone arrangement and prescribed vessel-mo
 {counts.get('WITHIN_ASSUMPTIONS', 0)} cells are within the configured assumptions, {counts.get('EXCEEDS_ASSUMPTIONS', 0)} exceed them,
 and {counts.get('NOT_EVALUATED', 0)} are not evaluated. These classifications concern the enumerated checks only.</p><ul>{findings}</ul>
 <p><strong>Operational acceptance remains NOT EVALUATED.</strong> Assumed capacities, unresolved component checks and statistical/model qualification
-prevent issue of an approved operational envelope.</p>{forecast}<p class="caption">Table 2-1. Default review snapshot: 120 s conditional load RMSE
-compared with the better persistence/history-mean baseline, using withheld simulated loads. Future JONSWAP waves are supplied inputs;
-the table does not quantify offshore wave-prediction accuracy.</p></section>'''
+prevent issue of an approved operational envelope.</p></section>'''
 
 
 def _design(summary, payload, config):
@@ -148,7 +129,7 @@ def _engineering_schematic():
     diagram = workflow_schematic()
     for original, replacement in [('Pamphlet evidence', 'Engineering review record'),
             ('Reviewed supported claims', 'Assumptions / results'), ('workflow-pamphlet', 'workflow-record'),
-            ('data-to="pamphlet"', 'data-to="record"'), ('Oracle input labelled if used', 'Supplied wave preview input'),
+            ('data-to="pamphlet"', 'data-to="record"'), ('Oracle input labelled if used', 'History-only forecast input'),
             ('Pending qualified boundaries', 'Sampled assumed-criteria grid'), ('Figure M1.', 'Figure 4-1.')]:
         if original not in diagram:
             raise ValueError('Workflow schematic source changed')
@@ -165,9 +146,9 @@ is retained independently at both ends. Positive tension denotes loading; non-po
 <h3>4.2 Assumed-criteria screening</h3><p>Maximum recorded endpoint tension is divided by its assumed capacity. Hoist minimum tension is divided by
 the corresponding static tension and compared with the assumed minimum ratio. Complete checks are required for a within-assumptions cell.
 Only contiguous sampled passing heights are retained; gaps are not interpolated and the tested upper edge is not extrapolated.</p>
-<h3>4.3 Monitoring demonstration</h3><p>The default display supplies the future simulated random JONSWAP wave record to a linear load model fitted
-using past wave/load samples. Load truth is held out. This is a conditional load forecast with oracle wave input, not causal offshore wave prediction.
-The separate history-only autoregression mode uses history through NOW. RMSE is compared with persistence and history-mean predictions over 120 s.</p>
+<h3>4.3 Monitoring demonstration</h3><p>The display uses a causal history-only autoregression fitted to recorded history through NOW and
+forecasts 120 s ahead. Load truth is held out. Forecast error is compared with persistence and history-mean predictions over 120 s.
+Wave-preview input is not admitted until preview timing checks exist.</p>
 <p>Marker coordinates are prescribed Hs/Tp values. Playback advances forecast origins without inventing measured sea-state evolution.
 Uncertainty intervals and live sensor assimilation are not established.</p></section>''')
 
@@ -196,7 +177,7 @@ within the sampled grid. The upper tested edge cannot be interpreted as a maximu
 <ol><li>Reconcile capacities, factors, connection details and governing code edition against the approved equipment/design register.</li>
 <li>Complete slack/re-tension, snap, interference, pipe/connector and crane operating-radius checks.</li>
 <li>Qualify wave seeds, duration, time step, RAO coverage, vessel heading and installation-stage sensitivities.</li>
-<li>Validate measured wave-preview accuracy, latency and conditional load errors before any operational use of the monitoring display.</li></ol></section>'''
+<li>Validate forecast accuracy, latency and load errors against measured data before any operational use of the monitoring display.</li></ol></section>'''
 
 
 def _appendix_case_details(cases, base):
@@ -248,7 +229,7 @@ def _references_appendices(summary, payload, config, evidence, base, created):
     return ('<section id="section-8"><h2>8 References and revision history</h2>' + references +
             '<p class="caption">Table 8-1. Pinned source artifacts used for this revision.</p><ul>' + links + '</ul>' + history +
             '<p class="caption">Table 8-2. Current review revision; no external approval is recorded.</p>'
-            '''<p>This revision integrates previously verified demand results with calculated assumed-criteria screening and the random-wave preview demonstration.
+            '''<p>This revision integrates previously verified demand results with calculated assumed-criteria screening and the simulated history-only monitoring demonstration.
             Earlier source snapshots remain separate evidence; no external issue or approval history is inferred.</p></section>'''
             '<section id="appendix-a"><h2>Appendix A Detailed results by case</h2>' + _appendix_case_details(_display_cases(summary, config, base), base) + '</section>'
             '''<section id="appendix-b"><h2>Appendix B Provenance and unresolved checks</h2><p>The JSON sidecar retains the full demand summary,

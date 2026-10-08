@@ -155,6 +155,13 @@ def test_history_only_payload_carrying_preview_is_rejected_by_both_editions(loca
     assert errors['html'] == errors['pdf']
 
 
+def test_pdf_narrative_makes_no_preview_claim():
+    """The PDF admits only history-only payloads, so its cover and Appendix B must not describe a wave preview."""
+    flat = ' '.join(pdf_text(summary(), payload()).split())
+    for phrase in ('wave-preview demonstration', 'irregular-wave preview', 'same payload-derived'):
+        assert phrase not in flat, phrase
+
+
 def test_unsupported_forecast_mode_is_rejected_before_output():
     data, screen = summary(), payload()
     screen['demo']['default_mode'] = 'unsupported'

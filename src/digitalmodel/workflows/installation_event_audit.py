@@ -29,9 +29,11 @@ def tension_channels(row):
 
 
 def audit_binding_errors(audit, row):
-    """Why one event audit does not prove complete tension-event verification of one result row (empty when it does).
+    """Why one event audit does not cover the tension-event verification of one result row (empty when it does).
 
-    Shared by the base-audit coverage rule and the supplemental-audit check of the composite.
+    Shared by the base-audit coverage rule and the supplemental-audit check of the composite. An audit that lists
+    audited_channels is checked by identity. A retained audit without that list is checked by count only, which
+    establishes the number of channels verified, not their identities; vessel_capability_layout._method discloses this.
     """
     errors = []
     if audit.get('status') != 'VERIFIED' or audit.get('errors') != []:

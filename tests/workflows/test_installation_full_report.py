@@ -59,6 +59,36 @@ def test_case_coordinate_mismatch_rejected(tmp_path):
         generate_report(source, data, tmp_path / 'full.html', {})
 
 
+@pytest.mark.parametrize('location', ['channel_metrics', 'channel_preview', 'default_mode'])
+def test_preview_bearing_payload_rejected_before_output(tmp_path, location):
+    """The HTML edition is paired with the PDF (installation_replay_report): it must reject what the PDF rejects."""
+    source, data = inputs(tmp_path)
+    payload = json.loads(data.read_text())
+    channel = payload['demo']['frames'][0]['channels'][0]
+    if location == 'channel_metrics':
+        channel['wave_preview_metrics'] = {'120': {'oracle_wave_fir': {'rmse': 1.0}, 'persistence': {'rmse': 2.0},
+                                                   'history_mean': {'rmse': 2.0}}}
+    if location == 'channel_preview':
+        channel['wave_preview'] = dict(channel['forecast'])
+    if location == 'default_mode':
+        payload['demo']['default_mode'] = 'wave_preview'
+    data.write_text(json.dumps(payload))
+    output = tmp_path / 'full.html'
+    with pytest.raises(ValueError, match='not supported until preview timing checks exist'):
+        generate_report(source, data, output, {})
+    assert not output.exists() and not output.with_suffix('.json').exists()
+
+
+def test_report_narrative_makes_no_preview_or_oracle_claim(tmp_path):
+    source, data = inputs(tmp_path)
+    output = tmp_path / 'full.html'
+    generate_report(source, data, output, {})
+    text = output.read_text(encoding='utf-8')
+    for phrase in ('Conditional RMSE', 'oracle wave input', 'random-wave preview demonstration',
+                   'Supplied wave preview input', 'future simulated random JONSWAP wave record'):
+        assert phrase not in text, phrase
+
+
 def test_dashboard_extraction_fails_closed_on_unrecognized_markup():
     with pytest.raises(ValueError):
         dashboard_parts('<html>unexpected</html>')

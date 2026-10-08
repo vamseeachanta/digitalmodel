@@ -146,6 +146,17 @@ def test_base_audit_claim_with_audited_channel_list(listed):
     assert ('source event audit is not established' in html)==(listed!='full')
 
 
+@pytest.mark.parametrize('listed',[False,True])
+def test_count_only_retained_audits_are_disclosed(listed):
+    """An audit without audited_channels proves a count, not channel identities; the issued text must say so."""
+    from tests.workflows.test_mudmat_sensitivity_reporting import TENSION_CHANNELS
+    data=audited_summary()
+    if listed:data['event_audits'][0].update(audited_channels=list(TENSION_CHANNELS))
+    html=mudmat.render_html(data)
+    assert 'source audit records' in html
+    assert ('channel identities are not recorded' in html)==(not listed)
+
+
 @pytest.mark.parametrize('defect',['unbound','partial','trace','failed','counts'])
 def test_audit_claim_requires_full_verified_coverage(defect):
     data=audited_summary() if defect!='unbound' else summary()

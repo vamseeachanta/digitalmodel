@@ -82,7 +82,7 @@ def _cover(story, summary, payload):
             ["Source cases", str(len(summary["cases"]))]]
     _table(story, ["Document control", "Record"], rows, [145, 362],
            "Table 1. Document control. This draft is not an issued installation authorization.")
-    story.extend([_p("The report integrates the retained irregular-wave demand study, assumed-criteria screening, and a simulated wave-preview demonstration. Original source evidence and reusable analysis results remain in their owning private repositories."), PageBreak()])
+    story.extend([_p("The report integrates the retained irregular-wave demand study, assumed-criteria screening, and a simulated history-only monitoring demonstration. Original source evidence and reusable analysis results remain in their owning private repositories."), PageBreak()])
 
 
 def _intro_summary(story, summary, payload, cases):
@@ -352,7 +352,7 @@ def _appendix(story, cases):
     _table(story, ["Case", "Hs (m)", "Tp (s)", "Peak (kN)", "Max util. (-)", "Governing assumed criterion", "Screen"],
            rows, [63, 43, 43, 65, 65, 180, 48], "Table A1. Complete case register, linked by stable case index to the retained simulation evidence.")
     story.extend([Spacer(1, 15), _p("Appendix B. Integrated envelope and monitoring snapshot", "Heading1"),
-                  _p("The following three pages contain the same payload-derived Hs-Tp envelope, simulated irregular-wave preview and conditional load response as the interactive report. Global report pagination applies.")])
+                  _p("The following pages contain the payload-derived Hs-Tp envelope and the causal history-only load forecast snapshot. Global report pagination applies.")])
 
 
 def _number_pages(body, snapshot, output, revision, title="Jumper installation analysis", *, tail=None):
