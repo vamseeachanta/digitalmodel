@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>One-case installation reproduction</title>
+<style>body{font:16px system-ui;max-width:1000px;margin:3em auto;padding:1em;line-height:1.5}pre{background:#eee;padding:1em;overflow:auto}td,th{padding:.6em;border:1px solid #ccc}table{border-collapse:collapse}</style>
+<h1>One-case installation reproduction</h1>
+<p>Engineering scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/1836">Installation analysis end-to-end</a>. The first workflow will reproduce one unchanged archival AHC-off model. The configuration will freeze the source by SHA-256 and will use existing digitalmodel solver, extraction, provenance and report components.</p>
+<h2>Execution</h2><p>A Windows host with a licensed OrcaFlex installation and the digitalmodel environment will run the following from the repository root. The output directory will be new for each solver execution.</p>
+<pre>python -m digitalmodel.workflows.orcaflex_reproduce examples/orcaflex/installation_reproduce.yml --output OUTPUT_DIRECTORY</pre>
+<p>A failed extraction will be retried against the fingerprinted saved simulation, without another solver run:</p>
+<pre>python -m digitalmodel.workflows.orcaflex_reproduce examples/orcaflex/installation_reproduce.yml --output OUTPUT_DIRECTORY --postprocess-only</pre>
+<h2>Workflow and reuse</h2><table><tr><th>Step</th><th>Implementation</th><th>Required evidence</th></tr>
+<tr><td>Freeze source</td><td>infrastructure.persistence.provenance</td><td>Matching source and snapshot hashes</td></tr>
+<tr><td>Identify solver</td><td>solvers.orcaflex.orcaflex_api</td><td>Resolved DLL path and version</td></tr>
+<tr><td>Solve one case</td><td>workflows.orcaflex_run_batch</td><td>One real case, statics and dynamics, saved simulation, bounded runtime</td></tr>
+<tr><td>Reopen</td><td>OrcaflexUtilities.get_model_and_metadata</td><td>Completion flag, stopped state, expected start/end/current times and sample coverage</td></tr>
+<tr><td>Extract demands</td><td>OPPTimeSeries, OPPRangeGraph, compute_time_series_stats</td><td>Eight specified rigging channels, two jumper envelopes, finite data and verified units</td></tr>
+<tr><td>Report</td><td>generate_orcaflex_report</td><td>Offline HTML, CSVs, JSON and provenance receipt</td></tr></table>
+<p>Table 1. The workflow will reuse the listed repository components.</p>
+<h2>Engineering limits</h2><p>The 21-second case will include 10 seconds of build-up and 11 seconds of subsequent response. The regular wave height will be 2 m, not significant wave height. AHC will remain off and payout will remain zero. The result will be a diagnostic reproduction; it will not establish steady-state statistics, a weather envelope, compensation performance or live operations readiness.</p>
+<p>Allowable tensions, stress criteria and measured validation evidence are not established. Engineering acceptance will remain <strong>NOT EVALUATED</strong>. The next review will compare the source, solver warnings, completeness checks and demand plots before defining any longer run or recorded-measurement replay. No physics change or second solver case will be automatic.</p>
+<h2>Reproducibility</h2><p>The run directory will retain request.yml, the source snapshot, generated batch input, solver.log, batch summary, saved simulation, run.json, provenance and extracted outputs. The receipt will identify the code and model. Outputs will remain local engineering evidence until their owning repository and publication scope are approved.</p>
+<p>The workflow will run from a Git checkout with a standalone monolithic model; dependency-based models will require a separately reviewed flattened source. This version will extract line End A/B histories and range graphs in SI units. Requested history endpoints will fall on saved sample times. Each postprocessing retry will write a separate extraction directory and preserve the original report. Solver warnings will appear in the HTML.</p>
+</html>

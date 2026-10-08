@@ -6,20 +6,30 @@ minima of a sign-criterion demand) gives the most probable extreme (MPM) and its
 status is set on the MPM. The governing seed is the seed with the largest observed utilisation (smallest demand
 for a minimum), and its time is the time of the coincident row that set it.
 
-Status: ``PASS`` (utilisation <= 1, or the sign criterion holds), ``FAIL``, ``NOT_EVALUATED`` (reason given).
-A missing channel is recorded in ``missing_channel``; the caller fails the step on any such record (plan 8).
+Status: ``PASS`` (utilisation <= 1, or the sign criterion holds), ``FAIL``, ``NOT_EVALUATED`` (reason given),
+``SCREENING`` (a value reported for information and excluded from the verdict, e.g. CR-10 on a regular wave under
+W510 / R02). A missing channel is recorded in ``missing_channel``; the caller fails the step on any such record
+(plan 8).
 """
 
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass, field
 from typing import Any, Iterable
 
 from digitalmodel.drilling_riser.postprocess.channels import MissingChannel, w5
-from digitalmodel.drilling_riser.postprocess.checks import CHECKS, U_TOL, CheckValue, NotEvaluated, evaluate_doc
+from digitalmodel.drilling_riser.postprocess.checks import (
+    CHECKS,
+    U_TOL,
+    CheckValue,
+    NotEvaluated,
+    cr10_station_mean,
+    evaluate_doc,
+)
 from digitalmodel.drilling_riser.postprocess.extremes import gumbel_fit
 
-STATUSES = ("PASS", "FAIL", "NOT_EVALUATED")
+STATUSES = ("PASS", "FAIL", "NOT_EVALUATED", "SCREENING")
 
 
 @dataclass
@@ -85,7 +95,7 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
                 parts.append(f"missing seeds {missing}")
             if extra:
                 parts.append(f"unexpected seeds {extra}")
-            return CaseCheck(rid, "NOT_EVALUATED", "; ".join(parts) + "; the Gumbel fit needs every seed",
+            return CaseCheck(rid, "NOT_EVALUATED", "; ".join(parts) + "; the seed combination needs every seed",
                              detail={"missing_seeds": missing, "unexpected_seeds": extra})
     values: dict[int | None, CheckValue] = {}
     for seed, doc in sorted(docs.items(), key=lambda kv: (kv[0] is None, kv[0])):
@@ -95,9 +105,48 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
             return CaseCheck(rid, "NOT_EVALUATED", str(e), missing_channel=e.channel, seed=seed)
         except NotEvaluated as e:
             return CaseCheck(rid, "NOT_EVALUATED", str(e), seed=seed)
+    if any(v.screening for v in values.values()):
+        if list(values) != [None]:  # a labelling slip must not take an irregular sea out of the verdict
+            return CaseCheck(rid, "NOT_EVALUATED", f"regular-wave screening requested on a seeded case "
+                                                   f"(documents keyed {sorted(values)}); check the case's wave "
+                                                   f"kind")
+        return _screening(row, values)
     if list(values) == [None]:
         return _single(row, values[None])
+    if any(v.combine == "station_mean" for v in values.values()):
+        try:
+            return _station_mean(row, values)
+        except NotEvaluated as e:
+            return CaseCheck(rid, "NOT_EVALUATED", str(e))
     return _combine(row, values)
+
+
+def _station_mean(row: dict, values: dict[int, CheckValue]) -> CaseCheck:
+    """W03: CR-10 on the significant range - seed mean at each station (:func:`checks.cr10_station_mean`)."""
+    v = cr10_station_mean(values)
+    us = [float(u) for u in v.detail["seed_values"].values()]
+    n = len(us)
+    mean = sum(us) / n
+    sd = math.sqrt(sum((u - mean) ** 2 for u in us) / (n - 1)) if n > 1 else 0.0
+    passed = bool(v.passed)
+    reason = _reason(v, passed, v.unit, prefix=f"seed mean over {n} seeds: ") + \
+        f"; seed U at the governing station {min(us):.3f}-{max(us):.3f}"
+    return CaseCheck(row_id=row["id"], status="PASS" if passed else "FAIL", reason=reason, u=v.u, demand=v.demand,
+                     allowable=v.allowable, unit=v.unit, location=v.location, seed=None, time_s=None,
+                     stats={"estimator": "seed mean", "n": n, "u_mean": mean, "u_sd": sd, "u_min": min(us),
+                            "u_max": max(us)},
+                     detail=v.detail)
+
+
+def _screening(row: dict, values: dict[int | None, CheckValue]) -> CaseCheck:
+    """A screening value (e.g. CR-10 on a regular wave, W510 / R02): reported with its utilisation, no verdict."""
+    gov = max(values, key=lambda s: (values[s].u if values[s].u is not None else float("-inf")))
+    v = values[gov]
+    reason = (f"screening only, not used for the verdict: demand {_fmt(v.demand)} {v.unit} against "
+              f"{_fmt(v.allowable)} {v.unit}" + ("" if v.u is None else f" (U = {v.u:.3f})"))
+    return CaseCheck(row_id=row["id"], status="SCREENING", reason=reason, u=v.u, demand=v.demand,
+                     allowable=v.allowable, unit=v.unit, location=v.location, seed=gov, time_s=v.time_s,
+                     detail=v.detail)
 
 
 def _combine(row: dict, values: dict[int, CheckValue]) -> CaseCheck:
@@ -152,13 +201,15 @@ def _order_key(c: CaseCheck) -> float:
 
 def summarise(results: Iterable[tuple[str, CaseCheck]]) -> dict[str, dict[str, Any]]:
     """Per row: counts by status, governing case (largest utilisation, or smallest margin for a sign criterion),
-    row status (FAIL if any case fails, PASS if every evaluated case passes, NOT_EVALUATED if none evaluated)."""
+    row status (FAIL if any case fails, PASS if every evaluated case passes, NOT_EVALUATED if none evaluated).
+    ``SCREENING`` cases are counted (the key appears only when present) but never govern and never set the row
+    status."""
     out: dict[str, dict[str, Any]] = {}
     for case_id, c in results:
-        s = out.setdefault(c.row_id, {"counts": {k: 0 for k in STATUSES}, "governing": None, "max_u": None,
+        s = out.setdefault(c.row_id, {"counts": {k: 0 for k in STATUSES[:3]}, "governing": None, "max_u": None,
                                       "_key": float("-inf")})
-        s["counts"][c.status] += 1
-        if c.status == "NOT_EVALUATED":
+        s["counts"][c.status] = s["counts"].get(c.status, 0) + 1  # SCREENING appears only when present
+        if c.status in ("NOT_EVALUATED", "SCREENING"):
             continue
         k = _order_key(c)
         if k > s["_key"]:
