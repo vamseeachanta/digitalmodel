@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Installation campaign: three-core execution</title>
+<body><h1>Installation campaign: three-core execution</h1>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/1836">installation workflow</a>, under the <a href="https://github.com/vamseeachanta/digitalmodel/issues/1640">OrcaFlex initiative</a>. User instruction, 17 September 2026: reuse existing parallel code and use three cores, with sixty reserved for CFD.</p>
+<h2>Proposed implementation</h2><ol>
+<li>The existing OrcaFlexParallelAnalysis process executor will run bounded waves of up to three installation cases. Its leaf adapter will retain current model generation, solve, verification and extraction functions.</li>
+<li>The installation process tree will be restricted to three logical CPUs disjoint from the verified CFD rank allocation. Native solves will use one thread each. The coordinator and descendants will share the same three-CPU ceiling.</li>
+<li>A single coordinator will write campaign status under an exclusive root lock. Each case will have one output directory. A failed wave will finish its already-started cases and prevent subsequent waves.</li>
+<li>The prior serial process tree will be stopped and its evidence preserved. Verified completed receipts will be reused. Any incomplete attempt will remain in the prior root and its case will be rerun in a new root. No old case directories will be overwritten.</li>
+<li>Tests will cover thread propagation, budget validation, unique case ownership, failure draining, completed evidence reuse, and incomplete evidence rejection. Code review, legal checks and observed live worker affinity will precede completion.</li>
+</ol><h2>Acceptance and limitations</h2>
+<p>Acceptance will require three simultaneous real cases, native thread count one, and observed descendants confined to the assigned CPUs. The implementation will leave engineering inputs and acceptance criteria unchanged. Runtime estimates will be updated from measured throughput; threefold acceleration will not be assumed.</p>
+<p>The native thread parameter will follow the <a href="https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference%2CModel.htm">Orcina Model API</a>. Worker count alone will not establish a core cap. A logical-CPU allocation will not be described as three independently verified physical cores.</p>
+</body></html>

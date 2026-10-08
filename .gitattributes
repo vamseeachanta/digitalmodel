@@ -78,6 +78,8 @@ docs/plans/2026-09-14-issue-2121-numerical-replay-intake.html text eol=lf
 docs/plans/2026-09-14-issue-2121-observed-native-intake.html text eol=lf
 docs/plans/evidence/2026-09-14-issue-2121-replay-review-status.json text eol=lf
 docs/reports/2026-09-14-ansys-cylinder-zero-native-checkpoint.html text eol=lf
+# Preserve the byte identity used by the reproducible installation example.
+docs/domains/orcaflex/jumper/manifold_to_plet/monolithic/DZ_AHCoff.yml text eol=lf
 # CP review receipts bind exact UTF-8/LF artifacts across Windows and Linux.
 docs/domains/cathodic_protection/reports/** text eol=lf
 tests/fixtures/cathodic_protection/workflow_inputs/*.yml text eol=lf
