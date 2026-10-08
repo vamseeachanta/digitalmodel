@@ -14,6 +14,7 @@ from __future__ import annotations
 import glob
 import math
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -235,6 +236,9 @@ def run_aqwa(work_dir: Path, variant: int) -> dict:
         "ok": True,
         "wall_s": round(wall, 3),
         "solve_s": round(float(run.duration_seconds or wall), 3),
+        # AQWA reports no solver-only time: this includes process start and
+        # licence checkout, so it is only compared with the same basis.
+        "timing_basis": "process",
         "note": "AQWA core count is the solver default (not controlled by the pack)",
         "input_sha256": sha,
         "fingerprint": {
@@ -285,20 +289,17 @@ def run_mapdl(work_dir: Path, cores: int) -> dict:
         return {"ok": False,
                 "error": f"MAPDL rc={proc.returncode}, fingerprint missing: {tail}"}
     elapsed = cases.parse_mapdl_elapsed(text)
-    threads = None
-    for pattern in ("Total number of cores requested", "number of cores"):
-        for line in text.splitlines():
-            if pattern.lower() in line.lower():
-                digits = [int(t) for t in line.replace("=", " ").split() if t.isdigit()]
-                if digits:
-                    threads = digits[-1]
-                    break
-        if threads is not None:
-            break
+    if "solution_s" not in elapsed:
+        return {"ok": False, "error": "MAPDL output has no solution elapsed time"}
+    # "Total number of cores requested : 4 (Shared Memory Parallel)" is the
+    # count MAPDL ran its SMP solve with; anything else is not accepted as proof.
+    m = re.search(r"Total number of cores requested\s*:\s*(\d+)\s*\(Shared Memory Parallel\)",
+                  text)
+    threads = int(m.group(1)) if m else None
     return {
         "ok": True,
         "wall_s": round(wall, 3),
-        "solve_s": round(elapsed.get("solution_s", wall), 3),
+        "solve_s": elapsed["solution_s"],
         "phases": elapsed,
         "threads_observed": threads,
         "input_sha256": cases.digest(cases.apdl_deck()),
@@ -342,6 +343,13 @@ def run_openfoam(work_dir: Path, n_procs: int) -> dict:
     tri.mkdir(parents=True, exist_ok=True)
     shutil.copy(root / "tutorials" / "resources" / "geometry" / "motorBike.obj.gz", tri)
 
+    # Digest the effective inputs (dictionaries, initial fields, geometry), not
+    # labels; the solve decomposition is excluded so variants share one digest.
+    input_sha = cases.digest({
+        str(p.relative_to(case)).replace("\\", "/"): cases.digest(p)
+        for p in sorted(case.rglob("*"))
+        if p.is_file() and p.name != "decomposeParDict"
+    })
     mesh_np = cases.OPENFOAM_MESH_PROCS
     mesh_dict = "-decomposeParDict system/decomposeParDict.mesh"
     start = _now()
@@ -383,10 +391,7 @@ def run_openfoam(work_dir: Path, n_procs: int) -> dict:
         "phases": {"mesh_s": round(mesh_s, 3), "decompose_init_s": round(t1 - t0, 3),
                    "simpleFoam_s": round(t2 - t1, 3)},
         "threads_observed": procs,
-        "input_sha256": cases.digest({"tutorial": cases.OPENFOAM_TUTORIAL,
-                                      "version": cases.OPENFOAM_VERSION,
-                                      "iterations": cases.OPENFOAM_ITERATIONS,
-                                      "mesh_procs": mesh_np}),
+        "input_sha256": input_sha,
         "fingerprint": {"cells": cases.parse_cell_count(check),
                         "cd": _round(forces["cd"], 7),
                         "iterations": forces["iterations"]},

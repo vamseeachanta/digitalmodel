@@ -50,12 +50,17 @@ except ImportError:
 
 def _run(args) -> int:
     cases = [CASES[name]() for name in args.solvers]
-    for case in cases:
-        if args.variants:
-            case.variants = [v if v in ("all", "default") else int(v)
-                             for v in args.variants]
+    if args.variants:
+        variants = [v if v in ("all", "default") else int(v) for v in args.variants]
+        for case in cases:
+            # "default" means solver-controlled cores; only AQWA works that way.
+            controlled = case.variants != ["default"]
+            if controlled == ("default" in variants):
+                sys.exit(f"--variants {args.variants} does not apply to {case.name} "
+                         f"(its variants are {case.variants})")
+            case.variants = variants
     scratch = Path(args.work_dir or tempfile.mkdtemp(prefix="solver_bench_"))
-    lock = Path(tempfile.gettempdir()) / "solver_benchmark.lock"
+    lock = runner.default_lock_path()
     try:
         from loguru import logger
 

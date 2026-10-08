@@ -87,7 +87,8 @@ def _ram_gb() -> float | None:
 
 def machine_environment() -> dict:
     return {
-        "os": f"{platform.system()} {platform.release()} ({platform.version()})",
+        # platform.version() can carry the kernel builder's user@host on Linux
+        "os": f"{platform.system()} {platform.release()}",
         "cpu_model": _cpu_model(),
         "logical_cores": os.cpu_count() or 1,
         "physical_cores": _physical_cores(),

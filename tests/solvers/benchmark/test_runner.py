@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import platform
 
 import pytest
@@ -249,3 +250,122 @@ def test_compare_missing_case_is_listed():
     result = compare.compare(_receipt([]), base)
     assert result["rows"][0]["fingerprint"] == "MISSING"
     assert result["ok"] is False
+
+
+# ------------------------------------------------- code-review r1 findings
+
+
+def test_compare_rejects_incomplete_new_run():
+    base = _receipt([_entry("a", 10, {"x": 1.0})])
+    new_entry = _entry("a", 10, {"x": 1.0})
+    new_entry["complete"] = False
+    result = compare.compare(_receipt([new_entry]), base)
+    assert result["rows"][0]["fingerprint"] == "FAILED"
+    assert result["ok"] is False
+
+
+def test_compare_input_change_fails():
+    base_e = _entry("a", 10, {"x": 1.0})
+    base_e["input_sha256"] = "aaa"
+    new_e = _entry("a", 10, {"x": 1.0})
+    new_e["input_sha256"] = "bbb"
+    result = compare.compare(_receipt([new_e]), _receipt([base_e]))
+    assert result["rows"][0]["fingerprint"] == "INPUT_CHANGED"
+    assert result["ok"] is False
+
+
+def test_compare_timing_basis_change_is_not_timed():
+    base_e = _entry("a", 10, {"x": 1.0})
+    base_e["timing_basis"] = "solver"
+    new_e = _entry("a", 10, {"x": 1.0})
+    new_e["timing_basis"] = "process"
+    row = compare.compare(_receipt([new_e]), _receipt([base_e]))["rows"][0]
+    assert row["timing"] == "NOT_COMPARABLE"
+
+
+def test_compare_zero_baseline_time_does_not_crash():
+    row = compare.compare(_receipt([_entry("a", 1, {"x": 1.0})]),
+                          _receipt([_entry("a", 0.0, {"x": 1.0})]))["rows"][0]
+    assert row["timing"] == "NOT_COMPARABLE"
+
+
+def test_thread_count_must_match_variant(tmp_path):
+    outcome = _ok(10, 1.0)
+    outcome["threads_observed"] = 1
+    case = runner.Case("fake", "fake", [4], lambda w, v: dict(outcome), lambda: "1")
+    entry = _run([case], tmp_path, repeats=1, cores=8)["results"][0]
+    assert entry["n_ok"] == 0
+    assert "thread" in entry["errors"][0]
+
+
+@pytest.mark.parametrize("solve", [None, 0.0, -1.0, math.nan])
+def test_missing_or_invalid_solve_time_fails_the_repeat(tmp_path, solve):
+    outcome = _ok(10, 1.0)
+    outcome["solve_s"] = solve
+    entry = _run([_case("fake", [outcome])], tmp_path, repeats=1)["results"][0]
+    assert entry["n_ok"] == 0
+    assert "solve" in entry["errors"][0]
+
+
+@pytest.mark.parametrize("text", [
+    "open C:/Users/bob/model.dat failed",
+    "open D:\\projects\\client\\model.dat failed",
+    "open \\\\fileserver\\Jobs\\B1\\model.dat failed",
+    "open /mnt/client/model.dat failed",
+])
+def test_sanitise_strips_absolute_paths_to_basename(text):
+    out = runner.sanitise(text)
+    assert "model.dat" in out
+    for leaked in ("bob", "projects", "client", "fileserver", "Jobs", "/mnt"):
+        assert leaked not in out
+
+
+def test_sanitise_strips_configured_licence_hosts(monkeypatch):
+    monkeypatch.setenv("ANSYSLMD_LICENSE_FILE", "1055@lic-a;1055@lic-b")
+    monkeypatch.setenv("ORCINA_LICENSE_FILE", "lic-c")
+    out = runner.sanitise("cannot reach lic-a or lic-b or lic-c")
+    assert "lic-a" not in out and "lic-b" not in out and "lic-c" not in out
+
+
+def test_note_is_sanitised(tmp_path):
+    outcome = _ok(10, 1.0)
+    outcome["note"] = f"ran on {platform.node()}"
+    entry = _run([_case("fake", [outcome])], tmp_path, repeats=1)["results"][0]
+    assert platform.node() not in entry["repeats"][0]["note"]
+
+
+def test_environment_os_has_no_build_identity():
+    assert "@" not in env.machine_environment()["os"]
+
+
+def test_stale_lock_from_dead_process_is_taken_over(tmp_path):
+    lock = tmp_path / "bench.lock"
+    lock.write_text("999999999")  # no such pid
+    with runner.pack_lock(lock):
+        assert lock.read_text() == str(os.getpid())
+
+
+def test_lock_release_does_not_remove_another_owners_lock(tmp_path):
+    lock = tmp_path / "bench.lock"
+    with runner.pack_lock(lock):
+        lock.write_text("1")  # replaced by another owner mid-run
+    assert lock.exists()
+
+
+def test_default_lock_path_is_machine_wide():
+    path = runner.default_lock_path()
+    assert "AppData" not in str(path)
+
+
+@pytest.mark.parametrize("variants", [[0], [-2], ["bogus"]])
+def test_invalid_variants_are_rejected(variants):
+    from digitalmodel.solvers.benchmark.cases import resolve_variants
+
+    with pytest.raises(ValueError):
+        resolve_variants(variants, cores=8)
+
+
+@pytest.mark.parametrize("kw", [{"repeats": 0}, {"warmup": -1}])
+def test_invalid_repeat_counts_are_rejected(tmp_path, kw):
+    with pytest.raises(ValueError):
+        _run([_case("fake", [])], tmp_path, **kw)

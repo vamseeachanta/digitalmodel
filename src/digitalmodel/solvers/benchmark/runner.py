@@ -29,7 +29,17 @@ BUSY_CORE_PCT = 80.0
 # Only these per-repeat keys reach the receipt; everything else a case returns
 # (stdout, environment values, paths) is dropped before serialisation.
 _REPEAT_KEYS = ("ok", "wall_s", "solve_s", "phases", "fingerprint",
-                "threads_observed", "input_sha256", "note", "error")
+                "threads_observed", "input_sha256", "timing_basis", "note", "error")
+
+# Environment variables whose values name licence servers.
+_LICENCE_ENV = ("ANSYSLMD_LICENSE_FILE", "ANSYSLI_SERVERS", "ORCINA_LICENSE_FILE",
+                "LM_LICENSE_FILE")
+
+_ABS_PATH = re.compile(
+    r"(?:\\\\[^\s\\]+\\|[A-Za-z]:[\\/]|/(?=[^\s/]+/))"  # UNC, drive, posix dir
+    r"(?:[^\s\\/]+[\\/])*"                              # directories
+    r"(?P<base>[^\s\\/]*)"                              # keep the basename
+)
 
 
 @dataclass
@@ -46,14 +56,18 @@ class Case:
 
 
 def sanitise(text: str) -> str:
-    """Strip hostnames, user home paths and licence-server addresses."""
+    """Strip hostnames, licence servers and directories (keeping basenames)."""
     text = str(text)
-    node = platform.node()
-    if node:
-        text = re.sub(re.escape(node), "<host>", text, flags=re.I)
+    hosts = {platform.node()}
+    for key in _LICENCE_ENV:
+        for item in re.split(r"[;,]", os.environ.get(key, "")):
+            host = item.split("@")[-1].strip()
+            if host:
+                hosts.add(host.split(":")[0])
+    for host in sorted(filter(None, hosts), key=len, reverse=True):
+        text = re.sub(re.escape(host), "<host>", text, flags=re.I)
     text = re.sub(r"\d+@[\w.\-<>]+", "<licence-server>", text)
-    text = re.sub(r"[A-Za-z]:\\Users\\[^\\\s]+", r"<home>", text)
-    text = re.sub(r"/(home|Users)/[^/\s]+", "<home>", text)
+    text = _ABS_PATH.sub(lambda m: m.group("base"), text)
     return text[:500]
 
 
@@ -69,12 +83,22 @@ def _finite_fingerprint(fp) -> str | None:
     return None
 
 
-def _clean(outcome: dict) -> dict:
+def _positive(value) -> bool:
+    return isinstance(value, (int, float)) and math.isfinite(value) and value > 0
+
+
+def _clean(outcome: dict, variant) -> dict:
     kept = {k: outcome[k] for k in _REPEAT_KEYS if k in outcome}
-    if "error" in kept:
-        kept["error"] = sanitise(kept["error"])
+    for key in ("error", "note"):
+        if key in kept:
+            kept[key] = sanitise(kept[key])
     if kept.get("ok"):
         reason = _finite_fingerprint(kept.get("fingerprint"))
+        if reason is None and not _positive(kept.get("solve_s")):
+            reason = f"solve time missing or invalid: {kept.get('solve_s')!r}"
+        threads = kept.get("threads_observed")
+        if reason is None and isinstance(variant, int) and threads != variant:
+            reason = f"thread/rank count observed {threads!r} != requested {variant}"
         if reason:
             kept.update(ok=False, error=reason)
     return kept
@@ -83,7 +107,7 @@ def _clean(outcome: dict) -> dict:
 def _run_once(case: Case, work_dir: Path, variant: int) -> dict:
     work_dir.mkdir(parents=True, exist_ok=True)
     try:
-        return _clean(case.run(work_dir, variant))
+        return _clean(case.run(work_dir, variant), variant)
     except Exception as exc:
         return {"ok": False, "error": sanitise(f"{type(exc).__name__}: {exc}")}
 
@@ -116,21 +140,68 @@ def _busy(load: dict | None) -> str | None:
     return None
 
 
+def default_lock_path() -> Path:
+    """A lock path shared by every user on the machine (not the per-user temp)."""
+    if os.name == "nt":
+        return Path(os.environ.get("ProgramData", r"C:\ProgramData")) / "solver_benchmark.lock"
+    return Path("/tmp/solver_benchmark.lock")
+
+
+def _pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.OpenProcess(0x1000, False, pid)  # QUERY_LIMITED_INFORMATION
+        if not handle:
+            return False
+        code = ctypes.c_ulong()
+        kernel32.GetExitCodeProcess(handle, ctypes.byref(code))
+        kernel32.CloseHandle(handle)
+        return code.value == 259  # STILL_ACTIVE
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
 @contextlib.contextmanager
 def pack_lock(path: Path):
-    """Refuse to start while another benchmark holds the machine-wide lock."""
+    """Refuse to start while a live benchmark process holds the machine-wide lock.
+
+    A lock left by a process that no longer exists is taken over; on exit the
+    lock is removed only if it still names this process.
+    """
     path = Path(path)
+    me = str(os.getpid())
+    for _ in range(2):
+        try:
+            fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            break
+        except FileExistsError:
+            try:
+                owner = int(path.read_text().strip() or 0)
+            except (OSError, ValueError):
+                owner = 0
+            if _pid_alive(owner):
+                raise RuntimeError(f"another benchmark (pid {owner}) holds {path}")
+            with contextlib.suppress(FileNotFoundError):
+                path.unlink()
+    else:
+        raise RuntimeError(f"another benchmark holds {path}")
     try:
-        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
-        raise RuntimeError(f"another benchmark holds {path}; remove it if stale")
-    try:
-        os.write(fd, str(os.getpid()).encode())
+        os.write(fd, me.encode())
         os.close(fd)
         yield
     finally:
-        with contextlib.suppress(FileNotFoundError):
-            path.unlink()
+        with contextlib.suppress(OSError, ValueError):
+            if path.read_text().strip() == me:
+                path.unlink()
 
 
 def _run_variant(case, variant, root, repeats, warmup, load_sampler, allow_busy,
@@ -169,6 +240,9 @@ def _run_variant(case, variant, root, repeats, warmup, load_sampler, allow_busy,
                                         if r.get("threads_observed") is not None})
     entry["fingerprint"] = ok[0]["fingerprint"] if ok else None
     entry["input_sha256"] = ok[0].get("input_sha256") if ok else None
+    entry["timing_basis"] = ok[0].get("timing_basis", "solver") if ok else None
+    if len({r.get("input_sha256") for r in ok}) > 1:
+        errors.append("input digest differs between repeats")
     entry["fingerprint_consistent"] = bool(ok) and all(
         _same(ok[0]["fingerprint"], r["fingerprint"], case.rel_tol, case.abs_tol)
         for r in ok[1:])
@@ -185,6 +259,9 @@ def run_pack(cases, work_root: Path, *, machine_label: str, repeats: int = 3,
              cores: int | None = None) -> dict:
     from .cases import resolve_variants
 
+    if repeats < 1 or warmup < 0:
+        raise ValueError(f"repeats must be >= 1 and warmup >= 0 "
+                         f"(got repeats={repeats}, warmup={warmup})")
     work_root = Path(work_root)
     work_root.mkdir(parents=True, exist_ok=True)
     cores = cores or os.cpu_count() or 1

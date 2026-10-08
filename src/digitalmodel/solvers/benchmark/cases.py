@@ -26,12 +26,13 @@ def resolve_variants(variants, cores: int) -> list[int]:
     """
     resolved: list = []
     for variant in variants:
-        if variant == "all":
-            n = cores
-        elif isinstance(variant, str):
-            n = variant
+        if variant in ("all", "default"):
+            n = cores if variant == "all" else variant
+        elif isinstance(variant, int) and not isinstance(variant, bool) and variant > 0:
+            n = min(variant, cores)
         else:
-            n = min(int(variant), cores)
+            raise ValueError(f"variant must be a positive integer, 'all' or "
+                             f"'default', got {variant!r}")
         if n not in resolved:
             resolved.append(n)
     return resolved
