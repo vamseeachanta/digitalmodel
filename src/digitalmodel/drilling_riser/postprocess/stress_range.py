@@ -260,7 +260,8 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
                                                                                 for p in pup_side)]
         if on_c:  # the hot spot must not take a coupling's own station
             raise ValueError(f"the hot-spot point at {a[near]} m lies on the coupling at {on_c[0]} m")
-    top = exclude_above_m if exclude_above_m is not None else max(a, default=0.0)
+    # upper end of the kept span: the exclusion boundary, else End B of the line (from the section geometry)
+    top = exclude_above_m if exclude_above_m is not None else float(sum(float(v) for v in sections_m))
     for c in couplings:
         # every point on the coupling (duplicates included, one per side of a section boundary); else the nearest
         # point (all duplicates at that arc) on each side
@@ -278,7 +279,7 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
             sides = []
             if abs(c - exclude_below_m) > _ON_TOL:
                 sides.append([x for x, k in zip(a, kinds) if k != "excluded" and x < c])
-            if exclude_above_m is None or abs(c - exclude_above_m) > _ON_TOL:
+            if abs(c - top) > _ON_TOL:  # the exterior side of End B / the exclusion boundary is not required
                 sides.append([x for x, k in zip(a, kinds) if k != "excluded" and x > c])
             near_x = []
             for side in sides:

@@ -554,6 +554,15 @@ def test_a_coupling_on_the_exclusion_boundary_needs_its_kept_side_within_the_tol
     assert kinds[-3] == "coupling" and kinds[-2] == "excluded"
 
 
+def test_the_end_b_coupling_keeps_its_inward_station_without_exclude_above():
+    st = {"sections_m": [10.0, 10.0], "joint_length_m": JOINT, "exclude_below_m": 10.0, "coupling_tol_m": 1.0}
+    arcs = [9.5, 10.5, 15.0, 19.5]
+    assert classify_stations(arcs, **st)[-1] == "coupling"
+    r = evaluate_case({None: _doc(arcs, sig=[1.0, 1.0, 1.0, 50e3])}, ROW,
+                      {"stress_line": "Riser", "wave_kind": "irregular", "cr10_stations": st})
+    assert r.status == "FAIL" and r.u == pytest.approx(50.0 / COUPLING_MPA)
+
+
 def test_a_saf_detail_with_no_station_kind_is_not_evaluated():
     row = {**ROW, "limit": {**ROW["limit"], "saf": {**ROW["limit"]["saf"], "riser flange weld": 5.0}}}
     r = evaluate_case({None: _doc(ARCS, sig=[1.0, 1.0, 1.0, 25e3, 1.0])}, row, IRR)
