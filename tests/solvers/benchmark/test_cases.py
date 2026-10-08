@@ -122,9 +122,9 @@ def test_prepare_openfoam_case_edits_dictionaries(tmp_path):
     decomp = (case / "system" / "decomposeParDict").read_text()
     assert "numberOfSubdomains 8;" in decomp
     assert "method          scotch;" in decomp
-    # meshing always uses a fixed rank count so every variant solves one mesh
-    mesh = (case / "system" / "decomposeParDict.mesh").read_text()
-    assert f"numberOfSubdomains {cases.OPENFOAM_MESH_PROCS};" in mesh
+    # meshing is serial (parallel snappyHexMesh is not deterministic), so no
+    # mesh decomposition is written
+    assert not (case / "system" / "decomposeParDict.mesh").exists()
 
 
 def test_parse_openfoam_procs_and_iterations():

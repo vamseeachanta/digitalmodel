@@ -350,17 +350,22 @@ def run_openfoam(work_dir: Path, n_procs: int) -> dict:
         for p in sorted(case.rglob("*"))
         if p.is_file() and p.name != "decomposeParDict"
     })
-    mesh_np = cases.OPENFOAM_MESH_PROCS
-    mesh_dict = "-decomposeParDict system/decomposeParDict.mesh"
+    # Parallel snappyHexMesh is not deterministic (two 6-rank runs gave 354,143
+    # and 353,909 cells and Cd 0.423 vs 0.415), so the mesh is built serially,
+    # once per pack run, and every repeat and rank variant solves that mesh.
+    cache = work_dir.parent / f"_openfoam_mesh_{input_sha[:16]}"
     start = _now()
-    _foam(case, "surfaceFeatureExtract", "surfaceFeatureExtract")
-    _foam(case, "blockMesh", "blockMesh")
-    _foam(case, f"decomposePar {mesh_dict}", "decomposePar.mesh")
-    _foam(case, f"mpirun -np {mesh_np} snappyHexMesh {mesh_dict} -parallel -overwrite",
-          "snappyHexMesh")
-    _foam(case, "reconstructParMesh -constant", "reconstructParMesh")
-    for proc_dir in case.glob("processor*"):
-        shutil.rmtree(proc_dir)
+    if not (cache / "polyMesh").is_dir():
+        _foam(case, "surfaceFeatureExtract", "surfaceFeatureExtract")
+        _foam(case, "blockMesh", "blockMesh")
+        _foam(case, "snappyHexMesh -overwrite", "snappyHexMesh", timeout=14400)
+        tmp = cache.with_name(cache.name + ".tmp")
+        shutil.rmtree(tmp, ignore_errors=True)
+        shutil.copytree(case / "constant" / "polyMesh", tmp / "polyMesh")
+        tmp.rename(cache)
+    else:
+        shutil.rmtree(case / "constant" / "polyMesh", ignore_errors=True)
+        shutil.copytree(cache / "polyMesh", case / "constant" / "polyMesh")
     shutil.copytree(case / "0.orig", case / "0")
     check = _foam(case, "checkMesh -constant", "checkMesh")
     mesh_s = _now() - start

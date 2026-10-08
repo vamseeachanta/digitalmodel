@@ -221,7 +221,6 @@ def parse_mapdl_elapsed(text: str) -> dict:
 OPENFOAM_VERSION = "openfoam2312"
 OPENFOAM_TUTORIAL = "incompressible/simpleFoam/motorBike"
 OPENFOAM_ITERATIONS = 100
-OPENFOAM_MESH_PROCS = 6
 _DROPPED_FUNCTIONS = ("streamLines", "wallBoundedStreamLines", "cuttingPlane",
                       "ensightWrite")
 
@@ -235,7 +234,7 @@ def _decompose_dict(n: int) -> str:
 
 
 def prepare_openfoam_case(case_dir: Path, n_procs: int) -> None:
-    """Pin iterations, drop I/O-heavy function objects, write both decompositions."""
+    """Pin iterations, drop I/O-heavy function objects, write the solve decomposition."""
     case_dir = Path(case_dir)
     control = case_dir / "system" / "controlDict"
     text = control.read_text()
@@ -246,7 +245,6 @@ def prepare_openfoam_case(case_dir: Path, n_procs: int) -> None:
         text = re.sub(rf'[ \t]*#include "{name}"\n', "", text)
     control.write_text(text)
     system = case_dir / "system"
-    (system / "decomposeParDict.mesh").write_text(_decompose_dict(OPENFOAM_MESH_PROCS))
     (system / "decomposeParDict").write_text(_decompose_dict(n_procs))
 
 
