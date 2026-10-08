@@ -541,6 +541,33 @@ def test_a_malformed_arc_axis_is_not_evaluated(arcs):
         assert r.status == "NOT_EVALUATED", ctx
 
 
+def test_a_coupling_on_the_exclusion_boundary_needs_its_kept_side_within_the_tolerance():
+    end = sum(SECTIONS)
+    secs = SECTIONS + [1.351, 1.599]
+    st = {"sections_m": secs, "joint_length_m": JOINT, "exclude_below_m": 18.288, "exclude_above_m": end,
+          "hot_spot_m": 18.796, "coupling_tol_m": 3.0}
+    arcs = [18.796, 21.336, 27.432, 33.528, 60.96, 88.392, 115.824, 143.256, end - 3.5, end + 0.5, end + 2.0]
+    with pytest.raises(ValueError):  # the excluded neighbour 0.5 m above must not stand in for the kept side
+        classify_stations(arcs, **st)
+    ok = arcs[:-3] + [end - 2.0, end + 0.5, end + 2.0]
+    kinds = classify_stations(ok, **st)
+    assert kinds[-3] == "coupling" and kinds[-2] == "excluded"
+
+
+def test_a_saf_detail_with_no_station_kind_is_not_evaluated():
+    row = {**ROW, "limit": {**ROW["limit"], "saf": {**ROW["limit"]["saf"], "riser flange weld": 5.0}}}
+    r = evaluate_case({None: _doc(ARCS, sig=[1.0, 1.0, 1.0, 25e3, 1.0])}, row, IRR)
+    assert r.status == "NOT_EVALUATED" and "riser flange weld" in r.reason
+    ok = evaluate_case({None: _doc(ARCS, sig=[1.0, 1.0, 1.0, 25e3, 1.0])}, row,
+                       {**IRR, "cr10_saf_not_applicable": ["riser flange weld"]})
+    assert ok.status == "PASS"
+
+
+def test_a_hot_spot_on_a_coupling_is_refused():
+    with pytest.raises(ValueError):
+        classify_stations([18.796, 19.9, 21.336, 25.0, 30.0, 34.0], **{**STATIONS, "hot_spot_m": 21.0})
+
+
 # ---------------------------------------------------------------- W04: pup-side station of the 18.288 m coupling
 
 PUP = {**STATIONS, "pup_side_couplings_m": [18.288]}

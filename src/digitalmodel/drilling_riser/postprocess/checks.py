@@ -380,6 +380,10 @@ def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
             raise NotEvaluated(f"CR-10 station map: {e}") from None
         detail_of = {**CR10_DETAIL_BY_KIND, **(ctx.get("cr10_detail_by_kind") or {})}
         cap_of = {k: limits[d] for k, d in detail_of.items() if d in limits}
+        unmapped = sorted(set(limits) - set(detail_of.values()) - set(ctx.get("cr10_saf_not_applicable") or ()))
+        if unmapped:  # a registered weld detail with no station kind must not leave the verdict unnoticed
+            raise NotEvaluated(f"CR-10: register detail(s) {', '.join(unmapped)} map to no station kind "
+                               "(cr10_detail_by_kind) and are not declared not applicable (cr10_saf_not_applicable)")
         lacking = sorted({detail_of.get(k, k) for k in kinds if k in ("coupling", "body") and k not in cap_of})
         if lacking:  # a station kind on the line without an allowable must not drop out of the verdict
             raise NotEvaluated(f"no SAF in the register row for {', '.join(lacking)}")

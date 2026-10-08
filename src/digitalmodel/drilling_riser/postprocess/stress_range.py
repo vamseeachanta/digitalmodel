@@ -254,31 +254,48 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
             raise ValueError(f"no result point within {hot_spot_tol_m} m of the hot spot at {hot_spot_m} m")
         kinds[near] = "hot_spot"
     couplings = coupling_positions(sections_m, joint_length_m)
-    kept_arcs = [x for x, k in zip(a, kinds) if k != "excluded"]
+    pup_side = [float(v) for v in pup_side_couplings_m]
+    if hot_spot_m is not None:
+        on_c = [c for c in couplings if abs(a[near] - c) <= _ON_TOL and not any(abs(c - p) <= _ON_TOL
+                                                                                for p in pup_side)]
+        if on_c:  # the hot spot must not take a coupling's own station
+            raise ValueError(f"the hot-spot point at {a[near]} m lies on the coupling at {on_c[0]} m")
+    top = exclude_above_m if exclude_above_m is not None else max(a, default=0.0)
     for c in couplings:
         # every point on the coupling (duplicates included, one per side of a section boundary); else the nearest
         # point (all duplicates at that arc) on each side
         idxs = [i for i, x in enumerate(a) if abs(x - c) <= _ON_TOL]
-        if not idxs:
+        if not idxs and coupling_tol_m is None:
             below = [x for x in a if x < c]
             above = [x for x in a if x > c]
-            near = ([max(below)] if below else []) + ([min(above)] if above else [])
-            if coupling_tol_m is not None and kept_arcs and min(kept_arcs) <= c <= max(kept_arcs):
-                # each side whose nearest point is kept needs it within the tolerance (an excluded side is not
-                # evaluated; a side beyond the grid has no point)
-                for x in near:
-                    if x in kept_arcs and abs(x - c) > coupling_tol_m:
-                        raise ValueError(f"coupling at {c:.3f} m: nearest result point on one side is "
-                                         f"{abs(x - c):.3f} m away (limit {coupling_tol_m} m)")
-            idxs = [i for i, x in enumerate(a) if x in near]
+            near_x = ([max(below)] if below else []) + ([min(above)] if above else [])
+            idxs = [i for i, x in enumerate(a) if x in near_x]
+        elif not idxs:
+            # with a tolerance: couplings in the kept span only; each kept side (not the side of an exclusion
+            # boundary) needs its nearest KEPT point within the tolerance - an excluded point never stands in
+            if c < exclude_below_m - _ON_TOL or c > top + _ON_TOL:
+                continue
+            sides = []
+            if abs(c - exclude_below_m) > _ON_TOL:
+                sides.append([x for x, k in zip(a, kinds) if k != "excluded" and x < c])
+            if exclude_above_m is None or abs(c - exclude_above_m) > _ON_TOL:
+                sides.append([x for x, k in zip(a, kinds) if k != "excluded" and x > c])
+            near_x = []
+            for side in sides:
+                x = (max(side) if side and side[0] < c else min(side)) if side else None
+                if x is None or abs(x - c) > coupling_tol_m:
+                    raise ValueError(f"coupling at {c:.3f} m: no kept result point within {coupling_tol_m} m on "
+                                     f"one side")
+                near_x.append(x)
+            idxs = [i for i, x in enumerate(a) if x in near_x and kinds[i] != "excluded"]
         for idx in idxs:
             if kinds[idx] == "body":
                 kinds[idx] = "coupling"
-    for c in (float(v) for v in pup_side_couplings_m):
-        if not any(abs(c - p) <= 1e-3 for p in couplings):
+    for c in pup_side:
+        if not any(abs(c - p) <= _ON_TOL for p in couplings):
             raise ValueError(f"pup-side station at {c} m: no coupling at that arc length")
-        borders = [abs(c - exclude_below_m) <= 1e-3] + \
-            ([abs(c - exclude_above_m) <= 1e-3] if exclude_above_m is not None else [])
+        borders = [abs(c - exclude_below_m) <= _ON_TOL] + \
+            ([abs(c - exclude_above_m) <= _ON_TOL] if exclude_above_m is not None else [])
         if not any(borders):
             raise ValueError(f"pup-side station at {c} m: the coupling does not border the excluded section")
         kept = [i for i in range(len(a)) if kinds[i] != "excluded"]
