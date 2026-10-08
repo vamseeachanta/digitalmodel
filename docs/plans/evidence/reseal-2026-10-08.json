@@ -1,0 +1,84 @@
+{
+  "schema": "evidence-reseal-note-1",
+  "date": "2026-10-08",
+  "decision": "Owner decision P02 (consolidation board r3): split and re-seal",
+  "reason": "Public-repository identifier redaction. One workstation-name fragment was replaced with a neutral placeholder; every digest that bound the changed bytes was recomputed. No measured value, result, verdict or assertion changed.",
+  "placeholder": "<workstation> (HTML-escaped as &lt;workstation&gt; inside HTML)",
+  "canonicalization": "SHA-256 and Git blob SHA-1 over LF-normalized repository bytes, matching the original pins",
+  "historical_scope_note": "Receipts and reviews recorded here (legal scan receipt, review coverage note, Claude review R3 bundle) were produced against the pre-redaction bytes. Their file digests are updated to the redacted bytes; the review bundle digest is unchanged because the bundle itself is not part of this repository.",
+  "resealed": [
+    {
+      "path": "docs/reports/2026-09-12-padeye-pressure-preparation.html",
+      "reason": "redacted identifier fragment",
+      "old": {
+        "sha256": "df6a798c02d945d817cece246774625fabea0c725682c15aba555ce7d994dddc",
+        "git_blob_sha1": "6e2634e5573785bc65fe24fe3d0071bf0b89a572"
+      },
+      "new": {
+        "sha256": "65ed164a50740e20ae03cd8e1447fbdc52fcacd04a1f8628fa2f375c61f2e332",
+        "git_blob_sha1": "9745530f6cc7bc3b1fff024a0c519b7adb22ef24"
+      },
+      "pinned_by": [
+        {
+          "pinned_by": "docs/plans/evidence/2026-09-13-issue-2117-verification.json",
+          "digest": "sha256",
+          "occurrences": 1
+        },
+        {
+          "pinned_by": "docs/plans/evidence/2026-09-13-solvers-current-review-coverage.md",
+          "digest": "sha256",
+          "occurrences": 1
+        },
+        {
+          "pinned_by": "docs/plans/evidence/2026-09-13-solvers-current-review-coverage.md",
+          "digest": "git_blob_sha1",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2117-verification.json",
+      "reason": "re-pinned digest(s) of upstream file(s)",
+      "old": {
+        "sha256": "858bd1b44d69565516a16228b32f45a743b2fec15a2c620856f8712463e126fd",
+        "git_blob_sha1": "5712ca44cb06016fea1dbaa8f6b152ed32f8454b"
+      },
+      "new": {
+        "sha256": "1ba3c7874e1c96b38eb9cfb76005b2a3bace77dcaf4864e8acc904d9eeca7adc",
+        "git_blob_sha1": "db7e40f6366f30c6ef43cba6a5c02a9c23ccaf7a"
+      },
+      "pinned_by": []
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-solvers-current-review-coverage.md",
+      "reason": "re-pinned digest(s) of upstream file(s)",
+      "old": {
+        "sha256": "d9c3b027c784953de022a7defb373cd4cad5fda3f30e038a1ad76534f1c09e12",
+        "git_blob_sha1": "8e8fff081bbe7b3e96b7b674d7626a0556e5d411"
+      },
+      "new": {
+        "sha256": "93b8e0d33b20c181af337b393db464c29d8b174b6110322e83d38496260d308a",
+        "git_blob_sha1": "19a8a959c1dd30b0b5f2588dbfa490c986908308"
+      },
+      "pinned_by": [
+        {
+          "pinned_by": "docs/plans/evidence/2026-09-13-issue-2117-verification.json",
+          "digest": "sha256",
+          "occurrences": 1
+        }
+      ]
+    }
+  ],
+  "not_resealed": [
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2094-response-resource-intel.json",
+      "status": "identifier fragment retained pending owner decision",
+      "reason": "Its digest is bound inside the canonical result-matrix package (examples/ansys/analysis-evidence/manifest.json) and intake.json. Every matrix revision r1-r6 carries it, so a re-seal changes all six package hashes, two hash-bound source constants and the private retained r6 snapshot that the strict replay test pins."
+    },
+    {
+      "path": "docs/plans/2026-09-11-issue-2094-ansys-example-deck-validation.md",
+      "status": "identifier fragment retained pending owner decision",
+      "reason": "Bound by docs/plans/evidence/2026-09-12-issue-2094-acceptance-legal.json, which is itself bound inside the same matrix package lineage. The fragment is also present in this file on main."
+    }
+  ]
+}

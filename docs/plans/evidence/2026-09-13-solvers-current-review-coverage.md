@@ -33,7 +33,7 @@ The retained Codex author disposition has SHA-256 `8e0a31f9f5508eb967f9065fd62ee
 
 ## Earlier pressure-preparation documentation
 
-Bounded report and receipt corrections received exact Claude review R3: MINOR, bundle SHA-256 `7883fde1fa872a8641bbce7d4c2b24c0e8ed1ad25aed66ae4cffaa455bf8bc42`. The report working-byte SHA-256 is `df6a798c02d945d817cece246774625fabea0c725682c15aba555ce7d994dddc`; receipt working-byte SHA-256 is `651a5f2dd4b1cb274d65ff5d55fa72cb35bcf03b66a93da44e7ec7b88b38e4c3`. Canonical Git blobs are respectively `6e2634e5573785bc65fe24fe3d0071bf0b89a572` and `7f082dce8bd06e1ccf8803ed66ad21c13b9fcbbc`.
+Bounded report and receipt corrections received exact Claude review R3: MINOR, bundle SHA-256 `7883fde1fa872a8641bbce7d4c2b24c0e8ed1ad25aed66ae4cffaa455bf8bc42`. The report working-byte SHA-256 is `65ed164a50740e20ae03cd8e1447fbdc52fcacd04a1f8628fa2f375c61f2e332`; receipt working-byte SHA-256 is `651a5f2dd4b1cb274d65ff5d55fa72cb35bcf03b66a93da44e7ec7b88b38e4c3`. Canonical Git blobs are respectively `9745530f6cc7bc3b1fff024a0c519b7adb22ef24` and `7f082dce8bd06e1ccf8803ed66ad21c13b9fcbbc`.
 
 The correction distinguishes historical evidence from current preparation checks. Historical receipt fields remain unchanged after removal of the added `review_annotation`. Broader implementation/report reviews remain MAJOR and unresolved; this bounded correction does not clear [issue 2094](https://github.com/vamseeachanta/digitalmodel/issues/2094).
 
