@@ -157,6 +157,17 @@ def test_count_only_retained_audits_are_disclosed(listed):
     assert ('channel identities are not recorded' in html)==(not listed)
 
 
+def test_unmatched_count_only_audit_is_not_disclosed_as_bound():
+    """Only audits bound to a VERIFIED result row may be described as matching that row's channel count."""
+    from tests.workflows.test_mudmat_sensitivity_reporting import TENSION_CHANNELS
+    data=audited_summary()
+    data['event_audits'][0].update(audited_channels=list(TENSION_CHANNELS))
+    data['event_audits'].append(dict(index=99,status='VERIFIED',errors=[],channels_verified=16,trace_sha256='x',metadata_sha256='y'))
+    html=mudmat.render_html(data)
+    assert 'source audit records' in html
+    assert 'channel identities are not recorded' not in html
+
+
 @pytest.mark.parametrize('defect',['unbound','partial','trace','failed','counts'])
 def test_audit_claim_requires_full_verified_coverage(defect):
     data=audited_summary() if defect!='unbound' else summary()

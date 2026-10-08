@@ -1,5 +1,6 @@
 from hashlib import sha256
 import json
+import re
 
 import pytest
 
@@ -84,9 +85,14 @@ def test_report_narrative_makes_no_preview_or_oracle_claim(tmp_path):
     output = tmp_path / 'full.html'
     generate_report(source, data, output, {})
     text = output.read_text(encoding='utf-8')
+    visible = re.sub(r'<script.*?</script>', '', text, flags=re.S)
     for phrase in ('Conditional RMSE', 'oracle wave input', 'random-wave preview demonstration',
-                   'Supplied wave preview input', 'future simulated random JONSWAP wave record'):
-        assert phrase not in text, phrase
+                   'Supplied wave preview input', 'future simulated random JONSWAP wave record',
+                   'supplied future random-wave record', 'SIMULATED WAVE PREVIEW INPUT', 'value="wave_preview"',
+                   'Validate measured wave-preview accuracy'):
+        assert phrase not in visible, phrase
+    assert 'History-only forecast' in visible
+    assert 'preview/forecast mode' not in text and '120 s history-only forecast, with NOW divider' in text
 
 
 def test_dashboard_extraction_fails_closed_on_unrecognized_markup():

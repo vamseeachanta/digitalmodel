@@ -250,7 +250,7 @@ def _validation_references(story, summary, payload):
         for note in notes:
             story.append(_p(note))
     _section(story, "7. Recommendations", "The capacity register and governing edition should be confirmed. Selected governing cases should then receive rigging-stiffness, limited-compression, time-step and mesh sensitivities. Geometric slack, interference, crane off/side lead, clamp/connector forces and pipe-code checks should be completed before an operating envelope is issued.")
-    story.append(_p("Additional random seeds and operation phases should be assessed near any emerging boundary. Offshore wave-preview and load-prediction performance should be measured against independent observations before near-real-time guidance is used operationally."))
+    story.append(_p("Additional random seeds and operation phases should be assessed near any emerging boundary. Forecast accuracy, latency and load errors should be measured against independent observations before near-real-time guidance is used operationally."))
     for recommendation in payload.get("_report_config", {}).get("recommendations", []):
         story.append(_p(recommendation))
     _section(story, "8. References and revision history", "The private retained source workbook, model manifest, simulation records and code revision form the evidence chain. Licensed standards remain at their licensed source locations.")

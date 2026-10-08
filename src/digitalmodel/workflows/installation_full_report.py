@@ -27,6 +27,17 @@ def dashboard_parts(document):
     grid = sections[1].replace('2 · Hs–Tp envelope under assumptions', '5.4 Hs–Tp envelope under assumptions')
     grid = grid.replace('Figure 1.', 'Figure 5-1.')
     live = sections[2].replace('3 · Simulated near-real-time review', '5.5 Simulated monitoring and two-minute forecasts')
+    # This edition admits only history-only payloads (reject_wave_preview), so the shared dashboard's preview
+    # option, supplied-wave statement and initial preview badge are replaced; a markup change fails closed.
+    for original, replacement in [
+            ('<option value="wave_preview">Supplied random-wave preview / conditional load</option>', ''),
+            ('Conditional load forecasts use a supplied future random-wave record and models fitted to past wave/load data.',
+             'Forecasts are causal and use recorded history through NOW only.'),
+            ('SIMULATED WAVE PREVIEW INPUT — conditional load forecast; offshore wave prediction not validated',
+             'History-only forecast; offshore forecast accuracy not validated')]:
+        if live.count(original) != 1:
+            raise ValueError('Dashboard forecast-mode markup changed')
+        live = live.replace(original, replacement)
     script = scripts[1]
     if script.count('return holder;') != 1:
         raise ValueError('Dashboard chart function changed')
