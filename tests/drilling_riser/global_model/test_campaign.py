@@ -189,6 +189,46 @@ def test_stack_segment_refinement_caps_every_stack_segment(base_spec):
         cp.case_spec(_case(base_spec, stack_segment_m=0.0))
 
 
+def test_coupling_segments_split_every_joint_end_into_short_pieces():
+    """E04 (owner, 2026-10-08): OrcaFlex reports ZZ stress at mid-segments, so the CR-10 coupling stations are read
+    half a segment away from each coupling (0.25-2.5 m). With ``coupling_segment_m`` every riser joint end gets a
+    segment of that length, so the station lies coupling_segment_m / 2 from the coupling on each side."""
+    from digitalmodel.drilling_riser.postprocess.stress_range import JOINT_LENGTH_M as J
+    from digitalmodel.drilling_riser.postprocess.stress_range import coupling_positions, joint_sections
+
+    secs = [{"name": "Outer barrel", "length_m": 18.288, "segment_length_m": 1.0},
+            {"name": "Pup", "length_m": 3.048, "segment_length_m": 1.0},
+            {"name": "Slick", "length_m": 2 * J, "segment_length_m": 4.0},
+            {"name": "LFJ upper body", "length_m": 0.15, "segment_length_m": 0.4}]
+    out = cp.split_at_couplings(secs, 0.1)
+    got = [(s["name"], round(s["length_m"], 6), s["segment_length_m"]) for s in out]
+    assert got == [("Outer barrel #1", 0.1, 0.1), ("Outer barrel #2", 18.088, 1.0), ("Outer barrel #3", 0.1, 0.1),
+                   ("Pup #1", 0.1, 0.1), ("Pup #2", 2.848, 1.0), ("Pup #3", 0.1, 0.1),
+                   ("Slick #1", 0.1, 0.1), ("Slick #2", round(J - 0.2, 6), 4.0), ("Slick #3", 0.1, 0.1),
+                   ("Slick #4", 0.1, 0.1), ("Slick #5", round(J - 0.2, 6), 4.0), ("Slick #6", 0.1, 0.1),
+                   ("LFJ upper body", 0.15, 0.1)]  # too short to split: segments capped
+    lengths, names = joint_sections([{"line_type": s["name"], "length_m": s["length_m"]} for s in out])
+    assert names == ["Outer barrel", "Pup", "Slick", "LFJ upper body"]
+    assert lengths == pytest.approx([18.288, 3.048, 2 * J, 0.15])
+    assert coupling_positions(lengths) == pytest.approx(coupling_positions([s["length_m"] for s in secs]))
+    with pytest.raises(ValueError, match="coupling_segment_m"):
+        cp.split_at_couplings(secs, 0.0)
+
+
+def test_coupling_segment_m_refines_only_the_riser_and_keeps_its_length(base_spec):
+    base = cp.case_spec(_case(base_spec))
+    ref = cp.case_spec(_case(base_spec, coupling_segment_m=0.1))
+    assert sum(s.length_m for s in ref.riser) == pytest.approx(sum(s.length_m for s in base.riser))
+    assert len(ref.riser) > len(base.riser)
+    assert [s.name for s in ref.stack] == [s.name for s in base.stack]
+    assert [s.name for s in ref.inner_barrel] == [s.name for s in base.inner_barrel]
+    # every piece keeps its parent's properties (only length and segment length change)
+    parent = {s.name: s for s in base.riser}
+    for s in ref.riser:
+        p = parent[s.name.split(" #")[0]]
+        assert (s.ei_nm2, s.ea_n, s.stress_od_m, s.mass_per_m_kg) == (p.ei_nm2, p.ea_n, p.stress_od_m, p.mass_per_m_kg)
+
+
 class _FakeObj:
     def __init__(self, type_name: str, stages=()):
         self.typeName = type_name
