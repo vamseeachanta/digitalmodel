@@ -425,6 +425,8 @@ docs/api/structural/wall-thickness-3d.json
 # Retain the reviewed offline cylinder engineering report.
 !docs/reports/2026-09-14-issue-2121-b1-preparation.html
 
+# Owner board O04 reconciliation evidence (authored, not generated output).
+!docs/reports/o04-ecosystem-reconciliation.html
 # Retain A07 DWG conversion qualification evidence; staging DXFs stay outside Git.
 !docs/reports/dwg-conversion/
 docs/reports/dwg-conversion/*

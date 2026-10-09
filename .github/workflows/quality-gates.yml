@@ -13,9 +13,25 @@ permissions:
   pull-requests: write
 
 jobs:
-  quality-gates:
+  quality-gates-aggregate:
     name: Run Quality Gates
+    permissions: {}
+    needs: quality-gates
+    if: always()
     runs-on: ubuntu-latest
+    steps:
+      - name: Verify matrix result
+        env:
+          QUALITY_GATES_RESULT: ${{ needs.quality-gates.result }}
+        run: test "$QUALITY_GATES_RESULT" = success
+
+  quality-gates:
+    name: Quality Gates (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
 
     steps:
       - name: Checkout code
@@ -26,22 +42,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Create virtual environment
-        run: |
-          uv venv
-          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Install dependencies
         run: |
+          uv venv
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
           UV_NO_SOURCES=true uv pip install -e .
           uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
+
+      - name: Check engineering register changes
+        env:
+          REGISTER_BASE: ${{ github.event_name == 'pull_request' && 'origin/main' || github.event.before }}
+        run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
 
       - name: Create reports directory
         run: mkdir -p reports
@@ -55,7 +73,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: quality-gate-results
+          name: quality-gate-results-${{ matrix.python-version }}
           path: |
             reports/quality_gates_results.json
             reports/bandit_report.json
@@ -67,7 +85,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-reports
+          name: coverage-reports-${{ matrix.python-version }}
           path: |
             htmlcov/
             coverage.xml
