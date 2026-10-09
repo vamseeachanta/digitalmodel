@@ -261,6 +261,8 @@ class _PyRefs:
         elif isinstance(node, ast.JoinedStr):
             vals = {""}
             for v in node.values:
+                if isinstance(v, ast.FormattedValue) and (v.format_spec or v.conversion != -1):
+                    return set()
                 part = e(v.value) if isinstance(v, ast.FormattedValue) else e(v)
                 vals = {a + b[1] for a in vals for b in part if b[0] == "s"}
             r |= {("s", v) for v in vals}
@@ -401,8 +403,6 @@ def explicit_references(code_texts, candidates, tracked):
             found[p] = {"evidence": ev, "matched": matched, "source": src}
 
     names = sorted(by_base, key=len, reverse=True)
-    name_re = re.compile(r"(?<![A-Za-z0-9_.\-])(" + "|".join(map(re.escape, names)) + r")(?![A-Za-z0-9_\-])") \
-        if names else None
 
     py_files = {p for p in code_texts if p.endswith(".py")}
     modules = {}
@@ -434,7 +434,10 @@ def explicit_references(code_texts, candidates, tracked):
     patterns = []
     for src in sorted(code_texts):
         text = code_texts[src].replace("\\\\", "/").replace("\\", "/")
-        if name_re is not None:
+        present = [name for name in names if name in text]
+        if present:
+            name_re = re.compile(r"(?<![A-Za-z0-9_.\-])(" + "|".join(map(re.escape, present))
+                                 + r")(?![A-Za-z0-9_\-])")
             for b in set(name_re.findall(text)):
                 shared = tracked_base_count[b] > 1
                 for p in by_base[b]:
@@ -706,6 +709,7 @@ def main(argv=None):
         with open(os.path.join(REPO, cf), "rb") as f:
             code_texts[cf] = f.read().decode("utf-8", "replace")
     refs_found = explicit_references(code_texts, rule_cands, all_paths)
+    print("src/tests reference scan complete", len(refs_found), file=sys.stderr)
     consumer_texts = dict(code_texts)
     for path in all_paths:
         if path not in consumer_texts and path.endswith((".yml", ".yaml", ".py")):
@@ -713,6 +717,8 @@ def main(argv=None):
                 consumer_texts[path] = f.read()
     extra_refs, human_holds, reference_gaps = reference_safety(
         consumer_texts, rule_cands, all_paths, hygiene_sources=HYGIENE_SCANS)
+    print("YAML/runtime safety scan complete", len(extra_refs), "static", len(human_holds), "held",
+          file=sys.stderr)
     other_python = {p: t for p, t in consumer_texts.items()
                     if p.endswith(".py") and p not in code_texts and p not in REPORT_PRODUCERS}
     extra_refs.update(explicit_references(other_python, rule_cands, all_paths))

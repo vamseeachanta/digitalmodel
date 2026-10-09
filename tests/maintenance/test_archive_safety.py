@@ -93,6 +93,24 @@ def test_runtime_join_and_unanchored_glob_hold_potential_inputs():
     assert set(held) == {"docs/models/a.dat", "docs/a.sim"}
 
 
+def test_formatted_runtime_path_is_held_instead_of_assumed_literal():
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/models/       a.dat", "docs/models/a.dat"]
+    source = "examples/run.py"
+    text = 'name = "a"\np = f"docs/models/{name:>8}.dat"\n'
+    refs = ac.explicit_references({source: text}, candidates, candidates + [source])
+    assert refs == {}
+    _, held, _ = reference_safety({source: text}, candidates, candidates + [source])
+    assert set(held) == set(candidates)
+
+
+def test_filename_prefilter_preserves_boundaries_and_spaced_names():
+    candidates = ["docs/model.dat", "docs/file name.pdf", "docs/unused.png"]
+    text = 'wrong = "xmodel.dat"\np = "file name.pdf"\nq = "model.dat"\n'
+    refs = ac.explicit_references({"src/read.py": text}, candidates, candidates)
+    assert set(refs) == set(candidates[:2])
+
+
 def test_retained_model_dependency_is_excluded():
     from archive_reference_safety import reference_safety
     candidates = ["docs/large.yml", "docs/inputs/a.dat"]

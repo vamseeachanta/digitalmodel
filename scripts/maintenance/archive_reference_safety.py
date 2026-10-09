@@ -94,9 +94,11 @@ def _python_template(node, env, seen=frozenset()):
     if isinstance(node, ast.Name):
         return (_python_template(env[node.id], env, seen | {node.id})
                 if node.id in env and node.id not in seen else "*")
+    if isinstance(node, ast.FormattedValue):
+        return ("*" if node.format_spec or node.conversion != -1
+                else _python_template(node.value, env, seen))
     if isinstance(node, ast.JoinedStr):
-        return "".join(_python_template(v.value if isinstance(v, ast.FormattedValue) else v,
-                                      env, seen) for v in node.values)
+        return "".join(_python_template(v, env, seen) for v in node.values)
     if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Div)):
         separator = "/" if isinstance(node.op, ast.Div) else ""
         return _python_template(node.left, env, seen) + separator + _python_template(node.right, env, seen)
