@@ -18,6 +18,11 @@ renders HTML/PDF. No HTML is written here.
   (route status + spacing <= 2 x protected length status), References.
 * ABS ships / offshore: the tables the legacy route exposes, plus the status.
 
+Every Adequacy section opens with the route's use status
+(``results["status"]["use_status"]``, owner decision 2026-09-27, epic #2206)
+and the route's StatusBlock detail repeats it, so each HTML/PDF deliverable
+states whether it may go to a client and on what condition.
+
 ``assessment`` takes a :class:`CPAssessmentReport` (plus optional CIS survey
 points/analysis and a :class:`DepletionProfile`) and lays out compliance,
 potential-vs-distance, remaining-mass-vs-years and recommendations.
@@ -33,11 +38,16 @@ import json
 import re
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Literal, Mapping, Sequence, cast
 
 from digitalmodel.cathodic_protection import _kernels as kernel
+from digitalmodel.cathodic_protection._edition import normalize_edition
 from digitalmodel.cathodic_protection.anode_depletion import DepletionProfile
-from digitalmodel.cathodic_protection.b401_tables import B401_WIKI_PATH
+from digitalmodel.cathodic_protection.b401_tables import (
+    B401_WIKI_PATH,
+    B401_WIKI_PATH_2017,
+    table_label,
+)
 from digitalmodel.cathodic_protection.cp_reporting import (
     ComplianceStatus,
     CPAssessmentReport,
@@ -46,11 +56,22 @@ from digitalmodel.cathodic_protection.cp_survey import CISAnalysisResult, CISSur
 from digitalmodel.cathodic_protection.engine_adapter import (
     KEY_ABS_OFFSHORE,
     KEY_ABS_SHIPS,
+    KEY_ABS_SHIPS_LEGACY,
     KEY_B401,
     KEY_F103,
+    KEY_F103_2010,
+    KEY_F103_ANODE_BANK,
     STATUS_PASS,
+    USE_STATUS_CLIENT_EOR,
+    USE_STATUS_CITED_PENDING_REVIEW,
+    USE_STATUS_ENGINEERING_VALIDATION,
+    USE_STATUS_EXPERIMENTAL,
+    USE_STATUS_LEGACY_UNCITED,
 )
-from digitalmodel.cathodic_protection.f103_tables import F103_WIKI_PATH
+from digitalmodel.cathodic_protection.f103_tables import (
+    F103_WIKI_PATH,
+    F103_WIKI_PATH_2019,
+)
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting.adapters import report_adapter
 from digitalmodel.reporting.figures import figure_from_columns
@@ -77,22 +98,39 @@ PLACEHOLDER_REVISION = "00"
 FIG_DEMAND_VS_TIME = "fig-cp-demand-vs-time"
 FIG_ANODE_COUNTS = "fig-cp-anode-counts"
 FIG_POTENTIAL_VS_DISTANCE = "fig-cp-potential-vs-distance"
+FIG_BANK_POTENTIAL_ENVELOPE = "fig-cp-bank-potential-envelope"
 FIG_REMAINING_MASS = "fig-cp-remaining-mass"
 
 #: Number of time samples for the ``I(t)`` curve (0 .. design life inclusive).
 DEMAND_CURVE_SAMPLES = 11
 
 _WIKI_BY_CODE: dict[str, str] = {
+    "abs-gn-ships": (
+        "wikis/engineering-standards/wiki/standards/"
+        "abs-gn-ships-cathodic-protection-2017.md"
+    ),
     "dnv-rp-b401": B401_WIKI_PATH,
     "dnv-rp-f103": F103_WIKI_PATH,
 }
-_PUBLISHER_BY_CODE: dict[str, str] = {"dnv-rp-b401": "DNV", "dnv-rp-f103": "DNV"}
+_WIKI_BY_REVISION: dict[tuple[str, str], str] = {
+    ("dnv-rp-b401", "2017-06"): B401_WIKI_PATH_2017,
+    ("dnv-rp-f103", "2019-09"): F103_WIKI_PATH_2019,
+}
+_PUBLISHER_BY_CODE: dict[str, str] = {
+    "abs-gn-ships": "ABS",
+    "dnv-rp-b401": "DNV",
+    "dnv-rp-f103": "DNV",
+}
 _STANDARD_RE = re.compile(r"^(?P<code>.+?)\s*\((?P<edition>[^()]+)\)\s*$")
 
 #: Report-facing labels for the legacy ABS routes (no cited tables).
 _ABS_STANDARDS: dict[str, tuple[str, str]] = {
     KEY_ABS_SHIPS: ("ABS GN Cathodic Protection of Ships", "December 2017"),
-    KEY_ABS_OFFSHORE: ("ABS GN Cathodic Protection of Offshore Structures", "December 2018"),
+    KEY_ABS_SHIPS_LEGACY: ("ABS GN Cathodic Protection of Ships", "December 2017"),
+    KEY_ABS_OFFSHORE: (
+        "ABS GN Cathodic Protection of Offshore Structures",
+        "December 2018",
+    ),
 }
 _ABS_PROVENANCE = "legacy solver; table values not cited"
 
@@ -116,7 +154,9 @@ def _results_digest(results: Mapping[str, Any]) -> str:
     return _sha256(json.dumps(results, sort_keys=True, default=str).encode("utf-8"))
 
 
-def _provenance(cfg: Mapping[str, Any], results: Mapping[str, Any], what: str) -> Provenance:
+def _provenance(
+    cfg: Mapping[str, Any], results: Mapping[str, Any], what: str
+) -> Provenance:
     """Input YAML (relative to the config dir, sha256) plus the results digest."""
     prov = Provenance()
     raw_path = cfg.get("_config_file_path")
@@ -143,7 +183,9 @@ def _provenance(cfg: Mapping[str, Any], results: Mapping[str, Any], what: str) -
     return prov
 
 
-def _document(cfg: Mapping[str, Any], default_title: str) -> tuple[DocumentMeta, str | None]:
+def _document(
+    cfg: Mapping[str, Any], default_title: str
+) -> tuple[DocumentMeta, str | None]:
     """``report.document`` from the input, else a placeholder (and a note)."""
     supplied = _mapping(_mapping(cfg.get("report")).get("document"))
     if supplied:
@@ -189,7 +231,7 @@ def _citations_from_labels(labels: Sequence[Any], note: str) -> list[Citation]:
                 publisher=_PUBLISHER_BY_CODE[code],
                 revision=revision,
                 section=section,
-                wiki_path=_WIKI_BY_CODE[code],
+                wiki_path=_WIKI_BY_REVISION.get((code, revision), _WIKI_BY_CODE[code]),
                 note=note,
             )
         key = f"{candidate.code_id} {candidate.revision} {candidate.section}"
@@ -206,7 +248,9 @@ def _standards(results: Mapping[str, Any], calc_type: str) -> list[StandardLabel
     if standard:
         match = _STANDARD_RE.match(standard)
         code = match.group("code") if match else standard
-        edition = match.group("edition") if match else str(results.get("edition") or "n/a")
+        edition = (
+            match.group("edition") if match else str(results.get("edition") or "n/a")
+        )
         labels.append(
             StandardLabel(
                 code_id=code,
@@ -216,8 +260,12 @@ def _standards(results: Mapping[str, Any], calc_type: str) -> list[StandardLabel
         )
     elif calc_type in _ABS_STANDARDS:
         code, edition = _ABS_STANDARDS[calc_type]
-        labels.append(StandardLabel(code_id=code, edition=edition, provenance=_ABS_PROVENANCE))
-    main = {lbl.code_id.lower() for lbl in labels}
+        labels.append(
+            StandardLabel(code_id=code, edition=edition, provenance=_ABS_PROVENANCE)
+        )
+    # "DNVGL-RP-F103" (2019) and "DNVGL-RP-B401" (2017) are cited as
+    # "dnv-rp-..."; fold the prefix so the route standard is not listed twice.
+    main = {re.sub(r"^dnvgl-", "dnv-", lbl.code_id.lower()) for lbl in labels}
     extra: dict[str, str] = {}
     for raw in results.get("citations") or []:
         parsed = _parse_label(str(raw))
@@ -243,6 +291,44 @@ def _kv_table(title: str, rows: Sequence[Row], source: str | None = None) -> Tab
     )
 
 
+#: Report wording per ``results["status"]["use_status"]`` token.
+_USE_STATUS_TEXT: dict[str, str] = {
+    USE_STATUS_CLIENT_EOR: (
+        "Use status: approved for client use subject to an engineer-of-record "
+        "check of this deliverable."
+    ),
+    USE_STATUS_CITED_PENDING_REVIEW: (
+        "Use status: cited-pending-review; standards tables are cited, but the coating "
+        "deterioration interpretation and ABS-specific wiki target require engineering review."
+    ),
+    USE_STATUS_EXPERIMENTAL: (
+        "Use status: experimental-known-understatement; not for design use. "
+        "Understates mean demand by about a third and final demand by about half "
+        "per the 2026-09-27 benchmark (#2259, #1852)."
+    ),
+    USE_STATUS_LEGACY_UNCITED: (
+        "Use status: legacy solver with uncited tables; not for client use "
+        "without an independent check."
+    ),
+    USE_STATUS_ENGINEERING_VALIDATION: (
+        "Use status: engineering validation required; not for client use pending "
+        "an independent engineering validation."
+    ),
+}
+_USE_STATUS_MISSING = (
+    "Use status: not recorded; not for client use without an independent check."
+)
+
+
+def _use_status_text(status: Mapping[str, Any]) -> str:
+    token = str(status.get("use_status") or "")
+    return _USE_STATUS_TEXT.get(token, _USE_STATUS_MISSING)
+
+
+def _use_status_block(status: Mapping[str, Any]) -> TextBlock:
+    return TextBlock(markdown=_use_status_text(status))
+
+
 def _status_block(status: Mapping[str, Any], label: str) -> StatusBlock:
     result: Literal["PASS", "FAIL"] = (
         "PASS" if str(status.get("result", "")).upper() == STATUS_PASS else "FAIL"
@@ -250,11 +336,12 @@ def _status_block(status: Mapping[str, Any], label: str) -> StatusBlock:
     governing = str(status.get("governing_case") or "").strip() or None
     if result == "FAIL" and not governing:
         governing = "not stated"
+    reason = str(status.get("reason") or "").strip()
     return StatusBlock(
         label=label,
         status=result,
         governing_case=governing,
-        detail=str(status.get("reason") or ""),
+        detail="; ".join(part for part in (reason, _use_status_text(status)) if part),
     )
 
 
@@ -268,7 +355,9 @@ def _checks_table(status: Mapping[str, Any]) -> TableBlock:
     return TableBlock(title="Adequacy checks", columns=["Check", "Result"], rows=rows)
 
 
-def _counts_figure(names: Sequence[str], counts: Sequence[Any], title: str) -> FigureBlock:
+def _counts_figure(
+    names: Sequence[str], counts: Sequence[Any], title: str
+) -> FigureBlock:
     return FigureBlock(
         title=title,
         caption="Required anode count per sizing case; the largest governs.",
@@ -284,7 +373,9 @@ def _counts_figure(names: Sequence[str], counts: Sequence[Any], title: str) -> F
     )
 
 
-def _references_section(results: Mapping[str, Any], usage: Sequence[tuple[str, Sequence[Any]]]) -> Section:
+def _references_section(
+    results: Mapping[str, Any], usage: Sequence[tuple[str, Sequence[Any]]]
+) -> Section:
     rows: list[Row] = []
     for item, labels in usage:
         text = ", ".join(sorted({str(x) for x in labels})) or "none"
@@ -312,7 +403,11 @@ def _references_section(results: Mapping[str, Any], usage: Sequence[tuple[str, S
         )
     if rows:
         blocks.append(
-            TableBlock(title="Where each cited table was used", columns=["Item", "Citations"], rows=rows)
+            TableBlock(
+                title="Where each cited table was used",
+                columns=["Item", "Citations"],
+                rows=rows,
+            )
         )
     return Section(key="references", title="References", blocks=blocks)
 
@@ -322,7 +417,29 @@ def _references_section(results: Mapping[str, Any], usage: Sequence[tuple[str, S
 # ---------------------------------------------------------------------------
 
 
-def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Section]:
+def _b401_sections(
+    inputs: Mapping[str, Any], results: Mapping[str, Any]
+) -> list[Section]:
+    if results.get("mode") == "b401_components":
+        from digitalmodel.cathodic_protection.b401_component_report import (
+            build_b401_component_sections,
+        )
+
+        return build_b401_component_sections(inputs, results)
+    if results.get("riser_base_assessment"):
+        from digitalmodel.cathodic_protection.b401_structures_phases_report import (
+            build_b401_structures_phases_sections,
+        )
+
+        return cast(
+            list[Section], build_b401_structures_phases_sections(inputs, results)
+        )
+    if results.get("anode_families"):
+        from digitalmodel.cathodic_protection.b401_family_report import (
+            build_b401_family_sections,
+        )
+
+        return cast(list[Section], build_b401_family_sections(inputs, results))
     areas = _mapping(results.get("surface_areas_m2"))
     breakdown = _mapping(results.get("coating_breakdown"))
     densities = _mapping(results.get("current_densities_A_m2"))
@@ -331,6 +448,9 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
     ver = _mapping(results.get("current_output_verification"))
     status = _mapping(results.get("status"))
     design_life = float(results.get("design_life_years") or 0.0)
+    edition = normalize_edition(str(results.get("edition")))
+    coating_table = table_label(edition, 4)
+    resistance_table = table_label(edition, 7)
     zones = [z for z in areas if z != "total_m2"]
     environment = _mapping(inputs.get("environment"))
     anode = _mapping(inputs.get("anode"))
@@ -341,17 +461,30 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         ["Edition provenance", results.get("provenance", ""), "-"],
         ["Design life", design_life, "yr"],
         ["Seawater temperature", environment.get("seawater_temperature_C", ""), "degC"],
-        ["Seawater resistivity", environment.get("seawater_resistivity_ohm_m", ""), "ohm.m"],
+        [
+            "Seawater resistivity",
+            environment.get("seawater_resistivity_ohm_m", ""),
+            "ohm.m",
+        ],
         ["Total surface area", areas.get("total_m2", ""), "m2"],
         ["Anode material", req.get("anode_material", anode.get("material", "")), "-"],
         ["Anode type", req.get("anode_type", anode.get("type", "")), "-"],
         ["Anode net mass", req.get("individual_mass_kg", ""), "kg"],
         ["Anode length", anode.get("length_m", ""), "m"],
-        ["Anode equivalent radius (fresh)", ver.get("equivalent_radius_initial_m", ""), "m"],
+        [
+            "Anode equivalent radius (fresh)",
+            ver.get("equivalent_radius_initial_m", ""),
+            "m",
+        ],
         ["Utilisation factor", req.get("utilization_factor", ""), "-"],
         ["Utilisation factor source", req.get("utilization_factor_source", ""), "-"],
-        ["Electrochemical capacity", req.get("electrochemical_capacity_Ah_kg", ""), "Ah/kg"],
+        [
+            "Electrochemical capacity",
+            req.get("electrochemical_capacity_Ah_kg", ""),
+            "Ah/kg",
+        ],
     ]
+    has_area_basis = any("area_basis" in _mapping(demand.get(z)) for z in zones)
     zone_rows: list[Row] = []
     for z in zones:
         fc = _mapping(breakdown.get(z))
@@ -361,6 +494,11 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
                 z,
                 dz.get("exposure_zone", dz.get("base_zone", "")),
                 areas.get(z, ""),
+                *(
+                    [_mapping(demand.get(z)).get("area_basis", "steel_surface")]
+                    if has_area_basis
+                    else []
+                ),
                 fc.get("coating_category", ""),
                 dz.get("depth_band", ""),
                 dz.get("climate", ""),
@@ -375,9 +513,13 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         blocks=[
             _kv_table("Design data", design_rows, source="cfg[inputs], cfg[results]"),
             TableBlock(
-                title="Zones and coating breakdown constants (Table 10-4)",
-                columns=["Zone", "Exposure", "Area", "Coating", "Depth band", "Climate", "a", "b"],
-                units=["-", "-", "m2", "category", "m", "-", "-", "1/yr"],
+                title=f"Zones and coating breakdown constants ({coating_table})",
+                columns=["Zone", "Exposure", "Area"]
+                + (["Area basis"] if has_area_basis else [])
+                + ["Coating", "Depth band", "Climate", "a", "b"],
+                units=["-", "-", "m2"]
+                + (["-"] if has_area_basis else [])
+                + ["category", "m", "-", "-", "1/yr"],
                 rows=zone_rows,
                 source="cfg[results][coating_breakdown], cfg[results][current_densities_A_m2]",
             ),
@@ -392,6 +534,7 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
             [
                 z,
                 d.get("area_m2", ""),
+                *([d.get("area_basis", "steel_surface")] if has_area_basis else []),
                 d.get("i_initial_A_m2", ""),
                 d.get("i_mean_A_m2", ""),
                 d.get("i_final_A_m2", ""),
@@ -407,7 +550,13 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         [
             "Total",
             areas.get("total_m2", ""),
-            "", "", "", "", "", "",
+            *([""] if has_area_basis else []),
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
             round(float(demand.get("total_initial_A", 0.0)), 4),
             round(float(demand.get("total_mean_A", 0.0)), 4),
             round(float(demand.get("total_final_A", 0.0)), 4),
@@ -423,7 +572,12 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         area = float(areas.get(z, 0.0))
         i_mean = float(_mapping(densities.get(z)).get("i_mean_A_m2", 0.0))
         series[z] = [
-            round(kernel.current_demand(area, i_mean, kernel.coating_breakdown_linear(a, b, t)), 6)
+            round(
+                kernel.current_demand(
+                    area, i_mean, kernel.coating_breakdown_linear(a, b, t)
+                ),
+                6,
+            )
             for t in t_years
         ]
     current_demand = Section(
@@ -434,17 +588,29 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
             TableBlock(
                 title="Current density, coating breakdown and demand by zone",
                 columns=[
-                    "Zone", "Area", "i initial", "i mean", "i final",
-                    "f_ci", "f_cm", "f_cf", "I initial", "I mean", "I final",
+                    "Zone",
+                    "Area",
+                    *(["Area basis"] if has_area_basis else []),
+                    "i initial",
+                    "i mean",
+                    "i final",
+                    "f_ci",
+                    "f_cm",
+                    "f_cf",
+                    "I initial",
+                    "I mean",
+                    "I final",
                 ],
-                units=["-", "m2", "A/m2", "A/m2", "A/m2", "-", "-", "-", "A", "A", "A"],
+                units=["-", "m2"]
+                + (["-"] if has_area_basis else [])
+                + ["A/m2", "A/m2", "A/m2", "-", "-", "-", "A", "A", "A"],
                 rows=demand_rows,
                 source="cfg[results][current_demand_A]",
             ),
             FigureBlock(
                 title="Maintenance current demand over the design life",
                 caption=(
-                    "I(t) = A x i_mean x min(1, a + b t) per zone with the Table 10-4 "
+                    f"I(t) = A x i_mean x min(1, a + b t) per zone with {coating_table} "
                     "breakdown constants; the initial and final design cases use the "
                     "phase densities tabulated above (i_initial with f_ci, i_final with f_cf)."
                 ),
@@ -465,9 +631,15 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
     n_mass = ver.get("count_by_mass", req.get("anode_count", 0))
     n_initial = ver.get("count_by_initial_current", 0)
     n_final = ver.get("count_by_final_current", 0)
-    recommended = ver.get("recommended_anode_count", max(int(n_mass), int(n_initial), int(n_final)))
+    recommended = ver.get(
+        "recommended_anode_count", max(int(n_mass), int(n_initial), int(n_final))
+    )
     req_rows: list[Row] = [
-        ["Total net anode mass required (Sec. 7.7)", req.get("total_mass_kg", ""), "kg"],
+        [
+            "Total net anode mass required (Sec. 7.7)",
+            req.get("total_mass_kg", ""),
+            "kg",
+        ],
         ["Individual anode net mass", req.get("individual_mass_kg", ""), "kg"],
         ["Design life", req.get("design_life_hours", ""), "h"],
         ["Anodes by mass (N_mass)", n_mass, "-"],
@@ -520,14 +692,20 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
     adequacy = Section(
         key="adequacy",
         title="Adequacy",
-        subtitle="DNV-RP-B401 Sec. 7.8 current-output verification (Table 10-7 resistance)",
+        subtitle=f"DNV-RP-B401 Sec. 7.8 current-output verification ({resistance_table} resistance)",
         blocks=[
+            _use_status_block(status),
             _status_block(status, "Anode design adequacy"),
             TableBlock(
                 title=f"Anode resistance and current output, {n_verified} anodes, fresh vs depleted",
                 columns=[
-                    "Case", "Equivalent radius", "Resistance R_a", "Output per anode",
-                    "Total output", "Demand", "Meets demand",
+                    "Case",
+                    "Equivalent radius",
+                    "Resistance R_a",
+                    "Output per anode",
+                    "Total output",
+                    "Demand",
+                    "Meets demand",
                 ],
                 units=["-", "m", "ohm", "A", "A", "A", "-"],
                 rows=ri_rows,
@@ -539,11 +717,27 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
 
     usage: list[tuple[str, Sequence[Any]]] = []
     for z in zones:
-        usage.append((f"{z}: design current density", _mapping(densities.get(z)).get("citations") or []))
-        usage.append((f"{z}: coating breakdown", _mapping(breakdown.get(z)).get("citations") or []))
+        usage.append(
+            (
+                f"{z}: design current density",
+                _mapping(densities.get(z)).get("citations") or [],
+            )
+        )
+        usage.append(
+            (
+                f"{z}: coating breakdown",
+                _mapping(breakdown.get(z)).get("citations") or [],
+            )
+        )
     usage.append(("Anode capacity and utilisation", req.get("citations") or []))
     usage.append(("Driving voltage", ver.get("citations") or []))
-    return [design_basis, current_demand, anode_requirements, adequacy, _references_section(results, usage)]
+    return [
+        design_basis,
+        current_demand,
+        anode_requirements,
+        adequacy,
+        _references_section(results, usage),
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -551,7 +745,9 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
 # ---------------------------------------------------------------------------
 
 
-def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Section]:
+def _f103_sections(
+    inputs: Mapping[str, Any], results: Mapping[str, Any]
+) -> list[Section]:
     geom = _mapping(results.get("pipeline_geometry_m"))
     fc = _mapping(results.get("coating_breakdown_factors"))
     dens = _mapping(results.get("current_densities_A_m2"))
@@ -571,25 +767,40 @@ def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         ["Length", geom.get("length_m", ""), "m"],
         ["Outer surface area", geom.get("outer_surface_area_m2", ""), "m2"],
         ["Linepipe coating", fc.get("linepipe_coating", ""), "-"],
-        ["Field joint coating", fc.get("field_joint_coating", ""), "-"],
+        ["Field joint coating (system id)", fc.get("field_joint_coating", ""), "-"],
+        ["Field joint infill", fc.get("field_joint_infill", ""), "-"],
         ["Field joint area", geom.get("field_joint_area_m2", ""), "m2"],
         ["Burial condition", dens.get("burial_condition", ""), "-"],
-        ["Internal fluid temperature", dens.get("internal_fluid_temperature_C", ""), "degC"],
+        [
+            "Internal fluid temperature",
+            dens.get("internal_fluid_temperature_C", ""),
+            "degC",
+        ],
         ["Temperature band", dens.get("temperature_band", ""), "degC"],
         ["Steel resistivity", geom.get("steel_resistivity_ohm_m", ""), "ohm.m"],
-        ["Seawater resistivity", environment.get("seawater_resistivity_ohm_m", "default"), "ohm.m"],
+        [
+            "Seawater resistivity",
+            environment.get("seawater_resistivity_ohm_m", "default"),
+            "ohm.m",
+        ],
         ["Anode material", req.get("anode_material", ""), "-"],
         ["Bracelet net mass", req.get("individual_anode_mass_kg", ""), "kg"],
         ["Bracelet exposed area", req.get("bracelet_exposed_area_m2", ""), "m2"],
         ["Utilisation factor", req.get("utilization_factor", ""), "-"],
         ["Utilisation factor source", req.get("utilization_factor_source", ""), "-"],
-        ["Metallic voltage drop allowance", atten.get("metallic_voltage_drop_V", ""), "V"],
+        [
+            "Metallic voltage drop allowance",
+            atten.get("metallic_voltage_drop_V", ""),
+            "V",
+        ],
     ]
     design_basis = Section(
         key="design-basis",
         title="Design basis",
         subtitle="Input echo: pipeline geometry, coating, exposure and anode data",
-        blocks=[_kv_table("Design data", design_rows, source="cfg[inputs], cfg[results]")],
+        blocks=[
+            _kv_table("Design data", design_rows, source="cfg[inputs], cfg[results]")
+        ],
     )
 
     current_demand = Section(
@@ -602,7 +813,12 @@ def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
                 columns=["Surface", "Coating", "f_cm", "f_cf"],
                 units=["-", "-", "-", "-"],
                 rows=[
-                    ["Linepipe", fc.get("linepipe_coating", ""), fc.get("mean_factor", ""), fc.get("final_factor", "")],
+                    [
+                        "Linepipe",
+                        fc.get("linepipe_coating", ""),
+                        fc.get("mean_factor", ""),
+                        fc.get("final_factor", ""),
+                    ],
                     [
                         "Field joints",
                         fc.get("field_joint_coating", ""),
@@ -615,11 +831,23 @@ def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
             _kv_table(
                 "Current demand",
                 [
-                    ["Mean design current density", dens.get("mean_current_density_A_m2", ""), "A/m2"],
+                    [
+                        "Mean design current density",
+                        dens.get("mean_current_density_A_m2", ""),
+                        "A/m2",
+                    ],
                     ["Linepipe area", geom.get("linepipe_area_m2", ""), "m2"],
                     ["Field joint area", geom.get("field_joint_area_m2", ""), "m2"],
-                    ["Mean current demand", demand.get("mean_current_demand_A", ""), "A"],
-                    ["Final current demand", demand.get("final_current_demand_A", ""), "A"],
+                    [
+                        "Mean current demand",
+                        demand.get("mean_current_demand_A", ""),
+                        "A",
+                    ],
+                    [
+                        "Final current demand",
+                        demand.get("final_current_demand_A", ""),
+                        "A",
+                    ],
                 ],
                 source="cfg[results][current_demand_A]",
             ),
@@ -637,14 +865,26 @@ def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
             _kv_table(
                 "Anode mass, count and spacing",
                 [
-                    ["Total net anode mass required", req.get("total_anode_mass_kg", ""), "kg"],
+                    [
+                        "Total net anode mass required",
+                        req.get("total_anode_mass_kg", ""),
+                        "kg",
+                    ],
                     ["Anode capacity", req.get("anode_capacity_Ah_kg", ""), "Ah/kg"],
                     ["Bracelets by mass (N_mass)", n_mass, "-"],
                     ["Bracelets by final current output (N_final)", n_final, "-"],
                     ["Bracelets installed (N)", n_total, "-"],
                     ["Anode spacing", spacing.get("spacing_m", ""), "m"],
-                    ["Protected length (attenuation)", atten.get("protected_length_m", ""), "m"],
-                    ["Maximum spacing (2 x protected length)", spacing.get("max_spacing_m", ""), "m"],
+                    [
+                        "Protected length (attenuation)",
+                        atten.get("protected_length_m", ""),
+                        "m",
+                    ],
+                    [
+                        "Maximum spacing (2 x protected length)",
+                        spacing.get("max_spacing_m", ""),
+                        "m",
+                    ],
                 ],
                 source="cfg[results][anode_requirements], cfg[results][anode_spacing_m]",
             ),
@@ -662,6 +902,7 @@ def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         title="Adequacy",
         subtitle="Route status, spacing check and current output",
         blocks=[
+            _use_status_block(status),
             _status_block(status, "Bracelet CP design adequacy"),
             StatusBlock(
                 label="Anode spacing <= 2 x protected length",
@@ -677,23 +918,47 @@ def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
                 columns=["Item", "Value", "Unit"],
                 rows=[
                     ["Driving voltage", req.get("driving_voltage_V", ""), "V"],
-                    ["Anode resistance R_a", req.get("anode_resistance_ohm", ""), "ohm"],
+                    [
+                        "Anode resistance R_a",
+                        req.get("anode_resistance_ohm", ""),
+                        "ohm",
+                    ],
                     ["Output per anode", req.get("anode_current_output_A", ""), "A"],
                     [
                         "Total output (N anodes)",
-                        round(float(req.get("anode_current_output_A", 0.0)) * float(n_total), 4),
+                        round(
+                            float(req.get("anode_current_output_A", 0.0))
+                            * float(n_total),
+                            4,
+                        ),
                         "A",
                     ],
-                    ["Final current demand", demand.get("final_current_demand_A", ""), "A"],
-                    ["Current output adequate", atten.get("current_output_ok", ""), "-"],
+                    [
+                        "Final current demand",
+                        demand.get("final_current_demand_A", ""),
+                        "A",
+                    ],
+                    [
+                        "Current output adequate",
+                        atten.get("current_output_ok", ""),
+                        "-",
+                    ],
                 ],
                 source="cfg[results][anode_requirements], cfg[results][attenuation_analysis]",
             ),
             _checks_table(status),
         ],
     )
-    usage: list[tuple[str, Sequence[Any]]] = [("Route citations", results.get("citations") or [])]
-    return [design_basis, current_demand, anode_requirements, adequacy, _references_section(results, usage)]
+    usage: list[tuple[str, Sequence[Any]]] = [
+        ("Route citations", results.get("citations") or [])
+    ]
+    return [
+        design_basis,
+        current_demand,
+        anode_requirements,
+        adequacy,
+        _references_section(results, usage),
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -709,18 +974,21 @@ def _phase_rows(block: Mapping[str, Any], phases: Sequence[str]) -> list[Row]:
     return rows
 
 
-def _abs_ships_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Section]:
+def _abs_ships_sections(
+    inputs: Mapping[str, Any], results: Mapping[str, Any]
+) -> list[Section]:
     demand = _mapping(results.get("current_demand_A"))
     dens = _mapping(results.get("current_densities_mA_m2"))
     fc = _mapping(results.get("coating_breakdown_factors"))
     req = _mapping(results.get("anode_requirements"))
     perf = _mapping(results.get("anode_performance"))
+    layout = _mapping(results.get("layout"))
     status = _mapping(results.get("status"))
     phases = ("initial", "mean", "final")
     areas = _mapping(demand.get("areas_m2"))
+    bare_basis = _mapping(demand.get("bare_current_basis"))
     design_rows: list[Row] = [
         ["Design life", results.get("design_life", ""), "yr"],
-        ["Seawater temperature", results.get("temperature", ""), "degC"],
         ["Anode current capacity", results.get("anode_current_capacity", ""), "Ah/kg"],
         ["Coated area", areas.get("coated", ""), "m2"],
         ["Uncoated area", areas.get("uncoated", ""), "m2"],
@@ -736,7 +1004,9 @@ def _abs_ships_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -
             title="Design basis",
             subtitle="Input echo: hull areas, environment and anode data",
             blocks=[
-                _kv_table("Design data", design_rows, source="cfg[inputs], cfg[results]"),
+                _kv_table(
+                    "Design data", design_rows, source="cfg[inputs], cfg[results]"
+                ),
                 TableBlock(
                     title="Coating breakdown factors",
                     columns=["Factor", "Value"],
@@ -756,11 +1026,45 @@ def _abs_ships_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -
                     rows=[[k, v] for k, v in sorted(dens.items())],
                     source="cfg[results][current_densities_mA_m2]",
                 ),
+                _kv_table(
+                    "Project bare-current basis (Table 3 comparator only)",
+                    [
+                        [
+                            "Dynamic bare density",
+                            bare_basis.get("dynamic_mA_m2", ""),
+                            "mA/m2",
+                        ],
+                        [
+                            "Static bare density",
+                            bare_basis.get("static_mA_m2", ""),
+                            "mA/m2",
+                        ],
+                        [
+                            "Dynamic time fraction",
+                            bare_basis.get("dynamic_time_fraction", ""),
+                            "-",
+                        ],
+                        ["Source", bare_basis.get("source", ""), "-"],
+                    ],
+                    source="cfg[results][current_demand_A][bare_current_basis]",
+                ),
                 TableBlock(
                     title="Current demand by surface and phase",
                     columns=["Surface", "Initial", "Mean", "Final"],
                     units=["-", "A", "A", "A"],
-                    rows=_phase_rows({k: v for k, v in demand.items() if k != "areas_m2"}, phases),
+                    rows=_phase_rows(
+                        {
+                            k: v
+                            for k, v in demand.items()
+                            if k
+                            not in {
+                                "areas_m2",
+                                "densities_mA_m2",
+                                "bare_current_basis",
+                            }
+                        },
+                        phases,
+                    ),
                     source="cfg[results][current_demand_A]",
                 ),
             ],
@@ -773,16 +1077,62 @@ def _abs_ships_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -
                     "Anode mass and count",
                     [
                         ["Mean current", req.get("mean_current_A", ""), "A"],
-                        ["Total net anode mass required", req.get("total_mass_kg", ""), "kg"],
-                        ["Anode count (rounded up)", req.get("anode_count", ""), "-"],
-                        ["Anode count (unrounded)", req.get("anode_count_raw", ""), "-"],
+                        [
+                            "Total net anode mass required",
+                            req.get("total_mass_kg", ""),
+                            "kg",
+                        ],
+                        [
+                            "Selected anode count",
+                            req.get("selected_anode_count", ""),
+                            "-",
+                        ],
+                        [
+                            "Recommended minimum count",
+                            req.get("recommended_anode_count", ""),
+                            "-",
+                        ],
+                        ["Mass-basis count", req.get("mass_count", ""), "-"],
+                        [
+                            "Initial-output count",
+                            req.get("initial_output_count", ""),
+                            "-",
+                        ],
+                        ["Mean-output count", req.get("mean_output_count", ""), "-"],
+                        ["Final-output count", req.get("final_output_count", ""), "-"],
                     ],
                     source="cfg[results][anode_requirements]",
-                )
+                ),
+                _kv_table(
+                    "Layout and spacing",
+                    [
+                        ["Layout status", layout.get("status", ""), "-"],
+                        [
+                            "Actual maximum spacing",
+                            layout.get("actual_max_spacing_m", ""),
+                            "m",
+                        ],
+                        ["Spacing limit", layout.get("spacing_limit_m", ""), "m"],
+                        [
+                            "Selected locations",
+                            layout.get("selected_locations", ""),
+                            "-",
+                        ],
+                        [
+                            "Anodes per location",
+                            layout.get("anodes_per_location", ""),
+                            "-",
+                        ],
+                    ],
+                    source="cfg[results][layout]",
+                ),
             ],
         ),
     ]
-    adequacy_blocks: list[Block] = [_status_block(status, "Hull CP design adequacy")]
+    adequacy_blocks: list[Block] = [
+        _use_status_block(status),
+        _status_block(status, "Assessed hull CP design scope"),
+    ]
     if perf:
         resist = _mapping(perf.get("resistance_ohm"))
         out = _mapping(perf.get("current_output_A"))
@@ -791,7 +1141,14 @@ def _abs_ships_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -
         adequacy_blocks.append(
             TableBlock(
                 title="Anode resistance and current output, fresh vs depleted",
-                columns=["Case", "Resistance R_a", "Output per anode", "Total output", "Demand", "Meets demand"],
+                columns=[
+                    "Case",
+                    "Resistance R_a",
+                    "Output per anode",
+                    "Total output",
+                    "Demand",
+                    "Meets demand",
+                ],
                 units=["-", "ohm", "A", "A", "A", "-"],
                 rows=[
                     [
@@ -800,7 +1157,7 @@ def _abs_ships_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -
                         out.get("initial_per_anode", ""),
                         out.get("initial_total", ""),
                         totals.get("initial", ""),
-                        checks.get("initial_meets_demand", ""),
+                        checks.get("initial_current_output", ""),
                     ],
                     [
                         "Final (depleted anode)",
@@ -808,19 +1165,52 @@ def _abs_ships_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -
                         out.get("final_per_anode", ""),
                         out.get("final_total", ""),
                         totals.get("final", ""),
-                        checks.get("final_meets_demand", ""),
+                        checks.get("final_current_output", ""),
                     ],
                 ],
                 source="cfg[results][anode_performance]",
             )
         )
+        depleted = _mapping(perf.get("depleted_geometry"))
+        if depleted:
+            adequacy_blocks.append(
+                _kv_table(
+                    "Depleted long-flush geometry",
+                    [[key, value, "-"] for key, value in sorted(depleted.items())],
+                    source="cfg[results][anode_performance][depleted_geometry]",
+                )
+            )
+    limitations = results.get("limitations") or []
+    assumptions = results.get("model_assumptions") or []
+    adequacy_blocks.append(
+        TableBlock(
+            title="Accepted model assumptions",
+            columns=["Interpretation"],
+            rows=[[item] for item in assumptions],
+            source="cfg[results][model_assumptions]",
+        )
+    )
+    adequacy_blocks.append(
+        TableBlock(
+            title="Design limitations",
+            columns=["Item"],
+            rows=[[item] for item in limitations],
+            source="cfg[results][limitations], cfg[results][citation_resolution]",
+        )
+    )
     adequacy_blocks.append(_checks_table(status))
     sections.append(Section(key="adequacy", title="Adequacy", blocks=adequacy_blocks))
-    sections.append(_references_section(results, []))
+    sections.append(
+        _references_section(
+            results, [("ABS route citations", results.get("citations") or [])]
+        )
+    )
     return sections
 
 
-def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Section]:
+def _abs_offshore_sections(
+    inputs: Mapping[str, Any], results: Mapping[str, Any]
+) -> list[Section]:
     fc = _mapping(results.get("coating_breakdown_factors"))
     dens = _mapping(results.get("current_densities_mA_m2"))
     demand = _mapping(results.get("current_demand_A"))
@@ -834,7 +1224,11 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
         ["Climatic region", results.get("climatic_region", ""), "-"],
         ["Surface area", results.get("surface_area_m2", ""), "m2"],
         ["Design life", results.get("design_life_years", ""), "yr"],
-        ["Anode current capacity", results.get("anode_current_capacity_Ah_kg", ""), "Ah/kg"],
+        [
+            "Anode current capacity",
+            results.get("anode_current_capacity_Ah_kg", ""),
+            "Ah/kg",
+        ],
         ["Anode utilisation factor", results.get("anode_utilisation_factor", ""), "-"],
     ]
     sections = [
@@ -843,7 +1237,9 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
             title="Design basis",
             subtitle="Input echo: zone, environment and anode data",
             blocks=[
-                _kv_table("Design data", design_rows, source="cfg[inputs], cfg[results]"),
+                _kv_table(
+                    "Design data", design_rows, source="cfg[inputs], cfg[results]"
+                ),
                 _kv_table(
                     "Coating breakdown",
                     [
@@ -878,8 +1274,16 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
                 _kv_table(
                     "Anode mass and count",
                     [
-                        ["Total net anode mass required", req.get("total_mass_kg", results.get("anode_mass_kg", "")), "kg"],
-                        ["Individual anode net mass", req.get("individual_mass_kg", "not given"), "kg"],
+                        [
+                            "Total net anode mass required",
+                            req.get("total_mass_kg", results.get("anode_mass_kg", "")),
+                            "kg",
+                        ],
+                        [
+                            "Individual anode net mass",
+                            req.get("individual_mass_kg", "not given"),
+                            "kg",
+                        ],
                         ["Anode count", req.get("anode_count", "not derived"), "-"],
                     ],
                     source="cfg[results][anode_requirements]",
@@ -889,7 +1293,11 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
         Section(
             key="adequacy",
             title="Adequacy",
-            blocks=[_status_block(status, "Offshore structure CP design adequacy"), _checks_table(status)],
+            blocks=[
+                _use_status_block(status),
+                _status_block(status, "Offshore structure CP design adequacy"),
+                _checks_table(status),
+            ],
         ),
         _references_section(results, []),
     ]
@@ -900,10 +1308,223 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
 # Registered adapters
 # ---------------------------------------------------------------------------
 
+
+def _bank_report_rows(
+    results: Mapping[str, Any],
+) -> tuple[list[Row], list[Row], list[Row], list[tuple[str, list[Any], list[Any]]]]:
+    """Flatten terminal-bank results into report rows and figure columns."""
+    demand_rows: list[Row] = []
+    resistance_rows: list[Row] = []
+    attenuation_rows: list[Row] = []
+    envelopes: list[tuple[str, list[Any], list[Any]]] = []
+    for value in results.get("banks", []):
+        bank = _mapping(value)
+        bank_id = str(bank.get("bank_id", ""))
+        demand = _mapping(bank.get("current_demand_A"))
+        for component in ("structure", "pipeline", "total"):
+            phases = _mapping(demand.get(component))
+            demand_rows.append(
+                [
+                    bank_id,
+                    component,
+                    phases.get("initial", ""),
+                    phases.get("mean", ""),
+                    phases.get("final", ""),
+                ]
+            )
+        resistance = _mapping(bank.get("anode_resistance_ohm"))
+        for phase in ("initial", "final"):
+            resistance_rows.append(
+                [
+                    bank_id,
+                    phase,
+                    _mapping(resistance.get("individual")).get(phase, ""),
+                    _mapping(resistance.get("parallel")).get(phase, ""),
+                    _mapping(resistance.get("total")).get(phase, ""),
+                ]
+            )
+        for side_value in bank.get("sides", []):
+            side = _mapping(side_value)
+            attenuation_rows.append(
+                [
+                    bank_id,
+                    side.get("side_id", ""),
+                    _mapping(side.get("geometry_m")).get("length", ""),
+                    side.get("f103_eq20_protected_length_m", ""),
+                    side.get("extended_protected_length_m", ""),
+                    side.get("far_potential_V", ""),
+                    side.get("protection_margin_V", ""),
+                    side.get("protection_ok", ""),
+                ]
+            )
+            envelope = _mapping(side.get("potential_envelope"))
+            distances = list(envelope.get("distance_m", []))
+            potentials = list(envelope.get("potential_V", []))
+            envelopes.append(
+                (f"{bank_id}/{side.get('side_id', '')}", distances, potentials)
+            )
+    return demand_rows, resistance_rows, attenuation_rows, envelopes
+
+
+def _bank_envelope_figure(
+    label: str, x_values: list[Any], potentials: list[Any], index: int
+) -> FigureBlock:
+    """Build one conservative figure so unequal side grids remain visible."""
+    return FigureBlock(
+        title="Conservative potential attenuation envelope",
+        caption=(
+            "F103 Eq. (15) voltage-drop envelope; this is not a "
+            "distributed-current potential profile."
+        ),
+        figure_id=f"{FIG_BANK_POTENTIAL_ENVELOPE}-{index}",
+        plotly=figure_from_columns(
+            "line",
+            x_values,
+            {label: potentials},
+            title="Potential envelope from terminal bank",
+            x_label="distance from bank (m)",
+            y_label="potential (V)",
+        ),
+    )
+
+
+def _bank_requirement_rows(results: Mapping[str, Any]) -> list[Row]:
+    """Expose the sizing comparators and bank-topology assumptions."""
+    rows: list[Row] = []
+    for value in results.get("banks", []):
+        bank = _mapping(value)
+        bank_id = str(bank.get("bank_id", ""))
+        requirement = _mapping(bank.get("anode_requirements"))
+        resistance = _mapping(bank.get("anode_resistance_ohm"))
+        fields = (
+            ("required_mass_kg", "Required mass", "kg"),
+            ("installed_mass_kg", "Installed mass", "kg"),
+            ("count_by_mass", "Count by mass", "-"),
+            ("count_by_initial_output", "Count by initial output", "-"),
+            ("count_by_final_output", "Count by final output", "-"),
+            ("count_by_attenuation", "Count by attenuation", "-"),
+            ("recommended_anode_count", "Recommended count", "-"),
+            ("installed_anode_count", "Installed count", "-"),
+            ("search_outcome", "Count-search outcome", "-"),
+        )
+        rows.extend(
+            [
+                [bank_id, label, requirement.get(key, ""), unit]
+                for key, label, unit in fields
+            ]
+        )
+        rows.extend(
+            [
+                [
+                    bank_id,
+                    "Interaction factor",
+                    resistance.get("interaction_factor", ""),
+                    "-",
+                ],
+                [bank_id, "Cable resistance", resistance.get("cable", ""), "ohm"],
+                [bank_id, "Group formula", resistance.get("group_formula", ""), "-"],
+            ]
+        )
+    return rows
+
+
+def _f103_anode_bank_sections(
+    inputs: Mapping[str, Any], results: Mapping[str, Any]
+) -> list[Section]:
+    """Standard layout for independently assessed terminal anode banks."""
+    demand, resistance, attenuation, envelopes = _bank_report_rows(results)
+    requirements = _bank_requirement_rows(results)
+    figures = [
+        _bank_envelope_figure(label, distances, potentials, index)
+        for index, (label, distances, potentials) in enumerate(envelopes, 1)
+    ]
+    status = _mapping(results.get("status"))
+    return [
+        Section(
+            key="design-basis",
+            title="Design basis",
+            blocks=[
+                _kv_table(
+                    "Terminal-bank basis",
+                    [
+                        ["Standard", results.get("standard", ""), "-"],
+                        ["Edition", results.get("edition", ""), "-"],
+                        ["Design life", results.get("design_life_years", ""), "years"],
+                    ],
+                )
+            ],
+        ),
+        Section(
+            key="current-demand",
+            title="Current demand",
+            blocks=[
+                TableBlock(
+                    title="Pipeline and structure current demand",
+                    columns=["Bank", "Component", "Initial", "Mean", "Final"],
+                    units=["-", "-", "A", "A", "A"],
+                    rows=demand,
+                )
+            ],
+        ),
+        Section(
+            key="bank-resistance",
+            title="Bank resistance",
+            blocks=[
+                TableBlock(
+                    title="Individual and group resistance",
+                    columns=["Bank", "Case", "Individual", "Parallel", "Total"],
+                    units=["-", "-", "ohm", "ohm", "ohm"],
+                    rows=resistance,
+                ),
+                TableBlock(
+                    title="Bank sizing and topology",
+                    columns=["Bank", "Item", "Value", "Unit"],
+                    rows=requirements,
+                ),
+            ],
+        ),
+        Section(
+            key="attenuation",
+            title="Flowline attenuation",
+            blocks=[
+                TableBlock(
+                    title="Protected length and far-end potential",
+                    columns=[
+                        "Bank",
+                        "Side",
+                        "Length",
+                        "F103 Eq. (20) length",
+                        "Fixed-load extension length",
+                        "Far potential",
+                        "Margin",
+                        "Pass",
+                    ],
+                    units=["-", "-", "m", "m", "m", "V", "V", "-"],
+                    rows=attenuation,
+                ),
+                *figures,
+            ],
+        ),
+        Section(
+            key="adequacy",
+            title="Adequacy",
+            blocks=[
+                _use_status_block(status),
+                _status_block(status, "Terminal-bank and far-end adequacy"),
+                _checks_table(status),
+            ],
+        ),
+        _references_section(results, []),
+    ]
+
+
 _SECTION_BUILDERS = {
     KEY_B401: _b401_sections,
     KEY_F103: _f103_sections,
+    KEY_F103_2010: _f103_sections,
+    KEY_F103_ANODE_BANK: _f103_anode_bank_sections,
     KEY_ABS_SHIPS: _abs_ships_sections,
+    KEY_ABS_SHIPS_LEGACY: _abs_ships_sections,
     KEY_ABS_OFFSHORE: _abs_offshore_sections,
 }
 
@@ -930,8 +1551,12 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
             f"cathodic_protection.anode_design has no layout for calculation_type "
             f"{calc_type!r}; supported: {sorted(_SECTION_BUILDERS)}"
         )
-    standard = str(results.get("standard") or _ABS_STANDARDS.get(calc_type, ("", ""))[0])
-    document, doc_note = _document(cfg, f"Cathodic protection anode design - {standard}".strip(" -"))
+    standard = str(
+        results.get("standard") or _ABS_STANDARDS.get(calc_type, ("", ""))[0]
+    )
+    document, doc_note = _document(
+        cfg, f"Cathodic protection anode design - {standard}".strip(" -")
+    )
     note = f"{standard}: {results.get('provenance', 'legacy solver')}"
     echo: dict[str, Any] = {"inputs": dict(inputs)}
     if doc_note:
@@ -939,7 +1564,10 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
     return ReportSpec(
         document=document,
         standards=_standards(results, calc_type),
-        citations=[asdict(c) for c in _citations_from_labels(results.get("citations") or [], note)],
+        citations=[
+            asdict(c)
+            for c in _citations_from_labels(results.get("citations") or [], note)
+        ],
         sections=builder(inputs, results),
         provenance=_provenance(cfg, results, "results"),
         input_echo=echo,
@@ -959,13 +1587,16 @@ def _compliance_status_block(report: CPAssessmentReport) -> StatusBlock:
     ]
     passed = report.overall_status == ComplianceStatus.COMPLIANT
     counts = {
-        s.value: sum(1 for c in report.compliance_checks if c.status == s) for s in ComplianceStatus
+        s.value: sum(1 for c in report.compliance_checks if c.status == s)
+        for s in ComplianceStatus
     }
     detail = "; ".join(f"{k.replace('_', ' ')}: {v}" for k, v in counts.items() if v)
     return StatusBlock(
         label=f"Overall compliance ({report.system_id})",
         status="PASS" if passed else "FAIL",
-        governing_case=None if passed else (", ".join(failing) or report.overall_status.value),
+        governing_case=None
+        if passed
+        else (", ".join(failing) or report.overall_status.value),
         detail=detail or "no compliance checks recorded",
     )
 
@@ -1005,12 +1636,21 @@ def build_assessment_spec(
             digest=_sha256(report.model_dump_json().encode("utf-8")),
             description=f"cp_reporting assessment for {report.system_id}",
         )
-        for label, model in (("CISAnalysisResult", cis_result), ("DepletionProfile", depletion)):
+        for label, model in (
+            ("CISAnalysisResult", cis_result),
+            ("DepletionProfile", depletion),
+        ):
             if model is not None:
-                provenance.add("results", label, digest=_sha256(model.model_dump_json().encode("utf-8")))
+                provenance.add(
+                    "results",
+                    label,
+                    digest=_sha256(model.model_dump_json().encode("utf-8")),
+                )
         if cis_points:
             payload = json.dumps([p.model_dump() for p in cis_points], sort_keys=True)
-            provenance.add("results", "CISSurveyPoint[]", digest=_sha256(payload.encode("utf-8")))
+            provenance.add(
+                "results", "CISSurveyPoint[]", digest=_sha256(payload.encode("utf-8"))
+            )
 
     summary_md = (
         f"**System:** {report.system_id}\n\n**Asset:** {report.asset_description}\n\n"
@@ -1028,8 +1668,14 @@ def build_assessment_spec(
 
     check_rows: list[Row] = [
         [
-            c.check_id, c.description, c.standard_reference, c.criterion_value,
-            c.measured_value, c.unit, c.status.value.replace("_", " "), c.notes,
+            c.check_id,
+            c.description,
+            c.standard_reference,
+            c.criterion_value,
+            c.measured_value,
+            c.unit,
+            c.status.value.replace("_", " "),
+            c.notes,
         ]
         for c in report.compliance_checks
     ]
@@ -1038,22 +1684,39 @@ def build_assessment_spec(
         compliance_blocks.append(
             TableBlock(
                 title="Compliance checks",
-                columns=["Check", "Description", "Standard reference", "Criterion", "Measured", "Unit", "Status", "Notes"],
+                columns=[
+                    "Check",
+                    "Description",
+                    "Standard reference",
+                    "Criterion",
+                    "Measured",
+                    "Unit",
+                    "Status",
+                    "Notes",
+                ],
                 rows=check_rows,
                 source="CPAssessmentReport.compliance_checks",
             )
         )
     else:
-        compliance_blocks.append(TextBlock(markdown="No compliance checks were recorded."))
-    sections.append(Section(key="compliance", title="Compliance", blocks=compliance_blocks))
+        compliance_blocks.append(
+            TextBlock(markdown="No compliance checks were recorded.")
+        )
+    sections.append(
+        Section(key="compliance", title="Compliance", blocks=compliance_blocks)
+    )
 
     if cis_points or cis_result is not None:
         survey_blocks: list[Block] = []
         if cis_points:
             distances = [p.distance_m for p in cis_points]
-            series: dict[str, list[float]] = {"ON potential": [p.on_potential_V for p in cis_points]}
+            series: dict[str, list[float]] = {
+                "ON potential": [p.on_potential_V for p in cis_points]
+            }
             if all(p.off_potential_V is not None for p in cis_points):
-                series["OFF potential"] = [float(p.off_potential_V or 0.0) for p in cis_points]
+                series["OFF potential"] = [
+                    float(p.off_potential_V or 0.0) for p in cis_points
+                ]
             survey_blocks.append(
                 FigureBlock(
                     title="Structure-to-electrolyte potential vs distance",
@@ -1076,15 +1739,24 @@ def build_assessment_spec(
                     [
                         ["Survey points", cis_result.total_points, "-"],
                         ["Protected points", cis_result.protected_points, "-"],
-                        ["Under-protected points", cis_result.underprotected_points, "-"],
+                        [
+                            "Under-protected points",
+                            cis_result.underprotected_points,
+                            "-",
+                        ],
                         ["Over-protected points", cis_result.overprotected_points, "-"],
-                        ["Protection percentage", cis_result.protection_percentage, "%"],
+                        [
+                            "Protection percentage",
+                            cis_result.protection_percentage,
+                            "%",
+                        ],
                         ["Most negative potential", cis_result.min_potential_V, "V"],
                         ["Least negative potential", cis_result.max_potential_V, "V"],
                         ["Mean potential", cis_result.mean_potential_V, "V"],
                         [
                             "Deficiency locations",
-                            ", ".join(f"{d:g}" for d in cis_result.deficiency_locations) or "none",
+                            ", ".join(f"{d:g}" for d in cis_result.deficiency_locations)
+                            or "none",
                             "m",
                         ],
                     ],
@@ -1114,7 +1786,9 @@ def build_assessment_spec(
             )
         if depletion is not None:
             series = {"Remaining gross mass": list(depletion.remaining_mass_kg)}
-            if depletion.usable_mass_kg and len(depletion.usable_mass_kg) == len(depletion.years):
+            if depletion.usable_mass_kg and len(depletion.usable_mass_kg) == len(
+                depletion.years
+            ):
                 series["Remaining usable mass"] = list(depletion.usable_mass_kg)
             life_blocks.append(
                 FigureBlock(
@@ -1131,17 +1805,33 @@ def build_assessment_spec(
                     ),
                 )
             )
-        sections.append(Section(key="remaining-life", title="Remaining life", blocks=life_blocks))
+        sections.append(
+            Section(key="remaining-life", title="Remaining life", blocks=life_blocks)
+        )
 
     rec_rows: list[Row] = [
-        [r.recommendation_id, r.priority.value, r.description, r.action_required, r.estimated_cost_category, r.timeframe]
+        [
+            r.recommendation_id,
+            r.priority.value,
+            r.description,
+            r.action_required,
+            r.estimated_cost_category,
+            r.timeframe,
+        ]
         for r in report.recommendations
     ]
     rec_blocks: list[Block] = (
         [
             TableBlock(
                 title="Recommendations",
-                columns=["ID", "Priority", "Description", "Action", "Cost category", "Timeframe"],
+                columns=[
+                    "ID",
+                    "Priority",
+                    "Description",
+                    "Action",
+                    "Cost category",
+                    "Timeframe",
+                ],
                 rows=rec_rows,
                 source="CPAssessmentReport.recommendations",
             )
@@ -1149,7 +1839,9 @@ def build_assessment_spec(
         if rec_rows
         else [TextBlock(markdown="No recommendations.")]
     )
-    sections.append(Section(key="recommendations", title="Recommendations", blocks=rec_blocks))
+    sections.append(
+        Section(key="recommendations", title="Recommendations", blocks=rec_blocks)
+    )
 
     echo: dict[str, Any] = {
         "system_id": report.system_id,
@@ -1160,7 +1852,9 @@ def build_assessment_spec(
     }
     if doc_note:
         echo["report.document"] = doc_note
-    return ReportSpec(document=document, sections=sections, provenance=provenance, input_echo=echo)
+    return ReportSpec(
+        document=document, sections=sections, provenance=provenance, input_echo=echo
+    )
 
 
 def _model(model_type: type[Any], value: Any) -> Any:
@@ -1189,7 +1883,11 @@ def assessment_report(cfg: Mapping[str, Any]) -> ReportSpec:
     cis_points = [_model(CISSurveyPoint, p) for p in points_raw]
     supplied = _mapping(_mapping(cfg.get("report")).get("document"))
     document = DocumentMeta.model_validate(dict(supplied)) if supplied else None
-    prov = _provenance(cfg, {"report": report.model_dump(), "cis_points": len(cis_points)}, "assessment")
+    prov = _provenance(
+        cfg,
+        {"report": report.model_dump(), "cis_points": len(cis_points)},
+        "assessment",
+    )
     return build_assessment_spec(
         report,
         cis_points=cis_points or None,
@@ -1203,6 +1901,7 @@ def assessment_report(cfg: Mapping[str, Any]) -> ReportSpec:
 __all__ = [
     "DEMAND_CURVE_SAMPLES",
     "FIG_ANODE_COUNTS",
+    "FIG_BANK_POTENTIAL_ENVELOPE",
     "FIG_DEMAND_VS_TIME",
     "FIG_POTENTIAL_VS_DISTANCE",
     "FIG_REMAINING_MASS",

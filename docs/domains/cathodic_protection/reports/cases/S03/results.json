@@ -1,0 +1,120 @@
+{
+  "anode_requirements": {
+    "anode_count": 28,
+    "anode_material": "aluminium",
+    "anode_type": "stand_off",
+    "citations": [
+      "dnv-rp-b401 2021-05 Table 8-6"
+    ],
+    "design_life_hours": 219000.0,
+    "electrochemical_capacity_Ah_kg": 2000.0,
+    "individual_mass_kg": 80.0,
+    "total_mass_kg": 2233.8,
+    "utilization_factor": 0.85,
+    "utilization_factor_source": "input"
+  },
+  "anode_resistance_ohm": 0.260554,
+  "citations": [
+    "dnv-rp-b401 2021-05 Table 8-1",
+    "dnv-rp-b401 2021-05 Table 8-2",
+    "dnv-rp-b401 2021-05 Table 8-4",
+    "dnv-rp-b401 2021-05 Table 8-6",
+    "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)"
+  ],
+  "coating_breakdown": {
+    "submerged": {
+      "a": 0.02,
+      "b_per_yr": 0.012,
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-4",
+        "dnv-rp-b401 2021-05 Table 8-4"
+      ],
+      "coating_category": "III",
+      "depth_band": "0-30",
+      "f_cf": 0.32,
+      "f_ci": 0.02,
+      "f_cm": 0.16999999999999998
+    }
+  },
+  "current_demand_A": {
+    "submerged": {
+      "I_final_A": 46.24,
+      "I_initial_A": 4.25,
+      "I_mean_A": 17.34,
+      "area_m2": 850.0,
+      "f_cf": 0.32,
+      "f_ci": 0.02,
+      "f_cm": 0.16999999999999998,
+      "i_final_A_m2": 0.17,
+      "i_initial_A_m2": 0.25,
+      "i_mean_A_m2": 0.12
+    },
+    "total_final_A": 46.24,
+    "total_initial_A": 4.25,
+    "total_mean_A": 17.34
+  },
+  "current_densities_A_m2": {
+    "submerged": {
+      "base_zone": "submerged",
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-1",
+        "dnv-rp-b401 2021-05 Table 8-2"
+      ],
+      "climate": "arctic",
+      "depth_band": "0-30",
+      "exposure_zone": "submerged",
+      "i_final_A_m2": 0.17,
+      "i_initial_A_m2": 0.25,
+      "i_mean_A_m2": 0.12,
+      "seawater_temperature_C": 6.0
+    }
+  },
+  "current_output_verification": {
+    "adequate": false,
+    "anode_count": 28,
+    "anode_count_source": "mass",
+    "anode_current_output_final_A": 0.7276,
+    "anode_current_output_initial_A": 0.9595,
+    "anode_resistance_final_ohm": 0.343586,
+    "anode_resistance_initial_ohm": 0.260554,
+    "citations": [
+      "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)"
+    ],
+    "count_by_final_current": 64,
+    "count_by_initial_current": 5,
+    "count_by_mass": 28,
+    "driving_voltage_V": 0.25,
+    "equivalent_radius_final_m": 0.017428,
+    "equivalent_radius_initial_m": 0.045,
+    "final_current_demand_A": 46.24,
+    "final_meets_demand": false,
+    "governing_case": "final",
+    "initial_current_demand_A": 4.25,
+    "initial_meets_demand": true,
+    "mass_meets_requirement": true,
+    "mean_current_demand_A": 17.34,
+    "radius_source": "input",
+    "recommended_anode_count": 64,
+    "total_anode_current_output_final_A": 20.373,
+    "total_anode_current_output_initial_A": 26.866
+  },
+  "design_life_years": 25.0,
+  "edition": "2021",
+  "provenance": "verified-2021-tables",
+  "standard": "DNV-RP-B401 (May 2021)",
+  "status": {
+    "checks": {
+      "final_current_output": false,
+      "initial_current_output": true,
+      "mass": true
+    },
+    "governing_case": "final",
+    "reason": "28 x 80 kg stand_off anodes (mass) fail the final current output check(s); the final case governs: N_mass=28, N_initial=5, N_final=64; install 64 anodes (B401 Sec. 7.8)",
+    "result": "FAIL",
+    "use_status": "client-use-with-eor-check"
+  },
+  "surface_areas_m2": {
+    "submerged": 850.0,
+    "total_m2": 850.0
+  }
+}

@@ -1,5 +1,10 @@
 # Offshore Vessel Hull CP Design — ABS GN Ships 2017
 
+> The hand calculations below preserve historical source/legacy arithmetic and are not
+> the rebuilt route's verified output. The executable blocks identify project current
+> densities outside Table 3 and return `client-use-with-eor-check` under owner decision
+> 2026-10-01.
+
 **Standard:** ABS Guidance Notes on Cathodic Protection of Ships (December 2017)
 **Structure type:** Floating Storage Terminal (FST) hull — submerged zone
 **Anode type:** Long-flush aluminium anodes
@@ -17,8 +22,9 @@ ABS Guidance Notes on Cathodic Protection of Ships (December 2017) covers the de
 of sacrificial anode cathodic protection systems for ship and vessel hulls. The method
 implements:
 
-- Section 2.4.4 Table 4: Coating breakdown factors (compound-growth model)
-- Section 2.4.4 Table 5: Design current densities for coated and bare steel
+- Section 2.4.4 Table 4: Coating breakdown percentages; no time law is prescribed
+- Section 2 Table 3: design current-density ranges for bare and coated steel
+- Section 2 Table 5: typical average current densities for coated hulls
 - Anode mass formula: M = I_cm × t_f × 8760 / (acc × u)
 - Anode resistance for long-flush geometry: R = ρ / (2 × s_mean)
 
@@ -55,7 +61,8 @@ implements:
 
 ### Step 1: Coating Breakdown Factors (ABS Section 2.4.4 Table 4)
 
-The ABS method uses a compound-growth model (not the linear DNV formula):
+The historical source spreadsheet uses the following compound-growth model; ABS Table 4
+does not prescribe this equation:
 
 ```
 f_initial = 1 + α/100 = 1 + 1.0/100 = 1.010   (per year for 2 years)
@@ -167,11 +174,10 @@ I_total = 127 × 1.004 = 127.5 A
 | Driving voltage ΔE | 0.290 | V |
 | Current output per anode | ~1.00 | A |
 
-**Reproduction note (this branch, `ABS_gn_ships_2018` route, snippet below):** the code
-returns a total anode mass of 3682.0 kg where the hand calculation above rounds to 3,679 kg
-(the difference is rounding of acc × u in the narrative); anode count 127.0, I_cm 149.94 A,
-fcm 1.030505, fcf 1.051010, Ra 0.2889 Ω and 1.004 A per anode agree. The ABS ships route is
-not affected by the #2207 DNV-RP-B401/F103 tables; these values are unchanged after #2207.
+**Historical-source note:** the values above describe the retired legacy calculation, not
+the rebuilt route. The executable block below supplies explicit project initial/maximum
+percentages and bare-current inputs. Its report is the controlling output and carries
+`client-use-with-eor-check` for the limitations listed there.
 
 ---
 
@@ -195,10 +201,12 @@ cfg = {
             "area_coverage": 100.0,
             "coating_initial_breakdown_factor": 1.0,
             "coating_initial_breakdown_duration": 2.0,
-            "coating_yearly_breakdown_factor": 1.0,
             "coating_breakdown_factor_max": 2.0,
         },
         "design_current": {
+            "dynamic_bare_steel_mA_m2": 1350.0,  # project value; outside Table 3
+            "static_bare_steel_mA_m2": 1350.0,
+            "dynamic_time_fraction": 0.5,
             "coated_steel_mA_m2": 13.5,
             "uncoated_steel_mA_m2": 200.0,
         },
@@ -207,12 +215,21 @@ cfg = {
             "protection_potential": 0.8,
             "closed_circuit_anode_potential": -1.09,
             "anode_Utilisation_factor": 0.825,
-            "physical_properties": {"net_weight": 29.0},
+            "anode_density": 2750.0,
+            "physical_properties": {
+                "net_weight": 29.0, "core_cross_section_m2": 0.01625,
+            },
             "geometry": {
                 "type": "long_flush",
                 "length_m": 1.00,
                 "width_m": 0.125,
             },
+        },
+        "layout": {
+            "actual_max_spacing_m": 8.0, "selected_locations": 230,
+            "anodes_per_location": 2, "high_current_or_low_resistivity": False,
+            "mechanical_damage_risk": False, "uniform_distribution_confirmed": True,
+            "bilge_damage_avoided": True, "bilge_keel_fitted": False,
         },
     }
 }
@@ -224,9 +241,9 @@ r = result["cathodic_protection"]
 print("Anode capacity (acc):      {:.0f} Ah/kg".format(
     r["anode_current_capacity"]))
 print("Coating factor (final):    {:.6f}".format(
-    r["coating_breakdown_factors"]["final_factor"]))
+    r["coating_breakdown_factors"]["final"]))
 print("Coating factor (mean):     {:.6f}".format(
-    r["coating_breakdown_factors"]["mean_factor"]))
+    r["coating_breakdown_factors"]["mean"]))
 print("Mean current demand:       {:.2f} A".format(
     r["current_demand_A"]["totals"]["mean"]))
 print("Total anode mass:          {:.1f} kg".format(
@@ -281,10 +298,8 @@ All other parameters remain identical.
    salinity ~24.5 ppt at 14 °C). In higher-salinity open ocean (ρ = 0.25 Ω·m), anode
    resistance would be proportionally lower, improving current delivery per anode.
 
-4. **ABS vs DNV coating model:** ABS uses a compound-growth model (fcf = f_i^2 × f_y^3
-   for 5 years), whereas DNV-RP-F103 uses a linear model (fcf = a + b×t). The models
-   give different numerical results even for similar input parameters; they should not
-   be mixed.
+4. **Source vs ABS coating model:** the source uses compound growth, while ABS Table 4
+   supplies percentages without prescribing a time-development equation.
 
 ---
 
@@ -344,24 +359,38 @@ cfg = {
             "area_coverage": 95.0,
             "coating_initial_breakdown_factor": 2.0,
             "coating_initial_breakdown_duration": 2.0,
-            "coating_yearly_breakdown_factor": 3.0,
             "coating_breakdown_factor_max": 2.0,
         },
-        "design_current": {"coated_steel_mA_m2": 13.5, "uncoated_steel_mA_m2": 200.0},
+        "design_current": {
+            "dynamic_bare_steel_mA_m2": 675.0,  # project value; outside Table 3
+            "static_bare_steel_mA_m2": 675.0,
+            "dynamic_time_fraction": 0.5,
+            "coated_steel_mA_m2": 13.5,
+            "uncoated_steel_mA_m2": 200.0,
+        },
         "anode": {
             "material": "aluminium",
             "protection_potential": 0.8,
             "closed_circuit_anode_potential": -1.09,
             "anode_Utilisation_factor": 0.825,
-            "physical_properties": {"net_weight": 29.0},
+            "anode_density": 2750.0,
+            "physical_properties": {
+                "net_weight": 29.0, "core_cross_section_m2": 0.01625,
+            },
             "geometry": {"type": "long_flush", "length_m": 0.65, "width_m": 0.125},
+        },
+        "layout": {
+            "actual_max_spacing_m": 8.0, "selected_locations": 230,
+            "anodes_per_location": 2, "high_current_or_low_resistivity": False,
+            "mechanical_damage_risk": False, "uniform_distribution_confirmed": True,
+            "bilge_damage_avoided": True, "bilge_keel_fitted": False,
         },
     }
 }
 
 r = CathodicProtection().router(cfg)["cathodic_protection"]
-print("Coating breakdown final:    {:.4f}".format(r["coating_breakdown_factors"]["final_factor"]))
-print("Coating breakdown mean:     {:.4f}".format(r["coating_breakdown_factors"]["mean_factor"]))
+print("Coating breakdown final:    {:.4f}".format(r["coating_breakdown_factors"]["final"]))
+print("Coating breakdown mean:     {:.4f}".format(r["coating_breakdown_factors"]["mean"]))
 print("Mean current demand:        {:.2f} A".format(r["current_demand_A"]["totals"]["mean"]))
 print("Final current demand:       {:.2f} A".format(r["current_demand_A"]["totals"]["final"]))
 print("Total anode mass:           {:.1f} kg".format(r["anode_requirements"]["total_mass_kg"]))
@@ -370,7 +399,7 @@ print("Anode resistance (initial): {:.4f} Ohm".format(r["anode_performance"]["re
 print("Current output / anode:     {:.3f} A".format(r["anode_performance"]["current_output_A"]["initial_per_anode"]))
 ```
 
-### Results Summary (code output on this branch)
+### Historical source results (not rebuilt-route output)
 
 | Output | Value | Unit |
 |--------|-------|------|

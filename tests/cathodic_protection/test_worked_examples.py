@@ -15,6 +15,7 @@ import io
 import re
 import warnings
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -32,6 +33,7 @@ ROUTER_KEY = re.compile(r'cfg\["inputs"\]\["calculation_type"\]\s*==\s*"([^"]+)"
 
 EXPECTED_ROUTER_KEYS = {
     "ABS_gn_ships_2018",
+    "ABS_gn_ships_2018_legacy",
     "DNV_RP_F103_2010",
     "ABS_gn_offshore_2018",
     "DNV_RP_B401_offshore",
@@ -49,7 +51,7 @@ def example_files() -> list[Path]:
     return files
 
 
-def python_blocks() -> list[pytest.ParameterSet]:
+def python_blocks() -> list[Any]:
     params = []
     for path in example_files():
         text = path.read_text(encoding="utf-8")
@@ -78,12 +80,15 @@ def test_examples_are_collected() -> None:
 
 
 @pytest.mark.parametrize("path,index,code", python_blocks())
-def test_worked_example_block_executes(path: Path, index: int, code: str, monkeypatch) -> None:
+def test_worked_example_block_executes(
+    path: Path, index: int, code: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
     reason = not_runnable_reason(code)
     if reason:
         pytest.skip(f"{path.name}#{index} tagged not-runnable: {reason}")
 
     monkeypatch.syspath_prepend(str(SRC))
+    monkeypatch.setenv("LLM_WIKI_PATH", str(ROOT / "tests" / "citations" / "fixtures"))
     namespace: dict = {"__name__": f"cp_worked_example_{path.stem}_{index}"}
     with contextlib.redirect_stdout(io.StringIO()), warnings.catch_warnings():
         warnings.simplefilter("ignore")

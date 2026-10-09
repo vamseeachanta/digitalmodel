@@ -1,0 +1,31 @@
+{
+  "artifacts": {
+    "citations": "report_citations.json",
+    "html": "report.html",
+    "manifest": "report_manifest.json",
+    "pdf": null
+  },
+  "citations_count": 5,
+  "document": {
+    "client": "Internal module review - no client issuance",
+    "number": "R2281-CP-006-00",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "title": "CP module review: Bracelet pipeline"
+  },
+  "execution_tool": "digitalmodel.reporting.engine",
+  "pdf": {
+    "engine": null,
+    "message": "pdf rendering disabled (pdf: off)",
+    "rendered": false
+  },
+  "report_layer": null,
+  "standards": [
+    {
+      "code_id": "DNVGL-RP-F103",
+      "edition": "September 2019, amended May 2021",
+      "provenance": "verified-2019-tables"
+    }
+  ],
+  "tool_version": "0.0.9"
+}

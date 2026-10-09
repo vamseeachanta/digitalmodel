@@ -57,6 +57,7 @@ from digitalmodel.cathodic_protection.b401_tables import (
     depth_band,
     design_current_density,
     design_driving_voltage,
+    reinforcement_current_density,
 )
 from digitalmodel.citations import CitedValue
 
@@ -69,6 +70,7 @@ class ExposureZone(str, Enum):
     TIDAL = "tidal"
     SUBMERGED = "submerged"
     BURIED_MUDLINE = "buried_mudline"
+    CONCRETE_EMBEDDED = "concrete_embedded"
 
 
 class ClimateRegion(str, Enum):
@@ -172,14 +174,18 @@ def standoff_anode_design_loop(
     r_initial = kernel.equivalent_radius_from_mass(
         anode_net_mass_kg, anode_length_m, anode_density_kg_m3
     )
-    R_initial = kernel.slender_standoff(seawater_resistivity_ohm_m, anode_length_m, r_initial)
+    R_initial = kernel.slender_standoff(
+        seawater_resistivity_ohm_m, anode_length_m, r_initial
+    )
     I_initial = kernel.anode_current_output(driving_voltage_V, R_initial)
     n_initial = kernel.anodes_for_current(initial_current_A, I_initial)
 
     r_final = depleted_equivalent_radius(
         anode_net_mass_kg, anode_length_m, utilization_factor, anode_density_kg_m3
     )
-    R_final = kernel.slender_standoff(seawater_resistivity_ohm_m, anode_length_m, r_final)
+    R_final = kernel.slender_standoff(
+        seawater_resistivity_ohm_m, anode_length_m, r_final
+    )
     I_final = kernel.anode_current_output(driving_voltage_V, R_final)
     n_final = kernel.anodes_for_current(final_current_A, I_final)
 
@@ -203,7 +209,17 @@ class StructuralZone(BaseModel):
 
     zone_name: str = Field(..., description="Zone identifier")
     exposure_zone: ExposureZone = Field(..., description="Exposure zone type")
-    surface_area_m2: float = Field(..., gt=0, description="Surface area [m²]")
+    surface_area_m2: float | None = Field(
+        default=None, gt=0, description="Steel surface area [m²] for non-concrete zones"
+    )
+    reinforcement_area_m2: float | None = Field(
+        default=None,
+        gt=0,
+        description="Steel reinforcement surface area [m²] for concrete-embedded zones",
+    )
+    anode_family: str | None = Field(
+        default=None, description="Named anode family assigned to this CP-active zone"
+    )
     depth_m: float = Field(
         default=0.0,
         ge=0.0,
@@ -222,9 +238,49 @@ class StructuralZone(BaseModel):
         ),
     )
 
+    @model_validator(mode="after")
+    def _validate_area_basis(self) -> "StructuralZone":
+        concrete = self.exposure_zone is ExposureZone.CONCRETE_EMBEDDED
+        if concrete and self.reinforcement_area_m2 is None:
+            raise ValueError(
+                "reinforcement_area_m2 is required for concrete_embedded zones; "
+                "concrete gross area is not a valid B401 Table x-3 basis"
+            )
+        if concrete and self.surface_area_m2 is not None:
+            raise ValueError(
+                "surface_area_m2 is not accepted for concrete_embedded zones"
+            )
+        if concrete and self.coating_breakdown_factor is not None:
+            raise ValueError(
+                "coating_breakdown_factor is not accepted for concrete_embedded zones"
+            )
+        if not concrete and self.surface_area_m2 is None:
+            raise ValueError("surface_area_m2 is required for non-concrete zones")
+        if not concrete and self.reinforcement_area_m2 is not None:
+            raise ValueError(
+                "reinforcement_area_m2 is only valid for concrete_embedded zones"
+            )
+        return self
+
+    @property
+    def design_area_m2(self) -> float:
+        """Unambiguous steel area used by the B401 current-demand equation."""
+        area = self.reinforcement_area_m2 or self.surface_area_m2
+        assert area is not None
+        return area
+
+    @property
+    def area_basis(self) -> str:
+        """Human-readable basis of :attr:`design_area_m2`."""
+        if self.exposure_zone is ExposureZone.CONCRETE_EMBEDDED:
+            return "reinforcement_steel"
+        return "steel_surface"
+
     @property
     def effective_breakdown_factor(self) -> float:
         """f_c used in the demand calculation: ``None`` is bare steel."""
+        if self.exposure_zone is ExposureZone.CONCRETE_EMBEDDED:
+            return _BARE_STEEL_BREAKDOWN
         if self.coating_breakdown_factor is None:
             return _BARE_STEEL_BREAKDOWN
         return self.coating_breakdown_factor
@@ -331,12 +387,8 @@ class RetrofitAssessment(BaseModel):
     additional_mass_kg: float = Field(
         ..., description="Additional anode mass required [kg]"
     )
-    is_retrofit_needed: bool = Field(
-        ..., description="Whether retrofit is recommended"
-    )
-    recommendation: str = Field(
-        ..., description="Recommendation text"
-    )
+    is_retrofit_needed: bool = Field(..., description="Whether retrofit is recommended")
+    recommendation: str = Field(..., description="Recommendation text")
 
 
 def _resolve_climate(
@@ -388,6 +440,11 @@ def zone_current_density(
         # Sec. 6.3: 0.020 A/m2 for all phases. The previous 25/20/20 mA/m2
         # were ABS values, not B401.
         return buried_current_density(edition)
+    if zone is ExposureZone.CONCRETE_EMBEDDED:
+        # Table 10-3 / A-3 / 8-3 supplies one mean design density referred
+        # to reinforcement steel area. It is held constant for the three
+        # sizing phases because the table has no phase-specific columns.
+        return reinforcement_current_density(climate, depth_band(depth_m), edition)
     # SPLASH and ATMOSPHERIC: CP is not applied above the waterline in the
     # scope of B401; these zones rely on coating and corrosion allowance.
     # Design choice of this module (0.0 A/m2), no clause to cite.
@@ -482,6 +539,13 @@ def marine_structure_current_demand(
         Total current demand, anode mass, number of anodes per case,
         governing case and citations.
     """
+    assigned = [zone.zone_name for zone in zones if zone.anode_family is not None]
+    if assigned:
+        raise ValueError(
+            "marine_structure_current_demand does not size anode families; "
+            "use the engine-adapter B401 anode_families route for assigned zones: "
+            f"{assigned}"
+        )
     ed = normalize_edition(edition, stacklevel=3)
     climate = _resolve_climate(climate_region, surface_temperature_c)
 
@@ -495,9 +559,10 @@ def marine_structure_current_demand(
         densities, labels = _zone_densities(zone, climate, ed)
         fc = zone.effective_breakdown_factor
 
-        i_initial = zone.surface_area_m2 * fc * densities[DesignPhase.INITIAL]
-        i_mean = zone.surface_area_m2 * fc * densities[DesignPhase.MEAN]
-        i_final = zone.surface_area_m2 * fc * densities[DesignPhase.FINAL]
+        area = zone.design_area_m2
+        i_initial = area * fc * densities[DesignPhase.INITIAL]
+        i_mean = area * fc * densities[DesignPhase.MEAN]
+        i_final = area * fc * densities[DesignPhase.FINAL]
 
         total_initial += i_initial
         total_mean += i_mean
@@ -507,21 +572,25 @@ def marine_structure_current_demand(
             if label not in citations:
                 citations.append(label)
 
-        zone_details.append({
-            "zone_name": zone.zone_name,
-            "exposure_zone": zone.exposure_zone.value,
-            "surface_area_m2": zone.surface_area_m2,
-            "depth_m": zone.depth_m,
-            "climate": climate.value,
-            "coating_breakdown_factor": fc,
-            "initial_current_density_A_m2": densities[DesignPhase.INITIAL],
-            "mean_current_density_A_m2": densities[DesignPhase.MEAN],
-            "final_current_density_A_m2": densities[DesignPhase.FINAL],
-            "initial_current_A": round(i_initial, 4),
-            "mean_current_A": round(i_mean, 4),
-            "final_current_A": round(i_final, 4),
-            "citations": labels,
-        })
+        zone_details.append(
+            {
+                "zone_name": zone.zone_name,
+                "exposure_zone": zone.exposure_zone.value,
+                "surface_area_m2": area,
+                "area_basis": zone.area_basis,
+                "anode_family": zone.anode_family,
+                "depth_m": zone.depth_m,
+                "climate": climate.value,
+                "coating_breakdown_factor": fc,
+                "initial_current_density_A_m2": densities[DesignPhase.INITIAL],
+                "mean_current_density_A_m2": densities[DesignPhase.MEAN],
+                "final_current_density_A_m2": densities[DesignPhase.FINAL],
+                "initial_current_A": round(i_initial, 4),
+                "mean_current_A": round(i_mean, 4),
+                "final_current_A": round(i_final, 4),
+                "citations": labels,
+            }
+        )
 
     # Anode mass from mean current demand (DNV-RP-B401 §7.7.1, Eq 2)
     total_mass = kernel.anode_mass(
@@ -629,7 +698,7 @@ def anode_distribution(
             zone.exposure_zone, climate, zone.depth_m, DesignPhase.FINAL, ed
         )
         ic_final = 0.0 if cited is None else cited.value
-        demand = zone.surface_area_m2 * zone.effective_breakdown_factor * ic_final
+        demand = zone.design_area_m2 * zone.effective_breakdown_factor * ic_final
         demands.append((zone.zone_name, demand))
 
     total_demand = sum(d for _, d in demands)
@@ -701,7 +770,9 @@ def retrofit_assessment(
         Assessment of remaining life and retrofit needs.
     """
     # Metal consumed so far (Faraday) and the usable mass still available
-    mass_consumed = kernel.mass_consumed(mean_current_A, elapsed_years, anode_capacity_Ah_kg)
+    mass_consumed = kernel.mass_consumed(
+        mean_current_A, elapsed_years, anode_capacity_Ah_kg
+    )
     usable_remaining = max(
         0.0, original_anode_mass_kg * utilization_factor - mass_consumed
     )

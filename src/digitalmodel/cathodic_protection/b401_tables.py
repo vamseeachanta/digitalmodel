@@ -879,6 +879,12 @@ def utilisation_factor(shape: AnodeShape, edition: Edition | None = None) -> Cit
     )
 
 
+def anode_resistance_citation(edition: Edition | None = None) -> Citation:
+    """Citation for the edition-specific anode resistance formula table."""
+    ed = normalize_edition(edition, stacklevel=3)
+    return _cite(table_label(ed, 7), "anode resistance formula", ed)
+
+
 def protection_potential(edition: Edition | None = None) -> CitedValue:
     """Design protective potential for carbon steel in seawater.
 

@@ -4,7 +4,9 @@ Each retired demo input (owner decision D5) now lives under
 ``tests/fixtures/cathodic_protection/workflow_inputs/`` and runs through
 ``run_cathodic_protection``. The pinned numbers are re-derived from the
 DNV-RP-B401 (2021) / DNV-RP-F103 (2010) tables in the plan
-``docs/plans/2026-09-25-issue-2210-cp-engine-adapter-demo-retirement.md``.
+``docs/plans/2026-09-25-issue-2210-cp-engine-adapter-demo-retirement.md``;
+the pipeline fixture (no edition given) follows the DNV-RP-F103 default,
+2019 since 2026-09-27, and is re-derived from the 2019 tables in its test.
 """
 
 from __future__ import annotations
@@ -23,16 +25,42 @@ from digitalmodel.cathodic_protection import engine_adapter
 from digitalmodel.cathodic_protection.engine_adapter import (
     CALCULATION_TYPES,
     KEY_B401_LEGACY,
+    KEY_F103,
+    KEY_F103_2010,
+    KEY_F103_ANODE_BANK,
     KEY_F103_LEGACY,
     STATUS_FAIL,
     STATUS_PASS,
+    USE_STATUS_CLIENT_EOR,
+    USE_STATUS_ENGINEERING_VALIDATION,
+    USE_STATUS_LEGACY_UNCITED,
     run_cathodic_protection,
 )
+
+
+def test_anode_bank_route_has_distinct_validation_status() -> None:
+    cfg = _run("anode_bank")
+    assert cfg["results"]["status"]["result"] == STATUS_PASS
+    assert cfg["results"]["status"]["use_status"] == USE_STATUS_ENGINEERING_VALIDATION
+    assert KEY_F103_ANODE_BANK in CALCULATION_TYPES
+    assert cfg["results"]["banks"][0]["sides"][0]["protection_ok"] is True
 
 FIXTURE_DIR = (
     Path(__file__).resolve().parents[1] / "fixtures" / "cathodic_protection" / "workflow_inputs"
 )
 FIXTURES = ("jacket", "manifold", "monopile", "pipeline", "ships", "fpso")
+# Owner decision 2026-09-27 (epic #2206): B401 offshore and F103 bracelet are
+# for client use with an engineer-of-record check; ABS offshore remains legacy.
+# Owner decision 2026-10-01 (#2259): rebuilt ABS ships has the same conditional
+# client-use status as the B401 and F103 routes.
+EXPECTED_USE_STATUS = {
+    "jacket": USE_STATUS_CLIENT_EOR,
+    "manifold": USE_STATUS_CLIENT_EOR,
+    "monopile": USE_STATUS_CLIENT_EOR,
+    "pipeline": USE_STATUS_CLIENT_EOR,
+    "ships": USE_STATUS_CLIENT_EOR,
+    "fpso": USE_STATUS_LEGACY_UNCITED,
+}
 
 B401_KEYS = {
     "standard",
@@ -70,6 +98,10 @@ def _load(name: str) -> dict[str, Any]:
     with (FIXTURE_DIR / f"{name}.yml").open(encoding="utf-8") as stream:
         cfg: dict[str, Any] = yaml.safe_load(stream)
     assert cfg["basename"] == "cathodic_protection"
+    if name == "ships":
+        cfg["citation_repo_root"] = str(
+            Path(__file__).resolve().parents[1] / "citations/fixtures"
+        )
     return cfg
 
 
@@ -79,7 +111,15 @@ def _run(name: str) -> dict[str, Any]:
 
 def _assert_status(status: dict[str, Any]) -> None:
     assert status["result"] in {STATUS_PASS, STATUS_FAIL}
-    assert status["governing_case"] in {"mass", "initial", "final"}
+    assert status["governing_case"] in {
+        "mass",
+        "initial",
+        "final",
+        "initial_current_output",
+        "mean_current_output",
+        "final_current_output",
+        "layout_distribution",
+    }
     assert isinstance(status["reason"], str) and status["reason"]
     assert isinstance(status["checks"], dict)
 
@@ -94,6 +134,7 @@ def test_fixture_runs_and_carries_status(name: str) -> None:
     cfg = _run(name)
     results = cfg["results"]
     _assert_status(results["status"])
+    assert results["status"]["use_status"] == EXPECTED_USE_STATUS[name]
     if name in {"jacket", "manifold", "monopile"}:
         assert B401_KEYS <= set(results)
         demand = results["current_demand_A"]
@@ -274,46 +315,139 @@ def test_b401_rejects_unknown_zone_and_coating() -> None:
 
 
 def test_pipeline_f103_bracelet_design() -> None:
-    # Non-buried, 60 C -> i_cm = 0.060 A/m2 (Table 5-1); FBE a = 0.010, b = 0.0003 (Table A.1);
-    # T = 30 yr: f_cm = 0.0145, f_cf = 0.019; A = pi * 0.3239 * 1500 = 1526.4 m2;
-    # I_cm = 1.328 A, I_cf = 1.740 A; M = 1.328 * 30 * 8760 / (2000 * 0.80) = 218.1 kg -> 9 x 25 kg;
-    # bracelet 0.2 m x 0.04 m: A_a = pi (0.3239 + 0.08) 0.2 = 0.2538 m2, R = 0.315 * 0.30 / sqrt(A_a)
-    # = 0.18759 ohm, I_a = 1.333 A -> N_final 2; spacing 1500 / 9 = 166.7 m <= 2 PL (Eq. 14).
+    # No edition in the fixture -> DNV-RP-F103 default, 2019 (owner decision 2026-09-27).
+    # Non-buried, 60 C -> Table 6-2 ">50-80" column: i_cm = 0.075 A/m2 (2010 Table 5-1: 0.060).
+    # FBE without concrete weight coating, Table A-1: a = 0.030, b = 0.0010 (2010 Table A.1:
+    # a = 0.010, b = 0.0003). T = 30 yr: f_cm = 0.030 + 0.0010 * 15 = 0.045,
+    # f_cf = 0.030 + 0.0010 * 30 = 0.060. A = pi * 0.3239 * 1500 = 1526.343 m2;
+    # I_cm = 1526.343 * 0.075 * 0.045 = 5.1514 A, I_cf = 1526.343 * 0.075 * 0.060 = 6.8685 A.
+    # Table 6-3 Al at ambient: 2000 Ah/kg, -1.05 V; [6.4.2] u = 0.80; [6.7.11] E_c = -0.80 V
+    # -> driving voltage 0.25 V. M = 5.1514 * 30 * 8760 / (2000 * 0.80) = 846.12 kg -> 34 x 25 kg.
+    # Bracelet 0.2 m x 0.04 m: A_a = pi (0.3239 + 0.08) 0.2 = 0.2538 m2, R = 0.315 * 0.30 / sqrt(A_a)
+    # = 0.18759 ohm, I_a = 0.25 / 0.18759 = 1.3327 A -> N_final = ceil(6.8685 / 1.3327) = 6.
+    # Spacing 1500 / 34 = 44.118 m <= 2 PL; Eq. 14 PL = sqrt(0.15 * 0.0159 * 0.308 /
+    # (0.2e-6 * 0.3239 * 0.060 * 0.075)) = 1587.4 m.
     results = _run("pipeline")["results"]
-    assert results["standard"] == "DNV-RP-F103 (October 2010)"
-    assert results["edition"] == "2010"
+    assert results["standard"] == "DNVGL-RP-F103 (September 2019, amended May 2021)"
+    assert results["edition"] == "2019"
     densities = results["current_densities_A_m2"]
-    assert densities["mean_current_density_A_m2"] == pytest.approx(0.06)
+    assert densities["mean_current_density_A_m2"] == pytest.approx(0.075)
     assert densities["temperature_band"] == ">50-80"
     coating = results["coating_breakdown_factors"]
-    assert coating["mean_factor"] == pytest.approx(0.0145)
-    assert coating["final_factor"] == pytest.approx(0.019)
+    assert coating["mean_factor"] == pytest.approx(0.045)
+    assert coating["final_factor"] == pytest.approx(0.060)
     geometry = results["pipeline_geometry_m"]
     assert geometry["outer_surface_area_m2"] == pytest.approx(math.pi * 0.3239 * 1500.0, abs=1e-3)
     demand = results["current_demand_A"]
-    assert demand["mean_current_demand_A"] == pytest.approx(1.3279, abs=1e-3)
-    assert demand["final_current_demand_A"] == pytest.approx(1.74, abs=1e-3)
+    assert demand["mean_current_demand_A"] == pytest.approx(1526.343 * 0.075 * 0.045, abs=1e-3)
+    assert demand["final_current_demand_A"] == pytest.approx(1526.343 * 0.075 * 0.060, abs=1e-3)
     anodes = results["anode_requirements"]
-    assert anodes["total_anode_mass_kg"] == pytest.approx(218.111, abs=1e-2)
-    assert anodes["anode_count"] == 9
-    assert anodes["anode_count_by_mass"] == 9
-    assert anodes["anode_count_by_final_current"] == 2
+    assert anodes["anode_capacity_Ah_kg"] == pytest.approx(2000.0)
+    assert anodes["driving_voltage_V"] == pytest.approx(0.25)
+    assert anodes["total_anode_mass_kg"] == pytest.approx(
+        1526.343 * 0.075 * 0.045 * 30 * 8760 / (2000 * 0.80), abs=1e-2
+    )
+    assert anodes["anode_count"] == 34
+    assert anodes["anode_count_by_mass"] == 34
+    assert anodes["anode_count_by_final_current"] == 6
     assert anodes["utilization_factor"] == pytest.approx(0.80)
     assert anodes["anode_resistance_ohm"] == pytest.approx(0.18759, abs=1e-4)
     spacing = results["anode_spacing_m"]
-    assert spacing["spacing_m"] == pytest.approx(1500.0 / 9.0, abs=1e-3)
+    assert spacing["spacing_m"] == pytest.approx(1500.0 / 34.0, abs=1e-3)
     assert spacing["spacing_ok"] is True
     attenuation = results["attenuation_analysis"]
     expected_pl = math.sqrt(
-        0.15 * 0.0159 * (0.3239 - 0.0159) / (0.2e-6 * 0.3239 * 0.019 * 0.06)
+        0.15 * 0.0159 * (0.3239 - 0.0159) / (0.2e-6 * 0.3239 * 0.060 * 0.075)
     )
     assert attenuation["protected_length_m"] == pytest.approx(expected_pl, rel=1e-4)
     assert attenuation["protection_adequate"] is True
-    assert "dnv-rp-f103 2010 Table 5-1" in results["citations"]
-    assert "dnv-rp-f103 2010 Table A.1" in results["citations"]
+    assert "dnv-rp-f103 2019-09 Table 6-2" in results["citations"]
+    assert "dnv-rp-f103 2019-09 Table A-1" in results["citations"]
     status = results["status"]
     assert status["result"] == STATUS_PASS
     assert status["governing_case"] == "mass"
+    assert status["use_status"] == USE_STATUS_CLIENT_EOR
+
+
+def test_pipeline_f103_explicit_2010_edition_reproduces_earlier_results() -> None:
+    # edition "2010" reproduces the pre-2026-09-27 default: Table 5-1 i_cm = 0.060 A/m2,
+    # Table A.1 FBE a = 0.010, b = 0.0003 -> f_cm = 0.0145, f_cf = 0.019; I_cm = 1.328 A,
+    # M = 1.328 * 30 * 8760 / (2000 * 0.80) = 218.1 kg -> 9 x 25 kg; spacing 166.7 m.
+    cfg = _load("pipeline")
+    cfg["inputs"]["design_data"]["edition"] = "2010"
+    _assert_f103_2010_pipeline(run_cathodic_protection(cfg)["results"])
+
+
+def _assert_f103_2010_pipeline(results: dict[str, Any]) -> None:
+    assert results["standard"] == "DNV-RP-F103 (October 2010)"
+    assert results["edition"] == "2010"
+    assert results["current_densities_A_m2"]["mean_current_density_A_m2"] == pytest.approx(0.06)
+    assert results["current_densities_A_m2"]["temperature_band"] == ">50-80"
+    assert results["coating_breakdown_factors"]["mean_factor"] == pytest.approx(0.0145)
+    assert results["coating_breakdown_factors"]["final_factor"] == pytest.approx(0.019)
+    assert results["current_demand_A"]["mean_current_demand_A"] == pytest.approx(1.3279, abs=1e-3)
+    assert results["anode_requirements"]["total_anode_mass_kg"] == pytest.approx(218.111, abs=1e-2)
+    assert results["anode_requirements"]["anode_count"] == 9
+    assert results["anode_requirements"]["anode_count_by_final_current"] == 2
+    assert results["anode_spacing_m"]["spacing_m"] == pytest.approx(1500.0 / 9.0, abs=1e-3)
+    assert "dnv-rp-f103 2010 Table 5-1" in results["citations"]
+    assert "dnv-rp-f103 2010 Table A.1" in results["citations"]
+
+
+def test_neutral_f103_key_without_edition_runs_the_2019_default() -> None:
+    cfg = _load("pipeline")
+    assert cfg["inputs"]["calculation_type"] == KEY_F103 == "DNV_RP_F103"
+    assert "edition" not in cfg["inputs"]["design_data"]
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        results = run_cathodic_protection(cfg)["results"]
+    assert results["edition"] == "2019"
+    assert results["standard"] == "DNVGL-RP-F103 (September 2019, amended May 2021)"
+    assert results["current_densities_A_m2"]["mean_current_density_A_m2"] == pytest.approx(0.075)
+    assert results["anode_requirements"]["anode_count"] == 34
+    assert results["status"]["use_status"] == USE_STATUS_CLIENT_EOR
+
+
+def test_f103_2010_alias_pins_2010_with_deprecation() -> None:
+    # Owner decision 2026-09-27: the historical key reproduces its pre-2019-default
+    # results exactly (the pinned 2010 numbers above) and points at DNV_RP_F103.
+    cfg = _load("pipeline")
+    cfg["inputs"]["calculation_type"] = KEY_F103_2010
+    with pytest.warns(DeprecationWarning, match="'DNV_RP_F103'"):
+        results = run_cathodic_protection(cfg)["results"]
+    _assert_f103_2010_pipeline(results)
+    assert results["status"]["use_status"] == USE_STATUS_CLIENT_EOR
+
+
+@pytest.mark.parametrize("edition", ["2010", "f103-2010"])
+def test_f103_2010_alias_accepts_a_matching_edition(edition: str) -> None:
+    cfg = _load("pipeline")
+    cfg["inputs"]["calculation_type"] = KEY_F103_2010
+    cfg["inputs"]["design_data"]["edition"] = edition
+    with pytest.warns(DeprecationWarning):
+        results = run_cathodic_protection(cfg)["results"]
+    _assert_f103_2010_pipeline(results)
+
+
+@pytest.mark.parametrize("edition", ["2019", "2021"])
+def test_f103_2010_alias_rejects_a_conflicting_edition(edition: str) -> None:
+    cfg = _load("pipeline")
+    cfg["inputs"]["calculation_type"] = KEY_F103_2010
+    cfg["inputs"]["design_data"]["edition"] = edition
+    with pytest.warns(DeprecationWarning), pytest.raises(ValueError, match="use calculation_type 'DNV_RP_F103'"):
+        run_cathodic_protection(cfg)
+
+
+def test_pipeline_temperature_band_follows_the_edition() -> None:
+    # 40 C is the 2010 Table 5-1 "<=50" column but the 2019 Table 6-2 ">25-50" column.
+    bands = {}
+    for edition in ("2010", "2019"):
+        cfg = _load("pipeline")
+        cfg["inputs"]["design_data"]["edition"] = edition
+        cfg["inputs"]["pipeline"]["internal_fluid_temperature_C"] = 40.0
+        results = run_cathodic_protection(cfg)["results"]
+        bands[edition] = results["current_densities_A_m2"]["temperature_band"]
+    assert bands == {"2010": "<=50", "2019": ">25-50"}
 
 
 def test_pipeline_f103_spacing_failure_reports_fail() -> None:
@@ -345,30 +479,134 @@ def test_pipeline_f103_requires_bracelet_dimensions() -> None:
         run_cathodic_protection(cfg)
 
 
+
+# Issue #2256: 2019 field-joint coating ids (DNVGL-RP-F102 (2011) numbering).
+# De-identified benchmark shape: F103 2019, FBE linepipe, 245 field joints of
+# 0.4 m, FBE field joints (3A) with and without 4E(2) moulded PU infill.
+FJC_JOINTS = 245
+FJC_JOINT_LENGTH_M = 0.4
+
+
+def _f103_2019_field_joint_cfg(fjc: str | None, infill: str | None) -> dict[str, Any]:
+    cfg = _load("pipeline")
+    cfg["inputs"]["design_data"]["edition"] = "2019"
+    pipeline = cfg["inputs"]["pipeline"]
+    pipeline.update(
+        length_m=3000.0,
+        field_joint_count=FJC_JOINTS,
+        field_joint_length_m=FJC_JOINT_LENGTH_M,
+    )
+    if fjc is not None:
+        pipeline["field_joint_coating"] = fjc
+    if infill is not None:
+        pipeline["field_joint_infill"] = infill
+    return cfg
+
+
+@pytest.mark.parametrize(
+    ("fjc", "infill", "a", "b", "member", "infill_row"),
+    [
+        # Table A-2 (2019) row "3A FBE", infill none: a = 0.10, b = 0.010.
+        ("3A", "none", 0.10, 0.010, "3A", "none"),
+        # Same row with 4E(2) moulded PU on top: a = 0.03, b = 0.003.
+        ("3A", "4E(2)", 0.03, 0.003, "3A+4E(2)", "4E(2) moulded PU on top"),
+        # Case/whitespace-insensitive, and the May 2021 amended name.
+        (" 3a ", "None", 0.10, 0.010, "3A", "none"),
+        ("17A", "4e(2)", 0.03, 0.003, "3A+4E(2)", "4E(2) moulded PU on top"),
+    ],
+)
+def test_f103_2019_fbe_field_joints_resolve_by_infill(
+    fjc: str, infill: str, a: float, b: float, member: str, infill_row: str
+) -> None:
+    results = run_cathodic_protection(_f103_2019_field_joint_cfg(fjc, infill))["results"]
+    assert results["edition"] == "2019"
+    coating = results["coating_breakdown_factors"]
+    assert coating["field_joint_coating"] == member
+    assert coating["field_joint_infill"] == infill_row
+    assert coating["field_joint_a"] == pytest.approx(a)
+    assert coating["field_joint_b_per_yr"] == pytest.approx(b)
+    # T = 30 yr: f_cm = a + b * 15, f_cf = a + b * 30.
+    assert coating["mean_factor_field_joint"] == pytest.approx(a + b * 15.0)
+    assert coating["final_factor_field_joint"] == pytest.approx(a + b * 30.0)
+    area = results["pipeline_geometry_m"]["field_joint_area_m2"]
+    assert area == pytest.approx(math.pi * 0.3239 * FJC_JOINTS * FJC_JOINT_LENGTH_M, abs=1e-3)
+    assert "dnv-rp-f103 2019-09 Table A-2" in results["citations"]
+    assert isinstance(results["anode_requirements"]["anode_count"], int)
+    _assert_status(results["status"])
+
+
+@pytest.mark.parametrize("fjc", ["2B(1)", "2c(2)", "5A/B/C(1)", "14B_LE"])
+def test_f103_2019_accepts_other_f102_ids_without_infill(fjc: str) -> None:
+    results = run_cathodic_protection(_f103_2019_field_joint_cfg(fjc, None))["results"]
+    assert results["coating_breakdown_factors"]["field_joint_a"] > 0.0
+
+
+def test_f103_2019_3a_without_infill_is_ambiguous() -> None:
+    cfg = _f103_2019_field_joint_cfg("3A", None)
+    with pytest.raises(ValueError, match=r"field_joint_infill.*\['none', '4E\(2\)'\]"):
+        run_cathodic_protection(cfg)
+
+
+def test_f103_2019_rejects_an_invalid_infill() -> None:
+    cfg = _f103_2019_field_joint_cfg("2C(2)", "4E(2)")
+    with pytest.raises(ValueError, match=r"valid choices: \['none'\]"):
+        run_cathodic_protection(cfg)
+
+
+def test_f103_2019_unknown_field_joint_id_lists_valid_ids() -> None:
+    cfg = _f103_2019_field_joint_cfg("3Z", "none")
+    with pytest.raises(ValueError, match=r"Unknown field-joint coating '3Z'.*'2B\(1\)'.*'5A/B/C\(1\)'"):
+        run_cathodic_protection(cfg)
+
+
+def test_f103_2010_field_joint_ids_unchanged() -> None:
+    # 2010 Table A.2 row "3A FBE": a = 3/100 = 0.03, b = 0.3/100 = 0.003.
+    cfg = _f103_2019_field_joint_cfg("3A", None)
+    cfg["inputs"]["design_data"]["edition"] = "2010"
+    coating = run_cathodic_protection(cfg)["results"]["coating_breakdown_factors"]
+    assert coating["field_joint_coating"] == "3A"
+    assert coating["field_joint_infill"] == "none"
+    assert coating["field_joint_a"] == pytest.approx(0.03)
+    assert coating["field_joint_b_per_yr"] == pytest.approx(0.003)
+    assert coating["mean_factor_field_joint"] == pytest.approx(0.03 + 0.003 * 15.0)
+    cfg["inputs"]["pipeline"]["field_joint_coating"] = "2B(1)"
+    with pytest.raises(ValueError, match=r"DNV-RP-F103 \(2010\) Table A.2; valid ids"):
+        run_cathodic_protection(cfg)
+
+
 # ---------------------------------------------------------------------------
 # ABS routes (legacy implementation, wrapped)
 # ---------------------------------------------------------------------------
 
 
-def test_ships_abs_2018_wrapped_with_int_count_and_status() -> None:
-    cfg = _run("ships")
+@pytest.mark.parametrize("flag", [None, False, "true", "false", 1, [], {}])
+def test_ships_ignores_retired_experimental_flag(flag: Any) -> None:
+    cfg = _load("ships")
+    cfg["inputs"]["design_data"]["experimental"] = flag
+    assert run_cathodic_protection(cfg)["results"]["status"]["use_status"] == (
+        USE_STATUS_CLIENT_EOR
+    )
+
+
+def test_ships_without_experimental_flag_runs_new_route() -> None:
+    cfg = _load("ships")
+    cfg["inputs"]["design_data"].pop("experimental", None)
+    assert run_cathodic_protection(cfg)["results"]["standard"] == "ABS GN Ships (2017-12)"
+
+
+def test_ships_abs_2018_new_route_has_int_count_and_status() -> None:
+    cfg = _load("ships")
+    run_cathodic_protection(cfg)
     cp = cfg["cathodic_protection"]
     assert cfg["results"] is cp
-    assert cp["current_demand_A"]["totals"]["mean"] == pytest.approx(196.667146)
+    # ABS percentages 2.0/2.0 convert to fc=0.02; the 13.5 mA/m2 input is
+    # the initial coated density, so the selected bare density is 675 mA/m2.
+    assert cp["current_demand_A"]["totals"]["mean"] == pytest.approx(181.52154)
     req = cp["anode_requirements"]
-    assert req["total_mass_kg"] == pytest.approx(5067.071173)
-    assert req["anode_count_raw"] == pytest.approx(184.257134)
-    assert req["anode_count"] == 185
-    checks = cp["anode_performance"]["checks"]
-    assert checks["initial_meets_demand"] is False
-    assert checks["final_meets_demand"] is False
+    assert isinstance(req["recommended_anode_count"], int)
     status = cp["status"]
-    assert status["result"] == STATUS_FAIL
-    assert status["governing_case"] == "final"
-    assert status["checks"] == {
-        "initial_current_output": False,
-        "final_current_output": False,
-    }
+    assert status["result"] == STATUS_PASS
+    assert status["use_status"] == USE_STATUS_CLIENT_EOR
 
 
 def test_fpso_abs_offshore_2018_wrapped_mass_only() -> None:
@@ -384,6 +622,7 @@ def test_fpso_abs_offshore_2018_wrapped_mass_only() -> None:
     assert status["governing_case"] == "mass"
     assert status["checks"]["current_output"] is None
     assert "no current-output check" in status["reason"]
+    assert status["use_status"] == USE_STATUS_LEGACY_UNCITED
 
 
 # ---------------------------------------------------------------------------
@@ -396,10 +635,11 @@ def test_legacy_b401_key_runs_old_solver_with_deprecation() -> None:
     cfg["inputs"]["calculation_type"] = KEY_B401_LEGACY
     with pytest.warns(DeprecationWarning, match="DNV_RP_B401_offshore"):
         results = run_cathodic_protection(cfg)["results"]
-    # The legacy route keeps its own (fresh-anode only) verification and no status.
+    # The legacy route keeps its own (fresh-anode only) verification and no
+    # PASS/FAIL verdict; its status block carries the use status only.
     assert results["current_demand_A"]["total_mean_A"] == pytest.approx(85.0)
     assert results["current_output_verification"]["recommended_anode_count"] == 135
-    assert "status" not in results
+    assert results["status"] == {"use_status": USE_STATUS_LEGACY_UNCITED}
 
 
 def test_legacy_f103_key_runs_old_solver_with_deprecation(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -411,7 +651,7 @@ def test_legacy_f103_key_runs_old_solver_with_deprecation(monkeypatch: pytest.Mo
         results = run_cathodic_protection(cfg)["results"]
     assert results["current_demand_A"]["mean_current_demand_A"] == pytest.approx(1.328)
     assert "attenuation_analysis" in results
-    assert "status" not in results
+    assert results["status"] == {"use_status": USE_STATUS_LEGACY_UNCITED}
 
 
 def test_unknown_calculation_type_lists_accepted_keys() -> None:
@@ -432,6 +672,16 @@ def test_adapter_returns_same_cfg_object() -> None:
         out = run_cathodic_protection(cfg)
     assert out is cfg
     assert cfg["inputs"] == snapshot
+
+
+def test_b401_component_and_riser_base_modes_are_mutually_exclusive() -> None:
+    cfg = _load("riser_base_phased")
+    cfg["inputs"]["components"] = _load("multi_component_riser")["inputs"][
+        "components"
+    ]
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        run_cathodic_protection(cfg)
 
 
 def test_engine_dispatches_cathodic_protection_to_adapter(monkeypatch: pytest.MonkeyPatch) -> None:

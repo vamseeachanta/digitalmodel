@@ -16,7 +16,17 @@ class CathodicProtection:
 
     def router(self, cfg):
         if cfg["inputs"]["calculation_type"] == "ABS_gn_ships_2018":
-            self.ABS_gn_ships_2018(cfg)
+            from digitalmodel.cathodic_protection.engine_adapter import (
+                run_cathodic_protection,
+            )
+
+            return run_cathodic_protection(cfg)
+        elif cfg["inputs"]["calculation_type"] == "ABS_gn_ships_2018_legacy":
+            from digitalmodel.cathodic_protection.engine_adapter import (
+                run_cathodic_protection,
+            )
+
+            return run_cathodic_protection(cfg)
         elif cfg["inputs"]["calculation_type"] == "DNV_RP_F103_2010":
             self.DNV_RP_F103_2010(cfg)
         elif cfg["inputs"]["calculation_type"] == "ABS_gn_offshore_2018":

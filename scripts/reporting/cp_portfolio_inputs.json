@@ -1,0 +1,57 @@
+{
+  "anode_bank.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "e08957b15305281b1e6a53a24e2dbd7be5d691cabdde17c1b3441b91a67cf28a",
+    "source_class": "synthetic_repository_regression"
+  },
+  "fpso.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "adc581d3ffa66962773fa505e69ef3e98deecfc59c1d7826dd0be34d4d366ffd",
+    "source_class": "synthetic_repository_regression"
+  },
+  "jacket.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "0cc963b13c98335bcfda30ae2176f7927ce1f9da6852895a70d732c3c18ead94",
+    "source_class": "synthetic_repository_regression"
+  },
+  "manifold.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "098ddcee3041607917d356af7a6c8ba470dbb864d73e034dc27120eb2906a673",
+    "source_class": "synthetic_repository_regression"
+  },
+  "mixed_family.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "04ac76037e948dbe927c0fb485e541e628d06a79ea816b6a700b88fde2a40941",
+    "source_class": "synthetic_repository_regression"
+  },
+  "monopile.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "6f4c225e91112c0a423c2c019977ad510de54c48461bf48c5309cfe944d373bb",
+    "source_class": "synthetic_repository_regression"
+  },
+  "multi_component_riser.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "a6a64e11cba2fdd858e79639a53405c7d4ca370b8c03f5e36ad2729eb7dfcd3a",
+    "source_class": "synthetic_repository_regression"
+  },
+  "pipeline.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "d51b3798999dac9d18c7151cd97281a9dea395dfcdc5085618c06cc5e6e326d7",
+    "source_class": "synthetic_repository_regression"
+  },
+  "riser_base_phased.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "82eb1a7cc42f800c71da6d87daf0032c2a70619e962266821e6832d9cff4b804",
+    "source_class": "synthetic_repository_regression"
+  },
+  "ships.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "75cc52eab34642b0a205aab823dd65e299dfde46e0e81a40591221a7404b94bb",
+    "source_class": "synthetic_repository_regression"
+  },
+  "temporary_service.yml": {
+    "basis": "Existing de-identified repository regression or literal extension of its synthetic tests; no private benchmark values",
+    "sha256": "2c5bf9a69454a23421d897c12133db2f6cfaf460d293cc42aebd6b606f9d9fd9",
+    "source_class": "synthetic_repository_regression"
+  }
+}

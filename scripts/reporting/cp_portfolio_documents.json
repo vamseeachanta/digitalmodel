@@ -1,0 +1,222 @@
+{
+  "S01": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-001-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Jacket"
+  },
+  "S02": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-002-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Monopile"
+  },
+  "S03": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-003-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Subsea manifold"
+  },
+  "S04": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-004-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Ship hull"
+  },
+  "S05": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-005-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Floating offshore structure"
+  },
+  "S06": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-006-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Bracelet pipeline"
+  },
+  "S07": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-007-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Terminal-bank flowline"
+  },
+  "S08": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-008-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Multi-component riser"
+  },
+  "S09": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-009-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Phased riser base and retrofit"
+  },
+  "S10": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-010-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Temporary service"
+  },
+  "S11": {
+    "approved_by": "Pending",
+    "checked_by": "Pending",
+    "client": "Internal module review - no client issuance",
+    "date": "2026-10-03",
+    "number": "R2281-CP-011-00",
+    "prepared_by": "Automated regression report",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "revision_history": [
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-03",
+        "description": "Internal review draft",
+        "rev": "00"
+      }
+    ],
+    "title": "CP module review: Concrete, buried and seawater families"
+  }
+}

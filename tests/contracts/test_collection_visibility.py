@@ -299,7 +299,7 @@ def test_collect_ignore_entries_exist(rootpath: Path) -> None:
 # for years naming nothing at all; see #1977.)
 SCRIPT_TEST_NAME_EXEMPTIONS = (
     # scripts/solver_smoke_test.py is live operator tooling, not a stray script.
-    # The deckhand licensed-run lane invokes it unattended over SSH; it was last
+    # The licensed-run lane invokes it unattended over SSH; it was last
     # touched 2026-07-31 ("Add end-to-end solver smoke test (OrcaFlex + AQWA
     # licence probe)").  Renaming it can break a scheduled task on a licensed
     # host this repository cannot see, and the fleet sweep that would clear that

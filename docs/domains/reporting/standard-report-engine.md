@@ -74,7 +74,7 @@ citations sidecar and manifest beside the results:
 ```yaml
 basename: cathodic_protection
 inputs:
-  calculation_type: DNV_RP_B401_offshore   # or DNV_RP_F103_2010, ABS_gn_ships_2018, ABS_gn_offshore_2018
+  calculation_type: DNV_RP_B401_offshore   # or DNV_RP_F103, ABS_gn_ships_2018, ABS_gn_offshore_2018
   ...                                       # the route's inputs (see tests/fixtures/cathodic_protection/workflow_inputs/)
 report:
   kind: anode_design                        # adapter "cathodic_protection.anode_design"
@@ -96,12 +96,17 @@ report:
 | Design basis | design data + zones table (areas, coating category, depth band, climate, a, b) | pipeline geometry, coating, exposure, temperature band, anode data | the route's design data and coating factors |
 | Current demand | per-zone initial/mean/final densities and demands + `I(t) = A x i_mean x (a + b t)` line figure (`fig-cp-demand-vs-time`) | coating breakdown (linepipe + field joints) and mean/final demand | densities and demand by surface / phase |
 | Anode requirements | mass, N_mass / N_initial / N_final / recommended + bar figure (`fig-cp-anode-counts`) | mass, N_mass / N_final / N, spacing, protected length + bar figure | mass and count |
-| Adequacy | status (governing case + reason), fresh vs depleted R / I table, checks | route status + `spacing <= 2 x protected length` status, R / I table | status (+ fresh vs depleted R / I for ships) |
+| Adequacy | use status line, status (governing case + reason + use status), fresh vs depleted R / I table, checks | use status line, route status + `spacing <= 2 x protected length` status, R / I table | use status line, status (+ fresh vs depleted R / I for ships) |
 | References | where each cited table was used; citation records go to *References cited* | same | note that the legacy solver carries no cited tables |
 
 Standards chips come from the route's `standard` / `edition` / `provenance`;
 citation records are rebuilt from the `code_id revision section` labels the
-route emits (DNV-RP-B401 and DNV-RP-F103 wiki pages). Provenance names the
+route emits (DNV-RP-B401 and DNV-RP-F103 wiki pages). The use status comes
+from `results["status"]["use_status"]` (owner decision 2026-09-27, see
+[cathodic_protection/_index.md](../cathodic_protection/_index.md#use-status)):
+B401 offshore and F103 read "approved for client use subject to an
+engineer-of-record check", the ABS routes "legacy solver with uncited tables;
+not for client use without an independent check". Provenance names the
 input YAML (config-dir relative, sha256) and the results mapping digest, so a
 report is always a view over its inputs.
 

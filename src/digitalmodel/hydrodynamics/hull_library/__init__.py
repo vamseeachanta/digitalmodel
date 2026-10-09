@@ -39,6 +39,13 @@ from .mesh_refiner import (
 )
 from .lookup import HullLookupTarget, HullMatch, HullLookup, get_hull_form
 from .parametric_hull import ParametricRange, HullParametricSpace
+from .parametric_form import (
+    MonohullFormParameters,
+    FormReport,
+    generate_profile,
+    form_report,
+    sweep_forms,
+)
 from .curvature_screen import (
     CurvatureSignature,
     CurvatureScreenResult,
@@ -114,6 +121,11 @@ __all__ = [
     # Parametric hull (WRK-043 Phase 1)
     "ParametricRange",
     "HullParametricSpace",
+    "MonohullFormParameters",
+    "FormReport",
+    "generate_profile",
+    "form_report",
+    "sweep_forms",
     # Curvature screening (HullProd, optional extra)
     "CurvatureSignature",
     "CurvatureScreenResult",

@@ -263,12 +263,12 @@ def test_coating_breakdown_missing_edition_warns_and_defaults_metadata():
     assert result.edition_used == "2021"
     assert result.standard == "DNV-RP-B401 (May 2021)"
 
-    with pytest.warns(UserWarning, match="defaulting to DNV-RP-F103 2010") as warnings:
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-F103 2019") as warnings:
         result = coating_breakdown_factors(CoatingCategory.FBE, edition="2021")
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
-    assert result.f103_edition_used == "2010"
-    assert result.standard == "DNV-RP-F103 (October 2010)"
+    assert result.f103_edition_used == "2019"
+    assert result.standard == "DNVGL-RP-F103 (September 2019, amended May 2021)"
 
 
 def test_coating_breakdown_b401_edition_does_not_change_linepipe_or_cat_i_iii():
