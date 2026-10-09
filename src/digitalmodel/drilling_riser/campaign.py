@@ -26,6 +26,8 @@ with the (private) matrix, not here:
                       (flex-joint stiffness sensitivity)
 ``stack_segment_m``   upper limit on the stack segment lengths (m): the connectors sit on nodes, where the
                       effective tension jumps by half of each adjacent segment's weight (W405)
+``coupling_segment_m`` a riser segment of this length at both ends of every joint (:func:`split_at_couplings`;
+                      E04): the CR-10 coupling stations are read this length / 2 from each coupling
 ``proxy``             TIMING PROXIES only, not design cases:
                       ``{"kind": "drift_off", "speed_change_m_s": v}`` - the vessel accelerates uniformly
                       along ``heading_deg`` over the main stage, reaching ``v`` at its end;
@@ -60,6 +62,7 @@ import yaml
 
 from .global_model.open_water import OpenWaterRiserSpec
 from .global_model.spec import RiserGlobalModelSpec
+from .postprocess.stress_range import JOINT_LENGTH_M, SPLIT_MARK
 
 SEED_PCT = -2.0
 # C2 EDP disconnect (owner decision W2B2, 2026-09-28): the tension steps to 0.98 x the released submerged weight in the
@@ -94,6 +97,38 @@ def offset_xy_m(spec: RiserGlobalModelSpec, pct_wd: float, heading_deg: float) -
     r = pct_wd / 100.0 * spec.environment.water_depth_m
     h = math.radians(heading_deg)
     return (r * math.cos(h), r * math.sin(h))
+
+
+def split_at_couplings(sections: list[dict], seg_m: float, joint_length_m: float = JOINT_LENGTH_M) -> list[dict]:
+    """Riser sections with a ``seg_m`` piece (one segment of ``seg_m``) at both ends of every joint (E04,
+    2026-10-08). OrcaFlex reports ZZ stress at mid-segments, so a coupling's CR-10 station is then read
+    ``seg_m / 2`` from the coupling instead of half a campaign segment. Joints: each section, and inside a section
+    holding a whole number (> 1) of ``joint_length_m`` joints, each joint. A piece is named ``<name> #<k>`` (section
+    names stay unique; ``stress_range.joint_sections`` merges them back) and keeps every property of its section;
+    a joint no longer than ``2 seg_m`` is kept whole with its segments capped at ``seg_m``."""
+    seg = float(seg_m)
+    if not seg > 0:
+        raise ValueError(f"coupling_segment_m must be > 0, got {seg_m}")
+    out: list[dict] = []
+    for s in sections:
+        length = float(s["length_m"])
+        n = length / joint_length_m
+        joints = [joint_length_m] * int(round(n)) if n > 1.0 + 1e-6 and abs(n - round(n)) * joint_length_m <= 1e-3 \
+            else [length]
+        if len(joints) > 1:
+            joints[-1] = length - joint_length_m * (len(joints) - 1)  # keep the section length exactly
+        pieces: list[tuple[float, float]] = []
+        for j in joints:
+            if j > 2.0 * seg + 1e-9:
+                pieces += [(seg, seg), (j - 2.0 * seg, float(s["segment_length_m"])), (seg, seg)]
+            else:
+                pieces.append((j, min(float(s["segment_length_m"]), seg)))
+        if len(pieces) == 1:
+            out.append({**s, "length_m": pieces[0][0], "segment_length_m": pieces[0][1]})
+            continue
+        for k, (ln, sg) in enumerate(pieces, start=1):
+            out.append({**s, "name": f"{s['name']}{SPLIT_MARK}{k}", "length_m": ln, "segment_length_m": sg})
+    return out
 
 
 def case_spec(case: dict) -> RiserGlobalModelSpec:
@@ -136,6 +171,8 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
             raise ValueError(f"stack_segment_m must be > 0, got {cap}")
         for s in d["stack"]:
             s["segment_length_m"] = min(s["segment_length_m"], cap)
+    if p.get("coupling_segment_m") is not None:
+        d["riser"] = split_at_couplings(d["riser"], p["coupling_segment_m"])
     if p.get("structural_damping_pct") is not None:
         if not d.get("structural_damping"):
             raise ValueError("structural_damping_pct needs structural damping in the base spec (its period is kept)")

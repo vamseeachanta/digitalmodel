@@ -1,0 +1,411 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "reviewed_tree": "c102f60beda3db304401bf8fda0b03384d6bd166",
+  "observed_utc": "2026-09-14T15:30:41.965083+00:00",
+  "tests": {
+    "passed": 1075,
+    "total": 1075,
+    "collected": 1077,
+    "deselected": 2
+  },
+  "test_command": "pytest tests/ansys -q -m \"not requires_mapdl\"; ANSYS_NATIVE_TESTS=0; audit hook permits only real Git subprocesses",
+  "process_guard": {
+    "exit_code": 0,
+    "elapsed_seconds": "47.468000000109896",
+    "subprocess_executables": [
+      "git",
+      "git",
+      "git",
+      "git",
+      "git",
+      "git"
+    ],
+    "native_process_invocations": 0,
+    "guard": "Only real Git subprocesses permitted; all other Popen audit events raise"
+  },
+  "test_report_sha256": "97873f52d9a8e10f83e91646d8804d3195a19d1ab90fc19ed542b4f5fb9b0d8c",
+  "verification": {
+    "files": [
+      {
+        "path": ".gitattributes",
+        "sha256": "19caf877a0122d6c70151cdc9b4b9d693e64e3f4e4aab3595333f21d8e20b450"
+      },
+      {
+        "path": ".gitignore",
+        "sha256": "0b1ce1821ef56a87ed426d3a4446f51f11a213aea9858fc77827eb3aff022123"
+      },
+      {
+        "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+        "sha256": "bc08cee28154cf3c211313f3fc08d4bc65f534ad8df36617192956e0ec5b542f"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-checker-codex-review.json",
+        "sha256": "dcda274dbf51c05572896f91d4b0f668e2c31ce56f9797819cb3114e8b4f450f"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-checker-observation-limitations.json",
+        "sha256": "86814c0d2f342dfea099ad73d48253900511e6513339e4603869c55df35539dd"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-claude-correction.json",
+        "sha256": "06f04784103db36dc940ee392aafc2b86de9babe0f276fce5171f2fa8a16fda6"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-claude-decks.json",
+        "sha256": "62260e9d736eae5869d1ffb2bce48e503f5ced31ec976c8543276d8096b13b92"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-claude-full-unavailable.json",
+        "sha256": "689ab11ce7b87dfd39795fac415ab8dc793e9eba9c0ebbd08e8b096d02db5a8c"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-claude-numerics-r1.json",
+        "sha256": "b587515f55afd840b4efc8bf8e4afd1468cd3d2eac46cb37c8d45b2e457e0cad"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-claude-numerics-timeout.json",
+        "sha256": "c17fa288e99dbb96b424d9eefd761283f570a118f412c1269ac80e7442135114"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-claude-runtime-r1.json",
+        "sha256": "a952c948cc42df572ad437ba09a3166c5cf9381299398590fef965274bb54ebe"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-claude-runtime-timeout.json",
+        "sha256": "1e77178b2690c53eee96e9458514f624c1378f9944a96833e1075f401de83101"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-correction-codex-disposition.json",
+        "sha256": "f594041d8762bbce585ae04102cfdd7b2bb4453be3dd3f68f1d2801172403d78"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-correction-codex-runtime.json",
+        "sha256": "2463542763d3e629636424bd6a5ae09db771a6f76d1547b40208ad460e074bad"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-decks-codex-disposition.json",
+        "sha256": "44294d6ce16202c7c9dc6cf2b4d01588b6abb9e1d93a18b46ec97c7519abcf1d"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-generated-audit.json",
+        "sha256": "1c7edc1c6f43d442d87bec7ea72511e47180473ad9b1da30f386f01471f6d6af"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-numerics-codex-disposition.json",
+        "sha256": "23af5b882cea36ece2a407d782c4caed2c2fea07022aaadb71e21603ae7ac673"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-profile-source.json",
+        "sha256": "abb579e8b54070cfb7be4cd79d59906a0b12b22814fe84059424a7c0d0e2eeb1"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-publication.json",
+        "sha256": "9c64d825b4830b9745c3d284781dbb750bd773e954ea232665a22414e7e80609"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-runtime-codex-disposition.json",
+        "sha256": "432aa59bad14632571363a6281a0774c23c62fc39314c61bead4ad048b7fa9a1"
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-verification.json",
+        "sha256": "33b7097e6c6a2e2958861b01f959822ef30d0ee3b3cdded95b2c46ceb300e7e3"
+      },
+      {
+        "path": "docs/reports/2026-09-14-issue-2121-b1-preparation.html",
+        "sha256": "5f367038422e37485822b1c1e9de5885fbace5400fca23c1bd76c81a40865788"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_brief.txt",
+        "sha256": "c738fa008bb6d6be0508d5f7678108956f80cfa8ebaeb27033568ad598c57911"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_capture.json",
+        "sha256": "487dfeda6c6a398a9cd892d267d7b85a0af4f6d12985cb4adb19627c04284363"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_contract.json",
+        "sha256": "85818d3a9203bf08ce2f931b910f9f187e97a8d5c69c82a823f5c8fb2c91da6e"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_invocation.json",
+        "sha256": "f1b57bdc9f7d9498d360f503cc0852a5dd039c7944be9cc22bd46aad61d2167c"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_process_stderr.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_response.json",
+        "sha256": "4a6c12f105980f4cb22776d0fa34df84ea729d93bbddd108363d29b838d84b2d"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_transport.json",
+        "sha256": "063ad98e481a142b150fe03244723432e5008928393bc9b01adf35af2fbf9938"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/manifest.json",
+        "sha256": "54bff7d35ec0fa8e915185f8858f09c7f452614e7817b9dbccbeb238dd2a7d06"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/basis-criteria.json",
+        "sha256": "ef5e0f749f7322d59dff668656e473c2a5ff8a993898b7fcf493c7e4b6cd6096"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n16.inp",
+        "sha256": "e12ec14194afba24176d34343ad8ecf0bec0d671509a1a9e27ddfb9413209f42"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n16.json",
+        "sha256": "834492a8698383a61264496bd41dea5b93735e588f08dc76a9096fe78187711e"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n4.inp",
+        "sha256": "bd2f9529412545743e4527f637190eedc42cce519033c8bd837946645c750de0"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n4.json",
+        "sha256": "7b7956d25ad848bdc781ada64eea6edc4646e40f63d0fcea9d0dcbc527a44e5b"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n8.inp",
+        "sha256": "ea4d95669f8e7922ab5ecd4e0d9f77713f14f4978d3a5ca1cc50f79f17c034e5"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n8.json",
+        "sha256": "e033de63d87051f0d6f0835318aef16965a1664eafebca5d79048f68c52a09d0"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-zero-t60-n16.inp",
+        "sha256": "1fcaf94c00c7f40ad9ccffbde512ee084e21a6600cb668204a823d23e4241448"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-zero-t60-n16.json",
+        "sha256": "1f266f7cb7751f5231f4bab3fba62bc2744ebb2e657ce396a5703dddb09c0ef7"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/preparation.json",
+        "sha256": "668c1a63b6ced8fe808da2b1214b9fb12e00e28828460e547a9d80b173501fe5"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/proposal.json",
+        "sha256": "117340d4e72b502dfa5e3a116a8019f572f08cb16e220ef5cb6a381e1287972d"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/producer_derivation.json",
+        "sha256": "405ba2af48734f66a1ad3d5738741d900587b444e6a589ed6e7b1a391ec91c9a"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/reference.json",
+        "sha256": "385ff3d42e4219faefd8cc1a72c20525f4b2731cf2fcb31aa51ba5b1de63c3b4"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/reference_comparison.json",
+        "sha256": "372e2e6658f3d43f49609d1529c4b75883a64bd418711a25f9c162ea165ecacf"
+      },
+      {
+        "path": "src/digitalmodel/ansys/analysis_records.py",
+        "sha256": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_adapter.py",
+        "sha256": "3d507d56493bb1a394e434ae507eb478c1074c8e1d2ca9e52927f07ac56a83b8"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_agreement.py",
+        "sha256": "49619d08d43b1cf541139c47fdce8a32a47dcf47d3dce5db92b4b453399856a0"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_benchmark.py",
+        "sha256": "1a4ab9ceb167a31278aa39c6fb946af8ee6b47dceedcff28d466865159b4e30b"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_canary.py",
+        "sha256": "3bc79ff642cc08c379b7b3d316fe107ec35c1681b4bf78a938753c57cd6c9ef3"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_criteria.py",
+        "sha256": "286e287834d2e38c675ce08a6aa44b8be1ba96739fbc807e65e1b8d82608eef3"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_deck.py",
+        "sha256": "c9dca5a7a5a0e53f4c555c95ea38d363b24896ca340c4069813e97670f3516d4"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_deck_exports.py",
+        "sha256": "48ff0fc3dce1ba196993c02b142a12d93ffea52ae25b9b5223bebbd723c69480"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_expression.py",
+        "sha256": "28a3c4742595ed2f8bef62fe2fc0a2ef8bdf3b4034742b0650b4d91f7d467cae"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_mesh.py",
+        "sha256": "82c42b9d8cc063b78201d7977229998d8e42bfbd4dbe3622707719a98e450d01"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_preparation.py",
+        "sha256": "ff4a105f09fe0145fd7b4315cdff6789514100500899f3ff31f99208f6d4a1c7"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_process.py",
+        "sha256": "6a91eddc2a9dfffff6d9ca55bd89b53d224106b42cd9f3c15d69773339b0fb59"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_process_windows.py",
+        "sha256": "b746ae57e916a31d2025fee9ede11fc73a423575cabcbca49b6997cc1f5d0338"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_reference.py",
+        "sha256": "55a9874f21b633e7e15f232035bd71a15dad82325041e44cc7f73a41955bb641"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_reference_provenance.py",
+        "sha256": "93c35eca16451f61864c91d605ec38df5cb88bb61d8345e843c323ea811e4c1c"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results.py",
+        "sha256": "a099fc97882a9ce2cc552a634b1bc73e63229b0d25cf2e774db9a074446f5c41"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_audit.py",
+        "sha256": "079c4a0201ece1dc7db58b9edef407e4102e792d875bde4f0b22757762dda9ea"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_cdb.py",
+        "sha256": "fbd3318e0baee4cc01ea1c1350776293d224ac8e44fe9d87e7ee2bc0c619f020"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_diagnostics.py",
+        "sha256": "4ac407fcb01c7747c610e96a6ed1970d484a1dec5bbd46d5905eb5527c8eb852"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_listings.py",
+        "sha256": "44eb5addfb873a900e8101588af6417bd9c4b2f3e4c493101b2190df035bb2c6"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_state.py",
+        "sha256": "651aac88c2b49f82ba25af84e557e195427342e96cd03031213cd0d6b9fb870b"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_validation.py",
+        "sha256": "da149366a2d3f08a943d9c5bac23aa71b4eeaa723d87ff99f3c821f18bcdd8a3"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_runner.py",
+        "sha256": "3ea772545d863cbbc6ddd1e072f33aac5ebf5c96beca5322e0081bb68e813d2e"
+      },
+      {
+        "path": "src/digitalmodel/ansys/runner.py",
+        "sha256": "05a0816a516938dfd953ec85a10a47296b9c78889a852a97a4baf847fb2fa6d8"
+      },
+      {
+        "path": "tests/ansys/cylinder_synthetic_protocol.py",
+        "sha256": "ec04324c7504095cd250c9adb0bcde27da96edf4da5d8c22d2d1b8bb284fd220"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_adapter.py",
+        "sha256": "0e43ef0137459caa426ecfc9984ba2965081b3c5de501188e386eb4cdc7cc7d9"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_agreement.py",
+        "sha256": "841eb7717eaecb649dab4abd1fca496c8b2d271dbf7e19f039d9700d3e425d2f"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_benchmark.py",
+        "sha256": "1b74addb1799307e574690b0a7fe55fe5433cd128e8c0f42c2715e0df778c6ad"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_canary.py",
+        "sha256": "13b53bc6f5506ed4af79955c37c54f1d4d4d5b7fc61fcfba9af0bf2ea0fcd6ff"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_canary_boundaries.py",
+        "sha256": "bc4ba2ea2cd4650d17af5092bcdd39608bd8b2446b38af6a9a11a5678ce26d4c"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_criteria.py",
+        "sha256": "e4d1e1fe6a52d5e77ad1fe6d35efafe15a71405d05d526a5c2b23e30f2b856c8"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_criteria_history.py",
+        "sha256": "d2ddd9dd9758cdfd703952dd4f79562343ec960c210ee9c09c53839225a998b3"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_deck.py",
+        "sha256": "ff66a53e8acf511c13aabe901c5cc0ec5185a28b98c6f3598190c392008ac240"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_expression.py",
+        "sha256": "482e9aac2e513889434256384458f8ad70740a450cc90c49c772b24fb0df9faa"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_native_protocol.py",
+        "sha256": "d35b88b5dbfb83a35dfb95bbae0ad745c85f880361f209e4b735470d99f999ad"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_preparation.py",
+        "sha256": "1c25f0d58a3b1cf541ad311ec32cd2f829fb2bb3f0805768f8c2e97b28774b82"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_process.py",
+        "sha256": "4a28b179ed5e7b7de0884a3f717ee3e4fa99f70ea7a715be038eb414b08679f7"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_reference.py",
+        "sha256": "e52f8e1d6b4788a1b5a2dd2ae78fd39616e19406d39c03179662a33926243a09"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_reference_provenance.py",
+        "sha256": "90779a7fe743a7501878890b1503bf6d54676e142456671cbef2babdc4ebabd5"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results.py",
+        "sha256": "6f9a0b22bef386c100d6021d4fb7069936225dbc1f7b0d30d594651ea8a6ca94"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_audit.py",
+        "sha256": "82318aa20c2e2705a706aeff97c41ca192fc1f546d629d3ba8a7f52243e9c302"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_cdb.py",
+        "sha256": "bc74723ab521442c9cd415567ae1419aa94b6432b4c83e184205a527a95c5639"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_corpus.py",
+        "sha256": "9d8d5c97b42a92659e0503d97692192099b514f5294f8d59e20dcde4859d8291"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_diagnostics.py",
+        "sha256": "6b747db2d8a27a07a7ad824b951b38983811e158301ace317dd15087b7d6492c"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_listings.py",
+        "sha256": "9e1956cbdd198fb79793790667dbcac0608385cdff46644e494bf4d17b582b25"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_state.py",
+        "sha256": "de70c5b9fd6b1a33b71da69b7b46b6c4f66f18e3285002d81b75883baa14e2a7"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_validation.py",
+        "sha256": "eefbbe42ec715cef5e78a9c03a2f8073a1a6b7ac5e66a7f0af13123e1220086c"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_runner.py",
+        "sha256": "6df886571b76e24b1835058b3109fdcfc17e7cc6e7c66ea4a04422cf7931f7e3"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_workflow.py",
+        "sha256": "dc9b6312054ce7bcd1aa820e0b449b02457f5fe6119f5602640f160d1b37e5b8"
+      }
+    ],
+    "legal_exit": 0,
+    "global_literal_pattern_count": 23,
+    "global_literal_findings": [],
+    "legal_stdout": "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n  Legal Sanity Scanner\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nScanning: digitalmodel (/d/ws/_coordination/solver-legal-padeye-parametric/digitalmodel)\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n  RESULT: PASS \u2014 no block violations found\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n",
+    "render": "PASS; no overflow or page errors; relative links resolve",
+    "scope": "Exact current review files plus staged publication files from Git index; no whole-repo or all-machine coverage; no literal-pattern exemptions"
+  },
+  "whitespace": "PASS with cr-at-eol for retained exact CRLF comparison evidence; no evidence bytes normalized",
+  "status": "1075 offline tests passed; code review has no blockers; latest report review unavailable, so B1 closeout pending"
+}

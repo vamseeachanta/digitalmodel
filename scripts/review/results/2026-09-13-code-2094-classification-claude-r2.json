@@ -1,0 +1,35 @@
+{
+  "provider": "Claude CLI",
+  "scope": "classification fix only",
+  "source_head_at_capture": "70c3c10ff090c17336100999bc1393971b2208af",
+  "source_blobs": [
+    {
+      "path": "tests/ansys/padeye_pressure_bundle.py",
+      "working_sha256": "c9a040189da979fc87cc52dfe84a15c93bc73c6d753e26a0756d4224273cc95d",
+      "bytes": 3745,
+      "canonical_git_blob": "d12636186dda2962c1f1a15140fb1b2194c6b128"
+    },
+    {
+      "path": "tests/ansys/test_padeye_pressure_bundle.py",
+      "working_sha256": "31809ce5be1440ffee8ecd77e6aa7759f6829fde3dcc2e92654d0302f4108b03",
+      "bytes": 4814,
+      "canonical_git_blob": "a91a84d3f1b2d48209235ad8ac240c297321f6cf"
+    }
+  ],
+  "prompt_sha256": "bd8341f5514dc6c4ccd208ebed4efc2862a158054439e386ebbb62cb05c831c5",
+  "status": "VALID",
+  "structured_output": {
+    "verdict": "MINOR",
+    "findings": [
+      "SCOPE: verdict applies only to the classification status/claims fix in the two supplied files; imported-helper, generator-source and physical-model questions are excluded by instruction, and the helper is not held to authenticating external receipts.",
+      "RESOLVED — reproduced defect: status is a single literal at one return site ('preparation_content_checks_passed'), and native_capture_independently_verified / log_artifact_class_independently_verified / source_revision_independently_verified / native_qualification_complete / stress_solve_authorized are literal False. No data path from expected['log_artifact_class'] to any claim field remains; the caller class is echoed as metadata only. The exact-set field check in _check_receipt (set(expected) != keys | {source_head, capture_id, log_artifact_class}) rejects caller-injected claim keys, guarded by test_unrecognized_receipt_assertions_are_not_silently_ignored.",
+      "REGRESSION GAP (highest residual): test_caller_classification_never_authenticates_native_capture does not assert native_qualification_complete is False. That field is asserted only in the format_reproduction-only test. Reintroducing `native_qualification_complete = kind == 'native_capture'` would leave the parametrized guard green — the strongest qualification claim is unguarded under precisely the label that triggered the original defect. Add the assertion.",
+      "STRENGTHEN GUARD: enumerating fields re-opens this gap on every future field addition. Prefer comparing the two parametrized results modulo the metadata key, e.g. assert {k: v for k, v in result.items() if k != 'log_artifact_class'} equals the format_reproduction baseline. That closes the whole 'any field varies with the caller label' class rather than the enumerated members.",
+      "RESIDUAL LABELLING ASYMMETRY: source_head is returned as 'recorded_source_head' with a paired source_revision_independently_verified: False, and log_artifact_class carries a paired independence flag, but capture_id is returned under a bare key with neither the 'recorded_' prefix nor an independence flag. A consumer reading the return dict may treat capture_id as established capture provenance. Rename to recorded_capture_id or add capture_id_independently_verified: False. Related: the r'\\d{8}T\\d{6}Z' check is format-only and admits impossible timestamps (e.g. 99999999T999999Z); acceptable if the field is explicitly recorded metadata, which the rename would make plain.",
+      "COVERAGE GAP ON THE CLASS ALLOWLIST: no test exercises rejection of an unsupported log_artifact_class (e.g. 'ansys_verified_native') or of a receipt missing that field. Widening the allowlist tuple in _check_receipt would therefore break no test while directly expanding the classification surface. Add a negative parametrized case.",
+      "RESIDUAL NATIVE-PROVENANCE LANGUAGE (prose, not behaviour): the count-mismatch message reads 'native mesh counts differ from frozen matrix' for a caller-supplied, unauthenticated CDB; the test module docstring asserts 'an observed native CDB fixture' while the only bundle labels that artifact format_reproduction; and test_composed_native_format_fixture_passes_without_qualification retains 'native' in its name. These re-seed the claim the fix removes from the return value. Recommend 'mesh counts differ from the frozen matrix' and dropping 'native' from the docstring and test name unless native provenance is separately established. The verify_pressure_bundle docstring phrase 'capture hashes and all independent preparation gates' is likewise an unbound completeness claim; 'attested digests and the domain, pressure and shape preparation gates' binds it to what is checked.",
+      "NOMENCLATURE NOTE (accepted, no change required): artifact_hashes_verified and verified_hashes denote digest agreement with caller-attested values only, not receipt authenticity. The module docstring states this and the adjacent False independence flags bound it, so the overclaim risk is contained; flagged only so the terms are not later read as provenance verification.",
+      "FAIL-CLOSED, DIAGNOSIS-DEGRADING: the `except (KeyError, TypeError, UnicodeError)` wrapper spans the downstream parse/domain/pressure/shape calls, so an internal defect in those helpers surfaces as 'malformed preparation bundle or external receipt'. The direction is safe — it raises rather than returning a passing status, so it creates no classification overclaim — but it misattributes helper faults to operator input. Narrowing the try to _check_receipt and the matrix lookup would preserve fail-closed behaviour with accurate attribution. Not blocking for this fix."
+    ]
+  }
+}

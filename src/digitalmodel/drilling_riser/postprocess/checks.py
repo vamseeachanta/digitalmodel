@@ -10,7 +10,10 @@ value in ``unit``, and the pair always satisfies ``u = |demand| / allowable``.
 
 ``combine`` (per check) says how the seeds of an irregular case combine: ``max`` - Gumbel fit over the seed
 maxima of the utilisation; ``min`` - Gumbel fit over the seed minima of the demand; ``mean`` - mean of the seed
-values; ``same`` - a setting identical in every seed.
+values; ``same`` - a setting identical in every seed. A :class:`CheckValue` may override the rule: CR-10 on the
+significant range of an irregular sea sets ``combine = "station_mean"`` (W03, owner decision 2026-10-07: the seed
+mean at each station, :func:`cr10_station_mean`), because H1/3 is a statistic of the whole sea state, not an
+extreme.
 """
 
 from __future__ import annotations
@@ -33,7 +36,11 @@ from digitalmodel.drilling_riser.postprocess.channels import (
 )
 from digitalmodel.drilling_riser.postprocess.pressure import REFERENCE as PRESSURE_REFERENCE
 from digitalmodel.drilling_riser.postprocess.pressure import burst_pressure_mpa, collapse_pressure_mpa
-from digitalmodel.drilling_riser.postprocess.stress_range import stress_range_limit_ksi
+from digitalmodel.drilling_riser.postprocess.stress_range import (
+    SIGNIFICANT_DEFINITION,
+    classify_stations,
+    stress_range_limit_ksi,
+)
 
 G = 9.80665
 KIP_KN = 4.4482216152605  # 1 kip in kN
@@ -57,9 +64,13 @@ class CheckValue:
     time_s: float | None = None
     passed: bool | None = None
     detail: dict[str, Any] = field(default_factory=dict)
+    screening: bool = False  # reported for information only, not part of the verdict (status SCREENING)
+    combine: str | None = None  # seed combination overriding the check's ``combine`` rule (``station_mean``)
 
     def __post_init__(self) -> None:
-        if self.passed is None and self.u is not None:
+        if self.screening:
+            self.passed = None
+        elif self.passed is None and self.u is not None:
             self.passed = self.u <= 1.0 + U_TOL
 
 
@@ -252,11 +263,158 @@ def conductor_bending(w, row, ctx) -> CheckValue:
     return best
 
 
+CR10_DETAIL_BY_KIND = {"coupling": "riser coupling weld", "body": "riser girth weld"}
+CR10_BASIS = {"irregular": ("sig", "significant"), "regular": ("max", "screening (max - min)")}
+
+
+def _cr10_limits(row) -> dict[str, float]:
+    saf = row["limit"].get("saf") or {}
+    return ({d: stress_range_limit_ksi(float(s)) * KSI_KPA / 1000.0 for d, s in saf.items()}
+            or {"nominal (SAF <= 1.5)": float(row["limit"]["value_if_saf_le_1_5"])})
+
+
+def _cr10_hot_spot(series, kinds, hot_spot_m, cap_of) -> dict[str, Any] | None:
+    """The W7 hot-spot report: the kept result point nearest ``hot_spot_m``. ``cr10_station`` names its CR-10
+    kind when it is also a CR-10 station (the pup-side station of the barrel coupling, W04), else None."""
+    if hot_spot_m is None:
+        return None
+    kept = [i for i, k in enumerate(kinds) if k != "excluded"]
+    if not kept:
+        return None
+    i = min(kept, key=lambda j: abs(series[j][0] - float(hot_spot_m)))
+    arc, v = series[i]
+    mpa = v / 1000.0
+    station = kinds[i] if kinds[i] in cap_of else None
+    return {"arc_m": arc, "demand": mpa, "unit": "MPa", "cr10_station": station,
+            "use": "W7 fatigue hot spot" + ("; also the CR-10 station of its coupling" if station
+                                            else "; not used for CR-10"),
+            "allowable_mpa": dict(cap_of), **{f"u_{kk}": mpa / cap for kk, cap in cap_of.items()}}
+
+
+def _cr10_governing(stations: list[dict], line: str, detail: dict, *, screening: bool,
+                    combine: str | None) -> CheckValue:
+    """The station with the largest utilisation, with the largest per kind in ``detail["by_kind"]``. A non-finite
+    value at any station, or no station at all, leaves CR-10 NOT_EVALUATED."""
+    if not stations:
+        raise NotEvaluated("CR-10: no station on the stress-range axis")
+    bad = [s["arc_m"] for s in stations if not (math.isfinite(s["demand"]) and math.isfinite(s["u"]))]
+    if bad:
+        raise NotEvaluated(f"CR-10: stress range not finite at {len(bad)} station(s), first at arc {bad[0]} m")
+    by_kind: dict[str, dict] = {}
+    for s in stations:
+        if s["kind"] not in by_kind or s["u"] > by_kind[s["kind"]]["u"]:
+            by_kind[s["kind"]] = {"u": s["u"], "demand": s["demand"], "arc_m": s["arc_m"]}
+    g = max(stations, key=lambda s: s["u"])
+    detail = {**detail, "by_kind": by_kind}
+    return CheckValue(demand=g["demand"], allowable=g["allowable"], unit="MPa", u=g["u"],
+                      location=f"{line} arc {g['arc_m']:.1f} m ({g['kind']}, {g['detail']})", detail=detail,
+                      screening=screening, combine=combine)
+
+
+def cr10_station_mean(values: dict) -> CheckValue:
+    """W03 (owner decision 2026-10-07): the significant range of an irregular sea combines over the seeds by the
+    seed MEAN at each station, then the station with the largest mean utilisation governs (the extremes keep the
+    Gumbel fit). Every seed must hold the same stations (``NotEvaluated`` otherwise)."""
+    seeds = list(values)
+    grids = {tuple((round(s["arc_m"], 6), s["kind"], round(s["allowable"], 9))
+                   for s in values[k].detail["station_values"]) for k in seeds}
+    if len(grids) != 1:
+        raise NotEvaluated("CR-10 seed mean: the seeds do not hold the same stations and allowables")
+    hot_arcs = {None if values[k].detail.get("hot_spot") is None else round(values[k].detail["hot_spot"]["arc_m"], 6)
+                for k in seeds}
+    if len(hot_arcs) != 1:
+        raise NotEvaluated("CR-10 seed mean: the seeds do not report the hot spot at the same arc")
+    first = values[seeds[0]]
+    n = len(seeds)
+    stations = []
+    for j, s0 in enumerate(first.detail["station_values"]):
+        d = sum(values[k].detail["station_values"][j]["demand"] for k in seeds) / n
+        stations.append({**s0, "demand": d, "u": d / s0["allowable"]})
+    line = first.detail["line"]
+    detail = {k: v for k, v in first.detail.items() if k not in ("station_values", "by_kind", "hot_spot")}
+    if "by_detail" in detail:  # whole-line path: recompute from the mean, not seed 1
+        peak = max(s["demand"] for s in stations)
+        detail["by_detail"] = {d: peak / cap for d, cap in detail["limits_mpa"].items()}
+    hots = [values[k].detail.get("hot_spot") for k in seeds]
+    if all(hots):
+        hd = sum(h["demand"] for h in hots) / n
+        detail["hot_spot"] = {**hots[0], "demand": hd, "combine": "seed mean",
+                              **{f"u_{k}": hd / cap for k, cap in hots[0]["allowable_mpa"].items()}}
+    v = _cr10_governing(stations, line, detail, screening=False, combine=None)
+    j = max(range(len(stations)), key=lambda i: stations[i]["u"])
+    seed_u = {str(k): values[k].detail["station_values"][j]["u"] for k in seeds}
+    v.detail.update({"combine": "seed mean per station", "seed_values": seed_u,
+                     "station_values": stations})
+    return v
+
+
+def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
+    """W510 (owner decisions 2026-10-07). R02: irregular seas (CON-I1) evaluate CR-10 on the significant range;
+    regular waves (CON-R1) give a screening value on the max - min range that takes no part in the verdict.
+    R03: ``SIGNIFICANT_DEFINITION`` (H1/3 of rainflow ranges). With ``cr10_stations`` in the context (keyword
+    arguments of :func:`stress_range.classify_stations`) each result point takes the SAF of its kind (coupling or
+    joint body), the excluded section is dropped and the first-pup hot spot is reported in ``detail`` without
+    governing; without it the whole line is taken against the lowest allowable range."""
+    if wave not in CR10_BASIS:
+        raise ValueError(f"wave_kind must be one of {sorted(CR10_BASIS)}, got {wave!r}")
+    kind_key, basis = CR10_BASIS[wave]
+    line = ctx.get("stress_line", "Riser")
+    series = range_series(w, line, "zz_range", kind_key)
+    arcs = [a for a, _ in series]
+    if not all(isinstance(a, (int, float)) and math.isfinite(a) for a in arcs) or \
+            any(y < x - 1e-6 for x, y in zip(arcs, arcs[1:])):
+        raise NotEvaluated(f"CR-10: the arc-length axis of range_graphs.{line} is missing, not finite or not "
+                           "non-decreasing")
+    limits = _cr10_limits(row)
+    detail: dict[str, Any] = {"basis": basis, "wave_kind": wave, "line": line,
+                              "channel": f"range_graphs.{line}.zz_range_{kind_key}",
+                              "theta_grid_note": "24 theta positions 15 deg apart: the bending part may be under-read "
+                                                 "by up to 1 - cos 7.5 deg = 0.86 %",
+                              "definition": SIGNIFICANT_DEFINITION if wave == "irregular" else None,
+                              "limits_mpa": limits}
+    st = ctx.get("cr10_stations")
+    if st:
+        try:
+            kinds = classify_stations([a for a, _ in series], **st)
+        except ValueError as e:
+            raise NotEvaluated(f"CR-10 station map: {e}") from None
+        detail_of = {**CR10_DETAIL_BY_KIND, **(ctx.get("cr10_detail_by_kind") or {})}
+        cap_of = {k: limits[d] for k, d in detail_of.items() if d in limits}
+        unmapped = sorted(set(limits) - set(detail_of.values()) - set(ctx.get("cr10_saf_not_applicable") or ()))
+        if unmapped:  # a registered weld detail with no station kind must not leave the verdict unnoticed
+            raise NotEvaluated(f"CR-10: register detail(s) {', '.join(unmapped)} map to no station kind "
+                               "(cr10_detail_by_kind) and are not declared not applicable (cr10_saf_not_applicable)")
+        lacking = sorted({detail_of.get(k, k) for k in kinds if k in ("coupling", "body") and k not in cap_of})
+        if lacking:  # a station kind on the line without an allowable must not drop out of the verdict
+            raise NotEvaluated(f"no SAF in the register row for {', '.join(lacking)}")
+        stations = [{"arc_m": arc, "kind": k, "detail": detail_of[k], "demand": v / 1000.0, "allowable": cap_of[k],
+                     "u": v / 1000.0 / cap_of[k]} for (arc, v), k in zip(series, kinds) if k in cap_of]
+        if not stations:
+            raise NotEvaluated("no riser-joint station on the stress-range axis")
+        hot = _cr10_hot_spot(series, kinds, st.get("hot_spot_m"), cap_of)
+        detail.update({"hot_spot": hot, "stations": st, "station_values": stations})
+        return _cr10_governing(stations, line, detail, screening=wave == "regular",
+                               combine="station_mean" if wave == "irregular" else None)
+    gov = min(limits, key=limits.get)  # one demand per point: the lowest allowable governs
+    stations = [{"arc_m": arc, "kind": "whole line", "detail": gov, "demand": v / 1000.0, "allowable": limits[gov],
+                 "u": v / 1000.0 / limits[gov]} for arc, v in series]
+    finite = [s["demand"] for s in stations if math.isfinite(s["demand"])]
+    peak = max(finite) if finite else float("nan")
+    detail.update({"by_detail": {d: peak / cap for d, cap in limits.items()}, "station_values": stations})
+    return _cr10_governing(stations, line, detail, screening=wave == "regular",
+                           combine="station_mean" if wave == "irregular" else None)
+
+
 def dyn_stress_range(w, row, ctx) -> CheckValue:
     """CR-10: outer-fibre axial stress range (double amplitude) along the riser against the allowable range of each
-    weld detail (10 ksi if SAF <= 1.5, else 15/SAF ksi); the detail with the largest utilisation governs."""
+    weld detail (10 ksi if SAF <= 1.5, else 15/SAF ksi); the detail with the largest utilisation governs.
+
+    With ``wave_kind`` in the context (``irregular`` or ``regular``) the W510 joint evaluation applies
+    (:func:`_dyn_stress_range_joints`); without it the W501 whole-line max - min path is kept unchanged."""
     if not is_dynamic(w):
         raise NotEvaluated("static case: no dynamic stress range")
+    if ctx.get("wave_kind") is not None:
+        return _dyn_stress_range_joints(w, row, ctx, ctx["wave_kind"])
     line = ctx.get("stress_line", "Riser")
     v, arc = range_extreme(w, line, "zz_range", "max")
     mpa = v / 1000.0

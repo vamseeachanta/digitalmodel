@@ -1,0 +1,92 @@
+{
+  "status": "comparison_passed_unreviewed",
+  "native_qualification_complete": false,
+  "case": "pressure-vessel",
+  "observed_at": "2026-09-12T20:53:38.279192+00:00",
+  "profile": {
+    "product": "Ansys Mechanical APDL",
+    "release": "2026 R1.01",
+    "build": "26.1",
+    "update": "UP20260202",
+    "platform": "WINDOWS x64",
+    "argv": "-b -np 1 -smp",
+    "cores": 1,
+    "parallel": "smp",
+    "equation_solver": "default sparse direct",
+    "note": "The run configuration is recorded because a value reproduces only under the conditions that produced it. Distributed and iterative solvers are not bit-reproducible across core counts, so a stability comparison is valid only against a matching configuration."
+  },
+  "input_sha256": "8d94ee1ad2ee626503cf3990bfe5a426b8e38a433e90eae064afb553566ee8f0",
+  "harness_sha256": "9ed7f59aa64b0c16294a829a4f8511919fc811df1495526d9cb01ca2a38a1989",
+  "relative_tolerance": 0.001,
+  "observed": {
+    "max_seqv_mpa": 134.7185,
+    "allowable_mpa": 138.0,
+    "uc": 0.97622,
+    "peak_node": 22.0,
+    "reaction_fx_n": -0.0,
+    "reaction_fy_n": 0.0005
+  },
+  "execution": {
+    "executable_sha256": "6c6327f6b906db8e6dd498bd38c97685d7e3e4acf52fccbf243b2dff7ed7af1b",
+    "argv": [
+      "ANSYS261.exe",
+      "-b",
+      "-i",
+      "pressure-vessel.inp",
+      "-o",
+      "pressure-vessel.out",
+      "-np",
+      "1",
+      "-smp"
+    ],
+    "timeout_seconds": 120,
+    "duration_seconds": 22.030999999959022,
+    "argv_presentation": "Normalized case-relative presentation; exact invocation retained in local raw receipt"
+  },
+  "artifacts": [
+    {
+      "path": "file.db",
+      "sha256": "eb67b8ed8874bfebfae780be816cca5a11b72840766e487946e82433b642bc5f"
+    },
+    {
+      "path": "file.mntr",
+      "sha256": "87be6987b12db76115578a933e3469132c51c24c95b4fa3602cb196485a62d1d"
+    },
+    {
+      "path": "file.rst",
+      "sha256": "dc813e24aec571d902d82188316502c251eb30dca119865ad4063be33b3e1ab6"
+    },
+    {
+      "path": "pv.inp",
+      "sha256": "8d94ee1ad2ee626503cf3990bfe5a426b8e38a433e90eae064afb553566ee8f0"
+    },
+    {
+      "path": "pv.out",
+      "sha256": "5f3b0a90a91a723efe12e5d98dfe5a5a7aadd2e1d575316981ff1dbba7e6a54f"
+    },
+    {
+      "path": "pv_result.csv",
+      "sha256": "d2dadc3c8c7dbab338d9dadbfd01940f597dd0facb3f9a17290cf84048c77a52"
+    }
+  ],
+  "source_receipt_sha256": "eda201039156cc24546f2509e65e7ecf7667468ac564e18f675a60c1fd5e3463",
+  "source_head": "175f0771808526719c9217fa2ef8ef04d93e95be",
+  "evidence_id": "ansys-2094-canary-20260912T205311Z/pressure-vessel",
+  "storage": "Raw solver artifacts retained on execution host; no backup or publication of raw logs/binaries established",
+  "license_counts_before": {
+    "ansys": {
+      "issued": 2,
+      "in_use": 0
+    },
+    "aqwa_solve": {
+      "issued": 2,
+      "in_use": 0
+    },
+    "anshpc": {
+      "issued": 4,
+      "in_use": 0
+    }
+  },
+  "solver_processes_after": [],
+  "seat_lock_released": true
+}
