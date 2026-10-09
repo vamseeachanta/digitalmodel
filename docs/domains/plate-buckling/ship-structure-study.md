@@ -76,7 +76,7 @@ remain fixed visibly; no arbitrary new parameter combination is computed.
 ## Execution, ownership and remaining gates
 
 Execution used a Windows workstation, Python 3.11.15; exact host is in the private
-owner manifest. Linux2 registry identifies a
+owner manifest. ace-linux-2 registry identifies a
 sim-worker, but strict SSH probe failed for absent trusted host key. Trust remains
 unchanged. No GPU/licensed/heavy job ran. Lightweight Windows work was retained.
 
@@ -173,9 +173,13 @@ flat-plate study. Flat-bar/rolled-tee stock matrices, plate width/length tables,
 IACS governing edition, bulb axes and source-specific distribution rights remain
 precise database gates.
 
-Source verification records a confirmed publisher inertia discrepancy for
-`british-ea-120x120x8`; solver use of that section is blocked pending resolution.
-The retained values are preserved. The finding is recorded in private
+Source verification flags `british-ea-120x120x8` as blocked for solver use
+pending resolution because of a confirmed publisher inertia discrepancy;
+`source_metadata.yml` records this restriction and does not enforce it at solve time.
+The staging-schema checks reported above apply to separate source research,
+not validation or enforcement of this authored pointer restriction.
+The discrepancy values and publisher comparator remain in the private evidence;
+no numeric source data is copied into this document. The finding is recorded in private
 [digitalmodel-data PR 44](https://github.com/vamseeachanta/digitalmodel-data/pull/44),
 commit `d3cdde0ed247a4d112b5139f9e66d3ab15e92bd2`, owner-relative
 `docs/reviews/ship-plate-study/local-loss-diagnostic/source-database-verification.json`.
@@ -183,7 +187,7 @@ This source-verification finding does not qualify other sections or alter the
 original synthetic cases or their acceptance status.
 
 The separate diagnostic manifest records UTC with +00:00. The preserved original
-manifest's executed_utc string has offset-05:00; it denotes 2026-10-06T01:19:43Z,
+manifest's executed_utc string has offset -05:00; it denotes 2026-10-06T01:19:43Z,
 and is not a naive UTC timestamp. No original run record was rewritten.
 
 Continuation readback also exercised the existing DataCatalog.load_catalog/load

@@ -27,6 +27,7 @@ sources:
     blocked_sections:
       - section_id: british-ea-120x120x8
         solver_use: blocked_pending_resolution
+        enforcement: advisory_metadata_not_runtime_enforced
         reason: confirmed_publisher_inertia_discrepancy_values_preserved
         evidence_owner: digitalmodel-data
         evidence_revision: d3cdde0ed247a4d112b5139f9e66d3ab15e92bd2
