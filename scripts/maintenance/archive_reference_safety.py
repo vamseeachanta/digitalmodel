@@ -155,10 +155,8 @@ def _value_evidence(value, source, candidates, tracked, by_base):
 
 def reference_safety(texts, candidates, tracked, hygiene_sources=frozenset()):
     """Return proven exclusions, candidate-level human holds, and scan gaps.
-
-    Only executable Python and YAML are scanned here. CSV/JSON archive manifests
-    and Markdown review reports are never interpreted as consumers. Explicit
-    references from candidate models count too, protecting retained dependencies.
+    Only Python and YAML consumers are scanned; reports are not dependencies.
+    Candidate models count too, protecting retained dependencies.
     """
     excluded, held, gaps = {}, {}, []
     candidates, tracked = set(candidates), set(tracked)

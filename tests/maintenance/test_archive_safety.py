@@ -70,6 +70,15 @@ def test_deep_reference_and_registry_paths_are_excluded():
     assert held == {}
 
 
+def test_yaml_references_preserve_escaped_and_template_paths():
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/input.dat", "docs/models/a.dat"]
+    texts = {"examples/run.yml": 'input: "docs/input\\u002edat"\nmodel: "docs/models/${name}.${ext}"\n'}
+    excluded, held, _ = reference_safety(texts, candidates, candidates + list(texts))
+    assert set(excluded) == {"docs/input.dat"}
+    assert set(held) == {"docs/models/a.dat"}
+
+
 def test_ambiguous_and_runtime_references_are_held():
     from archive_reference_safety import reference_safety
     candidates = ["docs/a/report.html", "docs/b/report.html", "docs/models/a.dat",
