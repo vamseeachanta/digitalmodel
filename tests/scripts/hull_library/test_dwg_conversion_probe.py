@@ -3,8 +3,9 @@
 import importlib.util
 from pathlib import Path
 
-import ezdxf
 import pytest
+
+ezdxf = pytest.importorskip("ezdxf")
 
 SCRIPT = (
     Path(__file__).resolve().parents[3] / "scripts/hull_library/dwg_conversion_probe.py"
@@ -62,7 +63,7 @@ def test_incomplete_inspection_makes_cli_fail(tmp_path, monkeypatch):
     report = probe.inspect_dxf(path)
     assert report["readiness"] == "blocked"
     monkeypatch.setattr(
-        probe, "convert", lambda *args: {"returncode": 0, "dxf": report}
+        probe, "convert", lambda *args, **kwargs: {"returncode": 0, "dxf": report}
     )
     monkeypatch.setattr("sys.argv", ["probe", "source.dwg", "output.dxf"])
     assert probe.main() == 1
@@ -105,8 +106,9 @@ def test_converter_failure_retains_stderr_and_clears_git_environment(
     monkeypatch.setenv("GIT_DIR", str(tmp_path / "caller-git"))
     report = load_probe().convert(source, tmp_path / "result.dxf", converter)
     assert report["returncode"] == 7
-    assert report["stdout"].strip() == "{}"
-    assert report["stderr"].strip() == "decode failed"
+    assert report["diagnostics"]["stdout_bytes"] == 3
+    assert report["diagnostics"]["stderr_bytes"] > 0
+    assert "decode failed" not in str(report)
     assert report["dxf"]["readiness"] == "blocked"
 
 
@@ -120,9 +122,10 @@ def test_conversion_timeout_retains_partial_diagnostics(tmp_path):
     report = load_probe().convert(
         source, tmp_path / "result.dxf", converter, timeout=0.1
     )
-    assert report["converter_version"] == "fixture 1"
+    assert report["converter_sha256"]
     assert report["returncode"] is None
-    assert "decode started" in report["stdout"]
+    assert report["diagnostics"]["stdout_bytes"] > 0
+    assert "decode started" not in str(report)
     assert "TimeoutExpired" in report["error"]
 
 
@@ -139,3 +142,91 @@ def test_staged_digest_mismatch_stops_before_conversion(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="Staged source differs"):
         probe.convert(source, tmp_path / "result.dxf", converter)
     assert source.read_bytes() == b"AC1032source"
+
+
+def test_metadata_allowlist_withholds_values_and_other_tags(tmp_path):
+    path = tmp_path / "drawing.dxf"
+    doc = ezdxf.new()
+    block = doc.blocks.new("BORDER")
+    block.add_lwpolyline([(0, 0), (841, 594)])
+    insert = doc.modelspace().add_blockref(
+        "BORDER", (10, 20), dxfattribs={"xscale": 2, "yscale": 2}
+    )
+    for tag in ("TITLE1", "DWG#", "COMPANY", "NAME", "SCALE"):
+        insert.add_attrib(tag, "sensitive fixture value")
+    doc.header["$INSUNITS"] = 0
+    doc.header["$MEASUREMENT"] = 1
+    doc.header["$LUNITS"] = 2
+    doc.header["$DIMSCALE"] = 10
+    doc.layout().add_viewport((5, 5), (10, 20), (0, 0), 200)
+    doc.saveas(path)
+    report = load_probe().inspect_dxf(path)
+    assert report["header"] == {
+        "$INSUNITS": 0,
+        "$MEASUREMENT": 1,
+        "$LUNITS": 2,
+        "$DIMSCALE": 10,
+    }
+    assert report["dimension_entity_count"] == 0
+    assert report["title_attribute_tags"] == ["DWG#", "TITLE1"]
+    assert report["inserts"][0]["scales"] == [2, 2, 1]
+    assert report["inserts"][0]["block_extents"]["maximum"] == [841, 594, 0]
+    assert report["paperspace_viewports"][0]["scale"] == 0.1
+    import json
+
+    serialized = json.dumps(report)
+    assert "COMPANY" not in serialized
+    assert "sensitive fixture value" not in serialized
+    assert "NAME" not in serialized
+
+
+def test_unexpected_inspection_exception_is_blocked(tmp_path, monkeypatch):
+    path = tmp_path / "drawing.dxf"
+    ezdxf.new().saveas(path)
+    probe = load_probe()
+
+    def fail_bounds(*args, **kwargs):
+        raise RuntimeError("private fixture payload")
+
+    monkeypatch.setattr(probe.bbox, "extents", fail_bounds)
+    report = probe.inspect_dxf(path)
+    assert report["readiness"] == "blocked"
+    assert "RuntimeError" in report["error"]
+    assert "private fixture payload" not in report["error"]
+
+
+def test_inspection_only_retains_no_dxf_or_converter_text(tmp_path):
+    converter = fake_converter(
+        tmp_path,
+        "import sys,ezdxf\nif '--version' in sys.argv: print('fixture 1')\n"
+        "else:\n ezdxf.new().saveas(sys.argv[sys.argv.index('-o')+1])\n"
+        " print('private fixture payload',file=sys.stderr)\n",
+    )
+    source = tmp_path / "input.dwg"
+    source.write_bytes(b"AC1032source")
+    probe = load_probe()
+    report = probe.convert(source, None, converter, inspection_only=True)
+    assert report["dxf"]["opens"]
+    assert report["diagnostics"]["stderr_bytes"] > 0
+    assert "private fixture payload" not in str(report)
+    assert not list(tmp_path.glob("*.dxf"))
+    assert source.read_bytes() == b"AC1032source"
+
+
+def test_library_diagnostics_do_not_escape_inspection(
+    tmp_path, monkeypatch, capsys, caplog
+):
+    import logging
+
+    probe = load_probe()
+
+    def fail_read(*args):
+        print("private fixture payload")
+        logging.getLogger("ezdxf").error("private fixture payload")
+        raise RuntimeError("private fixture payload")
+
+    monkeypatch.setattr(probe.ezdxf, "readfile", fail_read)
+    report = probe.inspect_dxf(tmp_path / "drawing.dxf")
+    captured = capsys.readouterr()
+    assert "private fixture payload" not in captured.out + captured.err + caplog.text
+    assert report["readiness"] == "blocked"

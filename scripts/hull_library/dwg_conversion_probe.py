@@ -6,12 +6,15 @@ The caller must retain the report and independently qualify lines-plan geometry.
 
 import argparse
 import hashlib
+import io
 import json
+import logging
 import os
 import shutil
 import subprocess
 import tempfile
 from collections import Counter
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from pathlib import Path
 
 import ezdxf
@@ -22,21 +25,92 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def drawing_texts(entities):
-    texts = []
+def extents(entities):
+    bounds = bbox.extents(entities, fast=False)
+    return (
+        {"minimum": list(bounds.extmin), "maximum": list(bounds.extmax)}
+        if bounds.has_data
+        else None
+    )
+
+
+def public_identifier(value):
+    # Arbitrary CAD names can contain restricted identities. Preserve only
+    # reviewed generic identifiers; pseudonyms allow cross-file comparison.
+    if value in {"0", "A", "SECTIONS", "BORDER", "Defpoints"} or value.isdecimal():
+        return value
+    return "withheld-" + hashlib.sha256(value.encode()).hexdigest()[:16]
+
+
+def insert_metadata(doc, entities):
+    inserts, tags = [], set()
     for entity in entities:
-        if entity.dxftype() in ("TEXT", "MTEXT"):
-            value = (
-                entity.dxf.text if entity.dxftype() == "TEXT" else entity.plain_text()
-            )
-            texts.append(
+        if entity.dxftype() != "INSERT":
+            continue
+        block = doc.blocks.get(entity.dxf.name)
+        inserts.append(
+            {
+                "block_name": public_identifier(entity.dxf.name),
+                "scales": [entity.dxf.xscale, entity.dxf.yscale, entity.dxf.zscale],
+                "block_extents": extents(block) if block is not None else None,
+                "insert_extents": extents([entity]),
+            }
+        )
+        for attribute in entity.attribs:
+            tag = attribute.dxf.tag
+            if tag.startswith("TITLE") or tag == "DWG#":
+                tags.add(tag)
+    return inserts, sorted(tags)
+
+
+def viewport_metadata(doc):
+    viewports = []
+    for layout in doc.layouts:
+        if layout.name == "Model":
+            continue
+        for entity in layout.query("VIEWPORT"):
+            height = entity.dxf.view_height
+            viewports.append(
                 {
-                    "handle": entity.dxf.handle,
-                    "layer": entity.dxf.layer,
-                    "text": value,
+                    "viewport_id": entity.dxf.id,
+                    "status": entity.dxf.status,
+                    "paper_height": entity.dxf.height,
+                    "view_height": height,
+                    "scale": entity.dxf.height / height if height else None,
                 }
             )
-    return texts
+    return viewports
+
+
+@contextmanager
+def private_diagnostics():
+    """Suppress decoder diagnostics without writing restricted payloads to disk."""
+    previous = logging.root.manager.disable
+    logging.disable(logging.CRITICAL)
+    try:
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            yield
+    finally:
+        logging.disable(previous)
+
+
+def layout_metadata(doc, entities, model):
+    return {
+        "opens": True,
+        "readiness": "unverified",
+        "dxf_version": doc.dxfversion,
+        "insunits": doc.header.get("$INSUNITS"),
+        "header": {
+            key: doc.header.get(key)
+            for key in ("$INSUNITS", "$MEASUREMENT", "$LUNITS", "$DIMSCALE")
+        },
+        "dimension_entity_count": sum(e.dxftype() == "DIMENSION" for e in entities),
+        "entities_by_type": dict(Counter(e.dxftype() for e in model)),
+        "entities_by_layer": dict(
+            Counter(public_identifier(e.dxf.layer) for e in model)
+        ),
+        "layers": [public_identifier(layer.dxf.name) for layer in doc.layers],
+    }
 
 
 def inspect_dxf(path):
@@ -46,38 +120,27 @@ def inspect_dxf(path):
         "ezdxf_version": ezdxf.__version__,
     }
     try:
-        doc = ezdxf.readfile(path)
-        entities = list(doc.modelspace())
-        report.update(
-            opens=True,
-            readiness="unverified",
-            dxf_version=doc.dxfversion,
-            insunits=doc.header.get("$INSUNITS"),
-            entities_by_type=dict(Counter(e.dxftype() for e in entities)),
-            entities_by_layer=dict(Counter(e.dxf.layer for e in entities)),
-            layers=[layer.dxf.name for layer in doc.layers],
-        )
-        report["texts"] = drawing_texts(entities)
-        bounds = bbox.extents(entities, fast=False)
-        report["modelspace_bbox"] = (
-            {"minimum": list(bounds.extmin), "maximum": list(bounds.extmax)}
-            if bounds.has_data
-            else None
-        )
-        # Counts/bounds above precede audit; audit may repair the in-memory copy.
-        audit = doc.audit()
-        report["audit_errors"] = [
-            {"code": e.code, "message": e.message} for e in audit.errors
-        ]
-        report["audit_fixes"] = [
-            {"code": e.code, "message": e.message} for e in audit.fixes
-        ]
-        report["qualification_required"] = (
-            "Identify hull view, units, scale, stated dimensions and station assignments; compare source fidelity."
-        )
-    except (ezdxf.DXFError, OSError, UnicodeError, ValueError) as error:
+        with private_diagnostics():
+            doc = ezdxf.readfile(path)
+            entities = [entity for layout in doc.layouts for entity in layout]
+            model = list(doc.modelspace())
+            report.update(layout_metadata(doc, entities, model))
+            report["inserts"], report["title_attribute_tags"] = insert_metadata(
+                doc, entities
+            )
+            report["paperspace_viewports"] = viewport_metadata(doc)
+            report["modelspace_bbox"] = extents(model)
+            audit = doc.audit()
+            # Audit messages, drawing texts and attribute VALUES may contain
+            # restricted identities. Only codes and allowlisted tags are emitted.
+            report["audit_errors"] = [e.code for e in audit.errors]
+            report["audit_fixes"] = [e.code for e in audit.fixes]
+            report["qualification_required"] = (
+                "Establish units, scale, dimensions and station assignments independently."
+            )
+    except Exception as error:  # noqa: BLE001 - each file must fail closed
         report["readiness"] = "blocked"
-        report["error"] = f"{type(error).__name__}: {error}"
+        report["error"] = f"{type(error).__name__}: inspection failed; message withheld"
     return report
 
 
@@ -94,8 +157,10 @@ def invoke(command, env, cwd, timeout):
         )
         return {
             "returncode": result.returncode,
-            "stdout": result.stdout,
-            "stderr": result.stderr,
+            "diagnostics": {
+                "stdout_bytes": len(result.stdout.encode()),
+                "stderr_bytes": len(result.stderr.encode()),
+            },
         }
     except (subprocess.TimeoutExpired, OSError) as error:
 
@@ -108,9 +173,11 @@ def invoke(command, env, cwd, timeout):
 
         return {
             "returncode": None,
-            "stdout": text_value(getattr(error, "stdout", "")),
-            "stderr": text_value(getattr(error, "stderr", "")),
-            "error": f"{type(error).__name__}: {error}",
+            "diagnostics": {
+                "stdout_bytes": len(text_value(getattr(error, "stdout", "")).encode()),
+                "stderr_bytes": len(text_value(getattr(error, "stderr", "")).encode()),
+            },
+            "error": f"{type(error).__name__}: converter failed; message withheld",
         }
 
 
@@ -121,7 +188,7 @@ def run_converter(executable, staged_source, staged_dxf, env, source_hash, timeo
     report = {
         "source": staged_source.name,
         "source_sha256": source_hash,
-        "converter_version": version["stdout"].strip(),
+        "converter_version": "not emitted; binary digest identifies converter",
         "converter_sha256": digest(executable),
         "command": ["dwg2dxf", "-v1", "-o", "<staged-output.dxf>", staged_source.name],
     }
@@ -133,9 +200,12 @@ def run_converter(executable, staged_source, staged_dxf, env, source_hash, timeo
     return report | invoke(command, env, staged_source.parent, timeout)
 
 
-def convert(source, output, converter, timeout=300):
-    source, output = Path(source).resolve(), Path(output).resolve()
-    if output.exists():
+def convert(source, output, converter, timeout=300, inspection_only=False):
+    source = Path(source).resolve()
+    output = Path(output).resolve() if output is not None else None
+    if not inspection_only and output is None:
+        raise ValueError("Output is required unless inspection-only")
+    if output is not None and output.exists():
         raise FileExistsError(output)
     if source.suffix.lower() != ".dwg" or not source.is_file():
         raise ValueError("Source must be an existing DWG file")
@@ -161,16 +231,18 @@ def convert(source, output, converter, timeout=300):
         if staged_dxf.is_file():
             report["dxf_sha256"] = digest(staged_dxf)
             report["dxf"] = inspect_dxf(staged_dxf)
-            output.parent.mkdir(parents=True, exist_ok=True)
-            # Exclusive creation preserves existing evidence even if it appears mid-run.
-            with output.open("xb") as target, staged_dxf.open("rb") as original:
-                shutil.copyfileobj(original, target)
+            if not inspection_only:
+                output.parent.mkdir(parents=True, exist_ok=True)
+                # Exclusive creation preserves evidence appearing mid-run.
+                with output.open("xb") as target, staged_dxf.open("rb") as original:
+                    shutil.copyfileobj(original, target)
         else:
             report["dxf"] = {
                 "opens": False,
                 "readiness": "blocked",
                 "error": "Converter produced no DXF",
             }
+    report["inspection_only"] = inspection_only
     return report
 
 
@@ -180,11 +252,21 @@ def main():
     parser.add_argument(
         "output",
         type=Path,
+        nargs="?",
         help="Unqualified staging DXF; never publish without review",
     )
     parser.add_argument("--converter", default="dwg2dxf")
+    parser.add_argument(
+        "--inspection-only",
+        action="store_true",
+        help="Inspect in temporary staging; retain no DXF",
+    )
     args = parser.parse_args()
-    report = convert(args.source, args.output, args.converter)
+    if args.output is None and not args.inspection_only:
+        parser.error("output is required unless --inspection-only")
+    report = convert(
+        args.source, args.output, args.converter, inspection_only=args.inspection_only
+    )
     print(json.dumps(report, indent=2, allow_nan=False))
     complete = report["dxf"].get("readiness") == "unverified"
     return 0 if report["returncode"] == 0 and complete else 1
