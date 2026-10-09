@@ -5,7 +5,7 @@ this document describe historical revisions. The current selection and review
 record are [R01-archive-manifest-review.html](R01-archive-manifest-review.html)
 and the regenerated summary JSON. Candidate rows with either `keep_for_feature`
 or `needs_human_check` stay in the repository. The blob map is an inventory,
-not authorization to remove every mapped path. Removal PR #2304 is held until
+not authorization to remove every mapped path. Removal [PR 2304](https://github.com/vamseeachanta/digitalmodel/pull/2304) is held until
 regeneration, Claude review and owner confirmation of the revised selection.
 
 Status: **review only.** This change adds a candidate list, a deduplicated blob

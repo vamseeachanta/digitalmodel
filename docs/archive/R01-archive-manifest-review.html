@@ -40,5 +40,24 @@ and a synthetic registry regression covers it. Archive availability has not been
 <p>Revision-4 counts in ARCHIVE-MOVE-PLAN-2026-10-08.md are historical. The regenerated summary
 and the R01 result below will govern selection. The existing removal PR must be revised against this
 selection after Claude review and owner confirmation.</p>
-<!-- R01_RESULT -->
+<h2>Regenerated R01 selection</h2>
+<table><tr><th>Partition</th><th>Files</th><th>Delta from revision 4</th></tr>
+<tr><td>Rule matches</td><td>1,471</td><td>0</td></tr>
+<tr><td>Referenced exclusions</td><td>188</td><td>+122</td></tr>
+<tr><td>Feature keeps</td><td>0</td><td>-11</td></tr>
+<tr><td>Needs human check</td><td>1,283</td><td>+1,283</td></tr>
+<tr><td>Move set</td><td>0</td><td>-1,394</td></tr></table>
+<p>Table 1. Disjoint selection partitions compared with revision 4. Human-held models remain
+available to preserve features; feature keeps therefore need not duplicate their holds.</p>
+<p>Actual merge base: <code>e355203bacb98e9690481b5f2d474203dfafc0cc</code>.
+Scanned clean revision: <code>f3ce3b6aebc073ec3e43a6276962baffb0444227</code>.
+All 1,283 candidate file SHA-256 digests, partition counts,
+blob-map flags and feature-inventory provenance were verified by readback.</p>
+<p>The targeted suite passes all 52 tests in both tested Python environments.
+Full-suite collection is blocked by the missing sibling dependency and 91 collection errors.
+<a href="R01-validation.json">Validation evidence</a> records the commands, environments,
+limitations and preservation probe.</p>
+<p>No move is authorized for a row marked <code>needs_human_check</code>.
+The per-file reasons in the regenerated summary identify the detected consumers and unresolved
+expressions. The removal PR remains held for Claude review and owner disposition of those checks.</p>
 </html>
