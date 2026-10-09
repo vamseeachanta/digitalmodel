@@ -1,0 +1,42 @@
+# Data pointers for bulky engineering artifacts moved out of git.
+#
+# Nothing here is fetched automatically; copy what is needed from the archive
+# host (ace-linux-1, reachable over Tailscale). DOCUMENT-MAP.md is the
+# human-readable companion of this file.
+
+archive_moves:
+  - date: "2026-10-08"
+    decision: "owner decision D01 (round 6); selection in PR #2293"
+    host: ace-linux-1
+    root: /mnt/ace/digitalmodel
+    # One copy per unique content; the file name is its own SHA-256 and the
+    # extension of the lexicographically first original path is kept.
+    layout: "blobs/sha256/<aa>/<sha256>.<ext>"
+    base_commit: a35bb88775119f15d79bc27cc44ab1a2d9fbf801  # main before removal
+    blob_map: data/archive/2026-10-08/MANIFEST.blob-map-2026-10-08.tsv  # repo path -> blob
+    sha256_manifest: data/archive/2026-10-08/MANIFEST.blobs-2026-10-08.sha256.tsv  # one row per blob
+    verification: data/archive/2026-10-08/VERIFY-blobs-2026-10-08.tsv  # recomputed on the archive host
+    files: 1394
+    unique_blobs: 1249
+    bytes_total: 1816070378  # git blob bytes of all moved paths
+    bytes_unique: 1715309069  # bytes stored (one copy per unique blob)
+    classes:
+      - name: solver-inputs
+        files: 321
+        bytes: 846160176
+        extensions: [csv, dat, dwg, gz, igs, lis, qtf, scdoc, stl, yml]
+      - name: html-report-renders
+        files: 470
+        bytes: 676308437
+        extensions: [html]
+      - name: documentation-images
+        files: 553
+        bytes: 203416172
+        extensions: [gif, jfif, jpeg, jpg, png, svg, tif]
+      - name: office-documents
+        files: 50
+        bytes: 90185593
+        extensions: [docx, pdf, ppt, pptx]
+    retrieve: >-
+      Look the repo path up in the blob map, copy <root>/<blob_path> from the
+      archive host to that path, and check that its SHA-256 equals sha256_blob.
