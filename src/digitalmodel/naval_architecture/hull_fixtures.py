@@ -5,6 +5,8 @@ Analytic hull fixtures used to verify :mod:`digitalmodel.naval_architecture.mesh
 
 All geometry is analytic (no vessel data). Meshes are returned in metres in the canonical
 frame of the adapter: x forward, y port, z up, baseline z = 0, midship at x = 0.
+Factories return independent mutable arrays for geometry authoring; no geometry or
+provenance is retained. TriMesh snapshots them on construction.
 Re-exported from ``mesh_hydrostatics`` so the public API is unchanged.
 """
 
