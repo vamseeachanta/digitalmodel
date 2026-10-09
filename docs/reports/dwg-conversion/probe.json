@@ -1,0 +1,445 @@
+{
+  "source": "H920DM-1A_Hull Lines_2.dwg",
+  "source_sha256": "000f48653b778b17586b244cd50b6677d71d12fa68bcdd766a47e89ff5927b57",
+  "converter_version": "dwg2dxf 0.14",
+  "converter_sha256": "cc7e370b2493c5c18cc8d05d2439ca7366cfbff81f30d07eb784cec2b1d1c240",
+  "command": [
+    "dwg2dxf",
+    "-v1",
+    "-o",
+    "<staged-output.dxf>",
+    "H920DM-1A_Hull Lines_2.dwg"
+  ],
+  "returncode": 0,
+  "stdout": "Reading DWG file <staging>/H920DM-1A_Hull Lines_2.dwg\nWriting DXF file <staging>/converted.dxf\n",
+  "stderr": "Warning: Unstable Class object 501 MATERIAL (0x481) 14/0\nWarning: Unstable Class object 501 MATERIAL (0x481) 22/0\nWarning: Unstable Class object 501 MATERIAL (0x481) 30/0\nWarning: Unstable Class object 504 TABLESTYLE (0xfff) 97/0\nWarning: TODO TABLESTYLE r2010+ missing fields\nWarning: Unstable Class object 505 MLEADERSTYLE (0xfff) 99/0\nERROR: Invalid ATTRIB.keep_duplicate_records 64\nERROR: Invalid ATTRIB.keep_duplicate_records 66\nERROR: Invalid ATTRIB.keep_duplicate_records 66\nERROR: Invalid ATTRIB.keep_duplicate_records 64\nERROR: Invalid ATTRIB.keep_duplicate_records 65\nWarning: Unstable Class object 501 MATERIAL (0x481) 14/11\nWarning: Unstable Class object 501 MATERIAL (0x481) 22/19\nWarning: Unstable Class object 501 MATERIAL (0x481) 30/21\nWarning: Unhandled Object TABLESTYLE in out_dxf 97/64\nWarning: Unstable Class object 505 MLEADERSTYLE (0xfff) 99/66\n",
+  "dxf_sha256": "73963a902fcabba377ec36f984bfb571ef981b11e1b0d53ad758af42bb6c9c85",
+  "dxf": {
+    "opens": true,
+    "readiness": "unverified",
+    "ezdxf_version": "1.4.4",
+    "dxf_version": "AC1027",
+    "insunits": 0,
+    "entities_by_type": {
+      "INSERT": 1,
+      "LWPOLYLINE": 109,
+      "TEXT": 28
+    },
+    "entities_by_layer": {
+      "0": 29,
+      "15": 14,
+      "7": 26,
+      "12": 9,
+      "1": 9,
+      "9": 9,
+      "2": 42
+    },
+    "layers": [
+      "0",
+      "BORDER",
+      "15",
+      "7",
+      "12",
+      "1",
+      "9",
+      "2",
+      "Defpoints"
+    ],
+    "texts": [
+      {
+        "handle": "7D0",
+        "layer": "0",
+        "text": "0"
+      },
+      {
+        "handle": "7D1",
+        "layer": "0",
+        "text": "1"
+      },
+      {
+        "handle": "7D2",
+        "layer": "0",
+        "text": "2"
+      },
+      {
+        "handle": "7D3",
+        "layer": "0",
+        "text": "3"
+      },
+      {
+        "handle": "7D4",
+        "layer": "0",
+        "text": "4"
+      },
+      {
+        "handle": "7D5",
+        "layer": "0",
+        "text": "5"
+      },
+      {
+        "handle": "7D6",
+        "layer": "0",
+        "text": "0"
+      },
+      {
+        "handle": "7D7",
+        "layer": "0",
+        "text": "1"
+      },
+      {
+        "handle": "7D8",
+        "layer": "0",
+        "text": "3"
+      },
+      {
+        "handle": "7D9",
+        "layer": "0",
+        "text": "2"
+      },
+      {
+        "handle": "7DA",
+        "layer": "0",
+        "text": "7"
+      },
+      {
+        "handle": "7DB",
+        "layer": "0",
+        "text": "6"
+      },
+      {
+        "handle": "7DC",
+        "layer": "0",
+        "text": "5"
+      },
+      {
+        "handle": "7DD",
+        "layer": "0",
+        "text": "4"
+      },
+      {
+        "handle": "7DE",
+        "layer": "0",
+        "text": "10"
+      },
+      {
+        "handle": "7DF",
+        "layer": "0",
+        "text": "9"
+      },
+      {
+        "handle": "7E0",
+        "layer": "0",
+        "text": "8"
+      },
+      {
+        "handle": "7E1",
+        "layer": "0",
+        "text": "8"
+      },
+      {
+        "handle": "7E2",
+        "layer": "0",
+        "text": "9"
+      },
+      {
+        "handle": "7E3",
+        "layer": "0",
+        "text": "10"
+      },
+      {
+        "handle": "7E4",
+        "layer": "0",
+        "text": "4"
+      },
+      {
+        "handle": "7E5",
+        "layer": "0",
+        "text": "5"
+      },
+      {
+        "handle": "7E6",
+        "layer": "0",
+        "text": "6"
+      },
+      {
+        "handle": "7E7",
+        "layer": "0",
+        "text": "7"
+      },
+      {
+        "handle": "7E8",
+        "layer": "0",
+        "text": "2"
+      },
+      {
+        "handle": "7E9",
+        "layer": "0",
+        "text": "3"
+      },
+      {
+        "handle": "7EA",
+        "layer": "0",
+        "text": "1"
+      },
+      {
+        "handle": "7EB",
+        "layer": "0",
+        "text": "0"
+      }
+    ],
+    "modelspace_bbox": {
+      "minimum": [
+        -4.463843685833867e-12,
+        -1.5774048733874224e-12,
+        0.0
+      ],
+      "maximum": [
+        10135.499999999998,
+        7107.9,
+        0.0
+      ]
+    },
+    "audit_errors": [],
+    "audit_fixes": [
+      {
+        "code": 202,
+        "message": "Removed invalid key ByBlock in DICTIONARY(#10)."
+      },
+      {
+        "code": 202,
+        "message": "Removed invalid key ByLayer in DICTIONARY(#10)."
+      },
+      {
+        "code": 202,
+        "message": "Removed invalid key Global in DICTIONARY(#10)."
+      },
+      {
+        "code": 202,
+        "message": "Removed invalid key Standard in DICTIONARY(#63)."
+      },
+      {
+        "code": 202,
+        "message": "Removed invalid key Standard in DICTIONARY(#65)."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#13) entity with invalid owner handle #12."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#14) entity with invalid owner handle #12."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#15) entity with invalid owner handle #12."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#16) entity with invalid owner handle #12."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#17) entity with invalid owner handle #12."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#18) entity with invalid owner handle #12."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#1B) entity with invalid owner handle #1A."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#1C) entity with invalid owner handle #1A."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#1D) entity with invalid owner handle #1A."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#1E) entity with invalid owner handle #1A."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#1F) entity with invalid owner handle #1A."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#20) entity with invalid owner handle #1A."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#23) entity with invalid owner handle #22."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#24) entity with invalid owner handle #22."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#25) entity with invalid owner handle #22."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#26) entity with invalid owner handle #22."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#27) entity with invalid owner handle #22."
+      },
+      {
+        "code": 202,
+        "message": "Deleted XRECORD(#28) entity with invalid owner handle #22."
+      }
+    ],
+    "qualification_required": "Identify hull view, units, scale, stated dimensions and station assignments; compare source fidelity."
+  },
+  "source_modelspace_entities_by_type": {
+    "INSERT": 1,
+    "LWPOLYLINE": 109,
+    "TEXT": 28
+  },
+  "source_modelspace_entities_by_layer": {
+    "0": 29,
+    "15": 14,
+    "7": 26,
+    "12": 9,
+    "1": 9,
+    "9": 9,
+    "2": 42
+  },
+  "polyline_fidelity": {
+    "comparator": "LibreDWG dwgread JSON, same decoder (not independent validation)",
+    "missing_handles": [],
+    "vertex_count_mismatch_handles": [],
+    "maximum_xy_coordinate_difference_drawing_units": 9.094947017729282e-13,
+    "compared_polylines": 109
+  },
+  "source_inventory_command": [
+    "dwgread",
+    "-O",
+    "JSON",
+    "-o",
+    "<source.json>",
+    "H920DM-1A_Hull Lines_2.dwg"
+  ],
+  "dwgread_stderr": "\nSUCCESS\n",
+  "title_attributes": [
+    {
+      "block": "A",
+      "attributes": {
+        "TITLE-L1": "920",
+        "TITLE-L2": "HULL LINES",
+        "DWG#": "920DM-1A",
+        "NAME": "DH",
+        "SCALE": "1 = 10"
+      }
+    }
+  ],
+  "dimension_entity_count": 0,
+  "qualification": {
+    "status": "blocked",
+    "units": "unknown: INSUNITS=0",
+    "stated_hull_dimensions": "not established: no DIMENSION entities; text contains station numbers and title-block attributes",
+    "bounding_box_comparison": "not established: no stated hull dimensions or units; full-sheet bounds are not a hull comparator",
+    "source_rights": "title block restricts reproduction/use/publication without written permission; permission evidence not established",
+    "all_six_conversion": "not attempted: first-file qualification gate failed",
+    "drawing_round_trip": "not attempted: no qualified drawing or station configuration"
+  },
+  "a1_preflight": {
+    "reader_config": {
+      "body_plan_layers": [
+        "15",
+        "7",
+        "12",
+        "1",
+        "9",
+        "2"
+      ],
+      "half_breadth_layers": null,
+      "sheer_layers": null,
+      "station_x": null,
+      "station_label_layer": "STATIONS",
+      "units": "auto",
+      "scale": 1.0,
+      "centreline_y": 0.0,
+      "baseline_z": 0.0,
+      "mirror_side": "both",
+      "n_waterlines": 201,
+      "tolerance": 1e-06
+    },
+    "error": "Unsupported $INSUNITS=0; specify units mm/m/ft/in",
+    "report": {
+      "entities_seen": 138,
+      "entities_used": 0,
+      "entities_skipped": 29,
+      "seen_by_type": {
+        "INSERT": 1,
+        "LWPOLYLINE": 109,
+        "TEXT": 28
+      },
+      "seen_by_layer": {
+        "0": 29,
+        "15": 14,
+        "7": 26,
+        "12": 9,
+        "1": 9,
+        "9": 9,
+        "2": 42
+      },
+      "used_by_type": {},
+      "used_by_layer": {},
+      "skipped_by_type": {
+        "INSERT": 1,
+        "TEXT": 28
+      },
+      "skipped_by_layer": {
+        "0": 29
+      },
+      "fragments_joined": 0,
+      "stations_found": 0,
+      "station_assignments": [],
+      "flattening_tolerance_m": 0.0,
+      "units": null,
+      "errors": [
+        "Unsupported $INSUNITS=0; specify units mm/m/ft/in"
+      ],
+      "warnings": []
+    },
+    "scope": "Units preflight only; numbered layers are not validated body-plan selection"
+  },
+  "rights_evidence": [
+    {
+      "block": "A",
+      "handle": "18A",
+      "text": "NOT BE REPRODUCED, USED, MANUFACTURED"
+    },
+    {
+      "block": "A",
+      "handle": "18B",
+      "text": "OR PUBLICIZED WITHOUT WRITTEN PERMISSION"
+    }
+  ],
+  "supplemental_analysis": {
+    "method": "Read-only session analysis after the probe; these fields are not produced by dwg_conversion_probe.py",
+    "fields": [
+      "source_modelspace_entities_by_type",
+      "source_modelspace_entities_by_layer",
+      "polyline_fidelity",
+      "source_inventory_command",
+      "dwgread_stderr",
+      "title_attributes",
+      "dimension_entity_count",
+      "qualification",
+      "a1_preflight",
+      "rights_evidence"
+    ],
+    "source_inventory": "dwgread JSON *Model_Space BLOCK_HEADER entity handle list matched to OBJECTS; LWPOLYLINE points compared by handle to ezdxf get_points(xy)",
+    "a1": "read_dxf_body_plan_with_report(path, DxfLinesConfig(**a1_preflight.reader_config)); catch DxfLinesError and retain report",
+    "rights": "ezdxf TEXT entities in block A, selected by restriction text",
+    "text_scan": "Read modelspace TEXT and block TEXT/ATTDEF plus INSERT ATTRIB; no stated hull dimensions identified",
+    "source_json_sha256": "4f900c123612a270fae9270fbf3898ba8f3e36eb0a182c4bb4e46ef3c0af6c25"
+  }
+}

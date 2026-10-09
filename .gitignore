@@ -424,3 +424,11 @@ docs/api/structural/wall-thickness-3d.json
 
 # Retain the reviewed offline cylinder engineering report.
 !docs/reports/2026-09-14-issue-2121-b1-preparation.html
+
+# Retain A07 DWG conversion qualification evidence; staging DXFs stay outside Git.
+!docs/reports/dwg-conversion/
+docs/reports/dwg-conversion/*
+!docs/reports/dwg-conversion/plan.html
+!docs/reports/dwg-conversion/source-manifest.json
+!docs/reports/dwg-conversion/probe.json
+!docs/reports/dwg-conversion/provenance.html

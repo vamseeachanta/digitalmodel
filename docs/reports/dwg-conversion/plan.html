@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>A07 conversion qualification plan</title>
+<body><h1>A07: DWG conversion qualification</h1>
+<p>The work will address <a href="https://github.com/vamseeachanta/digitalmodel/issues/2272">digitalmodel issue 2272</a> under the owner's 2026-10-08 card A07 authority. It will retain the six existing DWGs unchanged.</p>
+<p>LibreDWG 0.14, GPL-3.0-or-later, will be built without sudo in a permitted temporary prefix. One source will be converted first into isolated staging. The DXF will be opened and audited with ezdxf; entities, layers, polylines, dimension text, and geometry bounds will be inspected. Conversion diagnostics and source digests will be retained.</p>
+<p>A qualification gate will require identifiable lines-plan geometry and plausible bounds against stated dimensions with documented units and scale. A whole-sheet bound will not serve as a hull-dimension comparator. Audit repairs or omitted geometry will remain explicit findings.</p>
+<p>If qualification passes, the remaining five sources will be converted beside the DWGs, and actual drawing-derived A1 read/export/reimport checks will be attempted. Synthetic reader checks will remain separate evidence. Missing view/station/scale information will not be invented.</p>
+<p>If qualification fails, no DXFs will be committed. A draft PR will retain reproducible tooling and evidence; the epic will receive the precise failure and status:blocked label. The draft will use decision:architecture and the owner-specified attribution. No merge, force push or data deletion will occur.</p>
+<p>Adversarial plan review will challenge fidelity, units, view bounds, source preservation and actual A1 readiness. Script tests will precede implementation and exercise malformed DXF rejection and existing-output preservation. Artifact review and a cleanup audit will precede publication.</p>
+</body></html>
