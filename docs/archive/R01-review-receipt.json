@@ -1,0 +1,78 @@
+{
+  "owner_card": "R01",
+  "fixup": 2,
+  "date": "2026-10-09",
+  "review_provider": "Codex",
+  "independent_reviewer": "adversarial_review",
+  "artifact_verdict": "APPROVE",
+  "artifact_packet_sha256": "35ad2faebc4b25fe772994f48cf87ecdc45fa46634ec56dabc774dafce302c73",
+  "artifact_packet_bytes": 1472930,
+  "artifacts": [
+    {
+      "path": "docs/archive/ARCHIVE-MOVE-PLAN-2026-10-08.md",
+      "sha256": "4f3b3a8e4ecbc52a69f8aa5d441177380a32de4dbe140b19132b9f4001529354",
+      "bytes": 21335
+    },
+    {
+      "path": "docs/archive/R01-archive-manifest-review.html",
+      "sha256": "abbb050b5a18edebfd8721a8e0b2a9a7669f75d94c08f77d3a153cb94acac0f2",
+      "bytes": 7057
+    },
+    {
+      "path": "docs/archive/R01-validation.json",
+      "sha256": "280d380596c8af32431ce7ca398b0789d67487ff3a124130fc8d666176e2ca94",
+      "bytes": 8755
+    },
+    {
+      "path": "docs/archive/archive-candidates-2026-10-08.summary.json",
+      "sha256": "6f932f0a0de820fdc80f3466d87ffdadbdba1d4d0ed1f180ff22b6989c58e306",
+      "bytes": 104683
+    },
+    {
+      "path": "docs/archive/archive-candidates-2026-10-08.holds.json",
+      "sha256": "112858f717766caa1154c8f200318883e03978ad0364adb19e69f8869883864e",
+      "bytes": 63833
+    },
+    {
+      "path": "docs/archive/archive-candidates-2026-10-08.csv",
+      "sha256": "0067a1c7ff500078b911d611940cc75154ca37c90bb9a547a56f151c037457d7",
+      "bytes": 588160
+    },
+    {
+      "path": "docs/archive/archive-blob-map-2026-10-08.csv",
+      "sha256": "39a650c2ace499a5be4e67904074fe09726c620c69e22548c8123f70f5c1bbed",
+      "bytes": 321722
+    },
+    {
+      "path": "docs/archive/model-yaml-feature-inventory-2026-10-08.json",
+      "sha256": "b7ac8f9513e799defa33a40d35ceba8146b1d81ca10b1bb4950a6ac11bea5feb",
+      "bytes": 271559
+    }
+  ],
+  "code_verdict": "APPROVE (r2)",
+  "code_packet_sha256": "069313046ccbc355c970b413d21085e1b32b1a5ad84124d3ba5dff7c1e6897a4",
+  "code_files": [
+    {
+      "path": "scripts/maintenance/archive_candidates.py",
+      "sha256": "2acfd2498c826a3ad5b0c0ba5a9d3980eef14c2f7dd3484e9c13f8b212a4a8fe",
+      "bytes": 47776
+    },
+    {
+      "path": "scripts/maintenance/archive_reference_safety.py",
+      "sha256": "36b1eb1beeccdf9b14e5d66a8a6c666ebe91cc30a26acf77c66e44e7203c4807",
+      "bytes": 15926
+    },
+    {
+      "path": "tests/maintenance/test_archive_safety.py",
+      "sha256": "a35818502d4f9574ccf890df348d24c40e7ceb2d75e752c18bfe3415ea23d78b",
+      "bytes": 17798
+    },
+    {
+      "path": "tests/maintenance/test_archive_candidates.py",
+      "sha256": "a2f5c240fe54f38e1e29bc2ec108e17a0d852639b07541798cec6f5611ca90f1",
+      "bytes": 12594
+    }
+  ],
+  "review_scope": "Frozen packet. Artifact hashes, partitions, consumer counts, hold mappings, provenance, top-10 order and report wording independently checked. Main-session file/blob readback and test evidence were not independently rerun.",
+  "cross_provider_status": "Claude re-review pending before owner merge; no consensus claimed."
+}

@@ -3,8 +3,8 @@
  "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
  "scan_provenance": {
   "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
-  "scanned_head": "f3ce3b6aebc073ec3e43a6276962baffb0444227",
-  "scanned_index_tree": "312eee6b76fdee2f86d601a4637420f09910402c",
+  "scanned_head": "9e7ca2dda443254d26a6e2cc8fd8b4fa98fef7ee",
+  "scanned_index_tree": "21159eb94a374ce9f4a4ca01d3420831b3cd0305",
   "tracked_inputs_clean": true
  },
  "definition": {

@@ -1,63 +1,39 @@
 <!doctype html>
-<html lang="en"><meta charset="utf-8"><title>R01 archive manifest correction</title>
-<style>body{max-width:960px;margin:40px auto;padding:0 24px;font:16px/1.6 system-ui;color:#17212b}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bac4cf;padding:8px;text-align:left}code{font-size:90%}h1,h2{line-height:1.2}</style>
-<h1>R01 archive manifest correction</h1>
-<p>Owner card R01 authorizes correction of the selection in
-<a href="https://github.com/vamseeachanta/digitalmodel/pull/2293">PR 2293</a>.
-<a href="https://github.com/vamseeachanta/digitalmodel/pull/2304">Removal PR 2304</a>
-is held pending regeneration, Claude review and owner confirmation. This correction
-does not copy, move or remove repository data.</p>
-<h2>Implementation plan</h2>
-<ol>
-<li>The existing branch will receive current main through a merge. No history will be rewritten.</li>
-<li>Feature traversal will cover every finite YAML nesting level and traverse shared aliases at each path.
-Recursive aliases and parse failures will hold affected candidate models.</li>
-<li>The manifest will record the actual merge base with origin/main separately from the scanned
-HEAD and index tree. Dirty tracked inputs will be rejected and inherited Git bindings will be cleared.</li>
-<li>Tracked YAML and Python consumers will protect statically resolved inputs. Source-relative
-YAML includes, registry references and mkdocs navigation will be considered. Detected runtime templates,
-unresolved globs and ambiguous references will hold potentially affected candidates for human checking.</li>
-<li>Finite readable references from cyclic sources will remain protected. Readable paths in
-unparseable sources will hold dependencies. Archive enumeration reports will not count as consumers.</li>
-<li>Regeneration will follow a committed, clean generator revision. The summary, inventory, candidate
-CSV and blob map will be read back and verified, and the PR body will receive counts and revision-4 deltas.</li>
-</ol>
-<h2>Review and verification record</h2>
-<p>Plan-stage adversarial review identified report self-references, candidate dependency closure,
-runtime uncertainty and provenance as required checks. Code-stage adversarial review reproduced
-discarded readable references in cyclic and malformed YAML; regressions were added before correction.</p>
-<p>Targeted checks cover depth-eight feature retention and file references, traversal beyond the
-Python recursion limit, cycles, shared aliases, static and runtime paths, dirty-input rejection,
-merge-base accuracy, inherited Git-binding isolation, partition integrity and empty selections.</p>
-<p>Claude CLI: UNAVAILABLE (50-second timeout at workspace trust boundary). Gemini CLI:
-UNAVAILABLE (authentication required; no review returned). These states do not establish review approval.
-The owner's requested Claude review remains the next review checkpoint.</p>
+<html lang="en"><meta charset="utf-8"><title>R01 fix-up 2 — archive selection</title>
+<style>body{max-width:1100px;margin:40px auto;padding:0 24px;font:16px/1.6 system-ui;color:#17212b}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bac4cf;padding:8px;text-align:left;overflow-wrap:anywhere}code{font-size:90%}h1,h2{line-height:1.2}</style>
+<h1>R01 fix-up 2 — archive selection</h1>
+<p>The regenerated selection contains <strong>1,026 move candidates and 257 human holds</strong>, compared with the previous R01 selection of 0 moves and 1,283 holds. Proven exclusions remain 188; feature keeps remain 0. This change corrects <a href="https://github.com/vamseeachanta/digitalmodel/pull/2293">draft PR 2293</a> under owner card R01. No repository data was moved or removed.</p>
+<h2>Fix-up plan</h2>
+<ol><li>Runtime-path and glob holds will be limited to the consuming file's own directory tree; static resolved references will retain their existing scope.</li>
+<li>Each consumer will be represented once. Candidate rows will carry consumer IDs, and distinct pattern/reason evidence will be deduplicated per consumer.</li>
+<li>The serialized summary will remain below 1,000,000 bytes. A separate machine-readable file will carry consumer-to-candidate detail.</li>
+<li>Directory isolation and output-path handling will receive failing regressions before implementation. Regeneration will use a committed, clean scanner revision.</li>
+<li>Candidate hashes, provenance and disjoint partitions will be verified before publication; the PR will remain draft for Claude review and owner disposition.</li></ol>
+<h2>Regenerated selection</h2>
+<table><tr><th>Partition</th><th>Files</th><th>Delta from prior R01</th></tr>
+<tr><td>Rule matches</td><td>1,471</td><td>0</td></tr><tr><td>Proven exclusions</td><td>188</td><td>0</td></tr>
+<tr><td>Feature keeps</td><td>0</td><td>0</td></tr><tr><td>Human holds</td><td>257</td><td>−1,026</td></tr><tr><td>Move candidates</td><td>1,026</td><td>+1,026</td></tr></table>
+<p>Table 1. Disjoint partitions; exclusions plus feature keeps, human holds and moves total 1,471 rule matches. Move candidates are a review selection, not an executed removal.</p>
+<p>The summary is <strong>104,683 bytes</strong>, below the 1,000,000-byte criterion. The candidate CSV is 588,160 bytes, and separate <a href="archive-candidates-2026-10-08.holds.json">hold detail</a> is 63,833 bytes. There are 42 consumer entries. The <a href="archive-candidates-2026-10-08.summary.json">summary</a> records distinct patterns and reasons once per consumer; CSV <code>hold_consumers</code> IDs are repository-relative consumer paths.</p>
+<h2>Top 10 hold reasons by candidate count</h2>
+<table><tr><th>Consumer</th><th>Pattern or reference</th><th>Reason</th><th>Candidate count</th></tr><tr><td>docs/domains/orcaflex/modular_input_validation_example.py</td><td><code>*.yml</code></td><td>runtime path or unresolved glob</td><td>84</td></tr>
+<tr><td>docs/collide_pe/render_brief.py</td><td><code>*/briefs/*.html</code></td><td>runtime path or unresolved glob</td><td>25</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_amplitude.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_combined.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_heatmap.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_phase.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_report.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>scripts/benchmark/validate_owd_vs_spec.py</td><td><code>benchmark_amplitude.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>scripts/benchmark/validate_owd_vs_spec.py</td><td><code>benchmark_combined.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>scripts/benchmark/validate_owd_vs_spec.py</td><td><code>benchmark_heatmap.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+</table>
+<p>Table 2. Counts are distinct held candidates per consumer/pattern/reason. Rows overlap and shall not be summed as a partition count. Ties are ordered by consumer, pattern and reason.</p>
+<h2>Verification and review</h2>
+<p>All 1,283 candidate working-file and Git-blob SHA-256 digests, blob-map flags, disjoint partitions, hold IDs, consumer counts and detail mappings passed readback checks. Feature-inventory and hold-detail provenance match the summary. Actual merge base: <code>e355203bacb98e9690481b5f2d474203dfafc0cc</code>. Scanned clean revision: <code>9e7ca2dda443254d26a6e2cc8fd8b4fa98fef7ee</code>.</p>
+<p>All 61 targeted tests passed in Python 3.12 and isolated Python 3.11. Regressions cover unrelated directory B, directory-prefix boundaries, runtime templates, root consumers, unique evidence counts, detail links and output collision rejection. The full project test command is blocked by the absent editable sibling dependency <code>../assetutilities</code>. <a href="R01-validation.json">Validation evidence</a> records commands, digests and limitations.</p>
+<p>Plan-stage and code-stage adversarial Codex review findings were resolved; the second frozen code packet was approved and verified unchanged before scanner commit. The output-path finding is recorded for reuse in <a href="https://github.com/vamseeachanta/digitalmodel/issues/2315">issue 2315</a>. Cross-provider consensus is not established; Claude re-review remains required before owner merge.</p>
 <h2>Limitations and owner checkpoint</h2>
-<p>Arbitrary runtime or config-driven path construction cannot be exhaustively proven by static
-analysis. Detected candidate associations receive human holds; the remaining static selection is not
-an execution guarantee. <code>data/inputs.yaml</code> is absent in this checkout; the scanner supports it
-and a synthetic registry regression covers it. Archive availability has not been reverified by R01.</p>
-<p>Revision-4 counts in ARCHIVE-MOVE-PLAN-2026-10-08.md are historical. The regenerated summary
-and the R01 result below will govern selection. The existing removal PR must be revised against this
-selection after Claude review and owner confirmation.</p>
-<h2>Regenerated R01 selection</h2>
-<table><tr><th>Partition</th><th>Files</th><th>Delta from revision 4</th></tr>
-<tr><td>Rule matches</td><td>1,471</td><td>0</td></tr>
-<tr><td>Referenced exclusions</td><td>188</td><td>+122</td></tr>
-<tr><td>Feature keeps</td><td>0</td><td>-11</td></tr>
-<tr><td>Needs human check</td><td>1,283</td><td>+1,283</td></tr>
-<tr><td>Move set</td><td>0</td><td>-1,394</td></tr></table>
-<p>Table 1. Disjoint selection partitions compared with revision 4. Human-held models remain
-available to preserve features; feature keeps therefore need not duplicate their holds.</p>
-<p>Actual merge base: <code>e355203bacb98e9690481b5f2d474203dfafc0cc</code>.
-Scanned clean revision: <code>f3ce3b6aebc073ec3e43a6276962baffb0444227</code>.
-All 1,283 candidate file SHA-256 digests, partition counts,
-blob-map flags and feature-inventory provenance were verified by readback.</p>
-<p>The targeted suite passes all 52 tests in both tested Python environments.
-Full-suite collection is blocked by the missing sibling dependency and 91 collection errors.
-<a href="R01-validation.json">Validation evidence</a> records the commands, environments,
-limitations and preservation probe.</p>
-<p>No move is authorized for a row marked <code>needs_human_check</code>.
-The per-file reasons in the regenerated summary identify the detected consumers and unresolved
-expressions. The removal PR remains held for Claude review and owner disposition of those checks.</p>
+<p>Consumer-directory scoping is the owner-directed policy. Unresolved dynamic paths outside that tree do not create holds from this evidence; root-level consumers can cover the repository tree. Static exclusions and ambiguous literal references retain their prior semantics. Static analysis does not establish arbitrary config-driven execution dependencies or archive availability.</p>
+<p>The detail file maps each consumer to its union of held candidates. With multiple patterns per consumer, it does not encode which individual pattern matched each candidate; patterns and their counts remain available in the summary.</p>
+<p><a href="https://github.com/vamseeachanta/digitalmodel/pull/2304">Removal PR 2304</a> remains open and held. The PM owns closure after manifest review. Claude will review the regenerated selection before the owner merges. Any later removal list will require reconciliation against the 1,026 move candidates and shall preserve the 257 held files.</p>
 </html>

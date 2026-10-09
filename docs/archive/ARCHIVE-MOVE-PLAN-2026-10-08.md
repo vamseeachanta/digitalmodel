@@ -1,6 +1,6 @@
 # Archive move plan — regenerated candidate manifest (2026-10-08)
 
-**R01 supersedes the revision-4 selection below.** The figures and decisions in
+**R01 fix-up 2 supersedes the revision-4 selection below.** The figures and decisions in
 this document describe historical revisions. The current selection and review
 record are [R01-archive-manifest-review.html](R01-archive-manifest-review.html)
 and the regenerated summary JSON. Candidate rows with either `keep_for_feature`
@@ -46,6 +46,7 @@ move step.
 |---|---|
 | `archive-candidates-2026-10-08.csv` | One row per candidate (columns below) |
 | `archive-candidates-2026-10-08.summary.json` | Rule, base commit, totals, exclusions with evidence, dedup figures, model-YAML summary, comparison with PR #2146 |
+| `archive-candidates-2026-10-08.holds.json` | Full consumer-to-held-candidate mapping; distinct patterns/reasons and counts are stored once per consumer in the summary |
 | `archive-blob-map-2026-10-08.csv` | Every candidate repo path mapped to its single content-addressed blob in the archive store |
 | `model-yaml-feature-inventory-2026-10-08.json` | Feature definition, feature-to-file counts, files with unique features, feature cover, candidate-only features and the candidates kept for them |
 
@@ -57,12 +58,13 @@ python scripts/maintenance/archive_candidates.py <checkout> <pr2146_deleted_list
     docs/archive/archive-candidates-2026-10-08.csv \
     docs/archive/archive-candidates-2026-10-08.summary.json \
     --blob-map docs/archive/archive-blob-map-2026-10-08.csv \
-    --features docs/archive/model-yaml-feature-inventory-2026-10-08.json
+    --features docs/archive/model-yaml-feature-inventory-2026-10-08.json \
+    --hold-detail docs/archive/archive-candidates-2026-10-08.holds.json
 ```
 
 CSV columns:
 
-- `path` — repo-relative path at the base commit.
+- `path` — repo-relative path at the scanned revision.
 - `top_level`, `ext`, `class` — grouping keys. Classes follow PR #2146:
   `solver-inputs`, `html-report-renders`, `documentation-images`,
   `office-documents`.
@@ -77,7 +79,7 @@ CSV columns:
 - `ref_count_noncandidate` — references from files that are not themselves
   candidates. Since revision 3 the committed manifest files in `docs/archive/`
   name every candidate, so this count is at least 1 for every row and is no
-  longer a selection signal; selection uses the `src/`/`tests/` evidence only.
+  longer a selection signal; R01 selection uses proven tracked Python/YAML consumer evidence.
 - `first_ref_path` — first referencing path, preferring a non-candidate.
 - `in_pr2146` — whether PR #2146 also deleted this path.
 - `model_yaml_kind` — `orcaflex-native`, `orcawave` or `spec` when the file is a
@@ -90,6 +92,9 @@ CSV columns:
   (lexicographically first path).
 - `keep_for_feature` — `True` when the file stays in the repository because it
   carries a model feature that would otherwise leave with the candidates.
+
+- `needs_human_check` — `True` when the candidate is held for consumer uncertainty or parse failure.
+- `hold_consumers` — JSON array of consumer IDs, resolved in `human_holds_by_consumer` in the summary and the separate hold detail.
 
 ## Selection rule
 

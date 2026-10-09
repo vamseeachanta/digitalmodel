@@ -1,165 +1,150 @@
 {
   "owner_card": "R01",
+  "fixup": 2,
   "manifest_verification": {
-    "source_revision": "f3ce3b6aebc073ec3e43a6276962baffb0444227",
+    "source_revision": "9e7ca2dda443254d26a6e2cc8fd8b4fa98fef7ee",
     "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
-    "verified_candidate_file_hashes": 1283,
     "rule_matches": 1471,
     "excluded": 188,
+    "candidate_files": 1283,
     "feature_kept": 0,
-    "human_check": 1283,
-    "move": 0,
-    "partition_and_blob_map_verified": true
+    "human_check": 257,
+    "move": 1026,
+    "verified_candidate_file_hashes": 1283,
+    "partition_and_blob_map_verified": true,
+    "hold_ids_counts_and_detail_verified": true,
+    "summary_bytes": 104683,
+    "top_10_hold_reasons": [
+      {
+        "source": "docs/domains/orcaflex/modular_input_validation_example.py",
+        "pattern": "*.yml",
+        "reason": "runtime path or unresolved glob",
+        "candidate_count": 84
+      },
+      {
+        "source": "docs/collide_pe/render_brief.py",
+        "pattern": "*/briefs/*.html",
+        "reason": "runtime path or unresolved glob",
+        "candidate_count": 25
+      },
+      {
+        "source": "docs/capability-map/capabilities-sections.yml",
+        "pattern": "../hydro/unit-box-benchmark/benchmark_amplitude.html",
+        "reason": "ambiguous or unresolved reference",
+        "candidate_count": 19
+      },
+      {
+        "source": "docs/capability-map/capabilities-sections.yml",
+        "pattern": "../hydro/unit-box-benchmark/benchmark_combined.html",
+        "reason": "ambiguous or unresolved reference",
+        "candidate_count": 19
+      },
+      {
+        "source": "docs/capability-map/capabilities-sections.yml",
+        "pattern": "../hydro/unit-box-benchmark/benchmark_heatmap.html",
+        "reason": "ambiguous or unresolved reference",
+        "candidate_count": 19
+      },
+      {
+        "source": "docs/capability-map/capabilities-sections.yml",
+        "pattern": "../hydro/unit-box-benchmark/benchmark_phase.html",
+        "reason": "ambiguous or unresolved reference",
+        "candidate_count": 19
+      },
+      {
+        "source": "docs/capability-map/capabilities-sections.yml",
+        "pattern": "../hydro/unit-box-benchmark/benchmark_report.html",
+        "reason": "ambiguous or unresolved reference",
+        "candidate_count": 19
+      },
+      {
+        "source": "scripts/benchmark/validate_owd_vs_spec.py",
+        "pattern": "benchmark_amplitude.html",
+        "reason": "ambiguous or unresolved reference",
+        "candidate_count": 19
+      },
+      {
+        "source": "scripts/benchmark/validate_owd_vs_spec.py",
+        "pattern": "benchmark_combined.html",
+        "reason": "ambiguous or unresolved reference",
+        "candidate_count": 19
+      },
+      {
+        "source": "scripts/benchmark/validate_owd_vs_spec.py",
+        "pattern": "benchmark_heatmap.html",
+        "reason": "ambiguous or unresolved reference",
+        "candidate_count": 19
+      }
+    ],
+    "artifact_sha256": {
+      "docs/archive/archive-candidates-2026-10-08.summary.json": "6f932f0a0de820fdc80f3466d87ffdadbdba1d4d0ed1f180ff22b6989c58e306",
+      "docs/archive/archive-candidates-2026-10-08.holds.json": "112858f717766caa1154c8f200318883e03978ad0364adb19e69f8869883864e",
+      "docs/archive/archive-candidates-2026-10-08.csv": "0067a1c7ff500078b911d611940cc75154ca37c90bb9a547a56f151c037457d7",
+      "docs/archive/archive-blob-map-2026-10-08.csv": "39a650c2ace499a5be4e67904074fe09726c620c69e22548c8123f70f5c1bbed",
+      "docs/archive/model-yaml-feature-inventory-2026-10-08.json": "b7ac8f9513e799defa33a40d35ceba8146b1d81ca10b1bb4950a6ac11bea5feb"
+    },
+    "artifact_bytes": {
+      "docs/archive/archive-candidates-2026-10-08.summary.json": 104683,
+      "docs/archive/archive-candidates-2026-10-08.holds.json": 63833,
+      "docs/archive/archive-candidates-2026-10-08.csv": 588160,
+      "docs/archive/archive-blob-map-2026-10-08.csv": 321722,
+      "docs/archive/model-yaml-feature-inventory-2026-10-08.json": 271559
+    }
   },
   "targeted_tests": {
-    "tests": 52,
+    "tests": 61,
     "result": "PASS",
-    "isolated_environment": "Python 3.11.14, PyYAML 6.0.3",
-    "isolated_command": "uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/maintenance/test_archive_candidates.py tests/maintenance/test_archive_safety.py",
-    "system_environment": "Python 3.12.3, PyYAML 6.0.1",
-    "system_command": "PYTHONPATH=src python3 -m pytest -q tests/maintenance/test_archive_candidates.py tests/maintenance/test_archive_safety.py"
+    "system_environment": "Python 3.12.3 / pytest 9.0.2",
+    "isolated_environment": "Python 3.11.14 / pytest 9.1.1",
+    "system_command": "PYTHONPATH=src python3 -m pytest -q tests/maintenance/test_archive_candidates.py tests/maintenance/test_archive_safety.py",
+    "isolated_command": "UV_CACHE_DIR=<scratch>/uv-cache uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/maintenance/test_archive_candidates.py tests/maintenance/test_archive_safety.py",
+    "red_evidence": "Directory isolation failed for glob and runtime path; compact hold helper was absent. Three output-path regressions reproduced overwrite, missing detail link and unrejected collision before correction."
   },
   "full_suite": {
     "result": "BLOCKED",
-    "project_command": "PYTHONPATH=src uv run python -m pytest --collect-only -q",
-    "project_blocker": "Editable assetutilities dependency points to an absent sibling checkout.",
-    "system_collection": {
-      "collected_tests": 27704,
-      "collection_errors": [
-        "tests/ansys/test_cylinder_snapshot_descendant_coverage.py",
-        "tests/asset_integrity/test_bs7910_legacy_module.py",
-        "tests/code_checks/test_code_check_workflow.py",
-        "tests/compare_tool/test_compare_tool_workflow.py",
-        "tests/drilling_riser/stackup_drawing/test_workflow.py",
-        "tests/drilling_riser/test_riser_stackup_workflow.py",
-        "tests/drilling_riser/test_tsj_workflow.py",
-        "tests/fatigue/test_c203_citations.py",
-        "tests/fatigue/test_c203_sn_values.py",
-        "tests/fatigue/test_crack_growth.py",
-        "tests/fatigue/test_damage.py",
-        "tests/fatigue/test_environmental_correction.py",
-        "tests/fatigue/test_fatg.py",
-        "tests/fatigue/test_fatg_workflow.py",
-        "tests/fatigue/test_fatigue_reporting.py",
-        "tests/fatigue/test_hotspot_stress.py",
-        "tests/fatigue/test_multiaxial_fatigue.py",
-        "tests/fatigue/test_rainflow.py",
-        "tests/fatigue/test_rainflow_invariants.py",
-        "tests/fatigue/test_scf_library.py",
-        "tests/fatigue/test_sn_curve_workflow.py",
-        "tests/fatigue/test_sn_curves.py",
-        "tests/fatigue/test_sn_library.py",
-        "tests/fatigue/test_sn_library_api.py",
-        "tests/fatigue/test_spectral_fatigue.py",
-        "tests/fatigue/test_weld_classification.py",
-        "tests/fatigue/test_weld_fatigue_quickcheck.py",
-        "tests/fatigue/test_woehler_fitting.py",
-        "tests/floating_wind/test_workflow.py",
-        "tests/gis/test_blender_export.py",
-        "tests/gis/test_coordinates.py",
-        "tests/gis/test_imagery_aoi.py",
-        "tests/hydrodynamics/aqwa/test_aqwa_aqr.py",
-        "tests/hydrodynamics/aqwa/test_aqwa_aqr_raos.py",
-        "tests/hydrodynamics/aqwa/test_aqwa_dat.py",
-        "tests/hydrodynamics/aqwa/test_aqwa_ef_server.py",
-        "tests/hydrodynamics/aqwa/test_aqwa_lis.py",
-        "tests/hydrodynamics/aqwa/test_aqwa_mes_files.py",
-        "tests/hydrodynamics/aqwa/test_aqwa_no_mes_files.py",
-        "tests/hydrodynamics/aqwa/test_aqwa_preproces_deck.py",
-        "tests/hydrodynamics/aqwa/test_damping.py",
-        "tests/hydrodynamics/aqwa/test_preproces_deck_10.py",
-        "tests/hydrodynamics/aqwa/test_viscous_damping_determination.py",
-        "tests/hydrodynamics/passing_ship/test_wang_paper_benchmark.py",
-        "tests/hydrodynamics/rao_analysis/test_rao_analysis.py",
-        "tests/hydrodynamics/test_rao_tabulation_workflow.py",
-        "tests/infrastructure/factories - ModuleNotFoundError: No module named '...",
-        "tests/infrastructure/installation/test_installation_structure.py",
-        "tests/infrastructure/performance - ModuleNotFoundError: No module named...",
-        "tests/infrastructure/unit/test_structural_solvers.py",
-        "tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py",
-        "tests/orcaflex/test_fowt_mooring_workflow.py",
-        "tests/pipelay/test_pipelay_workflow.py",
-        "tests/reporting/test_router_hook.py",
-        "tests/riser_database/test_material_refs.py",
-        "tests/riser_fatigue/test_resolve_dff.py",
-        "tests/riser_fatigue/test_riser_fatigue_workflow.py",
-        "tests/riser_fatigue/test_touchdown.py",
-        "tests/seismic/test_response_spectrum_workflow.py",
-        "tests/signal_processing/signal_analysis/test_signal_integration.py",
-        "tests/signal_processing/time_series/test_csv_window_fft.py",
-        "tests/signal_processing/time_series/test_sample_fft.py",
-        "tests/signal_processing/time_series/test_window_fft.py",
-        "tests/solvers/orcaflex/test_opp_config_expansion.py",
-        "tests/specialized/gis/test_blender_gis.py",
-        "tests/specialized/gis/test_qgis_processing.py",
-        "tests/structural/fatigue - ModuleNotFoundError: No module named 'pylife'",
-        "tests/structural/structural_analysis/test_connection_scf.py",
-        "tests/test_geopandas_integration.py",
-        "tests/test_parametric_coordinator.py",
-        "tests/test_plate_buckling_units.py",
-        "tests/test_sectionproperties_integration.py",
-        "tests/test_sections.py",
-        "tests/test_spectral_fatigue_validation.py",
-        "tests/workflow_api/test_determinism_harness.py",
-        "tests/workflow_api/test_result_descriptors.py",
-        "tests/workflow_api/test_run_workflow_buckling.py",
-        "tests/workflow_api/test_run_workflow_ffs.py",
-        "tests/workflow_api/test_run_workflow_mooring_mbl.py",
-        "tests/workflow_api/test_run_workflow_viv_screening.py",
-        "tests/workflow_api/test_run_workflow_wall_thickness.py",
-        "tests/workflow_api/test_viv_screening_publication.py",
-        "tests/workflows/test_installation_composite_binding.py",
-        "tests/workflows/test_installation_envelope_pdf.py",
-        "tests/workflows/test_installation_full_report_pdf.py",
-        "tests/workflows/test_installation_replay_diagnostic.py",
-        "tests/workflows/test_installation_replay_integration.py",
-        "tests/workflows/test_installation_replay_report.py",
-        "tests/workflows/test_installation_report_integrity.py",
-        "tests/workflows/test_mudmat_sensitivity_reporting.py",
-        "tests/workflows/test_vessel_capability_screening.py"
-      ]
-    }
+    "command": "PYTHONPATH=src uv run python -m pytest",
+    "blocker": "Editable assetutilities dependency resolves to absent ../assetutilities in this worktree parent. Retried with writable scratch UV_CACHE_DIR after initial cache-write rejection; dependency failure reproduced."
   },
   "generation": {
-    "result": "PASS; four manifest artifacts read back and reconciled",
-    "diagnostic_limit": "An earlier system-Python faulthandler diagnostic process exited 139 before output. The final uninstrumented isolated generation completed successfully."
+    "result": "PASS",
+    "scanned_inputs_clean": true,
+    "outputs_read_back": 5,
+    "detail_contract": "Summary stores each consumer once and each distinct pattern/reason once per consumer. Candidate CSV stores consumer IDs; detail maps each consumer to its union of held candidates. Pattern-to-candidate associations are not separately encoded."
   },
   "reviews": {
-    "native_codex_plan_and_code_review": "Findings addressed with regressions; this is not cross-provider consensus.",
-    "claude_cli": "UNAVAILABLE: 50-second timeout at workspace trust boundary; no verdict.",
-    "gemini_cli": "UNAVAILABLE: authentication required; no verdict.",
-    "owner_checkpoint": "Claude review before owner merge; removal PR 2304 held."
+    "plan": "Adversarial Codex review findings addressed: directory boundaries, pre-fallback scoping, unique counts, output exclusion, deterministic IDs, summary byte cap and disjoint partitions.",
+    "code_r1": "CHANGES REQUESTED: extensionless summary/detail collision and broken cross-directory link.",
+    "code_r2": "APPROVE after regression fixes; packet verified unchanged before scanner commit.",
+    "code_packet_sha256": "069313046ccbc355c970b413d21085e1b32b1a5ad84124d3ba5dff7c1e6897a4",
+    "code_file_sha256": {
+      "scripts/maintenance/archive_candidates.py": "2acfd2498c826a3ad5b0c0ba5a9d3980eef14c2f7dd3484e9c13f8b212a4a8fe",
+      "scripts/maintenance/archive_reference_safety.py": "36b1eb1beeccdf9b14e5d66a8a6c666ebe91cc30a26acf77c66e44e7203c4807",
+      "tests/maintenance/test_archive_safety.py": "a35818502d4f9574ccf890df348d24c40e7ceb2d75e752c18bfe3415ea23d78b",
+      "tests/maintenance/test_archive_candidates.py": "a2f5c240fe54f38e1e29bc2ec108e17a0d852639b07541798cec6f5611ca90f1"
+    },
+    "claude": "Pending owner-requested re-review before owner merge; no cross-provider consensus claimed."
   },
-  "isolation_probe": {
-    "kind": "synthetic validation fixture; not engineering input",
-    "source_revision": "f3ce3b6aebc073ec3e43a6276962baffb0444227",
-    "inherited_git_bindings": [
-      "GIT_DIR",
-      "GIT_WORK_TREE",
-      "GIT_COMMON_DIR",
-      "GIT_INDEX_FILE"
-    ],
-    "dirty_input_rejected": true,
-    "fixture_input_hashes": {
-      "before": "ec5e46e3ae447c554b63a3053cb363918da5b00ea9598a66d0410ab2f6cf54bc",
-      "tampered": "03b9be97ab1c7e13354217c07e7f123a303f0d91d01f341fb1f68f40f028d9c1",
-      "restored": "ec5e46e3ae447c554b63a3053cb363918da5b00ea9598a66d0410ab2f6cf54bc"
+  "limitations": [
+    "Dynamic glob/template holds follow owner-directed consumer-directory-tree policy; an unresolved dynamic path outside that tree is not held by this evidence. Root-level consumers have the repository as their own tree.",
+    "Static exclusions and ambiguous literal references retain existing semantics. Hold reason counts overlap across consumers and patterns.",
+    "Static analysis does not establish arbitrary config-driven execution dependencies or archive-store availability.",
+    "Removal PR 2304 remains open and held; PM owns closure after review."
+  ],
+  "follow_on_issue": "https://github.com/vamseeachanta/digitalmodel/issues/2315",
+  "outgoing_bundle_review": {
+    "audience": "Public digitalmodel PR branch, explicitly authorized by originating fix-up request",
+    "artifact_sha256": {
+      "docs/archive/archive-candidates-2026-10-08.summary.json": "6f932f0a0de820fdc80f3466d87ffdadbdba1d4d0ed1f180ff22b6989c58e306",
+      "docs/archive/archive-candidates-2026-10-08.holds.json": "112858f717766caa1154c8f200318883e03978ad0364adb19e69f8869883864e",
+      "docs/archive/archive-candidates-2026-10-08.csv": "0067a1c7ff500078b911d611940cc75154ca37c90bb9a547a56f151c037457d7",
+      "docs/archive/archive-blob-map-2026-10-08.csv": "39a650c2ace499a5be4e67904074fe09726c620c69e22548c8123f70f5c1bbed",
+      "docs/archive/model-yaml-feature-inventory-2026-10-08.json": "b7ac8f9513e799defa33a40d35ceba8146b1d81ca10b1bb4950a6ac11bea5feb"
     },
-    "caller_protected_hashes_before": {
-      "AGENTS.md": "02396fdc0b0ea33acf07ba06e76fd2d7d2aeba8c2d3f61a4b5c1da242018c0dd",
-      "scanner": "b17200b7352d24f6e46bbbbae6d03033f5302bff96341be075d52cd66907eab4",
-      "reference_scanner": "e0925e074a9f792bd61d7616c573410a3b457f745a8267b6eeace9c499e88952",
-      "git_HEAD": "073b2f91994f81dad736c10f5f10c66b98387eaded4eff27a63c397cb9b4e685",
-      "git_index": "5bf47127742a2939580a3bd8324226175fcaa124438c0bddddb20965b8b60d63"
-    },
-    "caller_protected_hashes_after": {
-      "AGENTS.md": "02396fdc0b0ea33acf07ba06e76fd2d7d2aeba8c2d3f61a4b5c1da242018c0dd",
-      "scanner": "b17200b7352d24f6e46bbbbae6d03033f5302bff96341be075d52cd66907eab4",
-      "reference_scanner": "e0925e074a9f792bd61d7616c573410a3b457f745a8267b6eeace9c499e88952",
-      "git_HEAD": "073b2f91994f81dad736c10f5f10c66b98387eaded4eff27a63c397cb9b4e685",
-      "git_index": "5bf47127742a2939580a3bd8324226175fcaa124438c0bddddb20965b8b60d63"
-    },
-    "caller_files_and_git_metadata_preserved": true
-  },
-  "isolation_probe_scope": "Probe performed at the final scanner revision; targeted tests also exercise inherited Git-binding isolation and caller HEAD preservation."
+    "identifier_decision": "Retain existing public repository-relative source/candidate paths; no physical hostnames introduced by the fix-up text.",
+    "rights_and_qualification": "Derived inventory of already tracked public Git inputs, pinned to scanned revision; no client raw data or licensed standards added. Static dependency and archive availability limitations remain explicit.",
+    "secret_evidence": "Bounded added-line credential-pattern scan passed for PEM private keys, AWS access IDs, GitHub tokens and OpenAI-style API tokens; manual inspection of newly authored text. Gitleaks executable unavailable in this session; no full secret-scanner claim.",
+    "reviewer": "Codex",
+    "date": "2026-10-09",
+    "verdict": "verified for this public inventory bundle; Claude technical re-review remains pending"
+  }
 }
