@@ -116,9 +116,7 @@ curvature = [
 dev = [
     # Linting / typing / release tooling. Invoked as executables, never imported
     # by shipped code -- moved out of [project] dependencies in #1632.
-    "black>=24.0.0,<25.0.0",
     "flake8==6.1.0",
-    "isort>=5.13.0,<6.0.0",
     "mypy>=1.8.0,<2.0.0",
     "ruff>=0.1.0",
     "bandit==1.7.5",
@@ -261,11 +259,6 @@ digitalmodel = [
     "reporting/assets/*.css",
     "asset_integrity/data/*.yml",
 ]
-
-[tool.black]
-line-length = 88
-target-version = ['py311', 'py312']
-include = '\.pyi?$'
 
 [tool.ruff]
 line-length = 88
@@ -428,7 +421,7 @@ threshold_size = 1000           # Items before parallel kicks in
 
 [tool.scripts]
 test = "pytest -n auto"
-format = "ruff format src/ && ruff check --fix src/"
+format = "make format"
 lint = "ruff check src/ && mypy src/"
 install = "uv pip install -e ."
 dev-install = "uv pip install -e .[dev]"

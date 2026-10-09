@@ -93,88 +93,145 @@ def has_criterion_nearby(lines: list[str], idx: int) -> bool:
     return False
 
 
+def prose_lines(lines: list[str]) -> list[tuple[int, str]]:
+    """Return numbered prose outside Markdown code and quotations."""
+    result = []
+    fence = None
+    for number, line in enumerate(lines, 1):
+        marker = re.match(r"(`{3,}|~{3,})", line.lstrip())
+        if marker and fence is None:
+            fence = marker.group(1)
+            continue
+        if fence is not None:
+            if (
+                marker
+                and marker.group(1)[0] == fence[0]
+                and len(marker.group(1)) >= len(fence)
+            ):
+                fence = None
+            continue
+        if line.startswith(("    ", "\t")) or line.lstrip().startswith(">"):
+            continue
+        result.append((number, re.sub(r"`[^`]*`", "", line)))
+    return result
+
+
+def check_line(line: str, number: int, lines: list[str]) -> list[tuple[int, str, str]]:
+    """Check register rules that apply to an individual prose line."""
+    findings = []
+    match = FIRST_PERSON.search(line)
+    if match:
+        findings.append(
+            (
+                number,
+                "R1-subject",
+                f"First-person '{match.group().strip()}' — "
+                "use an analysis/component subject",
+            )
+        )
+    if SHOULD_SHALL_MISUSE.search(line):
+        findings.append(
+            (number, "R4-shall-should", "Requirement and advisory language are mixed")
+        )
+    match = ADJECTIVES_WITHOUT_CRITERION.search(line)
+    if match and not has_criterion_nearby(lines, number - 1):
+        findings.append(
+            (
+                number,
+                "R5-unsupported-adj",
+                f"'{match.group()}' without governing criterion",
+            )
+        )
+    for clause in re.split(r"[;.!?]\s+", line):
+        if re.match(
+            r"(?:the\s+)?(?:wall\s+)?(?:thickness|corrosion allowance)\b",
+            clause.strip(),
+            re.I,
+        ):
+            for match in THICKNESS_DECIMALS.finditer(clause):
+                findings.append(
+                    (
+                        number,
+                        "R7-thickness-decimals",
+                        f"Thickness '{match.group()}' requires 3 decimals",
+                    )
+                )
+    return findings
+
+
 def check_file(path: Path) -> list[tuple[int, str, str]]:
-    """Return list of (line_number, rule, message) findings."""
+    """Return register findings for readable prose in a file."""
     if is_excluded(path):
         return []
+    return check_file_text(path.read_text(encoding="utf-8", errors="replace"))
 
-    try:
-        text = path.read_text(encoding="utf-8", errors="replace")
-    except (OSError, UnicodeDecodeError):
-        return []
 
-    lines = text.splitlines()
-    if not lines:
-        return []
-
-    # Skip files that are verbatim transcriptions
-    if lines[0].startswith("> Source:") or lines[0].startswith("> Transcribed"):
-        return []
-
-    findings: list[tuple[int, str, str]] = []
-
-    for i, line in enumerate(lines, 1):
-        # Skip code blocks
-        if line.strip().startswith("```") or line.strip().startswith("    "):
-            continue
-        # Skip blockquotes (may be transcribed text)
-        if line.strip().startswith(">"):
-            continue
-
-        # Rule 1: subject is analysis/component, not a person
-        match = FIRST_PERSON.search(line)
-        if match:
-            findings.append((i, "R1-subject", f"First-person '{match.group().strip()}' — subject should be the analysis or component"))
-
-        # Rule 4: shall/should misuse
-        if SHOULD_SHALL_MISUSE.search(line):
-            findings.append((i, "R4-shall-should", "'shall' used with advisory language or 'should' with mandatory language"))
-
-        # Rule 5: unsupported adjective
-        match = ADJECTIVES_WITHOUT_CRITERION.search(line)
-        if match and not has_criterion_nearby(lines, i - 1):
-            findings.append((i, "R5-unsupported-adj", f"'{match.group()}' without governing criterion in this or following clause"))
-
-        # Rule 7: thickness with fewer than 3 decimals
-        for m in THICKNESS_DECIMALS.finditer(line):
-            value = m.group(1)
-            decimals = len(value.split(".")[1])
-            if decimals < 3:
-                findings.append((i, "R7-thickness-decimals", f"Thickness '{m.group()}' has {decimals} decimal(s); use 3"))
-
-    # Rule 6: caption above table (check pairs of consecutive lines)
-    for i in range(len(lines) - 1):
-        if CAPTION_ABOVE_TABLE.match(lines[i]) and TABLE_START.match(lines[i + 1]):
-            findings.append((i + 1, "R6-caption-position", "Caption appears above table; place it below"))
-
-    return findings
+FIXTURES: list[tuple[str, str, str | None]] = [
+    # (text, expected_rule_or_None, description)
+    (
+        "We verified the pipeline meets criteria.",
+        "R1-subject",
+        "first-person detected",
+    ),
+    (
+        "The pipeline satisfies burst criteria per DNV-ST-F101.",
+        None,
+        "proper subject, no finding",
+    ),
+    (
+        "The wall thickness is acceptable.",
+        "R5-unsupported-adj",
+        "unsupported adjective",
+    ),
+    (
+        "The wall thickness is acceptable per DNV-ST-F101 clause 5.4.2.",
+        None,
+        "adjective with criterion",
+    ),
+    ("The thickness is 12.5 mm.", "R7-thickness-decimals", "2-decimal thickness"),
+    ("The thickness is 12.500 mm.", None, "3-decimal thickness ok"),
+    (
+        "The coating shall be recommended for use.",
+        "R4-shall-should",
+        "shall with advisory",
+    ),
+    ("The coating should be applied.", None, "should alone is fine"),
+    ("Our analysis shows convergence.", "R1-subject", "first-person 'our'"),
+    ("The analysis converged at iteration 15.", None, "no first person"),
+    (
+        "Results are conservative.",
+        "R5-unsupported-adj",
+        "conservative without criterion",
+    ),
+    (
+        "Results are conservative because the load factor exceeds 1.5.",
+        None,
+        "conservative with because-clause",
+    ),
+    (
+        "The design is safe and adequate.",
+        "R5-unsupported-adj",
+        "multiple unsupported adjectives",
+    ),
+    (
+        "The thickness of 25.1 in is below the limit.",
+        "R7-thickness-decimals",
+        "inches with 1 decimal",
+    ),
+    (
+        "The thickness of 25.100 in meets requirements.",
+        None,
+        "inches with 3 decimals",
+    ),
+]
 
 
 def run_self_test() -> bool:
     """Run built-in test fixtures. Returns True if all pass."""
-    fixtures: list[tuple[str, str, str | None]] = [
-        # (text, expected_rule_or_None, description)
-        ("We verified the pipeline meets criteria.", "R1-subject", "first-person detected"),
-        ("The pipeline satisfies burst criteria per DNV-ST-F101.", None, "proper subject, no finding"),
-        ("The wall thickness is acceptable.", "R5-unsupported-adj", "unsupported adjective"),
-        ("The wall thickness is acceptable per DNV-ST-F101 clause 5.4.2.", None, "adjective with criterion"),
-        ("The thickness is 12.5 mm.", "R7-thickness-decimals", "2-decimal thickness"),
-        ("The thickness is 12.500 mm.", None, "3-decimal thickness ok"),
-        ("The coating shall be recommended for use.", "R4-shall-should", "shall with advisory"),
-        ("The coating should be applied.", None, "should alone is fine"),
-        ("Our analysis shows convergence.", "R1-subject", "first-person 'our'"),
-        ("The analysis converged at iteration 15.", None, "no first person"),
-        ("Results are conservative.", "R5-unsupported-adj", "conservative without criterion"),
-        ("Results are conservative because the load factor exceeds 1.5.", None, "conservative with because-clause"),
-        ("The design is safe and adequate.", "R5-unsupported-adj", "multiple unsupported adjectives"),
-        ("The value of 25.1 in is below the limit.", "R7-thickness-decimals", "inches with 1 decimal"),
-        ("The value of 25.100 in meets requirements.", None, "inches with 3 decimals"),
-    ]
-
     passed = 0
     failed = 0
 
-    for text, expected_rule, desc in fixtures:
+    for text, expected_rule, desc in FIXTURES:
         findings = check_file_text(text)
         found_rules = {f[1] for f in findings}
 
@@ -188,21 +245,39 @@ def run_self_test() -> bool:
             if expected_rule in found_rules:
                 passed += 1
             else:
-                print(f"  FAIL: '{desc}' — expected {expected_rule}, got {found_rules or 'none'}")
+                print(
+                    f"  FAIL: '{desc}' — expected {expected_rule}, "
+                    f"got {found_rules or 'none'}"
+                )
                 failed += 1
 
-    print(f"\nSelf-test: {passed} passed, {failed} failed out of {len(fixtures)}")
+    print(f"\nSelf-test: {passed} passed, {failed} failed out of {len(FIXTURES)}")
     return failed == 0
 
 
 def check_file_text(text: str) -> list[tuple[int, str, str]]:
-    """Check a single text string (for self-test)."""
-    import tempfile
-
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
-        f.write(text)
-        f.flush()
-        return check_file(Path(f.name))
+    """Check prose directly, without platform-specific temporary-file locks."""
+    lines = text.splitlines()
+    if not lines or lines[0].startswith(("> Source:", "> Transcribed")):
+        return []
+    prose = prose_lines(lines)
+    findings = [
+        finding for number, line in prose for finding in check_line(line, number, lines)
+    ]
+    for (number, line), (next_number, next_line) in zip(prose, prose[1:]):
+        if (
+            next_number == number + 1
+            and CAPTION_ABOVE_TABLE.match(line)
+            and TABLE_START.match(next_line)
+        ):
+            findings.append(
+                (
+                    number,
+                    "R6-caption-position",
+                    "Caption appears above table; place it below",
+                )
+            )
+    return findings
 
 
 def find_files(paths: list[str]) -> list[Path]:
@@ -220,24 +295,22 @@ def find_files(paths: list[str]) -> list[Path]:
 
 def diff_files(base: str) -> list[Path]:
     """Return files changed since base commit."""
-    try:
-        output = subprocess.check_output(
-            ["git", "diff", "--name-only", "--diff-filter=ACM", base],
-            text=True,
-        )
-    except subprocess.CalledProcessError:
-        return []
-    return [
-        Path(f) for f in output.strip().splitlines()
-        if f.endswith((".md", ".rst"))
-    ]
+    output = subprocess.check_output(
+        ["git", "diff", "--name-only", "--diff-filter=ACM", base, "--"],
+        text=True,
+    )
+    return [Path(f) for f in output.strip().splitlines() if f.endswith((".md", ".rst"))]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("paths", nargs="*", default=["docs/", "src/"])
-    parser.add_argument("--self-test", action="store_true", help="Run built-in test fixtures")
-    parser.add_argument("--diff", metavar="BASE", help="Only scan files changed since BASE")
+    parser.add_argument(
+        "--self-test", action="store_true", help="Run built-in test fixtures"
+    )
+    parser.add_argument(
+        "--diff", metavar="BASE", help="Only scan files changed since BASE"
+    )
     args = parser.parse_args()
 
     if args.self_test:

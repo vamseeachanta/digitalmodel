@@ -115,8 +115,8 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 ~~These stub modules contain no engineering value and clutter the namespace:~~
 - `specialized/digitalmarketing` -- retained: actively imported by engine.py despite earlier characterization
-- ~~`specialized/finance`~~ -- removed (2026-09-10)
-- ~~`specialized/project_management`~~ -- removed (2026-09-10)
+- `specialized/finance` -- retained during O04 reconciliation to preserve main's public-hygiene changes and package dependencies
+- `specialized/project_management` -- disabled code stubs removed; existing data and configuration retained
 
 ## Tech Debt
 
@@ -140,7 +140,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 7. ~~**No VISION.md at repo root.**~~ Closed — Phase 6 delivered `docs/vision/CALCULATIONS-VISION.md` as the canonical library vision document (2026-03-29).
 
-8. ~~**Stub modules with no engineering value.**~~ Partially closed — `specialized/finance` and `specialized/project_management` removed (2026-09-10). `specialized/digitalmarketing` retained: actively imported by engine.py.
+8. ~~**Stub modules with no engineering value.**~~ Partially closed — Project-management disabled code stubs removed; finance and all existing data retained during O04 reconciliation. `specialized/digitalmarketing` retained: actively imported by engine.py.
 
 ## Document Intelligence Pipeline
 

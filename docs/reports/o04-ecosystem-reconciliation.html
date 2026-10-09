@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>O04 ecosystem reconciliation</title>
+<style>body{font:16px/1.5 system-ui;max-width:1000px;margin:2rem auto;padding:0 1rem}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:.5rem;text-align:left}code{overflow-wrap:anywhere}</style>
+<h1>O04 ecosystem reconciliation</h1>
+<p>Owner board card O04; <a href="https://github.com/vamseeachanta/digitalmodel/issues/2306">tracking issue 2306</a>. Claude review and owner/PM merge remain required. The branch is not merged into main by this task.</p>
+<p>The cloud branch preserves its six commits and receives main revision <code>e355203bacb98e9690481b5f2d474203dfafc0cc</code> by a merge commit. The PR will remain draft.</p>
+<table><tr><th>Cloud change</th><th>Disposition</th></tr>
+<tr><td>Version and package metadata</td><td>Project, package and lockfile version 2.1.0; repository URLs corrected; py.typed included in wheel and source distribution.</td></tr>
+<tr><td>Ruff consolidation</td><td>Black/isort hooks, configuration and development dependencies removed. Formatter commands and Python Ruff hooks restricted to explicitly named O04 Python files. No repository-wide formatting performed; notebook formatter hooks removed, existing notebook Ruff lint retained.</td></tr>
+<tr><td>Python CI matrix</td><td>Python 3.11 and 3.12 retained; main domain gates and guards preserved; artifact names include matrix version. The full local suite uses Python 3.11; final focused regression checks also pass on Python 3.12. Full Python 3.12 execution remains a CI check.</td></tr>
+<tr><td>OIDC publishing</td><td>Automatic publishing is disabled. publish.yml has workflow_dispatch only, with no tag or push trigger. No workflow dispatch or PyPI upload occurred.</td></tr>
+<tr><td>Domain documentation</td><td>CFD findings, ten verification cases, report build and layout standard added to navigation. Strict MkDocs passes.</td></tr>
+<tr><td>Engineering register</td><td>Rule, checker, Make targets, pre-commit hook and dedicated CI step retained. Unsupported custom gate removed. Fences, indentation, inline examples, non-thickness measurements, Git errors and self-test temporary-file retention corrected; text self-tests now run in memory. Changed files are scanned in full. CI compares PRs to origin/main and pushes to the preceding event SHA.</td></tr>
+<tr><td>Stub removals</td><td>Finance package restored in full; existing finance and project-management data/configuration retained byte-for-byte from main. Only two disabled project-management scripts and two example Python stubs removed.</td></tr>
+<tr><td>Other ecosystem fixes</td><td>assetutilities documented as sibling dependency; main test dependencies retained. Hydrodynamic extraction import corrected; roadmap reconciled with retained finance and data.</td></tr></table>
+<p>Table 1. Cloud changes and final reconciliation disposition.</p>
+<h2>Conflict resolution</h2>
+<p>The sole textual conflict was modify/delete on <code>src/digitalmodel/specialized/finance/stock_analysis/finance_components_get_SEC_data.py</code>. Main's public-hygiene version was retained. The rest of the finance package was restored to retain its dependencies. Automatically merged quality gates, pre-commit configuration, roadmap and pyproject were reviewed against main. Main's domain gates, collection controls and dependency additions were retained.</p>
+<h2>Verification</h2>
+<p id="suite-status">The full configured pytest suite is ongoing: 29,898 tests collected, with failures already recorded. Final counts are pending. Final O04 regressions pass: 14 on Python 3.11 and 14 on Python 3.12; checker self-tests pass: 15. The O04 identifier check inspects 18 files with zero findings.</p>
+<p>Strict MkDocs, package build, lock consistency, final focused regression checks and checker self-tests pass. Both package archives contain py.typed. No other locked package version was upgraded; Black and isort are the only removed locked packages.</p>
+<p>The same isolated 46-test subset passes on main and on the reconciled branch. Some members fail during the full suite. This indicates a possible suite-interaction effect; its cause and main full-suite outcome are not established.</p>
+<p>Legacy Python files touched by the cloud branch still have Ruff findings. Ruff passing is established for the new checker and O04 tests only; no repository-wide lint pass is claimed.</p>
+<h2>Review and retained evidence</h2>
+<p>Codex plan and artifact adversarial reviews found publication triggers, matrix artifact collisions, unsupported register dispatch, checker false positives, a branch-dependent regression test, and lock drift. Those findings were corrected and the bounded final artifact review returned APPROVE. Claude review remains pending; no cross-provider consensus is claimed.</p>
+<p>Local test/build logs and the disposable Python environment are retained under the task scratch directory for Claude review. A temporary detached main worktree was removed after the comparison; owning repository data was retained.</p>
+</html>

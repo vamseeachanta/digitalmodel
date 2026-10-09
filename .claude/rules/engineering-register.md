@@ -8,14 +8,14 @@ produced by this repository's contributors and agents.
 ## Rules
 
 1. **Subject is the analysis or component, not a person.**
-   Write "the pipeline satisfies burst criteria" not "we verified the pipeline."
+   Write `the pipeline satisfies burst criteria` instead of `we verified the pipeline.`
 
 2. **Every conclusion is bound to its criterion and comparator.**
    State the standard clause, limit value, and computed value together.
 
 3. **Unestablished matters are stated as such with the missing evidence named.**
-   Write "fatigue life is not established; S-N test data for this alloy are unavailable"
-   not "fatigue life could not be determined."
+   Write `fatigue life is not established; S-N test data for this alloy are unavailable`
+   instead of `fatigue life could not be determined.`
 
 4. **`should`/`is recommended` for advice; `shall`/`must` for requirements only.**
    Do not use `shall` in a recommendation or `should` in a mandatory clause.
@@ -35,6 +35,11 @@ produced by this repository's contributors and agents.
 
 ## Enforcement levels
 
-- **Level 2 (current):** `scripts/enforcement/check-engineering-register.py` runs
-  manually or via `make check-register`. Not yet a blocking gate.
-- **Level 3 (target):** Pre-commit hook and CI gate, blocking on new/modified files.
+- **Level 2:** `scripts/enforcement/check-engineering-register.py` runs
+  manually or via `make check-register`. The self-test validates the detector fixtures.
+- **Level 3:** Pre-commit hook and a dedicated CI step block violations in changed Markdown/reStructuredText files. The CI comparison uses `origin/main` for pull requests and the prior event SHA for pushes; existing findings in a modified file are also reported.
+
+Register detector regressions shall cover quoted examples, code blocks, unrelated
+dimensional quantities, failed Git comparisons, disposable repositories and
+platform-independent in-memory text checks.
+Diff scope selects changed files; each selected file is scanned in full.

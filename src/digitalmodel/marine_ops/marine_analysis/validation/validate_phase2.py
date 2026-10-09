@@ -412,7 +412,9 @@ class Phase2Validator:
         }
 
         try:
-            from digitalmodel.marine_ops.marine_analysis.extraction.extract_hydro import HydrodynamicCoefficientExtractor
+            from digitalmodel.marine_ops.marine_analysis.extraction.extract_hydro import (
+                HydrodynamicCoefficientExtractor,
+            )
 
             # Create extractor with sample data
             extractor = HydrodynamicCoefficientExtractor(

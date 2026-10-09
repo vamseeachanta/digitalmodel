@@ -9,8 +9,10 @@ repos:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
         types_or: [python, pyi]
+        files: ^(scripts/enforcement/check-engineering-register\.py|src/digitalmodel/__init__\.py|src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2\.py|tests/contracts/test_o04_.*\.py)$
       - id: ruff-format
         types_or: [python, pyi]
+        files: ^(scripts/enforcement/check-engineering-register\.py|src/digitalmodel/__init__\.py|src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2\.py|tests/contracts/test_o04_.*\.py)$
 
   # Type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -77,10 +79,6 @@ repos:
     rev: 1.7.1
     hooks:
       - id: nbqa-ruff
-      - id: nbqa-ruff
-        entry: nbqa ruff-format
-        alias: nbqa-ruff-format
-        name: nbqa-ruff-format
 
   # Documentation links
   - repo: https://github.com/tcort/markdown-link-check
@@ -196,7 +194,7 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
-  # Engineering writing register (Level 3 — diff-scoped, blocks new violations)
+  # Engineering writing register (Level 3 — scans changed files)
   - repo: local
     hooks:
       - id: engineering-register

@@ -23,12 +23,14 @@ test:
 	@pytest -n auto --dist loadscope
 
 lint:
-	@echo "Running linters (parallel)..."
-	@ruff check src/ & mypy src/ & wait
+	@echo "Running linters..."
+	@ruff check src/ && mypy src/
+
+FORMAT_FILES = scripts/enforcement/check-engineering-register.py src/digitalmodel/__init__.py src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py tests/contracts/test_o04_ecosystem_config.py tests/contracts/test_o04_engineering_register.py
 
 format:
 	@echo "Formatting code..."
-	@ruff format src/ && ruff check --fix src/
+	@ruff format $(FORMAT_FILES)
 
 clean:
 	@echo "🧹 Cleaning (parallel)..."

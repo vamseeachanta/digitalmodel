@@ -44,6 +44,11 @@ jobs:
           UV_NO_SOURCES=true uv pip install -e .
           uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
 
+      - name: Check engineering register changes
+        env:
+          REGISTER_BASE: ${{ github.event_name == 'pull_request' && 'origin/main' || github.event.before }}
+        run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
+
       - name: Create reports directory
         run: mkdir -p reports
 
@@ -56,7 +61,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: quality-gate-results
+          name: quality-gate-results-${{ matrix.python-version }}
           path: |
             reports/quality_gates_results.json
             reports/bandit_report.json
@@ -68,7 +73,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-reports
+          name: coverage-reports-${{ matrix.python-version }}
           path: |
             htmlcov/
             coverage.xml

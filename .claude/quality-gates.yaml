@@ -332,16 +332,6 @@ gates:
     failure_action: "warn"
     warning_action: "report"
 
-  # Gate 6: Engineering writing register
-  engineering-register:
-    enabled: true
-    order: 6
-    description: "Engineering writing register compliance"
-    depends_on: []
-    command: "python scripts/enforcement/check-engineering-register.py docs/ src/"
-    failure_action: "warn"
-    warning_action: "report"
-
 # Global settings
 settings:
   execution_mode: "dag"
