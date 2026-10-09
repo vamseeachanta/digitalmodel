@@ -357,12 +357,20 @@ def test_root_consumer_can_hold_root_tree():
     assert set(held) == set(candidates)
 
 
-@pytest.mark.parametrize("text", ['p = f"docs/{name}.png"\n', 'p = "docs/*.png"\n[broken'])
-def test_dynamic_repo_prefix_does_not_escape_consumer_tree(text):
+@pytest.mark.parametrize("text", ['p = f"docs/{name}.png"\n', 'p = "docs/*.png"\n'])
+def test_dynamic_literal_leading_folder_holds_that_folder(text):
     from archive_reference_safety import reference_safety
     candidates = ["docs/x.png", "examples/x.png"]
     _, held, _ = reference_safety({"examples/run.py": text}, candidates, candidates + ["examples/run.py"])
-    assert "docs/x.png" not in held
+    assert set(held) == {"docs/x.png"}
+
+
+@pytest.mark.parametrize("text", ['p = f"{folder}/{name}.png"\n', 'p = "*.png"\n'])
+def test_dynamic_without_literal_leading_folder_stays_in_consumer_tree(text):
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/x.png", "examples/x.png"]
+    _, held, _ = reference_safety({"examples/run.py": text}, candidates, candidates + ["examples/run.py"])
+    assert set(held) == {"examples/x.png"}
 
 
 def test_colliding_outputs_are_rejected_before_writes(tmp_path):

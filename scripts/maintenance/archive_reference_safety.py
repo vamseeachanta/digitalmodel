@@ -246,9 +246,17 @@ def _value_evidence(value, source, candidates, tracked, by_base, path_context=Fa
         if "/" not in pattern or unknown_prefix:
             hits |= {p for p in candidates
                      if fnmatch.fnmatchcase(posixpath.basename(p), posixpath.basename(pattern))}
-        # R01 owner policy: unresolved dynamic evidence is local to its consumer.
-        directory = posixpath.dirname(source)
-        hits = {p for p in hits if not directory or p.startswith(directory + "/")}
+        first_segment = pattern.split("/", 1)[0]
+        has_literal_leading_folder = (
+            "/" in pattern
+            and first_segment not in {"", ".", ".."}
+            and not any(ch in first_segment for ch in "*?[")
+        )
+        if not has_literal_leading_folder:
+            # R01 owner policy: unresolved dynamic evidence is local to its consumer
+            # unless the pattern already names a concrete repository folder.
+            directory = posixpath.dirname(source)
+            hits = {p for p in hits if not directory or p.startswith(directory + "/")}
         return "runtime path or unresolved glob", hits, pattern
     basename = posixpath.basename(value)
     matches = by_base.get(basename, set())
