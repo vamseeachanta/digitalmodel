@@ -73,6 +73,39 @@ def yaml_scalars(docs, cycles=None):
             yield node
 
 
+def yaml_reference_values(text, basenames):
+    """Stream decoded scalars without constructing large numeric model tables.
+
+    Every scalar and alias event is visited. Alias definitions contain all their
+    scalar references; recursive/undefined aliases remain explicit scan gaps.
+    """
+    values, issues, active, declared = set(), set(), [], set()
+    loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+    for event in yaml.parse(text, Loader=loader):
+        if isinstance(event, yaml.events.DocumentStartEvent):
+            active, declared = [], set()
+        anchor = getattr(event, "anchor", None)
+        if isinstance(event, yaml.events.AliasEvent):
+            if anchor in active:
+                issues.add("CyclicYamlError")
+            elif anchor not in declared:
+                issues.add("ComposerError")
+        elif anchor:
+            if anchor in declared:
+                issues.add("ComposerError")
+            declared.add(anchor)
+        if isinstance(event, (yaml.events.MappingStartEvent, yaml.events.SequenceStartEvent)):
+            active.append(anchor)
+        elif isinstance(event, (yaml.events.MappingEndEvent, yaml.events.SequenceEndEvent)):
+            active.pop()
+        elif isinstance(event, yaml.events.ScalarEvent):
+            value = event.value.strip()
+            if (len(value) <= 512 and "." in value and "://" not in value
+                    and (value in basenames or any(c in value for c in "/\\#%{$*?["))):
+                values.add(event.value)
+    return values, sorted(issues)
+
+
 def _locations(value, source):
     value = value.replace("\\", "/").strip()
     if "://" in value or value.startswith("/"):
@@ -163,19 +196,18 @@ def reference_safety(texts, candidates, tracked, hygiene_sources=frozenset()):
     by_base = {}
     for path in tracked:
         by_base.setdefault(posixpath.basename(path), set()).add(path)
-    loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+    basenames = {posixpath.basename(p) for p in candidates}
     for source, text in sorted(texts.items()):
         if source in REPORT_PRODUCERS:
             continue
         uncertain = False
         try:
             if source.endswith((".yml", ".yaml")):
-                cycles = []
-                values = list(yaml_scalars(yaml.load_all(text, Loader=loader), cycles))
-                if cycles:
-                    gaps.append({"source": source, "reason": "CyclicYamlError"})
+                values, issues = yaml_reference_values(text, basenames)
+                if issues:
+                    gaps.extend({"source": source, "reason": issue} for issue in issues)
                     if source in candidates:
-                        held[source] = [{"source": source, "reason": "CyclicYamlError"}]
+                        held[source] = [{"source": source, "reason": issue} for issue in issues]
             elif source.endswith(".py"):
                 values = list(_python_strings(text))
             else:
