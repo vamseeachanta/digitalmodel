@@ -2,7 +2,7 @@
   "owner_card": "R01",
   "fixup": 2,
   "manifest_verification": {
-    "source_revision": "9e7ca2dda443254d26a6e2cc8fd8b4fa98fef7ee",
+    "source_revision": "5cbbf0bdc1f06f960af350c407aeead61bef9c12",
     "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
     "rule_matches": 1471,
     "excluded": 188,
@@ -13,7 +13,7 @@
     "verified_candidate_file_hashes": 1283,
     "partition_and_blob_map_verified": true,
     "hold_ids_counts_and_detail_verified": true,
-    "summary_bytes": 104683,
+    "summary_bytes": 104545,
     "top_10_hold_reasons": [
       {
         "source": "docs/domains/orcaflex/modular_input_validation_example.py",
@@ -77,28 +77,28 @@
       }
     ],
     "artifact_sha256": {
-      "docs/archive/archive-candidates-2026-10-08.summary.json": "6f932f0a0de820fdc80f3466d87ffdadbdba1d4d0ed1f180ff22b6989c58e306",
-      "docs/archive/archive-candidates-2026-10-08.holds.json": "112858f717766caa1154c8f200318883e03978ad0364adb19e69f8869883864e",
-      "docs/archive/archive-candidates-2026-10-08.csv": "0067a1c7ff500078b911d611940cc75154ca37c90bb9a547a56f151c037457d7",
+      "docs/archive/archive-candidates-2026-10-08.summary.json": "55e5259f91ad2ac32f33ff3a7926e1650b5ec33cf16a8ceba1876e0e4c13c724",
+      "docs/archive/archive-candidates-2026-10-08.holds.json": "c25d8d95aac61d36e4d00a899cdef21281a488e3fb8515b4e06b594976c04252",
+      "docs/archive/archive-candidates-2026-10-08.csv": "323062ed25564c25e8d6246f7f3517b4845c6a1fbc820be8f10b0c64fde46cb7",
       "docs/archive/archive-blob-map-2026-10-08.csv": "39a650c2ace499a5be4e67904074fe09726c620c69e22548c8123f70f5c1bbed",
-      "docs/archive/model-yaml-feature-inventory-2026-10-08.json": "b7ac8f9513e799defa33a40d35ceba8146b1d81ca10b1bb4950a6ac11bea5feb"
+      "docs/archive/model-yaml-feature-inventory-2026-10-08.json": "2cfeaa3a2ed8831bdbe133213f61bbe8507ec41a8068278dc7bc4086737c1915"
     },
     "artifact_bytes": {
-      "docs/archive/archive-candidates-2026-10-08.summary.json": 104683,
+      "docs/archive/archive-candidates-2026-10-08.summary.json": 104545,
       "docs/archive/archive-candidates-2026-10-08.holds.json": 63833,
-      "docs/archive/archive-candidates-2026-10-08.csv": 588160,
+      "docs/archive/archive-candidates-2026-10-08.csv": 588215,
       "docs/archive/archive-blob-map-2026-10-08.csv": 321722,
       "docs/archive/model-yaml-feature-inventory-2026-10-08.json": 271559
     }
   },
   "targeted_tests": {
-    "tests": 61,
+    "tests": 63,
     "result": "PASS",
     "system_environment": "Python 3.12.3 / pytest 9.0.2",
     "isolated_environment": "Python 3.11.14 / pytest 9.1.1",
-    "system_command": "PYTHONPATH=src python3 -m pytest -q tests/maintenance/test_archive_candidates.py tests/maintenance/test_archive_safety.py",
-    "isolated_command": "UV_CACHE_DIR=<scratch>/uv-cache uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/maintenance/test_archive_candidates.py tests/maintenance/test_archive_safety.py",
-    "red_evidence": "Directory isolation failed for glob and runtime path; compact hold helper was absent. Three output-path regressions reproduced overwrite, missing detail link and unrejected collision before correction."
+    "system_command": "PYTHONPATH=src python3 -m pytest -q tests/maintenance/test_archive_safety.py && PYTHONPATH=src python3 -m pytest -q tests/maintenance/test_archive_candidates.py",
+    "isolated_command": "UV_CACHE_DIR=/tmp/digitalmodel-r01-uv-cache uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/maintenance/test_archive_safety.py && UV_CACHE_DIR=/tmp/digitalmodel-r01-uv-cache uv run --no-project --with pytest --with pyyaml python -m pytest -q tests/maintenance/test_archive_candidates.py",
+    "red_evidence": "Literal leading folder regression reproduced: folder-qualified dynamic patterns such as f\"docs/{name}.png\" did not hold docs/x.png before correction. Separate test-file execution is recorded because the combined command trips an existing multiprocessing import-order PicklingError unrelated to this change."
   },
   "full_suite": {
     "result": "BLOCKED",
@@ -117,15 +117,15 @@
     "code_r2": "APPROVE after regression fixes; packet verified unchanged before scanner commit.",
     "code_packet_sha256": "069313046ccbc355c970b413d21085e1b32b1a5ad84124d3ba5dff7c1e6897a4",
     "code_file_sha256": {
-      "scripts/maintenance/archive_candidates.py": "2acfd2498c826a3ad5b0c0ba5a9d3980eef14c2f7dd3484e9c13f8b212a4a8fe",
-      "scripts/maintenance/archive_reference_safety.py": "36b1eb1beeccdf9b14e5d66a8a6c666ebe91cc30a26acf77c66e44e7203c4807",
-      "tests/maintenance/test_archive_safety.py": "a35818502d4f9574ccf890df348d24c40e7ceb2d75e752c18bfe3415ea23d78b",
+      "scripts/maintenance/archive_candidates.py": "1b4641eb349fc206afcdf83cd289134d37811189d654619f809137523556ef83",
+      "scripts/maintenance/archive_reference_safety.py": "2e040e559bf05d6015a482b27f5074758cbed949e8ed3393b433fb512e6a4e7f",
+      "tests/maintenance/test_archive_safety.py": "34f122497df7f579b097cb677939ec9a0e3fd56d5c14d0b836168733130f6937",
       "tests/maintenance/test_archive_candidates.py": "a2f5c240fe54f38e1e29bc2ec108e17a0d852639b07541798cec6f5611ca90f1"
     },
     "claude": "Pending owner-requested re-review before owner merge; no cross-provider consensus claimed."
   },
   "limitations": [
-    "Dynamic glob/template holds follow owner-directed consumer-directory-tree policy; an unresolved dynamic path outside that tree is not held by this evidence. Root-level consumers have the repository as their own tree.",
+    "Dynamic glob/template holds follow owner-directed consumer-directory-tree policy only when the pattern has no literal leading folder; folder-qualified patterns retain that folder scope. Root-level consumers can cover the repository tree.",
     "Static exclusions and ambiguous literal references retain existing semantics. Hold reason counts overlap across consumers and patterns.",
     "Static analysis does not establish arbitrary config-driven execution dependencies or archive-store availability.",
     "Removal PR 2304 remains open and held; PM owns closure after review."
@@ -134,11 +134,11 @@
   "outgoing_bundle_review": {
     "audience": "Public digitalmodel PR branch, explicitly authorized by originating fix-up request",
     "artifact_sha256": {
-      "docs/archive/archive-candidates-2026-10-08.summary.json": "6f932f0a0de820fdc80f3466d87ffdadbdba1d4d0ed1f180ff22b6989c58e306",
-      "docs/archive/archive-candidates-2026-10-08.holds.json": "112858f717766caa1154c8f200318883e03978ad0364adb19e69f8869883864e",
-      "docs/archive/archive-candidates-2026-10-08.csv": "0067a1c7ff500078b911d611940cc75154ca37c90bb9a547a56f151c037457d7",
+      "docs/archive/archive-candidates-2026-10-08.summary.json": "55e5259f91ad2ac32f33ff3a7926e1650b5ec33cf16a8ceba1876e0e4c13c724",
+      "docs/archive/archive-candidates-2026-10-08.holds.json": "c25d8d95aac61d36e4d00a899cdef21281a488e3fb8515b4e06b594976c04252",
+      "docs/archive/archive-candidates-2026-10-08.csv": "323062ed25564c25e8d6246f7f3517b4845c6a1fbc820be8f10b0c64fde46cb7",
       "docs/archive/archive-blob-map-2026-10-08.csv": "39a650c2ace499a5be4e67904074fe09726c620c69e22548c8123f70f5c1bbed",
-      "docs/archive/model-yaml-feature-inventory-2026-10-08.json": "b7ac8f9513e799defa33a40d35ceba8146b1d81ca10b1bb4950a6ac11bea5feb"
+      "docs/archive/model-yaml-feature-inventory-2026-10-08.json": "2cfeaa3a2ed8831bdbe133213f61bbe8507ec41a8068278dc7bc4086737c1915"
     },
     "identifier_decision": "Retain existing public repository-relative source/candidate paths; no physical hostnames introduced by the fix-up text.",
     "rights_and_qualification": "Derived inventory of already tracked public Git inputs, pinned to scanned revision; no client raw data or licensed standards added. Static dependency and archive availability limitations remain explicit.",

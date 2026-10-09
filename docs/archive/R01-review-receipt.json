@@ -4,9 +4,9 @@
   "date": "2026-10-09",
   "review_provider": "Codex",
   "independent_reviewer": "adversarial_review",
-  "artifact_verdict": "APPROVE",
-  "artifact_packet_sha256": "35ad2faebc4b25fe772994f48cf87ecdc45fa46634ec56dabc774dafce302c73",
-  "artifact_packet_bytes": 1472930,
+  "artifact_verdict": "UPDATED_PENDING_REVIEW",
+  "artifact_packet_sha256": "stale-after-fleet-pm-b2-update",
+  "artifact_packet_bytes": 1482352,
   "artifacts": [
     {
       "path": "docs/archive/ARCHIVE-MOVE-PLAN-2026-10-08.md",
@@ -15,28 +15,28 @@
     },
     {
       "path": "docs/archive/R01-archive-manifest-review.html",
-      "sha256": "abbb050b5a18edebfd8721a8e0b2a9a7669f75d94c08f77d3a153cb94acac0f2",
-      "bytes": 7057
+      "sha256": "5d335b4648cf49737014cc0f64e94248b0988643e19a58426c327d1980d0b25c",
+      "bytes": 7090
     },
     {
       "path": "docs/archive/R01-validation.json",
-      "sha256": "280d380596c8af32431ce7ca398b0789d67487ff3a124130fc8d666176e2ca94",
-      "bytes": 8755
+      "sha256": "f5d0e139f0d42c2bf277bce84a1bba5f9e7b1304ed27ba03e6b558dbc31c4ea9",
+      "bytes": 9049
     },
     {
       "path": "docs/archive/archive-candidates-2026-10-08.summary.json",
-      "sha256": "6f932f0a0de820fdc80f3466d87ffdadbdba1d4d0ed1f180ff22b6989c58e306",
-      "bytes": 104683
+      "sha256": "55e5259f91ad2ac32f33ff3a7926e1650b5ec33cf16a8ceba1876e0e4c13c724",
+      "bytes": 104545
     },
     {
       "path": "docs/archive/archive-candidates-2026-10-08.holds.json",
-      "sha256": "112858f717766caa1154c8f200318883e03978ad0364adb19e69f8869883864e",
+      "sha256": "c25d8d95aac61d36e4d00a899cdef21281a488e3fb8515b4e06b594976c04252",
       "bytes": 63833
     },
     {
       "path": "docs/archive/archive-candidates-2026-10-08.csv",
-      "sha256": "0067a1c7ff500078b911d611940cc75154ca37c90bb9a547a56f151c037457d7",
-      "bytes": 588160
+      "sha256": "323062ed25564c25e8d6246f7f3517b4845c6a1fbc820be8f10b0c64fde46cb7",
+      "bytes": 588215
     },
     {
       "path": "docs/archive/archive-blob-map-2026-10-08.csv",
@@ -45,27 +45,27 @@
     },
     {
       "path": "docs/archive/model-yaml-feature-inventory-2026-10-08.json",
-      "sha256": "b7ac8f9513e799defa33a40d35ceba8146b1d81ca10b1bb4950a6ac11bea5feb",
+      "sha256": "2cfeaa3a2ed8831bdbe133213f61bbe8507ec41a8068278dc7bc4086737c1915",
       "bytes": 271559
     }
   ],
-  "code_verdict": "APPROVE (r2)",
-  "code_packet_sha256": "069313046ccbc355c970b413d21085e1b32b1a5ad84124d3ba5dff7c1e6897a4",
+  "code_verdict": "UPDATED_PENDING_REVIEW",
+  "code_packet_sha256": "stale-after-fleet-pm-b2-update",
   "code_files": [
     {
       "path": "scripts/maintenance/archive_candidates.py",
-      "sha256": "2acfd2498c826a3ad5b0c0ba5a9d3980eef14c2f7dd3484e9c13f8b212a4a8fe",
-      "bytes": 47776
+      "sha256": "1b4641eb349fc206afcdf83cd289134d37811189d654619f809137523556ef83",
+      "bytes": 47899
     },
     {
       "path": "scripts/maintenance/archive_reference_safety.py",
-      "sha256": "36b1eb1beeccdf9b14e5d66a8a6c666ebe91cc30a26acf77c66e44e7203c4807",
-      "bytes": 15926
+      "sha256": "2e040e559bf05d6015a482b27f5074758cbed949e8ed3393b433fb512e6a4e7f",
+      "bytes": 16296
     },
     {
       "path": "tests/maintenance/test_archive_safety.py",
-      "sha256": "a35818502d4f9574ccf890df348d24c40e7ceb2d75e752c18bfe3415ea23d78b",
-      "bytes": 17798
+      "sha256": "34f122497df7f579b097cb677939ec9a0e3fd56d5c14d0b836168733130f6937",
+      "bytes": 18215
     },
     {
       "path": "tests/maintenance/test_archive_candidates.py",
@@ -73,6 +73,6 @@
       "bytes": 12594
     }
   ],
-  "review_scope": "Frozen packet. Artifact hashes, partitions, consumer counts, hold mappings, provenance, top-10 order and report wording independently checked. Main-session file/blob readback and test evidence were not independently rerun.",
-  "cross_provider_status": "Claude re-review pending before owner merge; no consensus claimed."
+  "review_scope": "Updated by fleet PM batch b2 after the prior frozen-packet review. Hashes and bytes were refreshed; Claude re-review remains pending before owner merge.",
+  "cross_provider_status": "Claude re-review pending before owner merge; no consensus claimed for the updated bytes."
 }

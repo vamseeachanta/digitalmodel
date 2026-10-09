@@ -3,8 +3,8 @@
   "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
   "scan_provenance": {
     "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
-    "scanned_head": "9e7ca2dda443254d26a6e2cc8fd8b4fa98fef7ee",
-    "scanned_index_tree": "21159eb94a374ce9f4a4ca01d3420831b3cd0305",
+    "scanned_head": "5cbbf0bdc1f06f960af350c407aeead61bef9c12",
+    "scanned_index_tree": "674651d575f6a6ec6d75164e2039cafc7f310b32",
     "tracked_inputs_clean": true
   },
   "rule": {
@@ -65,7 +65,7 @@
       "tests/",
       "tracked YAML and Python consumers"
     ],
-    "reference_evidence": "R01: explicit file references from src/tests, other tracked Python consumers and tracked YAML, including source-relative includes and mkdocs nav. C02/D01 filename qualification and hygiene-sweep exceptions remain. Detected unresolved templates, globs and ambiguous references receive human holds. Runtime/glob holds are restricted to the consumer directory tree by owner policy R01; resolved static references retain their scope. A bare directory mention excludes nothing.",
+    "reference_evidence": "R01: explicit file references from src/tests, other tracked Python consumers and tracked YAML, including source-relative includes and mkdocs nav. C02/D01 filename qualification and hygiene-sweep exceptions remain. Detected unresolved templates, globs and ambiguous references receive human holds. Runtime/glob holds are restricted to the consumer directory tree by owner policy R01 only when the pattern has no literal leading folder; folder-qualified patterns retain that folder scope. Resolved static references retain their scope. A bare directory mention excludes nothing.",
     "scope": "git ls-files (tracked only); extension match case-insensitive; size gate on git blob size",
     "source": "recovered from PR #2146 (head 48ff7b64) against its merge base 7e71d6b2"
   },
@@ -2544,16 +2544,8 @@
       "reason": "CyclicYamlError"
     },
     {
-      "source": "tests/engineering_validation/pipe_sizing/run_validation_suite.py",
-      "reason": "SyntaxError"
-    },
-    {
       "source": "tests/output/test_cli_base/test_groups_embedded.yml",
       "reason": "ParserError"
-    },
-    {
-      "source": "tests/test_automation/core/comparison_tracker.py",
-      "reason": "SyntaxError"
     },
     {
       "source": "tests/test_automation/core/domain_autofix_patterns.py",
@@ -2659,9 +2651,9 @@
     "rule_matches_delta": 0,
     "excluded_files_previous": 188,
     "excluded_files_delta": 0,
-    "move_files_previous": 0,
-    "move_files_delta": 1026,
+    "move_files_previous": 1026,
+    "move_files_delta": 0,
     "feature_keep_files_delta": 0,
-    "human_check_files_delta": -1026
+    "human_check_files_delta": 0
   }
 }
