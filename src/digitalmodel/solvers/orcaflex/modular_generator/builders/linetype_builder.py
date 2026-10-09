@@ -71,6 +71,13 @@ class LineTypeBuilder(BaseBuilder):
     Reference: 05_line_types.yml in modular include format.
     """
 
+    # Object sections emitted by build(); read by
+    # writers.basefile.object_section_order() to derive a section
+    # dependency order from this builder's registered order.
+    _sections = (
+        "LineTypes",
+    )
+
     def should_generate(self) -> bool:
         """Only generate for pipeline models."""
         return self.spec.is_pipeline()

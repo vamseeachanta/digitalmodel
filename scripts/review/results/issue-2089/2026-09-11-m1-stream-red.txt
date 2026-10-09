@@ -1,0 +1,62 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_______________ test_iterator_failure_preserves_partial_evidence _______________
+
+    def test_iterator_failure_preserves_partial_evidence():
+        import hashlib
+        def events():
+            yield {'kind':'stdout','data':b'partial'}
+            raise OSError('synthetic reader failed')
+>       result=runner.inspect_synthetic_events(events())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/solvers/ghs/test_boundaries.py:92:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/digitalmodel/solvers/ghs/runner.py:53: in inspect_synthetic_events
+    for count,event in enumerate(events):
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def events():
+        yield {'kind':'stdout','data':b'partial'}
+>       raise OSError('synthetic reader failed')
+E       OSError: synthetic reader failed
+
+tests/solvers/ghs/test_boundaries.py:91: OSError
+_______________ test_oversize_substitution_rejected_before_read ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-53/test_oversize_substitution_rej0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a0c07cd6d10>
+
+    def test_oversize_substitution_rejected_before_read(tmp_path,monkeypatch):
+        args=inputs();p=c.prepare_canary(*args)
+        def backend(**kwargs):
+            path=Path(kwargs['stage']['work'])/'canary.gf'
+            with path.open('wb') as handle:handle.truncate(8*1024*1024+1)
+            return [{'kind':'exit','returncode':0}]
+        def forbidden(*a,**k):raise AssertionError('unbounded read_bytes forbidden')
+        monkeypatch.setattr(Path,'read_bytes',forbidden)
+>       with pytest.raises(ValueError):runner.run_synthetic_capture(p,*args,tmp_path/'stage',backend)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/solvers/ghs/test_boundaries.py:106:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/digitalmodel/solvers/ghs/runner.py:87: in run_synthetic_capture
+    stage=stage_synthetic(root,geometry_bytes);_verify_stage(stage,geometry_bytes)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/digitalmodel/solvers/ghs/runner.py:79: in _verify_stage
+    if not path.is_file() or _is_link(path) or path.read_bytes()!=expected:fail()
+                                               ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (PosixPath('/tmp/pytest-of-vamsee/pytest-53/test_oversize_substitution_rej0/stage/work/canary.gf'),)
+k = {}
+
+>   def forbidden(*a,**k):raise AssertionError('unbounded read_bytes forbidden')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: unbounded read_bytes forbidden
+
+tests/solvers/ghs/test_boundaries.py:104: AssertionError
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_boundaries.py::test_iterator_failure_preserves_partial_evidence
+FAILED tests/solvers/ghs/test_boundaries.py::test_oversize_substitution_rejected_before_read
+2 failed, 16 deselected in 6.59s

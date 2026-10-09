@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Parent-process refusal evidence</title>
+<body><h1>Retain parent-process table changes on refusal</h1>
+<p>Issue: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2121">digitalmodel 2121</a>.
+Complexity: T2. Execution: single source writer with independent read-only Claude review.
+Authorization: the user selected diagnostic improvement, option 1. No solver or licence operation will be included.</p>
+<h2>Reproduction and source intelligence</h2>
+<p>The retained observation <code>SOLVERS-fluid-discovery-05d220f9-r1.json</code>,
+SHA-256 <code>77e742213ea3e6ae5d1b26d87cd82a05b7ba05a256d2dfa3f6b9edb682a7d472</code>,
+will be used as the failure reference. Source inspection will use
+<code>cylinder_parent_map.enumerate_windows_v2</code> and the existing exception-evidence propagation in
+<code>cylinder_diagnostic_snapshot_v2._observed_collection</code>. No external engineering standard
+or drive-file dataset will be required for this software-only correction.</p>
+<h2>Proposed change</h2>
+<p>The existing initial/final parent-table boolean predicate and refusal message will remain unchanged.
+Its refusal will use a local <code>ParentMapChangeError(ValueError)</code> defined in
+<code>cylinder_parent_map.py</code>, avoiding a new import dependency on PopulationError.
+Copied evidence will use <code>rejected_parent_observation</code>, disjoint from collector stage/completion
+keys, plus one fixed-enum <code>events</code> refusal summary naming the trigger identifiers.
+Tables will be sorted lists of [process identifier, parent identifier] pairs. Missing-side parent values
+in difference records will be null; actual table entries will remain integers, including zero.</p>
+<p>Differences over the union of both table key sets will distinguish addition (absent initially),
+disappearance (absent finally) and parent change (present in both with unequal parents).
+Exact trigger identifiers will be separate: a process disappearing before construction may be outside
+the refusal predicate. <code>unobserved_initial_pids</code> will record every initial-table identifier
+skipped during construction, including those still present finally. That list alone will not trigger refusal.</p>
+<p>Observed initial process identifiers will be retained as a sorted numeric list. No process-supplied
+strings, names, creation times or executable paths will enter this additional evidence. Numeric table
+records will not be described as complete process identities. Resource relevance will remain not evaluated;
+parent equality will not establish absence of identifier reuse with an unchanged parent.
+No extra process query, retry, fallback, exemption or success claim will be introduced.</p>
+<p>The collector will retain the rejected observation alongside its failed stage, never as a completed
+inventory. Each table and initial observation list will have at most 65,536 entries, using existing input
+validation; difference and trigger lists will have at most 131,072. Entries will contain only bounded
+process integers, nulls and fixed enum strings. Busy-host additions may continue to cause refusal;
+this correction will not promise collection success.</p>
+<h2>Acceptance and validation</h2>
+<ul><li>Tests will first fail for missing retained evidence on additions, disappearances and parent changes.</li>
+<li>Tests will verify deterministic ordering, zero versus null, exact trigger identifiers,
+copy independence, JSON round-trip equality of the new <code>rejected_parent_observation</code>
+namespace, and successful unchanged-table behavior. Existing integer keys in transported
+<code>completed_parent_maps</code> will still become string keys in JSON; that pre-existing limitation
+will remain outside this correction.</li>
+<li>Tests will preserve the pre-construction disappearance rule, including a simultaneous true trigger,
+and row-absent-but-table-present cases. Numeric-only projection will exclude oversized process text.</li>
+<li>Collector integration will verify rejected evidence survives at stages A, B and C without
+being described as a completed inventory; every producer evidence key will survive unchanged.</li>
+<li>Focused and applicable existing regression tests, static checks and legal scan will pass.
+The exact implementation will receive independent Claude review before any production observation.</li></ul>
+<h2>Ownership, limits and next checkpoint</h2>
+<p>SOLVERS will own this module, its tests and this issue-scoped evidence. Existing staged matrix work,
+runtime bundles, original failed observations and fluid-solver controls will be preserved.
+No native run, numerical criterion or result-matrix value will change. A later read-only observation
+will retain new facts only after review of its recorder contract; the existing recorder will serialize
+the full exception evidence dict. No automatic retry will be introduced.</p>
+</body></html>

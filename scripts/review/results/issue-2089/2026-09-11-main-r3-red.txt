@@ -1,0 +1,29 @@
+COMMAND ["/usr/local/bin/uv", "run", "--no-project", "--python", "3.11", "--with", "pytest==8.4.2", "--with", "numpy==2.4.4", "--with", "scipy==1.17.1", "--with", "pyyaml==6.0.3", "--with", "loguru==0.7.3", "python", "-B", "-m", "pytest", "tests/solvers/ghs/test_boundaries.py", "-k", "text_limit_precedes or never_claims_race", "-q", "-p", "no:cacheprovider"]
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-8.4.2, pluggy-1.6.0
+rootdir: /mnt/ace/ws/agent-worktrees/dm-2089-plan
+configfile: pytest.ini
+collected 20 items / 18 deselected / 2 selected
+
+tests/solvers/ghs/test_boundaries.py FF                                  [100%]
+
+=================================== FAILURES ===================================
+___________________ test_text_limit_precedes_string_scanning ___________________
+tests/solvers/ghs/test_boundaries.py:123: in test_text_limit_precedes_string_scanning
+    assert scanned==[]
+E   AssertionError: assert ['strip'] == []
+E
+E     Left contains one more item: 'strip'
+E     Use -v to get more diff
+_____________ test_synthetic_staging_never_claims_race_containment _____________
+tests/solvers/ghs/test_boundaries.py:130: in test_synthetic_staging_never_claims_race_containment
+    assert stage['containment_qualified'] is False
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'containment_qualified'
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_boundaries.py::test_text_limit_precedes_string_scanning
+FAILED tests/solvers/ghs/test_boundaries.py::test_synthetic_staging_never_claims_race_containment
+======================= 2 failed, 18 deselected in 6.41s =======================
+
+
+EXIT 1

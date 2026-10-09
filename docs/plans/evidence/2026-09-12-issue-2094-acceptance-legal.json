@@ -1,0 +1,52 @@
+{
+  "head": "f63594b8a1becf8a1813446f1abbeea64621a118",
+  "base": "107ebaa5",
+  "files": [
+    {
+      "path": "docs/plans/2026-09-11-issue-2094-ansys-example-deck-validation.md",
+      "sha256": "e7876be200f24eaae9dc48897ed7920b0240a08ebd845ca487e5faf7a01d86b9"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-12-issue-2094-padeye-capture-criteria.html",
+      "sha256": "a4e4908084fc5dd59d2785298b4b30e299fcd81c43f676d5ade494a2e4eff791"
+    },
+    {
+      "path": "examples/ansys/padeye/build.py",
+      "sha256": "156446232716e2db4397c01c34728ab5156d1ce3ee3d1adf992ce0f594e5f558"
+    },
+    {
+      "path": "examples/ansys/padeye/padeye.inp",
+      "sha256": "9d0c99dd48fa12117f8d971374563a1f10430f19176dab2c338bb8213416c2ff"
+    },
+    {
+      "path": "src/digitalmodel/ansys/padeye.py",
+      "sha256": "02dce647122a803831ee03d1880ec0462b87acb9dfada962bff571554dba6963"
+    },
+    {
+      "path": "tests/ansys/golden_acceptance.py",
+      "sha256": "54590021d55a668fc4557bfc8d98077a6c22f5f9085a1a68a49d14db63c5c301"
+    },
+    {
+      "path": "tests/ansys/padeye_mesh_study.py",
+      "sha256": "15fdb75ae4075d40aea88a203e88788697c3178d3facc0cc0b595f2940120105"
+    },
+    {
+      "path": "tests/ansys/test_example_goldens.py",
+      "sha256": "f553f6a2c47095253e51e1edbf89bf3f0b41dd0aa303aa9c7ff12b12af8be4ce"
+    },
+    {
+      "path": "tests/ansys/test_golden_acceptance.py",
+      "sha256": "84fb668f57b0af90634be956aebcbf8f98ccf0c2f190b82894255513ed4d8d19"
+    },
+    {
+      "path": "tests/ansys/test_padeye_mesh_study.py",
+      "sha256": "11385a2db87baec6b177126b33d6358a5e34477f975df2b6914eabd77e764429"
+    },
+    {
+      "path": "tests/ansys/test_padeye_preparation.py",
+      "sha256": "62648f0f9750bd8ac59d49a4c8274c4170bee0dfba77dfc4c3b65f79e3606a09"
+    }
+  ],
+  "exit_code": 0,
+  "scope": "Exact changed Git blobs staged in retained isolated scan repo; not full repository compliance"
+}

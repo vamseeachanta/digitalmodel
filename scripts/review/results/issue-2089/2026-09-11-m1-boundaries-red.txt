@@ -1,0 +1,160 @@
+FFFF.....F......                                                         [100%]
+=================================== FAILURES ===================================
+______________________ test_validate_before_hash[integer] ______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x725ab4247750>
+mutation = 'integer'
+
+    @pytest.mark.parametrize('mutation',['integer','text','nested','depths'])
+    def test_validate_before_hash(monkeypatch,mutation):
+        p=packet()
+        if mutation=='integer':p['resource_limits']['wall_timeout_seconds']=10**5000
+        elif mutation=='text':p['case_id']='x'*100000
+        elif mutation=='nested':p['density_kg_m3']={'unexpected':['x']*1000}
+        else:p['depths_m']=['1']*10000
+        def forbidden(*a,**k):raise AssertionError('hash called before bounds')
+        monkeypatch.setattr(c,'digest',forbidden)
+        with pytest.raises(ValueError,match='^invalid, noncanonical or unqualified canary evidence$'):
+>           c.validate_prepared(p)
+
+tests/solvers/ghs/test_boundaries.py:21:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/digitalmodel/solvers/ghs/contracts.py:107: in validate_prepared
+    if digest(req)!=digest(normalized_request(req)):
+       ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ({'case_id': 'neutral-box', 'density_kg_m3': '1000', 'depths_m': ['1', '2', '3'], 'geometry_sha256': '670cf0df7fbe643e894c357b0af79912dec3b5086a195b8ac4aa4cc2178d285b', ...},)
+k = {}
+
+>   def forbidden(*a,**k):raise AssertionError('hash called before bounds')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: hash called before bounds
+
+tests/solvers/ghs/test_boundaries.py:18: AssertionError
+_______________________ test_validate_before_hash[text] ________________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x725ab427d750>
+mutation = 'text'
+
+    @pytest.mark.parametrize('mutation',['integer','text','nested','depths'])
+    def test_validate_before_hash(monkeypatch,mutation):
+        p=packet()
+        if mutation=='integer':p['resource_limits']['wall_timeout_seconds']=10**5000
+        elif mutation=='text':p['case_id']='x'*100000
+        elif mutation=='nested':p['density_kg_m3']={'unexpected':['x']*1000}
+        else:p['depths_m']=['1']*10000
+        def forbidden(*a,**k):raise AssertionError('hash called before bounds')
+        monkeypatch.setattr(c,'digest',forbidden)
+        with pytest.raises(ValueError,match='^invalid, noncanonical or unqualified canary evidence$'):
+>           c.validate_prepared(p)
+
+tests/solvers/ghs/test_boundaries.py:21:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/digitalmodel/solvers/ghs/contracts.py:107: in validate_prepared
+    if digest(req)!=digest(normalized_request(req)):
+       ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ({'case_id': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...pths_m': ['1', '2', '3'], 'geometry_sha256': '670cf0df7fbe643e894c357b0af79912dec3b5086a195b8ac4aa4cc2178d285b', ...},)
+k = {}
+
+>   def forbidden(*a,**k):raise AssertionError('hash called before bounds')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: hash called before bounds
+
+tests/solvers/ghs/test_boundaries.py:18: AssertionError
+______________________ test_validate_before_hash[nested] _______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x725ab4958450>
+mutation = 'nested'
+
+    @pytest.mark.parametrize('mutation',['integer','text','nested','depths'])
+    def test_validate_before_hash(monkeypatch,mutation):
+        p=packet()
+        if mutation=='integer':p['resource_limits']['wall_timeout_seconds']=10**5000
+        elif mutation=='text':p['case_id']='x'*100000
+        elif mutation=='nested':p['density_kg_m3']={'unexpected':['x']*1000}
+        else:p['depths_m']=['1']*10000
+        def forbidden(*a,**k):raise AssertionError('hash called before bounds')
+        monkeypatch.setattr(c,'digest',forbidden)
+        with pytest.raises(ValueError,match='^invalid, noncanonical or unqualified canary evidence$'):
+>           c.validate_prepared(p)
+
+tests/solvers/ghs/test_boundaries.py:21:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/digitalmodel/solvers/ghs/contracts.py:107: in validate_prepared
+    if digest(req)!=digest(normalized_request(req)):
+       ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ({'case_id': 'neutral-box', 'density_kg_m3': {'unexpected': ['x', 'x', 'x', 'x', 'x', 'x', ...]}, 'depths_m': ['1', '2', '3'], 'geometry_sha256': '670cf0df7fbe643e894c357b0af79912dec3b5086a195b8ac4aa4cc2178d285b', ...},)
+k = {}
+
+>   def forbidden(*a,**k):raise AssertionError('hash called before bounds')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: hash called before bounds
+
+tests/solvers/ghs/test_boundaries.py:18: AssertionError
+______________________ test_validate_before_hash[depths] _______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x725ab41b7e50>
+mutation = 'depths'
+
+    @pytest.mark.parametrize('mutation',['integer','text','nested','depths'])
+    def test_validate_before_hash(monkeypatch,mutation):
+        p=packet()
+        if mutation=='integer':p['resource_limits']['wall_timeout_seconds']=10**5000
+        elif mutation=='text':p['case_id']='x'*100000
+        elif mutation=='nested':p['density_kg_m3']={'unexpected':['x']*1000}
+        else:p['depths_m']=['1']*10000
+        def forbidden(*a,**k):raise AssertionError('hash called before bounds')
+        monkeypatch.setattr(c,'digest',forbidden)
+        with pytest.raises(ValueError,match='^invalid, noncanonical or unqualified canary evidence$'):
+>           c.validate_prepared(p)
+
+tests/solvers/ghs/test_boundaries.py:21:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/digitalmodel/solvers/ghs/contracts.py:107: in validate_prepared
+    if digest(req)!=digest(normalized_request(req)):
+       ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ({'case_id': 'neutral-box', 'density_kg_m3': '1000', 'depths_m': ['1', '1', '1', '1', '1', '1', ...], 'geometry_sha256': '670cf0df7fbe643e894c357b0af79912dec3b5086a195b8ac4aa4cc2178d285b', ...},)
+k = {}
+
+>   def forbidden(*a,**k):raise AssertionError('hash called before bounds')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: hash called before bounds
+
+tests/solvers/ghs/test_boundaries.py:18: AssertionError
+_______________ test_stage_substitution_rejects[directory_link] ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-52/test_stage_substitution_reject4')
+mutate = 'directory_link'
+
+    @pytest.mark.parametrize('mutate',['geometry','runfile','output','unknown_file','directory_link'])
+    def test_stage_substitution_rejects(tmp_path,mutate):
+        args=inputs();p=c.prepare_canary(*args)
+        def backend(**kwargs):
+            work=Path(kwargs['stage']['work'])
+            if mutate=='geometry':(work/'canary.gf').write_bytes(b'wrong')
+            elif mutate=='runfile':(work/'canary.rf').write_bytes(b'wrong')
+            elif mutate=='output':(work/'canary.pf').write_bytes(b'stale')
+            elif mutate=='unknown_file':(work/'OPEN-RF.RF').write_bytes(b'unknown')
+            else:
+                target=tmp_path/'replacement';work.rename(target)
+                try:work.symlink_to(target,target_is_directory=True)
+                except OSError:pytest.skip('symlink unavailable')
+            return [{'kind':'exit','returncode':0}]
+>       with pytest.raises(ValueError):runner.run_synthetic_capture(p,*args,tmp_path/'stage',backend)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_boundaries.py:57: Failed
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_boundaries.py::test_validate_before_hash[integer]
+FAILED tests/solvers/ghs/test_boundaries.py::test_validate_before_hash[text]
+FAILED tests/solvers/ghs/test_boundaries.py::test_validate_before_hash[nested]
+FAILED tests/solvers/ghs/test_boundaries.py::test_validate_before_hash[depths]
+FAILED tests/solvers/ghs/test_boundaries.py::test_stage_substitution_rejects[directory_link]
+5 failed, 11 passed in 7.41s

@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import pytest
+import yaml
+
+from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 
 from digitalmodel.solvers.orcaflex.modular_generator.builders.context import (
     BuilderContext,
@@ -53,6 +56,32 @@ def _build(spec):
     builder = GeneralBuilder(spec, BuilderContext())
     result = builder.build()
     return result["General"]
+
+
+def test_generated_restart_test_is_quoted_empty_and_other_nulls_survive(tmp_path):
+    ModularModelGenerator.from_spec(_make_spec()).generate(tmp_path)
+    text = (tmp_path / "includes/01_general.yml").read_text()
+    general = yaml.safe_load(text)["General"]
+    assert "RestartStateRecordingTest: ''" in text
+    assert general["RestartStateRecordingTest"] == ""
+    for key in ("LogStartTime", "StartTime", "FirstStage", "RampStartTime",
+                "RampFinishTime", "TimeHistoryImportFrom", "TimeHistoryImportTo"):
+        assert general[key] is None
+    assert general["RestartStateRecordingPeriodicCount"] == 0
+    assert general["ImplicitUseVariableTimeStep"] is False
+
+
+@pytest.mark.parametrize("value", [None, "", "return False", False, 0])
+def test_explicit_generic_restart_override_is_preserved(tmp_path, value):
+    spec = _make_spec(generic={
+        "general_properties": {"RestartStateRecordingTest": value},
+        "line_types": [], "vessels": [],
+    })
+    ModularModelGenerator.from_spec(spec).generate(tmp_path)
+    text = (tmp_path / "includes/20_generic_objects.yml").read_text()
+    actual = yaml.safe_load(text)["General"]["RestartStateRecordingTest"]
+    assert actual == value
+    assert type(actual) is type(value)
 
 
 # ---------------------------------------------------------------------------

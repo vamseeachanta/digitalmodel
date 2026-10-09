@@ -102,6 +102,32 @@ class TestDeviationStatistics:
         assert stats.rms_error == pytest.approx(0.0)
         assert stats.correlation == pytest.approx(1.0)
 
+    def test_identical_arrays_have_identical_quality(self, mock_diffraction_results):
+        aqwa = _clone_results(mock_diffraction_results)
+        ow = _clone_results(mock_diffraction_results)
+        comp = DiffractionComparator(aqwa, ow)
+
+        stats = comp._calculate_deviation_stats(
+            np.array([1.0, 2.0, 3.0]),
+            np.array([1.0, 2.0, 3.0]),
+            np.array([0.1, 0.2, 0.3]),
+        )
+
+        assert stats.quality == "IDENTICAL"
+
+    def test_nearby_arrays_are_compared_not_identical(self, mock_diffraction_results):
+        aqwa = _clone_results(mock_diffraction_results)
+        ow = _clone_results(mock_diffraction_results)
+        comp = DiffractionComparator(aqwa, ow)
+
+        stats = comp._calculate_deviation_stats(
+            np.array([1e-9, 2e-9, 3e-9]),
+            np.array([5e-9, 6e-9, 7e-9]),
+            np.array([1.0, 1.1, 1.2]),
+        )
+
+        assert stats.quality == "COMPARED"
+
     def test_known_offset(self, mock_diffraction_results):
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)
@@ -169,6 +195,24 @@ class TestCompareRAOs:
         heave_comp = result["heave"]
         assert heave_comp.statistics.mean_error == pytest.approx(0.1, abs=0.01)
 
+    def test_equal_shape_offset_grids_align_before_comparison(
+        self, mock_diffraction_results,
+    ):
+        aqwa = _clone_results(mock_diffraction_results)
+        ow = _clone_results(mock_diffraction_results)
+        aqwa_grid = np.linspace(1.0, 1.4, 9)
+        ow_grid = np.linspace(0.98, 1.42, 9)
+        for results, grid in ((aqwa, aqwa_grid), (ow, ow_grid)):
+            for dof in DOF:
+                component = getattr(results.raos, dof.name.lower())
+                component.frequencies.values = grid
+                component.magnitude = np.repeat(grid[:, None], 5, axis=1)
+                component.phase = np.zeros_like(component.magnitude)
+
+        comparison = DiffractionComparator(aqwa, ow).compare_raos()["heave"]
+
+        assert comparison.statistics.rms_error == 0.0
+
     def test_phase_wrapping(self, mock_diffraction_results):
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)
@@ -182,6 +226,27 @@ class TestCompareRAOs:
         surge_comp = result["surge"]
         max_phase = np.max(np.abs(surge_comp.phase_diff))
         assert max_phase < 30, f"Expected wrapped phase diff near 20, got {max_phase}"
+
+    def test_invalid_abscissa_is_returned_as_unavailable(
+        self, mock_diffraction_results,
+    ):
+        aqwa = _clone_results(mock_diffraction_results)
+        ow = _clone_results(mock_diffraction_results)
+        aqwa.raos.surge.frequencies.values = np.array([3.0, 2.0, 1.0])
+        aqwa.raos.surge.magnitude = aqwa.raos.surge.magnitude[:3]
+        aqwa.raos.surge.phase = aqwa.raos.surge.phase[:3]
+
+        comparison = DiffractionComparator(aqwa, ow).compare_raos()["surge"]
+
+        assert (
+            comparison.statistics.quality,
+            comparison.statistics.correlation,
+            comparison.refusal_reason,
+        ) == (
+            "INVALID_ABSCISSA",
+            None,
+            "AbscissaOrderError: first abscissa must be strictly increasing",
+        )
 
 
 # ---------------------------------------------------------------------------

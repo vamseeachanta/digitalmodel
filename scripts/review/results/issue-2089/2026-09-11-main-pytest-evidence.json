@@ -1,0 +1,9 @@
+{
+  "command": "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=src uv run --no-project --python 3.11 --with pytest==8.4.2 --with numpy==2.4.4 --with scipy==1.17.1 --with pyyaml==6.0.3 --with loguru==0.7.3 python -B -m pytest tests/solvers/ghs -q -p no:cacheprovider",
+  "scope": "normal repository pytest.ini/importlib and root conftest, plugin autoload disabled",
+  "passed": 75,
+  "skipped": 0,
+  "elapsed_seconds": 7.61,
+  "exit_code": 0,
+  "evidence_kind": "main-observed command output summary; separate agent raw log retained"
+}

@@ -28,6 +28,14 @@ class BuoysBuilder(BaseBuilder):
     Registered at 08_buoys.yml (Approach B: single file, byte-identical output).
     """
 
+    # Object sections emitted by build(); read by
+    # writers.basefile.object_section_order() to derive a section
+    # dependency order from this builder's registered order.
+    _sections = (
+        "6DBuoys",
+        "3DBuoys",
+    )
+
     def should_generate(self) -> bool:
         if not self.spec.is_pipeline():
             return False

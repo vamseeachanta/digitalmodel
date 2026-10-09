@@ -5,7 +5,7 @@
 # Source: OrcaFlex Examples - C07 Metocean buoy in deep water
 # Template Version: 1.0
 #
-# Spar-type metocean buoy with multi-leg mooring in 500m water depth.
+# Spar-type metocean buoy with a single mooring line in 500m water depth.
 # Mooring composed of chain + polyester + nylon rope segments with
 # mid-line buoyancy. Severe metocean: 13m wave, 1.125 m/s current.
 #
@@ -33,8 +33,8 @@ environment:
       shear: 100                        # Shear stiffness (kN/m/m2)
   waves:
     type: Dean stream                   # Dean stream function
-    height: 13                          # Significant wave height (m)
-    period: 11.5                        # Peak period (s)
+    height: 13                          # Regular-wave height (m)
+    period: 11.5                        # Regular-wave period (s)
     direction: 0                        # Wave direction (deg)
   current:
     speed: 1.125                        # Reference current speed (m/s)

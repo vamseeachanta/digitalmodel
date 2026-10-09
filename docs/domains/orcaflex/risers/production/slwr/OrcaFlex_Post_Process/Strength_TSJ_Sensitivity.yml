@@ -6,27 +6,27 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ3p0in_30ft_GA2_Driving.sim
+    Name: ..\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ3p0in_30ft_GA2_Driving.sim
     Label: BaseCase, 30ft TSJ Thick-end 3.00inch
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ3p0in_12ft_GA2_Driving.sim
+    Name: ..\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ3p0in_12ft_GA2_Driving.sim
     Label: 12ft TSJ Thick-end 3.00inch
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ3p0in_20ft_GA2_Driving.sim
+    Name: ..\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ3p0in_20ft_GA2_Driving.sim
     Label: 20ft TSJ Thick-end 3.00inch
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ2p0in_30ft_GA2_Driving.sim
+    Name: ..\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ2p0in_30ft_GA2_Driving.sim
     Label: 30ft TSJ Thick-end 2.00inch
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ2p25in_30ft_GA2_Driving.sim
+    Name: ..\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ2p25in_30ft_GA2_Driving.sim
     Label: 30ft TSJ Thick-end 2.25inch
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ2p5in_30ft_GA2_Driving.sim
+    Name: ..\TSJ_Extension\SLWR_16OD_SE1200_HE1500_TSJ2p5in_30ft_GA2_Driving.sim
     Label: 30ft TSJ Thick-end 2.50inch
     ObjectName: SLWR
 

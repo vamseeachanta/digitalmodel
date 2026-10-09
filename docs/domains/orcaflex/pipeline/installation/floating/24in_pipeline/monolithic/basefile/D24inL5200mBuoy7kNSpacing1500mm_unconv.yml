@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\pipeline\installation\floating\24in_pipeline\monolithic\basefile\D24inL5200mBuoy7kNSpacing1500mm.yml
+# File: <private-data>/D24inL5200mBuoy7kNSpacing1500mm.yml
 # Created: 8:56 PM on 1/27/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

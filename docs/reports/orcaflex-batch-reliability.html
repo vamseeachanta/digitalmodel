@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OrcaFlex batch reliability: verified first slice</title>
+<style>body{font:16px/1.6 system-ui;background:#f2f5f7;color:#183043;margin:0}main{max-width:960px;margin:auto;padding:32px}section,header{background:white;padding:24px;margin-bottom:18px;border-radius:10px}header{background:#183043;color:white}header a{color:#abe4ec}a{color:#086d89}table{border-collapse:collapse;width:100%}td,th{text-align:left;vertical-align:top;padding:10px;border-bottom:1px solid #ddd}pre{overflow:auto;background:#eef2f5;padding:14px}.scroll{overflow:auto}</style></head>
+<body><main><header><p>9 September 2026 · bounded implementation evidence</p><h1>The engine batch now reports what actually ran</h1>
+<p><a href="https://github.com/vamseeachanta/digitalmodel/issues/1564">Engine configuration</a> · <a href="https://github.com/vamseeachanta/digitalmodel/issues/2051">YAML and failure reporting</a> · <a href="../plans/2026-09-09-issue-2051-batch-reliability.md">Reviewed scope</a></p></header>
+<section><h2>Result and boundary</h2><p>The patched engine CLI completed a generic line's statics and dynamics on OrcaFlex 11.6c, saved the simulation and reloaded it. Four effective-tension samples were finite. The batch recorded one completed case, zero failures, PASS and exit zero. This qualifies the measured local execution path; it does not validate an engineering design, the full model corpus, a scheduled-task account or remote submission.</p>
+<p>Source base: <code>61e0c9c2</code>; branch: <code>bugfix/orcaflex-batch-reliability</code>. The existing solver environment was reused with isolated source overrides. The production checkout, environment and scheduled tasks were preserved. Detailed hashes, dependency revision and timestamp are in the <a href="orcaflex-batch-native-proof.json">sanitized native evidence</a>.</p></section>
+<section><h2>Defects and repair</h2><div class="scroll"><table><tr><th>Trigger</th><th>Before</th><th>Verified behavior</th></tr>
+<tr><td>Engine configuration</td><td>Missing packaged base config stopped execution.</td><td>Packaged defaults load through the actual engine and retain user overrides.</td></tr>
+<tr><td>Native numeric defaults</td><td>Generic YAML dumping emitted null.</td><td>The canonical dumper emits OrcaFlex ~ defaults and Yes/No booleans.</td></tr>
+<tr><td>Blank script field</td><td>Blank RestartStateRecordingTest collapsed to None, then ~; dynamics attempted to compile ~ as Python.</td><td>A SafeLoader subclass distinguishes blank text from explicit null/default scalars. The native dynamics rerun passed.</td></tr>
+<tr><td>Failed or incomplete case set</td><td>The workflow could return without a refusing verdict.</td><td>Current manifests are retained and the existing central contract emits FAIL and exit one.</td></tr>
+<tr><td>Explicit mock success</td><td>Zero exit alone could resemble licensed execution.</td><td>SKIPPED with solver_available=false and marked mock artifacts.</td></tr></table></div>
+<p>UTF-8 input with optional BOM and UTF-8 output are supported. Legacy encodings are not certified; no silent fallback is introduced. Explicit null spellings normalize to ~; blank scalars become empty strings. Duplicate keys, includes, comments and arbitrary lexical roundtrip remain outside this repair.</p>
+<p>Orcina documents that the meaning of ~ is data-item-specific; the empty-script regression demonstrates why a generic null substitution is insufficient. <a href="https://www.orcina.com/webhelp/OrcaFlex/Content/html/Datafields.htm">Orcina data-field reference</a>.</p></section>
+<section><h2>Verification</h2><p>RED-first regressions reproduced missing defaults, serialization, verdict and Unicode failures. The final focused suite passed <strong>54 tests with one skip</strong>. An overlapping YAML/converter check passed 20 tests with two skips; these counts are not additive and skipped fixture checks do not establish corpus coverage. The native failure before the blank-scalar fix correctly returned exit one and retained its case diagnostics.</p>
+<pre><code>python -B -m pytest tests/workflows/test_orcaflex_batch_contract.py tests/workflows/test_orcaflex_run_batch.py tests/test_run_contract.py tests/solvers/orcaflex/format_converter/test_yaml_utils.py -q</code></pre>
+<p>Manual native proof on Windows: create an OrcFxAPI model with one default line named ProofLine; set StageDuration to [0.1, 0.2]; SaveData to native.yml; release that model. The input below overrides the second stage to 0.25, intentionally exercising rendering. Run the real engine CLI in a fresh working directory with a 90-second subprocess deadline, require completed=1/failed=0 and PASS, then reload the saved .sim with threadCount=1. Require SimulationStopped and more than one finite Effective tension sample at End A over the whole simulation. The new batch contract tests use explicit mock mode or stub both licence detection and execution; the native acceptance is separate from pytest.</p>
+<pre><code>basename: orcaflex_run_batch
+orcaflex_run_batch:
+  models:
+    files: [native.yml]
+  analysis:
+    type: both
+    duration: 0.25
+  run_batch:
+    workers: 1
+    mock: false
+    save_sim: true
+    output_dir: results
+    work_dir: batch_runs
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+# From the fresh case directory, using the reviewed source/environment:
+python -B -m digitalmodel input.yml</code></pre>
+<p>The batch used one process. Its internal solver thread count remains the executor default, so this proof does not establish the proposed one-thread resource policy. The sidecar uses an unversioned solver identity; the native evidence separately records DLL version 11.6c.</p></section>
+<section><h2>Methodology and next checkpoint</h2><p>Use the <a href="../maps/digitalmodel-operator-map.md">operator map</a> to enter the canonical ecosystem runbook. The sequence remains: trustworthy execution; existing specification/extractor and unsupported-field audit; native equivalence qualification; beam/plate and structural FE benchmarks; balanced global-to-local load transfer; then campaigns. Preserve separate execution and engineering-acceptance verdicts.</p>
+<p>Review and integrate this repair first. Then pin the intended Deckhand/digitalmodel releases, reconcile existing task/queue ownership, enforce resource limits and prove the same bounded case from the Linux producer in the intended task context. No remote rollout or fleet-wide readiness is claimed here.</p></section></main></body></html>

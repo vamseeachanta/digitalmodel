@@ -146,6 +146,7 @@ from digitalmodel.hydrodynamics.diffraction.polars_exporter import PolarsExporte
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
     MultiSolverComparator,
     BenchmarkReport,
+    ComparisonPolicy,
     PairwiseResult,
     PairwiseRAOComparison,
     ConsensusMetrics,
@@ -314,6 +315,7 @@ __all__ = [
     # WRK-031: Multi-solver benchmark
     'MultiSolverComparator',
     'BenchmarkReport',
+    'ComparisonPolicy',
     'PairwiseResult',
     'PairwiseRAOComparison',
     'ConsensusMetrics',

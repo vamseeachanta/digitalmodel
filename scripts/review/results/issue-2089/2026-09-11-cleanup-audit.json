@@ -1,0 +1,17 @@
+{
+  "scope": "Task worktree, three related canonical repositories, first-level checkout-parent entries and task-named temporary paths; not a whole-machine cleanup",
+  "CLEAN": [
+    "No task partial/tmp files",
+    "No task-named scratch directories",
+    "No parent cleanup lock/trash markers",
+    "Task worktree has no stashes"
+  ],
+  "EXPECTED": [
+    "Implementation artifacts will be committed",
+    "Other active worktrees and pre-existing metadata/coordination lock state are preserved",
+    "Managed dependency caches are preserved"
+  ],
+  "UNEXPECTED": [],
+  "parent_entry_count": 79,
+  "privacy": "Raw sibling names and machine paths intentionally excluded from public evidence"
+}

@@ -22,6 +22,13 @@ class RiserClumpTypeBuilder(BaseBuilder):
     Reference: OrcaFlex ClumpTypes documentation.
     """
 
+    # Object sections emitted by build(); read by
+    # writers.basefile.object_section_order() to derive a section
+    # dependency order from this builder's registered order.
+    _sections = (
+        "ClumpTypes",
+    )
+
     def should_generate(self) -> bool:
         """Only generate for riser models with clump types."""
         return self.spec.is_riser() and len(self.spec.riser.clump_types) > 0

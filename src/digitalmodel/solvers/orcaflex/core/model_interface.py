@@ -30,13 +30,15 @@ from .mock_artifacts import write_mock_artifact
 from .configuration import OrcaFlexConfig, AnalysisType
 
 
-# Try to import OrcFxAPI, but provide mock if not available
-try:
-    import OrcFxAPI
-    ORCFXAPI_AVAILABLE = True
-except ImportError:
-    OrcFxAPI = None
-    ORCFXAPI_AVAILABLE = False
+# Access to OrcFxAPI, or None where it is not installed.
+# #3838: routed through the facade instead of `import OrcFxAPI`. A module-scope
+# import binds the DLL before OrcFxAPIConfig.setLibPath() can select a version.
+from ..orcaflex_api import available as _orcaflex_available
+from ..orcaflex_api import lazy_api as _lazy_orcaflex_api
+from ..run_state import check_simulation, check_statics
+
+ORCFXAPI_AVAILABLE = _orcaflex_available()
+OrcFxAPI = _lazy_orcaflex_api() if ORCFXAPI_AVAILABLE else None
 
 
 class ModelState(Enum):
@@ -380,9 +382,12 @@ class OrcaFlexModelWrapper(LoggerMixin):
             else:
                 # Real static analysis
                 self._model.CalculateStatics()
-                
-                # Get convergence info
-                converged = True  # OrcaFlex throws if not converged
+
+                # #3838: the model state, not the absence of an exception, is
+                # what says the solve converged. check_statics raises otherwise,
+                # and the enclosing _error_handler records the failure.
+                check_statics(self._model, context="static analysis")
+                converged = True
                 iterations = getattr(self._model.state, 'StaticsIterationCount', 0)
             
             elapsed = time.time() - start_time
@@ -472,7 +477,10 @@ class OrcaFlexModelWrapper(LoggerMixin):
                 
                 # Run simulation
                 self._model.RunSimulation()
-            
+                # #3838: RunSimulation returns success for a run that went
+                # unstable; only the model state distinguishes the two.
+                check_simulation(self._model, context="dynamic analysis")
+
             elapsed = time.time() - start_time
             
             self._state = ModelState.DYNAMIC_COMPLETE

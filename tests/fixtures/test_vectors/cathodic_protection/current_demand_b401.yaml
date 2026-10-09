@@ -1,68 +1,129 @@
 source_type: standard
-source_description: "DNV-RP-B401 current demand calculations verified against hybrid riser CP design report"
+source_description: "DNV-RP-B401 current demand I_c = A_c i_c f_c: Table 10-1 design current densities, plus the calc-008 riser demands"
 extracted_date: "2026-03-16"
+revised_date: "2026-09-25"
+revision_note: >-
+  #2213: the 0.440 / 0.220 A/m2 current densities of the calc-008 examples are that
+  project's Table 4.9 values (twice the highest Table 10-1 entry), not DNV-RP-B401
+  Table 10-1; the examples are kept because the arithmetic checks Eq. 1 against a
+  repo document, and their source is now stated. Examples that draw i_c from Table
+  10-1 through the package's table lookup are added with derivations.
 legal_scan_passed: true
 category: "cathodic_protection"
 subcategory: "current_demand"
 equations:
   - name: "Current Demand"
     latex: "I_c = A_c \\cdot i_c \\cdot f_c"
-    description: "Current demand for a coated structure per DNV-RP-B401 section 7.4.1"
+    description: "Current demand for a coated structure per DNV-RP-B401 Sec. 7.4.1, Eq. 1"
 inputs:
   - name: "Surface area"
     symbol: "A_c"
     unit: "m2"
-    test_value: 1021.0
+    test_value: 1000.0
   - name: "Current density"
     symbol: "i_c"
     unit: "A/m2"
-    test_value: 0.440
+    test_value: 0.180
   - name: "Breakdown factor"
     symbol: "f_c"
     unit: "dimensionless"
-    test_value: 0.02
+    test_value: 1.0
 outputs:
   - name: "Current demand"
     symbol: "I_c"
     unit: "A"
-    test_expected: 8.98
-    tolerance: 0.05
+    test_expected: 180.0
+    tolerance: 0.01
 worked_examples:
-  - description: "Buoyancy tank initial current demand (A_c=1021, i_c=0.440, f_c=0.02)"
+  - description: "Table 10-1 tropical, >300 m, initial: 1000 m2 bare steel"
+    source: "tests/fixtures/test_vectors/cathodic_protection/datasets/dnv-rp-b401/2005-with-2008-amendments/dnv-rp-b401-2005-with-2008-amendments-table-001.csv (row >300, Tropical initial 0.180 A/m2)"
+    derivation: "1000 * 0.180 * 1.0 = 180.0 A"
+    inputs:
+      climate: "tropical"
+      depth_band: ">300"
+      phase: "initial"
+      edition: "2005"
+      surface_area_m2: 1000.0
+      breakdown_factor: 1.0
+    outputs:
+      current_demand_A: 180.0
+    tolerance: 0.01
+    use_as_test: true
+  - description: "Table 10-1 tropical, >300 m, final: 1000 m2 bare steel"
+    source: "Table 10-1 CSV as above (row >300, Tropical final 0.130 A/m2)"
+    derivation: "1000 * 0.130 * 1.0 = 130.0 A"
+    inputs:
+      climate: "tropical"
+      depth_band: ">300"
+      phase: "final"
+      edition: "2005"
+      surface_area_m2: 1000.0
+      breakdown_factor: 1.0
+    outputs:
+      current_demand_A: 130.0
+    tolerance: 0.01
+    use_as_test: true
+  - description: "Table 10-1 arctic, 0-30 m, initial: 500 m2 coated at f_c = 0.10"
+    source: "Table 10-1 CSV as above (row 0-30, Arctic initial 0.250 A/m2)"
+    derivation: "500 * 0.250 * 0.10 = 12.5 A"
+    inputs:
+      climate: "arctic"
+      depth_band: "0-30"
+      phase: "initial"
+      edition: "2005"
+      surface_area_m2: 500.0
+      breakdown_factor: 0.10
+    outputs:
+      current_demand_A: 12.5
+    tolerance: 0.01
+    use_as_test: true
+  - description: "calc-008 buoyancy tank initial (A_c=1021, i_c=0.440 project value, f_c=0.02)"
+    source: "docs/domains/cathodic_protection/examples/calc-008-dnv-b401-2005-slhr-deepwater.md, Tables 4.9 / 4.10 / 5.1 (doc: 8.99 A)"
+    derivation: "1021 * 0.440 * 0.02 = 8.985 A"
     inputs:
       surface_area_m2: 1021.0
       current_density_A_m2: 0.440
       breakdown_factor: 0.02
     outputs:
       current_demand_A: 8.98
+    tolerance: 0.05
     use_as_test: true
-  - description: "Buoyancy tank mean current demand (A_c=1021, i_c=0.220, f_c=0.11)"
+  - description: "calc-008 buoyancy tank mean (A_c=1021, i_c=0.220 project value, f_c=0.11)"
+    source: "calc-008 Table 5.1 (doc: 24.70 A)"
+    derivation: "1021 * 0.220 * 0.11 = 24.708 A"
     inputs:
       surface_area_m2: 1021.0
       current_density_A_m2: 0.220
       breakdown_factor: 0.11
     outputs:
       current_demand_A: 24.71
+    tolerance: 0.05
     use_as_test: true
-  - description: "Buoyancy tank final current demand (A_c=1021, i_c=0.220, f_c=0.20)"
+  - description: "calc-008 buoyancy tank final (A_c=1021, i_c=0.220 project value, f_c=0.20)"
+    source: "calc-008 Table 5.1 (doc: 44.92 A)"
+    derivation: "1021 * 0.220 * 0.20 = 44.924 A"
     inputs:
       surface_area_m2: 1021.0
       current_density_A_m2: 0.220
       breakdown_factor: 0.20
     outputs:
       current_demand_A: 44.92
+    tolerance: 0.05
     use_as_test: true
-  - description: "Foundation buried bare metal current demand (A_c=152.7, i_c=0.020, f_c=1.0)"
+  - description: "calc-008 buried exposed zone, bare (A_c=152.7, i_c=0.020 = B401 Sec. 6.3 buried value, f_c=1.0)"
+    source: "calc-008 Table 5.1 'Buried exposed (mudline to -2 m)' (doc: 3.05 A)"
+    derivation: "152.7 * 0.020 * 1.0 = 3.054 A"
     inputs:
       surface_area_m2: 152.7
       current_density_A_m2: 0.020
       breakdown_factor: 1.0
     outputs:
       current_demand_A: 3.054
+    tolerance: 0.01
     use_as_test: true
 assumptions:
-  - "Uniform current density across entire surface area"
-  - "Breakdown factor accounts for coating degradation at the given time point"
+  - "Uniform current density across the surface area"
+  - "Breakdown factor is the value at the phase considered (initial / mean / final)"
 references:
-  - "DNV-RP-B401 (2005/2017), Section 7.4.1, Eq 1"
-  - "Hybrid riser CP design report, Section 5.1.1"
+  - "DNV-RP-B401 (2005 with 2008 amendments), Sec. 7.4.1 Eq. 1 and Table 10-1"
+  - "docs/domains/cathodic_protection/examples/calc-008-dnv-b401-2005-slhr-deepwater.md"

@@ -11,6 +11,21 @@ older OrcaWave/OrcaFlex reconciliation context. This repo-wide map is the
 canonical active routing surface for digitalmodel and links that slice instead
 of duplicating its detailed issue history.
 
+## OrcaFlex execution and model qualification
+
+Follow the [ecosystem methodology and execution runbook](https://github.com/vamseeachanta/workspace-hub/blob/chore/orcaflex-execution-plan/docs/solver/orcaflex-execution-runbook.html)
+and the [qualified model-family strategy](https://github.com/vamseeachanta/workspace-hub/blob/chore/orcaflex-execution-plan/docs/reports/2026-09-09-orcaflex-fea-strategy.html).
+These links intentionally target the reviewed documentation branch while its PR is
+draft; switch them to the merged revision when it lands. The runbook distinguishes
+implemented capability from planned deployment controls.
+
+The first repair is tracked by [the batch reliability plan](../plans/2026-09-09-issue-2051-batch-reliability.md)
+for [#1564](https://github.com/vamseeachanta/digitalmodel/issues/1564) and
+[#2051](https://github.com/vamseeachanta/digitalmodel/issues/2051). Keep schema validity,
+native load/run proof, numerical qualification and engineering approval separate.
+Resolve issues using their full repository-qualified URL; solver code remains here,
+licensed execution transport outside this repo, and cross-repository deployment in workspace-hub.
+
 ## Source / Tests / Docs Routing
 
 | Module | Source | Tests | Docs | Issue routing | Key dependencies |
@@ -18,7 +33,7 @@ of duplicating its detailed issue history.
 | `ansys` | `src/digitalmodel/ansys/` | `tests/ansys/` | `docs/domains/ansys/` | ANSYS automation, APDL/WBJN parsing, pressure-vessel and weld checks | ANSYS file formats, engineering standards |
 | `asset_integrity` | `src/digitalmodel/asset_integrity/` | `tests/asset_integrity/` | `docs/domains/README.md` | Fitness-for-service, API 579, BS 7910, RSF, fracture mechanics | NumPy, pandas, matplotlib |
 | `benchmarks` | `src/digitalmodel/benchmarks/` | `tests/benchmarks/` | `docs/domains/README.md` | Benchmark inventory, model comparison, reproducibility metrics | pytest-benchmark |
-| `cathodic_protection` | `src/digitalmodel/cathodic_protection/` | `tests/cathodic_protection/` | `docs/domains/cathodic_protection/` | CP design, anode sizing, coating/current demand, worked examples | DNV/API/ISO CP standards |
+| `cathodic_protection` | `src/digitalmodel/cathodic_protection/` (engine entry: `engine_adapter.run_cathodic_protection`, `basename: cathodic_protection`; keys `DNV_RP_B401_offshore`, `DNV_RP_F103` (edition from `design_data.edition`, default 2019), `ABS_gn_ships_2018`, `ABS_gn_offshore_2018`; deprecated: `DNV_RP_F103_2010` (alias pinned to edition 2010) and the `*_legacy` keys) | `tests/cathodic_protection/` (adapter regression inputs in `tests/fixtures/cathodic_protection/workflow_inputs/`), `tests/specialized/cathodic_protection/` | `docs/domains/cathodic_protection/` | CP design, anode sizing, coating/current demand, PASS/FAIL adequacy status; no demo workflows (retired 2026-09-25, D5) | DNV/API/ISO CP standards |
 | `citations` | `src/digitalmodel/citations/` | `tests/citations/` | `docs/domains/README.md` | Standards citation schema and registry support | PyYAML |
 | `data_models` | `src/digitalmodel/data_models/` | `tests/` | `docs/domains/README.md` | Shared engineering data structures and curves | pydantic/dataclasses |
 | `data_systems` | `src/digitalmodel/data_systems/` | `tests/data_systems/` | `docs/domains/data_systems/` | Data catalogs, config loading, procurement/scraping support | pandas, SQL/file formats |

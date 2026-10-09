@@ -8,6 +8,11 @@ discipline: cathodic_protection
 
 # Floating Storage Terminal Hull — ABS GN Ships 2017 Cathodic Protection Specification
 
+> The narrative tables retain the abstracted source calculation record. The executable
+> block identifies the 1,350 mA/m2 bare-equivalent density as a project value outside
+> Table 3. Owner decision 2026-10-01 accepts the route's three recorded interpretations;
+> the rebuilt result is `client-use-with-eor-check`.
+
 ## Source
 Standard: ABS, Guidance Notes on Cathodic Protection of Ships, December 2017 (primary);
            DNV-RP-B401, October 2010 amended April 2011 (used for resistivity chart, Annex A
@@ -31,7 +36,7 @@ The primary calculation is in Section 4.4 (anode calculations, ABS method) and S
 from DNV-RP-B401 (Oct 2010 amended Apr 2011) Annex A Figure 10-1 (seawater resistivity vs
 temperature for 30–40 ppt salinity) — this cross-standard usage is noted in Gaps Found.
 
-Appendix D of the source document is titled "CTR2-CP Calculation RB1" and contains the
+Appendix D of the source document is titled "<contract>-CP Calculation RB1" and contains the
 same ABS calculation spreadsheet (4 pages). This is the same calculation as E1/E2 Excel
 workbooks already abstracted in calc-001-abs-gn-ships-2017-fst-hull.md. The Appendix D
 values are identical to Section 4.4 results. Do not re-abstract Appendix D; see calc-001
@@ -120,7 +125,7 @@ Note: fcf formula: (1 + 0.01/100)^2 × (1 + 0.01)^(5-2) = 1.0001^2 × 1.01^3 ≈
 ### Anode Weight Calculation
 | Parameter | Value | Unit | Reference |
 |-----------|-------|------|-----------|
-| Anode current capacity, Q | 2 500 | A·h/kg | ABS §2, Table 4 |
+| Anode current capacity, Q | 2 500 | A·h/kg | ABS §3/4.3, Table 4 |
 | Anode utilisation factor (u) | 0.825 | — | ABS §2, §7.3 |
 | Total net anode weight required (NWm, based on Icm) | 4 713 | kg | Icm × tf × 8760 / (Q × u) |
 | Total net anode weight required | 4.7 | mt | — |
@@ -210,6 +215,14 @@ Note: fcf formula: (1 + 0.01/100)^2 × (1 + 0.01)^(5-2) = 1.0001^2 × 1.01^3 ≈
 | Total gross weight of anodes | 14.4 | mt | — |
 | Anode life (calculated) | 7.1 | yr | > 5 yr design life: pass |
 
+**Reproduction note (rebuilt `ABS_gn_ships_2018` route):** with the explicit project
+bare-equivalent density and layout inputs, the code returns 145.5 / 221.9 / 298.3 A,
+4 712.2 kg required mass, 0.4194 / 0.3808 ohm initial/final resistance, and 460 selected
+anodes. These reproduce the displayed source values within rounding. The 1,350 mA/m2
+bare-equivalent density is outside Table 3. Owner decision 2026-10-01 accepts the
+arithmetic-mean coating treatment and depleted long-flush resistance reading. The derived
+core area remains a required project input subject to the deliverable's EOR check.
+
 ## Anode Bill of Materials (Section 4.5)
 ```
 QTY    DESCRIPTION                                             TOTAL WEIGHT
@@ -229,7 +242,7 @@ QTY    DESCRIPTION                                             TOTAL WEIGHT
 - Monitoring requirements per ABS GN Ships 2017 guidelines
 
 ## Linkage to calc-001
-Appendix D of the source document ("CTR2-CP Calculation RB1") contains the same ABS
+Appendix D of the source document ("<contract>-CP Calculation RB1") contains the same ABS
 aluminium anode spreadsheet. The basic design data (T=14°C, S=24.5 ppt, psw=0.325 ohm.m,
 Ac=10 778 m², tf=5 yr) matches this section 4.4 exactly. calc-001 was abstracted from the
 same underlying Excel workbook (E1/E2 pair). The only numeric difference between calc-001
@@ -239,12 +252,14 @@ here the design resistivity is 0.325 ohm.m (24.5 ppt at 14°C from DNV B401 Fig 
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
 cfg = {
     "inputs": {
         "calculation_type": "ABS_gn_ships_2018",
-        # ABS_gn_ships_2018 is the existing route in cathodic_protection.py.
-        # Source standard is ABS GN Ships December 2017; route name reflects 2018 offshore
-        # publication which uses the same methodology.
+        # ABS_gn_ships_2018 is the existing ABS ships route in cathodic_protection.py.
+        # The source standard is the ABS Guidance Notes on Cathodic Protection of Ships,
+        # December 2017; the router key is misnamed for that edition and is not renamed here.
         "design_data": {
             "design_life": 5,                    # years
             "seawater_max_temperature": 14,      # deg C (max observed)
@@ -259,11 +274,13 @@ cfg = {
             "area_coverage": 100.0,                # % coated
             "coating_initial_breakdown_factor": 1.0,    # % (High durability, ABS Table 4)
             "coating_initial_breakdown_duration": 2.0,  # years
-            "coating_yearly_breakdown_factor": 1.0,     # %/yr (High durability)
             "coating_breakdown_factor_max": 2.05,  # % final (5-yr, High durability)
         },
         "design_current": {
-            "coated_steel_mA_m2": 13.5,            # mA/m² (ABS §2, Table 3)
+            "dynamic_bare_steel_mA_m2": 1350.0,  # project value; outside Table 3
+            "static_bare_steel_mA_m2": 1350.0,
+            "dynamic_time_fraction": 0.5,
+            "coated_steel_mA_m2": 13.5,            # project initial coated density
             "uncoated_steel_mA_m2": 200.0,         # mA/m²
         },
         "anode": {
@@ -271,8 +288,10 @@ cfg = {
             "protection_potential": 0.8,           # V (magnitude, Ag/AgCl)
             "closed_circuit_anode_potential": -1.09, # V vs Ag/AgCl
             "anode_Utilisation_factor": 0.825,
+            "anode_density": 2750.0,
             "physical_properties": {
                 "net_weight": 29.0,                # kg
+                "core_cross_section_m2": 0.01625,
             },
             "geometry": {
                 "type": "long_flush",
@@ -280,17 +299,33 @@ cfg = {
                 "width_m": 0.125,                  # m
             },
         },
+        "layout": {
+            "actual_max_spacing_m": 8.0, "selected_locations": 230,
+            "anodes_per_location": 2, "high_current_or_low_resistivity": False,
+            "mechanical_damage_risk": False, "uniform_distribution_confirmed": True,
+            "bilge_damage_avoided": True, "bilge_keel_fitted": False,
+        },
     }
 }
+
+result = CathodicProtection().router(cfg)["cathodic_protection"]
+demand = result["current_demand_A"]["totals"]
+print("Ici / Icm / Icf (A): {:.1f} / {:.1f} / {:.1f}".format(
+    demand["initial"], demand["mean"], demand["final"]))
+print("Total net anode mass (kg): {:.0f}".format(result["anode_requirements"]["total_mass_kg"]))
+print("Anode count (mass basis): {:.1f}".format(result["anode_requirements"]["anode_count"]))
+print("Rai / Raf (ohm): {:.4f} / {:.4f}".format(
+    result["anode_performance"]["resistance_ohm"]["initial"],
+    result["anode_performance"]["resistance_ohm"]["final"]))
 ```
 
 ## Code Validation
 
 ```python
-# Run: CathodicProtection().router(cfg)
-# Route: ABS_gn_ships_2018 (existing)
+# Route: ABS_gn_ships_2018 (existing). The snippet above runs it; the code's current values
+# are in the Reproduction note under "Calculation Results".
 #
-# Expected results (5-yr, 0.325 ohm.m, 10 778 m², High durability coating):
+# Source results (5-yr, 0.325 ohm.m, 10 778 m², High durability coating):
 #   Initial coating breakdown factor (fci):     1.0%
 #   Final coating breakdown factor (fcf):       2.05%
 #   Mean coating breakdown factor (fcm):        ~1.53%
@@ -313,9 +348,6 @@ cfg = {
 #   Anode resistance (final, Raf):              0.3807 ohm
 #   Individual anode output final (Iaof):       0.788 A
 #   Total final current output (460 anodes):    329 A  (> 298 A: pass)
-#
-# NOTE: The cfg key names above must match the ABS_gn_ships_2018() method signature
-# in cathodic_protection.py. Cross-check against test_abs_cathodic_protection_calcs.py.
 ```
 
 ## Gaps Found
@@ -324,13 +356,13 @@ cfg = {
   in the router — the ABS route currently expects resistivity as a direct input, which is
   correct here.
 - The anode current capacity (A·h/kg) for the specific aluminium-zinc-indium-cadmium alloy
-  is 2 500 A·h/kg per ABS Section 7, Subsection 2, Table 4. The existing test uses an
+  is 2 500 A·h/kg per ABS Section 3/4.3, Table 4. The existing test uses an
   implicit value via the ABS table look-up; confirm cathodic_protection.py uses 2 500 A·h/kg
   for aluminium alloy (not 2 000 A·h/kg used in the DNV B401 example calc).
-- The ABS coating breakdown model (multiplicative annual-rate per ABS §2, Table 4) is
-  distinct from the DNV linear model. Confirm cathodic_protection.py implements the
-  ABS multiplicative formula: fcf = (1 + fci/100)^di × (1 + fc/100)^(tf - di).
-- Anode current capacity (Q = 2 500 A·h/kg) is referenced to ABS §2, Table 4, but the
+- ABS Table 4 gives initial and annual percentages but no time-development equation. Owner
+  decision 2026-10-01 accepts the arithmetic mean of the selected project initial and
+  maximum factors for this route.
+- Anode current capacity (Q = 2 500 A·h/kg) is referenced to ABS §3/4.3, Table 4, but the
   exact alloy composition (Al-Zn-In-Cd) is not in the ABS table — it matches the generic
   aluminium alloy capacity. Confirm with supplier datasheet if a non-standard value applies.
 - The specification covers the external hull only. Mooring jacket CP is not in scope and
@@ -341,5 +373,5 @@ cfg = {
 - Anode placement drawings (separate deliverables) contain the final anode distribution map;
   the 6–8 m spacing rule from ABS §3 §5.2 is applied but exact positions are not reproduced
   here.
-- Appendix D (CTR2-CP Calculation RB1) is identical to the E1/E2 Excel workbooks abstracted
+- Appendix D (<contract>-CP Calculation RB1) is identical to the E1/E2 Excel workbooks abstracted
   in calc-001. No additional engineering values found in Appendix D beyond Section 4.4.

@@ -248,7 +248,23 @@ def quick_fatigue_analysis(stress_time_series,
     -------
     dict
         Quick analysis results including damage, life, and cycles
+
+    Raises
+    ------
+    NonConservativeCountingError
+        Always, pending issue #3839. This function constructs its own
+        ``structural.fatigue.rainflow.RainflowCounter`` (``struct_fatigue``),
+        which extracts a maximum stress range below the signal's peak-to-valley
+        span, so the accumulated damage is understated. It does not route
+        through ``FatigueAnalysisEngine``, so it needs its own refusal.
     """
+    from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
+
+    refuse_damage_calculation(
+        "struct_fatigue",
+        "structural.fatigue.quick_fatigue_analysis",
+    )
+
     import numpy as np
 
     # Get S-N curve

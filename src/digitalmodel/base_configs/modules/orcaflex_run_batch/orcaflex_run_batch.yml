@@ -1,0 +1,20 @@
+# Defaults mirror workflows/orcaflex_run_batch.py; user input takes precedence.
+basename: orcaflex_run_batch
+
+orcaflex_run_batch:
+  models: {}
+  variants: {}
+  analysis:
+    type: both
+  run_batch:
+    workers: null
+    mock: false
+    save_sim: true
+    output_dir: results
+    work_dir: batch_runs
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

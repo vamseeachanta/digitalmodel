@@ -10,9 +10,6 @@ from digitalmodel.cathodic_protection.fuel_system_cp import (
     COATING_BREAKDOWN_FACTOR,
     CoatingType,
     FuelPipeSegment,
-    ImpressedCurrentGroundBed,
-    RectifierOutput,
-    check_protection,
     current_demand_segment,
     design_ground_bed,
     design_rectifier,
@@ -232,32 +229,12 @@ class TestDesignRectifier:
         )
 
 
-# ---- Protection check ----
-
-
-class TestCheckProtection:
-    def test_adequate_protection(self):
-        gb = design_ground_bed(0.5, soil_resistivity_ohm_m=50.0)
-        rect = design_rectifier(0.5, gb, structure_resistance_ohm=0.5)
-        result = check_protection(rect, gb, structure_resistance_ohm=0.5)
-        assert "pass" in result
-        assert "potential_v_cse" in result
-        assert isinstance(result["pass"], bool)
-
-    def test_protection_criterion_value(self):
-        """Criterion must be -0.85 V CSE."""
-        gb = design_ground_bed(0.5, soil_resistivity_ohm_m=50.0)
-        rect = design_rectifier(0.5, gb, structure_resistance_ohm=0.5)
-        result = check_protection(rect, gb, structure_resistance_ohm=0.5)
-        assert result["criterion_v_cse"] == pytest.approx(-0.85, rel=1e-6)
-
-
 # ---- End-to-end integration ----
 
 
 class TestEndToEnd:
     def test_full_fuel_system_design(self):
-        """End-to-end: segments -> current demand -> ground bed -> rectifier -> check."""
+        """End-to-end: segments -> current demand -> ground bed -> rectifier."""
         segments = [
             FuelPipeSegment(
                 segment_id="SUPPLY",
@@ -284,5 +261,14 @@ class TestEndToEnd:
         assert rect.dc_voltage_v > 0
         assert rect.power_w > 0
 
-        result = check_protection(rect, gb, structure_resistance_ohm=0.5)
-        assert isinstance(result["pass"], bool)
+
+
+def test_check_protection_removed():
+    """Issue #2247: the non-physical -0.55 - I*R protection check is deleted.
+
+    Protection is verified by survey (cp_survey.check_potential_criteria).
+    """
+    import digitalmodel.cathodic_protection.fuel_system_cp as fs
+
+    assert not hasattr(fs, "check_protection")
+    assert "cp_survey" in (fs.__doc__ or "")

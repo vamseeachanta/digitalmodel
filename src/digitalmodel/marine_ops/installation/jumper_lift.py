@@ -1,8 +1,8 @@
 """
-Jumper Lift Analysis – Ballymore Manifold-to-PLET Jumper V2
+Jumper Lift Analysis – GoM tieback Manifold-to-PLET Jumper V2
 
 Converts the engineering workbook
-  "Jumper_Input_Ballymore_Manifold-PLET V2.xlsx"
+  "Jumper_Input_GoM tieback_Manifold-PLET V2.xlsx"
 into a self-contained Python calculation module.
 
 Covers:
@@ -41,12 +41,12 @@ GRAVITY_M_S2: float = 9.81              # gravitational acceleration, m/s²
 
 
 # ──────────────────────────────────────────────────────────────────────
-#  JUMPER CONFIGURATIONS – Both Ballymore jumper models
+#  JUMPER CONFIGURATIONS – Both GoM tieback jumper models
 # ──────────────────────────────────────────────────────────────────────
 
 @dataclass
 class JumperConfig:
-    """Configuration for a specific Ballymore jumper model.
+    """Configuration for a specific GoM tieback jumper model.
 
     Supports both MF-PLET (Manifold-to-PLET) and PLET-PLEM (PLET-to-PLEM)
     jumper analysis using the same calculation pipeline.
@@ -54,8 +54,8 @@ class JumperConfig:
     Source: Corresponding Excel workbooks or spec.yml overrides.
     """
     # Identification
-    name: str = "ballymore_mf_plet"
-    description: str = "Ballymore Manifold-to-PLET Jumper"
+    name: str = "gom_tieback_mf_plet"
+    description: str = "GoM tieback Manifold-to-PLET Jumper"
 
     # Pipe properties (same for both jumpers – 10.75" OD jumper pipe)
     pipe_od_inch: float = 10.75
@@ -124,10 +124,10 @@ class JumperConfig:
 
 
 KNOWN_JUMPER_CONFIGS: Dict[str, JumperConfig] = {
-    "ballymore_mf_plet": JumperConfig(
-        name="ballymore_mf_plet",
-        description="Ballymore Manifold-to-PLET Jumper",
-        # Segment lengths from Jumper_Input_Ballymore_Manifold-PLET V2.xlsx
+    "gom_tieback_mf_plet": JumperConfig(
+        name="gom_tieback_mf_plet",
+        description="GoM tieback Manifold-to-PLET Jumper",
+        # Segment lengths from Jumper_Input_GoM tieback_Manifold-PLET V2.xlsx
         seg_a_inch=336.0,
         seg_b_inch=160.0,
         seg_c_inch=525.0,
@@ -145,12 +145,12 @@ KNOWN_JUMPER_CONFIGS: Dict[str, JumperConfig] = {
         kit3_wi_insul_kg=6134.0,
         kit4_wi_insul_kg=8730.0,
     ),
-    "ballymore_plet_plem": JumperConfig(
-        name="ballymore_plet_plem",
-        description="Ballymore PLET-to-PLEM Jumper",
-        # PLET-PLEM segment lengths from SZ_Ballymore_Jumper_MF.xlsm
+    "gom_tieback_plet_plem": JumperConfig(
+        name="gom_tieback_plet_plem",
+        description="GoM tieback PLET-to-PLEM Jumper",
+        # PLET-PLEM segment lengths from SZ_GoM tieback_Jumper_MF.xlsm
         # (same pipe, different jumper geometry and AHC offsets)
-        # TODO: Verify these from the SZ_Ballymore_Jumper_MF.xlsm workbook
+        # TODO: Verify these from the SZ_GoM tieback_Jumper_MF.xlsm workbook
         # For now, use MF-PLET as baseline (requires workbook conversion)
         seg_a_inch=336.0,
         seg_b_inch=160.0,
@@ -1203,13 +1203,13 @@ def run_jumper_analysis(config: JumperConfig | None = None) -> Dict:
       5. return consolidated results dict for downstream orcaflex model gen
 
     Args:
-        config: JumperConfig for specific jumper. Defaults to ballymore_mf_plet.
+        config: JumperConfig for specific jumper. Defaults to gom_tieback_mf_plet.
 
     Returns:
         dict with all calculation results plus the config used.
     """
     if config is None:
-        config = KNOWN_JUMPER_CONFIGS["ballymore_mf_plet"]
+        config = KNOWN_JUMPER_CONFIGS["gom_tieback_mf_plet"]
 
     # Pipe properties (stage 2: compute) — built FROM the config so that
     # spec.yml overrides (pipe_od_inch, pipe_bend_radius_inch, buoyancy_*,
@@ -1292,7 +1292,7 @@ def run_jumper_analysis(config: JumperConfig | None = None) -> Dict:
 
 if __name__ == "__main__":
     results = run_all()
-    print("=== Jumper Lift Analysis — Ballymore Manifold-to-PLET ===")
+    print("=== Jumper Lift Analysis — GoM tieback Manifold-to-PLET ===")
     print()
 
     pp = results["pipe_properties"]

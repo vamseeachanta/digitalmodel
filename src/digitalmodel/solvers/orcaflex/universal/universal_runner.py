@@ -18,6 +18,8 @@ import time
 from digitalmodel.solvers.orcaflex.core.exceptions import LicenseError
 from digitalmodel.solvers.orcaflex.core.mock_artifacts import write_mock_artifact
 
+from digitalmodel.solvers.orcaflex.run_state import check_simulation, check_statics
+
 
 def _mock_mode_requested() -> bool:
     """Whether an unlicensed run was explicitly opted into via the environment.
@@ -433,11 +435,15 @@ class UniversalOrcaFlexRunner:
                 if analysis_type in ['static', 'both']:
                     logger.debug(f"Running static analysis for {model_file.name}")
                     model.CalculateStatics()
-                
+                    # #3838: the state is the only signal of a diverged solve,
+                    # and it is read before the .sim is saved as a success.
+                    check_statics(model, context=str(model_file))
+
                 if analysis_type in ['dynamic', 'both']:
                     logger.debug(f"Running dynamic simulation for {model_file.name}")
                     # Run the simulation
                     model.RunSimulation()
+                    check_simulation(model, context=str(model_file))
                 
                 # Save simulation
                 sim_file = output_dir / f"{model_file.stem}.sim"

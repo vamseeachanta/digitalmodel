@@ -19,6 +19,13 @@ class WinchBuilder(BaseBuilder):
     stage-controlled winch.
     """
 
+    # Object sections emitted by build(); read by
+    # writers.basefile.object_section_order() to derive a section
+    # dependency order from this builder's registered order.
+    _sections = (
+        "Winches",
+    )
+
     def should_generate(self) -> bool:
         """Only generate for S-lay models with tensioner defined."""
         return (

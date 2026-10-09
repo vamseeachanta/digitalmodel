@@ -34,7 +34,7 @@ import logging
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -50,16 +50,18 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Environment-adjusted S-N curves
 # ---------------------------------------------------------------------------
-# DNV-RP-C203 (2016) Table 2-1 (in air) and Table 2-2 (seawater+CP).
-# Seawater free-corrosion: same m, no fatigue limit (curve continues).
-# Reference thickness: 25 mm.
+# DNV-RP-C203 (2011) S-N classes from digitalmodel.fatigue.c203_sn_tables
+# (#2165): seawater with CP, Table 2-2 (m1 above the 1e6 knee, m2 = 5 below
+# it, no cut-off for variable-amplitude loading); free corrosion, Table 2-3
+# (single slope m = 3, no fatigue limit). Reference thickness: 25 mm.
 
 def _dnv_seawater_cp(curve_class: str) -> PowerLawSNCurve:
     """
-    DNV-RP-C203 seawater + cathodic protection curve.
+    DNV-RP-C203 (2011) seawater with cathodic protection curve, Table 2-2.
 
-    Uses reduced A coefficient from DNV-RP-C203 Table 2-2.  The fatigue limit
-    is maintained (CP suppresses corrosion below CAFL).
+    Bilinear: log a1 (CP) with m1 above the 1e6-cycle knee, the in-air second
+    segment (log a2, m2 = 5) below it, and no cut-off. The tabulated fatigue
+    limit at 1e7 cycles is kept for reporting only.
 
     Parameters
     ----------
@@ -70,33 +72,16 @@ def _dnv_seawater_cp(curve_class: str) -> PowerLawSNCurve:
     -------
     PowerLawSNCurve
     """
-    # Seawater+CP factors vs air from DNV-RP-C203 Table 2-2.
-    # The correction reduces log(A) by ~0.06 log-units (factor 0.87 on cycles).
-    SW_CP_FACTORS: Dict[str, float] = {
-        'B1': 0.87, 'B2': 0.87,
-        'C': 0.87, 'C1': 0.87, 'C2': 0.87,
-        'D': 0.87, 'E': 0.87, 'F': 0.87, 'F1': 0.87, 'F3': 0.87,
-        'G': 0.87, 'W1': 0.87, 'W2': 0.87, 'W3': 0.87,
-    }
-    base = StandardSNCurves.get_curve('DNV', curve_class)
-    factor = SW_CP_FACTORS.get(curve_class, 0.87)
-    return PowerLawSNCurve(
-        name=f"DNV-{curve_class}-SwCP",
-        A=base.A * factor,
-        m=base.m,
-        fatigue_limit=base.fatigue_limit,  # CAFL retained under CP
-        cutoff_cycles=base.cutoff_cycles,
-        material=base.material,
-    )
+    curve = StandardSNCurves.get_dnv_c203_curve(curve_class, "seawater_cp")
+    curve.name = f"DNV-{curve_class}-SwCP"
+    return curve
 
 
 def _dnv_seawater_free(curve_class: str) -> PowerLawSNCurve:
     """
-    DNV-RP-C203 seawater free-corrosion curve.
+    DNV-RP-C203 (2011) seawater free-corrosion curve, Table 2-3.
 
-    No cathodic protection: fatigue limit removed and A reduced further.
-    DNV-RP-C203 Cl. 2.4.3: use air curve parameters but remove fatigue limit;
-    A factor ≈ 0.72 vs air.
+    Single slope m = 3 at every cycle count; no knee and no fatigue limit.
 
     Parameters
     ----------
@@ -107,15 +92,9 @@ def _dnv_seawater_free(curve_class: str) -> PowerLawSNCurve:
     -------
     PowerLawSNCurve
     """
-    base = StandardSNCurves.get_curve('DNV', curve_class)
-    return PowerLawSNCurve(
-        name=f"DNV-{curve_class}-SwFree",
-        A=base.A * 0.72,
-        m=base.m,
-        fatigue_limit=0.0,       # No CAFL in free-corrosion environment
-        cutoff_cycles=1e20,      # No cycle cutoff
-        material=base.material,
-    )
+    curve = StandardSNCurves.get_dnv_c203_curve(curve_class, "free_corrosion")
+    curve.name = f"DNV-{curve_class}-SwFree"
+    return curve
 
 
 def _chain_seawater_cp() -> PowerLawSNCurve:
@@ -273,7 +252,8 @@ def pipeline_girth_weld(
             "Palmgren-Miner linear damage accumulation",
         ],
         references=[
-            "DNV-RP-C203 (2016) Table 2-2 — seawater+CP S-N curves",
+            "DNV-RP-C203 (2011) Table 2-2 — seawater+CP S-N curves, bilinear, "
+            "no cut-off for variable-amplitude loading",
             "DNVGL-ST-F101 (2017) Cl. 6.7 — DFF for seabed pipelines",
             "ISO 13628-7 — girth weld SCF guidance",
         ],
@@ -332,11 +312,11 @@ def scr_touchdown(
             "Weibull stress distribution: h=1.1, scale=60 MPa",
             "5 × 10⁶ cycles/year (wave + current combined)",
             "Seawater free-corrosion — no cathodic protection at TDP",
-            "Fatigue limit removed per DNV-RP-C203 Cl. 2.4.3",
+            "No fatigue limit: DNV-RP-C203 (2011) Table 2-3, m = 3",
             "F1 class captures the groove detail at touchdown",
         ],
         references=[
-            "DNV-RP-C203 (2016) Cl. 2.4.3 — seawater free-corrosion guidance",
+            "DNV-RP-C203 (2011) Table 2-3 — seawater free-corrosion S-N curves",
             "DNVGL-ST-F201 (2018) Cl. 5.4.4 — SCR DFF requirements",
             "OTC 20228 — SCR touchdown fatigue analysis methodology",
         ],

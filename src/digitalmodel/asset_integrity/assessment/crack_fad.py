@@ -1,12 +1,20 @@
-# ABOUTME: Level-2 FAD assessment of crack-like flaws — BS 7910 Option 1 /
-# ABOUTME: API 579-1 Part 9 Level 2: Kr-Lr point vs the failure envelope.
+# ABOUTME: Level-2 FAD assessment of crack-like flaws: the repo's single BS 7910
+# ABOUTME: Option 1 curve, the API 579 Level 2 (Level 2A) curve, Kr-Lr vs envelope.
 """Crack-like flaw assessment on the Failure Assessment Diagram (#1270).
 
 Activates the fracture tier behind :mod:`level3_escalation`: a surface
 (semi-elliptical) flaw in a plate-like section is assessed as a single point
-``(Lr, Kr)`` against the BS 7910:2013 **Option 1** failure-assessment curve
-(equivalent to the API 579-1 Part 9 Level 2 FAD; the Level 2A ≡ Level 2
-equivalence is the published cross-standard result).
+``(Lr, Kr)`` against the BS 7910:2013 **Option 1** failure-assessment curve.
+The API 579-1/ASME FFS-1 Part 9 Level 2 curve (the BS 7910 Level 2A generic
+curve) is a *different* curve and is provided alongside as
+:func:`fad_curve_api579_level2`; the two are not equivalent (at Lr = 1.721
+the Level 2 curve gives 0.1756 for any material while Option 1 gives a
+material-dependent value around 0.16-0.17).
+
+This module holds the repo's **only** implementation of the Option 1 curve
+(#2160): ``asset_integrity/common/fad.py`` and
+``asset_integrity/common/BS7910_critical_flaw_limits.py`` delegate to
+:func:`fad_curve_option1`.
 
 Pieces, each anchored to its published source:
 
@@ -14,10 +22,15 @@ Pieces, each anchored to its published source:
   ``f(Lr) = (1 + 0.5 Lr^2)^-0.5 * (0.3 + 0.7 exp(-mu Lr^6))`` for Lr <= 1,
   ``f(1) * Lr^((N-1)/(2N))`` for 1 < Lr <= Lr_max, with
   ``mu = min(0.001 E/sigma_y, 0.6)``, ``N = 0.3 (1 - sigma_y/sigma_u)`` and
-  cutoff ``Lr_max = (sigma_y + sigma_u) / (2 sigma_y)``.  Numerically
-  cross-checked against the repo's legacy implementation
-  (``asset_integrity/common/fad.py``, used in prior class-society-reviewed
-  work) by the test suite.
+  cutoff ``Lr_max = (sigma_y + sigma_u) / (2 sigma_y)``.  Pinned to
+  hand-computed closed-form values in ``tests/asset_integrity/
+  test_fad_curves.py``; the legacy table builder in
+  ``asset_integrity/common/fad.py`` (used in prior class-society-reviewed
+  work) now calls this function.
+- **API 579 Level 2 curve** — API 579-1/ASME FFS-1 Part 9 Level 2 (2016)
+  = BS 7910 Level 2A generic curve = original R6 Option 1 curve:
+  ``f(Lr) = (1 - 0.14 Lr^2)(0.3 + 0.7 exp(-0.65 Lr^6))`` with the same
+  Lr_max cutoff (open-literature citation on the #2157 plan, PR #2194).
 - **Stress intensity** — Newman-Raju (1981) semi-elliptical surface flaw in a
   finite plate under membrane + bending stress (deepest point and surface
   point), the standard engineering K-solution for this geometry.
@@ -40,7 +53,8 @@ from typing import Optional
 
 
 # ---------------------------------------------------------------------------
-# FAD curve — BS 7910:2013 Option 1 (== API 579-1 Part 9 Level 2)
+# FAD curves — BS 7910:2013 Option 1 (canonical, single implementation) and
+# API 579-1 Part 9 Level 2 (BS 7910 Level 2A generic).  Not the same curve.
 # ---------------------------------------------------------------------------
 def lr_max(sigma_y_mpa: float, sigma_u_mpa: float) -> float:
     """Plastic-collapse cutoff Lr_max = flow/yield (BS 7910 Cl. 7.3.2)."""
@@ -52,7 +66,15 @@ def fad_curve_option1(
 ) -> float:
     """f(Lr) on the BS 7910:2013 Option 1 failure-assessment curve.
 
-    Returns 0.0 beyond the Lr_max cutoff.
+    BS 7910:2013+A1:2015 Clause 7.3.2 Option 1 (material-specific through
+    ``mu`` and ``N``); see the module docstring for the equation form.  This
+    is the repo's one implementation of the curve (#2160); the legacy
+    ``common.fad.FAD`` table and ``common.BS7910_critical_flaw_limits``
+    delegate here.  Not the API 579 Level 2 curve — that is
+    :func:`fad_curve_api579_level2`.
+
+    Returns 0.0 beyond the Lr_max cutoff.  ``e_mpa`` must be in the same
+    units as ``sigma_y_mpa`` (only the ratio enters).
     """
     if lr < 0:
         raise ValueError("Lr must be >= 0.")
@@ -65,6 +87,28 @@ def fad_curve_option1(
     f1 = (1.5) ** -0.5 * (0.3 + 0.7 * math.exp(-mu))
     n_exp = 0.3 * (1.0 - sigma_y_mpa / sigma_u_mpa)
     return f1 * lr ** ((n_exp - 1.0) / (2.0 * n_exp))
+
+
+def fad_curve_api579_level2(
+    lr: float, sigma_y_mpa: float, sigma_u_mpa: float
+) -> float:
+    """f(Lr) on the API 579-1/ASME FFS-1 Part 9 Level 2 failure-assessment curve.
+
+    ``f(Lr) = (1 - 0.14 Lr^2) (0.3 + 0.7 exp(-0.65 Lr^6))`` for
+    ``0 <= Lr <= Lr_max``; 0.0 beyond the same plastic-collapse cutoff as
+    :func:`fad_curve_option1`, ``Lr_max = (sigma_y + sigma_u) / (2 sigma_y)``.
+
+    Source: API 579-1/ASME FFS-1 Part 9 Level 2 (2016) = BS 7910 Level 2A
+    generic curve; also the original R6 Option 1 curve; see open-literature
+    citation on #2157 plan (PR #2194).  The curve itself is
+    material-independent (only the cutoff depends on sigma_y, sigma_u); it is
+    NOT the BS 7910:2013 Option 1 curve.
+    """
+    if lr < 0:
+        raise ValueError("Lr must be >= 0.")
+    if lr > lr_max(sigma_y_mpa, sigma_u_mpa):
+        return 0.0
+    return (1.0 - 0.14 * lr**2) * (0.3 + 0.7 * math.exp(-0.65 * lr**6))
 
 
 # ---------------------------------------------------------------------------

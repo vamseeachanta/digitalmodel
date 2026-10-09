@@ -7,7 +7,7 @@ Covers:
 - Correct Miner's rule damage computation
 - Utilisation ratio == damage
 - Life years relationship
-- Endurance-only (sub-fatigue-limit) input → zero damage
+- DNV input below the knee → m2 damage, no cut-off (#2165)
 - Various valid DNV S-N curves
 - API and BS design codes
 - Invalid sn_curve_name raises ValueError
@@ -182,12 +182,14 @@ class TestMinersRule:
     def test_single_constant_amplitude_damage(self):
         """
         For one stress range S with N cycles:
-        N_allowable = A * S^(-m) (DNV-D: A=5.73e11, m=3)
-        damage = N / N_allowable
+        N_allowable = A * S^(-m) (DNV-D in air, DNV-RP-C203 2011 Table 2-1:
+        A = 10^12.164, m = 3; #2165, was 5.73e11)
+        S = 100 MPa: N_allowable = 1.45881e12 / 1e6 = 1,458,814
+        damage = 10000 / 1,458,814 = 0.0068549
         """
         S = 100.0
         n = 10000.0
-        A = 5.73e11
+        A = 10**12.164
         m = 3.0
         N_allow = A * (S ** (-m))
         expected_damage = n / N_allow
@@ -220,29 +222,49 @@ class TestMinersRule:
 # 5. Below endurance limit → zero damage
 # ---------------------------------------------------------------------------
 
+
+# DNV-RP-C203 (2011) D in air, below the 52.63 MPa knee: N = 10^15.606 / S^5,
+# no cut-off for variable-amplitude loading (#2165 PR #2195 review r1 finding 2;
+# these bins used to give zero damage).
+def _n_d_air_m2(s):
+    return 10**15.606 / s**5
+
+
 class TestEnduranceLimit:
-    def test_stress_below_fatigue_limit_gives_zero_damage(self):
+    def test_stress_below_fatigue_limit_uses_m2(self):
         """
-        DNV-D fatigue limit ~ 52.63 MPa. Stress ranges below this give
-        infinite N_allowable → zero damage contribution.
+        DNV-D knee (tabulated limit) 52.63 MPa; below it the m2 = 5 segment.
+        1e6 cycles at 10, 20, 30 MPa:
+          N10 = 4.03645e15 / 1e5    = 4.03645e10 -> 2.47742e-5
+          N20 = 4.03645e15 / 3.2e6  = 1.26139e9  -> 7.92775e-4
+          N30 = 4.03645e15 / 2.43e7 = 1.66109e8  -> 6.02015e-3
+          D = 6.83769e-3 (was 0)
         """
         inp = FatigueAssessmentInput(
             stress_ranges=[10.0, 20.0, 30.0],
             cycle_counts=[1e6, 1e6, 1e6],
         )
         result = fatigue_assessment(inp)
-        assert result.utilisation_ratio == pytest.approx(0.0, abs=1e-12)
+        expected = sum(1e6 / _n_d_air_m2(s) for s in (10.0, 20.0, 30.0))
+        assert result.utilisation_ratio == pytest.approx(expected, rel=1e-12)
+        assert result.utilisation_ratio == pytest.approx(6.83769e-3, rel=1e-5)
 
-    def test_life_years_infinite_when_damage_zero(self):
+    def test_life_years_finite_below_the_knee(self):
+        """10 MPa x 1e6: D = 2.47742e-5, life = 1 / D = 40,364.5 (was inf)."""
         inp = FatigueAssessmentInput(
             stress_ranges=[10.0],
             cycle_counts=[1e6],
         )
         result = fatigue_assessment(inp)
-        assert math.isinf(result.life_years)
+        assert result.life_years == pytest.approx(_n_d_air_m2(10.0) / 1e6, rel=1e-12)
+        assert result.life_years == pytest.approx(40_364.5, abs=0.05)
 
     def test_mixed_below_and_above_limit(self):
-        """Only bins above the fatigue limit contribute to damage."""
+        """Bins below the knee add m2 damage.
+        100 MPa x 1000 (m1): 1000 / (10^12.164 / 1e6) = 1000 / 1.45881e6
+          = 6.85488e-4
+        20 MPa x 1e6 (m2): 7.92775e-4
+        total 1.47826e-3 (was 6.85488e-4)."""
         inp_above_only = FatigueAssessmentInput(
             stress_ranges=[100.0],
             cycle_counts=[1000.0],
@@ -253,8 +275,13 @@ class TestEnduranceLimit:
         )
         r1 = fatigue_assessment(inp_above_only)
         r2 = fatigue_assessment(inp_mixed)
-        # The 20 MPa bin (below CAFL) should add zero damage
-        assert r1.utilisation_ratio == pytest.approx(r2.utilisation_ratio, rel=1e-9)
+        assert r1.utilisation_ratio == pytest.approx(
+            1000.0 / (10**12.164 / 1e6), rel=1e-12
+        )
+        assert r2.utilisation_ratio == pytest.approx(
+            r1.utilisation_ratio + 1e6 / _n_d_air_m2(20.0), rel=1e-12
+        )
+        assert r2.utilisation_ratio == pytest.approx(1.47826e-3, rel=1e-5)
 
 
 # ---------------------------------------------------------------------------
@@ -464,8 +491,14 @@ class TestOffshoreScenario:
         assert math.isfinite(result.life_years)
         assert result.life_years > 0.0
 
-    def test_high_cycle_low_stress_safe_result(self):
-        """Many cycles but all below fatigue limit → infinite life."""
+    def test_high_cycle_low_stress_result(self):
+        """Many cycles, all below the knee: finite m2 damage (was zero).
+        1e8 cycles at 5, 10, 15 MPa on D (N = 10^15.606 / S^5):
+          N5  = 4.03645e15 / 3125   = 1.29166e12 -> 7.74196e-5
+          N10 = 4.03645e15 / 1e5    = 4.03645e10 -> 2.47742e-3
+          N15 = 4.03645e15 / 759375 = 5.31549e9  -> 1.88130e-2
+          D = 2.13678e-2, life = 46.80
+        """
         inp = FatigueAssessmentInput(
             stress_ranges=[5.0, 10.0, 15.0],
             cycle_counts=[1e8, 1e8, 1e8],
@@ -473,5 +506,7 @@ class TestOffshoreScenario:
             design_code="DNV",
         )
         result = fatigue_assessment(inp)
-        assert result.utilisation_ratio == pytest.approx(0.0, abs=1e-12)
-        assert math.isinf(result.life_years)
+        expected = sum(1e8 / _n_d_air_m2(s) for s in (5.0, 10.0, 15.0))
+        assert result.utilisation_ratio == pytest.approx(expected, rel=1e-12)
+        assert result.utilisation_ratio == pytest.approx(2.13678e-2, rel=1e-5)
+        assert result.life_years == pytest.approx(46.80, abs=5e-3)

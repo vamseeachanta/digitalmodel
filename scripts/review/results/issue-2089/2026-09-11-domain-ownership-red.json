@@ -1,0 +1,10 @@
+{
+  "expected": "Each GHS test module owned by solver-smoke",
+  "actual": {
+    "tests/solvers/ghs/test_boundaries.py": [],
+    "tests/solvers/ghs/test_comparison.py": [],
+    "tests/solvers/ghs/test_contracts.py": [],
+    "tests/solvers/ghs/test_runner.py": []
+  },
+  "expected_assertion": "FAIL before ownership registration"
+}

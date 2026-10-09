@@ -1,0 +1,60 @@
+{
+  "cli_exit": 0,
+  "summary": {
+    "workflow": "orcaflex_run_batch",
+    "total_cases": 1,
+    "completed": 1,
+    "failed": 0,
+    "workers": 1,
+    "host_cpu_count": 32,
+    "mock": false,
+    "analysis_type": "both",
+    "save_sim": true,
+    "wall_seconds_total": 1.806,
+    "parallel_speedup": 0.274,
+    "started_at_utc": "2026-09-10T00:18:49.586915+00:00",
+    "finished_at_utc": "2026-09-10T00:18:51.393374+00:00"
+  },
+  "verdict": {
+    "artifacts": [
+      "results/cases.csv",
+      "results/batch_summary.json"
+    ],
+    "host_kind": "licensed",
+    "issues": [],
+    "refused": false,
+    "solver_available": true,
+    "solver_identity": "OrcaFlex",
+    "verdict": "PASS",
+    "workflow": "orcaflex_run_batch"
+  },
+  "dll_version": "11.6c",
+  "simulation_state": "4",
+  "sample_count": 4,
+  "finite": true,
+  "effective_tension_min": 40.3575439453125,
+  "effective_tension_max": 44.8665771484375,
+  "reload_thread_count": 1,
+  "worker_thread_count": "executor default; not constrained by this repair",
+  "hashes": {
+    "native.yml": "440fa6295b09fd461f2e49554140824c7712d0a27e72a0f036e0eea75dff0594",
+    "input.yml": "ebf291b0cddc013d8cd400b8edaf78b3397c9fb34cc8b191eb0dead02a09072a",
+    "batch_runs\\sims\\case_0_native.sim": "c0e52faed7a12b1fb8d86384896e39f5c5195aafa9eea1749c7d87b2bc40fe54"
+  },
+  "source_base": "61e0c9c2",
+  "branch": "bugfix/orcaflex-batch-reliability",
+  "dependency_source_revision": "01e535cc76621578da4b0e12cd3ae3ca94e0d8b2",
+  "context": "local interactive Windows account; existing digitalmodel Python environment; source overrides; no queue",
+  "source_sha256": {
+    "src/digitalmodel/workflows/orcaflex_run_batch.py": "1699d800155bc62e7571c4864d4958e4af3df90d9b2a30a489a0e0e39e35356d",
+    "src/digitalmodel/solvers/orcaflex/yaml_utils.py": "b0e676a83e9237e5d0f359a8c37fc58b1d3331b54f0eaeb1a0e6e2b7d0176210",
+    "src/digitalmodel/base_configs/modules/orcaflex_run_batch/orcaflex_run_batch.yml": "3e46877d8a38288c2cef2b63c3c9b5ea8419d86639371a5bfa62564aeb689acf"
+  },
+  "limitations": [
+    "One generic line only; no engineering validation",
+    "Worker thread count uses existing executor default",
+    "No remote or scheduled-task acceptance",
+    "Input encoding UTF-8 with optional BOM; no legacy encoding qualification",
+    "Sidecar solver_identity is unversioned; DLL version independently recorded here"
+  ]
+}

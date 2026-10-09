@@ -1,0 +1,391 @@
+{
+  "reference_sha256": "2646c19c4f8a3c8abb396c6bba63156d9eb2c394eb04a87ee2a962492b0e0a22",
+  "source_sha256": "1fa7c6879eca05511a330dfd042fec39cdf21ba65f0f82b1653810b464d43be6",
+  "input_files": [
+    {
+      "path": "bundle/includes/01_general.yml",
+      "sha256": "2f415ce7bab630f8776de81553d95537b99965da8fa3474183d881c367af2992"
+    },
+    {
+      "path": "bundle/includes/03_environment.yml",
+      "sha256": "fb8a9cf756ed7d5bb0c4cec11a0ffdce260f686581a7fb41949e6bee2575f341"
+    },
+    {
+      "path": "bundle/includes/20_generic_objects.yml",
+      "sha256": "d21df42292305635fed616e5a673e924cf92702b6cf89a34db20d64b870115f9"
+    },
+    {
+      "path": "bundle/inputs/parameters.yml",
+      "sha256": "1ecba5ac7c79e14da438fa52ea1aa41db304279630ad6fe3cb2ff9821a943888"
+    },
+    {
+      "path": "bundle/master.yml",
+      "sha256": "fac020525bc6c1d6134effa62484242f6487b495bb2153382d0a09fce11a2e70"
+    },
+    {
+      "path": "source/spec.yml",
+      "sha256": "1fa7c6879eca05511a330dfd042fec39cdf21ba65f0f82b1653810b464d43be6"
+    }
+  ],
+  "reference_compatible": false,
+  "difference_count": 56,
+  "differences": [
+    {
+      "path": "/6DBuoys/0/InitialPosition/1",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/6DBuoys/0/Mass",
+      "kind": "value_or_type",
+      "reference_value_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+      "candidate_value_sha256": "fbd04e1aae9ce0b11a8946e2c9ac2619f7428a64d32d01eff61d809dcb70ee8e"
+    },
+    {
+      "path": "/ClumpTypes/0/Mass",
+      "kind": "value_or_type",
+      "reference_value_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+      "candidate_value_sha256": "d0ff5974b6aa52cf562bea5921840c032a860a91a3512f7fe8f768f6bbe005f6"
+    },
+    {
+      "path": "/Environment/CurrentApplyVerticalStretching",
+      "kind": "value_or_type",
+      "reference_value_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
+      "candidate_value_sha256": "b2cbc4e2e5545a6c43f6f8cc8f0e4766773fa6c83d238076313b6fa1e349caf6"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/0/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/0/1",
+      "kind": "value_or_type",
+      "reference_value_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+      "candidate_value_sha256": "d0ff5974b6aa52cf562bea5921840c032a860a91a3512f7fe8f768f6bbe005f6"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/1/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5",
+      "candidate_value_sha256": "f1e42019aecc858ffbcca7fddec511b761b474916fde37b1a6ff321a9b459330"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/2/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "f5ca38f748a1d6eaf726b8a42fb575c3c71f1864a8143301782de13da2d9202b",
+      "candidate_value_sha256": "585348dbd28810f9a34f57be46f000c5f9effab894d074713d93fe7ccfeb3b76"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/3/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "624b60c58c9d8bfb6ff1886c2fd605d2adeb6ea4da576068201b6c6958ce93f4",
+      "candidate_value_sha256": "26c9a96ce053a14dd88a71a4830c9cbed7e1fed7e3f3f8a0b0b6a58f3f0f02e6"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/4/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "d59eced1ded07f84c145592f65bdf854358e009c5cd705f5215bf18697fed103",
+      "candidate_value_sha256": "e15274dcfe2d0cb541e8aa23fef7aaaa116bfcbc937d35ffda9d4506c8d7e785"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/5/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "1a6562590ef19d1045d06c4055742d38288e9e6dcd71ccde5cee80f1d5a774eb",
+      "candidate_value_sha256": "f97a13577367c1d604d37c4d2b6242d7193c7ba04aa4d1a64c322b23b2f9bd2a"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/6/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "39fa9ec190eee7b6f4dff1100d6343e10918d044c75eac8f9e9a2596173f80c9",
+      "candidate_value_sha256": "db58b6c40698d7371bbcff35d085e1bac5fa439d0de31eb8e0da7c47d27cb2a7"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/7/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "ff5a1ae012afa5d4c889c50ad427aaf545d31a4fac04ffc1c4d03d403ba4250a",
+      "candidate_value_sha256": "2e12c864ec5ae8d3f0e2921625d48a7ef0adf5b5ba4eeb561cf409fc11c888f6"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/8/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "48449a14a4ff7d79bb7a1b6f3d488eba397c36ef25634c111b49baf362511afc",
+      "candidate_value_sha256": "5afc581cc9ea399a2b1fa46aef3df4bea99fdbcf96285152389d9b581f8969fa"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/9/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "69f59c273b6e669ac32a6dd5e1b2cb63333d8b004f9696447aee2d422ce63763",
+      "candidate_value_sha256": "17e70b2fd0afd679e7d0c9741b940b06fff6bc980929f83ce4991be53b09dbbd"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/10/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "ad57366865126e55649ecb23ae1d48887544976efea46a48eb5d85a6eeb4d306",
+      "candidate_value_sha256": "43b87f618caab482ebe4976c92bcd6ad308b48055f1c27b4c574f3e31d7683e0"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/11/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "2abaca4911e68fa9bfbf3482ee797fd5b9045b841fdff7253557c5fe15de6477",
+      "candidate_value_sha256": "184999fc4112ff83be6e918533470be97f00217c85101d9543ef8d3c81e1f181"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/12/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "dbae772db29058a88f9bd830e957c695347c41b6162a7eb9a9ea13def34be56b",
+      "candidate_value_sha256": "5d6ba45ee1d5e1697ad5f130677d44a7812ad273f13d6ce06d86d647961635d7"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/13/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "a512db2741cd20693e4b16f19891e72b9ff12cead72761fc5e92d2aaf34740c1",
+      "candidate_value_sha256": "648e5bca018ffe4b6db96361d9b1a5245ee72d27e49269c38f307c05c07f7014"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/14/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "7b69759630f869f2723875f873935fed29d2d12b10ef763c1c33b8e0004cb405",
+      "candidate_value_sha256": "9598d1edef9a37c9d4a9ff783906af30933a1bdac58ec5110f1e3ddcf19bb691"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/15/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "27badc983df1780b60c2b3fa9d3a19a00e46aac798451f0febdca52920faaddf",
+      "candidate_value_sha256": "f20032c43d0ea68c74fe526050f5ac012e1133635990277db7dace38972dbd22"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/16/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "36790ecd55c2030dc553685bef719df653f413a20cdad1bfd1dc934c76686ddd",
+      "candidate_value_sha256": "2e634014062b7f607fa5b4e8bfc47722568aefcfc497ef6c9df061978160e0d5"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/17/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "6af1f692e9496c6d0b668316eccb93276ae6b6774fa728aac31ff40a38318760",
+      "candidate_value_sha256": "4575464f612d636fe23dd94446e9399956c49c2f1187fdd69a92def975c962da"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/18/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "39bb88f40d3aa2b2fe9dea67be27c74765db0ebb3ff3cf8fb779af6319fa2045",
+      "candidate_value_sha256": "80b594f66dcb09bfebfff334269dc9e142b19bb241d4ac6357bfb65eb34ca1b3"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/19/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "7f0a22117f8fe0172cf9209ff622b64a51aaeda21d58b5b62685a93dbe2dad25",
+      "candidate_value_sha256": "d3fee8034b89e70d6261e32188bdf3a7d894120ab16b0208abfb2b7d19e2bf5e"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/20/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "983bd614bb5afece5ab3b6023f71147cd7b6bc2314f9d27af7422541c6558389",
+      "candidate_value_sha256": "a970559125d5ccd0dbbbb7685636bbcae5ce7cac4e8d1c6954d2467616a9db8c"
+    },
+    {
+      "path": "/Environment/CurrentDepth, CurrentFactor, CurrentRotation/21/0",
+      "kind": "value_or_type",
+      "reference_value_sha256": "0604cd3138feed202ef293e062da2f4720f77a05d25ee036a7a01c9cfcdd1f0a",
+      "candidate_value_sha256": "474ef07736571f2a9a2a80d85f1c2c1b27977e8ad22f943de7563c8b7a2bd8de"
+    },
+    {
+      "path": "/Environment/CurrentRamped",
+      "kind": "value_or_type",
+      "reference_value_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
+      "candidate_value_sha256": "b2cbc4e2e5545a6c43f6f8cc8f0e4766773fa6c83d238076313b6fa1e349caf6"
+    },
+    {
+      "path": "/Environment/IncludeBuoyWindLoads",
+      "kind": "value_or_type",
+      "reference_value_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+      "candidate_value_sha256": "184fda5c980b9d9cb375f42a528817c6235fbd4f79775a8018fae5afcbdf2a63"
+    },
+    {
+      "path": "/Environment/IncludeBuoyWingWindLoads",
+      "kind": "value_or_type",
+      "reference_value_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+      "candidate_value_sha256": "184fda5c980b9d9cb375f42a528817c6235fbd4f79775a8018fae5afcbdf2a63"
+    },
+    {
+      "path": "/Environment/IncludeLineWindLoads",
+      "kind": "value_or_type",
+      "reference_value_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+      "candidate_value_sha256": "184fda5c980b9d9cb375f42a528817c6235fbd4f79775a8018fae5afcbdf2a63"
+    },
+    {
+      "path": "/Environment/IncludeVesselWindLoads",
+      "kind": "value_or_type",
+      "reference_value_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+      "candidate_value_sha256": "184fda5c980b9d9cb375f42a528817c6235fbd4f79775a8018fae5afcbdf2a63"
+    },
+    {
+      "path": "/Environment/MultipleCurrentDataCanBeDefined",
+      "kind": "value_or_type",
+      "reference_value_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
+      "candidate_value_sha256": "b2cbc4e2e5545a6c43f6f8cc8f0e4766773fa6c83d238076313b6fa1e349caf6"
+    },
+    {
+      "path": "/Environment/RefCurrentDirection",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/Environment/SeabedNormalStiffness",
+      "kind": "value_or_type",
+      "reference_value_sha256": "ad57366865126e55649ecb23ae1d48887544976efea46a48eb5d85a6eeb4d306",
+      "candidate_value_sha256": "43b87f618caab482ebe4976c92bcd6ad308b48055f1c27b4c574f3e31d7683e0"
+    },
+    {
+      "path": "/Environment/SeabedOriginDepth",
+      "kind": "value_or_type",
+      "reference_value_sha256": "0604cd3138feed202ef293e062da2f4720f77a05d25ee036a7a01c9cfcdd1f0a",
+      "candidate_value_sha256": "474ef07736571f2a9a2a80d85f1c2c1b27977e8ad22f943de7563c8b7a2bd8de"
+    },
+    {
+      "path": "/Environment/SeabedShearStiffness",
+      "kind": "value_or_type",
+      "reference_value_sha256": "ad57366865126e55649ecb23ae1d48887544976efea46a48eb5d85a6eeb4d306",
+      "candidate_value_sha256": "43b87f618caab482ebe4976c92bcd6ad308b48055f1c27b4c574f3e31d7683e0"
+    },
+    {
+      "path": "/Environment/SeabedSlope",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/Environment/VerticalWindVariationFactor",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "path": "/Environment/WaveTrains/0/WaveDirection",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/Environment/WaveTrains/0/WaveHeight",
+      "kind": "value_or_type",
+      "reference_value_sha256": "3fdba35f04dc8c462986c992bcf875546257113072a909c162f7e470e581e278",
+      "candidate_value_sha256": "be293da5be477078cbeee7feef7b384f879f730ef26f51a674ce59f6ee0251d4"
+    },
+    {
+      "path": "/Environment/WindDirection",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/Environment/WindSpeed",
+      "kind": "value_or_type",
+      "reference_value_sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5",
+      "candidate_value_sha256": "f1e42019aecc858ffbcca7fddec511b761b474916fde37b1a6ff321a9b459330"
+    },
+    {
+      "path": "/General/DefaultViewAzimuth",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "d8d1790737d57ac4fe91a2c0a28087c0a97c81f5dc6b19d5e4aec20c08bb95ae",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "path": "/General/DefaultViewCentre",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "dbc0f29720267ae32d63eef5a6171461d0ab901f7cb03aa5de028d2c64244e72",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "path": "/General/DefaultViewElevation",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "path": "/General/DefaultViewMode",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "492f4a52a9bd8c4e8de6bca3c2b6d2ccb25998fd2e074b2ace126fdbe4db37d5",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "path": "/General/DefaultViewSize",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "129f55e4aaef3ccf14965efcb223cce6f24641690be9393cbe8f8dff43f33560",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "path": "/General/RestartStateRecordingTest",
+      "kind": "value_or_type",
+      "reference_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "candidate_value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+    },
+    {
+      "path": "/LineTypes/0/ID",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/LineTypes/1/ID",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/LineTypes/2/ID",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/LineTypes/3/ID",
+      "kind": "value_or_type",
+      "reference_value_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "candidate_value_sha256": "8aed642bf5118b9d3c859bd4be35ecac75b6e873cce34e7b6f554b06f75550d7"
+    },
+    {
+      "path": "/Lines/0/ContactPen",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "295158330b691f709371a2d3ef353d6eea00f020b722abf6004e8e0be6e59370",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "path": "/Lines/0/DrawNodesAsDiscs",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "path": "/Lines/0/DrawShadedNodesAsSpheres",
+      "kind": "missing_key",
+      "reference_present": true,
+      "candidate_present": false,
+      "reference_value_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+      "candidate_value_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    }
+  ],
+  "comparison": "Recursive mapping merge in generated include order; lists compared in order; no metadata exclusions.",
+  "native_verified": false,
+  "engineering_parity": false
+}

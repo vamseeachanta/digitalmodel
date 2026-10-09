@@ -48,11 +48,11 @@ def _amjig_repo_root() -> Path:
             / "engineering-standards"
             / "wiki"
             / "standards"
-            / "amjig-1997.md"
+            / "amjig-2000.md"
         )
         if page.is_file():
             return root
-    pytest.skip("amjig-1997 wiki criteria page not available")
+    pytest.skip("amjig-2000 wiki criteria page not available")
 
 
 @pytest.fixture(autouse=True)
@@ -109,7 +109,7 @@ def test_get_riser_scf_emits_c203_citation():
     cv = getters.get_riser_scf(repo_root=_fixture_repo_root())
     assert cv.value == 1.0
     assert cv.citation.code_id == "dnv-rp-c203"
-    assert cv.citation.revision == "2024-10"
+    assert cv.citation.revision == "2021"
     assert cv.citation.source_sibling == "generic"
     # The standard sources the METHODOLOGY; 1.0 is the neutral default.
     assert "methodology" in cv.citation.note.lower()
@@ -203,7 +203,7 @@ def test_get_von_mises_design_factor_emits_2rd_citation():
     assert cv.value == 0.67
     assert cv.citation.code_id == "api-std-2rd"
     assert cv.citation.publisher == "API"
-    assert cv.citation.revision == "3e-2025"
+    assert cv.citation.revision == "2e-2013"
     assert cv.citation.source_sibling == "generic"
     assert cv.units == "dimensionless"
 
@@ -232,14 +232,14 @@ def test_get_amjig_envelope_criteria_emits_private_wiki_citation():
     assert amjig.criteria_set == "16q-amjig"
     assert amjig.category
     assert amjig.von_mises_design_factor.value != plain_vm.value
-    assert amjig.von_mises_design_factor.citation.code_id == "amjig-1997"
-    assert amjig.flexjoint_angle_max_deg.citation.code_id == "amjig-1997"
+    assert amjig.von_mises_design_factor.citation.code_id == "amjig-2000"
+    assert amjig.flexjoint_angle_max_deg.citation.code_id == "amjig-2000"
 
 
 def test_get_amjig_envelope_criteria_fails_closed_without_wiki(_no_wiki_anywhere):
     with pytest.raises(CitationResolutionError) as exc:
         getters.get_amjig_envelope_criteria("connected")
-    assert exc.value.code_id in {"<resolver>", "amjig-1997"}
+    assert exc.value.code_id in {"<resolver>", "amjig-2000"}
 
 
 def test_von_mises_getter_matches_code_check_engine_default():

@@ -26,6 +26,13 @@ class RiserLinesBuilder(BaseBuilder):
     Reference: OrcaFlex Line documentation.
     """
 
+    # Object sections emitted by build(); read by
+    # writers.basefile.object_section_order() to derive a section
+    # dependency order from this builder's registered order.
+    _sections = (
+        "Lines",
+    )
+
     def should_generate(self) -> bool:
         """Only generate for riser models."""
         return self.spec.is_riser()

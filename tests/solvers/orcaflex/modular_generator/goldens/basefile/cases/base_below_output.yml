@@ -1,0 +1,5 @@
+%YAML 1.1
+# Generated from: base_model.yml + variation.yml
+---
+BaseFile: sub/base_model.yml
+IncludeFile: variation.yml

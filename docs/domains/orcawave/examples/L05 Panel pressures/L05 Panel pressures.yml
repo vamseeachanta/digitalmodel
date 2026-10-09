@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Diffraction
 # Program: OrcaWave 11.5e
-# File: D:\github\digitalmodel\docs\modules\orcawave\examples\L05 Panel pressures\L05 Panel pressures.yml
+# File: docs/domains/orcawave/examples/L05 Panel pressures/L05 Panel pressures.yml
 # Created: 5:46 AM on 8/22/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Model
 UnitsSystem: SI

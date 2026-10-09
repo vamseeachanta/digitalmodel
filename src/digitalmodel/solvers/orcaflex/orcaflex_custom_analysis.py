@@ -15,6 +15,8 @@ except ImportError:
     OrcFxAPI = None  # type: ignore
     ORCAFLEX_AVAILABLE = False
 
+from digitalmodel.solvers.orcaflex.run_state import check_simulation, check_statics
+
 from assetutilities.common.utilities import is_file_valid_func
 from assetutilities.common import file_management as fm
 from assetutilities.common.saveData import saveDataYaml
@@ -165,6 +167,9 @@ class OrcaFlexCustomAnalysis:
 
             if simulation_flag:
                 model.RunSimulation()
+                # #3838: RunSimulation returns success for a diverged run, so
+                # the state is checked before the .sim/.dat below are written.
+                check_simulation(model, context=filename_with_ext)
                 logging.info("Run simulation successful")
 
             if save_sim_flag:
@@ -214,6 +219,9 @@ class OrcaFlexCustomAnalysis:
         try:
             print("First analysis ......")
             model.CalculateStatics()
+            # #3838: a statics solve that did not reach a static state is a
+            # failed run; the bare except below turns this into the FAIL branch.
+            check_statics(model, context=filename_with_ext)
             print("First analysis ... PASS")
             self.save_model_with_calculated_positions(filename_with_ext, model)
             model = self.analysis_with_calculated_positions(model)
@@ -227,6 +235,7 @@ class OrcaFlexCustomAnalysis:
     def analysis_with_calculated_positions(self, model):
         try:
             model.CalculateStatics()
+            check_statics(model, context="analysis with calculated positions")
         except:
             print("Analysis with calculated positions ... FAIL")
 
@@ -255,6 +264,9 @@ class OrcaFlexCustomAnalysis:
     def iterate_to_target_value(self, model, iterate_cfg):
         iterations_df = pd.DataFrame(columns=["variable", "output"])
         model.CalculateStatics()
+        # #3838: an iteration seeded from a non-converged statics solve chases a
+        # meaningless output value, so the state is checked at each solve.
+        check_statics(model, context="iterate_to_target_value seed")
         model.SaveSimulation(iterate_cfg["filename_without_ext"] + ".sim")
 
         target_value = iterate_cfg["iterate"]["column"]["target_value"]
@@ -294,6 +306,9 @@ class OrcaFlexCustomAnalysis:
 
             model.SaveData(update_cfg["model_file"])
             model.CalculateStatics()
+            check_statics(
+                model, context=f"iterate_to_target_value iteration {current_iteration}"
+            )
             model.SaveSimulation(iterate_cfg["filename_without_ext"] + ".sim")
             output_current_value = round(
                 self.process_summary_by_model_and_cfg(model, column_cfg), 3

@@ -107,7 +107,7 @@ assumptions:
 
 references:
   - "DNV-RP-C203 (2021) — Fatigue Design of Offshore Steel Structures"
-  - "DNV-OS-F201 (2021) — Dynamic Risers"
+  - "DNV-OS-F201 (2010) — Dynamic Risers"
   - "API RP 2RD — Design of Risers for Floating Production Systems"
 
 charts:

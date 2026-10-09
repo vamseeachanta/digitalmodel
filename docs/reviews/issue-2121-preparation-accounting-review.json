@@ -1,0 +1,113 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-17T20:31:16.449073+00:00",
+  "scope": "Retained-preparation accounting, refusal identity binding, and exact current active-collector integration",
+  "status_at_observation": "INLINE_CORRECTIONS_TESTED_EXACT_FINAL_INDEPENDENT_REVIEW_PENDING",
+  "historical_collector_record": "docs/reviews/issue-2121-active-population-inline-disposition.json",
+  "source_pins": {
+    "src/digitalmodel/ansys/cylinder_preparation_history.py": "bf96b0d9bba7f96cdf687fc4645eee1444ccbd43318d5bee0bab545523e83f7b",
+    "src/digitalmodel/ansys/cylinder_pressure_resources.py": "257b51a83a4b396638e83cc13858ed0a74383cda2f4e7ea7b02d4c61d1dadbc0",
+    "src/digitalmodel/ansys/cylinder_pressure_admission.py": "61bf31aaec8d6a9454010c8ba23af8e63112f773b7bc82c6069d4be1373e5c48",
+    "scripts/ansys/run_pressure_diagnostic.py": "0ddb8caee905cb9fcb541b9c3923a16e2793ada2d1715ae388a68c27db230ed9",
+    "tests/ansys/test_cylinder_preparation_history.py": "c8e70aa41afcc43cbaa16ddf9f88a3276cec6ff28271e6153210252775be7da6",
+    "tests/ansys/test_cylinder_preparation_driver.py": "2971010fac6911a62b9f61a641e877f865bf8ee907240c9c6baba9fc563a6329",
+    "tests/ansys/test_cylinder_intermediate_driver.py": "63c0ff358c6f664751153ff75325513a60e29be5441ce5661d833d8701f3ecbf",
+    "tests/ansys/test_cylinder_pressure_admission.py": "1f29a7fb21e107f719caf87c1a3947943f9b0117ebe4578bafd5214c7ee2e9fc",
+    "src/digitalmodel/ansys/cylinder_pressure_resume.py": "e256a10119f65f70041effba3572be02adbcb3f39d8116fbfaf4471cd448c13c",
+    "tests/ansys/test_cylinder_preclaim_probe.py": "305b3ca1b89d8c9cc3e762cdf6682c4367d4f7f7034e1da743deb3106f57816c",
+    "src/digitalmodel/ansys/cylinder_absence_population.py": "9fdf82b5ba18f08ab314f122d7427b6c85c14e4b684b6d55b3da2fd67de53841",
+    "src/digitalmodel/ansys/cylinder_diagnostic_snapshot_v2.py": "c94c008846d3a452376766508f272b8dee7187509c07bb5a1ce5b9e1847179d1",
+    "tests/ansys/test_cylinder_active_population.py": "8f4046cd709141a03805ffa7195c55d982da024a24a2abe9634eac24d33f4dd5",
+    "tests/ansys/test_cylinder_diagnostic_snapshot_v2.py": "a5276ad3585f6003a473bf9868f082dde43163d47ec05c1192d44a85b5277a2e",
+    "docs/plans/issue-2121-active-population-accounting.html": "535b18774b8b618c35fffa2cc5930d31747000a8983bb0a1ab4b3ad681f06290",
+    "src/digitalmodel/ansys/cylinder_preparation_streams.py": "8dab8d6b8968511799778726b688f2585f69bb6148c34c17d83153f3416eeda6",
+    "tests/ansys/test_cylinder_preparation_streams.py": "d03918d12e25e9029073dd6ef242392c651219dab1e14f0083869bae445ca6ba",
+    "tests/ansys/test_cylinder_intermediate_resume.py": "d7aa889cc873c171761c8b2c68ebc0396ab1770389ff9c37d7fb6c81c5704597",
+    "tests/ansys/test_run_pressure_diagnostic.py": "5a2296e7f073606634428eba3dff385f19d8d83260b93be8f674b5cb3f5afd09"
+  },
+  "review": {
+    "bundle_sha256": "b34d5685274b95ae5b45cae762a49a9d5705215b0fa3087f252b5ca62b463275",
+    "verdict": "MAJOR"
+  },
+  "dispositions": [
+    {
+      "finding": "F1",
+      "disposition": "Original-stream namespace is derived from the lineage-bound original capture workspace, not caller-selected. It is inspected even without prior preparation directories; replica directories and orphan streams refuse."
+    },
+    {
+      "finding": "F2",
+      "disposition": "This integrated record supersedes the scope of the historical collector-only checkpoint; the old observation remains unchanged. All current changed source and test pins are listed."
+    },
+    {
+      "finding": "F3",
+      "disposition": "Stream prefix/suffix selection uses casefold, so case variants are observed rather than silently omitted."
+    },
+    {
+      "finding": "F4",
+      "disposition": "New preparation refusals carry exact configuration/output/ordinal/parent-claim binding. Only the exact known legacy configuration/refusal digest pair is accepted without that field. Original legacy evidence is not rewritten."
+    },
+    {
+      "finding": "F5",
+      "disposition": "First supported population refusal stops event evaluation. The retained complete A/B/C observations remain the evidence for other transitions; the event list is not claimed exhaustive after refusal. No native admission follows a refusal."
+    },
+    {
+      "finding": "F6",
+      "disposition": "Current driver streams may be written after the final accounting observation. Existing accounting_boundary remains explicit; this point-in-time check is not final dataset intake or a filesystem quota. No complete-final-byte or reuse claim is made."
+    }
+  ],
+  "native_attempt_delta": 0,
+  "engineering_qualified": false,
+  "runtime_configuration_status_at_observation": "NOT_REFRESHED_FOR_CURRENT_SOURCE",
+  "retained_original_bytes": 941247,
+  "regression": {
+    "passed": 872,
+    "skipped": 2,
+    "log_sha256": "51481120842f3aa04af6091e1e2937f0fdaaaa510652d9826819678df0c3aade",
+    "receipt_sha256": "81eac4c67d7cf92e4f6bfe8a74ae7f41d65a24615368412febde5bf2d5c3940f"
+  },
+  "second_review": {
+    "receipt": "SOLVERS-PM-Claude-088187941702.json",
+    "bundle_sha256": "08818794170205ef00ac189343dc01ff29592c18d9e0f3feea36f5537c330dfe",
+    "verdict": "MAJOR",
+    "dispositions": [
+      {
+        "finding": "F1",
+        "status": "INLINE_CORRECTION_NOT_INDEPENDENTLY_CLEARED",
+        "disposition": "Actual stdout/stderr file descriptors are checked with fstat and same-file identity against lineage-bound paths before reservation, in binding/accounting checks, at refusal retention and before final output. Pipes, replicas, swapped streams, unavailable identities and hardlinks refuse. Future refusal bindings record checked stream destinations."
+      },
+      {
+        "finding": "F2",
+        "status": "INLINE_CORRECTION",
+        "disposition": "Prior preparation stderr must be empty; nonempty bytes refuse."
+      },
+      {
+        "finding": "F3",
+        "status": "INLINE_CORRECTION",
+        "disposition": "Secondary terminal reasons and *_error fields refuse historical intake; original primary preclaim error remains valid evidence of refusal."
+      },
+      {
+        "finding": "F4",
+        "status": "FAIL_CLOSED_LIMITATION_RETAINED",
+        "disposition": "Campaign basename and serialized binding spelling remain exact. Case or spelling variants may refuse; paths are not silently normalized into wider acceptance."
+      },
+      {
+        "finding": "F5",
+        "status": "EVIDENCE_VERIFIED_LOCALLY_REVIEW_COVERAGE_PENDING",
+        "disposition": "Original configuration, original three-file preparation root and original two driver streams validate at 941247 bytes. Actual original stream evidence must be included in any future exact review, not merely a private copy or candidate total."
+      },
+      {
+        "finding": "F6",
+        "status": "INLINE_CORRECTION",
+        "disposition": "production_callbacks deep-copies configuration once before closures are formed."
+      }
+    ]
+  },
+  "review_routing": "Two integrated MAJOR verdicts preserved. Supported corrections applied inline. No third automatic review dispatched under the review-routing rule; final exact reciprocal coverage is not claimed. Native admission remains closed.",
+  "current_scope_limit": "No native execution, matrix qualification, or new publication. Current driver receipt writes follow final storage observation; no final-total claim is made.",
+  "current_regression": {
+    "passed": 887,
+    "skipped": 2,
+    "log": "D:\\ws\\_coordination\\SOLVERS-preparation-live-stream-final-regression.log",
+    "log_sha256": "2e0e0c79f4df61ba35d7e670ef705fc12dced14dc9e8bad0d82c98c9e03038b8"
+  }
+}

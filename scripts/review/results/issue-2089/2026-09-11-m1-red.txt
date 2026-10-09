@@ -1,0 +1,45 @@
+Installed 9 packages in 290ms
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-8.4.2, pluggy-1.6.0
+rootdir: /mnt/ace/ws/agent-worktrees/dm-2089-plan
+configfile: pytest.ini
+plugins: cov-7.0.0, socket-0.7.0
+collected 0 items / 3 errors
+
+==================================== ERRORS ====================================
+____________ ERROR collecting tests/solvers/ghs/test_comparison.py _____________
+ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-plan/tests/solvers/ghs/test_comparison.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/vamsee/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/solvers/ghs/test_comparison.py:7: in <module>
+    from digitalmodel.solvers.ghs import comparison as cmp
+E   ModuleNotFoundError: No module named 'digitalmodel.solvers.ghs'
+_____________ ERROR collecting tests/solvers/ghs/test_contracts.py _____________
+ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-plan/tests/solvers/ghs/test_contracts.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/vamsee/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/solvers/ghs/test_contracts.py:8: in <module>
+    from digitalmodel.solvers.ghs import contracts as c
+E   ModuleNotFoundError: No module named 'digitalmodel.solvers.ghs'
+______________ ERROR collecting tests/solvers/ghs/test_runner.py _______________
+ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-plan/tests/solvers/ghs/test_runner.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/vamsee/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/solvers/ghs/test_runner.py:3: in <module>
+    from digitalmodel.solvers.ghs import runner
+E   ModuleNotFoundError: No module named 'digitalmodel.solvers.ghs'
+=========================== short test summary info ============================
+ERROR tests/solvers/ghs/test_comparison.py
+ERROR tests/solvers/ghs/test_contracts.py
+ERROR tests/solvers/ghs/test_runner.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!
+============================== 3 errors in 7.10s ===============================

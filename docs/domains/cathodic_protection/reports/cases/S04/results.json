@@ -1,0 +1,148 @@
+{
+  "anode_current_capacity": 2500.0,
+  "anode_performance": {
+    "checks": {
+      "final_current_output": true,
+      "initial_current_output": true,
+      "layout": true,
+      "mass": true,
+      "mean_current_output": true
+    },
+    "current_output_A": {
+      "final_per_anode": 0.7210180090918397,
+      "final_total": 288.40720363673586,
+      "initial_per_anode": 0.7651063829787234,
+      "initial_total": 306.04255319148933
+    },
+    "depleted_geometry": {
+      "cross_section_m2": 0.012678679922236293,
+      "equivalent_width_m": 0.1796830356601924,
+      "length_m": 1.281,
+      "net_mass_kg": 4.125000000000001,
+      "radius_m": 0.0898415178300962
+    },
+    "driving_voltage_V": 0.29000000000000004,
+    "resistance_ohm": {
+      "final": 0.4022090937302251,
+      "initial": 0.3790322580645162
+    }
+  },
+  "anode_requirements": {
+    "anode_count": 400,
+    "final_output_count": 252,
+    "individual_mass_kg": 27.5,
+    "initial_output_count": 238,
+    "mass_count": 137,
+    "mean_current_A": 181.52154000000002,
+    "mean_output_count": 252,
+    "recommended_anode_count": 252,
+    "selected_anode_count": 400,
+    "total_mass_kg": 3741.479271529412
+  },
+  "citation_resolution": "generic wiki target available: wikis/engineering-standards/wiki/standards/abs-gn-ships-cathodic-protection-2017.md",
+  "citations": [
+    "abs-gn-ships 2017-12 Section 3, Table 4",
+    "abs-gn-ships 2017-12 Section 2, Table 1",
+    "abs-gn-ships 2017-12 Section 2, Table 3",
+    "abs-gn-ships 2017-12 Section 2/4.4 and Table 4",
+    "abs-gn-ships 2017-12 Section 2/4.5",
+    "abs-gn-ships 2017-12 Section 2/5",
+    "abs-gn-ships 2017-12 Sections 2/6.1-2/6.3",
+    "abs-gn-ships 2017-12 Section 2/7.3",
+    "abs-gn-ships 2017-12 Sections 2/7.5.1-2/7.5.2",
+    "abs-gn-ships 2017-12 Section 3/5.2"
+  ],
+  "coating_breakdown_factors": {
+    "final": 0.02,
+    "initial": 0.02,
+    "interpretation": "explicit project initial/maximum percentages converted to fractions; project mean is their arithmetic mean",
+    "mean": 0.02
+  },
+  "current_demand_A": {
+    "areas_m2": {
+      "coated": 13446.04,
+      "total": 13446.04,
+      "uncoated": 0.0
+    },
+    "bare_current_basis": {
+      "dynamic_mA_m2": 675.0,
+      "dynamic_time_fraction": 0.5,
+      "source": "project inputs; Table 3 is a reference comparator only",
+      "static_mA_m2": 675.0
+    },
+    "coated": {
+      "final": 181.52154000000002,
+      "initial": 181.52154000000002,
+      "mean": 181.52154000000002
+    },
+    "densities_mA_m2": {
+      "final": 13.5,
+      "initial": 13.5,
+      "mean": 13.5
+    },
+    "totals": {
+      "final": 181.52154000000002,
+      "initial": 181.52154000000002,
+      "mean": 181.52154000000002
+    },
+    "uncoated": {
+      "final": 0.0,
+      "initial": 0.0,
+      "mean": 0.0
+    }
+  },
+  "current_densities_mA_m2": {
+    "final": 13.5,
+    "initial": 13.5,
+    "mean": 13.5
+  },
+  "design_life": 5.0,
+  "edition": "2017-12",
+  "layout": {
+    "actual_max_spacing_m": 8.0,
+    "anodes_per_location": 2,
+    "assessment_scope": "Section 3/5.2 general distribution and bilge spacing",
+    "checks": {
+      "bilge_damage_avoided": true,
+      "bilge_keel_alternation": true,
+      "project_location_minimum": true,
+      "spacing": true,
+      "uniform_distribution": true
+    },
+    "citation": "ABS GN Ships 2017 Section 3/5.2",
+    "minimum_anodes_per_location": 1,
+    "minimum_layout_count": 200,
+    "selected_anode_count": 400,
+    "selected_locations": 200,
+    "spacing_limit_m": 8.0,
+    "special_geometry_checks": {
+      "stern_propeller_openings": "NOT_EVALUATED: applicability and geometry not supplied"
+    },
+    "status": "PASS"
+  },
+  "limitations": [
+    "Project bare-steel current densities are not constrained to Table 3 ranges.",
+    "The depleted core area remains a required project input.",
+    "Special stern, propeller and opening geometry checks remain not evaluated unless separately supplied."
+  ],
+  "model_assumptions": [
+    "owner decision 2026-10-01: coating deterioration uses the arithmetic mean of the project initial and maximum breakdown factors",
+    "owner decision 2026-10-01: depleted long-flush resistance uses the depleted length plus equivalent width in the long-flush expression",
+    "owner decision 2026-10-01: dynamic bare-steel current density is an explicit required project input where the guide leaves a choice"
+  ],
+  "provenance": "guide table/equation locators; generic wiki citation target",
+  "standard": "ABS GN Ships (2017-12)",
+  "status": {
+    "checks": {
+      "final_current_output": true,
+      "initial_current_output": true,
+      "layout": true,
+      "mass": true,
+      "mean_current_output": true
+    },
+    "governing_case": "mean_current_output",
+    "reason": "general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated",
+    "result": "PASS",
+    "use_status": "client-use-with-eor-check"
+  }
+}

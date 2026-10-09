@@ -149,7 +149,7 @@ includefile: ../base_files/env/fc001.yml
 ## 6. Project-Specific File Patterns
 
 ### Environment Files
-- **Location:** `D:\1522\ctr9\fatigue_full\rev_a08\base_files\env\`
+- **Location:** `<project-root>
 - **Naming:** `fc001.yml` through `fc081.yml`
 - **Encoding:** UTF-8 with single BOM
 - **Structure:**
@@ -168,7 +168,7 @@ includefile: ../base_files/env/fc001.yml
   ```
 
 ### Run Files
-- **Location:** `D:\1522\ctr9\fatigue_full\rev_a08\07c_fatigue\`
+- **Location:** `<project-root>
 - **Naming Pattern:** `{config_name}_fc{###}.yml`
 - **Encoding:** UTF-8 with single BOM
 - **Structure:**
@@ -202,8 +202,8 @@ Before using files in OrcaFlex:
 ## 8. Reference Files (Known Good)
 
 Always compare new files against these verified working files:
-- `D:\1522\ctr9\fatigue_full\rev_a08\base_files\env\fat_wave01.yml`
-- `D:\1522\ctr9\fatigue_full\rev_a08\07c_fatigue\go_by\fsts_l015_mwl_wave01.yml`
+- `<project-root>
+- `<project-root>
 
 ---
 
@@ -341,5 +341,5 @@ includefile: ../base_files/env/fc001.yml
 ---
 
 **Last Updated:** 2025-10-08
-**Validated Against:** OrcaFlex (version used in D:\1522\ctr9\fatigue_full\rev_a08 project)
+**Validated Against:** OrcaFlex (version used in <project-root> project)
 **Files Successfully Created:** 405 total (81 environment + 324 run files)
