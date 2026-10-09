@@ -145,9 +145,22 @@ def _python_template(node, env, seen=frozenset()):
     return "*"
 
 
-def _python_strings(text):
+def _path_context(node, parents):
+    names = {"Path", "PurePath", "join", "joinpath", "open", "glob", "iglob", "rglob",
+             "read_csv", "read_excel", "loadtxt", "read_text", "read_bytes"}
+    while node is not None and not isinstance(node, ast.stmt):
+        if isinstance(node, ast.Call):
+            name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
+            if name in names:
+                return True
+        node = parents.get(id(node))
+    return False
+
+
+def _python_strings(text, path_templates=None):
     """Literal/template strings; unresolved globs retain suffix evidence."""
     tree = ast.parse(text)
+    parents = {id(child): node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
     env = {t.id: n.value for n in ast.walk(tree) if isinstance(n, ast.Assign)
            for t in n.targets if isinstance(t, ast.Name)}
     covered = set()
@@ -158,12 +171,16 @@ def _python_strings(text):
             value = _python_template(node, env)
             if value != "*":
                 covered.update(id(child) for child in ast.walk(node))
+                if path_templates is not None and _path_context(node, parents):
+                    path_templates.add(value)
                 yield value
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if path_templates is not None and _path_context(node, parents):
+                path_templates.add(node.value)
             yield node.value
 
 
-def _value_evidence(value, source, candidates, tracked, by_base):
+def _value_evidence(value, source, candidates, tracked, by_base, path_context=False):
     value = value.strip().replace("\\", "/").split("#", 1)[0]
     locations = _locations(value, source)
     exact = locations & tracked
@@ -172,6 +189,9 @@ def _value_evidence(value, source, candidates, tracked, by_base):
     pattern = _template(value)
     dynamic = pattern != value or any(c in value for c in "*?[")
     if dynamic:
+        # Numeric formats and version strings provide no filename/directory hint.
+        if not path_context and not re.search(r"[A-Za-z0-9_-]", pattern):
+            return "unscoped format expression", set(), pattern
         locations = _locations(pattern, source)
         hits = {p for p in candidates if any(fnmatch.fnmatchcase(p, q) for q in locations)}
         # Unknown root: a filename suffix still identifies potentially affected files.
@@ -184,6 +204,17 @@ def _value_evidence(value, source, candidates, tracked, by_base):
     if len(matches) == 1 and "/" not in value:
         return "static", matches & candidates, value
     return "ambiguous or unresolved reference", matches & candidates, value
+
+
+def _record_hits(excluded, held, hits, source, matched, reason):
+    for path in sorted(hits - {source}):
+        evidence = {"source": source, "matched": matched, "reason": reason}
+        if reason == "static":
+            excluded.setdefault(path, {"source": source, "matched": matched, "evidence": "path"})
+        else:
+            bucket = held.setdefault(path, [])
+            if evidence not in bucket:
+                bucket.append(evidence)
 
 
 def reference_safety(texts, candidates, tracked, hygiene_sources=frozenset()):
@@ -201,6 +232,7 @@ def reference_safety(texts, candidates, tracked, hygiene_sources=frozenset()):
         if source in REPORT_PRODUCERS:
             continue
         uncertain = False
+        path_templates = set()
         try:
             if source.endswith((".yml", ".yaml")):
                 values, issues = yaml_reference_values(text, basenames)
@@ -209,7 +241,7 @@ def reference_safety(texts, candidates, tracked, hygiene_sources=frozenset()):
                     if source in candidates:
                         held[source] = [{"source": source, "reason": issue} for issue in issues]
             elif source.endswith(".py"):
-                values = list(_python_strings(text))
+                values = list(_python_strings(text, path_templates))
             else:
                 continue
         except (yaml.YAMLError, CyclicYamlError, SyntaxError, RecursionError) as error:
@@ -222,16 +254,11 @@ def reference_safety(texts, candidates, tracked, hygiene_sources=frozenset()):
         for value in sorted(set(values)):
             if len(value) > 512 or "." not in value or "://" in value:
                 continue
-            reason, hits, matched = _value_evidence(value, source, candidates, tracked, by_base)
+            reason, hits, matched = _value_evidence(value, source, candidates, tracked, by_base,
+                                                   path_context=value in path_templates)
             if source in hygiene_sources and reason == "runtime path or unresolved glob":
                 continue
             if uncertain:
                 reason = "readable reference in unparseable source"
-            for path in sorted(hits - {source}):
-                evidence = {"source": source, "matched": matched, "reason": reason}
-                if reason == "static":
-                    excluded.setdefault(path, {"source": source, "matched": matched,
-                                               "evidence": "path"})
-                else:
-                    held.setdefault(path, []).append(evidence)
+            _record_hits(excluded, held, hits, source, matched, reason)
     return excluded, {p: evidence for p, evidence in held.items() if p not in excluded}, gaps

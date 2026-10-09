@@ -113,6 +113,22 @@ def test_formatted_runtime_path_is_held_instead_of_assumed_literal():
     assert set(held) == set(candidates)
 
 
+def test_numeric_formats_and_versions_are_not_file_references():
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/input.dat", "docs/report.html"]
+    texts = {"src/report.py": 'number = "{value:.3f}"\nversion = f"{major}.{minor}"\n'}
+    excluded, held, _ = reference_safety(texts, candidates, candidates + list(texts))
+    assert excluded == {} and held == {}
+
+
+def test_generic_format_in_actual_path_expression_requires_human_check():
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/input.dat", "docs/report.html"]
+    texts = {"src/read.py": 'from pathlib import Path\np = Path(f"{stem}.{extension}")\n'}
+    excluded, held, _ = reference_safety(texts, candidates, candidates + list(texts))
+    assert excluded == {} and set(held) == set(candidates)
+
+
 def test_filename_prefilter_preserves_boundaries_and_spaced_names():
     candidates = ["docs/model.dat", "docs/file name.pdf", "docs/unused.png"]
     text = 'wrong = "xmodel.dat"\np = "file name.pdf"\nq = "model.dat"\n'
