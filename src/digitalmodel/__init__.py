@@ -18,9 +18,21 @@ Domain groups::
 """
 
 import warnings
+from importlib.metadata import PackageNotFoundError, version
 
 # Version of package
-__version__ = "2.1.0"
+try:
+    __version__ = version("digitalmodel")
+except PackageNotFoundError:
+    # Support an uninstalled source checkout without a second version literal.
+    import tomllib
+    from pathlib import Path
+
+    __version__ = tomllib.loads(
+        (Path(__file__).resolve().parents[2] / "pyproject.toml").read_text(
+            encoding="utf-8"
+        )
+    )["project"]["version"]
 
 __all__ = [
     "data_systems",

@@ -29,6 +29,7 @@ nav:
   # Contributing / Standards
   # ---------------------------------------------------------------------------
   - Contributing:
+      - Release Authorization: contributing/releases.md
       - Page Layout Standard: _assets/LAYOUT.md
 
 plugins:
