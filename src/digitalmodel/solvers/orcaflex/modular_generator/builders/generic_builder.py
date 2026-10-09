@@ -24,6 +24,7 @@ from ..schema.generic import (
     GenericVariableData,
 )
 from .base import BaseBuilder
+from .general_builder import _SKIP_GENERAL_KEYS
 from .registry import BuilderRegistry
 
 logger = logging.getLogger(__name__)

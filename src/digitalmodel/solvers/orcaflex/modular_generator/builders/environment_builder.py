@@ -121,7 +121,7 @@ class EnvironmentBuilder(BaseBuilder):
     # Wind-type-dependent properties keyed by WindType value.
     # Only emitted when the detected wind type matches.
     _WIND_TYPE_PROPS: dict[str, set[str]] = {
-        "Constant": {"VerticalWindVariationFactor"},
+        "Constant": set(),
         "API spectrum": {
             "VerticalWindVariationFactor",
             "WindSpectrumElevation",

@@ -8,9 +8,9 @@ import json
 from pathlib import Path
 
 GOVERNING_SOURCE = 'docs/domains/orcaflex/library/templates/mooring_buoy/spec.yml'
-GOVERNING_SHA256 = '3d2ee6ce1f35a27553e96d4809b781d07a4ab68b0260191c8eafa398e99779bd'
+GOVERNING_SHA256 = '1fa7c6879eca05511a330dfd042fec39cdf21ba65f0f82b1653810b464d43be6'
 REFERENCE_SOURCE = 'docs/domains/orcaflex/examples/yml/C07/C07 Metocean buoy in deep water.yml'
-REFERENCE_SHA256 = 'ca88f01734f1a58712ff5707e3c1f3c8010a1a01ec5ede76bacd2560d158ff4e'
+REFERENCE_SHA256 = '4d389188dca4ab21ea9c9f1f8899bef35afed1affa2155329012caab0f39f036'
 ALLOWED_KEYS = ['/environment/raw_properties/VerticalWindVariationFactor',
                 '/environment/raw_properties/WindType']
 

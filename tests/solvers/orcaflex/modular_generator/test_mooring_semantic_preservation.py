@@ -42,13 +42,13 @@ def test_general_owner_preserves_explicit_source_controls(builders):
     assert output['ImplicitConstantTimeStep'] == spec.simulation.time_step
 
 
-def test_explicit_reference_null_wind_setting_is_preserved_not_omitted(builders):
+def test_explicit_constant_wind_factor_is_suppressed_as_dormant(builders):
     spec, context, _, _, environment = builders
-    # This is explicit caller intent, not a new default for missing source data.
+    # Raw source data is still retained by packaging provenance, but Constant
+    # WindType must not emit this dormant property in generated Environment YAML.
     spec.environment.raw_properties = {'WindType': 'Constant', 'VerticalWindVariationFactor': None}
     output = environment(spec, context()).build()['Environment']
-    assert 'VerticalWindVariationFactor' in output
-    assert output['VerticalWindVariationFactor'] is None
+    assert 'VerticalWindVariationFactor' not in output
 
 
 def test_variable_mode_suppresses_constant_default_and_orders_maximum(builders):
@@ -101,8 +101,8 @@ def test_general_source_statics_order_and_early_custom_units(builders):
 
 @pytest.mark.parametrize('raw,expected_present,expected', [
     ({'WindType': 'Constant'}, False, None),
-    ({'WindType': 'Constant', 'VerticalWindVariationFactor': None}, True, None),
-    ({'WindType': 'Constant', 'VerticalWindVariationFactor': 0.8}, True, 0.8),
+    ({'WindType': 'Constant', 'VerticalWindVariationFactor': None}, False, None),
+    ({'WindType': 'Constant', 'VerticalWindVariationFactor': 0.8}, False, None),
 ])
 def test_wind_presence_and_value_are_source_specific(builders, raw, expected_present, expected):
     spec, context, _, _, environment = builders
@@ -189,5 +189,4 @@ def test_complete_generated_include_closure_has_single_general_owner(builders, t
     assert owners[0]['ImplicitConstantTimeStep'] == 0.01
     assert owners[0]['BuoysIncludedInStatics'] == 'All'
     environment = next(doc['Environment'] for doc in documents if 'Environment' in doc)
-    assert 'VerticalWindVariationFactor' in environment
-    assert environment['VerticalWindVariationFactor'] is None
+    assert 'VerticalWindVariationFactor' not in environment
