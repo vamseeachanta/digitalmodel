@@ -427,3 +427,17 @@ docs/api/structural/wall-thickness-3d.json
 
 # Owner board O04 reconciliation evidence (authored, not generated output).
 !docs/reports/o04-ecosystem-reconciliation.html
+# Retain A07 DWG conversion qualification evidence; staging DXFs stay outside Git.
+!docs/reports/dwg-conversion/
+docs/reports/dwg-conversion/*
+!docs/reports/dwg-conversion/plan.html
+!docs/reports/dwg-conversion/source-manifest.json
+!docs/reports/dwg-conversion/probe.json
+!docs/reports/dwg-conversion/provenance.html
+
+# X03 coordinate-only extraction guidance; no geometry is qualified for publication.
+!docs/reports/abstracted-hulls/
+docs/reports/abstracted-hulls/*
+!docs/reports/abstracted-hulls/plan.html
+!docs/reports/abstracted-hulls/schema.md
+!docs/reports/abstracted-hulls/provenance.html

@@ -1,5 +1,7 @@
 """Regression contracts for owner board O04 reconciliation."""
 
+import os
+import subprocess
 import tomllib
 from pathlib import Path
 
@@ -22,6 +24,37 @@ def test_matrix_artifacts_are_unique():
     for step in job["steps"]:
         if step.get("uses", "").startswith("actions/upload-artifact@"):
             assert "matrix.python-version" in step["with"]["name"]
+
+
+def test_required_quality_gate_context_fails_closed():
+    workflow = yaml.safe_load(
+        (ROOT / ".github/workflows/quality-gates.yml").read_text()
+    )
+    matches = [
+        job
+        for job in workflow["jobs"].values()
+        if job.get("name") == "Run Quality Gates"
+    ]
+    assert len(matches) == 1
+    job = matches[0]
+    assert job["needs"] == "quality-gates"
+    assert job["if"] == "always()"
+    assert "strategy" not in job
+    assert "continue-on-error" not in job
+    assert job["permissions"] == {}
+    assert len(job["steps"]) == 1
+    step = job["steps"][0]
+    assert "continue-on-error" not in step
+    command = step["run"]
+    assert step["env"]["QUALITY_GATES_RESULT"] == ("${{ needs.quality-gates.result }}")
+    assert "${{" not in command
+    for result in ("success", "failure", "cancelled", "skipped", ""):
+        completed = subprocess.run(
+            ["bash", "-c", command],
+            env={**os.environ, "QUALITY_GATES_RESULT": result},
+            capture_output=True,
+        )
+        assert (completed.returncode == 0) == (result == "success")
 
 
 def test_formatter_commands_do_not_target_all_source():

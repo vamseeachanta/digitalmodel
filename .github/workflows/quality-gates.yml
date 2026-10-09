@@ -13,6 +13,18 @@ permissions:
   pull-requests: write
 
 jobs:
+  quality-gates-aggregate:
+    name: Run Quality Gates
+    permissions: {}
+    needs: quality-gates
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify matrix result
+        env:
+          QUALITY_GATES_RESULT: ${{ needs.quality-gates.result }}
+        run: test "$QUALITY_GATES_RESULT" = success
+
   quality-gates:
     name: Quality Gates (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
