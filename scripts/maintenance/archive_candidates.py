@@ -47,6 +47,7 @@ ALWAYS = {
 SIZE_GATED = {"yml", "yaml", "csv"}  # only when blob > 1,000,000 bytes
 SIZE_GATE = 1_000_000
 EXCLUDED_PREFIXES = ("src/", "tests/", "docs/api/", "assets/logo/")
+EXCLUDED_REPORTS = {"docs/archive/R01-archive-manifest-review.html"}
 CODE_PREFIXES = ("src/", "tests/")
 ARCHIVE_ROOT = "/mnt/ace/digitalmodel"
 CLASS = {}
@@ -689,7 +690,7 @@ def main(argv=None):
 
     rule_cands = []
     for p in all_paths:
-        if p.startswith(EXCLUDED_PREFIXES) or p in lfs_paths:
+        if p.startswith(EXCLUDED_PREFIXES) or p in EXCLUDED_REPORTS or p in lfs_paths:
             continue
         e = ext(p)
         if e in ALWAYS or (e in SIZE_GATED and blob_size[p] > SIZE_GATE):
@@ -857,12 +858,13 @@ def main(argv=None):
             "extensions_size_gated": sorted(SIZE_GATED),
             "size_gate_bytes_exclusive": SIZE_GATE,
             "excluded_prefixes": list(EXCLUDED_PREFIXES),
+            "excluded_report_paths": sorted(EXCLUDED_REPORTS),
             "excluded_if_referenced_from": ["src/", "tests/", "tracked YAML and Python consumers"],
             "reference_evidence": (
-                "explicit file references only (owner decision C02, 2026-10-08): the file's repo path "
-                "appears in src/ or tests/ text or a Python path expression resolves to it; its exact "
-                "filename appears as a whole token; or a glob/rglob/iterdir/listdir/walk pattern anchored "
-                "on a resolvable repo directory matches it. A bare directory mention excludes nothing."),
+                "R01: explicit file references from src/tests, other tracked Python consumers and tracked "
+                "YAML, including source-relative includes and mkdocs nav. C02/D01 filename qualification "
+                "and hygiene-sweep exceptions remain. Detected unresolved templates, globs and ambiguous "
+                "references receive human holds. A bare directory mention excludes nothing."),
             "scope": "git ls-files (tracked only); extension match case-insensitive; size gate on git blob size",
             "source": "recovered from PR #2146 (head 48ff7b64) against its merge base 7e71d6b2",
         },
