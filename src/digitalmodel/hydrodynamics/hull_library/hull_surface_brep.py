@@ -203,13 +203,34 @@ def export_step(shape, path, unit="M") -> Path:
 
 
 def profile_to_step(
-    profile, path, *, mirror=True, bottom=True, n_x=None, n_z=None
+    profile,
+    path,
+    *,
+    mirror=True,
+    bottom=True,
+    n_x=None,
+    n_z=None,
+    sampling="uniform_z",
 ) -> Path:
-    """Fit the wetted sides and optional flat bottom; export in metres."""
-    points = profile_point_grid(profile, n_x, n_z)
+    """Fit wetted sides and optional bottom; experimental sampling is opt-in.
+
+    ``section_arclength`` is an unqualified diagnostic candidate. Successful
+    export/native screening does not establish fidelity to the source profile.
+    Generated rounded/transom forms fail the documented geometry checks.
+    """
+    if sampling not in ("uniform_z", "section_arclength"):
+        raise ValueError("sampling must be uniform_z or section_arclength")
+    from .hull_surface_brep_sampling import section_arclength_grid, shared_bottom_face
+
+    sampler = profile_point_grid if sampling == "uniform_z" else section_arclength_grid
+    points = sampler(profile, n_x, n_z)
     shape = bspline_face_from_grid(points)
     if bottom:
-        base = flat_bottom_face(points)
+        base = (
+            flat_bottom_face(points)
+            if sampling == "uniform_z"
+            else shared_bottom_face(shape, profile.draft)
+        )
         if base is not None:
             shape = _sew(shape, base)
     if mirror:
