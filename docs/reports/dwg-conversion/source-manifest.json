@@ -5,40 +5,34 @@
   "intended_use": "DWG-to-DXF qualification; not qualified engineering input",
   "sources": [
     {
-      "source": "docs/domains/freecad/src/hulls/04508036 Lines Aft Lwr Hull, Strut, Haunch.dwg",
+      "ordinal": 1,
       "sha256": "eaf626fe50c455dd4d39f73034f3770e0ed7dac2141fb9c1ec1938b5e376a006",
-      "bytes": 196769,
-      "dwg_header": "AC1032"
+      "size": 196769
     },
     {
-      "source": "docs/domains/freecad/src/hulls/733M-1A Hull Lines.dwg",
+      "ordinal": 2,
       "sha256": "5d82d7e0070729e282d5048f26cc4885d52bd0f71400ea565269f2f806a91639",
-      "bytes": 133661,
-      "dwg_header": "AC1032"
+      "size": 133661
     },
     {
-      "source": "docs/domains/freecad/src/hulls/733M-1A-lines plan rigid hull only.DWG",
+      "ordinal": 3,
       "sha256": "e7b863b1dbf02da30ea4435488f7d342296234baf361a6d65e58b421cc8484fb",
-      "bytes": 107776,
-      "dwg_header": "AC1012"
+      "size": 107776
     },
     {
-      "source": "docs/domains/freecad/src/hulls/FSO TWIN HULL LINES 3D.DWG",
+      "ordinal": 4,
       "sha256": "1b9bc73fd3e6c5ca20eac1f1ab33d839c36f2b22a4342be9578b29e3c26be136",
-      "bytes": 3280518,
-      "dwg_header": "AC1018"
+      "size": 3280518
     },
     {
-      "source": "docs/domains/freecad/src/hulls/H920DM-1A_Hull Lines_1.dwg",
+      "ordinal": 5,
       "sha256": "3f133a773572234a2c51435215d67f8242a7187c251b740e45835992903549a4",
-      "bytes": 109951,
-      "dwg_header": "AC1032"
+      "size": 109951
     },
     {
-      "source": "docs/domains/freecad/src/hulls/H920DM-1A_Hull Lines_2.dwg",
+      "ordinal": 6,
       "sha256": "000f48653b778b17586b244cd50b6677d71d12fa68bcdd766a47e89ff5927b57",
-      "bytes": 49427,
-      "dwg_header": "AC1027"
+      "size": 49427
     }
   ]
 }
