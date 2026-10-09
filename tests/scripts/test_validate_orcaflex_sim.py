@@ -45,6 +45,9 @@ class _Line:
         return _RangeGraph()
 
 
+_ABSENT = object()
+
+
 def _fake_api(state, *, complete=True, lines=None):
     api = types.ModuleType("OrcFxAPI")
     api.ModelState = ModelState
@@ -55,7 +58,8 @@ def _fake_api(state, *, complete=True, lines=None):
     class Model:
         def __init__(self, path):
             self.state = state
-            self.simulationComplete = complete
+            if complete is not _ABSENT:
+                self.simulationComplete = complete
             self.objects = [_Line("L1")] if lines is None else lines
 
     api.Model = Model
@@ -103,11 +107,50 @@ def test_stopped_but_not_complete_fails(monkeypatch, capsys):
     assert "simulationComplete" in out
 
 
-def test_later_line_with_strength_vars_passes(monkeypatch, capsys):
-    lines = [_Line("Hawser", missing=("Bend Moment",)), _Line("Riser")]
+def test_stopped_without_completion_flag_fails(monkeypatch, capsys):
+    rc, out = _run(monkeypatch, capsys, _fake_api(ModelState.SimulationStopped, complete=_ABSENT))
+    assert rc == 1
+    assert "VALIDATE: FAIL" in out
+    assert "simulationComplete is not exposed" in out
+    assert "PASS" not in out
+
+
+class _CountingLine(_Line):
+    def __init__(self, name, missing=()):
+        super().__init__(name, missing)
+        self.calls = 0
+
+    def RangeGraph(self, var, period):
+        self.calls += 1
+        return super().RangeGraph(var, period)
+
+
+def test_every_line_is_sampled_when_all_pass(monkeypatch, capsys):
+    lines = [_CountingLine("Riser"), _CountingLine("Mooring")]
     rc, out = _run(monkeypatch, capsys, _fake_api(ModelState.SimulationStopped, lines=lines))
     assert rc == 0
     assert "VALIDATE: PASS" in out
+    assert [ln.calls for ln in lines] == [5, 5]
+    assert "range-graph sample for Riser" in out
+    assert "range-graph sample for Mooring" in out
+
+
+def test_failing_first_line_fails_run(monkeypatch, capsys):
+    lines = [_CountingLine("Hawser", missing=("Bend Moment",)), _CountingLine("Riser")]
+    rc, out = _run(monkeypatch, capsys, _fake_api(ModelState.SimulationStopped, lines=lines))
+    assert rc == 1
+    assert "Hawser: Bend Moment" in out
+    assert "PASS" not in out
+    assert lines[1].calls == 5
+
+
+def test_failing_later_line_fails_run(monkeypatch, capsys):
+    lines = [_CountingLine("Riser"), _CountingLine("Hawser", missing=("Curvature",))]
+    rc, out = _run(monkeypatch, capsys, _fake_api(ModelState.SimulationStopped, lines=lines))
+    assert rc == 1
+    assert "Hawser: Curvature" in out
+    assert "PASS" not in out
+    assert [ln.calls for ln in lines] == [5, 5]
 
 
 def test_no_line_fails(monkeypatch, capsys):

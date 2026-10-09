@@ -4,11 +4,15 @@ Usage:  uv run python scripts/validate_orcaflex_sim.py <path-to-.sim>
 Prints VALIDATE: PASS or VALIDATE: FAIL with reasons. Read-only on the .sim.
 Requires a licensed OrcFxAPI install.
 
-Only ``SimulationStopped`` (with ``simulationComplete`` true where the API
-exposes it) counts as a completed simulation. Paused, unstable, reset,
+Only ``SimulationStopped`` with ``simulationComplete`` explicitly true counts
+as a completed simulation; a model that does not expose the completion flag
+fails (missing evidence is not completion). Paused, unstable, reset,
 statics-only, and still-running states are rejected with a non-zero exit:
 they can expose partial range-graph data that must not be post-processed as a
 finished run. Mirrors ``digitalmodel.solvers.orcaflex.run_state``.
+
+Every Line is sampled and reported; the run passes only when every Line
+exposes all strength variables, and any failing Line fails the run.
 """
 from __future__ import annotations
 
@@ -45,7 +49,9 @@ def completion_failure(model) -> str | None:
     if name != COMPLETE_STATE:
         why = REJECT_REASONS.get(name, "the simulation did not complete")
         return f"state {name} is not a completed simulation ({why})"
-    complete = getattr(model, "simulationComplete", True)
+    if not hasattr(model, "simulationComplete"):
+        return f"state {name} but simulationComplete is not exposed; completion is unproven"
+    complete = model.simulationComplete
     if complete is not True:
         return f"state {name} but simulationComplete is {complete!r}"
     return None
@@ -97,19 +103,23 @@ def main(argv: list[str]) -> int:
         print("VALIDATE: FAIL  (no Line object present)")
         return 1
 
-    # Pass if any Line exposes every strength variable; report each Line checked.
+    # Sample and report every Line; any Line missing a strength variable fails the run.
+    failing = []
     for line in lines:
         sample = sample_line(OrcFxAPI, line)
         print(f"range-graph sample for {line.name} (min over Min, max over Max):")
         for k, v in sample.items():
             print(f"   {k:18s} {v}")
-        if not any(isinstance(v, str) for v in sample.values()):
-            print("VALIDATE: PASS")
-            return 0
+        missing = [k for k, v in sample.items() if isinstance(v, str)]
+        if missing:
+            failing.append(f"{line.name}: {', '.join(missing)}")
 
-    print("VALIDATE: FAIL  (no Line exposes all strength variables)")
-    return 1
+    if failing:
+        print(f"VALIDATE: FAIL  (Line(s) missing strength variables: {'; '.join(failing)})")
+        return 1
 
+    print(f"VALIDATE: PASS  ({len(lines)} Line(s) checked)")
+    return 0
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv))
