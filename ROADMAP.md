@@ -122,7 +122,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 ### Category A -- Blocks Current Work
 
-1. ~~**0/150 structural tests runnable.**~~ Largely closed — 1,750 structural tests now collect successfully. Issues (b) RAOPlotter import and (c) PYTHONPATH were fixed previously; issue (a) `extract_hydro_coefficients` bare import fixed in `validate_phase2.py` (2026-10-08). The `TEST_STATUS_DASHBOARD.md` is stale (generated 2025-10-03).
+1. ~~**0/150 structural tests runnable.**~~ Largely closed — 1,724 structural tests now collect successfully. Issues (b) RAOPlotter import and (c) PYTHONPATH were fixed previously; issue (a) `extract_hydro_coefficients` bare import fixed in `validate_phase2.py` (2026-10-08). The `TEST_STATUS_DASHBOARD.md` is stale (generated 2025-10-03).
 
 2. ~~**pyproject.toml version mismatch.**~~ Closed — pyproject.toml, __init__.py, and CHANGELOG now all read 2.1.0 (2026-09-10).
 
