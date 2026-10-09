@@ -3,7 +3,7 @@
 Issue: https://github.com/vamseeachanta/digitalmodel/issues/2287 .
 Branch: `study/ffs-uniform-loss-screening`.
 Base: `2a52374d401e2f445d4baf435322f2cf18346c98`.
-Session: `codex-acmaws014-ffs8`.
+Session: `codex-owner-ffs8` (historical host identity withheld).
 
 Goal: qualified API 579-1/ASME FFS-1 2021 Part 5 Level 1/2 remaining-wall
 screening versus axial length, with width slices for four representative
