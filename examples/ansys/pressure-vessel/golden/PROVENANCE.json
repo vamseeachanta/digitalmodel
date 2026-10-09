@@ -1,0 +1,66 @@
+{
+  "case": "pressure-vessel",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2094",
+  "captured_utc": "2026-09-11T20:39:03Z",
+
+  "solver": {
+    "product": "Ansys Mechanical APDL",
+    "release": "2026 R1.01",
+    "build": "26.1",
+    "update": "UP20260202",
+    "platform": "WINDOWS x64",
+    "argv": "-b -np 1 -smp",
+    "cores": 1,
+    "parallel": "smp",
+    "equation_solver": "default sparse direct",
+    "note": "The run configuration is recorded because a value reproduces only under the conditions that produced it. Distributed and iterative solvers are not bit-reproducible across core counts, so a stability comparison is valid only against a matching configuration."
+  },
+
+  "input": {
+    "deck": "pv.inp",
+    "sha256": "8d94ee1ad2ee626503cf3990bfe5a426b8e38a433e90eae064afb553566ee8f0",
+    "generator_module": "src/digitalmodel/ansys/pressure_vessel.py",
+    "generator_commit_at_capture": "10cd2904",
+    "note": "The generator commit is recorded separately from the deck hash. A generator change that regenerates an identical deck leaves the hash unchanged; a generator change that alters the deck invalidates this golden even though the byte-match guard would still pass, because that guard compares the deck to the generator rather than either to a comparator."
+  },
+
+  "comparator": {
+    "class": "closed-form",
+    "basis": "Lame thick-wall cylinder, open-ended",
+    "expressions": [
+      "sigma_theta(ri) = P*(ro^2 + ri^2)/(ro^2 - ri^2)",
+      "sigma_r(ri) = -P",
+      "sigma_z = 0"
+    ],
+    "inputs": "ri = 750 mm, ro = 810 mm, P = 10 MPa",
+    "sigma_theta_mpa": 130.19,
+    "expected_von_mises_mpa": 135.47,
+    "observed_von_mises_mpa": 134.7185,
+    "deviation_pct": 0.55,
+    "tolerance_pct": 1.0,
+    "exactness_note": "sigma_z is exactly zero rather than approximately so. The deck applies pressure to the inner line only, with no end cap and a free top edge. For the Lame field sigma_r + sigma_theta is constant through the wall, so the axial strain is uniform and u_z = eps_zz * z satisfies the bottom-edge UY restraint identically. The restraint therefore introduces no corner disturbance and the comparison carries no idealisation error of its own.",
+    "residual_note": "The 0.55 percent deviation is mesh discretisation: ESIZE is wall_t/4, giving four elements through a 60 mm wall."
+  },
+
+  "equilibrium": {
+    "applied_axial_load_n": 0.0,
+    "observed_reaction_fy_n": 0.0005,
+    "observed_reaction_fx_n": -0.0,
+    "criterion": "Both reactions shall be zero to solver precision. A non-zero axial reaction indicates an unintended load or restraint; a non-zero radial reaction cannot arise unless a radial restraint has been re-introduced, which is the defect this issue removed."
+  },
+
+  "acceptance": {
+    "unity_check": 0.97622,
+    "allowable_mpa": 138.0,
+    "expected_status": "within_allowable",
+    "basis": "ASME VIII membrane allowable for SA-516 Gr 70 at the design temperature",
+    "linear_elastic_limit_exceeded": false,
+    "peak_vs_yield_pct": 51.8,
+    "note": "Peak von Mises is 51.8 percent of the 260 MPa stated yield, so the linear-elastic idealisation is comfortably inside its validity range. The superseded 30 mm parameterisation reached 99.8 percent of yield, which it was not."
+  },
+
+  "peak_location": {
+    "node": 22,
+    "note": "Recorded so the reported peak can be distinguished from a mesh-dependent singularity. For this model the peak is the inner-fibre hoop stress, which converges; the node is captured as standing practice rather than because this case is at risk."
+  }
+}

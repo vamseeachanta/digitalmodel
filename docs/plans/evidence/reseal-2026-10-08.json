@@ -1,0 +1,114 @@
+{
+  "schema": "evidence-reseal-note-1",
+  "date": "2026-10-08",
+  "decision": "Owner decision P02 (consolidation board r3): split and re-seal",
+  "reason": "Public-repository identifier redaction. One workstation-name fragment was replaced with a neutral placeholder; every digest that bound the changed bytes was recomputed. No measured value, result, verdict or assertion changed.",
+  "placeholder": "<workstation> (HTML-escaped as &lt;workstation&gt; inside HTML)",
+  "canonicalization": "SHA-256 and Git blob SHA-1 over LF-normalized repository bytes, matching the original pins",
+  "historical_scope_note": "Receipts and reviews recorded here (legal scan receipt, review coverage note, Claude review R3 bundle) were produced against the pre-redaction bytes. Their file digests are updated to the redacted bytes; the review bundle digest is unchanged because the bundle itself is not part of this repository.",
+  "resealed": [
+    {
+      "path": "docs/reports/2026-09-12-padeye-pressure-preparation.html",
+      "reason": "redacted identifier fragment",
+      "old": {
+        "sha256": "df6a798c02d945d817cece246774625fabea0c725682c15aba555ce7d994dddc",
+        "git_blob_sha1": "6e2634e5573785bc65fe24fe3d0071bf0b89a572"
+      },
+      "new": {
+        "sha256": "65ed164a50740e20ae03cd8e1447fbdc52fcacd04a1f8628fa2f375c61f2e332",
+        "git_blob_sha1": "9745530f6cc7bc3b1fff024a0c519b7adb22ef24"
+      },
+      "pinned_by": [
+        {
+          "pinned_by": "docs/plans/evidence/2026-09-13-issue-2117-verification.json",
+          "digest": "sha256",
+          "occurrences": 1
+        },
+        {
+          "pinned_by": "docs/plans/evidence/2026-09-13-solvers-current-review-coverage.md",
+          "digest": "sha256",
+          "occurrences": 1
+        },
+        {
+          "pinned_by": "docs/plans/evidence/2026-09-13-solvers-current-review-coverage.md",
+          "digest": "git_blob_sha1",
+          "occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2117-verification.json",
+      "reason": "re-pinned digest(s) of upstream file(s)",
+      "old": {
+        "sha256": "858bd1b44d69565516a16228b32f45a743b2fec15a2c620856f8712463e126fd",
+        "git_blob_sha1": "5712ca44cb06016fea1dbaa8f6b152ed32f8454b"
+      },
+      "new": {
+        "sha256": "1ba3c7874e1c96b38eb9cfb76005b2a3bace77dcaf4864e8acc904d9eeca7adc",
+        "git_blob_sha1": "db7e40f6366f30c6ef43cba6a5c02a9c23ccaf7a"
+      },
+      "pinned_by": []
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-solvers-current-review-coverage.md",
+      "reason": "re-pinned digest(s) of upstream file(s)",
+      "old": {
+        "sha256": "d9c3b027c784953de022a7defb373cd4cad5fda3f30e038a1ad76534f1c09e12",
+        "git_blob_sha1": "8e8fff081bbe7b3e96b7b674d7626a0556e5d411"
+      },
+      "new": {
+        "sha256": "93b8e0d33b20c181af337b393db464c29d8b174b6110322e83d38496260d308a",
+        "git_blob_sha1": "19a8a959c1dd30b0b5f2588dbfa490c986908308"
+      },
+      "pinned_by": [
+        {
+          "pinned_by": "docs/plans/evidence/2026-09-13-issue-2117-verification.json",
+          "digest": "sha256",
+          "occurrences": 1
+        }
+      ]
+    }
+  ],
+  "not_resealed": [],
+  "redacted_public_copies": {
+    "decision": "Owner decision M04 (consolidation board r4): option (b), redact the public copies only",
+    "summary": "The two files below carried an identifier fragment and are bound inside the r1-r6 result-matrix lineage. The public copies are redacted; the r1-r6 manifest pins, the hash-bound source constants and the private retained r6 snapshot are NOT rewritten. The lineage digests listed here are HISTORICAL: they refer to the original bytes, which are retained in the private data repository. A public checkout therefore no longer reproduces these historical digests from these two paths; the private copy does.",
+    "original_bytes_location": "private repository vamseeachanta/digitalmodel-data, data/public-repo-removals/digitalmodel-2114-redaction/files/<original repository path> (SHA-256 recorded in data/public-repo-removals/digitalmodel-2114-redaction/record.json)",
+    "files": [
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2094-response-resource-intel.json",
+        "redaction": "one JSON key renamed: the workstation-name prefix of the follow-up key is replaced with the neutral word 'workstation'; no value changed",
+        "historical": {
+          "sha256": "374d0d0a5af2493887086dde82355cf4d9cf25f5b199b226542521afe228be20",
+          "git_blob_sha1": "f26fee45249d9d5bb6212b62929a7948f619abdb",
+          "pinned_by": [
+            "examples/ansys/analysis-evidence/manifest.json (matrix revisions r1-r6)",
+            "examples/ansys/analysis-evidence/intake.json",
+            "private retained r6 snapshot (derived/r6/matrix.json)"
+          ]
+        },
+        "public_redacted": {
+          "sha256": "5d27d1ffa2dd938ae9114a3e9094a37f658dbadb1d4ca4bb2b700dab1ef488c6",
+          "git_blob_sha1": "b91f45db76ce6b87e3dbae5bd6865207eb7a368a"
+        }
+      },
+      {
+        "path": "docs/plans/2026-09-11-issue-2094-ansys-example-deck-validation.md",
+        "redaction": "one wiki page path: the organisation-name prefix is replaced with the placeholder <client>; no other text changed",
+        "historical": {
+          "sha256": "e7876be200f24eaae9dc48897ed7920b0240a08ebd845ca487e5faf7a01d86b9",
+          "git_blob_sha1": "e013eadd7ca23d13f536da01a8b805a05699b6c3",
+          "pinned_by": [
+            "docs/plans/evidence/2026-09-12-issue-2094-acceptance-legal.json (itself bound inside the r1-r6 matrix lineage)"
+          ]
+        },
+        "public_redacted": {
+          "sha256": "2767518bd4fdf53f1288e07664843e4b44a3948efb626ed357f42e13daf61969",
+          "git_blob_sha1": "88943e779293774927c68e84c2231ebdb8bd2a4d"
+        }
+      }
+    ],
+    "also_retained_privately": "The pre-redaction bytes of docs/reports/2026-09-12-padeye-pressure-preparation.html (sha256 df6a798c02d945d817cece246774625fabea0c725682c15aba555ce7d994dddc, the 'old' digest in the resealed list above) are kept in the same private folder.",
+    "verification": "No test pins the public digest of either file directly. The strict retained-corpus replay (tests/ansys/test_cylinder_refinement_replay.py::test_retained_n4_exact_replay, ANSYS_REPLAY_REQUIRE_CORPUS=1) passes unchanged against the private snapshot, and tests/ansys passes in full."
+  }
+}

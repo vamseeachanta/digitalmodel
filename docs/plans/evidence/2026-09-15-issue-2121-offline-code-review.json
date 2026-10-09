@@ -1,0 +1,74 @@
+{
+  "schema": "independent-review-source-view-1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "provider": "Claude",
+  "receipt_sha256": "689b515cdc83c59eda62218e397ce277f4a261eea86cb9fb61c77181d623d903",
+  "bundle_sha256": "4eea4867e58b89293165a023e03664b31edc9f1007656d1e0fdfda7f61750ef1",
+  "source_files": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_pressure_admission.py",
+      "sha256": "d8a824094801ba295607f178c2e90fdc44aaf97b0772d56fb246be4a7670b2bd"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_pressure_capture.py",
+      "sha256": "848f99c63c8cba53f012b286c518067803c971dbc73352ac6627a1caf32fb646"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_pressure_journal.py",
+      "sha256": "5743c10bfcf7e0f933db990601804dec166e1ec1f03514aad815fba73c1e137c"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_pressure_lineage.py",
+      "sha256": "429c468adc8e64d97bd1f52cea789d35ec19562dd36944005545e6b8f6d00f34"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_pressure_resources.py",
+      "sha256": "3bba8131da843ac9c71c1cdbf6963b03197c18859def8de4b2aba422da9addd9"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_pressure_resume.py",
+      "sha256": "acc4f1e8a136ef4be8e909109dbfc5e128b174802a0e8f64d721c4a68f43fb01"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_pressure_admission.py",
+      "sha256": "9b41e8d7983148edacf75a4934102f259f425d2d06ed42a3fd7004e1d97239c9"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_pressure_capture.py",
+      "sha256": "90fce4a622c3f2e199d39b5bcca8dabdc4938c77cf8f1672521203333a76a492"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_pressure_journal.py",
+      "sha256": "bdfa7a80a8ae965982fa053b5dfc622c8e77986771068d46a3e43ff490c31733"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_pressure_resources.py",
+      "sha256": "f4aec15613c149493558c817f93b1a47f3cec5ca5def4c8f92696f985d626ab3"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_pressure_resume.py",
+      "sha256": "a4cb7be5d0636f46db96f4d172acdf3393c835c72631fb6da4f4c008091b7a04"
+    },
+    {
+      "path": "scripts/ansys/run_pressure_diagnostic.py",
+      "sha256": "2277ac2cf26e700d104e53bcc848d055f220ec3429fb337ebc7ab59e931bdd15"
+    },
+    {
+      "path": "tests/ansys/test_run_pressure_diagnostic.py",
+      "sha256": "c43d291fd188ac25690b077454d6242123b3bce492347e79136f5fc8e163f82a"
+    }
+  ],
+  "review": {
+    "bundle_sha256": "4eea4867e58b89293165a023e03664b31edc9f1007656d1e0fdfda7f61750ef1",
+    "verdict": "MINOR",
+    "findings": [
+      "MINOR - cylinder_pressure_admission._blocking_severity now has a false-positive edge that terminally refuses ordinary nonblocking review prose. Evidence: after the blocking patterns miss, the unknown-label fallback applies `prefix + r'([A-Za-z][A-Za-z_-]*)\\s*[:|\\-]'` anchored at start (prefix = `^\\s*(?:[-*]\\s*)?(?:F\\d+\\s*[:.)-]?\\s*)?`) and refuses anything outside allowed={'MINOR','INFO','INFORMATIONAL','NOTE','NONBLOCKING'}. A genuinely MINOR finding beginning 'Remedy: ...', 'Evidence - ...', 'Observation: ...' or 'Recommendation - ...' yields label 'Remedy'/'Evidence'/'Observation'/'Recommendation' -> ValueError('blocking finding contradicts nonblocking verdict'). Because the config and review-receipt SHA256 pins are immutable external inputs, recovery requires a whole new review session and re-pinned config on a max_attempts=1 path. The symmetric false-negative also remains: a mid-sentence severity such as '_prefix burns the ordinal; MAJOR.' matches none of the three blocking patterns (not at start, not bracketed, not followed by ':') and no label pattern ('_' is not in the `[:|\\-]` class), so it is admitted under a MINOR verdict. Current tests (test_negated_or_historical_prose_is_not_a_blocking_label, test_explicit_and_unknown_severity_labels_refuse) only assert a fixed sample on both sides, so neither edge is pinned. Remedy: replace the open-ended unknown-label fallback with an explicit severity vocabulary (or require the token to occupy a severity-bearing position: bracketed, after `F\\d+`, or after `severity`), and add regressions asserting that 'Remedy:'/'Evidence -' leading prose is admitted and that a trailing/mid-text MAJOR is refused.",
+      "MINOR - the authoritative one-shot terminal record has an inconsistent shape: terminal_reasons is present on some paths and absent on others. Evidence: cylinder_pressure_resume._empty() sets only terminal_reason='PRECLAIM_REFUSAL'; the `except Exception` handler sets only terminal_reason='POSTCLAIM_INCOMPLETE'/'PRECLAIM_REFUSAL' plus `error`. terminal_reasons is created solely by _retain (success path) or by _additional_reason, and _additional_reason is only reached when _final_accounting observes a storage FAIL, a negative remaining window, or an accounting exception. So a preclaim refusal (e.g. failure='storage', failure='before_launch') or a postclaim phase2/spawn failure with healthy final accounting writes <parent-stem>.ordinal-2.terminal.json and outcome.json containing terminal_reason but no terminal_reasons key. Since this record is the durable, non-restartable disposition that a later offline parser correction must read, a consumer keying on terminal_reasons will KeyError on exactly the failure records it most needs. test_postclaim_failure_consumes_without_readmission and test_preclaim_refusal_never_launches_or_creates_successor only assert terminal_reason != 'PLANNED_SCOPE_STOP', so the shape is unpinned. Remedy: initialise terminal_reasons in _empty() and set both fields together in the exception handler, then assert the key's presence in every terminal/outcome record test.",
+      "MINOR - the newly introduced per-source committed-blob verification runs unbounded Git subprocesses inside the single 600-second invocation window. Evidence: cylinder_pressure_admission.verify_source_commit calls cylinder_runtime_bundle._git_blob(root, revision, row['path']) once per entry of config['source_files'], and _git_blob (cylinder_runtime_bundle.py:56-65) issues two subprocess.run calls per file ('git cat-file -t <rev>' then 'git show <rev>:<name>') with capture_output=True and no timeout=. required_source_inventory forces that list to cover every src/digitalmodel/ansys/*.py plus __init__.py, _compat.py and the entrypoint (~74 paths, ~148 spawns), and the 'cat-file -t' commit check is re-run redundantly for every file. The whole _validate body (verify_source_commit + shared._review, which re-reads and UTF-8-compares the full content of every bundled file, + validate_lineage, which re-enumerates the 23 original files and re-hashes 21 artifacts across three manifests) executes on every verify_authority() call; cylinder_pressure_resume._observe invokes _verify AFTER journal.start() has written the invocation record, so at least one full revalidation is charged to the window before the >=365s preclaim threshold is tested. A hung or slow git (network-backed worktree, filesystem stall) has no bound and cannot be interrupted; the invocation record already exists, so PressureJournal.__init__'s glob(stem + '*') refuses every readmission. Remedy: pass an explicit timeout= to both subprocess.run calls in _git_blob, hoist the 'cat-file -t' commit-type check out of the per-file loop, and add a driver-level test asserting the bounded-timeout contract.",
+      "MINOR - cylinder_pressure_capture._check misclassifies missing-evidence failures as dependency/contract defects. Evidence: _independent_checks passes artifacts.get(name) straight into the parsers ('configuration' -> parse_configuration(native), 'model' -> parse_model_cdb, 'state' -> parse_state_values, 'precision_witness' -> validate_precision_witness). When a file is missing, redirected, hardlinked or read-errored, _inventory_row returns raw=None and the name is absent from artifacts, so the parser receives None and typically raises TypeError; _check then records error_class='dependency_or_contract_error' rather than 'evidence_error'. The module already handles this correctly for the two checks that were explicitly guarded ('execution' via `all(isinstance(artifacts.get(name+'.bin'), bytes) ...)` and 'case_titles' via `isinstance(native, bytes)`), so the inconsistency is local. test_dependency_errors_remain_explicit_nonacceptance injects a deliberate broken classify_diagnostics, and test_partial_inventory_continues_after_failure only asserts inventory row status, so the mislabel is uncovered. Impact is diagnostic, not acceptance: capture_status stays INCOMPLETE and accepted_values stays {}, but the immutable capture record that must drive the later reviewed parser correction will attribute an evidence gap to a code defect. Remedy: guard each parsed check with an isinstance(..., bytes) precondition emitting status='INCOMPLETE' with an explicit evidence reason, matching the existing execution/case_titles pattern.",
+      "Scope note - no execution, no native run, no licence query, no ledger or claim write, no re-derivation of the frozen analytical reference, and no numerical acceptance were performed; all inspection was read-only over the listed bundle. numerical_assessment remains NOT_EVALUATED with reason PRESSURE_PARSER_NOT_VALIDATED, engineering_qualified remains false, campaign status remains INCOMPLETE, 0 cases qualified. The prior fb48bc F1 blocker was re-checked against the actual evaluate_attempt/make_check_receipt/derive_replay_case path (not the synthetic harness) and is resolved; F2/F3/F4 corrections are present in the current bytes. Production config, runtime bundle and replay-descriptor bytes were treated as out of scope and not assumed to exist, so no statement is made about their adequacy; the resources/preflight timing budget (five 1-second capacity samples plus two <=20-second licence queries against the 20/30-second age ceilings) is an operational feasibility question for that separate review, not a code defect. Test evidence is taken as reported (1282 PASS/1 SKIP preceding, 66 PASS focused, 116 PASS worker-captured); no test was executed here and no synthetic fixture is treated as native evidence. This session identifies a diagnostic software reviewer only; SOLVERS remains the operator and no engineering qualification or native clearance is granted."
+    ]
+  },
+  "status": "nonblocking-code-review-only",
+  "scope_limit": "No native readiness or engineering qualification; MINOR findings retained verbatim. Production inputs/runtime and retained result evidence require their own current verification."
+}

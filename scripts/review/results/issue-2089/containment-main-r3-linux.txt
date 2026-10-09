@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-8.4.2, pluggy-1.6.0
+rootdir: /mnt/ace/ws/agent-worktrees/dm-2089-containment-plan
+configfile: pytest.ini
+collected 146 items
+
+tests/solvers/ghs/test_boundaries.py ....................                [ 13%]
+tests/solvers/ghs/test_comparison.py ...............                     [ 23%]
+tests/solvers/ghs/test_contracts.py .................................... [ 48%]
+.....                                                                    [ 52%]
+tests/solvers/ghs/test_qualification.py ................................ [ 73%]
+..                                                                       [ 75%]
+tests/solvers/ghs/test_qualification_finalization.py ..                  [ 76%]
+tests/solvers/ghs/test_runner.py ..........                              [ 83%]
+tests/solvers/ghs/test_windows_job.py ....                               [ 86%]
+tests/solvers/ghs/test_windows_launch.py ...................             [ 99%]
+tests/solvers/ghs/test_windows_qualification.py s                        [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] tests/solvers/ghs/test_windows_qualification.py:7: Explicit Windows harmless-sentinel acceptance only
+======================== 145 passed, 1 skipped in 4.01s ========================

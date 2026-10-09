@@ -1,0 +1,67 @@
+{
+  "issue": 2121,
+  "observed_utc": "2026-09-14T15:57:00.094827+00:00",
+  "verdict": "MAJOR",
+  "scope": "Supported bounded normal-exit settlement defect and product-selection preparation; no general solver qualification",
+  "sources": [
+    {
+      "path": "D:\\ws\\_worktrees\\digitalmodel-2094-offline\\src\\digitalmodel\\ansys\\cylinder_runner.py",
+      "sha256": "3ea772545d863cbbc6ddd1e072f33aac5ebf5c96beca5322e0081bb68e813d2e"
+    },
+    {
+      "path": "D:\\ws\\_worktrees\\digitalmodel-2094-offline\\src\\digitalmodel\\ansys\\cylinder_process.py",
+      "sha256": "6a91eddc2a9dfffff6d9ca55bd89b53d224106b42cd9f3c15d69773339b0fb59"
+    },
+    {
+      "path": "D:\\ws\\_worktrees\\digitalmodel-2094-offline\\tests\\ansys\\test_cylinder_runner.py",
+      "sha256": "6df886571b76e24b1835058b3109fdcfc17e7cc6e7c66ea4a04422cf7931f7e3"
+    },
+    {
+      "path": "D:\\ws\\_coordination\\SOLVERS-2121-b2-supervisor-normal-exit\\receipt.json",
+      "sha256": "b0b923c5d4d9dc4ea06597f0c0a64c1fce5e6e15fc9022955d9080fb5e3724df"
+    },
+    {
+      "path": "D:\\ws\\_coordination\\SOLVERS-2121-b2-supervisor-settlement-observation\\receipt.json",
+      "sha256": "52af940808ea162ef785fa3bd64a6be108b5ff1ce00c7ddead91e2a631481272"
+    }
+  ],
+  "findings": [
+    {
+      "id": "SETTLE-1",
+      "severity": "major",
+      "basis": "Both parent-owned live non-solver helper receipts show assigned=True, return_code=0, initial active=1. Second receipt shows subsequent active=0 without preemptive termination. Current _settle immediately sets settlement_required=True and terminates on any initial nonzero active count; the flag remains true after zero is reached. launch_case therefore reports evidence_complete=False for that observed transient condition.",
+      "limit": "Receipts establish one normal-exit observation pattern only, not ANSYS behavior, descendant success, timeout cleanup or true persistent-child settlement."
+    }
+  ],
+  "proposed_correction_contract": [
+    "Set a single monotonic settlement deadline using the existing5-second polling allowance. Clean return means return_code exactly0, timed_outFalse and no launch/wait errors.",
+    "For clean return, query active and allow natural1-or-more\u21920 settlement within that existing deadline, polling at the existing0.01-second interval. Do not set settlement_required or terminate merely because the first clean-exit sample is nonzero.",
+    "If verified active reaches0 naturally, close owned handles; mark owned_processes_remaining0 and preserve settlement_requiredFalse. A query/close exception remainsINCOMPLETE and must retain uncertainty.",
+    "If activity persists through deadline or a query fails, mark cleanup-required, perform only owned termination and verify zero where possible; never reset cleanup-required to false after forced termination. Retain supervisor token/seat if zero cannot be established. Any further cleanup wait must be explicitly bounded and accounted, never silently extend fixed300-second solver or1800-second overall limits.",
+    "Timeout, failed start/wait, nonzero return and preexisting errors must not be converted to complete by the grace path. Preserve actual errors, raw bytes and ownership information."
+  ],
+  "required_tdd_cases": [
+    "Mock clean return0 with active samples[1,0]: no terminate call, closed=True, ownedremaining0, settlement_requiredFalse and evidence_completeTrue. Use fake time; no native helper required for regression.",
+    "Mock clean return0 with active0 immediately: unchanged success.",
+    "Mock activity persistent until deadline: forced cleanup, incomplete even if termination subsequently reaches0; no extra canary attempt.",
+    "Mock query failure during grace and close failure after zero: incomplete with exact exception/retained ownership; no release-as-success.",
+    "Mock timed-out or failed/nonzero return with eventual zero: incomplete; clean grace cannot mask failed execution.",
+    "Existing invalidUTF8, no-overwrite and owned-token settlement tests remain required."
+  ],
+  "product_selection": {
+    "disposition": "SUPPORTED_CONDITIONAL_DRIVER_PIN",
+    "basis": "Official v261 product-selection documentation states ANSYS261_PRODUCT selects product when command-level MAPDL is issued; ansys denotes Mechanical Enterprise. Current runner has no-p and Popen inherits process environment.",
+    "conditions": [
+      "Parent driver records ANSYS261_PRODUCT=ansys as exact execution environment evidence and ensures the same value in the actual launching process before every attempt. No frozen argv change is necessary.",
+      "External preflight validates the requested product alongside reviewed executable/hash/profile and records the effective environment source. No launcher profile is used by this direct executable route.",
+      "Observed native license identity/checkout evidence remains required to establish the actual acquired product; a requested environment value and lmstat counts alone do not prove checkout or exclusive ownership.",
+      "No weakening of fixed numerical criteria, attempt count,300/1800 limits or uncertain-seat retention."
+    ],
+    "source": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_ope/Hlp_G_OPE3_5.html"
+  },
+  "actions": "Read-only source/receipt inspection only; no code edits, helper/solver launch, provider call or process termination. Private receipt saved and read back.",
+  "cleanup": {
+    "classification": "EXPECTED",
+    "residue": "This private evidence/disposition receipt"
+  }
+}

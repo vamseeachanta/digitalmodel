@@ -1,0 +1,57 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-17T21:11:28.688259+00:00",
+  "authorization": "User option 1: improve rejected parent-map evidence while preserving the refusal rule.",
+  "plan_reviews": [
+    {
+      "bundle_sha256": "ec516358c49f2bea0c3f2f73f547d46f47de660b450ea6597cd6e59537c09eff",
+      "verdict": "MAJOR"
+    },
+    {
+      "bundle_sha256": "0931bd3689c765a12e43fcacabad7015ed4a04ca300606dd90870064b781e045",
+      "verdict": "MAJOR"
+    }
+  ],
+  "inline_dispositions": [
+    "ParentMapChangeError is a local ValueError subclass in cylinder_parent_map, exposing copied .evidence; no PopulationError import or new import cycle.",
+    "New parent tables are sorted pair lists, not integer-key dictionaries. JSON round-trip equality applies to the new rejection namespace; legacy completed_parent_maps key coercion remains outside scope.",
+    "Rejected evidence is nested under rejected_parent_observation. A fixed-enum top-level events summary mirrors the trigger identifiers; collector update/setdefault preserves every producer key, tested in stages A/B/C.",
+    "Only bounded numeric process/parent identifiers, nulls and fixed enum strings enter new evidence. No externally sized name, path or creation-time string is copied; oversized-text exclusion is tested.",
+    "Changes use the union of initial/final table identifiers. The exact original predicate supplies trigger identifiers. Skipped constructor identifiers are explicitly retained separately, including still-present final-table cases.",
+    "The boolean predicate is syntax-identical to published 05d220f9 and the refusal message is unchanged. A busy-host observation may continue to refuse.",
+    "Null denotes a missing side only in difference records; real table values remain integers including zero.",
+    "The existing read-only discovery recorder serializes the full exception evidence; it is included for exact implementation review."
+  ],
+  "source_pins": {
+    "src/digitalmodel/ansys/cylinder_parent_map.py": "d2bf4332f2f307d40f8dec4ce6f62e62e7625ff5c838618f33ecc58e317555a2",
+    "tests/ansys/test_cylinder_parent_refusal_evidence.py": "1b066e0c6731e19ae3534618b7bd22524d6b3e7d9fa835f883fc78f7f631a288",
+    "docs/plans/issue-2121-parent-map-refusal-evidence.html": "723b559d0550f4d5aceeb41a53ab259d099bd266bf7724f88d57d3ae4c87c2f1"
+  },
+  "focused_tests": {
+    "passed": 70,
+    "log": "SOLVERS-parent-refusal-focused.log",
+    "sha256": "655e333ff44e3929e7bb26d3e1bcadf5aeee589d989c94f58ef9139e6dc0874c"
+  },
+  "status": "SECOND_CODE_REVIEW_PENDING",
+  "limits": [
+    "No third automatic plan review cycle.",
+    "No native execution or engineering qualification.",
+    "Unrelated/relevant process change cannot be inferred from numeric table differences alone."
+  ],
+  "code_review_r1": {
+    "bundle_sha256": "80da4088d82c317c40a87916f74e215231e9c70d7332bb26a0c28650cdd86bfc",
+    "verdict": "MAJOR",
+    "dispositions": [
+      "Exact pre-change parent-map source supplied from Git commit 05d220f9; SHA-256 455e9e85b5b3a819ad25be896945f147e19ce2eeb88a790e56acab98f6c47cd7. Literal predicate/message comparison is now available to the reviewer.",
+      "Shared test_cylinder_parent_map.py fixture and all 28 existing parent-map tests added to inventory.",
+      "Event disposition is now the distinct REFUSED_PARENT_TABLE_CHANGED enum; no prior resource relevance disposition is implied.",
+      "Explicit __reduce__ binds exception reconstruction to evidence. Standard deepcopy/pickle tests passed even before this addition; no reproduced current transport failure is claimed.",
+      "Added disappearance test through real read_windows_parent_map validation with nonempty final table."
+    ]
+  },
+  "final_focused_tests": {
+    "passed": 73,
+    "log": "SOLVERS-parent-refusal-final-focused.log",
+    "sha256": "54e67fc4fead31f7961d8f34f87bf85ce8ac3b690cf3492bc91d7e0120715e41"
+  }
+}

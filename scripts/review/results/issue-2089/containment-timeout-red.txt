@@ -1,0 +1,20 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_timeout_has_observed_deadline_and_rejects_early_exit ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b23c9405d50>
+
+    def test_timeout_has_observed_deadline_and_rejects_early_exit(monkeypatch):
+        from digitalmodel.solvers.ghs import _qualification_scenarios as scenarios
+        ticks=iter([0.0,0.1,0.5,1.1]);waits=[]
+        monkeypatch.setattr(scenarios.time,'monotonic',lambda:next(ticks))
+        monkeypatch.setattr(scenarios,'alive',lambda *args:None)
+        monkeypatch.setattr(scenarios.w,'wait',lambda *args:waits.append(args[-1]) or False)
+>       observation=scenarios.observe_timeout(object(),[1],[{'pid':1,'creation_time':2}])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'digitalmodel.solvers.ghs._qualification_scenarios' has no attribute 'observe_timeout'
+
+tests/solvers/ghs/test_qualification.py:172: AttributeError
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_qualification.py::test_timeout_has_observed_deadline_and_rejects_early_exit
+1 failed, 30 deselected in 6.57s

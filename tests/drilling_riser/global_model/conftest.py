@@ -80,3 +80,11 @@ def synthetic_spec() -> RiserGlobalModelSpec:
 @pytest.fixture
 def spec() -> RiserGlobalModelSpec:
     return synthetic_spec()
+
+
+@pytest.fixture(autouse=True)
+def _fresh_statics_path_memory(monkeypatch):
+    """Each test starts with no remembered statics path (campaign._LAST_OK is per process)."""
+    from digitalmodel.drilling_riser import campaign
+
+    monkeypatch.setattr(campaign, "_LAST_OK", {})

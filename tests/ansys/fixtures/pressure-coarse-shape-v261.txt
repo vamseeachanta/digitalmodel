@@ -1,0 +1,22 @@
+ELEMENT SHAPE CHECKING IS ALREADY USING DEFAULT LIMITS
+ELEMENT SHAPE CHECKING IS ALREADY ON
+ELEMENT SHAPE CHECKING IS ON WITH DEFAULT LIMITS
+            <<<<<<          SHAPE TESTING SUMMARY           >>>>>>
+            <<<<<<        FOR ALL SELECTED ELEMENTS         >>>>>>
+ ------------------------------------------------------------------------------
+                    --------------------------------------
+                    |  Element count      1032 PLANE182  |
+                    --------------------------------------
+
+  Test                Number tested  Warning count  Error count    Warn+Err %
+  ----                -------------  -------------  -----------    ----------
+  Aspect Ratio               1032              0             0         0.00 %
+  Parallel Deviation         1032              0             0         0.00 %
+  Maximum Angle              1032              0             0         0.00 %
+  Jacobian Ratio             1032              0             0         0.00 %
+
+  Any                        1032              0             0         0.00 %
+ ------------------------------------------------------------------------------
+
+ NUMBER OF WARNING MESSAGES ENCOUNTERED= 0
+NUMBER OF ERROR MESSAGES ENCOUNTERED= 0

@@ -1,0 +1,101 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "checkpoint": "new user-authorized consolidated-corrections review",
+  "verdict": "APPROVE",
+  "reviewed_commit": "377be1d535388709b16e01d43bb43b652a63663e",
+  "reviewed_revision": "e03359e1b1b56079ed9b53f1934d57e7dfe2a9b3",
+  "reviewed_revision_kind": "git tree object",
+  "comparison_baseline": "17bb5527150bb18ce4c942b04627bf00e4355a3e",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "8005d4984cac2571ddf3b873e0c20629bb92a62eaf7540008df8e67d7c695529"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "f908277a61fd38460d6459636c9b99115feb14d844d6cbaea0091e2034d9f3ad"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r1.json",
+      "sha256": "b256c71197afa2d16bfc698d124765a6a9720036a090e754322534004b964c6d"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r2.json",
+      "sha256": "34b5b9eda783f27decdabcdf7d7d8dc810d51da7f073ddc904ced3a5ff1c2ea1"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r3.json",
+      "sha256": "36834dad8f5f4f1b0455ca89da831a779f16ecfd13dd98f90f2a742888df9f02"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r1.json",
+      "sha256": "5ac3a3ef70aecaaf55eabe7b82d8d66e096271fbe09d8f010f8bf83c7f778e4c"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r2.json",
+      "sha256": "bae22075f520421a9588ee30523b8e5984cfcfac330087f0f1524dda16d9e4f3"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r3.json",
+      "sha256": "573568bfbc64c92bce8e0be41857cd535306f1773078bbc7ad2bff7cf72be666"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "89b855c6209c850ddef03a69738bce186862dd9853e0ef9b285bb28f70d3721e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "78460c5564dc32154c843df17ddbd3b1ba1e7641572b33ff81ff7f0e307555cc"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "5aee024d350f602715e7fba9679cab126be398f711eceae796d1240704fca91a"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "68d962b7f51bdcf2293cbbc98b96af54cba3e7807441d81401a8a59357cb24b4"
+    }
+  ],
+  "findings": [],
+  "verified": [
+    "All 12 changed artifacts read; commit-to-tree mapping and raw Git blob SHA-256 values mechanically verified",
+    "All 11 verification-receipt inventory hashes and five baseline source hashes match",
+    "All historical Claude/Codex R1-R3 reviewed-file hashes verified against their named Git trees; prior verdicts remain historical",
+    "Four private diagnostic corpus files read locally: exact byte counts, SHA-256 hashes and NOTE/WARNING/ERROR/FATAL heading counts match scope record",
+    "R3 F1 resolved by isolated symbolic derivation followed by a frozen arithmetic-only evaluator, rational arithmetic and 50-digit Decimal square root; no unaided high-precision provider arithmetic required",
+    "R3 F2 resolved by PRESOL,S,COMP, fixed FORMAT precision, keyed element-node contributions and representation guards; v242 PRESOL documentation independently inspected",
+    "R3 F3 resolved at plan stage by named streams, anchored diagnostic envelopes, totals/suppression/decoding/truncation checks, observed private NOTE/WARNING corpus and explicitly synthetic ERROR/FATAL fixtures",
+    "Selection order explicitly preserves full ESEL, restricts only NSEL for nine-row PRNSOL and restores/checks full selection",
+    "Dedicated CFOPEN/CFCLOS export is distinguished from stdout and independent listings; missing values are not zero",
+    "Fixed engineering, readback and reference criteria preserved; no observed-result calibration or discretionary numerical waiver",
+    "Zero-control/N4/N8/N16 order, four-attempt budget, no retries, isolated reference gate and independent adjudication remain consistent",
+    "B1 preparation and B2 native execution remain separate approval gates; no native pass, lookup promotion or 28-case expansion claimed"
+  ],
+  "source_checks": [
+    {
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_PRESOL.html",
+      "claim": "PRESOL provides selected-element node-location stress components; FORMAT exception is beam/pipe section output outside proposed scope"
+    },
+    {
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_NERR.html",
+      "claim": "STAT is supported; nonnegative display limits do not suppress error-file warning/error retention"
+    }
+  ],
+  "limitations": [
+    "Approval is a plan-review verdict, not user implementation or execution authorization",
+    "Native classifier, extraction, arithmetic evaluator and independent checker controls are proposed and require B1 tests and separate exact-current code/artifact review",
+    "No native ERROR/FATAL observed corpus or canary pass is established",
+    "Recorded historical vendor HTTP-byte digests were not independently re-fetched byte-for-byte",
+    "Previous own Codex receipts were checked for fidelity; that check does not add an independent provider lane"
+  ],
+  "cleanup": {
+    "CLEAN": [
+      "No repository edits, solver calls or persistent sessions created"
+    ],
+    "EXPECTED": [
+      "Private SOLVERS-2121-canary-checkpoint-codex.json review receipt"
+    ],
+    "UNEXPECTED": []
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "cylinder-producer-derivation-1",
+  "basis": "independently derived linear elastic continuum equations; approved inputs are not material allowables",
+  "derivation": "Radial equilibrium integrates to radial stress A-B/r**2 and hoop stress A+B/r**2. Inner radial traction -p and outer zero give A=p*a**2/(b**2-a**2), B=A*b**2. Open ends without axial load give axial stress and radial-axial shear zero. Isotropic Hooke law gives ur=((1-nu)*A*r+(1+nu)*B/r)/E and uz=-2*nu*A*y/E with bottom axial reference zero. Equivalent stress is sqrt(sigma_r**2+sigma_theta**2-sigma_r*sigma_theta).",
+  "code": "src/digitalmodel/ansys/cylinder_reference.py",
+  "source_relation": "VM25-v242 pressure-cylinder method corroboration only; no vendor target fixture retained",
+  "status": "producer-only; independent agreement not established",
+  "native_results": false
+}
