@@ -1,0 +1,3 @@
+# Raw hull drawings are retained in private storage.
+*.dwg
+*.[dD][wW][gG]
