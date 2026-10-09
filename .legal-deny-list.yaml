@@ -269,9 +269,7 @@ exclusions:
   - path: 'data/vessels/sources/install.json'
     reason: >-
       Public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Kept by owner decision C13 (2026-09-25).
-  - path: 'docs/domains/freecad/src/ref/125 LNGC.igs'
-    reason: >-
-      IGES header carries a client project path in fixed-width Hollerith fields that cannot be edited without re-export. Kept by owner decision C13 (2026-09-25).
+  # client CAD held privately per X03
   - path: 'src/digitalmodel/web/digitaltwinfeed/StockAnalysis/static/StockAnalysis/data/company_tickers_exchange.json'
     reason: >-
       Public SEC company-ticker registry; company names are listed securities, not engagements.
