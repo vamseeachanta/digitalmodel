@@ -878,7 +878,8 @@ def main(argv=None):
                 "YAML, including source-relative includes and mkdocs nav. C02/D01 filename qualification "
                 "and hygiene-sweep exceptions remain. Detected unresolved templates, globs and ambiguous "
                 "references receive human holds. Runtime/glob holds are restricted to the consumer directory "
-                "tree by owner policy R01; resolved static references retain their scope. "
+                "tree by owner policy R01 only when the pattern has no literal leading folder; folder-qualified "
+                "patterns retain that folder scope. Resolved static references retain their scope. "
                 "A bare directory mention excludes nothing."),
             "scope": "git ls-files (tracked only); extension match case-insensitive; size gate on git blob size",
             "source": "recovered from PR #2146 (head 48ff7b64) against its merge base 7e71d6b2",
