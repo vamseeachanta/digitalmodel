@@ -51,3 +51,8 @@ def test_lockfile_matches_project_version():
     locked = tomllib.loads((ROOT / "uv.lock").read_text())
     package = next(p for p in locked["package"] if p["name"] == "digitalmodel")
     assert package["version"] == project["project"]["version"]
+
+
+def test_global_lint_preserves_main_default_rules():
+    config = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    assert set(config["tool"]["ruff"]["lint"]["select"]) == {"E4", "E7", "E9", "F"}

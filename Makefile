@@ -30,7 +30,7 @@ FORMAT_FILES = scripts/enforcement/check-engineering-register.py src/digitalmode
 
 format:
 	@echo "Formatting code..."
-	@ruff format $(FORMAT_FILES)
+	@ruff check --select I --fix $(FORMAT_FILES) && ruff format $(FORMAT_FILES)
 
 clean:
 	@echo "🧹 Cleaning (parallel)..."
