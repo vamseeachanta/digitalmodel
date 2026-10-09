@@ -151,7 +151,7 @@ def _value_evidence(value, source, candidates, tracked, by_base):
     return "ambiguous or unresolved reference", matches & candidates, value
 
 
-def reference_safety(texts, candidates, tracked):
+def reference_safety(texts, candidates, tracked, hygiene_sources=frozenset()):
     """Return proven exclusions, candidate-level human holds, and scan gaps.
 
     Only executable Python and YAML are scanned here. CSV/JSON archive manifests
@@ -191,6 +191,8 @@ def reference_safety(texts, candidates, tracked):
             if len(value) > 512 or "." not in value or "://" in value:
                 continue
             reason, hits, matched = _value_evidence(value, source, candidates, tracked, by_base)
+            if source in hygiene_sources and reason == "runtime path or unresolved glob":
+                continue
             if uncertain:
                 reason = "readable reference in unparseable source"
             for path in sorted(hits - {source}):

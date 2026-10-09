@@ -710,7 +710,8 @@ def main(argv=None):
         if path not in consumer_texts and path.endswith((".yml", ".yaml", ".py")):
             with open(os.path.join(REPO, path), encoding="utf-8", errors="replace") as f:
                 consumer_texts[path] = f.read()
-    extra_refs, human_holds, reference_gaps = reference_safety(consumer_texts, rule_cands, all_paths)
+    extra_refs, human_holds, reference_gaps = reference_safety(
+        consumer_texts, rule_cands, all_paths, hygiene_sources=HYGIENE_SCANS)
     other_python = {p: t for p, t in consumer_texts.items()
                     if p.endswith(".py") and p not in code_texts and p not in REPORT_PRODUCERS}
     extra_refs.update(explicit_references(other_python, rule_cands, all_paths))

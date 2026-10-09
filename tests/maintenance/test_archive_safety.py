@@ -122,6 +122,17 @@ def test_generated_manifest_is_not_a_consumer():
     assert excluded[candidates[0]]["source"] == "docs/archive/consumer.yml"
 
 
+def test_runtime_holds_preserve_d01_hygiene_exception():
+    from archive_reference_safety import reference_safety
+    source = "tests/legal/test_published_pages_have_no_internal_paths.py"
+    candidates = ["docs/a.html", "docs/b.html"]
+    texts = {source: 'pages = root.rglob("*.html")\nexplicit = "docs/a.html"\n'}
+    excluded, held, _ = reference_safety(texts, candidates, candidates + [source],
+                                         hygiene_sources={source})
+    assert set(excluded) == {"docs/a.html"}
+    assert held == {}
+
+
 def _git(repo, *args):
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     return subprocess.check_output(["git", "-C", str(repo), *args], env=env).decode().strip()
