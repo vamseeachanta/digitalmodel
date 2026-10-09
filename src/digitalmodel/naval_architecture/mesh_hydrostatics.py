@@ -64,6 +64,7 @@ import hashlib
 import json
 import math
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Iterator, Optional, Sequence
 
@@ -132,9 +133,13 @@ def _face_area_vectors(vertices: np.ndarray, faces: np.ndarray) -> np.ndarray:
 
 
 def _read_only(a: np.ndarray) -> np.ndarray:
-    a = np.array(a, copy=True)
-    a.flags.writeable = False
-    return a
+    """Snapshot numeric data on immutable storage, including every ndarray base."""
+    if isinstance(a, np.ndarray) and type(a) is not np.ndarray:
+        raise TypeError("immutable arrays do not support ndarray subclasses")
+    a = np.asarray(a)
+    if a.dtype.hasobject:
+        raise TypeError("immutable arrays cannot contain object references")
+    return np.frombuffer(a.tobytes(order="C"), dtype=a.dtype).reshape(a.shape)
 
 
 class TriMesh:
@@ -199,29 +204,50 @@ class TriMesh:
                 f"baseline (lowest vertex) must be at canonical z = 0 (draft datum); found z = {zmin!r} m"
             )
 
-        digest = hashlib.sha256()
-        digest.update(np.ascontiguousarray(canon).tobytes())
-        digest.update(np.ascontiguousarray(f).tobytes())
-        digest.update(json.dumps([units, list(axes), bool(flip_normals)]).encode())
         self._vertices = _read_only(canon)
         self._faces = _read_only(f)
-        self.source_digest = digest.hexdigest()
-        self.units = units
-        self.axes = tuple(axes)
-        self.scale_diag = diag
+        digest = hashlib.sha256()
+        digest.update(self._vertices.tobytes())
+        digest.update(self._faces.tobytes())
+        digest.update(json.dumps([units, list(axes), bool(flip_normals)]).encode())
+        self._source_digest = digest.hexdigest()
+        self._units = units
+        self._axes = tuple(axes)
+        self._scale_diag = diag
+
+    def __setstate__(self, state) -> None:
+        self.__dict__.update(state)
+        self._vertices = _read_only(self._vertices)
+        self._faces = _read_only(self._faces)
 
     @property
     def vertices(self) -> np.ndarray:
-        return self._vertices
+        return self._vertices.view()
 
     @property
     def faces(self) -> np.ndarray:
-        return self._faces
+        return self._faces.view()
+
+    @property
+    def source_digest(self) -> str:
+        return self._source_digest
+
+    @property
+    def units(self) -> str:
+        return self._units
+
+    @property
+    def axes(self) -> tuple[str, ...]:
+        return self._axes
+
+    @property
+    def scale_diag(self) -> float:
+        return self._scale_diag
 
     @property
     def bounds(self) -> tuple[np.ndarray, np.ndarray]:
         used = self._vertices[np.unique(self._faces)]
-        return used.min(axis=0), used.max(axis=0)
+        return _read_only(used.min(axis=0)), _read_only(used.max(axis=0))
 
 
 def _check_edges(faces: np.ndarray) -> None:
@@ -424,7 +450,7 @@ def _cap_area_vector(vertices: np.ndarray, boundary: np.ndarray) -> tuple[np.nda
     return c, 0.5 * np.cross(b, a).sum(axis=0)
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ClippedHull:
     """Closed submerged body in the canonical hull frame: physical faces plus artificial cap."""
 
@@ -436,8 +462,20 @@ class ClippedHull:
     plane_normal: np.ndarray
     waterplane_x_axis: np.ndarray
 
+    def __post_init__(self) -> None:
+        for name in ("vertices", "faces", "artificial", "waterline_points",
+                     "plane_point", "plane_normal", "waterplane_x_axis"):
+            object.__setattr__(self, name, _read_only(getattr(self, name)))
+
+    def __getattribute__(self, name):
+        value = object.__getattribute__(self, name)
+        return value.view() if isinstance(value, np.ndarray) else value
+
+    def __reduce__(self):
+        return type(self), tuple(getattr(self, name) for name in self.__dataclass_fields__)
+
     def face_areas(self) -> np.ndarray:
-        return np.linalg.norm(_face_area_vectors(self.vertices, self.faces), axis=1)
+        return _read_only(np.linalg.norm(_face_area_vectors(self.vertices, self.faces), axis=1))
 
 
 def _condition_geometry(mesh: TriMesh, draft, trim, x_midship, l_pp):
@@ -564,13 +602,27 @@ def _half_breadth(segs: np.ndarray, z: float, tol: float) -> float:
 # ---------------------------------------------------------------- output schema
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Quantity:
     value: object
     units: str
     provenance: str  # "computed" | "declared" | "not_computed"
     input_hash: str
     reason: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        value = object.__getattribute__(self, "value")
+        snapshot = _read_only(value) if isinstance(value, np.ndarray) else deepcopy(value)
+        object.__setattr__(self, "value", snapshot)
+
+    def __getattribute__(self, name):
+        value = object.__getattribute__(self, name)
+        if name == "value":
+            return value.view() if isinstance(value, np.ndarray) else deepcopy(value)
+        return value
+
+    def __reduce__(self):
+        return type(self), (self.value, self.units, self.provenance, self.input_hash, self.reason)
 
     def to_dict(self) -> dict:
         v = self.value
@@ -580,11 +632,26 @@ class Quantity:
                 "input_hash": self.input_hash, "reason": self.reason}
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class HydrostaticsResult(Mapping):
     quantities: dict
     input_hash: str
     conventions: dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "quantities", dict(self.quantities))
+        object.__setattr__(self, "conventions", deepcopy(self.conventions))
+
+    def __getattribute__(self, name):
+        value = object.__getattribute__(self, name)
+        if name == "quantities":
+            return dict(value)
+        if name == "conventions":
+            return deepcopy(value)
+        return value
+
+    def __reduce__(self):
+        return type(self), (dict(self.quantities), self.input_hash, dict(self.conventions))
 
     def __getitem__(self, key: str) -> Quantity:
         return self.quantities[key]
