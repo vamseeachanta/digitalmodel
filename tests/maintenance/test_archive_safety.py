@@ -73,7 +73,7 @@ def test_deep_reference_and_registry_paths_are_excluded():
 def test_yaml_references_preserve_escaped_and_template_paths():
     from archive_reference_safety import reference_safety
     candidates = ["docs/input.dat", "docs/models/a.dat"]
-    texts = {"examples/run.yml": 'input: "docs/input\\u002edat"\nmodel: "docs/models/${name}.${ext}"\n'}
+    texts = {"docs/run.yml": 'input: "docs/input\\u002edat"\nmodel: "docs/models/${name}.${ext}"\n'}
     excluded, held, _ = reference_safety(texts, candidates, candidates + list(texts))
     assert set(excluded) == {"docs/input.dat"}
     assert set(held) == {"docs/models/a.dat"}
@@ -83,7 +83,7 @@ def test_ambiguous_and_runtime_references_are_held():
     from archive_reference_safety import reference_safety
     candidates = ["docs/a/report.html", "docs/b/report.html", "docs/models/a.dat",
                   "other/unrelated.pdf"]
-    texts = {"examples/run.py": 'p = f"docs/models/{name}.dat"\n',
+    texts = {"docs/run.py": 'p = f"docs/models/{name}.dat"\n',
              "examples/config.yml": "report: report.html\n"}
     excluded, held, _ = reference_safety(texts, candidates, candidates + list(texts))
     assert excluded == {}
@@ -93,7 +93,7 @@ def test_ambiguous_and_runtime_references_are_held():
 def test_runtime_join_and_unanchored_glob_hold_potential_inputs():
     from archive_reference_safety import reference_safety
     candidates = ["docs/models/a.dat", "other/b.dat", "docs/a.sim", "docs/free.png"]
-    texts = {"examples/run.py": ('from pathlib import Path\n'
+    texts = {"docs/run.py": ('from pathlib import Path\n'
                                 'root = Path("docs/models")\n'
                                 'p = root / (name + ".dat")\n'
                                 'q = unknown.glob("*.sim")\n')}
@@ -105,7 +105,7 @@ def test_runtime_join_and_unanchored_glob_hold_potential_inputs():
 def test_formatted_runtime_path_is_held_instead_of_assumed_literal():
     from archive_reference_safety import reference_safety
     candidates = ["docs/models/       a.dat", "docs/models/a.dat"]
-    source = "examples/run.py"
+    source = "docs/run.py"
     text = 'name = "a"\np = f"docs/models/{name:>8}.dat"\n'
     refs = ac.explicit_references({source: text}, candidates, candidates + [source])
     assert refs == {}
@@ -143,7 +143,7 @@ def test_literal_string_join_can_resolve_an_input_filename():
 def test_generic_format_in_actual_path_expression_requires_human_check():
     from archive_reference_safety import reference_safety
     candidates = ["docs/input.dat", "docs/report.html"]
-    texts = {"src/read.py": 'from pathlib import Path\np = Path(f"{stem}.{extension}")\n'}
+    texts = {"docs/read.py": 'from pathlib import Path\np = Path(f"{stem}.{extension}")\n'}
     excluded, held, _ = reference_safety(texts, candidates, candidates + list(texts))
     assert excluded == {} and set(held) == set(candidates)
 
@@ -151,7 +151,7 @@ def test_generic_format_in_actual_path_expression_requires_human_check():
 def test_generic_format_in_path_division_requires_human_check():
     from archive_reference_safety import reference_safety
     candidates = ["docs/input.dat"]
-    texts = {"src/read.py": 'p = root / f"{stem}.{extension}"\n'}
+    texts = {"docs/read.py": 'p = root / f"{stem}.{extension}"\n'}
     _, held, _ = reference_safety(texts, candidates, candidates + list(texts))
     assert set(held) == set(candidates)
 
@@ -260,7 +260,7 @@ def test_generator_partitions_move_keep_hold_and_excluded(tmp_path, monkeypatch)
              "docs/free.png": "image",
              "docs/input.dat": "input",
              "docs/held.sim": "simulation",
-             "examples/run.py": 'p = f"docs/{name}.sim"\n',
+             "docs/run.py": 'p = f"docs/{name}.sim"\n',
              "docs/example.yml": "input: input.dat\nGeneral: {}\n",
              "docs/keep.yml": "General:\n  RareSolverMethod: Explicit\n#" + "x" * 1_000_001,
              "docs/bad.yml": "[ invalid\n#" + "x" * 1_000_001}
@@ -292,10 +292,19 @@ def test_generator_partitions_move_keep_hold_and_excluded(tmp_path, monkeypatch)
     assert move == {"docs/free.png"}
     assert len(excluded | kept | held | move) == summary["rule_matches"] == 5
     assert summary["move_set_after_feature_keep"]["files"] == 1
+    assert out_json.stat().st_size < 1_000_000
+    assert "paths" not in summary["needs_human_check"]
+    assert all("human_check_reasons" not in row for row in rows)
+    detail = json.loads((tmp_path / summary["hold_detail_file"]).read_text())
+    for row in rows:
+        ids = json.loads(row["hold_consumers"])
+        assert bool(ids) == (row["needs_human_check"] == "True")
+        assert all(row["path"] in detail["candidates_by_consumer"][key] for key in ids)
     assert _git(Path.cwd(), "rev-parse", "HEAD") == before
 
 
-def test_empty_candidate_manifest_has_headers(tmp_path):
+@pytest.mark.parametrize("summary_name,custom_detail", [("out.json", False), ("summary", False), ("out.json", True)])
+def test_empty_candidate_manifest_has_headers(tmp_path, summary_name, custom_detail):
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init")
@@ -307,7 +316,58 @@ def test_empty_candidate_manifest_has_headers(tmp_path):
     _git(repo, "commit", "-m", "empty selection")
     _git(repo, "update-ref", "refs/remotes/origin/main", _git(repo, "rev-parse", "HEAD"))
     (tmp_path / "previous.txt").write_text("")
-    ac.main([str(repo), str(tmp_path / "previous.txt"), str(tmp_path / "out.csv"),
-             str(tmp_path / "out.json"), "--blob-map", str(tmp_path / "map.csv")])
+    args = [str(repo), str(tmp_path / "previous.txt"), str(tmp_path / "out.csv"),
+            str(tmp_path / summary_name), "--blob-map", str(tmp_path / "map.csv")]
+    if custom_detail:
+        args += ["--hold-detail", str(repo / "detail.json")]
+    ac.main(args)
+    summary = json.loads((tmp_path / summary_name).read_text())
+    detail = json.loads((tmp_path / summary["hold_detail_file"]).read_text())
+    assert detail["candidates_by_consumer"] == {}
     assert list(csv.DictReader((tmp_path / "out.csv").open())) == []
     assert "path" in (tmp_path / "map.csv").read_text()
+
+
+@pytest.mark.parametrize("expression", ['unknown.glob("*.png")', 'root / f"{name}.png"'])
+def test_dynamic_hold_stays_in_consumer_directory(expression):
+    from archive_reference_safety import reference_safety
+    candidates = ["examples/a/x.png", "examples/a/nested/x.png", "docs/b/x.png", "examples/ab/x.png"]
+    texts = {"examples/a/run.py": "p = " + expression + "\n"}
+    _, held, _ = reference_safety(texts, candidates, candidates + list(texts))
+    assert set(held) == set(candidates[:2])
+
+
+def test_compact_holds_store_evidence_once_per_consumer():
+    from archive_reference_safety import compact_holds
+    evidence = {"source": "a/run.py", "matched": "*.png", "reason": "runtime path or unresolved glob"}
+    held = {"a/x.png": [evidence, evidence], "a/y.png": [evidence]}
+    consumers, candidate_ids, detail = compact_holds(held)
+    assert len(consumers) == 1
+    consumer_id = next(iter(consumers))
+    assert consumers[consumer_id]["candidate_count"] == 2
+    assert consumers[consumer_id]["evidence"] == [{"pattern": "*.png", "reason": evidence["reason"], "candidate_count": 2}]
+    assert candidate_ids == {"a/x.png": [consumer_id], "a/y.png": [consumer_id]}
+    assert detail[consumer_id] == ["a/x.png", "a/y.png"]
+
+
+def test_root_consumer_can_hold_root_tree():
+    from archive_reference_safety import reference_safety
+    candidates = ["a/x.png", "b/x.png"]
+    _, held, _ = reference_safety({"run.py": 'p = root.glob("*.png")\n'}, candidates, candidates + ["run.py"])
+    assert set(held) == set(candidates)
+
+
+@pytest.mark.parametrize("text", ['p = f"docs/{name}.png"\n', 'p = "docs/*.png"\n[broken'])
+def test_dynamic_repo_prefix_does_not_escape_consumer_tree(text):
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/x.png", "examples/x.png"]
+    _, held, _ = reference_safety({"examples/run.py": text}, candidates, candidates + ["examples/run.py"])
+    assert "docs/x.png" not in held
+
+
+def test_colliding_outputs_are_rejected_before_writes(tmp_path):
+    summary = tmp_path / "out.json"
+    summary.write_text("preserve")
+    with pytest.raises(ValueError, match="distinct"):
+        ac.main([str(tmp_path), "unused", str(tmp_path / "out.csv"), str(summary), "--hold-detail", str(summary)])
+    assert summary.read_text() == "preserve"

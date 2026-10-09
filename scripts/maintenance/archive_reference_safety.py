@@ -246,6 +246,9 @@ def _value_evidence(value, source, candidates, tracked, by_base, path_context=Fa
         if "/" not in pattern or unknown_prefix:
             hits |= {p for p in candidates
                      if fnmatch.fnmatchcase(posixpath.basename(p), posixpath.basename(pattern))}
+        # R01 owner policy: unresolved dynamic evidence is local to its consumer.
+        directory = posixpath.dirname(source)
+        hits = {p for p in hits if not directory or p.startswith(directory + "/")}
         return "runtime path or unresolved glob", hits, pattern
     basename = posixpath.basename(value)
     matches = by_base.get(basename, set())
@@ -310,3 +313,25 @@ def reference_safety(texts, candidates, tracked, hygiene_sources=frozenset()):
                 reason = "readable reference in unparseable source"
             _record_hits(excluded, held, hits, source, matched, reason)
     return excluded, {p: evidence for p, evidence in held.items() if p not in excluded}, gaps
+
+
+def compact_holds(held):
+    """Use consumer paths as stable IDs; count unique candidates per evidence."""
+    consumers, candidate_ids, detail = {}, {}, {}
+    evidence_paths = {}
+    for path, reasons in sorted(held.items()):
+        ids = set()
+        for evidence in reasons:
+            source = evidence["source"]
+            ids.add(source)
+            key = (source, evidence.get("matched", ""), evidence["reason"])
+            evidence_paths.setdefault(key, set()).add(path)
+        candidate_ids[path] = sorted(ids)
+        for source in sorted(ids):
+            detail.setdefault(source, []).append(path)
+    for source, paths in sorted(detail.items()):
+        consumers[source] = {"candidate_count": len(paths), "evidence": []}
+    for (source, pattern, reason), paths in sorted(evidence_paths.items()):
+        consumers[source]["evidence"].append(
+            {"pattern": pattern, "reason": reason, "candidate_count": len(paths)})
+    return consumers, candidate_ids, detail

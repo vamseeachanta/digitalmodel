@@ -31,7 +31,7 @@ import sys
 from concurrent.futures import ProcessPoolExecutor
 sys.path.insert(0, os.path.dirname(__file__))
 from archive_reference_safety import (CyclicYamlError, REPORT_PRODUCERS, basename_references, git_environment,
-                                      lfs_pointer_paths, reference_safety,
+                                      compact_holds, lfs_pointer_paths, reference_safety,
                                       scan_provenance)
 
 ALWAYS = {
@@ -51,6 +51,7 @@ EXCLUDED_REPORTS = {
     "docs/archive/R01-archive-manifest-review.html",
     "docs/archive/archive-candidates-2026-10-08.csv",
     "docs/archive/archive-candidates-2026-10-08.summary.json",
+    "docs/archive/archive-candidates-2026-10-08.holds.json",
     "docs/archive/archive-blob-map-2026-10-08.csv",
     "docs/archive/model-yaml-feature-inventory-2026-10-08.json",
 }
@@ -667,8 +668,13 @@ def main(argv=None):
     ap.add_argument("out_json")
     ap.add_argument("--blob-map")
     ap.add_argument("--features")
+    ap.add_argument("--hold-detail", help="Consumer-to-candidate detail JSON; defaults beside summary")
     ap.add_argument("--previous-summary", help="Previous manifest summary for a recorded count delta")
     a = ap.parse_args(argv)
+    detail_path = a.hold_detail or os.path.splitext(a.out_json)[0] + ".holds.json"
+    outputs = [p for p in (a.out_csv, a.out_json, detail_path, a.blob_map, a.features) if p]
+    if len({os.path.realpath(p) for p in outputs}) != len(outputs):
+        raise ValueError("Manifest output paths must be distinct")
     previous = None
     if a.previous_summary:
         with open(a.previous_summary, encoding="utf-8") as f:
@@ -815,20 +821,21 @@ def main(argv=None):
     for i, g in enumerate(dd["groups"], 1):
         for pp in g["paths"]:
             group_of[pp] = i
+    hold_consumers, candidate_hold_ids, hold_detail = compact_holds(human_holds)
     for row in rows:
         row["dup_group"] = group_of.get(row["path"], "")
         row["blob_store_path"] = blob_store_path(row["sha256_blob"], dd["canonical"][row["sha256_blob"]])
         row["is_canonical_copy"] = dd["canonical"][row["sha256_blob"]] == row["path"]
         row["keep_for_feature"] = row["path"] in keep_paths
         row["needs_human_check"] = row["path"] in human_holds
-        row["human_check_reasons"] = json.dumps(human_holds.get(row["path"], []), sort_keys=True)
+        row["hold_consumers"] = json.dumps(candidate_hold_ids.get(row["path"], []))
 
     if scan_provenance(REPO) != provenance:
         raise ValueError("Scan inputs changed during generation")
 
     with open(a.out_csv, "w", newline="", encoding="utf-8") as f:
         fields = (list(rows[0]) if rows else ["path", "keep_for_feature", "needs_human_check",
-                                            "human_check_reasons"])
+                                            "hold_consumers"])
         w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
@@ -870,7 +877,9 @@ def main(argv=None):
                 "R01: explicit file references from src/tests, other tracked Python consumers and tracked "
                 "YAML, including source-relative includes and mkdocs nav. C02/D01 filename qualification "
                 "and hygiene-sweep exceptions remain. Detected unresolved templates, globs and ambiguous "
-                "references receive human holds. A bare directory mention excludes nothing."),
+                "references receive human holds. Runtime/glob holds are restricted to the consumer directory "
+                "tree by owner policy R01; resolved static references retain their scope. "
+                "A bare directory mention excludes nothing."),
             "scope": "git ls-files (tracked only); extension match case-insensitive; size gate on git blob size",
             "source": "recovered from PR #2146 (head 48ff7b64) against its merge base 7e71d6b2",
         },
@@ -897,7 +906,9 @@ def main(argv=None):
         "kept_for_feature": {"files": len(keep_paths),
                              "blob_size_bytes": sum(row["blob_size_bytes"] for row in rows
                                                     if row["keep_for_feature"])},
-        "needs_human_check": {"files": len(human_holds), "paths": human_holds},
+        "needs_human_check": {"files": len(human_holds)},
+        "human_holds_by_consumer": hold_consumers,
+        "hold_detail_file": os.path.relpath(detail_path, os.path.dirname(os.path.abspath(a.out_json))),
         "reference_scan_gaps": reference_gaps,
         "reference_limitations": ["Arbitrary runtime/config-driven paths cannot be proven statically; "
                                   "detected ambiguous/template references are held, not moved.",
@@ -948,9 +959,14 @@ def main(argv=None):
             "feature_keep_files_delta": len(keep_paths) - previous["kept_for_feature"]["files"],
             "human_check_files_delta": len(human_holds) - previous.get("needs_human_check", {}).get("files", 0),
         }
-    with open(a.out_json, "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
+    serialized = json.dumps(summary, indent=2) + "\n"
+    if len(serialized.encode("utf-8")) >= 1_000_000:
+        raise ValueError("Summary exceeds the R01 1 MB limit")
+    with open(detail_path, "w", encoding="utf-8") as f:
+        json.dump({"scan_provenance": provenance, "candidates_by_consumer": hold_detail}, f, indent=2)
         f.write("\n")
+    with open(a.out_json, "w", encoding="utf-8") as f:
+        f.write(serialized)
 
     if a.features:
         inv = {
