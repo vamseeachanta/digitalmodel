@@ -29,6 +29,10 @@ import re
 import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+sys.path.insert(0, os.path.dirname(__file__))
+from archive_reference_safety import (CyclicYamlError, REPORT_PRODUCERS, git_environment,
+                                      lfs_pointer_paths, reference_safety,
+                                      scan_provenance)
 
 ALWAYS = {
     # solver inputs / results / CAD-mesh
@@ -97,7 +101,9 @@ def blob_map(rows):
         sha = r["sha256_blob"]
         out.append({"path": r["path"], "sha256_blob": sha, "blob_size_bytes": r["blob_size_bytes"],
                     "blob_path": blob_store_path(sha, canonical[sha]),
-                    "is_canonical_copy": canonical[sha] == r["path"]})
+                    "is_canonical_copy": canonical[sha] == r["path"],
+                    "keep_for_feature": r.get("keep_for_feature", False),
+                    "needs_human_check": r.get("needs_human_check", False)})
     return out
 
 
@@ -252,8 +258,11 @@ class _PyRefs:
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             r.add(("s", node.value))
         elif isinstance(node, ast.JoinedStr):
-            if all(isinstance(v, ast.Constant) for v in node.values):
-                r.add(("s", "".join(str(v.value) for v in node.values)))
+            vals = {""}
+            for v in node.values:
+                part = e(v.value) if isinstance(v, ast.FormattedValue) else e(v)
+                vals = {a + b[1] for a in vals for b in part if b[0] == "s"}
+            r |= {("s", v) for v in vals}
         elif isinstance(node, ast.Name):
             if node.id == "__file__":
                 r.add(("p", self.path))
@@ -361,6 +370,8 @@ class _PyRefs:
                 vals = self.ev(n)
             elif isinstance(n, ast.Constant) and isinstance(n.value, str) and len(n.value) < 512:
                 vals = {("s", n.value)}
+            elif isinstance(n, ast.JoinedStr):
+                vals = self.ev(n)
             for v in vals or ():
                 p = self.to_path(v)
                 if p is None:
@@ -499,7 +510,6 @@ VOCAB_KEY = re.compile(
     r"^(?:\d?[A-Z][A-Za-z0-9]*[A-Za-z]|[a-z][a-z0-9]*(?:_[a-z0-9]+)*[a-z]|[A-Z]-[a-z][A-Za-z]*|[A-Za-z])$")
 # maps whose keys are always object names
 NAME_MAP_PARENTS = {"Structure", "State", "BrowserGroups"}
-MAX_DEPTH = 5
 
 
 def _vocab(k):
@@ -538,28 +548,31 @@ def _name_keyed(d, parent):
     return any(not _vocab(str(k)) for k in d)
 
 
-def _walk(node, path, out, depth):
-    if depth > MAX_DEPTH:
-        return
-    if isinstance(node, dict):
-        parent = path.rsplit("/", 1)[-1] if path else ""
-        # top level holds sections: collapse only the non-vocabulary keys there
-        collapse_all = bool(path) and _name_keyed(node, parent)
-        for k, v in node.items():
-            k = str(k).strip()
-            collapse = collapse_all or not _vocab(k)
-            seg = "*" if collapse else k
-            p = f"{path}/{seg}" if path else seg
-            if not path:
-                out.add(f"section:{seg}")
-            out.add(f"key:{p}")
-            if (not collapse and isinstance(v, str) and _is_enum_key(k, parent)
-                    and ENUM_VALUE.match(v.strip())):
-                out.add(f"value:{p}={v.strip().lower()}")
-            _walk(v, p, out, depth + 1)
-    elif isinstance(node, list):
-        for item in node:
-            _walk(item, path, out, depth)
+def _walk(node, path, out):
+    stack = [(node, path, frozenset())]
+    while stack:
+        node, path, ancestors = stack.pop()
+        if isinstance(node, (dict, list)):
+            if id(node) in ancestors:
+                raise CyclicYamlError("recursive YAML alias")
+            ancestors = ancestors | {id(node)}
+        if isinstance(node, list):
+            stack.extend((item, path, ancestors) for item in node)
+        elif isinstance(node, dict):
+            parent = path.rsplit("/", 1)[-1] if path else ""
+            collapse_all = bool(path) and _name_keyed(node, parent)
+            for k, v in node.items():
+                k = str(k).strip()
+                collapse = collapse_all or not _vocab(k)
+                seg = "*" if collapse else k
+                p = f"{path}/{seg}" if path else seg
+                if not path:
+                    out.add(f"section:{seg}")
+                out.add(f"key:{p}")
+                if (not collapse and isinstance(v, str) and _is_enum_key(k, parent)
+                        and ENUM_VALUE.match(v.strip())):
+                    out.add(f"value:{p}={v.strip().lower()}")
+                stack.append((v, p, ancestors))
 
 
 def extract_features(docs):
@@ -568,7 +581,7 @@ def extract_features(docs):
     out = set()
     for d in docs:
         if isinstance(d, (dict, list)):
-            _walk(d, "", out, 0)
+            _walk(d, "", out)
     return out
 
 
@@ -628,7 +641,10 @@ def _parse_features(args):
     kind = model_yaml_kind(docs)
     if kind is None:
         return path, None, [], None
-    return path, kind, sorted(extract_features(docs)), None
+    try:
+        return path, kind, sorted(extract_features(docs)), None
+    except (CyclicYamlError, RecursionError) as error:
+        return path, None, [], type(error).__name__
 
 
 # --- generator ----------------------------------------------------------------
@@ -641,12 +657,20 @@ def main(argv=None):
     ap.add_argument("out_json")
     ap.add_argument("--blob-map")
     ap.add_argument("--features")
+    ap.add_argument("--previous-summary", help="Previous manifest summary for a recorded count delta")
     a = ap.parse_args(argv)
+    previous = None
+    if a.previous_summary:
+        with open(a.previous_summary, encoding="utf-8") as f:
+            previous = json.load(f)
     REPO = a.repo
+    provenance = scan_provenance(REPO)
+    lfs_paths = set(lfs_pointer_paths(REPO))
 
     def git(*args, inp=None):
         return subprocess.run(["git", "-c", "core.quotepath=false", "-C", REPO, *args],
-                              input=inp, capture_output=True, check=True).stdout
+                              input=inp, capture_output=True, check=True,
+                              env=git_environment()).stdout
 
     entries = []
     for rec in git("ls-files", "-s", "-z").split(b"\0"):
@@ -665,7 +689,7 @@ def main(argv=None):
 
     rule_cands = []
     for p in all_paths:
-        if p.startswith(EXCLUDED_PREFIXES):
+        if p.startswith(EXCLUDED_PREFIXES) or p in lfs_paths:
             continue
         e = ext(p)
         if e in ALWAYS or (e in SIZE_GATED and blob_size[p] > SIZE_GATE):
@@ -681,6 +705,18 @@ def main(argv=None):
         with open(os.path.join(REPO, cf), "rb") as f:
             code_texts[cf] = f.read().decode("utf-8", "replace")
     refs_found = explicit_references(code_texts, rule_cands, all_paths)
+    consumer_texts = dict(code_texts)
+    for path in all_paths:
+        if path not in consumer_texts and path.endswith((".yml", ".yaml", ".py")):
+            with open(os.path.join(REPO, path), encoding="utf-8", errors="replace") as f:
+                consumer_texts[path] = f.read()
+    extra_refs, human_holds, reference_gaps = reference_safety(consumer_texts, rule_cands, all_paths)
+    other_python = {p: t for p, t in consumer_texts.items()
+                    if p.endswith(".py") and p not in code_texts and p not in REPORT_PRODUCERS}
+    extra_refs.update(explicit_references(other_python, rule_cands, all_paths))
+    for path, evidence in extra_refs.items():
+        refs_found.setdefault(path, evidence)
+    human_holds = {p: v for p, v in human_holds.items() if p not in refs_found}
     excluded = []
     for p in rule_cands:
         if p in refs_found:
@@ -697,7 +733,8 @@ def main(argv=None):
     need = set(cands)
     last = {}
     proc = subprocess.Popen(["git", "-c", "core.quotepath=false", "-C", REPO, "log", "--format=@@%cs",
-                             "--name-only", "--no-renames", "HEAD"], stdout=subprocess.PIPE)
+                             "--name-only", "--no-renames", "HEAD"], stdout=subprocess.PIPE,
+                            env=git_environment())
     cur = None
     for raw in proc.stdout:
         line = raw.decode("utf-8", "replace").rstrip("\r\n")
@@ -709,11 +746,12 @@ def main(argv=None):
             if not need:
                 break
     proc.kill()
+    proc.communicate()
 
     # references: git grep -l -F <basename> over tracked text files, one call per unique basename
     def refs(b):
         rr = subprocess.run(["git", "-c", "core.quotepath=false", "-C", REPO, "grep", "-l", "-I", "-F", "-z",
-                             "-e", b], capture_output=True)
+                             "-e", b], capture_output=True, env=git_environment())
         return b, [x.decode("utf-8") for x in rr.stdout.split(b"\0") if x]
 
     with ThreadPoolExecutor(8) as ex:
@@ -728,9 +766,12 @@ def main(argv=None):
     kinds = {p: k for p, k, _, _ in parsed if k}
     file_features = {p: set(fs) for p, k, fs, _ in parsed if k}
     parse_fail = sorted(p for p, _, _, err in parsed if err)
+    for p, _, _, err in parsed:
+        if err and p in cand_set:
+            human_holds.setdefault(p, []).append({"source": p, "reason": err})
     uniq = unique_features(file_features)
     cover = feature_cover(file_features)
-    keep_set, cand_only = candidate_keep_set(file_features, cand_set)
+    keep_set, cand_only = candidate_keep_set(file_features, cand_set - set(human_holds))
     keep_paths = set(keep_set)
     print("model yaml", len(file_features), "with unique features", len(uniq),
           "candidate-only features", len(cand_only), "keep", len(keep_set), file=sys.stderr)
@@ -771,16 +812,25 @@ def main(argv=None):
         row["blob_store_path"] = blob_store_path(row["sha256_blob"], dd["canonical"][row["sha256_blob"]])
         row["is_canonical_copy"] = dd["canonical"][row["sha256_blob"]] == row["path"]
         row["keep_for_feature"] = row["path"] in keep_paths
+        row["needs_human_check"] = row["path"] in human_holds
+        row["human_check_reasons"] = json.dumps(human_holds.get(row["path"], []), sort_keys=True)
+
+    if scan_provenance(REPO) != provenance:
+        raise ValueError("Scan inputs changed during generation")
 
     with open(a.out_csv, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), lineterminator="\n")
+        fields = (list(rows[0]) if rows else ["path", "keep_for_feature", "needs_human_check",
+                                            "human_check_reasons"])
+        w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 
     if a.blob_map:
         with open(a.blob_map, "w", newline="", encoding="utf-8") as f:
             bm = blob_map(rows)
-            w = csv.DictWriter(f, fieldnames=list(bm[0].keys()), lineterminator="\n")
+            fields = (list(bm[0]) if bm else ["path", "sha256_blob", "blob_size_bytes",
+                                            "blob_path", "is_canonical_copy"])
+            w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
             w.writeheader()
             w.writerows(bm)
 
@@ -792,20 +842,21 @@ def main(argv=None):
             d[row[key]]["blob_size_bytes"] += row["blob_size_bytes"]
         return dict(sorted(d.items(), key=lambda kv: -kv[1]["blob_size_bytes"]))
 
-    move_rows = [row for row in rows if not row["keep_for_feature"]]
+    move_rows = [row for row in rows if not row["keep_for_feature"] and not row["needs_human_check"]]
     move_dd = dedup_blobs(move_rows)
-    head = git("rev-parse", "HEAD").decode().strip()
+    head = provenance["base_commit"]
     pr_not_cand = sorted(pr - set(rule_cands))
     feat_owner_count = collections.Counter(f for fs in file_features.values() for f in fs)
     summary = {
         "generated": datetime.date.today().isoformat(),
         "base_commit": head,
+        "scan_provenance": provenance,
         "rule": {
             "extensions_any_size": sorted(ALWAYS),
             "extensions_size_gated": sorted(SIZE_GATED),
             "size_gate_bytes_exclusive": SIZE_GATE,
             "excluded_prefixes": list(EXCLUDED_PREFIXES),
-            "excluded_if_referenced_from": list(CODE_PREFIXES),
+            "excluded_if_referenced_from": ["src/", "tests/", "tracked YAML and Python consumers"],
             "reference_evidence": (
                 "explicit file references only (owner decision C02, 2026-10-08): the file's repo path "
                 "appears in src/ or tests/ text or a Python path expression resolves to it; its exact "
@@ -814,9 +865,10 @@ def main(argv=None):
             "scope": "git ls-files (tracked only); extension match case-insensitive; size gate on git blob size",
             "source": "recovered from PR #2146 (head 48ff7b64) against its merge base 7e71d6b2",
         },
-        "lfs_tracked_files": len([x for x in git("lfs", "ls-files", "-n").decode().splitlines() if x]),
+        "lfs_tracked_files": len(lfs_paths),
+        "lfs_detection": "indexed Git LFS pointer headers; pointers excluded",
         "rule_matches": len(rule_cands),
-        "excluded_referenced_by_src_or_tests": {
+        "excluded_referenced": {
             "files": len(excluded), "blob_size_bytes": sum(x["blob_size_bytes"] for x in excluded),
             "by_evidence": {ev: {"files": sum(x["evidence"] == ev for x in excluded),
                                  "blob_size_bytes": sum(x["blob_size_bytes"] for x in excluded
@@ -833,9 +885,14 @@ def main(argv=None):
                                      "bytes_total", "bytes_unique", "bytes_saved")},
         "dedup_top_groups": [{k: g[k] for k in ("sha256_blob", "count", "blob_size_bytes", "bytes_saved")}
                              | {"example_path": g["paths"][0]} for g in dd["groups"][:20]],
-        "kept_for_feature": {"files": len(rows) - len(move_rows),
-                                    "blob_size_bytes": sum(row["blob_size_bytes"] for row in rows)
-                                    - sum(row["blob_size_bytes"] for row in move_rows)},
+        "kept_for_feature": {"files": len(keep_paths),
+                             "blob_size_bytes": sum(row["blob_size_bytes"] for row in rows
+                                                    if row["keep_for_feature"])},
+        "needs_human_check": {"files": len(human_holds), "paths": human_holds},
+        "reference_scan_gaps": reference_gaps,
+        "reference_limitations": ["Arbitrary runtime/config-driven paths cannot be proven statically; "
+                                  "detected ambiguous/template references are held, not moved.",
+                                  "Archive CSV/JSON and Markdown reports are not consumer evidence."],
         "move_set_after_feature_keep": {k: move_dd[k] for k in ("files", "unique_blobs", "duplicate_groups",
                                                                  "duplicate_files", "bytes_total",
                                                                  "bytes_unique", "bytes_saved")},
@@ -869,6 +926,19 @@ def main(argv=None):
             },
         },
     }
+    if previous:
+        previous_excluded = previous.get("excluded_referenced",
+                                         previous.get("excluded_referenced_by_src_or_tests", {}))
+        summary["comparison_with_previous_run"] = {
+            "base_commit": previous["base_commit"],
+            "rule_matches_delta": summary["rule_matches"] - previous["rule_matches"],
+            "excluded_files_previous": previous_excluded["files"],
+            "excluded_files_delta": len(excluded) - previous_excluded["files"],
+            "move_files_previous": previous["move_set_after_feature_keep"]["files"],
+            "move_files_delta": len(move_rows) - previous["move_set_after_feature_keep"]["files"],
+            "feature_keep_files_delta": len(keep_paths) - previous["kept_for_feature"]["files"],
+            "human_check_files_delta": len(human_holds) - previous.get("needs_human_check", {}).get("files", 0),
+        }
     with open(a.out_json, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
         f.write("\n")
@@ -877,6 +947,7 @@ def main(argv=None):
         inv = {
             "generated": summary["generated"],
             "base_commit": head,
+            "scan_provenance": provenance,
             "definition": {
                 "scope": "every tracked *.yml/*.yaml outside src/ and tests/ that parses as an OrcaFlex "
                          "native model, an OrcaWave model or a modular spec",

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>R01 archive manifest correction</title>
+<style>body{max-width:960px;margin:40px auto;padding:0 24px;font:16px/1.6 system-ui;color:#17212b}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bac4cf;padding:8px;text-align:left}code{font-size:90%}h1,h2{line-height:1.2}</style>
+<h1>R01 archive manifest correction</h1>
+<p>Owner card R01 authorizes correction of the selection in
+<a href="https://github.com/vamseeachanta/digitalmodel/pull/2293">PR 2293</a>.
+<a href="https://github.com/vamseeachanta/digitalmodel/pull/2304">Removal PR 2304</a>
+is held pending regeneration, Claude review and owner confirmation. This correction
+does not copy, move or remove repository data.</p>
+<h2>Implementation plan</h2>
+<ol>
+<li>The existing branch will receive current main through a merge. No history will be rewritten.</li>
+<li>Feature traversal will cover every finite YAML nesting level and traverse shared aliases at each path.
+Recursive aliases and parse failures will hold affected candidate models.</li>
+<li>The manifest will record the actual merge base with origin/main separately from the scanned
+HEAD and index tree. Dirty tracked inputs will be rejected and inherited Git bindings will be cleared.</li>
+<li>Tracked YAML and Python consumers will protect statically resolved inputs. Source-relative
+YAML includes, registry references and mkdocs navigation will be considered. Detected runtime templates,
+unresolved globs and ambiguous references will hold potentially affected candidates for human checking.</li>
+<li>Finite readable references from cyclic sources will remain protected. Readable paths in
+unparseable sources will hold dependencies. Archive enumeration reports will not count as consumers.</li>
+<li>Regeneration will follow a committed, clean generator revision. The summary, inventory, candidate
+CSV and blob map will be read back and verified, and the PR body will receive counts and revision-4 deltas.</li>
+</ol>
+<h2>Review and verification record</h2>
+<p>Plan-stage adversarial review identified report self-references, candidate dependency closure,
+runtime uncertainty and provenance as required checks. Code-stage adversarial review reproduced
+discarded readable references in cyclic and malformed YAML; regressions were added before correction.</p>
+<p>Targeted checks cover depth-eight feature retention and file references, traversal beyond the
+Python recursion limit, cycles, shared aliases, static and runtime paths, dirty-input rejection,
+merge-base accuracy, inherited Git-binding isolation, partition integrity and empty selections.</p>
+<p>Claude CLI: UNAVAILABLE (50-second timeout at workspace trust boundary). Gemini CLI:
+UNAVAILABLE (authentication required; no review returned). These states do not establish review approval.
+The owner's requested Claude review remains the next review checkpoint.</p>
+<h2>Limitations and owner checkpoint</h2>
+<p>Arbitrary runtime or config-driven path construction cannot be exhaustively proven by static
+analysis. Detected candidate associations receive human holds; the remaining static selection is not
+an execution guarantee. <code>data/inputs.yaml</code> is absent in this checkout; the scanner supports it
+and a synthetic registry regression covers it. Archive availability has not been reverified by R01.</p>
+<p>Revision-4 counts in ARCHIVE-MOVE-PLAN-2026-10-08.md are historical. The regenerated summary
+and the R01 result below will govern selection. The existing removal PR must be revised against this
+selection after Claude review and owner confirmation.</p>
+<!-- R01_RESULT -->
+</html>

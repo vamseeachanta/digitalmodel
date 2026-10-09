@@ -1,5 +1,13 @@
 # Archive move plan — regenerated candidate manifest (2026-10-08)
 
+**R01 supersedes the revision-4 selection below.** The figures and decisions in
+this document describe historical revisions. The current selection and review
+record are [R01-archive-manifest-review.html](R01-archive-manifest-review.html)
+and the regenerated summary JSON. Candidate rows with either `keep_for_feature`
+or `needs_human_check` stay in the repository. The blob map is an inventory,
+not authorization to remove every mapped path. Removal PR #2304 is held until
+regeneration, Claude review and owner confirmation of the revised selection.
+
 Status: **review only.** This change adds a candidate list, a deduplicated blob
 map and a model-YAML feature inventory. No file is deleted and nothing is
 copied to the archive by this change.
@@ -343,8 +351,9 @@ revision 4 implements that decision as described under *Selection rule*.
 
 ## How the move runs (copy and git removal in a separate change)
 
-1. **Owner review of the list.** D01 (2026-10-08) approves the move set: every
-   candidate row except those with `keep_for_feature = True`, which stay.
+1. **Owner review of the list.** R01 requires review of the regenerated move
+   set. Both `keep_for_feature = True` and `needs_human_check = True` rows stay.
+   The revision-4 D01 selection is superseded; PR #2304 remains held.
 2. **Refresh against `main`.** Re-run the generator (read-only) on the
    then-current `main` and drop any approved row whose `sha256_blob` changed,
    whose path no longer exists, that is now referenced from `src/` or `tests/`,
