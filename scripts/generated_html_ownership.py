@@ -70,6 +70,10 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/inventory/orcaflex_legacy_inventory.py": (
         "writes a Markdown inventory and only classifies HTML-producing scripts"
     ),
+    "scripts/maintenance/archive_candidates.py": (
+        "lists archive candidates (html is a matched extension, docs/api an excluded "
+        "prefix); it writes CSV/JSON under docs/archive and no HTML"
+    ),
     "scripts/python/digitalmodel/legacy/generate_integration_charts.py": (
         "writes legacy charts under docs/charts, not docs/api"
     ),
