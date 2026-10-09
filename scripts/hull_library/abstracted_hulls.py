@@ -217,7 +217,7 @@ def export_document(doc, record, source_hash, target, audit, privacy_documents=N
     return True
 
 
-def main():
+def parse_arguments():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--converter",
@@ -231,13 +231,26 @@ def main():
         action="store_true",
         help="Owner-authorized publication of declared-unit geometry",
     )
-    args = parser.parse_args()
+    parser.add_argument(
+        "--source-dir",
+        type=Path,
+        required=True,
+        help="Directory containing privately retained source DWGs",
+    )
+    return parser.parse_args()
+
+
+def main():
     root = Path(__file__).resolve().parents[2]
+    args = parse_arguments()
+    if not args.source_dir.is_dir():
+        print("Extraction blocked; source directory unavailable")
+        return 1
     probe = json.loads((root / "docs/reports/dwg-conversion/probe.json").read_text())
     decoded = []
     try:
         for record in probe["sources"]:
-            source = root / "docs/domains/freecad/src/hulls" / record["source"]
+            source = args.source_dir / record["source"]
             before = digest(source)
             doc, audit = read_dwg(source, args.converter)
             status = units_status(doc, record, before)

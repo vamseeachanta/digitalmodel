@@ -68,16 +68,19 @@ def test_real_sources_and_committed_output(tmp_path):
     if not converter:
         pytest.skip("Set LIBREDWG_DWGREAD for all-six-source privacy regression")
     probe = json.loads((ROOT / "docs/reports/dwg-conversion/probe.json").read_text())
-    actual = sorted(
-        p.name
-        for p in (ROOT / "docs/domains/freecad/src/hulls").iterdir()
-        if p.suffix.lower() == ".dwg"
-    )
+    configured = os.environ.get("HULL_DWG_SOURCE_DIR")
+    if not configured:
+        pytest.skip("Set HULL_DWG_SOURCE_DIR for privately retained source DWGs")
+    source_dir = Path(configured)
+    actual = sorted(p.name for p in source_dir.iterdir() if p.suffix.lower() == ".dwg")
     assert actual == sorted(r["source"] for r in probe["sources"])
     observations = []
     for record in probe["sources"]:
-        source = ROOT / "docs/domains/freecad/src/hulls" / record["source"]
+        source = source_dir / record["source"]
         before = module.digest(source)
+        assert before == record["source_sha256"], (
+            "private source differs from recorded digest"
+        )
         doc, audit = module.read_dwg(source, converter)
         assert bool(module.coordinate_curves(doc)), "no coordinate curves"
         assert module.digest(source) == before, "source changed"
@@ -223,3 +226,119 @@ def test_caller_cannot_omit_exported_source_from_privacy_check(tmp_path):
             {"errors": 0, "fixes": 0},
             privacy_documents=[ezdxf.new()],
         )
+
+
+def test_raw_sources_removed_and_case_insensitive_ignore_guard():
+    import subprocess
+
+    folder = ROOT / "docs/domains/freecad/src/hulls"
+    assert not any(p.suffix.lower() == ".dwg" for p in folder.iterdir())
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}
+    }
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z", "--", "docs/domains/freecad/src/hulls"],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        check=True,
+    ).stdout.split(b"\0")
+    assert b"docs/domains/freecad/src/hulls/.gitignore" in tracked
+    assert not any(name.lower().endswith(b".dwg") for name in tracked)
+    for name in ("future.dwg", "future.DWG", "future.DwG"):
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", str(folder / name)],
+            cwd=ROOT,
+            env=env,
+            capture_output=True,
+            check=False,
+        )
+        assert result.returncode == 0, "raw source ignore guard missing"
+
+
+def test_cli_reads_explicit_private_source_directory(tmp_path, monkeypatch, capsys):
+    module = exporter()
+    probe = json.loads((ROOT / "docs/reports/dwg-conversion/probe.json").read_text())
+    for record in probe["sources"]:
+        (tmp_path / record["source"]).write_bytes(b"synthetic input")
+    observed = []
+
+    def read_synthetic(source, converter):
+        observed.append(source)
+        assert source.read_bytes() == b"synthetic input"
+        return ezdxf.new(), None
+
+    monkeypatch.setattr(module, "read_dwg", read_synthetic)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "exporter",
+            "--converter",
+            "synthetic-converter",
+            "--source-dir",
+            str(tmp_path),
+            "--output",
+            str(tmp_path / "output"),
+        ],
+    )
+    assert module.main() == 0
+    assert observed == [tmp_path / r["source"] for r in probe["sources"]]
+    assert not (tmp_path / "output").exists()
+    output = capsys.readouterr().out
+    assert str(tmp_path) not in output
+    assert all(r["source"] not in output for r in probe["sources"])
+
+
+def test_cli_requires_private_source_directory(monkeypatch, capsys):
+    module = exporter()
+    monkeypatch.setattr(
+        "sys.argv", ["exporter", "--converter", "synthetic", "--output", "output"]
+    )
+    with pytest.raises(SystemExit) as failure:
+        module.main()
+    assert failure.value.code == 2
+    assert "--source-dir" in capsys.readouterr().err
+
+
+def test_cli_missing_source_directory_reports_neutral_precondition(
+    tmp_path, monkeypatch, capsys
+):
+    module = exporter()
+    missing = tmp_path / "missing"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "exporter",
+            "--converter",
+            "synthetic",
+            "--source-dir",
+            str(missing),
+            "--output",
+            str(tmp_path / "output"),
+        ],
+    )
+    assert module.main() == 1
+    output = capsys.readouterr().out
+    assert "source directory unavailable" in output
+    assert str(missing) not in output
+
+
+def test_real_source_configuration_missing_directory_fails(tmp_path, monkeypatch):
+    monkeypatch.setenv("LIBREDWG_DWGREAD", "synthetic-converter")
+    monkeypatch.setenv("HULL_DWG_SOURCE_DIR", str(tmp_path / "missing"))
+    with pytest.raises(FileNotFoundError):
+        test_real_sources_and_committed_output(tmp_path)
+
+
+def test_real_source_configuration_digest_mismatch_fails(tmp_path, monkeypatch):
+    probe = json.loads((ROOT / "docs/reports/dwg-conversion/probe.json").read_text())
+    for record in probe["sources"]:
+        (tmp_path / record["source"]).write_bytes(b"synthetic mismatched input")
+    monkeypatch.setenv("LIBREDWG_DWGREAD", "synthetic-converter")
+    monkeypatch.setenv("HULL_DWG_SOURCE_DIR", str(tmp_path))
+    with pytest.raises(
+        AssertionError, match="private source differs from recorded digest"
+    ):
+        test_real_sources_and_committed_output(tmp_path)
