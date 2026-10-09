@@ -39,9 +39,9 @@ approximation, not an exact finite-panel mode search or engineering qualificatio
 The plate routine ignores sigma_y and its boundary_conditions argument. The study
 rejects transverse compression, shear, supports other than simply-supported,
 unknown input keys, invalid/nonfinite values and unsupported profiles. Material
-is fixed assumed AH36 (fy355, E206000 MPa, nu0.3); FCA0, gamma1.15, fixed stress,
-physical span/breadth, initial plate thickness12 mm. Fixed force would raise local
-stress as thickness falls and requires a separate study. Numerical floor0.5 mm is
+is fixed assumed AH36 (fy 355, E 206000 MPa, nu 0.3); FCA 0, gamma 1.15, fixed stress,
+physical span/breadth, initial plate thickness 12 mm. Fixed force would raise local
+stress as thickness falls and requires a separate study. Numerical floor 0.5 mm is
 only an evaluation bound, never a practical remaining-thickness acceptance limit.
 
 The local-patch wrapper creates supported edges at the damage boundary. This can
@@ -57,10 +57,10 @@ reduction. Web loss is total uniform web-thickness deduction; flange dimensions
 unchanged. Existing intermediates reproduce one tee example; that does not
 validate arbitrary panel threshold crossings. Bulbs are not approximated as tees.
 
-40 synthetic combinations: 8 plates and 32 flatbar/welded-tee panels; spans600/1200,
-breadths400/600 mm, fixed compression50/100 MPa, web deductions0/1 mm for panels.
+40 synthetic combinations: 8 plates and 32 flatbar/welded-tee panels; spans 600/1200,
+breadths 400/600 mm, fixed compression 50/100 MPa, web deductions 0/1 mm for panels.
 All are authored model cases, not stock products or actual bulkhead geometry.
-Plain plate thresholds at b400 are 3.5147/4.9706 mm for 50/100 MPa; at b600,
+Plain plate thresholds at b 400 are 3.5147/4.9706 mm for 50/100 MPa; at b 600,
 5.2721/7.4559 mm. Span invariance follows the k=4 approximation, not universal
 structural behavior. Panel thresholds are not qualified engineering curves.
 
@@ -69,13 +69,13 @@ elastic square-plate formula, t-squared elastic stress scaling, JO continuity,
 threshold crossing, failed nominal, invalid inputs and exact lookup are covered.
 No interpolation or runtime solver dispatch occurs in the Plotly lookup.
 Separate structure/profile/span/breadth/stress/web-loss/loss-model controls select
-saved rows only. Browser checks verified plain-plate display, uncomputed span900,
+saved rows only. Browser checks verified plain-plate display, uncomputed span 900,
 inapplicable local damage and illustrative panel status. Material/support/FCA
 remain fixed visibly; no arbitrary new parameter combination is computed.
 
 ## Execution, ownership and remaining gates
 
-Execution used a Windows workstation, Python3.11.15; exact host is in the private
+Execution used a Windows workstation, Python 3.11.15; exact host is in the private
 owner manifest. Linux2 registry identifies a
 sim-worker, but strict SSH probe failed for absent trusted host key. Trust remains
 unchanged. No GPU/licensed/heavy job ran. Lightweight Windows work was retained.
@@ -95,15 +95,15 @@ Final Codex artifact review passes and independently reran 40 tests. Claude
 artifact review approved with limitations; its minor input/evidence corrections
 were applied and rereviewed by Codex. Source schema and source relationships pass;
 schema is a staging contract, not a complete engineering readiness validator.
-Result retention is verified in private digitalmodel-data draft PR44, commit
+Result retention is verified in private digitalmodel-data draft PR 44, commit
 95ddcd3a4ce34378309339e2a191484b372f0a98, owner-relative
 docs/reviews/ship-plate-study/manifest.json. Run identity
 ship-plate-synthetic-43aa52bfd6b78cc4; precomputed.json SHA256
 43aa52bfd6b78cc42c01ce5550ddc1e4a16634d8a7a49ae0a7f59989c06b5c23.
 All nine remote evidence blobs match retained bytes; JSON and HTML digests match
-the manifest. Published workflow095312dd source blobs match the executed code
+the manifest. Published workflow 095312dd source blobs match the executed code
 after Git line-ending normalization; exact executed byte hashes remain recorded.
-Draft PR2290 owns public methods/schema/tests; no merge or engineering acceptance.
+Draft PR 2290 owns public methods/schema/tests; no merge or engineering acceptance.
 This issue stays open for catalog rights/current-edition
 audit, discrete stock coverage, qualified panel/local-damage thresholds and richer
 independent lookup controls. No source catalog readiness or asset acceptance.
@@ -114,28 +114,28 @@ The eight plate rows are **numerically verified screens of the implemented k=4
 idealization**, not engineering-qualified cases. The exact screen is longitudinal
 compression only, zero shear/transverse stress, actual simply-supported full-field
 geometry, uniform loss, assumed AH36, E=206000 MPa, nu=0.3, fy=355 MPa, gamma=1.15,
-FCA=0, nominal thickness12 mm, and fixed applied stress50/100 MPa. The eight rows
-are the Cartesian product L600/1200, b400/600 and stress50/100. At every crossing,
-gamma*sigma_x is 57.5 or115 MPa, below fy/2=177.5 MPa, so the crossing lies on the
+FCA=0, nominal thickness 12 mm, and fixed applied stress 50/100 MPa. The eight rows
+are the Cartesian product L 600/1200, b 400/600 and stress 50/100. At every crossing,
+gamma*sigma_x is 57.5 or 115 MPa, below fy/2=177.5 MPa, so the crossing lies on the
 elastic branch. Independent solution:
 
 `t_cross = b * sqrt(gamma*sigma_x * 12*(1-nu^2) / (4*pi^2*E))`.
 
-This gives b400:3.5147/4.9706 mm and b600:5.2721/7.4559 mm, for either saved span.
+This gives b 400:3.5147/4.9706 mm and b 600:5.2721/7.4559 mm, for either saved span.
 The adapter independently checks this formula, thickness-squared scaling, JO
 continuity, pass-side threshold crossing and explicit unsupported-input rejection.
-The original 40-case result digest remains43aa52bfd6b78cc42c01ce5550ddc1e4a16634d8a7a49ae0a7f59989c06b5c23.
-The32 panel rows have null minimum_remaining_thickness_mm because the combined
+The original 40-case result digest remains 43aa52bfd6b78cc42c01ce5550ddc1e4a16634d8a7a49ae0a7f59989c06b5c23.
+The 32 panel rows have null minimum_remaining_thickness_mm because the combined
 panel threshold has no equivalent independent benchmark; full effective width,
 torsional restraint assumptions, mode switches and excluded pressure/interaction
 remain unresolved. Their separate illustrative_threshold_mm must not be promoted.
 
-A separate18-row/54-point diagnostic now retrieves the **existing**
-assess_plate_local_loss wrapper for patches300/600/1200 mm long and150/300/600 mm
-wide, parent1200x600x12 mm, stress50/100 MPa, losses0/4/8 mm. No new mechanics is
+A separate 18-row/54-point diagnostic now retrieves the **existing**
+assess_plate_local_loss wrapper for patches 300/600/1200 mm long and 150/300/600 mm
+wide, parent 1200x600x12 mm, stress 50/100 MPa, losses 0/4/8 mm. No new mechanics is
 implemented. Every row explicitly has acceptance_status=inapplicable_unvalidated_local_patch
 and null minimum_remaining_thickness_mm/maximum_accepted_loss_mm. Wrapper passes,
-Level2 framing, max acceptable loss and conservatism claims are not projected.
+Level 2 framing, max acceptable loss and conservatism claims are not projected.
 The data-only HTML compares the isolated artificially-supported patch response
 with uniform thinning of the full parent; neither is an embedded-damage solution
 or a proven bound. Missing saved patch combinations display UNCOMPUTED.
@@ -143,11 +143,11 @@ or a proven bound. Missing saved patch combinations display UNCOMPUTED.
 The full-sized patch reproduces uniform thinning, which verifies orchestration
 only. At zero loss a smaller named patch already changes the returned utilization
 although the physical parent is unchanged: parent modes are omitted. An elastic
-limit check using parent1200x600x2 mm and patch600x300 mm gives patch utilization
+limit check using parent 1200x600x2 mm and patch 600x300 mm gives patch utilization
 one quarter of parent utilization. This is a reproducible failure of the wrapper
 as a complete parent-panel assessment, not proof of a measured capacity benefit
 or a general safety bound. Nine diagnostic tests pass, including the limiting
-checks and invalid/nonfinite/oversized input rejection. The original40 calculations
+checks and invalid/nonfinite/oversized input rejection. The original 40 calculations
 were not rerun or overwritten.
 
 Local-damage acceptance requires a validated variable-thickness parent-field
@@ -173,8 +173,17 @@ flat-plate study. Flat-bar/rolled-tee stock matrices, plate width/length tables,
 IACS governing edition, bulb axes and source-specific distribution rights remain
 precise database gates.
 
+Source verification records a confirmed publisher inertia discrepancy for
+`british-ea-120x120x8`; solver use of that section is blocked pending resolution.
+The retained values are preserved. The finding is recorded in private
+[digitalmodel-data PR 44](https://github.com/vamseeachanta/digitalmodel-data/pull/44),
+commit `d3cdde0ed247a4d112b5139f9e66d3ab15e92bd2`, owner-relative
+`docs/reviews/ship-plate-study/local-loss-diagnostic/source-database-verification.json`.
+This source-verification finding does not qualify other sections or alter the
+original synthetic cases or their acceptance status.
+
 The separate diagnostic manifest records UTC with +00:00. The preserved original
-manifest's executed_utc string has offset-05:00; it denotes2026-10-06T01:19:43Z,
+manifest's executed_utc string has offset-05:00; it denotes 2026-10-06T01:19:43Z,
 and is not a naive UTC timestamp. No original run record was rewritten.
 
 Continuation readback also exercised the existing DataCatalog.load_catalog/load
@@ -185,7 +194,7 @@ mocked dependency was written. Optional pyarrow ABI warnings persist. This verif
 the YAML catalog route only, not package initialization, Parquet or database readiness.
 
 Independent Codex and Claude artifact reviews passed: both reran nine tests;
-Claude independently reproduced all54 diagnostic points from k and JO equations.
+Claude independently reproduced all 54 diagnostic points from k and JO equations.
 Gemini remains unavailable; no authentication or trust configuration changed.
 Browser checks verified saved-patch, full-size-patch and UNCOMPUTED retrieval.
 The previous public CI client scan rejected a physical hostname in this document;
@@ -193,7 +202,7 @@ it is replaced with a generic workstation label while exact private provenance
 is retained. No deny pattern, exclusion, baseline or security configuration changed.
 
 Diagnostic length sensitivity is specifically limited: k=4 whenever patch length
-is at least its breadth. Only the300x600 mm patch in this grid uses the shorter-field
+is at least its breadth. Only the 300x600 mm patch in this grid uses the shorter-field
 branch, k=6.25. These artificial-support effects are not measured corrosion-length
 benefits. Patch position is absent from the wrapper.
 
@@ -202,14 +211,14 @@ The diagnostic owner is private digitalmodel-data commit
 docs/reviews/ship-plate-study/local-loss-diagnostic/manifest.json, run
 ship-local-diagnostic-a30c6daa794e7cf8. Result SHA256
 a30c6daa794e7cf8be81ae775be67034779d474632cfa86818360e52f3745036;
-published code10bbc73af131f6cb85ff477ec7dca350d0882dae. Original40-case owner
-and result hashes remain unchanged. Private draftPR44 carries both runs.
+published code 10bbc73af131f6cb85ff477ec7dca350d0882dae. Original 40-case owner
+and result hashes remain unchanged. Private draft PR 44 carries both runs.
 
 Latest source continuation: Ovako's official flat-bar dimension sheet was inspected
 as a rendered graphical production envelope. It supplies no discrete stock table,
 grade, length or section properties; graph boundaries are not digitized and no
-rectangle properties or marine grade are inferred. The filename year2025 is not
+rectangle properties or marine grade are inferred. The filename year 2025 is not
 an established printed edition. Internal staging now contains six sources, three
 products and four sections, with this gap explicitly recorded. Temporary public
 PDF/PNG inspection files are removed after review; source originals are not
-retained in either draft. This source does not qualify the authored200x10 fixture.
+retained in either draft. This source does not qualify the authored 200x10 fixture.
