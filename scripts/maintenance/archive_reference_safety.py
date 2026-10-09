@@ -166,6 +166,11 @@ def _python_template(node, env, seen=frozenset()):
         return _python_template(node.left, env, seen) + separator + _python_template(node.right, env, seen)
     if isinstance(node, ast.Call):
         name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
+        if (name == "join" and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str)):
+            if node.args and isinstance(node.args[0], (ast.List, ast.Tuple)):
+                return node.func.value.value.join(_python_template(v, env, seen) for v in node.args[0].elts)
+            return "*"
         if name in {"Path", "PurePath", "join", "joinpath"}:
             values = list(node.args)
             if name == "joinpath":
@@ -182,6 +187,11 @@ def _path_context(node, parents):
             return True
         if isinstance(node, ast.Call):
             name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
+            if (name == "join" and isinstance(node.func, ast.Attribute)
+                    and isinstance(node.func.value, ast.Constant)
+                    and isinstance(node.func.value.value, str)):
+                node = parents.get(id(node))
+                continue
             if name in names:
                 return True
         node = parents.get(id(node))
@@ -220,13 +230,20 @@ def _value_evidence(value, source, candidates, tracked, by_base, path_context=Fa
     pattern = _template(value)
     dynamic = pattern != value or any(c in value for c in "*?[")
     if dynamic:
+        if value.rsplit("/", 1)[-1] in {".", "..", ""}:
+            return "directory expression", set(), pattern
+        if (source.endswith(".py") and not path_context and pattern.startswith("[")
+                and not re.search(r"\.[A-Za-z][A-Za-z0-9]*$", pattern)):
+            return "validation expression without a filename hint", set(), pattern
         # Numeric formats and version strings provide no filename/directory hint.
         if not path_context and not re.search(r"[A-Za-z0-9_-]", pattern):
             return "unscoped format expression", set(), pattern
         locations = _locations(pattern, source)
         hits = {p for p in candidates if any(fnmatch.fnmatchcase(p, q) for q in locations)}
         # Unknown root: a filename suffix still identifies potentially affected files.
-        if "/" not in pattern or pattern.startswith("*/"):
+        unknown_prefix = pattern.startswith("*/") and all(
+            not segment.strip("*?") for segment in pattern.split("/")[:-1])
+        if "/" not in pattern or unknown_prefix:
             hits |= {p for p in candidates
                      if fnmatch.fnmatchcase(posixpath.basename(p), posixpath.basename(pattern))}
         return "runtime path or unresolved glob", hits, pattern

@@ -121,6 +121,25 @@ def test_numeric_formats_and_versions_are_not_file_references():
     assert excluded == {} and held == {}
 
 
+def test_metadata_regex_directory_filters_and_string_formats_are_not_consumers():
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/input.dat", "docs/report.html"]
+    texts = {"src/validation.py": 'name_pattern = r"[A-Za-z0-9][A-Za-z0-9_.-]*"\n',
+             ".claude/propagation.yml": 'exclude: ["*/.git/*", "*/.venv/*"]\n',
+             "src/report.py": 'text = ",".join(["{value:.3f}"])\n',
+             "scripts/directories.py": 'directory = root / "."\n'}
+    excluded, held, _ = reference_safety(texts, candidates, candidates + list(texts))
+    assert excluded == {} and held == {}
+
+
+def test_literal_string_join_can_resolve_an_input_filename():
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/input.dat"]
+    texts = {"src/read.py": 'filename = ".".join(["input", "dat"])\n'}
+    excluded, held, _ = reference_safety(texts, candidates, candidates + list(texts))
+    assert set(excluded) == set(candidates) and held == {}
+
+
 def test_generic_format_in_actual_path_expression_requires_human_check():
     from archive_reference_safety import reference_safety
     candidates = ["docs/input.dat", "docs/report.html"]
