@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import re
+import subprocess
 from typing import Mapping
 
 from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
@@ -271,8 +272,9 @@ def _has_symlink_component(path: Path) -> bool:
 
 
 def _inside_git_checkout(path: Path) -> bool:
-    current = path.resolve()
-    for candidate in (current, *current.parents):
-        if (candidate / ".git").exists():
-            return True
-    return False
+    probe = subprocess.run(
+        ["git", "-C", str(path.resolve()), "rev-parse", "--is-inside-work-tree"],
+        capture_output=True,
+        text=True,
+    )
+    return probe.returncode == 0 and probe.stdout.strip() == "true"

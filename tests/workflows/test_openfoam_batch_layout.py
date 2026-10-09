@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 from types import SimpleNamespace
 
 import pytest
@@ -59,7 +60,7 @@ def test_hosted_missing_root_rejects_before_side_effect(tmp_path: Path) -> None:
 def test_trusted_local_requires_precreated_absolute_non_git_root(tmp_path: Path) -> None:
     cfg_dir = tmp_path / "checkout" / "case"
     cfg_dir.mkdir(parents=True)
-    (tmp_path / "checkout" / ".git").mkdir()
+    subprocess.run(["git", "init", "-q", str(tmp_path / "checkout")], check=True)
     external = tmp_path / "scratch"
     external.mkdir()
     paths = resolve_batch_paths(
