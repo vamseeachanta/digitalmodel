@@ -1,0 +1,7 @@
+# client CAD held privately per X03
+*.sldprt
+*.SLDPRT
+*.sldasm
+*.SLDASM
+*.slddrw
+*.SLDDRW
