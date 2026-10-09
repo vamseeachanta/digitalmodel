@@ -129,6 +129,28 @@ def test_generic_format_in_actual_path_expression_requires_human_check():
     assert excluded == {} and set(held) == set(candidates)
 
 
+def test_generic_format_in_path_division_requires_human_check():
+    from archive_reference_safety import reference_safety
+    candidates = ["docs/input.dat"]
+    texts = {"src/read.py": 'p = root / f"{stem}.{extension}"\n'}
+    _, held, _ = reference_safety(texts, candidates, candidates + list(texts))
+    assert set(held) == set(candidates)
+
+
+def test_batched_basename_counts_match_text_and_skip_binary(tmp_path):
+    from archive_reference_safety import basename_references
+    _git(tmp_path, "init")
+    for name, data in {"one.txt": b"a.dat repeated a.dat\nb.pdf\n",
+                       "two.txt": b"\xffa.dat\n",
+                       "binary.bin": b"\0a.dat\n"}.items():
+        (tmp_path / name).write_bytes(data)
+    _git(tmp_path, "add", ".")
+    result = basename_references(str(tmp_path), ["a.dat", "b.pdf", "unused.pdf"])
+    assert set(result["a.dat"]) == {"one.txt", "two.txt"}
+    assert result["b.pdf"] == ["one.txt"]
+    assert result["unused.pdf"] == []
+
+
 def test_filename_prefilter_preserves_boundaries_and_spaced_names():
     candidates = ["docs/model.dat", "docs/file name.pdf", "docs/unused.png"]
     text = 'wrong = "xmodel.dat"\np = "file name.pdf"\nq = "model.dat"\n'

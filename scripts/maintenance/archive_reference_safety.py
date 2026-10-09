@@ -55,6 +55,35 @@ def lfs_pointer_paths(repo):
     return paths
 
 
+def basename_references(repo, basenames):
+    """One Git text scan, then byte-exact per-file counts; binary files stay skipped."""
+    names = sorted(set(basenames))
+    result = {name: [] for name in names}
+    if not names:
+        return result
+    command = ["git", "-C", repo, "grep", "-l", "-I", "-F", "-z"]
+    if any("\n" in name for name in names):
+        for name in names:
+            found = subprocess.run(command + ["-e", name], capture_output=True, env=git_environment())
+            if found.returncode not in (0, 1):
+                raise subprocess.CalledProcessError(found.returncode, found.args, found.stderr)
+            result[name] = [p for p in found.stdout.decode().split("\0") if p]
+        return result
+    patterns = ("\n".join(names) + "\n").encode()
+    found = subprocess.run(command + ["-f", "-"], input=patterns,
+                           capture_output=True, env=git_environment())
+    if found.returncode not in (0, 1):
+        raise subprocess.CalledProcessError(found.returncode, found.args, found.stderr)
+    encoded = [(name, name.encode()) for name in names]
+    for path in (p for p in found.stdout.decode().split("\0") if p):
+        with open(os.path.join(repo, path), "rb") as source:
+            text = source.read()
+        for name, token in encoded:
+            if token in text:
+                result[name].append(path)
+    return result
+
+
 def yaml_scalars(docs, cycles=None):
     """Iterative, unlimited traversal; aliases at distinct paths remain visible."""
     stack = [(d, frozenset()) for d in docs]
@@ -149,6 +178,8 @@ def _path_context(node, parents):
     names = {"Path", "PurePath", "join", "joinpath", "open", "glob", "iglob", "rglob",
              "read_csv", "read_excel", "loadtxt", "read_text", "read_bytes"}
     while node is not None and not isinstance(node, ast.stmt):
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            return True
         if isinstance(node, ast.Call):
             name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
             if name in names:

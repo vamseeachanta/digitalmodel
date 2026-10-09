@@ -28,9 +28,9 @@ import os
 import re
 import subprocess
 import sys
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 sys.path.insert(0, os.path.dirname(__file__))
-from archive_reference_safety import (CyclicYamlError, REPORT_PRODUCERS, git_environment,
+from archive_reference_safety import (CyclicYamlError, REPORT_PRODUCERS, basename_references, git_environment,
                                       lfs_pointer_paths, reference_safety,
                                       scan_provenance)
 
@@ -47,7 +47,13 @@ ALWAYS = {
 SIZE_GATED = {"yml", "yaml", "csv"}  # only when blob > 1,000,000 bytes
 SIZE_GATE = 1_000_000
 EXCLUDED_PREFIXES = ("src/", "tests/", "docs/api/", "assets/logo/")
-EXCLUDED_REPORTS = {"docs/archive/R01-archive-manifest-review.html"}
+EXCLUDED_REPORTS = {
+    "docs/archive/R01-archive-manifest-review.html",
+    "docs/archive/archive-candidates-2026-10-08.csv",
+    "docs/archive/archive-candidates-2026-10-08.summary.json",
+    "docs/archive/archive-blob-map-2026-10-08.csv",
+    "docs/archive/model-yaml-feature-inventory-2026-10-08.json",
+}
 CODE_PREFIXES = ("src/", "tests/")
 ARCHIVE_ROOT = "/mnt/ace/digitalmodel"
 CLASS = {}
@@ -756,14 +762,8 @@ def main(argv=None):
     proc.kill()
     proc.communicate()
 
-    # references: git grep -l -F <basename> over tracked text files, one call per unique basename
-    def refs(b):
-        rr = subprocess.run(["git", "-c", "core.quotepath=false", "-C", REPO, "grep", "-l", "-I", "-F", "-z",
-                             "-e", b], capture_output=True, env=git_environment())
-        return b, [x.decode("utf-8") for x in rr.stdout.split(b"\0") if x]
-
-    with ThreadPoolExecutor(8) as ex:
-        refmap = dict(ex.map(refs, sorted({os.path.basename(p) for p in cands})))
+    refmap = basename_references(REPO, {os.path.basename(p) for p in cands})
+    print("basename reference counts complete", file=sys.stderr)
 
     pr = set(l.strip() for l in open(a.pr_list, encoding="utf-8") if l.strip())
 
