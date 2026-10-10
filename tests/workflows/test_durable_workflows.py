@@ -1624,6 +1624,10 @@ def test_workflow_registry(workflow, monkeypatch):
         assert res["critical_mode"] == 2
         assert res["a_d_ratio"] == pytest.approx(0.9789, abs=1e-3)
         assert res["fatigue_proxy"] > 0.0
+    elif workflow["id"] == "api579-pitting-screen":
+        assert cfg["api579_pitting_screen"]["level2"]["rsf"] == pytest.approx(0.9569915955570703)
+    elif workflow["id"] == "api579-dent-screen":
+        assert cfg["api579_dent_screen"]["assessment"]["strain"]["eps_max"] == pytest.approx(0.04028750840314319)
     elif workflow["id"] == "riser-joint-ffs":
         result = cfg["riser_joint_ffs"]
         assert len(result["scans"]) == len(result["placements"]) == 4
@@ -2282,6 +2286,22 @@ def test_esp_pump_hydraulics_tdh_and_sizing_closed_form():
     assert r.stages_required == math.ceil(expected_tdh / 6.0)
     assert r.brake_power_hp == pytest.approx(r.stages_required * 0.5 * 0.85, rel=1e-12)
     assert r.screening_status == "fail"  # 405 stages > 400 housing
+
+
+@pytest.mark.parametrize("workflow_id,basename,metric,expected", [
+    ("api579-pitting-screen", "api579_pitting_screen", "rsf", 0.9569915955570703),
+    ("api579-dent-screen", "api579_dent_screen", "eps_max", 0.04028750840314319),
+])
+def test_pitting_dent_screen_reports(workflow_id, basename, metric, expected):
+    """Wave 1 formula anchors and persisted offline report readback (#2182)."""
+    cfg = engine(inputfile=str(REPO_ROOT / "examples/workflows" / workflow_id / "input.yml"))
+    result = cfg[basename]
+    value = (result["level2"][metric] if metric == "rsf"
+             else result["assessment"]["strain"][metric])
+    assert value == pytest.approx(expected, abs=1e-9)
+    report = Path(result["report_path"]).read_text(encoding="utf-8")
+    assert report == result["report_html"]
+    assert "not evaluated" in report.lower()
 
 
 @pytest.fixture(scope="module")

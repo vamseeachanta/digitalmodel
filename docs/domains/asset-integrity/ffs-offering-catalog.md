@@ -21,8 +21,8 @@ Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, AP
 | River-bottom profile metal loss | ASME B31G, DNV-RP-F101 | rstreng-2d | T2 | live (pipeline-corroded-defect-screen covers MAX projection only; area-weighted mode remains a sensitivity calculation) |
 | Circumferential metal loss / net-section | API 579 Pt 5, DNV-RP-F101 | circumferential | T2 | validated (F101 combined-loading factor stubbed (#1146)) |
 | Interacting defect colonies | DNV-RP-F101, API 579 Pt 4 | dnv-f101 | T2 | engine (#1094 finding 1) |
-| Pitting | API 579 Pt 6 | pitting | T1, T2 | engine |
-| Plain dents / dent on weld | API 579 Pt 12, PDAM, ASME B31.8 App R | dents | T1, T2 | engine |
+| Pitting | API 579 Pt 6 | pitting | T1, T2 | workflow |
+| Plain dents / dent on weld | API 579 Pt 12, PDAM, ASME B31.8 App R | dents | T1, T2 | workflow |
 | Dent-gouge / gouges | API 579 Pt 12, PDAM | dents | T1, T2 | engine (gouge-only PDAM path not implemented) |
 | Crack-like flaws (SCC, seam weld, girth weld, fatigue cracks, hook cracks) | API 579 Pt 9, BS 7910, API RP 1176 | crack-fad, part9-level2 (#2175), part9-level1 (#2176) | T1, T2, T3 | engine |
 | Fatigue crack growth / remaining life / leak-before-break | BS 7910, API 579 Pt 9 | crack-growth | T2 | engine (#2177) |
@@ -154,9 +154,9 @@ Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are
 | Status | Rows |
 |---|---|
 | live | 1 |
-| workflow | 4 |
+| workflow | 6 |
 | validated | 5 |
-| engine | 30 |
+| engine | 28 |
 | planned | 25 |
 | none | 13 |
 | total | 78 |

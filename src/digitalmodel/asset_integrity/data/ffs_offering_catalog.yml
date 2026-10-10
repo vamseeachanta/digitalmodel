@@ -89,8 +89,8 @@ engines:
   rstreng-2d: {module: asset_integrity.rstreng_2d, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181, note: "workflow covers MAX projection only; area-weighted mode is a sensitivity calculation"}
   dnv-f101: {module: asset_integrity.dnv_rp_f101, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181, caveat: "workflow covers single-defect Part B safe working pressure (F1 x F2) only; interacting-defect method and PSF tables per #1094"}
   circumferential: {module: asset_integrity.circumferential_defect, status: validated, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181, note: "pipeline-corroded-defect-screen exercises axial membrane only; combined-loading and edition-matched Part 5 qualification remain outside scope"}
-  pitting: {module: asset_integrity.assessment.pitting, status: engine, issue: 2182, caveat: "Part 6 charts not transcribed; equivalent-LTA bound"}
-  dents: {module: asset_integrity.dent_assessment, status: engine, issue: 2182}
+  pitting: {module: asset_integrity.assessment.pitting, status: workflow, workflow: api579-pitting-screen, validation: docs/domains/asset-integrity/pitting-validation-2026-10-09.md, issue: 2182, caveat: "Part 6 charts not transcribed; equivalent-LTA bound"}
+  dents: {module: asset_integrity.dent_assessment, status: workflow, workflow: api579-dent-screen, validation: docs/domains/asset-integrity/dent-validation-2026-10-09.md, issue: 2182, caveat: "manual geometry; formula anchors only, published-case validation not established"}
   crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175"}
   crack-growth: {module: fatigue.crack_growth, status: engine, issue: 2177}
   level3-handoff: {module: asset_integrity.assessment.level3_escalation, status: engine, issue: 2184}
@@ -140,8 +140,8 @@ industries:
           - {mechanism: river-bottom profile metal loss, codes: [asme-b31g, dnv-rp-f101], engines: [rstreng-2d], tiers: [T2], status: live, caveat: "pipeline-corroded-defect-screen covers MAX projection only; area-weighted mode remains a sensitivity calculation"}
           - {mechanism: circumferential metal loss / net-section, codes: [api-579-1, dnv-rp-f101], parts: [5], engines: [circumferential], tiers: [T2], status: validated, caveat: "F101 combined-loading factor stubbed (#1146)"}
           - {mechanism: interacting defect colonies, codes: [dnv-rp-f101, api-579-1], parts: [4], engines: [dnv-f101], tiers: [T2], status: engine, caveat: "#1094 finding 1"}
-          - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: engine}
-          - {mechanism: plain dents / dent on weld, codes: [api-579-1, pdam, asme-b31-8], parts: [12], engines: [dents], tiers: [T1, T2], status: engine}
+          - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: workflow}
+          - {mechanism: plain dents / dent on weld, codes: [api-579-1, pdam, asme-b31-8], parts: [12], engines: [dents], tiers: [T1, T2], status: workflow}
           - {mechanism: dent-gouge / gouges, codes: [api-579-1, pdam], parts: [12], engines: [dents], tiers: [T1, T2], status: engine, caveat: "gouge-only PDAM path not implemented"}
           - {mechanism: "crack-like flaws (SCC, seam weld, girth weld, fatigue cracks, hook cracks)", codes: [api-579-1, bs-7910, api-rp-1176], parts: [9], engines: [crack-fad, part9-level2, part9-level1], tiers: [T1, T2, T3], status: engine}
           - {mechanism: fatigue crack growth / remaining life / leak-before-break, codes: [bs-7910, api-579-1], parts: [9], engines: [crack-growth], tiers: [T2], status: engine, issue: 2177}

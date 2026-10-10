@@ -799,6 +799,14 @@ def engine(
         from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
 
         cfg_base = FFSWorkflow().router(cfg_base)
+    elif basename == "api579_pitting_screen":
+        from digitalmodel.asset_integrity.assessment.pitting import router
+
+        cfg_base = router(cfg_base)
+    elif basename == "api579_dent_screen":
+        from digitalmodel.asset_integrity.dent_assessment import router
+
+        cfg_base = router(cfg_base)
     elif basename == "pipeline_defect_screen":
         from digitalmodel.asset_integrity.pipeline_defect_screen import router
 

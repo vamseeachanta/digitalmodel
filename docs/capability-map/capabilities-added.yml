@@ -49,8 +49,8 @@ engines:
     rstreng-2d: {status: live, module: asset_integrity.rstreng_2d, workflow: pipeline-corroded-defect-screen, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
     dnv-f101: {status: live, module: asset_integrity.dnv_rp_f101, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181}
     circumferential: {status: validated, module: asset_integrity.circumferential_defect, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181}
-    pitting: {status: engine, module: asset_integrity.assessment.pitting, issue: 2182}
-    dents: {status: engine, module: asset_integrity.dent_assessment, issue: 2182}
+    pitting: {status: workflow, module: asset_integrity.assessment.pitting, workflow: api579-pitting-screen, validation: docs/domains/asset-integrity/pitting-validation-2026-10-09.md, issue: 2182}
+    dents: {status: workflow, module: asset_integrity.dent_assessment, workflow: api579-dent-screen, validation: docs/domains/asset-integrity/dent-validation-2026-10-09.md, issue: 2182}
     crack-fad: {status: engine, module: asset_integrity.assessment.crack_fad, issue: 2184}
     crack-growth: {status: engine, module: fatigue.crack_growth, issue: 2177}
     level3-handoff: {status: engine, module: asset_integrity.assessment.level3_escalation, issue: 2184}

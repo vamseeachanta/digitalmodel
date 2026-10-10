@@ -1250,6 +1250,31 @@ workflows:
     result:
       kind: in_memory
       key: mooring_mbl
+
+  - id: api579-pitting-screen
+    basename: api579_pitting_screen
+    title: Offline api579-pitting-screen geometric screening and FFS report
+    input: examples/workflows/api579-pitting-screen/input.yml
+    outputs:
+      - examples/workflows/api579-pitting-screen/results/pitting-report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pitting-screen]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: api579_pitting_screen
+
+  - id: api579-dent-screen
+    basename: api579_dent_screen
+    title: Offline api579-dent-screen geometric screening and FFS report
+    input: examples/workflows/api579-dent-screen/input.yml
+    outputs:
+      - examples/workflows/api579-dent-screen/results/dent-report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-dent-screen]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: api579_dent_screen
+
   - id: riser-joint-ffs
     basename: riser_joint_ffs
     title: Anonymized drilling-riser joint envelopes, collapse depth, placement and fleet roll-up
