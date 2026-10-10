@@ -3,6 +3,8 @@
 * :mod:`.spec` - the riser global model specification (SI units, generic, no project data).
 * :mod:`.build` - spec -> modular-generator ``generic`` spec -> OrcaFlex text YAML model.
 * :mod:`.hand_checks` - submerged weight, effective tension chain, tensioned-beam periods.
+* :mod:`.open_water` - the open-water completion / workover riser (tension frame, rotary hold, stress joint,
+  EDP | LRP; EDP release event) with its closed-form tension, period and release hand checks.
 * :mod:`.qualification` - gate evaluation (PASS / FAIL / NOT_EVALUATED).
 * :mod:`.orcaflex_run` - statics, end tensions, modal periods and as-analysed section data
   through OrcFxAPI (configure the version pin with ``orcaflex_api.configure`` first).

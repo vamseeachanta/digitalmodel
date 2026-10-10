@@ -1,0 +1,175 @@
+{
+  "scope": "Exact final committed changed-file snapshots; not full repository compliance",
+  "scanner": {
+    "path": "workspace-hub/scripts/legal/legal-sanity-scan.sh",
+    "sha256": "e0c38d41a33fcfde590465ccd59d9dfa79c3d417246412fddb0f4a2b11634db3"
+  },
+  "method": "Exact final git blobs copied into isolated empty-baseline repositories, staged, and verified against source and staged SHA-256. Canonical scanner --all --diff-only; nonempty staged list and actual scan root verified.",
+  "prior_refs": [
+    {
+      "domain": "diffraction",
+      "base": "f5f1bb20f6a5c9bba47b0b15e216a54b2e33c5bc",
+      "head": "c266e41a26b4bd13bdebfb9ee92bf45a20fd77d9",
+      "staged_count": 7,
+      "exit_code": 0
+    },
+    {
+      "domain": "ansys",
+      "base": "0484af002f059f9819d2d3212e467fb661f88737",
+      "head": "f3b5f10f7572016f8b65be7479d500b080a99963",
+      "staged_count": 5,
+      "exit_code": 0
+    }
+  ],
+  "slices": [
+    {
+      "domain": "diffraction",
+      "source": "digitalmodel",
+      "base": "f5f1bb20f6a5c9bba47b0b15e216a54b2e33c5bc",
+      "head": "1c7f44fe7ad162283cfdd0bc8e2c432abadadf4b",
+      "staged_count": 11,
+      "files": [
+        {
+          "path": "docs/plans/2026-09-12-issue-1633-physical-zero-addendum.html",
+          "bytes": 4431,
+          "sha256": "501f4af7f02ef6a909dfaf9e05f349a8fab54a669cab66b3e11e49ab2982a338",
+          "git_blob": "c36a5c3d2f5389fe0ad00c8f779cff4775180a6f"
+        },
+        {
+          "path": "docs/plans/evidence/2026-09-12-issue-1633-claude-continuation.md",
+          "bytes": 18806,
+          "sha256": "f7e210a4411ce6f89dd8e54cbbd9f036ba51429196d74f3d55c94c571a005517",
+          "git_blob": "6a7058f2af72a475dc4cd97e97ae0682a980ba96"
+        },
+        {
+          "path": "docs/plans/evidence/2026-09-12-issue-1633-claude-r2.md",
+          "bytes": 13985,
+          "sha256": "30db4f578da7069ed8aa7ef71a52ccb5a2dfcd2583f3abc5ffc0dc305bb94b2a",
+          "git_blob": "db574fe55a341c475aafaa4272522ddd1e42c7db"
+        },
+        {
+          "path": "docs/plans/evidence/2026-09-12-solver-continuation.html",
+          "bytes": 6776,
+          "sha256": "4232e1f15c42a89f7543b708d9a27ce15c210b000358cf5764a2dc4cd3b4233d",
+          "git_blob": "499c24285a381be50b4b25dd470f43f6a587c4a3"
+        },
+        {
+          "path": "scripts/benchmark/validate_owd_vs_spec.py",
+          "bytes": 103766,
+          "sha256": "182b3350bf69b1657724b8668f260de602b73563be89651b42bb60fc31d40f89",
+          "git_blob": "da49bc03fd16637b9c7528036220819b3f25dae3"
+        },
+        {
+          "path": "src/digitalmodel/hydrodynamics/diffraction/benchmark_matrix_alignment.py",
+          "bytes": 3232,
+          "sha256": "b10977150dae192b04860782941bfff6cce6a977f591c4b64e4383471cab40bc",
+          "git_blob": "e4b1bbd802c821a52e7c83afafa3186e2a635655"
+        },
+        {
+          "path": "src/digitalmodel/hydrodynamics/diffraction/comparison_framework.py",
+          "bytes": 22674,
+          "sha256": "6ebc33119a28c7ad54bd6156fe8f190732d4c5780b289073653c4f9c4110ca5d",
+          "git_blob": "d7053c1f3e42098e63c4a78d650663e7ff411fa9"
+        },
+        {
+          "path": "src/digitalmodel/hydrodynamics/diffraction/multi_solver_comparator.py",
+          "bytes": 51711,
+          "sha256": "c05c03992f0d733774f10d8016aa62d918a7c4202a35ba9427e1091341040be5",
+          "git_blob": "1bebb72374791e60429b701275cf6c07d43db5fa"
+        },
+        {
+          "path": "tests/hydrodynamics/diffraction/test_matrix_abscissa_review.py",
+          "bytes": 4313,
+          "sha256": "2cd14a6a24f27d5d8e3bfe6665eaed8f7a3068e7f19afa9849e95af2fee64400",
+          "git_blob": "b0abdb05dc444c3488e00d5b7cab9edbf032e015"
+        },
+        {
+          "path": "tests/hydrodynamics/diffraction/test_review_round3_regressions.py",
+          "bytes": 12208,
+          "sha256": "06acae13d42dbfe90901c5390863fae95eb2de13dd1b67a04fa2e15579a74ffe",
+          "git_blob": "31c74d96db47213e5fc72b92ba84308c7d0e17f1"
+        },
+        {
+          "path": "tests/hydrodynamics/diffraction/test_summary_evidence_1633.py",
+          "bytes": 13291,
+          "sha256": "d58987fd85a142b49a5a6ab9997cd4fa0f3ac4544d27ad000b9ab5c5078e2d60",
+          "git_blob": "a23bd3cc2ccb6f003265bd73e8b02c0595300d46"
+        }
+      ],
+      "global_deny_sha256": "77ea4133ee858ce8ee4336ccf475f96d7ee392e3b996cc0c620e71c13520a1d3",
+      "exit_code": 0,
+      "result": "PASS: no block violations found",
+      "verified_scan_root": "solver-legal-diffraction",
+      "superseded_head": "ded9f30b556675f5a89019f2b1f47f14f6275752"
+    },
+    {
+      "domain": "ansys",
+      "source": "digitalmodel",
+      "base": "0484af002f059f9819d2d3212e467fb661f88737",
+      "head": "a3fee0a4f04d40dda736a3a10f3d38c6bba1df91",
+      "staged_count": 9,
+      "files": [
+        {
+          "path": "docs/plans/evidence/2026-09-12-issue-2094-claude-r1.md",
+          "bytes": 11855,
+          "sha256": "ec44a7651afc08dca8a2e3016ef6d9c578a6f4feb0e7c0f31b154871ae94591b",
+          "git_blob": "de650d749240119f22544013222b9a71228aac77"
+        },
+        {
+          "path": "docs/plans/evidence/2026-09-12-issue-2094-claude-r2.md",
+          "bytes": 10655,
+          "sha256": "087934de22a677462eed8669abd676cb2a9805656475cd1a54a38dd09d65719c",
+          "git_blob": "2150fe83b8e7fee6edda07b716b18ee1cced295a"
+        },
+        {
+          "path": "docs/plans/evidence/2026-09-12-solver-continuation.html",
+          "bytes": 6776,
+          "sha256": "4232e1f15c42a89f7543b708d9a27ce15c210b000358cf5764a2dc4cd3b4233d",
+          "git_blob": "499c24285a381be50b4b25dd470f43f6a587c4a3"
+        },
+        {
+          "path": "src/digitalmodel/ansys/runner.py",
+          "bytes": 11936,
+          "sha256": "b2ee52f003a12d302074043b33777460d2b29346ac7b57cf5b9c4ebee4acaa80",
+          "git_blob": "03b1a6b8a52330c071b1db6fab264d991cc25e49"
+        },
+        {
+          "path": "tests/ansys/test_example_goldens.py",
+          "bytes": 9076,
+          "sha256": "bbf91008003d1feeea81954ac1633df011524c7599417ed45bcaa118fdf60131",
+          "git_blob": "f35dc5b66359fee421468f3daa3d48b9f35e3de6"
+        },
+        {
+          "path": "tests/ansys/test_runner.py",
+          "bytes": 3762,
+          "sha256": "1afe58b65982c8395bfc6d36b4271e05727d0ccfc0cc0605a1019db8292dfc8c",
+          "git_blob": "e93c80f347f3d08700a36ff07e4ba2ee82ae6731"
+        },
+        {
+          "path": "tests/ansys/test_runner_evidence_failures.py",
+          "bytes": 4114,
+          "sha256": "9040678a435d2cd6390b8ba1246d6fbb64cbb2b8ca3208e0c42453e11da04fd4",
+          "git_blob": "a2241636fc60526a4ac3785be027019e8c142271"
+        },
+        {
+          "path": "tests/ansys/test_runner_invocation_evidence.py",
+          "bytes": 3389,
+          "sha256": "7ef220f288007264b6316b8ec9227af11f1fb20574c46c69802d80921aa3831a",
+          "git_blob": "f008d182cdece28f6af62a0352b0241991c1a1f5"
+        },
+        {
+          "path": "tests/ansys/test_runner_result_capture.py",
+          "bytes": 1867,
+          "sha256": "b337288222262d4d888ed2a095febca8958dea8157a2346c5f36eeddecfd69b0",
+          "git_blob": "952a88f85a61e51d20b9c601a36b1bea603c82e4"
+        }
+      ],
+      "global_deny_sha256": "77ea4133ee858ce8ee4336ccf475f96d7ee392e3b996cc0c620e71c13520a1d3",
+      "exit_code": 0,
+      "result": "PASS: no block violations found",
+      "verified_scan_root": "solver-legal-ansys",
+      "superseded_head": "6f57d7576f208868dcc494b3ed20f4d4a6a36840"
+    }
+  ],
+  "cleanup": "Owned scan repositories retained after automatic approval policy rejected removal. No retry."
+}

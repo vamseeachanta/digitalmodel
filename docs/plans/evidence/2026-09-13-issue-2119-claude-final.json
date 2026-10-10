@@ -1,0 +1,120 @@
+{
+  "findings": [
+    {
+      "id": "R3-1",
+      "severity": "MINOR",
+      "defect": "Decimal canonicalisation is lossy and one delivered claim about it is false. analysis_records.decimal_text returns `\"0\" if number == 0 else result.rstrip(\"0\").rstrip(\".\")`, so a valid retained literal is renormalised: `\"50000.0\"` becomes `\"50000\"`, `\"500.0\"` becomes `\"500\"`, `\"12.50\"` becomes `\"12.5\"`, and `\"-0.0\"` becomes `\"0\"`, discarding the sign of zero. The published record carries the normalised form in the field named `observed_value`, which the report and go-by present as the retained observation: intake.json records `ansys-2094-canary-20260912T205311Z/pressure-vessel` `reaction_fx_n` as `\"-0.0\"` while manifest.json records `\"observed_value\":\"0\"`; the padeye 20260912T221414Z/fine `reaction_fy_n` source literal `\"50000.0\"` is published as `\"50000\"`. docs/plans/evidence/2026-09-13-issue-2119-implementation-review.md states \"Decimal identity preserves all input digits\", which the rstrip path contradicts. The report states the record \"distinguishes decimal strings, null, absent fields and true zero\" without recording that negative zero is mapped onto true zero. The independent Codex comparison is stated to have used Decimal conversion, so it establishes numeric equality and cannot detect this normalisation. Numerical values are unaffected; the significant-figure and sign-of-zero information present in the source is not retained.",
+      "correction": "Restate the review-record sentence as preservation of exact decimal value under a declared normalisation, and name that normalisation (trailing zeros removed, negative zero mapped to zero). Either retain the source literal in a separate field beside `observed_value`, or document in examples/ansys/analysis-evidence/README.md that `observed_value` is the canonical decimal rather than the source token, so a reader comparing manifest text against the retained CSV is not misled."
+    },
+    {
+      "id": "R3-2",
+      "severity": "MINOR",
+      "defect": "No automated check binds the committed dataset artifacts. Every test in tests/ansys/ builds synthetic fixtures; none calls load_package on examples/ansys/analysis-evidence/manifest.json, so the only real delivered package has no regression guarding its loadability, its digest chain, or its schema. Readback of the real package is evidenced solely by the prose statement \"The production CLI reproduced and read back this exact package\" in the review record. Separately, examples/ansys/analysis-evidence/responses.csv is described in the go-by as \"its derived response export\" and linked from the report as a delivered artifact, but no digest for it appears in the manifest, the intake or the review record, and the go-by's self-contained check regenerates the CSV into the owner's dataset root and compares only the package hash, never the committed CSV. Spot comparison confirms the committed CSV currently agrees with the manifest (`ansys-2094-padeye-20260912T221756Z/coarse` `reaction_fx_n` = `-0.000000000114539489005`, `fsum_fy_n` = `50000.0000305`); the agreement is unenforced, so a stale or edited CSV would pass every delivered check.",
+      "correction": "Add one test that calls load_package on the committed manifest.json and asserts `package_hash == \"ff1e1525d47463581fc95f50681b01b73d02f93947e32a6db788a6fabfce24e5\"`, and a second that asserts `response_csv(package)` equals the committed responses.csv read with `newline=\"\"`. Alternatively record the responses.csv SHA-256 in the review record beside the package and intake digests."
+    },
+    {
+      "id": "R3-3",
+      "severity": "MINOR",
+      "defect": "Exact lookup requires canonical parameter strings that differ from the literals in the human-readable intake, and this is undocumented. analysis_intake._make_case builds `parameters` through `decimal_text(str(value))`, so intake.json's `\"applied_pressure_x_gradient_mpa_per_mm\":\"2.5e-05\"` is published as `\"0.000025\"`, `\"element_size_mm\":\"10.0\"` as `\"10\"`, and `\"thermal_expansion_per_C\":\"1.2e-05\"` as `\"0.000012\"`. analysis_lookup._find_response compares `case[\"parameters\"] != query[\"parameters\"]` by dict equality with no normalisation, and refuses with \"exact query must match exactly one response\" on any textual difference. The go-by's query example sidesteps this by constructing the query from the package itself, so a reader who instead transcribes parameters from the intake ledger, which the go-by names as the owner of the frozen candidate record, receives a bare no-match refusal with no indication that the value was correct and only the form was wrong.",
+      "correction": "State in the go-by's exact-query section that `parameters` are canonical decimal strings produced by decimal_text and are not the intake literals, giving `applied_pressure_x_gradient_mpa_per_mm` as the worked example. If query ergonomics are preferred over strict textual identity, normalise `query[\"parameters\"]` values through decimal_text in _find_response before comparison, and add a test asserting that `\"2.5e-05\"` and `\"0.000025\"` address the same case while `\"10.00001\"` still refuses."
+    },
+    {
+      "id": "R3-4",
+      "severity": "MINOR",
+      "defect": "The engineering-promotion contract omits a resolver obligation that the implementation enforces. analysis_lookup._check_authority calls `verify_reference(package[\"intake_reference\"], resolver)` unconditionally on every engineering lookup, so the owner must map the logical id `intake/3e641f8e82db665f42d7f793eeeb769cc712935f6c47f0c713818a5bb0e0d8` to readable bytes. examples/ansys/analysis-evidence/README.md lists only \"Criteria, review and verification references\" as the `{id, sha256}` records that must resolve, and never mentions the intake. An owner following the go-by receives `evidence unavailable: intake/3e641f8e...` with no guidance. Compounding this, analysis_intake._intake_references computes the reference digest from `canonical_bytes(intake)` and writes that re-serialisation into the cache, so the reference addresses a derived canonical blob rather than the committed examples/ansys/analysis-evidence/intake.json. The two are byte-identical at this revision, so the defect is latent; a future non-canonical intake file would leave the committed artifact unable to satisfy its own reference.",
+      "correction": "Add the intake reference to the go-by's list of records the resolver must supply, and name the cache location the importer writes it to. State explicitly that the intake reference addresses the canonical re-serialisation of the intake, and add an import-time assertion that `digest_bytes(canonical_bytes(intake))` equals the digest of the intake file bytes so the committed artifact and its reference cannot silently diverge."
+    },
+    {
+      "id": "R3-5",
+      "severity": "MINOR",
+      "defect": "The headline test evidence is not locatable and two documents overstate what the review record contains. docs/plans/evidence/2026-09-13-issue-2119-implementation-review.md states \"The selected offline suite completed with 175 passed, 2 skipped\" with no command, and attributes it under the R2-2 disposition to \"the source/test blobs submitted for the final verification; exact hashes are preserved in the provider result\" \u2014 an artifact that is neither named by path nor linked nor included in this bundle, so the count cannot be reproduced or checked from any delivered file. Separately, no delivered artifact names the current source revision 1a9800e14afbd52643cc4e3d09c8871301b189cf; the record names only 43ee0ab9 and 076b5ee4, both superseded, and the test-module digests are recorded nowhere. Against that state, docs/reports/2026-09-13-ansys-evidence-stage-a.html asserts \"Code and artifact revisions, independent provider verdicts, findings, test counts, legal-scan evidence and pending review coverage are tracked in the implementation review record\", and docs/domains/ansys/analysis-workflow.html asserts \"current verdicts and remaining gates are stated there\" \u2014 the record states remaining gates and the pending status, but states no current verdict and no current code revision. Artifact revisions are in fact pinned (package ff1e1525, intake 3e641f8e, and manifest.json `code_files`, whose four digests match the delivered source bytes exactly), so the gap is confined to the source revision, the test blobs and the test count.",
+      "correction": "Record the exact command and the revision the 175/2 result was obtained at, and either include the provider result artifact in docs/plans/evidence/ or cite it by repository path. Name 1a9800e14afbd52643cc4e3d09c8871301b189cf in the review record and list the five test-module SHA-256 values beside the source digests already carried in manifest.json. Amend the report sentence to \"artifact revisions, historical provider verdicts, findings and pending review coverage\", and change the workflow sentence from \"current verdicts and remaining gates are stated there\" to the state the record supports, for example \"the record states which revisions carry independent verdicts and which coverage remains pending\"."
+    },
+    {
+      "id": "R3-6",
+      "severity": "MINOR",
+      "defect": "Optional improvement. manifest.json carries `criteria_sha256` and `intake_digest` alongside the bound `criteria_reference` and `intake_reference` records that supersede them. At this revision the pairs agree (`1cebe3d4c8577b9795e67024a05a58bda7514c5d2334bea7d39f281f96af5bd0` and `3e641f8e3e82db665f42d7f793eeeb769cc712935f6c47f0c713818a5bb0e0d8`), but analysis_evidence._validate_study reads neither bare field and performs no equality check against the reference it duplicates. Two fields of identical cryptographic appearance are therefore published for the same binding, one verified against bytes on every engineering lookup and one never read, with nothing preventing a future revision from carrying divergent values. The R1 F7 correction offered removal of the bare fields or explicit labelling as unbound; the delivered change added the bound references and retained the bare fields unlabelled.",
+      "correction": "Remove `criteria_sha256` and `intake_digest` from the published study, since `criteria_reference[\"sha256\"]` and `intake_reference[\"sha256\"]` carry the same values under verification. If they are retained for readers of the earlier schema, assert their equality with the corresponding reference digests in _validate_study so divergence refuses at the validated boundary."
+    }
+  ],
+  "reviewed_files": [
+    {
+      "path": ".gitignore",
+      "sha256": "73655bd1abba6145ab01942b0810df805dded8c1edd5d2fb91898aa3fdf648bc"
+    },
+    {
+      "path": "docs/domains/ansys/analysis-workflow.html",
+      "sha256": "e24d5a3cc468b1f289795a2b3ef0d00402d868ba4669d1251bffb2f0cae39f61"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2119-claude-r1.json",
+      "sha256": "18ff100b73a61a604a078a6b040c8e1d6dec8507f42fc78b458542f2f8ed45a6"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2119-claude-r2.json",
+      "sha256": "c06ef31f5bfb33f0b03f23f83fe565bfeb1d1016daf91d027c63fd7909fd521b"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2119-implementation-review.md",
+      "sha256": "cee990b8cb560e79a918d3f7bf1cef34f200a09780f0cc90616d19c317cedbe1"
+    },
+    {
+      "path": "docs/reports/2026-09-13-ansys-evidence-stage-a.html",
+      "sha256": "d9077c920bed7784687bf9ab8318269cd4b18b4be3c5200b97ebedcfc25eeebb"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/README.md",
+      "sha256": "6ba8e828b2809cd1b4bcf5007418e2dadd3b014b052237b2f98a8bf2206a46ba"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/intake.json",
+      "sha256": "3e641f8e3e82db665f42d7f793eeeb769cc712935f6c47f0c713818a5bb0e0d8"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/manifest.json",
+      "sha256": "e6a2b9e78d5ffab5ee70b3162934f4b75a35b97750a0a324bba71404042aa247"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/responses.csv",
+      "sha256": "39cf726b6bc177c9256a4cb12d2e3946d26fa25399ea6346825c4215ecf6adf6"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_evidence.py",
+      "sha256": "ee4cd981296f306f5ca86087287ead8a36878295ff7a3f018e795580d84f40a7"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_intake.py",
+      "sha256": "5d7a8c5a3765f238f65277b7a57b1db789b90be6f27c1acf2284b813dfd9aa1a"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_lookup.py",
+      "sha256": "c1d29198f818e3b1063f3194dfe54a9c2bea023a84ffd5c2088b7eb245ea4e92"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_records.py",
+      "sha256": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511"
+    },
+    {
+      "path": "tests/ansys/test_analysis_evidence.py",
+      "sha256": "3ec9270b28a7be42a96c71fe0819748a4269784506f35cecd8c73f4b01254ed7"
+    },
+    {
+      "path": "tests/ansys/test_analysis_intake.py",
+      "sha256": "7702ac71120486b417446bd62402c5ea96e6b7d2ec880c5e401be7bcfbb6b427"
+    },
+    {
+      "path": "tests/ansys/test_analysis_lookup.py",
+      "sha256": "2085b3e5ec8c3fb090693fd0e5119fbbea7bcd2218a9ca66f801e027ee54ff19"
+    },
+    {
+      "path": "tests/ansys/test_analysis_qualification.py",
+      "sha256": "9a8efcb1dc468323ad9896979e78a32a664132edb392da7965c9a260daf6a9d1"
+    },
+    {
+      "path": "tests/ansys/test_analysis_review_regressions.py",
+      "sha256": "918fd3c5dbb680d41c860b2d70932a24dd2a15ebd00d3736e27a3bc2f71e2342"
+    }
+  ],
+  "reviewed_revision": "1a9800e14afbd52643cc4e3d09c8871301b189cf",
+  "verdict": "MINOR"
+}

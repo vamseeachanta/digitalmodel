@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>2254 immutable-array follow-up plan</title>
+<h1>W0/W1 array and provenance integrity</h1>
+<p>The fix will address <a href="https://github.com/vamseeachanta/digitalmodel/pull/2254#issuecomment-6083028919">R02 finding 4</a> under the owner's follow-up instruction. The branch will start from origin/main abdf5ef9 and will publish only a draft PR labelled decision:architecture.</p>
+<ol><li>Regression tests will first reproduce write-flag restoration and attempted doubling of the 120 m³ box beam.</li>
+<li>Array snapshots will use immutable bytes as backing storage, so neither public arrays, slices nor their NumPy bases will permit write access. Mesh hashing will use those snapshots.</li>
+<li>ClippedHull and array-valued Quantity constructors will isolate caller arrays. Bounds and face areas will follow the same read-only contract. Analytic fixture factories will retain independent mutable arrays for caller geometry authoring; these are defensive outputs with no retained state or cached identity.</li>
+<li>The half-breadth result will retain its nested-list API through defensive reads, preventing mutation of the stored result. Serialization will return independent data.</li>
+<li>The module suite and box, Wigley C_B = 4/9 and ITTC-57 closed-form checks will run. Frozen-packet artifact review will precede commit and publication.</li></ol>
+<p>Adversarial checks will target setflags restoration, base-chain access, constructor aliases, clipped face masks and grid-list aliases. Existing source file size violations will remain outside this urgent fix. Citation registry dependencies, clip degeneracy policy and million-face performance evidence will remain explicitly open rather than expanding the numerical scope.</p>
+</html>

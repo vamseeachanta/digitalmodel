@@ -1,0 +1,72 @@
+{
+  "verdict": "MINOR",
+  "reviewed_revision": "391b817d82f2db4a56743f322bb2a771103b8432",
+  "reviewed_files": [
+    {
+      "path": "examples/ansys/analysis-evidence/README.md",
+      "sha256": "5e3097d4374cd5777dce8a28760eaab1c5e9c28bd87a563549c60164c83fb668"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2119-implementation-review.md",
+      "sha256": "921076b6999db60eaa6118fc5f7c6c71a3ddace2434f8cf043caf9ee9937f1e7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2119-claude-final.json",
+      "sha256": "41bd3eaf164f00a222494cec72431831a1a9c896966535b67b4330e3ce4ed339"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2119-tests.json",
+      "sha256": "01cb6ed7fb85dcd99dadcaa257f506a49d47dac64fca3a566d8aeb526d525058"
+    }
+  ],
+  "findings": [
+    {
+      "id": "C1",
+      "severity": "MINOR",
+      "defect": "Malformed digest inside the published provider result. In docs/plans/evidence/2026-09-13-issue-2119-claude-final.json, finding R3-4's defect text cites the intake logical id as `intake/3e641f8e82db665f42d7f793eeeb769cc712935f6c47f0c713818a5bb0e0d8` \u2014 62 hex characters. The authoritative intake SHA-256 is `3e641f8e3e82db665f42d7f793eeeb769cc712935f6c47f0c713818a5bb0e0d8` (64 characters), recorded in the same file's `reviewed_files` entry for examples/ansys/analysis-evidence/intake.json, quoted correctly in the same file's R3-6 body, and repeated in the review record's final-verification section. The R3-4 citation drops the `3e` byte at position 5. An owner constructing the resolver key from R3-4, which is the finding whose entire subject is that undocumented key, receives a permanently unresolvable id \u2014 the exact `evidence unavailable: intake/3e641f8e...` failure R3-4 describes. The defect is confined to the quoted string; the finding's substance and the digests elsewhere in the bundle are correct.",
+      "correction": "The file is retained as a verbatim provider result, so the string must not be silently edited. Add an erratum line to the \"Claude final MINOR dispositions\" list in docs/plans/evidence/2026-09-13-issue-2119-implementation-review.md, for example: \"R3-4 erratum: the logical id quoted in the provider result is transcribed with 62 hex characters; the authoritative intake digest is 3e641f8e3e82db665f42d7f793eeeb769cc712935f6c47f0c713818a5bb0e0d8 as recorded in that result's reviewed_files.\" Alternatively carry the erratum in a non-verbatim sidecar field of the JSON, so the verbatim property and the correct digest both hold."
+    },
+    {
+      "id": "C2",
+      "severity": "MINOR",
+      "defect": "The review record misstates its own completion status. docs/plans/evidence/2026-09-13-issue-2119-implementation-review.md closes the \"Publication checks\" section with \"This record will be updated with the final evidence before publication.\" The final evidence is already present in the immediately following \"Final current source/data verification\" section: final tree 1a9800e1..., final case-data hash 52b77c24..., manifest e6a2b9e7..., CSV 39cf726b..., package ff1e1525..., the 175/2 receipt reference and all six R3 dispositions. The same Publication checks section asserts in present tense that \"the refreshed publication scan covers the appended receipts\" and that \"The final source/data reciprocal review and scoped cleanup results are recorded below\". The section therefore claims in one sentence that its publication evidence is complete and in the next that the record is not yet final. A reviewer reading in order is told the artifact is provisional when it is the closeout record.",
+      "correction": "Replace the trailing sentence with a statement of the reached state, for example \"The final evidence is recorded in the following section; the refreshed scan covers the appended receipts.\" Remove the future-tense update promise, which no longer describes any pending work."
+    },
+    {
+      "id": "C3",
+      "severity": "MINOR",
+      "defect": "Two R3 corrections are partly delivered and the dispositions do not record the omission, although the record marks deferrals explicitly elsewhere (F16 \"optional fixture relocation deferred\", R2-9 \"optional uniform exception wrapping is deferred\"). R3-4's correction was conjunctive: document the intake resolver obligation, state that the reference addresses the canonical re-serialisation, AND \"add an import-time assertion that `digest_bytes(canonical_bytes(intake))` equals the digest of the intake file bytes\". The README carries both documentation halves; the assertion was not added, since no source bytes changed at this revision. The disposition reads only \"R3-4: intake resolver obligation and canonical cache-byte residence are documented\" and is silent on the code half. R3-5's correction required amending the sentence in docs/reports/2026-09-13-ansys-evidence-stage-a.html (\"Code and artifact revisions, independent provider verdicts, findings, test counts, legal-scan evidence and pending review coverage are tracked in the implementation review record\") and the sentence in docs/domains/ansys/analysis-workflow.html (\"current verdicts and remaining gates are stated there\"). Neither HTML file changed. Both sentences are now in fact accurate, because the record's opening line states \"Current source/data verdicts: Claude MINOR; independent Codex APPROVE\" and the record names tree 1a9800e1..., test counts and legal-scan evidence \u2014 but nothing records that reasoning, so a reviewer cannot distinguish \"the correction became unnecessary\" from \"the correction was dropped\".",
+      "correction": "Extend the R3-4 disposition with an explicit deferral and its reason, matching the F16/R2-9 pattern: the import-time equality assertion is deferred because this closeout changes documentation only and no source bytes changed at tree 1a9800e1...; the committed intake is byte-identical to its canonical re-serialisation at this revision. Extend the R3-5 disposition to state that the report and workflow sentences were left unchanged because the record now states current source/data verdicts and names the current tree, making both sentences accurate as written."
+    },
+    {
+      "id": "C4",
+      "severity": "MINOR",
+      "defect": "The R3-2 disposition reads as closure while the enforcement gap R3-2 identified is unchanged, and the go-by does not support the record's reproduction claim. The README self-contained check writes the reproduced CSV to the owner's dataset root and asserts only `read_response_csv(output.read_text(encoding=\"utf-8\"))` \u2014 a parse check. It never compares against the committed examples/ansys/analysis-evidence/responses.csv, which is precisely the gap R3-2 named (\"compares only the package hash, never the committed CSV\"). The README was edited at this revision, so the block was in scope and was left as-is. The review record states \"Both Python go-by blocks executed successfully in the isolated environment; the reproduced CSV was byte-identical to the committed example\" \u2014 a one-time check that the published go-by does not perform, so no reader can reproduce it. The disposition \"R3-2: exact CSV digest is recorded above; independent equality and executed go-by checks establish agreement for these bytes\" presents the alternative the finding permitted (recording the digest, done: 39cf726b...) without stating that the binding is a recorded digest rather than an enforced or reader-reproducible check, leaving R3-2's residual risk \u2014 a stale or edited committed CSV passes every delivered check \u2014 undisclosed.",
+      "correction": "Either add the comparison to the README self-contained block \u2014 read the committed responses.csv with `newline=\"\"` and assert equality with `response_csv(package)` \u2014 so the go-by performs the check the record claims was performed; or amend the R3-2 disposition to state plainly that the CSV binding at this revision is the recorded digest 39cf726b6bc177c9256a4cb12d2e3946d26fa25399ea6346825c4215ecf6adf6, that the byte-identity check was performed once during verification, and that no automated regression enforces it."
+    },
+    {
+      "id": "C5",
+      "severity": "MINOR",
+      "defect": "The two publication checks are the only verifications in the record not bound to bytes. Every other claim is pinned: tree 1a9800e1..., package ff1e1525..., manifest e6a2b9e7..., CSV 39cf726b..., intake 3e641f8e..., case-data 52b77c24..., nine test-file digests, four implementation digests, raw log 26bea279... and JUnit 93f11d9f... in the receipt. By contrast \"the refreshed publication scan covers the appended receipts\" and \"both HTML documents rendered without overflow or page errors and all local links resolve\" name no file set, no digests and no revision. The binding matters more here than elsewhere because the record simultaneously discloses that legal validation \"uses the existing hub scanner/global deny list in a retained scoped snapshot because its live-root resolver has a previously recorded defect\" \u2014 so the only evidence that the scanned bytes are the published bytes is the unpinned assertion \"Every new staged text blob is copied and SHA-verified before scanning\". The staged set reconciles to 21 files against the working-tree status, but that count appears nowhere in the record.",
+      "correction": "Record the scanned set and its state alongside the existing digests in \"Final current source/data verification\": the 21 staged paths and either the revision or the per-file digests that the scoped legal scan and the HTML render/link check covered. Alternatively add them as a second receipt block in docs/plans/evidence/2026-09-13-issue-2119-tests.json, which already carries the per-file digest convention."
+    },
+    {
+      "id": "C6",
+      "severity": "MINOR",
+      "defect": "Key/value confusion in the text added to close R3-3, repeated in its disposition. The README \"Exact diagnostic query\" section states: \"Parameter keys use the same canonical decimal strings: for example, `applied_pressure_x_gradient_mpa_per_mm` is `0.000025`, not intake literal `2.5e-05`.\" The canonical decimal string is the parameter value; `applied_pressure_x_gradient_mpa_per_mm` is the key and is not transformed by decimal_text. As written the sentence asserts that the key equals 0.000025. The review record propagates the same error: \"R3-3: exact-query canonical keys and the 2.5e-05 to 0.000025 example are documented.\" The passage exists specifically to prevent a reader from transcribing intake literals into a query and receiving a bare no-match refusal; stating the rule against the wrong element of the mapping weakens the correction in the one document a confused reader consults.",
+      "correction": "Restate as: \"Parameter values are canonical decimal strings: the value of `applied_pressure_x_gradient_mpa_per_mm` is `0.000025`, not the intake literal `2.5e-05`.\" Amend the R3-3 disposition to \"exact-query canonical parameter values and the 2.5e-05 to 0.000025 example are documented.\""
+    },
+    {
+      "id": "C7",
+      "severity": "MINOR",
+      "defect": "Unconditional original-token availability claim contradicts the record's own provenance split. The README states without qualification: \"Original token formatting remains available in the digest-bound source CSV.\" The same README opens by stating that of the eight retained records, \"Six records represent native captures; two are older repository response references with incomplete native provenance.\" The review record corroborates the split: \"all 46 required references (36 native, 10 repository)\". The availability claim therefore asserts source-CSV token availability across records the document elsewhere describes as lacking native provenance. This sentence is the reader's only stated recourse for recovering the pre-normalisation token that R3-1 established `observed_value` discards, so its scope is load-bearing rather than incidental. A related weakness: the negative-zero mapping that R3-1 flagged is disclosed (\"negative zero becomes `0`\") but sits several paragraphs away from the unqualified opening claim that the record \"distinguishes decimal strings, null, absent fields and true zero\".",
+      "correction": "Scope the sentence to the records it holds for, for example: \"Original token formatting remains available in the digest-bound native source CSV for the six native captures; for the two repository-reference records the intake ledger carries the original literal.\" Name whichever artifact holds the token for the repository-reference records. Additionally, qualify the earlier \"distinguishes ... true zero\" sentence with a pointer to the normalisation paragraph, so the negative-zero mapping is not encountered only after the reader has accepted the stronger claim."
+    },
+    {
+      "id": "C8",
+      "severity": "MINOR",
+      "defect": "The test receipt pins code bytes but not the execution environment. docs/plans/evidence/2026-09-13-issue-2119-tests.json records the exact command array, `reviewed_source_tree` 1a9800e1..., thirteen file digests, and raw log/JUnit digests, but no interpreter version, no platform, no run timestamp and no recorded value of the ANSYS_NATIVE_TESTS gate. The 175/2 split is environment-dependent: the two skips are produced by that gate, whose state is described only in prose (\"intentionally disabled by ANSYS_NATIVE_TESTS gate\"), and the implementation carries platform-specific behaviour per F10 (\"COM1-9 and LPT1-9 are rejected with regression tests\"). A reader re-running the recorded command on a different platform, or with the gate set, cannot determine whether a differing count indicates a regression or a different environment \u2014 which defeats the receipt's purpose as the reproducible binding for the headline verification result.",
+      "correction": "Add `python_version`, `platform`, the ANSYS_NATIVE_TESTS value at run time, and the run timestamp to the receipt, so the recorded counts are attributable to a reproducible environment rather than to the command and source digests alone."
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "cylinder-b1-publication-1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "b1_authority": "https://github.com/vamseeachanta/digitalmodel/issues/2121#issuecomment-5665093291",
+  "status": "CHECKPOINT_PRESERVED; exact-current report review pending provider quota reset; B1 not fully closed",
+  "b2_execution_authorized": false,
+  "native_attempts": 0,
+  "lookup_qualification": false,
+  "reference_comparison": "AGREEMENT;126/126 fixed tolerances",
+  "manifest_sha256": "54bff7d35ec0fa8e915185f8858f09c7f452614e7817b9dbccbeb238dd2a7d06",
+  "report": {
+    "path": "docs/reports/2026-09-14-issue-2121-b1-preparation.html",
+    "sha256": "32a20aae5326988fde99780be97f72419ceb8e5356ac853c1ea960321cf66e78",
+    "review": "UNAVAILABLE; Claude API429; provider reports reset11:20am America/Chicago"
+  },
+  "review": {
+    "plan_baseline": "ba2ac7f458bdbd2b72ec0fd01f6abee596d1d840",
+    "code_artifact_tree": "c102f60beda3db304401bf8fda0b03384d6bd166",
+    "code_correction": "Claude MINOR; no blockers; independent Codex dispositions recorded",
+    "decks": "Claude MINOR at dbb098f4837d1a688baacb71997599c9d19f4a25; unchanged generators/tests and full N4 deck supplied; other prepared decks and metadata supplied as exact hash plus semantic audit representations",
+    "checker_derivation_codex": "APPROVE; exact retained capture and symbolic-domain review",
+    "report_previous_revision": "Claude MINOR; five findings corrected; current revision review unavailable",
+    "coverage_limit": "No full-text review claim for seven generated artifacts represented by hashes and semantic audits. Administrative receipts are validated separately."
+  },
+  "tests": {
+    "passed": 1075,
+    "native_deselected": 2,
+    "native_process_invocations": 0
+  },
+  "limitations": [
+    "Native table compatibility and Windows owned-process API behavior are unestablished until separate B2 execution.",
+    "Explicit external authority/live-preflight/human-adjudication adapters remain caller-owned trust boundaries.",
+    "Capture allowance is audited after an attempt; no live disk quota is asserted.",
+    "Processing callbacks, Git and I/O have no hard real-time ceiling; detected overall overrun returns INCOMPLETE.",
+    "Internal provider routing, auxiliary-model inputs and cache contents are unknown. Human engineering qualification is not established."
+  ],
+  "next_checkpoint": "Resume exact-report Claude review after provider availability; resolve findings and finalize B1 publication before preparing the separate B2 approval decision."
+}

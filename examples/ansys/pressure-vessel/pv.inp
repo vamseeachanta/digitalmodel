@@ -5,7 +5,7 @@
 ! ============================================================
 FINISH
 /CLEAR,NOSTART
-/TITLE,PV screening: ID=1500.0mm t=30.0mm P=10.0MPa
+/TITLE,PV screening: ID=1500.0mm t=60.0mm P=10.0MPa
 /UNITS,MPA
 /PREP7
 
@@ -19,23 +19,23 @@ ET,1,PLANE182
 KEYOPT,1,3,1            ! axisymmetric
 
 ! --- geometry: r-z wall section (X=radial, Y=axial) ---
-RECTNG,750.0,780.0,0,120.0   ! area 1 = wall slice
+RECTNG,750.0,810.0,0,240.0   ! area 1 = wall slice
 
 ! --- mesh ---
 TYPE,1
 MAT,1
-ESIZE,7.5
+ESIZE,15.0
 AMESH,ALL
 
 ! --- boundary conditions ---
-! symmetry / axial restraint on the bottom edge (y=0)
+! symmetry / axial restraint on the bottom edge (y=0). This is the
+! ONLY restraint required: an axisymmetric element has no radial
+! rigid-body mode (a uniform radial translation produces hoop strain,
+! so it is not a rigid-body motion), and UY here removes the single
+! axial mode. A radial point restraint would resist the wall's own
+! pressure and thermal expansion -- see #2094.
 NSEL,S,LOC,Y,0
 D,ALL,UY,0
-ALLSEL,ALL
-! restrain one node radially to remove rigid-body motion
-NSEL,S,LOC,X,780.0
-NSEL,R,LOC,Y,0
-D,ALL,UX,0
 ALLSEL,ALL
 
 ! --- load: internal pressure on the inner wall (x=r_inner) ---
@@ -60,16 +60,31 @@ FINISH
 SET,LAST
 NSORT,S,EQV
 *GET,smax,SORT,0,MAX
+*GET,peak_node,SORT,0,IMAX   ! a value without its location cannot
+                             ! be told from a singularity
 allow = 138.0
 uc = smax / allow
+
+! --- equilibrium check (#2094) ---
+! No axial load is applied -- the pressure acts on the inner wall
+! only and there is no end cap -- so the axial reaction shall be
+! zero. A non-zero value means an unintended load or restraint.
+! A radial reaction cannot arise: nothing is restrained radially.
+NSEL,S,LOC,Y,0
+FSUM
+*GET,rfx,FSUM,0,ITEM,FX
+*GET,rfy,FSUM,0,ITEM,FY
+ALLSEL,ALL
 /COM,============================================================
 /COM,PRESSURE-VESSEL SCREENING RESULT
 *MSG,INFO,smax,allow,uc
 peak von Mises = %G MPa ; allowable = %G MPa ; UC = %G
+*MSG,INFO,rfx,rfy
+reaction FX = %G N ; reaction FY = %G N  (both shall be ~0)
 /COM,============================================================
 ! numeric digest for the postprocessor (small, returnable)
 *CFOPEN,pv_result,csv
-*VWRITE,smax,allow,uc
-('max_seqv_mpa,',F12.4,',allowable_mpa,',F12.4,',uc,',F10.5)
+*VWRITE,smax,allow,uc,peak_node,rfx,rfy
+('max_seqv_mpa,',F12.4,',allowable_mpa,',F12.4,',uc,',F10.5,',peak_node,',F10.0,',reaction_fx_n,',F14.4,',reaction_fy_n,',F14.4)
 *CFCLOS
 FINISH

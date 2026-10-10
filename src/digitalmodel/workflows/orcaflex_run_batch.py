@@ -110,7 +110,10 @@ def router(cfg: dict) -> dict:
         "save_sim": save_sim,
         "save_dat": False,
         "output_dir": str(work_dir / "sims"),
+        "solver_threads": run_settings.get("solver_threads", 1),
     }
+    if 'progress_interval_seconds' in run_settings:
+        executor_config['progress_interval_seconds'] = run_settings['progress_interval_seconds']
 
     started_at = datetime.now(timezone.utc)
     pool_summary = executor.process_files_parallel(
@@ -284,6 +287,8 @@ def _manifest_rows(
                 "error": result.get("error"),
                 "wall_seconds": round(result.get("duration") or 0.0, 3),
                 "sim_path": sim_path,
+                "solver_threads_requested": result.get("solver_threads_requested"),
+                "solver_threads": result.get("solver_threads"),
             }
         )
     return rows
@@ -312,6 +317,9 @@ def _write_summary(
         "completed": completed,
         "failed": len(rows) - completed,
         "workers": workers,
+        "native_thread_budget": [
+            {"index": row["index"], "requested": row.get("solver_threads_requested"),
+             "observed": row.get("solver_threads")} for row in rows],
         "host_cpu_count": os.cpu_count(),
         "mock": mock,
         "analysis_type": analysis_type,

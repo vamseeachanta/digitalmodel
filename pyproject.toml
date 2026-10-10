@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "digitalmodel"
-version = "0.1.1"
+version = "2.1.0"
 description = "Standardized project configuration for digitalmodel"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -59,10 +59,12 @@ dependencies = [
     "pydantic-settings>=2.6.1,<3.0.0",
     "pylife>=2.2,<3.0",
     "pyproj==3.6.1",
+    "pypdf>=6.19.0,<7.0.0",
     "python-docx>=0.8.0,<2.0.0",
     "pyyaml>=6.0.0,<7.0.0",
     "rainflow>=3.2.0,<4.0.0",
     "requests>=2.31.0,<3.0.0",
+    "reportlab>=5.0.1,<6.0.0",
     "rich>=13.0.0,<15.0.0",
     "ruamel.yaml>=0.18.0,<1.0.0",
     "scikit-learn==1.3.2",
@@ -114,9 +116,7 @@ curvature = [
 dev = [
     # Linting / typing / release tooling. Invoked as executables, never imported
     # by shipped code -- moved out of [project] dependencies in #1632.
-    "black>=24.0.0,<25.0.0",
     "flake8==6.1.0",
-    "isort>=5.13.0,<6.0.0",
     "mypy>=1.8.0,<2.0.0",
     "ruff>=0.1.0",
     "bandit==1.7.5",
@@ -207,9 +207,9 @@ async = ["aiofiles>=23.0.0,<25.0.0", "asyncpg>=0.29.0,<1.0.0"]
 markitdown = ["markitdown>=0.0.1,<0.1.0"]
 
 [project.urls]
-"Homepage" = "https://github.com/username/digitalmodel"
-"Bug Tracker" = "https://github.com/username/digitalmodel/issues"
-"Documentation" = "https://github.com/username/digitalmodel#readme"
+"Homepage" = "https://github.com/vamseeachanta/digitalmodel"
+"Bug Tracker" = "https://github.com/vamseeachanta/digitalmodel/issues"
+"Documentation" = "https://github.com/vamseeachanta/digitalmodel#readme"
 
 [project.scripts]
 digital_model = "digitalmodel.__main__:main"
@@ -241,6 +241,7 @@ exclude = ["tests*", "docs*"]
 
 [tool.setuptools.package-data]
 digitalmodel = [
+    "py.typed",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
     "data_systems/data/*.yml",
@@ -259,14 +260,17 @@ digitalmodel = [
     "asset_integrity/data/*.yml",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ['py311', 'py312']
-include = '\.pyi?$'
+target-version = "py311"
 
-[tool.isort]
-profile = "black"
-line_length = 88
+[tool.ruff.lint]
+# Preserve main's default lint contract for unchanged source files.
+# Import sorting will run only through the scoped formatter command.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["digitalmodel"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -418,10 +422,9 @@ data_processing = "threshold"   # Based on data size
 threshold_size = 1000           # Items before parallel kicks in
 
 [tool.scripts]
-# Common scripts that use parallel processing
 test = "pytest -n auto"
-format = "black . && isort ."
-lint = "flake8 . & mypy . & pylint ."
+format = "make format"
+lint = "ruff check src/ && mypy src/"
 install = "uv pip install -e ."
 dev-install = "uv pip install -e .[dev]"
 

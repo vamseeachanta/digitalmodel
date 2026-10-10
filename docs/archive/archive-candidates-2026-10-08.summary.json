@@ -1,0 +1,2659 @@
+{
+  "generated": "2026-10-09",
+  "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
+  "scan_provenance": {
+    "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
+    "scanned_head": "5cbbf0bdc1f06f960af350c407aeead61bef9c12",
+    "scanned_index_tree": "674651d575f6a6ec6d75164e2039cafc7f310b32",
+    "tracked_inputs_clean": true
+  },
+  "rule": {
+    "extensions_any_size": [
+      "bmp",
+      "dat",
+      "doc",
+      "docx",
+      "dwg",
+      "dxf",
+      "engd",
+      "gif",
+      "gz",
+      "html",
+      "igs",
+      "jfif",
+      "jpeg",
+      "jpg",
+      "lis",
+      "owr",
+      "pdf",
+      "png",
+      "ppt",
+      "pptx",
+      "qtf",
+      "scdoc",
+      "sim",
+      "stl",
+      "svg",
+      "tif",
+      "tiff",
+      "webp",
+      "xls",
+      "xlsx"
+    ],
+    "extensions_size_gated": [
+      "csv",
+      "yaml",
+      "yml"
+    ],
+    "size_gate_bytes_exclusive": 1000000,
+    "excluded_prefixes": [
+      "src/",
+      "tests/",
+      "docs/api/",
+      "assets/logo/"
+    ],
+    "excluded_report_paths": [
+      "docs/archive/R01-archive-manifest-review.html",
+      "docs/archive/archive-blob-map-2026-10-08.csv",
+      "docs/archive/archive-candidates-2026-10-08.csv",
+      "docs/archive/archive-candidates-2026-10-08.holds.json",
+      "docs/archive/archive-candidates-2026-10-08.summary.json",
+      "docs/archive/model-yaml-feature-inventory-2026-10-08.json"
+    ],
+    "excluded_if_referenced_from": [
+      "src/",
+      "tests/",
+      "tracked YAML and Python consumers"
+    ],
+    "reference_evidence": "R01: explicit file references from src/tests, other tracked Python consumers and tracked YAML, including source-relative includes and mkdocs nav. C02/D01 filename qualification and hygiene-sweep exceptions remain. Detected unresolved templates, globs and ambiguous references receive human holds. Runtime/glob holds are restricted to the consumer directory tree by owner policy R01 only when the pattern has no literal leading folder; folder-qualified patterns retain that folder scope. Resolved static references retain their scope. A bare directory mention excludes nothing.",
+    "scope": "git ls-files (tracked only); extension match case-insensitive; size gate on git blob size",
+    "source": "recovered from PR #2146 (head 48ff7b64) against its merge base 7e71d6b2"
+  },
+  "lfs_tracked_files": 0,
+  "lfs_detection": "indexed Git LFS pointer headers; pointers excluded",
+  "rule_matches": 1471,
+  "excluded_referenced": {
+    "files": 188,
+    "blob_size_bytes": 506186760,
+    "by_evidence": {
+      "path": {
+        "files": 80,
+        "blob_size_bytes": 198574563
+      },
+      "filename": {
+        "files": 82,
+        "blob_size_bytes": 242229641
+      },
+      "glob": {
+        "files": 26,
+        "blob_size_bytes": 65382556
+      }
+    },
+    "filename_only_with_non_unique_basename": {
+      "files": 0,
+      "blob_size_bytes": 0
+    },
+    "paths": [
+      {
+        "path": "docs/cad-inventory/cad-file-manifest-deidentified.csv.gz",
+        "evidence": "path",
+        "matched": "cad-file-manifest-deidentified.csv.gz",
+        "source": "docs/cad-inventory/deidentify-manifest.py",
+        "blob_size_bytes": 9508583,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/briefs/pe-2026-06-19.html",
+        "evidence": "path",
+        "matched": "docs/collide_pe/briefs/pe-2026-06-19.html",
+        "source": "docs/collide_pe/render_brief.py",
+        "blob_size_bytes": 5623,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/dynacard-undulations/AceEngineer-dynacard-data-ask.pdf",
+        "evidence": "path",
+        "matched": "docs/collide_pe/dynacard-undulations/AceEngineer-dynacard-data-ask.pdf",
+        "source": "docs/collide_pe/dynacard-undulations/build_data_ask.py",
+        "blob_size_bytes": 499365,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/dynacard-undulations/AceEngineer-dynacard-rod-pump-report.pdf",
+        "evidence": "path",
+        "matched": "docs/collide_pe/dynacard-undulations/AceEngineer-dynacard-rod-pump-report.pdf",
+        "source": "docs/collide_pe/dynacard-undulations/build_report.py",
+        "blob_size_bytes": 1670098,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/dynacard-undulations/dynacard-data-ask.html",
+        "evidence": "path",
+        "matched": "docs/collide_pe/dynacard-undulations/dynacard-data-ask.html",
+        "source": "docs/collide_pe/dynacard-undulations/build_data_ask.py",
+        "blob_size_bytes": 31916,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/dynacard-undulations/dynacard-rod-pump-report.html",
+        "evidence": "path",
+        "matched": "docs/collide_pe/dynacard-undulations/dynacard-rod-pump-report.html",
+        "source": "docs/collide_pe/dynacard-undulations/build_report.py",
+        "blob_size_bytes": 52936,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/dynacard-undulations/fig1_card.png",
+        "evidence": "filename",
+        "matched": "fig1_card.png",
+        "source": "docs/collide_pe/dynacard-undulations/analyze.py",
+        "blob_size_bytes": 92471,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/dynacard-undulations/fig2_load_vs_time.png",
+        "evidence": "filename",
+        "matched": "fig2_load_vs_time.png",
+        "source": "docs/collide_pe/dynacard-undulations/analyze.py",
+        "blob_size_bytes": 67765,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/dynacard-undulations/fig3_time_vs_position.png",
+        "evidence": "filename",
+        "matched": "fig3_time_vs_position.png",
+        "source": "docs/collide_pe/dynacard-undulations/analyze.py",
+        "blob_size_bytes": 76059,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/collide_pe/templates/letterhead.html",
+        "evidence": "path",
+        "matched": "docs/collide_pe/templates/letterhead.html",
+        "source": "docs/collide_pe/render_brief.py",
+        "blob_size_bytes": 3920,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS",
+        "evidence": "path",
+        "matched": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS",
+        "source": "tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py",
+        "blob_size_bytes": 3340020,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_ship_raos.dat",
+        "evidence": "path",
+        "matched": "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_ship_raos.dat",
+        "source": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis.py",
+        "blob_size_bytes": 848910,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/aqwa/examples/03_dat/003_FPSO_Turret/D_fpso_turret.dat",
+        "evidence": "glob",
+        "matched": "docs/domains/aqwa/examples/03_dat/003_FPSO_Turret/*",
+        "source": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis_multibody.py",
+        "blob_size_bytes": 1894532,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/aqwa/examples/03_dat/003_FPSO_Turret/F_fpso_turret.dat",
+        "evidence": "glob",
+        "matched": "docs/domains/aqwa/examples/03_dat/003_FPSO_Turret/*",
+        "source": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis_multibody.py",
+        "blob_size_bytes": 1888862,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/aqwa/examples/spar-example/SIMPLE.LIS",
+        "evidence": "path",
+        "matched": "docs/domains/aqwa/examples/spar-example/SIMPLE.LIS",
+        "source": "scripts/benchmark/rerun_benchmarks_with_fidp.py",
+        "blob_size_bytes": 3749736,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/aqwa/examples/spar-example/simple.dat",
+        "evidence": "path",
+        "matched": "docs/domains/aqwa/examples/spar-example/simple.dat",
+        "source": "scripts/benchmark/run_spar_benchmark.py",
+        "blob_size_bytes": 1387982,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/aqwa/scripts/wlng_diffraction_analysis/raos/F_FST1_L00_DAMPAD.dat",
+        "evidence": "path",
+        "matched": "docs/domains/aqwa/scripts/wlng_diffraction_analysis/raos/F_FST1_L00_DAMPAD.dat",
+        "source": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis.py",
+        "blob_size_bytes": 3755471,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/aqwa/scripts/wlng_diffraction_analysis/raos/F_FST1_L00_DAMPNO.dat",
+        "evidence": "path",
+        "matched": "docs/domains/aqwa/scripts/wlng_diffraction_analysis/raos/F_FST1_L00_DAMPNO.dat",
+        "source": "tests/hydrodynamics/diffraction/test_aqwa_deck_basis.py",
+        "blob_size_bytes": 3755502,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/cathodic_protection/reporting-roadmap.html",
+        "evidence": "filename",
+        "matched": "reporting-roadmap.html",
+        "source": "scripts/reporting/build_cp_review_portfolio.py",
+        "blob_size_bytes": 9797,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/added_mass_animation.gif",
+        "evidence": "filename",
+        "matched": "added_mass_animation.gif",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/extraction/extract_hydro.py",
+        "blob_size_bytes": 1089801,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/coupling_network.png",
+        "evidence": "filename",
+        "matched": "coupling_network.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/extraction/extract_hydro.py",
+        "blob_size_bytes": 117718,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/critical_damping_ratios.png",
+        "evidence": "filename",
+        "matched": "critical_damping_ratios.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/extraction/extract_hydro.py",
+        "blob_size_bytes": 52758,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/damping_animation.gif",
+        "evidence": "filename",
+        "matched": "damping_animation.gif",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/extraction/extract_hydro.py",
+        "blob_size_bytes": 1197721,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/frequency_response_curves.png",
+        "evidence": "filename",
+        "matched": "frequency_response_curves.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/extraction/extract_hydro.py",
+        "blob_size_bytes": 375690,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/natural_periods.png",
+        "evidence": "filename",
+        "matched": "natural_periods.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/extraction/extract_hydro.py",
+        "blob_size_bytes": 111999,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/3d_cmc.png",
+        "evidence": "filename",
+        "matched": "3d_cmc.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 1471236,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/3d_cmw.png",
+        "evidence": "filename",
+        "matched": "3d_cmw.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 1170084,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/3d_cxc.png",
+        "evidence": "filename",
+        "matched": "3d_cxc.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 1498698,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/3d_cxw.png",
+        "evidence": "filename",
+        "matched": "3d_cxw.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 1226736,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/3d_cyc.png",
+        "evidence": "filename",
+        "matched": "3d_cyc.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 1497527,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/3d_cyw.png",
+        "evidence": "filename",
+        "matched": "3d_cyw.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 1232233,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/heading_sensitivity.png",
+        "evidence": "filename",
+        "matched": "heading_sensitivity.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 986692,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/heatmaps.png",
+        "evidence": "filename",
+        "matched": "heatmaps.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 472023,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html",
+        "evidence": "path",
+        "matched": "docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html",
+        "source": "src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py",
+        "blob_size_bytes": 201138,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/ocimf_extraction_report.html",
+        "evidence": "filename",
+        "matched": "ocimf_extraction_report.html",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 5125,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/polar_diagrams.png",
+        "evidence": "filename",
+        "matched": "polar_diagrams.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 1007973,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/ocimf/vector_field.png",
+        "evidence": "filename",
+        "matched": "vector_field.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py",
+        "blob_size_bytes": 193575,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/phase2_validation_dashboard.html",
+        "evidence": "filename",
+        "matched": "phase2_validation_dashboard.html",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 10259,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/png/correlation_scatter_plots.png",
+        "evidence": "filename",
+        "matched": "correlation_scatter_plots.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 912121,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/png/error_distributions.png",
+        "evidence": "filename",
+        "matched": "error_distributions.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 307318,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/png/hydro_added_mass_error_heatmap.png",
+        "evidence": "filename",
+        "matched": "hydro_added_mass_error_heatmap.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 180446,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/png/hydro_damping_error_heatmap.png",
+        "evidence": "filename",
+        "matched": "hydro_damping_error_heatmap.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 185509,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/png/ocimf_current_force_errors.png",
+        "evidence": "filename",
+        "matched": "ocimf_current_force_errors.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 406002,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/png/ocimf_interpolation_accuracy.png",
+        "evidence": "filename",
+        "matched": "ocimf_interpolation_accuracy.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 206622,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/png/ocimf_wind_force_errors.png",
+        "evidence": "filename",
+        "matched": "ocimf_wind_force_errors.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 449954,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase2/validation/png/performance_benchmarks.png",
+        "evidence": "filename",
+        "matched": "performance_benchmarks.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py",
+        "blob_size_bytes": 175587,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase3/performance/01_runtime_comparison.png",
+        "evidence": "filename",
+        "matched": "01_runtime_comparison.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+        "blob_size_bytes": 171960,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase3/performance/02_memory_usage.png",
+        "evidence": "filename",
+        "matched": "02_memory_usage.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+        "blob_size_bytes": 197136,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase3/performance/03_performance_ratio.png",
+        "evidence": "filename",
+        "matched": "03_performance_ratio.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+        "blob_size_bytes": 156379,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase3/performance/04_module_summary.png",
+        "evidence": "filename",
+        "matched": "04_module_summary.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+        "blob_size_bytes": 189794,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase3/performance/05_scaling_analysis.png",
+        "evidence": "filename",
+        "matched": "05_scaling_analysis.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+        "blob_size_bytes": 145457,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase3/performance/06_performance_heatmap.png",
+        "evidence": "filename",
+        "matched": "06_performance_heatmap.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+        "blob_size_bytes": 153475,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase3/performance/07_target_achievement.png",
+        "evidence": "filename",
+        "matched": "07_target_achievement.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+        "blob_size_bytes": 121626,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/charts/phase3/performance/08_bottleneck_analysis.png",
+        "evidence": "filename",
+        "matched": "08_bottleneck_analysis.png",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+        "blob_size_bytes": 73538,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/freecad/src/ref/125 LNGC.igs",
+        "evidence": "path",
+        "matched": "docs/domains/freecad/src/ref/125 LNGC.igs",
+        "source": ".legal-deny-list.yaml",
+        "blob_size_bytes": 64528245,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/ghs/2026-09-11-m1-synthetic.html",
+        "evidence": "path",
+        "matched": "docs/domains/ghs/2026-09-11-m1-synthetic.html",
+        "source": "scripts/review/results/issue-2089/replay-synthetic-example.py",
+        "blob_size_bytes": 3679,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/gmsh/examples/api/aneurysm_data.stl",
+        "evidence": "filename",
+        "matched": "aneurysm_data.stl",
+        "source": "scripts/python/digitalmodel/analysis/aneurysm.py",
+        "blob_size_bytes": 5476381,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/gmsh/examples/api/object.stl",
+        "evidence": "filename",
+        "matched": "object.stl",
+        "source": "scripts/python/digitalmodel/analysis/remesh_stl.py",
+        "blob_size_bytes": 188340,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/gmsh/examples/api/surface1.stl",
+        "evidence": "filename",
+        "matched": "surface1.stl",
+        "source": "scripts/python/digitalmodel/analysis/glue_and_remesh_stl.py",
+        "blob_size_bytes": 15411,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/gmsh/examples/api/surface2.stl",
+        "evidence": "filename",
+        "matched": "surface2.stl",
+        "source": "scripts/python/digitalmodel/analysis/glue_and_remesh_stl.py",
+        "blob_size_bytes": 16407,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/gmsh/examples/api/terrain_stl_data.stl",
+        "evidence": "filename",
+        "matched": "terrain_stl_data.stl",
+        "source": "scripts/python/digitalmodel/analysis/terrain_stl.py",
+        "blob_size_bytes": 617221,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/gmsh/tutorials/t13_data.stl",
+        "evidence": "filename",
+        "matched": "t13_data.stl",
+        "source": "scripts/python/digitalmodel/analysis/t13.py",
+        "blob_size_bytes": 263275,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/gmsh/tutorials/t4_image.png",
+        "evidence": "filename",
+        "matched": "t4_image.png",
+        "source": "scripts/python/digitalmodel/analysis/t4.py",
+        "blob_size_bytes": 78218,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/AL_FST2F_FST1F_HWL_ANS2019R1.LIS",
+        "evidence": "path",
+        "matched": "docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/AL_FST2F_FST1F_HWL_ANS2019R1.LIS",
+        "source": "tests/hydrodynamics/diffraction/test_aqwa_lis_coefficient_grid.py",
+        "blob_size_bytes": 12741541,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_HWL.LIS",
+        "evidence": "filename",
+        "matched": "FST2L015_FST1L015_HWL.LIS",
+        "source": "tests/marine_ops/marine_engineering/test_rao_verification_all_routes.py",
+        "blob_size_bytes": 13272732,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/template_fsts.yml",
+        "evidence": "path",
+        "matched": "template_fsts.yml",
+        "source": "docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015.yml",
+        "blob_size_bytes": 6224552,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/model_library_report.html",
+        "evidence": "path",
+        "matched": "docs/domains/orcaflex/examples/model_library_report.html",
+        "source": "scripts/benchmark_model_library.py",
+        "blob_size_bytes": 6107863,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/modular/K06/K06 FPV array/includes/07_lines.yml",
+        "evidence": "path",
+        "matched": "includes/07_lines.yml",
+        "source": "docs/domains/orcaflex/examples/modular/K06/K06 FPV array/master.yml",
+        "blob_size_bytes": 1448210,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/modular/K06/K06 FPV array/includes/08_buoys.yml",
+        "evidence": "path",
+        "matched": "includes/08_buoys.yml",
+        "source": "docs/domains/orcaflex/examples/modular/K06/K06 FPV array/master.yml",
+        "blob_size_bytes": 1537176,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/modular/L03/L03 Semi-sub multibody analysis/includes/04_vessel_types.yml",
+        "evidence": "path",
+        "matched": "includes/04_vessel_types.yml",
+        "source": "docs/domains/orcaflex/examples/modular/L03/L03 Semi-sub multibody analysis/master.yml",
+        "blob_size_bytes": 2592741,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/modular/L04/L04 Sectional bodies/includes/01_general.yml",
+        "evidence": "path",
+        "matched": "includes/01_general.yml",
+        "source": "docs/domains/orcaflex/examples/modular/L04/L04 Sectional bodies/master.yml",
+        "blob_size_bytes": 2844492,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/modular/L04/L04 Sectional bodies/includes/04_vessel_types.yml",
+        "evidence": "path",
+        "matched": "includes/04_vessel_types.yml",
+        "source": "docs/domains/orcaflex/examples/modular/L04/L04 Sectional bodies/master.yml",
+        "blob_size_bytes": 3156517,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/modular/L05/L05 Panel pressures/includes/01_general.yml",
+        "evidence": "path",
+        "matched": "includes/01_general.yml",
+        "source": "docs/domains/orcaflex/examples/modular/L05/L05 Panel pressures/master.yml",
+        "blob_size_bytes": 2844491,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/modular/L05/L05 Panel pressures/includes/04_vessel_types.yml",
+        "evidence": "path",
+        "matched": "includes/04_vessel_types.yml",
+        "source": "docs/domains/orcaflex/examples/modular/L05/L05 Panel pressures/master.yml",
+        "blob_size_bytes": 3156516,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/A05/A05 Catenary with spar.dat",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.dat",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 155960,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/D02/D02 Pull in analysis.dat",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.dat",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 65925,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/E08/basecase.dat",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.dat",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 248393,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/K03/K03 15MW semi-sub FOWT.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.yml",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 1618469,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/K06/K06 FPV array.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.yml",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 3354047,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/L03/L03 Semi-sub multibody analysis.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.yml",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 2639419,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/L04/L04 Sectional bodies.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.yml",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 4957375,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/L05/L05 Panel pressures.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.yml",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 4957374,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/examples/raw/Pipeline spanning (lay to rough seabed).dat",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/examples/raw/**/*.dat",
+        "source": "src/digitalmodel/solvers/orcaflex/examples_integration/complete_downloader.py",
+        "blob_size_bytes": 160783,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/installation/manifold/region_a/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 1973122,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/jumper/manifold_to_plet/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 1301445,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/jumper/plet_to_plem/spec.yml",
+        "evidence": "path",
+        "matched": "docs/domains/orcaflex/jumper/plet_to_plem/spec.yml",
+        "source": "src/digitalmodel/marine_ops/installation/jumper_to_modular_spec.py",
+        "blob_size_bytes": 1299251,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/jumper/sut_mm/resonance/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 1199029,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/k02_10mw_fixed_bottom_owt/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 1063242,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/k03_15mw_semi_sub_fowt/modular/includes/20_generic_objects.yml",
+        "evidence": "path",
+        "matched": "includes/20_generic_objects.yml",
+        "source": "docs/domains/orcaflex/library/model_library/k03_15mw_semi_sub_fowt/modular/master.yml",
+        "blob_size_bytes": 1941212,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/k03_15mw_semi_sub_fowt/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 2370704,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/l03_semi_sub_multibody_analysis/modular/includes/20_generic_objects.yml",
+        "evidence": "path",
+        "matched": "includes/20_generic_objects.yml",
+        "source": "docs/domains/orcaflex/library/model_library/l03_semi_sub_multibody_analysis/modular/master.yml",
+        "blob_size_bytes": 3418660,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/l03_semi_sub_multibody_analysis/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 3922597,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/l04_sectional_bodies/modular/includes/20_generic_objects.yml",
+        "evidence": "path",
+        "matched": "includes/20_generic_objects.yml",
+        "source": "docs/domains/orcaflex/library/model_library/l04_sectional_bodies/modular/master.yml",
+        "blob_size_bytes": 6379549,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/l04_sectional_bodies/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 7402152,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/l05_panel_pressures/modular/includes/20_generic_objects.yml",
+        "evidence": "path",
+        "matched": "includes/20_generic_objects.yml",
+        "source": "docs/domains/orcaflex/library/model_library/l05_panel_pressures/modular/master.yml",
+        "blob_size_bytes": 6379549,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/model_library/l05_panel_pressures/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 7402152,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/tier2_fast/riser_mesh_sensitivity.html",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/library/tier2_fast/*",
+        "source": "scripts/extract_library_validation.py",
+        "blob_size_bytes": 476512,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/library/tier2_fast/riser_validation_report.html",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/library/tier2_fast/*",
+        "source": "scripts/extract_library_validation.py",
+        "blob_size_bytes": 128362,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/mooring/reference/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 6226322,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/mooring/semi/rao-check/RAoStudyVessel_Z.png",
+        "evidence": "filename",
+        "matched": "RAoStudyVessel_Z.png",
+        "source": "docs/domains/orcaflex/mooring/semi/rao-check/RAO Study_heave.py",
+        "blob_size_bytes": 962129,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "evidence": "path",
+        "matched": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/basefile/vessel_end_winch.yml",
+        "source": "tests/solvers/orcaflex/test_pipeline_schematic.py",
+        "blob_size_bytes": 1265698,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_env_1yr_090.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_env_1yr_090.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 18377033,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_env_1yr_135.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_env_1yr_135.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 18437897,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_env_95NE_090.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_env_95NE_090.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 18399353,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_env_95NE_135.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_env_95NE_135.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 18401609,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_tension_0900kN.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_tension_0900kN.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 14799744,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_tension_1250kN.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_tension_1250kN.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 14767576,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_tension_1500kN.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_tension_1500kN.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 14747868,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_tension_2000kN.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_tension_2000kN.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 14715868,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_arclength_tension_2500kN.html",
+        "evidence": "filename",
+        "matched": "24in_arclength_tension_2500kN.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_html_report.py",
+        "blob_size_bytes": 14663512,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_main_report.html",
+        "evidence": "path",
+        "matched": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/24in_main_report.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/generate_html_report.py",
+        "blob_size_bytes": 81313,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/900kN_env_case_arclength_0deg.html",
+        "evidence": "filename",
+        "matched": "900kN_env_case_arclength_0deg.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_env_case_report.py",
+        "blob_size_bytes": 11213560,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/900kN_env_case_arclength_50deg.html",
+        "evidence": "filename",
+        "matched": "900kN_env_case_arclength_50deg.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_env_case_report.py",
+        "blob_size_bytes": 11108134,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/900kN_env_case_arclength_A.html",
+        "evidence": "filename",
+        "matched": "900kN_env_case_arclength_A.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_env_case_report.py",
+        "blob_size_bytes": 7444811,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/900kN_env_case_arclength_C.html",
+        "evidence": "filename",
+        "matched": "900kN_env_case_arclength_C.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_env_case_report.py",
+        "blob_size_bytes": 7498439,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/900kN_env_case_arclength_D.html",
+        "evidence": "filename",
+        "matched": "900kN_env_case_arclength_D.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/_archive/generate_env_case_report.py",
+        "blob_size_bytes": 7455389,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/900kN_env_case_report.html",
+        "evidence": "path",
+        "matched": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/900kN_env_case_report.html",
+        "source": "docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/generate_env_case_report.py",
+        "blob_size_bytes": 53763,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/reference/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 6191653,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/regional/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 1002448,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcaflex/support/optimization/Python-Automation-2018/4. Stinger tip clearance/E01 Explicit Geometry Stinger.dat",
+        "evidence": "filename",
+        "matched": "E01 Explicit Geometry Stinger.dat",
+        "source": "scripts/python/digitalmodel/analysis/FinalRollerClearance.py",
+        "blob_size_bytes": 144543,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/support/optimization/Python-automation-2013/3. Optimisation/Towed Fish.dat",
+        "evidence": "filename",
+        "matched": "Towed Fish.dat",
+        "source": "scripts/python/digitalmodel/analysis/TowedFish.py",
+        "blob_size_bytes": 146020,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcaflex/training/hulls/spec.yml",
+        "evidence": "glob",
+        "matched": "docs/domains/orcaflex/**/spec.yml",
+        "source": "scripts/audit_all_specs.py",
+        "blob_size_bytes": 2777268,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcawave/L00_validation_wamit/3.1/QTF_plot.png",
+        "evidence": "filename",
+        "matched": "QTF_plot.png",
+        "source": "scripts/benchmark/extract_chart_data.py",
+        "blob_size_bytes": 120734,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcawave/L00_validation_wamit/3.2/comparison_1.png",
+        "evidence": "filename",
+        "matched": "comparison_1.png",
+        "source": "scripts/benchmark/qtf_postprocessing.py",
+        "blob_size_bytes": 104841,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcawave/L00_validation_wamit/3.2/comparison_2.png",
+        "evidence": "filename",
+        "matched": "comparison_2.png",
+        "source": "scripts/benchmark/qtf_postprocessing.py",
+        "blob_size_bytes": 110688,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcawave/L00_validation_wamit/validation_summary.html",
+        "evidence": "filename",
+        "matched": "validation_summary.html",
+        "source": "scripts/benchmark/validate_owd_vs_spec.py",
+        "blob_size_bytes": 29605,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcawave/L01_aqwa_benchmark/001_SHIP_RAOS_REV2.LIS",
+        "evidence": "path",
+        "matched": "docs/domains/orcawave/L01_aqwa_benchmark/001_SHIP_RAOS_REV2.LIS",
+        "source": "docs/domains/orcawave/L01_aqwa_benchmark/compare_model_inputs.py",
+        "blob_size_bytes": 3391338,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat",
+        "evidence": "path",
+        "matched": "docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat",
+        "source": "scripts/benchmark/regenerate_ship_benchmark.py",
+        "blob_size_bytes": 848971,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/bemrosetta/mesh_nemoh.dat",
+        "evidence": "filename",
+        "matched": "mesh_nemoh.dat",
+        "source": "scripts/benchmark/run_3way_benchmark.py",
+        "blob_size_bytes": 841,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcawave/L01_aqwa_benchmark/interactive_rao_comparison.html",
+        "evidence": "path",
+        "matched": "docs/domains/orcawave/L01_aqwa_benchmark/interactive_rao_comparison.html",
+        "source": "docs/domains/orcawave/L01_aqwa_benchmark/create_interactive_rao_comparison.py",
+        "blob_size_bytes": 74934,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2.xlsx",
+        "evidence": "path",
+        "matched": "docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2.xlsx",
+        "source": "tests/solver/smoke_test.py",
+        "blob_size_bytes": 2340357,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/orcawave/L02_barge_benchmark/source_data/aqwa/WRK-031_3WAY_BENCHMARK.LIS",
+        "evidence": "path",
+        "matched": "docs/domains/orcawave/L02_barge_benchmark/source_data/aqwa/WRK-031_3WAY_BENCHMARK.LIS",
+        "source": "scripts/benchmark/compare_hydro_properties.py",
+        "blob_size_bytes": 842523,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcawave/L03_ship_benchmark/source_data/aqwa/001_SHIP_RAOS_REV2.LIS",
+        "evidence": "path",
+        "matched": "docs/domains/orcawave/L03_ship_benchmark/source_data/aqwa/001_SHIP_RAOS_REV2.LIS",
+        "source": "scripts/benchmark/compare_hydro_properties.py",
+        "blob_size_bytes": 3391338,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcawave/L03_ship_benchmark/source_data/aqwa/aqwa_001_ship_raos_rev2.dat",
+        "evidence": "path",
+        "matched": "docs/domains/orcawave/L03_ship_benchmark/source_data/aqwa/aqwa_001_ship_raos_rev2.dat",
+        "source": "scripts/benchmark/rerun_benchmarks_with_fidp.py",
+        "blob_size_bytes": 848971,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcawave/L04_spar_benchmark/source_data/aqwa/SIMPLE.LIS",
+        "evidence": "path",
+        "matched": "docs/domains/orcawave/L04_spar_benchmark/source_data/aqwa/SIMPLE.LIS",
+        "source": "scripts/benchmark/compare_hydro_properties.py",
+        "blob_size_bytes": 3749736,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcawave/L04_spar_benchmark/source_data/aqwa/simple.dat",
+        "evidence": "path",
+        "matched": "source_data/aqwa/simple.dat",
+        "source": "docs/domains/orcawave/L04_spar_benchmark/spec.yml",
+        "blob_size_bytes": 1387981,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/orcawave/spar_benchmark/simple.dat",
+        "evidence": "path",
+        "matched": "simple.dat",
+        "source": "docs/domains/orcawave/spar_benchmark/spar_benchmark.yml",
+        "blob_size_bytes": 1387977,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/passing_ship/wang_benchmark/benchmark_report.html",
+        "evidence": "path",
+        "matched": "docs/domains/passing_ship/wang_benchmark/benchmark_report.html",
+        "source": "src/digitalmodel/hydrodynamics/passing_ship/benchmark_report.py",
+        "blob_size_bytes": 25202,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/domains/project-docs/hydro_coefficients_extraction_report.html",
+        "evidence": "filename",
+        "matched": "hydro_coefficients_extraction_report.html",
+        "source": "src/digitalmodel/marine_ops/marine_analysis/analysis/hydro_usage_example.py",
+        "blob_size_bytes": 12302,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/domains/project-docs/test_performance_dashboard.html",
+        "evidence": "filename",
+        "matched": "test_performance_dashboard.html",
+        "source": "docs/domains/project-docs/test_performance_dashboard.py",
+        "blob_size_bytes": 17125,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html",
+        "evidence": "path",
+        "matched": "2026-07-16-issue-1602-riser-hf-analysis-design.html",
+        "source": "docs/plans/issue-1602-riser-analysis-contract-v1.yaml",
+        "blob_size_bytes": 24256,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/plans/2026-07-18-issue-1602-riser-host-diffraction-plan.html",
+        "evidence": "filename",
+        "matched": "2026-07-18-issue-1602-riser-host-diffraction-plan.html",
+        "source": "tests/validation/test_riser_parent_contract.py",
+        "blob_size_bytes": 22818,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/reports/2026-08-04-issue-1959-solver-start-evidence.html",
+        "evidence": "path",
+        "matched": "docs/reports/2026-08-04-issue-1959-solver-start-evidence.html",
+        "source": "tests/legal/test_published_pages_have_no_internal_paths.py",
+        "blob_size_bytes": 11716,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/reports/viv-parametric-screening/index.html",
+        "evidence": "path",
+        "matched": "docs/reports/viv-parametric-screening/index.html",
+        "source": "scripts/pilots/run_viv_pilot.py",
+        "blob_size_bytes": 3124,
+        "basename_unique": false
+      },
+      {
+        "path": "docs/small_operator/brochure.html",
+        "evidence": "filename",
+        "matched": "brochure.html",
+        "source": "docs/small_operator/build_pdfs.py",
+        "blob_size_bytes": 39753,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/small_operator/pdf/AceEngineer-small-operator-field-note.pdf",
+        "evidence": "filename",
+        "matched": "AceEngineer-small-operator-field-note.pdf",
+        "source": "docs/small_operator/build_pdfs.py",
+        "blob_size_bytes": 192994,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/spikes/2026-05-20-plotly-polar-arrow-technique/rendered.html",
+        "evidence": "filename",
+        "matched": "rendered.html",
+        "source": "docs/spikes/2026-05-20-plotly-polar-arrow-technique/prototype.py",
+        "blob_size_bytes": 8551,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/standards/analysis-parametric-lookup-criteria.html",
+        "evidence": "path",
+        "matched": "docs/standards/analysis-parametric-lookup-criteria.html",
+        "source": "src/digitalmodel/ansys/analysis_intake.py",
+        "blob_size_bytes": 22654,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/subsea/cross_sections/offshore_cross_section_report.html",
+        "evidence": "filename",
+        "matched": "offshore_cross_section_report.html",
+        "source": "src/digitalmodel/subsea/cross_sections/reporting.py",
+        "blob_size_bytes": 15504,
+        "basename_unique": true
+      },
+      {
+        "path": "docs/superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html",
+        "evidence": "path",
+        "matched": "docs/superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html",
+        "source": "tests/validation/test_riser_parent_contract.py",
+        "blob_size_bytes": 7903,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/media/demo_01_freespan_workflow.gif",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/media/demo_01_freespan_workflow.gif",
+        "source": "examples/demos/gtm/media/generate_demo_01_workflow_gif.py",
+        "blob_size_bytes": 3900147,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/media/demo_02_wall_thickness_workflow.gif",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/media/demo_02_wall_thickness_workflow.gif",
+        "source": "examples/demos/gtm/media/generate_demo_02_workflow_gif.py",
+        "blob_size_bytes": 4197862,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/media/demo_03_mudmat_installation_workflow.gif",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/media/demo_03_mudmat_installation_workflow.gif",
+        "source": "examples/demos/gtm/media/generate_demo_03_workflow_gif.py",
+        "blob_size_bytes": 4571715,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/media/demo_04_shallow_pipelay_workflow.gif",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/media/demo_04_shallow_pipelay_workflow.gif",
+        "source": "examples/demos/gtm/media/generate_demo_04_workflow_gif.py",
+        "blob_size_bytes": 3670836,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/media/demo_05_jumper_installation_workflow.gif",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/media/demo_05_jumper_installation_workflow.gif",
+        "source": "examples/demos/gtm/media/generate_demo_05_workflow_gif.py",
+        "blob_size_bytes": 2873535,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/media/demo_comparison_matrix.gif",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/media/demo_comparison_matrix.gif",
+        "source": "examples/demos/gtm/media/generate_comparison_matrix_gif.py",
+        "blob_size_bytes": 1546223,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/client_pdf_pack_2026-05-07/00_vessel_capability_gtm_pdf_pack_index.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/client_pdf_pack_2026-05-07/00_vessel_capability_gtm_pdf_pack_index.html",
+        "source": "examples/demos/gtm/tests/test_ctv_operability_reference.py",
+        "blob_size_bytes": 5149,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_01_freespan_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_01_freespan_report.html",
+        "source": "examples/demos/gtm/demo_01_dnv_freespan_viv.py",
+        "blob_size_bytes": 118328,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_02_wall_thickness_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_02_wall_thickness_report.html",
+        "source": "examples/demos/gtm/demo_02_wall_thickness_multicode.py",
+        "blob_size_bytes": 85444,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_03_mudmat_installation_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_03_mudmat_installation_report.html",
+        "source": "examples/demos/gtm/media/generate_demo_03_workflow_gif.py",
+        "blob_size_bytes": 73132,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_04_shallow_pipelay_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_04_shallow_pipelay_report.html",
+        "source": "examples/demos/gtm/demo_04_shallow_water_pipelay.py",
+        "blob_size_bytes": 85887,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_05_jumper_installation_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_05_jumper_installation_report.html",
+        "source": "examples/demos/gtm/demo_05_deepwater_rigid_jumper_installation.py",
+        "blob_size_bytes": 70098,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_06_marine_structure_cp_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_06_marine_structure_cp_report.html",
+        "source": "examples/demos/gtm/demo_06_marine_structure_cp.py",
+        "blob_size_bytes": 53596,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_07_pipeline_cp_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_07_pipeline_cp_report.html",
+        "source": "examples/demos/gtm/demo_07_pipeline_cp.py",
+        "blob_size_bytes": 113188,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_08_iccp_design_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_08_iccp_design_report.html",
+        "source": "examples/demos/gtm/demo_08_iccp_design.py",
+        "blob_size_bytes": 110029,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_09_cp_retrofit_remaining_life_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_09_cp_retrofit_remaining_life_report.html",
+        "source": "examples/demos/gtm/demo_09_cp_retrofit_remaining_life.py",
+        "blob_size_bytes": 56744,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_10_cad_plate_buckling_verification_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/gtm/output/demo_10_cad_plate_buckling_verification_report.html",
+        "source": "examples/demos/gtm/demo_10_cad_plate_buckling_verification.py",
+        "blob_size_bytes": 56477,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/gtm/output/demo_10_geometry_render.png",
+        "evidence": "filename",
+        "matched": "demo_10_geometry_render.png",
+        "source": "examples/demos/gtm/demo_10_cad_plate_buckling_verification.py",
+        "blob_size_bytes": 184830,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/structural/output/ship_panel_buckling_brief.pdf",
+        "evidence": "path",
+        "matched": "examples/demos/structural/output/ship_panel_buckling_brief.pdf",
+        "source": "examples/demos/structural/ship_panel_brief_pdf.py",
+        "blob_size_bytes": 46503,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/structural/output/ship_panel_buckling_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/structural/output/ship_panel_buckling_report.html",
+        "source": "examples/demos/structural/ship_panel_buckling_parametric.py",
+        "blob_size_bytes": 60253,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/demos/structural/output/ship_plate_buckling_report.html",
+        "evidence": "path",
+        "matched": "examples/demos/structural/output/ship_plate_buckling_report.html",
+        "source": "examples/demos/structural/make_standalone_report.py",
+        "blob_size_bytes": 56703,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/domains/artificial_lift/dynacard_comprehensive_report.html",
+        "evidence": "filename",
+        "matched": "dynacard_comprehensive_report.html",
+        "source": "examples/domains/artificial_lift/dynacard_demo.py",
+        "blob_size_bytes": 3648097,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/domains/artificial_lift/field_health_dashboard.html",
+        "evidence": "filename",
+        "matched": "field_health_dashboard.html",
+        "source": "examples/domains/artificial_lift/field_troubleshooter.py",
+        "blob_size_bytes": 3656009,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/domains/fatigue/advanced_examples/test_outputs/test_plot.png",
+        "evidence": "filename",
+        "matched": "test_plot.png",
+        "source": "tests/infrastructure/common/test_visualizations.py",
+        "blob_size_bytes": 306585,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/domains/structural/output/wall_thickness/parametric_sweep.html",
+        "evidence": "filename",
+        "matched": "parametric_sweep.html",
+        "source": "src/digitalmodel/structural/analysis/cli.py",
+        "blob_size_bytes": 28336,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/domains/structural/output/wall_thickness/phase_analysis.html",
+        "evidence": "filename",
+        "matched": "phase_analysis.html",
+        "source": "src/digitalmodel/structural/analysis/cli.py",
+        "blob_size_bytes": 2497657,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/domains/structural_analysis/legacy_ffs_dashboard.html",
+        "evidence": "filename",
+        "matched": "legacy_ffs_dashboard.html",
+        "source": "examples/domains/structural_analysis/legacy_ffs_demo.py",
+        "blob_size_bytes": 24037,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/marine_ops/mooring_resilience/foundation_vs_soil.png",
+        "evidence": "path",
+        "matched": "examples/marine_ops/mooring_resilience/foundation_vs_soil.png",
+        "source": "examples/marine_ops/mooring_resilience/run_resilience_curves.py",
+        "blob_size_bytes": 75423,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/marine_ops/mooring_resilience/resilience_map_Hs_depth.png",
+        "evidence": "path",
+        "matched": "examples/marine_ops/mooring_resilience/resilience_map_Hs_depth.png",
+        "source": "examples/marine_ops/mooring_resilience/run_resilience_curves.py",
+        "blob_size_bytes": 39370,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/marine_ops/mooring_resilience/resilience_vs_Hs.png",
+        "evidence": "path",
+        "matched": "examples/marine_ops/mooring_resilience/resilience_vs_Hs.png",
+        "source": "examples/marine_ops/mooring_resilience/run_resilience_curves.py",
+        "blob_size_bytes": 66739,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/marine_ops/mooring_resilience/util_intact_vs_damaged.png",
+        "evidence": "path",
+        "matched": "examples/marine_ops/mooring_resilience/util_intact_vs_damaged.png",
+        "source": "examples/marine_ops/mooring_resilience/run_resilience_curves.py",
+        "blob_size_bytes": 54846,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/structural/offshore_container_utilization/util_envelope_LW.png",
+        "evidence": "path",
+        "matched": "examples/structural/offshore_container_utilization/util_envelope_LW.png",
+        "source": "examples/structural/offshore_container_utilization/run_utilization_curves.py",
+        "blob_size_bytes": 45173,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/structural/offshore_container_utilization/util_vs_aspect_ratio.png",
+        "evidence": "path",
+        "matched": "examples/structural/offshore_container_utilization/util_vs_aspect_ratio.png",
+        "source": "examples/structural/offshore_container_utilization/run_utilization_curves.py",
+        "blob_size_bytes": 66917,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/structural/offshore_container_utilization/util_vs_rating.png",
+        "evidence": "path",
+        "matched": "examples/structural/offshore_container_utilization/util_vs_rating.png",
+        "source": "examples/structural/offshore_container_utilization/run_utilization_curves.py",
+        "blob_size_bytes": 76366,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/structural/offshore_container_utilization/util_vs_sling_angle.png",
+        "evidence": "path",
+        "matched": "examples/structural/offshore_container_utilization/util_vs_sling_angle.png",
+        "source": "examples/structural/offshore_container_utilization/run_utilization_curves.py",
+        "blob_size_bytes": 57293,
+        "basename_unique": true
+      },
+      {
+        "path": "examples/workflows/hull-girder-report-pack/data/hull_girder_margin_plot.svg",
+        "evidence": "glob",
+        "matched": "examples/workflows/hull-girder-report-pack/data/*",
+        "source": "tests/report_pack/test_hull_girder_report_pack_demo.py",
+        "blob_size_bytes": 4409,
+        "basename_unique": true
+      },
+      {
+        "path": "scripts/integrations/output/sectionproperties_composite_meshes.png",
+        "evidence": "path",
+        "matched": "scripts/integrations/output/sectionproperties_composite_meshes.png",
+        "source": "scripts/integrations/sectionproperties_composite_poc.py",
+        "blob_size_bytes": 798980,
+        "basename_unique": true
+      },
+      {
+        "path": "scripts/integrations/output/sectionproperties_poc_meshes.png",
+        "evidence": "path",
+        "matched": "scripts/integrations/output/sectionproperties_poc_meshes.png",
+        "source": "scripts/integrations/sectionproperties_poc.py",
+        "blob_size_bytes": 366408,
+        "basename_unique": true
+      }
+    ]
+  },
+  "totals": {
+    "files": 1283,
+    "size_bytes": 1437387873,
+    "blob_size_bytes": 1437387873
+  },
+  "dedup": {
+    "files": 1283,
+    "unique_blobs": 1144,
+    "duplicate_groups": 88,
+    "duplicate_files": 139,
+    "bytes_total": 1437387873,
+    "bytes_unique": 1351601032,
+    "bytes_saved": 85786841
+  },
+  "dedup_top_groups": [
+    {
+      "sha256_blob": "c8e7b4ceffaba4d5bb3bc98d89465c53f5a2a553991620352dc30f9bdd52258f",
+      "count": 2,
+      "blob_size_bytes": 7171675,
+      "bytes_saved": 7171675,
+      "example_path": "docs/domains/aqwa/examples/00_docs/2021_training/FPSOTurret.scdoc"
+    },
+    {
+      "sha256_blob": "1f7b8cb6b2ca88d98499461b44c79fbb711d65e1290c47eb58935827fc16a009",
+      "count": 3,
+      "blob_size_bytes": 2736423,
+      "bytes_saved": 5472846,
+      "example_path": "docs/domains/aqwa/examples/00_docs/2021 Aqwa_Intro/M04_Hydrodynamic_Diffraction/ship_model/ship.igs"
+    },
+    {
+      "sha256_blob": "ac91a22875b3f3b895a9b2aa931a4135dcb3def358fd6babb779095e0159d333",
+      "count": 2,
+      "blob_size_bytes": 4765382,
+      "bytes_saved": 4765382,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/PRE/0119-001 PRE-0001-01 API_STD_2RD Methods  (Draft1).pptx"
+    },
+    {
+      "sha256_blob": "5091eac75839b332fac036c34fd33a828411cff44bddc13c30280642213c0c45",
+      "count": 2,
+      "blob_size_bytes": 3081310,
+      "bytes_saved": 3081310,
+      "example_path": "docs/domains/orcaflex/mooring/feeding_mooring_line.yml"
+    },
+    {
+      "sha256_blob": "6235a79e12870a01368ceba13bd0806b5833969d16ebb34070e9393799aecd2e",
+      "count": 2,
+      "blob_size_bytes": 2213190,
+      "bytes_saved": 2213190,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft1).docx"
+    },
+    {
+      "sha256_blob": "957f91046b8537c5d7b607a948d451954a52134b5bea965a1c6c3cf42791abd7",
+      "count": 2,
+      "blob_size_bytes": 2209682,
+      "bytes_saved": 2209682,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft2).docx"
+    },
+    {
+      "sha256_blob": "af66d0c0b756489f2eda00d214b6af240195b8e62be204060a71ae93a855d051",
+      "count": 2,
+      "blob_size_bytes": 2101324,
+      "bytes_saved": 2101324,
+      "example_path": "docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_2p0_GA2_Driving.yml"
+    },
+    {
+      "sha256_blob": "9320ff90a3f517564552c86b19e572512a646342a4217793f8040cd2ecc98884",
+      "count": 2,
+      "blob_size_bytes": 2101323,
+      "bytes_saved": 2101323,
+      "example_path": "docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_2p5_GA2_Driving.yml"
+    },
+    {
+      "sha256_blob": "85f213f273e481c28cbfa88ebedadf6671e4bef6172c409aed40e55263a8bad4",
+      "count": 2,
+      "blob_size_bytes": 1670752,
+      "bytes_saved": 1670752,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/Ref/hand-calculations_ref.jpg"
+    },
+    {
+      "sha256_blob": "26430dec208b370549bf6d9f198a365750dd57ed1bf6a9559bc13c8c0bfe3f9a",
+      "count": 4,
+      "blob_size_bytes": 489521,
+      "bytes_saved": 1468563,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_12p75_CA0p236.png"
+    },
+    {
+      "sha256_blob": "4c327d755f68f772329090ed83f4562db85b82d7e011ee4555ad9576586f8922",
+      "count": 4,
+      "blob_size_bytes": 486092,
+      "bytes_saved": 1458276,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_11p75_CA0p236.png"
+    },
+    {
+      "sha256_blob": "c781ab729edaa55554fdeedba897e924d03328e562ea44d87b4102c0f2c7bdad",
+      "count": 4,
+      "blob_size_bytes": 485447,
+      "bytes_saved": 1456341,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_12p75_CA0p118.png"
+    },
+    {
+      "sha256_blob": "f1dd6a5e674be198542ba4302cdaa4e28928557997a49fa6245c9d6bae7ed0e9",
+      "count": 4,
+      "blob_size_bytes": 482605,
+      "bytes_saved": 1447815,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_14_CA0p236.png"
+    },
+    {
+      "sha256_blob": "93ff7bba32b9bc974407a859a30ab8e8d1841002b852c16e74a459910c85e020",
+      "count": 4,
+      "blob_size_bytes": 481779,
+      "bytes_saved": 1445337,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_10p75_CA0p236.png"
+    },
+    {
+      "sha256_blob": "f14b881d372066d6d7685fb5666e2370177d8a61d0971f42a63de8ce4f5da5c3",
+      "count": 4,
+      "blob_size_bytes": 479134,
+      "bytes_saved": 1437402,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_16_CA0p236.png"
+    },
+    {
+      "sha256_blob": "e20fd7b1fad58b4010abbe05c247ac540f62373956a3fb7d4a325eebee4def5e",
+      "count": 4,
+      "blob_size_bytes": 478972,
+      "bytes_saved": 1436916,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_14_CA0p118.png"
+    },
+    {
+      "sha256_blob": "475bfbfc42ed776e3e4dba37be5895b172265c7c6eb153b45a7487d626d471bc",
+      "count": 4,
+      "blob_size_bytes": 476405,
+      "bytes_saved": 1429215,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_ID_10_CA0p236.png"
+    },
+    {
+      "sha256_blob": "9409f1ce1dab8f6103c82ee26871cfc1f407ff52229d860455b271b261debea6",
+      "count": 4,
+      "blob_size_bytes": 475065,
+      "bytes_saved": 1425195,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_11p75_CA0p118.png"
+    },
+    {
+      "sha256_blob": "f1d2bb01d0c47d110e76a500f478016fb1d49bc2242ce8a74273faf0493379dd",
+      "count": 4,
+      "blob_size_bytes": 472772,
+      "bytes_saved": 1418316,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_OD_16_CA0p118.png"
+    },
+    {
+      "sha256_blob": "411358c7bc7a79679cd0cc56674851be8c227972a5dd30b457adf0982fab8e8a",
+      "count": 4,
+      "blob_size_bytes": 471157,
+      "bytes_saved": 1413471,
+      "example_path": "docs/domains/guides/legacy/apirp2rd/COD/API-STD-2RD/Rev1/results/BurstPressure_IP_OP_Files/Burst_Pressure_ID_11_CA0p236.png"
+    }
+  ],
+  "kept_for_feature": {
+    "files": 0,
+    "blob_size_bytes": 0
+  },
+  "needs_human_check": {
+    "files": 257
+  },
+  "human_holds_by_consumer": {
+    "docs/capability-map/capabilities-sections.yml": {
+      "candidate_count": 95,
+      "evidence": [
+        {
+          "pattern": "../hydro/unit-box-benchmark/benchmark_amplitude.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "../hydro/unit-box-benchmark/benchmark_combined.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "../hydro/unit-box-benchmark/benchmark_heatmap.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "../hydro/unit-box-benchmark/benchmark_phase.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "../hydro/unit-box-benchmark/benchmark_report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        }
+      ]
+    },
+    "docs/collide_pe/render_brief.py": {
+      "candidate_count": 25,
+      "evidence": [
+        {
+          "pattern": "*/briefs/*.html",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 25
+        }
+      ]
+    },
+    "docs/domains/orcaflex/modular_input_validation_example.py": {
+      "candidate_count": 84,
+      "evidence": [
+        {
+          "pattern": "*.yml",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 84
+        }
+      ]
+    },
+    "docs/domains/orcawave/L01_aqwa_benchmark/run_comparison.py": {
+      "candidate_count": 1,
+      "evidence": [
+        {
+          "pattern": "*/comparison_results/comparison_report_*.html",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 1
+        }
+      ]
+    },
+    "docs/domains/orcawave/L01_aqwa_benchmark/run_comparison_peaks.py": {
+      "candidate_count": 3,
+      "evidence": [
+        {
+          "pattern": "*/comparison_results/peak_comparison_*.html",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 3
+        }
+      ]
+    },
+    "docs/domains/orcawave/L01_aqwa_benchmark/run_comparison_with_interpolation.py": {
+      "candidate_count": 1,
+      "evidence": [
+        {
+          "pattern": "*/comparison_results/interpolated_comparison_*.html",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 1
+        }
+      ]
+    },
+    "docs/domains/orcawave/L01_aqwa_benchmark/run_heading_specific_comparison.py": {
+      "candidate_count": 1,
+      "evidence": [
+        {
+          "pattern": "*/comparison_results/heading_specific_*.html",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 1
+        }
+      ]
+    },
+    "docs/domains/orcawave/L01_aqwa_benchmark/run_proper_comparison.py": {
+      "candidate_count": 18,
+      "evidence": [
+        {
+          "pattern": "*/comparison_results/final_comparison_*.html",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 18
+        }
+      ]
+    },
+    "docs/domains/orcawave/examples/L01_default_vessel/run_orcawave_diffraction.py": {
+      "candidate_count": 1,
+      "evidence": [
+        {
+          "pattern": "*/*_data.dat",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 1
+        }
+      ]
+    },
+    "docs/domains/orcawave/examples/L01_default_vessel/run_orcawave_diffraction_improved.py": {
+      "candidate_count": 1,
+      "evidence": [
+        {
+          "pattern": "*/*_data.dat",
+          "reason": "runtime path or unresolved glob",
+          "candidate_count": 1
+        }
+      ]
+    },
+    "examples/demos/gtm/tests/test_demo_01_cli.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "named run must write output/parametric/demo_01/testrun/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "examples/demos/gtm/tests/test_demo_02_cli.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "named run must write output/parametric/demo_02/testrun/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "examples/demos/gtm/tests/test_demo_03_cli.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "named run must write output/parametric/demo_03/testrun/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "examples/demos/gtm/tests/test_demo_04_cli.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "named run must write output/parametric/demo_04/testrun/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "examples/demos/gtm/tests/test_demo_05_cli.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "named run must write output/parametric/demo_05/testrun/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "examples/demos/gtm/tests/test_prospect_adapter.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "examples/demos/gtm/tests/test_prospect_pipeline_e2e.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "scripts/benchmark/validate_owd_vs_spec.py": {
+      "candidate_count": 95,
+      "evidence": [
+        {
+          "pattern": "benchmark_amplitude.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "benchmark_combined.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "benchmark_heatmap.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "benchmark_phase.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "benchmark_report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        }
+      ]
+    },
+    "scripts/capabilities/build_onepagers.py": {
+      "candidate_count": 95,
+      "evidence": [
+        {
+          "pattern": "hydro/unit-box-benchmark/benchmark_amplitude.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "hydro/unit-box-benchmark/benchmark_combined.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "hydro/unit-box-benchmark/benchmark_heatmap.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "hydro/unit-box-benchmark/benchmark_phase.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "hydro/unit-box-benchmark/benchmark_report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/APIRP2RD_equationFunctionFile.py": {
+      "candidate_count": 6,
+      "evidence": [
+        {
+          "pattern": "Tension vs Moment.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 6
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/APIST2RD_Collapse_ID.py": {
+      "candidate_count": 2,
+      "evidence": [
+        {
+          "pattern": "CollapsePressureWithThickness_US_ID.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 2
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/RiserStackup.py": {
+      "candidate_count": 2,
+      "evidence": [
+        {
+          "pattern": "Riser Stack-up_3000ft.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 2
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/StackUp_3000Ft.py": {
+      "candidate_count": 2,
+      "evidence": [
+        {
+          "pattern": "Riser Stack-up_3000ft.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 2
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/VMCalculationsFunctionFile_R6.py": {
+      "candidate_count": 2,
+      "evidence": [
+        {
+          "pattern": "TensionvsMoment.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 2
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/VMCalculationsFunctionFile_R7.py": {
+      "candidate_count": 6,
+      "evidence": [
+        {
+          "pattern": "Tension vs Moment.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 6
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/VMCalculationsFunctionFile_R8.py": {
+      "candidate_count": 2,
+      "evidence": [
+        {
+          "pattern": "Tension vs Moment2.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 2
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/VMCalculationsFunctionFile_R9.py": {
+      "candidate_count": 6,
+      "evidence": [
+        {
+          "pattern": "Tension vs Moment.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 6
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/stackUpDrawing.py": {
+      "candidate_count": 2,
+      "evidence": [
+        {
+          "pattern": "testData/Riser Stack-up_3000ft.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 2
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/stackUpDrawing_01.py": {
+      "candidate_count": 2,
+      "evidence": [
+        {
+          "pattern": "Riser Stack-up_3000ft.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 2
+        }
+      ]
+    },
+    "scripts/python/digitalmodel/analysis/writeOutput.py": {
+      "candidate_count": 6,
+      "evidence": [
+        {
+          "pattern": "Tension vs Moment.png",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 6
+        }
+      ]
+    },
+    "src/digitalmodel/visualization/reporting/path_utils.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "src/digitalmodel/web/digitaltwinfeed/dtf/dtf.py": {
+      "candidate_count": 3,
+      "evidence": [
+        {
+          "pattern": "dtf/index.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 3
+        }
+      ]
+    },
+    "src/digitalmodel/web/digitaltwinfeed/example_SPA/example_SPA.py": {
+      "candidate_count": 3,
+      "evidence": [
+        {
+          "pattern": "example_SPA/index.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 3
+        }
+      ]
+    },
+    "src/digitalmodel/web/dtf/dtf.py": {
+      "candidate_count": 3,
+      "evidence": [
+        {
+          "pattern": "dtf/index.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 3
+        }
+      ]
+    },
+    "src/digitalmodel/web/example_SPA/example_SPA.py": {
+      "candidate_count": 3,
+      "evidence": [
+        {
+          "pattern": "example_SPA/index.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 3
+        }
+      ]
+    },
+    "tests/capabilities/test_capabilities_inventory.py": {
+      "candidate_count": 3,
+      "evidence": [
+        {
+          "pattern": "index.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 3
+        }
+      ]
+    },
+    "tests/coverage_analysis.py": {
+      "candidate_count": 3,
+      "evidence": [
+        {
+          "pattern": "\ud83d\udcc4 HTML coverage report generated: htmlcov_engine/index.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 3
+        }
+      ]
+    },
+    "tests/hydrodynamics/diffraction/test_unit_box_benchmark.py": {
+      "candidate_count": 95,
+      "evidence": [
+        {
+          "pattern": "benchmark_amplitude.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "benchmark_combined.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "benchmark_heatmap.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "benchmark_phase.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        },
+        {
+          "pattern": "benchmark_report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 19
+        }
+      ]
+    },
+    "tests/maintenance/test_archive_candidates.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "docs/r1/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        },
+        {
+          "pattern": "docs/r2/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        },
+        {
+          "pattern": "docs/r3/sub/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "tests/maintenance/test_archive_safety.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "docs/a/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        },
+        {
+          "pattern": "docs/b/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        },
+        {
+          "pattern": "docs/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "tests/specialized/cli/test_workflow_automation_cli.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "reports/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    },
+    "tests/workflows/test_installation_full_report.py": {
+      "candidate_count": 11,
+      "evidence": [
+        {
+          "pattern": "../runs/relocated/extracted/report.html",
+          "reason": "ambiguous or unresolved reference",
+          "candidate_count": 11
+        }
+      ]
+    }
+  },
+  "hold_detail_file": "archive-candidates-2026-10-08.holds.json",
+  "reference_scan_gaps": [
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/C05 Single Point Mooring/C05 Single Point Mooring/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/C06 CALM Buoy/C06 CALM Buoy/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/C06 CALM Buoy/C06 Discretised CALM Buoy/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/C07 Metocean Buoy in Deep Water/C07 Metocean Buoy in Deep Water/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/C08 Fish Farm/C08 Fish Farm/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/go-by/C06_CALM_Buoy/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/go-by/C06_Discretised_CALM_Buoy/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/mooring_with_buoys/10line-T25-3000sec/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/mooring_with_buoys/basedatawithbuoy/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/mooring_with_buoys/basedatawithbuoy2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/.dat/CALMBuoy_Vessel_2Drafts/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/.dat/FH_CALMBuoy_100YR_IM_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/.dat/SH_CALMBuoy_100YR_IM_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/.yml/CALMBuoy_Vessel_2Drafts/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/.yml/FH_CALMBuoy_100YR_IM_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/.yml/SH_CALMBuoy_100YR_IM_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/CALMBuoy_100YR_FM_R2_D1/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/CALMBuoy_100YR_IM_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/CALMBuoy_1YR_FM_BAL_R2_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/CALMBuoy_1YR_FM_FUL_R2_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/FH_100YR_IM_Dir3_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/FH_CALMBuoy_100YR_IM_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/FH_CALMBuoy_1YR_FM_FUL_R1_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/FH_CALMBuoy_1YR_IM_FUL_R1_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/calm_floating_hose/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/BaseModel/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_100YR_FM_R1_D1/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_100YR_FM_R2_D1/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_100YR_IM_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_1YR_FM_BAL_R1_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_1YR_FM_BAL_R2_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_1YR_FM_FUL_R1_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_1YR_FM_FUL_R2_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_1YR_IM_BAL_R1_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_1YR_IM_BAL_R2_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_1YR_IM_FUL_R1_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.dat/CALMBuoy_1YR_IM_FUL_R2_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/BaseModel/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_100YR_FM_R1_D1/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_100YR_FM_R2_D1/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_100YR_IM_R1_D6/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_1YR_FM_BAL_R1_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_1YR_FM_BAL_R2_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_1YR_FM_FUL_R1_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_1YR_FM_FUL_R2_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_1YR_IM_BAL_R1_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_1YR_IM_BAL_R2_D2/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_1YR_IM_FUL_R1_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/.yml/CALMBuoy_1YR_IM_FUL_R2_D3/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "docs/domains/orcaflex/mooring/semi/rao-check/RAO Study_heave_MP1.py",
+      "reason": "TabError"
+    },
+    {
+      "source": "docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/generated/master.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "scripts/python/digitalmodel/analysis/2058095_HydFilePreSolve.py",
+      "reason": "SyntaxError"
+    },
+    {
+      "source": "scripts/python/digitalmodel/analysis/Ovality.py",
+      "reason": "SyntaxError"
+    },
+    {
+      "source": "scripts/python/digitalmodel/analysis/RelativeVelocity.py",
+      "reason": "SyntaxError"
+    },
+    {
+      "source": "scripts/python/digitalmodel/analysis/TowedFish.py",
+      "reason": "SyntaxError"
+    },
+    {
+      "source": "src/digitalmodel/base_configs/modules/orcaflex/orcaflex_iterative_runs.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "tests/asset_integrity/test_data/API579/app_API579_12in_oil_cml28_b314.yml",
+      "reason": "CyclicYamlError"
+    },
+    {
+      "source": "tests/asset_integrity/test_data/API579/app_API579_12in_oil_cml31_b314.yml",
+      "reason": "CyclicYamlError"
+    },
+    {
+      "source": "tests/asset_integrity/test_data/API579/app_API579_16in_gas_b318.yml",
+      "reason": "CyclicYamlError"
+    },
+    {
+      "source": "tests/asset_integrity/test_data/fracture_mechanics/app_fracture_mechanics_fracture_mechanics_py_axial.yml",
+      "reason": "CyclicYamlError"
+    },
+    {
+      "source": "tests/asset_integrity/test_data/fracture_mechanics/app_fracture_mechanics_fracture_mechanics_py_axial_parallel_process.yml",
+      "reason": "CyclicYamlError"
+    },
+    {
+      "source": "tests/asset_integrity/test_data/fracture_mechanics/app_fracture_mechanics_fracture_mechanics_py_axial_single_process.yml",
+      "reason": "CyclicYamlError"
+    },
+    {
+      "source": "tests/asset_integrity/test_data/fracture_mechanics/app_fracture_mechanics_fracture_mechanics_py_circumferential_parallel_process.yml",
+      "reason": "CyclicYamlError"
+    },
+    {
+      "source": "tests/asset_integrity/test_data/fracture_mechanics/app_fracture_mechanics_fracture_mechanics_py_circumferential_single_process.yml",
+      "reason": "CyclicYamlError"
+    },
+    {
+      "source": "tests/output/test_cli_base/test_groups_embedded.yml",
+      "reason": "ParserError"
+    },
+    {
+      "source": "tests/test_automation/core/domain_autofix_patterns.py",
+      "reason": "SyntaxError"
+    }
+  ],
+  "reference_limitations": [
+    "Arbitrary runtime/config-driven paths cannot be proven statically; detected ambiguous/template references are held, not moved.",
+    "Archive CSV/JSON and Markdown reports are not consumer evidence."
+  ],
+  "move_set_after_feature_keep": {
+    "files": 1026,
+    "unique_blobs": 898,
+    "duplicate_groups": 79,
+    "duplicate_files": 128,
+    "bytes_total": 1164279072,
+    "bytes_unique": 1088869578,
+    "bytes_saved": 75409494
+  },
+  "archive_store": {
+    "root": "/mnt/ace/digitalmodel",
+    "layout": "blobs/sha256/<first two hex>/<sha256>.<ext>",
+    "one_copy_per_unique_blob": true
+  },
+  "referenced": {
+    "any": 1283,
+    "by_non_candidate": 1283
+  },
+  "by_top_level": {
+    "docs": {
+      "files": 1221,
+      "size_bytes": 1416073217,
+      "blob_size_bytes": 1416073217
+    },
+    "examples": {
+      "files": 55,
+      "size_bytes": 20420793,
+      "blob_size_bytes": 20420793
+    },
+    "config": {
+      "files": 3,
+      "size_bytes": 657140,
+      "blob_size_bytes": 657140
+    },
+    "references": {
+      "files": 4,
+      "size_bytes": 236723,
+      "blob_size_bytes": 236723
+    }
+  },
+  "by_class": {
+    "solver-inputs": {
+      "files": 287,
+      "size_bytes": 701549195,
+      "blob_size_bytes": 701549195
+    },
+    "html-report-renders": {
+      "files": 422,
+      "size_bytes": 468851441,
+      "blob_size_bytes": 468851441
+    },
+    "documentation-images": {
+      "files": 528,
+      "size_bytes": 179210604,
+      "blob_size_bytes": 179210604
+    },
+    "office-documents": {
+      "files": 46,
+      "size_bytes": 87776633,
+      "blob_size_bytes": 87776633
+    }
+  },
+  "model_yaml": {
+    "yaml_files_scanned": 4459,
+    "parse_failures": 51,
+    "model_files": 3112,
+    "by_kind": {
+      "orcaflex-native": 2852,
+      "orcawave": 144,
+      "spec": 116
+    },
+    "distinct_features": 4057,
+    "unique_features": 665,
+    "files_with_unique_features": 72,
+    "feature_cover_files": 167,
+    "candidates_that_are_model_yaml": 85,
+    "candidates_with_unique_features": 0,
+    "features_only_in_candidates": 0,
+    "candidates_kept_for_feature": 0
+  },
+  "comparison_with_pr2146": {
+    "pr2146_deleted_paths": 2299,
+    "candidates_also_in_pr2146": 1188,
+    "candidates_new_since_pr2146": 95,
+    "pr2146_paths_not_rule_matches": 925,
+    "pr2146_not_candidates_breakdown": {
+      "under_src_or_tests": 164,
+      "absent_from_current_main": 761
+    }
+  },
+  "comparison_with_previous_run": {
+    "base_commit": "e355203bacb98e9690481b5f2d474203dfafc0cc",
+    "rule_matches_delta": 0,
+    "excluded_files_previous": 188,
+    "excluded_files_delta": 0,
+    "move_files_previous": 1026,
+    "move_files_delta": 0,
+    "feature_keep_files_delta": 0,
+    "human_check_files_delta": 0
+  }
+}
