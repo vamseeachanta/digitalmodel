@@ -58,7 +58,7 @@ engines:
     rbi: {status: engine, module: asset_integrity.rbi_screening, issue: 2185}
     composite-repair: {status: engine, module: asset_integrity.composite_repair, issue: 2185}
     inspection-planning: {status: workflow, module: asset_integrity.inspection_planning, workflow: inspection-planning, issue: 2180}
-    riser-joint-ffs: {status: engine, module: asset_integrity.riser_joint_ffs, issue: 2183}
+    riser-joint-ffs: {status: workflow, module: asset_integrity.riser_joint_ffs, workflow: riser-joint-ffs, validation: docs/domains/asset-integrity/riser-joint-ffs-validation-2026-10-10.md, issue: 2183}
     plate-panel-buckling: {status: workflow, module: infrastructure.base_solvers.structural.plate_buckling, workflow: plate-buckling}
     jacket-member-joint: {status: engine, module: structural.jacket_topside}
     mooring-screen: {status: engine, module: mooring_resilience.screening}

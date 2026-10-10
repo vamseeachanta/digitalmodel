@@ -152,6 +152,7 @@ campaign-end growth allowance. Points are the real (anonymized)
 weld-flaw register; the side panel places the three real inspected joints in the
 string. Every number is precomputed in Python
 (<code>digitalmodel.asset_integrity.riser_joint_ffs</code>) — the page only draws.</p>
+<p class="sub">Offline fixture-backed workflow: <a href="https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/riser-joint-ffs">input and run instructions</a> · <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/examples/workflows/riser-joint-ffs/report.html">generated provenance report</a>.</p>
 
 <div class="controls">
   <div class="ctl"><label>Design pressure (psi)</label><select id="pres"></select></div>

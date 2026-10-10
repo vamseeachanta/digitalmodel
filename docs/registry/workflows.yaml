@@ -1250,6 +1250,18 @@ workflows:
     result:
       kind: in_memory
       key: mooring_mbl
+  - id: riser-joint-ffs
+    basename: riser_joint_ffs
+    title: Anonymized drilling-riser joint envelopes, collapse depth, placement and fleet roll-up
+    input: examples/workflows/riser-joint-ffs/input.yml
+    outputs:
+      - examples/workflows/riser-joint-ffs/results/riser-joint-ffs.html
+      - examples/workflows/riser-joint-ffs/results/riser-joint-ffs.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-joint-ffs]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: riser_joint_ffs
 
   - id: pipeline-corroded-defect-screen
     basename: pipeline_defect_screen

@@ -95,7 +95,7 @@ Frameworks: API RP 2MIM, API RP 2FSIM, API RP 2I, DNV-OS-E301, DNV-OS-E303. Chai
 | Mooring chain, wire and fibre rope, connectors | Anchor holding capacity after seabed change / drag | DNV-OS-E301 | — | T2 | none |
 | Steel catenary / top-tensioned production risers | Metal loss, pitting, cracks | API STD 2RD, DNV-ST-F201, API 579 Pt 4/5/6/9, BS 7910 | ffs-metal-loss, crack-fad | T1, T2 | engine |
 | Steel catenary / top-tensioned production risers | Fatigue (wave, VIV) | DNV-ST-F201, DNV-RP-C203 | riser-fatigue | T2 | workflow |
-| Drilling / completion riser joints and wellhead fatigue | Metal loss / weld flaws / collapse-limited depth | ASME B31G, DNV-RP-F101, BS 7910 | riser-joint-ffs | T1, T2 | engine (real C-scan fixtures; workflow #2183) |
+| Drilling / completion riser joints and wellhead fatigue | Metal loss / weld flaws / collapse-limited depth | ASME B31G, DNV-RP-F101, BS 7910 | riser-joint-ffs | T1, T2 | workflow (real C-scan fixtures; bounded composition validation) |
 | Drilling / completion riser joints and wellhead fatigue | Wellhead / conductor fatigue from riser loads | API RP 17G, DNV-RP-C203 | — | T2 | none |
 | Unbonded flexible pipe | Outer sheath damage / annulus flooding | API RP 17B | flexible-pipe-screen (#2200) | T1 | planned |
 | Unbonded flexible pipe | Tensile armour wire corrosion / rupture (end-fitting fatigue) | API RP 17B | flexible-pipe-screen (#2200) | T2 | planned |
@@ -154,9 +154,9 @@ Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are
 | Status | Rows |
 |---|---|
 | live | 1 |
-| workflow | 3 |
+| workflow | 4 |
 | validated | 5 |
-| engine | 31 |
+| engine | 30 |
 | planned | 25 |
 | none | 13 |
 | total | 78 |
