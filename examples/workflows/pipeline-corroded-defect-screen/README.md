@@ -27,8 +27,9 @@ maximum-depth defect bound. Colony interaction is not inferred.
 
 The four B31G-family pressure allowables divide failure pressure by the explicit
 `safety_factor`; DNV uses the single-defect allowable-stress calculation with
-caller `usage_factor` interpreted as operational F2. Part B safe working
-pressure applies F = F1 x F2 with F1 = 0.9; the examples use F2 = 0.72,
+caller `usage_factor` interpreted as operational F2.
+DNV-RP-F101 Part B safe working pressure applies F = F1 x F2 with F1 = 0.9;
+the examples use F2 = 0.72,
 so F = 0.648. The circumferential row is a separate axial membrane
 stress screen using SMYS as flow stress multiplied by the explicit caller
 `axial_design_factor` in (0, 1]. It is not a burst-pressure calculation.

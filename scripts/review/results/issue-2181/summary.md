@@ -22,7 +22,7 @@ Cleanup classification: tracked changes are task-scoped; no stash, partial/trash
 
 The earlier parity-only factor disclosure is superseded by this numerical correction.
 DNV-RP-F101 Part B applies modelling F1 = 0.9 times operational caller F2;
-F2 = 0.72 gives F = 0.648 and reference safe working pressure
+F2 = 0.72 gives F = 0.648 and DNV-RP-F101 Part B reference safe working pressure
 864.5577179776003 psi. The computed factors are retained on the method row and
 used by the HTML assessment-basis table. Both synthetic examples are regenerated
 through the engine; generated YAML/HTML remains ignored local output.
