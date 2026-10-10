@@ -501,14 +501,18 @@ def dnv_f101_interacting(
     smts_psi: float,
     *,
     maop_psi: Optional[float] = None,
-    usage_factor: float = _DEFAULT_USAGE_FACTOR,
+    usage_factor: Optional[float] = None,
 ) -> DNVF101Result:
     """Assess a colony of longitudinal defects with the DNV-RP-F101 interaction rule.
 
     Args:
         defects: list of ``(position_in, length_in, depth_in)`` tuples, where
             ``position_in`` is the axial start coordinate of each defect.
-        usage_factor / maop_psi: as for :func:`dnv_f101_single_defect`.
+        usage_factor: deprecated total F alias, as for
+            :func:`dnv_f101_single_defect`. Omitted or None uses the legacy
+            default F = 0.72 without a deprecation warning; an explicit numeric
+            value is forwarded and emits a DeprecationWarning.
+        maop_psi: as for :func:`dnv_f101_single_defect`.
 
     Adjacent defects whose axial gap is smaller than ``2*sqrt(D*t)`` are merged
     into a composite defect per DNV-RP-F101 Sec. 3.8.2 (combined-defect rule):
@@ -548,11 +552,12 @@ def dnv_f101_interacting(
     limit = interaction_spacing_limit(D, t)
 
     candidates: List[dict] = []
+    usage_kwargs = {} if usage_factor is None else {"usage_factor": usage_factor}
 
     # 1) Every individual defect on its own.
     for k in range(len(items)):
         res = dnv_f101_single_defect(
-            D, t, depths[k], lengths[k], smts_psi, usage_factor=usage_factor
+            D, t, depths[k], lengths[k], smts_psi, **usage_kwargs
         )
         candidates.append({"res": res, "kind": "single", "members": [k]})
 
@@ -577,7 +582,7 @@ def dnv_f101_interacting(
             else:  # degenerate zero-length span; fall back to mean depth
                 comp_depth = float(np.mean(member_depths))
             res = dnv_f101_single_defect(
-                D, t, comp_depth, comp_length, smts_psi, usage_factor=usage_factor
+                D, t, comp_depth, comp_length, smts_psi, **usage_kwargs
             )
             candidates.append(
                 {
@@ -597,7 +602,7 @@ def dnv_f101_interacting(
         "governing_kind": governing["kind"],
         "governing_members": governing["members"],
         "n_defects": int(n),
-        "usage_factor": usage_factor,
+        "usage_factor": gres.details["usage_factor"],
         "n_candidates": int(len(candidates)),
         **applicability.legacy_details(),
     }
