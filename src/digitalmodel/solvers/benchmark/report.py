@@ -446,9 +446,8 @@ def _row_notes(row: dict) -> list[str]:
         notes.append(
             f"Uses the most recent of {row['supplied']} receipts supplied for this machine and "
             f"variant (started {_e(row['started_utc'] or _MISSING)}); "
-            f"{row['older_eligible']} of the {older} older "
-            f"{'receipt was' if older == 1 else 'receipts were'} baseline-eligible "
-            f"and {'is' if older == 1 else 'are'} not shown.")
+            f"older receipts not shown: {older}, of which baseline-eligible: "
+            f"{row['older_eligible']}.")
     return notes
 
 
@@ -508,8 +507,8 @@ def _fingerprint_table(case: dict) -> str:
                     values.append('<td class="num">–</td>')
                     continue
                 flag = "" if row["comparable"] else (
-                    '<br><span class="flag">not baseline-eligible; shown, not compared'
-                    '</span>')
+                    '<br><span class="flag">not baseline-eligible; first completed '
+                    'repeat shown, not compared</span>')
                 values.append(f'<td class="num">{_e(_number(fingerprint[key]))}{flag}</td>')
             verdict = agreement["key_status"].get(key) or (
                 "not compared" if agreement["status"] != ONE_MACHINE else "one machine only")
@@ -544,10 +543,10 @@ def _summary(pack: dict) -> str:
              f'{summary[status]}</li>' for status in _STATUS_ORDER if summary[status]]
     eligible = summary["results"] - summary["ineligible"]
     return (f'<p>{len(pack["machines"])} machine label(s), {len(pack["cases"])} case(s), '
-            f'{summary["variants"]} case/variant combination(s). Of the '
-            f'{summary["results"]} machine results used, {eligible} are baseline-eligible '
-            f'and {summary["ineligible"]} are not. Cross-machine outcome per case/variant '
-            f'combination:</p><ul class="summary">{"".join(items)}</ul>')
+            f'{summary["variants"]} case/variant combination(s). Machine results used: '
+            f'{summary["results"]}, of which baseline-eligible: {eligible}, not '
+            f'baseline-eligible: {summary["ineligible"]}. Cross-machine outcome, counted '
+            f'per case/variant combination:</p><ul class="summary">{"".join(items)}</ul>')
 
 
 _CSS = """
@@ -612,6 +611,7 @@ the machines.</li>
 <li><strong>Fingerprint.</strong> A few numbers taken from the solver output of a
 case (for example a cell count and a force coefficient). Two fingerprints agree
 when every number matches within the tolerance stated beside the comparison.
+The fingerprint shown for a machine is the one from its first completed repeat.
 Agreement means the machines returned the same numbers for this case. It does not
 show that those numbers are physically correct, and it says nothing about other
 cases.</li>
