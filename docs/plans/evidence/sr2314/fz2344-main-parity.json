@@ -1,0 +1,36 @@
+{
+  "main_ref": "origin/main",
+  "comparisons": [
+    {
+      "function": "transfer_model_to_ship",
+      "cite": true,
+      "equal_except_prior_pr_explanatory_note_and_assumption": true
+    },
+    {
+      "function": "transfer_model_to_ship",
+      "cite": false,
+      "equal_except_prior_pr_explanatory_note_and_assumption": true
+    },
+    {
+      "function": "transfer_ship_to_model",
+      "cite": true,
+      "equal_except_prior_pr_explanatory_note_and_assumption": true
+    },
+    {
+      "function": "transfer_ship_to_model",
+      "cite": false,
+      "equal_except_prior_pr_explanatory_note_and_assumption": true
+    },
+    {
+      "function": "transfer_model_to_ship",
+      "standalone_values_citations_warning_equal": true
+    },
+    {
+      "function": "transfer_ship_to_model",
+      "standalone_values_citations_warning_equal": true
+    }
+  ],
+  "main_head": "7118ed44cec624352ae8b8b40cdd92ce796aaa3a",
+  "main_source_sha256": "04c99829cb6c0dfce8bd8cd0c47b83fc7bf6b7b212b800ae8237eb118fc799ec",
+  "current_source_sha256": "206f74f00f5cb93e3f9cee8b8c56d61d9935967b94eb0abf598e203c2aa3b3fa"
+}

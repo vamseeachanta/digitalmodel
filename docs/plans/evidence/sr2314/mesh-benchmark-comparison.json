@@ -1,0 +1,20 @@
+{
+  "criteria": {
+    "revision": "sr2314-comparison-v1",
+    "wall_time_ratio_max": 1.1,
+    "rss_ratio_max": 1.05
+  },
+  "mismatches": [],
+  "compared_record_sha256": {
+    "baseline": "c4a49640edd7abfdaa87e033fae86cf9bed082529bfc9ed901989bd0bc4711dc",
+    "current": "95c63d90fcb3238038a2c777bece669378a04d03e3e8c5394e1dd7ca668ea2f7"
+  },
+  "record_digest_scope": "canonical-json",
+  "wall_time_ratio": 0.7781824959999037,
+  "rss_ratio": 0.9862683909533998,
+  "qualified": true,
+  "compared_file_sha256": {
+    "baseline": "fe80d4e5d7abab9d7060b44a09f83e1a50b25ebb7733105b98fbb69463510526",
+    "current": "909bf77ecdb537a6bf267cd5ba736117979d510daf2bf3815545bd3bf178f5a2"
+  }
+}
