@@ -63,10 +63,16 @@ def _levels(char, od, wt, minimum, fca, rsfa, rt_min):
                             row_spacing_in=effective.row_spacing_in / 2)
     l2 = assess_pitting_level2_equivalent_lta(
         effective, nominal_od_in=od, nominal_wt_in=wt, t_min_in=minimum, rsf_a=rsfa)
+    l2["assessment_basis"] = (
+        "Uniform synthetic pit field represented by an equivalent local thin area "
+        "using mean net pit wall and axial extent, evaluated with the existing "
+        "simplified Part 5 engine. A bound on actual pitting failure mechanisms "
+        "and published-case qualification are not established."
+    )
     return l1, l2
 
 
-def _applicability(grid, char, fca, rt_min, l2):
+def _applicability(grid, char, minimum, fca, rt_min, l2):
     result = l2.get("applicability", Applicability())
     checks = [
         (char.pit_count == 0, "pitting.no_pits",
@@ -74,7 +80,16 @@ def _applicability(grid, char, fca, rt_min, l2):
         ((char.t_min_pit_in - fca) / char.nominal_wt_in < rt_min,
          "pitting.deep_ligament", "Remaining deepest ligament after FCA is below rt_min; detailed assessment required."),
     ]
-    pits = grid.to_numpy()[grid.to_numpy() < char.pit_threshold_in]
+    values = grid.to_numpy()
+    background = values[values >= char.pit_threshold_in]
+    checks.extend([
+        (not background.size, "pitting.no_background",
+         "No background wall readings establish the equivalent-LTA reference; use metal-loss assessment."),
+        (bool(background.size) and float(background.min()) - fca < minimum,
+         "pitting.background_below_tmin",
+         "Background wall after FCA is below the t_min reference; use metal-loss assessment."),
+    ])
+    pits = values[values < char.pit_threshold_in]
     checks.append((pits.size > 0 and np.ptp(pits) > 0, "pitting.nonuniform_depth",
                    "Nonuniform pit depths: mean-depth equivalent-LTA conservatism is not established."))
     for failed, flag, note in checks:
@@ -93,9 +108,11 @@ def _assess(block):
         char = replace(char, t_min_pit_in=float(grid.to_numpy().min()),
                        t_avg_pit_in=float(grid.to_numpy().mean()))
     l1, l2 = _levels(char, od, wt, minimum, fca, rsfa, rt_min)
-    applicability = _applicability(grid, char, fca, rt_min, l2)
+    applicability = _applicability(grid, char, minimum, fca, rt_min, l2)
     margin = l2["rsf"] if l2["rsf"] is not None else float("nan")
-    passed = margin >= rsfa and char.t_avg_pit_in - fca >= minimum
+    # Level 2 supersedes the Level 1 mean-wall screen on RSF; independent
+    # ligament and method applicability gates still override the disposition.
+    passed = np.isfinite(margin) and margin >= rsfa
     # Failed/unsupported screens have no established rerating or life basis:
     # a non-finite margin invokes the shared ESCALATE path before its bands.
     decision = decide(margin if passed else float("nan"), rsfa, float("nan"),
@@ -105,6 +122,8 @@ def _assess(block):
         f"Part 5 equivalent-LTA estimate: RSF={strength}, RSFa={rsfa}; "
         f"mean effective pit wall={char.t_avg_pit_in - fca:.3f} in, required={minimum:.3f} in; "
         f"screening disposition={decision['verdict']}. "
+        "Synthetic formula screening only; published-case qualification and "
+        "measured-component acceptance are not established. "
         "Life and pressure rerating are not evaluated; Part 6 coupled-pit charts are not evaluated."
     )
     if not applicability.ok:
@@ -122,20 +141,25 @@ def router(cfg):
     block = cfg["pitting_assessment"]
     char, l1, l2, decision = _assess(block)
     result = {"characterization": char.to_dict(), "level1": l1,
-              "level2": l2, "decision": decision}
+              "level2": l2, "decision": decision,
+              "qualification": "synthetic_formula_anchor_only"}
     sections = {"Pit characterization": char.to_dict(),
                 "Level 1 closed-form screen (Part 6 philosophy; no charts)": l1,
                 "Level 2 Part 5 equivalent-LTA estimate": l2}
     limits = [
         "API 579-1/ASME FFS-1 Part 6 charts and coupled-pit examples: not evaluated.",
-        "Equivalent-LTA conservatism is limited to the assumed uniform pit-field representation; "
-        "mean depth is not established as a conservative bound for every nonuniform pit field.",
+        "The equivalent LTA is an assumed representation of uniform synthetic pits; "
+        "a bound on actual pitting failure mechanisms and published-case qualification are not established.",
         "Inputs are remaining wall thickness and axial pitch in inches; FCA is deducted once for Level 2.",
-        "Deepest effective ligament / nominal WT must meet rt_min; mean effective pit wall must meet t_min.",
+        "Deepest effective ligament / nominal WT must meet rt_min; Level 2 requires RSF >= RSFa. "
+        "The Level 1 mean-wall criterion is not repeated as a Level 2 acceptance gate.",
+        "Measured background wall after FCA must meet the t_min reference; "
+        "missing or thinner background requires metal-loss assessment.",
         "Required wall t_min and FCA are user-supplied engineering inputs; pressure capacity is not calculated.",
         "Grid rows are axial; pit spacing assumes equal axial/circumferential pitch. Circumferential extent check: not evaluated.",
         "Absolute ligament and distance-to-discontinuity checks are not implemented; code-qualified acceptance is not established.",
-        "Uniform synthetic grids only; readings above nominal WT are rejected, not clipped.",
+        "Uniform synthetic pit fields only; readings above nominal WT are rejected, not clipped. "
+        "Pit-pair input is not implemented.",
         "Validation record: docs/domains/asset-integrity/pitting-validation-2026-10-09.md",
     ]
     result["report_html"] = FFSReport.generate_screening_html(

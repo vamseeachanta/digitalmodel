@@ -26,10 +26,17 @@ primary-source confirmation of those relations.
 
 Table 1. Synthetic formula checks; numbers are regenerated from the equations.
 
-RSF exceeds RSFa 0.90, but the mean effective wall is below the supplied
-required wall. The workflow therefore does not issue ACCEPT or MONITOR for
-this case; the shared screening disposition is ESCALATE (further assessment).
-No life projection or pressure rerating is calculated. The deepest-ligament gate takes precedence over both levels.
+RSF 0.9569915955570703 exceeds the existing RSFa 0.90 and the shared
+ACCEPT threshold 0.95. Level 1 fails its mean-wall criterion (0.300 < 0.350 in),
+but Level 2 passes on RSF; the shared synthetic screening disposition is ACCEPT.
+With FCA 0.020 in, the regenerated RSF is in the MONITOR band
+(0.90 <= RSF < 0.95). With axial pitch 10 in and FCA 0.000 in, RSF is
+0.8703619120925993, below RSFa 0.90; Level 2 fails and the workflow escalates.
+The mean-wall criterion is not repeated after Level 2; t_min remains its
+reference wall. Equality at RSFa passes. No life projection or pressure
+rerating is calculated. The deepest-ligament and applicability gates take
+precedence over either level. These dispositions qualify only the synthetic
+formula checks, not acceptance of a measured component.
 
 ## Published cases and applicability
 
@@ -38,17 +45,22 @@ No accessible verified example input/reference-value pair within this engine's
 method is established in this record; a published numerical difference cannot
 be calculated. No example number or reference result is invented.
 
-Equivalent-LTA conservatism is conditional on the assumed uniform pit-field
-representation. Replacing nonuniform pit depths by their mean is not established
-as a conservative bound on every local failure mechanism. The result shall not
-be treated as a fully qualified Part 6 coupled-pit assessment. Nonuniform
-pitted-cell depths are gated to ESCALATE; the mean estimate is reference only.
+The equivalent LTA is an assumed representation of uniform synthetic pit fields.
+A bound on actual pitting failure mechanisms and published-case qualification
+are not established. The result shall not be treated as a qualified Part 6
+coupled-pit assessment or measured-component acceptance. Nonuniform pitted-cell
+depths are gated to ESCALATE; their mean estimate is reference only.
+Pit-pair input is not implemented. The result field `qualification` is
+`synthetic_formula_anchor_only`.
 
 Inputs shall have OD > 2 WT, 0 < t_min <= WT, finite rectangular remaining-wall
 readings in (0, WT], and positive axial pitch. Over-nominal readings are rejected,
 not clipped. FCA is deducted once for Level 2. Remaining deepest ligament / WT
 shall meet the existing 0.20 screening default; lower configured floors are
 rejected. Non-positive net ligament yields ESCALATE without a strength number.
+Non-pitted background readings shall establish the reference wall: their
+minimum after FCA shall be at least t_min. Missing background or thinner
+background yields ESCALATE for metal-loss assessment, independent of pit RSF.
 The existing Folias applicability flags are propagated. Circumferential extent,
 absolute ligament and distance-to-discontinuity checks are **not evaluated**.
 
