@@ -67,7 +67,7 @@ rows are rejected before group-by, rather than silently dropped. Numeric practic
 zone margins, default weld Charpy energy, bending assumption and collapse factor
 are shown in the report basis table.
 
-The example references the existing anonymized 2017 measurement excerpts in
+The example references the existing anonymized baseline inspection excerpts in
 `tests/asset_integrity/test_data/real_inspection/`; it makes no copies. Their
 README documents removal of operator, contractor, rig, well, personnel, project,
 timestamps and serial identifiers, replacement with synthetic RJ IDs, rounding

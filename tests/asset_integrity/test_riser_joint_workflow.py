@@ -1,6 +1,7 @@
 """Fixture provenance and report-mode contracts for issue 2183."""
 
 import hashlib
+import re
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,31 @@ def run_report(tmp_path):
         "analysis_root_folder": str(EXAMPLE.parent),
     }
     return RiserJointFFSWorkflow().router(cfg)["riser_joint_ffs"]
+
+
+def test_public_report_uses_neutral_inspection_metadata(tmp_path):
+    result = run_report(tmp_path)
+    provenance = result["provenance"]
+    assert provenance["inspection_epoch"] == "baseline inspection"
+    statement = provenance["anonymization_statement"]
+    assert "anonymized baseline inspection excerpts" in statement
+    report = Path(result["report_html"]).read_text(encoding="utf-8")
+    title = re.search(r"<title>(.*?)</title>", report).group(1)
+    date = re.search(r"<strong>Date:</strong> (.*?)</p>", report).group(1)
+    assert title == "FFS Assessment Report — Riser fleet — baseline inspection"
+    assert date == "baseline inspection"
+    assert "anonymized baseline inspection excerpts" in report
+    record = (
+        ROOT
+        / "docs/domains/asset-integrity"
+        / "riser-joint-ffs-validation-2026-10-10.md"
+    ).read_text(encoding="utf-8")
+    fixture_paragraph = record.split("The example references ", 1)[1].split("\n\n", 1)[
+        0
+    ]
+    assert "anonymized baseline inspection excerpts" in fixture_paragraph
+    for metadata in (statement, title, date, fixture_paragraph):
+        assert not re.search(r"\b(?:19|20)\d{2}\b", metadata)
 
 
 def test_report_reads_four_grids_and_records_exact_bytes(tmp_path):

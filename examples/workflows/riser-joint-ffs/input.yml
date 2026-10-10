@@ -8,10 +8,10 @@ riser_joint_ffs:
   mode: report
   report:
     provenance:
-      inspection_epoch: 2017 baseline
+      inspection_epoch: baseline inspection
       anonymized: true
       anonymization_statement: >-
-        Existing anonymized 2017 inspection excerpts are referenced in place.
+        Existing anonymized baseline inspection excerpts are referenced in place.
         Identifiers and serials were replaced with synthetic RJ IDs; measurements
         were rounded to 0.001 mm and grids downsampled as described in the hashed README.
         Private originals remain private and are not copied here.
