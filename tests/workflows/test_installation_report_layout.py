@@ -1,6 +1,7 @@
 """Shared engineering cover preserves jumper defaults and exposes mudmat placeholders."""
 import copy
 from hashlib import sha256
+from html import escape
 import json
 import re
 
@@ -101,6 +102,21 @@ def design_row(**kwargs):
     [design_row(basis_key='missing')],[design_row(value=6.,basis_key='mass_t')]])
 def test_design_data_validation_rejects_unbound_values(rows):
     with pytest.raises(ValueError):mudmat.render_html(summary(),config={'design_data':rows})
+
+
+@pytest.mark.parametrize('status',[
+    '149 of 156 baseline cases verified; 7 numerical failures and 0 missing cells unassessed',
+    '61 of 160 baseline cases verified; 0 numerical failures and 95 missing cells unassessed',
+    '61 of 156 baseline cases verified; 7 numerical failures and 95 missing cells unassessed',
+    '61 of 156 baseline cases verified; 0 numerical failures and 94 missing cells unassessed'])
+def test_design_data_coverage_status_must_match_source_counts(status):
+    with pytest.raises(ValueError,match='coverage'):
+        mudmat.render_html(summary(),config={'design_data':[design_row(status=status)]})
+
+
+def test_design_data_coverage_status_matching_source_counts_renders():
+    status='61 of 156 baseline cases verified; 0 numerical failures and 95 missing cells unassessed'
+    assert escape(status) in mudmat.render_html(summary(),config={'design_data':[design_row(status=status)]})
 
 
 def test_audit_claims_and_unlinked_design_context_explicit():
