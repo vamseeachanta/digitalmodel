@@ -1,0 +1,47 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "verdict": "APPROVE",
+  "reviewed_revision": "1104526c2f8fc330f898b3b09911c1ca2beb0636",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "21d48f39abb9f8399961b5db50324ef85c99500748a437767828bc84b374ee54"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "a91e878c821c94725a16d741499c16c9de7a0bfd422e3ae8b52265b53b514c10"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-case-proposal.json",
+      "sha256": "3499a1b06b27972d7b4075ab2208888a2d3bab38b10273cfdcc3356f50deed81"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-claude-r1.json",
+      "sha256": "4602d8a8e9026afd4791256d8d629521d8f08d14379af117eb1202d46a33bc83"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-codex-r1.json",
+      "sha256": "914fe133ef042be97f0f90994109e9ecd79bbcd4b540238ff79715100ed3ad03"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-resource-intel.json",
+      "sha256": "5ae40fbe794ef3521362de400f648e5e66dcbde860ddcdeb7641c4c98a6c7a92"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-review-dispositions.json",
+      "sha256": "87a8d33cfab5f2bf218ceadd3c58f3aa946e4e64add020ecb4e72d98262b95f2"
+    }
+  ],
+  "findings": [],
+  "verified": [
+    "All 28 case tuples and auxiliary mesh stations",
+    "Lam\u00e9 and axial competing-condition formulas",
+    "Separate ledger/production keys and unique finest promotion",
+    "Historical PV coexistence and ocv namespace",
+    "180-minute cap and affirmative offline launch refusal",
+    "Claude C1/C5 contradicted source premises corrected",
+    "R1 finding dispositions supported; B1/B2 remain separately gated"
+  ],
+  "authority": "Review only; no user implementation or solve approval"
+}

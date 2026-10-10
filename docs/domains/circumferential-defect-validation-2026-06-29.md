@@ -12,6 +12,16 @@ DNV-RP-F101 single-defect primitive rather than duplicating it.
 
 ## What is implemented vs. stubbed
 
+**Qualification correction (2026-10-06, issue 2287):** historical labels
+"fully verified" and "verified" below describe the supplied arithmetic
+goldens. They do not establish exact 2021 Part 5 validation. The implemented
+square-root-of-polynomial Folias differs from existing legacy fixture Mt
+anchors, which match its squared value. Normative form, complete level-specific
+applicability and width/load acceptance are unresolved. Use
+[the source audit](asset-integrity/uniform-loss-source-audit-2026-10-06.md)
+before consuming these results as screening acceptance; no numerical formula
+change is made by this correction.
+
 | # | Method | Status | Golden |
 |---|--------|--------|--------|
 | 1 | API 579-1 Part 5 longitudinal LTA RSF | **Implemented (fully verified)** | RSF = 0.8907 |

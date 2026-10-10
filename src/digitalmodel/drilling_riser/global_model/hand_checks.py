@@ -99,8 +99,11 @@ def tensioned_beam_periods(segments: Sequence[BeamSegment], n_modes: int, *,
                            top_rot_stiffness_nm_per_rad: float = 0.0,
                            bottom_rot_stiffness_nm_per_rad: float = 0.0,
                            point_masses: dict[int, float] | None = None,
-                           point_springs: dict[int, float] | None = None) -> list[float]:
-    """Transverse natural periods (s), ascending, of a beam pinned in translation at both ends.
+                           point_springs: dict[int, float] | None = None,
+                           pinned_nodes: tuple[int, ...] | None = None,
+                           clamp_bottom: bool = False) -> list[float]:
+    """Transverse natural periods (s), ascending, of a beam pinned in translation at ``pinned_nodes``
+    (default: both ends); ``clamp_bottom`` also fixes the rotation of the bottom node.
 
     Nodes are numbered 0 (top) to len(segments) (bottom); ``point_masses`` and
     ``point_springs`` are keyed by node number (kg, N/m, translational).
@@ -129,7 +132,10 @@ def tensioned_beam_periods(segments: Sequence[BeamSegment], n_modes: int, *,
         M[2 * node, 2 * node] += mass
     for node, k in (point_springs or {}).items():
         K[2 * node, 2 * node] += k
-    free = [i for i in range(ndof) if i not in (0, ndof - 2)]
+    fixed = {2 * n for n in (pinned_nodes if pinned_nodes is not None else (0, n_el))}
+    if clamp_bottom:
+        fixed |= {ndof - 2, ndof - 1}
+    free = [i for i in range(ndof) if i not in fixed]
     Kf, Mf = K[np.ix_(free, free)], M[np.ix_(free, free)]
     # tiny rotational inertia keeps M positive definite where massless elements meet
     Mf = Mf + np.eye(len(free)) * 1e-9 * max(1.0, float(np.max(np.abs(Mf))))

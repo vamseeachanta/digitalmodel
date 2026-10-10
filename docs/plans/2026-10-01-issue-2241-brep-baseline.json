@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-10-01T23:45:29.389894+00:00",
+  "results": [
+    {
+      "case": "rounded",
+      "status": "geometric_singularity_nonintegrable",
+      "I_D": null,
+      "parameters": {
+        "length_bp": 100.0,
+        "beam": 20.0,
+        "draft": 8.0,
+        "depth": 12.0,
+        "cb": 0.7,
+        "lcb_fraction": 0,
+        "parallel_midbody_fraction": 0.4,
+        "bilge_radius_fraction": 0.2,
+        "deadrise_deg": 0,
+        "flare_deg": 0,
+        "bow_fullness": 2,
+        "stern_fullness": 2,
+        "entrance_angle_deg": 33.690067525979785,
+        "run_angle_deg": 33.690067525979785,
+        "transom_fraction": 0,
+        "n_stations": 41,
+        "n_waterlines": 21,
+        "box": false,
+        "wigley": false
+      },
+      "comparator_class": "archived-run",
+      "hullprod_version": "1.0.1"
+    },
+    {
+      "case": "transom",
+      "status": "quadrature_unconverged",
+      "I_D": null,
+      "parameters": {
+        "length_bp": 100.0,
+        "beam": 20.0,
+        "draft": 8.0,
+        "depth": 12.0,
+        "cb": 0.72,
+        "lcb_fraction": -0.1,
+        "parallel_midbody_fraction": 0.4,
+        "bilge_radius_fraction": 0.2,
+        "deadrise_deg": 0,
+        "flare_deg": 0,
+        "bow_fullness": 2,
+        "stern_fullness": 2,
+        "entrance_angle_deg": 33.690067525979785,
+        "run_angle_deg": 33.690067525979785,
+        "transom_fraction": 0.9,
+        "n_stations": 41,
+        "n_waterlines": 21,
+        "box": false,
+        "wigley": false
+      },
+      "comparator_class": "archived-run",
+      "hullprod_version": "1.0.1"
+    }
+  ],
+  "revision": "81e0fd893fad002fef0a247d1e3f3fae6cec6f7f",
+  "python_version": "3.11.15",
+  "side_isolation": [
+    {
+      "case": "rounded",
+      "n_faces": 1,
+      "status": "geometric_singularity_nonintegrable",
+      "I_D": null,
+      "one_level_relative_change": 0.09591036398347079,
+      "prior_level_relative_change": 0.0942726347653644,
+      "comparator_class": "archived-run"
+    },
+    {
+      "case": "transom",
+      "n_faces": 1,
+      "status": "quadrature_unconverged",
+      "I_D": null,
+      "one_level_relative_change": 0.140530597605564,
+      "prior_level_relative_change": 0.012387896525948712,
+      "comparator_class": "archived-run"
+    }
+  ]
+}
