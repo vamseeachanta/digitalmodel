@@ -201,3 +201,83 @@ def test_high_pressure_campaign_envelope_has_strict_reduction(method):
         **basis, corrosion_rate_in_per_yr=0.25 / 25.4, campaign_years=3
     )
     assert end["max_acceptable_length_in"][0] < start["max_acceptable_length_in"][0]
+
+
+@pytest.mark.parametrize(
+    "method,limit",
+    [
+        ("b31g", 0.80),
+        ("modified_b31g", 0.80),
+        ("dnv_f101", 0.85),
+        ("bs7910_option1_fad", 0.60),
+    ],
+)
+@pytest.mark.parametrize("growth_rate", [0.0, 0.01])
+def test_report_flags_depth_applicability_at_each_campaign(method, limit, growth_rate):
+    from digitalmodel.asset_integrity.riser_joint_ffs import level1_flaw_envelope
+    from digitalmodel.asset_integrity.riser_joint_report import _envelope_sections
+
+    args = {"region": "weld"} if method == "bs7910_option1_fad" else {"method": method}
+    basis = dict(
+        od_in=21.25,
+        wt_in=0.875,
+        grade="X80",
+        design_pressure_psi=500,
+        depth_fracs=[limit - 0.05, limit, limit + 0.05],
+        **args,
+    )
+    start = level1_flaw_envelope(**basis)
+    end = level1_flaw_envelope(
+        **basis, corrosion_rate_in_per_yr=growth_rate, campaign_years=3
+    )
+    rendered = "".join(
+        _envelope_sections(
+            {
+                "scans": [
+                    {
+                        "scan": "synthetic",
+                        "measured_min_wt_in": 0.6,
+                        "unmeasured_cells": 0,
+                        "envelopes": {method: {"start": start, "campaign_end": end}},
+                    }
+                ]
+            }
+        )
+    )
+    cells = [row.split("</tr>")[0] for row in rendered.split("<tr>")[2:]]
+    assert "OUT OF APPLICABILITY" not in cells[0]
+    assert cells[1].count("Not evaluated: OUT OF APPLICABILITY") == int(growth_rate > 0)
+    assert cells[2].count("Not evaluated: OUT OF APPLICABILITY") == 2
+
+
+def test_hash_bound_report_sources_preserve_bytes_under_autocrlf(tmp_path):
+    import os
+    import subprocess
+
+    # A disposable Git repository prevents conversion probes modifying caller state.
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull)
+
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=tmp_path, env=env, check=True, capture_output=True
+        )
+
+    git("init", "-q")
+    git("config", "core.autocrlf", "true")
+    git("config", "core.safecrlf", "false")
+    paths = [Path(".gitattributes"), EXAMPLE.parent.relative_to(ROOT) / "report.html"]
+    paths += [
+        p.relative_to(ROOT)
+        for p in (ROOT / "tests/asset_integrity/test_data/real_inspection").iterdir()
+        if p.is_file()
+    ]
+    expected = {str(p): (ROOT / p).read_bytes() for p in paths}
+    for name, data in expected.items():
+        target = tmp_path / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+    git("add", "--", *expected)
+    git("checkout-index", "--all", "--prefix=converted/")
+    for name, data in expected.items():
+        assert (tmp_path / "converted" / name).read_bytes() == data, name

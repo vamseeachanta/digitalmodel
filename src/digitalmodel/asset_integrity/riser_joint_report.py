@@ -13,9 +13,12 @@ import numpy as np
 import pandas as pd
 
 from .assessment.ffs_report import FFSReport
+from .corroded_pipe import _B31G_MAX_DT
+from .dnv_rp_f101 import _DNV_F101_MAX_DT
 from .riser_joint_ffs import (
     COLLAPSE_DESIGN_FACTOR,
     DEFAULT_WELD_CVN_JOULES,
+    DEPTH_CAP_WELD,
     MM_PER_IN,
     SEAWATER_PSI_PER_FT,
     ZONE_FATIGUE_MARGIN,
@@ -42,8 +45,7 @@ LIMITS = (
     "Unmeasured cells are excluded, so minimum wall is limited to measured stations. "
     "Axially downsampled grids do not establish full-resolution minima; the joint "
     "governing collapse result is the lowest limit among supplied grids only. "
-    "Collapse uses the specified differential-head fraction. Fleet roll-up is "
-    "life-based, not a fleet-wide collapse assessment."
+    "Collapse uses the specified differential-head fraction. Fleet roll-up is life-based, not a fleet-wide collapse assessment."
 )
 
 
@@ -146,6 +148,19 @@ def _table(headers, rows):
     return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
 
 
+def _reported_lengths(envelope):
+    limits = dict.fromkeys(("b31g", "modified_b31g"), _B31G_MAX_DT)
+    limits["dnv_f101"] = _DNV_F101_MAX_DT
+    limit = limits.get(envelope["method"], envelope["depth_cap_frac"])
+    growth = envelope["corrosion_rate_in_per_yr"] * envelope["campaign_years"]
+    growth /= envelope["wt_in"]
+    for fraction, length in zip(
+        envelope["depth_frac"], envelope["max_acceptable_length_in"]
+    ):
+        outside = fraction + growth > limit + 1e-12  # construction roundoff only
+        yield "Not evaluated: OUT OF APPLICABILITY" if outside else length
+
+
 def _envelope_sections(result):
     sections = []
     for scan in result["scans"]:
@@ -158,6 +173,9 @@ def _envelope_sections(result):
             start, end = pair["start"], pair["campaign_end"]
             sections += [
                 f"<h3>{html.escape(method)}</h3>",
+                f"<p>Depth limits: B31G/Modified B31G d/t ≤ {_B31G_MAX_DT:.2f}; "
+                f"DNV-RP-F101 ≤ {_DNV_F101_MAX_DT:.2f}; weld practice cap ≤ {DEPTH_CAP_WELD:.2f}. "
+                "Campaign-end depth includes growth. Out-of-limit lengths are not evaluated for report acceptance; unchanged raw JSON lengths are unqualified.</p>",
                 _table(
                     [
                         "Depth (in)",
@@ -166,8 +184,8 @@ def _envelope_sections(result):
                     ],
                     zip(
                         start["depth_in"],
-                        start["max_acceptable_length_in"],
-                        end["max_acceptable_length_in"],
+                        _reported_lengths(start),
+                        _reported_lengths(end),
                     ),
                 ),
             ]

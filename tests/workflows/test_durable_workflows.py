@@ -1624,14 +1624,13 @@ def test_workflow_registry(workflow, monkeypatch):
         assert res["critical_mode"] == 2
         assert res["a_d_ratio"] == pytest.approx(0.9789, abs=1e-3)
         assert res["fatigue_proxy"] > 0.0
+    elif workflow["id"] == "riser-joint-ffs":
+        result = cfg["riser_joint_ffs"]
+        assert len(result["scans"]) == len(result["placements"]) == 4
+        assert result["rollup"]["n_joints"] == 26
+        assert len(result["provenance"]["sources"]) == 6
     else:
-        if workflow["id"] == "riser-joint-ffs":
-            result = cfg["riser_joint_ffs"]
-            assert len(result["scans"]) == len(result["placements"]) == 4
-            assert result["rollup"]["n_joints"] == 26
-            assert len(result["provenance"]["sources"]) == 6
-        else:
-            raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
+        raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
 
 
 def test_wellpath_minimum_curvature_textbook_case(tmp_path):
@@ -2278,18 +2277,17 @@ def test_esp_pump_hydraulics_tdh_and_sizing_closed_form():
 
 @pytest.fixture(scope="module")
 def riser_joint_report_run(tmp_path_factory):
+    from digitalmodel.asset_integrity.riser_joint_ffs import RiserJointFFSWorkflow
+
     workflow = next(w for w in _load_registry() if w["id"] == "riser-joint-ffs")
     input_path = REPO_ROOT / workflow["input"]
     cfg = yaml.safe_load(input_path.read_text())
-    # Keep outputs isolated; fixture paths resolve from the committed input directory.
-    cfg["riser_joint_ffs"]["report"]["register_csv"] = str(
-        (input_path.parent / cfg["riser_joint_ffs"]["report"]["register_csv"]).resolve())
-    cfg["riser_joint_ffs"]["report"]["provenance_readme"] = str(
-        (input_path.parent / cfg["riser_joint_ffs"]["report"]["provenance_readme"]).resolve())
-    for scan in cfg["riser_joint_ffs"]["report"]["scans"]:
-        scan["grid_csv"] = str((input_path.parent / scan["grid_csv"]).resolve())
-    return engine(cfg=cfg, embed=True, root_folder=str(tmp_path_factory.mktemp("riser-ffs")),
-                  log_to_file=False)["riser_joint_ffs"]
+    # Resolve committed fixture paths without requiring dependency embed support.
+    cfg["Analysis"] = {
+        "result_folder": str(tmp_path_factory.mktemp("riser-ffs")),
+        "analysis_root_folder": str(input_path.parent),
+    }
+    return RiserJointFFSWorkflow().router(cfg)["riser_joint_ffs"]
 
 
 @pytest.mark.parametrize("grid_name,min_mm,depth_ft,verdict", [
