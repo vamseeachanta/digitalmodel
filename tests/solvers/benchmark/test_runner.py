@@ -369,3 +369,42 @@ def test_invalid_variants_are_rejected(variants):
 def test_invalid_repeat_counts_are_rejected(tmp_path, kw):
     with pytest.raises(ValueError):
         _run([_case("fake", [])], tmp_path, **kw)
+
+
+# ---------------------------------------------------- MPI ranks vs threads (#2320)
+
+
+def _echo_case(variants, cores_kind):
+    def run(work_dir, variant):
+        return {"ok": True, "wall_s": 2, "solve_s": 1, "fingerprint": {"x": 1.0},
+                "threads_observed": variant}
+
+    return runner.Case("fake", "fake", variants, run, lambda: "1",
+                       cores_kind=cores_kind)
+
+
+def test_all_resolves_to_physical_cores_for_mpi_rank_cases(tmp_path):
+    # Open MPI's default slot count is physical cores: 32 ranks on a
+    # 16-core/32-thread host is refused, so "all" must mean 16 there.
+    receipt = _run([_echo_case([8, "all"], "physical")], tmp_path, repeats=1,
+                   cores=32, physical_cores=16)
+    assert [r["variant"] for r in receipt["results"]] == [8, 16]
+
+
+def test_all_stays_logical_for_thread_cases(tmp_path):
+    receipt = _run([_echo_case([1, "all"], "logical")], tmp_path, repeats=1,
+                   cores=32, physical_cores=16)
+    assert [r["variant"] for r in receipt["results"]] == [1, 32]
+
+
+def test_unknown_physical_core_count_falls_back_to_logical(tmp_path, monkeypatch):
+    monkeypatch.setattr(env, "_physical_cores", lambda: None)
+    receipt = _run([_echo_case(["all"], "physical")], tmp_path, repeats=1, cores=12)
+    assert [r["variant"] for r in receipt["results"]] == [12]
+
+
+def test_openfoam_case_counts_physical_cores():
+    from digitalmodel.solvers.benchmark.solvers import CASES
+
+    assert CASES["openfoam"]().cores_kind == "physical"
+    assert CASES["orcawave"]().cores_kind == "logical"
