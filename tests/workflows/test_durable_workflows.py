@@ -1629,6 +1629,15 @@ def test_workflow_registry(workflow, monkeypatch):
         assert len(result["scans"]) == len(result["placements"]) == 4
         assert result["rollup"]["n_joints"] == 26
         assert len(result["provenance"]["sources"]) == 6
+    elif workflow["id"] == "pipeline-corroded-defect-screen":
+        result = cfg["pipeline_defect_screen"]
+        assert len(result["methods"]) == 6
+        assert all("applicability" in row for row in result["methods"])
+        rstreng = next(row for row in result["methods"] if row["method"] == "RSTRENG")
+        assert rstreng["margin"] == pytest.approx(1.031735167224636, rel=1e-12)
+        report = (Path(cfg["Analysis"]["result_folder"]) / result["report_file"]).read_text(encoding="utf-8")
+        assert "Method comparison" in report
+        assert all(path in report for path in result["validation_records"])
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
 

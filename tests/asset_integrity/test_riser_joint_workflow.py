@@ -113,8 +113,19 @@ def test_envelope_point_against_direct_pressure_engine(method, expected_length):
 def test_catalog_does_not_deny_existing_composition_record():
     from digitalmodel.asset_integrity import offering_catalog as catalog
 
-    text = catalog.render_markdown(catalog.load())
-    assert "`workflow` rows are not qualified as `live`" in text
+    cat = catalog.load()
+    text = catalog.render_markdown(cat)
+    assert "workflow (real C-scan fixtures; bounded composition validation)" in text
+    counts = cat.summary()
+    assert f"{counts['live']} of {counts['total']} rows are `live` today." in text
+    # Exercise the original zero-live wording even after a sibling becomes live.
+    for industry in cat.ffs["industries"]:
+        for asset in industry["assets"]:
+            for row in asset["defects"]:
+                if row["status"] == "live":
+                    row["status"] = "workflow"
+    assert cat.summary()["live"] == 0
+    assert "`workflow` rows are not qualified as `live`" in catalog.render_markdown(cat)
 
 
 @pytest.mark.parametrize(

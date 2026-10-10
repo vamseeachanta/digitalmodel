@@ -9,6 +9,7 @@ __version__ = "0.1.0"
 from .profile_schema import HullType, HullStation, HullProfile
 from .mesh_generator import MeshGeneratorConfig, HullMeshGenerator
 from .coarsen_mesh import coarsen_mesh
+from .mesh_cutouts import MoonpoolFootprint, MeshCutoutResult, cut_moonpool
 from .schematic_generator import SchematicGenerator
 from .catalog import (
     SeaStateDefinition,
@@ -46,6 +47,11 @@ from .parametric_form import (
     form_report,
     sweep_forms,
 )
+from .column_pontoon_form import (
+    ColumnPontoonParameters,
+    ColumnPontoonReport,
+    generate_column_pontoon,
+)
 from .curvature_screen import (
     CurvatureSignature,
     CurvatureScreenResult,
@@ -82,6 +88,9 @@ __all__ = [
     "MeshGeneratorConfig",
     "HullMeshGenerator",
     "coarsen_mesh",
+    "MoonpoolFootprint",
+    "MeshCutoutResult",
+    "cut_moonpool",
     # Schematics
     "SchematicGenerator",
     # Catalog
@@ -126,6 +135,9 @@ __all__ = [
     "generate_profile",
     "form_report",
     "sweep_forms",
+    "ColumnPontoonParameters",
+    "ColumnPontoonReport",
+    "generate_column_pontoon",
     # Curvature screening (HullProd, optional extra)
     "CurvatureSignature",
     "CurvatureScreenResult",

@@ -374,6 +374,8 @@ def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
                               "limits_mpa": limits}
     st = ctx.get("cr10_stations")
     if st:
+        if "sections_m" not in st:
+            raise NotEvaluated("CR-10 station map: sections_m is required")
         try:
             kinds = classify_stations([a for a, _ in series], **st)
         except ValueError as e:

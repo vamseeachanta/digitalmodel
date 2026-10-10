@@ -20,6 +20,23 @@ def _metadata(config,key):
     return ''.join('<p>'+escape(item)+'</p>' for item in items)
 
 
+_COVERAGE_CLAIMS=((r'\b(\d+) of \d+ baseline cases verified','VERIFIED'),
+    (r'\b(\d+) numerical failures','FAILED'),(r'\b(\d+) missing cells','MISSING'))
+
+
+def _coverage_status_errors(status,counts):
+    """Return why a configured coverage status contradicts the source counts (empty when it agrees or makes no claim)."""
+    errors=[]
+    for planned in re.finditer(r'\b\d+ of (\d+) baseline cases verified',status,re.IGNORECASE):
+        if int(planned.group(1))!=sum(counts.values()):
+            errors.append(f'{planned.group(1)} planned cases stated, source lists {sum(counts.values())}')
+    for pattern,key in _COVERAGE_CLAIMS:
+        for match in re.finditer(pattern,status,re.IGNORECASE):
+            if int(match.group(1))!=counts.get(key,0):
+                errors.append(f'{match.group(1)} {key} stated, source counts {counts.get(key,0)}')
+    return errors
+
+
 def _design(summary,config):
     keys=('parameter','value','unit','source','status','effect_if_changed')
     rows=config.get('design_data')
@@ -34,6 +51,8 @@ def _design(summary,config):
                 key=row['basis_key']
                 if key not in summary['design_basis'] or str(row['value'])!=str(summary['design_basis'][key]):
                     raise ValueError('Configured design value differs from linked source basis')
+            errors=_coverage_status_errors(str(row['status']),summary['counts'])
+            if errors:raise ValueError('Configured coverage status differs from source counts: '+'; '.join(errors))
     table=_table(['Parameter','Value','Unit','Source','Status','Effect if changed'],
         [[escape(str(row.get(k,'Not recorded'))) for k in keys] for row in rows])
     return _section(3,'Design data and assumed criteria',table+
