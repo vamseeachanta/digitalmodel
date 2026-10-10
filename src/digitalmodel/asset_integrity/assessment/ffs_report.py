@@ -69,6 +69,13 @@ class FFSReport:
     """Generate an HTML FFS assessment report."""
 
     @staticmethod
+    def generate_screening_html(component_id, title, decision, sections, limitations):
+        """Render mechanism-specific screening without inferred metal-loss metrics."""
+        from .screening_report import generate_screening_html
+
+        return generate_screening_html(component_id, title, decision, sections, limitations)
+
+    @staticmethod
     def generate_html(
         grid_df: pd.DataFrame,
         decision: dict,

@@ -21,8 +21,8 @@ Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, AP
 | River-bottom profile metal loss | ASME B31G, DNV-RP-F101 | rstreng-2d | T2 | validated |
 | Circumferential metal loss / net-section | API 579 Pt 5, DNV-RP-F101 | circumferential | T2 | validated (F101 combined-loading factor stubbed (#1146)) |
 | Interacting defect colonies | DNV-RP-F101, API 579 Pt 4 | dnv-f101 | T2 | engine (#1094 finding 1) |
-| Pitting | API 579 Pt 6 | pitting | T1, T2 | engine |
-| Plain dents / dent on weld | API 579 Pt 12, PDAM, ASME B31.8 App R | dents | T1, T2 | engine |
+| Pitting | API 579 Pt 6 | pitting | T1, T2 | workflow |
+| Plain dents / dent on weld | API 579 Pt 12, PDAM, ASME B31.8 App R | dents | T1, T2 | workflow |
 | Dent-gouge / gouges | API 579 Pt 12, PDAM | dents | T1, T2 | engine (gouge-only PDAM path not implemented) |
 | Crack-like flaws (SCC, seam weld, girth weld, fatigue cracks, hook cracks) | API 579 Pt 9, BS 7910, API RP 1176 | crack-fad, part9-level2 (#2175), part9-level1 (#2176) | T1, T2, T3 | engine |
 | Fatigue crack growth / remaining life / leak-before-break | BS 7910, API 579 Pt 9 | crack-growth | T2 | engine (#2177) |
@@ -154,14 +154,14 @@ Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are
 | Status | Rows |
 |---|---|
 | live | 0 |
-| workflow | 3 |
+| workflow | 5 |
 | validated | 6 |
-| engine | 31 |
+| engine | 29 |
 | planned | 25 |
 | none | 13 |
 | total | 78 |
 
-No row is `live` today: the 3 `workflow` rows lack validation records and the 6 `validated` rows lack a registered workflow. The 13 `none` rows are the roadmap beyond the filed issues: **pipelines-midstream**: manufacturing defects in pipe body, geohazard / ground-movement strain demand, direct-assessment programme support (ECDA / ICDA region and indication ranking); **downstream-fixed-equipment**: exchanger tube bundle thinning / pitting / tube plugging limits, fired-heater tube creep, bulging, carburization, floating roof / seal / appurtenance damage; **upstream-offshore-fixed**: conductor / caisson wall loss, guide wear, fatigue; **upstream-offshore-floating**: wire rope broken wires / corrosion / diameter loss, anchor holding capacity after seabed change / drag, wellhead / conductor fatigue from riser loads; **offshore-wind**: grouted connection slippage / cracking, bolted flange preload loss, lifetime extension assessment (remaining fatigue life, load re-evaluation).
+No row is `live` today: the 5 `workflow` rows lack validation records and the 6 `validated` rows lack a registered workflow. The 13 `none` rows are the roadmap beyond the filed issues: **pipelines-midstream**: manufacturing defects in pipe body, geohazard / ground-movement strain demand, direct-assessment programme support (ECDA / ICDA region and indication ranking); **downstream-fixed-equipment**: exchanger tube bundle thinning / pitting / tube plugging limits, fired-heater tube creep, bulging, carburization, floating roof / seal / appurtenance damage; **upstream-offshore-fixed**: conductor / caisson wall loss, guide wear, fatigue; **upstream-offshore-floating**: wire rope broken wires / corrosion / diameter loss, anchor holding capacity after seabed change / drag, wellhead / conductor fatigue from riser loads; **offshore-wind**: grouted connection slippage / cracking, bolted flange preload loss, lifetime extension assessment (remaining fatigue life, load re-evaluation).
 
 ## Sources (public overviews consulted 2026-09-25)
 

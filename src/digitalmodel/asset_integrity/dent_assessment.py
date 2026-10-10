@@ -396,3 +396,10 @@ def assess_dent(
 def _validate_geometry(od_in: float, wt_in: float) -> None:
     if od_in <= 0 or wt_in <= 0 or wt_in >= od_in / 2.0:
         raise ValueError(f"Invalid geometry: OD={od_in}, t={wt_in}.")
+
+
+def router(cfg):
+    """Dispatch the offline screening workflow without changing assessment physics."""
+    from .dent_workflow import router as workflow_router
+
+    return workflow_router(cfg)
