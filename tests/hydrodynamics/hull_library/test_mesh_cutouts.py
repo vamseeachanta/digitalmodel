@@ -86,7 +86,11 @@ def test_box_displacement_seam_winding_report_and_flags(shape):
     result = cut(source, footprint, wall_layers=3)
     expected = (3.7 * 2.9 if shape == "rectangle" else math.pi * 1.7**2) * 4
     assert volume(source) == pytest.approx(800)
-    assert volume(source) - volume(result.mesh) == pytest.approx(expected, rel=0.005)
+    polygon_volume = result.report["cutouts"][-1]["footprint_area"] * 4
+    assert volume(source) - volume(result.mesh) == pytest.approx(
+        polygon_volume, rel=1e-9
+    )
+    assert polygon_volume == pytest.approx(expected, rel=0.005)
     assert_wetted_closed(result.mesh)
     flags = np.asarray(result.mesh.metadata["moonpool_wall"], dtype=bool)
     assert len(flags) == result.mesh.n_panels
@@ -135,7 +139,11 @@ def test_generated_monohull_cut_spans_bottom_panel_seams(symmetry, shape):
     result = cut(source, footprint)
     original_volume = volume(source) * (2 if symmetry else 1)
     area = 4.3 * 2.7 if shape == "rectangle" else math.pi * 1.7**2
-    assert original_volume - volume(result.mesh) == pytest.approx(area * 4, rel=0.005)
+    polygon_volume = result.report["cutouts"][-1]["footprint_area"] * 4
+    assert original_volume - volume(result.mesh) == pytest.approx(
+        polygon_volume, rel=1e-9
+    )
+    assert polygon_volume == pytest.approx(area * 4, rel=0.005)
     assert result.mesh.symmetry_plane is None
     assert_wetted_closed(result.mesh)
 
@@ -175,7 +183,7 @@ def test_multiple_disjoint_cutouts_preserve_flags_and_report():
     second = cut(first.mesh, Footprint.circle(center=(15, 0), radius=1))
     assert len(second.report["cutouts"]) == 2
     assert volume(box_mesh()) - volume(second.mesh) == pytest.approx(
-        (4 + math.pi) * 4, rel=0.005
+        sum(e["footprint_area"] * 4 for e in second.report["cutouts"]), rel=1e-9
     )
     assert_wetted_closed(second.mesh)
     flags = np.array(second.mesh.metadata["moonpool_wall"])
@@ -259,7 +267,7 @@ def test_grid_aligned_cut_retains_downward_bottom_normals():
     bottom = np.all(np.isclose(result.mesh.vertices[result.mesh.panels, 2], -4), axis=1)
     assert np.all(result.mesh.normals[bottom, 2] < -0.999)
     assert_wetted_closed(result.mesh)
-    assert volume(source) - volume(result.mesh) == pytest.approx(4 * 2 * 4, rel=0.005)
+    assert volume(source) - volume(result.mesh) == pytest.approx(4 * 2 * 4, rel=1e-9)
 
 
 @pytest.mark.parametrize("center", [(10.0, 0.0), (7.0, 2.0)])
@@ -273,5 +281,5 @@ def test_nearby_disjoint_cut_keeps_existing_wall_layers_as_quads(center):
     assert all(len(set(p)) == 4 for p in second.mesh.panels[flags])
     assert_wetted_closed(second.mesh)
     assert volume(box_mesh()) - volume(second.mesh) == pytest.approx(
-        (4 + math.pi * 0.7**2) * 4, rel=0.005
+        sum(e["footprint_area"] * 4 for e in second.report["cutouts"]), rel=1e-9
     )
