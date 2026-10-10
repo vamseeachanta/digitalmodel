@@ -119,6 +119,42 @@ def test_design_data_coverage_status_matching_source_counts_renders():
     assert escape(status) in mudmat.render_html(summary(),config={'design_data':[design_row(status=status)]})
 
 
+@pytest.mark.parametrize('casing',[str.upper,str.title],ids=['uppercase','mixed-case'])
+@pytest.mark.parametrize('status',[
+    '149 of 156 baseline cases verified; 7 numerical failures and 0 missing cells unassessed',
+    '156 of 160 baseline cases verified',
+    '7 numerical failures',
+    '1 missing cells'])
+def test_design_data_coverage_status_rejects_case_variant_stale_claims(status,casing):
+    data=summary();data['counts']={'VERIFIED':156}
+    with pytest.raises(ValueError,match='coverage'):
+        mudmat.render_html(data,config={'design_data':[design_row(status=casing(status))]})
+
+
+@pytest.mark.parametrize('casing',[str.upper,str.title],ids=['uppercase','mixed-case'])
+def test_design_data_coverage_status_case_variant_matching_counts_renders(casing):
+    status=casing('61 of 156 baseline cases verified; 0 numerical failures and 95 missing cells unassessed')
+    assert escape(status) in mudmat.render_html(summary(),config={'design_data':[design_row(status=status)]})
+
+
+@pytest.mark.parametrize('claim',[
+    '7 numerical failures',
+    '60 of 156 baseline cases verified',
+    '61 of 160 baseline cases verified',
+    '94 missing cells',
+    '7 NuMeRiCaL FaIlUrEs'])
+def test_design_data_coverage_status_rejects_contradictory_later_claim(claim):
+    status='61 of 156 baseline cases verified; 0 numerical failures and 95 missing cells; '+claim
+    with pytest.raises(ValueError,match='coverage'):
+        mudmat.render_html(summary(),config={'design_data':[design_row(status=status)]})
+
+
+def test_design_data_coverage_status_repeated_matching_claims_renders():
+    status='61 of 156 baseline cases verified; 0 numerical failures and 95 missing cells'
+    status+='; '+status.upper()
+    assert escape(status) in mudmat.render_html(summary(),config={'design_data':[design_row(status=status)]})
+
+
 def test_audit_claims_and_unlinked_design_context_explicit():
     html=mudmat.render_html(summary(),config={'design_data':[design_row()]})
     assert 'source event audit is not established' in html

@@ -27,13 +27,13 @@ _COVERAGE_CLAIMS=((r'\b(\d+) of \d+ baseline cases verified','VERIFIED'),
 def _coverage_status_errors(status,counts):
     """Return why a configured coverage status contradicts the source counts (empty when it agrees or makes no claim)."""
     errors=[]
-    planned=re.search(r'\b\d+ of (\d+) baseline cases verified',status)
-    if planned and int(planned.group(1))!=sum(counts.values()):
-        errors.append(f'{planned.group(1)} planned cases stated, source lists {sum(counts.values())}')
+    for planned in re.finditer(r'\b\d+ of (\d+) baseline cases verified',status,re.IGNORECASE):
+        if int(planned.group(1))!=sum(counts.values()):
+            errors.append(f'{planned.group(1)} planned cases stated, source lists {sum(counts.values())}')
     for pattern,key in _COVERAGE_CLAIMS:
-        match=re.search(pattern,status)
-        if match and int(match.group(1))!=counts.get(key,0):
-            errors.append(f'{match.group(1)} {key} stated, source counts {counts.get(key,0)}')
+        for match in re.finditer(pattern,status,re.IGNORECASE):
+            if int(match.group(1))!=counts.get(key,0):
+                errors.append(f'{match.group(1)} {key} stated, source counts {counts.get(key,0)}')
     return errors
 
 
