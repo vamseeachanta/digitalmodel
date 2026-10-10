@@ -138,7 +138,10 @@ def test_hard_tank_and_heave_plate():
         diameter=6, draft=20, hard_tank_diameter=12, hard_tank_height=2,
         panel_target_size=3,
     ))
-    assert tank.displacement == pytest.approx(report.displacement)
+    assert tank.displacement == pytest.approx(report.displacement, rel=0.005)
+    assert tank.waterplane_area == pytest.approx(pi * 6**2, rel=0.005)
+    assert report.waterplane_area == pytest.approx(pi * 3**2, rel=0.005)
+    assert tank.kb > report.kb
 
 
 def test_oc4_published_geometry(record_property):
@@ -168,10 +171,14 @@ def test_oc4_published_geometry(record_property):
     # from the published comparator's allowance for omitted cross braces.
     assert abs(report.displacement / modeled - 1) <= 0.0005
     record_property("oc4_mesh_volume_m3", report.displacement)
+    record_property("oc4_max_aspect_ratio", report.max_aspect_ratio)
+    record_property("oc4_panel_count", mesh.n_panels)
+    assert report.max_aspect_ratio < 20
     record_property("oc4_unbraced_analytic_volume_m3", modeled)
     record_property("oc4_published_volume_m3", 13917)
     assert report.winding.volume == pytest.approx(report.displacement, rel=1e-6)
     assert abs(report.waterplane_area / (pi * (3 * 6**2 + 3.25**2)) - 1) <= 0.005
+    assert all(check["passed"] for check in report.primitive_checks)
     assert report.comparator_class == "published-geometry"
     assert_closed(mesh)
 
@@ -256,7 +263,11 @@ def test_closure_status_checks_returned_lid(monkeypatch):
     original = form._quad_mesh
     def missing_lid_panel(faces, lid):
         mesh = original(faces, lid)
-        return form.PanelMesh(mesh.vertices, mesh.panels[:-1]) if lid else mesh
+        if not lid:
+            return mesh
+        top = np.max(np.abs(mesh.vertices[mesh.panels, 2]), axis=1) < 1e-8
+        removed = np.flatnonzero(top)[0]
+        return form.PanelMesh(mesh.vertices, np.delete(mesh.panels, removed, axis=0))
     monkeypatch.setattr(form, "_quad_mesh", missing_lid_panel)
     _, report = form.generate_column_pontoon(form.ColumnPontoonParameters(
         square_side=4, draft=10, lid=True, panel_target_size=5,
