@@ -46,6 +46,11 @@ from .parametric_form import (
     form_report,
     sweep_forms,
 )
+from .column_pontoon_form import (
+    ColumnPontoonParameters,
+    ColumnPontoonReport,
+    generate_column_pontoon,
+)
 from .curvature_screen import (
     CurvatureSignature,
     CurvatureScreenResult,
@@ -126,6 +131,9 @@ __all__ = [
     "generate_profile",
     "form_report",
     "sweep_forms",
+    "ColumnPontoonParameters",
+    "ColumnPontoonReport",
+    "generate_column_pontoon",
     # Curvature screening (HullProd, optional extra)
     "CurvatureSignature",
     "CurvatureScreenResult",
