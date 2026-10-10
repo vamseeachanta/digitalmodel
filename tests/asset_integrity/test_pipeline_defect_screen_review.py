@@ -27,7 +27,9 @@ def test_screen_matches_validated_dnv_engine(reference, factor):
     row = next(
         row for row in assess(reference)["methods"] if row["method"] == "DNV-RP-F101"
     )
-    engine = dnv_f101_single_defect(30, 0.375, 0.15, 8, 66700, usage_factor=factor)
+    engine = dnv_f101_single_defect(
+        30, 0.375, 0.15, 8, 66700, operational_usage_factor=factor
+    )
     assert row["capacity_pressure_psi"] == pytest.approx(
         engine.capacity_pressure_psi, rel=1e-12
     )
@@ -36,10 +38,33 @@ def test_screen_matches_validated_dnv_engine(reference, factor):
     )
 
 
-def test_report_discloses_dnv_factor_scope(reference):
+def test_report_labels_part_b_and_factors(reference):
     report = render_report(reference, assess(reference))
-    assert "No separate modelling factor is applied" in report
-    assert "code-compliant DNV safety is not established" in report
+    assert "Part B safe working pressure" in report
+    for label, value in [
+        ("Modelling factor F1 (1)", "0.900"),
+        ("Operational usage factor F2 (1)", "0.720"),
+        ("Total usage factor F = F1 x F2 (1)", "0.648"),
+    ]:
+        assert f"<td>{label}</td><td>{value}</td>" in report
+    assert "No separate modelling factor is applied" not in report
+
+
+@pytest.mark.parametrize("factor", [-0.1, 0, 1.01])
+def test_screen_rejects_invalid_operational_factor(reference, factor):
+    reference["usage_factor"] = factor
+    with pytest.raises(ValueError, match="operational usage factor F2"):
+        assess(reference)
+
+
+def test_dnv_governs_derate_between_old_and_corrected_limits(reference):
+    reference.update(usage_factor=0.5, design_pressure_psi=630)
+    result = assess(reference)
+    assert result["governing_method"] == "DNV-RP-F101"
+    assert result["decision"]["verdict"] == "DERATE"
+    assert result["decision"]["demand_limits_psi"]["pressure"] == pytest.approx(
+        0.9 * 0.5 * 1334.1940092246919, rel=1e-12
+    )
 
 
 def test_report_discloses_above_nominal_rejection(reference):
@@ -85,7 +110,9 @@ def test_confirmed_boundary_preserves_reference_pressures(reference):
     )
     dnv = next(row for row in result["methods"] if row["method"] == "DNV-RP-F101")
     assert dnv["capacity_pressure_psi"] == pytest.approx(1334.1940092246919, rel=1e-12)
-    assert dnv["allowable_pressure_psi"] == pytest.approx(960.6196866417781, rel=1e-12)
+    assert dnv["allowable_pressure_psi"] == pytest.approx(
+        0.9 * 0.72 * 1334.1940092246919, rel=1e-12
+    )
 
 
 def test_invalid_method_numbers_withheld_from_report(reference):
@@ -95,7 +122,12 @@ def test_invalid_method_numbers_withheld_from_report(reference):
     assert any(not row["applicability"]["ok"] for row in result["methods"])
     for row in result["methods"]:
         if not row["applicability"]["ok"]:
-            cells = report.split(f"<td>{row['method']}</td>", 1)[1].split("</tr>", 1)[0]
+            label = row["method"] + (
+                " — Part B safe working pressure"
+                if row["method"] == "DNV-RP-F101"
+                else ""
+            )
+            cells = report.split(f"<td>{label}</td>", 1)[1].split("</tr>", 1)[0]
             assert cells.count("not evaluated") == 4
             assert f"<td>{row['demand_psi']:.3f}</td>" in cells
     assert "allowable/demand=" not in result["decision"]["governing_criterion"]
@@ -120,3 +152,25 @@ def test_above_nominal_boundary_requires_input_correction(reference):
     reference["grid"][0] = [0.4, 0.4]
     with pytest.raises(ValueError, match="thickness in"):
         assess(reference)
+
+
+def test_report_reads_applied_factors_from_computed_row(reference):
+    result = assess(reference)
+    row = next(row for row in result["methods"] if row["method"] == "DNV-RP-F101")
+    assert row["pressure_basis"] == {
+        "modelling_factor": 0.9,
+        "operational_usage_factor": 0.72,
+        "total_usage_factor": pytest.approx(0.648),
+        "result_label": "Part B safe working pressure",
+    }
+    reference["usage_factor"] = 0.5
+    report = render_report(reference, result)
+    assert "<td>Operational usage factor F2 (1)</td><td>0.720</td>" in report
+    assert "<td>Total usage factor F = F1 x F2 (1)</td><td>0.648</td>" in report
+
+
+def test_report_reads_geometry_from_saved_assessment(reference):
+    result = assess(reference)
+    reference["nominal_od_in"] = 99.0
+    report = render_report(reference, result)
+    assert "<td>OD (in)</td><td>30.000</td>" in report

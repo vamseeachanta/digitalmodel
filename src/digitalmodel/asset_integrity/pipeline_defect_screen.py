@@ -75,7 +75,8 @@ def _methods(inputs, positions, depths):
         depth,
         length,
         inputs["smts_psi"],
-        usage_factor=inputs["usage_factor"],
+        modelling_factor=0.9,
+        operational_usage_factor=inputs["usage_factor"],
     )
     rows.append(
         _pressure_row(
@@ -86,6 +87,15 @@ def _methods(inputs, positions, depths):
             demand,
         )
     )
+    rows[-1]["pressure_basis"] = {
+        key: dnv.details[key]
+        for key in (
+            "modelling_factor",
+            "operational_usage_factor",
+            "total_usage_factor",
+        )
+    }
+    rows[-1]["pressure_basis"]["result_label"] = "Part B safe working pressure"
     row, circ = _circumferential_row(inputs, depth, length)
     rows.append(row)
     return rows, collect([*results, dnv, circ])
@@ -224,7 +234,12 @@ def _comparison(rows):
         if row.get("level1_extent_screen_ok") is False:
             status += "; Level-1 extent screen failed; membrane check performed"
         values = [
-            row["method"],
+            row["method"]
+            + (
+                " — Part B safe working pressure"
+                if row["method"] == "DNV-RP-F101"
+                else ""
+            ),
             *[
                 row[key] if app["ok"] or key == "demand_psi" else "not evaluated"
                 for key in (
@@ -254,7 +269,10 @@ def _comparison(rows):
     return table + "</table>"
 
 
-def _assessment_basis(inputs):
+def _assessment_basis(inputs, rows):
+    basis = next(
+        row["pressure_basis"] for row in rows if row["method"] == "DNV-RP-F101"
+    )
     return (
         "<h2>Assessment basis</h2><table>"
         + "".join(
@@ -266,11 +284,15 @@ def _assessment_basis(inputs):
                 ("SMTS (psi)", "smts_psi"),
                 ("Circumferential width (in)", "circumferential_width_in"),
                 ("Safety factor (1)", "safety_factor"),
-                (
-                    "Total screening usage factor F applied to DNV capacity (caller supplied, 1)",
-                    "usage_factor",
-                ),
                 ("Axial design factor (1)", "axial_design_factor"),
+            )
+        )
+        + "".join(
+            f"<tr><td>{label}</td><td>{basis[key]:.3f}</td></tr>"
+            for label, key in (
+                ("Modelling factor F1 (1)", "modelling_factor"),
+                ("Operational usage factor F2 (1)", "operational_usage_factor"),
+                ("Total usage factor F = F1 x F2 (1)", "total_usage_factor"),
             )
         )
         + "</table>"
@@ -281,6 +303,7 @@ def render_report(inputs, result):
     """Reuse FFSReport presentation without implying a Part 5 L1/L2 assessment."""
     from digitalmodel.asset_integrity.applicability import Applicability
 
+    inputs = result["inputs"]
     decision = result["decision"]
     component = html.escape(str(inputs["component_id"]))
     grid = pd.DataFrame(inputs["grid"])
@@ -302,17 +325,14 @@ def render_report(inputs, result):
         f"<p>Verdict: {decision['verdict']}; "
         + html.escape(decision["governing_criterion"])
         + "</p>",
-        _assessment_basis(inputs),
+        _assessment_basis(inputs, result["methods"]),
         _comparison(result["methods"]),
         "<p>RSTRENG-2D uses the maximum-depth projection and therefore reproduces RSTRENG; not full 2D "
         "interaction. Circumferential capacity is an axial membrane "
         "screen using SMYS as flow stress and a caller-supplied axial design factor; combined loading and edition-matched "
         "Part 5 qualification are not established. Remaining life is not evaluated. "
-        "The safety factor and total DNV screening usage factor F are caller supplied. "
-        "No separate modelling factor is applied; Part-A PSF factors are not applied. "
-        "The example F=0.72 follows the existing engine's B31.8 class-1 screening basis; "
-        "code-compliant DNV safety is not established. The linked consolidated validation "
-        "record, row 8, validates capacity, not safety-factor selection.</p>",
+        "The safety factor and operational DNV usage factor F2 are caller supplied; "
+        "F2 selection requires the original design basis. Part-A PSF factors are not applied.</p>",
         "<p>" + " ".join(html.escape(note) for note in result["limitations"]) + "</p>",
         FFSReport._section_appendix(grid),
         "<footer><h2>Validation records</h2><ul>",

@@ -35,15 +35,21 @@ def validate(inputs):
         "usage_factor",
         "axial_design_factor",
     )
+    f2 = inputs.get("usage_factor")
+    if (
+        isinstance(f2, bool)
+        or not isinstance(f2, (int, float))
+        or not np.isfinite(f2)
+        or not 0 < f2 <= 1
+    ):
+        raise ValueError(
+            "usage_factor (operational usage factor F2) must be finite and in (0, 1]"
+        )
     for key in keys:
         _positive_value(inputs, key)
     if not isinstance(inputs.get("component_id"), str) or not inputs["component_id"]:
         raise ValueError("component_id must be a nonempty string")
-    if (
-        inputs["safety_factor"] < 1
-        or inputs["usage_factor"] > 1
-        or inputs["axial_design_factor"] > 1
-    ):
+    if inputs["safety_factor"] < 1 or inputs["axial_design_factor"] > 1:
         raise ValueError("safety_factor >= 1 and design factors <= 1 required")
     t, diameter = inputs["nominal_wt_in"], inputs["nominal_od_in"]
     if t >= diameter / 2 or inputs["smts_psi"] < inputs["smys_psi"]:

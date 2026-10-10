@@ -16,6 +16,7 @@ pipeline_defect_screen:
   design_pressure_psi: 800.0
   axial_stress_psi: 10000.0
   safety_factor: 1.39
+  # Operational usage factor F2; Part B applies F1=0.9, total F=0.648.
   usage_factor: 0.72
   # The synthetic defect is defined over this complete 8 in length.
   length_confirmed: true
