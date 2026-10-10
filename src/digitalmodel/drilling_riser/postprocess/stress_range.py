@@ -24,6 +24,8 @@ from __future__ import annotations
 import math
 from typing import Any, Iterable, Mapping, Sequence
 
+from .station_geometry import section_lengths
+
 SCHEMA = "riser-w5-stress-range/1"
 SCHEMA_SIG = "riser-w5-stress-range/2"
 VAR = "ZZ stress"
@@ -195,8 +197,9 @@ def coupling_positions(sections_m: Sequence[float], joint_length_m: float = JOIN
                        tol_m: float = 1e-3) -> list[float]:
     """Arc lengths (from End A) of the riser couplings: every section boundary and End B, plus k x joint length
     inside a section longer than one joint. Such a section must hold a whole number of joints (``ValueError``)."""
+    lengths = section_lengths(sections_m)
     out, arc = [], 0.0
-    for i, length in enumerate(float(v) for v in sections_m):
+    for i, length in enumerate(lengths):
         if length > joint_length_m + tol_m:
             n = length / joint_length_m
             if abs(n - round(n)) * joint_length_m > tol_m:
@@ -248,17 +251,20 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
     A point within ``_ON_TOL`` (0.1 mm, rounding of stored arcs) of a coupling is on it. Two points on an exclusion
     boundary are its two sides and the excluded side's point is excluded. With ``coupling_tol_m`` a coupling inside
     the kept span with no result point within that distance is refused (``ValueError``); a neighbour farther away
-    is not taken as the coupling's station.
+    is not taken as the coupling's station. End B needs only its inward side. A rounded explicit exclusion
+    selects its nearest geometry boundary within ``_ON_TOL`` (ties select the earlier boundary); only that
+    boundary's exterior side is exempt, and couplings beyond it need no samples.
     """
     a = [float(x) for x in arcs]
     if not all(math.isfinite(x) for x in a) or any(y < x - _ARC_TOL for x, y in zip(a, a[1:])):
         raise ValueError("the arc-length axis is not finite and non-decreasing")
     # End B is taken from the section geometry (below), so the geometry must cover every result point and the
     # exclusion boundary: sections that stop short would make an interior coupling "End B" and drop its upper side
-    end_b = float(sum(float(v) for v in sections_m))
-    if list(sections_m) and a and a[-1] > end_b + _ON_TOL:
+    couplings = coupling_positions(sections_m, joint_length_m)
+    end_b = couplings[-1]
+    if a and a[-1] > end_b + _ON_TOL:
         raise ValueError(f"result point at {a[-1]} m lies beyond End B ({end_b} m from the section geometry)")
-    if exclude_above_m is not None and list(sections_m) and exclude_above_m > end_b + _ON_TOL:
+    if exclude_above_m is not None and exclude_above_m > end_b + _ON_TOL:
         raise ValueError(f"exclude_above_m {exclude_above_m} m lies beyond End B ({end_b} m from the section "
                          f"geometry)")
     kinds = ["body"] * len(a)
@@ -280,7 +286,6 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
         if near is None or abs(a[near] - hot_spot_m) > hot_spot_tol_m:
             raise ValueError(f"no result point within {hot_spot_tol_m} m of the hot spot at {hot_spot_m} m")
         kinds[near] = "hot_spot"
-    couplings = coupling_positions(sections_m, joint_length_m)
     pup_side = [float(v) for v in pup_side_couplings_m]
     if hot_spot_m is not None:
         on_c = [c for c in couplings if abs(a[near] - c) <= _ON_TOL and not any(abs(c - p) <= _ON_TOL
@@ -289,6 +294,8 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
             raise ValueError(f"the hot-spot point at {a[near]} m lies on the coupling at {on_c[0]} m")
     # upper end of the kept span: the exclusion boundary, else End B of the line (from the section geometry)
     top = exclude_above_m if exclude_above_m is not None else end_b
+    nearest = min(couplings, key=lambda c: abs(c - top))
+    top_boundary = nearest if abs(nearest - top) <= _ON_TOL else None
     for c in couplings:
         # every point on the coupling (duplicates included, one per side of a section boundary); else the nearest
         # point (all duplicates at that arc) on each side
@@ -301,12 +308,13 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
         elif not idxs:
             # with a tolerance: couplings in the kept span only; each kept side (not the side of an exclusion
             # boundary) needs its nearest KEPT point within the tolerance - an excluded point never stands in
-            if c < exclude_below_m - _ON_TOL or c > top + _ON_TOL:
+            if c < exclude_below_m - _ON_TOL or c > top + _ON_TOL or \
+                    (top_boundary is not None and c > top_boundary):
                 continue
             sides = []
             if abs(c - exclude_below_m) > _ON_TOL:
                 sides.append([x for x, k in zip(a, kinds) if k != "excluded" and x < c])
-            if abs(c - top) > _ON_TOL:  # the exterior side of End B / the exclusion boundary is not required
+            if c != end_b and c != top_boundary:
                 sides.append([x for x, k in zip(a, kinds) if k != "excluded" and x > c])
             near_x = []
             for side in sides:
