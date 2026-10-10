@@ -3,9 +3,34 @@ from __future__ import annotations
 
 import numpy as np
 from .mesh_clipping import ClippedHull, _clip_keep_below, _cap_area_vector
+from .mesh_geometry import _read_only
 
 
-def _section(clipped: ClippedHull, x_station: float, x_keep_side: float, eps: float):
+class SectionIndex:
+    """Calculation-local x bounds and exact-station cache in the hull frame.
+
+    Midship fixes the keep side for endpoint sections. Every selection uses the
+    clipper's epsilon; close but distinct station floats are never coalesced.
+    """
+
+    def __init__(self, clipped: ClippedHull, midship: float, eps: float):
+        self.clipped, self.midship, self.eps = clipped, midship, eps
+        fx = clipped.vertices[:, 0][clipped.faces]
+        self.x_min, self.x_max = fx.min(axis=1), fx.max(axis=1)
+        self._cache = {}
+
+    def section(self, station: float):
+        station = float(station)
+        if station not in self._cache:
+            area, segments = _section(self.clipped, station, self.midship, self.eps,
+                                      bounds=(self.x_min, self.x_max))
+            self._cache[station] = area, _read_only(segments)
+        area, segments = self._cache[station]
+        return area, segments.view()
+
+
+def _section(clipped: ClippedHull, x_station: float, x_keep_side: float, eps: float,
+             *, bounds=None):
     """Submerged transverse section at hull-frame x.
 
     The body is clipped to the side of the station that contains ``x_keep_side`` (midship),
@@ -19,13 +44,16 @@ def _section(clipped: ClippedHull, x_station: float, x_keep_side: float, eps: fl
         normal, offset = np.array([-1.0, 0.0, 0.0]), -s  # keep x >= s
     else:
         normal, offset = np.array([1.0, 0.0, 0.0]), s  # keep x <= s
-    fx = clipped.vertices[clipped.faces][:, :, 0]
-    cand = (fx.min(axis=1) <= s + eps) & (fx.max(axis=1) >= s - eps)
+    if bounds is None:
+        fx = clipped.vertices[:, 0][clipped.faces]
+        bounds = fx.min(axis=1), fx.max(axis=1)
+    cand = (bounds[0] <= s + eps) & (bounds[1] >= s - eps)
     if not np.any(cand):
         return 0.0, np.zeros((0, 2, 3))
+    selected = clipped.faces[cand]
+    used, inverse = np.unique(selected, return_inverse=True)
     verts, _, _, boundary, b_art = _clip_keep_below(
-        clipped.vertices, clipped.faces[cand], clipped.artificial[cand], normal, offset, eps
-    )
+        clipped.vertices[used], inverse.reshape(-1, 3), clipped.artificial[cand], normal, offset, eps)
     if boundary.shape[0]:
         on = (np.abs(verts[boundary[:, 0], 0] - s) <= eps) & (np.abs(verts[boundary[:, 1], 0] - s) <= eps)
         boundary, b_art = boundary[on], b_art[on]

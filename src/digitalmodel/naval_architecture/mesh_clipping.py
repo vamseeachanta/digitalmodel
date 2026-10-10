@@ -37,6 +37,19 @@ def _clip_keep_below(
     drop = np.all(df >= 0.0, axis=1)
     mixed = ~keep_all & ~drop
 
+    verts, extra_faces, extra_art = _clip_mixed(verts, faces, artificial, normal, offset, d, mixed)
+    out_faces = [faces[keep_all]]
+    out_art = [artificial[keep_all]]
+    if extra_faces:
+        out_faces.append(np.asarray(extra_faces, dtype=np.int64))
+        out_art.append(np.asarray(extra_art, dtype=bool))
+    kept = np.vstack(out_faces)
+    art = np.concatenate(out_art)
+
+    return _boundary_edges(verts, kept, art)
+
+
+def _clip_mixed(verts, faces, artificial, normal, offset, d, mixed):
     new_pts: list = []
     cache: dict = {}
     n0 = verts.shape[0]
@@ -67,16 +80,12 @@ def _clip_keep_below(
             if len(set(t3)) == 3:
                 extra_faces.append(t3)
                 extra_art.append(bool(artificial[fi]))
-    out_faces = [faces[keep_all]]
-    out_art = [artificial[keep_all]]
-    if extra_faces:
-        out_faces.append(np.asarray(extra_faces, dtype=np.int64))
-        out_art.append(np.asarray(extra_art, dtype=bool))
     if new_pts:
         verts = np.vstack([verts, np.asarray(new_pts)])
-    kept = np.vstack(out_faces)
-    art = np.concatenate(out_art)
+    return verts, extra_faces, extra_art
 
+
+def _boundary_edges(verts, kept, art):
     if kept.shape[0] == 0:
         return verts, kept, art, np.zeros((0, 2), np.int64), np.zeros(0, bool)
     directed = kept[:, [0, 1, 1, 2, 2, 0]].reshape(-1, 2)
@@ -85,7 +94,6 @@ def _clip_keep_below(
     rev = directed[:, 1] * n + directed[:, 0]
     is_boundary = ~np.isin(rev, keys)
     return verts, kept, art, directed[is_boundary], np.repeat(art, 3)[is_boundary]
-
 
 
 def _cap_area_vector(vertices: np.ndarray, boundary: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -166,6 +174,26 @@ def _closure_check(verts: np.ndarray, faces: np.ndarray) -> None:
 
 
 
+def _check_physical_faces(vertices, faces, artificial):
+    """Computed-collapse guard for physical triangles after clipping/snapping.
+
+    Small resolved cut triangles remain valid; the source area floor does not
+    apply. This guard does not establish exact pre-rounding collinearity. Integration
+    never divides by physical area. Collinear artificial signed fans are exempt.
+    """
+    physical = faces[~artificial]
+    pts = vertices[physical]
+    edges = pts - np.roll(pts, 1, axis=1)
+    edge_squared = np.einsum("ijk,ijk->ij", edges, edges).max(axis=1)
+    area = np.linalg.norm(_face_area_vectors(vertices, physical), axis=1)
+    repeated = ((physical[:, 0] == physical[:, 1]) |
+                (physical[:, 1] == physical[:, 2]) | (physical[:, 2] == physical[:, 0]))
+    bad = repeated | ~np.isfinite(area) | (area <= np.finfo(float).eps * edge_squared)
+    if np.any(bad):
+        raise MeshContractError(
+            f"post-clip check failed: {int(bad.sum())} degenerate/non-finite physical faces")
+
+
 def clip_at_waterline(
     mesh: TriMesh,
     draft: float,
@@ -190,6 +218,7 @@ def clip_at_waterline(
         raise MeshContractError("dry hull: no part of the mesh lies below the waterline (keel)")
     if boundary.shape[0] == 0:
         raise MeshContractError("hull fully submerged: the waterline does not cut the mesh")
+    _check_physical_faces(verts, faces, art)
     c, _ = _cap_area_vector(verts, boundary)
     ci = verts.shape[0]
     verts = np.vstack([verts, c])

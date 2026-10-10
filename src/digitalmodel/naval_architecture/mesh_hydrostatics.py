@@ -63,7 +63,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Optional, Sequence
+import math
+from copy import deepcopy
+from dataclasses import dataclass, field
+from typing import Iterator, Mapping, Optional, Sequence
 
 import numpy as np
 
@@ -73,8 +76,18 @@ from .mesh_geometry import (MeshContractError, SCHEMA_VERSION, UNIT_SCALE, CANON
     _face_area_vectors, _tetra_moments, volume_tetra, volume_divergence)
 from .mesh_validation import TriMesh
 from .mesh_clipping import ClippedHull, clip_at_waterline, _condition_geometry
-from .mesh_sections import _section, _half_breadth
+from .mesh_sections import SectionIndex, _half_breadth
 from .mesh_results import Quantity, HydrostaticsResult, _CONVENTIONS, _check_station
+
+__all__ = [
+    "MeshContractError", "TriMesh", "ClippedHull", "Quantity", "HydrostaticsResult",
+    "SCHEMA_VERSION", "UNIT_SCALE", "CANONICAL_AXES", "box_mesh", "wigley_mesh",
+    "wigley_half_breadth", "wigley_wetted_area_reference", "volume_tetra",
+    "volume_divergence", "clip_at_waterline", "compute_hydrostatics",
+    # Retain the baseline wildcard namespace, including incidental imports.
+    "Iterator", "Mapping", "Optional", "Sequence", "annotations", "dataclass",
+    "deepcopy", "field", "hashlib", "json", "math", "np",
+]
 
 
 def compute_hydrostatics(
@@ -95,14 +108,23 @@ def compute_hydrostatics(
     (both then tagged ``computed``). Stations are hull-frame x in metres, end points included.
     """
     draft, trim, xm, xm_decl, lpp, lpp_decl, normal, ex, point = _condition_geometry(
-        mesh, draft, trim, x_midship, l_pp
-    )
+        mesh, draft, trim, x_midship, l_pp)
     lo, hi = mesh.bounds
-    diag = mesh.scale_diag
-    eps = _SNAP_REL * diag
-    tol = 1e-9 * diag
+    diag, eps = mesh.scale_diag, _SNAP_REL * mesh.scale_diag
     bulb = None if bulb_station is None else _check_station("bulb", bulb_station, lo, hi, eps)
     transom = None if transom_station is None else _check_station("transom", transom_station, lo, hi, eps)
+    grid_decl, gx, gz = _grid_inputs(grid_stations, grid_waterlines, lo, hi, eps)
+    h = _input_hash(mesh, draft, trim, x_midship, l_pp, bulb, transom, grid_decl, gx, gz)
+    clipped = clip_at_waterline(mesh, draft, trim, x_midship=x_midship, l_pp=l_pp)
+    metrics = _hydro_integrals(clipped, xm, diag, eps, normal, ex, point)
+    index = SectionIndex(clipped, xm, eps)
+    a_m, _ = index.section(xm)
+    q = _base_quantities(draft, trim, xm, xm_decl, lpp, lpp_decl, *metrics, a_m, diag, h)
+    _feature_quantities(q, index, bulb, transom, grid_decl, gx, gz, 1e-9 * diag, h)
+    return HydrostaticsResult(q, h, dict(_CONVENTIONS))
+
+
+def _grid_inputs(grid_stations, grid_waterlines, lo, hi, eps):
     grid_decl = grid_stations is not None and grid_waterlines is not None
     if grid_decl:
         gx = np.asarray(grid_stations, dtype=float).ravel()
@@ -113,6 +135,10 @@ def compute_hydrostatics(
         if np.any(gz < 0):
             raise MeshContractError("grid waterlines are heights above baseline and must be >= 0")
 
+    return grid_decl, (gx if grid_decl else None), (gz if grid_decl else None)
+
+
+def _input_hash(mesh, draft, trim, x_midship, l_pp, bulb, transom, grid_decl, gx, gz):
     payload = json.dumps(
         {
             "mesh": mesh.source_digest, "draft": repr(draft), "trim": repr(trim),
@@ -125,9 +151,11 @@ def compute_hydrostatics(
         },
         sort_keys=True,
     )
-    h = hashlib.sha256(payload.encode()).hexdigest()
+    return hashlib.sha256(payload.encode()).hexdigest()
 
-    clipped = clip_at_waterline(mesh, draft, trim, x_midship=x_midship, l_pp=l_pp)
+
+
+def _hydro_integrals(clipped, xm, diag, eps, normal, ex, point):
     wl = clipped.waterline_points
     if not (wl[:, 0].min() - eps <= xm <= wl[:, 0].max() + eps):
         raise MeshContractError(
@@ -152,7 +180,11 @@ def compute_hydrostatics(
         )
     lcb_m = float((centroid - point) @ ex)
 
-    a_m, _ = _section(clipped, xm, xm, eps)
+    return vol, s_wet, a_wp, l_wl, b_wl, lcb_m
+
+
+def _base_quantities(draft, trim, xm, xm_decl, lpp, lpp_decl,
+                     vol, s_wet, a_wp, l_wl, b_wl, lcb_m, a_m, diag, h):
     c_b = vol / (l_wl * b_wl * draft)
     c_wp = a_wp / (l_wl * b_wl)
 
@@ -188,17 +220,21 @@ def compute_hydrostatics(
     else:
         q["C_M"] = comp(a_m / (b_wl * draft), "-")
         q["C_P"] = comp(vol / (a_m * l_wl), "-")
+    return q
+
+
+def _feature_quantities(q, index, bulb, transom, grid_decl, gx, gz, tol, h):
     for key, station in (("A_BT", bulb), ("A_T", transom)):
         if station is None:
             q[key] = Quantity(None, "m^2", "not_computed", h,
                               f"no {('bulb' if key == 'A_BT' else 'transom')} station declared; "
                               "the adapter does not infer feature stations")
         else:
-            q[key] = comp(_section(clipped, station, xm, eps)[0], "m^2")
+            q[key] = Quantity(float(index.section(station)[0]), "m^2", "computed", h)
     if grid_decl:
         grid = np.zeros((gx.size, gz.size))
         for i, x in enumerate(gx):
-            _, segs = _section(clipped, x, xm, eps)
+            _, segs = index.section(x)
             for j, z in enumerate(gz):
                 grid[i, j] = _half_breadth(segs, float(z), tol)
         q["half_breadth"] = Quantity(grid.tolist(), "m", "computed", h,
@@ -206,5 +242,3 @@ def compute_hydrostatics(
     else:
         q["half_breadth"] = Quantity(None, "m", "not_computed", h,
                                      "no grid stations/waterlines declared")
-    return HydrostaticsResult(q, h, dict(_CONVENTIONS))
-

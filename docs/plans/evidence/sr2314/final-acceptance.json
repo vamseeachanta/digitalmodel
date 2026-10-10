@@ -1,0 +1,258 @@
+{
+  "schema": "sr2314-final-acceptance/1",
+  "timestamp_utc": "2026-10-10T04:37:56.755973+00:00",
+  "base_revision": "4f7bfc0cb4d9f62d7485fe5b03fb00550b2320eb",
+  "digest_domain": "raw-bytes",
+  "final_packet_sha256": "d9c8d8425a3b823e12f3c592c47d45a65edb0f3c45871eaa01f8536ee196c047",
+  "final_packet_bytes": 318357,
+  "files": [
+    {
+      "path": "docs/plans/2026-10-10-sr2314-r02.html",
+      "sha256": "99f59d1c329085624d3b142af91c54188a7986dab059fe6b98dc7be1d9bb864d",
+      "bytes": 7446
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/claude-artifact-r1.md",
+      "sha256": "7de58de80449b728f6b05a65cf880b8a81e1a10ef52cadcf5f7d8c7e16b23462",
+      "bytes": 10542
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/claude-artifact-r2.md",
+      "sha256": "42f1262a51715296f3d2f04d0749def8fc17ef778fd2d6158ff1b5fe14229006",
+      "bytes": 8538
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/claude-plan-r1.md",
+      "sha256": "e4362e8b313599f468dcff5c23a32584e4022ba80e1bec702f309b9ec8e71d02",
+      "bytes": 6868
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/claude-plan-r2.md",
+      "sha256": "56ef0da94e2e806db89b1964cb31947a8647f41eedf0754a9aa53cd47513324a",
+      "bytes": 8240
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/focused-environment-matrix.json",
+      "sha256": "31f53fdd89148961259301b93965ae88801a534bf3274d3e26b9ac5556cc8b95",
+      "bytes": 3902
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/generator-isolation.json",
+      "sha256": "48b691ba9093afc457186897d68b45b5e5c5a751dc80eef8c6ab0e8d8a72a4a1",
+      "bytes": 3418
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/holtrop-reproduction.html",
+      "sha256": "50ea8962d608ba3492b586dca8ac4f2b38ebc9530613aabfe238e2ff47c885e3",
+      "bytes": 16601
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/holtrop-reproduction.json",
+      "sha256": "2796090c7ba578b8163cebe28d462397e9ea347bc39036fceb25c06c4ca5bb10",
+      "bytes": 7646
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/mesh-benchmark-baseline.json",
+      "sha256": "fe80d4e5d7abab9d7060b44a09f83e1a50b25ebb7733105b98fbb69463510526",
+      "bytes": 8941
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/mesh-benchmark-comparison.json",
+      "sha256": "f696dd6d3ac2f9ca7440d6f477760795e10930346699f89ddb548fcc80d831d8",
+      "bytes": 682
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/mesh-benchmark-current.json",
+      "sha256": "909bf77ecdb537a6bf267cd5ba736117979d510daf2bf3815545bd3bf178f5a2",
+      "bytes": 9501
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/mesh-performance.html",
+      "sha256": "24c50bd817f8ea699e1cdcb8b0adf6f0cf227987b37b6ad73cfc865336197e4a",
+      "bytes": 10681
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/review-disposition.md",
+      "sha256": "6df5a87028cb1711044894ada55aa8d04b8c66be7b88215b92f839f83194ffd0",
+      "bytes": 11465
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/validation.html",
+      "sha256": "b07073e69e62adfd518807fa10d011df6aa80a9c21f3b37982a0dd05f6d31a22",
+      "bytes": 5577
+    },
+    {
+      "path": "scripts/validation/benchmark_mesh_hydrostatics.py",
+      "sha256": "ecf599b49217a40432c991af9a2b51e28fbdfca1220904735754c520b8ee51b8",
+      "bytes": 9587
+    },
+    {
+      "path": "scripts/validation/generate_mesh_legacy_pickles.py",
+      "sha256": "0bc312fab4ad34784218d4b425cb5d7f5155e67036e88b1fcb9615acc9871960",
+      "bytes": 3233
+    },
+    {
+      "path": "scripts/validation/reproduce_holtrop_discrepancy.py",
+      "sha256": "0ece827199be01315b246946053b08cd31279c21319a0658870d338bfa7d551b",
+      "bytes": 3985
+    },
+    {
+      "path": "src/digitalmodel/citations/registry.py",
+      "sha256": "499c95fd0c5930d60a3ea2719cc12bbd9bb1ad2f2ced8dc2f500b12c4e5f5834",
+      "bytes": 7477
+    },
+    {
+      "path": "src/digitalmodel/citations/resolver.py",
+      "sha256": "44404be9de7cbaf97466197d39dda34a5494d85473a36b6db957bb0d5e3eaffb",
+      "bytes": 12123
+    },
+    {
+      "path": "src/digitalmodel/citations/schema.py",
+      "sha256": "5cb1da984b9e993579f4a2d1e77a053330461628f4953f90fe31d3c395e48e70",
+      "bytes": 7113
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/friction_scaling.py",
+      "sha256": "76198ebd0e224800ad46eff1615e55a5603809a06aa77e9d8e70fa7696b93475",
+      "bytes": 13154
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_fixtures.py",
+      "sha256": "d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044",
+      "bytes": 6535
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_clipping.py",
+      "sha256": "a176d01ecd176184558ebed3364e03d8301f0c74ca1c48df0b768dacc3078902",
+      "bytes": 9358
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_geometry.py",
+      "sha256": "3a7f0676a8749723d8b99a1c864fee87d650eff45808460f49431270c2365783",
+      "bytes": 3606
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_hydrostatics.py",
+      "sha256": "e99c234625c87a57eca43bce42e0948c7108201668d6908d78f786a7137bb44b",
+      "bytes": 12453
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_results.py",
+      "sha256": "758311c7d3f5f5a653a6f18b93298ea8cbf4b87d3b25152cbd16eec019e125c6",
+      "bytes": 3728
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_sections.py",
+      "sha256": "9fa9e20563e06c1398a7bdd8f3e56198feadeaaf18bdcd959bb5a42303d47893",
+      "bytes": 3363
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_topology.py",
+      "sha256": "d54bf4712ada0dc6ebdc339f700b898c130b1e28ef8cef02addb092bec96dc08",
+      "bytes": 4092
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_validation.py",
+      "sha256": "885d88f96be708fe94b290ae703917ed03d4c5502e823da0f4a6b7be13e61e6b",
+      "bytes": 4507
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/prohaska.py",
+      "sha256": "81f18905fca58ef612f581069d039d084c1ecd8266bac7ee46e9e1c9d10a9d09",
+      "bytes": 3680
+    },
+    {
+      "path": "tests/citations/fixtures/knowledge/wikis/marine-engineering/wiki/standards/ittc-1978-performance-prediction.md",
+      "sha256": "a73d8661d6424d4bd157d3f07305bb628f1a59535a02131765eb6f3540757393",
+      "bytes": 307
+    },
+    {
+      "path": "tests/fixtures/test_vectors/naval_architecture/holtrop_mennen.yaml",
+      "sha256": "c9bc0d6b30d8db1efbeff8bd147a689901afae5b5aad3009a4521d2f4e1f1b6e",
+      "bytes": 1762
+    },
+    {
+      "path": "tests/fixtures/test_vectors/naval_architecture/mesh_legacy_pickles.json",
+      "sha256": "32c56eadd96486a65dd48cfce8ab66fc501b8a9e851f7a46a23212996ea3e197",
+      "bytes": 5885
+    },
+    {
+      "path": "tests/naval_architecture/test_friction_scaling.py",
+      "sha256": "2e8ecb6f21da54d81faeaddc544879d9459b5978d12732b506dd3988d836d7a1",
+      "bytes": 11398
+    },
+    {
+      "path": "tests/naval_architecture/test_holtrop_reproduction.py",
+      "sha256": "7292d03361d4c656c3dcc768c63807002eeab22d554a55abebe7a6f2a1b035a1",
+      "bytes": 2036
+    },
+    {
+      "path": "tests/naval_architecture/test_mesh_benchmark.py",
+      "sha256": "189b7e7fe074113067efc9fde00288c51c0fa5fe0dc7ab1a9c470ce38b5a3248",
+      "bytes": 4892
+    },
+    {
+      "path": "tests/naval_architecture/test_mesh_pickle_generator.py",
+      "sha256": "91042621cc054bb7160df9bafb1c918bd7b811ff13f741bd5ac81216b681dc00",
+      "bytes": 3788
+    },
+    {
+      "path": "tests/naval_architecture/test_mesh_r02.py",
+      "sha256": "ee810eb38a2d63a04be7e41ca220d5d79ae1113355fce0c8dada9cfc8204600e",
+      "bytes": 9816
+    },
+    {
+      "path": "tests/naval_architecture/test_transfer_citation_regressions.py",
+      "sha256": "119ba392c4ab12b8ff7e60a31a9f63529e614b7cb67e98443454b37180006f2f",
+      "bytes": 6064
+    }
+  ],
+  "review": {
+    "claude_artifact_r2": {
+      "packet_sha256": "a25e0378797f6402454ec44f0da8b9685c221596a265eb6083ecfe32d899ed5a",
+      "files": 34,
+      "integrity_before_action": "unchanged / packet match",
+      "verdict": "CHANGES-REQUIRED",
+      "verdict_artifact": "claude-artifact-r2.md"
+    },
+    "codex_inline_r3": {
+      "verdict": "accept bounded correction for draft review",
+      "basis": "actual mixed cuts, identical all-result digests, disposable generator preservation, dual-environment tests, compatibility regression and source digest readback",
+      "limitation": "No Claude APPROVE, provider consensus or owner merge approval is inferred"
+    },
+    "gemini": "UNAVAILABLE: freshly reproduced OAuth invalid_grant (authentication layer)"
+  },
+  "verification": {
+    "full_naval": {
+      "passed": 977,
+      "skipped": 5,
+      "xfailed": 1,
+      "seconds": 56.53,
+      "numpy": "2.3.5"
+    },
+    "focused": {
+      "passed": 224,
+      "seconds": 9.01,
+      "numpy": "2.4.4"
+    },
+    "benchmark_comparison": "qualified=true, full outputs identical, one synthetic case",
+    "ruff": "passed",
+    "diff_check": "passed"
+  },
+  "disclosure": {
+    "destination": "public vamseeachanta/digitalmodel draft PR",
+    "verdict": "verified for digest-listed outgoing public/analytic bundle",
+    "basis": "manual source/diff/data-origin review and independent credential-pattern scan: zero matches; metadata-only standards references; no licensed document, client data or physical hostname included",
+    "reviewer": "Codex"
+  },
+  "cleanup": {
+    "CLEAN": "No stashes, task-local partial/tmp markers or session handoff residue; no merge performed",
+    "EXPECTED": [
+      "Dedicated job worktree retained while draft PR awaits review",
+      "Task scratch sr2314-review and sr2314-uv-cache retained for verification/review reproduction",
+      "Three unrelated pre-existing DS_Store files in canonical checkout untouched"
+    ],
+    "UNEXPECTED": []
+  },
+  "owner_dependency": "Production ITTC wiki target page_missing; provision before citation-enabled merge/deployment. Issue 2239 wider scope remains open."
+}

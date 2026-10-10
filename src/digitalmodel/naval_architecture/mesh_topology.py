@@ -57,6 +57,14 @@ def _check_topology(canon: np.ndarray, faces: np.ndarray, diag: float) -> None:
             f"vertex), first at index {int(bad[0])}"
         )
 
+    _check_components(canon, faces, diag, face_e, face_t)
+
+
+def _check_components(canon, faces, diag, face_e, face_t):
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+
+    m = faces.shape[0]
     fgraph = coo_matrix((np.ones(3 * m), (face_e, face_t)), shape=(m, m))
     ncomp, flabels = connected_components(fgraph, directed=False)
     av = _face_area_vectors(canon, faces)
