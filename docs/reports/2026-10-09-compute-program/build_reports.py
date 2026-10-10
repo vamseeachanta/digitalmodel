@@ -109,6 +109,7 @@ def load(rel):
 
 cyl, flat, tflat = load("cylinder_re100/*/results.json"), load("flat_plate_blasius/*/results.json"), load("turbulent_flat_plate/*/results.json")
 dam, naca, wave = load("dam_break/*/results.json"), load("naca0012_polar/*/results.json"), load("wave_tank/*/results.json")
+fb = load("floating_body_decay/*/results.json")
 
 rows = []
 if cyl:
@@ -122,12 +123,18 @@ if naca:
     rows += [["NACA 0012 polar", "Lift-curve slope, per degree", "0.106 (experiment)", "0.1037", f"{naca['slope_per_deg']:.4f}", f"{naca['slope_err_vs_exp_pct']:+.1f} % against experiment; {naca['slope_err_vs_theory_pct']:+.1f} % against thin-airfoil theory"]]
 if dam:
     rows += [["Dam break", "Surge front against Martin and Moyce, mean deviation", "experiment, with gate-release shift", "3.0 %", f"{dam['front_dev_mean_gate_corrected']*100:.1f} %", f"max {dam['front_dev_max_gate_corrected']*100:.1f} %; mass drift {dam['mass_drift_rel']:.1e}"]]
+if fb:
+    rows += [["Floating-body heave decay", "Equilibrium draft against Archimedes", f"{fb['draft_theory']:.4f} m", "+1.1 %", f"{fb['draft_err']*100:+.1f} %",
+              f"{fb['n_cycles']} decay cycles; heave period {fb['T_measured']:.3f} s, {fb['T_ratio']:.2f} x the hydrostatic period (published 1.18)"]]
 if wave:
-    rows += [["Wave tank", "see page figures", "linear dispersion", "+0.2 %", "re-run complete", json.dumps({k: v for k, v in wave.items() if not isinstance(v, (list, dict))})[:160]]]
+    rows += [["Wave tank", "Wavenumber against linear dispersion", "omega^2 = g k tanh(k d)", "+0.2 %", f"{wave['k_err']*100:+.1f} %", "reproduces"],
+             ["", "Wave height in the established region, max error", "input wave height", "4.7 %", f"{wave['H_err_established_max']*100:.1f} %", "same side of the 5 % gate"],
+             ["", "Height decay along the tank", "none expected", "4.6 %", f"{wave['H_decay_8_to_18']*100:.1f} %", "<b>differs</b>: the re-run sits on the 5 % gate, the published value inside it"],
+             ["", "Reflection coefficient", "0 for a perfect beach", "0.010", f"{wave['reflection_Kr']:.3f}", "both far below the 0.10 gate"]]
 else:
-    rows += [["Wave tank", "Wavenumber against linear dispersion", "omega^2 = g k tanh(k d)", "+0.2 %", "still running", "not included in the count"]]
+    rows += [["Wave tank", "Wavenumber against linear dispersion", "omega^2 = g k tanh(k d)", "+0.2 %", "not run", ""]]
 
-done = sum(x is not None for x in (cyl, flat, tflat, dam, naca, wave))
+done = sum(x is not None for x in (cyl, flat, tflat, dam, naca, wave, fb))
 figs = ""
 for rel, cap in [("cylinder_re100/cyl_results/force_history.png", "Cylinder at Re = 100: drag and lift coefficient history from the re-run. The averaging window is t = 120 to 160."),
                  ("flat_plate_blasius/validation_results/cf_vs_rex.png", "Laminar flat plate: skin friction from the re-run against the Blasius solution."),
@@ -139,8 +146,8 @@ for rel, cap in [("cylinder_re100/cyl_results/force_history.png", "Cylinder at R
 
 body = f"""
 <div class='tiles'>
-<div class='tile'><b>{done} of 6</b><span>cases re-run to completion</span></div>
-<div class='tile'><b>{done} of {done}</b><span>completed cases reproduce the published figure to the digits shown</span></div>
+<div class='tile'><b>{done} of 7</b><span>cases re-run to completion</span></div>
+<div class='tile'><b>{done - (1 if wave else 0)} of {done}</b><span>reproduce the published figures to the digits shown; the wave tank differs on one of its four measures</span></div>
 <div class='tile'><b>v2312</b><span>OpenFOAM (ESI), unmodified</span></div>
 </div>
 <p>Each case below has a known answer from theory or a published experiment. The case files
@@ -150,7 +157,7 @@ with the commands in each case's README. The table sets the fresh result beside 
 the repository already publishes and beside the reference it is measured against.</p>
 <div class='card'>{table(['Case', 'Quantity', 'Reference', 'Published', 'This re-run', 'Note'], rows)}</div>
 <div class='note'>What this shows: the published figures can be regenerated from the committed
-case files on a second machine. What it does not show: accuracy on any hull or structure other
+case files on a second machine. The wave tank is the exception: wavenumber reproduces, but height decay along the tank came out at 5.0 % against a published 4.6 %, which moves it from just inside to just on its own 5 % acceptance gate. The cause has not been investigated. What none of this shows: accuracy on any hull or structure other
 than these textbook geometries. The turbulent flat plate sits 9 to 10 % from the correlation,
 which is the stated spread of the correlation itself, not a tuned match.</div>
 <h2>Figures from the re-run</h2>{figs}
@@ -160,7 +167,7 @@ README has a "Reproduce" block. All six are serial runs; the longest (wave tank)
 half an hour on a 2015-era Xeon core, the shortest about three minutes.</p>
 """
 page("openfoam-known-answer-rerun.html", "OpenFOAM known-answer cases: independent re-run",
-     "Six textbook CFD cases re-executed from the committed files on a second machine.", body)
+     "Seven textbook CFD cases re-executed from the committed files on a second machine.", body)
 
 # ------------------------------------------------ 2. barge, Capytaine leg
 
