@@ -9,6 +9,7 @@ __version__ = "0.1.0"
 from .profile_schema import HullType, HullStation, HullProfile
 from .mesh_generator import MeshGeneratorConfig, HullMeshGenerator
 from .coarsen_mesh import coarsen_mesh
+from .mesh_cutouts import MoonpoolFootprint, MeshCutoutResult, cut_moonpool
 from .schematic_generator import SchematicGenerator
 from .catalog import (
     SeaStateDefinition,
@@ -82,6 +83,9 @@ __all__ = [
     "MeshGeneratorConfig",
     "HullMeshGenerator",
     "coarsen_mesh",
+    "MoonpoolFootprint",
+    "MeshCutoutResult",
+    "cut_moonpool",
     # Schematics
     "SchematicGenerator",
     # Catalog
