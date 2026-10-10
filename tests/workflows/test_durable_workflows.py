@@ -1625,7 +1625,13 @@ def test_workflow_registry(workflow, monkeypatch):
         assert res["a_d_ratio"] == pytest.approx(0.9789, abs=1e-3)
         assert res["fatigue_proxy"] > 0.0
     else:
-        raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
+        if workflow["id"] == "riser-joint-ffs":
+            result = cfg["riser_joint_ffs"]
+            assert len(result["scans"]) == len(result["placements"]) == 4
+            assert result["rollup"]["n_joints"] == 26
+            assert len(result["provenance"]["sources"]) == 6
+        else:
+            raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
 
 
 def test_wellpath_minimum_curvature_textbook_case(tmp_path):
@@ -2268,3 +2274,48 @@ def test_esp_pump_hydraulics_tdh_and_sizing_closed_form():
     assert r.stages_required == math.ceil(expected_tdh / 6.0)
     assert r.brake_power_hp == pytest.approx(r.stages_required * 0.5 * 0.85, rel=1e-12)
     assert r.screening_status == "fail"  # 405 stages > 400 housing
+
+
+@pytest.fixture(scope="module")
+def riser_joint_report_run(tmp_path_factory):
+    workflow = next(w for w in _load_registry() if w["id"] == "riser-joint-ffs")
+    input_path = REPO_ROOT / workflow["input"]
+    cfg = yaml.safe_load(input_path.read_text())
+    # Keep outputs isolated; fixture paths resolve from the committed input directory.
+    cfg["riser_joint_ffs"]["report"]["register_csv"] = str(
+        (input_path.parent / cfg["riser_joint_ffs"]["report"]["register_csv"]).resolve())
+    cfg["riser_joint_ffs"]["report"]["provenance_readme"] = str(
+        (input_path.parent / cfg["riser_joint_ffs"]["report"]["provenance_readme"]).resolve())
+    for scan in cfg["riser_joint_ffs"]["report"]["scans"]:
+        scan["grid_csv"] = str((input_path.parent / scan["grid_csv"]).resolve())
+    return engine(cfg=cfg, embed=True, root_folder=str(tmp_path_factory.mktemp("riser-ffs")),
+                  log_to_file=False)["riser_joint_ffs"]
+
+
+@pytest.mark.parametrize("grid_name,min_mm,depth_ft,verdict", [
+    ("ut_grid_RJ-101-boxend_ds8.csv", 15.024, 2133.7, "REPAIR"),
+    ("ut_grid_RJ-101-boxend_worstzone_fullres.csv", 15.024, 2133.7, "REPAIR"),
+    ("ut_grid_RJ-102-boxend_ds8.csv", 15.348, 2265.4, "REPAIR"),
+    ("ut_grid_RJ-103-pinend_ds8.csv", 16.549, 2791.3, "RESTRICTED"),
+])
+def test_riser_joint_ffs_grid(riser_joint_report_run, grid_name, min_mm, depth_ft, verdict):
+    import hashlib
+
+    result = riser_joint_report_run
+    scan = next(s for s in result["scans"] if s["scan"] == grid_name)
+    assert scan["measured_min_wt_in"] == pytest.approx(min_mm / 25.4, abs=1e-12)
+    placement = next(p for p in result["placements"] if p["scan"] == grid_name)
+    assert placement["acceptable_depth_ft"] == pytest.approx(depth_ft, abs=0.05)
+    assert placement["verdict"] == verdict
+    assert len(result["joint_governing"]) == 3
+    assert set(scan["envelopes"]) == {"b31g", "modified_b31g", "dnv_f101", "bs7910_option1_fad"}
+    for envelope in scan["envelopes"].values():
+        assert len(envelope["start"]["depth_in"]) == 17
+        assert all(e <= s for e, s in zip(envelope["campaign_end"]["max_acceptable_length_in"],
+                                         envelope["start"]["max_acceptable_length_in"]))
+    assert len(result["placements"]) == 4
+    assert result["rollup"]["n_joints"] == 26
+    assert all(c["fit_joints"] + c["repair_joints"] == 26 for c in result["rollup"]["campaigns"])
+    source = next(s for s in result["provenance"]["sources"] if s["path"].endswith(grid_name))
+    assert source["sha256"] == hashlib.sha256((REPO_ROOT / source["path"]).read_bytes()).hexdigest()
+    assert source["sha256"] in Path(result["report_html"]).read_text()

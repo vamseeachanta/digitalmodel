@@ -98,7 +98,7 @@ engines:
   rbi: {module: asset_integrity.rbi_screening, status: engine, issue: 2185}
   composite-repair: {module: asset_integrity.composite_repair, status: engine, issue: 2185}
   inspection-planning: {module: asset_integrity.inspection_planning, status: workflow, workflow: inspection-planning, issue: 2180, note: "no validation record"}
-  riser-joint-ffs: {module: asset_integrity.riser_joint_ffs, status: engine, issue: 2183, note: "real anonymized C-scan fixtures (#1293)"}
+  riser-joint-ffs: {module: asset_integrity.riser_joint_ffs, status: workflow, workflow: riser-joint-ffs, validation: docs/domains/asset-integrity/riser-joint-ffs-validation-2026-10-10.md, issue: 2183, note: "anonymized C-scan composition record; independent fleet qualification not established"}
   plate-panel-buckling: {module: infrastructure.base_solvers.structural.plate_buckling, status: workflow, workflow: plate-buckling, note: "DNV-RP-C201 usage-factor check; plate metal-loss FFS reuses it by reducing thickness"}
   jacket-member-joint: {module: structural.jacket_topside, status: engine, note: "API RP 2A design checks; no damaged-member capacity"}
   mooring-screen: {module: mooring_resilience.screening, status: engine, note: "DNV-OS-E301 factors; GREEN/AMBER/RED vocabulary; no chain degradation"}
@@ -235,7 +235,7 @@ industries:
           - {mechanism: "fatigue (wave, VIV)", codes: [dnv-st-f201, dnv-rp-c203], engines: [riser-fatigue], tiers: [T2], status: workflow}
       - asset: drilling / completion riser joints and wellhead fatigue
         defects:
-          - {mechanism: metal loss / weld flaws / collapse-limited depth, codes: [asme-b31g, dnv-rp-f101, bs-7910], engines: [riser-joint-ffs], tiers: [T1, T2], status: engine, note: "real C-scan fixtures; workflow #2183"}
+          - {mechanism: metal loss / weld flaws / collapse-limited depth, codes: [asme-b31g, dnv-rp-f101, bs-7910], engines: [riser-joint-ffs], tiers: [T1, T2], status: workflow, note: "real C-scan fixtures; bounded composition validation"}
           - {mechanism: wellhead / conductor fatigue from riser loads, codes: [api-rp-17g, dnv-rp-c203], engines: [], tiers: [T2], status: none}
       - asset: unbonded flexible pipe
         defects:

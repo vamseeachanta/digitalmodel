@@ -1,0 +1,41 @@
+basename: riser_joint_ffs
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+riser_joint_ffs:
+  mode: report
+  report:
+    provenance:
+      inspection_epoch: 2017 baseline
+      anonymized: true
+      anonymization_statement: >-
+        Existing anonymized 2017 inspection excerpts are referenced in place.
+        Identifiers and serials were replaced with synthetic RJ IDs; measurements
+        were rounded to 0.001 mm and grids downsampled as described in the hashed README.
+        Private originals remain private and are not copied here.
+    od_in: 21.25
+    wt_in: 0.875
+    grade: X80
+    design_pressure_psi: 500.0
+    campaign_water_depth_ft: 5000.0
+    campaign_years: 3.0
+    differential_head_fraction: 1.0
+    n_campaigns: 4
+    min_high_fatigue_joints: 12
+    register_csv: ../../../tests/asset_integrity/test_data/real_inspection/gml_results_register.csv
+    provenance_readme: ../../../tests/asset_integrity/test_data/real_inspection/README.md
+    scans:
+      - joint_id: RJ-101
+        scan_location: Box End
+        grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_RJ-101-boxend_ds8.csv
+      - joint_id: RJ-101
+        scan_location: Box End
+        grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_RJ-101-boxend_worstzone_fullres.csv
+      - joint_id: RJ-102
+        scan_location: Box End
+        grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_RJ-102-boxend_ds8.csv
+      - joint_id: RJ-103
+        scan_location: Pin End
+        grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_RJ-103-pinend_ds8.csv
