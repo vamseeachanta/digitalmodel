@@ -85,9 +85,9 @@ codes:
 engines:
   ffs-metal-loss: {module: asset_integrity.assessment.ffs_coordinator, status: live, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, note: "canonical L1/L2 GML/LML coordinator"}
   api579-legacy: {module: asset_integrity.API579, status: workflow, workflow: api579-pipe-ffs-b314, note: "no validation record; superseded by ffs-metal-loss (#1075), kept as a regression reference"}
-  corroded-pipe: {module: asset_integrity.corroded_pipe, status: validated, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
-  rstreng-2d: {module: asset_integrity.rstreng_2d, status: validated, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
-  dnv-f101: {module: asset_integrity.dnv_rp_f101, status: validated, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181, caveat: "interacting-defect method and PSF tables per #1094"}
+  corroded-pipe: {module: asset_integrity.corroded_pipe, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181, note: "workflow covers original/Modified B31G and effective-area pressure methods only"}
+  rstreng-2d: {module: asset_integrity.rstreng_2d, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181, note: "workflow covers MAX projection only; area-weighted mode is a sensitivity calculation"}
+  dnv-f101: {module: asset_integrity.dnv_rp_f101, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181, caveat: "workflow covers single-defect allowable-stress only; interacting-defect method and PSF tables per #1094"}
   circumferential: {module: asset_integrity.circumferential_defect, status: validated, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181}
   pitting: {module: asset_integrity.assessment.pitting, status: engine, issue: 2182, caveat: "Part 6 charts not transcribed; equivalent-LTA bound"}
   dents: {module: asset_integrity.dent_assessment, status: engine, issue: 2182}

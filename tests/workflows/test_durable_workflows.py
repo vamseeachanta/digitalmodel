@@ -1624,6 +1624,13 @@ def test_workflow_registry(workflow, monkeypatch):
         assert res["critical_mode"] == 2
         assert res["a_d_ratio"] == pytest.approx(0.9789, abs=1e-3)
         assert res["fatigue_proxy"] > 0.0
+    elif workflow["id"] == "pipeline-corroded-defect-screen":
+        result = cfg["pipeline_defect_screen"]
+        assert len(result["methods"]) == 6
+        assert all("applicability" in row for row in result["methods"])
+        report = (Path(cfg["Analysis"]["result_folder"]) / result["report_file"]).read_text(encoding="utf-8")
+        assert "Method comparison" in report
+        assert all(path in report for path in result["validation_records"])
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
 
