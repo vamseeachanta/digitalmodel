@@ -441,3 +441,7 @@ docs/reports/abstracted-hulls/*
 !docs/reports/abstracted-hulls/plan.html
 !docs/reports/abstracted-hulls/schema.md
 !docs/reports/abstracted-hulls/provenance.html
+
+# Compute program first results (workspace-hub#4034): generic cases only, no project data.
+!docs/reports/2026-10-09-compute-program/
+!docs/reports/2026-10-09-compute-program/**
