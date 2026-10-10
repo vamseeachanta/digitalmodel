@@ -17,7 +17,10 @@ belong to B31G / Modified B31G / DNV-RP-F101, respectively.
 
 Lengths are inches; stresses and pressures are psi. Grid rows correspond to
 strictly increasing axial positions, columns to circumferential UT readings.
-Loss is nominal wall minus measured remaining thickness. The caller supplies
+Loss is nominal wall minus measured remaining thickness.
+Above-nominal readings are rejected; mill-tolerance correction remains outside
+this screen and this limitation is disclosed in the report.
+The caller supplies
 one single-defect assessment window and its total affected circumferential arc
 width. The whole axial window, including any intact points, defines the
 maximum-depth defect bound. Colony interaction is not inferred.
@@ -27,6 +30,14 @@ The four B31G-family pressure allowables divide failure pressure by the explicit
 explicit `usage_factor`. The circumferential row is a separate axial membrane
 stress screen using SMYS as flow stress multiplied by the explicit caller
 `axial_design_factor` in (0, 1]. It is not a burst-pressure calculation.
+The total DNV screening factor is applied once, with no separate modelling or
+Part-A PSF factors. The example 0.72 follows the existing engine's B31.8
+screening basis. Code-compliant DNV safety-factor selection is not established;
+row 8 of the consolidated validation record validates capacity only.
+Loss at either axial boundary requires a strictly boolean `length_confirmed: true`
+to establish the supplied full defect length; otherwise every method is flagged
+and the verdict is ESCALATE. The synthetic reference example explicitly confirms
+its defined 8 in length; no measured inspection-length evidence is implied.
 The minimum allowable-to-demand ratio governs current-demand screening. A ratio
 at or above 1 yields ACCEPT; a lower nonnegative ratio yields DERATE (reduce
 every exceeded pressure/stress demand to its reported limit). No RSF severity

@@ -10,7 +10,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from digitalmodel.asset_integrity.applicability import collect
+from digitalmodel.asset_integrity.applicability import collect, flagged, merge
+from digitalmodel.asset_integrity.pipeline_defect_screen_inputs import validate
 from digitalmodel.asset_integrity.corroded_pipe import (
     b31g_original,
     modified_b31g,
@@ -31,69 +32,6 @@ VALIDATION_RECORDS = (
     "docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md",
 )
 RECORD_BASE = "https://github.com/vamseeachanta/digitalmodel/blob/main/"
-
-
-def _positive_value(inputs, key):
-    value = inputs.get(key)
-    if not isinstance(value, (int, float)) or isinstance(value, bool):
-        raise ValueError(f"{key} must be a number")
-    if not np.isfinite(value) or value <= 0:
-        raise ValueError(f"{key} must be finite and positive")
-
-
-def _measurement_array(inputs, key):
-    if key not in inputs:
-        raise ValueError(f"Missing measurement field: {key}")
-    array = np.asarray(inputs[key])
-    if not np.issubdtype(array.dtype, np.number):
-        raise ValueError(f"{key} requires numerical measurements")
-    return array.astype(float)
-
-
-def _validate(inputs):
-    keys = (
-        "nominal_od_in",
-        "nominal_wt_in",
-        "smys_psi",
-        "smts_psi",
-        "design_pressure_psi",
-        "axial_stress_psi",
-        "circumferential_width_in",
-        "safety_factor",
-        "usage_factor",
-        "axial_design_factor",
-    )
-    for key in keys:
-        _positive_value(inputs, key)
-    if not isinstance(inputs.get("component_id"), str) or not inputs["component_id"]:
-        raise ValueError("component_id must be a nonempty string")
-    if (
-        inputs["safety_factor"] < 1
-        or inputs["usage_factor"] > 1
-        or inputs["axial_design_factor"] > 1
-    ):
-        raise ValueError("safety_factor >= 1 and design factors <= 1 required")
-    t, diameter = inputs["nominal_wt_in"], inputs["nominal_od_in"]
-    if t >= diameter / 2 or inputs["smts_psi"] < inputs["smys_psi"]:
-        raise ValueError("Invalid pipe geometry or tensile strength below yield")
-    grid = _measurement_array(inputs, "grid")
-    positions = _measurement_array(inputs, "axial_positions_in")
-    if (
-        grid.ndim != 2
-        or grid.shape[0] < 2
-        or grid.shape[1] < 1
-        or positions.shape != (grid.shape[0],)
-    ):
-        raise ValueError("A rectangular axial-by-circumferential grid is required")
-    if (
-        not np.isfinite(grid).all()
-        or not np.isfinite(positions).all()
-        or np.any(np.diff(positions) <= 0)
-        or np.any(grid < 0)
-        or np.any(grid > t)
-    ):
-        raise ValueError("Finite ordered positions and thickness in [0, t] required")
-    return positions, grid, t - grid
 
 
 def _pressure_row(name, result, capacity, allowable, demand):
@@ -192,12 +130,14 @@ def _decision(rows, applicability):
     decision.pop("rsf")
     decision.pop("rsf_a")
     decision["remaining_life_yr"] = None
-    criterion = "Current demand passes: minimum allowable/demand >= 1.000."
-    if decision["verdict"] == "ESCALATE":
-        criterion = (
+    if not applicability.ok:
+        decision["demand_limits_psi"] = None
+        decision["governing_criterion"] = (
             "A fitness verdict is not established; engineering review required. "
             + "; ".join(applicability.notes)
         )
+        return governing["method"], decision
+    criterion = "Current demand passes: minimum allowable/demand >= 1.000."
     pressure = min(row["allowable_pressure_psi"] for row in rows[:-1])
     axial = rows[-1]["allowable_axial_stress_psi"]
     decision["demand_limits_psi"] = (
@@ -227,16 +167,31 @@ def _decision(rows, applicability):
 
 def assess(inputs):
     """Assess one UT thickness grid; flag any extrapolation before disposition."""
-    positions, grid, depths = _validate(inputs)
+    positions, grid, depths = validate(inputs)
     rows, applicability = _methods(inputs, positions, depths)
-    governing, decision = _decision(rows, applicability)
     limitations = [
-        "The caller-defined grid window is assumed to bound one defect, including intact gaps."
+        "The caller-defined grid window is assumed to bound one defect, including intact gaps.",
+        "Above-nominal readings are rejected; mill-tolerance correction is not established in this screen.",
     ]
     if np.any(depths[[0, -1]] > 0):
-        limitations.append(
-            "Loss reaches an axial grid boundary; confirm the inspection window captures the full defect."
+        confirmed = inputs.get("length_confirmed", False)
+        note = "Loss reaches an axial grid boundary; " + (
+            "full defect length is caller confirmed."
+            if confirmed
+            else "full defect length is unconfirmed; engineering review required."
         )
+        limitations.append(note)
+        if not confirmed:
+            boundary = flagged("DEFECT_LENGTH_UNCONFIRMED", note)
+            applicability = merge(applicability, boundary)
+            for row in rows:
+                app = row["applicability"]
+                app.update(
+                    ok=False,
+                    flags=[*app["flags"], *boundary.flags],
+                    notes=[*app["notes"], note],
+                )
+    governing, decision = _decision(rows, applicability)
     source = deepcopy(inputs)
     source.update(grid=grid.tolist(), axial_positions_in=positions.tolist())
     return dict(
@@ -271,7 +226,7 @@ def _comparison(rows):
         values = [
             row["method"],
             *[
-                row[key]
+                row[key] if app["ok"] or key == "demand_psi" else "not evaluated"
                 for key in (
                     "capacity_pressure_psi",
                     "allowable_pressure_psi",
@@ -312,7 +267,7 @@ def _assessment_basis(inputs):
                 ("Circumferential width (in)", "circumferential_width_in"),
                 ("Safety factor (1)", "safety_factor"),
                 (
-                    "Usage factor applied to DNV capacity (caller supplied, 1)",
+                    "Total screening usage factor F applied to DNV capacity (caller supplied, 1)",
                     "usage_factor",
                 ),
                 ("Axial design factor (1)", "axial_design_factor"),
@@ -353,7 +308,11 @@ def render_report(inputs, result):
         "interaction. Circumferential capacity is an axial membrane "
         "screen using SMYS as flow stress and a caller-supplied axial design factor; combined loading and edition-matched "
         "Part 5 qualification are not established. Remaining life is not evaluated. "
-        "The safety factor and DNV usage factor are caller supplied.</p>",
+        "The safety factor and total DNV screening usage factor F are caller supplied. "
+        "No separate modelling factor is applied; Part-A PSF factors are not applied. "
+        "The example F=0.72 follows the existing engine's B31.8 class-1 screening basis; "
+        "code-compliant DNV safety is not established. The linked consolidated validation "
+        "record, row 8, validates capacity, not safety-factor selection.</p>",
         "<p>" + " ".join(html.escape(note) for note in result["limitations"]) + "</p>",
         FFSReport._section_appendix(grid),
         "<footer><h2>Validation records</h2><ul>",

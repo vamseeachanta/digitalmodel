@@ -17,6 +17,7 @@ def reference():
         axial_stress_psi=10000.0,
         safety_factor=1.39,
         usage_factor=0.72,
+        length_confirmed=True,
         axial_design_factor=0.72,
         axial_positions_in=[0.0, 4.0, 8.0],
         circumferential_width_in=4.0,

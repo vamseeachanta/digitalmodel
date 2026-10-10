@@ -88,7 +88,7 @@ engines:
   corroded-pipe: {module: asset_integrity.corroded_pipe, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181, note: "workflow covers original/Modified B31G and effective-area pressure methods only"}
   rstreng-2d: {module: asset_integrity.rstreng_2d, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181, note: "workflow covers MAX projection only; area-weighted mode is a sensitivity calculation"}
   dnv-f101: {module: asset_integrity.dnv_rp_f101, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181, caveat: "workflow covers single-defect allowable-stress only; interacting-defect method and PSF tables per #1094"}
-  circumferential: {module: asset_integrity.circumferential_defect, status: validated, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181}
+  circumferential: {module: asset_integrity.circumferential_defect, status: validated, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181, note: "pipeline-corroded-defect-screen exercises axial membrane only; combined-loading and edition-matched Part 5 qualification remain outside scope"}
   pitting: {module: asset_integrity.assessment.pitting, status: engine, issue: 2182, caveat: "Part 6 charts not transcribed; equivalent-LTA bound"}
   dents: {module: asset_integrity.dent_assessment, status: engine, issue: 2182}
   crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175"}
@@ -137,7 +137,7 @@ industries:
       - asset: steel pipeline body
         defects:
           - {mechanism: "general / local metal loss (external, internal corrosion)", codes: [asme-b31g, dnv-rp-f101, api-579-1], parts: [4, 5], engines: [corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss], tiers: [T1, T2], status: validated}
-          - {mechanism: river-bottom profile metal loss, codes: [asme-b31g, dnv-rp-f101], engines: [rstreng-2d], tiers: [T2], status: validated}
+          - {mechanism: river-bottom profile metal loss, codes: [asme-b31g, dnv-rp-f101], engines: [rstreng-2d], tiers: [T2], status: live, caveat: "pipeline-corroded-defect-screen covers MAX projection only; area-weighted mode remains a sensitivity calculation"}
           - {mechanism: circumferential metal loss / net-section, codes: [api-579-1, dnv-rp-f101], parts: [5], engines: [circumferential], tiers: [T2], status: validated, caveat: "F101 combined-loading factor stubbed (#1146)"}
           - {mechanism: interacting defect colonies, codes: [dnv-rp-f101, api-579-1], parts: [4], engines: [dnv-f101], tiers: [T2], status: engine, caveat: "#1094 finding 1"}
           - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: engine}
