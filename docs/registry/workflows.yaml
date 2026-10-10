@@ -1274,3 +1274,29 @@ workflows:
     result:
       kind: in_memory
       key: api579_dent_screen
+
+  - id: riser-joint-ffs
+    basename: riser_joint_ffs
+    title: Anonymized drilling-riser joint envelopes, collapse depth, placement and fleet roll-up
+    input: examples/workflows/riser-joint-ffs/input.yml
+    outputs:
+      - examples/workflows/riser-joint-ffs/results/riser-joint-ffs.html
+      - examples/workflows/riser-joint-ffs/results/riser-joint-ffs.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-joint-ffs]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: riser_joint_ffs
+
+  - id: pipeline-corroded-defect-screen
+    basename: pipeline_defect_screen
+    title: Six-method pipeline blunt-metal-loss comparison
+    input: examples/workflows/pipeline-corroded-defect-screen/input.yml
+    outputs:
+      - examples/workflows/pipeline-corroded-defect-screen/results/input.yml
+      - examples/workflows/pipeline-corroded-defect-screen/results/input-pipeline-defect-screen.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-corroded-defect-screen]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: pipeline_defect_screen

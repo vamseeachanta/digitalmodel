@@ -600,7 +600,7 @@ def _summary_block(cat: Catalog) -> list[str]:
     out += [f"| total | {s['total']} |", ""]
     if s["live"] == 0:
         lead = (
-            f"No row is `live` today: the {s['workflow']} `workflow` rows lack validation records and the "
+            f"No row is `live` today: the {s['workflow']} `workflow` rows are not qualified as `live` and the "
             f"{s['validated']} `validated` rows lack a registered workflow."
         )
     else:

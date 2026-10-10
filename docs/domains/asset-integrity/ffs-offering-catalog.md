@@ -18,7 +18,7 @@ Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, AP
 | Defect / mechanism | Governing codes | Engine(s) | Tier | Status |
 |---|---|---|---|---|
 | General / local metal loss (external, internal corrosion) | ASME B31G, DNV-RP-F101, API 579 Pt 4/5 | corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss | T1, T2 | validated |
-| River-bottom profile metal loss | ASME B31G, DNV-RP-F101 | rstreng-2d | T2 | validated |
+| River-bottom profile metal loss | ASME B31G, DNV-RP-F101 | rstreng-2d | T2 | live (pipeline-corroded-defect-screen covers MAX projection only; area-weighted mode remains a sensitivity calculation) |
 | Circumferential metal loss / net-section | API 579 Pt 5, DNV-RP-F101 | circumferential | T2 | validated (F101 combined-loading factor stubbed (#1146)) |
 | Interacting defect colonies | DNV-RP-F101, API 579 Pt 4 | dnv-f101 | T2 | engine (#1094 finding 1) |
 | Pitting | API 579 Pt 6 | pitting | T1, T2 | workflow |
@@ -95,7 +95,7 @@ Frameworks: API RP 2MIM, API RP 2FSIM, API RP 2I, DNV-OS-E301, DNV-OS-E303. Chai
 | Mooring chain, wire and fibre rope, connectors | Anchor holding capacity after seabed change / drag | DNV-OS-E301 | — | T2 | none |
 | Steel catenary / top-tensioned production risers | Metal loss, pitting, cracks | API STD 2RD, DNV-ST-F201, API 579 Pt 4/5/6/9, BS 7910 | ffs-metal-loss, crack-fad | T1, T2 | engine |
 | Steel catenary / top-tensioned production risers | Fatigue (wave, VIV) | DNV-ST-F201, DNV-RP-C203 | riser-fatigue | T2 | workflow |
-| Drilling / completion riser joints and wellhead fatigue | Metal loss / weld flaws / collapse-limited depth | ASME B31G, DNV-RP-F101, BS 7910 | riser-joint-ffs | T1, T2 | engine (real C-scan fixtures; workflow #2183) |
+| Drilling / completion riser joints and wellhead fatigue | Metal loss / weld flaws / collapse-limited depth | ASME B31G, DNV-RP-F101, BS 7910 | riser-joint-ffs | T1, T2 | workflow (real C-scan fixtures; bounded composition validation) |
 | Drilling / completion riser joints and wellhead fatigue | Wellhead / conductor fatigue from riser loads | API RP 17G, DNV-RP-C203 | — | T2 | none |
 | Unbonded flexible pipe | Outer sheath damage / annulus flooding | API RP 17B | flexible-pipe-screen (#2200) | T1 | planned |
 | Unbonded flexible pipe | Tensile armour wire corrosion / rupture (end-fitting fatigue) | API RP 17B | flexible-pipe-screen (#2200) | T2 | planned |
@@ -153,15 +153,15 @@ Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are
 
 | Status | Rows |
 |---|---|
-| live | 0 |
-| workflow | 5 |
-| validated | 6 |
-| engine | 29 |
+| live | 1 |
+| workflow | 6 |
+| validated | 5 |
+| engine | 28 |
 | planned | 25 |
 | none | 13 |
 | total | 78 |
 
-No row is `live` today: the 5 `workflow` rows lack validation records and the 6 `validated` rows lack a registered workflow. The 13 `none` rows are the roadmap beyond the filed issues: **pipelines-midstream**: manufacturing defects in pipe body, geohazard / ground-movement strain demand, direct-assessment programme support (ECDA / ICDA region and indication ranking); **downstream-fixed-equipment**: exchanger tube bundle thinning / pitting / tube plugging limits, fired-heater tube creep, bulging, carburization, floating roof / seal / appurtenance damage; **upstream-offshore-fixed**: conductor / caisson wall loss, guide wear, fatigue; **upstream-offshore-floating**: wire rope broken wires / corrosion / diameter loss, anchor holding capacity after seabed change / drag, wellhead / conductor fatigue from riser loads; **offshore-wind**: grouted connection slippage / cracking, bolted flange preload loss, lifetime extension assessment (remaining fatigue life, load re-evaluation).
+1 of 78 rows are `live` today. The 13 `none` rows are the roadmap beyond the filed issues: **pipelines-midstream**: manufacturing defects in pipe body, geohazard / ground-movement strain demand, direct-assessment programme support (ECDA / ICDA region and indication ranking); **downstream-fixed-equipment**: exchanger tube bundle thinning / pitting / tube plugging limits, fired-heater tube creep, bulging, carburization, floating roof / seal / appurtenance damage; **upstream-offshore-fixed**: conductor / caisson wall loss, guide wear, fatigue; **upstream-offshore-floating**: wire rope broken wires / corrosion / diameter loss, anchor holding capacity after seabed change / drag, wellhead / conductor fatigue from riser loads; **offshore-wind**: grouted connection slippage / cracking, bolted flange preload loss, lifetime extension assessment (remaining fatigue life, load re-evaluation).
 
 ## Sources (public overviews consulted 2026-09-25)
 

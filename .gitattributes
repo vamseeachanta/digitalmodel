@@ -83,3 +83,7 @@ docs/domains/orcaflex/jumper/manifold_to_plet/monolithic/DZ_AHCoff.yml text eol=
 # CP review receipts bind exact UTF-8/LF artifacts across Windows and Linux.
 docs/domains/cathodic_protection/reports/** text eol=lf
 tests/fixtures/cathodic_protection/workflow_inputs/*.yml text eol=lf
+
+# Preserve raw-byte provenance hashes and the riser-joint report golden.
+tests/asset_integrity/test_data/real_inspection/** -text
+examples/workflows/riser-joint-ffs/report.html -text

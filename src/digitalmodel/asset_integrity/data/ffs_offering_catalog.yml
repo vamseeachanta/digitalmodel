@@ -85,10 +85,10 @@ codes:
 engines:
   ffs-metal-loss: {module: asset_integrity.assessment.ffs_coordinator, status: live, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, note: "canonical L1/L2 GML/LML coordinator"}
   api579-legacy: {module: asset_integrity.API579, status: workflow, workflow: api579-pipe-ffs-b314, note: "no validation record; superseded by ffs-metal-loss (#1075), kept as a regression reference"}
-  corroded-pipe: {module: asset_integrity.corroded_pipe, status: validated, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
-  rstreng-2d: {module: asset_integrity.rstreng_2d, status: validated, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
-  dnv-f101: {module: asset_integrity.dnv_rp_f101, status: validated, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181, caveat: "interacting-defect method and PSF tables per #1094"}
-  circumferential: {module: asset_integrity.circumferential_defect, status: validated, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181}
+  corroded-pipe: {module: asset_integrity.corroded_pipe, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181, note: "workflow covers original/Modified B31G and effective-area pressure methods only"}
+  rstreng-2d: {module: asset_integrity.rstreng_2d, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181, note: "workflow covers MAX projection only; area-weighted mode is a sensitivity calculation"}
+  dnv-f101: {module: asset_integrity.dnv_rp_f101, status: live, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181, caveat: "workflow covers single-defect Part B safe working pressure (F1 x F2) only; interacting-defect method and PSF tables per #1094"}
+  circumferential: {module: asset_integrity.circumferential_defect, status: validated, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181, note: "pipeline-corroded-defect-screen exercises axial membrane only; combined-loading and edition-matched Part 5 qualification remain outside scope"}
   pitting: {module: asset_integrity.assessment.pitting, status: workflow, workflow: api579-pitting-screen, validation: docs/domains/asset-integrity/pitting-validation-2026-10-09.md, issue: 2182, caveat: "Part 6 charts not transcribed; equivalent-LTA bound"}
   dents: {module: asset_integrity.dent_assessment, status: workflow, workflow: api579-dent-screen, validation: docs/domains/asset-integrity/dent-validation-2026-10-09.md, issue: 2182, caveat: "manual geometry; formula anchors only, published-case validation not established"}
   crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175"}
@@ -98,7 +98,7 @@ engines:
   rbi: {module: asset_integrity.rbi_screening, status: engine, issue: 2185}
   composite-repair: {module: asset_integrity.composite_repair, status: engine, issue: 2185}
   inspection-planning: {module: asset_integrity.inspection_planning, status: workflow, workflow: inspection-planning, issue: 2180, note: "no validation record"}
-  riser-joint-ffs: {module: asset_integrity.riser_joint_ffs, status: engine, issue: 2183, note: "real anonymized C-scan fixtures (#1293)"}
+  riser-joint-ffs: {module: asset_integrity.riser_joint_ffs, status: workflow, workflow: riser-joint-ffs, validation: docs/domains/asset-integrity/riser-joint-ffs-validation-2026-10-10.md, issue: 2183, note: "anonymized C-scan composition record; independent fleet qualification not established"}
   plate-panel-buckling: {module: infrastructure.base_solvers.structural.plate_buckling, status: workflow, workflow: plate-buckling, note: "DNV-RP-C201 usage-factor check; plate metal-loss FFS reuses it by reducing thickness"}
   jacket-member-joint: {module: structural.jacket_topside, status: engine, note: "API RP 2A design checks; no damaged-member capacity"}
   mooring-screen: {module: mooring_resilience.screening, status: engine, note: "DNV-OS-E301 factors; GREEN/AMBER/RED vocabulary; no chain degradation"}
@@ -137,7 +137,7 @@ industries:
       - asset: steel pipeline body
         defects:
           - {mechanism: "general / local metal loss (external, internal corrosion)", codes: [asme-b31g, dnv-rp-f101, api-579-1], parts: [4, 5], engines: [corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss], tiers: [T1, T2], status: validated}
-          - {mechanism: river-bottom profile metal loss, codes: [asme-b31g, dnv-rp-f101], engines: [rstreng-2d], tiers: [T2], status: validated}
+          - {mechanism: river-bottom profile metal loss, codes: [asme-b31g, dnv-rp-f101], engines: [rstreng-2d], tiers: [T2], status: live, caveat: "pipeline-corroded-defect-screen covers MAX projection only; area-weighted mode remains a sensitivity calculation"}
           - {mechanism: circumferential metal loss / net-section, codes: [api-579-1, dnv-rp-f101], parts: [5], engines: [circumferential], tiers: [T2], status: validated, caveat: "F101 combined-loading factor stubbed (#1146)"}
           - {mechanism: interacting defect colonies, codes: [dnv-rp-f101, api-579-1], parts: [4], engines: [dnv-f101], tiers: [T2], status: engine, caveat: "#1094 finding 1"}
           - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: workflow}
@@ -235,7 +235,7 @@ industries:
           - {mechanism: "fatigue (wave, VIV)", codes: [dnv-st-f201, dnv-rp-c203], engines: [riser-fatigue], tiers: [T2], status: workflow}
       - asset: drilling / completion riser joints and wellhead fatigue
         defects:
-          - {mechanism: metal loss / weld flaws / collapse-limited depth, codes: [asme-b31g, dnv-rp-f101, bs-7910], engines: [riser-joint-ffs], tiers: [T1, T2], status: engine, note: "real C-scan fixtures; workflow #2183"}
+          - {mechanism: metal loss / weld flaws / collapse-limited depth, codes: [asme-b31g, dnv-rp-f101, bs-7910], engines: [riser-joint-ffs], tiers: [T1, T2], status: workflow, note: "real C-scan fixtures; bounded composition validation"}
           - {mechanism: wellhead / conductor fatigue from riser loads, codes: [api-rp-17g, dnv-rp-c203], engines: [], tiers: [T2], status: none}
       - asset: unbonded flexible pipe
         defects:

@@ -423,5 +423,6 @@ CASES = {
                           rel_tol=1e-6, abs_tol=1e-12, variant_label="smp_cores"),
     "openfoam": lambda: Case("openfoam_motorbike", "openfoam", [8, "all"],
                              run_openfoam, openfoam_version, rel_tol=1e-3,
-                             abs_tol=1e-6, variant_label="mpi_ranks"),
+                             abs_tol=1e-6, variant_label="mpi_ranks",
+                             cores_kind="physical"),
 }

@@ -25,21 +25,29 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Sequence
-
-import numpy as np
+from typing import Literal, Optional
 
 from digitalmodel.naval_architecture import resistance as _resistance
+
+from digitalmodel.naval_architecture.prohaska import (
+    PROHASKA_FN_MIN, PROHASKA_FN_MAX, PROHASKA_MIN_POINTS,
+    PROHASKA_MAX_CONDITION, ProhaskaFit, prohaska_form_factor,
+)
+from digitalmodel.citations.registry import get_en400_reference, get_ittc78_transfer_reference
+
+__all__ = ["PROHASKA_FN_MIN", "PROHASKA_FN_MAX", "PROHASKA_MIN_POINTS",
+           "PROHASKA_MAX_CONDITION", "ProhaskaFit", "prohaska_form_factor",
+           "ittc57_cf", "ittc57_cf_cited", "transfer_model_to_ship", "transfer_ship_to_model",
+           "AllowanceTerm", "TransferResult", "UnresolvedCitation", "Fluid",
+           "reynolds_number_si", "froude_number", "ITTC_TRANSFER_PROCEDURE",
+           "ITTC_TRANSFER_UNRESOLVED"]
 
 ITTC_TRANSFER_PROCEDURE = (
     "ITTC Recommended Procedure 7.5-02-03-01.4, 1978 ITTC Performance Prediction Method "
     "(simplified resistance transfer, form-factor approach)"
 )
 
-PROHASKA_FN_MIN = 0.10
-PROHASKA_FN_MAX = 0.20
-PROHASKA_MIN_POINTS = 6
-PROHASKA_MAX_CONDITION = 1e6
+
 
 # ITTC-57 is singular at Re = 100 (log10(Re) - 2 = 0) and meaningless below it.
 _ITTC57_MIN_RE = 100.0
@@ -128,10 +136,11 @@ class AllowanceTerm:
 
 @dataclass(frozen=True)
 class UnresolvedCitation:
-    """A standards reference that the citations registry cannot resolve.
+    """A standards reference that has not been resolved for this result.
 
-    Carried explicitly (never as a fabricated registry entry) so that the gap is visible in
-    every result. ``status`` is ``"unresolved-in-registry"``.
+    Carried explicitly when citation emission is opted out, so that the gap is visible in
+    every result. ``status="unresolved-in-registry"`` is retained as a legacy API label;
+    it denotes an unresolved result reference, not the current registry's capabilities.
     """
 
     source_id: str
@@ -142,15 +151,13 @@ class UnresolvedCitation:
     note: str = ""
 
 
-# ITTC 7.5-02-03-01.4 has no entry in digitalmodel.citations.registry and no wiki target
-# known to the resolver (checked 2026-09-27). Open item on #2239: add a registry getter and
-# wiki page with #2471 frontmatter, then replace this record by a resolved Citation.
+# Explicit opt-out preserves the unresolved record for public API compatibility.
 ITTC_TRANSFER_UNRESOLVED = UnresolvedCitation(
     source_id="ITTC-7.5-02-03-01.4",
     publisher="ITTC",
     title="ITTC Recommended Procedure 7.5-02-03-01.4, 1978 ITTC Performance Prediction Method",
     clause="simplified resistance transfer (form-factor approach): C_R conserved at equal Fn",
-    note="no registry getter or wiki page exists; open item on digitalmodel#2239",
+    note="transfer procedure citation has not been resolved for this result",
 )
 
 
@@ -181,6 +188,7 @@ _ASSUMPTIONS = (
     "Form factor (1+k) is invariant with Reynolds number between model and ship scale",
     "Residuary coefficient C_R is conserved between model and ship at equal Froude number",
     "Friction is the ITTC-1957 correlation line evaluated at the declared Reynolds numbers",
+    "Model allowance C_A,m is a caller-declared extension, not part of the cited ITTC transfer",
 )
 
 _ALWAYS_OMITTED = (
@@ -212,9 +220,11 @@ def _common_inputs(
     ca_model: Optional[float],
     ca_ship: Optional[float],
     delta_cf: Optional[float],
-    cite: bool,
+    cite: bool | Literal["strict"],
     repo_root: Optional[Path],
 ):
+    if isinstance(cite, str) and cite != "strict":
+        raise ValueError('cite must be True, False or "strict"')
     k = _finite("form factor k", form_factor_k)
     if k < 0.0:
         raise ValueError(f"form factor k must be non-negative, got {k!r}")
@@ -226,19 +236,13 @@ def _common_inputs(
             f"Froude numbers differ (model {fn_m!r}, ship {fn_s!r}) beyond relative tolerance "
             f"{tol:g}; the transfer is valid only at equal Froude number"
         )
-    if cite:
-        cm = ittc57_cf_cited(re_model, repo_root=repo_root)
-        cs = ittc57_cf_cited(re_ship, repo_root=repo_root)
-        cf_m, cf_s = cm["value"], cs["value"]
-        citations = list(cm["citations"]) + [c for c in cs["citations"] if c not in cm["citations"]]
-    else:
-        cf_m, cf_s = ittc57_cf(re_model), ittc57_cf(re_ship)
-        citations = []
+    cf_m, cf_s = ittc57_cf(re_model), ittc57_cf(re_ship)
     allowances = {
         "ca_model": _allowance("ca_model", ca_model),
         "ca_ship": _allowance("ca_ship", ca_ship),
         "delta_cf": _allowance("delta_cf", delta_cf),
     }
+    citations = _transfer_citations(re_model, repo_root, cite) if cite else []
     omitted = list(_ALWAYS_OMITTED)
     omitted += [
         f"{_ALLOWANCE_DESCRIPTIONS[n]} not declared; taken as zero"
@@ -262,19 +266,19 @@ def transfer_model_to_ship(
     ca_ship: Optional[float] = None,
     delta_cf: Optional[float] = None,
     fn_rel_tolerance: float = 1e-3,
-    cite: bool = True,
+    cite: bool | Literal["strict"] = True,
     repo_root: Optional[Path] = None,
 ) -> TransferResult:
     """Transfer a model total-resistance coefficient to ship scale (ITTC 7.5-02-03-01.4).
 
     Refuses (ValueError) when the Froude numbers differ beyond ``fn_rel_tolerance``,
     for invalid Reynolds numbers, a negative/non-finite form factor or a non-positive C_T,m.
-    The EN400 ITTC-57 citation sidecar is emitted by default through the existing
-    fail-closed wrapper (``resistance.ittc_1957_cf_cited``): a configured wiki without the
-    page raises ``CitationResolutionError``; an unconfigured resolver degrades with a one-shot
-    RuntimeWarning and an empty ``citations`` list. ``cite=False`` opts out and is recorded
-    in ``omitted_corrections``. The ITTC 7.5-02-03-01.4 procedure is carried as an explicit
-    :class:`UnresolvedCitation` in ``unresolved_citations``.
+    By default, the existing EN400 wrapper emits the friction-line citation; an
+    unconfigured resolver returns the result with its one-shot RuntimeWarning. A
+    configured but missing EN400 page still raises CitationResolutionError. The ITTC
+    procedure remains explicitly unresolved. ``cite="strict"`` validates both references
+    and raises for missing pages or resolver configuration. ``cite=False`` opts out,
+    recording the omission and unresolved procedure reference.
     """
     ct_m = _positive("model total resistance coefficient ct_model", ct_model)
     k, fn_m, fn_s, cf_m, cf_s, allow, omitted, citations = _common_inputs(
@@ -288,6 +292,7 @@ def transfer_model_to_ship(
         re_model=float(re_model), re_ship=float(re_ship), fn_model=fn_m, fn_ship=fn_s,
         allowances=allow, assumptions=_ASSUMPTIONS, omitted_corrections=omitted,
         citations=citations, cited=bool(cite),
+        unresolved_citations=() if cite == "strict" else (ITTC_TRANSFER_UNRESOLVED,),
     )
 
 
@@ -303,10 +308,14 @@ def transfer_ship_to_model(
     ca_ship: Optional[float] = None,
     delta_cf: Optional[float] = None,
     fn_rel_tolerance: float = 1e-3,
-    cite: bool = True,
+    cite: bool | Literal["strict"] = True,
     repo_root: Optional[Path] = None,
 ) -> TransferResult:
-    """Inverse of :func:`transfer_model_to_ship` (same conserved C_R and citation behaviour)."""
+    """Inverse of :func:`transfer_model_to_ship` with conserved C_R and validated citations.
+
+    Default EN400-only, standalone warning, ``cite="strict"`` fail-closed and
+    ``cite=False`` opt-out behaviour match :func:`transfer_model_to_ship`.
+    """
     ct_s = _positive("ship total resistance coefficient ct_ship", ct_ship)
     k, fn_m, fn_s, cf_m, cf_s, allow, omitted, citations = _common_inputs(
         re_model, re_ship, form_factor_k, fn_model, fn_ship, fn_rel_tolerance,
@@ -319,86 +328,18 @@ def transfer_ship_to_model(
         re_model=float(re_model), re_ship=float(re_ship), fn_model=fn_m, fn_ship=fn_s,
         allowances=allow, assumptions=_ASSUMPTIONS, omitted_corrections=omitted,
         citations=citations, cited=bool(cite),
+        unresolved_citations=() if cite == "strict" else (ITTC_TRANSFER_UNRESOLVED,),
     )
 
 
-# ---------------------------------------------------------------- Prohaska
-
-
-@dataclass(frozen=True)
-class ProhaskaFit:
-    k: float
-    c: float
-    residual_rms: float
-    k_ci95: tuple
-    condition_number: float
-    n_points: int
-    fn_window: tuple = (PROHASKA_FN_MIN, PROHASKA_FN_MAX)
-    error_model: str = (
-        "y = C_T/C_F = (1+k) + c Fn^4/C_F + e, e independent, homoscedastic and additive on "
-        "y (ordinary least squares); CI from Student's t with n-2 dof"
+def _transfer_citations(re_model, repo_root, cite):
+    """Keep the main citation path unless dual-reference validation is requested."""
+    if cite != "strict":
+        return ittc57_cf_cited(re_model, repo_root=repo_root)["citations"]
+    friction = get_en400_reference(
+        "Chapter 7 — Resistance & Powering (ITTC-1957 model–ship correlation friction line)",
+        note="ITTC-1957 friction coefficient",
+        repo_root=repo_root,
     )
-
-
-def prohaska_form_factor(
-    fn: Sequence[float], ct: Sequence[float], cf: Sequence[float]
-) -> ProhaskaFit:
-    """Least-squares Prohaska fit C_T/C_F = (1+k) + c Fn^4/C_F.
-
-    Admissible data: every point within Fn 0.10-0.20 (points outside are refused, not
-    dropped), at least 6 points. Refuses a design matrix whose 2-norm condition number
-    exceeds 1e6.
-
-    Error model: the residuals of y = C_T/C_F are independent, homoscedastic and additive
-    (ordinary least squares). The parameter covariance is s^2 (R^T R)^-1 from a QR
-    factorisation of the design matrix (normal equations are not formed); the 95 %
-    confidence interval on k uses Student's t with n-2 dof. Multiplicative (relative) noise
-    on C_T is only approximately covered by this model.
-    """
-    from scipy import stats
-    from scipy.linalg import solve_triangular
-
-    fn_a = np.asarray(fn, dtype=float)
-    ct_a = np.asarray(ct, dtype=float)
-    cf_a = np.asarray(cf, dtype=float)
-    if not (fn_a.shape == ct_a.shape == cf_a.shape) or fn_a.ndim != 1:
-        raise ValueError("fn, ct and cf must be 1-D sequences of equal length")
-    n = fn_a.size
-    if n < PROHASKA_MIN_POINTS:
-        raise ValueError(f"Prohaska fit needs at least {PROHASKA_MIN_POINTS} points, got {n}")
-    if not (np.all(np.isfinite(fn_a)) and np.all(np.isfinite(ct_a)) and np.all(np.isfinite(cf_a))):
-        raise ValueError("Prohaska inputs must be finite")
-    if np.any(ct_a <= 0) or np.any(cf_a <= 0):
-        raise ValueError("C_T and C_F must be positive")
-    outside = (fn_a < PROHASKA_FN_MIN - 1e-12) | (fn_a > PROHASKA_FN_MAX + 1e-12)
-    if np.any(outside):
-        raise ValueError(
-            f"Prohaska admissible window is Fn {PROHASKA_FN_MIN:.2f}-{PROHASKA_FN_MAX:.2f}; "
-            f"points outside it: {fn_a[outside].tolist()}"
-        )
-    y = ct_a / cf_a
-    x = fn_a**4 / cf_a
-    a_mat = np.column_stack([np.ones(n), x])
-    cond = float(np.linalg.cond(a_mat))
-    if not np.isfinite(cond) or cond > PROHASKA_MAX_CONDITION:
-        raise ValueError(
-            f"Prohaska design matrix condition number {cond:.3g} exceeds {PROHASKA_MAX_CONDITION:g}"
-        )
-    q_mat, r_mat = np.linalg.qr(a_mat)
-    coef = solve_triangular(r_mat, q_mat.T @ y)
-    resid = y - a_mat @ coef
-    dof = n - 2
-    s2 = float(resid @ resid) / dof
-    r_inv = solve_triangular(r_mat, np.eye(2))
-    cov = s2 * (r_inv @ r_inv.T)
-    se_a = math.sqrt(max(cov[0, 0], 0.0))
-    t = float(stats.t.ppf(0.975, dof))
-    k = float(coef[0] - 1.0)
-    return ProhaskaFit(
-        k=k,
-        c=float(coef[1]),
-        residual_rms=float(math.sqrt(float(resid @ resid) / n)),
-        k_ci95=(k - t * se_a, k + t * se_a),
-        condition_number=cond,
-        n_points=int(n),
-    )
+    transfer = get_ittc78_transfer_reference(repo_root=repo_root)
+    return [friction.citation, transfer.citation]

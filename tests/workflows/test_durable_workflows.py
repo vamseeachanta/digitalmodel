@@ -1628,6 +1628,20 @@ def test_workflow_registry(workflow, monkeypatch):
         assert cfg["api579_pitting_screen"]["level2"]["rsf"] == pytest.approx(0.9569915955570703)
     elif workflow["id"] == "api579-dent-screen":
         assert cfg["api579_dent_screen"]["assessment"]["strain"]["eps_max"] == pytest.approx(0.04028750840314319)
+    elif workflow["id"] == "riser-joint-ffs":
+        result = cfg["riser_joint_ffs"]
+        assert len(result["scans"]) == len(result["placements"]) == 4
+        assert result["rollup"]["n_joints"] == 26
+        assert len(result["provenance"]["sources"]) == 6
+    elif workflow["id"] == "pipeline-corroded-defect-screen":
+        result = cfg["pipeline_defect_screen"]
+        assert len(result["methods"]) == 6
+        assert all("applicability" in row for row in result["methods"])
+        rstreng = next(row for row in result["methods"] if row["method"] == "RSTRENG")
+        assert rstreng["margin"] == pytest.approx(1.031735167224636, rel=1e-12)
+        report = (Path(cfg["Analysis"]["result_folder"]) / result["report_file"]).read_text(encoding="utf-8")
+        assert "Method comparison" in report
+        assert all(path in report for path in result["validation_records"])
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
 
@@ -2288,3 +2302,47 @@ def test_pitting_dent_screen_reports(workflow_id, basename, metric, expected):
     report = Path(result["report_path"]).read_text(encoding="utf-8")
     assert report == result["report_html"]
     assert "not evaluated" in report.lower()
+
+
+@pytest.fixture(scope="module")
+def riser_joint_report_run(tmp_path_factory):
+    from digitalmodel.asset_integrity.riser_joint_ffs import RiserJointFFSWorkflow
+
+    workflow = next(w for w in _load_registry() if w["id"] == "riser-joint-ffs")
+    input_path = REPO_ROOT / workflow["input"]
+    cfg = yaml.safe_load(input_path.read_text())
+    # Resolve committed fixture paths without requiring dependency embed support.
+    cfg["Analysis"] = {
+        "result_folder": str(tmp_path_factory.mktemp("riser-ffs")),
+        "analysis_root_folder": str(input_path.parent),
+    }
+    return RiserJointFFSWorkflow().router(cfg)["riser_joint_ffs"]
+
+
+@pytest.mark.parametrize("grid_name,min_mm,depth_ft,verdict", [
+    ("ut_grid_RJ-101-boxend_ds8.csv", 15.024, 2133.7, "REPAIR"),
+    ("ut_grid_RJ-101-boxend_worstzone_fullres.csv", 15.024, 2133.7, "REPAIR"),
+    ("ut_grid_RJ-102-boxend_ds8.csv", 15.348, 2265.4, "REPAIR"),
+    ("ut_grid_RJ-103-pinend_ds8.csv", 16.549, 2791.3, "RESTRICTED"),
+])
+def test_riser_joint_ffs_grid(riser_joint_report_run, grid_name, min_mm, depth_ft, verdict):
+    import hashlib
+
+    result = riser_joint_report_run
+    scan = next(s for s in result["scans"] if s["scan"] == grid_name)
+    assert scan["measured_min_wt_in"] == pytest.approx(min_mm / 25.4, abs=1e-12)
+    placement = next(p for p in result["placements"] if p["scan"] == grid_name)
+    assert placement["acceptable_depth_ft"] == pytest.approx(depth_ft, abs=0.05)
+    assert placement["verdict"] == verdict
+    assert len(result["joint_governing"]) == 3
+    assert set(scan["envelopes"]) == {"b31g", "modified_b31g", "dnv_f101", "bs7910_option1_fad"}
+    for envelope in scan["envelopes"].values():
+        assert len(envelope["start"]["depth_in"]) == 17
+        assert all(e <= s for e, s in zip(envelope["campaign_end"]["max_acceptable_length_in"],
+                                         envelope["start"]["max_acceptable_length_in"]))
+    assert len(result["placements"]) == 4
+    assert result["rollup"]["n_joints"] == 26
+    assert all(c["fit_joints"] + c["repair_joints"] == 26 for c in result["rollup"]["campaigns"])
+    source = next(s for s in result["provenance"]["sources"] if s["path"].endswith(grid_name))
+    assert source["sha256"] == hashlib.sha256((REPO_ROOT / source["path"]).read_bytes()).hexdigest()
+    assert source["sha256"] in Path(result["report_html"]).read_text()

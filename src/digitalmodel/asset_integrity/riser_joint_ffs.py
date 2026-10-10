@@ -434,6 +434,10 @@ class RiserJointFFSWorkflow:
             spec = dict(block["rollup"])
             register = pd.read_csv(spec.pop("register_csv"))
             result = fleet_rollup(register, **spec)
+        elif mode == "report":
+            from .riser_joint_report import run_report
+
+            result = run_report(block["report"], cfg["Analysis"])
         else:
             raise ValueError(f"unknown riser_joint_ffs mode '{mode}'.")
         cfg[cfg["basename"]] = result

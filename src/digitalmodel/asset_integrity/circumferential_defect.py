@@ -52,8 +52,11 @@ Units are US customary throughout (inches, psi) unless noted.
 from __future__ import annotations
 
 import math
+
 from dataclasses import dataclass, field
 from typing import Optional
+
+from digitalmodel.asset_integrity.applicability import Applicability, flagged
 
 from digitalmodel.asset_integrity.dnv_rp_f101 import dnv_f101_single_defect
 from digitalmodel.codes import API_579, DNV_RP_F101
@@ -116,6 +119,7 @@ class NetSectionCircumferentialResult:
     level1_screen_ok: Optional[bool] = None  # c <= 2 s (E_L/E_C) if s given
     details: dict = field(default_factory=dict)
     code_reference: str = API_579.label
+    applicability: Applicability = field(default_factory=Applicability)
 
 
 # ---------------------------------------------------------------------------
@@ -283,6 +287,13 @@ def api579_part5_circumferential_netsection(
         sigma_flow_psi=sigma_flow_psi,
         allowable_axial_stress_psi=allowable_axial,
         level1_screen_ok=(None if screen_ok is None else bool(screen_ok)),
+        # A failed Level-1 extent screen triggers this net-section check;
+        # it does not invalidate the net-section calculation already performed.
+        applicability=(
+            flagged("CIRCUMFERENTIAL_THROUGH_WALL",
+                    "Through-wall loss requires leak/repair assessment")
+            if d >= t else Applicability()
+        ),
         details={
             "Dm_in": Dm,
             "t_in": t,

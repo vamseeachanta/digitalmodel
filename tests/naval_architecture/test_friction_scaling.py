@@ -253,8 +253,8 @@ def test_transfer_emits_citation_sidecar_by_default():
     assert r.citations[0].source_sibling == "generic"
 
 
-def test_transfer_procedure_citation_is_explicitly_unresolved():
-    r = _forward(0.2)
+def test_transfer_procedure_opt_out_is_explicitly_unresolved():
+    r = _forward(0.2, cite=False)
     rec = [u for u in r.unresolved_citations if u.source_id == "ITTC-7.5-02-03-01.4"]
     assert len(rec) == 1
     assert rec[0].status == "unresolved-in-registry"
@@ -274,21 +274,18 @@ def test_transfer_citation_fail_closed_on_missing_page(tmp_path):
                                fn_model=0.25, fn_ship=0.25, repo_root=tmp_path)
 
 
-def test_transfer_citation_standalone_degrades_with_warning(monkeypatch):
-    from digitalmodel.citations.schema import CitationResolutionError as _CRE
-    from digitalmodel.naval_architecture import resistance as res
+def test_transfer_citation_standalone_fails_closed(monkeypatch):
+    from digitalmodel.citations.schema import CitationResolutionError
+    from digitalmodel.naval_architecture import friction_scaling
 
     def _unconfigured(*_a, **_k):
-        raise _CRE(code_id="EN400", wiki_path="wikis/...", reason="resolver_unconfigured:test")
+        raise CitationResolutionError(code_id="EN400", wiki_path="wikis/test.md",
+                                      reason="resolver_unconfigured:test")
 
-    monkeypatch.setattr(res, "get_en400_reference", _unconfigured, raising=False)
-    monkeypatch.setattr(res, "_EN400_STANDALONE_WARNED", False)
-    with pytest.warns(RuntimeWarning, match="standalone"):
-        r = transfer_model_to_ship(ct_model=4.0e-3, re_model=1e7, re_ship=1e9,
-                                   form_factor_k=0.2, fn_model=0.25, fn_ship=0.25)
-    assert r.citations == []
-    assert r.ct_ship == pytest.approx(2.236735e-3, abs=5e-10)
-    assert any(u.status == "unresolved-in-registry" for u in r.unresolved_citations)
+    monkeypatch.setattr(friction_scaling, "get_en400_reference", _unconfigured)
+    with pytest.raises(CitationResolutionError, match="resolver_unconfigured"):
+        transfer_model_to_ship(ct_model=4.0e-3, re_model=1e7, re_ship=1e9,
+                               form_factor_k=0.2, fn_model=0.25, fn_ship=0.25, cite="strict")
 
 
 def test_transfer_explicit_opt_out_is_recorded():

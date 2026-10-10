@@ -169,3 +169,24 @@ def get_en400_reference(
     )
     validate_citation(citation, repo_root=repo_root)
     return CitedValue(value=1.0, citation=citation, units="reference")
+
+
+def get_ittc78_transfer_reference(*, repo_root: Optional[Path] = None) -> CitedValue:
+    """Validated reference to the simplified ITTC-78 resistance transfer.
+
+    Source: https://ittc.info/media/11796/75-02-03-014.pdf (2021, Revision 05).
+    Sections 2.3 and 2.4.1 identify model-test analysis and ship total resistance.
+    This getter does not imply that omitted air/appendage corrections are implemented.
+    The wiki target must be provisioned by its owner; missing configuration fails closed.
+    """
+    citation = Citation(
+        code_id="ITTC-7.5-02-03-01.4",
+        publisher="ITTC",
+        revision="2021 Revision 05",
+        section="Sections 2.3 and 2.4.1 (model resistance analysis and ship total resistance)",
+        wiki_path="wikis/marine-engineering/wiki/standards/ittc-1978-performance-prediction.md",
+        source_sibling="generic",
+        note="Simplified form-factor resistance transfer; caller-declared allowances only",
+    )
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=1.0, citation=citation, units="reference")
