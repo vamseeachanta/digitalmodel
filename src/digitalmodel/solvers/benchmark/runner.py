@@ -52,6 +52,11 @@ class Case:
     rel_tol: float = 1e-6
     abs_tol: float = 0.0
     variant_label: str = "threads"
+    # "all" (and the cap on explicit counts) means logical cores for thread
+    # cases and physical cores for MPI-rank cases: Open MPI's default slot
+    # count is physical cores, so asking for the logical count is refused on a
+    # hyperthreaded host (#2320).
+    cores_kind: str = "logical"
     extra: dict = field(default_factory=dict)
 
 
@@ -256,7 +261,8 @@ def _run_variant(case, variant, root, repeats, warmup, load_sampler, allow_busy,
 def run_pack(cases, work_root: Path, *, machine_label: str, repeats: int = 3,
              warmup: int = 1, load_sampler=env.sample_cpu_load,
              allow_busy: bool = False, keep: bool = False,
-             cores: int | None = None) -> dict:
+             cores: int | None = None,
+             physical_cores: int | None = None) -> dict:
     from .cases import resolve_variants
 
     if repeats < 1 or warmup < 0:
@@ -265,10 +271,12 @@ def run_pack(cases, work_root: Path, *, machine_label: str, repeats: int = 3,
     work_root = Path(work_root)
     work_root.mkdir(parents=True, exist_ok=True)
     cores = cores or os.cpu_count() or 1
+    physical = min(physical_cores or env._physical_cores() or cores, cores)
     started = _dt.datetime.now(_dt.timezone.utc)
     results = []
     for case in cases:
-        for variant in resolve_variants(case.variants, cores):
+        limit = physical if case.cores_kind == "physical" else cores
+        for variant in resolve_variants(case.variants, limit):
             results.append(_run_variant(case, variant, work_root, repeats, warmup,
                                         load_sampler, allow_busy, keep))
     return {
