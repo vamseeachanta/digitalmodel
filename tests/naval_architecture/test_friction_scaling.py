@@ -248,7 +248,7 @@ def test_prohaska_refuses_ill_conditioned():
 def test_transfer_emits_citation_sidecar_by_default():
     r = transfer_model_to_ship(ct_model=4.0e-3, re_model=1e7, re_ship=1e9, form_factor_k=0.2,
                                fn_model=0.25, fn_ship=0.25, repo_root=CIT_ROOT)
-    assert len(r.citations) == 2
+    assert len(r.citations) == 1
     assert r.citations[0].code_id == "EN400"
     assert r.citations[0].source_sibling == "generic"
 
@@ -285,7 +285,7 @@ def test_transfer_citation_standalone_fails_closed(monkeypatch):
     monkeypatch.setattr(friction_scaling, "get_en400_reference", _unconfigured)
     with pytest.raises(CitationResolutionError, match="resolver_unconfigured"):
         transfer_model_to_ship(ct_model=4.0e-3, re_model=1e7, re_ship=1e9,
-                               form_factor_k=0.2, fn_model=0.25, fn_ship=0.25)
+                               form_factor_k=0.2, fn_model=0.25, fn_ship=0.25, cite="strict")
 
 
 def test_transfer_explicit_opt_out_is_recorded():

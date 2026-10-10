@@ -66,7 +66,8 @@ import json
 import math
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Iterator, Mapping, Optional, Sequence
+from collections.abc import Mapping
+from typing import Iterator, Optional, Sequence
 
 import numpy as np
 

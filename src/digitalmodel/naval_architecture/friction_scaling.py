@@ -25,7 +25,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from digitalmodel.naval_architecture import resistance as _resistance
 
@@ -220,9 +220,11 @@ def _common_inputs(
     ca_model: Optional[float],
     ca_ship: Optional[float],
     delta_cf: Optional[float],
-    cite: bool,
+    cite: bool | Literal["strict"],
     repo_root: Optional[Path],
 ):
+    if isinstance(cite, str) and cite != "strict":
+        raise ValueError('cite must be True, False or "strict"')
     k = _finite("form factor k", form_factor_k)
     if k < 0.0:
         raise ValueError(f"form factor k must be non-negative, got {k!r}")
@@ -240,7 +242,7 @@ def _common_inputs(
         "ca_ship": _allowance("ca_ship", ca_ship),
         "delta_cf": _allowance("delta_cf", delta_cf),
     }
-    citations = _transfer_citations(repo_root) if cite else []
+    citations = _transfer_citations(re_model, repo_root, cite) if cite else []
     omitted = list(_ALWAYS_OMITTED)
     omitted += [
         f"{_ALLOWANCE_DESCRIPTIONS[n]} not declared; taken as zero"
@@ -264,18 +266,19 @@ def transfer_model_to_ship(
     ca_ship: Optional[float] = None,
     delta_cf: Optional[float] = None,
     fn_rel_tolerance: float = 1e-3,
-    cite: bool = True,
+    cite: bool | Literal["strict"] = True,
     repo_root: Optional[Path] = None,
 ) -> TransferResult:
     """Transfer a model total-resistance coefficient to ship scale (ITTC 7.5-02-03-01.4).
 
     Refuses (ValueError) when the Froude numbers differ beyond ``fn_rel_tolerance``,
     for invalid Reynolds numbers, a negative/non-finite form factor or a non-positive C_T,m.
-    Both the EN400 friction-line and ITTC transfer-procedure citations are validated
-    by default. A missing page or unconfigured resolver raises CitationResolutionError.
-    ``cite=False`` opts out, recording the omission and unresolved procedure reference.
-    The production ITTC wiki target is currently unprovisioned (tracked on issue #2239).
-    Default calls require owner provisioning; the test fixture is not a production source.
+    By default, the existing EN400 wrapper emits the friction-line citation; an
+    unconfigured resolver returns the result with its one-shot RuntimeWarning. A
+    configured but missing EN400 page still raises CitationResolutionError. The ITTC
+    procedure remains explicitly unresolved. ``cite="strict"`` validates both references
+    and raises for missing pages or resolver configuration. ``cite=False`` opts out,
+    recording the omission and unresolved procedure reference.
     """
     ct_m = _positive("model total resistance coefficient ct_model", ct_model)
     k, fn_m, fn_s, cf_m, cf_s, allow, omitted, citations = _common_inputs(
@@ -289,7 +292,7 @@ def transfer_model_to_ship(
         re_model=float(re_model), re_ship=float(re_ship), fn_model=fn_m, fn_ship=fn_s,
         allowances=allow, assumptions=_ASSUMPTIONS, omitted_corrections=omitted,
         citations=citations, cited=bool(cite),
-        unresolved_citations=() if cite else (ITTC_TRANSFER_UNRESOLVED,),
+        unresolved_citations=() if cite == "strict" else (ITTC_TRANSFER_UNRESOLVED,),
     )
 
 
@@ -305,15 +308,13 @@ def transfer_ship_to_model(
     ca_ship: Optional[float] = None,
     delta_cf: Optional[float] = None,
     fn_rel_tolerance: float = 1e-3,
-    cite: bool = True,
+    cite: bool | Literal["strict"] = True,
     repo_root: Optional[Path] = None,
 ) -> TransferResult:
     """Inverse of :func:`transfer_model_to_ship` with conserved C_R and validated citations.
 
-    The production ITTC wiki target is currently unprovisioned (tracked on issue #2239).
-    Default calls require owner provisioning; the test fixture is not a production source.
-    Missing pages or resolver configuration raise CitationResolutionError; ``cite=False``
-    records the explicit opt-out and retains the unresolved procedure reference.
+    Default EN400-only, standalone warning, ``cite="strict"`` fail-closed and
+    ``cite=False`` opt-out behaviour match :func:`transfer_model_to_ship`.
     """
     ct_s = _positive("ship total resistance coefficient ct_ship", ct_ship)
     k, fn_m, fn_s, cf_m, cf_s, allow, omitted, citations = _common_inputs(
@@ -327,12 +328,14 @@ def transfer_ship_to_model(
         re_model=float(re_model), re_ship=float(re_ship), fn_model=fn_m, fn_ship=fn_s,
         allowances=allow, assumptions=_ASSUMPTIONS, omitted_corrections=omitted,
         citations=citations, cited=bool(cite),
-        unresolved_citations=() if cite else (ITTC_TRANSFER_UNRESOLVED,),
+        unresolved_citations=() if cite == "strict" else (ITTC_TRANSFER_UNRESOLVED,),
     )
 
 
-def _transfer_citations(repo_root):
-    """Resolve both references without the legacy friction wrapper's warning fallback."""
+def _transfer_citations(re_model, repo_root, cite):
+    """Keep the main citation path unless dual-reference validation is requested."""
+    if cite != "strict":
+        return ittc57_cf_cited(re_model, repo_root=repo_root)["citations"]
     friction = get_en400_reference(
         "Chapter 7 — Resistance & Powering (ITTC-1957 model–ship correlation friction line)",
         note="ITTC-1957 friction coefficient",

@@ -1,0 +1,46 @@
+{
+  "schema": "review-packet/1",
+  "created": "2026-10-10T12:59:45+00:00",
+  "git_head": "cf835bc1fbc6ca97b399515531071b1ad9abf644",
+  "digest_domain": "raw-bytes",
+  "packet_bytes": 73989,
+  "packet_sha256": "b86b960a9f3e7f67ffc773718c5ccf57e24061c2489cd4a3bbd34c58f73db9ca",
+  "files": [
+    {
+      "path": "src/digitalmodel/naval_architecture/friction_scaling.py",
+      "sha256": "206f74f00f5cb93e3f9cee8b8c56d61d9935967b94eb0abf598e203c2aa3b3fa",
+      "bytes": 13334
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_hydrostatics.py",
+      "sha256": "a157e7c61b38889622de302a94aa391f67399b558d1fbb205c78969b01625aa7",
+      "bytes": 12480
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/resistance.py",
+      "sha256": "9c95175da33277e07fb0bdd7ed6ab91c7dc11cce6068d6d0f8e2d2845dc049fe",
+      "bytes": 3660
+    },
+    {
+      "path": "tests/naval_architecture/test_friction_scaling.py",
+      "sha256": "b785b6de634aeb9f7fd00c62f396873b1305aa43d1a2029469576fb8dfbffab1",
+      "bytes": 11413
+    },
+    {
+      "path": "tests/naval_architecture/test_transfer_citation_regressions.py",
+      "sha256": "b02ab688c82f7405584dd3c1dfa13e6f783f116f64d8c403522bfe47da1d2669",
+      "bytes": 10257
+    },
+    {
+      "path": "tests/naval_architecture/test_mesh_r02.py",
+      "sha256": "9b0b6ddf9eeff68ef04c1edbd48db39a7ab210e4c1e8981f57ab8f1296815a9e",
+      "bytes": 10021
+    },
+    {
+      "path": "docs/plans/evidence/sr2314/fz2344-main-parity.json",
+      "sha256": "15773df8b92744d8fbc1cf673f5b350925795b21811e10377041e55cccdf2482",
+      "bytes": 1109
+    }
+  ],
+  "packet_retention": "temporary stdin transport; source hashes retained"
+}

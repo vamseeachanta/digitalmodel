@@ -217,3 +217,9 @@ def test_baseline_wildcard_public_surface_is_preserved():
     namespace = {}
     exec("from digitalmodel.naval_architecture.mesh_hydrostatics import *", namespace)
     assert baseline <= namespace.keys()
+
+
+def test_facade_mapping_identity_matches_main():
+    from collections.abc import Mapping
+    from digitalmodel.naval_architecture import mesh_hydrostatics
+    assert mesh_hydrostatics.Mapping is Mapping
