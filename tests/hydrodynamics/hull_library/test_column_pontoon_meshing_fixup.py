@@ -89,7 +89,7 @@ def test_oc4_style_target_controls_count_and_quality(record_property):
     record_property('oc4_fine_count', fine.n_panels)
     record_property('oc4_coarse_max_edge_ratio', coarse_report.max_aspect_ratio)
     record_property('oc4_fine_max_edge_ratio', fine_report.max_aspect_ratio)
-    assert fine.n_panels > coarse.n_panels
+    assert fine.n_panels >= 1.5*coarse.n_panels
     assert max(coarse_report.max_aspect_ratio, fine_report.max_aspect_ratio) < 20
     for mesh in [coarse, fine]:
         points = mesh.vertices[mesh.panels]
@@ -110,3 +110,19 @@ def test_union_paneling_runs_once_with_or_without_lid(monkeypatch, lid):
         square_side=4, draft=10, panel_target_size=4, lid=lid))
     # One union plus its one independently integrated primitive.
     assert calls == [True, True]
+
+
+def test_report_marks_edge_bound_failure(monkeypatch):
+    original = form._quad_mesh
+    def elongated(faces, lid):
+        mesh = original(faces, lid)
+        vertices = mesh.vertices.copy()
+        vertices[:, :2] *= .01
+        return form.PanelMesh(vertices, mesh.panels)
+    monkeypatch.setattr(form, '_quad_mesh', elongated)
+    _, report = form.generate_column_pontoon(form.ColumnPontoonParameters(
+        square_side=4, draft=10, panel_target_size=4, lid=True))
+    assert report.max_aspect_ratio > 20
+    assert not report.edge_ratio_passed
+    assert report.edge_ratio_bound == 20
+    assert any('edge-ratio bound exceeded' in note for note in report.notes)

@@ -143,5 +143,3 @@ def _quad_mesh(faces: list[Array], lid: bool) -> PanelMesh:
         for i, a in enumerate(tri):
             panels.append([vertex(v) for v in (a, mids[i], centre, mids[i-1])])
     return PanelMesh(np.array(vertices), np.array(panels, dtype=np.int32), name="column_pontoon")
-
-

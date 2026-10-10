@@ -1,6 +1,8 @@
 """Geometry regressions: SI hand formulas and a 0.5 percent criterion."""
+from collections import Counter
 from math import pi
 
+import numpy as np
 import pytest
 from pydantic import ValidationError
 
@@ -59,3 +61,55 @@ def test_invalid_sizes_overlap_and_shallow_draft(changes):
             count=3, spacing=30, diameter=6, draft=20, pontoon_layout='ring',
             pontoon_width=2, pontoon_height=3,
         ) | changes))
+
+
+def test_near_circle_rounded_column_retains_half_percent_acceptance():
+    params = form.ColumnPontoonParameters(
+        square_side=4, corner_radius=1.9, draft=4, panel_target_size=4)
+    _, report = form.generate_column_pontoon(params)
+    area = 16-(4-pi)*1.9**2
+    assert report.waterplane_area == pytest.approx(area, rel=.005)
+    assert report.displacement == pytest.approx(4*area, rel=.005)
+    assert all(check['passed'] for check in report.primitive_checks)
+
+
+def test_near_circle_unequal_pontoon_retains_half_percent_acceptance():
+    params = form.ColumnPontoonParameters(
+        count=3, spacing=10, square_side=4, draft=5, panel_target_size=4,
+        pontoon_layout='ring', pontoon_width=2, pontoon_height=2.2,
+        pontoon_corner_radius=1)
+    solid = next(s for s in form._primitives(params)[0] if s['name'].startswith('pontoon'))
+    check = form._primitive_check(solid, params.draft)
+    area = 2*2.2-(4-pi)
+    assert check['volume']['mesh'] == pytest.approx(10*area, rel=.005)
+    assert check['passed']
+
+
+@pytest.mark.parametrize('width,height,radius', [(2, 3, 1), (1.6, 8, 0)])
+def test_unequal_rounded_primitive_cap_has_convex_closed_quads(width, height, radius):
+    params = form.ColumnPontoonParameters(
+        count=3, spacing=10, square_side=4, draft=10, panel_target_size=1,
+        pontoon_layout='ring', pontoon_width=width, pontoon_height=height,
+        pontoon_corner_radius=radius)
+    solid = next(s for s in form._primitives(params)[0] if s['name'].startswith('pontoon'))
+    mesh = form._quad_mesh(solid['faces'], True)
+    assert form._is_watertight(mesh)
+    points = mesh.vertices[mesh.panels]
+    edges = np.roll(points, -1, axis=1)-points
+    turns = np.cross(edges, np.roll(edges, -1, axis=1))
+    assert np.all(np.sum(turns*mesh.normals[:, None, :], axis=2) > 0)
+    assert form._primitive_check(solid, params.draft)['passed']
+
+
+def test_unequal_rounded_cap_knots_are_present_in_side_rings():
+    params = form.ColumnPontoonParameters(
+        count=3, spacing=10, square_side=4, draft=5, panel_target_size=1,
+        pontoon_layout='ring', pontoon_width=2, pontoon_height=3,
+        pontoon_corner_radius=1)
+    solid = next(s for s in form._primitives(params)[0] if s['name'].startswith('pontoon'))
+    edges = Counter()
+    for face in solid['faces']:
+        for a, b in zip(face, np.roll(face, -1, axis=0)):
+            key = tuple(sorted((tuple(np.round(a, 8)), tuple(np.round(b, 8)))))
+            edges[key] += 1
+    assert set(edges.values()) == {2}

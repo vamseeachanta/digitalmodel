@@ -41,6 +41,17 @@ profiles; total count is not guaranteed to be monotone for every target.
 An OC4 10/5 m probe exhibited a count inversion because coarser
 intersections required more quality repair. A blanket monotonic-density claim
 is therefore not established.
-The spar 3/1.5 m and OC4 5/2.5 m controls will establish the tested scaling.
+The spar 3/1.5 m and OC4 5/2.5 m controls will establish tested scaling
+above 2× and at least 1.5× respectively. Near-circular rounded corners will
+retain the 0.5% primitive criterion using at least ten chords per quarter.
+Rounded arcs are inscribed: displacement has a negative bias, bounded by
+0.411% of corner-sector area. The generic reported edge-ratio bound is 20;
+the spar fixture will meet the stricter test criterion below 10.
 The aspect metric is longest divided by shortest panel edge, not a solver
-qualification or angle-quality criterion.</p></body></html>
+qualification or angle-quality criterion. Circular Coons cap corner angles
+approach 180° as the facet count increases; positive turns and bounded edge
+ratios do not establish angular quality. Angular/Jacobian criteria are tracked
+in <a href="https://github.com/vamseeachanta/digitalmodel/issues/2346">issue 2346</a>.
+An exceeded edge-ratio bound will be explicit in the report rather than silently
+qualified. Unresolved ear triangulation will raise a clear error, and cap-grid
+padding knots will be shared with the side rings before meshing.</p></body></html>

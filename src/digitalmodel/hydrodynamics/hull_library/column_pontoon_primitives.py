@@ -23,7 +23,8 @@ def _profile(width: float, height: float, radius: float, target: float) -> Array
     points: list[Array] = []
     for sx, sy, start in ((1, 1, 0), (-1, 1, pi/2), (-1, -1, pi), (1, -1, 3*pi/2)):
         centre = np.array([sx * (width/2 - radius), sy * (height/2 - radius)])
-        minimum = 8
+        # Ten chords per quarter bound area loss by 0.411%, below 0.5%.
+        minimum = 10
         angles = np.linspace(start, start + pi/2, max(minimum, ceil(pi*radius/(2*target))) + 1)
         arc = centre + radius * np.column_stack((np.cos(angles), np.sin(angles)))
         points.extend(arc if radius else [centre])
@@ -35,15 +36,21 @@ def _profile(width: float, height: float, radius: float, target: float) -> Array
     return np.array(cleaned)
 
 
-def _cap_faces(profile: Array, origin: Array, e1: Array, e2: Array,
-               reverse: bool = False) -> list[Array]:
-    """Coons grid spans four boundary chains without a radial centre fan."""
-    # Repartition unequal rounded-rectangle chains into four equal lengths.
-    # A grid requires equal opposing boundary counts; pad with edge midpoints.
+def _grid_profile(profile: Array) -> Array:
+    """Share the cap grid's extra boundary knots with every side ring."""
+    # Four chains have equal index counts, not necessarily equal arc lengths.
+    # The same padded profile supplies caps and every side ring.
     while len(profile) % 4:
         lengths = np.linalg.norm(profile - np.roll(profile, -1, axis=0), axis=1)
         i = int(np.argmax(lengths))
         profile = np.insert(profile, i + 1, (profile[i] + profile[(i+1)%len(profile)]) / 2, axis=0)
+    return profile
+
+
+def _cap_faces(profile: Array, origin: Array, e1: Array, e2: Array,
+               reverse: bool = False) -> list[Array]:
+    """Coons grid spans four boundary chains without a radial centre fan."""
+    profile = _grid_profile(profile)
     m = len(profile) // 4
     loop = np.vstack((profile, profile[0]))
     bottom, right = loop[:m+1], loop[m:2*m+1]
@@ -65,6 +72,7 @@ def _cap_faces(profile: Array, origin: Array, e1: Array, e2: Array,
 
 def _solid(profile: Array, origin: Array, e1: Array, e2: Array, axis: Array,
            length: float, target: float, area: float, name: str, inertia: float | None = None) -> Solid:
+    profile = _grid_profile(profile)
     edge = np.linalg.norm(profile - np.roll(profile, -1, axis=0), axis=1).min()
     levels = np.linspace(0, length, ceil(length / min(target, 10 * edge)) + 1)
     rings = [origin + profile[:, :1]*e1 + profile[:, 1:]*e2 + z*axis for z in levels]
@@ -135,5 +143,3 @@ def _primitives(p: "ColumnPontoonParameters") -> tuple[list[Solid], float]:
                              a+[0, 0, z], np.array([-axis[1], axis[0], 0]), np.eye(3)[2],
                              axis, length, target, section_area, f"pontoon_{i}"))
     return solids, section_area
-
-

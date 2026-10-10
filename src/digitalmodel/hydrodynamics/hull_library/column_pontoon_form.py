@@ -142,6 +142,8 @@ class ColumnPontoonReport:
     min_edge: float = 0.
     max_edge: float = 0.
     closure_status: str = "open-at-waterline"
+    edge_ratio_bound: float = 20.
+    edge_ratio_passed: bool | None = None
     comparator_class: str = "analytic-control"
     screening: object | None = None
     notes: list[str] = field(default_factory=list)
@@ -244,6 +246,9 @@ def generate_column_pontoon(params: ColumnPontoonParameters, *, screen: bool = F
                            mesh.vertices[np.roll(mesh.panels, -1, axis=1)], axis=2)
     report.max_aspect_ratio = float(np.max(edges.max(axis=1) / edges.min(axis=1)))
     report.min_edge, report.max_edge = float(edges.min()), float(edges.max())
+    report.edge_ratio_passed = report.max_aspect_ratio <= report.edge_ratio_bound
+    if not report.edge_ratio_passed:
+        report.notes.append(f"edge-ratio bound exceeded: {report.max_aspect_ratio:.3f} > {report.edge_ratio_bound:g}")
     report.closure_status = ("closed-with-lid" if report.watertight else
                              "invalid-lid" if params.lid else "open-at-waterline")
     report.comparator_class = params.comparator_class

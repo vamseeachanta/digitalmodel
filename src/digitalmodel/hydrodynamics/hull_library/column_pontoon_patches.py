@@ -11,20 +11,25 @@ Array = NDArray[np.float64]
 def triangulate(ring: Array) -> list[Array]:
     """Remove convex ears while retaining seam vertices on straight edges."""
     ids = list(range(len(ring)))
-    normal = np.sum(np.cross(ring, np.roll(ring, -1, axis=0)), axis=0)
+    extent = float(np.max(np.ptp(ring, axis=0)))
+    local = (ring-ring[0]) / extent if extent else np.zeros_like(ring)
+    normal = np.sum(np.cross(local, np.roll(local, -1, axis=0)), axis=0)
+    if np.linalg.norm(normal) < 1e-12:
+        raise ValueError("cannot triangulate degenerate clipped patch")
     result = []
     while len(ids) > 3:
         choices = []
         for j in range(len(ids)):
             tri = ring[[ids[j-1], ids[j], ids[(j+1) % len(ids)]]]
-            area = np.dot(np.cross(tri[1]-tri[0], tri[2]-tri[0]), normal)
-            remaining = ring[ids[:j] + ids[j+1:]]
+            candidate = local[[ids[j-1], ids[j], ids[(j+1) % len(ids)]]]
+            area = np.dot(np.cross(candidate[1]-candidate[0], candidate[2]-candidate[0]), normal)
+            remaining = local[ids[:j] + ids[j+1:]]
             rem_area = np.dot(np.sum(np.cross(remaining, np.roll(remaining, -1, axis=0)), axis=0), normal)
             if area > np.linalg.norm(normal)*1e-7 and rem_area > np.linalg.norm(normal)*1e-7:
                 lengths = np.linalg.norm(tri-np.roll(tri, -1, axis=0), axis=1)
                 choices.append((lengths.min()/lengths.max(), j, tri))
         if not choices:
-            break
+            raise ValueError("cannot triangulate clipped patch while preserving its boundary")
         _, j, tri = max(choices, key=lambda item: item[0])
         result.append(tri)
         ids.pop(j)
