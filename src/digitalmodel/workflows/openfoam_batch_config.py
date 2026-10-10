@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import re
+import subprocess
 from typing import Mapping
 
 from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
@@ -270,9 +271,31 @@ def _has_symlink_component(path: Path) -> bool:
     return False
 
 
+# Inherited repository bindings override ``git -C`` discovery, so the probe drops them.
+_GIT_REPOSITORY_BINDINGS = frozenset({
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+    "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_CEILING_DIRECTORIES",
+})
+
+
 def _inside_git_checkout(path: Path) -> bool:
-    current = path.resolve()
-    for candidate in (current, *current.parents):
-        if (candidate / ".git").exists():
-            return True
-    return False
+    """Classify ``path`` by Git discovery; a failed probe raises instead of reading as outside."""
+    env = {key: value for key, value in os.environ.items()
+           if key not in _GIT_REPOSITORY_BINDINGS}
+    env["LC_ALL"] = "C"
+    try:
+        probe = subprocess.run(
+            ["git", "-C", str(path.resolve()), "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+    except OSError as exc:
+        raise RuntimeError(f"Git probe could not run for {path}: {exc}") from exc
+    if probe.returncode == 0:
+        return probe.stdout.strip() == "true"
+    if "not a git repository" in probe.stderr.lower():
+        return False
+    raise RuntimeError(
+        f"Git probe failed for {path} (exit {probe.returncode}): {probe.stderr.strip()}"
+    )

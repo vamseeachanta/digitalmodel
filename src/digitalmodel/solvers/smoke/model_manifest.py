@@ -174,6 +174,8 @@ def verify_manifest(path):
             raise ValueError("invalid source identity")
         if source["path"] not in files or digest(files[source["path"]]) != source["sha256"]:
             raise ValueError("source hash mismatch")
+        from .model_source import verify_source_provenance
+        verify_source_provenance(data, files)
         _relative(root, data["master"])
         _closure(root, data["master"], files)
         return {**data, "_root": root}

@@ -232,7 +232,7 @@ def test_unknown_section_warning_survives(tmp_path):
 
 def test_generator_preserves_and_reorders_maximum_then_validator_recognizes(tmp_path):
     from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
-    from digitalmodel.solvers.orcaflex.modular_generator.builders.generic_builder import GenericModelBuilder
+    from digitalmodel.solvers.orcaflex.modular_generator.builders.general_builder import GeneralBuilder
     from digitalmodel.solvers.orcaflex.modular_generator.schema import GenericModel, ProjectInputSpec
 
     properties = {MAXIMUM: 0.125, MODE: True, METHOD: "Implicit time domain"}
@@ -243,7 +243,7 @@ def test_generator_preserves_and_reorders_maximum_then_validator_recognizes(tmp_
                      "seabed": {"stiffness": {"normal": 100, "shear": 100}}},
         generic=GenericModel(general_properties=properties),
     )
-    output = GenericModelBuilder(spec, BuilderContext()).build()
+    output = GeneralBuilder(spec, BuilderContext()).build()
     settings = output["General"]
     assert settings[MAXIMUM] == properties[MAXIMUM]
     assert list(settings).index(MODE) < list(settings).index(MAXIMUM)

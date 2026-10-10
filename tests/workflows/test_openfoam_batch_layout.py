@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 from types import SimpleNamespace
 
 import pytest
@@ -56,10 +57,19 @@ def test_hosted_missing_root_rejects_before_side_effect(tmp_path: Path) -> None:
     assert set(tmp_path.iterdir()) == before
 
 
+_GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")
+
+
+def _git_init(path: Path) -> None:
+    # Isolated child bindings: an inherited GIT_DIR would redirect the init.
+    env = {key: value for key, value in os.environ.items() if key not in _GIT_BINDINGS}
+    subprocess.run(["git", "init", "-q", str(path)], check=True, env=env)
+
+
 def test_trusted_local_requires_precreated_absolute_non_git_root(tmp_path: Path) -> None:
     cfg_dir = tmp_path / "checkout" / "case"
     cfg_dir.mkdir(parents=True)
-    (tmp_path / "checkout" / ".git").mkdir()
+    _git_init(tmp_path / "checkout")
     external = tmp_path / "scratch"
     external.mkdir()
     paths = resolve_batch_paths(
@@ -70,6 +80,47 @@ def test_trusted_local_requires_precreated_absolute_non_git_root(tmp_path: Path)
         resolve_batch_paths(
             {"execution_context": "trusted-local", "work_root": str(cfg_dir)}, cfg_dir, env={}
         )
+
+
+@pytest.mark.parametrize("binding", ["work-tree-elsewhere", "missing-git-dir"])
+def test_git_probe_ignores_inherited_repository_bindings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, binding: str
+) -> None:
+    from digitalmodel.workflows.openfoam_batch_config import _inside_git_checkout
+
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    _git_init(checkout)
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    if binding == "work-tree-elsewhere":
+        monkeypatch.setenv("GIT_DIR", str(checkout / ".git"))
+        monkeypatch.setenv("GIT_COMMON_DIR", str(checkout / ".git"))
+        monkeypatch.setenv("GIT_WORK_TREE", str(scratch))
+    else:
+        monkeypatch.setenv("GIT_DIR", str(tmp_path / "absent" / ".git"))
+    assert _inside_git_checkout(checkout) is True
+    assert _inside_git_checkout(scratch) is False
+    with pytest.raises(ValueError, match="Git checkout"):
+        resolve_batch_paths(
+            {"execution_context": "trusted-local", "work_root": str(checkout)}, scratch, env={}
+        )
+
+
+@pytest.mark.parametrize("failure", ["unexpected-exit", "git-missing"])
+def test_git_probe_failure_is_not_a_non_repository_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    from digitalmodel.workflows import openfoam_batch_config as config
+
+    def probe(*args, **kwargs):
+        if failure == "git-missing":
+            raise FileNotFoundError("git")
+        return subprocess.CompletedProcess(args[0], 128, "", "fatal: unable to access config\n")
+
+    monkeypatch.setattr(config.subprocess, "run", probe)
+    with pytest.raises(RuntimeError, match="Git probe"):
+        config._inside_git_checkout(tmp_path)
 
 
 def test_owned_layout_rejects_foreign_marker_and_cleans_only_case(tmp_path: Path) -> None:

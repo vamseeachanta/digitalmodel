@@ -69,7 +69,8 @@ def test_complete_bundle_and_reference_differences(packaging, tmp_path):
     assert packaging.SOURCE.read_bytes() == original
     actual = {p.relative_to(root).as_posix() for p in (root / "bundle").rglob("*") if p.is_file()}
     listed = {item["path"] for item in data["files"]}
-    assert actual | {"source/spec.yml"} == listed
+    assert actual | {"source/spec.yml", "source/template.yml",
+                     "source/derivation.json", "reference-differences.json"} == listed
     assert [x["path"] for x in data["files"]] == sorted(listed)
     assert data["master"] == "bundle/master.yml"
     differences = json.loads((root / "reference-differences.json").read_text())
@@ -95,7 +96,7 @@ def test_existing_file_is_rejected(packaging, tmp_path):
     assert output.read_text() == "preserve"
 
 
-def test_failed_generation_removes_only_owned_output(packaging, tmp_path, monkeypatch):
+def test_failed_generation_preserves_owned_evidence(packaging, tmp_path, monkeypatch):
     def fail(*args):
         raise ValueError("injected generation failure")
 
@@ -105,7 +106,10 @@ def test_failed_generation_removes_only_owned_output(packaging, tmp_path, monkey
     output = tmp_path / "output"
     with pytest.raises(ValueError, match="injected"):
         packaging.prepare_bundle(output)
-    assert not output.exists()
+    assert (output / "source/spec.yml").is_file()
+    assert (output / "source/template.yml").is_file()
+    assert (output / "source/derivation.json").is_file()
+    assert not (output / "manifest.json").exists()
     assert neighbor.read_text() == "preserve"
 
 
@@ -226,8 +230,19 @@ def _bundle(tmp_path, master, includes):
 
 def test_generated_sections_merge_explicit_include_records(packaging, tmp_path):
     bundle = _bundle(tmp_path, "- includefile: a.yml\n- includefile: b.yml\n",
-                     {"a.yml": "General:\n  X: 1\n", "b.yml": "General:\n  Y: 2\nLines: []\n"})
-    assert packaging._generated_sections(bundle) == {"General": {"X": 1, "Y": 2}, "Lines": []}
+                     {"a.yml": "General:\n  X: 1\nLines:\n  A: 1\n",
+                      "b.yml": "Lines:\n  B: 2\nGroups: []\n"})
+    sections, updates = packaging._generated_sections(bundle)
+    assert sections == {"General": {"X": 1}, "Lines": {"A": 1, "B": 2}, "Groups": []}
+    assert [(u["section"], u["previous_include"], u["current_include"]) for u in updates] == [
+        ("Lines", "a.yml", "b.yml")]
+
+
+def test_generated_sections_refuse_second_general_owner(packaging, tmp_path):
+    bundle = _bundle(tmp_path, "- includefile: a.yml\n- includefile: b.yml\n",
+                     {"a.yml": "General:\n  X: 1\n", "b.yml": "General:\n  Y: 2\n"})
+    with pytest.raises(ValueError, match="General"):
+        packaging._generated_sections(bundle)
 
 
 @pytest.mark.parametrize("master,includes", [
