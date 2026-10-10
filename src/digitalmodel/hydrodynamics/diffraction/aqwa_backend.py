@@ -82,11 +82,33 @@ def _fmt_coord(value: float) -> str:
 
     Always includes a decimal point (required by AQWA v252+).
     Matches Workbench output format: e.g. ``149.10987``, ``-18.016252``, ``0.``
+
+    The value is written at the highest precision that fits nine characters, so the field keeps a
+    leading blank as a separator. Five significant figures, used before, moved hull nodes by up to
+    5 mm (182.3698 written as 182.37) and overflowed the field for small negative values such as
+    -0.00032717, which AQWA rejects as an embedded space in the COOR card.
     """
-    s = f"{value:.5g}"
-    if "." not in s and "e" not in s.lower():
-        s += "."
-    return f"{s:>10s}"
+    value = float(value)
+    if not math.isfinite(value):
+        raise ValueError(f"coordinate must be finite, got {value!r}")
+    if value == 0.0:
+        return f"{'0.':>10s}"
+    candidates = []
+    for d in range(8, -1, -1):
+        s = f"{value:.{d}f}"
+        if "." not in s:
+            s += "."
+        if s.rstrip("0").endswith("."):
+            s = s.rstrip("0") if s.rstrip("0") != "-." else s
+        candidates.append(s)
+    for p in range(6, -1, -1):
+        m, ex = f"{value:.{p}e}".split("e")
+        if "." not in m:
+            m += "."
+        candidates.append(f"{m}e{int(ex)}")
+    fitting = [s for s in candidates if len(s) <= 10]
+    best = min(fitting, key=lambda s: (abs(float(s) - value), len(s)))
+    return f"{best:>10s}"
 
 
 def _fmt_float(value: float, width: int = 10) -> str:
