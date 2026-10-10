@@ -60,7 +60,7 @@ validate arbitrary panel threshold crossings. Bulbs are not approximated as tees
 40 synthetic combinations: 8 plates and 32 flatbar/welded-tee panels; spans 600/1200,
 breadths 400/600 mm, fixed compression 50/100 MPa, web deductions 0/1 mm for panels.
 All are authored model cases, not stock products or actual bulkhead geometry.
-Plain plate thresholds at b 400 are 3.5147/4.9706 mm for 50/100 MPa; at b 600,
+Plain plate thresholds at b = 400 mm are 3.5147/4.9706 mm for 50/100 MPa; at b = 600 mm,
 5.2721/7.4559 mm. Span invariance follows the k=4 approximation, not universal
 structural behavior. Panel thresholds are not qualified engineering curves.
 
@@ -80,8 +80,8 @@ owner manifest. ace-linux-2 registry identifies a
 sim-worker, but strict SSH probe failed for absent trusted host key. Trust remains
 unchanged. No GPU/licensed/heavy job ran. Lightweight Windows work was retained.
 
-Numerical output owner: private digitalmodel-data, branch
-study/ship-plate-synthetic-results, docs/reviews/ship-plate-study/. Temporary
+Numerical output owner: private digitalmodel-data, main (merged from branch
+study/ship-plate-synthetic-results through PR 44), docs/reviews/ship-plate-study/. Temporary
 ship-plate-results is an execution replica. manifest.json pins algorithm hashes,
 workflow revision/dirty status, result digest, execution time and content-based
 run identity. No client input or existing dataset/run identity is substituted.
@@ -95,11 +95,15 @@ Final Codex artifact review passes and independently reran 40 tests. Claude
 artifact review approved with limitations; its minor input/evidence corrections
 were applied and rereviewed by Codex. Source schema and source relationships pass;
 schema is a staging contract, not a complete engineering readiness validator.
-Result retention is verified in private digitalmodel-data draft PR 44, commit
+Result retention is verified in private digitalmodel-data merged PR 44, commit
 95ddcd3a4ce34378309339e2a191484b372f0a98, owner-relative
 docs/reviews/ship-plate-study/manifest.json. Run identity
 ship-plate-synthetic-43aa52bfd6b78cc4; precomputed.json SHA256
 43aa52bfd6b78cc42c01ce5550ddc1e4a16634d8a7a49ae0a7f59989c06b5c23.
+The 95ddcd3, 4754b1c and d3cdde0 revisions cited in this study are original PR 44
+commits, preserved through the merged PR and not ancestors of main. The same
+owner-relative paths are on digitalmodel-data main at
+1722e55a49feb235b5e40eddd60ecbfb05ac958d with unchanged SHA256.
 All nine remote evidence blobs match retained bytes; JSON and HTML digests match
 the manifest. Published workflow 095312dd source blobs match the executed code
 after Git line-ending normalization; exact executed byte hashes remain recorded.
@@ -115,13 +119,13 @@ idealization**, not engineering-qualified cases. The exact screen is longitudina
 compression only, zero shear/transverse stress, actual simply-supported full-field
 geometry, uniform loss, assumed AH36, E=206000 MPa, nu=0.3, fy=355 MPa, gamma=1.15,
 FCA=0, nominal thickness 12 mm, and fixed applied stress 50/100 MPa. The eight rows
-are the Cartesian product L 600/1200, b 400/600 and stress 50/100. At every crossing,
+are the Cartesian product L = 600/1200 mm, b = 400/600 mm and stress 50/100. At every crossing,
 gamma*sigma_x is 57.5 or 115 MPa, below fy/2=177.5 MPa, so the crossing lies on the
 elastic branch. Independent solution:
 
 `t_cross = b * sqrt(gamma*sigma_x * 12*(1-nu^2) / (4*pi^2*E))`.
 
-This gives b 400:3.5147/4.9706 mm and b 600:5.2721/7.4559 mm, for either saved span.
+This gives b = 400 mm: 3.5147/4.9706 mm and b = 600 mm: 5.2721/7.4559 mm, for either saved span.
 The adapter independently checks this formula, thickness-squared scaling, JO
 continuity, pass-side threshold crossing and explicit unsupported-input rejection.
 The original 40-case result digest remains 43aa52bfd6b78cc42c01ce5550ddc1e4a16634d8a7a49ae0a7f59989c06b5c23.
@@ -216,7 +220,7 @@ docs/reviews/ship-plate-study/local-loss-diagnostic/manifest.json, run
 ship-local-diagnostic-a30c6daa794e7cf8. Result SHA256
 a30c6daa794e7cf8be81ae775be67034779d474632cfa86818360e52f3745036;
 published code 10bbc73af131f6cb85ff477ec7dca350d0882dae. Original 40-case owner
-and result hashes remain unchanged. Private draft PR 44 carries both runs.
+and result hashes remain unchanged. Merged private PR 44 carries both runs.
 
 Latest source continuation: Ovako's official flat-bar dimension sheet was inspected
 as a rendered graphical production envelope. It supplies no discrete stock table,
@@ -225,4 +229,4 @@ rectangle properties or marine grade are inferred. The filename year 2025 is not
 an established printed edition. Internal staging now contains six sources, three
 products and four sections, with this gap explicitly recorded. Temporary public
 PDF/PNG inspection files are removed after review; source originals are not
-retained in either draft. This source does not qualify the authored 200x10 fixture.
+retained in either repository. This source does not qualify the authored 200x10 fixture.

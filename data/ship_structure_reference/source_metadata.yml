@@ -31,6 +31,7 @@ sources:
         reason: confirmed_publisher_inertia_discrepancy_values_preserved
         evidence_owner: digitalmodel-data
         evidence_revision: d3cdde0ed247a4d112b5139f9e66d3ab15e92bd2
+        evidence_main_revision: 1722e55a49feb235b5e40eddd60ecbfb05ac958d
         evidence_path: docs/reviews/ship-plate-study/local-loss-diagnostic/source-database-verification.json
   - key: dnv-c201
     issuer: DNV
@@ -47,5 +48,7 @@ study: ../../docs/domains/plate-buckling/ship-structure-study.md
 result_owner:
   repo: digitalmodel-data
   pull_request: https://github.com/vamseeachanta/digitalmodel-data/pull/44
+  status: merged
+  merged_revision: 1722e55a49feb235b5e40eddd60ecbfb05ac958d
   owner_path: docs/reviews/ship-plate-study/
   applicability: synthetic_model_screening_and_isolated_patch_diagnostics_no_asset_acceptance
