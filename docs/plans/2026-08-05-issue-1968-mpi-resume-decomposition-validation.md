@@ -400,7 +400,7 @@ moved and no implementation is authorized.
 - **The owner may prefer option 2 (reject).** It is safer and cheaper, and this
   plan says so plainly rather than arguing it away. Approving option 1 accepts
   that resume remains a real capability with a real, now-gated hazard.
-- **D5's check 3 is not evidence-backed and is retained as a conservative
+- **D5's check 3 is not evidence-backed and is retained as a
   default.** Approving this plan accepts a check whose necessity is unproven but
   whose cost is one directory listing per rank. If OpenFOAM v2312 turns out to
   synchronise per-rank time selection, the check is redundant, not wrong.

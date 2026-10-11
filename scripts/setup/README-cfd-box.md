@@ -18,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/vamseeachanta/digitalmodel/main/scr
 REPO_DIR=$HOME/digitalmodel WORK_DIR=$HOME/cfd_work bash provision-cfd-box.sh
 ```
 Installs OpenFOAM ESI **v2312** (`dl.openfoam.com`), OpenMPI 4.1.x, uv, gh, git,
-clones `digitalmodel`, installs its Python deps. Idempotent — safe to re-run.
+clones `digitalmodel`, installs its Python deps. Idempotent — can be re-run.
 
 ## 2. Verify
 ```bash

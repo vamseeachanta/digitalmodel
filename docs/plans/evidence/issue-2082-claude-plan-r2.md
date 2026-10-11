@@ -10,6 +10,7 @@ Private temporary directory removed: True
 
 ## Actual stdout (private host and scratch path redacted)
 
+````text
 # ADVERSARIAL PLAN REVIEW — Issue 2082 r2 (amended)
 
 **VERDICT: MAJOR** — One load-bearing gap remains; prior blockers adequately resolved.
@@ -116,6 +117,7 @@ Does this mean calling `json.dumps(report)` without `default=str` and asserting 
 - If **cross-platform support** is intended, request `.sh` harness or Python wrapper.
 - If **native acceptance is deferred**, move `.ps1` to follow-on issue and re-approve this plan as offline-only.
 
+````
 
 ## Actual stderr
 

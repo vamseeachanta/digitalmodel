@@ -63,7 +63,7 @@ initial volume is 600.0000 m3 for both variants (same `setFieldsDict`,
 true t=0 is **-81.163 %**, marginally worse than the reported figure. The metric
 in `volume_drift_percent` is structurally blind to first-timestep loss; it
 understates leakage and can never overstate it, so the verdict direction is
-safe. Tracked as a follow-on.
+unchanged. Tracked as a follow-on.
 
 Two further corroborations that this is a sustained leak rather than a transient
 or a reporting artefact:
@@ -109,7 +109,7 @@ inputs under both.
 two classes of difference, both benign:
 
 - `postProcessing/liquidVolume/0/volFieldValue.dat` appears only in `run/`. It is
-  a *result* file that my path filter caught because its path contains `/0/`. It
+  a *result* file that the path filter caught because its path contains `/0/`. It
   does not exist in the dry-run root because the solver never ran there.
 - `0/alpha.water` differs, because `setFields` rewrites it in place. Everything
   else — including `system/fvSolution`, `system/fvSchemes`, `system/controlDict`
@@ -212,7 +212,7 @@ full at t ~ 31.3 s while the `CaseType.SLOSHING` default `end_time` is 50.0 s.
 Past that point liquid is expelled through the vent. The previous full-height
 pressure outlet relieved this; closing it removed the relief. This is a real gap
 in the coupled configuration, not in the placement decision, and it is the
-strongest argument that the matrix is not yet safe to launch.
+strongest argument that the matrix should not yet be launched.
 
 **4. Momentum and turbulence disagree on the closed outlet.** `U` there is now
 `noSlip`, a wall condition, but `k`, `omega` and `nut` remain `zeroGradient` /
