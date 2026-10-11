@@ -40,7 +40,7 @@ def extracted_entries():
     for stem in STEMS:
         entries[stem] = populate_database_from_xlsx(
             RAODatabase(), FIXTURES / f"{stem}.xlsx", stem, {},
-            metadata={"basis": {"qualification": "fixture only"}},
+            metadata={"basis": {"rotations": "rad/m"}},
         )
     return entries
 
@@ -76,7 +76,7 @@ def test_different_basis_does_not_collapse(extracted_entries):
     original = extracted_entries[STEMS[0]]
     changed = deepcopy(original)
     changed.variation_id = "different_basis"
-    changed.metadata["basis"]["qualification"] = "different reference"
+    changed.metadata["basis"]["rotations"] = "deg/m"
     db = RAODatabase()
     store_fixture_entry(db, original)
     store_fixture_entry(db, changed)
