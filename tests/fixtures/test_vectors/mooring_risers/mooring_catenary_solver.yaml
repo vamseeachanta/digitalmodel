@@ -1,28 +1,43 @@
-source_type: excel
-source_description: "Catenary solver validation against Excel Poly Mooring reference and verified analytical solution from CATENARY_SOLVER_STATUS.md"
+source_type: analytical
+source_description: "Independent fully suspended elastic catenary derived from endpoint equilibrium and Hooke's law"
 extracted_date: "2026-03-16"
-legal_scan_passed: true
+reconciled_date: "2026-10-11"
 category: "mooring_risers"
 subcategory: "mooring_catenary_solver"
+provenance:
+  inputs:
+    source: "Original version of this fixture; public issue 2050, Inputs section"
+    revision: "11c13ad3c"
+    sha256: "0b843cbb2f901b4238b031c37e5e4e7fc5d9b077f84f8e741fa6b0ad6332fb27"
+    retrieved: "2026-10-11"
+  equations:
+    source: "MoorPy elastic catenary equations, eval_func_cat, ProfileType 1"
+    url: "https://github.com/NatLabRockies/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/moorpy/Catenary.py#L1170-L1185"
+    location: "Lines 1170-1185; EXF and EZF endpoint residuals"
+    retrieved: "2026-10-11"
+    reuse_terms: "BSD-3-Clause; equations are independently integrated here, with no copied implementation"
+    license_url: "https://github.com/NatLabRockies/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/LICENSE.txt"
+  derivation: "tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py"
+  precision: "Forces and parameter rounded to six decimal places; elongation to twelve. Tolerances are half the last displayed decimal unit."
 equations:
-  - name: "Catenary equation"
-    latex: "y(x) = a \\cdot (\\cosh(x/a) - 1)"
-    description: "Catenary shape equation where a = H/w"
-  - name: "Catenary arc length"
-    latex: "s = a \\cdot \\sinh(x/a)"
-    description: "Arc length along catenary from anchor"
-  - name: "Catenary parameter"
-    latex: "a = H / w"
-    description: "Catenary parameter from horizontal tension and weight"
+  - name: "Signed vertical equilibrium"
+    latex: "V(s) = V_a + w s, \\quad V_f - V_a = w L"
+    description: "s is unstretched arclength; V is the internal component directed from anchor toward fairlead"
+  - name: "Endpoint tension"
+    latex: "T_i = \\sqrt{H^2 + V_i^2}"
+    description: "Applies at both endpoints"
+  - name: "Elastic horizontal span"
+    latex: "X = \\frac{H}{w}[\\operatorname{asinh}(V_f/H)-\\operatorname{asinh}(V_a/H)] + \\frac{HL}{EA}"
+    description: "Integral of dx/ds = H/T + H/EA"
+  - name: "Elastic vertical span"
+    latex: "d = \\frac{T_f-T_a}{w} + \\frac{(V_a+wL/2)L}{EA}"
+    description: "Integral of dy/ds = V/T + V/EA"
   - name: "Elastic elongation"
-    latex: "\\Delta L = H \\cdot L / EA"
-    description: "Elastic stretch of mooring line"
-  - name: "Total tension (Pythagorean)"
-    latex: "T = \\sqrt{H^2 + V^2}"
-    description: "Total tension from horizontal and vertical components"
-  - name: "Vertical tension at fairlead"
-    latex: "V = H \\cdot \\tanh(x/a)"
-    description: "Vertical tension using hyperbolic tangent"
+    latex: "\\Delta L = \\frac{1}{EA}\\int_0^L \\sqrt{H^2+(V_a+ws)^2}\\,ds"
+    description: "Full tension-dependent stretch; H*L/EA is only the horizontal elastic displacement"
+  - name: "Inextensible chord/arc identity"
+    latex: "\\sqrt{S^2-d_g^2} = 2a\\sinh(X_g/(2a)), \\quad a=H/w"
+    description: "S=L, X_g=X-HL/EA, d_g=d-(V_a+wL/2)L/EA; inextensible limit uses physical X and d"
 inputs:
   - name: "Unstretched line length"
     symbol: "L"
@@ -36,88 +51,100 @@ inputs:
     symbol: "Y"
     unit: "m"
     test_value: 100
-  - name: "Submerged weight per length"
+  - name: "Submerged weight per unstretched length"
     symbol: "w"
     unit: "N/m"
     test_value: 1962
   - name: "Axial stiffness"
     symbol: "EA"
     unit: "N"
-    test_value: 64.0e9
+    test_value: 64000000000.0
 outputs:
-  - name: "Horizontal tension (verified analytical)"
+  - name: "Horizontal tension"
+    result_key: "horizontal_tension"
     symbol: "H"
     unit: "N"
-    test_expected: 1327168
-    tolerance: 13272
-  - name: "Vertical tension at fairlead (verified analytical)"
-    symbol: "V"
+    test_expected: 671447.442408
+    tolerance: 0.0000005
+  - name: "Signed vertical tension at anchor"
+    result_key: "vertical_tension_anchor"
+    symbol: "V_a"
     unit: "N"
-    test_expected: 1961959
-    tolerance: 19620
-  - name: "Total tension at fairlead (verified analytical)"
-    symbol: "T"
+    test_expected: -861932.636679
+    tolerance: 0.0000005
+  - name: "Signed vertical tension at fairlead"
+    result_key: "vertical_tension_fairlead"
+    symbol: "V_f"
     unit: "N"
-    test_expected: 2368683
-    tolerance: 23687
-  - name: "Catenary parameter (verified analytical)"
+    test_expected: 1100067.363321
+    tolerance: 0.0000005
+  - name: "Total tension at anchor"
+    result_key: "total_tension_anchor"
+    symbol: "T_a"
+    unit: "N"
+    test_expected: 1092597.610325
+    tolerance: 0.0000005
+  - name: "Total tension at fairlead"
+    result_key: "total_tension_fairlead"
+    symbol: "T_f"
+    unit: "N"
+    test_expected: 1288793.960166
+    tolerance: 0.0000005
+  - name: "Catenary parameter"
+    result_key: "catenary_parameter"
     symbol: "a"
     unit: "m"
-    test_expected: 676.44
-    tolerance: 6.76
-  - name: "Elongation (verified analytical)"
+    test_expected: 342.226015
+    tolerance: 0.0000005
+  - name: "Elastic elongation"
+    result_key: "elongation"
     symbol: "dL"
     unit: "m"
-    test_expected: 0.021
-    tolerance: 0.005
+    test_expected: 0.013591821950
+    tolerance: 0.0000000000005
 worked_examples:
-  - description: "Verified analytical solution: L=1000m, X=800m, w=1962 N/m, EA=64e9 N"
+  - description: "Independent elastic reference; fully suspended line with signed anchor load"
     inputs:
       length: 1000
       horizontal_span: 800
       vertical_span: 100
       weight_per_length: 1962
-      ea_stiffness: 64.0e9
+      ea_stiffness: 64000000000.0
+    outputs:
+      horizontal_tension: 671447.442408
+      vertical_tension_anchor: -861932.636679
+      vertical_tension_fairlead: 1100067.363321
+      total_tension_anchor: 1092597.610325
+      total_tension_fairlead: 1288793.960166
+      catenary_parameter: 342.226015
+      elongation: 0.013591821950
+    use_as_test: true
+superseded_answers:
+  - description: "Former verified analytical answer"
     outputs:
       horizontal_tension: 1327168
       vertical_tension_fairlead: 1961959
       total_tension_fairlead: 2368683
       catenary_parameter: 676.44
       elongation: 0.021
-    use_as_test: true
-  - description: "Excel Poly Mooring reference values (noted inconsistent in CATENARY_SOLVER_STATUS.md)"
-    inputs:
-      length: 1000
-      horizontal_span: 800
-      vertical_span: 100
-      weight_per_length: 1962
-      ea_stiffness: 64.0e9
-    outputs:
-      horizontal_tension: 785000
-      vertical_tension_fairlead: 196200
-      total_tension_fairlead: 809000
-      elongation: 12.3
-    use_as_test: true
-  - description: "CatenaryResults dataclass reference values (from test_catenary_solver.py)"
-    inputs:
-      length: 1000
-      horizontal_span: 800
-      vertical_span: 100
-      weight_per_length: 1962
-      ea_stiffness: 64.0e9
+    use_as_test: false
+    reason: "Its H/w fails the stated chord/arc identity. A nearly touchdown-based solution explains its fairlead vertical load being approximately the whole line weight; with a horizontal anchor tangent the implied rise exceeds the stated rise. The touchdown span/length root is near, rather than exactly equal to, this published answer."
+  - description: "Former spreadsheet answer, also duplicated as a dataclass example"
     outputs:
       horizontal_tension: 785000
       vertical_tension_fairlead: 196200
       total_tension_fairlead: 809000
       total_tension_anchor: 785000
       elongation: 12.3
-    use_as_test: true
+    use_as_test: false
+    reason: "Its H/w fails the stated chord/arc identity. The duplicated example implies zero anchor vertical load from T_anchor=H, while V_fairlead is not the full line weight."
 assumptions:
-  - "Catenary shape with uniform weight per unit length"
-  - "Elastic elongation modeled as H*L/EA"
-  - "Newton-Raphson solver with Brent fallback"
-  - "Excel reference values found inconsistent per CATENARY_SOLVER_STATUS.md — verified analytical solution is H=1,327,168 N"
+  - "Fully suspended line without seabed contact; low point lies between endpoints and below the anchor"
+  - "Uniform submerged weight per unit unstretched length and constant axial stiffness"
+  - "Linear elastic strain T/EA; both elastic coordinate increments are retained"
+  - "Vertical components are signed internal components, not support reaction magnitudes"
+  - "The classical physical chord/arc identity applies only in the inextensible limit; the elastic reference uses corrected geometric spans"
+  - "Legacy spreadsheet and status-document answers are superseded, not validation targets"
 references:
-  - "digitalmodel/tests/marine_ops/marine_engineering/test_mooring_catenary.py"
-  - "digitalmodel/tests/marine_ops/marine_engineering/test_catenary_solver.py"
-  - "digitalmodel/tests/CATENARY_SOLVER_STATUS.md"
+  - "tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py"
+  - "tests/marine_ops/marine_engineering/test_mooring_catenary.py"
