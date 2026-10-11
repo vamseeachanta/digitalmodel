@@ -3,7 +3,7 @@
 **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/481
 **Status:** plan-review
 **Tier:** T3 (Excel→Python conversion across two repos)
-**Machine:** ws014 (Windows, Claude cowork)
+**Machine:** ace-win-2 (Windows, Claude cowork)
 
 ## Context
 
@@ -13,7 +13,7 @@ Current state of PLEM consumer: `docs/domains/orcaflex/subsea/jumper/installatio
 
 ## Plan
 
-1. **Open workbook with Claude cowork on ws014.** Pre-flight: confirm ws014 is reachable, Excel is licensed, and the cowork harness is installed. Open `SZ_GoM tieback_Jumper_MF.xlsm`. List sheets, formulas, cross-sheet refs. Document any external links or VBA macros (these block deterministic conversion — flag immediately).
+1. **Open workbook with Claude cowork on ace-win-2.** Pre-flight: confirm ace-win-2 is reachable, Excel is licensed, and the cowork harness is installed. Open `SZ_GoM tieback_Jumper_MF.xlsm`. List sheets, formulas, cross-sheet refs. Document any external links or VBA macros (these block deterministic conversion — flag immediately).
 
 2. **Run `excel-workbook-to-python-cowork` skill.** Follow the skill's standard sequence: extract all sheet data, transcribe formulas, identify input/output boundaries, generate Python module skeleton, add pytest suite. Target the same shape as `jumper_lift.py`: ≥20 functions and ≥80 pytest tests. New module lands as `client_projects/.../plet_plem_jumper_lift.py` (private) — **NOT** in digitalmodel; only the test file and `KNOWN_JUMPER_CONFIGS` entry land in this public repo.
 
@@ -25,7 +25,7 @@ Current state of PLEM consumer: `docs/domains/orcaflex/subsea/jumper/installatio
 
 ## Acceptance Criteria
 
-- [ ] Python module produced from workbook on ws014 with ≥20 functions and ≥80 tests, all passing on ws014
+- [ ] Python module produced from workbook on ace-win-2 with ≥20 functions and ≥80 tests, all passing on ace-win-2
 - [ ] `KNOWN_JUMPER_CONFIGS["gom_tieback_plet_plem"]` entry exists in `src/digitalmodel/marine_ops/installation/jumper_lift.py` with verified segment lengths
 - [ ] `docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml` no longer contains the "TBD from workbook conversion" warning; segment lengths match the registry entry
 - [ ] `tests/marine_ops/installation/test_plet_plem_jumper.py` exists and passes on Linux via `uv run pytest`
@@ -34,6 +34,6 @@ Current state of PLEM consumer: `docs/domains/orcaflex/subsea/jumper/installatio
 
 ## Open questions
 
-1. Is ws014 currently online and licensed for Excel + Claude cowork? Confirm before dispatch.
+1. Is ace-win-2 currently online and licensed for Excel + Claude cowork? Confirm before dispatch.
 2. Does the workbook contain VBA macros or external data links? If yes, document and decide whether to convert them or freeze cached values — block on user input.
 3. The workbook lives in `client_projects` (private). Confirm the executor has push rights to that repo before starting; otherwise plan reduces to an extract-and-handoff.

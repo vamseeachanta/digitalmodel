@@ -149,7 +149,7 @@ Routing: the small diagnostic ran locally on a Windows workstation; no remote di
 made. Existing hub fleet metadata declares ace-linux-2 as an SSH alias, but that
 file is for fleet configuration fan-out, not verified solver readiness.
 Preference for sustained generic computation is ace-linux-1/ace-linux-2;
-licensed computation requires the designated licensed host such as RDS02,
+licensed computation requires the designated licensed host, a remote Windows workstation,
 subject to actual solver/license/resource verification. No live route, capacity
 or license status is claimed by this preparation.
 

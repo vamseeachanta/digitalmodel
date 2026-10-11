@@ -26,7 +26,7 @@ atmosphere opening to `top`.
 
 | Item | Value |
 |---|---|
-| Host | gpu-claw (Tailscale `undi@100.101.237.123`), Ubuntu 24.04.4, 8 ranks |
+| Host | dev-gpu (Tailscale `<user>@<tailnet-ip>`), Ubuntu 24.04.4, 8 ranks |
 | OpenFOAM | ESI v2312, `FOAM_API=2312` |
 | Interpreter | `/home/undi/ws/digitalmodel/.venv/bin/python`, CPython 3.12.3 |
 | Branch SHA run | `04725bbfa58be2c64ee3ca055a6552cf7b4b6619` (detached worktree, clean) |
@@ -95,7 +95,7 @@ either side of the threshold, so the verdict does not depend on the exact value.
 
 ## Proof the case tree was not patched
 
-`~/ws/cfd_work/dm1528/patch_case.sh` on gpu-claw overwrites nine generated files
+`~/ws/cfd_work/dm1528/patch_case.sh` on dev-gpu overwrites nine generated files
 and deletes the RAS fields. All earlier slice-7 evidence came from a tree it had
 patched, which is why the builder itself had never been validated. This run
 proves independence three ways.
@@ -144,7 +144,7 @@ No value in this report was imported from `patch_case.sh`.
 | `log.interFoam.<variant>.excerpt` | Solver banner, first timesteps, clean `End` |
 | `driver-run.log` | Full launcher transcript |
 
-Full 4.4 MB solver logs are retained on gpu-claw under
+Full 4.4 MB solver logs are retained on dev-gpu under
 `/home/undi/ws/cfd_work/vent2/run/<variant>/dm1528-filldrain-2a44db9cf998-<variant>/`.
 
 ## Confirmation run against the shipped default

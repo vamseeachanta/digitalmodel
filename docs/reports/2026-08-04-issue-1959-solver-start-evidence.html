@@ -58,7 +58,7 @@ procedure fails on the unfixed builder.</p>
 
 <table>
 <tr><th>Item</th><th>Value</th></tr>
-<tr><td>Host</td><td><code>gpu-claw</code>, Ubuntu 24.04.4, 8 cores</td></tr>
+<tr><td>Host</td><td><code>dev-gpu</code>, Ubuntu 24.04.4, 8 cores</td></tr>
 <tr><td>OpenFOAM</td><td>ESI <strong>v2312</strong>, <code>patch=260127</code>, at <code>/usr/lib/openfoam/openfoam2312</code></td></tr>
 <tr><td>Solver binary</td><td><code>platforms/linux64GccDPInt32Opt/bin/interFoam</code></td></tr>
 <tr><td>Execution</td><td>serial — the failure class is a rank-independent dictionary read</td></tr>
@@ -215,7 +215,7 @@ constant of unknown provenance.</p>
 
 <h2>Reproducing this</h2>
 
-<div class="scroll"><pre>ssh undi@gpu-claw
+<div class="scroll"><pre>ssh &lt;user&gt;@dev-gpu
 openfoam2312 -c "cd &lt;checkout&gt; &amp;&amp; python3 -m pytest \
     tests/solvers/openfoam/test_case_runnable.py -v"</pre></div>
 

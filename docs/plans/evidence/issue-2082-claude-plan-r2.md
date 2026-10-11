@@ -51,7 +51,7 @@ scripts/solver_smoke_test.py --solver orcaflex  ← Python, cross-platform
 
 **Current context risk**:
 - Current working directory: `[private-review-scratch]` (Linux).
-- Memory indicates active execution hosts: gpu-claw (Linux), ace-linux-1 (Linux), ace-linux-2 (Linux).
+- Memory indicates active execution hosts: dev-gpu (Linux), ace-linux-1 (Linux), ace-linux-2 (Linux).
 - Retired: ace-win-1 (Windows, per `reference_ace_win_1_retired_use_[private-host-redacted].md`).
 - OrcaFlex licensing suggests a specific Windows host ([private-host-redacted] per memory).
 

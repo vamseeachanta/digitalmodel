@@ -10,7 +10,7 @@ Arch   : "LSB;label=32;scalar=64"
 Exec   : setFields
 Date   : Aug 04 2026
 Time   : 21:47:03
-Host   : gpu-claw
+Host   : dev-gpu
 PID    : 2134901
 --> FOAM Warning : 
     From Foam::fileName Foam::cwd_L()

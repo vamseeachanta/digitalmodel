@@ -44,7 +44,7 @@ throughput AND wall-clock predictability** — a-l-2's real limit was contention
 a shared box, not the solver.
 
 ## 4. Dispatch between CFD Linux hosts
-Use the dispatcher from `ace-linux-1` when both `gpu-claw` and `ace-linux-2` are
+Use the dispatcher from `ace-linux-1` when both `dev-gpu` and `ace-linux-2` are
 available over SSH. It probes each host for reachability, core count, and current
 load, then selects the fastest eligible host from the benchmark manifests.
 
