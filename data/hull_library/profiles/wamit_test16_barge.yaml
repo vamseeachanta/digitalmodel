@@ -1,0 +1,23 @@
+name: wamit_test16_barge
+hull_type: barge
+stations:
+- x_position: 0.0
+  waterline_offsets:
+  - - 0.0
+    - 5.0
+  - - 5.0
+    - 5.0
+- x_position: 80.0
+  waterline_offsets:
+  - - 0.0
+    - 5.0
+  - - 5.0
+    - 5.0
+length_bp: 80.0
+beam: 10.0
+draft: 5.0
+depth: 5.0
+source: WAMIT v7.5 Appendix A, A.16 TEST16; https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html;
+  retrieved 2026-10-11. Rebuilt rectangular dimensions; submerged-only depth=draft.
+  Source geometry is not copied; export lacks generator end caps.
+block_coefficient: 1.0

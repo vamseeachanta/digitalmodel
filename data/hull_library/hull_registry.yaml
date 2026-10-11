@@ -1,0 +1,257 @@
+source_catalog_id: public-benchmark-hulls
+owner_repo: digitalmodel
+units:
+  length_bp: m
+  beam: m
+  draft: m
+  block_coefficient: dimensionless
+  displacement: t
+  analytic_volume_m3: m^3
+conventions:
+  'null': not established; never assumed zero
+  paths: repository-relative
+  profile_loading: HullCatalog(data/hull_library/profiles)
+  mesh_scope: full hull, x from aft origin, z=0 at waterline
+  qualification: geometry only; quality checks do not establish solver validation
+  gdf_header: GDFHandler.write uses the unit length and gravity from tests/hydrodynamics/bemrosetta/test_mesh.py::TestGDFHandler
+    fixtures; this export convention is not the WAMIT benchmark run gravity.
+rights:
+  terms_url: https://www.wamit.com/demo.htm
+  demo_geometry_restriction: Data in the geometric data files may not be modified
+    nor may additional data be added to those files
+  disposition: No demonstration geometry or source document is redistributed. Only
+    dimensions from the public manual are rebuilt.
+hulls:
+- hull_id: unit_box
+  hull_type: barge
+  classification: generic/synthetic
+  profile_path: data/hull_library/profiles/unit_box.yaml
+  profile_sha256: 1279fbea5e88e2846de649b11b83f2adbedd71e81d5a3d5950e3c3e0ae7ecc97
+  principal_dimensions:
+    length_bp: 100.0
+    beam: 20.0
+    draft: 10.0
+    block_coefficient: 1
+    displacement: null
+  analytic_volume_m3: 20000.0
+  mesh_files:
+  - data/hull_library/panels/unit_box.gdf
+  mesh_sha256: ef751d0d0b829ba4ea2968a9ad029599030f3c9a0ae2bed51f83488461667f02
+  rao_database_entries: []
+  rao_status: not established
+  provenance:
+    source: Repository box_profile fixture
+    url: tests/hydrodynamics/hull_library/conftest.py
+    page_table: box_profile
+    retrieval_date: '2026-10-11'
+    reuse_terms: MIT License (repository fixture)
+    geometry_disposition: rebuilt from repository fixture
+    derivation: Exact fixture offsets and depth; Cb=1; volume=L*B*T.
+  validation:
+    status: reference-only
+    reason: HullMeshGenerator omits end caps on nonzero end sections; exported mesh
+      is open below waterline and is reference-only for solver use.
+    relative_tolerance: 0.01
+    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    mesh_config:
+      symmetry: false
+      resolution: MeshGeneratorConfig defaults
+- hull_id: generic_barge
+  hull_type: barge
+  classification: generic/synthetic
+  profile_path: data/hull_library/profiles/generic_barge.yaml
+  profile_sha256: ab9e5bda4d0610340577ff6877fa44b3132dfd9d453e5c6ae204d9f4d06b0dee
+  principal_dimensions:
+    length_bp: 100.0
+    beam: 30.0
+    draft: 6.0
+    block_coefficient: 1
+    displacement: null
+  analytic_volume_m3: 18000.0
+  mesh_files:
+  - data/hull_library/panels/generic_barge.gdf
+  mesh_sha256: 87c83a5401324409eb4180949d8a72251eb1817935ee8b071cb9fe142a0b2407
+  rao_database_entries: []
+  rao_status: not established
+  provenance:
+    source: digitalmodel issue 1700
+    url: issues/1700
+    page_table: 'Deliverables: generic barge'
+    retrieval_date: '2026-10-11'
+    reuse_terms: terms not stated
+    geometry_disposition: generic/synthetic
+    derivation: Repository-relative issue URL. Scale box_profile offsets and depth
+      by L/L0, B/B0, T/T0. Cb=1; volume=L*B*T.
+  validation:
+    status: reference-only
+    reason: HullMeshGenerator omits end caps on nonzero end sections; exported mesh
+      is open below waterline and is reference-only for solver use.
+    relative_tolerance: 0.01
+    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    mesh_config:
+      symmetry: false
+      resolution: MeshGeneratorConfig defaults
+- hull_id: generic_tanker
+  hull_type: tanker
+  classification: generic/synthetic
+  profile_path: data/hull_library/profiles/generic_tanker.yaml
+  profile_sha256: 54eb31b45e3c0752b36121aab6e3ecd1a55a3a46d711f8c4ed1fac36c7cc7504
+  principal_dimensions:
+    length_bp: 250.0
+    beam: 45.0
+    draft: 16.0
+    block_coefficient: null
+    displacement: null
+  analytic_volume_m3: null
+  mesh_files:
+  - data/hull_library/panels/generic_tanker.gdf
+  mesh_sha256: 7e441fdeb32440e5c6f136f695ef7897180f91dd3cfe940eb245b85382885569
+  rao_database_entries: []
+  rao_status: not established
+  provenance:
+    source: digitalmodel issue 1700
+    url: issues/1700
+    page_table: 'Deliverables: generic tanker/FPSO'
+    retrieval_date: '2026-10-11'
+    reuse_terms: terms not stated
+    geometry_disposition: generic/synthetic
+    derivation: Repository-relative issue URL. Scale ship_profile offsets and depth
+      by L/L0, B/B0, T/T0; no published Cb or mass.
+  validation:
+    status: reference-only
+    reason: HullMeshGenerator omits end caps on nonzero end sections; exported mesh
+      is open below waterline and is reference-only for solver use.
+    relative_tolerance: 0.01
+    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    mesh_config:
+      symmetry: false
+      resolution: MeshGeneratorConfig defaults
+- hull_id: wamit_test04_barge
+  hull_type: barge
+  classification: published benchmark
+  profile_path: data/hull_library/profiles/wamit_test04_barge.yaml
+  profile_sha256: d88d2761063f1d82a5fa104e7f2bc53b56081e3e22cd7c6adf26709abf3f66bd
+  principal_dimensions:
+    length_bp: 80.0
+    beam: 20.0
+    draft: 10.0
+    block_coefficient: 1.0
+    displacement: null
+  analytic_volume_m3: 16000.0
+  mesh_files:
+  - data/hull_library/panels/wamit_test04_barge.gdf
+  mesh_sha256: c8f71ee121f18044023d404ba00e8880ddbe0e1430fc7afff62abeb71cafd2a0
+  rao_database_entries: []
+  rao_status: not established
+  provenance:
+    source: WAMIT v7.5 public manual
+    url: https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html
+    page_table: Appendix A.4 TEST04
+    retrieval_date: '2026-10-11'
+    reuse_terms: terms not stated for published dimensions; demo geometry restricted
+    geometry_disposition: rebuilt from published dimensions
+    derivation: Rectangular B/2 offsets at x=0,L and z=0,T; depth=T is submerged truncation.
+      Cb=1; volume=L*B*T. Wall case is not reproduced.
+  validation:
+    status: reference-only
+    reason: HullMeshGenerator omits end caps on nonzero end sections; exported mesh
+      is open below waterline and is reference-only for solver use.
+    relative_tolerance: 0.01
+    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    mesh_config:
+      symmetry: false
+      resolution: MeshGeneratorConfig defaults
+- hull_id: wamit_test16_barge
+  hull_type: barge
+  classification: published benchmark
+  profile_path: data/hull_library/profiles/wamit_test16_barge.yaml
+  profile_sha256: 9b63deec88b469860a02ab510c6fe9cbf9f0007b1fbd21dd00c3b04f22819781
+  principal_dimensions:
+    length_bp: 80.0
+    beam: 10.0
+    draft: 5.0
+    block_coefficient: 1.0
+    displacement: null
+  analytic_volume_m3: 4000.0
+  mesh_files:
+  - data/hull_library/panels/wamit_test16_barge.gdf
+  mesh_sha256: 20abdba5519dcac67d04641efb4546ab63b82f23ec9ec13f07793e90266a9a9d
+  rao_database_entries: []
+  rao_status: not established
+  provenance:
+    source: WAMIT v7.5 public manual
+    url: https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html
+    page_table: Appendix A.16 TEST16
+    retrieval_date: '2026-10-11'
+    reuse_terms: terms not stated for published dimensions; demo geometry restricted
+    geometry_disposition: rebuilt from published dimensions
+    derivation: Rectangular B/2 offsets at x=0,L and z=0,T; depth=T is submerged truncation.
+      Cb=1; volume=L*B*T. Elastic response is not reproduced.
+  validation:
+    status: reference-only
+    reason: HullMeshGenerator omits end caps on nonzero end sections; exported mesh
+      is open below waterline and is reference-only for solver use.
+    relative_tolerance: 0.01
+    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    mesh_config:
+      symmetry: false
+      resolution: MeshGeneratorConfig defaults
+- hull_id: wamit_test01_cylinder
+  hull_type: cylinder
+  classification: published benchmark
+  profile_path: data/hull_library/profiles/wamit_test01_cylinder.yaml
+  profile_sha256: f990d1a7a576071eb7fc83c3c271f3734982f450ec89afddfbfa41e224f4562c
+  principal_dimensions:
+    length_bp: 2.0
+    beam: 2.0
+    draft: 0.5
+    block_coefficient: 0.7853981633974483
+    displacement: null
+  analytic_volume_m3: 1.5707963267948966
+  mesh_files:
+  - data/hull_library/panels/wamit_test01_cylinder.gdf
+  mesh_sha256: 21b97c4cf4ce454793ddea1237f5b2b0a7a4dbee8aff740c41fb25714e4af159
+  rao_database_entries: []
+  rao_status: not established
+  provenance:
+    source: WAMIT v7.5 public manual
+    url: https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html
+    page_table: Appendix A.1 TEST01
+    retrieval_date: '2026-10-11'
+    reuse_terms: terms not stated for published dimensions; demo geometry restricted
+    geometry_disposition: rebuilt from published dimensions
+    derivation: R=1 m,T=0.5 m; L=B=2R (diameter extents); y=sqrt(R^2-(x-R)^2), x=2R*i/40,
+      i=0..40. 40 intervals=200 integration-test panels/5 fixture stations. depth=T
+      is submerged truncation; Cb=pi/4; volume=pi*R^2*T.
+  validation:
+    status: qualified-geometry
+    reason: Submerged surface closes; analytic cylinder volume comparator. Hydrodynamic
+      coefficients and motion RAOs remain unvalidated.
+    relative_tolerance: 0.01
+    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    mesh_config:
+      symmetry: false
+      resolution: MeshGeneratorConfig defaults
+exclusions:
+- hull: DeepCwind / OC4 and VolturnUS-S semi-submersibles
+  reason: The existing station profile cannot represent disconnected columns and pontoons.
+    Open source meshes are not HullProfile definitions.
+- hull: OC3-Hywind spar
+  source: https://www.osti.gov/servlets/purl/979456
+  page_table: NREL definition report, printed page 4, Table 3-1
+  reason: Primary particulars were reopened. The station representation would require
+    zero half-breadth outside the upper tapered radius, which is inferred to create
+    centreplane curtains in the existing generator. No equivalent qualified station
+    mesh is established.
+- hull: WAMIT TEST03, TEST20 and TEST07 FPSO
+  source: https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html
+  reason: Shaped ends are not defined by principal dimensions; a rectangular substitute
+    would not reproduce the published geometry. Demo files are restricted.
+- hull: KCS, KVLCC2, DTMB 5415, JBC and ONRT
+  reason: Research note reports unstated geometry reuse terms. No source geometry
+    is redistributed and no independently qualified station profile is established.
+- hull: Series 60, Wigley, S-175 and DTC
+  reason: The research note does not verify a complete usable hull definition. No
+    dimensions from unverified cells are used.
+- hull: Supply vessel and jack-up
+  reason: No openly published complete definition verified in this bounded seed scope.
