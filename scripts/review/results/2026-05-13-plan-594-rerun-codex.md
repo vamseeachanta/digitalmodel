@@ -11,7 +11,7 @@ workdir: /mnt/local-analysis/workspace-hub/digitalmodel
 model: gpt-5.5
 provider: openai
 approval: never
-sandbox: workspace-write [workdir, /tmp, <home>/.codex/memories]
+sandbox: workspace-write [workdir, /tmp, /home/vamsee/.codex/memories]
 reasoning effort: medium
 reasoning summaries: none
 session id: 019e212b-9437-7d62-a21a-b64fe8b48ae9
