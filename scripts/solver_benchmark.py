@@ -12,10 +12,12 @@ Usage::
     python scripts/solver_benchmark.py run --machine-label ace-linux-1 \\
         --solvers openfoam --out <receipts-dir>
     python scripts/solver_benchmark.py compare new.json baseline.json
+    python scripts/solver_benchmark.py report <receipts-dir>/*/*.json --out fleet.html
 
 ``run`` exits 0 only when every selected case completed every repeat with a
 consistent fingerprint; ``compare`` exits 0 when every fingerprint matches (or
-the solver version changed). The receipt carries a logical machine label, not
+the solver version changed); ``report`` writes one self-contained HTML page
+comparing solve times and fingerprints across machines. The receipt carries a logical machine label, not
 the hostname, and no licence-server addresses or user paths.
 
 Run OrcaFlex/OrcaWave from an interactive or credentialed logon: their licence
@@ -38,13 +40,13 @@ _SRC = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(_SRC))
 
 try:
-    from digitalmodel.solvers.benchmark import compare, runner
+    from digitalmodel.solvers.benchmark import compare, report, runner
     from digitalmodel.solvers.benchmark.solvers import CASES
 except ImportError:
     # Linux CFD hosts need only the stdlib OpenFOAM leg: load the pack folder
     # on its own when the full digitalmodel package cannot import.
     sys.path.insert(0, str(_SRC / "digitalmodel" / "solvers"))
-    from benchmark import compare, runner  # type: ignore[no-redef]
+    from benchmark import compare, report, runner  # type: ignore[no-redef]
     from benchmark.solvers import CASES  # type: ignore[no-redef]
 
 
@@ -105,6 +107,20 @@ def _compare(args) -> int:
     return 0 if result["ok"] else 1
 
 
+def _report(args) -> int:
+    try:
+        model = report.write_report(args.receipts, args.out)
+    except ValueError as exc:
+        sys.exit(f"report: {exc}")
+    for pack in model["packs"]:
+        counts = ", ".join(f"{report.STATUS_LABEL[k]}: {pack['summary'][k]}"
+                           for k in report.STATUS_LABEL if pack["summary"][k])
+        print(f"pack version {pack['pack_version']}: {len(pack['machines'])} machine(s), "
+              f"{pack['summary']['variants']} case/variant combination(s); {counts}")
+    print(f"report: {args.out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -130,6 +146,11 @@ def main(argv: list[str] | None = None) -> int:
     cmp_.add_argument("baseline")
     cmp_.add_argument("--slower-ratio", type=float, default=compare.SLOWER_RATIO)
     cmp_.set_defaults(func=_compare)
+
+    rep = sub.add_parser("report", help="write a cross-machine HTML report")
+    rep.add_argument("receipts", nargs="+", help="receipt JSON files")
+    rep.add_argument("--out", required=True, help="HTML file to write")
+    rep.set_defaults(func=_report)
 
     args = parser.parse_args(argv)
     return args.func(args)
