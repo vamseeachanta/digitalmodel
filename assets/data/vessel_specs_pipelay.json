@@ -1,0 +1,69 @@
+[
+  {
+    "vessel_name": "Solitaire",
+    "owner": "Allseas",
+    "lay_methods": [
+      "S-lay"
+    ],
+    "tensioner_capacity_tonnes": 1050,
+    "max_pipe_diameter_inches": 60,
+    "dp_class": "DP-3",
+    "water_depth_min_m": null,
+    "water_depth_max_m": null,
+    "record_water_depth_m": 2775,
+    "source_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf",
+    "retrieved_utc": "2026-10-11T18:51:20.235538+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.allseas.com/en/who-we-are/our-fleet/solitaire",
+      "owner": "https://www.allseas.com/en/who-we-are/our-fleet/solitaire",
+      "lay_methods": "https://www.allseas.com/en/who-we-are/our-fleet/solitaire",
+      "tensioner_capacity_tonnes": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf",
+      "max_pipe_diameter_inches": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf",
+      "dp_class": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf",
+      "record_water_depth_m": "https://www.allseas.com/en/who-we-are/our-fleet/solitaire"
+    }
+  },
+  {
+    "vessel_name": "Lorelay",
+    "owner": "Allseas",
+    "lay_methods": null,
+    "tensioner_capacity_tonnes": 165,
+    "max_pipe_diameter_inches": 41,
+    "dp_class": "DP-3",
+    "water_depth_min_m": null,
+    "water_depth_max_m": null,
+    "record_water_depth_m": null,
+    "source_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf",
+    "retrieved_utc": "2026-10-11T18:51:24.360062+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.allseas.com/en/who-we-are/our-fleet/lorelay",
+      "owner": "https://www.allseas.com/en/who-we-are/our-fleet/lorelay",
+      "tensioner_capacity_tonnes": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf",
+      "max_pipe_diameter_inches": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf",
+      "dp_class": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf"
+    }
+  },
+  {
+    "vessel_name": "Pioneering Spirit",
+    "owner": "Allseas",
+    "lay_methods": [
+      "S-lay"
+    ],
+    "tensioner_capacity_tonnes": 2000,
+    "max_pipe_diameter_inches": 68,
+    "dp_class": "DP-3",
+    "water_depth_min_m": null,
+    "water_depth_max_m": null,
+    "record_water_depth_m": null,
+    "source_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf",
+    "retrieved_utc": "2026-10-11T18:51:28.578802+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.allseas.com/en/who-we-are/our-fleet/pioneering-spirit",
+      "owner": "https://www.allseas.com/en/who-we-are/our-fleet/pioneering-spirit",
+      "lay_methods": "https://www.allseas.com/en/who-we-are/our-fleet/pioneering-spirit",
+      "tensioner_capacity_tonnes": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf",
+      "max_pipe_diameter_inches": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf",
+      "dp_class": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf"
+    }
+  }
+]

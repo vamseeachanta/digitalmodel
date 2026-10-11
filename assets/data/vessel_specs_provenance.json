@@ -1,0 +1,140 @@
+{
+  "dataset_id": "public-vessel-specs-1773",
+  "version": "1",
+  "owner_repo": "digitalmodel",
+  "intended_use": "GTM demonstration reference facts only; not an engineering operating envelope or fleet collection replacement.",
+  "readiness_status": "partial",
+  "source_vintage": "Web pages undated; Allseas filenames indicate a 2026 edition, not a verified publication date. Thialf equipment sheet explicitly dates to June 2020.",
+  "retrieval_policy": {
+    "connections": 1,
+    "timeout_seconds": 30,
+    "retry_limit": 1,
+    "same_site_pause_seconds": 3,
+    "user_agent": "PublicVesselSpecResearch/1.0 (public specification curation; sequential requests)",
+    "refusal_policy": "Stop site on robots disallow, HTTP refusal or challenge; no workarounds."
+  },
+  "refused_sites": [],
+  "sources": [
+    {
+      "source_url": "https://www.heerema.com/robots.txt",
+      "resolved_url": "https://www.heerema.com/robots.txt",
+      "retrieved_utc": "2026-10-11T18:50:10.487444+00:00",
+      "sha256": "69dc334e2823620cb2a695022e88d372874a11e1ba96bfd19596b4a391de3b28",
+      "size_bytes": 279,
+      "status": "retrieved",
+      "role": "access_policy",
+      "source_vintage": "not stated",
+      "licence_terms": "Robots access directives recorded; no content reuse licence stated."
+    },
+    {
+      "source_url": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+      "resolved_url": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+      "retrieved_utc": "2026-10-11T18:50:13.589857+00:00",
+      "sha256": "127676277a1a61d83bf649b27d759d39a201b715543adfc4041fe35b3dfe200c",
+      "size_bytes": 114840,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "not stated",
+      "licence_terms": "No content reuse licence stated on the retrieved fleet page. Extracted factual specifications only; page excluded from Git."
+    },
+    {
+      "source_url": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+      "resolved_url": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+      "retrieved_utc": "2026-10-11T18:50:16.664466+00:00",
+      "sha256": "57cf3c1c2214156582013f418212ebd766595ff9764ed296c8db9d3bc1866a1d",
+      "size_bytes": 120004,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "not stated",
+      "licence_terms": "No content reuse licence stated on the retrieved fleet page. Extracted factual specifications only; page excluded from Git."
+    },
+    {
+      "source_url": "https://www.allseas.com/robots.txt",
+      "resolved_url": "https://www.allseas.com/robots.txt",
+      "retrieved_utc": "2026-10-11T18:50:17.519804+00:00",
+      "sha256": "773fb8d35bb9a39d35335ee6db8dc5c912d2aacbfb823152d9c61cd647dd902d",
+      "size_bytes": 2027,
+      "status": "retrieved",
+      "role": "access_policy",
+      "source_vintage": "not stated",
+      "licence_terms": "Robots access directives recorded; no content reuse licence stated."
+    },
+    {
+      "source_url": "https://www.allseas.com/en/who-we-are/our-fleet/solitaire",
+      "resolved_url": "https://www.allseas.com/en/who-we-are/our-fleet/solitaire",
+      "retrieved_utc": "2026-10-11T18:50:21.322905+00:00",
+      "sha256": "548e02d0f7d60b8dcf04058ad54b002febf7da873cdf472e2924c0d9b1d1f446",
+      "size_bytes": 68308,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "not stated",
+      "licence_terms": "No content reuse licence stated on the retrieved fleet page. Extracted factual specifications only; page excluded from Git."
+    },
+    {
+      "source_url": "https://www.allseas.com/en/who-we-are/our-fleet/lorelay",
+      "resolved_url": "https://www.allseas.com/en/who-we-are/our-fleet/lorelay",
+      "retrieved_utc": "2026-10-11T18:50:25.148820+00:00",
+      "sha256": "f8ef7f4541d5571677f3945c10eef94dd0d52cddaa0567996458509e8d4adcf2",
+      "size_bytes": 57391,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "not stated",
+      "licence_terms": "No content reuse licence stated on the retrieved fleet page. Extracted factual specifications only; page excluded from Git."
+    },
+    {
+      "source_url": "https://www.allseas.com/en/who-we-are/our-fleet/pioneering-spirit",
+      "resolved_url": "https://www.allseas.com/en/who-we-are/our-fleet/pioneering-spirit",
+      "retrieved_utc": "2026-10-11T18:50:29.087168+00:00",
+      "sha256": "cef41ac4b626b5162c663142e3af8d248f77be71302566a415871004d1c25bcb",
+      "size_bytes": 101826,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "not stated",
+      "licence_terms": "No content reuse licence stated on the retrieved fleet page. Extracted factual specifications only; page excluded from Git."
+    },
+    {
+      "source_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf",
+      "resolved_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf",
+      "retrieved_utc": "2026-10-11T18:51:20.235538+00:00",
+      "sha256": "c00e9fe8acd8df4607bf6e447228b78ccb8470047413658dedb148357d6d8d7c",
+      "size_bytes": 247947,
+      "status": "retrieved",
+      "role": "specification",
+      "source_vintage": "2026 filename edition; publication date not established",
+      "licence_terms": "No reuse licence or explicit redistribution terms stated in the retrieved document. Extracted factual specifications only; original document excluded from Git."
+    },
+    {
+      "source_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf",
+      "resolved_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf",
+      "retrieved_utc": "2026-10-11T18:51:24.360062+00:00",
+      "sha256": "1ae9330664205dc3b7acfa352786ad25218eb07f3f3fac5091b5b7fc65273067",
+      "size_bytes": 239014,
+      "status": "retrieved",
+      "role": "specification",
+      "source_vintage": "2026 filename edition; publication date not established",
+      "licence_terms": "No reuse licence or explicit redistribution terms stated in the retrieved document. Extracted factual specifications only; original document excluded from Git."
+    },
+    {
+      "source_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf",
+      "resolved_url": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf",
+      "retrieved_utc": "2026-10-11T18:51:28.578802+00:00",
+      "sha256": "56330c9f9b9c9bf3eca87e6027e337b617e9c2def78ec0d29b67ab2747099e56",
+      "size_bytes": 549208,
+      "status": "retrieved",
+      "role": "specification",
+      "source_vintage": "2026 filename edition; publication date not established",
+      "licence_terms": "No reuse licence or explicit redistribution terms stated in the retrieved document. Extracted factual specifications only; original document excluded from Git."
+    },
+    {
+      "source_url": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf",
+      "resolved_url": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf",
+      "retrieved_utc": "2026-10-11T18:55:46.968746+00:00",
+      "sha256": "4c0587220fb2dca85c0c2cf81d2eebb61661137df2845ba7bd4355ab19a71a3a",
+      "size_bytes": 1554177,
+      "status": "retrieved",
+      "role": "specification",
+      "source_vintage": "June 2020, printed on the document",
+      "licence_terms": "No reuse licence or explicit redistribution terms stated in the retrieved document. Extracted factual specifications only; original document excluded from Git."
+    }
+  ]
+}

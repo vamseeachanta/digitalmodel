@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Public PIPELAY vessel specifications",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "vessel_name",
+      "owner",
+      "dp_class",
+      "source_url",
+      "retrieved_utc",
+      "field_sources",
+      "lay_methods",
+      "tensioner_capacity_tonnes",
+      "max_pipe_diameter_inches",
+      "water_depth_min_m",
+      "water_depth_max_m",
+      "record_water_depth_m"
+    ],
+    "properties": {
+      "vessel_name": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S",
+        "description": "Publicly marketed vessel name.",
+        "x-unit": "1"
+      },
+      "owner": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S",
+        "description": "Fleet owner/operator brand shown by the public source; not legal ownership certification.",
+        "x-unit": "1"
+      },
+      "dp_class": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "enum": [
+          "DP-1",
+          "DP-2",
+          "DP-3",
+          "NMD Class III",
+          null
+        ],
+        "description": "Explicit published dynamic-positioning class; DP1/DP2/DP3 hyphenated, NMD notation preserved.",
+        "x-unit": "1"
+      },
+      "source_url": {
+        "type": "string",
+        "format": "uri",
+        "pattern": "^https://[^\\s/?#]+(?:[/?#].*)?$",
+        "description": "HTTPS URL of a retrieved public source.",
+        "x-unit": "1"
+      },
+      "retrieved_utc": {
+        "type": "string",
+        "format": "date-time",
+        "pattern": "(Z|\\+00:00)$",
+        "description": "UTC retrieval instant of the row primary source; secondary retrievals are in the manifest.",
+        "x-unit": "UTC"
+      },
+      "field_sources": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://[^\\s/?#]+(?:[/?#].*)?$",
+          "description": "HTTPS URL of a retrieved public source.",
+          "x-unit": "1"
+        },
+        "description": "Each non-null factual field maps to the exact source URL in the provenance manifest.",
+        "x-unit": "1"
+      },
+      "lay_methods": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "enum": [
+            "S-lay",
+            "J-lay",
+            "reel-lay"
+          ]
+        },
+        "minItems": 1,
+        "uniqueItems": true,
+        "description": "Only explicitly published supported pipe-lay methods; null if not established.",
+        "x-unit": "1"
+      },
+      "tensioner_capacity_tonnes": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Published total installed pipe-tensioner capacity, excluding optional equipment. Tonne-force rating as labelled t by source.",
+        "x-unit": "tf",
+        "exclusiveMinimum": 0
+      },
+      "max_pipe_diameter_inches": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Upper published pipe outside-diameter equipment range, not a diameter achieved on a project.",
+        "x-unit": "in",
+        "exclusiveMinimum": 0
+      },
+      "water_depth_min_m": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Published lower operating water-depth bound for the stated lay methods; not vessel draught.",
+        "x-unit": "m",
+        "exclusiveMinimum": 0
+      },
+      "water_depth_max_m": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Published upper operating water-depth bound for the stated lay methods; achieved depth records do not establish this bound.",
+        "x-unit": "m",
+        "exclusiveMinimum": 0
+      },
+      "record_water_depth_m": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Explicit numerical achieved pipelay water-depth record; not an operating capability limit.",
+        "x-unit": "m",
+        "exclusiveMinimum": 0
+      }
+    }
+  }
+}
