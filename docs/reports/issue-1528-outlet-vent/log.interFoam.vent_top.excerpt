@@ -1,6 +1,6 @@
 ### EXCERPT of log.interFoam for variant: vent_top
 ### Full log (4379125 bytes) retained on dev-gpu at
-### /home/undi/ws/cfd_work/vent2/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top/log.interFoam
+### <home>/ws/cfd_work/vent2/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top/log.interFoam
 ### 'Time = ' lines: 1000   'FOAM FATAL' lines: 0
 
 ===== HEAD: first 90 lines (banner, decomposition, solver start) =====
@@ -39,7 +39,7 @@ Time   : 05:03:18
 Host   : dev-gpu
 PID    : 2276128
 I/O    : uncollated
-Case   : /home/undi/ws/cfd_work/vent2/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
+Case   : <home>/ws/cfd_work/vent2/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
 nProcs : 8
 Hosts  :
 (

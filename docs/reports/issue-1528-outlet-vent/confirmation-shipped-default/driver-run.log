@@ -15,23 +15,23 @@ Python 3.12.3
 ===== STEP 1: build only (dry-run, solver never invoked) =====
 2026-08-05 05:18:06.079 | INFO     | digitalmodel.solvers.openfoam.sloshing_sweep:generate_sweep:379 - Generated dm#1528 sweep 'dm1528-filldrain': 144 cases (48 controls), hash e71879da02af121c
 2026-08-05 05:18:06.080 | INFO     | digitalmodel.solvers.openfoam.case_coupling:map_sweep_case_to_openfoam_case:351 - Mapped coupled case 'dm1528-filldrain-2a44db9cf998': fill=0.500, T_roll=6.251s, cap=0.05, V_transfer=60 m^3, Q_peak=30.15 m^3/s
-2026-08-05 05:18:06.080 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:115 - Building OpenFOAM case: /home/undi/ws/cfd_work/vent3/emitted/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
-2026-08-05 05:18:06.081 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:128 - Case build complete: /home/undi/ws/cfd_work/vent3/emitted/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
+2026-08-05 05:18:06.080 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:115 - Building OpenFOAM case: <home>/ws/cfd_work/vent3/emitted/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
+2026-08-05 05:18:06.081 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:128 - Case build complete: <home>/ws/cfd_work/vent3/emitted/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
 2026-08-05 05:18:06.083 | INFO     | digitalmodel.solvers.openfoam.sloshing_sweep:generate_sweep:379 - Generated dm#1528 sweep 'dm1528-filldrain': 144 cases (48 controls), hash e71879da02af121c
 2026-08-05 05:18:06.083 | INFO     | digitalmodel.solvers.openfoam.case_coupling:map_sweep_case_to_openfoam_case:351 - Mapped coupled case 'dm1528-filldrain-2a44db9cf998': fill=0.500, T_roll=6.251s, cap=0.05, V_transfer=60 m^3, Q_peak=30.15 m^3/s
-2026-08-05 05:18:06.083 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:115 - Building OpenFOAM case: /home/undi/ws/cfd_work/vent3/emitted/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
-2026-08-05 05:18:06.084 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:128 - Case build complete: /home/undi/ws/cfd_work/vent3/emitted/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
+2026-08-05 05:18:06.083 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:115 - Building OpenFOAM case: <home>/ws/cfd_work/vent3/emitted/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
+2026-08-05 05:18:06.084 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:128 - Case build complete: <home>/ws/cfd_work/vent3/emitted/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
 Built 2 case(s); dry-run, solver not invoked.
 emitted input files hashed: 30
 ===== STEP 2: full run (blockMesh, setFields, decomposePar, interFoam) =====
 2026-08-05 05:18:06.637 | INFO     | digitalmodel.solvers.openfoam.sloshing_sweep:generate_sweep:379 - Generated dm#1528 sweep 'dm1528-filldrain': 144 cases (48 controls), hash e71879da02af121c
 2026-08-05 05:18:06.638 | INFO     | digitalmodel.solvers.openfoam.case_coupling:map_sweep_case_to_openfoam_case:351 - Mapped coupled case 'dm1528-filldrain-2a44db9cf998': fill=0.500, T_roll=6.251s, cap=0.05, V_transfer=60 m^3, Q_peak=30.15 m^3/s
-2026-08-05 05:18:06.638 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:115 - Building OpenFOAM case: /home/undi/ws/cfd_work/vent3/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
-2026-08-05 05:18:06.639 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:128 - Case build complete: /home/undi/ws/cfd_work/vent3/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
+2026-08-05 05:18:06.638 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:115 - Building OpenFOAM case: <home>/ws/cfd_work/vent3/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
+2026-08-05 05:18:06.639 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:128 - Case build complete: <home>/ws/cfd_work/vent3/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
 2026-08-05 05:18:06.641 | INFO     | digitalmodel.solvers.openfoam.sloshing_sweep:generate_sweep:379 - Generated dm#1528 sweep 'dm1528-filldrain': 144 cases (48 controls), hash e71879da02af121c
 2026-08-05 05:18:06.641 | INFO     | digitalmodel.solvers.openfoam.case_coupling:map_sweep_case_to_openfoam_case:351 - Mapped coupled case 'dm1528-filldrain-2a44db9cf998': fill=0.500, T_roll=6.251s, cap=0.05, V_transfer=60 m^3, Q_peak=30.15 m^3/s
-2026-08-05 05:18:06.641 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:115 - Building OpenFOAM case: /home/undi/ws/cfd_work/vent3/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
-2026-08-05 05:18:06.642 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:128 - Case build complete: /home/undi/ws/cfd_work/vent3/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
+2026-08-05 05:18:06.641 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:115 - Building OpenFOAM case: <home>/ws/cfd_work/vent3/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
+2026-08-05 05:18:06.642 | INFO     | digitalmodel.solvers.openfoam.case_builder:build:128 - Case build complete: <home>/ws/cfd_work/vent3/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top
 baseline_full_height_outlet: liquid-volume drift -81.1601%
 vent_top: liquid-volume drift 0%
 Recommendation: vent_top
@@ -40,8 +40,8 @@ driver exit code: 0
 consumed input files hashed: 32
 ===== STEP 4: tamper check =====
 TREE_DIFFERS: see sha256-diff.txt
---- /home/undi/ws/cfd_work/vent3/sha256-emitted.txt	2026-08-05 05:18:06.165938640 -0400
-+++ /home/undi/ws/cfd_work/vent3/sha256-after.txt	2026-08-05 05:19:41.062329604 -0400
+--- <home>/ws/cfd_work/vent3/sha256-emitted.txt	2026-08-05 05:18:06.165938640 -0400
++++ <home>/ws/cfd_work/vent3/sha256-after.txt	2026-08-05 05:19:41.062329604 -0400
 @@ -1,5 +1,5 @@
  444258612c676ded96b495766679bb101711ea6bd0526d8c13ef5f903271686a  baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet/0/U
 -c284ff2850e00b808794b8186877bc60824bef5dfa0a00534a1d844815c03628  baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet/0/alpha.water

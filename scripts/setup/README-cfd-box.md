@@ -56,6 +56,7 @@ uv run python scripts/setup/dispatch-cfd-run.py --ranks 8 --dry-run -- \
 Remove `--dry-run` to execute the command on the selected host. The remote
 command runs with OpenFOAM v2312 sourced, from `~/digitalmodel`, and receives:
 `CFD_DISPATCH_HOST`, `CFD_DISPATCH_RANKS`, and `CFD_DISPATCH_S_PER_STEP`.
+The prose alias `dev-gpu` denotes the host addressed by the first dispatcher key in the Host defaults list below.
 
 Host defaults:
 - `gpu-claw`: `CFD_GPU_CLAW_SSH` or `gpu-claw`; manifest

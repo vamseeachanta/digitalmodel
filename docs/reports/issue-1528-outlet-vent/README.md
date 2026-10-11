@@ -2,6 +2,7 @@
 
 Settles the open slice-7 checklist item *"Settle outlet/vent placement for clean
 tank-volume balance"*, which gated the full 144-case coupled matrix.
+Machine names and home-directory paths in the recorded logs were replaced with neutral placeholders after the run; nothing else in the logs was altered.
 
 Issue: https://github.com/vamseeachanta/digitalmodel/issues/1528
 
@@ -28,7 +29,7 @@ atmosphere opening to `top`.
 |---|---|
 | Host | dev-gpu (Tailscale `<user>@<tailnet-ip>`), Ubuntu 24.04.4, 8 ranks |
 | OpenFOAM | ESI v2312, `FOAM_API=2312` |
-| Interpreter | `/home/undi/ws/digitalmodel/.venv/bin/python`, CPython 3.12.3 |
+| Interpreter | `<home>/ws/digitalmodel/.venv/bin/python`, CPython 3.12.3 |
 | Branch SHA run | `04725bbfa58be2c64ee3ca055a6552cf7b4b6619` (detached worktree, clean) |
 | Case | `dm1528-filldrain-2a44db9cf998`, fill 0.500, tank 20 x 6 x 10 m |
 | Mesh | 40 x 8 x 40 = 12800 cells |
@@ -145,7 +146,7 @@ No value in this report was imported from `patch_case.sh`.
 | `driver-run.log` | Full launcher transcript |
 
 Full 4.4 MB solver logs are retained on dev-gpu under
-`/home/undi/ws/cfd_work/vent2/run/<variant>/dm1528-filldrain-2a44db9cf998-<variant>/`.
+`<home>/ws/cfd_work/vent2/run/<variant>/dm1528-filldrain-2a44db9cf998-<variant>/`.
 
 ## Confirmation run against the shipped default
 

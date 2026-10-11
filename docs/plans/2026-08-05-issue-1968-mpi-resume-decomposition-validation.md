@@ -321,7 +321,7 @@ injected `command_runner`. No OpenFOAM binary is required, and none is available
 
 ```text
 $ which mpirun interFoam decomposePar reconstructPar
-/home/vamsee/miniforge3/bin/mpirun
+<home>/miniforge3/bin/mpirun
 $ ls -d /opt/openfoam* /usr/lib/openfoam* 2>/dev/null
 # no output
 ```
