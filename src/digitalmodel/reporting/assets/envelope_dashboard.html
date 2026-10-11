@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{
+  --bg:#f7f8fa;--panel:#ffffff;--ink:#1c2430;--muted:#5b6675;--line:#d9dee5;--grid:#eef1f4;
+  --green:#2e8b57;--amber:#e0a100;--red:#c8382f;--na:#a7b0bb;
+  --green-bg:#e3f3ea;--amber-bg:#fdf3d6;--red-bg:#fbe3e1;--amber-ink:#9a6b00;--on-amber:#3b2a00;--on-band:#ffffff;
+  --accent:#2457a6;--on-accent:#ffffff;--contour:#1c2430;--shadow:rgba(0,0,0,.18);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161c;--panel:#1a2029;--ink:#e6eaf0;--muted:#9aa5b4;--line:#2d3644;--grid:#222a35;
+  --green:#3fae72;--amber:#f0b72f;--red:#e5554b;--na:#5e6875;
+  --green-bg:#173327;--amber-bg:#3a2f12;--red-bg:#3d1c1a;--amber-ink:#f0b72f;--on-amber:#2a1e00;--on-band:#ffffff;
+  --accent:#7aa7ff;--on-accent:#0b1220;--contour:#f2f4f7;--shadow:rgba(0,0,0,.5);}}
+:root[data-theme="dark"]{
+  --bg:#12161c;--panel:#1a2029;--ink:#e6eaf0;--muted:#9aa5b4;--line:#2d3644;--grid:#222a35;
+  --green:#3fae72;--amber:#f0b72f;--red:#e5554b;--na:#5e6875;
+  --green-bg:#173327;--amber-bg:#3a2f12;--red-bg:#3d1c1a;--amber-ink:#f0b72f;--on-amber:#2a1e00;--on-band:#ffffff;
+  --accent:#7aa7ff;--on-accent:#0b1220;--contour:#f2f4f7;--shadow:rgba(0,0,0,.5);}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1320px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:13px}
+.banner{margin:10px 0 14px;padding:8px 12px;border-left:4px solid var(--amber);background:var(--amber-bg);border-radius:4px;font-size:13px}
+.banner.synthetic{border-left-color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.kpi .v{font-size:24px;font-weight:650;font-variant-numeric:tabular-nums}
+.kpi .l{color:var(--muted);font-size:12px}
+.kpi.green{border-top:4px solid var(--green)}.kpi.amber{border-top:4px solid var(--amber)}.kpi.red{border-top:4px solid var(--red)}.kpi.info{border-top:4px solid var(--accent)}
+.controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.controls label{font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--on-accent)}
+select,input[type=number]{font:inherit;font-size:13px;padding:3px 6px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--ink);max-width:100%}
+input[type=number]{width:64px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h2{font-size:15px;margin:0 0 8px}
+svg text{fill:var(--ink)}
+.axis text{font-size:12px;fill:var(--muted)}
+.cell{cursor:crosshair}
+.cell.pinned{stroke:var(--ink);stroke-width:2.5}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-top:6px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:4px}
+#tip{position:fixed;pointer-events:none;z-index:10;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 24px var(--shadow);padding:10px;width:400px;max-width:calc(100vw - 16px);display:none;font-size:12.5px}
+.dh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.dh b{font-size:14px}
+.chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.chip.green{background:var(--green-bg);color:var(--green)}.chip.amber{background:var(--amber-bg);color:var(--amber-ink)}.chip.red{background:var(--red-bg);color:var(--red)}.chip.na{background:var(--grid);color:var(--muted)}
+table.crit{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:12px}
+#pinned{overflow-x:auto}
+table.crit td{padding:4px 3px;border-top:1px solid var(--grid);vertical-align:middle}
+table.crit tr.lim td{font-weight:650}
+table.crit td.n{text-align:right;white-space:nowrap}
+.tag{font-size:10px;font-weight:700;color:var(--panel);background:var(--ink);border-radius:3px;padding:0 4px;margin-left:4px}
+.note{color:var(--muted);font-size:11.5px;margin-top:6px}
+.mults{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.mult{border:1px solid var(--line);border-radius:6px;padding:6px;cursor:pointer;background:var(--panel)}
+.mult.on{outline:2px solid var(--accent)}
+.mult .t{font-size:12px;font-weight:600}.mult .s{font-size:11px;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+table.lims{border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+table.lims th,table.lims td{padding:3px 6px;border-bottom:1px solid var(--grid);text-align:right}
+table.lims th{color:var(--muted);font-weight:600}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media (max-width:980px){.cols{grid-template-columns:1fr}}
+ul{margin:4px 0;padding-left:18px}
+.foot{color:var(--muted);font-size:11.5px;margin-top:14px}
+button.small{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:5px;padding:2px 8px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title"></h1>
+  <div class="sub" id="sub"></div>
+  <div class="banner" id="banner"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="controls">
+    <span><label for="view">Check&nbsp;</label><select id="view"></select></span>
+    <span><label>Surface&nbsp;</label><span class="seg" id="mode"><button data-m="sampled" class="on">Sampled cells</button><button data-m="interp">Interpolated</button></span></span>
+    <span><label for="amber">Amber from U &ge;&nbsp;</label><input id="amber" type="number" min="0.05" max="0.99" step="0.05"><label>&nbsp; Red above U &gt; 1.00</label></span>
+    <span><label><input type="checkbox" id="vals" checked> values</label></span>
+    <span><label><input type="checkbox" id="cont" checked> interpolated contours</label></span>
+    <span><button class="small" id="theme">Light/dark</button></span>
+  </div>
+
+  <div class="main">
+    <div class="card">
+      <h2 id="charttitle"></h2>
+      <div id="chart"></div>
+      <div class="legend" id="legend"></div>
+      <div class="note" id="chartnote"></div>
+    </div>
+    <div class="card" id="pinned">
+      <h2>Selected sea state</h2>
+      <div id="detail" class="note">Hover over the chart to see every check for a sea state; click to pin it here.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2>Utilisation by check (click to view)</h2>
+    <div class="mults" id="mults"></div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Limiting Hs by Tp, for the selected view</h2>
+      <div class="tablewrap"><table class="lims" id="lims"></table></div>
+      <div class="note">Sampled: highest Hs reached from the lowest sampled Hs without a cell above U = 1.00. Interpolated: linear crossing of U = 1.00 (or the amber threshold) between adjacent sampled Hs. "&gt; top" means the crossing is not reached within the sampled range; no extrapolation.</div>
+    </div>
+    <div class="card">
+      <h2>Basis and limitations</h2>
+      <div id="basis"></div>
+    </div>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+<div id="tip"></div>
+
+<script id="envelope-data" type="application/json">__ENVELOPE_DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById("envelope-data").textContent);
+const NS = "http://www.w3.org/2000/svg";
+const K = D.checks.length;
+const HS = D.hs, TP = D.tp, NH = HS.length, NT = TP.length;
+const st = { view: "gov", mode: "sampled", amber: D.amber_threshold, vals: true, cont: true, pin: null };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// node grid: G[i][j] -> array of U per check (null where not evaluated)
+const G = HS.map(() => TP.map(() => null)), C = HS.map(() => TP.map(() => null));
+for (const c of D.cells) {
+  const i = HS.indexOf(c.hs), j = TP.indexOf(c.tp);
+  G[i][j] = c.u; C[i][j] = c;
+}
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+// green U < amber; amber amber <= U <= 1; red U > 1 (same rule as classify_band in Python)
+const band = u => u == null || isNaN(u) ? "na" : u > 1 ? "red" : u >= st.amber ? "amber" : "green";
+const bandLabel = { green: "Within margin", amber: "Approaching limit", red: "Exceeds limit", na: "Not evaluated" };
+const fmt = (x, d = 2) => x == null ? "–" : x.toFixed(d);
+const vmax = a => { let m = null; for (const x of a) if (x != null && (m == null || x > m)) m = x; return m; };
+const argmax = a => { let m = -1; a.forEach((x, k) => { if (x != null && (m < 0 || x > a[m])) m = k; }); return m; };
+const viewOf = us => us == null ? null : st.view === "gov" ? vmax(us) : us[+st.view];
+const unitsOf = c => c.units ? " " + esc(c.units) : "";
+
+// bilinear interpolation of every check at (hs, tp); null outside the sampled hull or next to a missing node
+function locate(arr, x) {
+  if (arr.length < 2 || x < arr[0] || x > arr[arr.length - 1]) return null;
+  let i = 0; while (i < arr.length - 2 && x > arr[i + 1]) i++;
+  return [i, (x - arr[i]) / (arr[i + 1] - arr[i])];
+}
+function interpAll(hs, tp) {
+  const a = locate(HS, hs), b = locate(TP, tp); if (!a || !b) return null;
+  const [i, fy] = a, [j, fx] = b, out = [];
+  for (let k = 0; k < K; k++) {
+    const q = [G[i][j], G[i][j + 1], G[i + 1][j], G[i + 1][j + 1]].map(v => v ? v[k] : null);
+    if (q.some(v => v == null)) { out.push(null); continue; }
+    out.push(q[0] * (1 - fx) * (1 - fy) + q[1] * fx * (1 - fy) + q[2] * (1 - fx) * fy + q[3] * fx * fy);
+  }
+  return out.every(v => v == null) ? null : out;
+}
+
+// chart geometry: cells centred on sampled values, edges at midpoints
+const edges = arr => {
+  if (arr.length === 1) return [arr[0] - 0.5, arr[0] + 0.5];
+  const e = [arr[0] - (arr[1] - arr[0]) / 2]; for (let i = 0; i < arr.length - 1; i++) e.push((arr[i] + arr[i + 1]) / 2);
+  e.push(arr[arr.length - 1] + (arr[arr.length - 1] - arr[arr.length - 2]) / 2); return e;
+};
+const EX = edges(TP), EY = edges(HS);
+const W = 780, H = 540, M = { l: 58, r: 14, t: 12, b: 46 }, PW = W - M.l - M.r, PH = H - M.t - M.b;
+const sx = tp => M.l + (tp - EX[0]) / (EX[NT] - EX[0]) * PW;
+const sy = hs => M.t + PH - (hs - EY[0]) / (EY[NH] - EY[0]) * PH;
+const ix = px => EX[0] + (px - M.l) / PW * (EX[NT] - EX[0]);
+const iy = py => EY[0] + (M.t + PH - py) / PH * (EY[NH] - EY[0]);
+const el = (tag, at = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (parent) parent.appendChild(e); return e; };
+
+// marching squares on a fine grid of the selected view (interpolated); segments in data coordinates
+function contour(level) {
+  if (NH < 2 || NT < 2) return [];
+  const n = 8, xs = [], ys = [];
+  for (let j = 0; j < NT - 1; j++) for (let s = 0; s < n; s++) xs.push(TP[j] + (TP[j + 1] - TP[j]) * s / n); xs.push(TP[NT - 1]);
+  for (let i = 0; i < NH - 1; i++) for (let s = 0; s < n; s++) ys.push(HS[i] + (HS[i + 1] - HS[i]) * s / n); ys.push(HS[NH - 1]);
+  const V = ys.map(y => xs.map(x => viewOf(interpAll(y, x))));
+  const segs = [], lerp = (a, b, va, vb) => a + (b - a) * (level - va) / (vb - va);
+  for (let r = 0; r < ys.length - 1; r++) for (let c = 0; c < xs.length - 1; c++) {
+    const v = [V[r][c], V[r][c + 1], V[r + 1][c + 1], V[r + 1][c]];
+    if (v.some(x => x == null)) continue;
+    const p = [[xs[c], ys[r]], [xs[c + 1], ys[r]], [xs[c + 1], ys[r + 1]], [xs[c], ys[r + 1]]], pts = [];
+    for (let e = 0; e < 4; e++) {
+      const a = e, b = (e + 1) % 4;
+      if ((v[a] > level) !== (v[b] > level)) pts.push([lerp(p[a][0], p[b][0], v[a], v[b]), lerp(p[a][1], p[b][1], v[a], v[b])]);
+    }
+    if (pts.length === 2) segs.push(pts);
+    else if (pts.length === 4) { segs.push([pts[0], pts[1]]); segs.push([pts[2], pts[3]]); }
+  }
+  return segs;
+}
+
+// join marching-squares segments into polylines so dash patterns run continuously
+function chain(segs) {
+  const key = q => q[0].toFixed(4) + "," + q[1].toFixed(4), ends = new Map(), used = new Array(segs.length).fill(false);
+  segs.forEach((s, n) => { for (const q of s) { const k = key(q); if (!ends.has(k)) ends.set(k, []); ends.get(k).push(n); } });
+  const next = (q, n) => (ends.get(key(q)) || []).find(m => m !== n && !used[m]);
+  const lines = [];
+  for (let n = 0; n < segs.length; n++) {
+    if (used[n]) continue; used[n] = true;
+    const line = [segs[n][0], segs[n][1]];
+    for (const dir of [1, -1]) {
+      let cur = n;
+      for (;;) {
+        const tip = dir > 0 ? line[line.length - 1] : line[0], m = next(tip, cur);
+        if (m == null) break; used[m] = true; cur = m;
+        const s = segs[m], far = key(s[0]) === key(tip) ? s[1] : s[0];
+        dir > 0 ? line.push(far) : line.unshift(far);
+      }
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+
+function raster() {
+  const scale = 2, cw = Math.round(PW * scale), ch = Math.round(PH * scale);
+  const cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
+  const ctx = cv.getContext("2d"), img = ctx.createImageData(cw, ch);
+  const rgb = h => { const x = h.replace("#", ""); return [0, 2, 4].map(o => parseInt(x.substr(o, 2), 16)); };
+  const col = { green: rgb(css("--green")), amber: rgb(css("--amber")), red: rgb(css("--red")) };
+  for (let py = 0; py < ch; py++) {
+    const hs = iy(M.t + py / scale);
+    for (let px = 0; px < cw; px++) {
+      const u = viewOf(interpAll(hs, ix(M.l + px / scale)));
+      if (u == null) continue;
+      const c = col[band(u)], o = (py * cw + px) * 4;
+      img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 200;
+    }
+  }
+  ctx.putImageData(img, 0, 0); return cv.toDataURL();
+}
+
+function drawChart() {
+  const host = document.getElementById("chart"); host.innerHTML = "";
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Utilisation over Hs and Tp" }, host);
+  const defs = el("defs", {}, svg), pat = el("pattern", { id: "hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: css("--line"), "stroke-width": 2 }, pat);
+  el("rect", { x: M.l, y: M.t, width: PW, height: PH, fill: st.mode === "interp" ? "url(#hatch)" : css("--grid") }, svg);
+  const cg = el("g", {}, svg);
+  if (st.mode === "interp") {
+    el("image", { href: raster(), x: M.l, y: M.t, width: PW, height: PH, preserveAspectRatio: "none" }, svg);
+    for (const c of D.cells) {
+      const u = viewOf(c.u);
+      el("circle", { cx: sx(c.tp), cy: sy(c.hs), r: 2.2, fill: css("--contour"), opacity: .55 }, svg);
+      if (st.vals) { const t = el("text", { x: sx(c.tp), y: sy(c.hs) - 5, "text-anchor": "middle", "font-size": 10, opacity: .8 }, svg); t.textContent = fmt(u); }
+    }
+  } else {
+    for (let i = 0; i < NH; i++) for (let j = 0; j < NT; j++) {
+      const u = viewOf(G[i][j]), b = band(u);
+      el("rect", { class: "cell" + (st.pin && st.pin.i === i && st.pin.j === j ? " pinned" : ""), x: sx(EX[j]) + .5, y: sy(EY[i + 1]) + .5, width: sx(EX[j + 1]) - sx(EX[j]) - 1, height: sy(EY[i]) - sy(EY[i + 1]) - 1, fill: css("--" + b), "fill-opacity": .88, rx: 2 }, cg);
+      if (st.vals && u != null) { const t = el("text", { x: sx(TP[j]), y: sy(HS[i]) + 4, "text-anchor": "middle", "font-size": 11, "font-weight": 600, fill: b === "amber" ? css("--on-amber") : css("--on-band"), "pointer-events": "none" }, cg); t.textContent = fmt(u); }
+    }
+  }
+  if (st.cont) {
+    for (const [lv, dash, w] of [[1.0, "", 2.6], [st.amber, "7 5", 1.8]]) {
+      let d = ""; for (const line of chain(contour(lv))) d += "M" + line.map(q => `${sx(q[0]).toFixed(1)},${sy(q[1]).toFixed(1)}`).join("L");
+      if (d) el("path", { d, stroke: css("--contour"), "stroke-width": w, "stroke-dasharray": dash, fill: "none", "stroke-linecap": "round", "pointer-events": "none" }, svg);
+    }
+  }
+  const ax = el("g", { class: "axis" }, svg);
+  TP.forEach(tp => { const t = el("text", { x: sx(tp), y: M.t + PH + 16, "text-anchor": "middle" }, ax); t.textContent = tp; });
+  HS.forEach(hs => { const t = el("text", { x: M.l - 6, y: sy(hs) + 4, "text-anchor": "end" }, ax); t.textContent = hs.toFixed(2); });
+  let t = el("text", { x: M.l + PW / 2, y: H - 8, "text-anchor": "middle" }, ax); t.textContent = "Peak period Tp (s)";
+  t = el("text", { x: 14, y: M.t + PH / 2, "text-anchor": "middle", transform: `rotate(-90 14 ${M.t + PH / 2})` }, ax); t.textContent = "Significant wave height Hs (m)";
+  if (st.pin) el("circle", { cx: sx(st.pin.tp), cy: sy(st.pin.hs), r: 7, fill: "none", stroke: css("--accent"), "stroke-width": 2.5, "pointer-events": "none" }, svg);
+  const hit = el("rect", { x: M.l, y: M.t, width: PW, height: PH, fill: "transparent" }, svg);
+  hit.addEventListener("mousemove", ev => showTip(ev, svg));
+  hit.addEventListener("mouseleave", () => document.getElementById("tip").style.display = "none");
+  hit.addEventListener("click", ev => { const p = probe(ev, svg); if (p) { st.pin = p; drawChart(); document.getElementById("detail").innerHTML = detailHTML(p); } });
+}
+
+// a probe is either the sampled cell under the pointer or the interpolated point
+function probe(ev, svg) {
+  const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+  const p = pt.matrixTransform(svg.getScreenCTM().inverse()), tp = ix(p.x), hs = iy(p.y);
+  if (st.mode === "interp") {
+    const us = interpAll(hs, tp); if (!us) return null;
+    return { interp: true, hs, tp, us };
+  }
+  const j = EX.findIndex((e, k) => k < NT && tp >= e && tp < EX[k + 1]), i = EY.findIndex((e, k) => k < NH && hs >= e && hs < EY[k + 1]);
+  if (i < 0 || j < 0) return null;
+  return { interp: false, i, j, hs: HS[i], tp: TP[j], us: G[i][j], cell: C[i][j] };
+}
+
+function bullet(u) {
+  const w = 84, h = 11, max = 1.3, x = v => Math.min(v, max) / max * w, b = band(u);
+  if (u == null) return `<svg width="${w}" height="${h}"></svg>`;
+  return `<svg width="${w}" height="${h}" style="vertical-align:middle">
+    <rect width="${w}" height="${h}" rx="2" fill="${css("--grid")}"/>
+    <rect width="${x(u).toFixed(1)}" height="${h}" rx="2" fill="${css("--" + b)}"/>
+    <line x1="${x(st.amber)}" x2="${x(st.amber)}" y1="0" y2="${h}" stroke="${css("--amber")}" stroke-width="1.5" stroke-dasharray="2 2"/>
+    <line x1="${x(1)}" x2="${x(1)}" y1="-1" y2="${h + 1}" stroke="${css("--ink")}" stroke-width="2"/>${u > max ? `<text x="${w - 8}" y="10" font-size="10" fill="${css("--on-band")}">›</text>` : ""}</svg>`;
+}
+
+function detailHTML(p) {
+  if (!p.us) return `<div class="note">Not evaluated at this sea state.</div>`;
+  const lim = argmax(p.us), gov = p.us[lim], b = band(gov), gc = D.checks[lim];
+  const rows = D.checks.map((c, k) => ({ c, k, u: p.us[k] })).sort((a, z) => (z.u ?? -1) - (a.u ?? -1));
+  let h = `<div class="dh"><b>Hs ${p.hs.toFixed(2)} m · Tp ${p.tp.toFixed(p.interp ? 1 : 2)} s</b><span class="chip ${b}">${bandLabel[b]}</span></div>`;
+  h += `<div class="note" style="margin:0 0 6px">${p.interp ? "Interpolated (bilinear between the four surrounding sampled cells); indicative, not a sampled result." : "Sampled cell."}</div>`;
+  const margin = gc.limit != null ? fmt(Math.abs(1 - gov) * gc.limit, 2) + unitsOf(gc) : "ΔU " + fmt(Math.abs(1 - gov), 3);
+  h += `<div style="margin-bottom:6px">Governing: <b>${esc(gc.id)}</b> at U = <b>${fmt(gov, 3)}</b>; ${gov > 1 ? "exceeds its limit by " : "margin to its limit "}${margin}.</div>`;
+  h += `<table class="crit"><tr style="color:var(--muted);font-size:11px"><td>Check</td><td>Utilisation</td><td class="n">U</td><td class="n">Demand / limit</td></tr>`;
+  const dem = !p.interp && p.cell && p.cell.demand;
+  for (const r of rows) {
+    const d = r.u == null ? null : dem && dem[r.k] != null ? dem[r.k] : r.c.limit != null ? r.u * r.c.limit : null;
+    const dl = r.c.limit != null ? `${fmt(d, 2)} / ${fmt(r.c.limit, 2)}${unitsOf(r.c)}` : "–";
+    h += `<tr class="${r.k === lim ? "lim" : ""}"><td>${esc(r.c.id)}${r.k === lim ? '<span class="tag">GOVERNING</span>' : ""}</td><td>${bullet(r.u)}</td><td class="n"><span class="chip ${band(r.u)}">${fmt(r.u, 3)}</span></td><td class="n">${dl}</td></tr>`;
+  }
+  h += `</table><div class="note">Bar: utilisation U = demand / limit; dashed tick = amber threshold ${st.amber.toFixed(2)}; solid tick = U 1.00.</div>`;
+  return h;
+}
+
+function showTip(ev, svg) {
+  const tip = document.getElementById("tip"), p = probe(ev, svg);
+  if (!p) { tip.style.display = "none"; return; }
+  tip.innerHTML = detailHTML(p); tip.style.display = "block";
+  const r = tip.getBoundingClientRect(); let x = ev.clientX + 16, y = ev.clientY + 16;
+  if (x + r.width > innerWidth - 8) x = Math.max(8, ev.clientX - r.width - 16);
+  if (y + r.height > innerHeight - 8) y = Math.max(8, innerHeight - r.height - 8);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+
+function kpis() {
+  const n = { green: 0, amber: 0, red: 0, na: 0 }, gov = Array(K).fill(0); let mx = null, at = null;
+  for (let i = 0; i < NH; i++) for (let j = 0; j < NT; j++) {
+    const u = viewOf(G[i][j]); n[band(u)]++;
+    if (G[i][j]) gov[argmax(G[i][j])]++;
+    if (u != null && (mx == null || u > mx)) { mx = u; at = `Hs ${HS[i]} m, Tp ${TP[j]} s`; }
+  }
+  const top = gov.indexOf(Math.max(...gov)), tot = NH * NT;
+  const card = (cls, v, l) => `<div class="kpi ${cls}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+  document.getElementById("kpis").innerHTML =
+    card("green", n.green, `Within margin (U &lt; ${st.amber.toFixed(2)}) of ${tot}`) +
+    card("amber", n.amber, `Approaching (${st.amber.toFixed(2)} ≤ U ≤ 1.00)`) +
+    card("red", n.red, "Exceeds limit (U &gt; 1.00)") +
+    card("info", fmt(mx, 3), `Peak U${at ? ", " + at : ""}`) +
+    card("info", `${gov[top]}/${tot}`, `Cells governed by ${esc(D.checks[top].id)}`) +
+    (n.na ? card("", n.na, "Not evaluated") : "");
+}
+
+function mults() {
+  const host = document.getElementById("mults"); host.innerHTML = "";
+  const opts = [["gov", "Governing (max of all)"], ...D.checks.map((c, k) => [String(k), c.id])];
+  for (const [v, name] of opts) {
+    const d = document.createElement("div"); d.className = "mult" + (st.view === v ? " on" : "");
+    const sv = st.view; st.view = v;
+    let mx = null; const cnt = { green: 0, amber: 0, red: 0 };
+    const cw = 13, ch = 10, s = el("svg", { width: "100%", viewBox: `0 0 ${NT * cw} ${NH * ch}` });
+    for (let i = 0; i < NH; i++) for (let j = 0; j < NT; j++) {
+      const u = viewOf(G[i][j]), b = band(u); if (b in cnt) cnt[b]++; if (u != null && (mx == null || u > mx)) mx = u;
+      el("rect", { x: j * cw, y: (NH - 1 - i) * ch, width: cw - 1, height: ch - 1, fill: css("--" + b), "fill-opacity": .9 }, s);
+    }
+    st.view = sv;
+    const c = v === "gov" ? null : D.checks[+v];
+    const lim = c && c.limit != null ? ` · limit ${c.limit}${unitsOf(c)}` : "";
+    d.innerHTML = `<div class="t">${esc(name)}</div><div class="s">peak U ${fmt(mx, 3)}${lim}</div>`;
+    d.appendChild(s);
+    const leg = document.createElement("div"); leg.className = "s";
+    leg.innerHTML = `<span class="chip green">${cnt.green}</span> <span class="chip amber">${cnt.amber}</span> <span class="chip red">${cnt.red}</span>`;
+    d.appendChild(leg);
+    d.onclick = () => { st.view = v; document.getElementById("view").value = v; render(); };
+    host.appendChild(d);
+  }
+}
+
+function limits() {
+  const cross = (j, lv) => {
+    for (let i = 0; i < NH; i++) {
+      const u = viewOf(G[i][j]); if (u == null) return { txt: "n/e", b: "na" };
+      if (u > lv) {
+        if (i === 0) return { txt: `&lt; ${HS[0].toFixed(2)}`, b: lv === 1 ? "red" : "amber" };
+        const u0 = viewOf(G[i - 1][j]);
+        return { txt: (HS[i - 1] + (HS[i] - HS[i - 1]) * (lv - u0) / (u - u0)).toFixed(2), b: lv === 1 ? "red" : "amber" };
+      }
+    }
+    return { txt: `&gt; ${HS[NH - 1].toFixed(2)}`, b: "green" };
+  };
+  let h = `<tr><th style="text-align:left">Tp (s)</th><th>Highest sampled Hs, U ≤ 1.00</th><th>Interp. Hs at U = ${st.amber.toFixed(2)}</th><th>Interp. Hs at U = 1.00</th></tr>`;
+  for (let j = 0; j < NT; j++) {
+    let hi = null; for (let i = 0; i < NH; i++) { const u = viewOf(G[i][j]); if (u == null || u > 1) break; hi = HS[i]; }
+    const a = cross(j, st.amber), r = cross(j, 1.0);
+    h += `<tr><td style="text-align:left">${TP[j]}</td><td>${hi == null ? "none" : hi.toFixed(2) + (hi === HS[NH - 1] ? " (top of range)" : "")}</td><td><span class="chip ${a.b}">${a.txt}</span></td><td><span class="chip ${r.b}">${r.txt}</span></td></tr>`;
+  }
+  document.getElementById("lims").innerHTML = h;
+}
+
+function render() {
+  const name = st.view === "gov" ? "Governing utilisation (maximum over all checks)" : D.checks[+st.view].id + " utilisation";
+  document.getElementById("charttitle").textContent = name + (st.mode === "interp" ? " — interpolated surface" : " — sampled cells");
+  document.getElementById("legend").innerHTML =
+    `<span><span class="sw" style="background:var(--green)"></span>U &lt; ${st.amber.toFixed(2)} within margin</span>` +
+    `<span><span class="sw" style="background:var(--amber)"></span>${st.amber.toFixed(2)} ≤ U ≤ 1.00 approaching limit</span>` +
+    `<span><span class="sw" style="background:var(--red)"></span>U &gt; 1.00 exceeds limit</span>` +
+    `<span><span class="sw" style="background:var(--na)"></span>not evaluated</span>` +
+    (st.cont ? `<span>── U = 1.00 &nbsp; - - U = ${st.amber.toFixed(2)} (interpolated contours)</span>` : "");
+  document.getElementById("chartnote").textContent = st.mode === "interp"
+    ? "Interpolated surface: bilinear in Hs and Tp between sampled cells, per check, then the maximum is taken. Dots are the sampled cells. Hatched margins lie outside the sampled range and are not extrapolated. Interpolation is indicative only; the sampled cells are the analysis result."
+    : "Each cell is one sampled sea state; the value is its utilisation U for the selected view. Contours, when shown, are interpolated between cells and are indicative only.";
+  kpis(); drawChart(); mults(); limits();
+  if (st.pin) { const p = st.pin.interp ? { ...st.pin, us: interpAll(st.pin.hs, st.pin.tp) } : st.pin; document.getElementById("detail").innerHTML = detailHTML(p); }
+}
+
+function init() {
+  document.getElementById("title").textContent = D.title;
+  document.getElementById("sub").textContent = `${NH} Hs × ${NT} Tp grid · ${D.cells.length} sampled sea states · ${K} checks` + (D.source ? ` · source ${D.source}` : "");
+  const banner = document.getElementById("banner");
+  if (D.synthetic) {
+    banner.classList.add("synthetic");
+    banner.innerHTML = "<b>SYNTHETIC EXAMPLE DATA.</b> Values are generated for demonstration and do not represent any structure, vessel or operation.";
+  } else {
+    banner.innerHTML = "Utilisation U = demand / limit for each check, against the limits supplied with the data. The colours show margin to those limits; they are not an approved operating window.";
+  }
+  const amber = document.getElementById("amber"); amber.value = st.amber.toFixed(2);
+  const sel = document.getElementById("view");
+  sel.innerHTML = `<option value="gov">Governing (max of all)</option>` + D.checks.map((c, k) => `<option value="${k}">${esc(c.id)}${c.limit != null ? ` (${c.limit}${unitsOf(c)})` : ""}</option>`).join("");
+  sel.onchange = () => { st.view = sel.value; render(); };
+  document.querySelectorAll("#mode button").forEach(b => b.onclick = () => { document.querySelectorAll("#mode button").forEach(x => x.classList.toggle("on", x === b)); st.mode = b.dataset.m; st.pin = null; document.getElementById("detail").innerHTML = '<div class="note">Hover over the chart; click to pin.</div>'; render(); });
+  amber.oninput = e => { const v = parseFloat(e.target.value); if (v > 0 && v < 1) { st.amber = v; render(); } };
+  document.getElementById("vals").onchange = e => { st.vals = e.target.checked; render(); };
+  document.getElementById("cont").onchange = e => { st.cont = e.target.checked; render(); };
+  document.getElementById("theme").onclick = () => { const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme = dark ? "light" : "dark"; render(); };
+  let b = "<b>Checks</b><ul>" + D.checks.map(c => `<li>${esc(c.id)}${c.limit != null ? `: limit ${c.limit}${unitsOf(c)}` : ""}</li>`).join("") + "</ul>";
+  b += `<b>Colour bands</b><ul><li>Green U &lt; ${D.amber_threshold.toFixed(2)}; amber ${D.amber_threshold.toFixed(2)} ≤ U ≤ 1.00; red U &gt; 1.00 (amber threshold as built; the control above changes the view only).</li></ul>`;
+  b += "<b>Limitations</b><ul>" + D.notes.map(x => `<li>${esc(x)}</li>`).join("") + "<li>The interpolated view and contours are a display aid; they are not part of the analysis result.</li><li>Sea states and checks absent from the input are shown as not evaluated.</li></ul>";
+  document.getElementById("basis").innerHTML = b;
+  document.getElementById("foot").textContent = `Amber threshold as built ${D.amber_threshold.toFixed(2)} · generated by digitalmodel.reporting.envelope_dashboard`;
+  render();
+}
+init();
+</script>
+</body>
+</html>
