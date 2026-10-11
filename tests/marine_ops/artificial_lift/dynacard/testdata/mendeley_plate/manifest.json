@@ -1,0 +1,56 @@
+{
+  "dataset_doi": "10.17632/hnfwm9mjs6.1",
+  "dataset_url": "https://data.mendeley.com/datasets/hnfwm9mjs6/1",
+  "source_version": "1",
+  "source_published": "2020-12-14",
+  "retrieval_date": "2026-10-11",
+  "licence": "CC0 1.0",
+  "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "licence_evidence": "Dataset page, Licence section: CC0 1.0; checked before download.",
+  "linked_paper_doi": "10.1016/j.petrol.2020.108254",
+  "linked_paper_relationship": "Paper cited by issue; paper text is not included or used as coordinate evidence.",
+  "file": {
+    "name": "Working condition diagnosis plate.xls",
+    "size_bytes": 397312,
+    "sha256": "69723091c93269761a2fa79fc774a6ae7bf0eff786af439fb94c40171018058e",
+    "url": "https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded"
+  },
+  "numeric_provenance": "All point counts, column offsets and extrema below are read from numeric cell pairs on the named workbook sheet; no resampling or axis scaling. Embedded chart titles identify Normalized displacement, Normalized load and Normalized power.",
+  "units": {
+    "position": "dimensionless",
+    "load": "dimensionless",
+    "power": "dimensionless"
+  },
+  "intended_use": "Canonical diagnostic shape fixture only; not field measurements, training corpus or dimensioned solver input.",
+  "mapping_basis": "Literal class-name equivalents to existing fault-mode names only, on load curves. Supply insufficiency does not establish fluid pound; sand does not establish abrasion. Power curves and surface-unit conditions have no pump fault-mode mapping.",
+  "chart_titles": {
+    "position": "Normalized displacement",
+    "load": "Normalized load",
+    "power": "Normalized power"
+  },
+  "curves": [
+    {"label": "工况正常", "block_index": 0, "columns_zero_based": [2, 3], "point_count": 43, "ordinate": "load", "fault_mode": "NORMAL", "position_range": [0.086674, 0.805969], "ordinate_range": [0.056656, 0.856861]},
+    {"label": "工况正常", "block_index": 1, "columns_zero_based": [10, 11], "point_count": 112, "ordinate": "power", "fault_mode": null, "position_range": [0.00490196, 0.995098], "ordinate_range": [0.00934579, 0.985981]},
+    {"label": "供液不足", "block_index": 0, "columns_zero_based": [3, 4], "point_count": 40, "ordinate": "load", "fault_mode": null, "position_range": [0.0957991, 0.767069], "ordinate_range": [0.248628, 0.758419]},
+    {"label": "供液不足", "block_index": 1, "columns_zero_based": [11, 12], "point_count": 86, "ordinate": "power", "fault_mode": null, "position_range": [0.00790514, 0.988142], "ordinate_range": [0.0151515, 0.977273]},
+    {"label": "气体影响", "block_index": 0, "columns_zero_based": [3, 4], "point_count": 35, "ordinate": "load", "fault_mode": "GAS_INTERFERENCE", "position_range": [0.116129, 0.804301], "ordinate_range": [0.245455, 0.709091]},
+    {"label": "气体影响", "block_index": 1, "columns_zero_based": [11, 12], "point_count": 87, "ordinate": "power", "fault_mode": null, "position_range": [0.0116279, 0.984496], "ordinate_range": [0.00729927, 0.985401]},
+    {"label": "抽油杆断脱", "block_index": 0, "columns_zero_based": [1, 2], "point_count": 21, "ordinate": "load", "fault_mode": "ROD_PARTING", "position_range": [0.167019, 0.761099], "ordinate_range": [0.559242, 0.706161]},
+    {"label": "抽油杆断脱", "block_index": 1, "columns_zero_based": [10, 11], "point_count": 96, "ordinate": "power", "fault_mode": null, "position_range": [0.00796813, 0.992032], "ordinate_range": [0.00699301, 0.986014]},
+    {"label": "上碰泵", "block_index": 0, "columns_zero_based": [1, 2], "point_count": 28, "ordinate": "load", "fault_mode": "PUMP_TAGGING_UP", "position_range": [0.10986, 0.675286], "ordinate_range": [0.291758, 0.775255]},
+    {"label": "上碰泵", "block_index": 1, "columns_zero_based": [10, 11], "point_count": 74, "ordinate": "power", "fault_mode": null, "position_range": [0.0077821, 0.992218], "ordinate_range": [0.0155642, 0.994675]},
+    {"label": "下碰泵", "block_index": 0, "columns_zero_based": [1, 2], "point_count": 31, "ordinate": "load", "fault_mode": "PUMP_TAGGING_DOWN", "position_range": [0.0684932, 0.737443], "ordinate_range": [0.209214, 0.718336]},
+    {"label": "下碰泵", "block_index": 1, "columns_zero_based": [11, 12], "point_count": 75, "ordinate": "power", "fault_mode": null, "position_range": [0.00377358, 0.992453], "ordinate_range": [0.00719424, 0.985612]},
+    {"label": "游动阀漏失", "block_index": 0, "columns_zero_based": [1, 2], "point_count": 34, "ordinate": "load", "fault_mode": "VALVE_LEAK_TV", "position_range": [0.128398, 0.807043], "ordinate_range": [0.266496, 0.751584]},
+    {"label": "游动阀漏失", "block_index": 1, "columns_zero_based": [9, 10], "point_count": 75, "ordinate": "power", "fault_mode": null, "position_range": [0.0114504, 0.984733], "ordinate_range": [0.0142857, 0.985714]},
+    {"label": "固定阀漏失", "block_index": 0, "columns_zero_based": [1, 2], "point_count": 33, "ordinate": "load", "fault_mode": "VALVE_LEAK_SV", "position_range": [0.120558, 0.763821], "ordinate_range": [0.295344, 0.721039]},
+    {"label": "固定阀漏失", "block_index": 1, "columns_zero_based": [11, 12], "point_count": 83, "ordinate": "power", "fault_mode": null, "position_range": [0.00667366, 0.984409], "ordinate_range": [0.0225564, 0.992481]},
+    {"label": "活塞脱出工作筒", "block_index": 0, "columns_zero_based": [1, 2], "point_count": 30, "ordinate": "load", "fault_mode": "PLUNGER_OUT_OF_BARREL", "position_range": [0.105083, 0.814894], "ordinate_range": [0.305087, 0.730368]},
+    {"label": "活塞脱出工作筒", "block_index": 1, "columns_zero_based": [11, 12], "point_count": 86, "ordinate": "power", "fault_mode": null, "position_range": [0.0140644, 0.994483], "ordinate_range": [0.00657895, 0.986842]},
+    {"label": "出砂", "block_index": 0, "columns_zero_based": [2, 3], "point_count": 190, "ordinate": "load", "fault_mode": null, "position_range": [0.0748567, 0.784905], "ordinate_range": [0.35122, 0.834146]},
+    {"label": "出砂", "block_index": 1, "columns_zero_based": [10, 11], "point_count": 150, "ordinate": "power", "fault_mode": null, "position_range": [0.0147534, 0.990746], "ordinate_range": [0.0137931, 0.97931]},
+    {"label": "过平衡", "block_index": 0, "columns_zero_based": [1, 2], "point_count": 72, "ordinate": "power", "fault_mode": null, "position_range": [0.00772201, 0.992278], "ordinate_range": [0.0136986, 0.986301]},
+    {"label": "欠平衡", "block_index": 0, "columns_zero_based": [3, 4], "point_count": 64, "ordinate": "power", "fault_mode": null, "position_range": [0.00796813, 0.992032], "ordinate_range": [0.013986, 0.986014]},
+    {"label": "减速箱故障", "block_index": 0, "columns_zero_based": [2, 3], "point_count": 167, "ordinate": "power", "fault_mode": null, "position_range": [0.00396825, 0.996032], "ordinate_range": [0.0352113, 0.985915]}
+  ]
+}
