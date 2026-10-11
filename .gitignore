@@ -252,6 +252,7 @@ node_modules/
 
 /output/
 /results/
+/data/steel_shapes_local/
 reports/
 !docs/reports/
 docs/reports/*

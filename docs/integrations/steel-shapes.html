@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AISC nominal section lookup</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 55rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.6; color: #203040; }
+pre { background: #f0f4f7; padding: 1rem; overflow: auto; }
+table { border-collapse: collapse; width: 100%; } td, th { text-align: left; padding: .5rem; border-bottom: 1px solid #ccd; }
+</style>
+<main>
+<h1>AISC nominal section lookup</h1>
+<p>The packaged lookup returns a <code>sectionproperties</code> Geometry for a limited,
+cited sample. Full W-shape coverage depends on the user obtaining and importing the
+publisher workbook. <a href="https://github.com/vamseeachanta/digitalmodel/issues/1694">Issue 1694</a>
+remains subject to review and original-manual validation.</p>
+<pre><code>from digitalmodel.steel_shapes import get_section, get_section_data, list_sections
+
+geometry = get_section("W14x90")       # mm; equivalent alias: W360x134
+inches = get_section("W360x134", unit="imperial")
+reference = get_section_data("W14x90") # inches and square inches, with source cells
+available = list_sections("W")
+</code></pre>
+<p>Names ignore case and whitespace and accept the multiplication sign in place of
+<code>x</code>. Both EDI and manual labels are stored explicitly. Other fraction,
+decimal, punctuation or schedule spellings are accepted only when present as aliases;
+the lookup does not infer metric names by arithmetic. Unknown names raise a
+<code>KeyError</code>; invalid names, units and catalogue values raise clear errors.</p>
+<p>Some full-catalogue Pipe labels collide across naming systems: the same text can
+denote an imperial nominal diameter or a metric nominal diameter. Ambiguous names
+raise a <code>KeyError</code>. Select <code>name_system="imperial"</code> or
+<code>name_system="metric"</code> explicitly; this selects the name interpretation,
+while <code>unit</code> still controls the output coordinates.</p>
+<p>Output coordinates default to mm independently of the designation language.
+Raw metadata retains source inch dimensions and square-inch areas. Metric geometry
+uses the inch conversion already present in the existing integration utility;
+rounded metric dimension columns are not substituted for imperial source figures.</p>
+<table>
+<thead><tr><th>Family</th><th>Nominal geometry model</th></tr></thead>
+<tbody>
+<tr><td>W, HP</td><td>Parallel-flange I-section; root radius derived from design k and flange thickness.</td></tr>
+<tr><td>S, C</td><td>Approximate tapered flanges; root radius derived by tangency, sharp toes. A warning identifies the unverified nominal thickness interpretation.</td></tr>
+<tr><td>L</td><td>Angle with root radius derived from design k; unsourced toe radii are omitted.</td></tr>
+<tr><td>Rectangular HSS</td><td>Design wall thickness with an idealised circular outer corner radius.</td></tr>
+<tr><td>Round HSS, Pipe</td><td>Circular hollow section using outside diameter and design wall thickness.</td></tr>
+</tbody>
+</table>
+<p>Table 1. Nominal model assumptions; source figures and formula derivations are
+recorded in <code>src/digitalmodel/data_systems/data/steel_shapes_provenance.yaml</code>.</p>
+<p>The model does not infer material or capacity. Agreement with catalogue area
+within a corner-envelope and discretisation allowance does not establish the exact
+rolled outline. Source-byte equivalence with the publisher and comparison against
+original Manual pages are unestablished: the research sample was checked against
+a publicly accessible electronic workbook copy. Engineering use requires obtaining
+the governing source and verifying these assumptions for the selected section.</p>
+<h2>Local full catalogue</h2>
+<p>Review the <a href="https://www.aisc.org/aisc/about-aisc/terms-conditions/">publisher terms</a>
+and obtain the current XLSX link from the
+<a href="https://www.aisc.org/aisc/publications/steel-construction-manual/aisc-shapes-database-v160/">AISC download page</a>.
+No bulk redistribution permission is asserted. From the repository root, either
+fetch the publisher URL or import an already obtained workbook:</p>
+<pre><code>PYTHONPATH=src python scripts/integrations/fetch_steel_shapes.py --url PUBLISHER_XLSX_URL
+# Alternative when the publisher download requires browser interaction:
+PYTHONPATH=src python scripts/integrations/fetch_steel_shapes.py --workbook source.xlsx
+
+# Explicit selection prevents a missing full catalogue from silently using samples:
+geometry = get_section("W14x90", catalog_path="data/steel_shapes_local/catalog.json")
+</code></pre>
+<p>The fetch utility is never called by tests. It accepts publisher HTTPS URLs,
+stops on access failures, refuses existing destinations, retains the raw workbook,
+records its SHA-256 digest and source cells, and verifies saved files by readback.
+Both files remain under the git-ignored <code>data/steel_shapes_local/</code> directory.
+If validation fails, the downloaded raw workbook is preserved and no usable full
+catalogue is reported. The original file is retained for diagnosis; an existing
+destination is never overwritten. File import records the publisher page as its
+source locator, so source authenticity remains a user verification obligation.</p>
+<p>The converter accepts the named v16 worksheet, separates duplicate imperial and
+metric name headings, and includes W, S, HP, C, L, rectangular/round HSS and Pipe.
+Other families are excluded. Missing dimensions, impossible geometry and ambiguous
+aliases reject the import. Counts are reported from the actual imported rows;
+import success alone does not establish that a user workbook is complete.</p>
+<h2>Dependency and catalogue choice</h2>
+<p><code>sectionproperties</code> and <code>openpyxl</code> are already declared project
+dependencies. Geometry construction imports <code>sectionproperties</code> lazily;
+metadata lookup remains available when that dependency is absent. No runtime
+dependency is added.</p>
+<p><a href="https://pypi.org/project/steelpy/">steelpy</a> supplies imperial family CSV
+files and a convenient attribute-based lookup. Its Apache software licence metadata
+does not establish redistribution rights for the upstream AISC compilation. A thin
+in-repo JSON loader is used to retain source-cell provenance, explicit metric aliases
+and geometry assumptions without another dependency. The existing script-level W
+lookup and its catalogue remain separate compatibility surfaces.</p>
+</main>
+</html>

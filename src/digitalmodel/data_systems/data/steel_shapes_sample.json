@@ -1,0 +1,59 @@
+{
+  "schema": "aisc-shapes/1",
+  "units": {"length": "in", "area": "in^2"},
+  "source": {
+    "catalog_id": "aisc-shapes",
+    "publication": "AISC Shapes Database v16.0, August 2023",
+    "url": "https://www.aisc.org/aisc/publications/steel-construction-manual/aisc-shapes-database-v160/",
+    "sha256": "82d0ceb96a0d938ae1a6bd9637cb10a1e269225b5d668dce5b0bdc8d86013496",
+    "retrieved_on": "2026-10-11",
+    "access_note": "Hand-entered sample from a public research copy. Direct publisher access returned HTTP 403; publisher-byte equivalence and original-manual page validation are unestablished. See steel_shapes_provenance.yaml."
+  },
+  "sections": [
+    {
+      "name": "W14X90", "metric_name": "W360X134", "aliases": ["W14X90"], "family": "W", "area": 26.5,
+      "dimensions": {"d": 14, "bf": 14.5, "tw": 0.44, "tf": 0.71, "kdes": 1.31},
+      "source": {"sheet": "Database v16.0", "row": 208, "area_number_format": "0.0", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+    },
+    {
+      "name": "W12X65", "metric_name": "W310X97", "aliases": ["W12X65"], "family": "W", "area": 19.1,
+      "dimensions": {"d": 12.1, "bf": 12, "tw": 0.39, "tf": 0.605, "kdes": 1.2},
+      "source": {"sheet": "Database v16.0", "row": 237, "area_number_format": "0.0", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+    },
+    {
+      "name": "HP12X53", "metric_name": "HP310X79", "aliases": ["HP12X53"], "family": "HP", "area": 15.5,
+      "dimensions": {"d": 11.8, "bf": 12, "tw": 0.435, "tf": 0.435, "kdes": 1.13},
+      "source": {"sheet": "Database v16.0", "row": 353, "area_number_format": "0.0", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+    },
+    {
+      "name": "S12X35", "metric_name": "S310X52", "aliases": ["S12X35"], "family": "S", "area": 10.2,
+      "dimensions": {"d": 12, "bf": 5.08, "tw": 0.428, "tf": 0.544, "kdes": 1.19},
+      "source": {"sheet": "Database v16.0", "row": 322, "area_number_format": "0.0", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+    },
+    {
+      "name": "C9X20", "metric_name": "C230X30", "aliases": ["C9X20"], "family": "C", "area": 5.87,
+      "dimensions": {"d": 9, "bf": 2.65, "tw": 0.448, "tf": 0.413, "kdes": 1},
+      "source": {"sheet": "Database v16.0", "row": 367, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+    },
+    {
+      "name": "L4X4X1/2", "metric_name": "L102X102X12.7", "aliases": ["L4X4X1/2"], "family": "L", "area": 3.75,
+      "dimensions": {"d": 4, "b": 4, "t": 0.5, "kdes": 0.875},
+      "source": {"sheet": "Database v16.0", "row": 505, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "b": "O", "t": "V", "kdes": "Y"}}
+    },
+    {
+      "name": "HSS8X6X3/8", "metric_name": "HSS203.2X152.4X9.5", "aliases": ["HSS8X6X.375"], "family": "HSS_RECT", "area": 8.97,
+      "dimensions": {"d": 8, "b": 6, "t": 0.349, "tnom": 0.375},
+      "source": {"sheet": "Database v16.0", "row": 1862, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "I", "b": "N", "t": "X", "tnom": "W"}}
+    },
+    {
+      "name": "HSS6.625X0.280", "metric_name": "HSS168.3X7.1", "aliases": ["HSS6.625X.280"], "family": "HSS_ROUND", "area": 5.2,
+      "dimensions": {"d": 6.63, "t": 0.26, "tnom": 0.28},
+      "source": {"sheet": "Database v16.0", "row": 2182, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "K", "t": "X", "tnom": "W"}}
+    },
+    {
+      "name": "Pipe6STD", "metric_name": "Pipe150STD", "aliases": ["Pipe6SCH40"], "family": "PIPE", "area": 5.2,
+      "dimensions": {"d": 6.625, "t": 0.261, "tnom": 0.28},
+      "source": {"sheet": "Database v16.0", "row": 2259, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "K", "t": "X", "tnom": "W"}}
+    }
+  ]
+}
