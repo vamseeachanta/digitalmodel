@@ -46,6 +46,8 @@ from digitalmodel.cathodic_protection.anode_depletion import DepletionProfile
 from digitalmodel.cathodic_protection.b401_tables import (
     B401_WIKI_PATH,
     B401_WIKI_PATH_2017,
+    B401_WIKI_PATH_2021,
+    edition_source,
     table_label,
 )
 from digitalmodel.cathodic_protection.cp_reporting import (
@@ -114,6 +116,7 @@ _WIKI_BY_CODE: dict[str, str] = {
 }
 _WIKI_BY_REVISION: dict[tuple[str, str], str] = {
     ("dnv-rp-b401", "2017-06"): B401_WIKI_PATH_2017,
+    ("dnv-rp-b401", "2021-05"): B401_WIKI_PATH_2021,
     ("dnv-rp-f103", "2019-09"): F103_WIKI_PATH_2019,
 }
 _PUBLISHER_BY_CODE: dict[str, str] = {
@@ -226,6 +229,8 @@ def _citations_from_labels(labels: Sequence[Any], note: str) -> list[Citation]:
             if parsed is None or parsed[0] not in _WIKI_BY_CODE:
                 continue
             code, revision, section = parsed
+            if code == "dnv-rp-b401" and revision == "2021":
+                revision = edition_source(revision).revision
             candidate = Citation(
                 code_id=code,
                 publisher=_PUBLISHER_BY_CODE[code],
