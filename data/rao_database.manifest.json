@@ -1,0 +1,132 @@
+{
+  "owner": "digitalmodel",
+  "dataset": "rao_database",
+  "basis": {
+    "frequencies": "rad/s",
+    "directions": "deg",
+    "phases": "deg",
+    "translations": "m/m",
+    "rotations": "rad/m",
+    "unit_evidence": "L00_test01.xlsx:Displacement RAOs, row 9; raw displacementRAOs exporter",
+    "phase_evidence": "native degree phases; pipeline degrees(angle(displacementRAOs))",
+    "coordinate_reference_qualification": "unverified; benchmark fixture comparison only",
+    "exporter_source": "workspace-hub:scripts/solver/process-queue.py::_export_orcawave_xlsx"
+  },
+  "readiness": "benchmark fixtures; engineering coordinate/reference qualification unverified",
+  "reuse": "Existing in-repository fixtures; repository LICENSE applies; no new upstream rights claimed",
+  "regenerate": "PYTHONPATH=src uv run --no-sources python scripts/populate_rao_database.py --retrieved-on 2026-10-11",
+  "comparison_criterion": "Named box pair only: per-source half decimal export unit (10**(order - observed significant digits + 1)/2) plus binary spacing; circular phase residual includes full-turn spacing. Generic deduplication requires exact arrays and matching basis.",
+  "database_sha256": "4bc5680b860a1af01481cea82cf258c307ed18ff45e2cbcc0b6a5937b35fa218",
+  "database_bytes": 83373,
+  "entries": [
+    {
+      "variation_id": "test01_unit_box",
+      "frequency_count": 50,
+      "heading_count": 2,
+      "sources": [
+        {
+          "path": "tests/fixtures/solver/test01_unit_box.xlsx",
+          "sha256": "c51bf630758e597160b517c7ade4798f6139f7664b327fc466da6b1180336fe8",
+          "revision": "83e2fafb017db1125ee4eaed314df708a9729747",
+          "retrieved_on": "2026-10-11",
+          "format": "pipeline",
+          "worksheet": "RAOs",
+          "table": "all displacement RAO rows and headings",
+          "url": "../../83e2fafb017db1125ee4eaed314df708a9729747/tests/fixtures/solver/test01_unit_box.xlsx"
+        },
+        {
+          "path": "tests/fixtures/solver/L00_test01.xlsx",
+          "sha256": "8ccf108ac99be19763cafb7df262fc2ac2b90189229729801872a16ef37c380f",
+          "revision": "1c01b3013d01176b10b6347ed956baad84a9ab9b",
+          "retrieved_on": "2026-10-11",
+          "format": "native",
+          "worksheet": "Displacement RAOs",
+          "table": "all displacement RAO rows and headings",
+          "url": "../../1c01b3013d01176b10b6347ed956baad84a9ab9b/tests/fixtures/solver/L00_test01.xlsx"
+        }
+      ],
+      "box_comparison": {
+        "equivalent": true,
+        "directions_exact": true,
+        "source_significant_digits": [
+          16,
+          17
+        ],
+        "components": {
+          "frequencies": {
+            "units": "rad/s",
+            "within_bounds": true,
+            "max_raw_abs_difference": 1.1102230246251565e-16,
+            "max_comparison_abs_difference": 1.1102230246251565e-16,
+            "max_export_bound": 2.3263568394002503e-15
+          },
+          "amplitudes": {
+            "units": "m/m (translation), rad/m (rotation)",
+            "within_bounds": true,
+            "max_raw_abs_difference": 4.440892098500626e-16,
+            "max_comparison_abs_difference": 4.440892098500626e-16,
+            "max_export_bound": 1.4381784197001253e-15
+          },
+          "phases": {
+            "units": "deg",
+            "within_bounds": true,
+            "max_raw_abs_difference": 360.00000000000006,
+            "max_comparison_abs_difference": 8.526512829121202e-14,
+            "max_export_bound": 1.8289769243681805e-13
+          }
+        }
+      }
+    },
+    {
+      "variation_id": "ellipsoid",
+      "frequency_count": 1,
+      "heading_count": 18,
+      "sources": [
+        {
+          "path": "tests/fixtures/solver/ellipsoid.xlsx",
+          "sha256": "b3e4d5b10dd32fc73d053f3abba252d64090fbef1994d82e20de27354e08c3c7",
+          "revision": "83e2fafb017db1125ee4eaed314df708a9729747",
+          "retrieved_on": "2026-10-11",
+          "format": "pipeline",
+          "worksheet": "RAOs",
+          "table": "all displacement RAO rows and headings",
+          "url": "../../83e2fafb017db1125ee4eaed314df708a9729747/tests/fixtures/solver/ellipsoid.xlsx"
+        }
+      ]
+    },
+    {
+      "variation_id": "L01_001_ship_raos",
+      "frequency_count": 20,
+      "heading_count": 9,
+      "sources": [
+        {
+          "path": "tests/fixtures/solver/L01_001_ship_raos.xlsx",
+          "sha256": "ae2316caf3a575d9e2f6e4e60ef56b9017161cb11596d2fca73de700ebedf9be",
+          "revision": "1c01b3013d01176b10b6347ed956baad84a9ab9b",
+          "retrieved_on": "2026-10-11",
+          "format": "native",
+          "worksheet": "Displacement RAOs",
+          "table": "all displacement RAO rows and headings",
+          "url": "../../1c01b3013d01176b10b6347ed956baad84a9ab9b/tests/fixtures/solver/L01_001_ship_raos.xlsx"
+        }
+      ]
+    },
+    {
+      "variation_id": "L02_OC4_semi_sub",
+      "frequency_count": 32,
+      "heading_count": 9,
+      "sources": [
+        {
+          "path": "tests/fixtures/solver/L02_OC4_semi_sub.xlsx",
+          "sha256": "3a560ee394e31037b6ffdd696db9a768bfa79051dde2210e4fcd0a272625f131",
+          "revision": "901eb148155ddb73eb65f46ab02046b5f8b30b5d",
+          "retrieved_on": "2026-10-11",
+          "format": "pipeline",
+          "worksheet": "RAOs",
+          "table": "all displacement RAO rows and headings",
+          "url": "../../901eb148155ddb73eb65f46ab02046b5f8b30b5d/tests/fixtures/solver/L02_OC4_semi_sub.xlsx"
+        }
+      ]
+    }
+  ]
+}
