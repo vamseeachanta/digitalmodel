@@ -1,4 +1,4 @@
-# Safe warm starts for calm-water resistance
+# Warm starts for calm-water resistance
 
 `scripts/cfd/warm_start.py` prepares and supervises OpenFOAM v2312 warm starts. It is
 fail-closed: a case is touched only after all admissibility checks pass and the expected

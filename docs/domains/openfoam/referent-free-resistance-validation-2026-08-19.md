@@ -15,8 +15,8 @@ the whole of what is available, and it is worth having — but it is a different
 claim, not a weaker version of the same claim.**
 
 Verification and validation are not two tiers of the same measurement.
-Verification asks *am I solving the equations right* and is answerable from the
-simulation alone. Validation asks *am I solving the right equations* and is
+Verification asks *are the equations solved correctly* and is answerable from the
+simulation alone. Validation asks *are the correct equations solved* and is
 answerable only against a measurement of the thing being modelled. Removing the
 referent does not shrink the validation claim. It deletes it.
 
@@ -172,8 +172,8 @@ criterion*. Plausibility bands gate nothing here for the same reason.
 
 The band declines outside its declared hull class rather than guessing — a
 planing hull or a multihull gets `not_applicable`, not a stretched interval.
-That is the same discipline §4 demands of Holtrop & Mennen, applied to our own
-band so the standard is not one we only impose on other people's methods.
+That is the same discipline §4 demands of Holtrop & Mennen, applied to this
+band so the standard is also applied to other methods.
 
 ### 3.2 What the form factor says about V2b — a real finding
 
@@ -343,7 +343,7 @@ than with the covering note:
    stated and checked arithmetically. Regime transfer is a claim about
    similarity, and an unstated one is an assumption. #2023 identifies this as the
    part most likely to be skipped and most likely to cause harm; nothing in this
-   design makes it safe to skip.
+   design establishes grounds for omitting the check.
 
 And one prerequisite that sits outside this design entirely: per #2023, the KCS
 gate currently fails on all four criteria. **A referent-free scoring mode does

@@ -2,7 +2,7 @@
 
 Reaching an iteration budget is not evidence of convergence. A free-surface
 pressure-force oscillation can remain at the budget boundary, and its amplitude can
-even be increasing while cycle means and asymptote estimators appear acceptable.
+even be increasing while cycle means and asymptote estimators appear to satisfy their criteria.
 Reduction therefore measures the oscillation envelope as well as its mean.
 
 `force_cycle_average` estimates each case's wobble period as twice the median spacing
