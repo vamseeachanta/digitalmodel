@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-shaped jumper modal benchmark — Phase A skeleton</title>
+<style>
+:root { color-scheme: light; font-family: Arial, sans-serif; color: #182b40; }
+body { max-width: 1200px; margin: auto; padding: 24px; background: #f3f6fa; }
+.report-header { padding: 28px; background: #183b56; color: white; border-radius: 10px; }
+section, footer { background: white; padding: 22px; margin-top: 20px; border-radius: 10px; }
+h1 { margin-top: 0; } h2 { color: #183b56; }
+a { color: #125b92; } .report-header a { color: #bde6ff; }
+.summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.stat-card { padding: 18px; background: #eaf1f7; border-radius: 6px; }
+.stat-value { font-size: 1.8rem; font-weight: bold; }
+.placeholder { color: #713d08; background: #fff4db; padding: 4px; }
+.table-scroll { overflow-x: auto; } table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; border-bottom: 1px solid #cbd7e2; padding: 10px; vertical-align: top; }
+th { background: #eaf1f7; } caption { caption-side: bottom; text-align: left; padding: 12px 0; }
+.plot-container { border: 1px dashed #acbbc8; padding: 20px; margin: 12px 0; }
+label { display: block; margin-bottom: 12px; } select { font: inherit; padding: 6px; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; } li { margin-bottom: 8px; }
+@media (max-width: 600px) { body { padding: 10px; } section { padding: 12px; } }
+</style>
+</head>
+<body>
+<header class="report-header">
+<h1>M-shaped jumper modal benchmark</h1>
+<p>Phase A • Report skeleton • No native modal results</p>
+<p>Module: OrcaFlex comparison utilities / digitalmodel. Generator: Codex.</p>
+<p>Issued report timestamp: <mark class="placeholder">[PLACEHOLDER: phase B issue timestamp]</mark></p>
+<p>Scope and acceptance: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2424">benchmark issue</a>.</p>
+</header>
+<section aria-labelledby="summary">
+<h2 id="summary">Summary and evidence boundary</h2>
+<div class="summary-stats">
+<div class="stat-card">Reference models<div class="stat-value">3</div></div>
+<div class="stat-card">Held frequency targets<div class="stat-value">10</div></div>
+<div class="stat-card">Missing published frequencies<div class="stat-value">8</div></div>
+<div class="stat-card">Native qualification<div class="placeholder">[PLACEHOLDER: recorded evidence]</div></div>
+</div>
+<p>Only repository-held literature references are reproduced. The first model records measured towing-tank frequencies;
+the other two record published numerical results. The second model's frequency is approximate.
+Numerical mode-shape arrays are not held in the inspected sources. Recorded directions are listed below.</p>
+<p>Phase B will require converged statics, a recorded solver version, modal readback, and documented modelling assumptions.
+No acceptance threshold is defined and no qualification or claim-registry change is established here.</p>
+</section>
+<section aria-labelledby="method">
+<h2 id="method">Method and comparison basis</h2>
+<p>Difference (%) = (computed frequency − published frequency) / published frequency × 100.</p>
+<p>Pairing is by ascending frequency within the same direction class where recorded. Classified targets reserve matching
+modes first; remaining slots pair with remaining computed modes in ascending frequency. Missing published slots consume
+ranks. Equal computed frequencies use mode number as tie-break. Missing direction is not guessed.
+This rank-based convention is not mode-shape correlation or proof of modal identity.</p>
+<p>A missing computed match is labelled “not computed”. A missing reference remains “not held in the repository”,
+with no percentage calculated. The full spectrum from mode 1 is required; gaps in the exported computed spectrum can
+invalidate rank pairing. Extra computed modes are outside the target table.</p>
+<p>Canonical inputs: <a href="modal_benchmark_targets.yaml">target table with citations, line locators and source digests</a>.
+Source digests use UTF-8 text with LF newlines, so checkout newline conversion does not alter the comparison basis.</p>
+</section>
+<section aria-labelledby="comparison">
+<h2 id="comparison">Comparison table</h2>
+<label>Model filter <select id="model-filter"><option value="all">All models</option>
+<option value="mj01">mj01</option><option value="mj02">mj02</option><option value="mj03">mj03</option></select></label>
+<div class="table-scroll"><table>
+<thead><tr><th>Model</th><th>Published mode</th><th>Published frequency (Hz)</th><th>Recorded direction</th>
+<th>Computed mode</th><th>Computed frequency (Hz)</th><th>Difference (%)</th><th>Evidence / status</th></tr></thead>
+<tbody>
+<tr data-model="mj01"><td>mj01</td><td>1</td><td>0.863</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj01"><td>mj01</td><td>2</td><td>2.149</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj01"><td>mj01</td><td>3</td><td>2.194</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj01"><td>mj01</td><td>4</td><td>2.542</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj02"><td>mj02</td><td>1</td><td>approximately 1.464</td><td>out-of-plane</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>1</td><td>8.520</td><td>out-of-plane</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>2</td><td>13.825</td><td>in-plane</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>3</td><td>17.473</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>4</td><td>20.628</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>5</td><td>not held in the repository</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>6</td><td>not held in the repository</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>7</td><td>not held in the repository</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>8</td><td>not held in the repository</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>9</td><td>not held in the repository</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>10</td><td>not held in the repository</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>11</td><td>not held in the repository</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>12</td><td>not held in the repository</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+<tr data-model="mj03"><td>mj03</td><td>13</td><td>78.933</td><td>not held in the repository</td><td class="placeholder">[PLACEHOLDER: mode]</td><td class="placeholder">[PLACEHOLDER: frequency]</td><td class="placeholder">[PLACEHOLDER: difference]</td><td class="placeholder">[PLACEHOLDER: readback]</td></tr>
+</tbody><caption>Table 1. Repository-held modal references; every computed field awaits phase B.</caption>
+</table></div>
+<p>Comparison CSV: <mark class="placeholder">[PLACEHOLDER: relative path to verified harness output]</mark>.
+Phase B will import the CSV using a path relative to this report and retain its provenance and synthetic flag.</p>
+</section>
+<section aria-labelledby="plots">
+<h2 id="plots">Interactive visualizations reserved for phase B</h2>
+<div class="plot-container"><h3>Published and computed frequency</h3><p class="placeholder">[PLACEHOLDER: interactive frequency plot from verified CSV]</p></div>
+<div class="plot-container"><h3>Signed frequency difference</h3><p class="placeholder">[PLACEHOLDER: interactive percentage plot from verified CSV]</p></div>
+<div class="plot-container"><h3>Computed modal directions and shapes</h3><p class="placeholder">[PLACEHOLDER: interactive modal readback; no published shape arrays held]</p></div>
+<p>Completed plots will provide hover values, zoom, pan, legend toggling, export and responsive layout.
+No synthetic or invented result is plotted in this skeleton.</p>
+</section>
+<section aria-labelledby="assumptions">
+<h2 id="assumptions">Modelling assumptions and repository citations</h2>
+<p>The following assumptions are copied from the specification headers. Their effects on each comparison remain
+<mark class="placeholder">[PLACEHOLDER: phase B assessment]</mark>.</p>
+<article><h3>mj01</h3><pre>Wang et al., &quot;VIV Response of a Subsea Jumper in Uniform Current&quot;, OMAE2013 V04BT04A043
+Zheng et al., &quot;Numerical Analysis of Experimental Data of Subsea Jumper VIV&quot;, OMAE2015
+Igeh, &quot;VIV Fatigue Investigation for Subsea Planar Rigid Spools and Jumpers&quot;,
+MSc thesis, Univ. of Stavanger 2017 (CC-BY), Tables 1-4 — dimension source:
+https://core.ac.uk/download/249952931.pdf
+</pre><p><a href="../../../library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml">source lines 5-9</a></p><ul>
+<li>A1: corner bend radii not published; sharp corners (source FEM did the same)  (<a href="../../../library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml">source lines 20-20</a>)</li>
+<li>A2: towing-tank water depth not published; 10 m assumed, jumper hubs at z=-9  (<a href="../../../library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml">source lines 21-21</a>)</li>
+<li>A3: spline statics starting shape control points at corner coordinates; licensed statics refinement is #718/#719 scope  (<a href="../../../library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml">source lines 22-23</a>)</li>
+</ul><p>Frequency provenance: <a href="../../../library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml">source lines 15-16</a>.</p></article>
+<article><h3>mj02</h3><pre>Zhu, Hu, Tang, Ji, Zhou, &quot;Evolution of Gas-Liquid Two-Phase Flow in an
+M-Shaped Jumper and the Resultant Flow-Induced Vibration Response&quot;,
+Processes 10(10):2133, 2022 (open access):
+https://www.mdpi.com/2227-9717/10/10/2133
+</pre><p><a href="../../../library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml">source lines 5-8</a></p><ul>
+<li>A1: water depth not published; 100 m assumed, jumper flanges at z=-95 (mid-span dip 3 m above seabed)  (<a href="../../../library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml">source lines 23-24</a>)</li>
+<li>A2: end fixity assumed clamped (flanged connections to subsea equipment)  (<a href="../../../library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml">source lines 25-25</a>)</li>
+<li>A3: drag/added-mass coefficients not published (paper is internal-flow FIV); Cd=1.2 / Ca=1.0 standard bare-pipe values assumed  (<a href="../../../library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml">source lines 26-27</a>)</li>
+<li>A4: contents density not tabulated (gas-oil multiphase at 6 MPa); ContentsDensity 0 placeholder — set per analysis load case  (<a href="../../../library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml">source lines 28-29</a>)</li>
+</ul><p>Frequency provenance: <a href="../../../library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml">source lines 18-19</a>.</p></article>
+<article><h3>mj03</h3><pre>Li, Li, Lin, Han, Zhou (Dalian Maritime Univ.), &quot;Dynamic Response
+Analysis of a Subsea Rigid M-Shaped Jumper under Combined Internal and
+External Flows&quot;, J. Mar. Sci. Eng. 12(8):1261, 2024 (open access):
+https://www.mdpi.com/2077-1312/12/8/1261
+</pre><p><a href="../../../library/model_library/mj03_li2024_m_jumper_lab/spec.yml">source lines 6-9</a></p><ul>
+<li>A1: numerical/lab case has no site; 5 m water depth assumed, flanges z=-4  (<a href="../../../library/model_library/mj03_li2024_m_jumper_lab/spec.yml">source lines 31-31</a>)</li>
+<li>A2: line ends placed at the bend-1/bend-8 corner points; flange stub offsets (72 mm) folded into the end arcs  (<a href="../../../library/model_library/mj03_li2024_m_jumper_lab/spec.yml">source lines 32-33</a>)</li>
+<li>A3: end orientations horizontal (inlet flow enters +X per Figure 1); outlet orientation mirrored — flange facing not fully legible in figure  (<a href="../../../library/model_library/mj03_li2024_m_jumper_lab/spec.yml">source lines 34-35</a>)</li>
+<li>A4: drag/added-mass coefficients not published (paper uses CFD pressure mapping); Cd=1.2 / Ca=1.0 assumed  (<a href="../../../library/model_library/mj03_li2024_m_jumper_lab/spec.yml">source lines 36-37</a>)</li>
+<li>A5: contents density 0 placeholder (air-water mix varies per case); structural damping 1.2% (published Rayleigh a=1.160, b=4.368e-5) to be applied at analysis level on licensed runs  (<a href="../../../library/model_library/mj03_li2024_m_jumper_lab/spec.yml">source lines 38-40</a>)</li>
+</ul><p>Frequency provenance: <a href="../../../library/model_library/mj03_li2024_m_jumper_lab/spec.yml">source lines 25-26</a>; <a href="LITERATURE_GEOMETRY_SURVEY.md">source lines 131-133</a>.</p></article>
+</section>
+<section aria-labelledby="readiness">
+<h2 id="readiness">Preconditions and recorded execution</h2>
+<p>Request at least 4 modes for mj01, at least 1 for mj02 (extend until its first out-of-plane mode is captured),
+and at least 13 for mj03, with directions established from the jumper plane. Export all modes from the first,
+including those without published frequencies. The issue estimates about 6 solves: statics and modal analysis for each model.</p>
+<p>The stored JSON interface is one object with <code>model</code> (mj01/mj02/mj03), <code>synthetic</code> (boolean),
+and <code>modes</code> (list of <code>mode</code>, <code>frequency_hz</code>, optional <code>direction</code>).
+The existing modal module records zero-based <code>modeIndex</code> and <code>period</code>.
+An exporter will provide positive mode identifiers and frequency in hertz from reciprocal period in seconds;
+raw DOF labels do not establish in-plane/out-of-plane direction without the model coordinate basis.</p>
+<ul>
+<li>Model revision and input digests: <mark class="placeholder">[PLACEHOLDER: phase B inputs]</mark></li>
+<li>Solver version and static convergence: <mark class="placeholder">[PLACEHOLDER: native readback]</mark></li>
+<li>Modal output and digests: <mark class="placeholder">[PLACEHOLDER: verified output]</mark></li>
+<li>Contents density, damping and boundary conditions: <mark class="placeholder">[PLACEHOLDER: documented case]</mark></li>
+<li>Benchmark interpretation and claim disposition: <mark class="placeholder">[PLACEHOLDER: reviewed evidence]</mark></li>
+</ul>
+</section>
+<footer>
+<p>Form: <a href="../../../../project-docs/HTML_REPORTING_STANDARDS.md">HTML Reporting Standards</a>,
+including report header, summary, table, visualization slots and source footer. Phase B supplies CSV import and plots.</p>
+<p>Generation method: repository-held references transcribed into a standalone HTML skeleton; no external libraries,
+fonts, network fetches or solver results are embedded. Citations describe repository evidence, not independent paper verification.</p>
+<p>Support and review: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2424">benchmark issue</a>.
+Second-provider review precedes merge; licensed execution is outside Phase A.</p>
+</footer>
+<script>
+document.getElementById('model-filter').addEventListener('change', function () {
+  document.querySelectorAll('tr[data-model]').forEach(row => {
+    row.hidden = this.value !== 'all' && row.dataset.model !== this.value;
+  });
+});
+</script>
+</body>
+</html>
