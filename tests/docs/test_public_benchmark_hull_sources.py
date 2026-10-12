@@ -44,7 +44,21 @@ def valid_url(value):
         return False
 
 
-def validate_entry(entry):
+def geometry_reaches_url(entry, rows, seen=frozenset()):
+    """Follow geometry references only; page URLs cannot qualify a row."""
+    if entry["id"] in seen:
+        return False
+    seen = seen | {entry["id"]}
+    for location in entry["geometry"]:
+        if valid_url(location.get("url")):
+            return True
+        target = rows.get(location.get("same_as"))
+        if target is not None and geometry_reaches_url(target, rows, seen):
+            return True
+    return False
+
+
+def validate_entry(entry, rows=None):
     """Reject malformed rows and unsupported verified-source claims."""
     for key, kind in REQUIRED.items():
         if key not in entry or not isinstance(entry[key], kind):
@@ -68,13 +82,19 @@ def validate_entry(entry):
                 raise ValueError(f"Missing or mistyped geometry {key}")
         if location["url"] is not None and not valid_url(location["url"]):
             raise ValueError("Malformed geometry URL")
+        if "same_as" in location:
+            reference = location["same_as"]
+            if not isinstance(reference, str) or reference == entry["id"]:
+                raise ValueError("Invalid geometry same-as reference")
     if not all(valid_url(url) for url in entry["pages"] + entry["benchmark_pages"]):
         raise ValueError("Malformed page URL")
-    if entry["geometry_available"] not in {"yes", "no", "dimensions only"}:
+    # Listed case folders do not establish that their contents were opened.
+    if entry["geometry_available"] not in {
+        "yes", "no", "dimensions only", "listed, not opened",
+    }:
         raise ValueError("Unknown geometry availability")
-    urls = [item["url"] for item in entry["geometry"]] + entry["pages"]
     if entry["grade"] == "verified" and (
-        not any(valid_url(url) for url in urls) or not entry["reuse_terms"].strip()
+        not geometry_reaches_url(entry, rows or {}) or not entry["reuse_terms"].strip()
     ):
         raise ValueError("Verified row requires geometry URL and terms text")
 
@@ -106,9 +126,10 @@ def test_structure_order_and_counts():
 def test_rows_and_known_note_gaps():
     data = load_register()
     gaps = []
+    rows = {row["id"]: row for row in data["hulls"]}
     for row in data["hulls"]:
         try:
-            validate_entry(row)
+            validate_entry(row, rows)
         except ValueError as error:
             assert str(error) == "Verified row requires geometry URL and terms text"
             gaps.append(row["id"])
@@ -176,7 +197,7 @@ def test_markdown_table_matches_yaml():
 def test_validator_rejects_broken_in_memory_entry(mutation, message):
     row = deepcopy(load_register()["hulls"][0])
     if mutation == "no_geometry":
-        row["geometry"], row["pages"] = [], []
+        row["geometry"] = []  # A URL in pages must not satisfy geometry.
     elif mutation == "bad_grade":
         row["grade"] = "confirmed"
     elif mutation == "no_terms":
@@ -188,3 +209,38 @@ def test_validator_rejects_broken_in_memory_entry(mutation, message):
         row["particulars"][0]["verified"] = True
     with pytest.raises(ValueError, match=message):
         validate_entry(row)
+
+
+@pytest.mark.parametrize("target, accepted", [
+    ("missing", False), ("no_url", False), ("self", False),
+    ("cycle", False), ("direct", True), ("chain", True),
+])
+def test_geometry_same_as_resolution(target, accepted):
+    rows = {row["id"]: deepcopy(row) for row in load_register()["hulls"]}
+    row = rows["O5"]
+    reference = {
+        "format": None, "url": None, "host": None, "size_as_reported": None,
+        "note": row["geometry_as_reported"], "same_as": "O4",
+    }
+    row["geometry"] = [reference]
+    if target == "missing":
+        del rows["O4"]
+    elif target == "no_url":
+        rows["O4"]["geometry"] = []
+    elif target == "self":
+        reference["same_as"] = "O5"
+    elif target == "cycle":
+        rows["O4"]["geometry"] = [dict(reference, same_as="O5")]
+    elif target == "chain":
+        rows["O4"]["geometry"] = [dict(reference, same_as="O6")]
+    if accepted:
+        validate_entry(row, rows)
+    else:
+        with pytest.raises(ValueError, match="geometry"):
+            validate_entry(row, rows)
+
+
+def test_listed_geometry_availability_retains_note_qualification():
+    row = next(row for row in load_register()["hulls"] if row["id"] == "O7")
+    assert "Contents were listed, not opened." in row["fitness_note"]
+    assert row["geometry_available"] == "listed, not opened"

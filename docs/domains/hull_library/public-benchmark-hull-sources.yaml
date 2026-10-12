@@ -309,7 +309,8 @@ hulls:
   particulars: [{name: Two barges length, value: '100', unit: m, note: TEST03; 100 m x 20 m}, {name: Two barges breadth, value: '20', unit: m, note: TEST03; 100 m x 20 m}, {name: Two barges length, value: '50', unit: m, note: TEST03; 50 m x 10 m}, {name: Two barges breadth, value: '10', unit: m, note: TEST03; 50 m x 10 m}, {name: draft, value: '4.8', unit: m, note: TEST03}, {name: gap, value: '2', unit: m, note: TEST03}, {name: barge length, value: '80', unit: m, note: TEST04}, {name: barge breadth, value: '20', unit: m, note: TEST04}, {name: draft, value: '10', unit: m, note: TEST04}, {name: from a wall, value: '2', unit: m, note: TEST04}, {name: barge length, value: '100', unit: m, note: TEST20}, {name: barge breadth, value: '20', unit: m, note: TEST20}, {name: draft, value: '4.8', unit: m, note: TEST20}, {name: FPSO length, value: '200', unit: m, note: TEST07 series}, {name: FPSO breadth, value: '44', unit: m, note: TEST07 series}, {name: draft, value: '12', unit: m, note: TEST07 series}, {name: two tanks wide, value: '42', unit: m, note: TEST07 series}, {name: two tanks long, value: '20', unit: m, note: TEST07 series}]
   particulars_source: WAMIT v7.5 manual, Appendix A
   particulars_as_reported: Two barges 100 m x 20 m and 50 m x 10 m, draft 4.8 m, 2 m gap (TEST03); barge 80 m x 20 m, draft 10 m, 2 m from a wall (TEST04); barge 100 m x 20 m x 4.8 m draft (TEST20); FPSO 200 m x 44 m, draft 12 m, two tanks 42 m wide and 20 m long (TEST07 series) (WAMIT v7.5 manual, Appendix A)
-  geometry: []
+  geometry:
+  - {same_as: O4, format: null, url: null, host: null, size_as_reported: null, note: 'As O4: inside the demonstration package; dimensions are in the public manual'}
   pages: ['https://www.wamit.com/demo.htm', 'https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html']
   geometry_as_reported: 'As O4: inside the demonstration package; dimensions are in the public manual'
   geometry_available: dimensions only
@@ -351,7 +352,7 @@ hulls:
   - {format: null, url: 'https://github.com/LHEEA/Nemoh', host: null, size_as_reported: null, note: 'Case folders `Verification/Cylinder`, `Verification/2Bodies`, `Verification/NonSymmetrical`, with "Test cases description.doc"; Contents were listed, not opened.'}
   pages: []
   geometry_as_reported: Case folders `Verification/Cylinder`, `Verification/2Bodies`, `Verification/NonSymmetrical` in `https://github.com/LHEEA/Nemoh`, with "Test cases description.doc"
-  geometry_available: 'yes'
+  geometry_available: listed, not opened
   benchmark_data: Reference inputs and results for single-body and two-body radiation and diffraction
   reuse_terms: 'Repository licence Apache-2.0 (host metadata); notice file: "Copyright 2014 Ecole Centrale de Nantes"'
   fitness_note: The two-body case is the only openly licensed multibody reference found. Contents were listed, not opened.

@@ -25,10 +25,12 @@ public benchmark hull source register. Source: [research note on the issue, chec
 | O4 | ISSC tension-leg platform (four columns, four pontoons) | verified | dimensions only |
 | O5 | Rectangular barges and FPSO with internal tanks (WAMIT standard tests) | verified | dimensions only |
 | O6 | Truncated circular cylinder, and cylinder with moonpool | verified | yes |
-| O7 | NEMOH verification set (cylinder, two bodies, non-symmetrical body) | partial | yes |
+| O7 | NEMOH verification set (cylinder, two bodies, non-symmetrical body) | partial | listed, not opened |
 | O8 | Reference Model 3 (RM3) two-body point absorber: float and spar/plate | partial | yes |
 | O9 | ITI Energy barge and MIT/NREL TLP (5 MW baseline platforms) | partial | no |
 
 Grades follow the Counts section. O2 retains its conflicting Status cell in the YAML and is listed in `meta.note_inconsistencies`. Geometry availability describes the source note; it does not establish reuse permission. "dimensions only" identifies the manual-based cases whose demonstration files have restrictive terms.
+
+O5 has its own geometry entry with `same_as: O4` and no copied URL: "As O4: inside the demonstration package; dimensions are in the public manual". O7 case folders were listed, not opened.
 
 Suggested use for the registry: seed from the Apache-2.0 rows first (O1, O2, O3, O6), reference the workshop hulls by URL and checksum rather than vendoring the files, and rebuild the box and TLP cases from published dimensions.
