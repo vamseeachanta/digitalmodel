@@ -42,8 +42,18 @@ class BearingCapacityResult:
     notes: list[str] = field(default_factory=list)
 
 
+def _validate_finite_inputs(**inputs: float | None) -> None:
+    """Reject Boolean and non-finite inputs before calculator arithmetic."""
+    for name, value in inputs.items():
+        if value is not None and (
+            isinstance(value, bool) or not math.isfinite(value)
+        ):
+            raise ValueError(f"{name} must be a finite number")
+
+
 def bearing_capacity_factors(phi_deg: float) -> tuple[float, float, float]:
     """Brinch Hansen bearing-capacity factors (Nc, Nq, Ngamma)."""
+    _validate_finite_inputs(phi_deg=phi_deg)
     if phi_deg < 0.0:
         raise ValueError("friction angle must be non-negative")
     phi = math.radians(phi_deg)
@@ -108,6 +118,18 @@ def mudmat_bearing_capacity(
     Returned effective dimensions retain their original axis identities;
     bearing factors use the shorter/longer effective dimensions.
     """
+    _validate_finite_inputs(
+        width_b_m=width_b_m,
+        length_l_m=length_l_m,
+        embedment_depth_m=embedment_depth_m,
+        submerged_unit_weight_kn_m3=submerged_unit_weight_kn_m3,
+        vertical_load_kn=vertical_load_kn,
+        moment_knm=moment_knm,
+        undrained_shear_strength_kpa=undrained_shear_strength_kpa,
+        friction_angle_deg=friction_angle_deg,
+        effective_cohesion_kpa=effective_cohesion_kpa,
+        interface_friction_angle_deg=interface_friction_angle_deg,
+    )
     if width_b_m <= 0.0 or length_l_m <= 0.0:
         raise ValueError("foundation width and length must be positive")
     if width_b_m > length_l_m:
