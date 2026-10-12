@@ -12,6 +12,25 @@ Exclusions:
   - The unsupported-adjective rule (rule 5) accepts a criterion that appears
     in the same sentence OR the immediately following sentence.
 
+Source masking for R1 and R5:
+  - Bare HTTP/HTTPS and www URL tokens contain ASCII URL characters only:
+    letters, digits, percent escapes, and . _ ~ : / ? # @ ! $ & ( ) * + , ; = -.
+    Tokens end at whitespace, non-ASCII characters, {, }, backslash, caret,
+    backtick, quotes, angle/square brackets, or table pipes. Commas, semicolons,
+    closing emphasis/strikethrough markers, and unmatched closing parentheses
+    delimit adjacent prose; trailing punctuation remains outside the mask.
+  - Markdown link/image destinations and single-line reference-definition
+    destinations are masked. Labels, alt text, titles, and footnote text remain
+    checked; reference labels beginning with ^ are footnotes.
+  - Paired even-length backtick spans are masked with same-length spaces.
+    Escaped opening backticks are not delimiters for this additional mask.
+    Existing single/odd-backtick removal and word joining remain unchanged.
+
+Documented limit (PM ruling R-D): without whitespace, a word joined to a bare
+URL by a legal URL character is part of the token. With U=https://example.org/a,
+U.conservative, U:conservative, U!conservative, U?conservative, U=conservative,
+U/conservative, U*conservative*, and U_(b)conservative cannot be separated.
+
 Usage:
   python scripts/enforcement/check-engineering-register.py [paths...]
   python scripts/enforcement/check-engineering-register.py --self-test
@@ -143,7 +162,7 @@ def mask_link_destinations(line: str) -> str:
                         line = line[:start] + " " * (stop - start) + line[stop:]
                     break
     definition = re.match(
-        r"""^ {0,3}\[[^\[\]]+\]:[ \t]*(<[^<>]*>|[^\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*$""",
+        r"""^ {0,3}\[(?!\^)[^\[\]]+\]:[ \t]*(<[^<>]*>|[^\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*$""",
         line,
     )
     if definition:
@@ -166,7 +185,7 @@ def mask_bare_url(match: re.Match) -> str:
     depth = 0
     stop = len(token)
     for index, char in enumerate(token):
-        if char in ",;" or token[index : index + 2] in ("**", "__"):
+        if char in ",;" or token[index : index + 2] in ("**", "__", "~~"):
             stop = index
             break
         if char in "*_" and char == wrapper:
@@ -186,7 +205,7 @@ def mask_bare_url(match: re.Match) -> str:
 def register_prose(line: str) -> str:
     """Mask additional source tokens only for the subject and adjective rules."""
     line = re.sub(
-        r"(?<!`)(`+)(?!`)(.*?)(?<!`)\1(?!`)",
+        r"(?<![`\\])(`+)(?!`)(.*?)(?<!`)\1(?!`)",
         lambda m: " " * len(m[0]) if len(m[1]) % 2 == 0 else m[0],
         line,
     )
@@ -194,7 +213,7 @@ def register_prose(line: str) -> str:
     line = re.sub(r"`[^`]*`", "", line)
     line = mask_link_destinations(line)
     return re.sub(
-        r"(?<![^\W_])(?:https?://|www\.)[^\s<>`\"'\[\]|]+",
+        r"(?<![^\W_])(?:https?://|www\.)(?a:[a-z0-9._~:/?#@!$&()*+,;=%-]+)",
         mask_bare_url,
         line,
         flags=re.IGNORECASE,
@@ -323,6 +342,9 @@ FIXTURES: list[tuple[str, str, str | None]] = [
     ("|https://example.org/a|safe|", "R5-unsupported-adj", "adjacent URL cell"),
     ('[source](safe-design "our note")', "R1-subject", "link title checked"),
     ("[id]: docs/conservative-design.md", None, "relative definition masked"),
+    ("[^1]: Conservative.", "R5-unsupported-adj", "footnote text checked"),
+    ("https://example.org/a—safe", "R5-unsupported-adj", "non-ASCII URL boundary"),
+    (r"Text \`` conservative \`` end.", "R5-unsupported-adj", "escaped even ticks"),
 ]
 
 
