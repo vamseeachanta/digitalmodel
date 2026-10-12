@@ -1,0 +1,95 @@
+# Counts **unverified** and **Unverified** in the body; no bold Not opened
+# or not verified occurs. The legend has one additional **unverified**.
+{
+  "schema_version": 1,
+  "document": "docs/research/ffs-mooring-chain-degradation-screen.md",
+  "issue": 2199,
+  "source_of_entries": "research note on the issue",
+  "checked": "2026-10-11",
+  "sources": [
+    {
+      "id": "S1",
+      "citation": "Lone, Maincon, Gabrielsen, Sauder, Larsen, Leira, \"Analysis of S-N data for new and corroded mooring chains at varying mean load levels using a hierarchical model\", preprint, CC BY 4.0.",
+      "urls": [
+        "https://engrxiv.org/preprint/view/2377"
+      ],
+      "access_note": "(page and PDF text opened)"
+    },
+    {
+      "id": "S2",
+      "citation": "Fontaine, Rosen, Potts, Ma, Melchers, \"SCORCH JIP - Feedback on MIC and pitting corrosion from field recovered mooring chain links\", repository record.",
+      "urls": [
+        "https://scholars.lib.ntu.edu.tw/handle/123456789/582634"
+      ],
+      "access_note": "(record opened)"
+    },
+    {
+      "id": "S3",
+      "citation": "\"HSE RR1092: Practical method for calculating mooring chain wear for floating offshore installations\", summary page. ; programme summary \"HSE RR1090\"",
+      "urls": [
+        "https://www.fabig.com/external-publications/hse-rr1092/",
+        "https://www.fabig.com/external-publications/hse-rr1090/"
+      ],
+      "access_note": "(opened); (opened)"
+    },
+    {
+      "id": "S4",
+      "citation": "\"Study on Mooring System Integrity Management for Floating Structures\", final report to the US offshore safety regulator, dated August 4, 2015.",
+      "urls": [
+        "https://bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program//730-aa.pdf"
+      ],
+      "access_note": "(text opened)"
+    },
+    {
+      "id": "S5",
+      "citation": "\"Mooring line failures attract industry attention\", trade press, 16 July 2013.",
+      "urls": [
+        "https://www.oedigital.com/component/k2/item/3477-mooring-line-failures-attract-industry-attention"
+      ],
+      "access_note": "(opened; secondary report of two conference papers)"
+    },
+    {
+      "id": "S6",
+      "citation": "\"DNV-RP-E308 Mooring integrity management\", landing page.",
+      "urls": [
+        "https://www.dnv.com/energy/standards-guidelines/dnv-rp-e308-mooring-integrity-management/"
+      ],
+      "access_note": "(opened)"
+    },
+    {
+      "id": "S7",
+      "citation": "\"Regulatory expectations on moorings for floating wind and marine devices\", August 2017.",
+      "urls": [
+        "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/640962/Regulatory_expectations_on_mooring_devices_from_HSE_and_MCA.PDF"
+      ],
+      "access_note": "(text opened)"
+    },
+    {
+      "id": "S8",
+      "citation": "Farrow, Potts, Washington, \"Investigations Into Fatigue Performance of Offshore Mooring Chains\", database record.",
+      "urls": [
+        "https://tethys-engineering.pnnl.gov/publications/investigations-fatigue-performance-offshore-mooring-chains"
+      ],
+      "access_note": "(opened)"
+    },
+    {
+      "id": "S9",
+      "citation": "\"TAP-641 - Seawater Corrosion of Rope & Chain (SCORCh)\", regulator research record.",
+      "urls": [
+        "https://www.bsee.gov/research-record/tap-641-seawater-corrosion-rope-chain-scorch"
+      ],
+      "access_note": "(opened)"
+    }
+  ],
+  "could_not_verify": [
+    "The regulator's own report pages and PDFs for RR444 and RR1090-RR1098, and every page on the pitting project owner's site, returned \"not found\" from this host; claims that rest on them are marked above.",
+    "Current publication status and scope wording of API RP 2MIM; IACS UR W22 and ISO 20438 content; the Energy Institute guidance; the 0.4 mm/year allowance.",
+    "Any published accuracy figure for underwater chain dimensional measurement."
+  ],
+  "bottom_line": [
+    "The issue's screen is buildable from open sources for **fatigue with corrosion and mean load** (a CC BY data set of 154 full-scale tests with a published corrosion-grade scale exists) and for **wear** (a regulator-published analytical method exists).",
+    "It is **not** buildable from open sources for **pitted-link residual strength**: the joint industry project that defined the pit classes validated its method against break tests, but the break-load numbers and the pit-class boundaries are in conference papers and proprietary reports I could not open. The honest design is a cross-section-loss lower-tier estimate plus an \"outside published bounds, escalate\" flag, exactly as the issue already says.",
+    "Discard thresholds are a licensed-text matter. One open regulator-commissioned report describes the industry inspection practice as a retirement criterion of limiting strength reduction to 10 % of minimum breaking strength; that is enough to document a default, and the value must stay an input."
+  ],
+  "unverified_mark_count": 6
+}
