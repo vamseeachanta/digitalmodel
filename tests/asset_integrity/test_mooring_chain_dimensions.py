@@ -58,12 +58,22 @@ def test_uniform_loss_hand_calculation(inspection):
     assert result.scope == "inspected_locations_only"
     assert result.overall_verdict is None
     assert result.citations[0]["url"] == SOURCE
+    assert len(result.citations) == 2
+    regulator = result.citations[1]
+    assert regulator.keys() == result.citations[0].keys()
+    assert regulator["title"] == (
+        "Study on Mooring System Integrity Management for Floating Structures"
+    )
+    assert regulator["locator"] == "Table 7, page 40"
+    assert regulator["url"] == (
+        "https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program//730-aa.pdf"
+    )
 
 
 def test_fairlead_reading_hand_calculation(inspection):
     """Hand: mean(80,80)=80; loss=0.2>0.08; area=0.64<0.8.
 
-    IACS sections 5.2 and 2.2.3 identify fairlead shoulder measurements:
+    IACS section 5.2 identifies fairlead shoulder measurements:
     https://iacs.s3.af-south-1.amazonaws.com/wp-content/uploads/2022/05/20093306/rec38rev2.pdf
     This is a local dimensional failure, not a fairlead wear-rate model.
     """
@@ -112,6 +122,35 @@ def test_small_loss_equality_uses_stable_arithmetic(inspection):
     assert screen_dimensions(exact).samples[0].status == "WITHIN_LIMITS"
 
 
+def test_area_limit_equality_at_seventy_percent_diameter(inspection):
+    """Hand: 70 x 70 = 4900; 0.49 x 100 x 100 = 4900, equal area limit.
+
+    Mean 70 on nominal 100 mm has loss (100-70)/100=0.30, below the
+    supplied 0.8 loss limit. Zero uncertainty is an admitted exact bound.
+    """
+    reading = DiameterReading("bend-reference", "bend", 70, 70, 0)
+    exact = replace(inspection, readings=(reading,), min_area_ratio=0.49,
+                    max_diameter_loss_fraction=0.8)
+    sample = screen_dimensions(exact).samples[0]
+    assert sample.status == "WITHIN_LIMITS"
+    assert sample.area_ratio_range == ((70 / 100) ** 2,) * 2
+    assert sample.diameter_loss_range_fraction == (0.30, 0.30)
+
+
+def test_diameter_loss_limit_equality_at_seventy_percent_diameter(inspection):
+    """Hand: (100-70)/100=30/100=0.30, exactly the supplied loss limit.
+
+    Area 70 x 70 / (100 x 100)=0.49 exceeds the supplied area limit 0.2.
+    Zero uncertainty isolates diameter-loss equality from interval overlap.
+    """
+    reading = DiameterReading("bend-reference", "bend", 70, 70, 0)
+    exact = replace(inspection, readings=(reading,), min_area_ratio=0.2,
+                    max_diameter_loss_fraction=0.30)
+    sample = screen_dimensions(exact).samples[0]
+    assert sample.status == "WITHIN_LIMITS"
+    assert sample.diameter_loss_range_fraction == (0.30, 0.30)
+
+
 @pytest.mark.parametrize("field", ["crack", "loose_stud", "missing_stud",
                                    "geometry_anomaly", "pitting"])
 @pytest.mark.parametrize("observation", [True, None])
@@ -147,6 +186,14 @@ def test_outside_source_scope_never_passes(inspection, changes):
     assert not result.applicability.ok
     assert result.samples[0].status == "OUT_OF_SCOPE"
     assert result.samples[0].area_ratio_range is None
+    missing_flags = {
+        "uniform_loss_confirmed": "UNIFORM_LOSS_NOT_CONFIRMED",
+        "perpendicular_readings_confirmed": "PERPENDICULAR_READINGS_NOT_CONFIRMED",
+        "coverage_confirmed": "COVERAGE_NOT_CONFIRMED",
+    }
+    for field, flag in missing_flags.items():
+        if changes.get(field) is False:
+            assert result.applicability.flags == [flag]
 
 
 def test_r4_mechanical_scope_and_independent_samples(inspection):

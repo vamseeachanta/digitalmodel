@@ -167,7 +167,7 @@ def _scope(inspection: ChainInspection) -> Applicability:
         "uniform_loss_confirmed", "perpendicular_readings_confirmed", "coverage_confirmed"
     ):
         if not getattr(inspection, name):
-            flags.append(name.upper())
+            flags.append(f"{name.removesuffix('_confirmed').upper()}_NOT_CONFIRMED")
             notes.append(f"{name} is not established; local clearance is withheld.")
     for item in fields(inspection.visual):
         if getattr(inspection.visual, item.name) is not False:
@@ -208,23 +208,30 @@ def _sample(
     area = ((lower / nominal) ** 2, (upper / nominal) ** 2)
     if area[0] <= 0:
         raise ValueError("area ratio is outside representable positive precision")
-    status = _interval_status(loss, area, inspection)
+    status = _interval_status(loss, (lower, upper), inspection)
     return DimensionalResult(reading.location_id, status, (lower, upper), loss, area, validity)
 
 
 def _interval_status(
-    loss: tuple[float, float], area: tuple[float, float], inspection: ChainInspection
+    loss: tuple[float, float], diameter: tuple[float, float], inspection: ChainInspection
 ) -> Status:
     """An interval must establish both comparisons before local clearance."""
+    # Compare products, without squaring a rounded quotient. A common exact
+    # power-of-two scale puts nominal in [1, 2), avoiding large-area overflow
+    # without scaling the limit product below its positive input precision.
+    exponent = math.frexp(inspection.nominal_diameter_mm)[1] - 1
+    nominal = math.ldexp(inspection.nominal_diameter_mm, -exponent)
+    lower, upper = (math.ldexp(bound, -exponent) for bound in diameter)
+    area_limit = inspection.min_area_ratio * nominal * nominal
     status: Status
     if (
         loss[1] <= inspection.max_diameter_loss_fraction
-        and area[0] >= inspection.min_area_ratio
+        and lower * lower >= area_limit
     ):
         status = "WITHIN_LIMITS"
     elif (
         loss[0] > inspection.max_diameter_loss_fraction
-        or area[1] < inspection.min_area_ratio
+        or upper * upper < area_limit
     ):
         status = "EXCEEDS_LIMITS"
     else:
@@ -255,7 +262,17 @@ def screen_dimensions(inspection: ChainInspection) -> ChainDimensionalScreen:
         "opened": "2026-10-12",
         "reuse_terms": "No reuse licence stated in inspected PDF; citation only",
     }
+    regulator_citation = {
+        "title": "Study on Mooring System Integrity Management for Floating Structures",
+        "publisher": "ABS Consulting for the Bureau of Safety and Environmental Enforcement",
+        "document": "final report",
+        "revision": "August 4, 2015",
+        "locator": "Table 7, page 40",
+        "url": "https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program//730-aa.pdf",
+        "opened": "2026-10-12",
+        "reuse_terms": "No reuse licence is stated in the inspected passages; citation only.",
+    }
     return ChainDimensionalScreen(
         inspection, samples, merge(*(s.applicability for s in samples)),
-        (citation,), "inspected_locations_only", None,
+        (citation, regulator_citation), "inspected_locations_only", None,
     )

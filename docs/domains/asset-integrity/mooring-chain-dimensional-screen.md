@@ -23,6 +23,9 @@ perpendicular readings and uniform section loss require explicit
 confirmation. Visual observations for cracks, missing studs, loose studs,
 geometry anomalies and pitting are inspected-negative, inspected-positive or
 unknown. Unknown or positive observations prevent dimensional clearance.
+Missing confirmations emit `UNIFORM_LOSS_NOT_CONFIRMED`,
+`PERPENDICULAR_READINGS_NOT_CONFIRMED` or `COVERAGE_NOT_CONFIRMED`,
+respectively, for uniform loss, perpendicular readings or coverage.
 
 The maximum diameter-loss fraction and minimum remaining-area ratio are operator
 inputs with a required reference. No discard threshold, corrosion rate,
@@ -51,6 +54,12 @@ reference are outside the implemented loss model.
 Each sampled interval is compared with both operator limits. Entirely meeting
 both limits, including equality, gives `WITHIN_LIMITS`. Entirely exceeding
 either limit gives `EXCEEDS_LIMITS`. Overlapping a limit gives `INDETERMINATE`.
+The area comparison uses products: squared mean-diameter bounds against the
+area limit times squared nominal diameter, without squaring a rounded quotient.
+A common exact power-of-two scale places nominal diameter in `[1, 2)` to avoid
+large-area overflow. No tolerance is added; reported area ratios retain their
+squared-quotient definition. Diameter-loss comparisons retain
+`(nominal - bound) / nominal`, which meets the hand-exact `30 / 100 = 0.30` equality.
 Unsupported scope, section shape, coverage or observations give `OUT_OF_SCOPE`,
 with the existing `Applicability` type carrying the reason. No overall verdict
 is issued, even when every inspected location meets its dimensional limits.
@@ -78,8 +87,9 @@ escalates all such observations rather than substituting unverified tolerances.
   Attribution 4.0 International. No coefficients or dataset excerpt is taken.
 
 These documents were opened on October 12, 2026. Result sidecars identify the
-dimensional-method source and locators; operator-limit provenance remains
-separate. No new standards-derived numerical coefficient is introduced.
+dimensional-method and interlink-exclusion sources and locators; operator-limit
+provenance remains separate. No new standards-derived numerical coefficient is
+introduced.
 
 ## Gaps and validation
 
