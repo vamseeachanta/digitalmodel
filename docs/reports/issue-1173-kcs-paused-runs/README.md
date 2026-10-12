@@ -13,8 +13,8 @@ carries `startFrom latestTime`.
 
 | Case | Host | Ranks | Cells | Latest written time |
 |---|---|---|---|---|
-| `kcs_fine` | gpu-claw | 8 | — | **5024** |
-| `kcs_prod_yplus` | ace-linux-2 | 16 | 1,626,151 | **9913** |
+| `kcs_fine` | GPU host | 8 | — | **5024** |
+| `kcs_prod_yplus` | Linux workstation | 16 | 1,626,151 | **9913** |
 
 ## To resume
 
@@ -23,8 +23,8 @@ match the existing `processor*` decomposition — 8 for `kcs_fine`, 16 for
 `kcs_prod_yplus`. Decomposing again would discard the paused fields.
 
 ```bash
-cd "$HOME/cfd/dm1173/kcs_cases/<case>"          # gpu-claw: kcs_fine
-                                                 # ace-linux-2: ~/cfd/dm1173/kcs_prod_yplus
+cd "$HOME/cfd/dm1173/kcs_cases/<case>"          # GPU host: kcs_fine
+                                                 # Linux workstation: <data-root>/cfd/dm1173/kcs_prod_yplus
 source /usr/lib/openfoam/openfoam2312/etc/bashrc   # no set -e / set -u; it trips both
 setsid nohup mpirun -np NRANKS interFoam -parallel \
   < /dev/null > log.interFoam.resume 2>&1 &
@@ -45,7 +45,7 @@ and supersedes them:
    value was recoverable only by listing `processor0/`. The real values are in
    the table above.
 2. **`-np NRANKS` is a literal placeholder**, and the notes point at
-   `~/cfd/dm1173/ittc_watch.sh` — the superseded first-generation watcher, not
+   `<data-root>/cfd/dm1173/ittc_watch.sh` — the superseded first-generation watcher, not
    the repo copy. The stale copy is the one carrying the coefficient-file
    hazard described below.
 
@@ -69,11 +69,11 @@ live client cases are not exposed (each has a single coefficient file).
 
 ## `kcs_prod_yplus-mesh-logs/`
 
-The mesh under solve on ace-linux-2 was **built on gpu-claw and transferred**,
-so the ace-linux-2 case has no mesh logs at all. These are the sole build
+The mesh under solve on Linux workstation was **built on GPU host and transferred**,
+so the Linux workstation case has no mesh logs at all. These are the sole build
 record for it. Verified as that mesh, not assumed: `log.snappyHexMesh`
 ("Layer mesh : cells:1626151 faces:4987086 points:1736971") and `log.checkMesh`
-match the live `constant/polyMesh/owner` header on ace-linux-2 field-for-field
+match the live `constant/polyMesh/owner` header on Linux workstation field-for-field
 (nPoints 1736971, nCells 1626151, nFaces 4987086).
 
 Refs #1173, #2023.

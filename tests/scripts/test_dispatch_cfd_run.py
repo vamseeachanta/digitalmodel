@@ -399,3 +399,25 @@ def test_poll_can_report_without_terminating(tmp_path, capsys) -> None:
         assert os.kill(proc.pid, 0) is None  # still alive
     finally:
         os.killpg(os.getpgid(proc.pid), 9)
+
+
+@pytest.mark.parametrize("configured_root", [None, "data/configured-cfd"])
+def test_compute_collector_default_root_is_portable(monkeypatch, configured_root) -> None:
+    script = SCRIPT.parents[1] / "cfd" / "collect_compute_stats.py"
+    spec = importlib.util.spec_from_file_location("collect_compute_stats", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.delenv("DM_CFD_WORK_DIR", raising=False)
+    if configured_root is not None:
+        monkeypatch.setenv("DM_CFD_WORK_DIR", configured_root)
+    observed = []
+
+    def capture_glob(pattern):
+        observed.append(pattern)
+        raise StopIteration("input lookup captured")
+
+    monkeypatch.setattr(module.glob, "glob", capture_glob)
+    with pytest.raises(StopIteration, match="input lookup captured"):
+        module.main([])
+    expected = Path(configured_root or "data/sloshing_cfd_work")
+    assert observed == [str(expected / "*" / "_result.json")]

@@ -130,7 +130,7 @@ of the reducer's column files.
 ## Lanes and deployment
 
 `scripts/cfd/deploy_lane.sh <user@host> [campaign]` rsyncs `scripts/cfd/`
-to `<host>:~/cfd/<campaign>/scripts/` after checking, by exact process
+to `<host>:<data-root>/cfd/<campaign>/scripts/` after checking, by exact process
 name, that no solver or mesher is running there. Registries and cases are
 never deployed by it. Every lane runs the same scripts; a lane-local edit is
 a bug until it is committed here and redeployed.

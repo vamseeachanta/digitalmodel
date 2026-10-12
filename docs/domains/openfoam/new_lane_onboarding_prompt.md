@@ -19,7 +19,7 @@ and for anything destructive.
 Rules that are not negotiable:
 1. Nothing on a lane is hand-edited. Chain scripts flow repo -> lane only through
    digitalmodel scripts/cfd/deploy_lane.sh <USER>@<HOST> <campaign> (records DEPLOYED.txt,
-   ships src/digitalmodel as ~/cfd/dm_src for the python gates). A lane-local edit is a bug
+   ships src/digitalmodel as <data-root>/cfd/dm_src for the python gates). A lane-local edit is a bug
    until it is committed to digitalmodel and redeployed.
 2. Never edit a running bash script in place. Never pgrep -f a case path (it matches its
    own ssh command line); poll markers (MESH_DONE, RUN_DONE/RUN_FAILED, CONT_DONE/
@@ -58,12 +58,12 @@ Do this, in order, and stop to report after each numbered step:
    the exact versions and the bashrc path (the chain scripts default to
    /usr/lib/openfoam/openfoam2312/etc/bashrc; on macOS set DM_CFD_OPENFOAM_BASHRC or the
    equivalent override and report if the scripts need a patch, which goes to digitalmodel).
-3. Create the lane tree ~/cfd/<campaign>/ {geometry, meshes, cases, scripts, docs, runs,
+3. Create the lane tree <data-root>/cfd/<campaign>/ {geometry, meshes, cases, scripts, docs, runs,
    stage, status} (root = control plane only: registries, lane entry points, the
    <case>.log/.marker ledger, status/). Deploy the chain with deploy_lane.sh from this
    host. Copy the campaign registry and geometry from <LANE_A>. Do NOT copy cases.
 4. Seed the mesh store: rsync the store entries the queued cases need from <LANE_A>
-   (~/cfd/<campaign>/meshes/<id>-<name>/, serial polyMesh only), then
+   (<data-root>/cfd/<campaign>/meshes/<id>-<name>/, serial polyMesh only), then
    mesh_store.sh verify and mesh_store.sh status on the new lane.
 5. Qualify the lane with the portable PIMPLE benchmark pack (project wiki
    analysis/runs/pimple_bench_*/: pimple_bench_prep.sh builds b0..b6 from the 3.2 M-cell

@@ -10,7 +10,7 @@ reads mesh size (blockMeshDict) and sim time / step count (controlDict + solver
 log), classifies by case-class, and writes the small derived manifest
 ``docs/api/cfd/sloshing-compute.json`` (the committed, reproducible artifact).
 
-    uv run python scripts/cfd/collect_compute_stats.py --work-dir /mnt/local-analysis/sloshing_cfd_work
+    uv run python scripts/cfd/collect_compute_stats.py --work-dir data/sloshing_cfd_work
 """
 from __future__ import annotations
 
@@ -103,7 +103,7 @@ def _stats(v: List[float]) -> Dict[str, float]:
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Aggregate CFD compute stats (#1439)")
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path(os.environ.get("DM_CFD_WORK_DIR", "data/sloshing_cfd_work")))
     args = ap.parse_args(argv)
 
     buckets: Dict[str, List[Dict[str, Any]]] = {}
