@@ -1,5 +1,6 @@
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Compare stored modal results without importing a solver or parent package.
 
 Run as a script (not ``python -m``)::

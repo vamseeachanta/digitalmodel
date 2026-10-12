@@ -1,5 +1,6 @@
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline tests; run this file directly without package or pytest setup.
 
 All computed inputs are synthetic. No temporary folders or solver imports.
@@ -8,8 +9,11 @@ All computed inputs are synthetic. No temporary folders or solver imports.
 import csv
 import importlib.util
 import io
+import os
 import re
+import subprocess
 import sys
+import types
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -172,13 +176,55 @@ class TestModalBenchmark(unittest.TestCase):
         self.assertTrue(all(row["model"] == "mj01" for row in rows))
         self.assertEqual(rows[-1]["status"], "not computed")
 
+    def test_phase_b_rank_pairing_caveat(self):
+        table = self.harness.load_targets(TARGETS)
+        pairs = []
+        for model, data in table["models"].items():
+            known = [row for row in data["modes"] if row["frequency_hz"] is not None]
+            for lower, upper in zip(known, known[1:]):
+                spacing = (
+                    (upper["frequency_hz"] - lower["frequency_hz"])
+                    / lower["frequency_hz"]
+                    * 100
+                )
+                pairs.append((spacing, model, lower["mode"], upper["mode"]))
+        spacing, model, lower, upper = min(pairs)
+        skeleton = TARGETS.with_name(
+            "modal-benchmark-report-skeleton.html"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Rank-pairing caveat", skeleton)
+        self.assertIn(f"{model} modes {lower} and {upper}", skeleton)
+        self.assertIn(f"{spacing:.3f}%", skeleton)
+
     def test_import_does_not_load_solver_interface(self):
-        self.assertNotIn("OrcFxAPI", sys.modules)
-        load_harness()
-        self.assertNotIn("OrcFxAPI", sys.modules)
-        self.assertNotIn(
-            "digitalmodel.solvers.orcaflex.orcaflex_modal_analysis", sys.modules
+        code = """
+import importlib.util
+import sys
+spec = importlib.util.spec_from_file_location("modal_benchmark", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+print("OrcFxAPI" in sys.modules)
+print("digitalmodel.solvers.orcaflex.orcaflex_modal_analysis" in sys.modules)
+"""
+        env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+        result = subprocess.run(
+            [sys.executable, "-c", code, str(HARNESS)],
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
         )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ["False", "False"])
+
+
+def test_import_check_with_modules_already_loaded(monkeypatch):
+    """Check helper isolation when another test has registered both names."""
+    monkeypatch.setitem(sys.modules, "OrcFxAPI", types.ModuleType("OrcFxAPI"))
+    name = "digitalmodel.solvers.orcaflex.orcaflex_modal_analysis"
+    monkeypatch.setitem(sys.modules, name, types.ModuleType(name))
+    case = TestModalBenchmark("test_import_does_not_load_solver_interface")
+    case.test_import_does_not_load_solver_interface()
 
 
 if __name__ == "__main__":

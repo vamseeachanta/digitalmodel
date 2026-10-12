@@ -144,6 +144,11 @@ and <code>modes</code> (list of <code>mode</code>, <code>frequency_hz</code>, op
 The existing modal module records zero-based <code>modeIndex</code> and <code>period</code>.
 An exporter will provide positive mode identifiers and frequency in hertz from reciprocal period in seconds;
 raw DOF labels do not establish in-plane/out-of-plane direction without the model coordinate basis.</p>
+<h3>Rank-pairing caveat</h3>
+<p>Pairing is by ascending frequency within a direction class; a swapped pair of close modes is not detected.
+The closest target pair is mj01 modes 2 and 3, with relative spacing 2.094%
+((2.194 - 2.149) / 2.149 * 100). Phase B therefore confirms each pairing from the mode shape and direction
+before a difference is read.</p>
 <ul>
 <li>Model revision and input digests: <mark class="placeholder">[PLACEHOLDER: phase B inputs]</mark></li>
 <li>Solver version and static convergence: <mark class="placeholder">[PLACEHOLDER: native readback]</mark></li>
