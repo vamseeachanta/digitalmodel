@@ -1,0 +1,282 @@
+schema_version: 1
+data_class: REAL-EXTERNAL
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+limits:
+- 'Other contractors: zero verified rig rows.'
+- 'Semisubmersibles: zero verified rows. No semisubmersible specification or contract was verified in this pass.'
+- '"Only two 20K rigs worldwide" is not proven by this note: it verifies that these two have 20K stacks, not that no other rig does. Other contractors'' rigs were not verified (see Coverage).'
+- 15K coverage is partial by construction. Most modern ultra-deepwater floaters carry 15,000 psi stacks; this note verifies nine Transocean drillships only. It must not be read as a
+  census of the 15K fleet.
+- The gap between the first 20K-era contract (Titan, 463,000) and the latest 20K fixtures (Atlas, 635,000-650,000) is as published; no trend or forecast is implied.
+sources:
+- key: S1
+  type: Primary, securities filing (8-K Ex. 99.2)
+  title: Transocean Ltd. Provides Quarterly Fleet Status Report
+  url: https://www.sec.gov/Archives/edgar/data/0001451505/000145150526000058/rig-20260805xex99d2.htm
+  published: '2026-08-05'
+  checked: '2026-10-11'
+- key: S2
+  type: Primary, securities filing (8-K Ex. 99.2)
+  title: Transocean Ltd. Provides Quarterly Fleet Status Report
+  url: https://www.sec.gov/Archives/edgar/data/0001451505/000145150526000041/rig-20260504xex99d2.htm
+  published: '2026-05-04'
+  checked: '2026-10-11'
+- key: S3
+  type: Primary, contractor spec sheet
+  title: Deepwater Atlas rig specification
+  url: https://deepwater.com/documents/rigspecs/deepwater%20atlas.pdf
+  published: file dated 2024-07-12
+  checked: '2026-10-11'
+  date_note: Spec-sheet dates are the PDF file modification dates; the sheets carry no printed revision date.
+- key: S4
+  type: Primary, contractor spec sheet
+  title: Deepwater Titan rig specification
+  url: https://deepwater.com/documents/rigspecs/deepwater%20titan.pdf
+  published: file dated 2023-12-14
+  checked: '2026-10-11'
+  date_note: Spec-sheet dates are the PDF file modification dates; the sheets carry no printed revision date.
+- key: S5
+  type: Primary, contractor spec sheets
+  title: Deepwater Poseidon / Pontus / Conqueror / Proteus / Thalassa / Invictus / Asgard rig specifications
+  url: https://deepwater.com/documents/rigspecs/deepwater%20poseidon.pdf
+  published: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  checked: '2026-10-11'
+  note: same path pattern, rig name substituted
+  date_note: Spec-sheet dates are the PDF file modification dates; the sheets carry no printed revision date.
+- key: S6
+  type: Secondary, trade press
+  title: Transocean Deploys World's First Subsea 20,000 psi Blowout Preventer (Ocean News)
+  url: https://oceannews.com/news/energy/transocean-deploys-world-s-first-subsea-20-000-psi-blowout-preventer
+  published: '2024-07-10'
+  checked: '2026-10-11'
+- key: S7
+  type: Primary, contractor report
+  title: Valaris Fleet Status Report
+  url: https://s23.q4cdn.com/956522167/files/doc_financials/2026/q2/08052026-Fleet-Status-Report_FINAL.pdf
+  published: '2026-08-05'
+  checked: '2026-10-11'
+rigs:
+- name: {value: Deepwater Titan, source_key: S4, as_published_on: file dated 2023-12-14}
+  owner_manager: {value: Transocean, source_key: S4, as_published_on: file dated 2023-12-14}
+  rig_type: {value: drillships, source_key: S4, as_published_on: file dated 2023-12-14}
+  design_as_published: {value: Jurong Espadon JE3T Ultra Deepwater Drillship, source_key: S4, as_published_on: file dated 2023-12-14, as_published: Jurong Espadon JE3T Ultra Deepwater
+      Drillship}
+  year_entered_service: {value: 2023, source_key: S4, as_published_on: file dated 2023-12-14}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S4, as_published_on: file dated 2023-12-14, as_published: '12,000 ft (3,657.6 m) designed / 8,000 ft (2,438 m) outfitted'}
+  water_depth_outfitted_ft: {value: 8000, unit: ft, source_key: S4, as_published_on: file dated 2023-12-14, as_published: '12,000 ft (3,657.6 m) designed / 8,000 ft (2,438 m) outfitted'}
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S4, as_published_on: file dated 2023-12-14, as_published: '40,000 ft (12,192 m)'}
+  bop_stacks: {value: [{rating_psi: 20000, rams: 6, count: 2, maker: NOV}], source_key: S4, as_published_on: file dated 2023-12-14, as_published: '"Two (2) x six (6) ram 18-3/4" x 20,000
+      psi NOV BOP''s"'}
+  hookload_short_tons: {value: 1700, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: ['20,000 psi K/C lines', '10,000 psi'], source_key: S4, as_published_on: file dated 2023-12-14, as_published: 'Titan lists "20,000 psi K/C lines" on its riser
+      and mud pumps "10,000 psi"; Atlas lists mud pumps "7,500 psi".'}
+- name: {value: Deepwater Atlas, source_key: S3, as_published_on: file dated 2024-07-12}
+  owner_manager: {value: Transocean, source_key: S3, as_published_on: file dated 2024-07-12}
+  rig_type: {value: drillships, source_key: S3, as_published_on: file dated 2024-07-12}
+  design_as_published: {value: Jurong Espadon JE3T Ultra Deepwater Drillship, source_key: S3, as_published_on: file dated 2024-07-12, as_published: Jurong Espadon JE3T Ultra Deepwater
+      Drillship}
+  year_entered_service: {value: 2022, source_key: S3, as_published_on: file dated 2024-07-12}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S3, as_published_on: file dated 2024-07-12, as_published: '12,000 ft. (3,658 m) designed / 8,000 ft. (2,648 m) outfitted',
+    sic: true}
+  water_depth_outfitted_ft: {value: 8000, unit: ft, source_key: S3, as_published_on: file dated 2024-07-12, as_published: '12,000 ft. (3,658 m) designed / 8,000 ft. (2,648 m) outfitted',
+    sic: true}
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S3, as_published_on: file dated 2024-07-12, as_published: '40,000 ft. (12,192 m)'}
+  bop_stacks: {value: [{rating_psi: 20000, rams: 6, count: 1, maker: NOV}, {rating_psi: 15000, rams: 7, count: 1, maker: NOV}], source_key: S3, as_published_on: file dated 2024-07-12,
+    as_published: '"One (1) x six (6) ram 18-3/4" x 20,000 psi NOV BOP and one (1) x seven (7) ram 18-3/4" x 15,000 psi NOV BOP"'}
+  hookload_short_tons: {value: 1700, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: ['7,500 psi'], source_key: S3, as_published_on: file dated 2024-07-12, as_published: 'Titan lists "20,000 psi K/C lines" on its riser and mud pumps "10,000 psi";
+      Atlas lists mud pumps "7,500 psi".'}
+- name: {value: Deepwater Poseidon, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
+      12000 Ultra Deepwater Drillship}
+  year_entered_service: {value: 2018, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted'}
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted'}
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
+      m)'}
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: undated, as_published: '"Two
+      (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"'}
+  hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+- name: {value: Deepwater Pontus, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
+      12000 Ultra Deepwater Drillship}
+  year_entered_service: {value: 2017, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
+      m)'}
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: undated, as_published: '"Two
+      (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"', note: 'the research note records: same wording as Poseidon'}
+  hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+- name: {value: Deepwater Conqueror, source_key: S5, as_published_on: file dated 2026-02-02}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: file dated 2026-02-02}
+  rig_type: {value: drillships, source_key: S5, as_published_on: file dated 2026-02-02}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: file dated 2026-02-02, as_published: DSME
+      12000 Ultra Deepwater Drillship}
+  year_entered_service: {value: 2016/2017, source_key: S5, as_published_on: file dated 2026-02-02}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: file dated 2026-02-02, as_published: '12,000 ft.(3,658
+      m) designed /10,000 ft.(3,048 m) outfitted'}
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: file dated 2026-02-02, as_published: '12,000 ft.(3,658
+      m) designed /10,000 ft.(3,048 m) outfitted'}
+  drilling_depth_ft: {value: null, unit: ft, source_key: S5, as_published_on: file dated 2026-02-02, status: not extracted (unverified)}
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: file dated 2026-02-02, as_published: '"Two
+      (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"'}
+  hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: null, source_key: S5, as_published_on: file dated 2026-02-02}
+- name: {value: Deepwater Proteus, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
+      12000 Ultra Deepwater Drillship}
+  year_entered_service: {value: 2016, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
+      m)'}
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: undated, as_published: '"Two
+      (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"', note: 'the research note records: same wording as Poseidon'}
+  hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+- name: {value: Deepwater Thalassa, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
+      12000 Ultra Deepwater Drillship}
+  year_entered_service: {value: 2016, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
+      m)'}
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: undated, as_published: '"Two
+      (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"', note: 'the research note records: same wording as Poseidon'}
+  hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+- name: {value: Deepwater Invictus, source_key: S5, as_published_on: file dated 2024-07-12}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: file dated 2024-07-12}
+  rig_type: {value: drillships, source_key: S5, as_published_on: file dated 2024-07-12}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: file dated 2024-07-12, as_published: DSME
+      12000 Ultra Deepwater Drillship}
+  year_entered_service: {value: 2014, source_key: S5, as_published_on: file dated 2024-07-12}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: file dated 2024-07-12, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: file dated 2024-07-12, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: file dated 2024-07-12, as_published: '40,000 ft (12,192
+      m)'}
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: Cameron}], source_key: S5, as_published_on: file dated 2024-07-12,
+    as_published: '"(Primary) Cameron 18-3/4", 15,000 psi 7-ram preventer" and "(Secondary) Cameron 18-3/4", 15,000 psi 7-ram preventer"'}
+  hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: null, source_key: S5, as_published_on: file dated 2024-07-12}
+- name: {value: Deepwater Asgard, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
+      12000 Ultra Deepwater Drillship}
+  year_entered_service: {value: 2014, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
+      m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
+      m)'}
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: Cameron}], source_key: S5, as_published_on: undated,
+    as_published: '"2 x Cameron 18-3/4", 15,000 psi 7-ram preventer"'}
+  hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
+  generation: null
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+contracts:
+- {rig: Deepwater Titan, customer: Chevron, location: USGOM, status: Firm, start: Apr-23, end: Apr-28, dayrate_usd: 463000, source_keys: [S1, S2], as_published_on: '2026-08-05', footnote_1: true,
+  previous_report: {source_key: S2, as_published_on: '2026-05-04', as_published: 'S2 showed 462,000; footnote 1, cost escalation', dayrate_usd: 462000}}
+- {rig: Deepwater Atlas, customer: Beacon, location: USGOM, status: Firm, start: Aug-26, end: Oct-26, dayrate_usd: 580000, source_keys: [S1], as_published_on: '2026-08-05', footnote_1: false}
+- {rig: Deepwater Atlas, customer: Beacon, location: USGOM, status: Contingent, start: Oct-26, end: Dec-26, dayrate_usd: 650000, source_keys: [S1], as_published_on: '2026-08-05', footnote_1: false}
+- {rig: Deepwater Atlas, customer: Beacon, location: USGOM, status: Firm, start: Dec-26, end: Dec-26, dayrate_usd: 580000, source_keys: [S1], as_published_on: '2026-08-05', footnote_1: false}
+- {rig: Deepwater Atlas, customer: Beacon, location: USGOM, status: Contingent, start: Dec-26, end: Feb-27, dayrate_usd: 650000, source_keys: [S1], as_published_on: '2026-08-05', footnote_1: false}
+- {rig: Deepwater Atlas, customer: Beacon, location: USGOM, status: Firm, start: Feb-27, end: Feb-27, dayrate_usd: 580000, source_keys: [S1], as_published_on: '2026-08-05', footnote_1: false}
+- {rig: Deepwater Atlas, customer: Beacon, location: USGOM, status: Firm, start: Feb-27, end: Jul-27, dayrate_usd: 505000, source_keys: [S1], as_published_on: '2026-08-05', footnote_1: false}
+- {rig: Deepwater Atlas, customer: bp, location: USGOM, status: Firm, start: Jun-28, end: Jun-30, dayrate_usd: 635000, source_keys: [S1, S2], as_published_on: '2026-08-05', footnote_1: false,
+  previous_report: {source_key: S2, as_published_on: '2026-05-04', as_published: 'S2 showed two rows, Jun-28 to May-29 and Jun-29 to May-30, both 635,000', rows: [{start: Jun-28, end: May-29,
+        dayrate_usd: 635000}, {start: Jun-29, end: May-30, dayrate_usd: 635000}]}}
+- {rig: Deepwater Poseidon, customer: Shell, location: USGOM, status: Firm, start: Sep-18, end: Feb-28, dayrate_usd: 501000, source_keys: [S1, S2], as_published_on: '2026-08-05', footnote_1: true,
+  previous_report: {source_key: S2, as_published_on: '2026-05-04', as_published: 'S2: 499,000; footnote 1', dayrate_usd: 499000}}
+- {rig: Deepwater Pontus, customer: Shell, location: USGOM, status: Firm, start: Oct-17, end: Oct-27, dayrate_usd: 499000, source_keys: [S1, S2], as_published_on: '2026-08-05', footnote_1: true,
+  previous_report: {source_key: S2, as_published_on: '2026-05-04', as_published: 'S2: 496,000; footnote 1', dayrate_usd: 496000}}
+- {rig: Deepwater Conqueror, customer: Not Disclosed, location: USGOM, status: Firm, start: Oct-25, end: Jan-27, dayrate_usd: 530000, source_keys: [S1, S2], as_published_on: '2026-08-05',
+  footnote_1: false, previous_report: {source_key: S2, as_published_on: '2026-05-04', as_published: 'S2: Sep-26', end: Sep-26}}
+- {rig: Deepwater Proteus, customer: Not Disclosed, location: USGOM, status: Firm, start: Jul-26, end: Nov-26, dayrate_usd: not_disclosed, source_keys: [S1], as_published_on: '2026-08-05',
+  footnote_1: false}
+- {rig: Deepwater Proteus, customer: Not Disclosed, location: USGOM, status: Priced Options, start: Nov-26, end: Jan-27, dayrate_usd: not_disclosed, source_keys: [S1], as_published_on: '2026-08-05',
+  footnote_1: false}
+- {rig: Deepwater Proteus, customer: null, location: USGOM, status: Idle, start: Apr-26, end: null, dayrate_usd: null, source_keys: [S2], as_published_on: '2026-05-04', footnote_1: false}
+- {rig: Deepwater Thalassa, customer: Woodside, location: Mexico, status: Firm, start: Mar-26, end: Feb-29, dayrate_usd: 495000, source_keys: [S1, S2], as_published_on: '2026-08-05',
+  footnote_1: true}
+- {rig: Deepwater Invictus, customer: bp, location: USGOM, status: Firm, start: Apr-25, end: Apr-28, dayrate_usd: 485000, source_keys: [S1, S2], as_published_on: '2026-08-05', footnote_1: false}
+- {rig: Deepwater Asgard, customer: Not Disclosed, location: USGOM, status: Firm, start: Jun-25, end: Jun-26, dayrate_usd: 515000, source_keys: [S2], as_published_on: '2026-05-04', footnote_1: false}
+- {rig: Deepwater Asgard, customer: Not Disclosed, location: Eastern Med, status: Firm, start: Dec-26, end: Dec-27, dayrate_usd: 405000, source_keys: [S1, S2], as_published_on: '2026-08-05',
+  footnote_1: false}
+secondary_reports:
+- source_key: S6
+  as_published_on: '2024-07-10'
+  status: secondary
+  statement: Ocean News reports a Transocean announcement of the world's first subsea 20,000 psi BOP deployment from Deepwater Titan. NOV supplied the stack for extremely high-pressure
+    reservoirs.
+  access_statement: The contractor's own release was not opened.
+narrative_items:
+- source_key: S7
+  as_published_on: '2026-08-05'
+  status: narrative_only_not_a_rig_row
+  statement: Valaris reported a letter of award for a two-well exploration program for VALARIS DS-18, expected to start in the fourth quarter of 2026 and last up to seven months. No
+    dayrate is published for it.
+not_verified:
+- statement: 'Semisubmersibles: zero verified rows. No semisubmersible specification or contract was verified in this pass.'
+  status: unverified
+- statement: 'Other contractors: zero verified rig rows. Valaris (S7) and the Seadrill August 2026 fleet status report were opened, but their PDF tables did not extract with reliable
+    row alignment, and neither states a BOP pressure rating, so no rig row is reported from them. The only item taken from S7 is narrative text: "Letter of Award (LOA) for a two-well
+    exploration program for VALARIS DS-18. The program is expected to commence in the fourth quarter of 2026 with a duration of up to seven months." No dayrate is published for it. Noble''s
+    fleet status report was not located.'
+  status: unverified
+- statement: 15K coverage is partial by construction. Most modern ultra-deepwater floaters carry 15,000 psi stacks; this note verifies nine Transocean drillships only. It must not be
+    read as a census of the 15K fleet.
+  status: unverified
+- statement: 'Unverified items seen only in search summaries (do not ingest as sourced): the 2021 award value and phasing for Atlas'' first contract (initial dual 15K operation, later
+    20K BOP installation); the 2024 bp award backlog value for Atlas; the Titan contract total value; newbuild cost per rig; any 20K newbuild or upgrade pipeline at other contractors.'
+  status: unverified
+- statement: Fleet-level utilization, marketed-supply-by-year and intervention-vessel counts (other open tasks on this issue) were not researched in this pass.
+  status: unverified
+- statement: Neither report states which well, field or pressure class a contract is for. Linking the Beacon rows to a specific 20K development, or the bp rows to a specific 20K project,
+    is unverified here and should not be stored as sourced.
+  status: unverified
+- statement: The contractor's own release was not opened.
+  status: unverified
+- statement: The spec sheets give a design name, not a generation number. "8th generation" (Atlas, Titan) and "7th generation" labels are trade-press and investor-relations usage and
+    are not printed on the sheets checked, so the generation field should be stored as secondary/unverified.
+  status: secondary_unverified
