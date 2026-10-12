@@ -51,6 +51,8 @@ from digitalmodel.naval_architecture.hull_girder_screening import (
     utilization_at_frames,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 L = 100.0
 W = 10_000.0
 N = 401  # dx = 0.25 m; stations align with the L/4 block edges
@@ -123,8 +125,8 @@ def test_distributed_weight_trapezoid_centroid():
     item = DistributedWeight("tank", 300.0, x_start_m=10.0, x_end_m=40.0, lcg_m=28.0)
     xs = np.linspace(10.0, 40.0, 30001)
     dens = np.array([item.density_at(float(xi)) for xi in xs])
-    total = np.trapz(dens, xs)
-    lcg = np.trapz(dens * xs, xs) / total
+    total = _trapezoid(dens, xs)
+    lcg = _trapezoid(dens * xs, xs) / total
     assert total == pytest.approx(300.0, rel=1e-6)
     assert lcg == pytest.approx(28.0, rel=1e-6)
     assert dens.min() >= 0.0
@@ -144,7 +146,7 @@ def test_condition_totals_and_point_weights():
 
     x = np.linspace(0.0, 100.0, 401)
     w = build_weight_curve(x, items, points)
-    assert np.trapz(w, x) == pytest.approx(1100.0, rel=1e-6)
+    assert _trapezoid(w, x) == pytest.approx(1100.0, rel=1e-6)
 
 
 def test_weight_outside_hull_rejected():
