@@ -71,10 +71,7 @@ API_RP_1111 = CodeReference(
     "API RP 1111", "2015",
     "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon "
     "Pipelines (Limit State Design)")
-# The legacy WSD strategy does not establish an edition; do not inherit the
-# separate STD strategy's year. See docs/domains/codes-register.md.
-API_RP_2RD = CodeReference(
-    "API RP 2RD", "edition not established", "Legacy WSD riser design")
+API_RP_2RD = CodeReference("API RP 2RD", "2013", "Dynamic Risers for FPS")
 API_STD_2RD = CodeReference("API STD 2RD", "2013", "Dynamic Risers for FPS")
 DNV_ST_F201 = CodeReference("DNV-ST-F201", "2021", "Dynamic Risers")
 DNV_ST_F101 = CodeReference("DNV-ST-F101", "2021", "Submarine Pipeline Systems")

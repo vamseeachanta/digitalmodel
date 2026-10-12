@@ -158,7 +158,7 @@ Criteria (DNV-RP-C205):
 - Natural frequency (Hz)
 - Shedding frequency (Hz)
 - Reduced velocity (dimensionless)
-- Lock-in status (safe/marginal/lock-in)
+- Lock-in status (safe/marginal/lock-in) per the stated screening criteria
 - Safety factor
 - Recommendation (mitigation measures if needed)
 
@@ -609,7 +609,7 @@ pytest tests/domains/viv_analysis/ -v
 
 2. **Added Mass Calculation**: Ensuring added mass effects were correctly applied in frequency calculations. Validated against published data.
 
-3. **Lock-in Range Logic**: Complex logic for determining safe/marginal/lock-in status. Solved with explicit margin calculation.
+3. **Lock-in Range Logic**: Logic for determining safe/marginal/lock-in status per the stated screening criteria. Resolved with explicit margin calculation.
 
 4. **S-N Curve Parameters**: Tracking 13 different S-N curves with correct parameters. Organized as class constant dictionary.
 
@@ -641,9 +641,9 @@ pytest tests/domains/viv_analysis/ -v
    - VIV screening procedures
    - Fatigue assessment guidelines
 
-3. **DNV-RP-C203** (edition not established in the implementation): "Fatigue Design of Offshore Steel Structures"
+3. **DNV-RP-C203** (2016): "Fatigue Design of Offshore Steel Structures"
    - `src/digitalmodel/subsea/viv_analysis/fatigue.py:27` cites DNV-RP-C203 without an edition.
-   - The former 2016 attribution in this document was more specific than the code citation; the edition label now matches that evidence.
+   - The year is restored unchanged from main; not verified: source did not open. Publisher retrieval evidence is recorded in the codes register.
    - Correspondence of the implemented values and table locator below to a licensed edition is not verified.
    - S-N curve parameters (Table 2-1)
    - Thickness correction factors
