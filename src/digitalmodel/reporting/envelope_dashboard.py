@@ -21,7 +21,7 @@ Optional columns ``demand``, ``limit`` and ``units`` are carried into the
 detail view when present. A (sea state, check) pair that is absent from the
 input renders as "not evaluated"; it is never coloured.
 
-Colour bands (owner decision 2026-10-11, card W1-ENV01):
+Colour bands (default threshold 0.80):
 
 * green  ``U < amber_threshold`` (default 0.80)
 * amber  ``amber_threshold <= U <= 1.0``
@@ -43,12 +43,13 @@ import csv
 import html
 import json
 import math
+import re
 from importlib import resources
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
 DEFAULT_AMBER_THRESHOLD = 0.80
-"""Owner decision 2026-10-11 (W1-ENV01): amber from U = 0.80."""
+"""Default threshold 0.80: amber from U = 0.80."""
 
 REQUIRED_COLUMNS = ("hs_m", "tp_s", "check", "utilisation")
 OPTIONAL_COLUMNS = ("demand", "limit", "units")
@@ -240,6 +241,7 @@ def build_payload(
             "hs": hs,
             "tp": tp,
             "u": c["u"],
+            "demand_supplied": [d is not None for d in c["demand"]],
             "governing": gk,
             "band": classify_band(c["u"][gk], t),
         }
@@ -295,10 +297,14 @@ def render_dashboard(
         source_label=source_label,
         synthetic=synthetic,
     )
-    return (
-        _template()
-        .replace("__TITLE__", html.escape(title))
-        .replace("__ENVELOPE_DATA__", _json_for_script(payload))
+    replacements = {
+        "__TITLE__": html.escape(title),
+        "__ENVELOPE_DATA__": _json_for_script(payload),
+    }
+    return re.sub(
+        r"__TITLE__|__ENVELOPE_DATA__",
+        lambda match: replacements[match.group()],
+        _template(),
     )
 
 

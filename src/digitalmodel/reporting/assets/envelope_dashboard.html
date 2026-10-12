@@ -316,11 +316,13 @@ function detailHTML(p) {
   h += `<div class="note" style="margin:0 0 6px">${p.interp ? "Interpolated (bilinear between the four surrounding sampled cells); indicative, not a sampled result." : "Sampled cell."}</div>`;
   const margin = gc.limit != null ? fmt(Math.abs(1 - gov) * gc.limit, 2) + unitsOf(gc) : "ΔU " + fmt(Math.abs(1 - gov), 3);
   h += `<div style="margin-bottom:6px">Governing: <b>${esc(gc.id)}</b> at U = <b>${fmt(gov, 3)}</b>; ${gov > 1 ? "exceeds its limit by " : "margin to its limit "}${margin}.</div>`;
-  h += `<table class="crit"><tr style="color:var(--muted);font-size:11px"><td>Check</td><td>Utilisation</td><td class="n">U</td><td class="n">Demand / limit</td></tr>`;
   const dem = !p.interp && p.cell && p.cell.demand;
+  const demandLabel = p.interp || !p.cell.demand_supplied.some(Boolean) ? "Demand (derived: U x limit)" : "Demand";
+  h += `<table class="crit"><tr style="color:var(--muted);font-size:11px"><td>Check</td><td>Utilisation</td><td class="n">U</td><td class="n">${demandLabel} / limit</td></tr>`;
   for (const r of rows) {
     const d = r.u == null ? null : dem && dem[r.k] != null ? dem[r.k] : r.c.limit != null ? r.u * r.c.limit : null;
-    const dl = r.c.limit != null ? `${fmt(d, 2)} / ${fmt(r.c.limit, 2)}${unitsOf(r.c)}` : "–";
+    const derived = p.interp || !p.cell.demand_supplied[r.k];
+    const dl = r.c.limit != null ? `${derived && d != null ? "Demand (derived: U x limit): " : ""}${fmt(d, 2)} / ${fmt(r.c.limit, 2)}${unitsOf(r.c)}` : "–";
     h += `<tr class="${r.k === lim ? "lim" : ""}"><td>${esc(r.c.id)}${r.k === lim ? '<span class="tag">GOVERNING</span>' : ""}</td><td>${bullet(r.u)}</td><td class="n"><span class="chip ${band(r.u)}">${fmt(r.u, 3)}</span></td><td class="n">${dl}</td></tr>`;
   }
   h += `</table><div class="note">Bar: utilisation U = demand / limit; dashed tick = amber threshold ${st.amber.toFixed(2)}; solid tick = U 1.00.</div>`;

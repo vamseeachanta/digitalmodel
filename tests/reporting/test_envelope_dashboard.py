@@ -14,6 +14,7 @@ import math
 import re
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from digitalmodel.reporting.envelope_dashboard import (
@@ -23,6 +24,7 @@ from digitalmodel.reporting.envelope_dashboard import (
     classify_band,
     governing_checks,
     load_records,
+    main,
     render_dashboard,
     write_dashboard,
 )
@@ -63,7 +65,7 @@ def _embedded(html: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_default_threshold_is_owner_decision():
+def test_default_threshold_is_0_80():
     assert DEFAULT_AMBER_THRESHOLD == 0.80
 
 
@@ -281,3 +283,76 @@ def test_synthetic_example_builds(tmp_path):
         records, tmp_path / "example.html", title="Synthetic example", synthetic=True
     )
     assert "SYNTHETIC" in out.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("token", ["__ENVELOPE_DATA__", "__TITLE__"])
+def test_title_placeholders_stay_literal(tmp_path, token):
+    title = f"Literal {token} <&>"
+    out = write_dashboard(_rows(), tmp_path / "literal.html", title=title)
+    page = out.read_text(encoding="utf-8")
+    assert f"<title>Literal {token} &lt;&amp;&gt;</title>" in page
+    blocks = re.findall(
+        r'<script id="envelope-data" type="application/json">(.*?)</script>',
+        page,
+        re.S,
+    )
+    assert len(blocks) == 1 and page.count(blocks[0]) == 1
+    assert json.loads(blocks[0]) == build_payload(_rows(), title=title)
+    assert blocks[0] not in re.search(r"<title>(.*?)</title>", page, re.S)[1]
+
+
+def test_dataframe_input_matches_mapping_rows():
+    rows = _rows()
+    assert _embedded(render_dashboard(pd.DataFrame(rows), title="t")) == _embedded(
+        render_dashboard(rows, title="t")
+    )
+
+
+def test_main_builds_example_and_refuses_overwrite(tmp_path):
+    out = tmp_path / "example.html"
+    args = [str(EXAMPLE_CSV), str(out), "--amber-threshold", "0.70"]
+    assert main(args) == 0
+    assert list(tmp_path.iterdir()) == [out]
+    page = out.read_bytes()
+    assert _embedded(page.decode("utf-8"))["amber_threshold"] == 0.70
+    with pytest.raises(FileExistsError, match="overwrite=True"):
+        main(args)
+    assert out.read_bytes() == page
+
+
+def test_sparse_grid_preserves_missing_check_as_null():
+    page = render_dashboard(_rows()[:-1], title="t")
+    cell = _embedded(page)["cells"][1]
+    assert cell["u"] == [1.2, 0.95, None]
+    assert cell["governing"] == 0
+    assert 'na: "Not evaluated"' in page
+    assert 'u == null || isNaN(u) ? "na"' in page
+    assert 'background:var(--grid);color:var(--muted)' in page
+
+
+def test_inconsistent_limit_error_names_check():
+    rows = _rows()
+    rows[0]["limit"], rows[3]["limit"] = 50.0, 60.0
+    with pytest.raises(ValueError, match="check 'A': inconsistent limit"):
+        build_payload(rows, title="t")
+
+
+@pytest.mark.parametrize("mode", ["absent", "supplied", "mixed"])
+def test_payload_marks_supplied_demand(mode):
+    rows = [dict(r, limit=50.0) for r in _rows()]
+    for n, row in enumerate(rows):
+        if mode == "supplied" or (mode == "mixed" and n == 0):
+            row["demand"] = row["utilisation"] * 50.0
+    cells = build_payload(rows, title="t")["cells"]
+    expected = [mode == "supplied"] * 3
+    assert cells[1]["demand_supplied"] == expected
+    if mode == "mixed":
+        expected[0] = True
+    assert cells[0]["demand_supplied"] == expected
+
+
+def test_template_labels_derived_demand():
+    page = render_dashboard(_rows(), title="t")
+    assert "Demand (derived: U x limit)" in page
+    assert "p.interp || !p.cell.demand_supplied[r.k]" in page
+    assert '"Demand"' in page
