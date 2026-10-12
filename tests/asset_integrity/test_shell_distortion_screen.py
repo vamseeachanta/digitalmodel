@@ -7,6 +7,7 @@ Synthetic dimensions use millimetres. Expected utilisation is calculated by
 subtracting measured extreme diameters, dividing by specified diameter,
 then dividing by the cited fabrication limit. No published example solution
 was opened; these tests establish the individual table criteria only.
+Second read confirmed on 2026-10-12 UTC against the held copy of the cited edition (independent re-read of the four limit values and their locators).
 """
 
 from dataclasses import replace

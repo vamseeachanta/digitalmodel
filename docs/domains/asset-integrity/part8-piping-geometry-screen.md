@@ -40,6 +40,8 @@ are inputs, not findings calculated by the screen.
 
 ## Applicability and validation
 
+Second read confirmed on 2026-10-12 UTC against the held copy of the cited edition (independent re-read of the four limit values and their locators).
+
 Only the listed purchased-pipe specifications and the angular weld criterion
 are supported. Fittings, elbows, centreline offsets, tank tolerances,
 general shell distortions and combined defects require separate assessment.
