@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Regression coverage for ignore anchoring and tracked include chains."""
 
 from contextlib import redirect_stderr, redirect_stdout
@@ -22,6 +25,8 @@ def child_env():
     env = os.environ.copy()
     for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
         env.pop(key, None)
+    env["GIT_CONFIG_GLOBAL"] = os.devnull
+    env["GIT_CONFIG_NOSYSTEM"] = "1"
     env["PYTHONPATH"] = str(ROOT / "src")
     return env
 
@@ -114,6 +119,8 @@ def test_absent_target_fails(repo, key):
 
 def test_ignored_target_reports_rule(repo):
     """An ignored on-disk target will fail with the ignore rule and its line."""
+    ignore = repo / ".gitignore"
+    ignore.write_text("# Fixture line offset.\n" + ignore.read_text(encoding="utf-8"), encoding="utf-8")
     write(repo, "models/run.yml", "includefile: ../env/case.yml\n")
     write(repo, "env/case.yml", "General: {}\n")
     git(repo, "add", "models/run.yml")
@@ -121,8 +128,11 @@ def test_ignored_target_reports_rule(repo):
     assert result.returncode == 1
     assert "models/run.yml" in result.stdout
     assert "env/case.yml" in result.stdout
-    assert ".gitignore:141:" in result.stdout
-    assert "/env/" in result.stdout
+    rules = ignore.read_text(encoding="utf-8").splitlines()
+    assert rules.count("/env/") == 1
+    assert "env/" not in rules
+    line_number = rules.index("/env/") + 1
+    assert f".gitignore:{line_number}:/env/" in result.stdout
 
 
 def test_reincluded_untracked_target_has_no_ignore_rule(repo):
@@ -220,3 +230,53 @@ def test_real_tree_matches_baseline():
     """The real tracked tree will contain exactly the committed baseline defects."""
     result = run_check(ROOT, BASELINE)
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    ("path", "ignored"),
+    [
+        ("a/b/env/pyvenv.cfg", True),
+        ("a/b/env/bin/python", True),
+        ("a/b/env/bin/activate", True),
+        ("a/b/env/bin/pip", True),
+        ("a/b/env/Scripts/python.exe", True),
+        ("a/b/env/Scripts/activate.bat", True),
+        ("a/b/env/Scripts/pip.exe", True),
+        ("a/b/env/lib/python3.11/site-packages/module.py", True),
+        ("a/b/env/lib64/python3.11/site-packages/module.py", True),
+        ("a/b/env/Lib/site-packages/module.py", True),
+        ("a/b/env/include/python3.11/header.h", True),
+        ("a/b/env/case.dat", False),
+        ("a/b/env/case.yml", False),
+        ("a/b/env/inputs/case.dat", False),
+        ("a/b/env/inputs/case.yml", False),
+        ("a/b/env/include/case.dat", False),
+        ("a/b/env/library/case.yml", False),
+        ("a/b/env/bin/case.dat", False),
+        ("a/b/env/Scripts/case.yml", False),
+    ],
+)
+def test_nested_env_structure(repo, path, ignored):
+    """Environment paths will be ignored while engineering inputs stay visible."""
+    write(repo, "a/b/env/pyvenv.cfg", "")
+    write(repo, path, "")
+    result = git(repo, "check-ignore", "-q", path, check=False)
+    assert result.returncode == (0 if ignored else 1), path
+
+
+def test_global_git_configuration_is_isolated(repo, monkeypatch):
+    """A global ignore file will not alter fixture ignore decisions."""
+    ignores = write(repo, "global-ignore", "*.yml\n")
+    config = write(repo, "global-config", f"[core]\n    excludesFile = {ignores.as_posix()}\n")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
+    write(repo, "models/case.yml", "")
+    result = git(repo, "check-ignore", "-q", "models/case.yml", check=False)
+    assert result.returncode == 1
+    assert child_env()["GIT_CONFIG_NOSYSTEM"] == "1"
+
+
+def test_baseline_can_only_shrink():
+    """Baseline growth will require a visible edit to the regression ceiling."""
+    entries = load_checker().read_baseline(BASELINE)
+    # This ceiling may be lowered, never raised without a visible test edit.
+    assert len(entries) <= 198
