@@ -185,8 +185,11 @@ def test_workflow_registry(workflow, monkeypatch):
             "stress_range_MPa", "cycles_per_year", "damage_per_year",
         }
         assert {"screening_status", "cf_lock_in_count", "il_lock_in_count",
+                "il_lock_in_unassessed",
                 "screening_damage_rate_per_year", "screening_life_years",
                 "dff_margin"} <= set(totals.columns)
+        assert summary["il_lock_in_unassessed"] is True
+        assert bool(totals.iloc[0]["il_lock_in_unassessed"]) is True
         inertia = math.pi * (0.2731**4 - 0.2287**4) / 64
         frequency = math.pi / (2 * 60**2) * math.sqrt(2.07e11 * inertia / 180)
         assert results.iloc[0]["f_n_Hz"] == pytest.approx(frequency)

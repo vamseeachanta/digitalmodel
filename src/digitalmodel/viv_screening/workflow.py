@@ -46,6 +46,7 @@ def router(cfg: dict) -> dict:
         "lock_in_count": len(locked),
         "cf_lock_in_count": sum(row["cf_lock_in"] for row in rows),
         "il_lock_in_count": sum(row["il_lock_in"] for row in rows),
+        "il_lock_in_unassessed": any(row["il_lock_in"] for row in rows),
         "screening_damage_rate_per_year": rate,
         "screening_life_years": life,
         "required_life_years": required_life,
@@ -267,6 +268,6 @@ def save_echo(cfg: dict) -> None:
         "default": cfg["default"],
         "viv_screening": result,
     }
-    path = config_dir / "results" / f"{_input_stem(cfg)}.yml"
+    path = _output_dir(cfg, cfg["viv_screening"]) / f"{_input_stem(cfg)}.yml"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.safe_dump(echo, sort_keys=False), encoding="utf-8")

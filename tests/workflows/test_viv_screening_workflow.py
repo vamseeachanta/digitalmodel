@@ -224,6 +224,7 @@ def test_committed_example_runs_through_engine_and_is_stable(tmp_path):
     data = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
     result = run_input(tmp_path, copy.deepcopy(data))
     assert result["screening_status"] == "fail"
+    assert result["il_lock_in_unassessed"] is True
     paths = [
         tmp_path / "results/input.yml",
         Path(result["results_csv"]),
@@ -235,3 +236,71 @@ def test_committed_example_runs_through_engine_and_is_stable(tmp_path):
     echo = paths[0].read_text(encoding="utf-8")
     assert str(tmp_path) not in echo
     assert "start_time" not in echo
+
+
+def test_il_only_lock_in_is_unassessed(tmp_path, screening_input):
+    screening_input["viv_screening"]["environment"]["current"] = {"speed_m_s": 0.10}
+    result = run_input(tmp_path, screening_input)
+    assert result["cf_lock_in_count"] == 0
+    assert result["il_lock_in_count"] == 1
+    assert result["screening_status"] == "pass"
+    assert result["screening_damage_rate_per_year"] == 0.0
+    assert result["screening_life_years"] == float("inf")
+    assert result.get("il_lock_in_unassessed") is True
+    summary = pd.read_csv(result["summary_csv"]).iloc[0]
+    assert bool(summary["il_lock_in_unassessed"]) is True
+
+
+def test_no_il_lock_in_flag_is_unset(tmp_path, screening_input):
+    settings = screening_input["viv_screening"]
+    settings["environment"]["current"] = {"speed_m_s": 0.01}
+    del settings["unit_modal_stress_MPa"]
+    result = run_input(tmp_path, screening_input)
+    assert result["il_lock_in_count"] == 0
+    assert result["screening_status"] == "pass"
+    assert result["screening_damage_rate_per_year"] == 0.0
+    assert result["screening_life_years"] == float("inf")
+    assert result.get("il_lock_in_unassessed") is False
+    summary = pd.read_csv(result["summary_csv"]).iloc[0]
+    assert bool(summary["il_lock_in_unassessed"]) is False
+
+
+def test_mixed_lock_in_preserves_example_totals(tmp_path):
+    data = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    result = run_input(tmp_path, data)
+    assert result["lock_in_modes"] == [1, 2]
+    assert result["cf_lock_in_count"] == result["il_lock_in_count"] == 1
+    assert result["screening_status"] == "fail"
+    assert result["screening_damage_rate_per_year"] == 0.09283365625182306
+    assert result["screening_life_years"] == 10.771955348687046
+    assert result.get("il_lock_in_unassessed") is True
+    summary = pd.read_csv(result["summary_csv"]).iloc[0]
+    assert bool(summary["il_lock_in_unassessed"]) is True
+
+
+@pytest.mark.parametrize("absolute", [False, True], ids=["relative", "absolute"])
+def test_custom_output_dir_contains_all_workflow_files(
+    tmp_path, screening_input, absolute
+):
+    directory = tmp_path / "requested_output"
+    screening_input["viv_screening"]["output_dir"] = (
+        str(directory) if absolute else directory.name
+    )
+    result = run_input(tmp_path, screening_input)
+    names = ["input.yml", "input_viv_screening.csv", "input_viv_screening_summary.csv"]
+    assert Path(result["results_csv"]).parent == directory
+    assert Path(result["summary_csv"]).parent == directory
+    for name in names:
+        assert (directory / name).is_file(), name
+        assert not (tmp_path / "results" / name).exists(), name
+
+
+def test_default_output_locations_are_preserved(tmp_path, screening_input):
+    result = run_input(tmp_path, screening_input)
+    directory = tmp_path / "results"
+    assert Path(result["results_csv"]) == directory / "input_viv_screening.csv"
+    assert Path(result["summary_csv"]) == directory / "input_viv_screening_summary.csv"
+    for name in (
+        "input.yml", "input_viv_screening.csv", "input_viv_screening_summary.csv"
+    ):
+        assert (directory / name).is_file()
