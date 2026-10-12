@@ -20,6 +20,8 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, str(Path(__file__).parent))
 from house import house_style, page, plot_div, flipbook, fig_to_jpeg_b64
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 CASE = Path(sys.argv[1])          # reference case root (background/ solved)
 RES = Path(sys.argv[2])
 WT = Path(sys.argv[3])
@@ -101,7 +103,7 @@ zn = (zw - zw.mean()) / A_I
 om = 2 * np.pi / cfg["wave"]["T"]
 # incident wave at the body reconstructed from the split (unit amplitude)
 eta_n = np.cos(om * (tw - tw[0]) + np.angle(
-    np.trapz((zw - zw.mean()) * np.exp(-1j * om * (tw - tw[0])), tw)))
+    _trapezoid((zw - zw.mean()) * np.exp(-1j * om * (tw - tw[0])), tw)))
 follow_chart = plot_div("web-follow", [
     {"x": r4(tw[::2]), "y": r4(zn[::2]), "mode": "lines",
      "name": f"heave / a_incident  (RAO = {resp['rao']:.3f})",
