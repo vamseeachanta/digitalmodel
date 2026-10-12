@@ -97,7 +97,20 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     assert len(outputs) == 21  # the 36 capabilities/api envelope pages were removed
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
-    assert len(checker.EXCLUDED_GENERATORS) == 8
+    assert len(checker.EXCLUDED_GENERATORS) == 9
+    # The verification generator needs a caller-supplied solved case;
+    # repository inputs alone cannot reproduce its page.
+    assert set(checker.EXCLUDED_GENERATORS) == {
+        "scripts/cfd/generate-kcs-verification.py",
+        "docs/api/cfd/report_build/build_dam_break.py",
+        "docs/api/cfd/report_build/build_decay_report.py",
+        "docs/api/cfd/report_build/build_floating_body.py",
+        "docs/api/cfd/report_build/build_kleefsman.py",
+        "docs/api/cfd/report_build/build_wave_excited_body.py",
+        "docs/api/cfd/report_build/build_wave_excited_body_rao.py",
+        "docs/api/cfd/report_build/build_wave_tank.py",
+        "docs/api/cfd/report_build/upgrade_reports.py",
+    }
     assert len(checker.MANUAL_PAGES) == 11
 
 
