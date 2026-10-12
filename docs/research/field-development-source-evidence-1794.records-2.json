@@ -292,7 +292,7 @@
           "unverified": true
         }
       ],
-      "no_primary_source_found": "well-to-FPSO tieback distance, project cost. Two water depths stated (rows 54 and 56). Tried: OnePetro OTC page from the provisional record (HTTP 403), shell.com (script-only), archived operator investor handbook (redirects away)."
+      "no_primary_source_found": "No primary source found: well-to-FPSO tieback distance, project cost. Two water depths stated (rows 54 and 56). Tried: OnePetro OTC page from the provisional record (HTTP 403), shell.com (script-only), archived operator investor handbook (redirects away)."
     },
     {
       "record": "Lucius",

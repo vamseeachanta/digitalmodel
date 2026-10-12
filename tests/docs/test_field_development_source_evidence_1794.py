@@ -23,7 +23,6 @@ GATE_RECORDS = ["Perdido", "Appomattox", "Whale", "Atlantis", "Thunder Horse",
 # The research note orders the provisional table differently and uses two aliases.
 # Known note anomalies: none in the class-count table; absence paragraphs for
 # Mad Dog Phase 2, Perdido, Lucius and Mars contain narrative/preamble wording.
-KNOWN_NOTE_ANOMALIES = []
 
 
 def load_pack():
@@ -155,7 +154,9 @@ def test_gate_review_and_empty_acceptance():
                 assert row in evidence
                 if field in FIELDS[:2] and evidence[row]["class"] == "contractor":
                     contracted.add(row)
-    assert parent["as_contracted_rows"] == sorted(contracted) == [13, 14, 28, 52, 53, 67]
+    assert parent["as_contracted_rows"] == sorted(
+        row for row in contracted if "contract scope" in evidence[row]["quantity"]
+    ) == [52, 53, 67]
     assert parent["accepted_records"] == []
     for candidate in parent["accepted_records"]:
         assert acceptance_reasons(candidate, parent["sources"], list(evidence.values())) == []

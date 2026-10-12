@@ -53,7 +53,7 @@
           "unverified": true
         }
       ],
-      "no_primary_source_found": "manifold count, base-development tieback distance, project cost, water depth. Tried: fiscal 2003 and 2007 20-F, operator press pages (HTTP 403 or script-only)."
+      "no_primary_source_found": "No primary source found: manifold count, base-development tieback distance, project cost, water depth. Tried: fiscal 2003 and 2007 20-F, operator press pages (HTTP 403 or script-only)."
     },
     {
       "record": "Atlantis",
@@ -87,7 +87,7 @@
           "unverified": true
         }
       ],
-      "no_primary_source_found": "tree count, manifold count, tieback distance, base-development cost, capacity, water depth. Peak uplift for Phase 3 appears as 38,000 boe/d in 2019 coverage and about 36,000 boe/d in a 2020 operator page snippet (both unverified)."
+      "no_primary_source_found": "No primary source found: tree count, manifold count, tieback distance, base-development cost, capacity, water depth. Peak uplift for Phase 3 appears as 38,000 boe/d in 2019 coverage and about 36,000 boe/d in a 2020 operator page snippet (both unverified)."
     },
     {
       "record": "Mars / Mars B Olympus",
@@ -146,7 +146,7 @@
           "unverified": true
         }
       ],
-      "no_primary_source_found": "manifold count, tieback distance, project cost, water depth, capacity. Row 82 is the best lead for a tieback definition but is secondary and unverified."
+      "no_primary_source_found": "No primary source found: manifold count, tieback distance, project cost, water depth, capacity. Row 82 is the best lead for a tieback definition but is secondary and unverified."
     }
   ]
 }

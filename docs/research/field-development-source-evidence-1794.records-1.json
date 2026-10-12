@@ -152,7 +152,7 @@
           "unverified": true
         }
       ],
-      "no_primary_source_found": "tree count as such, manifold/PLEM/PLET count, drill-centre-to-host distance, sanctioned cost. Tried: both Shell releases, the McDermott release, shell.com and shell.us pages (script-only).",
+      "no_primary_source_found": "No primary source found: tree count as such, manifold/PLEM/PLET count, drill-centre-to-host distance, sanctioned cost. Tried: both Shell releases, the McDermott release, shell.com and shell.us pages (script-only).",
       "as_written_in_document": "tree count as such, manifold/PLEM/PLET count, drill-centre-to-host distance, sanctioned cost. Tried: both Shell releases, the McDermott release, shell.com and pages at shell.us (script-only)."
     },
     {
@@ -295,7 +295,7 @@
           "unverified": false
         }
       ],
-      "no_primary_source_found": "tree count, manifold count, well-to-host distance, absolute project cost. The 7,400 feet (2,255 m) water depth in the provisional record appears only in trade coverage of the start-up (unverified); the opened start-up release (S5) states no depth."
+      "no_primary_source_found": "No primary source found: tree count, manifold count, well-to-host distance, absolute project cost. The 7,400 feet (2,255 m) water depth in the provisional record appears only in trade coverage of the start-up (unverified); the opened start-up release (S5) states no depth."
     }
   ]
 }
