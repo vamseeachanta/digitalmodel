@@ -25,4 +25,4 @@ draft: 10.0
 depth: 12.0
 source: Repository box_profile fixture; tests/hydrodynamics/hull_library/conftest.py;
   retrieved 2026-10-11. generic/synthetic; Cb=1 follows the rectangular form.
-block_coefficient: 1
+block_coefficient: 1.0

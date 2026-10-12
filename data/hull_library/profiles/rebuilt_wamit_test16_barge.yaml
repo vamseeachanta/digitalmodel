@@ -1,4 +1,4 @@
-name: wamit_test16_barge
+name: rebuilt_wamit_test16_barge
 hull_type: barge
 stations:
 - x_position: 0.0

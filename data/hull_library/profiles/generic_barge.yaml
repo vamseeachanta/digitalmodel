@@ -26,4 +26,4 @@ depth: 7.199999999999999
 source: generic/synthetic; digitalmodel issue 1700, Deliverables generic barge; retrieved
   2026-10-11. Dimensions from issue; offsets and depth scaled from tests/hydrodynamics/hull_library/conftest.py::box_profile
   by L/L0, B/B0 and T/T0.
-block_coefficient: 1
+block_coefficient: 1.0

@@ -26,8 +26,8 @@ from digitalmodel.visualization.design_tools.hull_hydrostatics import HullHydros
 ROOT = Path(__file__).resolve().parents[3]
 LIBRARY = ROOT / "data" / "hull_library"
 HULL_IDS = (
-    "unit_box", "generic_barge", "generic_tanker", "wamit_test04_barge",
-    "wamit_test16_barge", "wamit_test01_cylinder",
+    "unit_box", "generic_barge", "generic_tanker", "rebuilt_wamit_test04_barge",
+    "rebuilt_wamit_test16_barge", "rebuilt_wamit_test01_cylinder",
 )
 
 
@@ -75,7 +75,7 @@ def submerged_boundary_edges(mesh):
         for a, b in zip(indices, indices[1:] + indices[:1]):
             edges[tuple(sorted((a, b)))] += 1
     return [edge for edge, count in edges.items()
-            if count == 1 and np.any(mesh.vertices[list(edge), 2] < 0)]
+            if count != 2 and np.any(mesh.vertices[list(edge), 2] < 0)]
 
 
 def signed_mesh_volume(mesh):
@@ -160,26 +160,31 @@ def test_gdf_export_preserves_geometry(entry, generated, tmp_path):
 def test_geometry_qualification_and_analytic_particular(entry, generated):
     profile, mesh = generated
     validation = entry["validation"]
-    if entry["analytic_volume_m3"] is not None:
-        assert HullHydrostatics(profile).compute_displaced_volume() == pytest.approx(
-            entry["analytic_volume_m3"], rel=validation["relative_tolerance"]
-        )
-    if submerged_boundary_edges(mesh):
+    assert not submerged_boundary_edges(mesh)
+    if entry["analytic_volume_m3"] is None:
         assert validation["status"] == "reference-only"
-        assert "end caps" in validation["reason"]
+        assert "analytic volume" in validation["reason"]
         return
     assert validation["status"] == "qualified-geometry"
-    radius = profile.beam / 2
-    expected = np.pi * radius ** 2 * profile.draft
+    if entry["hull_type"] == "cylinder":
+        radius = profile.beam / 2
+        expected = np.pi * radius ** 2 * profile.draft
+        for station in profile.stations:
+            for _, y in station.waterline_offsets:
+                assert y ** 2 + (station.x_position - radius) ** 2 == pytest.approx(
+                    radius ** 2
+                )
+    elif entry["hull_type"] == "barge":
+        expected = profile.length_bp * profile.beam * profile.draft
+    else:
+        pytest.fail(f"No analytic volume is defined for {entry['hull_type']}")
     assert expected == pytest.approx(entry["analytic_volume_m3"])
     assert signed_mesh_volume(mesh) == pytest.approx(
         expected, rel=validation["relative_tolerance"]
     )
-    for station in profile.stations:
-        for _, y in station.waterline_offsets:
-            assert y ** 2 + (station.x_position - radius) ** 2 == pytest.approx(
-                radius ** 2
-            )
+    assert HullHydrostatics(profile).compute_displaced_volume() == pytest.approx(
+        expected, rel=validation["relative_tolerance"]
+    )
 
 
 def test_generic_shapes_are_scaled_repository_fixtures(catalog, box_profile,
@@ -197,3 +202,82 @@ def test_generic_shapes_are_scaled_repository_fixtures(catalog, box_profile,
                 for z, y in original.waterline_offsets
             ]
         assert len(profile.stations) == len(fixture.stations)
+
+
+@pytest.mark.parametrize("symmetry", [False, True])
+def test_box_end_caps_close_submerged_surface(box_profile, symmetry):
+    mesh = HullMeshGenerator().generate(
+        box_profile, MeshGeneratorConfig(symmetry=symmetry)
+    )
+    edges = Counter()
+    faces = []
+    for panel in mesh.panels:
+        indices = list(dict.fromkeys(int(i) for i in panel if i >= 0))
+        faces.append(tuple(sorted(indices)))
+        for a, b in zip(indices, indices[1:] + indices[:1]):
+            edges[tuple(sorted((a, b)))] += 1
+    assert len(faces) == len(set(faces))
+    assert np.all(mesh.panel_areas > 0)
+    for edge, count in edges.items():
+        points = mesh.vertices[list(edge)]
+        boundary = np.all(points[:, 2] == 0) or (
+            symmetry and np.all(points[:, 1] == 0)
+        )
+        assert count == (1 if boundary else 2)
+    multiplier = 2 if symmetry else 1
+    expected = box_profile.length_bp * box_profile.beam * box_profile.draft
+    assert multiplier * signed_mesh_volume(mesh) == pytest.approx(expected, rel=0.01)
+    for x, direction in ((0, -1), (box_profile.length_bp, 1)):
+        caps = np.all(mesh.vertices[mesh.panels, 0] == x, axis=1)
+        assert np.any(caps)
+        np.testing.assert_allclose(mesh.normals[caps, 0], direction)
+        np.testing.assert_allclose(mesh.normals[caps, 1:], 0)
+
+
+@pytest.mark.parametrize("symmetry, expected_digest", [
+    (False, "cbe165628b592b696d7087ad1b107fa8f290de22ce9c5b15bfffecab573252d9"),
+    (True, "94be75a1caa3d3f3b6492b2e0ea428ee403f6f23136110d43f37ae90e21a1d2a"),
+])
+def test_zero_area_end_sections_preserve_pre_fix_panels(catalog, symmetry,
+                                                        expected_digest):
+    # Vertex and panel bytes derived at the reviewed PR head, before end caps.
+    profile = catalog.get_hull("rebuilt_wamit_test01_cylinder").profile
+    mesh = HullMeshGenerator().generate(
+        profile, MeshGeneratorConfig(symmetry=symmetry)
+    )
+    digest = hashlib.sha256(mesh.vertices.tobytes() + mesh.panels.tobytes()).hexdigest()
+    assert digest == expected_digest
+
+
+# Principal dimensions (m), as quoted by the second-provider source review.
+SOURCE_DIMENSIONS = [
+    ("rebuilt_wamit_test04_barge", 80.0, 20.0, 10.0),  # WAMIT v7.5 Appendix A.4
+    ("rebuilt_wamit_test16_barge", 80.0, 10.0, 5.0),  # WAMIT v7.5 Appendix A.16
+    ("rebuilt_wamit_test01_cylinder", 2 * 1.0, 2 * 1.0, 0.5),  # Appendix A.1: R=1 m
+    ("generic_barge", 100.0, 30.0, 6.0),  # Issue 1700: generic barge
+    ("generic_tanker", 250.0, 45.0, 16.0),  # Issue 1700: generic tanker
+]
+
+
+@pytest.mark.parametrize("hull_id, length, beam, draft", SOURCE_DIMENSIONS)
+def test_source_dimensions_are_pinned(registry, catalog, hull_id, length, beam, draft):
+    entry = next(h for h in registry["hulls"] if h["hull_id"] == hull_id)
+    profile = catalog.get_hull(hull_id).profile
+    for key, expected in (("length_bp", length), ("beam", beam), ("draft", draft)):
+        assert entry["principal_dimensions"][key] == expected
+        assert getattr(profile, key) == expected
+
+
+def test_rebuilt_manual_terms_and_fixture_name(registry):
+    for entry in registry["hulls"]:
+        if entry["classification"] == "published benchmark":
+            assert entry["provenance"]["reuse_terms"].startswith(
+                "Copyright WAMIT, Inc. 1999-2023. All Rights Reserved."
+            )
+        coefficient = entry["principal_dimensions"]["block_coefficient"]
+        if coefficient is not None:
+            assert isinstance(coefficient, float)
+            raw_profile = yaml.safe_load((ROOT / entry["profile_path"]).read_text())
+            assert isinstance(raw_profile["block_coefficient"], float)
+    box = next(h for h in registry["hulls"] if h["hull_id"] == "unit_box")
+    assert "not a unit-dimension box" in box["provenance"]["derivation"]
