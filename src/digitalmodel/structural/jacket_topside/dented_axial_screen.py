@@ -52,6 +52,9 @@ STUDY_ENVELOPE = {
     "neutral_axis_bow_ratio": (0.0005, 0.02),
 }
 STUDY_ELASTIC_TO_YIELD_RATIO = 600.0  # Cho (1987), section 6.3.1, page 193.
+# Numerical policy: four double-precision ULPs at the fixed study value.
+# This covers floating-point round-off only, not an engineering material range.
+MATERIAL_RATIO_ROUNDOFF_TOLERANCE = 4 * math.ulp(STUDY_ELASTIC_TO_YIELD_RATIO)
 
 
 @dataclass(frozen=True)
@@ -64,6 +67,9 @@ class DentedAxialInput:
     neutral axis is divided by member length; an opposite-generatrix
     measurement cannot be substituted. Demand is axial stress / yield stress.
     Elastic/yield ratio is the elastic modulus divided by yield stress.
+    Applicability requires the study value 600 (section 6.3.1, page 193).
+    MATERIAL_RATIO_ROUNDOFF_TOLERANCE covers floating-point round-off only,
+    four double-precision ULPs at 600; it is not an engineering material range.
     Conditions require explicit confirmation; no support/load assumption
     is supplied by default. All numeric inputs use consistent stress units.
     """
@@ -99,6 +105,11 @@ class DentedAxialResult:
     citations: tuple[SourceReference, ...] = CITATIONS
     validation_status: str = "hand_calculation_only"
     engineering_acceptance_established: bool = False
+    applicability_text: str = (
+        "Material applicability requires the study value 600; the absolute "
+        "tolerance of four double-precision ULPs at 600 covers floating-point "
+        "round-off only, not an engineering material range."
+    )
 
 
 def _validate_inputs(data: DentedAxialInput) -> None:
@@ -130,7 +141,10 @@ def _applicability_flags(data: DentedAxialInput) -> tuple[str, ...]:
         name for name, (low, high) in STUDY_ENVELOPE.items()
         if not low <= getattr(data, name) <= high
     ]
-    if data.elastic_to_yield_ratio != STUDY_ELASTIC_TO_YIELD_RATIO:
+    if not math.isclose(
+        data.elastic_to_yield_ratio, STUDY_ELASTIC_TO_YIELD_RATIO,
+        rel_tol=0.0, abs_tol=MATERIAL_RATIO_ROUNDOFF_TOLERANCE,
+    ):
         flags.append("elastic_to_yield_ratio")
     required_conditions = {
         "simply_supported": True,
