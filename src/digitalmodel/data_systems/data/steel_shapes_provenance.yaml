@@ -1,79 +1,27 @@
-catalog_id: aisc-shapes
+catalog_id: synthetic-steel-shapes
 owner: digitalmodel
-readiness_status: partial
-intended_use: Nominal geometry research and source-value regression; engineering design qualification is unestablished.
-retrieved_on: '2026-10-11'
-source_sibling: generic
-publication: AISC Shapes Database v16.0, August 2023
-edition_claim: The workbook Readme states consistency with the Steel Construction Manual, 16th Edition, first printing.
+synthetic: true
+readiness_status: tests-only
+intended_use: Software tests of nominal geometry, lookup and unit conversion only.
+publication: Hand-written synthetic test profiles
+origin: The committed sample is synthetic and was written by hand for testing. It is not derived from any publisher table.
+real_values: Real values come only from a file the user obtains from the publisher and imports locally under the publisher's terms. Nothing imported is committed.
+redistribution: The repository redistributes no publisher data.
 publisher_url: https://www.aisc.org/aisc/publications/steel-construction-manual/aisc-shapes-database-v160/
-research_copy_url: https://api.github.com/repositories/1122508720/contents/app/resources/aisc-shapes-database-v16.0.xlsx?ref=b803a23780627ae51d968f097bdc82d8bd4dd8d0
-research_copy_sha256: 82d0ceb96a0d938ae1a6bd9637cb10a1e269225b5d668dce5b0bdc8d86013496
-access:
-  publisher_direct: HTTP 403; no access workaround is supplied.
-  inspected_copy: Public research copy, with row/cell locators retained in the sample.
-  publisher_byte_equivalence: unestablished
-  original_manual_page_comparison: unestablished; electronic workbook comparison is separate evidence.
-rights:
-  terms_url: https://www.aisc.org/aisc/about-aisc/terms-conditions/
-  terms_section: '5(a), License'
-  terms_retrieved_on: '2026-10-11'
-  terms_access: Direct open returned HTTP 403; the publisher page's indexed terms were inspected.
-  verbatim_quote: Your access and use of this Site is further limited to personal, internal and noncommercial purposes only.
-  bulk_redistribution: No explicit permission established. No complete workbook or bulk catalogue is committed.
-  sample: Limited hand-entered factual values under the authorized sample fallback; no manual text or complete table is reproduced. No open licence for the underlying AISC compilation is asserted.
-  full_catalogue: User obtains the publisher workbook subject to its terms; raw bytes and derived catalogue remain git-ignored.
-fields:
-  locator: Each record identifies the electronic table (Database v16.0), row and dimension/area/name columns; printed page numbers do not apply to this table.
-  aliases: Imperial EDI names are column B; metric EDI names are column CG. Canonical imperial and metric manual labels are columns C and CH.
-  naming_collisions: In the research workbook, Pipe20STD occurs as the imperial manual label at row 2252 and the metric label at row 2269. Naming systems are indexed separately; ambiguous unqualified lookups fail and require name_system. No row is overwritten.
-  units: Source lengths are inches and area is square inches; metric labels are publisher aliases, not converted dimensions.
-  design_thickness: HSS and Pipe use column X (tdes); column W (tnom) is retained for provenance. Pipe ID is not used to infer design thickness.
-  hand_entry: Decimal figures are read from the displayed precision of selected workbook cells, without binary floating-point serialization noise.
+naming_rule: All synthetic canonical names and aliases begin with SYN-. Normalisation preserves this prefix; these names cannot collide with publisher catalogue designations. SYN-METRIC- names are test aliases, not publisher metric names.
+units: Dimensions are hand-selected round inch values. Geometry in mm is computed with exactly 25.4 mm per inch; area scales by 25.4 squared.
+properties:
+  dimensions: Eight plausible profiles were made up independently for the eight supported section families, without copying or perturbing publisher rows.
+  area: Each stored square-inch area is _construct_geometry(library, family, dimensions).geom.area from digitalmodel.steel_shapes, using sectionproperties 3.10.2. The polygon area is stored without display rounding.
+  other_properties: No weight, inertia, capacity, material or other unsupported tabulated property is supplied.
 geometry_basis:
-  w_hp: Circular root radius r=kdes-tf; parallel flanges. This is a nominal idealisation, not a measured rolled outline.
-  l: Circular root radius r=kdes-t; toe radii are omitted because the workbook does not specify them.
-  s_c: Nominal tf is interpreted as mid-outstand flange thickness. The slope is approximate and toes are sharp; geometry emits a warning. Original-manual verification of this interpretation remains outstanding.
-  taper_derivation: 's=2/12; alpha=atan(s) in degrees. tf_root=tf+s*outstand/2; a circle tangent to the web and sloping flange gives r=(kdes-tf_root)/(sqrt(1+s*s)-s). Radius is not fitted to area.'
-  s_slope_source:
-    publication: Modern Steel Construction, April 1998, Steel Quiz
-    locator: Answer 7
-    url: https://www.aisc.org/globalassets/modern-steel/archives/1998/04/1998v04_quiz.pdf
-    value: Approximate flange slope 2:12.
-    retrieved_on: '2026-10-11'
-    access: Publisher indexed text inspected.
-  c_slope_source:
-    publication: Pocket Companion, 1900
-    locator: General Notes, paragraph on I-beam and standard-channel flange slopes
-    url: https://www.aisc.org/globalassets/aisc/publications/historic-shape-references/pocket-companion-containing-useful-information-and-tables-appertaining-to-the-use-of-steel-1900.pdf
-    value: Two inches per foot; corroborates the approximate standard-channel slope, without establishing the current rolled outline.
-    retrieved_on: '2026-10-11'
-    access: Publisher indexed text inspected; historical evidence only.
-  hss_rectangle: Outer radius ro=2*tdes and inner radius ro-tdes; nominal circular-corner idealisation.
-  hss_radius_source:
-    publication: Torsion of Rectangular HSS and Box Sections, Engineering Journal, First Quarter 2026
-    locator: Page 3, discussion preceding Equation 11
-    url: https://ej.aisc.org/index.php/engj/article/download/1364/1347/1408
-    value: Idealised outside corner radius ro=2t.
-    retrieved_on: '2026-10-11'
-    access: Publisher indexed text inspected; direct document request ended without a response.
-  circle: Outer diameter d and design thickness tdes are used; the nominal label diameter does not override the dimension column.
-  conversion: 25.4 mm/in is reused from scripts/integrations/aisc_section_lookup.py; area scales by its square.
-  discretisation: Fillet resolution and circle resolution reuse src/digitalmodel/sections.py and tests/test_sections.py.
-area_verification:
-  scope: Nine sample geometries are compared to independently hand-entered workbook values, not original manual pages.
-  rounding: Half of the final displayed decimal place in source area is allowed. The source cell number format is retained explicitly; areas stored as 5.2 but displayed as 5.20 use the two-place format, not the JSON string representation.
-  roots: Circular-root allowance is root_count*(1-pi/4)*(kdes-thickness)^2, the square-minus-quarter-circle area of the nominal roots. Root counts follow geometric topology. This is a nominal-model comparison criterion accounting for idealised fillets and omitted toes; it is not a manufacturing tolerance or proof of the actual rolled outline.
-  hss_corners: The radius-idealisation allowance is (4-pi)*4*tdes*(tnom-tdes), derived from the annular corner area change between outer radii 2*tdes and 2*tnom, plus source area rounding.
-  circles: Polygon chord loss is analytic_area*(1-n*sin(2*pi/n)/(2*pi)), where analytic_area=pi*tdes*(d-tdes), plus source area rounding.
-  limitation: These envelopes bound nominal-model comparison; agreement does not establish material, capacity, exact rolled shape or engineering readiness.
-steelpy_evaluation:
-  url: https://pypi.org/project/steelpy/
-  version: '1.1.1'
-  retrieved_on: '2026-10-11'
-  terms_quote: Apache Software License (Apache-2.0)
-  inspected_artifact_url: https://files.pythonhosted.org/packages/b0/34/648794eed665b024ee071a94042f34ce7fb9141d067ce58efa961dddf9eb/steelpy-1.1.1-py3-none-any.whl
-  inspected_artifact_sha256: 5710a7ff7d7a7eb0ca52a00699851aaa962cd137d5f9492709e19e0aec85670a
-  strengths: Ships family CSV files and an AISC property lookup API; documentation claims consistency with the Manual's 16th Edition.
-  limits: Imperial properties and Python attribute normalization are provided; a sectionproperties Geometry wrapper and metric alias mapping remain necessary. Package licence metadata does not establish upstream AISC bulk-data rights.
-  outcome: An in-repo JSON loader and schema preserve row-level provenance, explicit SI aliases and optional geometry imports without a new dependency. steelpy is not installed or used at runtime.
+  W: Parallel-flange I-section; root radius kdes-tf, n_r=16.
+  HP: Bearing-pile I-section; same constructor and root-radius rule as W, n_r=16.
+  S: Tapered-flange I-section; approximate slope 2/12, mid-outstand tf, sharp toes, n_r=16.
+  C: Tapered-flange channel; same approximate slope and tangency construction as S, n_r=16.
+  L: Equal-leg angle; root radius kdes-t, sharp toes, n_r=16.
+  HSS_RECT: Rectangular hollow section; outer corner radius 2*t, inner radius t, n_r=16.
+  HSS_ROUND: Circular hollow section; outside diameter d, wall t, 64 polygon segments.
+  PIPE: Circular hollow section; same constructor as round HSS, 64 polygon segments.
+  taper_derivation: 's=2/12; alpha=atan(s) in degrees; tf_root=tf+s*outstand/2; r=(kdes-tf_root)/(sqrt(1+s*s)-s). The radius is not fitted to area.'
+limitations: Synthetic area agreement verifies model self-consistency only. S/C geometry emits an approximation warning; original rolled-profile validation remains required for real sections. The importer has been exercised only on synthetic workbooks, never on the publisher's real file.

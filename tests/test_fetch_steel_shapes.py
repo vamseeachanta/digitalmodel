@@ -101,3 +101,63 @@ def test_output_guard_requires_ignore_rule(fetch_module, tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="git-ignored"):
         fetch_module.output_directory()
     assert not (job / "data/steel_shapes_local").exists()
+
+
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch):
+    import socket
+    def denied(*args, **kwargs):
+        raise AssertionError("fetch tests shall remain offline")
+    monkeypatch.setattr(socket.socket, "connect", denied)
+
+
+def _synthetic_workbook(path, *, good=True):
+    from openpyxl import Workbook
+    book = Workbook()
+    sheet = book.active
+    sheet.title = "Database v16.0"
+    sheet.append(["Type", "EDI_Std_Nomenclature", "AISC_Manual_Label", "A", "d",
+                  "Ht", "OD", "bf", "B", "b", "tw", "tf", "t", "tnom",
+                  "tdes", "kdes", "EDI_Std_Nomenclature", "AISC_Manual_Label"])
+    row = ["W", "SYN-CLI", "SYN-CLI", 20, 10, None, None, 8, None, None,
+           .5, 1, None, None, None, 1.5, "SYN-METRIC-CLI", "SYN-METRIC-CLI"]
+    if good:
+        sheet.append(row)
+    row = row.copy()
+    row[1:3] = ["SYN-CLI-BAD", "SYN-CLI-BAD"]
+    row[10] = None
+    sheet.append(row)
+    book.save(path)
+    book.close()
+
+
+@pytest.mark.parametrize("strict,good", [(False, True), (True, True), (False, False)])
+def test_local_cli_partial_and_strict(fetch_module, tmp_path, monkeypatch, capsys, strict, good):
+    import json
+    import sys
+    job = _git_fixture(tmp_path / "job")
+    monkeypatch.setattr(fetch_module, "__file__", str(job / "scripts/integrations/fetch_steel_shapes.py"))
+    workbook = tmp_path / "synthetic.xlsx"
+    _synthetic_workbook(workbook, good=good)
+    def no_opener(*args, **kwargs):
+        raise AssertionError("local workbook import must not create a network opener")
+    monkeypatch.setattr(fetch_module.urllib.request, "build_opener", no_opener)
+    argv = ["fetch_shapes", "--workbook", str(workbook)]
+    if strict:
+        argv.append("--strict")
+    monkeypatch.setattr(sys, "argv", argv)
+    output = job / "data/steel_shapes_local"
+    before = hashlib.sha256(workbook.read_bytes()).hexdigest()
+    if strict or not good:
+        with pytest.raises(SystemExit) as exc:
+            fetch_module.main()
+        assert exc.value.code != 0
+        assert not (output / "catalog.json").exists()
+    else:
+        fetch_module.main()
+        data = json.loads((output / "catalog.json").read_text())
+        assert data["import_report"]["imported"] == 1
+        assert data["import_report"]["rejected"] == 1
+        assert json.loads(capsys.readouterr().out)["imported"] == 1
+    assert hashlib.sha256((output / "source.xlsx").read_bytes()).hexdigest() == before
+    assert hashlib.sha256(workbook.read_bytes()).hexdigest() == before

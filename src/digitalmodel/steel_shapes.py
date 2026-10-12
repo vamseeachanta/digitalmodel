@@ -3,6 +3,10 @@
 Geometry defaults to mm; metadata retains source inches and in². Names ignore
 case and whitespace and accept either ``x`` or ``×``. Fractions/decimals are
 accepted only when explicitly catalogued (no arithmetic designation guessing).
+The repository ships a synthetic sample for tests only. For real section
+properties, obtain the shapes database from the publisher yourself, under the
+publisher's terms, then run the importer on your local copy; nothing imported
+is committed. Publisher: https://www.aisc.org/aisc/publications/steel-construction-manual/aisc-shapes-database-v160/
 See data_systems/data/steel_shapes_provenance.yaml for model limitations.
 """
 
@@ -16,6 +20,7 @@ from importlib.resources import files
 from pathlib import Path
 
 _DATA_PACKAGE = "digitalmodel.data_systems.data"
+_CATALOG_CACHE = {}
 _IN_TO_MM = 25.4  # Existing scripts/integrations/aisc_section_lookup.py.
 _FIELDS = {
     "W": ("d", "bf", "tf", "tw", "kdes"),
@@ -68,6 +73,8 @@ def _check_dimensions(item: dict) -> None:
             invalid |= 4 * dims["t"] > size
     if invalid:
         raise ValueError(f"Impossible geometry dimensions for {item['name']}")
+    if family in {"S", "C"}:
+        _tapered_radius(family, dims)
 
 
 def validate_catalog(data: dict) -> dict[tuple[str, str], dict]:
@@ -107,13 +114,28 @@ def validate_catalog(data: dict) -> dict[tuple[str, str], dict]:
     return index
 
 
+def clear_catalog_cache() -> None:
+    """Clear packaged and local catalogue indexes; the next lookup validates again.
+
+    Local catalogues otherwise refresh on resolved-path modification time (ns)
+    or size changes. Clear explicitly after edits that preserve both attributes.
+    """
+    _CATALOG_CACHE.clear()
+
+
 def _load_catalog(catalog_path: str | Path | None) -> dict[tuple[str, str], dict]:
-    path = (
-        files(_DATA_PACKAGE).joinpath("steel_shapes_sample.json")
-        if catalog_path is None
-        else Path(catalog_path)
-    )
-    return validate_catalog(json.loads(path.read_text(encoding="utf-8")))
+    if catalog_path is None:
+        key, signature = "packaged-synthetic", None
+        path = files(_DATA_PACKAGE).joinpath("steel_shapes_sample.json")
+    else:
+        path = Path(catalog_path).resolve()
+        stat = path.stat()
+        key, signature = path, (stat.st_mtime_ns, stat.st_size)
+    cached = _CATALOG_CACHE.get(key)
+    if cached is None or cached[0] != signature:
+        index = validate_catalog(json.loads(path.read_text(encoding="utf-8")))
+        _CATALOG_CACHE[key] = (signature, index)
+    return _CATALOG_CACHE[key][1]
 
 
 def get_section_data(
@@ -122,7 +144,10 @@ def get_section_data(
     """Return an independent copy of raw inch dimensions, area and provenance.
 
     ``catalog_path`` selects an explicit full local catalogue; absence of that
-    file fails rather than silently falling back to the packaged sample.
+    file fails rather than silently falling back to the packaged sample. Packaged
+    rows carry ``synthetic=True`` and synthetic source provenance: tests only,
+    never real section properties. Calls reuse a validated source cache; use
+    ``clear_catalog_cache()`` to discard it.
     """
     key = _normalize(name)
     if name_system not in {None, "imperial", "metric"}:
@@ -155,19 +180,22 @@ def list_sections(
     )
 
 
-def _tapered_geometry(library, family: str, dims: dict):
-    # Approximate S/C flange slope: 2:12, cited in provenance. The published
-    # nominal tf is interpreted as mid-outstand thickness. Toe radii are omitted.
+def _tapered_radius(family: str, dims: dict) -> float:
+    # Approximate S/C slope 2:12; tf is interpreted at mid-outstand.
     slope = 2 / 12
     outstand = dims["bf"] - dims["tw"]
     if family == "S":
         outstand /= 2
     root_thickness = dims["tf"] + slope * outstand / 2
-    # Circle tangent to x=tw and y=tf_root-slope*(x-tw):
-    # kdes = tf_root + r*(sqrt(1+slope²)-slope).
     radius = (dims["kdes"] - root_thickness) / (math.sqrt(1 + slope**2) - slope)
     if radius < 0 or radius > outstand or dims["tf"] - slope * outstand / 2 <= 0:
-        raise ValueError("Tapered geometry basis does not fit the published dimensions")
+        raise ValueError("Tapered geometry basis does not fit the supplied dimensions")
+    return radius
+
+
+def _tapered_geometry(library, family: str, dims: dict):
+    radius = _tapered_radius(family, dims)
+    slope = 2 / 12
     warnings.warn(
         "S/C geometry is approximate: nominal mid-flange thickness and sharp toes; "
         "original rolled-profile validation remains required",
@@ -234,10 +262,17 @@ def get_section(
     sharp toes; HSS outer radius is idealised as 2*tdes. Pipe and round HSS use
     design wall thickness. S/C issue an approximation warning. No material or
     strength is inferred from designation. Resolution reuses existing sections.
+    Synthetic profiles issue a warning; inspect ``get_section_data(name)`` for
+    the ``synthetic`` flag. The packaged sample is for tests only. Obtain real
+    properties from the publisher and import your own local file; nothing
+    imported is committed. See the module docstring for the publisher link.
     """
     if unit not in {"metric", "imperial"}:
         raise ValueError("unit must be 'metric' (mm) or 'imperial' (in)")
     data = get_section_data(name, name_system=name_system, catalog_path=catalog_path)
+    if data.get("synthetic", False):
+        warnings.warn("Synthetic steel section: tests only, not publisher data",
+                      UserWarning, stacklevel=2)
     try:
         from sectionproperties.pre import library
     except ImportError as exc:

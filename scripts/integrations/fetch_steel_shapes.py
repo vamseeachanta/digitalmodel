@@ -4,6 +4,11 @@ Examples (from the repository root):
     PYTHONPATH=src python scripts/integrations/fetch_steel_shapes.py --url PUBLISHER_XLSX_URL
     PYTHONPATH=src python scripts/integrations/fetch_steel_shapes.py --workbook source.xlsx
 
+The repository ships a synthetic sample for tests only. For real section
+properties, obtain the shapes database from the publisher yourself, under the
+publisher's terms, then run the importer on your local copy; nothing imported
+is committed.
+
 The current download URL shall be obtained from the publisher's download page.
 Authentication/access errors stop the fetch. No alternate mirror is attempted.
 """
@@ -81,6 +86,8 @@ def main() -> None:
     source.add_argument(
         "--workbook", type=Path, help="Already obtained AISC v16 workbook"
     )
+    parser.add_argument("--strict", action="store_true",
+                        help="Reject the complete import if any supported row is invalid")
     args = parser.parse_args()
     output = output_directory()
     if args.url:
@@ -97,7 +104,10 @@ def main() -> None:
     workbook = output / "source.xlsx"
     with workbook.open("xb") as target:
         target.write(raw)
-    catalog = import_workbook(workbook, source_url=url)
+    try:
+        catalog = import_workbook(workbook, source_url=url, strict=args.strict)
+    except ValueError as exc:
+        parser.exit(1, f"Import failed: {exc}\n")
     saved = output / "catalog.json"
     with saved.open("x", encoding="utf-8") as target:
         target.write(json.dumps(catalog, indent=2, allow_nan=False) + "\n")
@@ -110,6 +120,9 @@ def main() -> None:
             {
                 "status": "imported; source and engineering qualification remain user-owned",
                 "counts": dict(Counter(item["family"] for item in catalog["sections"])),
+                "imported": catalog["import_report"]["imported"],
+                "rejected": catalog["import_report"]["rejected"],
+                "skipped": catalog["import_report"]["skipped"],
                 "sha256": catalog["source"]["sha256"],
             }
         )

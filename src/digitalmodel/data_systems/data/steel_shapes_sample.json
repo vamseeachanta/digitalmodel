@@ -1,59 +1,178 @@
 {
   "schema": "aisc-shapes/1",
-  "units": {"length": "in", "area": "in^2"},
+  "synthetic": true,
+  "units": {
+    "length": "in",
+    "area": "in^2"
+  },
   "source": {
-    "catalog_id": "aisc-shapes",
-    "publication": "AISC Shapes Database v16.0, August 2023",
-    "url": "https://www.aisc.org/aisc/publications/steel-construction-manual/aisc-shapes-database-v160/",
-    "sha256": "82d0ceb96a0d938ae1a6bd9637cb10a1e269225b5d668dce5b0bdc8d86013496",
-    "retrieved_on": "2026-10-11",
-    "access_note": "Hand-entered sample from a public research copy. Direct publisher access returned HTTP 403; publisher-byte equivalence and original-manual page validation are unestablished. See steel_shapes_provenance.yaml."
+    "kind": "synthetic",
+    "catalog_id": "synthetic-steel-shapes",
+    "publication": "Hand-written synthetic test profiles",
+    "access_note": "Written by hand for tests only; not derived from any publisher table. No publisher data is redistributed."
   },
   "sections": [
     {
-      "name": "W14X90", "metric_name": "W360X134", "aliases": ["W14X90"], "family": "W", "area": 26.5,
-      "dimensions": {"d": 14, "bf": 14.5, "tw": 0.44, "tf": 0.71, "kdes": 1.31},
-      "source": {"sheet": "Database v16.0", "row": 208, "area_number_format": "0.0", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+      "name": "SYN-W",
+      "metric_name": "SYN-METRIC-W",
+      "aliases": [
+        "SYN-WXDEMO"
+      ],
+      "family": "W",
+      "synthetic": true,
+      "area": 20.21603652549288,
+      "dimensions": {
+        "d": 10,
+        "bf": 8,
+        "tw": 0.5,
+        "tf": 1,
+        "kdes": 1.5
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
     },
     {
-      "name": "W12X65", "metric_name": "W310X97", "aliases": ["W12X65"], "family": "W", "area": 19.1,
-      "dimensions": {"d": 12.1, "bf": 12, "tw": 0.39, "tf": 0.605, "kdes": 1.2},
-      "source": {"sheet": "Database v16.0", "row": 237, "area_number_format": "0.0", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+      "name": "SYN-HP",
+      "metric_name": "SYN-METRIC-HP",
+      "aliases": [
+        "SYN-HPXDEMO"
+      ],
+      "family": "HP",
+      "synthetic": true,
+      "area": 17.0910365254929,
+      "dimensions": {
+        "d": 8,
+        "bf": 8,
+        "tw": 0.75,
+        "tf": 0.75,
+        "kdes": 1.25
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
     },
     {
-      "name": "HP12X53", "metric_name": "HP310X79", "aliases": ["HP12X53"], "family": "HP", "area": 15.5,
-      "dimensions": {"d": 11.8, "bf": 12, "tw": 0.435, "tf": 0.435, "kdes": 1.13},
-      "source": {"sheet": "Database v16.0", "row": 353, "area_number_format": "0.0", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+      "name": "SYN-S",
+      "metric_name": "SYN-METRIC-S",
+      "aliases": [
+        "SYN-SXDEMO"
+      ],
+      "family": "S",
+      "synthetic": true,
+      "area": 12.006311171217941,
+      "dimensions": {
+        "d": 10,
+        "bf": 5,
+        "tw": 0.5,
+        "tf": 0.75,
+        "kdes": 1.5
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
     },
     {
-      "name": "S12X35", "metric_name": "S310X52", "aliases": ["S12X35"], "family": "S", "area": 10.2,
-      "dimensions": {"d": 12, "bf": 5.08, "tw": 0.428, "tf": 0.544, "kdes": 1.19},
-      "source": {"sheet": "Database v16.0", "row": 322, "area_number_format": "0.0", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+      "name": "SYN-C",
+      "metric_name": "SYN-METRIC-C",
+      "aliases": [
+        "SYN-CXDEMO"
+      ],
+      "family": "C",
+      "synthetic": true,
+      "area": 7.784456097092346,
+      "dimensions": {
+        "d": 8,
+        "bf": 3,
+        "tw": 0.5,
+        "tf": 0.75,
+        "kdes": 1.25
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
     },
     {
-      "name": "C9X20", "metric_name": "C230X30", "aliases": ["C9X20"], "family": "C", "area": 5.87,
-      "dimensions": {"d": 9, "bf": 2.65, "tw": 0.448, "tf": 0.413, "kdes": 1},
-      "source": {"sheet": "Database v16.0", "row": 367, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "bf": "L", "tw": "Q", "tf": "T", "kdes": "Y"}}
+      "name": "SYN-L",
+      "metric_name": "SYN-METRIC-L",
+      "aliases": [
+        "SYN-LXDEMO"
+      ],
+      "family": "L",
+      "synthetic": true,
+      "area": 6.9915091313732285,
+      "dimensions": {
+        "d": 5,
+        "b": 5,
+        "t": 0.75,
+        "kdes": 1.25
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
     },
     {
-      "name": "L4X4X1/2", "metric_name": "L102X102X12.7", "aliases": ["L4X4X1/2"], "family": "L", "area": 3.75,
-      "dimensions": {"d": 4, "b": 4, "t": 0.5, "kdes": 0.875},
-      "source": {"sheet": "Database v16.0", "row": 505, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "G", "b": "O", "t": "V", "kdes": "Y"}}
+      "name": "SYN-HSS_RECT",
+      "metric_name": "SYN-METRIC-HSS_RECT",
+      "aliases": [
+        "SYN-HSS_RECTXDEMO"
+      ],
+      "family": "HSS_RECT",
+      "synthetic": true,
+      "area": 14.351890423522114,
+      "dimensions": {
+        "d": 10,
+        "b": 6,
+        "t": 0.5,
+        "tnom": 0.5
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
     },
     {
-      "name": "HSS8X6X3/8", "metric_name": "HSS203.2X152.4X9.5", "aliases": ["HSS8X6X.375"], "family": "HSS_RECT", "area": 8.97,
-      "dimensions": {"d": 8, "b": 6, "t": 0.349, "tnom": 0.375},
-      "source": {"sheet": "Database v16.0", "row": 1862, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "I", "b": "N", "t": "X", "tnom": "W"}}
+      "name": "SYN-HSS_ROUND",
+      "metric_name": "SYN-METRIC-HSS_ROUND",
+      "aliases": [
+        "SYN-HSS_ROUNDXDEMO"
+      ],
+      "family": "HSS_ROUND",
+      "synthetic": true,
+      "area": 7.057234103729325,
+      "dimensions": {
+        "d": 5,
+        "t": 0.5,
+        "tnom": 0.5
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
     },
     {
-      "name": "HSS6.625X0.280", "metric_name": "HSS168.3X7.1", "aliases": ["HSS6.625X.280"], "family": "HSS_ROUND", "area": 5.2,
-      "dimensions": {"d": 6.63, "t": 0.26, "tnom": 0.28},
-      "source": {"sheet": "Database v16.0", "row": 2182, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "K", "t": "X", "tnom": "W"}}
-    },
-    {
-      "name": "Pipe6STD", "metric_name": "Pipe150STD", "aliases": ["Pipe6SCH40"], "family": "PIPE", "area": 5.2,
-      "dimensions": {"d": 6.625, "t": 0.261, "tnom": 0.28},
-      "source": {"sheet": "Database v16.0", "row": 2259, "area_number_format": "0.00", "columns": {"name": "C", "metric_name": "CH", "area": "F", "d": "K", "t": "X", "tnom": "W"}}
+      "name": "SYN-PIPE",
+      "metric_name": "SYN-METRIC-PIPE",
+      "aliases": [
+        "SYN-PIPEXDEMO"
+      ],
+      "family": "PIPE",
+      "synthetic": true,
+      "area": 2.940514209885892,
+      "dimensions": {
+        "d": 4,
+        "t": 0.25,
+        "tnom": 0.25
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
     }
   ]
 }

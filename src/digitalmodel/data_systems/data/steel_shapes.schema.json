@@ -3,53 +3,375 @@
   "title": "Nominal AISC section catalogue in inches and square inches",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "units", "source", "sections"],
+  "required": [
+    "schema",
+    "units",
+    "source",
+    "sections"
+  ],
   "properties": {
-    "schema": {"const": "aisc-shapes/1"},
-    "units": {"const": {"length": "in", "area": "in^2"}},
+    "schema": {
+      "const": "aisc-shapes/1"
+    },
+    "units": {
+      "const": {
+        "length": "in",
+        "area": "in^2"
+      }
+    },
     "source": {
-      "type": "object",
-      "required": ["catalog_id", "publication", "url", "sha256", "retrieved_on", "access_note"],
-      "properties": {
-        "catalog_id": {"const": "aisc-shapes"},
-        "publication": {"const": "AISC Shapes Database v16.0, August 2023"},
-        "url": {"type": "string", "minLength": 1},
-        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-        "retrieved_on": {"type": "string", "format": "date"},
-        "access_note": {"type": "string", "minLength": 1}
-      },
-      "additionalProperties": false
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "catalog_id",
+            "publication",
+            "url",
+            "sha256",
+            "retrieved_on",
+            "access_note"
+          ],
+          "properties": {
+            "catalog_id": {
+              "const": "aisc-shapes"
+            },
+            "publication": {
+              "const": "AISC Shapes Database v16.0, August 2023"
+            },
+            "url": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "retrieved_on": {
+              "type": "string",
+              "format": "date"
+            },
+            "access_note": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "catalog_id",
+            "publication",
+            "access_note"
+          ],
+          "properties": {
+            "kind": {
+              "const": "synthetic"
+            },
+            "catalog_id": {
+              "const": "synthetic-steel-shapes"
+            },
+            "publication": {
+              "const": "Hand-written synthetic test profiles"
+            },
+            "access_note": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
     },
     "sections": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["name", "metric_name", "aliases", "family", "area", "dimensions", "source"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "metric_name",
+          "aliases",
+          "family",
+          "area",
+          "dimensions",
+          "source"
+        ],
         "properties": {
-          "name": {"type": "string", "minLength": 1},
-          "metric_name": {"type": "string", "minLength": 1},
-          "aliases": {"type": "array", "items": {"type": "string", "minLength": 1}},
-          "metric_aliases": {"type": "array", "items": {"type": "string", "minLength": 1}},
-          "family": {"enum": ["W", "S", "HP", "C", "L", "HSS_RECT", "HSS_ROUND", "PIPE"]},
-          "area": {"type": "number", "exclusiveMinimum": 0},
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metric_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "metric_aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "family": {
+            "enum": [
+              "W",
+              "S",
+              "HP",
+              "C",
+              "L",
+              "HSS_RECT",
+              "HSS_ROUND",
+              "PIPE"
+            ]
+          },
+          "area": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
           "dimensions": {
-            "type": "object", "minProperties": 1,
-            "propertyNames": {"enum": ["d", "b", "bf", "tf", "tw", "t", "tnom", "kdes"]},
-            "additionalProperties": {"type": "number", "exclusiveMinimum": 0}
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {
+              "enum": [
+                "d",
+                "b",
+                "bf",
+                "tf",
+                "tw",
+                "t",
+                "tnom",
+                "kdes"
+              ]
+            },
+            "additionalProperties": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
           },
           "source": {
-            "type": "object", "additionalProperties": false,
-            "required": ["sheet", "row", "columns"],
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sheet",
+                  "row",
+                  "columns"
+                ],
+                "properties": {
+                  "sheet": {
+                    "const": "Database v16.0"
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 2
+                  },
+                  "area_number_format": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "columns": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": {
+                      "type": "string",
+                      "pattern": "^[A-Z]+$"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "derivation"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "synthetic"
+                  },
+                  "derivation": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "synthetic": {
+            "type": "boolean"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "synthetic"
+              ],
+              "properties": {
+                "synthetic": {
+                  "const": true
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "name": {
+                  "pattern": "^SYN-"
+                },
+                "metric_name": {
+                  "pattern": "^SYN-"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "source": {
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "synthetic"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "synthetic"
+              ],
+              "properties": {
+                "synthetic": {
+                  "const": true
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "synthetic": {
+      "type": "boolean"
+    },
+    "import_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imported",
+        "rejected",
+        "skipped",
+        "rejections"
+      ],
+      "properties": {
+        "imported": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rejected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rejections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "row",
+              "designation",
+              "reason"
+            ],
             "properties": {
-              "sheet": {"const": "Database v16.0"},
-              "row": {"type": "integer", "minimum": 2},
-              "area_number_format": {"type": "string", "minLength": 1},
-              "columns": {"type": "object", "minProperties": 1,
-                "additionalProperties": {"type": "string", "pattern": "^[A-Z]+$"}}
+              "row": {
+                "type": "integer",
+                "minimum": 2
+              },
+              "designation": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "synthetic"
+        ],
+        "properties": {
+          "synthetic": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sections": {
+            "items": {
+              "required": [
+                "synthetic"
+              ],
+              "properties": {
+                "synthetic": {
+                  "const": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "synthetic"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "synthetic"
+        ],
+        "properties": {
+          "synthetic": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
 }
