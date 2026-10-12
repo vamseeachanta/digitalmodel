@@ -18,7 +18,7 @@ REQUIRED_FIELDS = {
     "sources", "could_not_verify", "bottom_line", "unverified_mark_count",
 }
 # The note lists nine sources, in this order, and cites each outside that list.
-SOURCE_IDS = [f"S{i}" for i in range(1, 10)]
+SOURCE_IDS = [f"S{number}" for number in range(1, 10)]
 KNOWN_UNCITED_NOTE_SOURCES = []  # No uncited-source anomalies in this note.
 HEADINGS = [
     "1. Bottom line", "2. Part titles as published", "3. Part by part",
