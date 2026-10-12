@@ -1,0 +1,42 @@
+schema_version: 1
+document: ffs-unbonded-flexible-pipe-integrity-screen.md
+issue: 2200
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+sources:
+- id: S1
+  citation: '"Un-bonded Flexible Risers - Recent Field Experience and Actions for Increased Robustness", report for the Norwegian offshore safety regulator, document 0389-26583-U-0032, revision 5, dated 31.12.2013, classification "Open".'
+  urls:
+  - https://www.havtil.no/contentassets/c2a5bd00e8214411ad5c4966009d6ade/un-bonded-flexible-risers--recent-field-experience-and-actions--for-increased-robustness.pdf
+  access_note: text opened
+- id: S2
+  citation: '"Flexible Pipe Integrity; post-Sureflex & introducing the draft EI life extension guidance", presentation hosted by the Norwegian regulator (undated in the file).'
+  urls:
+  - https://www.havtil.no/contentassets/8357c28fc9b543419c58ec2b0eec8307/11---flexible-pipe-integrity-post-sureflex-introducing-the-draft-ei-life-extension-guidance---wood.pdf
+  access_note: text opened
+- id: S3
+  citation: '"Unbonded flexible pipe inspection issues and recommendations", UK regulator, issued 19 February 2008, page last updated 26 March 2025.'
+  urls:
+  - https://www.hse.gov.uk/pipelines/resources/flexiblepipe.htm
+  access_note: opened
+- id: S4
+  citation: dos Santos and de Sousa, "Assessment of flexible pipes with damaged tensile armor wires using finite element models and symbolic regression", conference paper record.
+  urls:
+  - https://publicacoes.softaliza.com.br/cilamce2020/article/view/6610
+  access_note: abstract opened
+- id: S5
+  citation: '"Lessons From the Sureflex JIP: Latest Industry Data and Flexible Pipe Integrity Management", technical-society magazine article, 16 December 2024.'
+  urls:
+  - https://jpt.spe.org/lessons-from-the-sureflex-jip-latest-industry-data-and-flexible-pipe-integrity-management
+  access_note: opened; states that the full joint-project report, revision 05 dated December 2023, is an open industry publication with 14 conclusions, but lists none of them
+could_not_verify:
+- 'The open joint-project report itself (revision 05, December 2023): its host page returned access denied from this host. It is the first document a reviewer should open; its statistics may supersede the 556-event table.'
+- The industry-institute life-extension guidance and its mechanism-by-mechanism tables (access denied).
+- Current editions and scope wording of API RP 17B and API Spec 17J from the publisher (not opened; the report [S1] said new editions were in final review in late 2013).
+- Any published measurement uncertainty for annulus free-volume tests (the report only says providers disagree).
+bottom_line:
+- 'The **failure-mode taxonomy with event counts is public** and can be reproduced with citation: an industry joint project''s refreshed data set of 556 categorised damage and failure events, presented at a regulator seminar [S2], plus a regulator-commissioned state-of-the-art report with six anonymised serious-incident narratives [S1]. That satisfies the "published failure-mode taxonomy reproduced with citations" and "validation against a published case history" acceptance lines.'
+- 'Two of the quantitative items in the issue have **no public basis**: an "allowable fraction" of broken armour wires, and a corrosion-fatigue life reduction factor. The regulator report says S-N data in representative annulus environments is mostly proprietary and that "No general prediction model for CO2 corrosion in flexible pipe annulus is available in public domain" [S1]. Both must be user inputs with an explicit "no public default" status, or the screen will imply precision it does not have.'
+- The realistic product is a **risk-ranking and evidence-to-verdict screen** (MONITOR / REPAIR / REPLACE / ESCALATE), not a remaining-life calculator.
+# Counts bold unverified / Unverified / Not opened / not verified, including the legend.
+unverified_mark_count: 2
