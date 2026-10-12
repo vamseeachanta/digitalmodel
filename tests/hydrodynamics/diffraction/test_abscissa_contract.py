@@ -395,3 +395,104 @@ def test_identical_adequate_grids_pass_values_through_unchanged():
     np.testing.assert_array_equal(result.frequencies, frequencies)
     np.testing.assert_array_equal(result.first.magnitude, magnitude)
     np.testing.assert_array_equal(result.first.phase_degrees, phase)
+
+
+@pytest.mark.parametrize("value", [np.nan, np.inf], ids=["nan", "infinity"])
+def test_config_rejects_nonfinite_relative_gap(value):
+    with pytest.raises(ValueError, match="max_relative_gap"):
+        _api().AbscissaConfig(max_relative_gap=value, justification="probe")
+
+
+@pytest.mark.parametrize("value", [0.0, -0.1], ids=["zero", "negative"])
+def test_config_rejects_nonpositive_relative_gap(value):
+    with pytest.raises(ValueError, match="max_relative_gap"):
+        _api().AbscissaConfig(max_relative_gap=value, justification="probe")
+
+
+@pytest.mark.parametrize(
+    "value", [np.nan, np.inf, 0.0, -0.5, 1.5],
+    ids=["nan", "infinity", "zero", "negative", "above_one"],
+)
+def test_config_rejects_invalid_coverage(value):
+    with pytest.raises(ValueError, match="min_coverage"):
+        _api().AbscissaConfig(min_coverage=value, justification="probe")
+
+
+@pytest.mark.parametrize(
+    "value", [1, 0, -3, 5.0, True, np.nan],
+    ids=["one", "zero", "negative", "float", "boolean", "nan"],
+)
+def test_config_rejects_invalid_sample_count(value):
+    with pytest.raises(ValueError, match="min_samples"):
+        _api().AbscissaConfig(min_samples=value, justification="probe")
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("max_relative_gap", "0.05"),
+        ("max_relative_gap", 0.05 + 0j),
+        ("min_coverage", "0.8"),
+        ("min_coverage", 0.8 + 0j),
+        ("min_samples", "7"),
+    ],
+    ids=["gap_string", "gap_complex", "coverage_string", "coverage_complex", "count_string"],
+)
+def test_config_rejects_values_outside_numeric_types(field, value):
+    with pytest.raises(ValueError, match=field):
+        _api().AbscissaConfig(**{field: value}, justification="probe")
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("max_relative_gap", 0.05),
+        ("min_coverage", 1.0),
+        ("min_coverage", 0.8),
+        ("min_coverage", None),
+        ("min_samples", 7),
+        ("min_samples", 2),
+    ],
+    ids=["gap", "coverage_one", "coverage_fraction", "coverage_none", "count_seven", "count_two"],
+)
+def test_config_valid_domains_regression_pin(field, value):
+    config = _api().AbscissaConfig(**{field: value}, justification="probe")
+    assert getattr(config, field) == value
+
+
+def test_config_defaults_regression_pin():
+    api = _api()
+    config = api.AbscissaConfig()
+    assert (config.min_samples, config.min_coverage, config.max_relative_gap) == (
+        api.MIN_SAMPLES, None, api.MAX_RELATIVE_GAP,
+    )
+    assert config.justification == api.DEFAULT_JUSTIFICATION
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [("max_relative_gap", np.nan), ("min_coverage", 1.5), ("min_samples", 1)],
+    ids=["gap", "coverage", "count"],
+)
+def test_config_numeric_validation_precedes_justification(field, value):
+    with pytest.raises(ValueError, match=field):
+        _api().AbscissaConfig(**{field: value})
+
+
+@pytest.mark.parametrize("value", [np.nan, np.inf], ids=["nan", "infinity"])
+def test_config_nonfinite_gap_prevents_matrix_caller(value, two_identical_results):
+    from unittest.mock import Mock
+
+    from digitalmodel.hydrodynamics.diffraction.benchmark_matrix_alignment import (
+        align_matrix_sets,
+    )
+
+    first, second = two_identical_results.values()
+    caller = Mock(wraps=align_matrix_sets)
+    with pytest.raises(ValueError, match="max_relative_gap"):
+        caller(
+            first.added_mass,
+            second.added_mass,
+            config=_api().AbscissaConfig(max_relative_gap=value, justification="probe"),
+        )
+    caller.assert_not_called()
