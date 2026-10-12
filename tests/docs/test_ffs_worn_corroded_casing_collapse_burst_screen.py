@@ -18,7 +18,7 @@ TABLE_ROWS = [4, 4]
 # The note cites all three sources outside its Sources list; no known anomalies.
 KNOWN_UNCITED_NOTE_ANOMALIES = []
 HEADINGS = ['1. Bottom line', '2. Damage mechanisms', '3. Governing standards and technical reports (designations only)', '4. Assessment methods and levels in use', '5. Input data', '6. Acceptance criteria in outline', '7. Published validation and benchmark material', '8. Who buys the work, and when', '9. Fit assessment and next reading', 'Sources', 'Could not verify']
-BODY_SHA256 = '89d7b03885025127eee86ceb92a5870aea0ea6ed7bd39938200e95b0f1ebd4d1'
+BODY_SHA256 = '24babdeb783d468fe14de38620b6dfda10fa7391b0627383cd04e3ffdab77512'
 
 
 def table_rows(text):

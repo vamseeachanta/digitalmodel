@@ -4,12 +4,14 @@ Public-source research screen for issue [#2201](https://github.com/vamseeachanta
 
 Single source: research note on the issue, sources checked 2026-10-11.
 
-Research only; no code. All sources were checked on 2026-10-11. "Opened" means I read the page or document text myself; "search snippet" means I only saw a search-engine summary and the claim is **unverified**. Standards are cited by designation; an edition appears only where an opened source states it. This screen is shallower than the three priority screens posted today; section 9 lists what a reviewer should open next.
+First-person wording of the research note was restated in the third person with no change of content.
+
+Research only; no code. All sources were checked on 2026-10-11. "Opened" means the page or document text was read for this screen; "search snippet" means only a search-engine summary was seen and the claim is **unverified**. Standards are cited by designation; an edition appears only where an opened source states it. This screen is shallower than the three priority screens posted on 2026-10-11; section 9 lists what a reviewer should open next.
 
 ## 1. Bottom line
 
 - The calculation in this issue (reduced wall into the standard performance-property formulas) is the industry's baseline practice, and published work says it is **conservative for collapse and not reliable for a local groove**: a uniform-wall reduction is "very conservative" (thesis abstract, search snippet), while standard burst and collapse models were "not suitable" for a single crescent groove (thesis abstract, search snippet). Both are **unverified** here because the repositories refused the connection. The screen should present the uniform-wall result as a lower-tier estimate and flag local grooves for a higher tier.
-- The golden-test source named in the acceptance criteria (the technical report's own example properties) is a **licensed document**; I found no open copy. Open alternatives exist for the unworn baseline (the formulas' regime structure is described in open papers) but not, from what I could open, for worn-pipe test data.
+- The golden-test source named in the acceptance criteria (the technical report's own example properties) is a **licensed document**; no open copy was found. Open alternatives exist for the unworn baseline (the formulas' regime structure is described in open papers) but not, from the sources that could be opened, for worn-pipe test data.
 - A regulator safety alert documents the failure mode exactly: casing "extensively worn during operations, allowing failure at pressures significantly below rated burst" [S1].
 
 ## 2. Damage mechanisms
@@ -20,7 +22,7 @@ Research only; no code. All sources were checked on 2026-10-11. "Opened" means I
 
 ## 3. Governing standards and technical reports (designations only)
 
-| Document | Role | Status of my check |
+| Document | Role | Status of check |
 |---|---|---|
 | API TR 5C3 | Collapse-strength models for unworn pipe; four collapse regimes. | Described so in [S2] (opened), which cites a 2008 edition. Publisher page not opened. |
 | ISO/TR 10400 | Equations and templates for casing, tubing, drill pipe and line pipe properties, including axial strength, internal pressure resistance and collapse resistance; a later edition has replaced the first. | Search snippet of standards-catalogue pages; **unverified** (the publisher page returned access denied). |
@@ -69,12 +71,12 @@ Design-factor comparison of de-rated collapse, burst and axial ratings with the 
 
 ## Sources
 
-- [S1] US offshore regulator, Safety Alert No. 226, "Pressure Rise to Surface after Cementing Leads to Burst Casing and Loss of Control", 28 January 2005. https://www.bsee.gov/sites/bsee.gov/files/safety-alerts/safety/safety-alert-no-226.pdf (opened)
+- [S1] United States offshore regulator, Safety Alert No. 226, "Pressure Rise to Surface after Cementing Leads to Burst Casing and Loss of Control", 28 January 2005. https://www.bsee.gov/sites/bsee.gov/files/safety-alerts/safety/safety-alert-no-226.pdf (opened)
 - [S2] Silva, Lima Junior, Gouveia, "Elastoplastic numerical evaluation on the collapse pressure of a worn casing tube", Revista de Engenharia e Tecnologia 11(3), 2019. https://revistas.uepg.br/index.php/ret/article/download/13194/209209211470 (opened)
 - [S3] Norwegian offshore safety regulator, "Knowledge acquisition for temporarily plugged and abandoned wells", 12 November 2024. https://www.havtil.no/en/explore-technical-subjects2/technical-competence/news/2024/knowledge-acquisition-for-temporarily-plugged-and-abandoned-wells/ (opened)
 
 ## Could not verify
 
-- Every thesis and model paper named in section 4 (repositories unreachable or redirecting to an empty page from this host).
+- Every thesis and model paper named in section 4 (repositories unreachable or redirecting to an empty page).
 - Scope wording of API TR 5C3, ISO/TR 10400 and API 7CW from their publishers.
 - Any independent, published accuracy figure for casing inspection logs.
