@@ -14,6 +14,8 @@ SOURCE_LIST = DOCUMENT.with_suffix(".sources.yaml")
 SOURCE_IDS = [f"P{i}" for i in range(1, 35)]
 # The note has five tags beginning *(unverified, including qualified tags.
 NOTE_UNVERIFIED_TAG_COUNT = 5
+# PM register disposition: one section-2 passage and sources P17 and P18.
+NOTE_PARAPHRASED_PASSAGE_COUNT = 3
 # Explicit exceptions for sources never cited outside section 11 in the note.
 # None: all 34 source IDs occur outside the note's Sources read list.
 KNOWN_NOTE_UNCITED_SOURCES = []
@@ -91,7 +93,8 @@ def validate_sources(text, data):
         require_fields(entry, ("id", "citation", "url", "status"))
         assert entry["status"] == "read"
         validate_url(entry["url"])
-        assert record == (entry["id"], entry["citation"], entry["url"])
+        wording = document_wording(text, entry, "citation")
+        assert record == (entry["id"], wording, entry["url"])
         assert entry["id"] in used or entry["id"] in KNOWN_NOTE_UNCITED_SOURCES
 
 
@@ -106,7 +109,7 @@ def validate_located(text, data):
     for entry, bullet in zip(entries, bullets):
         require_fields(entry, ("id", "text", "urls", "status"))
         assert entry["status"] == "located_not_read"
-        assert entry["text"] == bullet
+        assert document_wording(text, entry, "text") == bullet
         assert isinstance(entry["urls"], list)
         assert entry["urls"] == re.findall(r"https?://[^\s)]+", bullet)
         assert text.count(bullet) == 1, "located item repeated outside its list"
@@ -140,10 +143,39 @@ def validate_gaps(text, data):
     for entry, row in zip(entries, rows):
         require_fields(entry, ("area", "verdict", "basis_source_ids"))
         assert row[0] == entry["area"]
-        assert row[1] == "**" + entry["verdict"] + "**"
+        wording = document_wording(text, entry, "verdict")
+        assert row[1] == "**" + wording + "**"
         assert isinstance(entry["basis_source_ids"], list)
         assert source_ids(row[2]) == entry["basis_source_ids"]
         assert set(entry["basis_source_ids"]) <= set(SOURCE_IDS)
+
+
+def document_wording(text, entry, original_field):
+    require_fields(entry, (original_field,))
+    if "as_written_in_document" in entry:
+        require_fields(entry, ("as_written_in_document",))
+        assert entry["as_written_in_document"] in text
+    return entry.get("as_written_in_document", entry[original_field])
+
+
+def validate_paraphrases(text, data):
+    passages = data["paraphrased_passages"]
+    assert isinstance(passages, list)
+    overrides = sum("as_written_in_document" in entry
+                    for group in ("sources", "located_not_read", "gap_analysis")
+                    for entry in data[group])
+    assert len(passages) + overrides == NOTE_PARAPHRASED_PASSAGE_COUNT
+    for entry in passages:
+        require_fields(entry, ("section", "source_id", "note_wording",
+                               "as_written_in_document"))
+        assert entry["source_id"] in SOURCE_IDS
+        assert entry["as_written_in_document"] in section(text, entry["section"])
+        assert entry["note_wording"] not in text
+
+
+def validate_line_counts(contents):
+    for text in contents:
+        assert len(text.splitlines()) <= 400, "file exceeds 400 lines"
 
 
 def validate_document(text, data):
@@ -152,6 +184,7 @@ def validate_document(text, data):
     validate_located(text, data)
     validate_matrix(text)
     validate_gaps(text, data)
+    validate_paraphrases(text, data)
     assert text.count("*(unverified") == NOTE_UNVERIFIED_TAG_COUNT
     for url in re.findall(r"https?://[^\s)]+", text):
         validate_url(url)
@@ -160,6 +193,11 @@ def validate_document(text, data):
 def test_industry_practice_document():
     validate_document(DOCUMENT.read_text(encoding="utf-8"),
                       yaml.safe_load(SOURCE_LIST.read_text(encoding="utf-8")))
+
+
+def test_deliverable_line_counts():
+    validate_line_counts(path.read_text(encoding="utf-8")
+                         for path in (DOCUMENT, SOURCE_LIST, Path(__file__)))
 
 
 @pytest.mark.parametrize("field,value", [
@@ -199,3 +237,76 @@ def test_validator_rejects_broken_markdown(old, new):
     data = yaml.safe_load(SOURCE_LIST.read_text(encoding="utf-8"))
     with pytest.raises(AssertionError):
         validate_document(text.replace(old, new, 1), data)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("citation", ""), ("as_written_in_document", ""),
+    ("as_written_in_document", "Absent paraphrase"),
+])
+def test_validator_rejects_broken_source_paraphrase(field, value):
+    text = DOCUMENT.read_text(encoding="utf-8")
+    data = yaml.safe_load(SOURCE_LIST.read_text(encoding="utf-8"))
+    entry = data["sources"][16]
+    assert "as_written_in_document" in entry
+    entry[field] = value
+    with pytest.raises(AssertionError):
+        validate_document(text, data)
+
+
+def test_gap_paraphrase_is_displayed_instead_of_original():
+    text = DOCUMENT.read_text(encoding="utf-8")
+    data = yaml.safe_load(SOURCE_LIST.read_text(encoding="utf-8"))
+    entry = data["gap_analysis"][0]
+    original = entry["verdict"]
+    entry["as_written_in_document"] = "Synthetic replacement verdict"
+    changed = text.replace("**" + original + "**",
+                           "**" + entry["as_written_in_document"] + "**", 1)
+    validate_gaps(changed, data)
+    with pytest.raises(AssertionError):
+        validate_gaps(text, data)
+    entry["verdict"] = ""
+    with pytest.raises(AssertionError):
+        validate_gaps(changed, data)
+
+
+@pytest.mark.parametrize("field", [
+    "section", "source_id", "note_wording", "as_written_in_document",
+])
+def test_validator_rejects_missing_passage_field(field):
+    text = DOCUMENT.read_text(encoding="utf-8")
+    data = yaml.safe_load(SOURCE_LIST.read_text(encoding="utf-8"))
+    data["paraphrased_passages"][0].pop(field)
+    with pytest.raises(AssertionError):
+        validate_document(text, data)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("section", "1. Tool landscape"), ("source_id", "P99"),
+    ("note_wording", ""), ("as_written_in_document", "Absent paraphrase"),
+])
+def test_validator_rejects_invalid_passage(field, value):
+    text = DOCUMENT.read_text(encoding="utf-8")
+    data = yaml.safe_load(SOURCE_LIST.read_text(encoding="utf-8"))
+    data["paraphrased_passages"][0][field] = value
+    with pytest.raises(AssertionError):
+        validate_document(text, data)
+
+
+def test_validator_rejects_original_passage_in_document():
+    text = DOCUMENT.read_text(encoding="utf-8")
+    data = yaml.safe_load(SOURCE_LIST.read_text(encoding="utf-8"))
+    with pytest.raises(AssertionError):
+        validate_document(text + "\n" + data["paraphrased_passages"][0]["note_wording"], data)
+
+
+def test_validator_rejects_changed_paraphrase_count():
+    text = DOCUMENT.read_text(encoding="utf-8")
+    data = yaml.safe_load(SOURCE_LIST.read_text(encoding="utf-8"))
+    data["paraphrased_passages"].append(deepcopy(data["paraphrased_passages"][0]))
+    with pytest.raises(AssertionError):
+        validate_document(text, data)
+
+
+def test_validator_rejects_file_over_line_cap():
+    with pytest.raises(AssertionError):
+        validate_line_counts(["line\n" * 401])

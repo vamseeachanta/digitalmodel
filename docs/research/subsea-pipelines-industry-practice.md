@@ -4,6 +4,8 @@ Tool landscape, method convergence and divergence, key papers, contractor matrix
 
 Single source: [research note on the issue](https://github.com/vamseeachanta/digitalmodel/issues/1815#issuecomment-6115103070), sources checked 2026-10-11.
 
+Three passages flagged by the repository's writing-register rule are paraphrased; facts, numbers, source ids and locators are unchanged. The note's exact wording for these passages is retained in the adjacent source list file.
+
 This domain was researched last and is the thinnest of the three notes posted today; the counts and acceptance-criteria status section lists what was not done.
 
 - Every source was checked on **2026-10-11**. Sources are numbered `[Pnn]` and listed in section 11 with title, publisher, year and URL.
@@ -32,7 +34,7 @@ Cathodic protection tools and pre-commissioning practice, both named in the issu
 
 **Converging**
 1. **One recommended-practice family frames most public work.** The papers read check against DNV-ST-F101 (edition 2021-08, amended 2021-12) and its companion practices: global buckling RP-F110 (2019-09, amended 2021-09), pipe-soil interaction RP-F114 (2021-05), on-bottom stability RP-F109 (2021-05, amended 2025-09), free spans RP-F105 (2025-12), corroded pipelines RP-F101 (2019-09, amended 2025-09) [P16][P12][P13][P11][P14][P15]. One paper checks strength and fatigue against both API RP 1111 and DNV-ST-F101 [P3].
-2. **Controlled lateral buckling is the accepted design philosophy for hot, exposed lines.** The RP's stated aim is to let an unburied pipeline "buckle in a safe and controlled manner" [P12]; the JIP behind it promoted pre-installed triggers at intervals [P17][P19]. Trenching and burial as the historical restraint is described as less practical in deep water [P19].
+2. **Controlled lateral buckling is the accepted design philosophy for hot, exposed lines.** The RP's stated aim is controlled buckling of an unburied pipeline with safety maintained [P12]; the JIP behind it promoted pre-installed triggers at intervals [P17][P19]. Trenching and burial as the historical restraint is described as less practical in deep water [P19].
 3. **Pipe-soil interaction as a force-displacement response, not a friction coefficient.** This was a core SAFEBUCK output and now has its own recommended practice [P18][P13].
 
 **Diverging or unresolved**
@@ -159,8 +161,8 @@ Digital twins and machine-learning surrogates specific to pipelines were not ver
 - [P14] DNV-RP-F105 Free spanning pipelines (catalogue page). DNV. https://www.dnv.com/energy/standards-guidelines/dnv-rp-f105-free-spanning-pipelines/
 - [P15] DNV-RP-F101 Corroded pipelines (catalogue page). DNV. https://www.dnv.com/energy/standards-guidelines/dnv-rp-f101-corroded-pipelines/
 - [P16] DNV-ST-F101 Submarine pipeline systems (catalogue page). DNV. https://www.dnv.com/energy/standards-guidelines/dnv-st-f101-submarine-pipeline-systems/
-- [P17] TAP-454: Safe Design of Hot On-Bottom Pipelines with Lateral Buckling (research record). US Bureau of Safety and Environmental Enforcement. https://www.bsee.gov/research-record/tap-454-safe-design-hot-bottom-pipelines-lateral-buckling-safebuck
-- [P18] TAP-664: Safebuck Phase III and Safebuck Geo JIPs (research record). US Bureau of Safety and Environmental Enforcement, 2014. https://www.bsee.gov/research-record/tap-664-safebuck-phase-iii-and-safebuck-geo-jips
+- [P17] TAP-454: research record on safety in the design of hot on-bottom pipelines with lateral buckling (see section 2: controlled buckling of an unburied pipeline with safety maintained [P12]). United States Bureau of Safety and Environmental Enforcement. https://www.bsee.gov/research-record/tap-454-safe-design-hot-bottom-pipelines-lateral-buckling-safebuck
+- [P18] TAP-664: Safebuck Phase III and Safebuck Geo JIPs (research record). United States Bureau of Safety and Environmental Enforcement, 2014. https://www.bsee.gov/research-record/tap-664-safebuck-phase-iii-and-safebuck-geo-jips
 - [P19] Bruton, Carr: Bucking the trend. Offshore Engineer, 2010. https://www.oedigital.com/amp/news/460109-bucking-the-trend
 - [P20] Griffiths et al.: Improved stability design of subsea pipelines on mobile seabeds: learnings from the STABLEpipe JIP. ASME OMAE2018 (repository record). https://research-repository.uwa.edu.au/en/publications/improved-stability-design-of-subsea-pipelines-on-mobile-seabeds-l/
 - [P21] Castorone extends the threshold for deepwater, large-diameter pipelay. Offshore magazine, 2013. https://www.offshore-mag.com/vessels/article/16761539/castorone-extends-the-threshold-for-deepwater-large-diameter-pipelay

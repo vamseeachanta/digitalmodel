@@ -73,11 +73,13 @@ sources:
   url: https://www.dnv.com/energy/standards-guidelines/dnv-st-f101-submarine-pipeline-systems/
   status: read
 - id: P17
+  as_written_in_document: "TAP-454: research record on safety in the design of hot on-bottom pipelines with lateral buckling (see section 2: controlled buckling of an unburied pipeline with safety maintained [P12]). United States Bureau of Safety and Environmental Enforcement."
   citation: 'TAP-454: Safe Design of Hot On-Bottom Pipelines with Lateral Buckling (research record). US Bureau of Safety
     and Environmental Enforcement.'
   url: https://www.bsee.gov/research-record/tap-454-safe-design-hot-bottom-pipelines-lateral-buckling-safebuck
   status: read
 - id: P18
+  as_written_in_document: "TAP-664: Safebuck Phase III and Safebuck Geo JIPs (research record). United States Bureau of Safety and Environmental Enforcement, 2014."
   citation: 'TAP-664: Safebuck Phase III and Safebuck Geo JIPs (research record). US Bureau of Safety and Environmental Enforcement,
     2014.'
   url: https://www.bsee.gov/research-record/tap-664-safebuck-phase-iii-and-safebuck-geo-jips
@@ -248,3 +250,9 @@ counts:
   sources_read: 34
   located_not_read_documents: about 18 documents
   located_not_read_groups: 10
+
+paraphrased_passages:
+- section: 2. Method convergence versus divergence
+  source_id: P12
+  note_wording: "The RP's stated aim is to let an unburied pipeline \"buckle in a safe and controlled manner\" [P12]"
+  as_written_in_document: "The RP's stated aim is controlled buckling of an unburied pipeline with safety maintained [P12]"
