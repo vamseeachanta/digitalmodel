@@ -1,7 +1,12 @@
-# ABOUTME: Generate client-facing 1-page capability PDFs (light theme, branded).
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+# ABOUTME: Generate capability one-page HTML and PDFs (light theme, branded).
 # ABOUTME: One PDF per left-nav section and per live work; rendered via headless Chrome.
-"""Build the **capability one-pagers** — a single-page PDF for every left-nav
-section and every live work surfaced on ``/capabilities/``.
+"""Build the **capability one-pagers**.
+
+A single-page PDF is produced for every left-nav section and every live work
+surfaced on ``/capabilities/``.
 
 Each one-pager is a self-contained, light-themed, A4 page (digitalmodel logo,
 what-it-is, key figures, what-you-get, and the live link) rendered to PDF with
@@ -9,6 +14,7 @@ headless Chrome. Outputs (committed frozen artifacts; mkdocs serves them as stat
 files under ``docs/api``):
 
     docs/api/capabilities/pdf/<id>.pdf        # section + work one-pagers
+    docs/api/capabilities/pdf/<id>.html       # self-contained source pages
 
 Run (stdlib only; needs google-chrome on PATH, override with CHROME=/path):
     python3 scripts/capabilities/build_onepagers.py
@@ -16,12 +22,13 @@ Run (stdlib only; needs google-chrome on PATH, override with CHROME=/path):
 
 from __future__ import annotations
 
+import argparse
 import html
 import os
 import re
 import shutil
 import subprocess
-import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[2]
@@ -654,11 +661,12 @@ SPECS: list[dict] = [
 
 
 def _report_url(spec: dict) -> str:
-    p = spec["path"]
+    p: str = spec["path"]
     return p if p.startswith("http") else f"{_SITE}/{p}"
 
 
 _TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>{title}</title>
 <style>
   @page{{size:A4;margin:0}}
   :root{{--navy:#0B3D91;--teal:#0f8a7e;--ink:#13233f;--muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}}
@@ -688,7 +696,7 @@ _TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
   .foot .live{{color:var(--navy);font-weight:700}}
   .cta{{background:linear-gradient(135deg,#0f8a7e,#0B3D91);color:#fff;font-weight:700;
        font-size:12px;padding:8px 14px;border-radius:9px;display:inline-block}}
-</style></head>
+</style>{brand_style}</head>
 <body>
   <div class="top">{logo}<div class="kind">Capability one-pager</div></div>
   <div class="std">{std}</div>
@@ -705,7 +713,24 @@ _TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 </body></html>"""
 
 
-def _render_html(spec: dict) -> str:
+def _validate_brand_css(css: str) -> None:
+    """Reject resource loads and markup so the page remains self-contained."""
+    normalized = re.sub(r"\\(?:\r\n|[\r\n\f])", "", css)
+    normalized = re.sub(
+        r"\\([0-9a-fA-F]{1,6})(?:\s)?|\\(.)",
+        lambda match: chr(min(int(match[1], 16), 0x10FFFF)) if match[1] else match[2],
+        normalized,
+    )
+    normalized = re.sub(r"/\*.*?\*/", "", normalized, flags=re.S)
+    if re.search(r"@\s*import\b|\burl\s*\(|<\s*/\s*style\b", normalized, re.I):
+        raise ValueError(
+            "Brand stylesheet must be self-contained: resource loads and "
+            "HTML markup are not supported"
+        )
+
+
+def _render_html(spec: dict, brand_css: str = "") -> str:
+    _validate_brand_css(brand_css)
     figs = ""
     if spec["figures"]:
         cells = "".join(
@@ -717,37 +742,89 @@ def _render_html(spec: dict) -> str:
     bullets = "".join(f"<li>{html.escape(b)}</li>" for b in spec["bullets"])
     live = _report_url(spec)
     return _TEMPLATE.format(
-        logo=_LOGO, std=html.escape(spec["std"]), title=html.escape(spec["title"]),
-        blurb=html.escape(spec["blurb"]), figs=figs, bullets=bullets, live=html.escape(live),
+        brand_style=f"<style>{brand_css}</style>" if brand_css else "",
+        logo=_LOGO,
+        std=html.escape(spec["std"]),
+        title=html.escape(spec["title"]),
+        blurb=html.escape(spec["blurb"]),
+        figs=figs,
+        bullets=bullets,
+        live=html.escape(live),
     )
 
 
-def _to_pdf(html_text: str, out_pdf: Path) -> None:
-    with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as f:
-        f.write(html_text)
-        src = f.name
-    try:
-        subprocess.run(
-            [_CHROME, "--headless", "--no-sandbox", "--disable-gpu",
-             "--no-pdf-header-footer", f"--print-to-pdf={out_pdf}", src],
-            check=True, capture_output=True, timeout=90,
-        )
-    finally:
-        os.unlink(src)
+def _to_pdf(source: Path, out_pdf: Path) -> None:
+    """Print the kept HTML file to its PDF sibling."""
+    if not _CHROME:
+        raise SystemExit("No Chrome found; set CHROME=/path/to/google-chrome")
+    subprocess.run(
+        [
+            _CHROME,
+            "--headless",
+            "--no-sandbox",
+            "--disable-gpu",
+            "--no-pdf-header-footer",
+            f"--print-to-pdf={out_pdf.resolve()}",
+            source.resolve().as_uri(),
+        ],
+        check=True,
+        capture_output=True,
+        timeout=90,
+    )
 
 
-def main() -> None:
-    """Build all one-pagers, or only the spec ids passed as CLI args
-    (keeps the committed-PDF diff scoped when adding one capability)."""
-    import sys
+def build_onepager(
+    spec: dict,
+    output: Path,
+    *,
+    brand_css: str = "",
+    renderer: Callable[[Path, Path], None] = _to_pdf,
+) -> Path:
+    """Write a self-contained page and print that same file."""
+    text = _render_html(spec, brand_css)
+    output.mkdir(parents=True, exist_ok=True)
+    source = output / f"{spec['id']}.html"
+    source.write_text(text, encoding="utf-8")
+    renderer(source, source.with_suffix(".pdf"))
+    return source
 
-    only = set(sys.argv[1:])
+
+def main(
+    argv: list[str] | None = None,
+    *,
+    renderer: Callable[[Path, Path], None] = _to_pdf,
+) -> None:
+    """Build all one-pagers, or only the supplied specification ids."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "ids",
+        nargs="*",
+        metavar="ID",
+        help="specification ids to build (default: all specifications)",
+    )
+    parser.add_argument(
+        "--brand",
+        type=Path,
+        metavar="CSS",
+        help="inline a self-contained stylesheet after the default styles (no resource loads)",
+    )
+    args = parser.parse_args(argv)
+    only = set(args.ids)
     unknown = only - {spec["id"] for spec in SPECS}
     if unknown:
         raise SystemExit(f"Unknown spec id(s): {sorted(unknown)}")
-    if not _CHROME:
+    brand_css = ""
+    if args.brand is not None:
+        try:
+            brand_css = args.brand.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as error:
+            raise SystemExit(f"Cannot read brand stylesheet: {error}") from error
+    try:
+        _validate_brand_css(brand_css)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    if renderer is _to_pdf and not _CHROME:
         raise SystemExit("No Chrome found; set CHROME=/path/to/google-chrome")
-    _OUT.mkdir(parents=True, exist_ok=True)
     ids: set[str] = set()
     n_pdf = 0
     for spec in SPECS:
@@ -755,7 +832,7 @@ def main() -> None:
         ids.add(spec["id"])
         if only and spec["id"] not in only:
             continue
-        _to_pdf(_render_html(spec), _OUT / f"{spec['id']}.pdf")
+        build_onepager(spec, _OUT, brand_css=brand_css, renderer=renderer)
         n_pdf += 1
     print(f"Wrote {n_pdf} one-pager PDFs into {_OUT.relative_to(_REPO)}/")
 
