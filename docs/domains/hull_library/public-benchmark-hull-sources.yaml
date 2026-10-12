@@ -1,0 +1,399 @@
+meta:
+  description: public benchmark hull source register
+  issue_reference: https://github.com/vamseeachanta/digitalmodel/issues/1839
+  source_statement: research note on the issue, checked 2026-10-11
+  source_comment: https://github.com/vamseeachanta/digitalmodel/issues/1839#issuecomment-6111980881
+  date_checked: '2026-10-11'
+  grade_legend:
+    verified: '**Verified** = geometry location and the quoted particulars were read on a page or repository listing opened during this check.'
+    partial: '**Partial** = the files or pages were confirmed, but some particulars could not be read from a primary source (flagged "unverified" in the cell).'
+    unverified: '**Unverified** = from memory or a search-result summary only; do not seed the registry from these rows without a second check.'
+  terms_legend: '"Terms" quotes the source. Where a source says nothing, the cell says "terms not stated", which is not the same as permission: treat those as cite-and-reference, do not redistribute the files.'
+  counts:
+    verified: 10
+    partial: 6
+    unverified: 2
+  grade_ids:
+    verified: [S1, S2, S3, S4, S5, O1, O3, O4, O5, O6]
+    partial: [S6, S7, O2, O7, O8, O9]
+    unverified: [S8, S9]
+  note_inconsistencies:
+  - id: O2
+    note: Counts lists O2 as Partial; the Status cell reads "Verified (files, licence); particulars unverified". grade follows Counts; status_note preserves the cell.
+  recommendations:
+    hydrostatics:
+    - {ids: [S1], reason: 'IGES plus offsets, and the source page publishes volume, wetted surface, Cb, Cm, LCB, GM and gyradii, so every hydrostatic output has a published target.'}
+    - {ids: [S2], reason: 'same completeness for a full form (Cb 0.81), which exercises the bilge and bulb integration differently from KCS.'}
+    - {ids: [O3], reason: 'the reference WAMIT listing prints volume, centre of buoyancy and the restoring coefficients for the exact mesh that is published, which gives a like-for-like multi-column check.'}
+    first_order_diffraction_rao:
+    - {ids: [O1], reason: 'open mesh, reference coefficients from two solvers, benchmark output in three formats, permissive licence, and it is the case named in this epic.'}
+    - {ids: [O3], reason: 'reference inputs and outputs are both published, including all headings at 10 degree spacing.'}
+    - {ids: [O2], reason: 'axisymmetric and deep, so it isolates heave and pitch behaviour; run it first as the simplest case. Once its particulars are read from the report it moves to fully verified.'}
+    multibody_or_moored:
+    - {ids: [O1], reason: the hull is open and the definition report is public. The three-line catenary mooring layout is from memory (unverified); the mooring properties were not read during this check and need to be taken from the report.}
+    - {ids: [O4], reason: tendon-moored four-column platform with dimensions confirmed in a public manual; rebuild the mesh from those dimensions.}
+    - {ids: [O7, O5], reason: 'the first is openly licensed, the second has confirmed dimensions and a known gap resonance. Neither has tabulated reference results confirmed here.'}
+  recommendation_notes:
+  - For a ship form, KCS (S1) and the 5512 geosim of DTMB 5415 (S3) are the only ones with confirmed measured wave responses, and only the 5512 set includes zero speed.
+  - Public multibody and moored references are the thinnest part of this register. None of the three has reference results that were read as numbers during this check.
+  unconfirmed_leads:
+  - '**Wigley**: no primary page opened. Needs the hull equation and the TU Delft 1992 report located in the university repository.'
+  - '**S-175**: no open geometry found; particulars are from a secondary summary.'
+  - '**Series 60**: no offsets file found; the pages describe data but do not link the files.'
+  - '**DTC**: geometry link confirmed, but particulars and test data were not read from the 2012 paper.'
+  - '**DTMB 5415**: the IIHR IGES link did not respond, and the bare-hull archive on the workshop site is only 10.9 kB, so its content needs checking before it is relied on. The 5512 measured data files are not linked from the data pages.'
+  - '**OC4 and OC3 definition reports**: located and confirmed as public PDFs, but the text could not be extracted, so draft, volume, water depth and mooring data are flagged unverified in rows O1 and O2.'
+  - '**OC5 and OC6**: a definition PDF for OC5 Phase II appeared in search results, and the data portal redirects to a new host whose project page did not render. Dataset contents and access conditions are unconfirmed.'
+  - '**SIMMAN 2014 and 2020, Gothenburg 2010**: sites not reachable or not opened. The SIMMAN 2008 site answers on plain HTTP only (its certificate does not match the host name).'
+  - '**KVLCC1 and the HSVA tanker**: KVLCC1 is listed on the SIMMAN 2008 site; its geometry page was not opened. Nothing was found for the HSVA tanker.'
+  - '**Intact-stability benchmark repository** (shipstab.org data access, including an "ITTC-Box" reference ship): seen in search results only.'
+  - '**Classification-society and commercial solver validation manuals** (other than the WAMIT manual): not searched.'
+  - '**Reuse terms**: every workshop and university source is silent on terms. Only the four code repositories (Apache-2.0) and the WAMIT demonstration package (restrictive) state anything.'
+  suggested_use: 'Suggested use for the registry: seed from the Apache-2.0 rows first (O1, O2, O3, O6), reference the workshop hulls by URL and checksum rather than vendoring the files, and rebuild the box and TLP cases from published dimensions.'
+  scope: No geometry was downloaded.
+  geometry_availability_legend: Geometry availability describes the source note; it does not establish reuse permission. "dimensions only" identifies the manual-based cases whose demonstration files have restrictive terms.
+hulls:
+- id: S1
+  name: KCS, KRISO container ship
+  hull_type: KRISO container ship
+  group: ships
+  particulars: [{name: Lpp, value: '230.0', unit: m, note: null}, {name: Bwl, value: '32.2', unit: m, note: null}, {name: T, value: '10.8', unit: m, note: null}, {name: vol, value: 52 030, unit: m3, note: null}, {name: Cb, value: '0.651', unit: null, note: null}, {name: LCB, value: '-1.48', unit: '%', note: null}, {name: GM, value: '0.60', unit: m, note: null}, {name: ixx/B, value: '0.40', unit: null, note: null}, {name: izz/Lpp, value: '0.25', unit: null, note: null}, {name: Cb, value: '0.6505', unit: null, note: Tokyo 2015 page gives Cb 0.6505}]
+  particulars_source: SIMMAN 2008 KCS geometry page; Tokyo 2015 page gives Cb 0.6505
+  particulars_as_reported: Lpp 230.0 m, Bwl 32.2 m, T 10.8 m, vol 52 030 m3, Cb 0.651, LCB -1.48 %, GM 0.60 m, ixx/B 0.40, izz/Lpp 0.25 (SIMMAN 2008 KCS geometry page; Tokyo 2015 page gives Cb 0.6505)
+  geometry:
+  - {format: 'IGES + offsets, zip', url: 'https://t2015.nmri.go.jp/file/Geometry_IGES_files/kcs/KCS_hull_SVA.zip', host: 'NMRI, Tokyo 2015', size_as_reported: 74 kB, note: null}
+  - {format: 'IGES + offsets, zip', url: 'http://www.simman2008.dk/PDF/KCS_hull_SVA.zip', host: FORCE Technology, size_as_reported: 73 kB, note: null}
+  pages: ['https://t2015.nmri.go.jp/kcs_gc.html', 'http://www.simman2008.dk/KCS/kcs_geometry.htm']
+  geometry_as_reported: 'IGES + offsets, zip. `https://t2015.nmri.go.jp/file/Geometry_IGES_files/kcs/KCS_hull_SVA.zip` (74 kB, NMRI, Tokyo 2015) and `http://www.simman2008.dk/PDF/KCS_hull_SVA.zip` (73 kB, FORCE Technology). Pages: `https://t2015.nmri.go.jp/kcs_gc.html`, `http://www.simman2008.dk/KCS/kcs_geometry.htm`'
+  geometry_available: 'yes'
+  benchmark_data: 'Tokyo 2015 cases 2.1 (resistance, sinkage, trim; KRISO/NMRI), 2.5 and 2.7 (self-propulsion, NMRI), 2.10 (head waves: heave, pitch, added resistance; FORCE), 2.11 (head and oblique waves: surge, heave, roll, pitch; FORCE/IIHR). SIMMAN 2008: PMM, CMT and free-running manoeuvring tests. Proceedings: Hino et al. (eds), Numerical Ship Hydrodynamics, Springer 2021, DOI 10.1007/978-3-030-47572-7'
+  reuse_terms: 'terms not stated (both sites). Propeller KP505 only: "It becomes available to download after the workshop (Mon. Aug. 01, 2016) by the courtesy of KRISO."'
+  fitness_note: 'Good ship case: full mass data (GM, gyradii) is published, and measured heave/pitch exist. The wave cases are at forward speed, so they test the forward-speed path, not a zero-speed diffraction run.'
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified
+  benchmark_pages: []
+- id: S2
+  name: KVLCC2, KRISO tanker
+  hull_type: KRISO tanker
+  group: ships
+  particulars: [{name: Lpp, value: '320.0', unit: m, note: null}, {name: Bwl, value: '58.0', unit: m, note: null}, {name: D, value: '30.0', unit: m, note: null}, {name: T, value: '20.8', unit: m, note: null}, {name: vol, value: 312 622, unit: m3, note: null}, {name: Cb, value: '0.8098', unit: null, note: null}, {name: LCB, value: '+3.48', unit: '%', note: null}, {name: GM, value: '5.71', unit: m, note: null}, {name: ixx/B, value: '0.40', unit: null, note: null}, {name: izz/Lpp, value: '0.25', unit: null, note: null}]
+  particulars_source: SIMMAN 2008 KVLCC2 geometry page
+  particulars_as_reported: Lpp 320.0 m, Bwl 58.0 m, D 30.0 m, T 20.8 m, vol 312 622 m3, Cb 0.8098, LCB +3.48 %, GM 5.71 m, ixx/B 0.40, izz/Lpp 0.25 (SIMMAN 2008 KVLCC2 geometry page)
+  geometry:
+  - {format: 'IGES, zip', url: 'http://www.simman2008.dk/Technical%20data/ships/Tanker%20VLCC2/ship%20data/Geometry/Hull/kvlcc2.zip', host: FORCE Technology, size_as_reported: 1.35 MB, note: null}
+  pages: ['http://www.simman2008.dk/KVLCC/KVLCC2/kvlcc2_geometry.html']
+  geometry_as_reported: 'IGES, zip. `http://www.simman2008.dk/Technical%20data/ships/Tanker%20VLCC2/ship%20data/Geometry/Hull/kvlcc2.zip` (1.35 MB, FORCE Technology). Page: `http://www.simman2008.dk/KVLCC/KVLCC2/kvlcc2_geometry.html`'
+  geometry_available: 'yes'
+  benchmark_data: 'SIMMAN 2008: PMM deep and shallow (MOERI 1999, INSEAN 2006), CMT (NMRI 2006), free-running (HSVA, CTO, MARIN). Seakeeping and added-resistance data exist from the Gothenburg 2010 workshop (unverified, not opened)'
+  reuse_terms: terms not stated. Raw test series are behind a workshop FTP login.
+  fitness_note: Best public tanker form for hydrostatics and a zero-speed diffraction run (full form, published GM and gyradii), but no open RAO table was confirmed on a page opened here.
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified (geometry, particulars); RAO data unverified
+  benchmark_pages: []
+- id: S3
+  name: DTMB 5415, naval combatant
+  hull_type: naval combatant
+  group: ships
+  particulars: [{name: Lpp, value: '142.00', unit: m, note: null}, {name: Bwl, value: '19.06', unit: m, note: null}, {name: T, value: '6.15', unit: m, note: null}, {name: vol, value: 8 424.4, unit: m3, note: null}, {name: Cb, value: '0.507', unit: null, note: null}, {name: GM, value: '1.95', unit: m, note: null}, {name: ixx/B, value: '0.37', unit: null, note: null}, {name: izz/Lpp, value: '0.25', unit: null, note: null}]
+  particulars_source: SIMMAN 2008 5415 geometry page
+  particulars_as_reported: Lpp 142.00 m, Bwl 19.06 m, T 6.15 m, vol 8 424.4 m3, Cb 0.507, GM 1.95 m, ixx/B 0.37, izz/Lpp 0.25 (SIMMAN 2008 5415 geometry page)
+  geometry:
+  - {format: Zip archives for bare and appended hull, url: 'http://www.simman2008.dk/Technical%20data/ships/Frigate%205415/ship%20data/Geometry/hull%20(FORCE%202004,%20IIHR%202005,%20INSEAN%202005)/5415%20hull%20(FORCE%202004,%20IIHR%202005,%20INSEAN%202005).zip', host: FORCE Technology, size_as_reported: 10.9 kB, note: small enough that the content format should be confirmed before use}
+  - {format: IGES, url: 'http://www2.iihr.uiowa.edu/efd_data_files/Model5415.igs', host: null, size_as_reported: null, note: did not respond}
+  pages: ['http://www.simman2008.dk/5415/5415_geometry.htm']
+  geometry_as_reported: 'Zip archives for bare and appended hull, FORCE Technology. Bare: `http://www.simman2008.dk/Technical%20data/ships/Frigate%205415/ship%20data/Geometry/hull%20(FORCE%202004,%20IIHR%202005,%20INSEAN%202005)/5415%20hull%20(FORCE%202004,%20IIHR%202005,%20INSEAN%202005).zip` (10.9 kB, small enough that the content format should be confirmed before use). Page: `http://www.simman2008.dk/5415/5415_geometry.htm`. The IIHR IGES link `http://www2.iihr.uiowa.edu/efd_data_files/Model5415.igs` did not respond.'
+  geometry_available: 'yes'
+  benchmark_data: 'SIMMAN 2008: PMM bare and appended (FORCE, IIHR, INSEAN), CMT (BEC), free-running (MARIN). Geosim 5512 at IIHR: pitch and heave transfer functions in regular head waves at Fr 0, 0.19, 0.28, 0.34, 0.41 (Irvine, Longo, Stern, J. Ship Research 52(2), 2008, pp. 146-163), roll decay, forward-speed diffraction, static drift. Pages under `https://stern.lab.uiowa.edu/efd-data/efd-data-towing-tank/`'
+  reuse_terms: terms not stated (SIMMAN site; IIHR pages carry only a university copyright footer)
+  fitness_note: 'Useful: the 5512 set includes Fr = 0 heave and pitch transfer functions, which is a true zero-speed check. The measured data files are not linked from the IIHR pages, only the paper.'
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified (geometry page, particulars, data description); data files not located
+  benchmark_pages: ['https://stern.lab.uiowa.edu/efd-data/efd-data-towing-tank/']
+- id: S4
+  name: JBC, Japan Bulk Carrier
+  hull_type: Japan Bulk Carrier
+  group: ships
+  particulars: [{name: Lpp, value: '280.0', unit: m, note: null}, {name: B, value: '45.0', unit: m, note: null}, {name: T, value: '16.5', unit: m, note: null}, {name: vol, value: 178 369.9, unit: m3, note: null}, {name: Cb, value: '0.858', unit: null, note: null}]
+  particulars_source: Tokyo 2015 JBC page
+  particulars_as_reported: Lpp 280.0 m, B 45.0 m, T 16.5 m, vol 178 369.9 m3, Cb 0.858 (Tokyo 2015 JBC page)
+  geometry:
+  - {format: 'IGES, zip', url: 'https://t2015.nmri.go.jp/file/Geometry_IGES_files/jbc/JBC_IGES.zip', host: NMRI, size_as_reported: 2.51 MB, note: null}
+  pages: ['https://t2015.nmri.go.jp/jbc_gc.html']
+  geometry_as_reported: 'IGES, zip. `https://t2015.nmri.go.jp/file/Geometry_IGES_files/jbc/JBC_IGES.zip` (2.51 MB, NMRI). Page: `https://t2015.nmri.go.jp/jbc_gc.html`'
+  geometry_available: 'yes'
+  benchmark_data: 'Tokyo 2015 cases 1.1 to 1.8: resistance, sinkage and trim, wake and turbulence fields, wave pattern, self-propulsion, with and without energy-saving duct (NMRI, Osaka University, TUHH). Wind-tunnel data at `https://www.nmri.go.jp/en/study/intellectual/db/jbc/` (not opened)'
+  reuse_terms: terms not stated
+  fitness_note: Hydrostatics and resistance only. No wave or motion data were published for this hull.
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified
+  benchmark_pages: ['https://www.nmri.go.jp/en/study/intellectual/db/jbc/']
+- id: S5
+  name: ONR Tumblehome (ONRT), naval surface combatant
+  hull_type: naval surface combatant
+  group: ships
+  particulars: [{name: Lwl, value: '154.0', unit: m, note: null}, {name: Bwl, value: '18.78', unit: m, note: null}, {name: T, value: '5.494', unit: m, note: null}, {name: displacement, value: 8 507, unit: t, note: null}, {name: Cb, value: '0.535', unit: null, note: null}]
+  particulars_source: Tokyo 2015 ONRT page; Lpp is not listed there
+  particulars_as_reported: Lwl 154.0 m, Bwl 18.78 m, T 5.494 m, displacement 8 507 t, Cb 0.535 (Tokyo 2015 ONRT page; Lpp is not listed there)
+  geometry:
+  - {format: 'IGES, zip', url: 'https://t2015.nmri.go.jp/file/Geometry_IGES_files/onrt/onrt_wo_gap.zip', host: NMRI, size_as_reported: 753 kB, note: companion `onrt_w_gap.zip` in the same folder}
+  pages: ['https://t2015.nmri.go.jp/onrt_gc.html']
+  geometry_as_reported: 'IGES, zip. `https://t2015.nmri.go.jp/file/Geometry_IGES_files/onrt/onrt_wo_gap.zip` (753 kB, NMRI); companion `onrt_w_gap.zip` in the same folder. Page: `https://t2015.nmri.go.jp/onrt_gc.html`'
+  geometry_available: 'yes'
+  benchmark_data: 'Tokyo 2015 cases 3.9 (calm-water self-propulsion), 3.12 (head waves), 3.13 (beam, quartering and following waves): motions, thrust, torque, speed loss, free-running (IIHR)'
+  reuse_terms: terms not stated
+  fitness_note: 'Free-running tests with propulsion: a course-keeping benchmark, poorly matched to a first-order diffraction check. Useful for hydrostatics of an unusual section shape.'
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified
+  benchmark_pages: []
+- id: S6
+  name: DTC, Duisburg Test Case, 14 000 TEU container ship
+  hull_type: 14 000 TEU container ship
+  group: ships
+  particulars: [{name: Lpp, value: '355.0', unit: m, note: unverified, verified: false}, {name: Bwl, value: '51.0', unit: m, note: unverified, verified: false}, {name: T, value: '14.5', unit: m, note: unverified, verified: false}, {name: vol, value: 173 467, unit: m3, note: unverified, verified: false}, {name: Cb, value: '0.661', unit: null, note: unverified, verified: false}]
+  particulars_source: from memory of el Moctar, Shigunov, Zorn, Ship Technology Research 59(3), 2012, pp. 50-65, DOI 10.1179/str.2012.59.3.004 (publisher page returned an access error)
+  particulars_as_reported: 'Lpp 355.0 m, Bwl 51.0 m, T 14.5 m, vol 173 467 m3, Cb 0.661: **unverified**, from memory of el Moctar, Shigunov, Zorn, Ship Technology Research 59(3), 2012, pp. 50-65, DOI 10.1179/str.2012.59.3.004 (publisher page returned an access error)'
+  geometry:
+  - {format: 'IGES, zip', url: 'https://www.uni-due.de/imperia/md/content/inam/igs_ordner.zip', host: University of Duisburg-Essen, size_as_reported: 2.34 MB, note: linked as "Duisburg Test Case (DTC)"}
+  - {format: STL, url: null, host: OpenFOAM/OpenFOAM-dev, size_as_reported: 3.53 MB, note: '`tutorials/resources/geometry/DTC-scaled.stl.gz`'}
+  pages: ['https://www.uni-due.de/IST/ismt_dtc_veroeffentlichungen.shtml']
+  geometry_as_reported: 'IGES, zip. `https://www.uni-due.de/imperia/md/content/inam/igs_ordner.zip` (2.34 MB, University of Duisburg-Essen, linked as "Duisburg Test Case (DTC)" from `https://www.uni-due.de/IST/ismt_dtc_veroeffentlichungen.shtml`). Also STL in the OpenFOAM tutorials: `tutorials/resources/geometry/DTC-scaled.stl.gz` (3.53 MB) in `OpenFOAM/OpenFOAM-dev`'
+  geometry_available: 'yes'
+  benchmark_data: Resistance and propulsion tests at SVA Potsdam and roll decay at HSVA at scale 1:59.407 (search-result summary of the 2012 paper, unverified). Later seakeeping and shallow-water campaigns exist (unverified)
+  reuse_terms: terms not stated on the university page. The OpenFOAM repository licence is reported by the host as "NOASSERTION"; the licence file was not read.
+  fitness_note: Promising for roll damping checks (published roll-decay tests), but the particulars and data need a primary-source read before use.
+  date_checked: '2026-10-11'
+  grade: partial
+  status_note: Partial
+  benchmark_pages: []
+- id: S7
+  name: Series 60, Cb = 0.6
+  hull_type: Series 60, Cb = 0.6
+  group: ships
+  particulars: [{name: L, value: '3.048', unit: m, note: model; other particulars not given on the pages opened}]
+  particulars_source: other particulars not given on the pages opened
+  particulars_as_reported: L = 3.048 m model; other particulars not given on the pages opened
+  geometry: []
+  pages: ['https://stern.lab.uiowa.edu/efd-data/efd-data-towing-tank/series-60-steady-flow']
+  geometry_as_reported: 'No geometry download found. Data description pages only: `https://stern.lab.uiowa.edu/efd-data/efd-data-towing-tank/series-60-steady-flow` and `/series-60-drift`'
+  geometry_available: 'no'
+  benchmark_data: Resistance Fr 0.1 to 0.36, wave profiles and elevations, boundary layer and wake (Toda, Stern, Longo, J. Ship Research 36(4), 1992, pp. 360-377; IIHR Report 352, 1991; Longo and Stern, Experiments in Fluids 32, 2002, pp. 558-569)
+  reuse_terms: terms not stated
+  fitness_note: 'Not fit as found: resistance and flow-field data only, and no offsets file.'
+  date_checked: '2026-10-11'
+  grade: partial
+  status_note: Partial (data pages verified, geometry not found)
+  benchmark_pages: []
+- id: S8
+  name: Wigley hull (parabolic, analytic)
+  hull_type: parabolic, analytic
+  group: ships
+  particulars: [{name: 'L, B, T', value: null, unit: null, note: 'Defined by a closed-form equation, so particulars follow from the chosen L, B, T: **unverified** here', verified: false}]
+  particulars_source: null
+  particulars_as_reported: 'Defined by a closed-form equation, so particulars follow from the chosen L, B, T: **unverified** here'
+  geometry: []
+  pages: []
+  geometry_as_reported: No file needed in principle; no source page opened
+  geometry_available: 'no'
+  benchmark_data: 'Journee, Experiments and calculations on four Wigley hullforms, TU Delft, 1992 (ISSN 0925-6555): added mass, damping, exciting forces and motions in head waves. Only a library catalogue record was found, not the report'
+  reuse_terms: terms not stated
+  fitness_note: Would be the cleanest ship-like radiation/diffraction check because the hull is analytic and coefficients were measured, but nothing was confirmed on a primary page.
+  date_checked: '2026-10-11'
+  grade: unverified
+  status_note: Unverified
+  benchmark_pages: []
+- id: S9
+  name: S-175 container ship (ITTC seakeeping comparative study)
+  hull_type: container ship
+  group: ships
+  particulars: [{name: Lpp, value: '175.0', unit: m, note: unverified, verified: false}, {name: B, value: '25.4', unit: m, note: unverified, verified: false}, {name: T, value: '9.5', unit: m, note: unverified, verified: false}, {name: displacement, value: 24 539, unit: t, note: unverified, verified: false}, {name: Cb, value: '0.572', unit: null, note: unverified, verified: false}]
+  particulars_source: from a search-result summary of a secondary thesis
+  particulars_as_reported: 'Lpp 175.0 m, B 25.4 m, T 9.5 m, displacement 24 539 t, Cb 0.572: **unverified**, from a search-result summary of a secondary thesis'
+  geometry: []
+  pages: []
+  geometry_as_reported: No offsets or geometry file located
+  geometry_available: 'no'
+  benchmark_data: 15th to 17th ITTC cooperative seakeeping programme (regular and irregular head and following waves at two Froude numbers); only a record of a 1992 review was found
+  reuse_terms: terms not stated
+  fitness_note: Classic RAO comparison case, but no open geometry was found, so it cannot be seeded yet.
+  date_checked: '2026-10-11'
+  grade: unverified
+  status_note: Unverified
+  benchmark_pages: []
+- id: O1
+  name: DeepCwind / OC4 Phase II semi-submersible (three offset columns plus centre column)
+  hull_type: semi-submersible (three offset columns plus centre column)
+  group: offshore and box-type forms
+  particulars: [{name: Mass matrix entry, value: '1.40179E+07', unit: kg, note: null}, {name: heave restoring C33, value: '3.836E+06', unit: N/m, note: null}, {name: roll and pitch hydrostatic restoring, value: '-3.776E+08', unit: N m/rad, note: about the stated origin}, {name: Draft, value: '20', unit: m, note: unverified, verified: false}, {name: displaced volume, value: 13 917, unit: m3, note: unverified, verified: false}, {name: water depth, value: '200', unit: m, note: unverified, verified: false}]
+  particulars_source: HAMS `CertTest/DeepCwind/Input/Hydrostatic.in`, which cites the NREL definition report
+  particulars_as_reported: 'Mass matrix entry 1.40179E+07 kg, heave restoring C33 3.836E+06 N/m, roll and pitch hydrostatic restoring -3.776E+08 N m/rad about the stated origin (HAMS `CertTest/DeepCwind/Input/Hydrostatic.in`, which cites the NREL definition report). Draft 20 m, displaced volume 13 917 m3, water depth 200 m: **unverified**, from memory of the report (the PDF could not be read as text)'
+  geometry:
+  - {format: Panel mesh, url: 'https://github.com/YingyiLiu/HAMS/tree/master/CertTest/DeepCwind/Input', host: null, size_as_reported: 181 kB, note: '`HullMesh.pnl`'}
+  - {format: Panel mesh, url: 'https://github.com/YingyiLiu/HAMS/tree/master/CertTest/DeepCwind/Input', host: null, size_as_reported: 16 kB, note: '`WaterplaneMesh.pnl`'}
+  pages: []
+  geometry_as_reported: 'Panel mesh: `HullMesh.pnl` (181 kB) and `WaterplaneMesh.pnl` (16 kB) in `https://github.com/YingyiLiu/HAMS/tree/master/CertTest/DeepCwind/Input`. WAMIT outputs (no mesh): `marin_semi.1` (503 kB), `.3` (10.2 MB), `.hst`, `.12d`, `.12s` (1.2 MB each) in `https://github.com/OpenFAST/r-test/tree/main/glue-codes/openfast/5MW_Baseline/HydroData`'
+  geometry_available: 'yes'
+  benchmark_data: 'Added mass and damping (`.1`), first-order excitation (`.3`), hydrostatics (`.hst`), difference- and sum-frequency QTFs (`.12d`, `.12s`). HAMS ships reference results in three formats (`Output_Benchmark/Hams_format`, `Hydrostar_format`, `Wamit_format`). Definition: Robertson et al., NREL/TP-5000-60601, 2014, DOI 10.2172/1155123 (2.3 MB PDF)'
+  reuse_terms: 'HAMS: "HAMS is freely distributed under the Apache License, Version 2.0, http://www.apache.org/licenses/LICENSE-2.0, and may be modified and extended by researchers who intend to enhance its capabilities and port the code to other platforms." OpenFAST r-test: repository licence Apache-2.0 (host metadata). Report record: terms not stated'
+  fitness_note: 'Best fit in this register: open mesh, open reference coefficients from two independent solvers, clear licence, and it is the multi-column case this epic names.'
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified (files, licence, hydrostatic matrix); draft and volume unverified
+  benchmark_pages: ['https://github.com/OpenFAST/r-test/tree/main/glue-codes/openfast/5MW_Baseline/HydroData']
+- id: O2
+  name: OC3-Hywind spar
+  hull_type: spar
+  group: offshore and box-type forms
+  particulars: [{name: Draft, value: '120', unit: m, note: unverified, verified: false}, {name: displaced volume, value: 8 029, unit: m3, note: unverified, verified: false}, {name: water depth, value: '320', unit: m, note: unverified, verified: false}]
+  particulars_source: from memory of Jonkman, NREL/TP-500-47535, 2010, DOI 10.2172/979456 (PDF could not be read as text)
+  particulars_as_reported: 'Draft 120 m, displaced volume 8 029 m3, water depth 320 m: **unverified**, from memory of Jonkman, NREL/TP-500-47535, 2010, DOI 10.2172/979456 (PDF could not be read as text)'
+  geometry:
+  - {format: Panel mesh, url: 'https://github.com/YingyiLiu/HAMS/tree/master/CertTest/HywindSpar/Input', host: null, size_as_reported: 234 kB, note: '`HullMesh.pnl`'}
+  - {format: Panel mesh, url: 'https://github.com/YingyiLiu/HAMS/tree/master/CertTest/HywindSpar/Input', host: null, size_as_reported: 10 kB, note: '`WaterplaneMesh.pnl`'}
+  pages: []
+  geometry_as_reported: 'Panel mesh: `HullMesh.pnl` (234 kB) and `WaterplaneMesh.pnl` (10 kB) in `https://github.com/YingyiLiu/HAMS/tree/master/CertTest/HywindSpar/Input`. WAMIT outputs: `Spar.1` (57 kB), `Spar.3` (2.0 MB), `Spar.hst` in the OpenFAST r-test `HydroData` folder'
+  geometry_available: 'yes'
+  benchmark_data: Added mass, damping, excitation, hydrostatics (WAMIT format); HAMS benchmark output folder
+  reuse_terms: As O1 (Apache-2.0 for both repositories)
+  fitness_note: 'Very good first check: axisymmetric, deep draft, so heave and pitch coefficients are easy to sanity-check by hand.'
+  date_checked: '2026-10-11'
+  grade: partial
+  status_note: Verified (files, licence); particulars unverified
+  benchmark_pages: []
+- id: O3
+  name: UMaine VolturnUS-S semi-submersible for the IEA 15 MW reference turbine
+  hull_type: semi-submersible
+  group: offshore and box-type forms
+  particulars: [{name: Displaced volume, value: 20 148.4, unit: m3, note: VOLX}, {name: centre of buoyancy z, value: '-13.628', unit: m, note: null}, {name: 'C(3,3)', value: '443.05', unit: null, note: in WAMIT non-dimensional form}, {name: 'C(4,4)', value: '0.21824E+06', unit: null, note: in WAMIT non-dimensional form}, {name: panels, value: 5 076, unit: null, note: null}, {name: Y, value: '0', unit: null, note: symmetry}, {name: Draft, value: '20', unit: m, note: unverified, verified: false}]
+  particulars_source: header of `IEA-15-240-RWT-UMaineSemi_1stOrder.out.wamit`
+  particulars_as_reported: 'Displaced volume 20 148.4 m3 (VOLX), centre of buoyancy z = -13.628 m, C(3,3) 443.05 and C(4,4) 0.21824E+06 in WAMIT non-dimensional form, 5 076 panels, Y = 0 symmetry (header of `IEA-15-240-RWT-UMaineSemi_1stOrder.out.wamit`). Draft 20 m: **unverified**'
+  geometry:
+  - {format: WAMIT GDF mesh, url: 'https://github.com/IEAWindTask37/IEA-15-240-RWT/tree/master/OpenFAST/IEA-15-240-RWT-UMaineSemi/HydroData/wamit_inputs_1stOrder', host: null, size_as_reported: 401 kB, note: '`IEA-15-240-RWT.gdf` plus `.pot`, `.frc`, `.cfg`'}
+  pages: []
+  geometry_as_reported: WAMIT GDF mesh `IEA-15-240-RWT.gdf` (401 kB) plus `.pot`, `.frc`, `.cfg` in `https://github.com/IEAWindTask37/IEA-15-240-RWT/tree/master/OpenFAST/IEA-15-240-RWT-UMaineSemi/HydroData/wamit_inputs_1stOrder`
+  geometry_available: 'yes'
+  benchmark_data: 'Full WAMIT set: `.1` (102 kB), `.3` (2.0 MB), `.hst`, `.12d` and `.12s` (824 kB each), and both `.out.wamit` listings (1.26 MB, 0.91 MB). The readme states first-order excitation covers all headings in 10 degree steps and QTFs are for 0 degrees only. Definition report: Allen et al., NREL/TP-5000-76773, 2020 (unverified, not opened)'
+  reuse_terms: Repository licence Apache-2.0 (host metadata)
+  fitness_note: 'Excellent: inputs and outputs of the reference run are both open, so a solver can be driven from the same mesh and compared number for number, including hydrostatics.'
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified
+  benchmark_pages: []
+- id: O4
+  name: ISSC tension-leg platform (four columns, four pontoons)
+  hull_type: tension-leg platform (four columns, four pontoons)
+  group: offshore and box-type forms
+  particulars: [{name: Column radius, value: '8.435', unit: m, note: null}, {name: column centres, value: '86.25', unit: m, note: null}, {name: pontoons wide, value: '7.5', unit: m, note: null}, {name: pontoons high, value: '10.5', unit: m, note: null}, {name: draft, value: '35', unit: m, note: null}, {name: water depth, value: '450', unit: m, note: null}, {name: CG, value: '(0, 0, 3.0)', unit: m, note: null}]
+  particulars_source: WAMIT v7.5 manual, Appendix A, TEST06 and TEST14
+  particulars_as_reported: Column radius 8.435 m, column centres 86.25 m apart, pontoons 7.5 m wide by 10.5 m high, draft 35 m, water depth 450 m, CG at (0, 0, 3.0) m (WAMIT v7.5 manual, Appendix A, TEST06 and TEST14)
+  geometry:
+  - {format: WAMIT GDF inside the demonstration package only, url: 'https://www.wamit.com/DEMO_downloads/WAMITDEMO_v75_x64w.msi', host: null, size_as_reported: 12.9 MB, note: null}
+  pages: ['https://www.wamit.com/demo.htm', 'https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html']
+  geometry_as_reported: 'WAMIT GDF inside the demonstration package only: `https://www.wamit.com/DEMO_downloads/WAMITDEMO_v75_x64w.msi` (12.9 MB), page `https://www.wamit.com/demo.htm`. Manual: `https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html`'
+  geometry_available: dimensions only
+  benchmark_data: 'Added mass, damping, exciting forces, motions and wave loads at 5, 10, 15 s; surge RAO; second-order time-domain data at 99 frequencies (TEST14a). Original comparison: Eatock Taylor and Jefferys (cited in the manual; full reference not read)'
+  reuse_terms: 'Restrictive. "These programs will only be used to demonstrate the capabilities of the WAMIT software." and "Data in the geometric data files may not be modified nor may additional data be added to those files". Manual: "Copyright WAMIT, Inc. 1999-2023. All Rights Reserved."'
+  fitness_note: Good as a multi-column check if the geometry is rebuilt from the published dimensions rather than copied from the demo files.
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified (dimensions and terms); reference results need the original paper
+  benchmark_pages: []
+- id: O5
+  name: Rectangular barges and FPSO with internal tanks (WAMIT standard tests)
+  hull_type: Rectangular barges and FPSO with internal tanks
+  group: offshore and box-type forms
+  particulars: [{name: Two barges length, value: '100', unit: m, note: TEST03; 100 m x 20 m}, {name: Two barges breadth, value: '20', unit: m, note: TEST03; 100 m x 20 m}, {name: Two barges length, value: '50', unit: m, note: TEST03; 50 m x 10 m}, {name: Two barges breadth, value: '10', unit: m, note: TEST03; 50 m x 10 m}, {name: draft, value: '4.8', unit: m, note: TEST03}, {name: gap, value: '2', unit: m, note: TEST03}, {name: barge length, value: '80', unit: m, note: TEST04}, {name: barge breadth, value: '20', unit: m, note: TEST04}, {name: draft, value: '10', unit: m, note: TEST04}, {name: from a wall, value: '2', unit: m, note: TEST04}, {name: barge length, value: '100', unit: m, note: TEST20}, {name: barge breadth, value: '20', unit: m, note: TEST20}, {name: draft, value: '4.8', unit: m, note: TEST20}, {name: FPSO length, value: '200', unit: m, note: TEST07 series}, {name: FPSO breadth, value: '44', unit: m, note: TEST07 series}, {name: draft, value: '12', unit: m, note: TEST07 series}, {name: two tanks wide, value: '42', unit: m, note: TEST07 series}, {name: two tanks long, value: '20', unit: m, note: TEST07 series}]
+  particulars_source: WAMIT v7.5 manual, Appendix A
+  particulars_as_reported: Two barges 100 m x 20 m and 50 m x 10 m, draft 4.8 m, 2 m gap (TEST03); barge 80 m x 20 m, draft 10 m, 2 m from a wall (TEST04); barge 100 m x 20 m x 4.8 m draft (TEST20); FPSO 200 m x 44 m, draft 12 m, two tanks 42 m wide and 20 m long (TEST07 series) (WAMIT v7.5 manual, Appendix A)
+  geometry: []
+  pages: ['https://www.wamit.com/demo.htm', 'https://www.wamit.com/manual7.x/html/wamit_v75manualap1.html']
+  geometry_as_reported: 'As O4: inside the demonstration package; dimensions are in the public manual'
+  geometry_available: dimensions only
+  benchmark_data: Diffraction in beam seas with gap resonance (TEST03), heave and pitch RAOs at 6, 9, 12 s for three headings (TEST20), tank sloshing coupled with roll (TEST07, TEST22), drift forces by three methods (TEST04a)
+  reuse_terms: As O4 (restrictive)
+  fitness_note: Box hulls are trivial to rebuild from the stated dimensions, so these give clean hydrostatics and RAO targets without redistributing the files. The published manual shows results as plots, not tables.
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified (dimensions and terms)
+  benchmark_pages: []
+- id: O6
+  name: Truncated circular cylinder, and cylinder with moonpool
+  hull_type: Truncated circular cylinder, and cylinder with moonpool
+  group: offshore and box-type forms
+  particulars: []
+  particulars_source: null
+  particulars_as_reported: Not read from the input files. The moonpool case is tied to a journal paper
+  geometry:
+  - {format: Panel meshes, url: 'https://github.com/YingyiLiu/HAMS', host: null, size_as_reported: 29 kB, note: '`CertTest/Cylinder/Input/HullMesh.pnl`'}
+  - {format: Panel meshes, url: 'https://github.com/YingyiLiu/HAMS', host: null, size_as_reported: 180 kB, note: '`CertTest/Moonpool/Input/HullMesh.pnl`'}
+  pages: []
+  geometry_as_reported: 'Panel meshes: `CertTest/Cylinder/Input/HullMesh.pnl` (29 kB) and `CertTest/Moonpool/Input/HullMesh.pnl` (180 kB) in `https://github.com/YingyiLiu/HAMS`'
+  geometry_available: 'yes'
+  benchmark_data: 'HAMS benchmark outputs per case. Moonpool: Zheng, Gao, Liu, Cheng, Ocean Engineering 237 (2021) 109573 (semi-analytical solution)'
+  reuse_terms: 'Apache-2.0 (sentence quoted under O1). Moonpool readme: "This example has been included in a manuscript authored by Siming Zheng et al., 2020, please cite the article as below"'
+  fitness_note: 'Ideal smoke test: analytic or semi-analytic references exist, so solver error is separable from mesh error.'
+  date_checked: '2026-10-11'
+  grade: verified
+  status_note: Verified (files, licence)
+  benchmark_pages: []
+- id: O7
+  name: NEMOH verification set (cylinder, two bodies, non-symmetrical body)
+  hull_type: cylinder, two bodies, non-symmetrical body
+  group: offshore and box-type forms
+  particulars: []
+  particulars_source: null
+  particulars_as_reported: Not read
+  geometry:
+  - {format: null, url: 'https://github.com/LHEEA/Nemoh', host: null, size_as_reported: null, note: 'Case folders `Verification/Cylinder`, `Verification/2Bodies`, `Verification/NonSymmetrical`, with "Test cases description.doc"; Contents were listed, not opened.'}
+  pages: []
+  geometry_as_reported: Case folders `Verification/Cylinder`, `Verification/2Bodies`, `Verification/NonSymmetrical` in `https://github.com/LHEEA/Nemoh`, with "Test cases description.doc"
+  geometry_available: 'yes'
+  benchmark_data: Reference inputs and results for single-body and two-body radiation and diffraction
+  reuse_terms: 'Repository licence Apache-2.0 (host metadata); notice file: "Copyright 2014 Ecole Centrale de Nantes"'
+  fitness_note: The two-body case is the only openly licensed multibody reference found. Contents were listed, not opened.
+  date_checked: '2026-10-11'
+  grade: partial
+  status_note: Partial (listing and licence verified)
+  benchmark_pages: []
+- id: O8
+  name: 'Reference Model 3 (RM3) two-body point absorber: float and spar/plate'
+  hull_type: 'two-body point absorber: float and spar/plate'
+  group: offshore and box-type forms
+  particulars: []
+  particulars_source: null
+  particulars_as_reported: Not read
+  geometry:
+  - {format: STL, url: 'https://github.com/WEC-Sim/WEC-Sim', host: null, size_as_reported: 145 kB, note: '`examples/RM3/geometry/float.stl`'}
+  - {format: STL, url: 'https://github.com/WEC-Sim/WEC-Sim', host: null, size_as_reported: 100 kB, note: '`plate.stl`'}
+  pages: []
+  geometry_as_reported: 'STL: `examples/RM3/geometry/float.stl` (145 kB) and `plate.stl` (100 kB) in `https://github.com/WEC-Sim/WEC-Sim`'
+  geometry_available: 'yes'
+  benchmark_data: Hydrodynamic data and time-domain example with a power take-off between the two bodies (contents not opened)
+  reuse_terms: Repository licence Apache-2.0 (host metadata)
+  fitness_note: Small two-body heaving case with open geometry; useful for multibody coupling, less so for vessel RAOs.
+  date_checked: '2026-10-11'
+  grade: partial
+  status_note: Partial (files and licence verified)
+  benchmark_pages: []
+- id: O9
+  name: ITI Energy barge and MIT/NREL TLP (5 MW baseline platforms)
+  hull_type: barge and MIT/NREL TLP
+  group: offshore and box-type forms
+  particulars: []
+  particulars_source: null
+  particulars_as_reported: Not read
+  geometry: []
+  pages: []
+  geometry_as_reported: 'No mesh. WAMIT outputs only: `Barge.1` (57 kB), `Barge.3` (2.0 MB), `Barge.hst`; `tlpmit.1`, `tlpmit.3`, `tlpmit.hst` in the OpenFAST r-test `HydroData` folder'
+  geometry_available: 'no'
+  benchmark_data: Added mass, damping, excitation, hydrostatics in WAMIT format
+  reuse_terms: Repository licence Apache-2.0 (host metadata)
+  fitness_note: 'Coefficients without geometry: usable as reader and database fixtures, not as a solver validation case until the geometry is sourced.'
+  date_checked: '2026-10-11'
+  grade: partial
+  status_note: Partial (files and licence verified)
+  benchmark_pages: []
