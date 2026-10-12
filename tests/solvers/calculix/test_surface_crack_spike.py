@@ -1,5 +1,6 @@
 """Offline spike checks; public-field derivation is recorded in the spike note."""
 import importlib.util
+import json
 import math
 import shutil
 import sys
@@ -14,6 +15,16 @@ SPEC = importlib.util.spec_from_file_location(
 )
 post = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(post)
+
+
+def test_solver_version_label_in_committed_results_and_generated_page():
+    from surface_crack_report import render
+
+    data = json.loads((ROOT / "docs/domains/asset-integrity/"
+                       "surface-crack-calculix-results.json").read_text())
+    label = "as installed on the build machine; not read from the run"
+    assert data["solver_version_source"] == label
+    assert f'{data["solver"]} ({label})' in render(data)
 
 
 def test_recovers_known_k_from_textbook_field():

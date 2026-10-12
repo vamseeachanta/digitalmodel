@@ -57,6 +57,7 @@ class Generator:
     # committed is still reproducible as long as that input is itself generated
     # deterministically from the repository.
     prerequisites: tuple[str, ...] = ()
+    inputs: tuple[str, ...] = ()
 
 
 GENERATORS = (
@@ -143,6 +144,13 @@ GENERATORS = (
     Generator(
         "scripts/production_chemistry/build_scale_si_explorer.py",
         ("docs/api/production/scale-si-explorer.html",),
+    ),
+    Generator(
+        "scripts/studies/surface_crack_report.py",
+        ("docs/domains/asset-integrity/surface-crack-calculix-spike-2026-10-11.html",),
+        ("--results", "docs/domains/asset-integrity/surface-crack-calculix-results.json",
+         "--output", "docs/domains/asset-integrity/surface-crack-calculix-spike-2026-10-11.html"),
+        inputs=("docs/domains/asset-integrity/surface-crack-calculix-results.json",),
     ),
 )
 
@@ -251,6 +259,12 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
         source = repo / relative
         if source.exists():
             shutil.copytree(source, shadow / relative)
+    for entry in GENERATORS:
+        for relative in (*entry.inputs, *entry.outputs):
+            source, target = repo / relative, shadow / relative
+            if source.is_file():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
 
 
 def output_paths(root: Path, entry: Generator) -> set[Path]:
@@ -291,7 +305,8 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
     command = [
         sys.executable,
         str(script),
-        *(str(shadow / argument) for argument in entry.arguments),
+        *(argument if argument.startswith("--") else str(shadow / argument)
+          for argument in entry.arguments),
     ]
     if entry.redirect_module_outputs:
         command = [

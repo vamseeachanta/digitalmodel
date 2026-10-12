@@ -178,6 +178,7 @@ def compile_results(scratch):
         runs.append(row)
     return dict(benchmark=BENCHMARK, material=dict(e_mpa=E_MPA, nu=NU),
                 half_length_mm=HALF_LENGTH_MM, solver="CalculiX 2.21",
+                solver_version_source="as installed on the build machine; not read from the run",
                 comparison_tolerance=COMPARISON_TOLERANCE,
                 qualification="research only; two-solver verdict remains open",
                 runs=runs, source_revision="f21a12af5349c1656137a7b9daa091ec8f968738",

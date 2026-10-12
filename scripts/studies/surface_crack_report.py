@@ -15,6 +15,7 @@ def table(headers, rows, caption):
 def method_text(data):
     b = data["benchmark"]
     return f'''<h2>Benchmark and method</h2>
+<p>Solver: {html.escape(data['solver'])} ({html.escape(data['solver_version_source'])}).</p>
 <p>The fixed flaw has a = c = {b['a_mm']:g} mm, t = {b['t_mm']:g} mm,
 plate full width = {2*b['width_mm']:g} mm and full length = {2*data['half_length_mm']:g} mm.
 Thus a/t = {b['a_mm']/b['t_mm']:g}, a/c = {b['a_mm']/b['c_mm']:g},
