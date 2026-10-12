@@ -1,0 +1,106 @@
+{
+  "source": {
+    "source_id": "nrel-iea-reference-turbines",
+    "name": "MoorPy old default line-property coefficient set",
+    "url": "https://github.com/NREL/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/moorpy/library/MoorProps_default.yaml",
+    "commit": "1fb29f8eca2618543b2df7056adfdfce0265737b",
+    "file": "moorpy/library/MoorProps_default.yaml",
+    "locator": "wire lines 85-89; polyester lines 93-99; nylon lines 105-112; helpers.py getLineProps and loadLineProps",
+    "retrieved_at": "2026-10-11T23:39:03Z",
+    "license": "BSD 3-Clause License",
+    "terms": "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:",
+    "terms_url": "https://github.com/NREL/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/LICENSE.txt",
+    "sha256": "4f0b8d9b10eb1a7def04709350e8bc4a7afa6f4461f40cb0d2b4a4e700732cac",
+    "formula_url": "https://github.com/NREL/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/moorpy/helpers.py",
+    "formula_sha256": "8ac9c719d05e88a1e709cb9c2e110721f4414ff2c847bd39325a34c399f48199",
+    "readiness": "computed examples only; not certified component selection"
+  },
+  "water_density": 1025.0,
+  "water_density_units": "kg/m^3",
+  "water_density_source": "https://github.com/NREL/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/moorpy/helpers.py#L630",
+  "mm_per_m": 1000,
+  "n_per_kn": 1000,
+  "conversion_source": "helpers.py getLineProps converts mm to m using 0.001; kN is N divided by the same SI prefix factor",
+  "wire": {
+    "MoorPy generic wire": {
+      "mass_d2": 5293.0,
+      "dvol_dnom": 1.18,
+      "MBL_d2": 1022000000.0,
+      "EA_d2": 97100000000.0
+    }
+  },
+  "line": {
+    "polyester": {
+      "mass_d2": 679.0,
+      "MBL_d2": 308000000.0,
+      "EA_MBL": 14.0,
+      "density": 1380.0
+    },
+    "nylon": {
+      "mass_d2": 585.0,
+      "MBL_d3": 230000000.0,
+      "MBL_d2": 207000000.0,
+      "EA_MBL": 5.0,
+      "density": 1140.0
+    }
+  },
+  "excerpts": {
+    "wire": "    mass_d2   :  5293    # linear mass density per diameter^2 [kg/m/m^2]    \n    dvol_dnom :  1.18     # volume-equivalent diameter per nominal diameter [-] (assumes 4,875.5 kg/m^3 material density)\n    MBL_d2    :  1022e6    # minimum breaking load per diameter^2 [N/m^2] \n    EA_d2     :  97.1e9    # stiffness per diameter^2 [N/m^2]\n",
+    "polyester": "    mass_d2   :  679       # linear mass density per diameter^2 [kg/m/m^2]       \n    MBL_d2    :  308e6     # minimum breaking load per diameter^2 [N/m^2]     \n    EA_MBL    :   14       # quasi-static stiffness per MBL [N/N]\n    density   :  1380      # density of the polyester material [kg/m^3] (taken from specific gravity of 1.38, relative to 1000 kg/m^3)\n",
+    "nylon": "    mass_d2   :  585       # linear mass density per diameter^2 [kg/m/m^2]\n    MBL_d3    :  230e6     # minimum breaking load per diameter^3 [N/m^2]\n    MBL_d2    :  207e6     # minimum breaking load per diameter^2 [N/m^2] \n    EA_MBL    :  5         # quasi-static stiffness per MBL [N/N] (can range from 1 to 10)\n    density   :  1140      # density of the nylon material [kg/m^3] (taken from specific gravity of 1.14, relative to 1000 kg/m^3)\n"
+  },
+  "wire_diameters_mm": [
+    20,
+    24,
+    28,
+    32,
+    36,
+    40,
+    44,
+    48
+  ],
+  "line_diameters_mm": [
+    50,
+    76
+  ],
+  "diameter_source": {
+    "owner_repo": "digitalmodel",
+    "url": "https://github.com/vamseeachanta/digitalmodel/blob/f21a12af5349c1656137a7b9daa091ec8f968738/tests/marine_ops/marine_engineering/test_component_database.py",
+    "commit": "f21a12af5349c1656137a7b9daa091ec8f968738",
+    "file": "tests/marine_ops/marine_engineering/test_component_database.py",
+    "locator": "_generate_wire_database diameter list; _generate_chain_database diameter list; sampling only, not a valid manufacturer range",
+    "retrieved_at": "2026-10-12T00:46:08.513880+00:00",
+    "license": "MIT License",
+    "terms": "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction",
+    "terms_url": "https://github.com/vamseeachanta/digitalmodel/blob/f21a12af5349c1656137a7b9daa091ec8f968738/LICENSE",
+    "sha256": "f6738b3651a13c078fb8bc65a2cf2d22e76a4b840c4b81736b401855e7d67ed7"
+  },
+  "excluded_sources": [
+    {
+      "name": "IEA reference platform",
+      "commit": "e4993d63de10f165389534461dd544006750fe60",
+      "file": "OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_MoorDyn.dat",
+      "url": "https://github.com/IEAWindTask37/IEA-15-240-RWT/blob/e4993d63de10f165389534461dd544006750fe60/OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_MoorDyn.dat",
+      "terms": "Apache License, Version 2.0",
+      "terms_url": "https://github.com/IEAWindTask37/IEA-15-240-RWT/blob/e4993d63de10f165389534461dd544006750fe60/LICENSE",
+      "retrieval_date_utc": "2026-10-11",
+      "reason": "No breaking strength in inspected model; equivalent/model diameter cannot be treated as nominal catalogue diameter."
+    },
+    {
+      "name": "OC4 reference platform",
+      "commit": "dd5feaaaa500ba7283140107806300d551cff0a7",
+      "file": "glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC4DeepCwindSemi_MoorDyn.dat",
+      "url": "https://github.com/OpenFAST/r-test/blob/dd5feaaaa500ba7283140107806300d551cff0a7/glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC4DeepCwindSemi_MoorDyn.dat",
+      "terms": "Apache License, Version 2.0",
+      "terms_url": "https://github.com/OpenFAST/r-test/blob/dd5feaaaa500ba7283140107806300d551cff0a7/LICENSE",
+      "retrieval_date_utc": "2026-10-11",
+      "reason": "No breaking strength in inspected model; no complete chain row."
+    }
+  ],
+  "retained_large_discovery_file": {
+    "scratch_relative_path": "sources/oc4-commit.json",
+    "size_bytes": 1264083,
+    "sha256": "946a5dbd2fa9c3e96aeea27a9fe5852535b2dcce7602043f0e2caf0eab8746dc",
+    "purpose": "source revision discovery; retained in the job scratch area on the data disk of the Linux workstation"
+  }
+}
