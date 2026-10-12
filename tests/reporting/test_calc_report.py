@@ -241,6 +241,20 @@ def test_print_uses_auto_table_layout_not_fixed():
     assert "table-layout: fixed" not in html_out
 
 
+def test_design_data_tables_have_no_lower_minimum_width():
+    """Design-data tables inherit the global 440px minimum-width floor."""
+    html_out = minimal_report().render_html()
+    styles = "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", html_out, re.S))
+    css = re.sub(r"/\*.*?\*/", "", styles, flags=re.S)
+    minimum_widths = [
+        width.strip()
+        for selector, declarations in re.findall(r"([^{}]+)\{([^{}]*)\}", css)
+        if re.search(r"\btable\b", selector)
+        for width in re.findall(r"\bmin-width\s*:\s*([^;}]+)", declarations)
+    ]
+    assert minimum_widths == ["440px"], minimum_widths
+
+
 # ---------------------------------------------------------------------------
 # The organisation marks
 #
@@ -264,7 +278,7 @@ HOUSE_FOOT_BAR = '<div class="foot-bar"><span>AceEngineer &middot; Test</span>'
 #: change is expected to move it -- regenerate it then, having first read the
 #: diff and confirmed the marks above are still intact.
 HOUSE_RENDER_SHA256 = (
-    "5f8da8c0b4bb55e634a8250ed51b74727c1922dfb28ef49a494cb17ac0d9c558")
+    "5eb71f39d71f9fb581244fffce3176d84891814549302fe7e1925694e1a58c2a")
 
 
 def test_default_organisation_renders_the_house_marks_unchanged():
@@ -376,7 +390,7 @@ SINGLE_TIER_REVHIST = (
 #: *before* `InternalRevision` and `incorporates` were added, not by copying
 #: the value the changed code happened to produce.
 SINGLE_TIER_RENDER_SHA256 = (
-    "8bc5345b0ea3e25af0ae3d6e52d100aabf7aa73ccf9f98fa389eba72f8edbabf")
+    "d719824b30f06e75f75afbc6942639bd16080d31fa2fc0b50045f24d65f8a2ee")
 
 
 def test_a_single_tier_report_is_unmoved_by_the_internal_tier():
