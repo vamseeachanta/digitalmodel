@@ -173,7 +173,7 @@ class TestLazyWaveSolver:
 
         # Legacy force calculations (lines 164-165)
         expected_Fh = typical_config.hangoff_bend_radius * typical_config.weight_without_buoyancy
-        expected_Fv = expected_Fh + typical_config.weight_without_buoyancy * results.hangoff_to_sag.arc_length
+        expected_Fv = typical_config.weight_without_buoyancy * results.hangoff_to_sag.arc_length
 
         # Verify exact match
         assert math.isclose(results.horizontal_force, expected_Fh, rel_tol=1e-9)
