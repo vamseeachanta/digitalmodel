@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criterion summary coverage contract</title>
+<style>body{font:1rem/1.6 system-ui;max-width:70rem;margin:3rem auto;padding:0 1rem}table{border-collapse:collapse}td,th{border:1px solid #aaa;padding:.5rem;text-align:left}code{background:#eee}caption{caption-side:bottom;text-align:left}</style>
+<main>
+<h1>Criterion summary coverage contract</h1>
+<p><code>postprocess.evaluate.summarise</code> reports supplied final checks and their coverage.
+It changes no criterion, limit, factor or acceptance value and does not establish design acceptance.</p>
+<h2>Inputs and reconciliation</h2>
+<p>The positional iterable of <code>(case_id, CaseCheck)</code> is retained. Two optional keyword arguments
+make coverage explicit: <code>expected_cases</code> maps criterion ID to sensitivity group to applicable
+logical case IDs; <code>ledger_outcomes</code> maps logical case ID to its final run outcome.</p>
+<p>Build expected sets from the run manifests and criterion applicability, including cases without checks.
+Use <code>aggregate.collect</code> to reconcile attempts: the latest ledger record governs and a manifest
+case with no ledger is retained as <code>missing</code>. Map returned records to <code>ok</code> and issues
+to their returned status. Verify result digests with <code>load_verified</code> before evaluation.
+For seeded cases, reconcile all expected seeds into the logical case before summarising; an incomplete
+seed set must not become an <code>ok</code> logical case. The summary does not read files or infer applicability.</p>
+<p>Each criterion/case pair has exactly one final check. Duplicates, invalid check statuses, duplicate IDs
+within a group, and observed cases outside explicit applicability raise <code>ValueError</code>.
+Groups may overlap; row counts use their union, so a case is counted once per criterion.</p>
+<h2>Returned fields per criterion and group</h2>
+<table>
+<tr><th>Field</th><th>Meaning</th></tr>
+<tr><td>counts, governing, max_u</td><td>Existing fields describe supplied checks; screening never governs.</td></tr>
+<tr><td>observed_status</td><td>FAIL if any supplied check fails; otherwise PASS if any passes; otherwise NOT_EVALUATED. This field alone says nothing about coverage.</td></tr>
+<tr><td>expected_cases, recorded_cases</td><td>Sorted applicable IDs and supplied check IDs. Expected cases are null when undeclared.</td></tr>
+<tr><td>final_outcomes</td><td>Final ledger status for each expected case (observed cases if no expected set). Missing entries in a supplied ledger mapping become missing. Values are null when the mapping is omitted.</td></tr>
+<tr><td>missing_cases, missing_count</td><td>Expected cases without a check or with a final outcome other than ok. Both are null without an expected set. Without ledger evidence they count absent checks only, not verified final-result coverage.</td></tr>
+<tr><td>unevaluated_cases</td><td>Supplied NOT_EVALUATED check IDs, including unsupported criteria. These need not have missing solver results.</td></tr>
+<tr><td>coverage_complete</td><td>True only for a nonempty expected set with every check, every final outcome ok, and no NOT_EVALUATED check. False otherwise; null if either coverage input is omitted.</td></tr>
+<tr><td>status</td><td>Observed FAIL stays FAIL independently of coverage. PASS requires complete coverage and observed PASS. Otherwise NOT_EVALUATED.</td></tr>
+<tr><td>groups</td><td>The same fields per declared sensitivity group, without nested groups. Empty when applicability is not supplied.</td></tr>
+<caption>Table 1. Summary fields. Null denotes unknown, not zero.</caption>
+</table>
+<p>SCREENING checks count as recorded coverage but never yield PASS by themselves. Empty selections are
+NOT_EVALUATED; a completely undeclared empty input returns an empty dictionary. A failed solve is a coverage
+gap, not an engineering FAIL. A supplied stale PASS cannot overcome a failed final ledger outcome.</p>
+<h2>Compatibility and sources</h2>
+<p>Existing callers in <code>test_evaluate.py</code> and <code>test_w510_significant_range.py</code> keep
+the positional interface; <code>postprocess/__init__.py</code> still exports the function. A formerly passing
+summary without both coverage inputs now returns NOT_EVALUATED. Consumers wanting the old observational
+value can inspect observed_status together with coverage_complete.</p>
+<p>Status vocabulary is defined in <code>src/digitalmodel/drilling_riser/postprocess/evaluate.py:32</code>;
+final ledger and missing-case semantics are defined in <code>aggregate.py:3-8</code> and
+<code>aggregate.py:64</code>. No new status words or engineering constants are introduced. Tests use
+synthetic records and case/group identifiers already present in the evaluator and aggregation tests.</p>
+<p>The configuration-specific consumer is outside this public repository; parity with its implementation
+is not established. The public contract is covered by <code>test_summary_coverage.py</code>.</p>
+</main>
+</html>
