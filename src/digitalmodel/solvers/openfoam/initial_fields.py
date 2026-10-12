@@ -112,13 +112,22 @@ def write_pressure_field(
 ) -> None:
     """Write 0/p or 0/p_rgh pressure initial and boundary conditions.
 
-    For VOF (multiphase) simulations, OpenFOAM uses a modified pressure
-    p_rgh = p - rho*g*h. The file is named accordingly so the solver
-    can find it. Attached ``boundary_conditions`` for the pressure field
-    override the defaults per patch.
+    Incompressible single-phase simpleFoam and pimpleFoam cases use kinematic
+    pressure p (pressure divided by density), with units of m^2/s^2. Multiphase
+    interFoam VOF cases use p_rgh = p - rho*g*h, with pascal dimensions.
+
+    Dimensions are confirmed from installed OpenFOAM v2312 tutorial files
+    (Development/openfoam repository, release tag OpenFOAM-v2312):
+    - tutorials/incompressible/simpleFoam/pitzDaily/0/p
+    - tutorials/multiphase/interFoam/laminar/damBreak/damBreak/0.orig/p_rgh
+
+    Attached ``boundary_conditions`` for the pressure field override the
+    defaults per patch.
     """
-    field_name = "p_rgh" if is_multiphase else "p"
-    dims = "[1 -1 -2 0 0 0 0]"
+    if is_multiphase:
+        field_name, dims = "p_rgh", "[1 -1 -2 0 0 0 0]"
+    else:
+        field_name, dims = "p", "[0 2 -2 0 0 0 0]"
     defaults = {
         "inlet": {"type": "zeroGradient"},
         "outlet": {"type": "fixedValue", "value": "uniform 0"},
