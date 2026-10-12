@@ -7,11 +7,16 @@ Fatigue Postprocessor
 
 Post-processes ANSYS APDL stress results for fatigue life assessment:
 
-    - Stress range extraction at critical locations
+    - APDL command generation for stress range extraction at critical locations
     - S-N curve definition and evaluation (DNV-RP-C203, ASME VIII Div 2)
     - Miner's cumulative damage rule
     - Fatigue damage contour data generation
-    - Rainflow cycle counting (simplified)
+
+Stress ranges and cycle counts supplied by the caller are consumed by this
+module. The stress concentration factor, thickness correction, S-N lookup,
+Miner summation and design fatigue factor are applied. Cycle counting is not
+performed here. Stress-range extraction is delegated to the solver through
+the generated APDL command text.
 
 Supported S-N curves:
 
