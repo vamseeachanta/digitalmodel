@@ -4,7 +4,7 @@ Public-source research screen for [issue #2202](https://github.com/vamseeachanta
 
 Single source: research note on the issue, sources checked 2026-10-11.
 
-Research only; no code. All sources were checked on 2026-10-11. "Opened" means I read the page or the document text myself; "search snippet" means I only saw a search-engine summary and the claim is **unverified**. Rule and recommendation designations are given without edition years unless the opened copy states one. The common structural rules are openly published; only short defining sentences are quoted.
+Research only; no code. All sources were checked on 2026-10-11. "Opened" means the page or the document text was read directly; "search snippet" means only a search-engine summary was seen and the claim is **unverified**. Rule and recommendation designations are given without edition years unless the opened copy states one. The common structural rules are openly published; only short defining sentences are quoted.
 
 ## 1. Bottom line
 
@@ -45,7 +45,7 @@ IMO resolution MSC.108(73), adopted 5 December 2000, urges governments to ensure
 ### 3.4 Pitting, grooving, edge corrosion
 
 - The flag-state instruction reproduces a pitting intensity diagram "taken from IMO Resolution A.1049(27)" and states, "based on IACS Common Structural Rules": scattered pitting with intensity below 20 % and remaining thickness in pits not less than 70 % of original (or 3.0 mm if greater) may be repaired by welding; intensity below 5 % needs cleaning and coating only; grooving up to 15 % of stiffener height with at least 75 % of original thickness; edge corrosion up to 25 % of a flat-bar height or flange length [S2, opened]. It also gives a minimum edge thickness figure of "30% of the original thickness", which reads like a slip for 70 % and should be checked against the primary text before use.
-- Because these limits are not in the Chapter 13 copy I opened (3.1), their primary home is the survey requirements or an earlier rule edition. **Unverified** which.
+- Because these limits are not in the Chapter 13 copy opened (3.1), their primary home is the survey requirements or an earlier rule edition. **Unverified** which.
 - IACS Recommendation 84 is listed by a bookseller as "Container Ships. Guidelines for Surveys, Assessment and Repair of Hull Structures" (search snippet; **unverified**, and whether it contains pitting intensity diagrams was not checked). The issue's "pitting intensity classification per IACS Rec. 84 practice" should be re-pointed or confirmed.
 
 ## 4. Assessment methods and levels in use
@@ -72,7 +72,7 @@ ACCEPT when all readings exceed renewal thickness plus reserve and the hull-gird
 |---|---|---|
 | Rule formulas in [S1] | Closed-form; a synthetic section can be hand-checked for each branch, including the short cut. | **Yes**, meets the issue's golden-test acceptance line. |
 | Kuznecovs, Ringsberg, Johnson, Yamada, journal paper, CC BY [S4] | Double-hull tanker, non-linear finite element versus Smith method, intact and collision-damaged, new and corroded (the corroded case is assumed to represent 25 years of ageing, with corrosion margins estimated from the common structural rules). Good agreement between both methods and the rule formula for the intact non-corroded hull in vertical bending; "The differences between the two methods were larger for the corroded and damaged ship hull structure". | **Yes** as an external benchmark for the hull-girder tier and as a caution on Smith-method accuracy for corroded sections. |
-| Ship-structure research report SSC-474, public release [S5] | Worked assessment process for a corrosion-degraded ship. | Useful as method reference; I read only the front matter and abstract. |
+| Ship-structure research report SSC-474, public release [S5] | Worked assessment process for a corrosion-degraded ship. | Useful as method reference; only the front matter and abstract were read. |
 | Paper on pitting wastage and hull-girder ultimate strength using an international committee benchmark bulk carrier | Search snippet only. | **Unverified**. |
 
 ## 8. Who buys the work, and when
@@ -87,7 +87,7 @@ ACCEPT when all readings exceed renewal thickness plus reserve and the hull-gird
 - **Can offer now with open methods:** the complete screen (local, global, short cut), a steel-renewal quantity estimate from a thickness-measurement report, panel buckling and hull-girder ultimate strength as an optional higher tier, sensitivity to gauging uncertainty.
 - **Needs licensed or owner data:** individual class societies' percentage diminution tables and condition-rating criteria; the ship's approved plans with as-built, renewal and voluntary-addition thicknesses; survey requirement texts for pitting and grooving limits if the open copies cannot be confirmed.
 - **Differentiator:** speed and transparency before dry-dock (renewal tonnage forecast from the previous survey's readings plus a corrosion-rate projection), and an independent check for owners, buyers and insurers. Class societies own the formal verdict; this is decision support around it, not a substitute.
-- **Verdict: strong fit. Lowest data and licensing risk of the offering screens reviewed today, and the closest reuse of existing hull-girder and panel-buckling code.**
+- **Verdict: strong fit. Lowest data and licensing risk of the offering screens reviewed on 2026-10-11, and the closest reuse of existing hull-girder and panel-buckling code.**
 
 ## 10. Consequences for this issue's objective
 
@@ -109,5 +109,5 @@ ACCEPT when all readings exceed renewal thickness plus reserve and the hull-gird
 ## Could not verify
 
 - The text of IACS UR Z7 and UR Z10.x (substantial-corrosion definitions, pitting and grooving limits, thickness-measurement tables): mirrors refused the connection; the official site's landing pages do not show the content.
-- Whether [S1] is identical to the association's own current consolidated edition (I opened a class-society mirror, not the association's file).
+- Whether [S1] is identical to the association's own current consolidated edition (a class-society mirror was opened, not the association's file).
 - IACS Recommendation 84 content; IMO Resolution A.1049(27) itself; published corrosion-rate statistics by compartment (not searched in depth); any numeric ultrasonic gauging accuracy.

@@ -48,7 +48,7 @@ sources:
   access_note: opened
 could_not_verify:
 - 'The text of IACS UR Z7 and UR Z10.x (substantial-corrosion definitions, pitting and grooving limits, thickness-measurement tables): mirrors refused the connection; the official site''s landing pages do not show the content.'
-- Whether [S1] is identical to the association's own current consolidated edition (I opened a class-society mirror, not the association's file).
+- Whether [S1] is identical to the association's own current consolidated edition (a class-society mirror was opened, not the association's file).
 - IACS Recommendation 84 content; IMO Resolution A.1049(27) itself; published corrosion-rate statistics by compartment (not searched in depth); any numeric ultrasonic gauging accuracy.
 bottom_line:
 - 'The renewal logic this issue needs is **fully open** and simple enough to hand-check: one renewal-thickness formula per element, a fixed 0.5 mm reserve band, and three hull-girder zone checks. Golden tests on a synthetic thickness-measurement report are realistic.'
