@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Aggregate CFD runtime / mesh / throughput into a committed compute manifest (#1439).
 
 Compute optimization: turn the sloshing CFD case tree into a reusable

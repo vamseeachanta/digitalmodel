@@ -74,11 +74,11 @@ Checked curvature refinement in = 0 s
 Adding patches for surface regions
 ----------------------------------
 
-Patch Type                Region                        
------ ----                ------                        
+Patch Type                Region
+----- ----                ------
 hull:
 
-6     wall                hull                          
+6     wall                hull
 
 Added patches in = 0.05 s
 
@@ -119,7 +119,7 @@ Location : (-0.857766 0 0)
     cellZone : none
 
 For cellZone none found point (-0.857766 0 0) in global region 0 out of 2 regions.
---> FOAM Warning : 
+--> FOAM Warning :
     From void Foam::meshRefinement::nearestFace(const Foam::labelUList&, const Foam::bitSet&, Foam::autoPtr<Foam::mapDistribute>&, Foam::labelList&, Foam::label) const
     in file meshRefinement/meshRefinement.C at line 515
     Did not visit some faces, e.g. face 0 at (-30.8508 -22.7761 -19.1284)
@@ -344,7 +344,7 @@ Morphing phase
 Duplicating 0 points on faceZones of type boundary
 Snapping to features in 10 iterations ...
 Constructing mesh displacer ...
-Using mesh parameters 
+Using mesh parameters
 {
     maxNonOrtho     70;
     maxBoundarySkewness 4;
@@ -2267,7 +2267,7 @@ Layer specification as
 Shrinking and layer addition phase
 ----------------------------------
 
-Using mesh parameters 
+Using mesh parameters
 {
     maxNonOrtho     70;
     maxBoundarySkewness 4;
@@ -2341,7 +2341,7 @@ Set displacement to zero for points on 579 feature edges
 patch faces    layers avg thickness[m]
                      near-wall overall
 ----- -----    ------ --------- -------
-hull 33991    6      0.00188   0.0235  
+hull 33991    6      0.00188   0.0235
 
 
 Outer iteration : 0
@@ -2369,7 +2369,7 @@ Detected 0 points with point normal pointing through faces.
 Reset displacement at 0 points to average of surrounding points.
 
 displacementMedialAxis : Smoothing using Medial Axis ...
-displacementMedialAxis : Reducing layer thickness at 11 nodes where thickness to medial axis distance is large 
+displacementMedialAxis : Reducing layer thickness at 11 nodes where thickness to medial axis distance is large
 displacementMedialAxis : Removing isolated regions ...
 - if partially extruded faces make angle < 30
 - if exclusively surrounded by non-extruded faces
@@ -2530,7 +2530,7 @@ Detected 0 points with point normal pointing through faces.
 Reset displacement at 0 points to average of surrounding points.
 
 displacementMedialAxis : Smoothing using Medial Axis ...
-displacementMedialAxis : Reducing layer thickness at 6 nodes where thickness to medial axis distance is large 
+displacementMedialAxis : Reducing layer thickness at 6 nodes where thickness to medial axis distance is large
 displacementMedialAxis : Removing isolated regions ...
 - if partially extruded faces make angle < 30
 - if exclusively surrounded by non-extruded faces
@@ -2691,7 +2691,7 @@ Detected 0 points with point normal pointing through faces.
 Reset displacement at 0 points to average of surrounding points.
 
 displacementMedialAxis : Smoothing using Medial Axis ...
-displacementMedialAxis : Reducing layer thickness at 5 nodes where thickness to medial axis distance is large 
+displacementMedialAxis : Reducing layer thickness at 5 nodes where thickness to medial axis distance is large
 displacementMedialAxis : Removing isolated regions ...
 - if partially extruded faces make angle < 30
 - if exclusively surrounded by non-extruded faces
@@ -2852,7 +2852,7 @@ Detected 0 points with point normal pointing through faces.
 Reset displacement at 0 points to average of surrounding points.
 
 displacementMedialAxis : Smoothing using Medial Axis ...
-displacementMedialAxis : Reducing layer thickness at 5 nodes where thickness to medial axis distance is large 
+displacementMedialAxis : Reducing layer thickness at 5 nodes where thickness to medial axis distance is large
 displacementMedialAxis : Removing isolated regions ...
 - if partially extruded faces make angle < 30
 - if exclusively surrounded by non-extruded faces
@@ -3013,7 +3013,7 @@ Detected 0 points with point normal pointing through faces.
 Reset displacement at 0 points to average of surrounding points.
 
 displacementMedialAxis : Smoothing using Medial Axis ...
-displacementMedialAxis : Reducing layer thickness at 5 nodes where thickness to medial axis distance is large 
+displacementMedialAxis : Reducing layer thickness at 5 nodes where thickness to medial axis distance is large
 displacementMedialAxis : Removing isolated regions ...
 - if partially extruded faces make angle < 30
 - if exclusively surrounded by non-extruded faces
@@ -3174,7 +3174,7 @@ Detected 0 points with point normal pointing through faces.
 Reset displacement at 0 points to average of surrounding points.
 
 displacementMedialAxis : Smoothing using Medial Axis ...
-displacementMedialAxis : Reducing layer thickness at 5 nodes where thickness to medial axis distance is large 
+displacementMedialAxis : Reducing layer thickness at 5 nodes where thickness to medial axis distance is large
 displacementMedialAxis : Removing isolated regions ...
 - if partially extruded faces make angle < 30
 - if exclusively surrounded by non-extruded faces
@@ -3334,7 +3334,7 @@ Mesh with layers : cells:1626151  faces:4987086  points:1736971
 patch faces        layers        overall thickness
               target   mesh     [m]       [%]
 ----- -----    -----    ----     ---       ---
-hull 33991    6        5.43     0.0227    95.8    
+hull 33991    6        5.43     0.0227    95.8
 
 Layer mesh : cells:1626151  faces:4987086  points:1736971
 Cells per refinement level:
@@ -3356,4 +3356,3 @@ Checking faces in error :
 Finished meshing with 26 illegal faces (concave, zero area or negative cell pyramid volume)
 Finished meshing in = 423.78 s.
 End
-

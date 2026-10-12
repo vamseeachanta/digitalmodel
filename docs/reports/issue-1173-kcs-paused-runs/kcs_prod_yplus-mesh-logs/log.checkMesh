@@ -28,7 +28,7 @@ Check mesh...
 
 Time = 0
 
-Mesh stats 
+Mesh stats
     points:           1736971
     faces:            4987086
     internal faces:   4885878
@@ -108,4 +108,3 @@ Checking geometry...
 Mesh OK.
 
 End
-
