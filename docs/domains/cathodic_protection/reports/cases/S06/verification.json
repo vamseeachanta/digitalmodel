@@ -1,0 +1,19 @@
+{
+  "calculation_result": "PASS",
+  "children": [],
+  "engineering_review": "pending",
+  "fixture": "pipeline.yml",
+  "id": "S06",
+  "pack_state": "verified",
+  "report": "cases/S06/report.html",
+  "route": "DNV_RP_F103",
+  "source_class": "synthetic_repository_regression",
+  "source_revision": "bf638ed1",
+  "title": "Bracelet pipeline",
+  "use_status": "client-use-with-eor-check",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

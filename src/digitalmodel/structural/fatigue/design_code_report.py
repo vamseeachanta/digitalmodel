@@ -21,8 +21,11 @@ _SUPPORTED_STANDARDS: Dict[str, Dict[str, Any]] = {
         "default_curve": "D",
         "environment": "Seawater + CP",
         "references": [
-            "DNV-RP-C203 (2016) including 2019 amendments",
-            "DNV-RP-C203 Table 2-1 to Table 2-3 (air / seawater+CP / free-corrosion)",
+            "DNV-RP-C203 S-N class framework; the curve constants in this module are "
+            "not traced to a single DNV-RP-C203 edition (the 2021 tables are "
+            "implemented in digitalmodel.fatigue.sn_library)",
+            "DNV-RP-C203 (2021) Table 2-1 / Table 2-2 / Table 2-4 "
+            "(air / seawater+CP / free corrosion)",
             "DNV-RP-C203 thickness correction using (t/tref)^k with tref=25 mm",
             "DNV-RP-C203 weld improvement guidance (grinding and hammer peening)",
         ],

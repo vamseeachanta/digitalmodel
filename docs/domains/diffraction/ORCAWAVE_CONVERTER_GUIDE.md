@@ -226,14 +226,14 @@ from digitalmodel.orcawave.diffraction.orchestrator import OrcaWaveOrchestrator
 from digitalmodel.diffraction import OrcaWaveConverter, OrcaFlexExporter
 
 # Run OrcaWave analysis
-orchestrator = OrcaWaveOrchestrator(vessel_name="sea_cypress")
+orchestrator = OrcaWaveOrchestrator(vessel_name="tug_30m_1")
 orchestrator.run_workflow()
 
 # Convert results after analysis complete
-results_dir = orchestrator.results_dir / "sea_cypress"
-model_file = results_dir / "sea_cypress.sim"
+results_dir = orchestrator.results_dir / "tug_30m_1"
+model_file = results_dir / "tug_30m_1.sim"
 
-converter = OrcaWaveConverter(model_file, "sea_cypress")
+converter = OrcaWaveConverter(model_file, "tug_30m_1")
 results = converter.convert_to_unified_schema(water_depth=1200.0)
 
 # Export for OrcaFlex

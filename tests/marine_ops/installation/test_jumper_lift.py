@@ -1,8 +1,8 @@
 """
-Test suite for jumper_lift.py – Ballymore Manifold-to-PLET Jumper V2
+Test suite for jumper_lift.py – GoM tieback Manifold-to-PLET Jumper V2
 
 Every expected value is traced back to a specific cell in the source
-workbook (Jumper_Input_Ballymore_Manifold-PLET V2.xlsx).
+workbook (Jumper_Input_GoM tieback_Manifold-PLET V2.xlsx).
 
 Tolerances:
     • 1e-4 for lengths, weights, densities (4 decimal places matches

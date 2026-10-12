@@ -47,7 +47,8 @@ docs\cathodic_protection\codes\DNV RP B401 (2011) Cathodic Protection Design.pdf
 
 ## Courses
 
-See, [See other literature including course work from various sources](literature)
+Course notes from various sources were consulted for the salinity/resistivity data above;
+they are not stored in this repository.
 
 ## Other References
 
@@ -74,10 +75,12 @@ SNAME T&R Report R-21: Fundamentals of Cathodic Protection for Marine Service (1
 Tyipical design for CP system is shown in the figure below:
 <img src="cp_calculation.png" width=auto, height=auto/>
 
-The detailed calculations for Sacrificial Anode Cathodic Protection System is:
+The detailed calculations for a Sacrificial Anode Cathodic Protection System are in
+[Sacrificial Anode Methodology (ABS ships)](abs_ship_sacrificial_anode.md); worked examples
+are listed in [_index.md](_index.md).
 
-The detailed calculations for Impressed Current Cathodic Protection System is:
-[Sacrificial Anode Methodology](sacrificial_anode.md)
+The detailed calculations for an Impressed Current Cathodic Protection System are not yet
+documented here; see `src/digitalmodel/cathodic_protection/iccp_design.py`.
 
 ## Vendors
 

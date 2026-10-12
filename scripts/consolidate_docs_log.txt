@@ -1,6 +1,6 @@
 2026-02-08 00:06:54 | Starting docs/eng/ -> docs/modules/ consolidation
-2026-02-08 00:06:54 | Source: D:\workspace-hub\digitalmodel\docs\eng
-2026-02-08 00:06:54 | Target: D:\workspace-hub\digitalmodel\docs\modules
+2026-02-08 00:06:54 | Source: <private-data>\eng
+2026-02-08 00:06:54 | Target: <private-data>\modules
 2026-02-08 00:06:54 | ================================================================================
 2026-02-08 00:06:54 | 
 --- cathodic_protection/ -> cathodic_protection/ ---
@@ -85,7 +85,7 @@
 2026-02-08 00:06:54 | 
 --- accidents/ -> standards/accidents/ ---
 2026-02-08 00:06:54 |   MOVE: accidents\blowouts.md -> modules/standards/accidents/blowouts.md
-2026-02-08 00:06:54 |   MOVE: accidents\macondo_resources.pdf -> modules/standards/accidents/macondo_resources.pdf
+2026-02-08 00:06:54 |   MOVE: accidents\gom_2010_blowout_resources.pdf -> modules/standards/accidents/gom_2010_blowout_resources.pdf
 2026-02-08 00:06:54 | 
 --- animation/ -> visualization/ ---
 2026-02-08 00:06:54 |   MOVE: animation\blender.md -> modules/visualization/blender.md
@@ -145,7 +145,7 @@
 2026-02-08 00:06:54 |   MOVE: field_development\IND_2020-21revised.pdf -> modules/references/field_development/IND_2020-21revised.pdf
 2026-02-08 00:06:54 |   MOVE: field_development\IND_NIO_BOOKLET_21.05.16.pdf -> modules/references/field_development/IND_NIO_BOOKLET_21.05.16.pdf
 2026-02-08 00:06:54 |   MOVE: field_development\minimum_facilities.md -> modules/references/field_development/minimum_facilities.md
-2026-02-08 00:06:54 |   MOVE: field_development\ongc_mirage_guide.pdf -> modules/references/field_development/ongc_mirage_guide.pdf
+2026-02-08 00:06:54 |   MOVE: field_development\operator_mirage_guide.pdf -> modules/references/field_development/operator_mirage_guide.pdf
 2026-02-08 00:06:54 |   MOVE: field_development\revive_old_wells.md -> modules/references/field_development/revive_old_wells.md
 2026-02-08 00:06:54 |   MOVE: field_development\subsea_field_development.pdf -> modules/references/field_development/subsea_field_development.pdf
 2026-02-08 00:06:54 | 
@@ -295,14 +295,14 @@
 2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-MWD_Real_Time_Density.pdf -> modules/drilling/references/REF-ENG-O&G-MWD_Real_Time_Density.pdf
 2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-Natural_Gas_Reservoir_Engineering.pdf -> modules/reservoir/references/REF-ENG-O&G-Natural_Gas_Reservoir_Engineering.pdf
 2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-BOEM-Deepwater-Operation-Presentation.pdf -> modules/standards/REF-ENG-O&G-OFF-BOEM-Deepwater-Operation-Presentation.pdf
-2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-DNV_Macondo_Draft_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-DNV_Macondo_Draft_Report.pdf
-2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-DNV_Macondo_Final_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-DNV_Macondo_Final_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-DNV_2010 GoM blowout_Draft_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-DNV_2010 GoM blowout_Draft_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-DNV_2010 GoM blowout_Final_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-DNV_2010 GoM blowout_Final_Report.pdf
 2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Dynamic_Positioning_Model_Tests.pdf -> modules/marine_ops/references/REF-ENG-O&G-OFF-Dynamic_Positioning_Model_Tests.pdf
-2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo-KeyStone_Casing_Report.pdf -> modules/drilling/references/REF-ENG-O&G-OFF-Macondo-KeyStone_Casing_Report.pdf
-2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo-Location_Map.pdf -> modules/standards/REF-ENG-O&G-OFF-Macondo-Location_Map.pdf
-2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo_Accident_Overview.pdf -> modules/standards/REF-ENG-O&G-OFF-Macondo_Accident_Overview.pdf
-2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo_BOP_Pipe_Shear.pdf -> modules/standards/REF-ENG-O&G-OFF-Macondo_BOP_Pipe_Shear.pdf
-2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-Macondo_OilField_Testing_Consultant_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-Macondo_OilField_Testing_Consultant_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-2010 GoM blowout-KeyStone_Casing_Report.pdf -> modules/drilling/references/REF-ENG-O&G-OFF-2010 GoM blowout-KeyStone_Casing_Report.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-2010 GoM blowout-Location_Map.pdf -> modules/standards/REF-ENG-O&G-OFF-2010 GoM blowout-Location_Map.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-2010 GoM blowout_Accident_Overview.pdf -> modules/standards/REF-ENG-O&G-OFF-2010 GoM blowout_Accident_Overview.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-2010 GoM blowout_BOP_Pipe_Shear.pdf -> modules/standards/REF-ENG-O&G-OFF-2010 GoM blowout_BOP_Pipe_Shear.pdf
+2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-2010 GoM blowout_OilField_Testing_Consultant_Report.pdf -> modules/standards/REF-ENG-O&G-OFF-2010 GoM blowout_OilField_Testing_Consultant_Report.pdf
 2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-OFF754-4-Lufeng-FSOU_Relocation.pdf -> modules/references/REF-ENG-O&G-OFF-OFF754-4-Lufeng-FSOU_Relocation.pdf
 2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-OFF-VIV_Of_Risers_thesis.pdf -> modules/viv/references/REF-ENG-O&G-OFF-VIV_Of_Risers_thesis.pdf
 2026-02-08 00:06:54 |   MOVE: ref/REF-ENG-O&G-ON-Artificial-Lift-Selection-Process-NEW.pdf -> modules/artificial_lift/references/REF-ENG-O&G-ON-Artificial-Lift-Selection-Process-NEW.pdf
@@ -404,8 +404,8 @@
 2026-02-08 00:06:54 |   MOVE: ref/WPC-29128.pdf -> modules/reservoir/references/WPC-29128.pdf
 2026-02-08 00:06:54 | 
 --- Root-level eng/ files (pattern-based distribution) ---
-2026-02-08 00:06:54 |   MOVE: 3_29_21_BSEE_Deepwater_Asgard_Alert.pdf -> modules/standards/3_29_21_BSEE_Deepwater_Asgard_Alert.pdf
-2026-02-08 00:06:54 |   MOVE: 3_29_21_Deepwater_Asgard_lawsuit.pdf -> modules/standards/3_29_21_Deepwater_Asgard_lawsuit.pdf
+2026-02-08 00:06:54 |   MOVE: 3_29_21_BSEE_Deepwater_Drillship_Alert.pdf -> modules/standards/3_29_21_BSEE_Deepwater_Drillship_Alert.pdf
+2026-02-08 00:06:54 |   MOVE: 3_29_21_Deepwater_Drillship_lawsuit.pdf -> modules/standards/3_29_21_Deepwater_Drillship_lawsuit.pdf
 2026-02-08 00:06:54 |   MOVE: ag_drones.md -> modules/references/ag_drones.md
 2026-02-08 00:06:54 |   MOVE: bsee_data.md -> modules/standards/bsee_data.md
 2026-02-08 00:06:54 |   MOVE: Catenary Curve.pdf -> modules/risers/Catenary Curve.pdf
@@ -467,4 +467,4 @@
 2026-02-08 00:06:54 |   Collisions (renamed): 2
 2026-02-08 00:06:54 |   Errors: 0
 2026-02-08 00:06:54 |   docs/eng/ is now empty (safe to delete)
-2026-02-08 00:06:54 | Log saved to: D:\workspace-hub\digitalmodel\scripts\consolidate_docs_log.txt
+2026-02-08 00:06:54 | Log saved to: <private-data>\consolidate_docs_log.txt

@@ -8,7 +8,7 @@ When working in Git Bash or MinGW environment on Windows:
 #### ALWAYS USE Unix-style paths:
 - ✅ `/d/github/digitalmodel/` 
 - ✅ `/c/Users/username/`
-- ❌ `D:\github\digitalmodel\`
+- ❌ `<private-data>\`
 - ❌ `D:/github/digitalmodel/`
 
 #### Path Conversion Rules:
@@ -21,7 +21,7 @@ When working in Git Bash or MinGW environment on Windows:
 #### 1. Direct Windows Path in Bash Commands
 ```bash
 # WRONG
-cd D:\github\digitalmodel\specs
+cd <private-data>\specs
 
 # CORRECT
 cd /d/github/digitalmodel/specs
@@ -39,7 +39,7 @@ cd /d/github/digitalmodel/specs
 #### 3. Forgetting Path Context
 ```bash
 # WRONG (assumes Windows CMD)
-dir D:\github\*
+dir <private-data>\*
 
 # CORRECT (Git Bash)
 ls /d/github/*
@@ -48,7 +48,7 @@ ls /d/github/*
 ### Tool-Specific Path Requirements
 
 #### Read/Write Tools (Python/System)
-- Can use Windows paths: `D:\github\digitalmodel\file.py`
+- Can use Windows paths: `<private-data>\file.py`
 - Preferred for file operations in Write/Read tools
 
 #### Bash Commands
@@ -70,8 +70,8 @@ ls /d/github/*
 |---------|--------|---------|
 | Bash cd | Unix | `/d/github/digitalmodel/` |
 | Bash ls | Unix | `/d/github/digitalmodel/*.py` |
-| Python read | Windows OK | `D:\github\digitalmodel\file.py` |
-| Write tool | Windows OK | `D:\github\digitalmodel\output.txt` |
+| Python read | Windows OK | `<private-data>\file.py` |
+| Write tool | Windows OK | `<private-data>\output.txt` |
 | Git operations | Unix | `/d/github/digitalmodel/.git` |
 
 ### Environment Variables

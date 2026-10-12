@@ -1,13 +1,13 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\risers\completion\riserless.yml
+# File: docs/domains/orcaflex/risers/completion/riserless.yml
 # Created: 9:59 PM on 1/17/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
-  Comments: ! "31242 Shell Riser Less Analysis\r\nVamsee Achanta 8th May 2014"
+  Comments: ! "Riserless completion string analysis; 236 m water depth; NW Australia (approximate location)\r\nMay 2014"
   # Units
   UnitsSystem: SI
   # Reset
@@ -1480,7 +1480,7 @@ ClumpTypes:
     Cd: [1.1, ~, 0.08]
     Ca: [1, ~, 1]
 Vessels:
-  - Name: Norshore
+  - Name: Vessel_A
     VesselType: Vessel Type1
     Draught: Draught1
     Length: ~
@@ -1520,7 +1520,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Norshore, 9.18, 0, 3.3000000000000114, 0, 180, 0, ~]
+      - [Vessel_A, 9.18, 0, 3.3000000000000114, 0, 180, 0, ~]
       - [Free, 0, 0, -100, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -1909,7 +1909,7 @@ Links:
 Groups:
   Structure:
     Tubing: Model
-    Norshore: Model
+    Vessel_A: Model
     X10: Model
     X1: Model
     X2: Model

@@ -21,12 +21,16 @@ from plotly.subplots import make_subplots
 import yaml
 from loguru import logger
 
-# Optional OrcaFlex API import
-try:
-    import OrcFxAPI
-    ORCAFLEX_AVAILABLE = True
-except ImportError:
-    ORCAFLEX_AVAILABLE = False
+# Optional OrcaFlex API access.
+# #3838: routed through the facade instead of `import OrcFxAPI`, so the binding
+# is not loaded before OrcFxAPIConfig.setLibPath() can select a version.
+from digitalmodel.solvers.orcaflex.orcaflex_api import available as _orcaflex_available
+from digitalmodel.solvers.orcaflex.orcaflex_api import lazy_api as _lazy_orcaflex_api
+from digitalmodel.solvers.orcaflex.run_state import check_statics
+
+ORCAFLEX_AVAILABLE = _orcaflex_available()
+OrcFxAPI = _lazy_orcaflex_api() if ORCAFLEX_AVAILABLE else None
+if not ORCAFLEX_AVAILABLE:
     logger.debug("OrcFxAPI not available - API screenshot mode disabled")
 
 
@@ -1557,6 +1561,9 @@ class OrcaFlexViewCapture:
         if calculate_statics:
             logger.info("Calculating statics...")
             self._model.CalculateStatics()
+            # #3838: the schematic drawn below is of the static configuration,
+            # so a solve that did not reach one must not be captured.
+            check_statics(self._model, context=str(self.model_file))
 
     def capture_view(
         self,

@@ -67,7 +67,7 @@ the inventory; flagged for #1007).
 | Archived folder | Active twin present? | Files in archive | Dedup action |
 |---|---|---|---|
 | `client_projects.preexisting-…-064502` | yes (`client_projects`) | 4,522 | **drop** as duplicate |
-| `acma-projects.preexisting-…-075928` | yes (`acma-projects`) | 3,230 | **drop** as duplicate |
+| `<project-archive>.preexisting-…-075928` | yes (`<project-archive>`) | 3,230 | **drop** as duplicate |
 | `eng-partner.preexisting-…-064502` | yes (`eng-partner`) | 502 | **drop** as duplicate |
 | `seanation.preexisting-…-064502` | yes (`seanation`) | 481 | **drop** as duplicate |
 | `epc-partner.preexisting-…-064502` | **no live twin** | 317 | **keep** — only copy |
@@ -123,13 +123,13 @@ Removed by dedup: **8,735** archived duplicates + **1,115** dependency files = *
 | `docs` | 473,552 | 2.0 TB | **79% is the `ri/00_inbox` flush-drive dump** (416,283 files) |
 | `digitalmodel` | 37,422 | 19.7 GB | the repo itself — mostly `.dat`/test fixtures + benchmark models |
 | `client_projects.preexisting-…` | 4,522 | 59.1 GB | archived twin of `client_projects` → deduped |
-| `acma-projects.preexisting-…` | 3,230 | 3.4 TB | archived twin of `acma-projects` (OrcaFlex-heavy) → deduped |
+| `<project-archive>.preexisting-…` | 3,230 | 3.4 TB | archived twin of `<project-archive>` (OrcaFlex-heavy) → deduped |
 | `OGManufacturing` | 1,115 | 30.7 MB | **all `.venv`/site-packages noise** (not real CAD) |
 | `data` | 944 | 706 MB | |
 | `client_projects` | 815 | 170 MB | **active** client engineering CAD |
 | `eng-partner.preexisting-…` | 502 | 750 MB | deduped |
 | `seanation.preexisting-…` | 481 | 87 MB | deduped |
-| `acma-projects` | 474 | 3.3 GB | **active** |
+| `<project-archive>` | 474 | 3.3 GB | **active** |
 | `rock-oil-field.preexisting-…` | 424 | 1.1 GB | no live twin → kept |
 | `gdrive` | 407 | 719 MB | mirrored Google-Drive corpus |
 | `epc-partner.preexisting-…` | 317 | 1.5 GB | no live twin → kept |
@@ -159,7 +159,7 @@ This is the curated engineering CAD that actually warrants automation analysis (
 | NetCDF (`.nc`) | 7 | 12.2 MB |
 
 > Most curated SolidWorks lives under `docs/disciplines/{misc,drilling}`; the subsea project repos
-> (`client_projects`, `acma-projects`, `seanation`, `epc-partner`, `rock-oil-field`, `eng-partner`) are OrcaFlex-dominant.
+> (`client_projects`, `<project-archive>`, `seanation`, `epc-partner`, `rock-oil-field`, `eng-partner`) are OrcaFlex-dominant.
 > Folder→domain→client mapping is in [`project-domain-map.md`](./project-domain-map.md) (#1007).
 
 ---

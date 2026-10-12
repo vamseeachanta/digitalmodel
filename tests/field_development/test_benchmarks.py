@@ -413,7 +413,7 @@ class TestNormalizeIntegration:
 
         raw = [
             {
-                "Project Name": "Perdido",
+                "Project Name": "GoM-UD-Spar",
                 "Operator": "Shell",
                 "Water Depth (m)": 2438,
                 "Host Type": "Spar",
@@ -436,12 +436,12 @@ class TestNormalizeIntegration:
         projects = load_projects(normalized)
 
         assert len(projects) == 2
-        perdido = projects[0]
-        assert perdido.name == "Perdido"
-        assert perdido.water_depth_m == 2438.0
-        assert perdido.concept_type == "Spar"
-        assert perdido.num_trees == 16
-        assert perdido.tieback_distance_km == 12.5
+        gom_ud_spar = projects[0]
+        assert gom_ud_spar.name == "GoM-UD-Spar"
+        assert gom_ud_spar.water_depth_m == 2438.0
+        assert gom_ud_spar.concept_type == "Spar"
+        assert gom_ud_spar.num_trees == 16
+        assert gom_ud_spar.tieback_distance_km == 12.5
 
         stones = projects[1]
         assert stones.name == "Stones"
@@ -749,7 +749,7 @@ class TestPredictConceptType:
 # GoM reference fields with known concept selections
 CASE_STUDY_RECORDS = [
     # Real GoM field data (approximate values from public sources)
-    {"name": "Perdido", "water_depth_m": 2438, "concept_type": "Spar",
+    {"name": "GoM-UD-Spar", "water_depth_m": 2438, "concept_type": "Spar",
      "operator": "Shell", "region": "GoM"},
     {"name": "Mars", "water_depth_m": 896, "concept_type": "TLP",
      "operator": "Shell", "region": "GoM"},
@@ -803,14 +803,14 @@ class TestCaseStudyValidation:
         """1500m+ band should be dominated by Spar and Semi in GoM data."""
         matrix = concept_probability_matrix(case_study_projects)
         ultra = matrix["1500m+"]
-        # Perdido(Spar), Atlantis(Semi), Thunder Horse(Semi),
+        # GoM-UD-Spar(Spar), Atlantis(Semi), Thunder Horse(Semi),
         # Appomattox(Semi), Stones(FPSO), Lucius(Spar), Na Kika(Semi),
         # Constitution(Spar), Great White(Spar)
         assert "Spar" in ultra
         assert "Semi" in ultra
         assert ultra["Spar"] + ultra["Semi"] > 0.6  # combined > 60%
 
-    def test_predict_at_perdido_depth(self, case_study_projects):
+    def test_predict_at_gom_ud_spar_depth(self, case_study_projects):
         """At 2438m with large reservoir, should predict Spar or Semi."""
         result = predict_concept_type(
             projects=case_study_projects,

@@ -1,0 +1,82 @@
+{
+  "anode_requirements": {
+    "anode_capacity_Ah_kg": 2000.0,
+    "anode_count": 34,
+    "anode_count_by_final_current": 6,
+    "anode_count_by_mass": 34,
+    "anode_current_output_A": 1.3327,
+    "anode_material": "aluminium",
+    "anode_resistance_ohm": 0.187588,
+    "bracelet_exposed_area_m2": 0.253778,
+    "driving_voltage_V": 0.25,
+    "individual_anode_mass_kg": 25.0,
+    "total_anode_mass_kg": 846.119,
+    "utilization_factor": 0.8,
+    "utilization_factor_source": "input"
+  },
+  "anode_spacing_m": {
+    "anode_count": 34,
+    "max_spacing_m": 3174.847,
+    "spacing_m": 44.118,
+    "spacing_ok": true
+  },
+  "attenuation_analysis": {
+    "current_output_ok": true,
+    "metallic_voltage_drop_V": 0.15,
+    "protected_length_m": 1587.424,
+    "protection_adequate": true
+  },
+  "citations": [
+    "dnv-rp-f103 2019-09 Table 6-2",
+    "dnv-rp-f103 2019-09 Table A-1",
+    "dnv-rp-f103 2019-09 [6.4.2] (anode utilisation factor)",
+    "dnv-rp-f103 2019-09 Table 6-3",
+    "dnv-rp-f103 2019-09 Table 6-3 with [6.7.11] (design protective potential)"
+  ],
+  "coating_breakdown_factors": {
+    "design_life_years": 30.0,
+    "field_joint_a": 0.3,
+    "field_joint_b_per_yr": 0.03,
+    "field_joint_coating": "none",
+    "field_joint_infill": "4E(1) moulded PU on top bare steel (with primer)",
+    "final_factor": 0.06,
+    "final_factor_field_joint": 1.0,
+    "linepipe_coating": "FBE",
+    "mean_factor": 0.045,
+    "mean_factor_field_joint": 0.75
+  },
+  "current_demand_A": {
+    "final_current_demand_A": 6.8685,
+    "mean_current_demand_A": 5.1514
+  },
+  "current_densities_A_m2": {
+    "burial_condition": "non_buried",
+    "exposure": "Non-Buried",
+    "internal_fluid_temperature_C": 60.0,
+    "mean_current_density_A_m2": 0.075,
+    "temperature_band": ">50-80"
+  },
+  "design_life_years": 30.0,
+  "edition": "2019",
+  "pipeline_geometry_m": {
+    "field_joint_area_m2": 0.0,
+    "length_m": 1500.0,
+    "linepipe_area_m2": 1526.343,
+    "outer_diameter_m": 0.3239,
+    "outer_surface_area_m2": 1526.343,
+    "steel_resistivity_ohm_m": 2e-07,
+    "wall_thickness_m": 0.0159
+  },
+  "provenance": "verified-2019-tables",
+  "standard": "DNVGL-RP-F103 (September 2019, amended May 2021)",
+  "status": {
+    "checks": {
+      "final_current_output": true,
+      "spacing": true
+    },
+    "governing_case": "mass",
+    "reason": "34 x 25 kg bracelets at 44.1 m meet the mass (846.1 kg) and final current (6.869 A) requirements within 2 x protected length (3175 m)",
+    "result": "PASS",
+    "use_status": "client-use-with-eor-check"
+  }
+}

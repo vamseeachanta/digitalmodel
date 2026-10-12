@@ -8,13 +8,13 @@ Kind regards,
 Max Nicholson
 
 T :  +44(0)1229 584742
-E :  <orcina@orcina.com>
+E :  [email removed]
 W:  <www.orcina.com>
 
-From: Vamsee Achanta <vamseea@none.com>
+From: Vamsee Achanta [email removed]
 Sent: 04 November 2024 21:33
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@none.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]
 Subject: RE: OrcaWave | Multibody Analysis
 
 Max,
@@ -29,9 +29,9 @@ Please confirm our understanding.
 Thank you,
 Vamsee
 
-From: Scott McClure <scottm@none.com>
+From: Scott McClure [email removed]
 Sent: Wednesday, October 30, 2024 11:26 AM
-To: Orcina <orcina@orcina.com>; Vamsee Achanta <vamseea@none.com>
+To: Orcina [email removed]; Vamsee Achanta [email removed]
 Subject: RE: OrcaWave | Multibody Analysis
 
 Max,
@@ -43,10 +43,10 @@ Do you mean that OrcaFlex cannot determine the coefficients themselves? I think 
 Thanks,
 Scott
 
-From: Orcina <orcina@orcina.com>
+From: Orcina [email removed]
 Sent: Wednesday, October 30, 2024 10:59 AM
-To: Vamsee Achanta <vamseea@none.com>
-Cc: Scott McClure <scottm@none.com>
+To: Vamsee Achanta [email removed]
+Cc: Scott McClure [email removed]
 Subject: RE: OrcaWave | Multibody Analysis
 
 Dear Vamsee,
@@ -61,13 +61,13 @@ Kind regards,
 Max Nicholson
 
 T :  +44(0)1229 584742
-E :  <orcina@orcina.com>
+E :  [email removed]
 W:  <www.orcina.com>
 
-From: Vamsee Achanta <vamseea@none.com>
+From: Vamsee Achanta [email removed]
 Sent: 30 October 2024 03:27
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@none.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]
 Subject: OrcaWave | Multibody Analysis
 
 Dear Support Representative,

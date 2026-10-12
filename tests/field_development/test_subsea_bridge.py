@@ -24,7 +24,7 @@ def research_data():
     return {
         "report_type": "Field Development Intelligence",
         "gom_fields": [
-            {"name": "Perdido", "operator": "Shell", "water_depth_m": 2438, "host": "Spar", "year": 2010, "capacity_bopd": 100000},
+            {"name": "GoM-UD-Spar", "operator": "Shell", "water_depth_m": 2438, "host": "Spar", "year": 2010, "capacity_bopd": 100000},
             {"name": "Appomattox", "operator": "Shell", "water_depth_m": 2250, "host": "Semi-submersible", "year": 2019, "capacity_bopd": 125000},
             {"name": "Atlantis", "operator": "BP", "water_depth_m": 2150, "host": "Semi-submersible", "year": 2007, "capacity_bopd": 200000},
             {"name": "Thunder Horse", "operator": "BP", "water_depth_m": 1844, "host": "Semi-submersible", "year": 2008, "capacity_bopd": 250000},
@@ -71,7 +71,7 @@ class TestSubseaFieldCatalog:
 
     def test_query_by_operator(self, catalog):
         shell = catalog.query(operator="Shell")
-        assert len(shell) == 6  # Perdido, Appomattox, Mars, Stones, Ursa, Whale
+        assert len(shell) == 6  # GoM-UD-Spar, Appomattox, Mars, Stones, Ursa, Whale
         assert all(f.operator == "Shell" for f in shell)
 
         bp = catalog.query(operator="BP")
@@ -80,7 +80,7 @@ class TestSubseaFieldCatalog:
 
     def test_query_by_host_type(self, catalog):
         spars = catalog.query(host_type="Spar")
-        assert len(spars) == 2  # Perdido, Whale
+        assert len(spars) == 2  # GoM-UD-Spar, Whale
 
         tlps = catalog.query(host_type="TLP")
         assert len(tlps) == 4  # Mars, Ursa + Stones, Lucius ('TLP' is substring of 'ETLP')
@@ -136,8 +136,8 @@ class TestSubseaFieldCatalog:
         )
         assert match is not None
         assert 0.0 < match.score <= 1.0
-        # Perdido: 2438m, 100k bopd — should be closest to 2400m, 100k
-        assert match.field.name == "Perdido"
+        # GoM-UD-Spar: 2438m, 100k bopd — should be closest to 2400m, 100k
+        assert match.field.name == "GoM-UD-Spar"
 
     def test_all_operators(self, catalog):
         """List all unique operators."""
@@ -161,7 +161,7 @@ class TestSubseaFieldCatalog:
         """Load catalog from dict instead of file."""
         catalog = SubseaFieldCatalog.from_dict(research_data)
         assert len(catalog.fields) == 10
-        assert catalog.fields[0].name == "Perdido"
+        assert catalog.fields[0].name == "GoM-UD-Spar"
 
     def test_field_count(self, catalog):
         assert len(catalog.fields) == 10

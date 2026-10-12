@@ -6,11 +6,11 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\PressureTest\SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_No Load, No Offset.sim
+    Name: ..\PressureTest\SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_No Load, No Offset.sim
     Label: 1yr Wave No Load, 3% Offset
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\PressureTest\SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_Water_Filled.sim
+    Name: ..\PressureTest\SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_Water_Filled.sim
     Label: 1yr Wave test pressure water filled
     ObjectName: SLWR
 

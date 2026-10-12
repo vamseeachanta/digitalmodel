@@ -90,7 +90,7 @@ L3 = 6 m each; bottom horizontal L4 = 10 m; bend radius R/D = 2
 (D = 0.27 m → R = 0.54 m).
 
 **Cross-section:** OD 0.27 m, ID 0.21 m, WT 30 mm; E = 2.068e11 Pa,
-ν = 0.303 (steel). Near-identical pipe size to the Ballymore 10.75″
+ν = 0.303 (steel). Near-identical pipe size to the GoM tieback 10.75″
 (0.273 m) jumpers — plausible full-scale realization of Case 1's 10″ base
 case.
 

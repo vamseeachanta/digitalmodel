@@ -23,8 +23,8 @@
 | Spec | Schema Type | Notes |
 |------|-------------|-------|
 | `passing_ship/sample/spec.yml` | PassingShipSpec | moored_vessel + passing_vessel |
-| `subsea/jumper/installation/ballymore_mf_plet/spec.yml` | JumperInstallation | environment.metocean format |
-| `subsea/jumper/installation/ballymore_plet_plem/spec.yml` | JumperInstallation | pipe + jumper format |
+| `subsea/jumper/installation/gom_tieback_mf_plet/spec.yml` | JumperInstallation | environment.metocean format |
+| `subsea/jumper/installation/gom_tieback_plet_plem/spec.yml` | JumperInstallation | pipe + jumper format |
 
 ## Improvement Journey
 
@@ -142,8 +142,8 @@
 | 83 | FAIL | pipeline | pass | fail | skip | skip | pipeline/installation/s-lay/SB-SA/spec.yml |
 | 84 | FAIL | - | fail | skip | skip | skip | reference/spec.yml |
 | 85 | FAIL | - | fail | skip | skip | skip | regional/spec.yml |
-| 86 | FAIL | - | fail | skip | skip | skip | subsea/jumper/installation/ballymore_mf_plet/spec.yml |
-| 87 | FAIL | - | fail | skip | skip | skip | subsea/jumper/installation/ballymore_plet_plem/spec.yml |
+| 86 | FAIL | - | fail | skip | skip | skip | subsea/jumper/installation/gom_tieback_mf_plet/spec.yml |
+| 87 | FAIL | - | fail | skip | skip | skip | subsea/jumper/installation/gom_tieback_plet_plem/spec.yml |
 | 88 | FAIL | - | fail | skip | skip | skip | training/crane_master/spec.yml |
 | 89 | FAIL | - | fail | skip | skip | skip | training/hulls/spec.yml |
 | 90 | PASS | generic | pass | pass | pass | pass | training/node_feeding/spec.yml |

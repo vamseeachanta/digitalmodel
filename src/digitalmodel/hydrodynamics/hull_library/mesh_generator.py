@@ -5,7 +5,8 @@ grading. Mesh coarsening lives in coarsen_mesh.py.
 
 Steps: normalise waterline offsets to marine z-convention, compute (n_x, n_z)
 subdivisions, interpolate half-breadth y(x,z), build starboard quads + flat
-bottom, optionally mirror to port, orient normals outward, return PanelMesh.
+bottom and optional submerged end caps, optionally mirror to port, orient normals
+outward, return PanelMesh.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import NDArray
 from pydantic import BaseModel, Field
-from scipy.interpolate import interp1d
+from scipy.interpolate import PchipInterpolator
 
 from digitalmodel.hydrodynamics.bemrosetta.models.mesh_models import (
     MeshFormat,
@@ -29,12 +30,53 @@ if TYPE_CHECKING:
     )
 
 
+def _shape_preserving_interp(
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
+    x_new: NDArray[np.float64],
+    fill: tuple[float, float],
+) -> NDArray[np.float64]:
+    """Monotone cubic (PCHIP) interpolation with constant fill outside the data range.
+
+    Linear lofting between stations produces ruled surfaces, which have Gaussian
+    curvature K <= 0 everywhere, so generated monohulls read as saddle plate at bow and
+    stern regardless of resolution (#2188, HullProd evaluation 2026-09-25). PCHIP is
+    shape preserving (no overshoot) and gives the smooth, doubly curved ends a faired
+    hull has. With two data points it reduces to linear interpolation.
+    """
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    order = np.argsort(x)
+    x, y = x[order], y[order]
+    unique_x, first = np.unique(x, return_index=True)
+    if len(unique_x) < len(x):
+        x, y = unique_x, y[first]
+    x_new = np.asarray(x_new, dtype=np.float64)
+
+    if len(x) == 1:
+        values = np.full(len(x_new), y[0], dtype=np.float64)
+    elif len(x) == 2:
+        values = np.interp(x_new, x, y)
+    else:
+        values = PchipInterpolator(x, y, extrapolate=False)(x_new)
+
+    values = np.where(x_new < x[0], fill[0], values)
+    values = np.where(x_new > x[-1], fill[1], values)
+    values = np.where(np.isnan(values), np.where(x_new <= x[0], fill[0], fill[1]), values)
+    return values.astype(np.float64)
+
+
 class MeshGeneratorConfig(BaseModel):
     """Configuration for hull mesh generation."""
 
     target_panels: int = Field(default=1000, gt=0)
     waterline_refinement: float = Field(default=2.0, gt=0)
     symmetry: bool = True
+    close_ends: bool = Field(
+        default=False,
+        description="add flat panels closing non-zero submerged end sections; "
+        "off by default so existing consumers keep their panel counts",
+    )
     adaptive_density: bool = Field(
         default=False,
         description="Use curvature-adaptive panel distribution. "
@@ -90,6 +132,14 @@ class HullMeshGenerator:
             offset = len(vertices)
             vertices = np.vstack([vertices, bottom_verts])
             panels = np.vstack([panels, bottom_panels + offset])
+
+        # Close nonzero submerged end sections before mirroring to port.
+        if config.close_ends:
+            cap_verts, cap_panels = self._build_end_caps(x_values, z_values, y_grid)
+            if len(cap_panels) > 0:
+                offset = len(vertices)
+                vertices = np.vstack([vertices, cap_verts])
+                panels = np.vstack([panels, cap_panels + offset])
 
         # 6. Handle symmetry
         if not config.symmetry:
@@ -147,14 +197,9 @@ class HullMeshGenerator:
         if len(z_keel) == 1:
             return np.full(len(z_values), y_half[0], dtype=np.float64)
 
-        interp_fn = interp1d(
-            z_keel,
-            y_half,
-            kind="linear",
-            bounds_error=False,
-            fill_value=(y_half[0], y_half[-1]),
+        return _shape_preserving_interp(
+            z_keel, y_half, z_values, fill=(y_half[0], y_half[-1])
         )
-        return interp_fn(z_values).astype(np.float64)
 
     def _compute_grid_resolution(
         self,
@@ -226,14 +271,12 @@ class HullMeshGenerator:
         if len(station_x) == 1:
             y_fine = np.full(n_sample, station_y_at_draft[0])
         else:
-            interp_x = interp1d(
+            y_fine = _shape_preserving_interp(
                 station_x,
                 station_y_at_draft,
-                kind="linear",
-                bounds_error=False,
-                fill_value=(station_y_at_draft[0], station_y_at_draft[-1]),
+                x_fine,
+                fill=(station_y_at_draft[0], station_y_at_draft[-1]),
             )
-            y_fine = interp_x(x_fine)
 
         # Compute second derivative as curvature proxy
         dy = np.gradient(y_fine, x_fine)
@@ -299,14 +342,9 @@ class HullMeshGenerator:
             if len(station_x) == 1:
                 y_grid[:, j] = station_y_at_z[0, j]
             else:
-                interp_x = interp1d(
-                    station_x,
-                    station_y_at_z[:, j],
-                    kind="linear",
-                    bounds_error=False,
-                    fill_value=0.0,
+                y_grid[:, j] = _shape_preserving_interp(
+                    station_x, station_y_at_z[:, j], x_values, fill=(0.0, 0.0)
                 )
-                y_grid[:, j] = interp_x(x_values)
 
         # Clamp negative half-breadths to zero
         y_grid = np.maximum(y_grid, 0.0)
@@ -399,6 +437,39 @@ class HullMeshGenerator:
         )
         return vertices, panels_arr
 
+    @staticmethod
+    def _build_end_caps(
+        x_values: NDArray[np.float64],
+        z_values: NDArray[np.float64],
+        y_grid: NDArray[np.float64],
+    ) -> tuple[NDArray[np.float64], NDArray[np.int32]]:
+        """Close each positive-area end band from centerline to starboard.
+
+        The vertical bands reuse the side surface's z grid and keel edge;
+        their waterline edges remain open. Zero-width bands add no panels.
+        A band tapering to zero at one end becomes a collapsed triangle,
+        normalized by the existing deduplication and winding steps.
+        """
+        vertices, panels = [], []
+        for end in (0, len(x_values) - 1):
+            widths = y_grid[end]
+            if not np.any(widths > 0):
+                continue
+            offset = len(vertices)
+            for z, width in zip(z_values, widths):
+                vertices.extend(((x_values[end], 0.0, z),
+                                 (x_values[end], width, z)))
+            for j in range(len(z_values) - 1):
+                if widths[j] == widths[j + 1] == 0:
+                    continue
+                lower = offset + 2 * j
+                panel = [lower, lower + 1, lower + 3, lower + 2]
+                if end == 0:
+                    panel = panel[::-1]
+                panels.append(panel)
+        return (np.asarray(vertices, dtype=np.float64).reshape(-1, 3),
+                np.asarray(panels, dtype=np.int32).reshape(-1, 4))
+
     def _mirror_to_port(
         self,
         vertices: NDArray[np.float64],
@@ -475,27 +546,89 @@ class HullMeshGenerator:
             return np.empty((0, panels.shape[1]), dtype=panels.dtype)
         return panels[np.array(keep)]
 
+    @staticmethod
+    def _winding_components(panel_vertices):
+        """Propagate edge-direction parity by BFS on each manifold component."""
+        edges = {}
+        neighbors = [[] for _ in panel_vertices]
+        for i, vertices in enumerate(panel_vertices):
+            for a, b in zip(vertices, vertices[1:] + vertices[:1]):
+                edges.setdefault((min(a, b), max(a, b)), []).append((i, a < b))
+        for incidence in edges.values():
+            if len(incidence) > 2:
+                raise ValueError("Cannot orient a non-manifold shared edge")
+            if len(incidence) == 2:
+                (i, forward_i), (j, forward_j) = incidence
+                same = forward_i == forward_j
+                neighbors[i].append((j, same))
+                neighbors[j].append((i, same))
+
+        flip_mask = np.zeros(len(panel_vertices), dtype=bool)
+        visited = np.zeros(len(panel_vertices), dtype=bool)
+        components = []
+        for seed in range(len(panel_vertices)):
+            if visited[seed]:
+                continue
+            component = [seed]
+            visited[seed] = True
+            # Appending while iterating visits panels in breadth-first order.
+            for i in component:
+                for j, same in neighbors[i]:
+                    required = flip_mask[i] ^ same
+                    if visited[j]:
+                        if flip_mask[j] != required:
+                            raise ValueError("Panel winding is not orientable")
+                        continue
+                    visited[j] = True
+                    flip_mask[j] = required
+                    component.append(j)
+            components.append(component)
+        return components, flip_mask
+
+    @staticmethod
+    def _apply_panel_winding(mesh, panel_vertices, flip_mask):
+        """Reverse about the first vertex, retaining quad diagonals and padding."""
+        for i, vertices in enumerate(panel_vertices):
+            ordered = vertices[:1] + vertices[:0:-1] if flip_mask[i] else vertices
+            valid = mesh.panels[i] >= 0
+            # Keep collapsed triangles' first three corners distinct so the
+            # PanelMesh normal calculation does not fall back to an arbitrary +z.
+            mesh.panels[i, valid] = ordered + [ordered[-1]] * (
+                np.count_nonzero(valid) - len(ordered)
+            )
+        mesh._compute_normals()
+        mesh._compute_centers()
+
     def _orient_normals_outward(self, mesh: PanelMesh) -> None:
-        """Ensure all panel normals point outward (away from hull interior).
+        """Make winding consistent, then choose one outward sign per component.
 
-        For a closed hull, the centroid of all vertices is inside. Each
-        panel's normal should point away from this centroid.
+        Per-panel centroid tests can create folds on open or concave hulls.
+        Shared-edge propagation preserves continuity; only the area-weighted
+        component score selects the global sign. Flips count net reversals of
+        the input winding, including any final component reversal.
         """
-        centroid = np.mean(mesh.vertices, axis=0)
-
-        flip_mask = np.zeros(mesh.n_panels, dtype=bool)
-        for i in range(mesh.n_panels):
-            center = mesh.panel_centers[i]
-            normal = mesh.normals[i]
-            to_outside = center - centroid
-            if np.dot(normal, to_outside) < 0:
-                flip_mask[i] = True
-
-        if np.any(flip_mask):
-            # Flip normals
-            mesh.normals[flip_mask] = -mesh.normals[flip_mask]
-            # Reverse winding of those panels
-            mesh.panels[flip_mask] = mesh.panels[flip_mask, ::-1]
+        panel_vertices = [
+            list(dict.fromkeys(int(i) for i in panel if i >= 0))
+            for panel in mesh.panels
+        ]
+        components, flip_mask = self._winding_components(panel_vertices)
+        self._apply_panel_winding(mesh, panel_vertices, flip_mask)
+        global_flip = False
+        for component in components:
+            indices = np.unique(mesh.panels[component])
+            centroid = np.mean(mesh.vertices[indices[indices >= 0]], axis=0)
+            outward = mesh.panel_centers[component] - centroid
+            dots = np.einsum("ij,ij->i", mesh.normals[component], outward)
+            if np.sum(mesh.panel_areas[component] * dots) < 0:
+                flip_mask[component] = ~flip_mask[component]
+                global_flip = True
+        if global_flip:
+            self._apply_panel_winding(mesh, panel_vertices, flip_mask)
+        mesh.metadata["winding"] = {
+            "components": len(components),
+            "flipped_panels": int(np.count_nonzero(flip_mask)),
+            "method": "adjacency_bfs",
+        }
 
 
 __all__ = [

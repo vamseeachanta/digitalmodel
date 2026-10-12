@@ -12,7 +12,9 @@ import matplotlib.pyplot as plt
 import logging
 
 # Add the project root to path
-sys.path.insert(0, r'D:\github\digitalmodel\src')
+sys.path.insert(
+    0, os.path.join(os.path.dirname(os.path.abspath(__file__)), *[os.pardir] * 4, "src")
+)
 
 from digitalmodel.modules.signal_analysis.orcaflex import TimeSeriesAnalyzer
 
@@ -24,7 +26,7 @@ def process_single_test_file():
     """Process a single fatigue CSV file with consistent colors and line styles"""
     
     # Configuration
-    input_dir = Path(r"D:\1522\ctr7\orcaflex\rev_a08\output\csv\07c_fatigue")
+    input_dir = Path(r"<project-root>")
     output_dir = input_dir / "rainflow"
     output_dir.mkdir(parents=True, exist_ok=True)
     

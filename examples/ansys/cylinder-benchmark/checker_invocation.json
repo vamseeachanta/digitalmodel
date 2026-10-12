@@ -1,0 +1,63 @@
+{
+  "schema": "cylinder-independent-checker-invocation-1",
+  "invocation_ordinal": 1,
+  "maximum_invocations": 1,
+  "state": "invocation_consumed",
+  "started_utc": "2026-09-14T14:19:21.006915+00:00",
+  "input_commit": "bf60335f773739ef449166da5f38286478f4d587",
+  "frozen_files": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_reference.py",
+      "sha256": "55a9874f21b633e7e15f232035bd71a15dad82325041e44cc7f73a41955bb641"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_expression.py",
+      "sha256": "28a3c4742595ed2f8bef62fe2fc0a2ef8bdf3b4034742b0650b4d91f7d467cae"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_agreement.py",
+      "sha256": "49619d08d43b1cf541139c47fdce8a32a47dcf47d3dce5db92b4b453399856a0"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_reference.py",
+      "sha256": "e52f8e1d6b4788a1b5a2dd2ae78fd39616e19406d39c03179662a33926243a09"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_expression.py",
+      "sha256": "482e9aac2e513889434256384458f8ad70740a450cc90c49c772b24fb0df9faa"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_agreement.py",
+      "sha256": "841eb7717eaecb649dab4abd1fca496c8b2d271dbf7e19f039d9700d3e425d2f"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_contract.json",
+      "sha256": "85818d3a9203bf08ce2f931b910f9f187e97a8d5c69c82a823f5c8fb2c91da6e"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_brief.txt",
+      "sha256": "c738fa008bb6d6be0508d5f7678108956f80cfa8ebaeb27033568ad598c57911"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/producer_derivation.json",
+      "sha256": "405ba2af48734f66a1ad3d5738741d900587b444e6a589ed6e7b1a391ec91c9a"
+    }
+  ],
+  "prompt_sha256": "c738fa008bb6d6be0508d5f7678108956f80cfa8ebaeb27033568ad598c57911",
+  "provider": "Claude",
+  "cli_version": "2.1.270 (Claude Code)",
+  "cli_sha256": "fd7f35ec7761195ab5ba4eff423e48a78a7849e78f60d93ec31256cdb1a9ec7e",
+  "arguments": [
+    "-p",
+    "--safe-mode",
+    "--tools",
+    "",
+    "--effort",
+    "medium",
+    "--output-format",
+    "json",
+    "--no-session-persistence"
+  ],
+  "isolation": "Fresh CLI invocation, safe-mode disables project/system user customizations/MCP/hooks/skills; tools empty; no session persistence; sole user input is frozen physics brief. No plan, code, expected values or conversation supplied.",
+  "qualification": "unestablished; output must be committed before arithmetic comparison"
+}

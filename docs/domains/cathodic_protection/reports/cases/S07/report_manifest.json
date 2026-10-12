@@ -1,0 +1,36 @@
+{
+  "artifacts": {
+    "citations": "report_citations.json",
+    "html": "report.html",
+    "manifest": "report_manifest.json",
+    "pdf": null
+  },
+  "citations_count": 8,
+  "document": {
+    "client": "Internal module review - no client issuance",
+    "number": "R2281-CP-007-00",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "title": "CP module review: Terminal-bank flowline"
+  },
+  "execution_tool": "digitalmodel.reporting.engine",
+  "pdf": {
+    "engine": null,
+    "message": "pdf rendering disabled (pdf: off)",
+    "rendered": false
+  },
+  "report_layer": null,
+  "standards": [
+    {
+      "code_id": "DNV-RP-F103",
+      "edition": "2019",
+      "provenance": "verified-2019-tables"
+    },
+    {
+      "code_id": "DNV-RP-B401",
+      "edition": "2017-06",
+      "provenance": "tables cited through the DNV_RP_F103_anode_bank route"
+    }
+  ],
+  "tool_version": "0.0.9"
+}

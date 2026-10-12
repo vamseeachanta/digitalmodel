@@ -67,7 +67,7 @@ plot_multiple:
     file_name_extension: NULL
     nrows: 4
     ncols: 1
-    suptitle: Vessel Northing, Noble Bob Douglas
+    suptitle: Vessel Northing, drillship
     sets:
 
     -

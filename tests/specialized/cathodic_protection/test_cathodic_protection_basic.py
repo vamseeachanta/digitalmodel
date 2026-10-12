@@ -6,8 +6,7 @@ import sys
 import pytest  # noqa
 
 # Reader imports
-from digitalmodel.engine import engine
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 def run_cathodic_protection(input_file, expected_result={}):

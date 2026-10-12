@@ -19,6 +19,13 @@ class VesselTypeBuilder(BaseBuilder):
     (when vessel is defined in equipment).
     """
 
+    # Object sections emitted by build(); read by
+    # writers.basefile.object_section_order() to derive a section
+    # dependency order from this builder's registered order.
+    _sections = (
+        "VesselTypes",
+    )
+
     def should_generate(self) -> bool:
         """Only generate for S-lay models with vessel defined."""
         return self.spec.equipment.vessel is not None

@@ -54,11 +54,11 @@ Where:
 
 Current density requirements based on vessel speed $V$:
 
-| Speed Range | Condition | Current Density $J_b$ (mA/m²) |
-|------------|-----------|-------------------------------|
-| $V \leq 1$ m/s | Static/moored | 100-250 |
-| $1 &lt; V &lt; 10$ m/s | Normal operation | 220-350 |
-| $V \geq 10$ m/s | High speed | 350-500 |
+| Speed Range (m/s) | Condition | Current Density $J_b$ (mA/m²) |
+|-------------------|-----------|-------------------------------|
+| $V \leq 1$ | Static/moored | 100-250 |
+| $1 &lt; V &lt; 10$ | Normal operation | 220-350 |
+| $V \geq 10$ | High speed | 350-500 |
 | Ice conditions | Arctic service | 500-750 |
 
 ## 3. Coating Specifications (Mandatory)

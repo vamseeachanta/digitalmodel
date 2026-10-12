@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\github\digitalmodel\docs\modules\orcaflex\examples\raw\C07\C07 Metocean buoy in deep water.yml
+# File: docs/domains/orcaflex/library/model_library/c07_metocean_buoy/monolithic/C07 Metocean buoy in deep water.yml
 # Created: 1:29 PM on 8/20/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

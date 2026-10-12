@@ -1,0 +1,54 @@
+schema_version: 1
+purpose: Authored source pointers and applicability; no extracted dimensional database
+discovery_authority: llm-wiki:data/data-source-catalog.yml and domain-database-index.yml structural-ffs
+observed_on: '2026-10-06'
+research_records: source_research.yml (local-only; not published; pending rights)
+sources:
+  - key: ovako-flat-bar-envelope
+    issuer: Ovako
+    url: https://www.ovako.com/globalassets/downloads/products/dimensions_hot-rolled-flat-bar_2025.pdf
+    edition: printed_date_unconfirmed_filename_year_not_governing_edition
+    coverage: graphical_production_envelope_no_discrete_stock_grade_or_section_properties
+  - key: ssab-hs-observation
+    issuer: SSAB
+    url: https://www.ssab.com/en/brands-and-products/ssab-multisteel/product-offer/ssab-multisteel-hs
+    edition: unknown_live_datasheet
+    coverage: plate_supply_range_strength_and_delivery_condition_not_stock_matrix
+  - key: british-steel-bulb-observation
+    issuer: British Steel
+    url: https://www.britishsteel.co.uk/wp-content/uploads/2026/07/bulb-flats-brochure-20-07-26.pdf
+    edition: printed_revision_unconfirmed
+    coverage: selected_bulb_dimensions_properties_no_supported_bulb_solver
+  - key: british-steel-equal-angle-2026
+    issuer: British Steel
+    url: https://www.britishsteel.co.uk/wp-content/uploads/2026/07/UK-sections-datasheets-20.07.26-1.pdf
+    edition: 'CEAD:ENG:072026 (printed identifier)'
+    coverage: selected_equal_angles_no_marine_certification_or_qualified_eccentric_angle_solver
+    blocked_sections:
+      - section_id: british-ea-120x120x8
+        solver_use: blocked_pending_resolution
+        enforcement: advisory_metadata_not_runtime_enforced
+        reason: confirmed_publisher_inertia_discrepancy_values_preserved
+        evidence_owner: digitalmodel-data
+        evidence_revision: d3cdde0ed247a4d112b5139f9e66d3ab15e92bd2
+        evidence_main_revision: 1722e55a49feb235b5e40eddd60ecbfb05ac958d
+        evidence_path: docs/reviews/ship-plate-study/local-loss-diagnostic/source-database-verification.json
+  - key: dnv-c201
+    issuer: DNV
+    url: https://www.dnv.com/energy/standards-guidelines/dnv-rp-c201-buckling-strength-of-plated-structures/
+    edition: '2023-09'
+    coverage: edition_metadata_only_implementation_identifies_2010_clause_mapping_pending
+  - key: iacs-csr
+    issuer: IACS
+    url: https://iacs.org.uk/resolutions/common-structural-rules/csr-for-bulk-carriers-and-oil-tankers
+    edition: governing_edition_unresolved
+    coverage: scope_metadata_only_no_renewal_criteria
+existing_section_database: ../aisc_shapes.yaml (existing v15.0 header; inch units; no edition upgrade)
+study: ../../docs/domains/plate-buckling/ship-structure-study.md
+result_owner:
+  repo: digitalmodel-data
+  pull_request: https://github.com/vamseeachanta/digitalmodel-data/pull/44
+  status: merged
+  merged_revision: 1722e55a49feb235b5e40eddd60ecbfb05ac958d
+  owner_path: docs/reviews/ship-plate-study/
+  applicability: synthetic_model_screening_and_isolated_patch_diagnostics_no_asset_acceptance

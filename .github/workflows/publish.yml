@@ -1,0 +1,44 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write  # OIDC trusted publishing
+
+jobs:
+  publish:
+    name: Build and Publish
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # The pypi GitHub environment must have the owner as a REQUIRED REVIEWER.
+    # No PyPI publish may occur without a later owner decision card.
+    # Configure required reviewers in GitHub; this comment does not enforce it.
+    environment: pypi
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra test --no-sources
+
+      - name: Run tests
+        run: uv run --no-sources pytest tests/ -x --tb=short -q -m "not solver and not slow"
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

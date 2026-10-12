@@ -46,7 +46,7 @@ returns a `utilization` directly, and already defines material grades.
    **not yet validated** against a DNV worked example; kept out of the management headline chart.
 3. **Parametric sweep + lookup** (`structural/buckling_parametric.py`) — full-factorial sweep over
    thickness × width × load × grade following the `parametric_run` convention, emitting `cases.csv`
-   and an **indexed `results.json`** for O(1) point lookups (downstream Deckhand API workflows).
+   and an **indexed `results.json`** for O(1) point lookups (downstream query workflows).
 4. **Configs** — populated `plate_buckling.yml` with an AH36 worked example, and a
    `parametric_run`-style `ship_plate_buckling_parametric.yml` sweep config.
 5. **Management report** — interactive Plotly HTML (`examples/demos/structural/`) with buckling

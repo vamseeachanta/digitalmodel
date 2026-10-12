@@ -19,6 +19,7 @@ functions. Pipe units in/psi, plate units mm/MPa.
 
 from __future__ import annotations
 
+import math
 from typing import Optional
 
 from .corroded_pipe import (
@@ -90,6 +91,116 @@ def pipe_acceptance_curve(
         "depth_frac": depth_fracs, "depth_in": depth_in,
         "max_acceptable_length_in": max_len,
     }
+
+
+# ---------------------------------------------------------------------------
+# Bounded preliminary pressure-demand wall screen
+# ---------------------------------------------------------------------------
+def pipe_pressure_wall_screen(
+    D: float, t: float, grade: str, method: str, *, axial_length_in: float,
+    pressure_psi: float, safety_factor: float, max_depth_fraction: float = 0.80,
+    flaw_orientation: str = 'longitudinal', load_case: str = 'internal-pressure',
+) -> dict:
+    """Bounded preliminary arithmetic; no API 579 or asset acceptance.
+
+    Reuses raw B31G-2012-labelled methods with retained applicability. Uniform
+    loss gives RSTRENG a rectangular two-point axial profile; B31G methods use
+    their own area approximations. Width/axial load/instability are not assessed.
+    """
+    if not all(math.isfinite(v) and v > 0 for v in
+               (D, t, axial_length_in, pressure_psi, safety_factor, max_depth_fraction)):
+        raise ValueError('Finite positive geometry, demand and factors required')
+    if 2*t >= D or max_depth_fraction >= 1 or safety_factor < 1:
+        raise ValueError('Invalid geometry, depth fraction or safety factor')
+    if method not in {'b31g', 'modified_b31g', 'rstreng'}:
+        raise ValueError('Use b31g, modified_b31g or rstreng')
+    try:
+        smys = SMYS_PSI[grade]
+    except KeyError as exc:
+        raise ValueError(f'Unknown pipe grade: {grade}') from exc
+    result = dict(
+        evidence_status='PRELIMINARY_ARITHMETIC_ONLY',
+        method=method, code_basis='ASME B31G-2012 label; historical arithmetic anchors',
+        api579_allowable_remaining_wall_in=None, asset_acceptance=None,
+        preliminary_remaining_wall_in=None, reason_codes=[],
+        inputs=dict(od_in=D, nominal_wall_in=t, smys_psi=smys, grade=grade,
+                    axial_length_in=axial_length_in, pressure_psi=pressure_psi,
+                    safety_factor=safety_factor, max_depth_fraction=max_depth_fraction,
+                    flaw_orientation=flaw_orientation, load_case=load_case),
+        monotonicity_samples=[], passing_bracket=None, failing_bracket=None,
+        limitations=['HOOP_CONTAINMENT_ONLY', 'WIDTH_DOMAIN_NOT_QUALIFIED',
+                     'NO_SEPARATE_AXIAL_STRESS_OR_INSTABILITY_CHECK',
+                     'NOT_FULL_EDITION_SPECIFIC_COMPLIANCE_AUDIT'],
+        wall_bracket_tolerance_in=1e-6,
+        monotonicity_basis='Fixed nominal geometry/length: area ratio increases with depth; '
+                           'constant M>=1 makes capacity nonincreasing with depth. '
+                           'Original long-flaw branch is linear. Sampling also checked.')
+    if flaw_orientation != 'longitudinal' or load_case != 'internal-pressure':
+        result.update(status='INAPPLICABLE', reason_codes=['UNSUPPORTED_LOAD_OR_ORIENTATION'])
+        return result
+    if max_depth_fraction > .80:
+        result.update(status='INAPPLICABLE', reason_codes=['B31G_DEPTH_BOUND_EXCEEDED'])
+        return result
+
+    def evaluate(wall, depth_override=None):
+        depth = t-wall if depth_override is None else depth_override
+        kw = dict(maop_psi=pressure_psi, safety_factor=safety_factor)
+        if method == 'rstreng':
+            raw = rstreng_effective_area(D, t, [0., axial_length_in], [depth, depth], smys, **kw)
+        else:
+            fn = b31g_original if method == 'b31g' else modified_b31g
+            raw = fn(D, t, depth, axial_length_in, smys, **kw)
+        return dict(remaining_wall_in=wall, depth_in=depth,
+                    safe_pressure_psi=raw.safe_pressure_psi,
+                    pressure_margin_psi=raw.safe_pressure_psi-pressure_psi,
+                    applicability=raw.applicability.to_dict(),
+                    failure_pressure_psi=raw.failure_pressure_psi,
+                    flow_stress_psi=raw.flow_stress_psi, area_ratio=raw.area_ratio,
+                    folias_factor=(raw.folias_factor if math.isfinite(raw.folias_factor) else None),
+                    folias_factor_reason=('FINITE' if math.isfinite(raw.folias_factor)
+                                          else 'ORIGINAL_B31G_INFINITE_LENGTH_REGIME'),
+                    code_reference=raw.code_reference)
+
+    samples = []
+    for i in range(101):
+        depth = max_depth_fraction*t*(100-i)/100
+        # Correct construction roundoff only; caller bounds above .80 are rejected.
+        while depth/t > max_depth_fraction:
+            depth = math.nextafter(depth, 0.)
+        samples.append(evaluate(t-depth, depth_override=depth))
+    result['monotonicity_samples'] = samples
+    if not all(row['applicability']['ok'] for row in samples):
+        result.update(status='INAPPLICABLE', reason_codes=['UNDERLYING_APPLICABILITY_FLAG'])
+        return result
+    if any(b['safe_pressure_psi'] < a['safe_pressure_psi']-1e-9
+           for a, b in zip(samples, samples[1:])):
+        result.update(status='INAPPLICABLE', reason_codes=['NONMONOTONIC_PRESSURE'])
+        return result
+    passing, failing = samples[-1], samples[0]
+    if failing['pressure_margin_psi'] >= 0:
+        result.update(status='LOWER_BOUND_CENSORED', passing_bracket=failing,
+                      reason_codes=['LOWEST_STUDY_WALL_MEETS_PRESSURE'])
+        return result
+    if passing['pressure_margin_psi'] < 0:
+        result.update(status='NO_PRESSURE_SOLUTION', failing_bracket=passing,
+                      reason_codes=['NOMINAL_WALL_BELOW_PRESSURE_DEMAND'])
+        return result
+    for _ in range(60):
+        if passing['remaining_wall_in']-failing['remaining_wall_in'] <= 1e-6:
+            break
+        mid = evaluate((passing['remaining_wall_in']+failing['remaining_wall_in'])/2)
+        if not mid['applicability']['ok']:
+            result.update(status='INAPPLICABLE', flagged_evaluation=mid,
+                          reason_codes=['UNDERLYING_APPLICABILITY_FLAG'])
+            return result
+        if mid['pressure_margin_psi'] >= 0:
+            passing = mid
+        else:
+            failing = mid
+    result.update(status='PRELIMINARY_THRESHOLD',
+                  preliminary_remaining_wall_in=passing['remaining_wall_in'],
+                  passing_bracket=passing, failing_bracket=failing)
+    return result
 
 
 # ---------------------------------------------------------------------------

@@ -88,8 +88,17 @@ def test_explorer_html_has_no_external_reference():
 
 
 # 4. one-pager governance (host-allowlisted) ---------------------------------
-_SAFE_HOSTS = ("t.me/the_deckhand_bot", "api.deckhand", "vamseeachanta.github.io", "w3.org")
-_API = REPO / "docs" / "api" / "capabilities" / "api" / "drilling-riser-operability"
+_SAFE_HOSTS = ("vamseeachanta.github.io", "w3.org")
+
+
+def _onepager(spec_id: str) -> tuple[str, str]:
+    """(rendered one-pager HTML, its live report URL) straight from build_onepagers SPECS."""
+    path = REPO / "scripts" / "capabilities" / "build_onepagers.py"
+    spec = importlib.util.spec_from_file_location("build_onepagers_gov", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    entry = next(s for s in mod.SPECS if s["id"] == spec_id)
+    return mod._render_html(entry), mod._report_url(entry)
 
 
 def _strip_safe(text: str) -> str:
@@ -100,13 +109,9 @@ def _strip_safe(text: str) -> str:
 
 
 def test_onepager_is_governance_clean():
-    html = _API.with_suffix(".html")
-    js = _API.with_suffix(".json")
-    assert html.is_file() and js.is_file(), "one-pager not generated (run build_onepagers.py)"
-    assert not _structural_hits(_strip_safe(html.read_text()))
-    assert not _structural_hits(_strip_safe(js.read_text()))
-    env = json.loads(js.read_text())
-    assert env["report_url"].startswith("https://vamseeachanta.github.io/"), env["report_url"]
+    html, report_url = _onepager("drilling-riser-operability")
+    assert not _structural_hits(_strip_safe(html))
+    assert report_url.startswith("https://vamseeachanta.github.io/"), report_url
 
 
 # 5. results.json exclude-list + generic tokens ------------------------------

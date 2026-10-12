@@ -1,0 +1,274 @@
+{
+  "criteria": {
+    "revision": "sr2314-v1",
+    "minimum_faces": 1000000,
+    "volume_relative_error_max": 0.0001,
+    "area_relative_error_max": 0.0005,
+    "elapsed_seconds_max_exclusive": 120,
+    "peak_rss_bytes_max_exclusive": 2147483648
+  },
+  "implementation": "legacy",
+  "implementation_sha256": "ad745569961e8dcb59fcfe1c931dad2655003fa886d702be1c1f7653ad00cc1b",
+  "benchmark_script_sha256": "ecf599b49217a40432c991af9a2b51e28fbdfca1220904735754c520b8ee51b8",
+  "source_sha256": {
+    "hull_fixtures.py": "d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044",
+    "original_mesh.py": "ad745569961e8dcb59fcfe1c931dad2655003fa886d702be1c1f7653ad00cc1b"
+  },
+  "python": "3.11.14",
+  "platform": "linux",
+  "numpy": "2.4.4",
+  "scipy": "1.17.1",
+  "draft_m": 5.973,
+  "grid_stations_m": [
+    -44.95,
+    -34.95,
+    -24.950000000000003,
+    -14.950000000000003,
+    -4.950000000000003,
+    5.049999999999997,
+    15.049999999999997,
+    25.049999999999997,
+    35.05,
+    45.05
+  ],
+  "nx": 1000,
+  "nz": 250,
+  "source_faces": 1009998,
+  "station_count": 10,
+  "section_evaluation_count": 11,
+  "unique_section_stations": 11,
+  "volume_m3": 2648.653517471568,
+  "reference_volume_m3": 2648.666788166667,
+  "midship_area_m2": 39.729842490002596,
+  "reference_midship_area_m2": 39.73000182250001,
+  "C_M": 0.6651718829025121,
+  "C_P": 0.6666660000321071,
+  "result": {
+    "schema": "mesh_hydrostatics/2",
+    "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+    "conventions": {
+      "frame": "right-handed; x forward, y port, z up; baseline z = 0",
+      "trim": "T_fwd - T_aft over l_pp, negative by the stern, about the midship waterline point",
+      "LCB": "percent of L_wl, positive forward of midship, along the waterplane",
+      "S": "physical (non-cap) submerged faces only",
+      "extents": "L_wl, B_wl and half-breadths from physical faces only",
+      "sections": "transverse planes normal to hull-frame x; end stations give the end face",
+      "half_breadth": "max |y| of the physical submerged section at (x_i, height z_j above baseline)"
+    },
+    "quantities": {
+      "draft_mean": {
+        "value": 5.973,
+        "units": "m",
+        "provenance": "declared",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "trim": {
+        "value": 0.0,
+        "units": "m",
+        "provenance": "declared",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "draft_fwd": {
+        "value": 5.973,
+        "units": "m",
+        "provenance": "declared",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "draft_aft": {
+        "value": 5.973,
+        "units": "m",
+        "provenance": "declared",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "x_midship": {
+        "value": 0.0,
+        "units": "m",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "l_pp": {
+        "value": 100.0,
+        "units": "m",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "V": {
+        "value": 2648.653517471568,
+        "units": "m^3",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "S": {
+        "value": 1439.14627062945,
+        "units": "m^2",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "L_wl": {
+        "value": 100.0,
+        "units": "m",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "B_wl": {
+        "value": 9.99978,
+        "units": "m",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "A_WP": {
+        "value": 666.6513333480009,
+        "units": "m^2",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "A_M": {
+        "value": 39.729842490002596,
+        "units": "m^2",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "C_B": {
+        "value": 0.44344747850844285,
+        "units": "-",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "C_WP": {
+        "value": 0.6666660000000009,
+        "units": "-",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "LCB": {
+        "value": -5.0336677230001516e-05,
+        "units": "% L_wl",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "C_M": {
+        "value": 0.6651718829025121,
+        "units": "-",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "C_P": {
+        "value": 0.6666660000321071,
+        "units": "-",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": null
+      },
+      "A_BT": {
+        "value": null,
+        "units": "m^2",
+        "provenance": "not_computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": "no bulb station declared; the adapter does not infer feature stations"
+      },
+      "A_T": {
+        "value": null,
+        "units": "m^2",
+        "provenance": "not_computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": "no transom station declared; the adapter does not infer feature stations"
+      },
+      "half_breadth": {
+        "value": [
+          [
+            0.2930413062399998,
+            0.7192424999999995,
+            0.9589689561599994
+          ],
+          [
+            0.7813089542399999,
+            1.9177424999999995,
+            2.5569337881599994
+          ],
+          [
+            1.1473558022400001,
+            2.8162424999999995,
+            3.75490742016
+          ],
+          [
+            1.39118185024,
+            3.4147424999999996,
+            4.55288985216
+          ],
+          [
+            1.5127870982400002,
+            3.7132425000000002,
+            4.950881084160001
+          ],
+          [
+            1.5121715462400003,
+            3.7117425,
+            4.948881116160001
+          ],
+          [
+            1.3893351942400003,
+            3.4102425,
+            4.5468899481600005
+          ],
+          [
+            1.1442780422400003,
+            2.8087425000000006,
+            3.7449075801600005
+          ],
+          [
+            0.7770000902400003,
+            1.9072425000000004,
+            2.5429340121600004
+          ],
+          [
+            0.28750133824000024,
+            0.7057425000000005,
+            0.9409692441600005
+          ]
+        ],
+        "units": "m",
+        "provenance": "computed",
+        "input_hash": "426f821c316ca5d7291794c72aab9c58f8a1941328483e5e2b3c09287f01c0da",
+        "reason": "stations x=[-44.95, -34.95, -24.950000000000003, -14.950000000000003, -4.950000000000003, 5.049999999999997, 15.049999999999997, 25.049999999999997, 35.05, 45.05] m; heights z=[1.0, 3.0, 5.973] m"
+      }
+    }
+  },
+  "result_sha256": "55c6d7a6e779bc54c004e51002d3b8af6ac1b06d520cdb71f4df26ea69790dec",
+  "wetted_area_m2": 1439.14627062945,
+  "reference_area_m2": 1439.1469696401637,
+  "volume_relative_error": 5.010330162424914e-06,
+  "area_relative_error": 4.857118336420996e-07,
+  "source_area_m2": {
+    "count": 1009998,
+    "min": 0.0012000015268029953,
+    "mean": 0.0026883463328823535
+  },
+  "generated_physical_area_m2": {
+    "count": 998000,
+    "min": 0.0001312565649079855,
+    "mean": 0.0014420303312920341
+  },
+  "elapsed_seconds_validate_hydrostatics": 24.9101094272919,
+  "peak_rss_raw": 880596,
+  "peak_rss_raw_before_timed_region": 503200,
+  "peak_rss_raw_after_timed_region": 880596,
+  "peak_rss_raw_unit": "KiB",
+  "peak_rss_bytes": 901730304,
+  "qualified": true
+}

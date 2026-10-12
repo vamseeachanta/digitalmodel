@@ -104,10 +104,12 @@ def discover_explorers(repo: Path) -> list[str]:
     """Live explorer pages across docs/api/**, excluding the frozen
     capabilities/api work-item assets."""
     root = repo / "docs" / "api"
+    # posix paths: the inventory is a committed contract checked on Linux CI, and
+    # the FROZEN_DIR filter is written with forward slashes (dm#2197 found this on Windows)
     return sorted(
-        str(p.relative_to(repo))
+        p.relative_to(repo).as_posix()
         for p in root.rglob("*-explorer.html")
-        if FROZEN_DIR not in str(p)
+        if FROZEN_DIR not in p.as_posix()
     )
 
 

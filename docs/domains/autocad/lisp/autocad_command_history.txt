@@ -41,7 +41,7 @@ Command: _ACTRECORD
 Command: '_ACTSTOP
 
 Command:
-Automatic save to C:\Users\CHINNI\AppData\Local\Temp\Drawing1_1_7114_a3308b41.sv$ ...
+Automatic save to <private-data>\Drawing1_1_7114_a3308b41.sv$ ...
 
 Command:
 Command:

@@ -1,0 +1,11 @@
+"Section 2 Table 1, Summary of Potentials versus Ag/AgCl/Seawater Reference Electrode Recommended for the Cathodic Protection of Various Metals in Seawater",material,condition,minimum_negative_potential_V,maximum_negative_potential_V
+,Iron and steel,aerobic,-0.80,-1.10
+,Iron and steel,anaerobic active sulfate-reducing bacteria,-0.90,-1.10
+,High-strength steels,yield strength >690 MPa or hardness >350 HV,-0.80,-0.83 to -0.95
+,Austenitic stainless steel,aerobic and anaerobic NPRE >=40,-0.30,-1.10
+,Austenitic stainless steel,aerobic and anaerobic NPRE <40,-0.60,-1.10
+,Duplex stainless steel,aerobic and anaerobic,-0.60,
+,Martensitic stainless steel (13%Cr),aerobic and anaerobic,-0.50,
+,Nickel-based alloys,,-0.20,
+,Copper alloys,with aluminum,-0.45 to -0.60,-1.10
+,Copper alloys,without aluminum,-0.45 to -0.60,

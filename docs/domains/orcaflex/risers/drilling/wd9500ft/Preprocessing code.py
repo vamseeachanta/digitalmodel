@@ -23,7 +23,7 @@ import os
 import xlrd                                                             
 wb = xlrd.open_workbook('environmentLoading.xlsx')  # Open Excel file 
 sh1 = wb.sheet_by_name(u'Sheet1')   # Read Sheet
-masterFile1 = 'Stones_0.875WT_3000ft.dat'   # name of basemodel
+masterFile1 = 'GoM_UDW_0.875WT_3000ft.dat'   # name of basemodel
 waterDepth = 2895.6  #Water depth of the model is 3000 ft
 waveType = sh1.col_values(0)    # Defining wave type in array
 waveDirection = sh1.col_values(1)   # Defining wave direction in array

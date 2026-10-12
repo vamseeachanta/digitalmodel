@@ -41,13 +41,16 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Optional imports — gracefully absent in environments without a licence
-try:
-    import OrcFxAPI as ofx
+# Optional imports — gracefully absent in environments without a licence.
+# #3838: routed through the facade instead of `import OrcFxAPI`, so the binding
+# is not loaded before OrcFxAPIConfig.setLibPath() can select a version.
+from digitalmodel.solvers.orcaflex.orcaflex_api import available as _orcaflex_available
+from digitalmodel.solvers.orcaflex.orcaflex_api import lazy_api as _lazy_orcaflex_api
+from digitalmodel.solvers.orcaflex.run_state import check_statics
 
-    _OFX_AVAILABLE = True
-except ImportError:
-    _OFX_AVAILABLE = False
+_OFX_AVAILABLE = _orcaflex_available()
+ofx = _lazy_orcaflex_api() if _OFX_AVAILABLE else None
+if not _OFX_AVAILABLE:
     logger.debug("OrcFxAPI not available — schematic capture disabled")
 
 try:
@@ -115,6 +118,9 @@ def save_orcaflex_views(
     model.LoadData(str(model_file))
     if run_statics:
         model.CalculateStatics()
+        # #3838: the views captured below are of the static configuration, so a
+        # solve that did not reach one must not be saved as a schematic.
+        check_statics(model, context=str(model_file))
 
     saved: dict[str, Path] = {}
     view_angles = {

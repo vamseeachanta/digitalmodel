@@ -1,14 +1,14 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\STAT-2buoys\_13_i01_def__uth_landing4on_elastic_surf.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/_13_i01_def__uth_landing4on_elastic_surf.yml
 # Created: 3:04 PM on 7/13/2023
 # User: 
 # Machine: 
 ---
 BaseFile: _10_i02_cal.yml
 Vessels:
-  SevenArctic:
+  iv02:
     InitialX: 87
 Lines:
   Umbilical:

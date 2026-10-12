@@ -50,12 +50,12 @@ unit_conversions:
 # Identifiers + wiki_path ONLY — no clause text, no table values (plan D2/[R2-B4]).
 # registry_revision mirrors llm-wiki data/standards-registry.json verbatim.
 crosswalk_rows:
-  - code_id: amjig-1997
-    family_key: amjig-1997
+  - code_id: amjig-2000
+    family_key: amjig-2000
     publisher: AMJIG
     section: "criteria"
     topic: drilling riser integrity management criteria
-    wiki_path: wikis/engineering-standards/wiki/standards/amjig-1997.md
+    wiki_path: wikis/engineering-standards/wiki/standards/amjig-2000.md
     registry_revision: "Rev 2 (2000)"
     note: public identifier attested by AADE 2001; criteria values resolve wiki-side
   - code_id: api-std-2rd
@@ -64,7 +64,7 @@ crosswalk_rows:
     section: "Sec.5"
     topic: dynamic riser design criteria
     wiki_path: wikis/engineering-standards/wiki/standards/api-std-2rd.md
-    registry_revision: 3e-2025
+    registry_revision: 2e-2013
     note: formerly API RP 2RD; API reclassified it as STD 2RD
   - code_id: api-rp-16q
     family_key: api-rp-16q
@@ -88,8 +88,8 @@ crosswalk_rows:
     section: "Sec.2"
     topic: fatigue design; S-N curves and SCF methodology
     wiki_path: wikis/engineering-standards/wiki/standards/dnv-rp-c203.md
-    registry_revision: 2024-10
-    note: code implements the 2021 edition tables; drift vs wiki revision recorded
+    registry_revision: "2021"
+    note: edition whose S-N tables the code implements (fatigue.c203_editions)
 
 # sn_curve_name/environment use fatigue/sn_curves.py vocabulary (the real
 # riser consumer); scf_ref/dff_ref name getters — references, never values.

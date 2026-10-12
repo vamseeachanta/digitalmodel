@@ -326,7 +326,7 @@ def _run_benchmark_comparison(
 
         config = BenchmarkConfig(
             output_dir=output_dir,
-            tolerance=0.05,
+            # No measured uncertainty budget; emit diagnostics without a verdict.
             x_axis="period",
             reference_solver="WAMIT",
         )

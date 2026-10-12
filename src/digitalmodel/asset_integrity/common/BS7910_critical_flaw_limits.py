@@ -1,4 +1,9 @@
-"""BS 7910 critical flaw size limit calculations."""
+"""BS 7910:2013 critical flaw size limit calculations (legacy engine).
+
+The allowable Kr comes from the repo's single Option 1 curve,
+:func:`digitalmodel.asset_integrity.assessment.crack_fad.fad_curve_option1`
+(#2160).
+"""
 
 import logging
 import math
@@ -68,14 +73,24 @@ class BS7910_2013():
         pass
 
     def get_K_r_allowable(self):
-        try:
-            self.K_r_allowable = np.interp(self.L_r,
-                                           self.fad['option_1']['L_r'],
-                                           self.fad['option_1']['K_r'])
-        except:
-            print(
-                "Could not evaluate self.K_r_allowable. Check results using breakpoint in function 'get_K_r_allowable' "
-            )
+        """Allowable Kr at the current L_r on the BS 7910:2013 Option 1 curve.
+
+        Delegates to the canonical
+        :func:`digitalmodel.asset_integrity.assessment.crack_fad.fad_curve_option1`
+        (#2160).  Before the consolidation this linearly interpolated the
+        201-point ``FAD.option_1`` table; the exact curve agrees with that to
+        interpolation accuracy and is 0.0 beyond Lr_max as before.
+        """
+        from digitalmodel.asset_integrity.assessment.crack_fad import (
+            fad_curve_option1,
+        )
+
+        self.K_r_allowable = fad_curve_option1(
+            float(self.L_r),
+            self.material_grade_properties['SMYS'],
+            self.material_grade_properties['SMUS'],
+            self.material_properties['E'],
+        )
 
     def iterate_flaw_length_for_unstable_limits(self):
 
@@ -162,10 +177,11 @@ class BS7910_2013():
                     stress_intensity_annex = 'Annex_M_7_3_6'
                     reference_stress_annex = 'Annex_P_10_6'
                 else:
-                    print(
-                        f"No calculation found for flaw geometry: {self.flaw.geometry} and flaw oreintation: {self.flaw.orientation}"
+                    raise ValueError(
+                        f"No calculation found for flaw geometry: {self.flaw.geometry}, "
+                        f"flaw orientation: {self.flaw.orientation} and flaw location: "
+                        f"{self.flaw.location}"
                     )
-                    exit()
             elif self.flaw.orientation == 'circumferential':
                 if self.flaw.location == 'internal_surface':
                     stress_intensity_annex = 'Annex_M_7_3_2'
@@ -177,10 +193,11 @@ class BS7910_2013():
                     stress_intensity_annex = 'Annex_M_7_3_6'
                     reference_stress_annex = 'Annex_P_10_6'
                 else:
-                    print(
-                        f"No calculation found for flaw geometry: {self.flaw.geometry} and flaw orientation: {self.flaw.orientation}"
+                    raise ValueError(
+                        f"No calculation found for flaw geometry: {self.flaw.geometry}, "
+                        f"flaw orientation: {self.flaw.orientation} and flaw location: "
+                        f"{self.flaw.location}"
                     )
-                    exit()
 
         self.stress_intensity_annex = stress_intensity_annex
         self.reference_stress_annex = reference_stress_annex
@@ -562,10 +579,16 @@ class BS7910_2013():
                           (df['a_over_c'] == a_over_c_high) &
                           (df['B_over_ri'] == B_over_ri_high) &
                           (df['theta'] == theta)].copy()
-        df_temp = df_temp_low.copy()
-        row = [a_over_B, a_over_c, B_over_ri, theta, theta_location, None, None]
-        df_temp.loc[len(df_temp)] = row
-        df_temp = df_temp.append(df_temp_high, ignore_index=True)
+        # Three-row frame: bracketing low row, the query point (Mm/Mb
+        # unknown), bracketing high row.  Typed NaNs keep the float columns
+        # float so pd.concat needs no dtype inference on all-NA entries.
+        query_row = pd.DataFrame(
+            [[a_over_B, a_over_c, B_over_ri, theta, theta_location,
+              np.nan, np.nan]],
+            columns=df_temp_low.columns,
+        )
+        df_temp = pd.concat([df_temp_low, query_row, df_temp_high],
+                            ignore_index=True)
         # TODO replace below manual interpolation to scipy package in future
 
         if a_over_B_low == a_over_B_high:
@@ -649,7 +672,7 @@ class BS7910_2013():
 
         if a_over_c_flag:
             if (a_over_c >= a_over_c_range[0]) and (a_over_c <=
-                                                    a_over_c_range[0]):
+                                                    a_over_c_range[1]):
                 logging.info("a/c check acceptable")
             else:
                 logging.info(

@@ -221,7 +221,7 @@ class DnvStF101Strategy:
         # g(min(p_el, p_p)) = -min(p_el, p_p)*coeff < 0, so this bracket is
         # always valid. The previous bracket (0, max(p_el, p_p)*1.5) converged
         # to a spurious high root of the cubic whenever p_p > p_el (deepwater,
-        # thin t2/D), overstating collapse resistance ~5x (deckhand#227).
+        # thin t2/D), overstating collapse resistance ~5x (regression: tests/test_wall_thickness_collapse_solver.py).
         lo, hi = 0.0, min(p_el, p_p)
 
         for _ in range(max_iter):

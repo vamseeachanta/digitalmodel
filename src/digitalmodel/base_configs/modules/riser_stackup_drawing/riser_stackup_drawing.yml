@@ -1,0 +1,10 @@
+basename: riser_stackup_drawing
+
+riser_stackup_drawing:
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

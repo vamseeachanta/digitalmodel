@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for layout_model — full field-layout model (#1509, epic #1507).
 # ABOUTME: Schema round-trip, connectivity validation, waypoint routing, offshore e2e, tracer back-compat.
 """Tests for digitalmodel.field_development.layout_model."""

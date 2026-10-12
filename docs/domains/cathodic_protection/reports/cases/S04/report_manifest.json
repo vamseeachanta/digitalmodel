@@ -1,0 +1,36 @@
+{
+  "artifacts": {
+    "citations": "report_citations.json",
+    "html": "report.html",
+    "manifest": "report_manifest.json",
+    "pdf": null
+  },
+  "citations_count": 10,
+  "document": {
+    "client": "Internal module review - no client issuance",
+    "number": "R2281-CP-004-00",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "title": "CP module review: Ship hull"
+  },
+  "execution_tool": "digitalmodel.reporting.engine",
+  "pdf": {
+    "engine": null,
+    "message": "pdf rendering disabled (pdf: off)",
+    "rendered": false
+  },
+  "report_layer": null,
+  "standards": [
+    {
+      "code_id": "ABS GN Ships",
+      "edition": "2017-12",
+      "provenance": "guide table/equation locators; generic wiki citation target"
+    },
+    {
+      "code_id": "ABS-GN-SHIPS",
+      "edition": "2017-12",
+      "provenance": "tables cited through the ABS_gn_ships_2018 route"
+    }
+  ],
+  "tool_version": "0.0.9"
+}

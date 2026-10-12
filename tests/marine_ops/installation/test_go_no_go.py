@@ -22,10 +22,10 @@ class TestGoNoGoDecision:
     """Test overall Go/No-Go decision logic."""
 
     def setup_method(self):
-        cfg = jl.KNOWN_JUMPER_CONFIGS["ballymore_mf_plet"]
+        cfg = jl.KNOWN_JUMPER_CONFIGS["gom_tieback_mf_plet"]
         self.results = jl.run_jumper_analysis(cfg)
         self.decision = gng.evaluate_go_no_go(
-            "Ballymore Manifold-to-PLET", self.results
+            "GoM tieback Manifold-to-PLET", self.results
         )
 
     def test_returns_decision(self):
@@ -35,7 +35,7 @@ class TestGoNoGoDecision:
         assert len(self.decision.criteria) > 0
 
     def test_jumper_name_set(self):
-        assert self.decision.jumper_name == "Ballymore Manifold-to-PLET"
+        assert self.decision.jumper_name == "GoM tieback Manifold-to-PLET"
 
     def test_criteria_have_states(self):
         for c in self.decision.criteria:
@@ -65,12 +65,12 @@ class TestGoNoGoDecision:
         assert len(self.decision.summary) > 50
 
     def test_no_failed_criteria(self):
-        """Ballymore jumper should have no FAIL criteria."""
+        """GoM tieback jumper should have no FAIL criteria."""
         fail_states = [c for c in self.decision.criteria if c.state == gng.CriterionState.FAIL]
         assert len(fail_states) == 0, f"Unexpected FAIL: {[c.name for c in fail_states]}"
 
     def test_overall_state_is_marginal_or_go(self):
-        """Ballymore jumper should be GO or MARGINAL."""
+        """GoM tieback jumper should be GO or MARGINAL."""
         assert self.decision.overall_state in [
             gng.DecisionState.GO,
             gng.DecisionState.MARGINAL,
@@ -126,7 +126,7 @@ class TestCraneCriteria:
     """Test crane-specific criteria."""
 
     def setup_method(self):
-        cfg = jl.KNOWN_JUMPER_CONFIGS["ballymore_mf_plet"]
+        cfg = jl.KNOWN_JUMPER_CONFIGS["gom_tieback_mf_plet"]
         self.results = jl.run_jumper_analysis(cfg)
 
     def test_sz_crane_utilisation_passes(self):
@@ -191,7 +191,7 @@ class TestIssue472Criteria:
     """
 
     def setup_method(self):
-        cfg = jl.KNOWN_JUMPER_CONFIGS["ballymore_mf_plet"]
+        cfg = jl.KNOWN_JUMPER_CONFIGS["gom_tieback_mf_plet"]
         self.results = jl.run_jumper_analysis(cfg)
 
     # ----- helpers --------------------------------------------------------

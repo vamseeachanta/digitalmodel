@@ -1,0 +1,23 @@
+"Table A-2 Recommendations for constants a and b to be used for calculation of coating breakdown factors associated with specific field joint coating systems, with and without infill, as defined in DNVGL-RP-F102",,,,,
+"FJC type
+(DNVGL-RP-F102 (2011)
+FJC system)","Infill type
+(DNVGL-RP-F102
+(2011) system)","Tentative max.
+temperature
+[°C]","Examples of compatibility
+with DNVGL-RP-F106
+Linepipe coating system",a,b
+none,4E(1) moulded PU on top bare steel (with primer),70,"FBE (CDS 1), 3LPE (CDS 2), AE (CDS 4), all with concrete",0.30,0.030
+1D Adhesive Tape or 2A(1)/2A(2) HSS (PE/PP backing) with mastic adhesive,4E(2) moulded PU on top 1D or 2A(1)/2A(2),70,"3LPE (CDS 2), AE (CDS 4), all with concrete",0.10,0.010
+2B(1) HSS (backing + adhesive in PE with LE primer),none or 4E(2) moulded PU on top 2B(1),70,3LPE (CDS 2); 3LPE (CDS 2) with concrete,0.03,0.003
+"2C(1) HSS (backing + adhesive in PP, LE primer)",none or 4E(2) moulded PU on top 2B(1),110,3LPP (CDS 3) or FBE (CDS 1); with concrete,0.03,0.003
+3A FBE,none,90,"FBE (CDS 1), 3LPE (CDS 2) and 3LPP (CDS 3)",0.10,0.010
+3A FBE,4E(2) moulded PU on top,90,"FBE (CDS 1), 3LPE (CDS 2) and 3LPP (CDS 3) with concrete",0.03,0.003
+2B(2) FBE with PE HSS,none or 4E(2) moulded PU on top FBE + PE HSS,70,FBE (CDS 1) and 3LPE (CDS 2); with concrete,0.01,0.0003
+"5D(1) and 5E FBE with PE applied as flame spraying or tape, respectively",none,70,3LPE (CDS 2),0.01,0.0003
+2C(2) FBE with PP HSS,none,140,3LPP (CDS 3) and FBE/PP thermal insulation coating,0.01,0.0003
+"5A/B/C(1) FBE, PP adhesive and PP (wrapped, flame sprayed or moulded)",none,140,3LPP (CDS3) and FBE/PP thermal insulation coating,0.01,0.0003
+NA,5C(1) moulded PE on top FBE with PE adhesive,70,FBE/PU based thermally insulating coating,0.01,0.0003
+NA,5C(2) moulded PP on top FBE with PP adhesive,140,FBE/PP thermal insulation coating,0.01,0.0003
+8A polychloroprene,none,90,polychloroprene (CDS 5),0.03,0.001

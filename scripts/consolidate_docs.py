@@ -82,8 +82,8 @@ REF_PATTERNS = [
         r"(?i)(structural|ffs|fad|buckling|FEA|schmidt|nordlock|bolt|lug)",
         "structural/references",
     ),
-    # Standards (API, DNV, BS, BSEE, Macondo, BOEM)
-    (r"(?i)(API5|API579|BS7910|DNV|BSEE|Macondo|BOEM|OOC|JSCE)", "standards"),
+    # Standards (API, DNV, BS, BSEE, 2010 GoM blowout, BOEM)
+    (r"(?i)(API5|API579|BS7910|DNV|BSEE|2010 GoM blowout|BOEM|OOC|JSCE)", "standards"),
     # Fatigue, ECA, GoM fatigue
     (
         r"(?i)(fatigue|ECA|flaw|crackwise|FlawCheck)",
@@ -169,7 +169,7 @@ ROOT_PATTERNS = [
     (r"(?i)(ndt|sonatest)", "nde"),
     (r"(?i)(fmea|imca)", "risk"),
     (
-        r"(?i)(bsee|BSEE|deepwater.*asgard|Deepwater_Asgard|dhsg)",
+        r"(?i)(bsee|BSEE|deepwater_drillship_alert|dhsg)",
         "standards",
     ),
     (r"(?i)(digital.?twin|ditigal_twin)", "digitaltwin"),

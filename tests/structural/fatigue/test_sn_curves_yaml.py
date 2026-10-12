@@ -8,6 +8,11 @@ Validates that:
 3. StandardSNCurves.get_curve() returns PowerLawSNCurve with correct params.
 4. StandardSNCurves.list_curves() returns the correct counts per standard.
 5. Python class dicts and YAML values are cross-consistent.
+
+DNV-RP-C203 single-slope curves are not in the YAML (#2165): they come from
+digitalmodel.fatigue.c203_sn_tables, the verified single source, and are
+pinned in tests/fatigue/test_c203_consumers.py. The YAML keeps API, BS, AWS
+and the DNV multislope entries.
 """
 
 import pytest
@@ -43,9 +48,13 @@ _STD_TO_ATTR = {
 }
 
 
-def _all_single_slope_cases():
+# Standards whose single-slope curves live in the YAML (DNV does not, #2165)
+_YAML_STD_TO_ATTR = {k: v for k, v in _STD_TO_ATTR.items() if k != "DNV"}
+
+
+def _all_single_slope_cases(std_to_attr=_STD_TO_ATTR):
     """Yield (standard, curve_class, expected_params) for parametrize."""
-    for std, attr in _STD_TO_ATTR.items():
+    for std, attr in std_to_attr.items():
         curves = getattr(StandardSNCurves, attr)
         for cls_name, params in curves.items():
             yield std, cls_name, params
@@ -87,8 +96,9 @@ class TestSNCurvesYAML:
 
     # -- curve count checks -------------------------------------------------
 
-    def test_yaml_curve_count_dnv(self, yaml_data):
-        assert len(yaml_data["standards"]["DNV"]["curves"]) == EXPECTED_COUNTS["DNV"]
+    def test_yaml_has_no_dnv_single_slope_curves(self, yaml_data):
+        """#2165: DNV-RP-C203 curves come from fatigue.c203_sn_tables only."""
+        assert "curves" not in yaml_data["standards"]["DNV"]
 
     def test_yaml_curve_count_api(self, yaml_data):
         assert len(yaml_data["standards"]["API"]["curves"]) == EXPECTED_COUNTS["API"]
@@ -121,8 +131,8 @@ class TestYAMLCurveValues:
 
     @pytest.mark.parametrize(
         "standard, curve_class, expected",
-        list(_all_single_slope_cases()),
-        ids=[f"{s}-{c}" for s, c, _ in _all_single_slope_cases()],
+        list(_all_single_slope_cases(_YAML_STD_TO_ATTR)),
+        ids=[f"{s}-{c}" for s, c, _ in _all_single_slope_cases(_YAML_STD_TO_ATTR)],
     )
     def test_yaml_single_slope_values(self, yaml_data, standard, curve_class, expected):
         yaml_curve = yaml_data["standards"][standard]["curves"][curve_class]
@@ -212,8 +222,8 @@ class TestCrossCheck:
 
     @pytest.mark.parametrize(
         "standard, attr",
-        list(_STD_TO_ATTR.items()),
-        ids=list(_STD_TO_ATTR.keys()),
+        list(_YAML_STD_TO_ATTR.items()),
+        ids=list(_YAML_STD_TO_ATTR.keys()),
     )
     def test_python_yaml_key_parity(self, yaml_data, standard, attr):
         """Python dict and YAML must have identical curve names."""
@@ -227,8 +237,8 @@ class TestCrossCheck:
 
     @pytest.mark.parametrize(
         "standard, curve_class, expected",
-        list(_all_single_slope_cases()),
-        ids=[f"{s}-{c}" for s, c, _ in _all_single_slope_cases()],
+        list(_all_single_slope_cases(_YAML_STD_TO_ATTR)),
+        ids=[f"{s}-{c}" for s, c, _ in _all_single_slope_cases(_YAML_STD_TO_ATTR)],
     )
     def test_python_yaml_value_match(self, yaml_data, standard, curve_class, expected):
         """Every value in the Python dict must equal the corresponding YAML value."""

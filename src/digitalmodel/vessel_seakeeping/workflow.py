@@ -93,7 +93,7 @@ def router(cfg: dict) -> dict:
         "governing_operability_pct": governing["operability_pct"],
         "response_transfer": "S_response(w) = |RAO(w)|^2 * S_wave(w)",
         # Top-level pass/fail: the vessel is operable only if every DOF meets
-        # its required operability. Drives the deckhand report mitigation section.
+        # its required operability. Drives the report's mitigation section.
         "screening_status": "pass" if all(s["passes"] for s in summaries) else "fail",
         "dofs": summaries,
         "results_csv": _display_path(csv_path),

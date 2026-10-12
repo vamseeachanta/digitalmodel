@@ -18,8 +18,8 @@ APPROVE for `status:plan-review` / user approval request.
 
 ## Prior MAJOR findings resolved
 
-1. **B1528 outputs contradiction resolved** — #596 now keeps `outputs/b1528_sirocco/**` in place as a temporary metadata-backed durable exception and defers per-file classification/relocation to `digitalmodel#597`; no source traceability-link edits or B1528 moves are authorized in #596.
-2. **Over-broad stale-reference gate resolved** — the repo-wide zero-match `rg -F 'outputs/b1528_sirocco'` gate is removed; verification now checks unauthorized generated roots, explicit B1528 exception metadata, concrete follow-up URL, and placeholder rejection.
+1. **<job-code> outputs contradiction resolved** — #596 now keeps `outputs/moved-private/**` in place as a temporary metadata-backed durable exception and defers per-file classification/relocation to `digitalmodel#597`; no source traceability-link edits or <job-code> moves are authorized in #596.
+2. **Over-broad stale-reference gate resolved** — the repo-wide zero-match `rg -F 'outputs/moved-private'` gate is removed; verification now checks unauthorized generated roots, explicit <job-code> exception metadata, concrete follow-up URL, and placeholder rejection.
 3. **CI checker enforcement resolved** — the plan requires a named workflow to run the repo-structure checker or hook, plus tests/workflow grep verification.
 4. **Docs workflow weakness resolved** — the plan requires docs workflow path-filter coverage for touched docs surfaces and non-API docs validation through full pre-commit or markdown-link-check plus routing tests.
 5. **Approval drift resolved** — the approval gate requires exact reviewed plan path plus git/blob SHA and a pre-implementation marker/current-plan SHA mismatch abort before any implementation edit.

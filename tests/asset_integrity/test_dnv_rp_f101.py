@@ -16,7 +16,6 @@ from digitalmodel.asset_integrity.dnv_rp_f101 import (
     length_correction_factor,
 )
 
-
 # Reference geometry / material for the hand-calc golden.
 D, T, DEPTH, LEN = 30.0, 0.375, 0.15, 8.0
 SMTS = 66_700.0  # API 5L X52
@@ -361,3 +360,71 @@ def test_input_validation():
         dnv_f101_single_defect(30.0, 0.375, 0.15, -1.0, SMTS)  # L < 0
     with pytest.raises(ValueError):
         dnv_f101_interacting(30.0, 0.375, [], SMTS)  # empty colony
+
+
+def test_part_b_explicit_factors_and_legacy_validation_record():
+    """The committed reference capacity and legacy total-F pressure stay fixed."""
+    legacy = dnv_f101_single_defect(D, T, DEPTH, LEN, SMTS, usage_factor=0.72)
+    assert legacy.Q == pytest.approx(1.6623945246407532, rel=1e-12)
+    assert legacy.capacity_pressure_psi == pytest.approx(1334.1940092246919, rel=1e-12)
+    assert legacy.allowable_pressure_psi == pytest.approx(960.6196866417781, rel=1e-12)
+    part_b = dnv_f101_single_defect(
+        D, T, DEPTH, LEN, SMTS, modelling_factor=0.9, operational_usage_factor=0.72
+    )
+    assert part_b.allowable_pressure_psi == pytest.approx(
+        0.9 * 0.72 * legacy.capacity_pressure_psi, rel=1e-12
+    )
+    assert part_b.details["total_usage_factor"] == pytest.approx(0.648)
+    assert part_b.details["modelling_factor"] == 0.9
+    assert part_b.details["operational_usage_factor"] == 0.72
+
+
+@pytest.mark.parametrize("factor", [-1, 0, 1.01, float("nan"), float("inf")])
+def test_part_b_rejects_invalid_f2(factor):
+    with pytest.raises(ValueError, match="operational_usage_factor"):
+        dnv_f101_single_defect(D, T, DEPTH, LEN, SMTS, operational_usage_factor=factor)
+
+
+def test_part_b_rejects_ambiguous_factor_arguments():
+    with pytest.raises(ValueError, match="total F.*F2"):
+        dnv_f101_single_defect(
+            D, T, DEPTH, LEN, SMTS, usage_factor=0.72, operational_usage_factor=0.72
+        )
+
+
+@pytest.mark.parametrize("alias", [None, 0.72])
+def test_part_b_f1_requires_explicit_f2(alias):
+    with pytest.raises(
+        ValueError, match="modelling_factor requires operational_usage_factor"
+    ):
+        dnv_f101_single_defect(
+            D, T, DEPTH, LEN, SMTS, usage_factor=alias, modelling_factor=0.9
+        )
+
+
+@pytest.mark.parametrize("factor", [-1, 0, 1.01, float("nan"), True])
+def test_part_b_rejects_invalid_f1(factor):
+    with pytest.raises(ValueError, match="modelling_factor"):
+        dnv_f101_single_defect(
+            D,
+            T,
+            DEPTH,
+            LEN,
+            SMTS,
+            modelling_factor=factor,
+            operational_usage_factor=0.72,
+        )
+
+
+def test_legacy_alias_emits_deprecation_warning():
+    with pytest.warns(DeprecationWarning, match="deprecated total F alias"):
+        dnv_f101_single_defect(D, T, DEPTH, LEN, SMTS, usage_factor=0.72)
+
+
+def test_omitted_legacy_alias_does_not_warn():
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        result = dnv_f101_single_defect(D, T, DEPTH, LEN, SMTS)
+    assert result.allowable_pressure_psi == pytest.approx(960.6196866417781, rel=1e-12)

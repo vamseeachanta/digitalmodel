@@ -1,6 +1,6 @@
 # Wall Thickness Quickcheck
 
-Runs the deckhand wall-thickness quickcheck from the committed cache and writes
+Runs the wall-thickness quickcheck from the committed cache and writes
 the self-contained HTML report plus JSON/CSV result extracts.
 
 Run:

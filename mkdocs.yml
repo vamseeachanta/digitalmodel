@@ -4,7 +4,33 @@ docs_dir: docs/api
 site_dir: site
 
 nav:
-  - API Reference: index.md
+  - Home: index.md
+
+  # ---------------------------------------------------------------------------
+  # CFD — Computational Fluid Dynamics
+  # ---------------------------------------------------------------------------
+  - CFD:
+      - Findings:
+          - Single Tank Amplitude: cfd/single-tank-amplitude-findings.md
+      - Verification Cases:
+          - Cylinder Re 100: cfd/cases/cylinder_re100/README.md
+          - Dam Break: cfd/cases/dam_break/README.md
+          - Flat Plate (Blasius): cfd/cases/flat_plate_blasius/README.md
+          - Floating Body Decay: cfd/cases/floating_body_decay/README.md
+          - Kleefsman Impact: cfd/cases/kleefsman_impact/README.md
+          - MacCamy-Fuchs Cylinder: cfd/cases/maccamy_fuchs/README.md
+          - NACA 0012 Airfoil: cfd/cases/naca0012_polar/README.md
+          - Turbulent Flat Plate: cfd/cases/turbulent_flat_plate/README.md
+          - Wave-Excited Body: cfd/cases/wave_excited_body/README.md
+          - Wave Tank: cfd/cases/wave_tank/README.md
+      - Report Build: cfd/report_build/README.md
+
+  # ---------------------------------------------------------------------------
+  # Contributing / Standards
+  # ---------------------------------------------------------------------------
+  - Contributing:
+      - Release Authorization: contributing/releases.md
+      - Page Layout Standard: _assets/LAYOUT.md
 
 plugins:
   - search
@@ -24,3 +50,7 @@ theme:
   name: material
   features:
     - navigation.sections
+    - navigation.tabs
+    - navigation.expand
+    - content.code.copy
+    - navigation.top

@@ -36,8 +36,10 @@ S-N class parameters encoded in the engine (DNV-RP-C203, in air, N <= 1e7):
     F3      3.0       11.546      11.146
     G       3.0       11.398      10.998
 
-(All slopes m=3 below the 1e7 knee; m=5 above. Values: DNV-RP-C203
-Table 2-1 in air, Table 2-2 seawater with cathodic protection.)
+(m = 3 up to the knee, m = 5 beyond it; the knee is at 1e7 cycles in air
+and 1e6 cycles in seawater with CP. Free corrosion is single slope, m = 3.
+Values: :mod:`digitalmodel.fatigue.c203_sn_tables`, verified against
+DNV-RP-C203 (2011) Tables 2-1 to 2-3, #2165.)
 
 References
 ----------
@@ -56,21 +58,15 @@ from typing import Sequence
 
 import pandas as pd
 
+from . import c203_sn_tables as _c203
 from .sn_curves import get_sn_curve
 from .damage import miner_damage, thickness_correction
 
 # DNV-RP-C203 Sec. 2.4 default thickness-correction reference thickness.
 _DEFAULT_T_REF = 25.0
-# Thickness exponent k by weld class (DNV-RP-C203 Table 2-1, last column).
-# D=0.20, others (E..G welded details) = 0.25.  Used only when t > t_ref.
-_THICKNESS_EXPONENT = {
-    "D": 0.20,
-    "E": 0.25,
-    "F": 0.25,
-    "F1": 0.25,
-    "F3": 0.25,
-    "G": 0.25,
-}
+# Thickness exponent k by weld class (DNV-RP-C203 Table 2-1, last column;
+# verified against the 2011 edition, #2165). Used only when t > t_ref.
+_THICKNESS_EXPONENT = {name: p.k for name, p in _c203.BILINEAR.items()}
 _DEFAULT_K = 0.25
 
 

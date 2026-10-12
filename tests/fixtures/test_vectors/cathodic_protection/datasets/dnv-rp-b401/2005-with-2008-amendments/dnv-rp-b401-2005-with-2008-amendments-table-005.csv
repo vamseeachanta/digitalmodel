@@ -1,0 +1,13 @@
+"Table 10-6 Recommended design electrochemical capacity and
+design closed circuit potential for anode materials at seawater
+ambient temperatures (ref. 6.5).",,,
+"Anode Material
+Type",Environment,"Electrochem-
+ical Capacity
+(Ah/kg)","Closed Circuit
+Potential
+(V)"
+Al-based,seawater,"2,000",-1.05
+,sediments,"1,500",-0.95
+Zn-based,seawater,780,-1.00
+,sediments,700,-0.95

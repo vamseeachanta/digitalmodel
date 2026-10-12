@@ -184,7 +184,13 @@ class TestLegacyComparison:
         )
 
     def test_full_lazy_wave_matches_legacy(self, legacy_data):
-        """Test complete lazy-wave solution matches legacy."""
+        """Test complete lazy-wave solution matches legacy.
+
+        The legacy vertical value is the sum of vertical and horizontal force;
+        the solver value is corrected to w*S under issue #2044.
+        test_legacy_vertical_force_excess_is_horizontal_force_pin
+        demonstrates this difference.
+        """
         # Run legacy full solution
         legacy_hangoff = catenaryEquation(legacy_data['HangOff'])
         legacy_data['HangOff'].update(legacy_hangoff)
@@ -208,11 +214,6 @@ class TestLegacyComparison:
         assert math.isclose(
             modern_result.horizontal_force,
             legacy_result['Summary']['Fh'],
-            rel_tol=1e-9
-        )
-        assert math.isclose(
-            modern_result.vertical_force,
-            legacy_result['Summary']['Fv'],
             rel_tol=1e-9
         )
 
@@ -265,7 +266,13 @@ class TestLegacyComparison:
         )
 
     def test_legacy_dict_format_matches(self, legacy_data):
-        """Test that to_legacy_dict produces exact legacy format."""
+        """Test that to_legacy_dict produces exact legacy format.
+
+        The legacy vertical value is the sum of vertical and horizontal force;
+        the solver value is corrected to w*S under issue #2044.
+        test_legacy_vertical_force_excess_is_horizontal_force_pin
+        demonstrates this difference.
+        """
         # Run legacy
         legacy_hangoff = catenaryEquation(legacy_data['HangOff'])
         legacy_data['HangOff'].update(legacy_hangoff)
@@ -307,11 +314,6 @@ class TestLegacyComparison:
         assert math.isclose(
             modern_dict['Summary']['Fh'],
             legacy_result['Summary']['Fh'],
-            rel_tol=1e-9
-        )
-        assert math.isclose(
-            modern_dict['Summary']['Fv'],
-            legacy_result['Summary']['Fv'],
             rel_tol=1e-9
         )
 

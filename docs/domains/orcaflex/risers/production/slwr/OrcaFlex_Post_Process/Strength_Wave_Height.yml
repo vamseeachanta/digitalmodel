@@ -6,15 +6,15 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
+    Name: ..\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
     Label: Basecase, HS 7.2m
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\WaveHeight\SLWR_16OD_SE1200_HE1500_HS_10_GA2_Driving.sim
+    Name: ..\WaveHeight\SLWR_16OD_SE1200_HE1500_HS_10_GA2_Driving.sim
     Label: SE1200 HE1500 HS 10m
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\WaveHeight\SLWR_16OD_SE1200_HE1500_HS_12_GA2_Driving.sim
+    Name: ..\WaveHeight\SLWR_16OD_SE1200_HE1500_HS_12_GA2_Driving.sim
     Label: SE1200 HE1500 HS 12m
     ObjectName: SLWR
 

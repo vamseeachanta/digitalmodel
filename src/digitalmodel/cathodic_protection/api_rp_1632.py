@@ -30,7 +30,10 @@ ANODE_OC_POTENTIAL: dict[str, float] = {
 # ---------------------------------------------------------------------------
 ANODE_CAPACITY: dict[str, float] = {
     "zinc": 780.0,  # ASTM B418 Type II
-    "magnesium_h1": 500.0,  # practical efficiency ~45%
+    # H-1 alloy: 2200 A-h/kg theoretical x ~50 % practical efficiency
+    # = 1100 A-h/kg. The commonly quoted "500" is A-h/lb (500 / 0.4536
+    # = 1102 A-h/kg); it was previously stored here as if per kg (issue #2209).
+    "magnesium_h1": 1100.0,
     "aluminum": 2000.0,  # theoretical
 }
 

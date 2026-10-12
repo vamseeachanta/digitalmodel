@@ -2,7 +2,7 @@ ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('CATIA V6 STEP','CAx-IF Rec.Pracs.--- Model Styling and Organization---1.4--- 2014-01-23'),'2;1');
 
-FILE_NAME('D:\\Downloads\\Step Files\\cubez.stp','2017-05-22T11:55:54+00:00',('none'),('none'),'3DEXPERIENCE Platform3DEXPERIENCE R2016x HotFix 9','3DEXPERIENCE Platform STEP AP214','none');
+FILE_NAME('<private-data>\\cubez.stp','2017-05-22T11:55:54+00:00',('none'),('none'),'3DEXPERIENCE Platform3DEXPERIENCE R2016x HotFix 9','3DEXPERIENCE Platform STEP AP214','none');
 
 FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));
 

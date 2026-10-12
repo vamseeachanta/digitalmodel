@@ -69,16 +69,16 @@ Regards,
 Colin Lewis.
  
 T :  +44(0)1229 584742
-E :  orcina@orcina.com
+E :  [email removed]
 W:  www.orcina.com
      
 
 
 ==============================
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 13 February 2025 05:02
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: OrcaWave | Python Scripts
 
 Dear Support Representative,

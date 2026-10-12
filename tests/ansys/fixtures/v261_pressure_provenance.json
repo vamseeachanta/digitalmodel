@@ -1,0 +1,28 @@
+{
+  "kind": "Observed native load-audit fixture with explicit account-field normalization; not a qualified result",
+  "dataset_id": "ansys-cylinder-benchmark",
+  "run_id": "ansys-2121-pressure-diagnostic-20260915-r1",
+  "case_id": "ocv-t60-p10-n4",
+  "retained_revision": "c8627f0533e18556f68a51dd8107787c63bfb767",
+  "source_output_sha256": "6fa298c2eca0bbb000c493f8261c8c358a6d430d369355eb51d9ee3d229208d6",
+  "source_metadata_sha256": "7b7956d25ad848bdc781ada64eea6edc4646e40f63d0fcea9d0dcbc527a44e5b",
+  "extracted_loads_sha256": "364fb11bef3c47b0ce2ab38ebd2c6e96f1ed03e660f6d4b450954ef4fb50af1c",
+  "transformation": [
+    "CRLF normalized to LF by split_load_audit",
+    "Single load block between unique LOAD_AUDIT_BEGIN and pre-solve routine-completion boundary extracted",
+    "Two page account fields normalized to eight zeros; all numerical table bytes unchanged",
+    "Frozen metadata projected without value conversion onto case_id, case_token, pressure_mpa, pressure_faces, bottom_node_ids, nodes, elements; compact JSON serialization."
+  ],
+  "files": {
+    "v261_pressure_loads.txt": "6e936ed6b2888c0f8cfe83e4016a223b863f004fd22802f3a12e7f250a7c35e0",
+    "v261_pressure_case.json": "40e26b0b83c65ab8a9d450fb764893034d0f06b3e588004e4f1936ca0ee699a6"
+  },
+  "units": {
+    "pressure": "MPa",
+    "displacement": "mm"
+  },
+  "limits": [
+    "Observed N4 v261 layout only; printed equality does not establish unprinted precision.",
+    "No numerical qualification; input model remains bound to frozen metadata."
+  ]
+}

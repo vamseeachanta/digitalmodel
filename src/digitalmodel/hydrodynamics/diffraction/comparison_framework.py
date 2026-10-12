@@ -18,10 +18,19 @@ Status: Benchmark comparison tools
 
 import numpy as np
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Literal, Tuple, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 import json
+
+from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    AbscissaGapError,
+    AbscissaOrderError,
+    AbscissaOverlapError,
+    AlignedResponses,
+    InsufficientSampling,
+    align_responses,
+)
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults,
@@ -36,9 +45,27 @@ class DeviationStatistics:
     max_error: float
     rms_error: float
     mean_abs_error: float
-    correlation: float
+    correlation: Optional[float]
     frequencies: np.ndarray
     errors: np.ndarray
+    quality: Literal[
+        "COMPARED",
+        "IDENTICAL",
+        "NULL_RESPONSE",
+        # Structurally absent coupling — zero on both legs. Distinct from
+        # INSUFFICIENT_DATA: it never claims agreement, but it also does not
+        # refuse the report, because a symmetric body has genuinely zero
+        # off-diagonal couplings (#1633).
+        "NOT_APPLICABLE",
+        # A diagonal term that is zero on both legs. Geometry/frame and
+        # extraction evidence are absent, so its physical interpretation is
+        # unestablished. This refuses without claiming extraction failure.
+        "ABSENT_DIAGONAL",
+        "INSUFFICIENT_DATA",
+        "INSUFFICIENT_SAMPLING",
+        "UNTRUSTED_SOURCE",
+        "INVALID_ABSCISSA",
+    ] = "COMPARED"
 
 
 @dataclass
@@ -50,6 +77,7 @@ class RAOComparison:
     phase_diff: np.ndarray
     max_magnitude_diff_location: Tuple[int, int]  # (freq_idx, heading_idx)
     max_phase_diff_location: Tuple[int, int]
+    refusal_reason: Optional[str] = None
 
 
 @dataclass
@@ -125,6 +153,23 @@ class DiffractionComparator:
         Returns:
             Deviation statistics
         """
+        if (
+            values1.size == 0
+            or values2.size == 0
+            or not np.all(np.isfinite(values1))
+            or not np.all(np.isfinite(values2))
+        ):
+            return DeviationStatistics(
+                mean_error=0.0,
+                max_error=0.0,
+                rms_error=0.0,
+                mean_abs_error=0.0,
+                correlation=None,
+                frequencies=frequencies,
+                errors=np.array([], dtype=float),
+                quality="INSUFFICIENT_DATA",
+            )
+
         # Calculate errors
         errors = values2 - values1
 
@@ -134,8 +179,25 @@ class DiffractionComparator:
         rms_error = np.sqrt(np.mean(errors**2))
         mean_abs_error = np.mean(np.abs(errors))
 
-        # Correlation
-        correlation = np.corrcoef(values1.flatten(), values2.flatten())[0, 1]
+        flat1 = values1.flatten()
+        flat2 = values2.flatten()
+        # Zero variance first: r is undefined for a constant vector regardless
+        # of whether the two vectors are equal. See multi_solver_comparator for
+        # the measured consequence of the opposite ordering (#1633).
+        if not np.any(flat1) and not np.any(flat2):
+            # Structurally absent coupling, zero on both legs — an empty cell,
+            # not a failed comparison. See multi_solver_comparator (#1633).
+            correlation = None
+            quality = "NOT_APPLICABLE"
+        elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
+            correlation = None
+            quality = "INSUFFICIENT_DATA"
+        elif np.array_equal(flat1, flat2):
+            correlation = 1.0
+            quality = "IDENTICAL"
+        else:
+            correlation = float(np.corrcoef(flat1, flat2)[0, 1])
+            quality = "COMPARED"
 
         return DeviationStatistics(
             mean_error=mean_error,
@@ -144,7 +206,8 @@ class DiffractionComparator:
             mean_abs_error=mean_abs_error,
             correlation=correlation,
             frequencies=frequencies,
-            errors=errors
+            errors=errors,
+            quality=quality,
         )
 
     def compare_raos(self) -> Dict[str, RAOComparison]:
@@ -166,20 +229,77 @@ class DiffractionComparator:
             if aqwa_rao is None or orcawave_rao is None:
                 continue
 
-            # Ensure same dimensions
-            if aqwa_rao.magnitude.shape != orcawave_rao.magnitude.shape:
-                print(f"Warning: Shape mismatch for {dof.name} RAOs - skipping")
+            try:
+                alignment = align_responses(
+                    aqwa_rao.frequencies.values,
+                    aqwa_rao.magnitude,
+                    aqwa_rao.phase,
+                    orcawave_rao.frequencies.values,
+                    orcawave_rao.magnitude,
+                    orcawave_rao.phase,
+                )
+            except (
+                AbscissaOrderError,
+                AbscissaOverlapError,
+                AbscissaGapError,
+            ) as exc:
+                stats = DeviationStatistics(
+                    mean_error=0.0,
+                    max_error=0.0,
+                    rms_error=0.0,
+                    mean_abs_error=0.0,
+                    correlation=None,
+                    frequencies=np.array([], dtype=float),
+                    errors=np.zeros_like(aqwa_rao.magnitude),
+                    quality="INVALID_ABSCISSA",
+                )
+                comparisons[dof_name] = RAOComparison(
+                    dof=dof,
+                    statistics=stats,
+                    magnitude_diff=np.zeros_like(aqwa_rao.magnitude),
+                    phase_diff=np.zeros_like(aqwa_rao.phase),
+                    max_magnitude_diff_location=(0, 0),
+                    max_phase_diff_location=(0, 0),
+                    refusal_reason=f"{type(exc).__name__}: {exc}",
+                )
                 continue
+            if isinstance(alignment, InsufficientSampling):
+                stats = DeviationStatistics(
+                    mean_error=0.0,
+                    max_error=0.0,
+                    rms_error=0.0,
+                    mean_abs_error=0.0,
+                    correlation=None,
+                    frequencies=np.array([], dtype=float),
+                    errors=np.zeros_like(aqwa_rao.magnitude),
+                    quality="INSUFFICIENT_SAMPLING",
+                )
+                comparisons[dof_name] = RAOComparison(
+                    dof=dof,
+                    statistics=stats,
+                    magnitude_diff=np.zeros_like(aqwa_rao.magnitude),
+                    phase_diff=np.zeros_like(aqwa_rao.phase),
+                    max_magnitude_diff_location=(0, 0),
+                    max_phase_diff_location=(0, 0),
+                )
+                continue
+            if not isinstance(alignment, AlignedResponses):
+                raise TypeError("unexpected abscissa alignment result")
+
+            aqwa_magnitude = alignment.first.magnitude
+            orcawave_magnitude = alignment.second.magnitude
+            aqwa_phase = alignment.first.phase_degrees
+            orcawave_phase = alignment.second.phase_degrees
 
             # Magnitude comparison
-            mag_diff = orcawave_rao.magnitude - aqwa_rao.magnitude
+            mag_diff = orcawave_magnitude - aqwa_magnitude
             max_mag_loc = np.unravel_index(
                 np.argmax(np.abs(mag_diff)),
                 mag_diff.shape
             )
 
             # Phase comparison (handle wrap-around)
-            phase_diff = orcawave_rao.phase - aqwa_rao.phase
+            phase_diff = orcawave_phase - aqwa_phase
             # Wrap to [-180, 180]
             phase_diff = np.mod(phase_diff + 180, 360) - 180
             max_phase_loc = np.unravel_index(
@@ -189,9 +309,9 @@ class DiffractionComparator:
 
             # Statistics for magnitude
             stats = self._calculate_deviation_stats(
-                aqwa_rao.magnitude,
-                orcawave_rao.magnitude,
-                aqwa_rao.frequencies.values
+                aqwa_magnitude,
+                orcawave_magnitude,
+                alignment.frequencies,
             )
 
             comparison = RAOComparison(
@@ -361,19 +481,26 @@ class DiffractionComparator:
         rao_corrs = [
             comp.statistics.correlation
             for comp in report.rao_comparisons.values()
+            if comp.statistics.correlation is not None
         ]
 
         # Check matrix correlations (diagonal terms only for simplicity)
         am_corrs = [
             report.added_mass_comparison.element_statistics[(i, i)].correlation
             for i in range(6)
+            if report.added_mass_comparison.element_statistics[(i, i)].correlation
+            is not None
         ]
         damp_corrs = [
             report.damping_comparison.element_statistics[(i, i)].correlation
             for i in range(6)
+            if report.damping_comparison.element_statistics[(i, i)].correlation
+            is not None
         ]
 
         all_corrs = rao_corrs + am_corrs + damp_corrs
+        if not all_corrs:
+            return "POOR"
         min_corr = min(all_corrs)
         mean_corr = np.mean(all_corrs)
 
@@ -393,7 +520,10 @@ class DiffractionComparator:
 
         # RAO notes
         for dof_name, comp in report.rao_comparisons.items():
-            if comp.statistics.correlation < 0.95:
+            if (
+                comp.statistics.correlation is not None
+                and comp.statistics.correlation < 0.95
+            ):
                 notes.append(
                     f"Low correlation ({comp.statistics.correlation:.3f}) for {dof_name.upper()} RAO"
                 )
@@ -442,7 +572,12 @@ class DiffractionComparator:
         # RAO comparisons
         for dof_name, comp in report.rao_comparisons.items():
             report_dict['rao_comparisons'][dof_name] = {
-                'correlation': float(comp.statistics.correlation),
+                'correlation': (
+                    float(comp.statistics.correlation)
+                    if comp.statistics.correlation is not None
+                    else None
+                ),
+                'quality': comp.statistics.quality,
                 'mean_error': float(comp.statistics.mean_error),
                 'max_error': float(comp.statistics.max_error),
                 'rms_error': float(comp.statistics.rms_error),
@@ -459,7 +594,11 @@ class DiffractionComparator:
                 'max_deviation_frequency': float(am.max_deviation_frequency),
                 'max_deviation_element': am.max_deviation_element,
                 'diagonal_correlations': {
-                    i: float(am.element_statistics[(i, i)].correlation)
+                    i: (
+                        float(am.element_statistics[(i, i)].correlation)
+                        if am.element_statistics[(i, i)].correlation is not None
+                        else None
+                    )
                     for i in range(6)
                 }
             }
@@ -471,7 +610,11 @@ class DiffractionComparator:
                 'max_deviation_frequency': float(damp.max_deviation_frequency),
                 'max_deviation_element': damp.max_deviation_element,
                 'diagonal_correlations': {
-                    i: float(damp.element_statistics[(i, i)].correlation)
+                    i: (
+                        float(damp.element_statistics[(i, i)].correlation)
+                        if damp.element_statistics[(i, i)].correlation is not None
+                        else None
+                    )
                     for i in range(6)
                 }
             }

@@ -1,4 +1,4 @@
-;| TOTLEN.LSP    c.2000  Rob Herr    robherr@hotmail.com
+;| TOTLEN.LSP    c.2000  Rob Herr    [email removed]
  'Add selected lines, plines, lwplines, splines, and arcs for total length'
 
  Revisions:
@@ -16,7 +16,7 @@
 
 ------------------------------------------------------------------------
  Modified by J. Tippit, SPAUG President
-    E-mail:                     cadpres@spaug.org
+    E-mail:                     [email removed]
     Web Site:                http://www.spaug.org
 ------------------------------------------------------------------------
 
@@ -110,6 +110,6 @@
  (setvar "cmdecho" cmdecho)
  (princ)
 )
-(prompt "\nBy Rob Herr   robherr@hotmail.com  ")
+(prompt "\nBy Rob Herr   [email removed]  ")
 (prompt "\nType TOTLEN to run.\tVersion 1.1 - Total Length routine ")
 (princ)

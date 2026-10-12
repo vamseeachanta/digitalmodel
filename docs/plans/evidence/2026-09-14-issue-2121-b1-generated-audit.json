@@ -1,0 +1,635 @@
+{
+  "revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+  "method": "Read every raw deck N/EN/D/SFE row; compare exact Fraction coordinates/connectivity; independently assert complete rectangular origin grid, all eight Q8 corners/midsides, all and only bottom UY supports, all and only inner face4 pressures, and compare complete generator bytes/metadata. No solve. Large metadata/decks are reviewed through this explicit representation plus full coarse deck and full generators/tests; no raw-all-lines reading claim.",
+  "cases": {
+    "ocv-t60-p10-n16": {
+      "metadata_sha256": "834492a8698383a61264496bd41dea5b93735e588f08dc76a9096fe78187711e",
+      "deck_sha256": "e12ec14194afba24176d34343ad8ecf0bec0d671509a1a9e27ddfb9413209f42",
+      "deck_lines": 7089,
+      "nodes": 4833,
+      "elements": 1536,
+      "uniform_width_mm": "15/4",
+      "uniform_height_mm": "5/2",
+      "complete_tiling": true,
+      "all_q8_connectivity_and_midsides": true,
+      "supports": 33,
+      "pressure_faces": 96,
+      "basis": {
+        "axial_length_mm": "240",
+        "delta_temperature_C": "0",
+        "element": "PLANE183",
+        "external_pressure_mpa": "0",
+        "inner_radius_mm": "750",
+        "keyopts": {
+          "1": 0,
+          "3": 1,
+          "6": 0
+        },
+        "length_unit": "mm",
+        "nlgeom": "OFF",
+        "poisson_ratio": "0.3",
+        "pressure_unit": "MPa",
+        "wall_thickness_mm": "60",
+        "youngs_modulus_mpa": "200000"
+      },
+      "stations": [
+        {
+          "adjacent_element_ids": [
+            369,
+            385
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y60",
+          "node_id": 1201,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            376,
+            377,
+            392,
+            393
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y60",
+          "node_id": 1217,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            384,
+            400
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y60",
+          "node_id": 1233,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            753,
+            769
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y120",
+          "node_id": 2401,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            760,
+            761,
+            776,
+            777
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y120",
+          "node_id": 2417,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            768,
+            784
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y120",
+          "node_id": 2433,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            1137,
+            1153
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y180",
+          "node_id": 3601,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "180"
+        },
+        {
+          "adjacent_element_ids": [
+            1144,
+            1145,
+            1160,
+            1161
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y180",
+          "node_id": 3617,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "180"
+        },
+        {
+          "adjacent_element_ids": [
+            1152,
+            1168
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y180",
+          "node_id": 3633,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "180"
+        }
+      ],
+      "regenerated_deck_and_metadata_byte_semantics": "exact match to current generator; independent raw N/EN/D/SFE parsing and rational geometry checks also passed"
+    },
+    "ocv-t60-p10-n4": {
+      "metadata_sha256": "7b7956d25ad848bdc781ada64eea6edc4646e40f63d0fcea9d0dcbc527a44e5b",
+      "deck_sha256": "bd2f9529412545743e4527f637190eedc42cce519033c8bd837946645c750de0",
+      "deck_lines": 897,
+      "nodes": 345,
+      "elements": 96,
+      "uniform_width_mm": "15",
+      "uniform_height_mm": "10",
+      "complete_tiling": true,
+      "all_q8_connectivity_and_midsides": true,
+      "supports": 9,
+      "pressure_faces": 24,
+      "basis": {
+        "axial_length_mm": "240",
+        "delta_temperature_C": "0",
+        "element": "PLANE183",
+        "external_pressure_mpa": "0",
+        "inner_radius_mm": "750",
+        "keyopts": {
+          "1": 0,
+          "3": 1,
+          "6": 0
+        },
+        "length_unit": "mm",
+        "nlgeom": "OFF",
+        "poisson_ratio": "0.3",
+        "pressure_unit": "MPa",
+        "wall_thickness_mm": "60",
+        "youngs_modulus_mpa": "200000"
+      },
+      "stations": [
+        {
+          "adjacent_element_ids": [
+            21,
+            25
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y60",
+          "node_id": 85,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            22,
+            23,
+            26,
+            27
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y60",
+          "node_id": 89,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            24,
+            28
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y60",
+          "node_id": 93,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            45,
+            49
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y120",
+          "node_id": 169,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            46,
+            47,
+            50,
+            51
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y120",
+          "node_id": 173,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            48,
+            52
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y120",
+          "node_id": 177,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            69,
+            73
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y180",
+          "node_id": 253,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "180"
+        },
+        {
+          "adjacent_element_ids": [
+            70,
+            71,
+            74,
+            75
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y180",
+          "node_id": 257,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "180"
+        },
+        {
+          "adjacent_element_ids": [
+            72,
+            76
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y180",
+          "node_id": 261,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "180"
+        }
+      ],
+      "regenerated_deck_and_metadata_byte_semantics": "exact match to current generator; independent raw N/EN/D/SFE parsing and rational geometry checks also passed"
+    },
+    "ocv-t60-p10-n8": {
+      "metadata_sha256": "e033de63d87051f0d6f0835318aef16965a1664eafebca5d79048f68c52a09d0",
+      "deck_sha256": "ea4d95669f8e7922ab5ecd4e0d9f77713f14f4978d3a5ca1cc50f79f17c034e5",
+      "deck_lines": 2193,
+      "nodes": 1265,
+      "elements": 384,
+      "uniform_width_mm": "15/2",
+      "uniform_height_mm": "5",
+      "complete_tiling": true,
+      "all_q8_connectivity_and_midsides": true,
+      "supports": 17,
+      "pressure_faces": 48,
+      "basis": {
+        "axial_length_mm": "240",
+        "delta_temperature_C": "0",
+        "element": "PLANE183",
+        "external_pressure_mpa": "0",
+        "inner_radius_mm": "750",
+        "keyopts": {
+          "1": 0,
+          "3": 1,
+          "6": 0
+        },
+        "length_unit": "mm",
+        "nlgeom": "OFF",
+        "poisson_ratio": "0.3",
+        "pressure_unit": "MPa",
+        "wall_thickness_mm": "60",
+        "youngs_modulus_mpa": "200000"
+      },
+      "stations": [
+        {
+          "adjacent_element_ids": [
+            89,
+            97
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y60",
+          "node_id": 313,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            92,
+            93,
+            100,
+            101
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y60",
+          "node_id": 321,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            96,
+            104
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y60",
+          "node_id": 329,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            185,
+            193
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y120",
+          "node_id": 625,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            188,
+            189,
+            196,
+            197
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y120",
+          "node_id": 633,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            192,
+            200
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y120",
+          "node_id": 641,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            281,
+            289
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y180",
+          "node_id": 937,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "180"
+        },
+        {
+          "adjacent_element_ids": [
+            284,
+            285,
+            292,
+            293
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y180",
+          "node_id": 945,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "180"
+        },
+        {
+          "adjacent_element_ids": [
+            288,
+            296
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y180",
+          "node_id": 953,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "180"
+        }
+      ],
+      "regenerated_deck_and_metadata_byte_semantics": "exact match to current generator; independent raw N/EN/D/SFE parsing and rational geometry checks also passed"
+    },
+    "ocv-zero-t60-n16": {
+      "metadata_sha256": "1f266f7cb7751f5231f4bab3fba62bc2744ebb2e657ce396a5703dddb09c0ef7",
+      "deck_sha256": "1fcaf94c00c7f40ad9ccffbde512ee084e21a6600cb668204a823d23e4241448",
+      "deck_lines": 6993,
+      "nodes": 4833,
+      "elements": 1536,
+      "uniform_width_mm": "15/4",
+      "uniform_height_mm": "5/2",
+      "complete_tiling": true,
+      "all_q8_connectivity_and_midsides": true,
+      "supports": 33,
+      "pressure_faces": 0,
+      "basis": {
+        "axial_length_mm": "240",
+        "delta_temperature_C": "0",
+        "element": "PLANE183",
+        "external_pressure_mpa": "0",
+        "inner_radius_mm": "750",
+        "keyopts": {
+          "1": 0,
+          "3": 1,
+          "6": 0
+        },
+        "length_unit": "mm",
+        "nlgeom": "OFF",
+        "poisson_ratio": "0.3",
+        "pressure_unit": "MPa",
+        "wall_thickness_mm": "60",
+        "youngs_modulus_mpa": "200000"
+      },
+      "stations": [
+        {
+          "adjacent_element_ids": [
+            369,
+            385
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y60",
+          "node_id": 1201,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            376,
+            377,
+            392,
+            393
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y60",
+          "node_id": 1217,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            384,
+            400
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y60",
+          "node_id": 1233,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "60"
+        },
+        {
+          "adjacent_element_ids": [
+            753,
+            769
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y120",
+          "node_id": 2401,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            760,
+            761,
+            776,
+            777
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y120",
+          "node_id": 2417,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            768,
+            784
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y120",
+          "node_id": 2433,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "120"
+        },
+        {
+          "adjacent_element_ids": [
+            1137,
+            1153
+          ],
+          "adjacent_elements": 2,
+          "id": "inner_y180",
+          "node_id": 3601,
+          "node_type": "corner",
+          "radial_id": "inner",
+          "x_mm": "750",
+          "y_mm": "180"
+        },
+        {
+          "adjacent_element_ids": [
+            1144,
+            1145,
+            1160,
+            1161
+          ],
+          "adjacent_elements": 4,
+          "id": "middle_y180",
+          "node_id": 3617,
+          "node_type": "corner",
+          "radial_id": "middle",
+          "x_mm": "780",
+          "y_mm": "180"
+        },
+        {
+          "adjacent_element_ids": [
+            1152,
+            1168
+          ],
+          "adjacent_elements": 2,
+          "id": "outer_y180",
+          "node_id": 3633,
+          "node_type": "corner",
+          "radial_id": "outer",
+          "x_mm": "810",
+          "y_mm": "180"
+        }
+      ],
+      "regenerated_deck_and_metadata_byte_semantics": "exact match to current generator; independent raw N/EN/D/SFE parsing and rational geometry checks also passed"
+    }
+  },
+  "helper_sha256": "46885245d59b43b1b31fccc1a77ffe65533e0dce038b2436f63c959a0da148e7"
+}

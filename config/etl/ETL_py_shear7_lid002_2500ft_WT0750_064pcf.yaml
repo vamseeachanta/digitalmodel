@@ -5,19 +5,19 @@ parameters:
   location_id_str: &location_id_str "2"
   load_range: &load_range 25
 
-  viv_file_prep_basefile_text_io_1: &viv_file_prep_basefile_text_io_1 ["M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\", "app_vertical_riser_", *model_id, "_shear7.dat"]
+  viv_file_prep_basefile_text_io_1: &viv_file_prep_basefile_text_io_1 ["<private-data>\\", "app_vertical_riser_", *model_id, "_shear7.dat"]
   viv_file_prep_basefile_text_io_2: &viv_file_prep_basefile_text_io_2 ["lid0", *location_id_str, "_cp{:02d}_", *model_id]
-  viv_file_prep_model_state_information_text_io_1: &viv_file_prep_model_state_information_text_io_1 ["M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\", "app_vertical_riser_", *model_id, "_shear7.dat"]
-  viv_file_prep_replace_text_io_1: &viv_file_prep_replace_text_io_1 ["M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\", *model_id, "_inline.mds"]
+  viv_file_prep_model_state_information_text_io_1: &viv_file_prep_model_state_information_text_io_1 ["<private-data>\\", "app_vertical_riser_", *model_id, "_shear7.dat"]
+  viv_file_prep_replace_text_io_1: &viv_file_prep_replace_text_io_1 ["<private-data>\\", *model_id, "_inline.mds"]
 
-  combined_viv_batch_process_header_text_1: &combined_viv_batch_process_header_text_1 ["COPY \"", "M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\", *model_id, "_inline.mds\""," ", "M:\\0185\\Shear7\\Rev2\\common.mds"]
+  combined_viv_batch_process_header_text_1: &combined_viv_batch_process_header_text_1 ["COPY \"", "<private-data>\\", *model_id, "_inline.mds\""," ", "<private-data>\\common.mds"]
   combined_viv_batch_process_repeat_patterns_text_2: &combined_viv_batch_process_repeat_patterns_text_2 ["CALL Shear746 lid0", *location_id_str, "_cp{:02d}_", *model_id]
 
-  combined_fatigue_header_text_2: &combined_fatigue_header_text_2 ["      io: M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\", "app_vertical_riser_", *model_id, "_stack_up_properties.csv"]
-  combined_histogram_header_text_2: &combined_histogram_header_text_2 ["      io: M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\results\\", "app_fatigue_analysis_app_ETL_shear7_lid00", *location_id_str, "_", *model_id, "_combined_damage_damage_results.csv"]
-  combined_header_text_4: &combined_header_text_4 ["    io: M:\\0185\\WaveFatigue\\", "app_ETL_fe_fatigue_models_lid00", *location_id_str, "_", *model_id, "_orcaflex_fatigue_analysis.xlsx"]
-  combined_repeat_patterns_text_2: &combined_repeat_patterns_text_2 ["    io: M:\\0185\\Shear7\\Rev2\\", "lid0", *location_id_str, "_cp{:02d}_", *model_id, ".plt"]
-  combined_footer_text_2: &combined_footer_text_2 ["    io: M:\\documents\\0185 ECS FFS Engineering\\COD\\results\\results\\", "app_orcaflex_analysis_app_ETL_fe_fatigue_models_lid00", *location_id_str, "_", *model_id, "_wave_histogram_histograms.xlsx"]
+  combined_fatigue_header_text_2: &combined_fatigue_header_text_2 ["      io: <private-data>\\", "app_vertical_riser_", *model_id, "_stack_up_properties.csv"]
+  combined_histogram_header_text_2: &combined_histogram_header_text_2 ["      io: <private-data>\\", "app_fatigue_analysis_app_ETL_shear7_lid00", *location_id_str, "_", *model_id, "_combined_damage_damage_results.csv"]
+  combined_header_text_4: &combined_header_text_4 ["    io: <private-data>\\", "app_ETL_fe_fatigue_models_lid00", *location_id_str, "_", *model_id, "_orcaflex_fatigue_analysis.xlsx"]
+  combined_repeat_patterns_text_2: &combined_repeat_patterns_text_2 ["    io: <private-data>\\", "lid0", *location_id_str, "_cp{:02d}_", *model_id, ".plt"]
+  combined_footer_text_2: &combined_footer_text_2 ["    io: <private-data>\\", "app_orcaflex_analysis_app_ETL_fe_fatigue_models_lid00", *location_id_str, "_", *model_id, "_wave_histogram_histograms.xlsx"]
 
 default:
   Constants:
@@ -37,7 +37,7 @@ default:
   load: NULL
 
 Analysis:
-  custom_folder: M:\0185\Shear7\Rev2
+  custom_folder: <private-data>\Rev2
 
 output_files:
   -
@@ -168,7 +168,7 @@ output_files:
         text: *combined_viv_batch_process_header_text_1
         fields: NULL
       -
-        text: CD M:\0185\Shear7\Rev2
+        text: CD <private-data>\Rev2
         fields: NULL
       -
         text: "M:"
@@ -184,7 +184,7 @@ output_files:
 
     footer:
       -
-        text: DEL M:\0185\Shear7\Rev2\common.mds
+        text: DEL <private-data>\common.mds
         fields: NULL
       -
         text: "K:"

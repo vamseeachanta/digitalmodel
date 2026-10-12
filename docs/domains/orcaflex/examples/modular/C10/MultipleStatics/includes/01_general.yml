@@ -2,7 +2,7 @@
 # Generated from: MultipleStatics.yml
 # Date: 2026-01-18 22:18:08
 General: {}
-Model: C10 Multiple statics.dat
+Model: C10 Multiple statics.yml
 VesselName: Vessel1
 AzimuthFrom: 0
 AzimuthTo: 90

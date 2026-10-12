@@ -1,0 +1,31 @@
+"Table A.2: Recommendations for constants “a” and “b” to be used for calculation of coating breakdown factors associated with
+specific field joint coating systems, with and without infill, as defined in DNV-RP-F102.
+(Maximum temperatures refer to continuous operation ad are indicative only. Manufacturer’s recommendations shall always apply. For coat-
+ings with an inner layer of FBE and operating temperatures above 90°C, adequate properties shall be documented by pre-qualification and/or
+PQT. The same applies for polychloroprene based coatings at operating temperatures above 100°C)",,,,,
+"FJC Type
+(DNV-RP-F102
+FJC System)","Infill Type
+(DNV-RP-F102 System)","Max. Temperature
+(°C)","Examples of Compatibility with
+DNV-RP-F106
+Linepipe Coating System","a
+x100","b
+x100"
+None,"II (PU), III (Concrete) or IV (PP)",,"CDS no 1, 2, 5, 6 with concrete,
+CDS no. 4",30,3
+"1A Adhesive Tape or Heat Shrink
+Sleeve (PVC/PE backing) with
+mastic adhesive","I (Mastic), II or III",70,CDS no 5 and 6 with concrete,10,1
+"2A Heat Shrink Sleeve (Backing +
+adhesive in PE, LE primer)",II or III,70,CDS no. 2 with concrete,3,0.3
+"2B Heat Shrink Sleeve (Backing +
+adhesive in PP, LE primer)",none,110,CDS no. 3,3,0.3
+3A FBE,none,90,CDS no. 1,3,0.3
+3B FBE with PE Heat Shrink Sleeve,II or III,80,CDS no. 2 with concrete,1,0.03
+3C FBE with PP Heat Shrink Sleeve,None or II,140,CDS no. 3,1,0.03
+"3D FBE, PP adhesive and PP
+(wrapped, extruded or flame sprayed)",None or II,140,CDS no. 3 or 4,1,0.03
+4A Polychloroprene,none,90,CDS no. 7,1,0.03
+"Note: x100 in the heading of the two column to the right means that all figures in these columns have been multiplied by a factor of 100; i.e.
+before use in eqns. (2) or (4), the numbers shall be multiplied with a factor 10-2.",,,,,

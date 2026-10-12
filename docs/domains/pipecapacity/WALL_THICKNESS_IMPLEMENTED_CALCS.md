@@ -3,10 +3,11 @@
 This document summarizes the implemented wall thickness calculations in code, organized by standard. Each section lists the steps, equations (LaTeX), and the code reference where the logic lives.
 
 **Related references:**
-- Latest-only extracts: `docs/domains/pipecapacity/WALL_THICKNESS_LATEST_ONLY.md`
 - Latest-only LaTeX: `docs/domains/pipecapacity/WALL_THICKNESS_LATEST_ONLY_LATEX.md`
-- Latest-to-older extracts: `docs/domains/pipecapacity/WALL_THICKNESS_LATEST_TO_OLDER.md`
-- OCR inventory: `docs/domains/pipecapacity/WALL_THICKNESS_CODES_ONLY.md`
+
+The extract and OCR inventory files these steps were drawn from were removed
+from this public repository by owner decision C13 (2026-09-25); a copy is kept
+privately.
 
 ## Common Symbols
 

@@ -49,6 +49,8 @@ from typing import Optional, Sequence
 
 import numpy as np
 
+from digitalmodel.asset_integrity.applicability import Applicability
+
 from digitalmodel.asset_integrity.corroded_pipe import (
     CorrodedPipeResult,
     rstreng_effective_area,
@@ -78,6 +80,11 @@ class RiverBottom2DResult:
     result: CorrodedPipeResult  # full 1D RSTRENG result (verbatim)
     within_applicability: bool  # max(d)/t <= 0.80 (B31G validity)
     details: dict = field(default_factory=dict)
+
+    @property
+    def applicability(self) -> Applicability:
+        """Projected-profile validity; raw maximum depth is checked only in MAX mode."""
+        return self.result.applicability
 
     # --- convenience pass-throughs to the embedded 1D result ---------------
     @property

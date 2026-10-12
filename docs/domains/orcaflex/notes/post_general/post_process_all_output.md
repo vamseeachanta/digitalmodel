@@ -27,22 +27,22 @@ Colin Lewis.
 
  
 T :  +44(0)1229 584742
-E :  orcina@orcina.com
+E :  [email removed]
 W:  www.orcina.com
      
 
 
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 09 May 2025 14:46
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: RE: Orcaflex | Postprocess all available variables for an object
 
 Completing and correcting the below email
 
 From: Vamsee Achanta 
 Sent: Friday, May 9, 2025 8:42 AM
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: Orcaflex | Postprocess all available variables for an object
 
 Is there any command with which I can find all the available variables to assess for an object (eg Line object or Vessel Object)?  I can copy them directly from UI. However, if you add any additional quantity in future revisions, I would like to capture them as well.

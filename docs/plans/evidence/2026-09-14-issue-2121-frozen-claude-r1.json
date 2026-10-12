@@ -1,0 +1,90 @@
+{
+  "verdict": "MAJOR",
+  "reviewed_revision": "4bcf77b2c28abad45e925a1641f29e4203c8d370",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "b87003671a959eae99590a174b682fe2400ae2f69a96edc4b349be37eb1fb17a"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "72fd817132c456ee8977da76e6b9228286bc3cd0c37766297e2ac7311a20efd7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "068500e455438502f009ae8aa6236151b8f150b0cedc32851391d3388373ed97"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "6b226025b55cc3abb2aec2a4bfe6476fade88596dbd4358ed20f23f2d932e6a0"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "08e7804ead0f27f97d8a742452a03bb227f91c602dcb0bd019fa4a9fdcfda17b"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "25c0fde670b38dc7e3a4413cf79911e718b550467b6a9ebb3fffdbe7d4df4648"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r1.json",
+      "sha256": "067a261029c77cf79622872f10c44a49ed51233a1b588147d5e96a40030c66fa"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r2.json",
+      "sha256": "9f9e1d765719dc03517756ed03510b0b9f406ac70c12d35961f6869b21e5e934"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r1.json",
+      "sha256": "3696285441c87f3c65978c27c46a9f7eb7abff3f29c6e27e1019014240a8e64f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r2.json",
+      "sha256": "6d6a75230be8bdd6f6ace6113cc79708331c6681f092ed98f7a16a50e9421d6f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+      "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    {
+      "path": "docs/plans/evidence/register_json_prose.py",
+      "sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69"
+    },
+    {
+      "path": "tests/docs/test_register_json_prose.py",
+      "sha256": "c771031a1122750346074fe62060a009698a5e4a5a29eb7e5c64d07081a65dfe"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R-00",
+      "severity": "INFO",
+      "defect": "Supplied-content review only; no digest recomputed, no blob read, tree-to-commit mapping not resolved. Unaudited: vendor page contents (notably *GET NODE S Item2 ESOL, /CONFIG STAT label and Begin-level restriction), private corpus digests, extracted-prose digest reproduction. Re-derived and consistent: Lame values, counts 96/384/1536 and 345/1265/4833, 54+9=63, 96-column record, 152 listing columns, +/-48.539 MPa terms, 12 receipt mirror digests matching the bundle.",
+      "correction": "Treat the Codex lane as authority for mechanical hash agreement; findings below do not depend on it."
+    },
+    {
+      "id": "K1",
+      "severity": "MAJOR",
+      "defect": "The frozen checker grammar lists operators + - * / integer ** and sqrt but never states whether unary negation is permitted. The natural independent form u_z = -2*nu*A*y/E begins with a unary minus. With exactly one invocation, no syntax retry and rejection leaving the gate unestablished, an unspecified unary rule makes a foreseeable conforming answer refusable, defeating the N1 correction's 'parseable by construction' property and blocking B2 on a specification gap rather than physics.",
+      "correction": "State in output_contract and the brief whether unary minus/plus is allowed (recommend allowed, with a B1 evaluator identity test), and whether integer literals and leading/trailing whitespace are accepted. Hash the amended brief before the single invocation."
+    },
+    {
+      "id": "K2",
+      "severity": "MINOR",
+      "defect": "HTML 'Checkpoint corrections' paragraph reads: the checker brief will include symbols, operators, 'and a JSON object containing the seven named response expressions plus a derivation'. Read literally, the brief supplies the expressions, contradicting brief_sources (no producer formula) and the isolation claim. The proposal's output_contract.shape shows this is the required output, not brief content.",
+      "correction": "Reword the HTML so the JSON object is the checker's required output shape, and the brief carries only the schema description."
+    },
+    {
+      "id": "K3",
+      "severity": "MINOR",
+      "defect": "load_audit requires SFELIST/FLIST/DLIST 'immediately before SOLVE', while stored_precision inserts FINISH; /CONFIG,STAT; /SOLU between the audit and SOLVE. Both are mandatory execution-evidence conditions; a B1 deck test written to either sentence literally refuses the other ordering, and no rule forbids database-altering commands during the re-entry.",
+      "correction": "Fix one ordering (audit in /SOLU, then FINISH, /CONFIG,STAT, /SOLU, SOLVE) and state that no load, constraint, selection or solution-control command may appear between the audit listings and SOLVE; add a deck test for that window."
+    },
+    {
+      "id": "K4",
+      "severity": "MINOR",
+      "defect": "The verification helper is tested only against the index (revision ''), yet the receipt's recorded invocation uses a bare tree object 3ea02cd6 with git show tree:path. No test exercises a tree/commit revision, and no test or receipt field reproduces extracted_prose_sha256 fbba9e66 from the four staged blobs, so the reproducibility the receipt claims is asserted rather than demonstrated.",
+      "correction": "Add a test committing a fixture and extracting via the commit's tree id, and a repository-level test or recorded rerun asserting the four bundle input hashes yield extracted_bytes 54177 and digest fbba9e66."
+    }
+  ]
+}

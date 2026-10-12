@@ -34,6 +34,13 @@ class ShapesBuilder(BaseBuilder):
     Reference: 09_shapes.yml in modular include format.
     """
 
+    # Object sections emitted by build(); read by
+    # writers.basefile.object_section_order() to derive a section
+    # dependency order from this builder's registered order.
+    _sections = (
+        "Shapes",
+    )
+
     def should_generate(self) -> bool:
         """Only generate for pipeline models with ramp configuration."""
         return self.spec.is_pipeline() and self.spec.equipment.ramps is not None

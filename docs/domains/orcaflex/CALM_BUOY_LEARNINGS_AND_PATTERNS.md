@@ -35,7 +35,7 @@ The CALM buoy project work was completed **manually** without systematic use of 
 **Reference Projects:**
 - `projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/base_files/`
 - `projects/modules/calm/nse_100m/TEST_OPERABILITY/orcaflex/base_files/`
-- `D:\1522\ctr7\rev_a09\base_files`
+- `<project-root>
 
 **Pattern: Modular Base Files**
 ```
@@ -64,7 +64,7 @@ base_files/
 ### 2. Environmental File Patterns
 
 **Reference:**
-- `D:\1522\ctr7\rev_a09\base_files\env\`
+- `<project-root>
 
 **Proven Structure:**
 ```yaml
@@ -87,7 +87,7 @@ base_files/
 
 **Reference:**
 - `projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/analysis_models/`
-- `D:\1522\ctr7\rev_a09\03c_100yr/`
+- `<project-root>
 
 **Flat File Pattern:**
 ```
@@ -165,7 +165,7 @@ FrequencyDependentAddedMassAndDamping:
 
 **Reference:**
 - `projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/scripts/dm_vessel.yml`
-- `D:\1522\ctr7\rev_a09\postproc\dm_fsts_lngc.yml`
+- `<project-root>
 
 **Standard Structure:**
 ```yaml
@@ -353,7 +353,7 @@ orcaflex-agent run-workflow calm_buoy_operability
 
 ### Pattern Examples
 1. **Base Files**: `projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/base_files/`
-2. **Env Files**: `D:\1522\ctr7\rev_a09\base_files\env\`
+2. **Env Files**: `<project-root>
 3. **Analysis Models**: `projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/analysis_models/`
 4. **Post-Processing**: `projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/scripts/dm_vessel.yml`
 
@@ -363,7 +363,7 @@ orcaflex-agent run-workflow calm_buoy_operability
 3. **User Prompt**: `docs/domains/orcaflex/mooring/buoy/C06 CALM Buoy/user_prompt.md`
 
 ### Working Reference Project
-1. **Complete Example**: `D:\1522\ctr7\rev_a09\`
+1. **Complete Example**: `<project-root>
    - Base files: `base_files/`
    - Env files: `base_files/env/`
    - Analysis: `03c_100yr/`

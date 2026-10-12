@@ -133,10 +133,10 @@ worked_examples:
       stress_range_MPa: 100.0
       sn_curve: "F"
       environment: "IN_AIR"
-      A: 1.73e11
+      A: 7.161434e11  # 10^11.855, DNV-RP-C203 (2011) Table 2-1 (#2165; was 1.73e11)
       m: 3.0
     outputs:
-      N_allowable: 173000.0
+      N_allowable: 716143.4
     use_as_test: true
   - description: "CF onset velocity at large seabed gap (e/D > 0.8)"
     inputs:

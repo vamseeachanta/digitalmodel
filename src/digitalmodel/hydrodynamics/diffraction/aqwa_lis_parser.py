@@ -75,29 +75,45 @@ class AQWALISParser:
         if pos is None:
             raise ValueError("Could not find added mass frequency table")
 
-        # Extract the table (next ~2000 characters should contain it)
-        table_text = self.content[pos:pos + 3000]
-
-        # Find all rows with period/frequency data followed by added mass values
-        # AQWA format: " 22.00   0.286  2.33E+06  2.93E+07..." (period, freq, then 12 scientific values)
-        # Pattern must match: period (decimal), freq (decimal), then at least 6 scientific notation values
-        # This ensures we only match actual data rows, not headers or other numeric content
+        # Walk the table row by row rather than reading a fixed-size window.
+        # A window sized for a typical grid truncates a longer one, and reports
+        # the result as a short grid rather than as a failure.
+        # AQWA format: " 22.00   0.286  2.33E+06  2.93E+07..." — period,
+        # frequency, then twelve values in scientific notation. Requiring six of
+        # those is what distinguishes a data row from a header.
         pattern = r'^\s*([\d.]+)\s+([\d.]+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)\s+([+-]?[\d.]+[Ee][+-]?\d+)'
+        row = re.compile(pattern)
 
         periods = []
         frequencies = []
+        seen_any = False
+        blanks_since_last_row = 0
 
-        for match in re.finditer(pattern, table_text, re.MULTILINE):
+        for line in self.content[pos:].splitlines():
+            match = row.match(line)
+            if match is None:
+                if seen_any:
+                    blanks_since_last_row += 1
+                    # A handful of non-matching lines inside a table is normal
+                    # (blank separators, repeated headers). A long run of them
+                    # means the table has ended.
+                    if blanks_since_last_row > 12:
+                        break
+                continue
+            blanks_since_last_row = 0
+            seen_any = True
+
             period = float(match.group(1))
             freq = float(match.group(2))
 
-            # Sanity check: reasonable values for marine structures
-            # Period typically 2-30 seconds, Frequency 0.2-3.5 rad/s
-            if 0.1 < freq < 10 and 1.0 < period < 100:
-                # Avoid duplicates
-                if freq not in frequencies:
-                    periods.append(period)
-                    frequencies.append(freq)
+            # Keep a sanity filter, but one wide enough not to discard physical
+            # values. The previous bounds excluded exactly 0.100 rad/s, a common
+            # choice for the lowest frequency, and any period beyond 100 s.
+            if not (0.0 < freq <= 100.0 and 0.0 < period <= 100000.0):
+                continue
+            if freq not in frequencies:
+                periods.append(period)
+                frequencies.append(freq)
 
         if not frequencies:
             raise ValueError("No valid frequency data found in added mass table")
@@ -146,6 +162,35 @@ class AQWALISParser:
 
         return headings
 
+    #: A coefficient table ends where the next one begins. Bounding it that way
+    #: is structural; the previous 2,000-character window held about twelve
+    #: rows and silently dropped the rest, so a 43-frequency run returned ten
+    #: matrices and the converter padded the difference with zeros.
+    _TABLE_END_MARKERS = (
+        "-VARIATION WITH WAVE PERIOD/FREQUENCY",
+        "H Y D R O D Y N A M I C",
+        "S T A B I L I T Y",
+        "M O O R I N G",
+    )
+
+    def _table_span(self, marker: str) -> str:
+        """The listing text from one table's header to the next boundary."""
+        pos = self.find_section(marker)
+        if pos is None:
+            return ""
+        rest = self.content[pos:]
+        # Skip this table's own header before looking for the next boundary.
+        head = rest.find("\n")
+        if head < 0:
+            return rest
+        tail = rest[head:]
+        cut = len(tail)
+        for end in self._TABLE_END_MARKERS:
+            found = tail.find(end)
+            if 0 <= found < cut:
+                cut = found
+        return rest[:head + cut]
+
     def parse_added_mass_table(self) -> Dict[float, np.ndarray]:
         """
         Parse added mass table from .LIS file.
@@ -160,7 +205,7 @@ class AQWALISParser:
         if pos is None:
             raise ValueError("Could not find added mass table")
 
-        table_text = self.content[pos:pos + 2000]
+        table_text = self._table_span(section_marker)
 
         # Pattern for data rows: period, freq, then 12 matrix values in scientific notation
         # Format: " 62.83   0.100  1.95E+06  2.60E+07  1.80E+08..."
@@ -222,7 +267,7 @@ class AQWALISParser:
         if pos is None:
             raise ValueError("Could not find damping table")
 
-        table_text = self.content[pos:pos + 2000]
+        table_text = self._table_span(section_marker)
 
         # Same pattern as added mass - must contain scientific notation
         pattern = r'^\s+([\d.]+)\s+([\d.]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)'

@@ -2,7 +2,7 @@
 # A01 Steep Wave Riser - Steep wave riser (simplified single-line)
 #
 # Model Type: Riser (steep wave configuration)
-# Source: OrcaFlex Examples - A01 Steep wave riser.dat
+# Source: OrcaFlex Examples - A01 Steep wave riser.yml
 # Tier: 2 (Fast validation, <10s statics)
 #
 # The steep wave configuration uses a buoyant section in the middle of

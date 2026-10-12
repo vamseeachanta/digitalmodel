@@ -4,7 +4,6 @@ ABOUTME: Migrated from infrastructure/common/ in Phase 2D (WRK-415).
 """
 
 from .cathodic_protection import CathodicProtection
-from .cp_DNV_RP_F103_2010 import DNV_RP_F103
 from .cp_sacrificial_anode_b401 import (
     net_anode_mass,
     gross_anode_mass,
@@ -17,7 +16,6 @@ from .cp_sacrificial_anode_b401 import (
 
 __all__ = [
     "CathodicProtection",
-    "DNV_RP_F103",
     "net_anode_mass",
     "gross_anode_mass",
     "anode_count",

@@ -32,6 +32,27 @@ from digitalmodel.marine_ops.marine_engineering.calm_buoy_fatigue import (
     WIRE_ROPE_SN_SEAWATER,
     compute_fatigue_life,
 )
+from digitalmodel.fatigue.counting_contract import NonConservativeCountingError
+
+# Issue #3839: RainflowFatigue.count_cycles extracts a maximum tension range below the
+# history's peak-to-valley span (50.0 of a 100.0 span on a pure sine), so damage
+# accumulated from it is understated. `ScatterDiagramFatigue.compute` and
+# `compute_fatigue_life` — the two damage entry points bound to that counter — now
+# refuse. The assertions below are preserved verbatim rather than rewritten, and marked
+# expected-fail against the refusal; strict=True turns a repair into a failure demanding
+# this marker's removal and a re-review of the numbers asserted here.
+#
+# Cost recorded rather than hidden: the refusal is unconditional and precedes input
+# validation, so `test_scatter_probabilities_must_sum_to_one`,
+# `test_missing_seastate_tension_raises_keyerror` and
+# `test_compute_requires_either_csv_or_scatter` no longer exercise the validation they
+# were written for. Those validations guard a calculation that cannot run.
+# https://github.com/vamseeachanta/workspace-hub/issues/3839
+_REFUSED_3839 = pytest.mark.xfail(
+    raises=NonConservativeCountingError,
+    strict=True,
+    reason="calm_buoy refuses damage calculation pending #3839",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -326,6 +347,7 @@ class TestMinersRuleDamage:
 # 5. ScatterDiagramFatigue
 # ---------------------------------------------------------------------------
 
+@_REFUSED_3839
 class TestScatterDiagramFatigue:
     """Unit tests for scatter-diagram weighted damage."""
 
@@ -490,6 +512,7 @@ class TestMooringLineResult:
 # 8. compute_fatigue_life integration function
 # ---------------------------------------------------------------------------
 
+@_REFUSED_3839
 class TestComputeFatigueLife:
     """Integration tests for the top-level convenience function."""
 

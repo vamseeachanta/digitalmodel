@@ -1,4 +1,0 @@
-- [ ] Add Analytical calculation for structures. Refer to MP's calculation
-- [ ] Automate Orcaflex results for each mode as follows:
-  - [ ] add schematic
-  - [ ] assess data to filter through

@@ -279,6 +279,17 @@ class TestHydrodynamicMatrix:
         assert d["frequency"] == 0.5
         assert d["matrix_type"] == "added_mass"
 
+    def test_source_provenance_round_trips(self):
+        hm = HydrodynamicMatrix(
+            matrix=np.eye(6),
+            frequency=1.0,
+            matrix_type="added_mass",
+            units={"linear": "kg", "angular": "kg.m^2"},
+            source="placeholder",
+        )
+
+        assert hm.to_dict()["source"] == "placeholder"
+
 
 # ---------------------------------------------------------------------------
 # AddedMassSet / DampingSet

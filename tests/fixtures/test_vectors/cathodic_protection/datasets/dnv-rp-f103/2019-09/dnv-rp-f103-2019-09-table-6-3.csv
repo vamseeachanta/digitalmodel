@@ -1,0 +1,19 @@
+Table 6-3 Design values for Al and Zn based galvanic anode materials,,,,,
+Anode material,"Anode surface temperature
+[°C]","Seawater exposure*
+Closed circuit potential
+[V]","Seawater exposure*
+Electrochemical capacity
+[Ah/kg]","Sediment exposure*
+Closed circuit potential
+[V]","Sediment exposure*
+Electrochemical capacity
+[Ah/kg]"
+"Al-Zn-In
+(ref Table 6-1)",≤ 30,-1.050,2000,-1.000,1500
+,60,-1.050,1500,-1.000,680
+,80,-1.000,720,-1.000,320
+"Zn
+(ref Table 6-1)",≤ 30,-1.030,780,-0.980,750
+,> 30 to 50,,,-0.980,580
+"* Anodes being ‘non-buried’ and ‘buried’, respectively according to definition in [6.2.4]",,,,,

@@ -1,0 +1,61 @@
+{
+  "probe": "disposable repositories; hostile Git bindings and tampered working-tree hull fixture",
+  "timestamp_utc": "2026-10-10T04:34:18.289858+00:00",
+  "duration_s": 0.4764031101949513,
+  "temporary_probe_id": "sr2314-generator-isolation-duzqampf",
+  "path_notation": "<scratch> denotes the unique TemporaryDirectory named by temporary_probe_id; <uv-python> is sys.executable from the recorded uv environment.",
+  "command": [
+    "<uv-python>",
+    "<scratch>/target/scripts/validation/generate_mesh_legacy_pickles.py"
+  ],
+  "cwd": "<scratch>/decoy",
+  "environment": {
+    "python_version": "3.11.14",
+    "numpy_version": "2.4.4",
+    "scipy_version": "1.17.1"
+  },
+  "target_repository": "<scratch>/target",
+  "decoy_repository": "<scratch>/decoy",
+  "hostile_git_bindings": {
+    "GIT_DIR": "<scratch>/decoy/.git",
+    "GIT_WORK_TREE": "<scratch>/decoy",
+    "GIT_COMMON_DIR": "<scratch>/decoy/.git",
+    "GIT_INDEX_FILE": "<scratch>/decoy/.git/index"
+  },
+  "source_binding": {
+    "production_baseline_revision": "4f7bfc0cb4d9f62d7485fe5b03fb00550b2320eb",
+    "disposable_baseline_revision": "2e9d96dedb289f6875d8c8086329c17b316eaa71",
+    "source_sha256": "ad745569961e8dcb59fcfe1c931dad2655003fa886d702be1c1f7653ad00cc1b",
+    "hull_committed_sha256": "d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044",
+    "hull_tampered_sha256": "a5a5fb7329340a4cd9e17032a9d3cfe74c009dcf517d546965d66ce18e7a5ccf",
+    "hull_restored_sha256": "d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044",
+    "generator_sha256": "0bc312fab4ad34784218d4b425cb5d7f5155e67036e88b1fcb9615acc9871960",
+    "note": "Disposable commit substitutes revision only; source and hull blobs retain production baseline pins."
+  },
+  "output_enumeration": {
+    "changed": [
+      "tests/fixtures/test_vectors/naval_architecture/mesh_legacy_pickles.json"
+    ],
+    "created": [],
+    "deleted": []
+  },
+  "before_output_sha256": "1c8d0c5d0d4cd522789dc4a9faf53f0bd1373de7f7b1b757ffb68b07f627f84d",
+  "after_output_sha256": "7610c77436d9f667c644fd26978695cb7b2c50ed915725f85ffee94224af0032",
+  "decoy_tree_before_sha256": "0ee5e1c2b2d4ecdf94323703697910b4e9471f1b85a606ac25e98e7bc48923fd",
+  "decoy_tree_after_sha256": "0ee5e1c2b2d4ecdf94323703697910b4e9471f1b85a606ac25e98e7bc48923fd",
+  "decoy_git_metadata_before_sha256": "ed713a2a67193f233ac9c50d7e56f020723b2f1c6c3133b06bb2c577cb965acb",
+  "decoy_git_metadata_after_sha256": "ed713a2a67193f233ac9c50d7e56f020723b2f1c6c3133b06bb2c577cb965acb",
+  "target_git_metadata_before_sha256": "a99d0edce0f0d736184108f2edc719f6219d3600b2760fdacfc422ffa42902d9",
+  "target_git_metadata_after_sha256": "a99d0edce0f0d736184108f2edc719f6219d3600b2760fdacfc422ffa42902d9",
+  "returncode": 0,
+  "stdout": "7610c77436d9f667c644fd26978695cb7b2c50ed915725f85ffee94224af0032\n",
+  "stderr": "",
+  "regression_test": "tests/naval_architecture/test_mesh_pickle_generator.py",
+  "reproduction_command": "PYTHONPATH=src UV_CACHE_DIR=<cache> uv run --no-project --with pytest --with pytest-cov --with pytest-socket --with numpy==2.4.4 --with scipy --with pyyaml python -m pytest tests/naval_architecture/test_mesh_pickle_generator.py -q",
+  "preservation": "decoy tree and both Git metadata trees unchanged; target fixture changed from sentinel to generated output; target hull restored to committed source",
+  "fixture_payload_keys": [
+    "clipped",
+    "mesh",
+    "result"
+  ]
+}

@@ -26,6 +26,8 @@ from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass, field
 from copy import deepcopy
 
+from digitalmodel.solvers.orcaflex.run_state import check_statics
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -550,6 +552,9 @@ class ModelValidator:
             if run_statics:
                 try:
                     model.CalculateStatics()
+                    # #3838: convergence is a property of the resulting model
+                    # state, not of the call returning without raising.
+                    check_statics(model, context=str(file_path))
                     result['statics_converged'] = True
                 except Exception as e:
                     result['statics_converged'] = False

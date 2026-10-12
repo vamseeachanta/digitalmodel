@@ -1,0 +1,17 @@
+"Table 8-6 Recommended design electrochemical capacity and design closed circuit potential for anode materials at seawater ambient temperatures, see [3.5]",,,,,
+Anode material,"Anode surface temperature
+[°C]","Seawater exposure
+Closed circuit potential
+[V]","Seawater exposure
+Electrochemical capacity
+[Ah/kg]","Sediment exposure
+Closed circuit potential
+[V]","Sediment exposure
+Electrochemical capacity
+[Ah/kg]"
+Al-Zn-In,≤30,-1.050,"2,000",-1.000,"1,500"
+,60,-1.050,"1,500",-1.000,680
+,80,-1.000,720,-1.000,320
+Zn,≤30,-1.030,780,-0.980,750
+,> 30 to 50,,,-0.980,580
+"1) For zinc anode surface temperatures exceeding 50 °C, it is recommended to qualify the anode material for the project-specific maximum temperature according to Sec.10 (free-running test).",,,,,

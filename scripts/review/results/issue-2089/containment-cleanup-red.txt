@@ -1,0 +1,30 @@
+..F.                                                                     [100%]
+=================================== FAILURES ===================================
+_______________ test_cleanup_attempts_all_handle_releases[close] _______________
+
+failure = 'close'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x745b2fb82c90>
+
+    @pytest.mark.parametrize('failure',['close','wait'])
+    def test_cleanup_attempts_all_handle_releases(failure,monkeypatch):
+        from digitalmodel.solvers.ghs import _owned_process as o
+        calls=[]
+        class Kernel:
+            def CloseHandle(self,handle):
+                calls.append(handle)
+                return not(handle==1 and failure=='close')
+            def WaitForSingleObject(self,*args):
+                return 0xffffffff if failure=='wait' else 0
+        monkeypatch.setattr(w,'identity',lambda *args:{'pid':1,'creation_time':2})
+        item=o.Owned(Kernel(),1,2,3,'child',0)
+        with pytest.raises(RuntimeError):item.cleanup()
+        assert calls==[1,3,2]
+>       if failure=='close':assert item.job==1
+                            ^^^^^^^^^^^^^^^^^^
+E       assert None == 1
+E        +  where None = <digitalmodel.solvers.ghs._owned_process.Owned object at 0x745b2fb79d50>.job
+
+tests/solvers/ghs/test_windows_job.py:38: AssertionError
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_windows_job.py::test_cleanup_attempts_all_handle_releases[close]
+1 failed, 3 passed in 6.59s

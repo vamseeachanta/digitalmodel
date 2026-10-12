@@ -40,6 +40,10 @@ concept_screening:
   #
   # Optional real BSEE per-well rig-days benchmark (worldenergydata well_rig_days).
   # Omitted -> generic GoM default. bsee_per_well_rig_days: 95.0
+  # capex_override:  # absolute total CAPEX per host, USD bn; bypasses fractions
+  #   TLP: 4.0
+  #   Spar: 5.0
+  #   Semi: 6.0
   outputs:
     directory: results/concept_screening
     summary_json: concept_screening_summary.json

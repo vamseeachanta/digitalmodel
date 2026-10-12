@@ -3,7 +3,7 @@
 # the Q6 schema-rejection coverage.
 prospect:
   company: "Acme Marine Contractors"
-  contact: "jane.doe@acme.example"
+  contact: "redacted@example.com"
   nda_in_place: true
   target_demo: "demo_03"
   delivery_deadline_utc: "2026-04-21T17:00:00Z"

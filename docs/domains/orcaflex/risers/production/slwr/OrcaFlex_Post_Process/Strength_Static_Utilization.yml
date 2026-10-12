@@ -6,15 +6,15 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_No Load, No Offset.sim
+    Name: ..\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_No Load, No Offset.sim
     Label: 750psi with Production Fluid Filled
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi_No Load, No Offset.sim
+    Name: ..\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi_No Load, No Offset.sim
     Label: 8000psi with Production Fluid Filled
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\PressureTest\SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_No Load, No Offset.sim
+    Name: ..\PressureTest\SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_No Load, No Offset.sim
     Label: 10000 psi with Water Filled
     ObjectName: SLWR
 

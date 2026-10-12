@@ -1,0 +1,49 @@
+{
+  "verdict": "APPROVE",
+  "scope": "Bounded independent Codex review of root-authored operator F1 and F3 corrections only; no overall engineering or B2 approval",
+  "reviewed_revision": "c102f60beda3db304401bf8fda0b03384d6bd166",
+  "revision_kind": "Git tree",
+  "bundle_sha256": "aa416e8feb1deb40e8665dfc3a7e188f4b3a0688098870fa1dd7fefe120a452c",
+  "reviewed_files": [
+    {
+      "path": "src/digitalmodel/ansys/analysis_records.py",
+      "sha256": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_canary.py",
+      "sha256": "3bc79ff642cc08c379b7b3d316fe107ec35c1681b4bf78a938753c57cd6c9ef3"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_benchmark.py",
+      "sha256": "1a4ab9ceb167a31278aa39c6fb946af8ee6b47dceedcff28d466865159b4e30b"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_canary.py",
+      "sha256": "13b53bc6f5506ed4af79955c37c54f1d4d4d5b7fc61fcfba9af0bf2ea0fcd6ff"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_canary_boundaries.py",
+      "sha256": "bc4ba2ea2cd4650d17af5092bcdd39608bd8b2446b38af6a9a11a5678ce26d4c"
+    }
+  ],
+  "mechanical_verification": "All24 bundle file hashes match exact Git tree;4 scoped working files match exact tree after CRLF normalization. Benchmark validate_deck inspected.",
+  "findings": [],
+  "dispositions": {
+    "F1": "RESOLVED: exact frozen command stream validation precedes copied-deck write, approval ledger claim, attempt receipt and callback. Reapproved malicious command mutation producesINCOMPLETE with zero launch calls/consumed attempts. Adapter defense-in-depth authored in this lane is not counted as independently reviewed here.",
+    "F3": "RESOLVED within declared callback-data boundary: extracted record, assessment and proof are canonicalized and detached before retention; assessment receives detached records. Invalid callback values fail inside run try-block and produce canonicalINCOMPLETE outcome. A final-save fallback is not required to resolve the reported callback serialization defect.",
+    "final_save_limit": "Final file creation/fsync/readback can still raise genuine filesystem errors; no successful return or durable receipt is established then. Callback canonicalization does not promise recovery from unavailable storage, arbitrary in-process sabotage or process termination."
+  },
+  "validation": {
+    "command": "uv run --no-project --python <workspace-venv-python> python -m pytest tests/ansys/test_cylinder_canary.py tests/ansys/test_cylinder_canary_boundaries.py -q",
+    "result": "43 passed in18.33s",
+    "completion_tool_chunk": "d5cc0b",
+    "native_opt_in": "disabled",
+    "actual_solver_or_checker_calls": 0
+  },
+  "cleanup": {
+    "classification": "EXPECTED",
+    "new_residue": "Private review receipt only; no repository edits",
+    "parent_owned_changes": "Preserved"
+  },
+  "review_gate": "Independent Claude exact-current review remains separate and pending; no native execution authority granted."
+}

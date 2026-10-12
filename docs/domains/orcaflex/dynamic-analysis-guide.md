@@ -57,7 +57,7 @@ python -m digitalmodel.orcaflex.universal \
     --dynamic \
     pattern="fsts*pb*.yml" \
     simulation_time=200 \
-    input_directory="D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension" \
+    input_directory="<project-root>" \
     output_directory=".\dynamic_results"
 
 # Batch processing with both analyses
@@ -268,14 +268,14 @@ python -m digitalmodel.orcaflex.universal \
     --dynamic \
     pattern="*lwl*.yml" \
     simulation_time=200 \
-    input_directory="D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension"
+    input_directory="<project-root>"
 
 # High water line conditions
 python -m digitalmodel.orcaflex.universal \
     --dynamic \
     pattern="*hwl*.yml" \
     simulation_time=200 \
-    input_directory="D:\1522\ctr7\orcaflex\rev_a08\base_files\fsts_lngc_pretension"
+    input_directory="<project-root>"
 ```
 
 ### Batch Processing Different Distances

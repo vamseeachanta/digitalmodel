@@ -1,0 +1,45 @@
+{
+  "anode_current_capacity_Ah_kg": 1865.0,
+  "anode_mass_kg": 14091.153,
+  "anode_requirements": {
+    "anode_count": 79,
+    "individual_mass_kg": 180.0,
+    "total_mass_kg": 14091.153
+  },
+  "anode_utilisation_factor": 0.8,
+  "climatic_region": "tropical",
+  "coating_breakdown_factors": {
+    "alpha": 0.01,
+    "beta_final": 0.012,
+    "beta_mean": 0.006,
+    "depth_zone": "shallow",
+    "design_life_years": 25.0,
+    "final": 0.31,
+    "initial": 0.01,
+    "mean": 0.16
+  },
+  "current_demand_A": {
+    "final": 248.0,
+    "initial": 12.0,
+    "mean": 96.0
+  },
+  "current_densities_mA_m2": {
+    "final": 100.0,
+    "initial": 150.0,
+    "mean": 75.0
+  },
+  "design_life_years": 25.0,
+  "status": {
+    "checks": {
+      "current_output": null,
+      "mass": true
+    },
+    "governing_case": "mass",
+    "reason": "79 x 180 kg anodes provide the 14091 kg mean-current mass requirement; ABS GN Offshore 2018 route has no current-output check",
+    "result": "PASS",
+    "use_status": "legacy-uncited-independent-check-required"
+  },
+  "surface_area_m2": 8000.0,
+  "water_depth_m": 20.0,
+  "zone": "submerged"
+}

@@ -10,6 +10,15 @@ cited per row.
 
 ## Validation summary
 
+**Part 5 qualification correction (2026-10-06, issue 2287):** the Level 1/2
+rows below establish existing implementation checks, not edition-matched 2021
+Part 5 qualification for an axial-length/circumferential-width envelope. The
+canonical simplified Folias helper, circumferential polynomial helper and
+legacy fixture anchors disagree; L1 omits damage extent and L2 omits width.
+See [the source audit](uniform-loss-source-audit-2026-10-06.md) for exact record
+coverage, unresolved clause requests and conditional fixes/tests. Other method
+rows retain their existing independent validation scopes.
+
 | # | Method / module | Reference | Check | Result | Test |
 |---|---|---|---|---|---|
 | 1 | **Folias bulging factor** (`level2_engine._folias_factor`) | API 579-1/ASME FFS-1 Table 4.4 (M_t = √(1+0.48λ²)) | λ=1 / 2 / 5 | M_t = 1.217 / 1.709 / 3.606 ✓ | `test_ffs_validation::test_folias_factor_matches_api579_table_4_4` |
@@ -25,6 +34,33 @@ cited per row.
 | 11 | **Plate metal-loss FFS** (`plate_metal_loss_ffs`) | re-run validated buckling at reduced t | monotonicity, util=1 envelope | ✓ | `test_plate_metal_loss_ffs` |
 | 12 | **Measurement sufficiency** (`measurement_sufficiency`) | API 579 grid-adequacy / COV practice | branch logic | ✓ | `test_measurement_sufficiency` |
 | 13 | **Coordinator** (`ffs_coordinator`) | end-to-end chain | unified record | ✓ | `test_ffs_coordinator` |
+
+## DNV-RP-F101 Part B factor correction (2026-10-10)
+
+Scope: [issue 2181](https://github.com/vamseeachanta/digitalmodel/issues/2181),
+[PR 2338](https://github.com/vamseeachanta/digitalmodel/pull/2338), fix-up fz2338.
+
+The single-defect Part B path is validated separately from the unchanged row 8
+capacity anchor. For the row 8 geometry, the regenerated capacity is
+1334.194009224692 psi. With modelling factor F1 = 0.9 and caller operational
+factor F2 = 0.72, total F = 0.648 gives safe working pressure 864.557717977600 psi
+(864.56 psi rounded). This is the Part B pressure criterion used by the screen.
+The caller shall establish F2 against the original design basis; 0.72 is a
+synthetic example input, not a universal DNV operational factor.
+
+`test_dnv_rp_f101::test_part_b_explicit_factors_and_legacy_validation_record`
+pins the explicit factors and preserves legacy total-F pressure
+960.619686641778 psi, capacity and Q. The original row 8 capacity numbers remain
+unchanged. `test_pipeline_defect_screen_review::test_confirmed_boundary_preserves_reference_pressures`
+pins the corrected pressure, while
+`test_dnv_governs_derate_between_old_and_corrected_limits` checks F2 = 0.5:
+600.387304151111 psi is below the 630 psi demand and requires DERATE.
+F2 <= 0, F2 > 1 and nonfinite F2 are rejected by the explicit engine path.
+
+Reference: DNV-RP-F101 Part B, total usage factor and single-defect pressure
+criterion. All values above are regenerated from the reference geometry;
+no licensed table is reproduced. Catalog `dnv-f101` remains live for this bounded
+single-defect Part B workflow, not Part A or interacting-defect qualification.
 
 ## Cross-method consistency
 For the reference defect (30"×0.375", d=0.15", L=8"), failure pressures order

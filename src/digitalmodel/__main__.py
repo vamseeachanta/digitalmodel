@@ -25,18 +25,24 @@ More information is available at:
 Version:
 --------
 
-- digitalmodel v0.0.9
+- digitalmodel v{version}
 """
 
 import sys
 from importlib import metadata
 from pathlib import Path
 
-from digitalmodel import run_contract
-from digitalmodel.engine import engine
+from digitalmodel import __version__, run_contract
 
 # Entry points that would re-enter this module rather than dispatch to a CLI.
 _SELF_NAMES = {"digital_model", "digitalmodel"}
+
+
+def engine():
+    """Load analysis dependencies only when an analysis is requested."""
+    from digitalmodel.engine import engine as run_engine
+
+    return run_engine()
 
 
 def _resolve_cli(name: str):
@@ -67,8 +73,11 @@ def main():
     # contract); the engine contract `python -m digitalmodel <input.yml>` is
     # unaffected: a real file still takes the path below.
     argv = sys.argv[1:]
+    if argv and argv[0] == "--version":
+        print(f"digitalmodel {__version__}")
+        return 0
     if argv and argv[0] in ("-h", "--help"):
-        print(__doc__)
+        print(__doc__.format(version=__version__))
         return 0
     # An existing file always wins: `python -m digitalmodel <input.yml>` is
     # the engine contract and must stay unchanged (durable-workflow callers).
@@ -79,8 +88,8 @@ def main():
             sys.exit(entry_point.load()())
     # #1631: the engine contract had no failure exit path. engine() returns
     # cfg_base and its value was discarded here, so this command exited 0
-    # whatever the run concluded -- on any host, licensed or not. Deckhand is a
-    # thin subprocess.run wrapper, so this status is the whole success signal.
+    # whatever the run concluded -- on any host, licensed or not. A caller that runs
+    # this command as a subprocess sees only this status as its success signal.
     cfg = engine()
     verdict = run_contract.from_cfg(cfg)
     if verdict is None:

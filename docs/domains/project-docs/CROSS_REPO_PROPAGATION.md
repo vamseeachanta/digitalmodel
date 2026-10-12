@@ -283,7 +283,7 @@ done
 ```powershell
 # PowerShell
 Get-ChildItem .agent-os/standards/*.md | ForEach-Object {
-  python scripts/cross_repo_change_propagator.py --file $_.FullName.Replace("D:\workspace-hub\digitalmodel\", "") --auto
+  python scripts/cross_repo_change_propagator.py --file $_.FullName.Replace("<private-data>\", "") --auto
 }
 ```
 

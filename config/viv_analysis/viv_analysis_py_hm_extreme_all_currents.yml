@@ -1,12 +1,12 @@
 ---
 parameters:
-  file_io_01: &file_io_01 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_Med_Shear_A10_Low_TTF.plt
+  file_io_01: &file_io_01 <private-data>\100yr_Med_Shear_A10_Low_TTF.plt
   label_01: &label_01 Medium Shear
-  file_io_02: &file_io_02 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_Hig_Shear_A10_Low_TTF.plt
+  file_io_02: &file_io_02 <private-data>\100yr_Hig_Shear_A10_Low_TTF.plt
   label_02: &label_02 High Shear
-  file_io_03: &file_io_03 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_Low_Shear_A10_Low_TTF.plt
+  file_io_03: &file_io_03 <private-data>\100yr_Low_Shear_A10_Low_TTF.plt
   label_03: &label_03 Low Shear
-  file_io_04: &file_io_04 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_All_Shear_A10_Low_TTF.plt
+  file_io_04: &file_io_04 <private-data>\100yr_All_Shear_A10_Low_TTF.plt
   label_04: &label_04 All Data
 
   ascii_data_columns_parameter: &ascii_data_columns_parameter [x/L, unknown1, unknown2, unknown3, unknown4, Damage, unknown5]
@@ -135,7 +135,7 @@ modal_plots:
     plt_kind: scatter
     xlabel: Mode Number (#)
     ylabel: Frequency (Hz)
-    suptitle: Horn Mountain TTR VIV Analysis
+    suptitle: GoM spar TTR VIV Analysis
     title: Frequency with Mode Number
     xticklabels: NULL
     grid: True
@@ -157,7 +157,7 @@ modal_plots:
     plt_kind: scatter
     xlabel: Mode Number (#)
     ylabel: curvature (1/unit length)
-    suptitle: Horn Mountain TTR VIV Analysis
+    suptitle: GoM spar TTR VIV Analysis
     title: Frequency with Mode Number
     xticklabels: NULL
     grid: True
@@ -179,7 +179,7 @@ modal_plots:
     plt_kind: scatter
     xlabel: Frequency (Hz)
     ylabel: curvature (1/unit length)
-    suptitle: Horn Mountain TTR VIV Analysis
+    suptitle: GoM spar TTR VIV Analysis
     title: Frequency with Mode Number
     xticklabels: NULL
     grid: True

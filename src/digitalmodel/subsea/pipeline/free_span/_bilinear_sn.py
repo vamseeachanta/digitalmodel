@@ -1,30 +1,34 @@
 """
-Self-contained bilinear S-N curve for DNV-RP-C203 fatigue assessment.
+Bilinear S-N curve for DNV-RP-C203 fatigue assessment (free spans).
 
-This module provides a lightweight S-N curve implementation that works
-without importing ``digitalmodel.structural.fatigue``.  When that module
-**is** available the public helper ``get_sn_curve()`` delegates to it;
-otherwise it falls back to the built-in table below.
+The curve parameters come from :mod:`digitalmodel.fatigue.c203_sn_tables`,
+verified against DNV-RP-C203 (October 2011) Tables 2-1 and 2-2 (#2165). This
+module keeps no copy of its own.
 
-Bilinear S-N model (DNV-RP-C203 Table 2-1):
-    N = A1 × S^(−m1)     for S ≥ S_transition   (low-cycle / high-stress)
-    N = A2 × S^(−m2)     for S <  S_transition   (high-cycle / low-stress)
+Bilinear S-N model:
+    N = A1 × S^(−m1)     for S ≥ S_transition   (high stress)
+    N = A2 × S^(−m2)     for S <  S_transition   (low stress)
 
-The transition stress is computed from the first slope at the knee-point
-number of cycles (typically 1 × 10⁷):
+The transition stress is computed from the first slope at the knee:
 
     S_transition = (A1 / N_transition)^(1/m1)
 
-Environment corrections (DNV-RP-C203 Sec 2.4):
-    IN_AIR         — use the "in air" parameters directly
-    SEAWATER_CP    — use the dedicated seawater-with-CP parameters
+Knee per environment (2011 Sec 2.4):
+    IN_AIR         — N_transition = 1e7; A1, A2 from Table 2-1
+    SEAWATER_CP    — N_transition = 1e6; A1 from Table 2-2, and the same second
+                     segment (A2) as in air
 
-Thickness correction (DNV-RP-C203 Sec 2.4.3):
+The curve object keeps the in-air tabulated fatigue limit as a cut-off (a
+screening convention for the constant-amplitude VIV check) and no cut-off for
+seawater with CP; :class:`.SpanFatigueDamage` uses the selected curve's own
+limit and never carries the in-air limit to seawater with CP (#2165).
+
+Thickness correction (DNV-RP-C203 Sec 2.4.3), applied only above t_ref:
     S_corrected = S × (t / t_ref)^k
-    where t_ref = 25 mm (default), k = thickness exponent.
-
-Reference: DNV-RP-C203 "Fatigue Design of Offshore Steel Structures" (2021).
+    where t_ref = 25 mm (default) and k is the class exponent from the tables
+    unless given.
 """
+
 from __future__ import annotations
 
 import math
@@ -122,122 +126,57 @@ class BilinearSNCurve:
 
 
 # =========================================================================
-# DNV-RP-C203 curve tables  (Table 2-1, 2021 edition)
-# =========================================================================
-# Keys: curve class.  Each entry has "air" and "seawater_cp" sub-dicts.
-#
-#   A1, m1 — first slope  (N ≤ 1e7)
-#   A2, m2 — second slope (N > 1e7)
-#   fatigue_limit — CAFL [MPa]  (in-air value; seawater_cp has no CAFL
-#                   per DNV-RP-C203 Sec 2.4.4: "No fatigue limit for
-#                   joints exposed to seawater with cathodic protection.")
-#
-# Source: DNV-RP-C203 Table 2-1 (2021), log₁₀ intercepts converted to A.
+# DNV-RP-C203 curve parameters, from fatigue.c203_sn_tables (#2165)
 # =========================================================================
 
-_DNV_SN_TABLE: dict[str, dict[str, dict]] = {
-    "B1": {
-        "air": {"A1": 2.3431e15, "m1": 4.0, "A2": 2.3431e15, "m2": 4.0,
-                "fatigue_limit": 106.97},
-        "seawater_cp": {"A1": 2.3431e15, "m1": 4.0, "A2": 2.3431e15, "m2": 4.0,
-                        "fatigue_limit": 0.0},
-    },
-    "B2": {
-        "air": {"A1": 1.0147e15, "m1": 4.0, "A2": 1.0147e15, "m2": 4.0,
-                "fatigue_limit": 93.59},
-        "seawater_cp": {"A1": 1.0147e15, "m1": 4.0, "A2": 1.0147e15, "m2": 4.0,
-                        "fatigue_limit": 0.0},
-    },
-    "C": {
-        "air": {"A1": 1.08e12, "m1": 3.0, "A2": 1.14e16, "m2": 5.0,
-                "fatigue_limit": 73.10},
-        "seawater_cp": {"A1": 4.23e11, "m1": 3.0, "A2": 2.59e15, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "C1": {
-        "air": {"A1": 4.23e11, "m1": 3.0, "A2": 2.59e15, "m2": 5.0,
-                "fatigue_limit": 65.50},
-        "seawater_cp": {"A1": 2.08e11, "m1": 3.0, "A2": 7.18e14, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "C2": {
-        "air": {"A1": 1.08e11, "m1": 3.0, "A2": 2.51e14, "m2": 5.0,
-                "fatigue_limit": 46.78},
-        "seawater_cp": {"A1": 5.19e10, "m1": 3.0, "A2": 6.24e13, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "D": {
-        "air": {"A1": 5.73e11, "m1": 3.0, "A2": 4.47e15, "m2": 5.0,
-                "fatigue_limit": 52.63},
-        "seawater_cp": {"A1": 2.83e11, "m1": 3.0, "A2": 1.24e15, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "E": {
-        "air": {"A1": 3.29e11, "m1": 3.0, "A2": 1.83e15, "m2": 5.0,
-                "fatigue_limit": 45.54},
-        "seawater_cp": {"A1": 1.62e11, "m1": 3.0, "A2": 5.07e14, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "F": {
-        "air": {"A1": 1.73e11, "m1": 3.0, "A2": 6.33e14, "m2": 5.0,
-                "fatigue_limit": 36.84},
-        "seawater_cp": {"A1": 8.51e10, "m1": 3.0, "A2": 1.76e14, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "F1": {
-        "air": {"A1": 1.08e11, "m1": 3.0, "A2": 2.94e14, "m2": 5.0,
-                "fatigue_limit": 36.58},
-        "seawater_cp": {"A1": 5.28e10, "m1": 3.0, "A2": 8.07e13, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "F3": {
-        "air": {"A1": 5.73e10, "m1": 3.0, "A2": 1.01e14, "m2": 5.0,
-                "fatigue_limit": 29.64},
-        "seawater_cp": {"A1": 2.83e10, "m1": 3.0, "A2": 2.80e13, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "G": {
-        "air": {"A1": 2.82e10, "m1": 3.0, "A2": 3.48e13, "m2": 5.0,
-                "fatigue_limit": 23.44},
-        "seawater_cp": {"A1": 1.40e10, "m1": 3.0, "A2": 9.70e12, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "W1": {
-        "air": {"A1": 2.15e10, "m1": 3.0, "A2": 2.19e13, "m2": 5.0,
-                "fatigue_limit": 21.34},
-        "seawater_cp": {"A1": 1.06e10, "m1": 3.0, "A2": 6.08e12, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "W2": {
-        "air": {"A1": 1.08e10, "m1": 3.0, "A2": 6.89e12, "m2": 5.0,
-                "fatigue_limit": 16.92},
-        "seawater_cp": {"A1": 5.33e9, "m1": 3.0, "A2": 1.91e12, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-    "W3": {
-        "air": {"A1": 5.30e9, "m1": 3.0, "A2": 2.14e12, "m2": 5.0,
-                "fatigue_limit": 13.35},
-        "seawater_cp": {"A1": 2.62e9, "m1": 3.0, "A2": 5.95e11, "m2": 5.0,
-                        "fatigue_limit": 0.0},
-    },
-}
+
+def _dnv_params(curve_class: str, env_key: str) -> BilinearSNCurveParams:
+    """Curve parameters for one class and environment from the verified tables."""
+    # Imported here so that importing the free-span package stays light.
+    from digitalmodel.fatigue import c203_sn_tables as c203
+
+    p = c203.BILINEAR[curve_class]
+    if env_key == "air":
+        log_a1, n_knee, limit = p.log_a1_air, c203.N_KNEE_AIR, p.fatigue_limit_mpa
+    else:
+        log_a1, n_knee, limit = p.log_a1_cp, c203.N_KNEE_SEAWATER_CP, 0.0
+    return BilinearSNCurveParams(
+        A1=10.0**log_a1,
+        m1=p.m1,
+        A2=10.0**p.log_a2,
+        m2=p.m2,
+        N_transition=n_knee,
+        fatigue_limit=limit,
+    )
+
+
+def _class_thickness_exponent(curve_class: str) -> float:
+    from digitalmodel.fatigue import c203_sn_tables as c203
+
+    return c203.BILINEAR[curve_class].k
+
+
+def _available_classes() -> list[str]:
+    from digitalmodel.fatigue import c203_sn_tables as c203
+
+    return list(c203.CLASSES)
 
 
 # =========================================================================
 # Public helper
 # =========================================================================
 
+
 def get_sn_curve(
     curve_class: str,
     environment: str = "air",
     thickness_mm: Optional[float] = None,
     thickness_ref_mm: float = 25.0,
-    thickness_exponent: float = 0.25,
+    thickness_exponent: Optional[float] = None,
 ) -> BilinearSNCurve:
     """Get a DNV-RP-C203 bilinear S-N curve.
 
-    Tries ``digitalmodel.structural.fatigue`` first; falls back to
-    the built-in table if that module is unavailable.
+    Parameters come from :mod:`digitalmodel.fatigue.c203_sn_tables`.
 
     Parameters
     ----------
@@ -246,12 +185,13 @@ def get_sn_curve(
     environment : str
         ``"air"`` or ``"seawater_cp"``.
     thickness_mm : float, optional
-        Actual plate/wall thickness [mm].  If provided and differs from
+        Actual plate/wall thickness [mm].  If provided and greater than
         *thickness_ref_mm*, a thickness correction is applied.
     thickness_ref_mm : float
         Reference thickness [mm] (default 25 mm per DNV-RP-C203).
-    thickness_exponent : float
-        Exponent *k* for thickness correction (default 0.25).
+    thickness_exponent : float, optional
+        Exponent *k* for thickness correction; ``None`` (default) takes the
+        class value from DNV-RP-C203 (#2165).
 
     Returns
     -------
@@ -265,25 +205,21 @@ def get_sn_curve(
     key = curve_class.upper()
     env_key = "seawater_cp" if "seawater" in environment.lower() or "cp" in environment.lower() else "air"
 
-    if key not in _DNV_SN_TABLE:
-        available = sorted(_DNV_SN_TABLE.keys())
+    available = _available_classes()
+    if key not in available:
         raise KeyError(
             f"Unknown DNV curve class '{curve_class}'. "
-            f"Available: {available}"
+            f"Available: {sorted(available)}"
         )
 
-    d = _DNV_SN_TABLE[key][env_key]
-    params = BilinearSNCurveParams(
-        A1=d["A1"], m1=d["m1"],
-        A2=d["A2"], m2=d["m2"],
-        N_transition=1e7,
-        fatigue_limit=d["fatigue_limit"],
-    )
+    params = _dnv_params(key, env_key)
 
     curve = BilinearSNCurve(params, name=f"DNV-{key}-{env_key}")
 
     # --- thickness correction ---
-    if thickness_mm is not None and thickness_mm != thickness_ref_mm:
+    if thickness_mm is not None and thickness_mm > thickness_ref_mm:
+        if thickness_exponent is None:
+            thickness_exponent = _class_thickness_exponent(key)
         t_ratio = thickness_mm / thickness_ref_mm
         # Stress-based correction: effective S is multiplied by t_ratio^k,
         # which shifts the S-N curve down by (t_ratio^k)^m in the N-direction.

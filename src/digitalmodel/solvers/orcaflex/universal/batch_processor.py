@@ -14,6 +14,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 import psutil
 from digitalmodel.solvers.orcaflex.core.mock_artifacts import write_mock_artifact
+
+from digitalmodel.solvers.orcaflex.run_state import check_statics
 from digitalmodel.solvers.orcaflex.file_size_optimizer import FileSizeOptimizer
 
 logger = logging.getLogger(__name__)
@@ -294,7 +296,10 @@ class BatchProcessor:
                 
                 # Run static analysis
                 model.CalculateStatics()
-                
+                # #3838: a statics solve that did not reach a static state must
+                # not be saved as a .sim and reported successful.
+                check_statics(model, context=str(model_path))
+
                 # Save simulation
                 sim_file = output_directory / f"{model_path.stem}.sim"
                 model.SaveSimulation(str(sim_file))

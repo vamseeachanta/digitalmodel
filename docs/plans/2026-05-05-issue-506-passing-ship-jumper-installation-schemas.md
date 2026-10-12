@@ -9,13 +9,13 @@
 The spec audit identified two valid domain specs that don't conform to `ProjectInputSpec` (the OrcaFlex modular-generator schema) because they describe non-OrcaFlex workflows:
 
 - `docs/domains/orcaflex/passing_ship/sample/spec.yml` — top-level `moored_vessel`, `passing_vessel`, scenario keys (consumed by `hydrodynamics/passing_ship/`).
-- `docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml` — top-level `metadata`, `environment`, `pipe`, `jumper` keys (consumed by `marine_ops/installation/jumper_lift.py`).
+- `docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml` — top-level `metadata`, `environment`, `pipe`, `jumper` keys (consumed by `marine_ops/installation/jumper_lift.py`).
 
 Both currently lack Pydantic schema validation, so `scripts/audit_all_specs.py` cannot validate them and silently skips or warns. We need parallel Pydantic schemas that the audit script can dispatch to based on a `metadata.spec_type` discriminator.
 
 ## Plan
 
-1. **Define `metadata.spec_type` discriminator.** Edit both target spec files to carry `metadata.spec_type: passing_ship` and `metadata.spec_type: jumper_installation` respectively (verify the ballymore spec already has `metadata.structure: jumper` — extend it without breaking `jumper_lift.py` consumption). This becomes the dispatch key.
+1. **Define `metadata.spec_type` discriminator.** Edit both target spec files to carry `metadata.spec_type: passing_ship` and `metadata.spec_type: jumper_installation` respectively (verify the gom_tieback spec already has `metadata.structure: jumper` — extend it without breaking `jumper_lift.py` consumption). This becomes the dispatch key.
 
 2. **Author `PassingShipSpec`.** New file `src/digitalmodel/hydrodynamics/passing_ship/schema.py`. Pydantic `BaseModel` mirroring the YAML structure: `name`, `description`, `moored_vessel: VesselSpec` (hull + loading_condition + mooring_lines), `passing_vessel: VesselSpec`, `scenario: ScenarioSpec` (water_depth, separation, speed, heading). Use field aliases for any deviations. Export from `src/digitalmodel/hydrodynamics/passing_ship/__init__.py`.
 
@@ -35,4 +35,4 @@ Both currently lack Pydantic schema validation, so `scripts/audit_all_specs.py` 
 
 ## Open questions
 
-1. Is there a third unaccounted-for spec shape in `docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml`? Inspect — if structurally identical, share the schema; if different, file a follow-up.
+1. Is there a third unaccounted-for spec shape in `docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml`? Inspect — if structurally identical, share the schema; if different, file a follow-up.

@@ -1,0 +1,202 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2082",
+  "source_revision": "80da6e09b649707ef7bdb09c9d112f1650bf3d6a",
+  "source_file": "src/digitalmodel/solvers/smoke/probes.py",
+  "method": "file-loaded source plus injected fake API; no native imports or licences",
+  "native_verification": false,
+  "scratch_removed": true,
+  "results": [
+    {
+      "scenario": "finite_control",
+      "observed_ok": true,
+      "expected_ok_after_repair": true,
+      "static_tension": 1.0,
+      "dynamic_range": [
+        1.0,
+        2.0
+      ],
+      "dynamic_samples": 2,
+      "simulation_state": "SimulationStopped",
+      "constructor_calls": [
+        {
+          "input_suffix": null,
+          "kwargs": {}
+        },
+        {
+          "input_suffix": ".dat",
+          "kwargs": {}
+        }
+      ],
+      "sim_reload_attempted": false,
+      "raw_report_is_strict_json": true
+    },
+    {
+      "scenario": "static_nan",
+      "observed_ok": true,
+      "expected_ok_after_repair": false,
+      "static_tension": "nan",
+      "dynamic_range": [
+        1.0,
+        2.0
+      ],
+      "dynamic_samples": 2,
+      "simulation_state": "SimulationStopped",
+      "constructor_calls": [
+        {
+          "input_suffix": null,
+          "kwargs": {}
+        },
+        {
+          "input_suffix": ".dat",
+          "kwargs": {}
+        }
+      ],
+      "sim_reload_attempted": false,
+      "raw_report_is_strict_json": false
+    },
+    {
+      "scenario": "static_inf",
+      "observed_ok": true,
+      "expected_ok_after_repair": false,
+      "static_tension": "inf",
+      "dynamic_range": [
+        1.0,
+        2.0
+      ],
+      "dynamic_samples": 2,
+      "simulation_state": "SimulationStopped",
+      "constructor_calls": [
+        {
+          "input_suffix": null,
+          "kwargs": {}
+        },
+        {
+          "input_suffix": ".dat",
+          "kwargs": {}
+        }
+      ],
+      "sim_reload_attempted": false,
+      "raw_report_is_strict_json": false
+    },
+    {
+      "scenario": "dynamic_nan",
+      "observed_ok": true,
+      "expected_ok_after_repair": false,
+      "static_tension": 1.0,
+      "dynamic_range": [
+        "nan",
+        "nan"
+      ],
+      "dynamic_samples": 2,
+      "simulation_state": "SimulationStopped",
+      "constructor_calls": [
+        {
+          "input_suffix": null,
+          "kwargs": {}
+        },
+        {
+          "input_suffix": ".dat",
+          "kwargs": {}
+        }
+      ],
+      "sim_reload_attempted": false,
+      "raw_report_is_strict_json": false
+    },
+    {
+      "scenario": "dynamic_inf",
+      "observed_ok": true,
+      "expected_ok_after_repair": false,
+      "static_tension": 1.0,
+      "dynamic_range": [
+        1.0,
+        "inf"
+      ],
+      "dynamic_samples": 2,
+      "simulation_state": "SimulationStopped",
+      "constructor_calls": [
+        {
+          "input_suffix": null,
+          "kwargs": {}
+        },
+        {
+          "input_suffix": ".dat",
+          "kwargs": {}
+        }
+      ],
+      "sim_reload_attempted": false,
+      "raw_report_is_strict_json": false
+    },
+    {
+      "scenario": "single_sample",
+      "observed_ok": true,
+      "expected_ok_after_repair": false,
+      "static_tension": 1.0,
+      "dynamic_range": [
+        1.0,
+        1.0
+      ],
+      "dynamic_samples": 1,
+      "simulation_state": "SimulationStopped",
+      "constructor_calls": [
+        {
+          "input_suffix": null,
+          "kwargs": {}
+        },
+        {
+          "input_suffix": ".dat",
+          "kwargs": {}
+        }
+      ],
+      "sim_reload_attempted": false,
+      "raw_report_is_strict_json": true
+    },
+    {
+      "scenario": "wrong_state",
+      "observed_ok": true,
+      "expected_ok_after_repair": false,
+      "static_tension": 1.0,
+      "dynamic_range": [
+        1.0,
+        2.0
+      ],
+      "dynamic_samples": 2,
+      "simulation_state": "SimulationRunning",
+      "constructor_calls": [
+        {
+          "input_suffix": null,
+          "kwargs": {}
+        },
+        {
+          "input_suffix": ".dat",
+          "kwargs": {}
+        }
+      ],
+      "sim_reload_attempted": false,
+      "raw_report_is_strict_json": true
+    },
+    {
+      "scenario": "corrupt_sim",
+      "observed_ok": true,
+      "expected_ok_after_repair": false,
+      "static_tension": 1.0,
+      "dynamic_range": [
+        1.0,
+        2.0
+      ],
+      "dynamic_samples": 2,
+      "simulation_state": "SimulationStopped",
+      "constructor_calls": [
+        {
+          "input_suffix": null,
+          "kwargs": {}
+        },
+        {
+          "input_suffix": ".dat",
+          "kwargs": {}
+        }
+      ],
+      "sim_reload_attempted": false,
+      "raw_report_is_strict_json": true
+    }
+  ]
+}

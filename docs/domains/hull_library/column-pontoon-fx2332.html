@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Column pontoon review correction</title>
+<body><h1>Column pontoon review correction</h1>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/pull/2332">draft PR 2332</a>,
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2318">issue 2318</a>, owner board card A01.</p>
+<h2>Correction plan</h2>
+<p>The fix will replace circular fixed-facet profiles with target-derived,
+area-preserving polygons. Structured Coons grids will cover caps, and axial
+spacing will account for section edge lengths. Convex clipping and shared seam
+vertices will remain conforming. Coplanar diagonal flips and an interior
+point selected against the emitted quad edge ratios will remove avoidable
+clipping slivers. Conforming edge bisection will target the quad criterion,
+rather than attempt to change angles fixed by geometric intersections. The full spar and OC4 meshes will be tested
+against maximum edge-length aspect ratios of 10 and 20 respectively.</p>
+<p>The hard tank will occupy the waterline section with its own diameter and
+depth, while the heave plate will remain at the keel. Unsupported pontoon widths
+will be rejected. Existing size, overlap and draft validation will be reproduced
+before any change is made.</p>
+<p>Each primitive will be integrated from its emitted closed panel mesh and
+compared with independent analytic volume, waterplane area, KB and BM at 0.5%.
+The check will expose mesh values, analytic values, relative differences,
+tolerances and pass/fail. A perturbed mesh will exercise failure reporting.</p>
+<p>The optional geometric lid will inherit wetted-panel orientation and its
+panels will point upward. Closure will distinguish open-at-waterline,
+closed-with-lid and invalid-lid. Three/six square-column and six circular-column
+ring layouts will be exercised. The original 0.5% hand-formula and 1% OC4
+acceptance assertions will remain, including the independent 0.05% OC4 model check.</p>
+<h2>Plan review dispositions</h2>
+<p>Adversarial review required original-dimension section inertia, shared seam
+vertices, complete-mesh quality assertions, direct coarse/fine panel-count
+comparison and integration of actual primitive panels. These criteria will bind
+implementation acceptance. Small rounded-corner edges will remain a documented
+refinement cost; solver qualification will not be inferred from hydrostatic checks.</p>
+<h2>Model limitations</h2>
+<p>Area-preserving circular facets slightly expand the nominal vertex radius;
+this compensates polygon area loss but does not reproduce exact circular
+intersection curves. Braces, column rotation and pontoon end overhangs remain
+outside this generator. Clipped intersection polygons require conforming local
+subdivision; cap and uncut face grids have no high-valence radial centre fan.
+Local intersection refinement can dominate the count for very coarse
+profiles; total count is not guaranteed to be monotone for every target.
+An OC4 10/5 m probe exhibited a count inversion because coarser
+intersections required more quality repair. A blanket monotonic-density claim
+is therefore not established.
+The spar 3/1.5 m and OC4 5/2.5 m controls will establish tested scaling
+above 2× and at least 1.5× respectively. Near-circular rounded corners will
+retain the 0.5% primitive criterion using at least ten chords per quarter.
+Rounded arcs are inscribed: displacement has a negative bias, bounded by
+0.411% of corner-sector area. The generic reported edge-ratio bound is 20;
+the spar fixture will meet the stricter test criterion below 10.
+The aspect metric is longest divided by shortest panel edge, not a solver
+qualification or angle-quality criterion. Circular Coons cap corner angles
+approach 180° as the facet count increases; positive turns and bounded edge
+ratios do not establish angular quality. Angular/Jacobian criteria are tracked
+in <a href="https://github.com/vamseeachanta/digitalmodel/issues/2346">issue 2346</a>.
+An exceeded edge-ratio bound will be explicit in the report rather than silently
+qualified. Unresolved ear triangulation will raise a clear error, and cap-grid
+padding knots will be shared with the side rings before meshing.</p></body></html>

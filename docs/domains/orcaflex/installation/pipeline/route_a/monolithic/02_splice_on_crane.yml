@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ms\STAT\02_splice_on_crane.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/02_splice_on_crane.yml
 # Created: 11:40 AM on 6/11/2023
 # User: 
 # Machine: 
@@ -45,7 +45,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     CharacteristicLength: ~
     CharacteristicForce: ~
-    EndAConnection: SevenArctic
+    EndAConnection: iv02
     EndAX: -64.85000000000001
     EndAY: -28.06
     EndAZ: 24.8

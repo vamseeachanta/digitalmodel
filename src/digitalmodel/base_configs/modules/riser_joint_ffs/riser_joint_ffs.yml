@@ -1,0 +1,7 @@
+# The example supplies the report fixture references and campaign basis.
+basename: riser_joint_ffs
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

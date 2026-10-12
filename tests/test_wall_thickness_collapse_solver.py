@@ -1,7 +1,7 @@
 # ABOUTME: Regression tests for the DNV-ST-F101 Eq 5.9 collapse-pressure solver bracket.
 # ABOUTME: Pins the deepwater (p_p > p_el) case that previously converged to a spurious high root.
 
-"""DNV collapse cubic solver — bracket regression (deckhand#227).
+"""DNV collapse cubic solver — bracket regression.
 
 The characteristic collapse pressure p_c solves Eq 5.9:
 

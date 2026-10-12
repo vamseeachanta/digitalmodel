@@ -15,7 +15,7 @@ How to open powershell and run the analysis:
 
 - open "Anaconda PowerShell Prompt" by searching for "powershell"
 - change director:
-  - cd K:\tutorial\sp\dat\003_FPSO_Turret\rev0
+  - cd <private-data>\rev0
 - if not in same dirve. change drive. I.e.
   - K:
 - check directory files using following command
@@ -49,7 +49,7 @@ Need .HYD file to avoid below error.
 
 Using below command, the error is thrown:
 
-"C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe" /STD I:\B1516\rev2\master\LIBR_NE
+"C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\aqwa.exe" /STD <private-data>\LIBR_NE
 
 **** MODELLING WARNING **** WHEN AQWA IS *NOT* RUN FROM WORKBENCH, ONLY 2 PARAMETERS (RESOLUTION) ARE ALLOWED ON THE
                              SEAG CARD. DEFAULT VALUES HAVE BEEN USED FOR THE GRID SIZE

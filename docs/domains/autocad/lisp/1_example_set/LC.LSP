@@ -4,7 +4,7 @@
 ;    ZOTO Technologies,
 ;    23 Greenhills Dve,
 ;    Melton 3337.
-;    E-MAIL: zoltan.toth@ains.net.au
+;    E-MAIL: [email removed]
 ;       WWW: http://www.ains.net.au/zoto/
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Version 1.1: Modified to use the block layer when the sub-entity layer

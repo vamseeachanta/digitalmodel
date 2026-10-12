@@ -351,7 +351,7 @@ python examples/workflows/01_spread_mooring_8point.py
 ### Technical Support
 - **Issues:** GitHub Issues
 - **Discussions:** GitHub Discussions
-- **Email:** support@company.com
+- **Email:** [email removed]
 
 ### Additional Resources
 - API RP 2SK (Mooring Standards)

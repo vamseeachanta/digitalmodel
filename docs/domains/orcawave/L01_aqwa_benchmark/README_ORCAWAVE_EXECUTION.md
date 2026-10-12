@@ -223,7 +223,7 @@ python execute_orcawave_parallel.py --config <your_config.yml>
 Scripts search for OrcaWave in:
 1. `C:\Program Files\Orcina\OrcaWave\OrcaWave.exe`
 2. `C:\Program Files (x86)\Orcina\OrcaWave\OrcaWave.exe`
-3. `D:\OrcaWave\OrcaWave.exe`
+3. `<private-data>\OrcaWave.exe`
 
 **Custom path:**
 ```bash

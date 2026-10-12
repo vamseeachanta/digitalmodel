@@ -1,0 +1,1726 @@
+# Transcription only: no standards text was opened or copied for this inventory.
+# No page/section/clause references, factors or formulas were obtained; issue examples are not copied.
+# Brazil and Australia regulator acceptance was not established from a regulator page.
+# UK recognition is a search-summary statement (unv.), not regulator-page verification.
+# meta: source provenance, note counts, unmet criteria, source-key catalog and graph.
+# meta.domain: the research note's domain.
+# meta.issue_reference: issue requesting this inventory.
+# meta.source_statement: the sole factual source and its date.
+# meta.research_note: stable comment link to that source.
+# meta.date_checked: the note's date, not a new currency check.
+# meta.edition_basis_legend: exact meaning of C, N and U mapped to closed values.
+# meta.counts: the note's own Counts table, without reclassifying combined rows.
+# meta.acceptance_criteria_not_met: gaps stated by the note (historical note status).
+# meta.cross_reference_edges: graph bullet statements verbatim, including unv. marks.
+# meta.external_references: references-cell designations with no row or alias here.
+# meta.source_keys: all key-table entries, including regulator keys used outside row source cells.
+# standards: one entry per numbered note row, in the same order; combined rows stay combined.
+# code_id: first designation in the note's Designation cell.
+# also_known_as: former or additional designations from that cell or the rename statement.
+# designation: complete Designation cell, retaining combined-row context.
+# publisher: Issuer cell.
+# revision: Current edition / date cell, including all caveats.
+# title: Title cell.
+# scope: Scope (own words) cell.
+# key_methods: Methods cell as a list; a dash becomes an empty list, n/v remains n/v.
+# applicability: Applicability limits stated publicly cell; a dash remains a dash.
+# links_to: designations extracted from References / pairs with; prose-only cells yield no targets.
+# references_statement: full References / pairs with cell with its uncertainty markers.
+# group: exact sub-topic heading.
+# status: Status cell, not an independently verified closed vocabulary.
+# edition_basis: currency-check (C), issuer-page (N), or not-verified (U), from Src.
+# edition_verified: false for U or an edition-not-verified cell; true means the note's standing only.
+# unverified_statements: affected field names; markers also remain inside source text.
+# relation_to_neighbours: Relation to neighbours cell.
+# boundary_flags: closed set mooring, risers-viv, flexible-pipe, subsea-production; only named boundary rows.
+# boundary_reasons: flag-to-reason mapping from Boundary flags or the boundary group row.
+# issue_designation_correction: optional list of issue_text and issuer_page_today from corrections table.
+# issue_designation_correction[].issue_text: exact Issue text cell from the corrections table.
+# issue_designation_correction[].issuer_page_today: exact Issuer page today cell, without Markdown emphasis.
+# sources: row source-cell keys only, each resolved against the note's key table; dash is empty.
+# sources[].key: source key from the note.
+# sources[].urls: all full https addresses in its key-table cell; absent if none is supplied.
+# sources[].remark: complete key-table wording, retaining URL context and caveats.
+# date_checked: the note's date for this row.
+# accepted_edition_by_regime: only regime incorporation or naming stated in the note; otherwise empty.
+# accepted_edition_by_regime[].regime: regime named in the note.
+# accepted_edition_by_regime[].edition_or_statement: incorporation/naming statement, including uncertainty.
+# accepted_edition_by_regime[].source_key: one cited key resolved in meta.source_keys, not necessarily row sources.
+# accepted_edition_by_regime[].source_keys: two or more distinct cited keys resolved in meta.source_keys.
+# Each regime entry has either source_key or source_keys, never both.
+meta:
+  domain: subsea pipelines
+  issue_reference: https://github.com/vamseeachanta/digitalmodel/issues/1813
+  source_statement: research note on the issue, 2026-10-11
+  research_note: https://github.com/vamseeachanta/digitalmodel/issues/1813#issuecomment-6115054109
+  date_checked: '2026-10-11'
+  edition_basis_legend:
+    currency-check: C = taken from the standards currency check completed today (issuer page, checked
+      2026-10-11)
+    issuer-page: N = read now on the issuer's own page (key in the last column)
+    not-verified: U = edition not verified on an issuer page
+  counts:
+    currency-check: 22
+    issuer-page: 20
+    not-verified: 3
+    total: 45
+  acceptance_criteria_not_met:
+  - 'No YAML file committed. `pages_relevant` and "key formulas" are not given: they need the paid texts,
+    which were not opened.'
+  - Edition not verified for CSA Z662, AS 2885.4 and the NACE structure standard; NACE SP0169 rests on
+    an AMPP event page.
+  - No issuer document dedicated to pipeline walking was found; the cross-reference graph is only partly
+    evidenced on public pages (marked).
+  - Brazil and Australia regulator acceptance not established from a regulator page.
+  cross_reference_edges:
+  - 'DNV-ST-F101 <- DNV-RP-F110 (global buckling requirements), DNV-RP-F108 (fatigue and fracture limit
+    states), DNV-RP-F115 (compliant systems): stated on the RP pages.'
+  - 'DNV-ST-F101 <- DNV-RP-F101, F103, F105, F107, F109, F111, F113, F114, F116, C205, F102, F106: listed
+    together by DNV as its pipeline codes (P1); the individual pages do not print the dependency.'
+  - DNV-RP-C212 -> DNV-RP-F114 for pipelines (stated). DNV-RP-F109, F105, F110 -> DNV-RP-F114 for soil
+    input (unv.).
+  - DNV-RP-F106 -> ISO 21809-1; DNV-RP-F102 -> ISO 21809-3 (stated on the RP pages).
+  - PD 8010-2 -> DNV submarine pipeline standard beyond 500 m; -> PD 8010-1 onshore; -> BS EN ISO 13628-5
+    for umbilicals (stated on P1 for PD 8010-2).
+  - AS 2885.4 -> DNV-ST-F101 (search summary, unv.).
+  - API Spec 5LD -> API Spec 5L base metal (stated in the catalogue). API RP 17B -> Spec 17J, 17K, 17L1,
+    17L2 (stated).
+  - ISO 13623 -> ISO 16708, 3183, 15589-2, 21809, 13847, 19345-2, 12747 (same committee listing; dependency
+    unv.).
+  - 'Regulator edges: US regulation -> ASME B31.8 (2003), API Spec 17J (4th), API RP 2RD, API 6A/6D, ASME
+    B16.5-2003 for pipelines (R4); Norway guideline -> ISO 13623, DNV-ST-F101, DNV-ST-F201, API 17J (R2).'
+  external_references:
+  - PD 8010-1
+  - PD 8010-4
+  - PD 8010-5
+  - BS 8010-3:1993
+  - DNV-RP-C212
+  - API RP 1160
+  - API RP 17A
+  - API 17J
+  source_keys:
+  - key: D1
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-st-f101-submarine-pipeline-systems/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-st-f101-submarine-pipeline-systems/
+  - key: D2
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f109-on-bottom-stability-design-of-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f109-on-bottom-stability-design-of-submarine-pipelines/
+  - key: D3
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f114-pipe-soil-interaction-for-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f114-pipe-soil-interaction-for-submarine-pipelines/
+  - key: D4
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/
+  - key: D5
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f105-free-spanning-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f105-free-spanning-pipelines/
+  - key: D6
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f111-interference-between-trawl-gear-and-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f111-interference-between-trawl-gear-and-pipelines/
+  - key: D7
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f107-risk-assessment-of-pipeline-protection/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f107-risk-assessment-of-pipeline-protection/
+  - key: D8
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f110-global-buckling-of-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f110-global-buckling-of-submarine-pipelines/
+  - key: D9
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f101-corroded-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f101-corroded-pipelines/
+  - key: D10
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f116-integrity-management-of-submarine-pipeline-systems/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f116-integrity-management-of-submarine-pipeline-systems/
+  - key: D11
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f113-pipeline-subsea-repair/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f113-pipeline-subsea-repair/
+  - key: D12
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f108-assessment-of-flaws-in-pipeline-and-riser-girth-welds/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f108-assessment-of-flaws-in-pipeline-and-riser-girth-welds/
+  - key: D13
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f112-duplex-stainless-steel-design-against-hydrogen-induced-stress-cracking/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f112-duplex-stainless-steel-design-against-hydrogen-induced-stress-cracking/
+  - key: D14
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f103-cathodic-protection-of-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f103-cathodic-protection-of-submarine-pipelines/
+  - key: D15
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-b401-cathodic-protection-design/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-b401-cathodic-protection-design/
+  - key: D16
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f106-factory-applied-external-pipeline-coatings-for-corrosion-control/
+      and https://www.dnv.com/energy/standards-guidelines/dnv-rp-f102-pipeline-field-joint-coating-and-field-repair-of-linepipe-coating/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f106-factory-applied-external-pipeline-coatings-for-corrosion-control/
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f102-pipeline-field-joint-coating-and-field-repair-of-linepipe-coating/
+  - key: D17
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f115-pre-commissioning-of-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f115-pre-commissioning-of-submarine-pipelines/
+  - key: D18
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-st-f201-riser-systems/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-st-f201-riser-systems/
+  - key: P1
+    remark: https://www.dnv.com/energy/services/pipelines/pipeline-codes/ and https://knowledge.bsigroup.com/products/pipeline-systems-subsea-pipelines-code-of-practice
+    urls:
+    - https://www.dnv.com/energy/services/pipelines/pipeline-codes/
+    - https://knowledge.bsigroup.com/products/pipeline-systems-subsea-pipelines-code-of-practice
+  - key: P2
+    remark: https://knowledge.bsigroup.com/products/petroleum-and-natural-gas-industries-pipeline-transportation-systems
+    urls:
+    - https://knowledge.bsigroup.com/products/petroleum-and-natural-gas-industries-pipeline-transportation-systems
+  - key: P3
+    remark: BSI product page for BS 7910:2019, as read in the currency check (knowledge.bsigroup.com)
+  - key: I1
+    remark: https://www.iso.org/standard/61251.html
+    urls:
+    - https://www.iso.org/standard/61251.html
+  - key: I2
+    remark: 'ISO catalogue listing for ICS 75.200: https://www.iso.org/ics/75.200/x/'
+    urls:
+    - https://www.iso.org/ics/75.200/x/
+  - key: I3
+    remark: https://www.iso.org/standard/79658.html
+    urls:
+    - https://www.iso.org/standard/79658.html
+  - key: I4
+    remark: https://www.iso.org/standard/86664.html
+    urls:
+    - https://www.iso.org/standard/86664.html
+  - key: A1
+    remark: 'API 2025 Publications Catalog, Exploration and Production: https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf
+  - key: A3
+    remark: 'API 2025 Publications Catalog, Transportation: https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf
+  - key: A4
+    remark: 'API 2025 Publications Catalog, Refining: https://www.api.org/-/media/Files/Publications/2025-Catalog/06_Refining_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/06_Refining_2025.pdf
+  - key: S2
+    remark: https://www.asme.org/codes-standards/find-codes-standards/b31-4-pipeline-transportation-systems-liquids-slurries
+    urls:
+    - https://www.asme.org/codes-standards/find-codes-standards/b31-4-pipeline-transportation-systems-liquids-slurries
+  - key: S3
+    remark: https://www.asme.org/codes-standards/find-codes-standards/b31-8-gas-transmission-distribution-piping-systems
+    urls:
+    - https://www.asme.org/codes-standards/find-codes-standards/b31-8-gas-transmission-distribution-piping-systems
+  - key: S4
+    remark: https://www.asme.org/codes-standards/find-codes-standards/b31-8s-managing-system-integrity-gas-pipelines
+    urls:
+    - https://www.asme.org/codes-standards/find-codes-standards/b31-8s-managing-system-integrity-gas-pipelines
+  - key: N1
+    remark: AMPP event page for the June 2024 SP0169 webinar, as read in the currency check (ampp.org)
+  - key: C1
+    remark: https://www.csagroup.org/store/product/CSA%20Z662:23/ (refused a plain fetch; not read)
+    urls:
+    - https://www.csagroup.org/store/product/CSA%20Z662:23/
+  - key: U1
+    remark: https://store.standards.org.au/product/as-2885-4-2024 (address from a search; not opened)
+    urls:
+    - https://store.standards.org.au/product/as-2885-4-2024
+  - key: R1
+    remark: 'US 30 CFR 250.198: https://www.ecfr.gov/current/title-30/section-250.198'
+    urls:
+    - https://www.ecfr.gov/current/title-30/section-250.198
+  - key: R2
+    remark: https://www.havtil.no/en/regulations/all-acts/the-facilities-regulations3/III/11/
+    urls:
+    - https://www.havtil.no/en/regulations/all-acts/the-facilities-regulations3/III/11/
+  - key: R4
+    remark: 'US 30 CFR 250.1002: https://www.ecfr.gov/current/title-30/section-250.1002'
+    urls:
+    - https://www.ecfr.gov/current/title-30/section-250.1002
+standards:
+- code_id: DNV-ST-F101
+  also_known_as:
+  - DNV-OS-F101
+  designation: DNV-ST-F101
+  publisher: DNV
+  revision: 2021-08, amended 2021-12
+  title: Submarine pipeline systems
+  scope: Submarine pipelines over the whole life cycle from concept to abandonment, centred on structural
+    integrity.
+  key_methods:
+  - Safety philosophy with target failure probabilities; load and resistance factor design; safety classes
+    tied to failure consequence (stated).
+  applicability: Carbon-manganese, corrosion-resistant alloy, and lined or clad linepipe.
+  links_to: []
+  references_statement: The DNV-RP-F series below; industry standards for components.
+  group: A. Design codes
+  status: Active (was DNV-OS-F101)
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - relation_to_neighbours
+  relation_to_neighbours: Named by Norway's regulator guideline for steel pipelines (R2); adopted by Australia's
+    AS 2885.4 (unv., row 9); named by PD 8010-2 for water deeper than 500 m.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D1
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-st-f101-submarine-pipeline-systems/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-st-f101-submarine-pipeline-systems/
+  - key: P1
+    remark: https://www.dnv.com/energy/services/pipelines/pipeline-codes/ and https://knowledge.bsigroup.com/products/pipeline-systems-subsea-pipelines-code-of-practice
+    urls:
+    - https://www.dnv.com/energy/services/pipelines/pipeline-codes/
+    - https://knowledge.bsigroup.com/products/pipeline-systems-subsea-pipelines-code-of-practice
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: Norway
+    edition_or_statement: Named by Norway's regulator guideline for steel pipelines (R2)
+    source_key: R2
+  issue_designation_correction:
+  - issue_text: DNV-OS-F101 (PRIMARY), revision 2021-08
+    issuer_page_today: Now DNV-ST-F101, Edition 2021-08, amended 2021-12 ("previously named DNV-OS-F101")
+- code_id: API RP 1111
+  also_known_as: []
+  designation: API RP 1111
+  publisher: API
+  revision: 5th Ed, Sept 2015, reaffirmed Jan 2021
+  title: Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines (Limit State
+    Design)
+  scope: Design, construction, testing, operation and maintenance of offshore steel pipelines from the
+    production facility outlet, including platform transport piping.
+  key_methods:
+  - Limit state design with burst as the primary design condition, giving a uniform margin independent
+    of diameter, wall thickness and grade (catalogue).
+  applicability: Offshore steel hydrocarbon pipelines; may be used for water injection lines.
+  links_to:
+  - ASME B31.4
+  - ASME B31.8
+  - API Spec 5L
+  references_statement: ASME B31.4, B31.8; API Spec 5L (unv.).
+  group: A. Design codes
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - references_statement
+  - links_to
+  relation_to_neighbours: 'US practice. The US regulator''s pipeline design section read today is written
+    around ASME B31.8 and does not name RP 1111 (R4): confirm acceptance per project.'
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A3
+    remark: 'API 2025 Publications Catalog, Transportation: https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf
+  - key: R4
+    remark: 'US 30 CFR 250.1002: https://www.ecfr.gov/current/title-30/section-250.1002'
+    urls:
+    - https://www.ecfr.gov/current/title-30/section-250.1002
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 13623
+  also_known_as: []
+  designation: ISO 13623
+  publisher: ISO
+  revision: ISO 13623:2017, Ed 3, 2017-09; Amd 1:2024 (CO2 and hydrogen); confirmed 2026; revision project
+    opened
+  title: Petroleum and natural gas industries - Pipeline transportation systems
+  scope: Functional requirements for design, materials, construction, testing, operation, maintenance
+    and abandonment of pipeline systems.
+  key_methods:
+  - Functional requirements (abstract). Allowable-stress basis with ISO 16708 as the reliability-based
+    alternative (unv.).
+  applicability: On-land and offshore; rigid metallic pipelines only, not flexibles or GRP; not retroactive.
+  links_to:
+  - ISO 3183
+  - ISO 15589-2
+  - ISO 21809
+  - ISO 16708
+  references_statement: ISO 3183, ISO 15589-2, ISO 21809, ISO 16708.
+  group: A. Design codes
+  status: Published
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - relation_to_neighbours
+  relation_to_neighbours: International umbrella; named with DNV-ST-F101 by Norway's regulator guideline
+    (R2). PD 8010 was aligned to it (unv.).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: I1
+    remark: https://www.iso.org/standard/61251.html
+    urls:
+    - https://www.iso.org/standard/61251.html
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: Norway
+    edition_or_statement: named with DNV-ST-F101 by Norway's regulator guideline (R2)
+    source_key: R2
+- code_id: ASME B31.4
+  also_known_as: []
+  designation: ASME B31.4
+  publisher: ASME
+  revision: '2025'
+  title: Pipeline Transportation Systems for Liquids and Slurries
+  scope: Design, construction, inspection, testing, operation and maintenance of liquid pipelines between
+    fields, storage, plants and terminals.
+  key_methods:
+  - Allowable-stress design (unv.).
+  applicability: Liquids and slurries; the public page does not mention offshore routes.
+  links_to:
+  - API RP 1111
+  - API Std 1104
+  references_statement: API RP 1111, API Std 1104.
+  group: A. Design codes
+  status: Active (stabilized maintenance)
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - relation_to_neighbours
+  relation_to_neighbours: US liquid-line base code; offshore chapter exists (unv.).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: S2
+    remark: https://www.asme.org/codes-standards/find-codes-standards/b31-4-pipeline-transportation-systems-liquids-slurries
+    urls:
+    - https://www.asme.org/codes-standards/find-codes-standards/b31-4-pipeline-transportation-systems-liquids-slurries
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ASME B31.8
+  also_known_as: []
+  designation: ASME B31.8
+  publisher: ASME
+  revision: '2025'
+  title: Gas Transmission and Distribution Piping Systems
+  scope: Gas pipelines, stations, mains and service lines, including gathering lines from production facilities.
+  key_methods:
+  - Design-factor (allowable hoop stress) method, as used in the US regulation (R4).
+  applicability: Gas; public page mentions offshore appurtenances.
+  links_to:
+  - ASME B31.8S
+  - API Spec 5L
+  references_statement: ASME B31.8S, API Spec 5L.
+  group: A. Design codes
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: The US regulator's pipeline design formula is tied to it, but at the 2003 edition
+    (R1, R4).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: S3
+    remark: https://www.asme.org/codes-standards/find-codes-standards/b31-8-gas-transmission-distribution-piping-systems
+    urls:
+    - https://www.asme.org/codes-standards/find-codes-standards/b31-8-gas-transmission-distribution-piping-systems
+  - key: R4
+    remark: 'US 30 CFR 250.1002: https://www.ecfr.gov/current/title-30/section-250.1002'
+    urls:
+    - https://www.ecfr.gov/current/title-30/section-250.1002
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: US
+    edition_or_statement: The US regulator's pipeline design formula is tied to it, but at the 2003 edition
+      (R1, R4).
+    source_keys:
+    - R1
+    - R4
+- code_id: PD 8010-2
+  also_known_as: []
+  designation: PD 8010-2
+  publisher: BSI
+  revision: PD 8010-2:2015+A1:2016, published 31 Mar 2015
+  title: Pipeline systems - Subsea pipelines. Code of practice
+  scope: Recommendations for steel subsea pipelines offshore, nearshore and at landfalls through the full
+    life cycle; includes guidance on flexible composite pipelines.
+  key_methods:
+  - Not stated on the page. Allowable-stress with strain-based options (unv.).
+  applicability: Water depth up to 500 m; deeper water is sent to the DNV submarine pipeline standard.
+    Excludes onshore lines (PD 8010-1), sea outfalls and umbilicals.
+  links_to:
+  - PD 8010-1
+  - PD 8010-4
+  - PD 8010-5
+  references_statement: PD 8010-1, PD 8010-4 (integrity), PD 8010-5.
+  group: A. Design codes
+  status: Current
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - relation_to_neighbours
+  relation_to_neighbours: UK practice; UK regulator lists it with the DNV standard as recognised (search
+    summary of the regulator site; page not opened, unv.).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: P1
+    remark: https://www.dnv.com/energy/services/pipelines/pipeline-codes/ and https://knowledge.bsigroup.com/products/pipeline-systems-subsea-pipelines-code-of-practice
+    urls:
+    - https://www.dnv.com/energy/services/pipelines/pipeline-codes/
+    - https://knowledge.bsigroup.com/products/pipeline-systems-subsea-pipelines-code-of-practice
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: BS EN 14161
+  also_known_as: []
+  designation: BS EN 14161
+  publisher: BSI
+  revision: BS EN 14161:2003, withdrawn 30 Sep 2011; successor not read
+  title: Petroleum and natural gas industries - Pipeline transportation systems
+  scope: European adoption of ISO 13623 (unv.).
+  key_methods: []
+  applicability: '-'
+  links_to:
+  - BS 8010-3:1993
+  references_statement: Superseded BS 8010-3:1993.
+  group: A. Design codes
+  status: Withdrawn
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - revision
+  - scope
+  relation_to_neighbours: Do not cite the 2003 edition as current.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: P2
+    remark: https://knowledge.bsigroup.com/products/petroleum-and-natural-gas-industries-pipeline-transportation-systems
+    urls:
+    - https://knowledge.bsigroup.com/products/petroleum-and-natural-gas-industries-pipeline-transportation-systems
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+  issue_designation_correction:
+  - issue_text: BS EN 14161
+    issuer_page_today: BS EN 14161:2003 was withdrawn 30 Sep 2011; a current successor was not read on
+      a BSI page
+- code_id: CSA Z662
+  also_known_as: []
+  designation: CSA Z662
+  publisher: CSA Group
+  revision: 'Z662:23 per a search of the CSA store; store page refused a plain fetch: edition not verified'
+  title: Oil and gas pipeline systems
+  scope: Canadian code for oil and gas pipeline systems, with an offshore clause (unv.).
+  key_methods:
+  - n/v
+  applicability: Canada.
+  links_to: []
+  references_statement: '-'
+  group: A. Design codes
+  status: n/v
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - scope
+  - key_methods
+  - status
+  - sources
+  relation_to_neighbours: Regional.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: C1
+    remark: https://www.csagroup.org/store/product/CSA%20Z662:23/ (refused a plain fetch; not read)
+    urls:
+    - https://www.csagroup.org/store/product/CSA%20Z662:23/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: AS 2885.4
+  also_known_as: []
+  designation: AS 2885.4
+  publisher: Standards Australia
+  revision: 'AS 2885.4:2024 per a search of the Standards Australia store; page not opened: edition not
+    verified'
+  title: Pipelines - Gas and liquid petroleum - Submarine pipeline systems
+  scope: Minimum requirements for submarine pipelines in Australia, by applying the DNV submarine pipeline
+    standard with stated deviations (search summary).
+  key_methods:
+  - Follows DNV-ST-F101 (unv.).
+  applicability: Australia.
+  links_to:
+  - DNV-ST-F101
+  references_statement: DNV-ST-F101.
+  group: A. Design codes
+  status: n/v
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - scope
+  - key_methods
+  - status
+  - relation_to_neighbours
+  - sources
+  relation_to_neighbours: Not in the issue; added because it is how the DNV code governs in Australia.
+    No offshore regulator guidance page was found.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: U1
+    remark: https://store.standards.org.au/product/as-2885-4-2024 (address from a search; not opened)
+    urls:
+    - https://store.standards.org.au/product/as-2885-4-2024
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 16708
+  also_known_as: []
+  designation: ISO 16708
+  publisher: ISO
+  revision: ISO 16708:2006; DIS for a new edition under development
+  title: Pipeline transportation systems - Reliability-based limit state methods
+  scope: Reliability-based limit state design and assessment for pipelines (title).
+  key_methods:
+  - Reliability-based limit states (title).
+  applicability: n/v
+  links_to:
+  - ISO 13623
+  references_statement: ISO 13623.
+  group: A. Design codes
+  status: Published, to be revised
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - applicability
+  - relation_to_neighbours
+  relation_to_neighbours: The route by which ISO 13623 admits limit-state design (unv.).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: I2
+    remark: 'ISO catalogue listing for ICS 75.200: https://www.iso.org/ics/75.200/x/'
+    urls:
+    - https://www.iso.org/ics/75.200/x/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 1102
+  also_known_as: []
+  designation: API RP 1102
+  publisher: API
+  revision: 7th Ed, Dec 2007, Errata 1-5, reaffirmed June 2024
+  title: Steel Pipelines Crossing Railroads and Highways
+  scope: Design, installation, inspection and testing of steel pipeline crossings under railroads and
+    highways.
+  key_methods:
+  - Not detailed in the catalogue.
+  applicability: Onshore crossings; not for directionally drilled crossings or utility tunnels.
+  links_to:
+  - ASME B31.4
+  - ASME B31.8
+  references_statement: ASME B31.4, B31.8.
+  group: A. Design codes
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: 'Onshore only: relevant to shore approaches and landfalls at most.'
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A3
+    remark: 'API 2025 Publications Catalog, Transportation: https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F109
+  also_known_as: []
+  designation: DNV-RP-F109
+  publisher: DNV
+  revision: 2021-05, amended 2025-09
+  title: On-bottom stability design of submarine pipelines, cables and umbilicals
+  scope: Design criteria and guidance for lateral and vertical on-bottom stability under hydrodynamic
+    loading.
+  key_methods:
+  - Page states criteria only. Absolute stability, generalised and dynamic lateral methods (unv.).
+  applicability: Pipelines, cables and umbilicals (title).
+  links_to:
+  - DNV-ST-F101
+  - DNV-RP-C205
+  - DNV-RP-F114
+  references_statement: DNV-ST-F101, DNV-RP-C205, DNV-RP-F114.
+  group: B. On-bottom stability and pipe-soil interaction
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - relation_to_neighbours
+  relation_to_neighbours: No API or ISO equivalent in this list; used worldwide by reference (unv.).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D2
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f109-on-bottom-stability-design-of-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f109-on-bottom-stability-design-of-submarine-pipelines/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+  issue_designation_correction:
+  - issue_text: DNV-RP-F109 On-Bottom Stability Design of Submarine Pipelines
+    issuer_page_today: Title now includes "cables and umbilicals"; 2021-05, amended 2025-09
+- code_id: DNV-RP-F114
+  also_known_as: []
+  designation: DNV-RP-F114
+  publisher: DNV
+  revision: 2021-05
+  title: Pipe-soil interaction for submarine pipelines
+  scope: How to evaluate pipe-soil interaction for design and assessment.
+  key_methods:
+  - Not stated on the page.
+  applicability: Exposed and buried submarine pipelines.
+  links_to:
+  - DNV-RP-F109
+  - DNV-RP-F110
+  - DNV-RP-F105
+  - DNV-RP-C212
+  references_statement: DNV-RP-F109, F110, F105; DNV-RP-C212 points here for pipelines.
+  group: B. On-bottom stability and pipe-soil interaction
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Shared soil input for rows 12, 15 and 18.
+  boundary_flags:
+  - mooring
+  boundary_reasons:
+    mooring: DNV-RP-C212 / F114 versus the anchor RPs for soil.
+  sources:
+  - key: D3
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f114-pipe-soil-interaction-for-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f114-pipe-soil-interaction-for-submarine-pipelines/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-C205
+  also_known_as: []
+  designation: DNV-RP-C205
+  publisher: DNV
+  revision: 2025-04, amended 2026-03
+  title: Environmental conditions and environmental loads
+  scope: Wind, wave, current and ice conditions and loads on marine structures.
+  key_methods:
+  - See the hydrodynamics inventory (#1798).
+  applicability: Marine structures generally.
+  links_to: []
+  references_statement: Listed by DNV among its pipeline codes.
+  group: B. On-bottom stability and pipe-soil interaction
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Metocean and hydrodynamic load input to rows 12 and 15.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D4
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F105
+  also_known_as: []
+  designation: DNV-RP-F105
+  publisher: DNV
+  revision: 2025-12
+  title: Free spanning pipelines
+  scope: Ultimate and fatigue limit states of free spans under in-line and cross-flow vortex-induced vibration
+    and direct wave loading.
+  key_methods:
+  - Span analysis, environmental modelling, structural and modal response, span categorisation, VIV avoidance
+    screening, simplified and detailed fatigue (stated).
+  applicability: Free spans of submarine pipelines.
+  links_to:
+  - DNV-ST-F101
+  - DNV-RP-C205
+  - DNV-RP-F114
+  references_statement: DNV-ST-F101, DNV-RP-C205, DNV-RP-F114.
+  group: C. Free spans, trawl interference and third-party protection
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: 'New edition (December 2025). Boundary to Domain 4 (risers/VIV): same VIV physics,
+    different structure.'
+  boundary_flags:
+  - risers-viv
+  boundary_reasons:
+    risers-viv: VIV of spans
+  sources:
+  - key: D5
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f105-free-spanning-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f105-free-spanning-pipelines/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F111
+  also_known_as: []
+  designation: DNV-RP-F111
+  publisher: DNV
+  revision: 2025-04
+  title: Interference between trawl gear and pipelines
+  scope: Design of pipelines against trawl gear loads.
+  key_methods:
+  - 'Three crossing phases treated: impact, pull-over and hooking (stated).'
+  applicability: No limits stated.
+  links_to:
+  - DNV-ST-F101
+  - DNV-RP-F110
+  references_statement: DNV-ST-F101, DNV-RP-F110.
+  group: C. Free spans, trawl interference and third-party protection
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - relation_to_neighbours
+  relation_to_neighbours: Mainly a North Sea concern (unv.).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D6
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f111-interference-between-trawl-gear-and-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f111-interference-between-trawl-gear-and-pipelines/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F107
+  also_known_as: []
+  designation: DNV-RP-F107
+  publisher: DNV
+  revision: 2019-09, amended 2021-09
+  title: Risk assessment of pipeline protection
+  scope: Risk method for dropped objects and ship impact on risers and pipelines in installation safety
+    zones; also discusses anchors and trawling.
+  key_methods:
+  - Quantitative values or procedures where data exist, qualitative approach otherwise (stated).
+  applicability: Checking implemented protection or optimising planned protection.
+  links_to:
+  - DNV-ST-F101
+  references_statement: DNV-ST-F101.
+  group: C. Free spans, trawl interference and third-party protection
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: 'Boundary to Domain 2 (mooring): dragged and dropped anchors are a shared hazard.'
+  boundary_flags:
+  - mooring
+  boundary_reasons:
+    mooring: anchor and dropped-object hazard
+  sources:
+  - key: D7
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f107-risk-assessment-of-pipeline-protection/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f107-risk-assessment-of-pipeline-protection/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F110
+  also_known_as: []
+  designation: DNV-RP-F110
+  publisher: DNV
+  revision: 2019-09, amended 2021-09
+  title: Global buckling of submarine pipelines
+  scope: 'Supports the global buckling requirements of the base standard: exposed lines allowed to buckle
+    in a controlled way, buried lines kept in place against upheaval and lateral buckling.'
+  key_methods:
+  - Design methodology and criteria (stated); no detail on the page.
+  applicability: Exposed and buried pipelines.
+  links_to:
+  - DNV-ST-F101
+  - DNV-RP-F114
+  references_statement: DNV-ST-F101, DNV-RP-F114.
+  group: D. Global buckling and walking
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - relation_to_neighbours
+  relation_to_neighbours: Pipeline walking is not mentioned on the public page; no issuer document dedicated
+    to walking was found.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D8
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f110-global-buckling-of-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f110-global-buckling-of-submarine-pipelines/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F101
+  also_known_as: []
+  designation: DNV-RP-F101
+  publisher: DNV
+  revision: 2019-09, amended 2025-09
+  title: Corroded pipelines
+  scope: Assessment of pipelines with corrosion defects.
+  key_methods:
+  - Two alternative assessment approaches (stated, not described).
+  applicability: Internal pressure alone, or with longitudinal compressive stress.
+  links_to:
+  - DNV-ST-F101
+  references_statement: DNV-ST-F101.
+  group: E. Integrity management, defect assessment and repair
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Not to be confused with the base standard, which carried the same number before
+    its rename.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D9
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f101-corroded-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f101-corroded-pipelines/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F116
+  also_known_as: []
+  designation: DNV-RP-F116
+  publisher: DNV
+  revision: 2021-12
+  title: Integrity management of submarine pipeline systems
+  scope: How to establish, implement and maintain an integrity management system.
+  key_methods:
+  - Management process.
+  applicability: Submarine pipeline systems.
+  links_to:
+  - DNV-ST-F101
+  references_statement: DNV-ST-F101.
+  group: E. Integrity management, defect assessment and repair
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Offshore counterpart of ASME B31.8S and API RP 1160, which are onshore-oriented.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D10
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f116-integrity-management-of-submarine-pipeline-systems/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f116-integrity-management-of-submarine-pipeline-systems/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F113
+  also_known_as: []
+  designation: DNV-RP-F113
+  publisher: DNV
+  revision: 2019-09, amended 2021-09
+  title: Pipeline subsea repair
+  scope: Repair and tie-in fittings (couplings, clamps, T-branches, isolation plugs), mechanical or welded.
+  key_methods:
+  - Guidance on hot tapping, above-water tie-in, preparedness, damage assessment and testing (stated).
+  applicability: No size or depth limits stated.
+  links_to:
+  - DNV-ST-F101
+  references_statement: DNV-ST-F101.
+  group: E. Integrity management, defect assessment and repair
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: '-'
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D11
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f113-pipeline-subsea-repair/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f113-pipeline-subsea-repair/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F108
+  also_known_as: []
+  designation: DNV-RP-F108
+  publisher: DNV
+  revision: 2019-09, amended 2021-09
+  title: Assessment of flaws in pipeline and riser girth welds
+  scope: Fatigue and fracture limit states of girth welds.
+  key_methods:
+  - S-N approach and fracture mechanics approach, with when each may be used (stated).
+  applicability: Pipeline and riser girth welds.
+  links_to:
+  - DNV-ST-F101
+  - BS 7910
+  references_statement: DNV-ST-F101; BS 7910 (unv.).
+  group: E. Integrity management, defect assessment and repair
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - references_statement
+  - links_to
+  relation_to_neighbours: 'Boundary to Domain 4: applies to riser welds too.'
+  boundary_flags:
+  - risers-viv
+  boundary_reasons:
+    risers-viv: riser girth welds
+  sources:
+  - key: D12
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f108-assessment-of-flaws-in-pipeline-and-riser-girth-welds/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f108-assessment-of-flaws-in-pipeline-and-riser-girth-welds/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ASME B31.8S
+  also_known_as: []
+  designation: ASME B31.8S
+  publisher: ASME
+  revision: '2025'
+  title: Managing System Integrity of Gas Pipelines
+  scope: Integrity management programme for gas pipeline systems.
+  key_methods:
+  - Management process.
+  applicability: Land-based ferrous gas pipeline systems (public scope).
+  links_to:
+  - ASME B31.8
+  references_statement: ASME B31.8.
+  group: E. Integrity management, defect assessment and repair
+  status: Active (stabilized maintenance)
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Not an offshore document; listed in the issue.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: S4
+    remark: https://www.asme.org/codes-standards/find-codes-standards/b31-8s-managing-system-integrity-gas-pipelines
+    urls:
+    - https://www.asme.org/codes-standards/find-codes-standards/b31-8s-managing-system-integrity-gas-pipelines
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API 579-1
+  also_known_as:
+  - ASME FFS-1
+  designation: API 579-1 / ASME FFS-1
+  publisher: API / ASME
+  revision: 4th Ed, Dec 2021
+  title: Fitness-For-Service
+  scope: Fitness-for-service assessment of pressure equipment with flaws or damage.
+  key_methods:
+  - Levelled assessment procedures (unv.).
+  applicability: Pressure equipment generally.
+  links_to:
+  - BS 7910
+  references_statement: BS 7910.
+  group: E. Integrity management, defect assessment and repair
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: General FFS route when a pipeline-specific method does not fit.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A4
+    remark: 'API 2025 Publications Catalog, Refining: https://www.api.org/-/media/Files/Publications/2025-Catalog/06_Refining_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/06_Refining_2025.pdf
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: BS 7910
+  also_known_as: []
+  designation: BS 7910
+  publisher: BSI
+  revision: BS 7910:2019
+  title: Guide to methods for assessing the acceptability of flaws in metallic structures
+  scope: Assessment of flaws in metallic structures.
+  key_methods:
+  - Fracture and fatigue assessment (unv.).
+  applicability: Metallic structures.
+  links_to:
+  - DNV-RP-F108
+  references_statement: DNV-RP-F108 (unv.).
+  group: E. Integrity management, defect assessment and repair
+  status: Current, under review
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - references_statement
+  - links_to
+  relation_to_neighbours: 2013+A1:2015 edition withdrawn 13 Dec 2019.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: P3
+    remark: BSI product page for BS 7910:2019, as read in the currency check (knowledge.bsigroup.com)
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 19345-2
+  also_known_as: []
+  designation: ISO 19345-2
+  publisher: ISO
+  revision: ISO 19345-2:2019
+  title: 'Pipeline integrity management specification - Part 2: Full-life cycle integrity management for
+    offshore pipeline'
+  scope: Life-cycle integrity management of offshore pipelines (title).
+  key_methods:
+  - Management process.
+  applicability: Offshore pipelines.
+  links_to:
+  - ISO 13623
+  references_statement: ISO 13623.
+  group: E. Integrity management, defect assessment and repair
+  status: Published
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: ISO counterpart to DNV-RP-F116.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: I2
+    remark: 'ISO catalogue listing for ICS 75.200: https://www.iso.org/ics/75.200/x/'
+    urls:
+    - https://www.iso.org/ics/75.200/x/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 12747
+  also_known_as: []
+  designation: ISO 12747
+  publisher: ISO
+  revision: ISO 12747:2025
+  title: Pipeline transportation systems - Requirements and guidance for pipeline life extension assessment
+  scope: Life extension assessment of pipelines (title).
+  key_methods:
+  - n/v
+  applicability: n/v
+  links_to:
+  - ISO 13623
+  references_statement: ISO 13623.
+  group: E. Integrity management, defect assessment and repair
+  status: Published
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - applicability
+  relation_to_neighbours: Use for operation beyond design life.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: I2
+    remark: 'ISO catalogue listing for ICS 75.200: https://www.iso.org/ics/75.200/x/'
+    urls:
+    - https://www.iso.org/ics/75.200/x/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 1183
+  also_known_as: []
+  designation: API RP 1183
+  publisher: API
+  revision: 1st Ed, Nov 2020, Errata 1 Jan 2021, Addendum 1 May 2024
+  title: Assessment and Management of Pipeline Dents
+  scope: Dent formation, strain, fatigue and failure modes, with preventive and mitigative measures.
+  key_methods:
+  - Strain and fatigue based dent assessment (catalogue).
+  applicability: Hazardous liquid or natural gas pipelines.
+  links_to:
+  - API RP 1160
+  references_statement: API RP 1160.
+  group: E. Integrity management, defect assessment and repair
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Onshore-led but not restricted to onshore in the catalogue text.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A3
+    remark: 'API 2025 Publications Catalog, Transportation: https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 17N
+  also_known_as: []
+  designation: API RP 17N
+  publisher: API
+  revision: 2nd Ed, June 2017, Addendum 1 May 2018
+  title: Subsea Production System Reliability, Technical Risk, and Integrity Management
+  scope: Structured reliability and technical-risk management for subsea projects through to operation.
+  key_methods:
+  - Reliability techniques (catalogue).
+  applicability: Subsea production equipment; guidance only.
+  links_to:
+  - API RP 17A
+  references_statement: API RP 17A.
+  group: E. Integrity management, defect assessment and repair
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Boundary to subsea production systems.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A1
+    remark: 'API 2025 Publications Catalog, Exploration and Production: https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API Spec 5L
+  also_known_as: []
+  designation: API Spec 5L
+  publisher: API
+  revision: 46th Ed, Apr 2018 (effective 1 Nov 2018), Errata 1 May 2018
+  title: Line Pipe
+  scope: Manufacture of seamless and welded steel pipe at two product specification levels.
+  key_methods:
+  - Product specification.
+  applicability: Not for cast pipe.
+  links_to:
+  - ISO 3183
+  references_statement: ISO 3183.
+  group: F. Materials and welding
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - relation_to_neighbours
+  relation_to_neighbours: Addenda after 2018 are not confirmed by the catalogue.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A1
+    remark: 'API 2025 Publications Catalog, Exploration and Production: https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 3183
+  also_known_as: []
+  designation: ISO 3183
+  publisher: ISO
+  revision: ISO 3183:2019 (stage 90.93, confirmed)
+  title: Steel pipe for pipeline transportation systems
+  scope: Steel linepipe for pipeline systems (title).
+  key_methods:
+  - Product specification.
+  applicability: n/v
+  links_to:
+  - API Spec 5L
+  - ISO 13623
+  references_statement: API Spec 5L; ISO 13623.
+  group: F. Materials and welding
+  status: Published
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - applicability
+  relation_to_neighbours: ISO counterpart of Spec 5L.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: I2
+    remark: 'ISO catalogue listing for ICS 75.200: https://www.iso.org/ics/75.200/x/'
+    urls:
+    - https://www.iso.org/ics/75.200/x/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API Spec 5LC
+  also_known_as:
+  - 5LD
+  designation: API Spec 5LC / 5LD
+  publisher: API
+  revision: Both 4th Ed, Mar 2015, reaffirmed July 2020; 5LD Addendum 1 Feb 2024
+  title: CRA Line Pipe / CRA Clad or Lined Steel Pipe
+  scope: Solid corrosion-resistant alloy linepipe, and clad or lined steel linepipe.
+  key_methods:
+  - Product specification.
+  applicability: Alloy families listed in the catalogue.
+  links_to:
+  - API Spec 5L
+  references_statement: API Spec 5L (base metal for 5LD).
+  group: F. Materials and welding
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Pairs with the CRA and clad pipe coverage of DNV-ST-F101.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A1
+    remark: 'API 2025 Publications Catalog, Exploration and Production: https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API Std 1104
+  also_known_as: []
+  designation: API Std 1104
+  publisher: API
+  revision: 22nd Ed, July 2021, Errata 1 Sept 2023
+  title: Welding of Pipelines and Related Facilities
+  scope: Gas and arc welding of butt, fillet and socket welds in carbon and low-alloy steel pipelines,
+    new construction and in-service.
+  key_methods:
+  - Procedure and welder qualification, inspection acceptance (unv.).
+  applicability: Carbon and low-alloy steel.
+  links_to:
+  - ASME B31.4
+  - ASME B31.8
+  - API RP 1111
+  references_statement: ASME B31.4, B31.8; API RP 1111.
+  group: F. Materials and welding
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: US counterpart of ISO 13847:2013 (published, to be revised).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A3
+    remark: 'API 2025 Publications Catalog, Transportation: https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf
+  - key: I2
+    remark: 'ISO catalogue listing for ICS 75.200: https://www.iso.org/ics/75.200/x/'
+    urls:
+    - https://www.iso.org/ics/75.200/x/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 15156
+  also_known_as:
+  - NACE MR0175
+  designation: ISO 15156 (NACE MR0175)
+  publisher: ISO / AMPP
+  revision: 'Parts 1 and 3: 2020, Ed 4, 2020-11; Part 2: 2020; FDIS replacements under development'
+  title: Materials for use in H2S-containing environments in oil and gas production
+  scope: Selection and qualification of metallic materials for sour service.
+  key_methods:
+  - Qualification by environmental limits and testing (unv.).
+  applicability: H2S-containing production environments.
+  links_to:
+  - API Spec 5L
+  references_statement: API Spec 5L sour annex (unv.).
+  group: F. Materials and welding
+  status: Published
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - references_statement
+  - links_to
+  relation_to_neighbours: The US regulation still incorporates the 2003 NACE MR0175 (R1).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: I3
+    remark: https://www.iso.org/standard/79658.html
+    urls:
+    - https://www.iso.org/standard/79658.html
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: US
+    edition_or_statement: The US regulation still incorporates the 2003 NACE MR0175 (R1).
+    source_key: R1
+  issue_designation_correction:
+  - issue_text: NACE MR0175 / ISO 15156
+    issuer_page_today: ISO 15156 parts are at 2020 (Ed 4) with replacements at FDIS stage
+- code_id: DNV-RP-F112
+  also_known_as: []
+  designation: DNV-RP-F112
+  publisher: DNV
+  revision: 2019-09, amended 2021-09
+  title: Duplex stainless steel - design against hydrogen induced stress cracking
+  scope: Design of duplex stainless steel components installed subsea and exposed to cathodic protection.
+  key_methods:
+  - Not stated on the page.
+  applicability: Duplex stainless steel under CP.
+  links_to:
+  - DNV-RP-B401
+  - DNV-RP-F103
+  references_statement: DNV-RP-B401, DNV-RP-F103.
+  group: F. Materials and welding
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Links materials to CP design.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D13
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f112-duplex-stainless-steel-design-against-hydrogen-induced-stress-cracking/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f112-duplex-stainless-steel-design-against-hydrogen-induced-stress-cracking/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+  issue_designation_correction:
+  - issue_text: DNV-RP-F112 Duplex Stainless Steel
+    issuer_page_today: '"Duplex stainless steel - design against hydrogen induced stress cracking"; 2019-09,
+      amended 2021-09'
+- code_id: DNV-RP-F103
+  also_known_as: []
+  designation: DNV-RP-F103
+  publisher: DNV
+  revision: 2019-09, amended 2021-05
+  title: Cathodic protection of submarine pipelines
+  scope: Detailed CP design for pipelines and specification of galvanic anode manufacture and installation.
+  key_methods:
+  - Galvanic anode design (stated).
+  applicability: Submarine pipelines; general requirements to be amended per project.
+  links_to:
+  - ISO 15589-2
+  - DNV-RP-B401
+  references_statement: ISO 15589-2 (unv.); DNV-RP-B401.
+  group: G. Corrosion control, cathodic protection and coatings
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - references_statement
+  - links_to
+  relation_to_neighbours: Pipeline-specific; use B401 for structures and subsea equipment.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D14
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f103-cathodic-protection-of-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f103-cathodic-protection-of-submarine-pipelines/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-B401
+  also_known_as: []
+  designation: DNV-RP-B401
+  publisher: DNV
+  revision: 2021-05
+  title: Cathodic protection design
+  scope: Conceptual and detailed CP design with aluminium or zinc galvanic anodes, plus anode manufacture
+    and installation.
+  key_methods:
+  - Galvanic anode design (stated).
+  applicability: General; adaptable to regulatory or owner requirements.
+  links_to:
+  - DNV-RP-F103
+  references_statement: DNV-RP-F103.
+  group: G. Corrosion control, cathodic protection and coatings
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: 'Boundary to Domain 2: also used for mooring and subsea structure CP.'
+  boundary_flags:
+  - mooring
+  boundary_reasons:
+    mooring: shared CP method
+  sources:
+  - key: D15
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-b401-cathodic-protection-design/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-b401-cathodic-protection-design/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 15589-2
+  also_known_as: []
+  designation: ISO 15589-2
+  publisher: ISO
+  revision: ISO 15589-2:2024
+  title: 'Cathodic protection of pipeline transportation systems - Part 2: Offshore pipelines'
+  scope: CP of offshore pipelines (title).
+  key_methods:
+  - n/v
+  applicability: Offshore pipelines.
+  links_to:
+  - ISO 13623
+  - DNV-RP-F103
+  references_statement: ISO 13623; DNV-RP-F103 (unv.).
+  group: G. Corrosion control, cathodic protection and coatings
+  status: Published
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - references_statement
+  - links_to
+  relation_to_neighbours: Part 1 (on-land) was reissued in 2026.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: I2
+    remark: 'ISO catalogue listing for ICS 75.200: https://www.iso.org/ics/75.200/x/'
+    urls:
+    - https://www.iso.org/ics/75.200/x/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: NACE SP0169
+  also_known_as: []
+  designation: NACE SP0169
+  publisher: AMPP
+  revision: SP0169-2024 (AMPP event page of June 2024; later edition not excluded)
+  title: Control of External Corrosion on Underground or Submerged Metallic Piping Systems
+  scope: External corrosion control for buried or submerged metallic piping.
+  key_methods:
+  - n/v
+  applicability: Onshore-led (unv.).
+  links_to: []
+  references_statement: '-'
+  group: G. Corrosion control, cathodic protection and coatings
+  status: Current as of that page
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - applicability
+  - relation_to_neighbours
+  relation_to_neighbours: AMPP store pages need a human-verification step and were not read.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: N1
+    remark: AMPP event page for the June 2024 SP0169 webinar, as read in the currency check (ampp.org)
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+  issue_designation_correction:
+  - issue_text: NACE SP0169
+    issuer_page_today: NACE SP0169-2024 per the AMPP event page; AMPP store pages cannot be read without
+      a human-verification step
+- code_id: NACE SP0176
+  also_known_as: []
+  designation: NACE SP0176
+  publisher: AMPP
+  revision: edition not verified (AMPP store not readable)
+  title: Corrosion control of submerged areas of permanently installed steel offshore structures (title
+    unv.)
+  scope: CP and corrosion control of fixed offshore steel structures (unv.).
+  key_methods:
+  - n/v
+  applicability: Structures, not pipelines (unv.).
+  links_to: []
+  references_statement: '-'
+  group: G. Corrosion control, cathodic protection and coatings
+  status: n/v
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - title
+  - scope
+  - key_methods
+  - applicability
+  - status
+  relation_to_neighbours: The US regulation incorporates the 2003 predecessor RP0176 for platforms (R1).
+    Listed in the issue; a structure standard.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources: []
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: US
+    edition_or_statement: The US regulation incorporates the 2003 predecessor RP0176 for platforms (R1).
+    source_key: R1
+- code_id: ISO 21809 series
+  also_known_as:
+  - ISO 21809
+  designation: ISO 21809 series
+  publisher: ISO
+  revision: 'Part 1 (3-layer PE/PP): 2018; Part 2 (FBE): 2026; Part 3 (field joints): 2016 + Amd 1:2020,
+    FDIS for a new edition; Part 4 (2-layer PE): 2026; Part 5 (concrete): 2017, FDIS for a new edition;
+    Part 11 (in-field application and repair): 2019'
+  title: External coatings for buried or submerged pipelines
+  scope: Qualification, application and testing of external pipeline coatings by coating type.
+  key_methods:
+  - Product and application specification.
+  applicability: Buried or submerged pipelines.
+  links_to:
+  - DNV-RP-F106
+  - DNV-RP-F102
+  references_statement: DNV-RP-F106 (Part 1), DNV-RP-F102 (Part 3).
+  group: G. Corrosion control, cathodic protection and coatings
+  status: Published
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Part 5 concrete coating feeds on-bottom stability (row 12).
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: I2
+    remark: 'ISO catalogue listing for ICS 75.200: https://www.iso.org/ics/75.200/x/'
+    urls:
+    - https://www.iso.org/ics/75.200/x/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F106
+  also_known_as:
+  - DNV-RP-F102
+  designation: DNV-RP-F106 / DNV-RP-F102
+  publisher: DNV
+  revision: 'F106: 2019-09, amended 2021-09 (N); F102: 2021-05 (C)'
+  title: Factory applied external pipeline coatings for corrosion control / Pipeline field joint coating
+    and field repair of linepipe coating
+  scope: Purchaser-side quality control for factory linepipe coating and for field joint coating work.
+  key_methods:
+  - Quality control and documentation (stated).
+  applicability: Written for compliance with ISO 21809-1 (F106) and ISO 21809-3 (F102).
+  links_to:
+  - ISO 21809
+  references_statement: ISO 21809.
+  group: G. Corrosion control, cathodic protection and coatings
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: DNV overlay on the ISO coating parts.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D16
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f106-factory-applied-external-pipeline-coatings-for-corrosion-control/
+      and https://www.dnv.com/energy/standards-guidelines/dnv-rp-f102-pipeline-field-joint-coating-and-field-repair-of-linepipe-coating/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f106-factory-applied-external-pipeline-coatings-for-corrosion-control/
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f102-pipeline-field-joint-coating-and-field-repair-of-linepipe-coating/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-F115
+  also_known_as: []
+  designation: DNV-RP-F115
+  publisher: DNV
+  revision: 2025-09
+  title: Pre-commissioning of submarine pipelines
+  scope: Planning, design and execution of pre-commissioning activities.
+  key_methods:
+  - Not stated on the page.
+  applicability: Pipeline systems compliant with DNV-ST-F101.
+  links_to:
+  - DNV-ST-F101
+  references_statement: DNV-ST-F101.
+  group: H. Installation, testing and pre-commissioning
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: New edition last month.
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: D17
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f115-pre-commissioning-of-submarine-pipelines/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f115-pre-commissioning-of-submarine-pipelines/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 1110
+  also_known_as: []
+  designation: API RP 1110
+  publisher: API
+  revision: 7th Ed, Dec 2022
+  title: Pressure Testing of Steel Pipelines for the Transportation of Gas, Petroleum Gas, Hazardous Liquids,
+    Highly Volatile Liquids, or Carbon Dioxide
+  scope: Pressure testing of line pipe, station piping and appurtenances.
+  key_methods:
+  - Test planning and execution.
+  applicability: Excludes pumps, compressors, tanks, vessels and small-bore piping.
+  links_to:
+  - ASME B31.4
+  - ASME B31.8
+  references_statement: ASME B31.4, B31.8.
+  group: H. Installation, testing and pre-commissioning
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: 'US counterpart to the testing part of row 43. Installation analysis itself
+    sits in the base codes and in DNV-ST-N001 (marine operations, 2023-12; see #1798).'
+  boundary_flags: []
+  boundary_reasons: {}
+  sources:
+  - key: A3
+    remark: 'API 2025 Publications Catalog, Transportation: https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/05_Transportation_2025.pdf
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 17B
+  also_known_as:
+  - Spec 17J
+  - ISO 13628-1
+  - DNV-ST-F201
+  designation: API RP 17B (with Spec 17J), ISO 13628-1, DNV-ST-F201
+  publisher: API / ISO / DNV
+  revision: RP 17B 6th Ed May 2024; Spec 17J 5th Ed May 2024 (effective 29 May 2025); ISO 13628-1:2025
+    Ed 3; DNV-ST-F201 2020-01 amended 2021-10
+  title: Flexible Pipe; Subsea production systems - general requirements; Riser systems
+  scope: Flexible pipe design and analysis guidance; general subsea production system requirements; structural
+    design of risers under static and dynamic loading.
+  key_methods:
+  - See the respective domains.
+  applicability: ISO 13623 and PD 8010-2 exclude or only touch flexibles.
+  links_to:
+  - API 17J
+  - DNV-ST-F201
+  references_statement: Norway's regulator guideline names API 17J for flexibles and DNV-ST-F201 for catenary
+    metallic risers (R2).
+  group: I. Boundary rows (flexible pipe, risers, subsea production systems)
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: 'Boundary flags: flexible pipe domain (17B/17J), Domain 4 risers/VIV (DNV-ST-F201;
+    US regulation uses API RP 2RD 1st edition for floating platform risers, R4), subsea production systems
+    (ISO 13628-1). The US regulation incorporates Spec 17J at the 4th edition (R1).'
+  boundary_flags:
+  - flexible-pipe
+  - risers-viv
+  - subsea-production
+  boundary_reasons:
+    flexible-pipe: flexible pipe domain (17B/17J)
+    risers-viv: Domain 4 risers/VIV (DNV-ST-F201; US regulation uses API RP 2RD 1st edition for floating
+      platform risers, R4)
+    subsea-production: subsea production systems (ISO 13628-1)
+  sources:
+  - key: A1
+    remark: 'API 2025 Publications Catalog, Exploration and Production: https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf'
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf
+  - key: I4
+    remark: https://www.iso.org/standard/86664.html
+    urls:
+    - https://www.iso.org/standard/86664.html
+  - key: D18
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-st-f201-riser-systems/
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-st-f201-riser-systems/
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: Norway
+    edition_or_statement: Norway's regulator guideline names API 17J for flexibles and DNV-ST-F201 for
+      catenary metallic risers (R2).
+    source_key: R2
+  - regime: US
+    edition_or_statement: The US regulation incorporates Spec 17J at the 4th edition (R1).
+    source_key: R1
+  issue_designation_correction:
+  - issue_text: ISO 13628-1
+    issuer_page_today: ISO 13628-1:2025 (Ed 3) replaced the 2005 edition and its amendment

@@ -8,6 +8,6 @@
     "errors": [],
     "processing_time": 31.530575
   },
-  "input_directory": "D:\\workspace-hub\\digitalmodel\\data\\orcaflex_examples",
-  "output_directory": "D:\\workspace-hub\\digitalmodel\\docs\\modules\\orcaflex\\examples\\raw"
+  "input_directory": "<private-data>\\orcaflex_examples",
+  "output_directory": "<private-data>\\raw"
 }

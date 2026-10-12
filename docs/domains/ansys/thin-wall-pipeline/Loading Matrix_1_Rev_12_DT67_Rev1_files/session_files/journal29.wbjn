@@ -1,7 +1,0 @@
-﻿# encoding: utf-8
-# Release 16.2
-SetScriptVersion(Version="16.2.176")
-ClearMessages()
-Save(Overwrite=True)
-Save(Overwrite=True)
-Save(Overwrite=True)

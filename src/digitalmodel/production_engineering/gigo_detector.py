@@ -34,7 +34,7 @@ from digitalmodel.production_engineering.vlp_correlations import (
     FlowConditions,
     FluidProperties,
     TubingConfig,
-    hagedorn_brown_pwf,
+    simplified_homogeneous_pwf,
 )
 
 
@@ -118,7 +118,7 @@ class GigoDetector:
             watercut=test.watercut,
             gor_scf_per_bbl=test.gor_scf_per_bbl or 500.0,
         )
-        pwf_vlp = hagedorn_brown_pwf(flow, tubing, fluid, whp_psi)
+        pwf_vlp = simplified_homogeneous_pwf(flow, tubing, fluid, whp_psi)
         model_rate = ipr.flow_rate(pwf_vlp)
 
         test_rate = test.oil_rate_bopd

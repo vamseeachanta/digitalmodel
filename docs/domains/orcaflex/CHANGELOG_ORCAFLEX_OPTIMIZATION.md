@@ -9,7 +9,7 @@
 ##### Configuration Files Updated
 - **dm_fsts.yml**: Added parallel processing configuration with `threads: 15` (was implicitly 30)
 - **dm_fsts_lngc.yml**: Added parallel processing configuration with `threads: 15` (was implicitly 30)
-- **Location**: `D:\1522\ctr7\orcaflex\rev_a08\runtime_test\`
+- **Location**: `<project-root>
 
 ##### Backups Created
 - `dm_fsts_backup_20250825.yml` - Original configuration preserved
@@ -62,8 +62,8 @@ Very large (>1GB):         10 threads (Heavy I/O)
 - `specs/modules/orcaflex/postprocess-optimization/PRODUCTION_DEPLOYMENT.md`
 
 ##### Modified Files
-- `D:\1522\ctr7\orcaflex\rev_a08\runtime_test\dm_fsts.yml`
-- `D:\1522\ctr7\orcaflex\rev_a08\runtime_test\dm_fsts_lngc.yml`
+- `<project-root>
+- `<project-root>
 - `agents/orcaflex/agent.yaml`
 - `CLAUDE.md`
 
@@ -98,7 +98,7 @@ optimal_threads = resource_mgr.calculate_optimal_threads(file_paths)
 #### Rollback Instructions (if needed)
 ```bash
 # To rollback to original configuration
-cd /d/1522/ctr7/orcaflex/rev_a08/runtime_test
+cd /d/1522/<CTR>/orcaflex/rev_a08/runtime_test
 cp dm_fsts_backup_20250825.yml dm_fsts.yml
 cp dm_fsts_lngc_backup_20250825.yml dm_fsts_lngc.yml
 ```

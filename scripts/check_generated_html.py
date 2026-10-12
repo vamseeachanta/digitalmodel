@@ -51,13 +51,13 @@ class Generator:
     outputs: tuple[str, ...] = ()
     arguments: tuple[str, ...] = ()
     output_glob: str | None = None
-    onepagers: bool = False
     redirect_module_outputs: bool = False
     # Scripts producing a gitignored intermediate this generator reads. They run
     # first, in order, inside the shadow tree. A page whose input is not
     # committed is still reproducible as long as that input is itself generated
     # deterministically from the repository.
     prerequisites: tuple[str, ...] = ()
+    inputs: tuple[str, ...] = ()
 
 
 GENERATORS = (
@@ -88,11 +88,6 @@ GENERATORS = (
     Generator(
         "scripts/capabilities/build_ipr_explorer.py",
         ("docs/api/structural/ipr-explorer.html",),
-    ),
-    Generator(
-        "scripts/capabilities/build_onepagers.py",
-        output_glob="docs/api/capabilities/api/*.html",
-        onepagers=True,
     ),
     Generator(
         "scripts/capabilities/build_pore_pressure_explorer.py",
@@ -150,21 +145,14 @@ GENERATORS = (
         "scripts/production_chemistry/build_scale_si_explorer.py",
         ("docs/api/production/scale-si-explorer.html",),
     ),
+    Generator(
+        "scripts/studies/surface_crack_report.py",
+        ("docs/domains/asset-integrity/surface-crack-calculix-spike-2026-10-11.html",),
+        ("--results", "docs/domains/asset-integrity/surface-crack-calculix-results.json",
+         "--output", "docs/domains/asset-integrity/surface-crack-calculix-spike-2026-10-11.html"),
+        inputs=("docs/domains/asset-integrity/surface-crack-calculix-results.json",),
+    ),
 )
-
-ONEPAGER_DRIVER = r"""
-import importlib.util
-import sys
-
-script = sys.argv[1]
-spec = importlib.util.spec_from_file_location("generated_html_onepagers", script)
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
-module._CHROME = "drift-check-no-browser"
-module._to_pdf = lambda *_args, **_kwargs: None
-sys.argv = [script]
-module.main()
-"""
 
 REDIRECT_DRIVER = r"""
 import importlib.util
@@ -271,6 +259,12 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
         source = repo / relative
         if source.exists():
             shutil.copytree(source, shadow / relative)
+    for entry in GENERATORS:
+        for relative in (*entry.inputs, *entry.outputs):
+            source, target = repo / relative, shadow / relative
+            if source.is_file():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
 
 
 def output_paths(root: Path, entry: Generator) -> set[Path]:
@@ -311,11 +305,10 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
     command = [
         sys.executable,
         str(script),
-        *(str(shadow / argument) for argument in entry.arguments),
+        *(argument if argument.startswith("--") else str(shadow / argument)
+          for argument in entry.arguments),
     ]
-    if entry.onepagers:
-        command = [sys.executable, "-c", ONEPAGER_DRIVER, str(script)]
-    elif entry.redirect_module_outputs:
+    if entry.redirect_module_outputs:
         command = [
             sys.executable,
             "-c",

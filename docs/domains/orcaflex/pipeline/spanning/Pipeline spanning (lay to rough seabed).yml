@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.4d
-# File: K:\pipeline_capabilities\Pipeline spanning (lay to rough seabed).yml
+# File: docs/domains/orcaflex/pipeline/spanning/Pipeline spanning (lay to rough seabed).yml
 # Created: 9:59 PM on 11/25/2024
-# User: vamseea
-# Machine: ACMA-ANSYS04
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

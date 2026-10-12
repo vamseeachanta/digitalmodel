@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\STAT\_07_i01_def__uth_landing.yml
+# File: <private-data>/_07_i01_def__uth_landing.yml
 # Created: 3:52 PM on 7/11/2023
 # User: 
 # Machine: 
@@ -14,7 +14,7 @@ General:
   StaticsMaxDamping: 80
 
 Vessels:
-  SevenArctic:
+  iv02:
     InitialX: 20
 
 6DBuoys:

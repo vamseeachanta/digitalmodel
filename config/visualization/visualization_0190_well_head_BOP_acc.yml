@@ -66,7 +66,7 @@ plot_multiple:
     file_name_extension: BOP_Acc
     nrows: 2
     ncols: 1
-    suptitle: Yellowtail Well, Noble Bob Douglas
+    suptitle: Deepwater well, drillship
     sets:
     -
       title: BOP Acceleration
@@ -112,7 +112,7 @@ plot_multiple:
 #    xlabel: Date
 #    ylabel: BOP Acceleration (Unit Unknown)
 #    suptitle: BOP Accelerations, Blue Pod
-#    title: Yellowtail Well, Noble Bob Douglas
+#    title: Deepwater well, drillship
 #    xticklabels: NULL
 #    grid: True
 #    legend: True

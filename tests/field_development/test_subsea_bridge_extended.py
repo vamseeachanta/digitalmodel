@@ -35,7 +35,7 @@ from digitalmodel.field_development.subsea_bridge import (
 
 SYNTHETIC_GOM_DATA = {
     "gom_fields": [
-        {"name": "Perdido", "operator": "Shell", "water_depth_m": 2438, "host": "Spar", "year": 2010, "capacity_bopd": 100000},
+        {"name": "GoM-UD-Spar", "operator": "Shell", "water_depth_m": 2438, "host": "Spar", "year": 2010, "capacity_bopd": 100000},
         {"name": "Appomattox", "operator": "Shell", "water_depth_m": 2250, "host": "Semi-submersible", "year": 2019, "capacity_bopd": 125000},
         {"name": "Atlantis", "operator": "BP", "water_depth_m": 2150, "host": "Semi-submersible", "year": 2007, "capacity_bopd": 200000},
         {"name": "Thunder Horse", "operator": "BP", "water_depth_m": 1844, "host": "Semi-submersible", "year": 2008, "capacity_bopd": 250000},
@@ -262,10 +262,10 @@ class TestAnalogueMatching:
 
     def test_exact_match_score_near_1(self, catalog):
         """Matching an exact catalog field should give score near 1.0."""
-        # Perdido: 2438 m, 100000 bopd
+        # GoM-UD-Spar: 2438 m, 100000 bopd
         match = catalog.find_gom_analogue(2438, 100000)
         assert match.score > 0.95
-        assert match.field.name == "Perdido"
+        assert match.field.name == "GoM-UD-Spar"
 
     def test_depth_delta_computed(self, catalog):
         """depth_delta_m should be absolute difference."""
@@ -411,9 +411,9 @@ class TestGoMFieldExtended:
         assert set(d.keys()) == {"name", "operator", "water_depth_m", "host", "year", "capacity_bopd"}
 
     def test_to_dict_values_match(self):
-        f = GoMField("Perdido", "Shell", 2438, "Spar", 2010, 100000)
+        f = GoMField("GoM-UD-Spar", "Shell", 2438, "Spar", 2010, 100000)
         d = f.to_dict()
-        assert d["name"] == "Perdido"
+        assert d["name"] == "GoM-UD-Spar"
         assert d["water_depth_m"] == 2438
         assert d["capacity_bopd"] == 100000
 

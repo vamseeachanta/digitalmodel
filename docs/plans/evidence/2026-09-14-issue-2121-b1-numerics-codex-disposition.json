@@ -1,0 +1,62 @@
+{
+  "issue": 2121,
+  "reviewed_revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+  "review_receipt_sha256": "a17c91831b5420650a2a75f2d39696309345cde6118f48d8b1c681d2e9f08e70",
+  "disposition": "Numerical MAJOR not sustained after omitted runtime context; prior-check loss and isolation uncertainty are legitimate",
+  "findings": {
+    "B1-1": "At reviewed revision, reference_provenance replay verifies exact126 comparisons plus documented capture commit and all prepared reference values/coordinates. Missing-generation convenience differs from missing verification.",
+    "B1-2": "analysis_records exists unchanged in input/capture/review/current Git trees despite omission from nine-file list. Benchmark is not a comparison dependency. Manifest inventories helper/benchmark/criteria.",
+    "B1-3": "Record auxiliary model usage and cache-token metadata without claiming their unseen role/input/content. Single CLI invocation does not prove only one internal model activity. Preserve historical records.",
+    "B1-4": "Accumulated-check loss confirmed and corrected by this patch. Fixed10MPa/750mm force scale matches frozen scope; criteria present in runtime inventory.",
+    "B1-5": "Production extractor hashes actual reference bytes and binds approved digest before passing it to attributed-byte validator. Low-level comparison alone is not authentication.",
+    "B1-6": "Symbolic branch equivalence may be retained as a bounded reviewer note; no engineering qualification."
+  },
+  "git_evidence": {
+    "path": "src/digitalmodel/ansys/analysis_records.py",
+    "refs": [
+      "bf60335f773739ef449166da5f38286478f4d587",
+      "48027b1a1c6311fc738a08bb8992f97f4936c694",
+      "dbb098f4837d1a688baacb71997599c9d19f4a25"
+    ],
+    "same_git_blob_oid": "59ae1efd0a7f23060e01480e7b9a5021b4fe6be7",
+    "sha256": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511",
+    "bytes": 8414,
+    "current_working_file_equal": true,
+    "actual_reference_replay": true,
+    "exact_decimal_input_identity_checks": 8
+  },
+  "patch": {
+    "scope": "Only preserve accumulated checks at evaluate_canary early FAIL/INCOMPLETE return",
+    "files": [
+      {
+        "path": "src/digitalmodel/ansys/cylinder_criteria.py",
+        "sha256": "4dafd98de2e2d026d7d2de1c2a6230cce78603b5a02817e0a37afdc346850a1d",
+        "bytes": 6425
+      },
+      {
+        "path": "tests/ansys/test_cylinder_criteria_history.py",
+        "sha256": "dc112f365dde18f9fc3c228f600256b51268586ccc6e0aa7387761ae62ffd7ff",
+        "bytes": 1414
+      }
+    ],
+    "red": {
+      "failed": 2
+    },
+    "green": {
+      "passed": 30,
+      "failed": 0
+    },
+    "no_threshold_changes": true,
+    "no_manifest_changes": true,
+    "no_staging": true,
+    "no_commits": true,
+    "no_native_or_provider_invocation": true
+  },
+  "cleanup": {
+    "classification": "EXPECTED",
+    "owned_new_test": "tests/ansys/test_cylinder_criteria_history.py",
+    "parent_owned_existing_dirty_state": "Preserved",
+    "owned_status": "AM src/digitalmodel/ansys/cylinder_criteria.py\n?? tests/ansys/test_cylinder_criteria_history.py\n"
+  },
+  "review_gate": "Exact-current independent Claude review remains root responsibility."
+}

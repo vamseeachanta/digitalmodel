@@ -13,14 +13,18 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 from typing import List, Dict, Optional, Any
 
-try:
-    import OrcFxAPI
-    ORCAFLEX_AVAILABLE = True
-except ImportError:
-    ORCAFLEX_AVAILABLE = False
+# #3838: routed through the facade instead of `import OrcFxAPI`. A module-scope
+# import binds the DLL before OrcFxAPIConfig.setLibPath() can select a version,
+# and this module is on the import path of the package __init__.
+from digitalmodel.solvers.orcaflex.orcaflex_api import available as _orcaflex_available
+from digitalmodel.solvers.orcaflex.orcaflex_api import lazy_api as _lazy_orcaflex_api
+
+ORCAFLEX_AVAILABLE = _orcaflex_available()
+OrcFxAPI = _lazy_orcaflex_api() if ORCAFLEX_AVAILABLE else None
 
 from digitalmodel.solvers.orcaflex.core.exceptions import LicenseError
 from digitalmodel.solvers.orcaflex.core.mock_artifacts import write_mock_artifact
+from digitalmodel.solvers.orcaflex.run_state import check_statics
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +123,10 @@ class OrcaFlexModelRunner:
                 # Run static analysis
                 logger.info(f"Running static analysis for {model_path.name}...")
                 model.CalculateStatics()
-                
+                # #3838: a solve that did not converge to a static state must
+                # not be saved as a .sim and reported as a success.
+                check_statics(model, context=str(model_path))
+
                 # Save as .sim file
                 logger.info(f"Saving to: {sim_file}")
                 model.SaveSimulation(str(sim_file))

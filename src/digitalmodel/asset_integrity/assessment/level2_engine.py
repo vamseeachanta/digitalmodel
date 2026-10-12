@@ -45,6 +45,12 @@ import math
 import numpy as np
 import pandas as pd
 
+from digitalmodel.asset_integrity.applicability import (
+    API579_FOLIAS_LAMBDA_FLAG,
+    Applicability,
+    check_upper_limit,
+)
+
 _SUPPORTED_TYPES = {"GML", "LML"}
 
 # Folias factor breakpoints per API 579 Table 4.4 simplified cylindrical column
@@ -105,6 +111,9 @@ class Level2Engine:
                 t_mm_in (float): Minimum measured thickness (inches)
                 assessment_type (str): ``'GML'`` or ``'LML'``
                 folias_factor (float): M_t (always present; 1.0 for pure GML)
+                applicability (Applicability): validity record; LML raises
+                    ``API579_FOLIAS_LAMBDA_GT_20`` when the shell parameter
+                    exceeds the Table 4.4 range and M_t was frozen (#1094)
         """
         if self._type == "GML":
             return self._evaluate_gml(grid_df)
@@ -138,6 +147,7 @@ class Level2Engine:
             "t_mm_in": t_mm,
             "assessment_type": "GML",
             "folias_factor": 1.0,  # not used for GML area-averaging
+            "applicability": Applicability(),  # no lambda cap in the GML path
         }
 
     # ------------------------------------------------------------------
@@ -173,11 +183,24 @@ class Level2Engine:
 
         # Folias factor
         nominal_id = self._od - 2.0 * t_c
+        lam = self._shell_parameter(l_a, nominal_id, t_c)
         mt = self._folias_factor(l_a, nominal_id, t_c)
 
         # Thickness ratio Rt = t_mm / t_c
         rt = t_mm / t_c if t_c > 0 else 1.0
         rt = min(rt, 1.0)  # cap at 1.0
+
+        # Applicability (finding #1094-11): beyond lambda = 20 M_t is frozen at
+        # the Table 4.4 limit.  That is flagged rather than returned silently --
+        # but only when M_t actually enters the RSF (Rt < 1).  At Rt = 1 the
+        # RSF is identically 1.0 whatever M_t is, so nothing was extrapolated.
+        applicability = Applicability()
+        if rt < 1.0:
+            applicability = check_upper_limit(
+                lam, _LAMBDA_UPPER, flag=API579_FOLIAS_LAMBDA_FLAG,
+                quantity="lambda", method="API 579-1 Table 4.4 Folias",
+                advice="M_t frozen at the lambda = 20 value; Level 3 or a "
+                       "long-flaw method is required")
 
         # RSF per API 579 Part 5 Level 2 Eq. (5.13)
         denominator = 1.0 - (1.0 - rt) / mt
@@ -199,6 +222,8 @@ class Level2Engine:
             "folias_factor": mt,
             "flaw_length_in": l_a,
             "rt": rt,
+            "lambda": lam,
+            "applicability": applicability,
         }
 
     # ------------------------------------------------------------------
@@ -228,7 +253,7 @@ class Level2Engine:
         if nominal_id <= 0 or t_c <= 0:
             return 1.0
 
-        lam = 1.285 * l_a / math.sqrt(nominal_id * t_c)
+        lam = Level2Engine._shell_parameter(l_a, nominal_id, t_c)
 
         if lam <= _LAMBDA_LOWER:
             mt = 1.0
@@ -239,6 +264,16 @@ class Level2Engine:
             mt = math.sqrt(1.0 + 0.48 * _LAMBDA_UPPER ** 2)
 
         return max(mt, 1.0)
+
+    @staticmethod
+    def _shell_parameter(l_a: float, nominal_id: float, t_c: float) -> float:
+        """API 579 shell parameter ``lambda = 1.285 L_a / sqrt(D t_c)``.
+
+        Returns 0.0 for a degenerate geometry (M_t is then 1.0).
+        """
+        if nominal_id <= 0 or t_c <= 0:
+            return 0.0
+        return 1.285 * l_a / math.sqrt(nominal_id * t_c)
 
     @staticmethod
     def _infer_spacing(index: pd.Index) -> float:

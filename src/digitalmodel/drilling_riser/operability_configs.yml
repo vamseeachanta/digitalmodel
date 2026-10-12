@@ -14,7 +14,7 @@ provenance:
   licence: synthetic — no client, field, well or vendor data
   standards:
     - {id: API-RP-16Q, edition: "1993"}
-    - {id: API-STD-2RD, edition: "3e-2025"}
+    - {id: API-STD-2RD, edition: "2e-2013"}
   note: >
     Generic nominal configurations (nominal 21-in riser, 500 m water-depth bands,
     coarse MN tension bands). No real project values. Criteria are the published

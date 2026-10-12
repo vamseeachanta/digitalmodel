@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\src\__03a_umbilical_br_ap.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/__03a_umbilical_br_ap.yml
 # Created: 4:19 PM on 9/20/2023
 # User: 
 # Machine: 
@@ -27,10 +27,10 @@ VariableData:
       ExternalResults: (none)
 LineTypes:
   New:
-    - InfUmbVenice-3.84in-Orlov
+    - InfUmb-3.84in-UmbB
     - BendRestrictor_LineType
     - LineArmorPot
-  InfUmbVenice-3.84in-Orlov:
+  InfUmb-3.84in-UmbB:
     Category: General
     OD: 0.0972
     ID: 0
@@ -345,7 +345,7 @@ Lines:
         ReactsToWake: No
         WakeModel: (none)
         DisturbanceVessel: (none)
-      - LineType: InfUmbVenice-3.84in-Orlov
+      - LineType: InfUmb-3.84in-UmbB
         Length: 34.8
         ExpansionFactor: ~
         TargetSegmentLength: 0.2
@@ -355,7 +355,7 @@ Lines:
         ReactsToWake: No
         WakeModel: (none)
         DisturbanceVessel: (none)
-      - LineType: InfUmbVenice-3.84in-Orlov
+      - LineType: InfUmb-3.84in-UmbB
         Length: 5
         ExpansionFactor: ~
         TargetSegmentLength: 0.5
@@ -365,7 +365,7 @@ Lines:
         ReactsToWake: No
         WakeModel: (none)
         DisturbanceVessel: (none)
-      - LineType: InfUmbVenice-3.84in-Orlov
+      - LineType: InfUmb-3.84in-UmbB
         Length: 10
         ExpansionFactor: ~
         TargetSegmentLength: 1
@@ -375,7 +375,7 @@ Lines:
         ReactsToWake: No
         WakeModel: (none)
         DisturbanceVessel: (none)
-      - LineType: InfUmbVenice-3.84in-Orlov
+      - LineType: InfUmb-3.84in-UmbB
         Length: 885
         ExpansionFactor: ~
         TargetSegmentLength: 10
@@ -385,7 +385,7 @@ Lines:
         ReactsToWake: No
         WakeModel: (none)
         DisturbanceVessel: (none)
-      - LineType: InfUmbVenice-3.84in-Orlov
+      - LineType: InfUmb-3.84in-UmbB
         Length: 10
         ExpansionFactor: ~
         TargetSegmentLength: 1
@@ -395,7 +395,7 @@ Lines:
         ReactsToWake: No
         WakeModel: (none)
         DisturbanceVessel: (none)
-      - LineType: InfUmbVenice-3.84in-Orlov
+      - LineType: InfUmb-3.84in-UmbB
         Length: 180
         ExpansionFactor: ~
         TargetSegmentLength: 0.5
@@ -405,7 +405,7 @@ Lines:
         ReactsToWake: No
         WakeModel: (none)
         DisturbanceVessel: (none)
-      - LineType: InfUmbVenice-3.84in-Orlov
+      - LineType: InfUmb-3.84in-UmbB
         Length: 20
         ExpansionFactor: ~
         TargetSegmentLength: 1
@@ -415,7 +415,7 @@ Lines:
         ReactsToWake: No
         WakeModel: (none)
         DisturbanceVessel: (none)
-      - LineType: InfUmbVenice-3.84in-Orlov
+      - LineType: InfUmb-3.84in-UmbB
         Length: 350
         ExpansionFactor: ~
         TargetSegmentLength: 2

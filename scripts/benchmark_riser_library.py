@@ -311,11 +311,13 @@ def extract_spec_info(spec_path: Path, spec: ProjectInputSpec) -> SpecInfo:
 # ---------------------------------------------------------------------------
 
 def run_monolithic(model_dir: Path) -> ModelResults:
-    """Load monolithic .dat, run statics, extract results."""
+    """Load the monolithic model (.dat, else its .yml twin), run statics,
+    extract results. A .dat with a proven .yml twin was removed from the
+    public tree (C13)."""
     mono_dir = model_dir / "monolithic"
-    dat_files = list(mono_dir.glob("*.dat"))
+    dat_files = sorted(mono_dir.glob("*.dat")) or sorted(mono_dir.glob("*.yml"))
     if not dat_files:
-        raise FileNotFoundError(f"No .dat file in {mono_dir}")
+        raise FileNotFoundError(f"No .dat or .yml model in {mono_dir}")
 
     mono_path = dat_files[0]
     print(f"    Loading: {mono_path.name}")

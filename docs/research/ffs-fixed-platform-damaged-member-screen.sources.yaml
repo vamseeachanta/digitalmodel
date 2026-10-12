@@ -1,0 +1,61 @@
+schema_version: 1
+document: docs/research/ffs-fixed-platform-damaged-member-screen.md
+issue: 2198
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+sources:
+- id: S1
+  citation: '"Assessment of Fixed Offshore Platform Performance in Hurricanes Katrina and Rita", final report to the United States offshore regulator, May 2007.'
+  urls:
+  - https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/578aa.pdf
+  access_note: executive summary, sections 5 and 7 opened
+- id: S2
+  citation: Landet and Lotsberg, "Laboratory Testing of Ultimate Capacity of Dented Tubular Members", Journal of Structural Engineering 118(4), 1992, bibliographic record.
+  urls:
+  - https://trid.trb.org/View/440978
+  access_note: opened
+- id: S3
+  citation: Ricles, Lamport, Gillum, "Residual Strength of Damaged Offshore Steel Tubular Bracing", conference paper OTC 6938, 1992, bibliographic record.
+  urls:
+  - https://trid.trb.org/View/441898
+  access_note: opened
+- id: S4
+  citation: 'Search results listing further records in the same database (combined bending and dent damage; collapse and residual strength of damaged tubular members): not opened.'
+  urls: []
+  access_note: null
+- id: S5
+  citation: Cho, "Design Approximations for Offshore Tubulars Against Collisions", PhD thesis, 1987.
+  urls:
+  - https://theses.gla.ac.uk/77600/
+  access_note: abstract page opened
+- id: S6
+  citation: '"TAP-101 Residual Strength of Offshore Structures After Damage", regulator research record.'
+  urls:
+  - https://www.bsee.gov/research-record/tap-101-residual-strength-offshore-structures-after-damage
+  access_note: opened
+- id: S7
+  citation: '"TAP-277 Structural Integrity Assessment and Repair of Corrosion-Damaged Offshore Platform Tubulars", regulator research record.'
+  urls:
+  - https://www.bsee.gov/research-record/tap-277-structural-integrity-assessment-and-repair-corrosion-damaged-offshore
+  access_note: opened
+- id: S8
+  citation: Regulator workshop slides on a floater evaluation and assessment team.
+  urls:
+  - https://www.BSEE.gov/sites/bsee.gov/files/feat-for-bsee.pdf
+  access_note: text partly extractable; only headings read
+- id: S9
+  citation: Zeinoddini, Ezzati, Parke, "Plastic buckling, wrinkling and collapse behaviour of dented X80 steel line pipes under axial compression", 2015, repository record.
+  urls:
+  - https://openresearch.surrey.ac.uk/esploro/outputs/journalArticle/Plastic-buckling-wrinkling-and-collapse-behaviour/99516279702346
+  access_note: opened
+could_not_verify:
+- Any content of API RP 2SIM, ISO 19902, NORSOK N-004 or NORSOK N-006 (not opened).
+- UK regulator reports on ageing and life extension and on dented tubulars (pages returned "not found" on 2026-10-11).
+- Specimen-level data for every test series except what the bibliographic records state.
+- The later hurricane assessment report for the 2008 season (file too large to fetch on 2026-10-11).
+bottom_line:
+- 'Demand is real and documented by the regulator: one hurricane season left 116 fixed platforms destroyed and 163 with major damage, and the damage list reads like this issue''s scope (dents, bows, holes, severed members) [S1].'
+- '**Public test series for dented tubulars exist, but the data tables are in journal and conference papers, not in open reports.** Bibliographic records confirm test counts, D/t values and dent depths for the main series [S2, S3, S4]; the specimen-level numbers needed for golden tests must be taken from the papers through a licensed route, or from one open doctoral thesis [S5].'
+- No opened source states the capacity-reduction formulas used in the design codes. The issue's own knowledge note is right that the formulas must come from citable papers; the codes' text is licensed.
+# Counts bold **unverified**, **Unverified**, **Not opened**, **not verified**; legend excluded.
+unverified_mark_count: 5

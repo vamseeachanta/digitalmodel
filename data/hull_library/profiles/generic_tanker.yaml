@@ -1,0 +1,61 @@
+name: generic_tanker
+hull_type: tanker
+stations:
+- x_position: 0.0
+  waterline_offsets:
+  - - 0.0
+    - 0.0
+  - - 4.0
+    - 6.75
+  - - 10.0
+    - 9.0
+  - - 16.0
+    - 11.25
+- x_position: 62.5
+  waterline_offsets:
+  - - 0.0
+    - 0.0
+  - - 4.0
+    - 15.75
+  - - 10.0
+    - 20.25
+  - - 16.0
+    - 22.5
+- x_position: 125.0
+  waterline_offsets:
+  - - 0.0
+    - 0.0
+  - - 4.0
+    - 15.75
+  - - 10.0
+    - 22.5
+  - - 16.0
+    - 22.5
+- x_position: 187.5
+  waterline_offsets:
+  - - 0.0
+    - 0.0
+  - - 4.0
+    - 15.75
+  - - 10.0
+    - 20.25
+  - - 16.0
+    - 22.5
+- x_position: 250.0
+  waterline_offsets:
+  - - 0.0
+    - 0.0
+  - - 4.0
+    - 4.5
+  - - 10.0
+    - 6.75
+  - - 16.0
+    - 9.0
+length_bp: 250.0
+beam: 45.0
+draft: 16.0
+depth: 24.0
+source: generic/synthetic; digitalmodel issue 1700, Deliverables generic tanker/FPSO;
+  retrieved 2026-10-11. Dimensions from issue; offsets and depth scaled from tests/hydrodynamics/hull_library/conftest.py::ship_profile
+  by L/L0, B/B0 and T/T0. This is a tapered fixture shape, without a published tanker
+  displacement.

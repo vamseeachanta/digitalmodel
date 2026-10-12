@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\github\digitalmodel\docs\modules\orcaflex\examples\raw\A06\A06 SHEAR7 import drag amplification.yml
+# File: docs/domains/orcaflex/examples/raw/A06/A06 SHEAR7 import drag amplification.yml
 # Created: 1:29 PM on 8/20/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units
@@ -122,8 +122,8 @@ Environment:
   WindDirection: 0
   VerticalWindVariationFactor: ~
 SHEAR7Data:
-  SHEAR7ExecutableLocation: \\orcfile2\apps\Shear7\v4.11b\bin\shear7_4.11b.exe
-  SHEAR7LiftFileLocation: \\orcfile2\apps\Shear7\v4.11b\bin\common.S7CL
+  SHEAR7ExecutableLocation: <private-data>\shear7_4.11b.exe
+  SHEAR7LiftFileLocation: <private-data>\common.S7CL
   SHEAR7Version: 4.11
   SHEAR7OutputAnm: No
   SHEAR7OutputDmg: No

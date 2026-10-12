@@ -1,0 +1,9 @@
+"Section 3 Table 4, Typical Properties of Aluminum Anodes in Normal Operation Conditions",alloy,condition,closed_circuit_potential_V,capacity_Ah_kg,capacity_Ah_lb,consumption_kg_A_y,consumption_lb_A_y
+,A1,,-1.09,2500,1134,3.5,7.7
+,A2,,-1.09,2500,1134,3.5,7.7
+,A3,,-1.09,2500,1134,3.5,7.7
+,A4,,-0.83,1500,680,5.8,12.8
+,MIL conventional,long term,-1.05 to -1.15,2535,1150,,
+,MIL conventional,short term,-1.05 to -1.15,2535,1150,,
+,MIL low voltage,long term,-0.80 to -0.90,1656,751,,
+,MIL low voltage,short term,-0.78 to -0.83,1800,816,,

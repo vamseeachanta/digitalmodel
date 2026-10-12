@@ -22,10 +22,10 @@ Colin Lewis.
 
 ====================
 
-Saipem Classification - General Use
-From: Achanta Vamsee <Vamsee.Achanta.guest@saipem.com>
+a contractor Classification - General Use
+From: <name> <email>
 Sent: Sunday, March 24, 2024 10:50 PM
-To: Orcina <orcina@orcina.com>
+To: Orcina <email>
 Subject: YML FIles | Tilde or null or None
 
 In yaml files the Tilde and null seem to be not interchangeable.  I am injecting ~ as a string with single quotation marks. Any comment on why this is so?

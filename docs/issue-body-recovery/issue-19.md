@@ -1,8 +1,0 @@
-- [x] Develop basic images to QA results
-- [ ] Background
-  - [ ] white 
-  - [ ] Clear (Orcina - work or another library)
-- [ ] Annotations
-  - [ ] Add text
-  - [ ] Add lines
-  - [ ] Add arrows

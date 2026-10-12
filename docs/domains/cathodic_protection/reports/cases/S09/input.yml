@@ -1,0 +1,183 @@
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+  design_data:
+    edition: '2021'
+    design_life: 25.0
+  environment:
+    seawater_temperature_C: 10.0
+  anode_families:
+  - name: sea
+    environment: seawater
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 20.0
+    count: 5
+    length_m: 2.0
+    radius_m: 0.1
+    electrolyte_resistivity_ohm_m: 0.3
+    utilization_factor: 0.9
+  - name: mud
+    environment: sediments
+    material: aluminium
+    type: flush_mounted
+    individual_anode_mass_kg: 20.0
+    count: 4
+    length_m: 1.0
+    width_m: 0.2
+    thickness_m: 0.1
+    exposed_area_m2: 0.8
+    final_length_m: 0.8
+    final_width_m: 0.16
+    final_thickness_m: 0.08
+    final_exposed_area_m2: 0.5
+    electrolyte_resistivity_ohm_m: 1.0
+    utilization_factor: 0.85
+  - name: hatch
+    environment: seawater
+    material: aluminium
+    type: flush_mounted
+    individual_anode_mass_kg: 5.0
+    count: 2
+    length_m: 0.5
+    width_m: 0.2
+    thickness_m: 0.1
+    exposed_area_m2: 0.3
+    final_length_m: 0.4
+    final_width_m: 0.16
+    final_thickness_m: 0.08
+    final_exposed_area_m2: 0.2
+    electrolyte_resistivity_ohm_m: 0.3
+    utilization_factor: 0.85
+  - name: concrete
+    environment: sediments
+    material: aluminium
+    type: flush_mounted
+    individual_anode_mass_kg: 10.0
+    count: 2
+    length_m: 0.8
+    width_m: 0.2
+    thickness_m: 0.1
+    exposed_area_m2: 0.6
+    final_length_m: 0.64
+    final_width_m: 0.16
+    final_thickness_m: 0.08
+    final_exposed_area_m2: 0.4
+    electrolyte_resistivity_ohm_m: 1.0
+    utilization_factor: 0.85
+  riser_base_assessment:
+    components:
+    - name: base
+      type: riser_base
+      composition_basis: project_practice
+      composition_reason: Generic round-area test composition.
+      zones:
+      - zone: frame
+        base_zone: submerged
+        depth_m: 100.0
+        area_m2: 10.0
+        coating_category: bare
+        anode_family: sea
+    - name: foundation
+      type: foundation
+      composition_basis: project_practice
+      composition_reason: Generic reinforcement drain composition.
+      zones:
+      - zone: reinforcement
+        base_zone: concrete_embedded
+        depth_m: 100.0
+        reinforcement_area_m2: 20.0
+        anode_family: concrete
+    - name: mudmat
+      type: mudmat
+      composition_basis: project_practice
+      composition_reason: Outer sediment-facing area supplied as an input.
+      zones:
+      - zone: underside
+        base_zone: buried
+        area_m2: 30.0
+        coating_category: bare
+        anode_family: mud
+    - name: hatch
+      type: hatch_cover
+      composition_basis: project_practice
+      composition_reason: Electrically isolated cover with a local family.
+      zones:
+      - zone: cover
+        base_zone: submerged
+        depth_m: 100.0
+        area_m2: 2.0
+        coating_category: bare
+        anode_family: hatch
+    phases:
+    - name: storage
+      type: wet_storage
+      life_years: 2.0
+      basis:
+        source: project_practice
+        reason: Two-year pre-operation exposure assumed for this fixture.
+      families:
+      - family: sea
+        mean_current_A: 1.0
+        initial_current_A: 1.0
+        final_current_A: 1.0
+        basis:
+          source: project_practice
+          reason: Rounded phase demand for hand calculation.
+    - name: operation
+      type: operating
+      life_years: 25.0
+      basis:
+        source: project_practice
+        reason: Operating life supplied by the owner.
+      families:
+      - family: sea
+        mean_current_A: 1.0
+        initial_current_A: 20.0
+        final_current_A: 20.0
+        basis:
+          source: project_practice
+          reason: Rounded demands exercise mass and output shortfalls.
+    retrofit:
+      family: sea
+      age_years: 10.0
+      historical_mean_current_A: 1.0
+      future_life_years: 10.0
+      future_mean_current_A: 1.5
+      future_initial_current_A: 1.5
+      future_final_current_A: 1.5
+      remaining_mass_basis: inferred_from_age_and_demand
+      remaining_mass_source: project_practice
+      remaining_mass_reason: No measured mass is supplied in this synthetic case.
+      condition:
+        potential_history: unavailable
+        steel: assumed_unchanged
+        coating: assumed_unchanged
+        calcareous_deposit: not_observed
+        marine_growth: not_observed
+        remaining_life: 10 years supplied as project practice
+      proposed_anode:
+        individual_mass_kg: 20.0
+        utilization_factor: 0.9
+        current_output_initial_A: 1.0
+        current_output_final_A: 1.0
+        output_basis:
+          source: project_practice
+          reason: Rounded proposed-anode output for count verification.
+report:
+  document:
+    approved_by: Pending
+    checked_by: Pending
+    client: Internal module review - no client issuance
+    date: '2026-10-03'
+    number: R2281-CP-009-00
+    prepared_by: Automated regression report
+    project: Digitalmodel CP regression portfolio
+    revision: '00'
+    revision_history:
+    - approved: Pending
+      checked: Pending
+      date: '2026-10-03'
+      description: Internal review draft
+      rev: '00'
+    title: 'CP module review: Phased riser base and retrofit'

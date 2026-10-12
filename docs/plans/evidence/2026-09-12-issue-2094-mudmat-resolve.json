@@ -1,0 +1,92 @@
+{
+  "status": "comparison_passed_unreviewed",
+  "native_qualification_complete": false,
+  "case": "mudmat",
+  "observed_at": "2026-09-12T20:55:01.134831+00:00",
+  "profile": {
+    "product": "Ansys Mechanical APDL",
+    "release": "2026 R1.01",
+    "build": "26.1",
+    "update": "UP20260202",
+    "platform": "WINDOWS x64",
+    "argv": "-b -np 1 -smp",
+    "cores": 1,
+    "parallel": "smp",
+    "equation_solver": "default sparse direct"
+  },
+  "input_sha256": "9936d9313776f5d4f917d8ecd05a83eaa6b9597f90d50b15e85656e902f2156f",
+  "harness_sha256": "9ed7f59aa64b0c16294a829a4f8511919fc811df1495526d9cb01ca2a38a1989",
+  "relative_tolerance": 0.001,
+  "observed": {
+    "max_seqv_mpa": 38.7149,
+    "allowable_mpa": 212.5749,
+    "uc": 0.18212,
+    "peak_node": 20.0,
+    "reaction_fz_n": 0.03,
+    "q_soil_mpa": 0.088889,
+    "eccentricity_mm": 500.0
+  },
+  "execution": {
+    "executable_sha256": "6c6327f6b906db8e6dd498bd38c97685d7e3e4acf52fccbf243b2dff7ed7af1b",
+    "argv": [
+      "ANSYS261.exe",
+      "-b",
+      "-i",
+      "mudmat.inp",
+      "-o",
+      "mudmat.out",
+      "-np",
+      "1",
+      "-smp"
+    ],
+    "timeout_seconds": 120,
+    "duration_seconds": 18.485000000102445,
+    "argv_presentation": "Normalized case-relative presentation; exact invocation retained in local raw receipt"
+  },
+  "artifacts": [
+    {
+      "path": "file.db",
+      "sha256": "ca995e5b4cf0e3271b88d63368b4131ac45d2aba03318b9c1fc82e3133b0651b"
+    },
+    {
+      "path": "file.mntr",
+      "sha256": "7b97cdadbf2ed5f4fbfa4bccebaa935569f1accbb71cf841279936024b56f71d"
+    },
+    {
+      "path": "file.rst",
+      "sha256": "e7240513d21b79b90f90d95a8d72ce6b4ce071b67ab10348484fe8303ada092f"
+    },
+    {
+      "path": "mudmat.inp",
+      "sha256": "9936d9313776f5d4f917d8ecd05a83eaa6b9597f90d50b15e85656e902f2156f"
+    },
+    {
+      "path": "mudmat.out",
+      "sha256": "a62fed2554f103caf9ccc3293e8e69caf524c6396072e94b7140a8c8f9837467"
+    },
+    {
+      "path": "mudmat_result.csv",
+      "sha256": "c0b6d3f5339b88713419e272b61420bdcf4202deadf1d950f56d68872f042a9b"
+    }
+  ],
+  "source_receipt_sha256": "406255d38be2c6db9fb5e464286560b438f0fd21c80d0d9349c954e43d6b7e70",
+  "source_head": "175f0771808526719c9217fa2ef8ef04d93e95be",
+  "evidence_id": "ansys-2094-canary-20260912T205437Z/mudmat",
+  "storage": "Raw solver artifacts retained on execution host; no backup or publication of raw logs/binaries established",
+  "license_counts_before": {
+    "ansys": {
+      "issued": 2,
+      "in_use": 0
+    },
+    "aqwa_solve": {
+      "issued": 2,
+      "in_use": 0
+    },
+    "anshpc": {
+      "issued": 4,
+      "in_use": 0
+    }
+  },
+  "solver_processes_after": [],
+  "seat_lock_released": true
+}

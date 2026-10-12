@@ -412,9 +412,9 @@ class Phase2Validator:
         }
 
         try:
-            # Import hydro module
-            sys.path.insert(0, str(Path(__file__).parent))
-            from extract_hydro_coefficients import HydrodynamicCoefficientExtractor
+            from digitalmodel.marine_ops.marine_analysis.extraction.extract_hydro import (
+                HydrodynamicCoefficientExtractor,
+            )
 
             # Create extractor with sample data
             extractor = HydrodynamicCoefficientExtractor(

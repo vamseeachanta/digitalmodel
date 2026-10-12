@@ -5,7 +5,7 @@ Weld Detail Classification
 Given a textual description of a weld geometry, return the appropriate
 fatigue detail class (S-N curve) per:
 
-- DNV-RP-C203 (2021), Tables 2-1 through 2-8
+- DNV-RP-C203 (2021), Appendix A (Tables A-1 to A-10)
 - AWS D1.1 (2020), Table 2.5
 - BS 7608:2014, Table 2
 
@@ -14,13 +14,19 @@ both the class and a confidence indicator.
 
 References
 ----------
-- DNV-RP-C203 (2021), Table 2-1 to 2-8
+- DNV-RP-C203 (2021), Appendix A (Tables A-1 to A-10) — detail classification;
+  Table 2-3 — tubular joints (T-curve)
 - AWS D1.1/D1.1M:2020, Table 2.5
 - BS 7608:2014+A1:2015, Table 2
 """
 
 from typing import Dict, List, Optional, Tuple
 from pydantic import BaseModel, Field
+
+from .c203_editions import DNV_RP_C203_DETAIL_CLASSIFICATION, c203_sn_table
+
+_APPENDIX_A = DNV_RP_C203_DETAIL_CLASSIFICATION
+_TUBULAR_T_CURVE = f"{c203_sn_table('tubular_joint')} (T-curve)"
 
 
 # ---------------------------------------------------------------------------
@@ -83,12 +89,14 @@ class ClassificationResult(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Classification rules — DNV-RP-C203 Tables 2-1 through 2-8
+# Classification rules — DNV-RP-C203 Appendix A (Tables A-1 to A-10).
+# The per-detail Appendix A table is not assigned here; each rule cites the
+# appendix. Tubular joints cite the T-curve table of the implemented edition.
 # ---------------------------------------------------------------------------
 
 # Each rule: (keywords, joint_types, conditions) -> (dnv, aws, bs, table, note)
 _RULES: List[dict] = [
-    # Table 2-1: Base material
+    # Base material
     {
         "keywords": ["base metal", "base material", "rolled", "plate", "no weld"],
         "joint_types": [""],
@@ -96,101 +104,101 @@ _RULES: List[dict] = [
             w in d.description.lower() for w in ["weld", "fillet", "butt"]
         ),
         "dnv": "B1", "aws": "A", "bs": "B",
-        "table": "Table 2-1", "note": "Base material, no welds",
+        "table": _APPENDIX_A, "note": "Base material, no welds",
     },
-    # Table 2-2: Butt welds, ground flush, inspected
+    # Butt welds, ground flush, inspected
     {
         "keywords": ["butt weld", "butt joint", "full penetration butt"],
         "joint_types": ["butt"],
         "conditions": lambda d: d.ground_flush and d.inspected and d.full_penetration,
         "dnv": "C", "aws": "B", "bs": "C",
-        "table": "Table 2-2", "note": "Butt weld, ground flush, NDE inspected",
+        "table": _APPENDIX_A, "note": "Butt weld, ground flush, NDE inspected",
     },
-    # Table 2-2: Butt welds, ground flush, not inspected
+    # Butt welds, ground flush, not inspected
     {
         "keywords": ["butt weld", "butt joint"],
         "joint_types": ["butt"],
         "conditions": lambda d: d.ground_flush and not d.inspected,
         "dnv": "C1", "aws": "B'", "bs": "C",
-        "table": "Table 2-2", "note": "Butt weld, ground flush, not NDE inspected",
+        "table": _APPENDIX_A, "note": "Butt weld, ground flush, not NDE inspected",
     },
-    # Table 2-2: Butt welds, as-welded (not ground)
+    # Butt welds, as-welded (not ground)
     {
         "keywords": ["butt weld", "butt joint"],
         "joint_types": ["butt"],
         "conditions": lambda d: not d.ground_flush and d.full_penetration,
         "dnv": "D", "aws": "C", "bs": "D",
-        "table": "Table 2-2", "note": "Butt weld, as-welded, full penetration",
+        "table": _APPENDIX_A, "note": "Butt weld, as-welded, full penetration",
     },
-    # Table 2-3: Transverse butt weld with backing strip
+    # Transverse butt weld with backing strip
     {
         "keywords": ["backing strip", "backing bar", "permanent backing"],
         "joint_types": ["butt"],
         "conditions": lambda d: True,
         "dnv": "F", "aws": "D", "bs": "F",
-        "table": "Table 2-3", "note": "Butt weld on permanent backing strip",
+        "table": _APPENDIX_A, "note": "Butt weld on permanent backing strip",
     },
-    # Table 2-4: Welded attachments — non-load-carrying fillet weld
+    # Welded attachments — non-load-carrying fillet weld
     {
         "keywords": ["attachment", "stiffener", "non-load carrying", "bracket"],
         "joint_types": ["attachment", "stiffener", "fillet"],
         "conditions": lambda d: not d.transverse_load,
         "dnv": "E", "aws": "C", "bs": "E",
-        "table": "Table 2-4", "note": "Non-load-carrying attachment fillet weld",
+        "table": _APPENDIX_A, "note": "Non-load-carrying attachment fillet weld",
     },
-    # Table 2-5: Welded attachments — load-carrying fillet weld
+    # Welded attachments — load-carrying fillet weld
     {
         "keywords": ["attachment", "stiffener", "load carrying", "load-carrying"],
         "joint_types": ["attachment", "stiffener", "fillet"],
         "conditions": lambda d: d.transverse_load,
         "dnv": "F1", "aws": "D", "bs": "F2",
-        "table": "Table 2-5", "note": "Load-carrying attachment fillet weld",
+        "table": _APPENDIX_A, "note": "Load-carrying attachment fillet weld",
     },
-    # Table 2-5: Fillet welds
+    # Fillet welds
     {
         "keywords": ["fillet weld", "fillet", "lap joint"],
         "joint_types": ["fillet"],
         "conditions": lambda d: d.full_penetration,
         "dnv": "F", "aws": "D", "bs": "F",
-        "table": "Table 2-5", "note": "Fillet weld, toe failure",
+        "table": _APPENDIX_A, "note": "Fillet weld, toe failure",
     },
     {
         "keywords": ["fillet weld root", "root failure", "partial penetration"],
         "joint_types": ["fillet"],
         "conditions": lambda d: not d.full_penetration,
         "dnv": "W3", "aws": "E'", "bs": "W1",
-        "table": "Table 2-5", "note": "Fillet weld, root failure (partial pen)",
+        "table": _APPENDIX_A, "note": "Fillet weld, root failure (partial pen)",
     },
-    # Table 2-6: Cruciform joints
+    # Cruciform joints
     {
         "keywords": ["cruciform", "cross joint", "T-joint"],
         "joint_types": ["cruciform"],
         "conditions": lambda d: d.full_penetration,
         "dnv": "F", "aws": "D", "bs": "F",
-        "table": "Table 2-6", "note": "Cruciform joint, full penetration",
+        "table": _APPENDIX_A, "note": "Cruciform joint, full penetration",
     },
     {
         "keywords": ["cruciform", "cross joint"],
         "joint_types": ["cruciform"],
         "conditions": lambda d: not d.full_penetration,
         "dnv": "W3", "aws": "E'", "bs": "W1",
-        "table": "Table 2-6", "note": "Cruciform joint, partial penetration",
+        "table": _APPENDIX_A, "note": "Cruciform joint, partial penetration",
     },
-    # Table 2-7: Cope holes
+    # Cope holes
     {
         "keywords": ["cope hole", "scallop", "access hole", "mouse hole"],
         "joint_types": ["cope_hole"],
         "conditions": lambda d: True,
         "dnv": "E", "aws": "D", "bs": "E",
-        "table": "Table 2-7", "note": "Cope hole / weld access hole",
+        "table": _APPENDIX_A, "note": "Cope hole / weld access hole",
     },
-    # Table 2-8: Tubular joints (T-curve)
+    # Tubular joints (T-curve)
     {
         "keywords": ["tubular", "tube", "CHS", "circular hollow"],
         "joint_types": ["tubular"],
         "conditions": lambda d: True,
         "dnv": "T", "aws": "ET", "bs": "S1",
-        "table": "Table 2-8", "note": "Tubular joint — use T-curve (hotspot stress method)",
+        "table": _TUBULAR_T_CURVE, "note": "Tubular joint — use T-curve (hotspot stress method)",
     },
 ]
 

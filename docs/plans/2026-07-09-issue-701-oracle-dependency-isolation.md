@@ -102,7 +102,7 @@ CI work with no formula, solver input, or engineering result change.
 
 ### Reproduction proofs
 
-Synchronized Windows host `ACMA-HOU-RDS02`, 2026-07-09:
+Synchronized Windows host `ace-win-1`, 2026-07-09:
 
 ```text
 $ git rev-parse HEAD

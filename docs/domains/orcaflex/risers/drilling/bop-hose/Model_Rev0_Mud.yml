@@ -136,7 +136,7 @@ Environment:
   WindSpeed: 0
   WindDirection: 0
 VesselTypes:
-  - Name: Saipem 10000
+  - Name: Drillship_166m
     Length: 166.5
     # Conventions
     RAOResponseUnits: degrees
@@ -2505,7 +2505,7 @@ LineTypes:
     Pen: [2, Solid, Yellow]
 Vessels:
   - Name: Drillship
-    VesselType: Saipem 10000
+    VesselType: Drillship_166m
     Draught: Full
     Length: ~
     Connection: Free

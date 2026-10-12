@@ -10,7 +10,7 @@ an engine basename (``ffs``) so it is callable both from the durable CLI path
 No assessment physics lives here -- every number comes from the validated
 Phase-1 chain. The router only normalises the cfg inputs into a
 :class:`FFSComponent` + grid, runs ``assess_component``, and parks the indexed
-16-key ``FFSAssessmentResult.to_dict()`` (the #1066 Deckhand-API surface) on
+16-key ``FFSAssessmentResult.to_dict()`` (the #1066 indexed result surface) on
 ``cfg["ffs"]`` so the registry ``result: {kind: in_memory, key: ffs}`` descriptor
 can locate it.
 """
@@ -49,7 +49,7 @@ class FFSWorkflow:
         )
 
         # in-memory locator target: cfg[basename] == cfg["ffs"] (the 16-key
-        # indexed FFSAssessmentResult.to_dict() Deckhand-API shape, #1066).
+        # indexed FFSAssessmentResult.to_dict() indexed shape, #1066).
         cfg[cfg["basename"]] = result.to_dict()
         return cfg
 

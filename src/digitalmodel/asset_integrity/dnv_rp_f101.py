@@ -52,20 +52,32 @@ psi.  All formula constants follow DNV-RP-F101 (2015/2017) Sections 2 (PSF) and
 of use; callers may override every factor.
 
 .. note::
-   The allowable-stress ``usage_factor`` default 0.72 is the **ASME B31.8
-   location-class-1 design factor**, *not* a DNV safety-class usage factor.  Use
-   the PSF format (:func:`dnv_f101_psf`) with an explicit ``safety_class`` for
-   DNV-RP-F101 code-compliant safety.
+   Part B safe working pressure uses total usage factor F = F1 x F2,
+   with modelling factor F1 = 0.9 and operational factor F2 based on the
+   original design factor. The deprecated ``usage_factor`` alias means total F;
+   its legacy default 0.72 is preserved numerically, not selected as Part B F2.
+   Part A is the separate PSF format (:func:`dnv_f101_psf`).
 """
 
 from __future__ import annotations
 
 import math
+import warnings
 from dataclasses import dataclass, field
 from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
+from digitalmodel.asset_integrity.applicability import (
+    DNV_F101_RELATIVE_DEPTH_FLAG,
+    DNV_F101_SIZING_STD_FLAG,
+    Applicability,
+    check_upper_limit,
+    merge,
+)
+from digitalmodel.asset_integrity.corroded_pipe import (
+    ASME_B318_CLASS1_DESIGN_FACTOR,
+)
 from digitalmodel.codes import DNV_RP_F101
 from digitalmodel.materials import legacy_smts_psi_dict
 
@@ -79,17 +91,11 @@ from digitalmodel.materials import legacy_smts_psi_dict
 # ---------------------------------------------------------------------------
 SMTS_PSI = legacy_smts_psi_dict()
 
-# Default usage factor for the allowable-stress format.
-#
-# NOTE on 0.72: this is the ASME B31.8 location-class-1 DESIGN FACTOR (hoop-stress
-# usage factor for onshore transmission pipelines), NOT a DNV-RP-F101 safety-class
-# usage factor.  DNV-RP-F101's own calibrated safety derives from the Part-A
-# partial-safety-factor format (see ``dnv_f101_psf`` and the gamma_m table below),
-# not from a single scalar usage factor.  We expose 0.72 only as a familiar
-# allowable-stress screening level; for code-compliant DNV safety use the PSF
-# format with the appropriate ``safety_class``.  Location class 2/3/4 would use
-# 0.60/0.50/0.40 respectively (ASME B31.8), overridable via ``usage_factor``.
-_DEFAULT_USAGE_FACTOR = 0.72
+# Legacy total-F default retained for existing callers and validation records.
+# Part B instead applies F1 (modelling) times F2 (operational/design usage).
+# The legacy scalar 0.72 is bound to the ASME constant for provenance; it is
+# not a DNV safety-class selection and must not be silently reinterpreted as F2.
+_DEFAULT_USAGE_FACTOR = ASME_B318_CLASS1_DESIGN_FACTOR  # 0.72
 
 # ---------------------------------------------------------------------------
 # DNV-RP-F101 Part-A partial-safety-factor (LRFD) tables.
@@ -253,6 +259,9 @@ class DNVF101Result:
     acceptable: Optional[bool] = None  # allowable >= MAOP (if maop_psi given)
     details: dict = field(default_factory=dict)
     code_reference: str = DNV_RP_F101.label  # governing code (all formats)
+    # Validity record (#1094): d/t > 0.85 and (PSF) StD[d/t] > 0.16 are flagged;
+    # the pressures above are still computed and returned alongside.
+    applicability: Applicability = field(default_factory=Applicability)
 
 
 # ---------------------------------------------------------------------------
@@ -269,6 +278,17 @@ def length_correction_factor(D: float, t: float, L: float) -> float:
 def _intact_pressure(t: float, f_u: float, D: float) -> float:
     """Defect-free hoop capacity ``2 t f_u / (D - t)``."""
     return 2.0 * t * f_u / (D - t)
+
+
+def _depth_applicability(dt: float) -> Applicability:
+    """Flag ``d/t`` beyond the DNV-RP-F101 0.85 validity limit (#1094-3)."""
+    return check_upper_limit(
+        dt,
+        _DNV_F101_MAX_DT,
+        flag=DNV_F101_RELATIVE_DEPTH_FLAG,
+        quantity="d/t",
+        method="DNV-RP-F101",
+    )
 
 
 def _capacity(t: float, f_u: float, D: float, dt: float, Q: float) -> float:
@@ -288,9 +308,11 @@ def dnv_f101_single_defect(
     smts_psi: float,
     *,
     maop_psi: Optional[float] = None,
-    usage_factor: float = _DEFAULT_USAGE_FACTOR,
+    usage_factor: Optional[float] = None,
+    modelling_factor: Optional[float] = None,
+    operational_usage_factor: Optional[float] = None,
 ) -> DNVF101Result:
-    """DNV-RP-F101 allowable-stress single-defect capacity and allowable pressure.
+    """DNV-RP-F101 Part B capacity and safe working pressure (F1 x F2).
 
     Args:
         D: pipe outside diameter (in).
@@ -299,15 +321,25 @@ def dnv_f101_single_defect(
         L: axial defect length (in).
         smts_psi: ultimate tensile strength f_u = SMTS (psi).
         maop_psi: maximum allowable operating pressure for an accept/reject flag.
-        usage_factor: F applied to the capacity for the allowable pressure.
+        usage_factor: deprecated total-F alias; omitted legacy calls retain F=0.72.
+            Cannot be combined with operational_usage_factor.
+        modelling_factor: Part B F1 (resolved default 0.9); requires explicit F2.
+        operational_usage_factor: Part B F2 in (0, 1], based on original design.
+            Safe working pressure is modelling_factor * operational_usage_factor
+            * capacity. A default 0.72 total F is used when both usage inputs are absent.
     """
     _validate(D, t, d, L)
     f_u = smts_psi
     dt = d / t
     Q = length_correction_factor(D, t, L)
     p_cap = _capacity(t, f_u, D, dt, Q)
-    p_allow = usage_factor * p_cap
-    within = dt <= _DNV_F101_MAX_DT
+    if operational_usage_factor is not None and modelling_factor is None:
+        modelling_factor = 0.9
+    total_factor = _single_defect_usage_factor(
+        usage_factor, modelling_factor, operational_usage_factor
+    )
+    p_allow = total_factor * p_cap
+    applicability = _depth_applicability(dt)
     return DNVF101Result(
         method="DNV-F101-AS",
         capacity_pressure_psi=p_cap,
@@ -317,19 +349,47 @@ def dnv_f101_single_defect(
         intact_pressure_psi=_intact_pressure(t, f_u, D),
         acceptable=(None if maop_psi is None else bool(p_allow >= maop_psi)),
         details={
-            "usage_factor": usage_factor,
+            "usage_factor": total_factor,
+            "total_usage_factor": total_factor,
+            "modelling_factor": (
+                modelling_factor if operational_usage_factor is not None else None
+            ),
+            "operational_usage_factor": operational_usage_factor,
             "L_in": L,
             "smts_psi": f_u,
             "format": "allowable_stress",
-            "within_applicability": bool(within),
-            "applicability_note": (
-                None
-                if within
-                else f"d/t={dt:.3f} exceeds DNV-RP-F101 validity limit "
-                f"{_DNV_F101_MAX_DT:.2f}; assess by repair/replace criteria"
-            ),
+            **applicability.legacy_details(),
         },
+        applicability=applicability,
     )
+
+
+def _single_defect_usage_factor(total_alias, modelling_factor, operational_factor):
+    if operational_factor is None:
+        if modelling_factor is not None:
+            raise ValueError("modelling_factor requires operational_usage_factor F2")
+        if total_alias is not None:
+            warnings.warn(
+                "usage_factor is a deprecated total F alias; use modelling_factor and "
+                "operational_usage_factor for Part B F1 x F2",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+        return _DEFAULT_USAGE_FACTOR if total_alias is None else total_alias
+    if total_alias is not None:
+        raise ValueError("Specify either legacy total F or operational F2, not both")
+    for name, value in (
+        ("operational_usage_factor", operational_factor),
+        ("modelling_factor", modelling_factor),
+    ):
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or not 0 < value <= 1
+        ):
+            raise ValueError(f"{name} must be finite and in (0, 1]")
+    return modelling_factor * operational_factor
 
 
 # ---------------------------------------------------------------------------
@@ -389,20 +449,17 @@ def dnv_f101_psf(
     )
     p_corr = max(p_corr, 0.0)
     p_cap = _capacity(t, f_u, D, dt, Q)  # un-factored mean capacity, for reference
-    within_dt = dt <= _DNV_F101_MAX_DT
-    within_std = std_rel_depth <= _DNV_F101_MAX_STD
-    within = within_dt and within_std
-    notes = []
-    if not within_dt:
-        notes.append(
-            f"d/t={dt:.3f} exceeds DNV-RP-F101 validity limit {_DNV_F101_MAX_DT:.2f}; "
-            f"assess by repair/replace criteria"
-        )
-    if not within_std:
-        notes.append(
-            f"StD[d/t]={std_rel_depth:.3f} exceeds the Part-A PSF calibration "
-            f"range {_DNV_F101_MAX_STD:.2f}; gamma_d/epsilon_d clamped at 0.16"
-        )
+    applicability = merge(
+        _depth_applicability(dt),
+        check_upper_limit(
+            std_rel_depth,
+            _DNV_F101_MAX_STD,
+            flag=DNV_F101_SIZING_STD_FLAG,
+            quantity="StD[d/t]",
+            method="DNV-RP-F101 Part-A PSF calibration",
+            advice="gamma_d/epsilon_d clamped at the 0.16 point",
+        ),
+    )
     return DNVF101Result(
         method="DNV-F101-PSF",
         capacity_pressure_psi=p_cap,
@@ -422,9 +479,9 @@ def dnv_f101_psf(
             "L_in": L,
             "smts_psi": f_u,
             "format": "partial_safety_factor",
-            "within_applicability": bool(within),
-            "applicability_note": ("; ".join(notes) if notes else None),
+            **applicability.legacy_details(),
         },
+        applicability=applicability,
     )
 
 
@@ -534,7 +591,7 @@ def dnv_f101_interacting(
 
     governing = min(candidates, key=lambda c: c["res"].capacity_pressure_psi)
     gres = governing["res"]
-    gov_within = bool(gres.details.get("within_applicability", True))
+    applicability = gres.applicability
     gov_details = {
         "interaction_limit_in": limit,
         "governing_kind": governing["kind"],
@@ -542,8 +599,7 @@ def dnv_f101_interacting(
         "n_defects": int(n),
         "usage_factor": usage_factor,
         "n_candidates": int(len(candidates)),
-        "within_applicability": gov_within,
-        "applicability_note": gres.details.get("applicability_note"),
+        **applicability.legacy_details(),
     }
     if governing["kind"] == "composite":
         gov_details["comp_length_in"] = governing["comp_length_in"]
@@ -559,6 +615,7 @@ def dnv_f101_interacting(
             None if maop_psi is None else bool(gres.allowable_pressure_psi >= maop_psi)
         ),
         details=gov_details,
+        applicability=applicability,
     )
 
 

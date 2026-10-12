@@ -94,7 +94,7 @@ def test_registry_has_reasoned_complete_ownership() -> None:
 
     assert checker.validate_registry(checker.REPO) == []
     assert len(checker.GENERATORS) == 21
-    assert len(outputs) == 56
+    assert len(outputs) == 21  # the 36 capabilities/api envelope pages were removed
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 8

@@ -1,0 +1,50 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
+benchmark: 4.0.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+Using --randomly-seed=3075651375
+rootdir: D:\ws\_worktrees\digitalmodel-2094-offline
+configfile: pytest.ini
+plugins: anyio-4.12.1, Faker-20.1.0, hypothesis-6.151.9, asyncio-0.21.1, benchmark-4.0.0, cov-4.1.0, html-4.2.0, instafail-0.5.0, json-report-1.5.0, metadata-3.1.1, mock-3.12.0, randomly-3.16.0, sugar-0.9.7, timeout-2.4.0, xdist-3.8.0
+asyncio: mode=Mode.STRICT
+collected 41 items
+
+tests\ansys\test_cylinder_refinement_replay.py ...F......F........s..F.. [ 60%]
+................                                                         [100%]
+
+================================== FAILURES ===================================
+__________________ test_missing_historical_field_is_refusal ___________________
+tests\ansys\test_cylinder_refinement_replay.py:161: in test_missing_historical_field_is_refusal
+    run(synthetic)
+tests\ansys\test_cylinder_refinement_replay.py:63: in run
+    return replay.replay_n4_predecessor(fixture['dataset'], fixture['runtime'], fixture['observation'])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\digitalmodel\ansys\cylinder_refinement_replay.py:152: in replay_n4_predecessor
+    sources = _sources(report)
+              ^^^^^^^^^^^^^^^^
+src\digitalmodel\ansys\cylinder_refinement_replay.py:60: in _sources
+    sources = report['source_files']
+              ^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'source_files'
+______________ test_synthetic_contract_does_not_grant_admission _______________
+tests\ansys\test_cylinder_refinement_replay.py:75: in test_synthetic_contract_does_not_grant_admission
+    assert result['failed_checks'] == []
+           ^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'failed_checks'
+_______________ test_missing_frozen_reference_entry_is_refusal ________________
+tests\ansys\test_cylinder_refinement_replay.py:172: in test_missing_frozen_reference_entry_is_refusal
+    run(synthetic)
+tests\ansys\test_cylinder_refinement_replay.py:63: in run
+    return replay.replay_n4_predecessor(fixture['dataset'], fixture['runtime'], fixture['observation'])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\digitalmodel\ansys\cylinder_refinement_replay.py:153: in replay_n4_predecessor
+    case, reference, pins = _inputs(runtime, report)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^
+src\digitalmodel\ansys\cylinder_refinement_replay.py:89: in _inputs
+    entry = by_name[name]
+            ^^^^^^^^^^^^^
+E   KeyError: 'reference.json'
+=========================== short test summary info ===========================
+FAILED tests/ansys/test_cylinder_refinement_replay.py::test_missing_historical_field_is_refusal
+FAILED tests/ansys/test_cylinder_refinement_replay.py::test_synthetic_contract_does_not_grant_admission
+FAILED tests/ansys/test_cylinder_refinement_replay.py::test_missing_frozen_reference_entry_is_refusal
+=================== 3 failed, 37 passed, 1 skipped in 3.22s ===================

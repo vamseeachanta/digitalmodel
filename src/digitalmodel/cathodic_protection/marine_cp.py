@@ -1,23 +1,25 @@
-"""Marine structure CP assessment — multi-zone design.
+"""Marine structure CP assessment — deprecated facade (issue #2211).
 
-Provides seawater current density lookup by temperature and depth,
-zone-based current demand calculation with calcareous deposit correction,
-and end-to-end multi-zone CP design for offshore structures.
+This module used to carry a second multi-zone design next to
+:mod:`digitalmodel.cathodic_protection.marine_structure_cp`. It is now a
+thin facade: the ``Zone`` / ``MarineCPInput`` / ``MarineCPResult`` models
+and the density helpers are kept for callers, and ``design_marine_cp``
+maps its input onto ``marine_structure_current_demand`` (which runs the
+full DNV-RP-B401 Sec. 7 loop when anode geometry is given). Importing
+``design_marine_cp`` emits a :class:`DeprecationWarning`; new code should
+use ``marine_structure_cp`` directly.
 
-References
-----------
-- DNV-RP-B401 (2017) "Cathodic Protection Design" §7, Table 10-1
-- DNV-RP-B401 (2017) "Cathodic Protection Design" §10.4 — calcareous deposits
-- ISO 12473 (2006) "General Principles of Cathodic Protection in Seawater"
-- NACE SP0176 "Corrosion Control of Submerged Areas of Permanently
-  Installed Steel Offshore Structures"
+Current densities are the DNV-RP-B401 Table 10-1 (initial, final) and
+Table 10-2 (mean) step values keyed by climatic region
+(``b401_tables.climate_from_temperature``) and depth band
+(``b401_tables.depth_band``); buried surfaces use Sec. 6.3.
 """
 
 from __future__ import annotations
 
-import math
+import warnings
 from enum import Enum
-from typing import Any
+from typing import Any, Final
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -27,6 +29,22 @@ from digitalmodel.cathodic_protection._edition import (
     normalize_edition,
     standard_for_edition,
 )
+from digitalmodel.cathodic_protection.b401_tables import (
+    DesignPhase,
+    citation_label,
+    climate_from_temperature,
+    depth_band,
+    design_current_density,
+)
+from digitalmodel.cathodic_protection.marine_structure_cp import (
+    ExposureZone,
+    StructuralZone,
+    marine_structure_current_demand,
+)
+from digitalmodel.cathodic_protection.marine_structure_cp import (
+    zone_current_density as _structure_zone_current_density,
+)
+from digitalmodel.citations import CitedValue
 
 
 # ───────────────────────────────────────────────────────────────────────
@@ -43,24 +61,15 @@ class ZoneType(str, Enum):
     MUDLINE = "mudline"
 
 
-# ───────────────────────────────────────────────────────────────────────
-# Current density model
-# ───────────────────────────────────────────────────────────────────────
-
-# Base mean current densities [mA/m²] at reference conditions (15°C, 30 m depth)
-# Per DNV-RP-B401 Table 10-1 (temperate mean values)
-BASE_CURRENT_DENSITY: dict[ZoneType, float] = {
-    ZoneType.ATMOSPHERIC: 0.0,   # Not CP-protected
-    ZoneType.SPLASH: 0.0,        # Not CP-protected (coatings + corrosion allowance)
-    ZoneType.TIDAL: 80.0,        # mA/m²
-    ZoneType.SUBMERGED: 100.0,   # mA/m² (temperate mean)
-    ZoneType.MUDLINE: 20.0,      # mA/m² (buried/mud zone)
+_EXPOSURE_BY_ZONE_TYPE: Final[dict[ZoneType, ExposureZone]] = {
+    ZoneType.ATMOSPHERIC: ExposureZone.ATMOSPHERIC,
+    ZoneType.SPLASH: ExposureZone.SPLASH,
+    ZoneType.TIDAL: ExposureZone.TIDAL,
+    ZoneType.SUBMERGED: ExposureZone.SUBMERGED,
+    ZoneType.MUDLINE: ExposureZone.BURIED_MUDLINE,
 }
 
-# Calcareous deposit reduction factors
-# Once polarized, calcareous deposits form and reduce current demand
-# Typical reduction: 30-50% of initial after 1-2 years
-CALCAREOUS_REDUCTION_FACTOR: float = 0.60  # 40% reduction
+_MA_PER_A: Final = 1000.0
 
 
 class Zone(BaseModel):
@@ -107,6 +116,17 @@ class MarineCPInput(BaseModel):
     utilization_factor: float = Field(
         default=0.90, gt=0, le=1.0, description="Anode utilization factor"
     )
+    anode_length_m: float | None = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Stand-off anode length [m]; when given the B401 Sec. 7.8 "
+            "initial / final current-output checks run"
+        ),
+    )
+    seawater_resistivity_ohm_m: float = Field(
+        default=0.30, gt=0, description="Seawater resistivity [ohm-m]"
+    )
 
 
 class MarineCPResult(BaseModel):
@@ -124,6 +144,9 @@ class MarineCPResult(BaseModel):
     number_of_anodes: int = Field(
         ..., description="Number of anodes required"
     )
+    governing_case: str = Field(
+        default="mass", description="'mass', 'initial' or 'final'"
+    )
     zone_demands: list[dict] = Field(
         default_factory=list,
         description="Per-zone current demand breakdown",
@@ -137,6 +160,18 @@ class MarineCPResult(BaseModel):
     standard: str = Field(
         ..., description="Standards reference matching the selected edition"
     )
+    citations: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Rendered citations ('code_id revision section') of every table "
+            "value used, in first-use order"
+        ),
+    )
+
+    @property
+    def edition(self) -> Edition:
+        """Alias of ``edition_used`` for report provenance."""
+        return self.edition_used
 
     @model_validator(mode="before")
     @classmethod
@@ -155,23 +190,47 @@ class MarineCPResult(BaseModel):
         return values
 
 
+def seawater_current_density(
+    temperature_c: float,
+    depth_m: float,
+    phase: DesignPhase = DesignPhase.MEAN,
+    edition: Edition | None = None,
+) -> CitedValue:
+    """Cited design current density [A/m²] for submerged bare steel.
+
+    Parameters
+    ----------
+    temperature_c : float
+        Surface seawater temperature [°C] → Table 10-1 / 10-2 climate column.
+    depth_m : float
+        Water depth [m] → Table 10-1 / 10-2 depth band row.
+    phase : DesignPhase
+        Initial or final (Table 10-1) or mean (Table 10-2); default mean.
+    edition : Edition, optional
+        DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
+
+    Returns
+    -------
+    CitedValue
+        Current density in A/m² with its table citation.
+    """
+    ed = normalize_edition(edition, stacklevel=3)
+    return design_current_density(
+        climate_from_temperature(temperature_c), depth_band(depth_m), phase, ed
+    )
+
+
 def get_seawater_current_density(
     temperature_c: float,
     depth_m: float,
     calcareous: bool = False,
+    phase: DesignPhase = DesignPhase.MEAN,
+    edition: Edition | None = None,
 ) -> float:
-    """Get seawater current density for submerged bare steel.
+    """Get seawater current density for submerged bare steel [mA/m²].
 
-    Uses a temperature-depth model based on DNV-RP-B401 Table 10-1.
-
-    Temperature correction (relative to 15°C reference):
-        - Colder water → higher oxygen solubility → higher current density
-        - Factor: 1.0 + 0.025 * (15 - T) for T < 15°C
-        - Factor: 1.0 - 0.015 * (T - 15) for T > 15°C
-
-    Depth correction (relative to 30 m reference):
-        - Deeper water → higher pressure → slightly higher current density
-        - Factor: 1.0 + 0.0003 * (depth - 30) for depth > 30 m
+    Step lookup in DNV-RP-B401 Table 10-1 (initial, final) or Table 10-2
+    (mean) by climatic region and depth band.
 
     Parameters
     ----------
@@ -180,36 +239,44 @@ def get_seawater_current_density(
     depth_m : float
         Water depth [m].
     calcareous : bool
-        Whether calcareous deposits have formed (reduces demand).
+        Accepted for signature compatibility and ignored: the B401 design
+        current densities already include the effect of calcareous deposit
+        formation, so no separate reduction is applied.
+    phase : DesignPhase
+        Design phase; default mean (Table 10-2).
+    edition : Edition, optional
+        DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
 
     Returns
     -------
     float
-        Design mean current density [mA/m²].
+        Design current density [mA/m²].
     """
-    base = BASE_CURRENT_DENSITY[ZoneType.SUBMERGED]  # 100 mA/m²
+    del calcareous  # B401 densities already include calcareous deposits
+    ed = normalize_edition(edition, stacklevel=3)
+    return seawater_current_density(temperature_c, depth_m, phase, ed).value * _MA_PER_A
 
-    # Temperature correction
-    if temperature_c < 15.0:
-        temp_factor = 1.0 + 0.025 * (15.0 - temperature_c)
-    elif temperature_c > 15.0:
-        temp_factor = max(0.5, 1.0 - 0.015 * (temperature_c - 15.0))
-    else:
-        temp_factor = 1.0
 
-    # Depth correction
-    if depth_m > 30.0:
-        depth_factor = 1.0 + 0.0003 * (depth_m - 30.0)
-    else:
-        depth_factor = 1.0
+def zone_current_density(
+    zone_type: ZoneType,
+    temperature_c: float,
+    depth_m: float,
+    phase: DesignPhase,
+    edition: Edition,
+) -> CitedValue | None:
+    """Cited design current density [A/m²] for one zone type and phase.
 
-    density = base * temp_factor * depth_factor
-
-    # Calcareous deposit reduction
-    if calcareous:
-        density *= CALCAREOUS_REDUCTION_FACTOR
-
-    return density
+    Delegates to ``marine_structure_cp.zone_current_density``. Returns
+    ``None`` for splash and atmospheric zones: CP is not applied above the
+    waterline in the scope of B401 (0.0 A/m², nothing to cite).
+    """
+    return _structure_zone_current_density(
+        _EXPOSURE_BY_ZONE_TYPE[ZoneType(zone_type)],
+        climate_from_temperature(temperature_c),
+        depth_m,
+        phase,
+        edition,
+    )
 
 
 def calculate_zone_demand(
@@ -217,10 +284,12 @@ def calculate_zone_demand(
     temperature_c: float = 15.0,
     depth_m: float = 30.0,
     calcareous: bool = False,
+    phase: DesignPhase = DesignPhase.MEAN,
+    edition: Edition | None = None,
 ) -> float:
     """Calculate current demand for a single structural zone.
 
-    I_zone = A * f_c * i_c / 1000
+    I_zone = A * f_c * i_c
 
     Parameters
     ----------
@@ -231,100 +300,125 @@ def calculate_zone_demand(
     depth_m : float
         Water depth [m].
     calcareous : bool
-        Whether calcareous deposits are present.
+        Accepted for signature compatibility and ignored (see
+        ``get_seawater_current_density``).
+    phase : DesignPhase
+        Design phase; default mean.
+    edition : Edition, optional
+        DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
 
     Returns
     -------
     float
         Zone current demand [A].
     """
-    # Splash and atmospheric zones are not CP-protected
-    if zone.zone_type in (ZoneType.SPLASH, ZoneType.ATMOSPHERIC):
-        return 0.0
-
-    # Get current density based on zone type
-    if zone.zone_type == ZoneType.SUBMERGED:
-        density = get_seawater_current_density(
-            temperature_c=temperature_c,
-            depth_m=depth_m,
-            calcareous=calcareous,
-        )
-    elif zone.zone_type == ZoneType.TIDAL:
-        # Tidal zone uses base tidal density with temperature correction
-        base = BASE_CURRENT_DENSITY[ZoneType.TIDAL]
-        if temperature_c < 15.0:
-            temp_factor = 1.0 + 0.025 * (15.0 - temperature_c)
-        elif temperature_c > 15.0:
-            temp_factor = max(0.5, 1.0 - 0.015 * (temperature_c - 15.0))
-        else:
-            temp_factor = 1.0
-        density = base * temp_factor
-        if calcareous:
-            density *= CALCAREOUS_REDUCTION_FACTOR
-    elif zone.zone_type == ZoneType.MUDLINE:
-        # Mudline uses fixed low current density (soil-dominated)
-        density = BASE_CURRENT_DENSITY[ZoneType.MUDLINE]
-    else:
-        density = 0.0
-
-    return zone.surface_area_m2 * zone.coating_breakdown_factor * density / 1000.0
+    del calcareous  # B401 densities already include calcareous deposits
+    ed = normalize_edition(edition, stacklevel=3)
+    cited = zone_current_density(zone.zone_type, temperature_c, depth_m, phase, ed)
+    density = 0.0 if cited is None else cited.value
+    return zone.surface_area_m2 * zone.coating_breakdown_factor * density
 
 
-def design_marine_cp(
+def _to_structural_zone(zone: Zone, depth_m: float) -> StructuralZone:
+    return StructuralZone(
+        zone_name=zone.name,
+        exposure_zone=_EXPOSURE_BY_ZONE_TYPE[ZoneType(zone.zone_type)],
+        surface_area_m2=zone.surface_area_m2,
+        depth_m=depth_m,
+        coating_breakdown_factor=zone.coating_breakdown_factor,
+    )
+
+
+def _design_marine_cp(
     input_params: MarineCPInput,
     edition: Edition | None = None,
 ) -> MarineCPResult:
-    """Design multi-zone CP system for a marine structure.
+    """Multi-zone CP design via ``marine_structure_current_demand``.
 
-    Calculates per-zone current demands, total anode mass, and
-    number of anodes required for the full structure.
+    Per-zone mean current demands (Table 10-2 / Sec. 6.3), total anode mass
+    from the mean demand and the anode count from the B401 Sec. 7 loop
+    (mass only unless ``anode_length_m`` is given).
 
     Parameters
     ----------
     input_params : MarineCPInput
         Structure definition with zones and environmental parameters.
+    edition : Edition, optional
+        DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
 
     Returns
     -------
     MarineCPResult
-        Complete CP design result with per-zone breakdown.
+        Complete CP design result with per-zone breakdown and citations.
     """
     ed = normalize_edition(edition, stacklevel=3)
+    zones = [_to_structural_zone(z, input_params.water_depth_m) for z in input_params.zones]
+    result = marine_structure_current_demand(
+        zones=zones,
+        design_life_years=input_params.design_life_years,
+        anode_net_mass_kg=input_params.anode_net_mass_kg,
+        anode_capacity_Ah_kg=input_params.anode_capacity_Ah_kg,
+        utilization_factor=input_params.utilization_factor,
+        edition=ed,
+        surface_temperature_c=input_params.water_temperature_c,
+        anode_length_m=input_params.anode_length_m,
+        seawater_resistivity_ohm_m=input_params.seawater_resistivity_ohm_m,
+    )
 
     zone_demands: list[dict] = []
-    total_demand = 0.0
-
-    for zone in input_params.zones:
-        demand = calculate_zone_demand(
-            zone=zone,
-            temperature_c=input_params.water_temperature_c,
-            depth_m=input_params.water_depth_m,
-            calcareous=False,  # Design for initial (conservative)
+    for zone, detail in zip(input_params.zones, result.zone_details, strict=True):
+        cited = zone_current_density(
+            zone.zone_type,
+            input_params.water_temperature_c,
+            input_params.water_depth_m,
+            DesignPhase.MEAN,
+            ed,
         )
-        total_demand += demand
         zone_demands.append({
             "zone_name": zone.name,
             "zone_type": zone.zone_type.value,
             "surface_area_m2": zone.surface_area_m2,
             "coating_breakdown_factor": zone.coating_breakdown_factor,
-            "current_demand_A": round(demand, 4),
+            "mean_current_density_A_m2": detail["mean_current_density_A_m2"],
+            "current_demand_A": detail["mean_current_A"],
+            "citation": None if cited is None else citation_label(cited.citation),
         })
-
-    # Total anode mass from mean current demand
-    # M = (I_mean * t * 8760) / (capacity * u_f)
-    total_mass = (total_demand * input_params.design_life_years * 8760.0) / (
-        input_params.anode_capacity_Ah_kg * input_params.utilization_factor
-    )
-
-    n_anodes = max(1, math.ceil(total_mass / input_params.anode_net_mass_kg))
 
     return MarineCPResult(
         structure_name=input_params.structure_name,
-        total_current_demand_A=round(total_demand, 4),
-        total_anode_mass_kg=round(total_mass, 2),
-        number_of_anodes=n_anodes,
+        total_current_demand_A=result.total_mean_current_A,
+        total_anode_mass_kg=result.total_anode_mass_kg,
+        number_of_anodes=result.number_of_anodes,
+        governing_case=result.governing_case,
         zone_demands=zone_demands,
         design_life_years=input_params.design_life_years,
         edition_used=ed,
         standard=standard_for_edition(ed),
+        citations=result.citations,
     )
+
+
+def __getattr__(name: str) -> Any:
+    """Emit a DeprecationWarning when ``design_marine_cp`` is imported."""
+    if name == "design_marine_cp":
+        warnings.warn(
+            "digitalmodel.cathodic_protection.marine_cp.design_marine_cp is "
+            "deprecated; use marine_structure_cp.marine_structure_current_demand.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _design_marine_cp
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = [
+    "MarineCPInput",
+    "MarineCPResult",
+    "Zone",
+    "ZoneType",
+    "calculate_zone_demand",
+    "design_marine_cp",  # noqa: F822 (lazy via module __getattr__, deprecated)
+    "get_seawater_current_density",
+    "seawater_current_density",
+    "zone_current_density",
+]

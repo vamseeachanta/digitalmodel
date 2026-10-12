@@ -10,7 +10,7 @@ scaled by production capacity and water depth.
 
 GoM Benchmark Data (2024 basis):
 - TLP:            $2-6B (Mars 896 m, Ursa 1067 m)
-- Spar:           $3-7B (Perdido 2438 m, Whale 2100 m)
+- Spar:           $3-7B (GoM-UD-Spar 2438 m, Whale 2100 m)
 - Semi:           $4-10B (Appomattox 2250 m, Thunder Horse 1844 m)
 - FPSO:           $5-12B (emerging GoM, Brazil pre-salt analogue)
 - Tieback <10 km: $200-500M
@@ -214,7 +214,7 @@ def estimate_capex(
             f"GoM {host_type.value} benchmark (2024 basis); "
             f"ref 100k bopd / 1500 m; capacity_factor={cap_factor:.3f}, "
             f"depth_factor={dep_factor:.3f}. "
-            f"Analogues: Perdido Spar $3-7B, Thunder Horse Semi $4-10B, "
+            f"Analogues: GoM-UD-Spar Spar $3-7B, Thunder Horse Semi $4-10B, "
             f"Mars TLP $2-6B."
         )
 

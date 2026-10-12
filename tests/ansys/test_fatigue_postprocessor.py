@@ -238,3 +238,19 @@ class TestDamageSummaryDF:
     def test_empty_results(self):
         df = _fp().create_damage_summary_df([])
         assert len(df) == 0
+
+
+def test_module_docstring_states_caller_input_boundary():
+    from digitalmodel.ansys import fatigue_postprocessor
+
+    docstring = fatigue_postprocessor.__doc__
+    assert "rainflow" not in docstring.lower()
+    assert "supplied by the caller" in docstring
+
+
+def test_regression_pin_load_case_exposes_caller_input_fields():
+    """Regression pin: stress ranges and cycle counts remain input fields."""
+    from dataclasses import fields
+
+    input_fields = {item.name for item in fields(FatigueLoadCase) if item.init}
+    assert {"stress_range_mpa", "num_cycles"} <= input_fields

@@ -1,0 +1,1789 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2272",
+  "card": "A07",
+  "inspection_only": true,
+  "attribute_policy": "Only TITLE* and DWG# tags; all values withheld. No drawing texts or raw decoder messages emitted.",
+  "identifier_policy": "Reviewed generic names retained; other names represented by SHA-256 pseudonyms.",
+  "qualification": {
+    "status": "blocked",
+    "units": "One decoded header declares millimetres; two drawings suggest only a millimetre sheet basis; physical hull units remain unestablished for the other three drawings.",
+    "rights": "Publication-rights evidence is not established."
+  },
+  "sources": [
+    {
+      "source": "04508036 Lines Aft Lwr Hull, Strut, Haunch.dwg",
+      "source_sha256": "eaf626fe50c455dd4d39f73034f3770e0ed7dac2141fb9c1ec1938b5e376a006",
+      "converter_version": "not emitted; binary digest identifies converter",
+      "converter_sha256": "146dc3406462425947f9d6a54796b130a7f077d4a10749b1a71c4327fa260738",
+      "command": [
+        "dwg2dxf",
+        "-v1",
+        "-o",
+        "<staged-output.dxf>",
+        "04508036 Lines Aft Lwr Hull, Strut, Haunch.dwg"
+      ],
+      "returncode": 0,
+      "diagnostics": {
+        "stdout_bytes": 143,
+        "stderr_bytes": 3654
+      },
+      "dxf_sha256": "9273db69a071b734e45477c540f5c9ef71e79c0a274864cb707d13f942d37a70",
+      "dxf": {
+        "opens": true,
+        "readiness": "unverified",
+        "ezdxf_version": "1.4.4",
+        "dxf_version": "AC1032",
+        "insunits": 0,
+        "header": {
+          "$INSUNITS": 0,
+          "$MEASUREMENT": 0,
+          "$LUNITS": 4,
+          "$DIMSCALE": 32.0
+        },
+        "dimension_entity_count": 15,
+        "entities_by_type": {
+          "INSERT": 17,
+          "DIMENSION": 15,
+          "LINE": 163,
+          "TEXT": 62,
+          "LEADER": 19,
+          "ARC": 17,
+          "POLYLINE": 3,
+          "SPLINE": 1,
+          "LWPOLYLINE": 6,
+          "MTEXT": 13
+        },
+        "entities_by_layer": {
+          "0": 27,
+          "withheld-612c54af0df009ee": 52,
+          "withheld-e4ba216b53e675d3": 69,
+          "withheld-17a1680c1ddf9ff1": 1,
+          "withheld-a6dcc188d07f1920": 2,
+          "withheld-2215b79651c369c9": 1,
+          "withheld-3e4e42ccbc14d732": 2,
+          "withheld-3e8c8831bb1fc384": 1,
+          "withheld-3471caa466365f13": 7,
+          "withheld-ec2f2f1b338d6287": 4,
+          "withheld-de9bead4db4761ee": 1,
+          "withheld-f708b5d9d992e801": 3,
+          "withheld-a80b47bbaaf25d42": 2,
+          "withheld-5a354871c74c02dc": 2,
+          "withheld-4a43f14045d2c933": 1,
+          "withheld-9b676e1f7bb3054d": 4,
+          "withheld-67a0007d10cad6c8": 2,
+          "withheld-f31def61f3a58066": 4,
+          "withheld-8ab282d187167770": 2,
+          "withheld-cfa4ab274379010f": 4,
+          "withheld-856c2619675e5ab1": 1,
+          "withheld-59d8031bf7ba9f8b": 3,
+          "withheld-48333579093e2c91": 2,
+          "withheld-c3f1559a5606adaf": 3,
+          "withheld-c3bbb330856f00d3": 2,
+          "withheld-05f7ae7e913908f2": 2,
+          "withheld-1e93228026be4177": 2,
+          "withheld-9ee4da1cc7b4ed1e": 1,
+          "withheld-b458fe2298628353": 2,
+          "withheld-b71a1be0f0a32f1c": 1,
+          "withheld-079e787c483a6fb7": 2,
+          "withheld-1d4380686bfefd0c": 1,
+          "withheld-ffcea3598e78c448": 2,
+          "withheld-dec0d66b07501228": 1,
+          "withheld-cf3edd325a442cf5": 2,
+          "withheld-54dbd8138fbebbb1": 49,
+          "withheld-ee9e7b565838f140": 1,
+          "withheld-2a85d626bee34a91": 8,
+          "withheld-c7f397761401079d": 4,
+          "withheld-9dcd1d1e977beabe": 32,
+          "BORDER": 3,
+          "withheld-1b2a719d740bd008": 1
+        },
+        "layers": [
+          "0",
+          "withheld-c400c253a9243106",
+          "withheld-664afdad612ee301",
+          "withheld-ce47f5325b1cf258",
+          "withheld-d0f0322d0a8f066e",
+          "withheld-4cf666b1081ec478",
+          "withheld-0e4a0819ffa63199",
+          "withheld-6b31259cecec6ca8",
+          "withheld-d097e495e9a9e3cb",
+          "withheld-e4ba216b53e675d3",
+          "withheld-c1fba92568caea4e",
+          "withheld-54dbd8138fbebbb1",
+          "withheld-2215b79651c369c9",
+          "withheld-a6dcc188d07f1920",
+          "withheld-3471caa466365f13",
+          "withheld-3e8c8831bb1fc384",
+          "withheld-ee9e7b565838f140",
+          "withheld-612c54af0df009ee",
+          "withheld-1e93228026be4177",
+          "withheld-ec2f2f1b338d6287",
+          "withheld-c3f1559a5606adaf",
+          "withheld-59d8031bf7ba9f8b",
+          "withheld-cfa4ab274379010f",
+          "withheld-f31def61f3a58066",
+          "withheld-9b676e1f7bb3054d",
+          "withheld-5a354871c74c02dc",
+          "withheld-f708b5d9d992e801",
+          "withheld-cf3edd325a442cf5",
+          "withheld-ffcea3598e78c448",
+          "withheld-079e787c483a6fb7",
+          "withheld-b458fe2298628353",
+          "withheld-a80b47bbaaf25d42",
+          "withheld-de9bead4db4761ee",
+          "withheld-05f7ae7e913908f2",
+          "withheld-c3bbb330856f00d3",
+          "withheld-48333579093e2c91",
+          "withheld-856c2619675e5ab1",
+          "withheld-8ab282d187167770",
+          "withheld-67a0007d10cad6c8",
+          "withheld-4710be890942e582",
+          "withheld-9ee4da1cc7b4ed1e",
+          "withheld-fc9b0b80146942c7",
+          "withheld-78a1da9617122203",
+          "withheld-7d0f8d0b65caaa66",
+          "withheld-dec0d66b07501228",
+          "withheld-1d4380686bfefd0c",
+          "withheld-b71a1be0f0a32f1c",
+          "withheld-4a43f14045d2c933",
+          "withheld-3e4e42ccbc14d732",
+          "withheld-5de80a72f028bb46",
+          "withheld-c1ad47209d2950db",
+          "withheld-17a1680c1ddf9ff1",
+          "withheld-9dcd1d1e977beabe",
+          "withheld-a1d46d819c6c4b71",
+          "withheld-3a35c92d6d143337",
+          "withheld-dd19ce79ee673f1b",
+          "withheld-0e9e6277fbee4e17",
+          "withheld-c7bdd4c58c3a58d0",
+          "withheld-7613ab9151f2dc0d",
+          "withheld-c6a05256d4642a9f",
+          "withheld-2a85d626bee34a91",
+          "withheld-bffffae84cd5d552",
+          "withheld-c487155821eef2e9",
+          "withheld-ba7902e95c7cf3d4",
+          "withheld-70e2325c075f74ca",
+          "withheld-1b2a719d740bd008",
+          "withheld-c7f397761401079d",
+          "withheld-afa7e559a55d673e",
+          "withheld-05d1f69d8cfd1e50",
+          "withheld-d2ec0dcc44ec1f1e",
+          "withheld-ec35d84d2e2bcfad",
+          "withheld-ecb7e4b543ae24f3",
+          "withheld-2b7fa41682a8eda2",
+          "withheld-c294cf93e7a32c20",
+          "withheld-e04d2d12dfc322c0",
+          "withheld-1d0bd85ef5ce18b2",
+          "withheld-eb7f2a866ba65c6f",
+          "withheld-af4f9510bfdd6267",
+          "withheld-d950697d12b07fde",
+          "withheld-c4a0a79ab818f1fe",
+          "withheld-76cea90c96f68081",
+          "BORDER"
+        ],
+        "inserts": [
+          {
+            "block_name": "withheld-3af38ca74c0ad75f",
+            "scales": [
+              1,
+              1,
+              1
+            ],
+            "block_extents": {
+              "minimum": [
+                -619.7658975725931,
+                -62.36761849999994,
+                0.0
+              ],
+              "maximum": [
+                5.905512746837189,
+                104.3136094737401,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                378.00614433162366,
+                490.7339866863747,
+                0.0
+              ],
+              "maximum": [
+                1003.6775546510539,
+                657.4152146601148,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-fb248b5e9fb9e6da",
+            "scales": [
+              1,
+              1,
+              1
+            ],
+            "block_extents": null,
+            "insert_extents": null
+          },
+          {
+            "block_name": "withheld-1ea38c786e2155d6",
+            "scales": [
+              1,
+              1,
+              1
+            ],
+            "block_extents": null,
+            "insert_extents": null
+          },
+          {
+            "block_name": "withheld-552688b3486dec52",
+            "scales": [
+              1,
+              1,
+              1
+            ],
+            "block_extents": {
+              "minimum": [
+                0.0,
+                226.3779542500004,
+                0.0
+              ],
+              "maximum": [
+                262.0551185000004,
+                458.4443918750006,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                49.60012458516098,
+                371.7717325614955,
+                0.0
+              ],
+              "maximum": [
+                311.6552430851614,
+                603.8381701864957,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-8a934fad7bbf4b68",
+            "scales": [
+              32.0,
+              32.0,
+              32.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -0.06632361909263018,
+                -0.07549880476901316,
+                0.0
+              ],
+              "maximum": [
+                0.06328958478498435,
+                0.1256434597479661,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                47.07478002280453,
+                606.2955219361893,
+                0.0
+              ],
+              "maximum": [
+                51.2224025468882,
+                612.7320744007326,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-01fe9be1e02751b3",
+            "scales": [
+              1,
+              1,
+              1
+            ],
+            "block_extents": {
+              "minimum": [
+                0.2,
+                0.67,
+                0.0
+              ],
+              "maximum": [
+                1059.2,
+                683.84,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                0.2,
+                0.67,
+                0.0
+              ],
+              "maximum": [
+                1059.2,
+                683.84,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-bb32f2e64ea8fae3",
+            "scales": [
+              32.0,
+              32.0,
+              32.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -0.1623797632095823,
+                -0.09375000000000004,
+                0.0
+              ],
+              "maximum": [
+                0.1623797632095822,
+                0.1875,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                116.42091049721297,
+                357.8789962324522,
+                0.0
+              ],
+              "maximum": [
+                126.81321534262624,
+                366.8789962324522,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-cbdeeadae3565bf6",
+            "scales": [
+              -1.0,
+              1.0,
+              1.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -54.2737256394546,
+                4.501360496808672,
+                0.0
+              ],
+              "maximum": [
+                57.31972121661715,
+                47.6904991599103,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                195.28040336854366,
+                130.89513880830387,
+                0.0
+              ],
+              "maximum": [
+                306.8738502246154,
+                174.0842774714055,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-d00afaeb243f9eeb",
+            "scales": [
+              -1.0,
+              1.0,
+              1.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -46.01953335746703,
+                12.072258917684337,
+                0.0
+              ],
+              "maximum": [
+                46.80693853733555,
+                46.82639284713963,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                205.79318604782526,
+                138.46603722917953,
+                0.0
+              ],
+              "maximum": [
+                298.61965794262784,
+                173.22017115863483,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-ae5b80bf8749433e",
+            "scales": [
+              1,
+              1,
+              1
+            ],
+            "block_extents": {
+              "minimum": [
+                -42.20842206211432,
+                15.85770812812206,
+                0.0
+              ],
+              "maximum": [
+                41.06011988410705,
+                44.61698588065832,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                210.47734742843957,
+                142.25148643961725,
+                0.0
+              ],
+              "maximum": [
+                293.7458893746609,
+                171.01076419215352,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-585c902ac4ffd6ad",
+            "scales": [
+              -1.0,
+              1.0,
+              1.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -59.23599583841951,
+                -2.1316282072803006e-14,
+                0.0
+              ],
+              "maximum": [
+                63.14396818841942,
+                47.72974326971394,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                189.4561563967414,
+                126.39377831149517,
+                0.0
+              ],
+              "maximum": [
+                311.8361204235803,
+                174.12352158120913,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-f22f9a64c9532bcc",
+            "scales": [
+              32.0,
+              32.0,
+              32.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -0.6371138228399196,
+                -0.4835623845320551,
+                0.0
+              ],
+              "maximum": [
+                0.6371138228399196,
+                0.2409996651038178,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                754.9870055846385,
+                67.59905331918293,
+                0.0
+              ],
+              "maximum": [
+                813.9823170380879,
+                80.06243695162982,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-f22f9a64c9532bcc",
+            "scales": [
+              32.0,
+              32.0,
+              32.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -0.6371138228399196,
+                -0.4835623845320551,
+                0.0
+              ],
+              "maximum": [
+                0.6371138228399196,
+                0.2409996651038178,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                91.38936098619354,
+                67.59905331918293,
+                0.0
+              ],
+              "maximum": [
+                164.97275013555725,
+                80.06243695162982,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-f22f9a64c9532bcc",
+            "scales": [
+              32.0,
+              32.0,
+              32.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -0.6371138228399196,
+                -0.4835623845320551,
+                0.0
+              ],
+              "maximum": [
+                0.6371138228399196,
+                0.2409996651038178,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                723.5251837494075,
+                478.5302456837505,
+                0.0
+              ],
+              "maximum": [
+                845.4441388733189,
+                486.24223496707265,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-340302243d43067b",
+            "scales": [
+              21.330496,
+              21.330496,
+              21.330496
+            ],
+            "block_extents": {
+              "minimum": [
+                -0.0033749999999999995,
+                -0.378375,
+                0.0
+              ],
+              "maximum": [
+                7.517433858004018,
+                0.0,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                896.6784941073568,
+                646.770137576,
+                0.0
+              ],
+              "maximum": [
+                1054.1790592144428,
+                656.8582861653313,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-b7b1c20c7a082ef9",
+            "scales": [
+              32.0,
+              32.0,
+              32.0
+            ],
+            "block_extents": {
+              "minimum": [
+                -0.5351415428301751,
+                -0.1606664434025452,
+                0.0
+              ],
+              "maximum": [
+                0.5666453754517311,
+                0.1606664434025452,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                1011.4566391687945,
+                88.53770621921701,
+                0.0
+              ],
+              "maximum": [
+                1046.7138205538154,
+                98.82035859697991,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-7434caab27b97910",
+            "scales": [
+              22.176,
+              22.176,
+              22.176
+            ],
+            "block_extents": {
+              "minimum": [
+                -0.003375000000016874,
+                -0.3783750000006419,
+                0.0
+              ],
+              "maximum": [
+                7.380446037629557,
+                1.250000103425464e-12,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                733.0068692008833,
+                670.449155999958,
+                -0.003200000000000008
+              ],
+              "maximum": [
+                896.7504845313567,
+                678.8399999999999,
+                -0.003200000000000008
+              ]
+            }
+          }
+        ],
+        "title_attribute_tags": [],
+        "paperspace_viewports": [],
+        "modelspace_bbox": {
+          "minimum": [
+            0.2,
+            0.67,
+            -0.003200000000000008
+          ],
+          "maximum": [
+            1059.2,
+            683.84,
+            0.0
+          ]
+        },
+        "audit_errors": [],
+        "audit_fixes": [
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202
+        ],
+        "qualification_required": "Establish units, scale, dimensions and station assignments independently."
+      },
+      "inspection_only": true,
+      "unit_inference": {
+        "status": "unknown",
+        "basis": "Units cannot be established. Architectural LUNITS and DIMSCALE=32 are formatting/annotation settings; the largest block spans approximately 1059 \u00d7 683 drawing units and does not uniquely establish a sheet or hull unit."
+      }
+    },
+    {
+      "source": "733M-1A Hull Lines.dwg",
+      "source_sha256": "5d82d7e0070729e282d5048f26cc4885d52bd0f71400ea565269f2f806a91639",
+      "converter_version": "not emitted; binary digest identifies converter",
+      "converter_sha256": "146dc3406462425947f9d6a54796b130a7f077d4a10749b1a71c4327fa260738",
+      "command": [
+        "dwg2dxf",
+        "-v1",
+        "-o",
+        "<staged-output.dxf>",
+        "733M-1A Hull Lines.dwg"
+      ],
+      "returncode": 0,
+      "diagnostics": {
+        "stdout_bytes": 119,
+        "stderr_bytes": 2033
+      },
+      "dxf_sha256": "6e092db055fd5f96e82dff37ce80f2d8e965de06d9f12a21f2117e3dfd577fdf",
+      "dxf": {
+        "opens": true,
+        "readiness": "unverified",
+        "ezdxf_version": "1.4.4",
+        "dxf_version": "AC1032",
+        "insunits": 0,
+        "header": {
+          "$INSUNITS": 0,
+          "$MEASUREMENT": 0,
+          "$LUNITS": 2,
+          "$DIMSCALE": 1.5
+        },
+        "dimension_entity_count": 58,
+        "entities_by_type": {
+          "INSERT": 4,
+          "TEXT": 30,
+          "LWPOLYLINE": 7,
+          "POLYLINE": 2,
+          "LINE": 87,
+          "SOLID": 4,
+          "DIMENSION": 58
+        },
+        "entities_by_layer": {
+          "0": 15,
+          "withheld-39f17ec6ebcf3cec": 6,
+          "withheld-612c54af0df009ee": 43,
+          "withheld-54bef1ccfde12b92": 1,
+          "withheld-5d73ebde81987d4c": 1,
+          "withheld-726a2749e243fa32": 1,
+          "withheld-db5f1a085a445a01": 1,
+          "withheld-22ca9cf39e446698": 8,
+          "withheld-3a386d2bb69adffc": 1,
+          "withheld-68d0766ae14980da": 1,
+          "withheld-5ba2c833c5d65e64": 1,
+          "withheld-33b975be1b356015": 1,
+          "withheld-420b5fcad107dba4": 1,
+          "withheld-1ae55232c15b65f0": 1,
+          "withheld-9bf6f67741ec1888": 1,
+          "withheld-f069afe77ee40e4a": 51,
+          "withheld-ce4878d3f410d92d": 58
+        },
+        "layers": [
+          "0",
+          "BORDER",
+          "withheld-b607661a35fe8d57",
+          "withheld-49a95fd0f7ec1822",
+          "withheld-18f6028b7cf74b8d",
+          "withheld-6f953caf246f6537",
+          "withheld-ce4878d3f410d92d",
+          "withheld-68d0766ae14980da",
+          "withheld-9bf6f67741ec1888",
+          "withheld-1ae55232c15b65f0",
+          "withheld-3a386d2bb69adffc",
+          "withheld-726a2749e243fa32",
+          "withheld-5d73ebde81987d4c",
+          "withheld-54bef1ccfde12b92",
+          "withheld-5ba2c833c5d65e64",
+          "withheld-db5f1a085a445a01",
+          "withheld-33b975be1b356015",
+          "withheld-420b5fcad107dba4",
+          "withheld-612c54af0df009ee",
+          "withheld-22ca9cf39e446698",
+          "withheld-d0f0322d0a8f066e",
+          "withheld-39f17ec6ebcf3cec",
+          "withheld-f069afe77ee40e4a"
+        ],
+        "inserts": [
+          {
+            "block_name": "withheld-dfcae7d467db336f",
+            "scales": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "block_extents": {
+              "minimum": [
+                44.68878862341209,
+                3.123846218090705,
+                0.0
+              ],
+              "maximum": [
+                283.8528446726057,
+                19.50767248180366,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                67.03318293511813,
+                4.685769327136057,
+                0.0
+              ],
+              "maximum": [
+                425.7792670089086,
+                29.26150872270549,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-1eb6798cd8a894ed",
+            "scales": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "block_extents": {
+              "minimum": [
+                -4.999999999129587,
+                -4.999999999129587,
+                0.0
+              ],
+              "maximum": [
+                291.9999999491679,
+                204.999999964313,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                -7.49999999869438,
+                -7.49999999869438,
+                0.0
+              ],
+              "maximum": [
+                437.99999992375183,
+                307.4999999464695,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-851ae1d02366f569",
+            "scales": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "block_extents": {
+              "minimum": [
+                0.6842318109392443,
+                18.059577147171726,
+                0.0
+              ],
+              "maximum": [
+                286.3016145867267,
+                181.93760522111393,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                1.0263477164088664,
+                27.089365720757584,
+                0.0
+              ],
+              "maximum": [
+                429.4524218800901,
+                272.9064078316709,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-8bf797aa02bd65b7",
+            "scales": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "block_extents": {
+              "minimum": [
+                19.924459782996557,
+                0.3731678128894167,
+                0.0
+              ],
+              "maximum": [
+                267.0613866146695,
+                199.62401455539623,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                29.88668967449484,
+                0.5597517193341246,
+                0.0
+              ],
+              "maximum": [
+                400.5920799220043,
+                299.43602183309434,
+                0.0
+              ]
+            }
+          }
+        ],
+        "title_attribute_tags": [
+          "TITLE"
+        ],
+        "paperspace_viewports": [],
+        "modelspace_bbox": {
+          "minimum": [
+            -7.49999999869438,
+            -7.49999999869438,
+            0.0
+          ],
+          "maximum": [
+            437.99999992375183,
+            307.4999999464695,
+            0.0
+          ]
+        },
+        "audit_errors": [],
+        "audit_fixes": [
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202
+        ],
+        "qualification_required": "Establish units, scale, dimensions and station assignments independently."
+      },
+      "inspection_only": true,
+      "unit_inference": {
+        "status": "tentative-sheet-only",
+        "basis": "Tentative millimetre sheet basis: one unscaled block spans approximately 297 \u00d7 210, consistent with an A4 sheet, and is inserted at scale 1.5. INSUNITS=0; this does not establish the physical scale of hull coordinates."
+      }
+    },
+    {
+      "source": "733M-1A-lines plan rigid hull only.DWG",
+      "source_sha256": "e7b863b1dbf02da30ea4435488f7d342296234baf361a6d65e58b421cc8484fb",
+      "converter_version": "not emitted; binary digest identifies converter",
+      "converter_sha256": "146dc3406462425947f9d6a54796b130a7f077d4a10749b1a71c4327fa260738",
+      "command": [
+        "dwg2dxf",
+        "-v1",
+        "-o",
+        "<staged-output.dxf>",
+        "733M-1A-lines plan rigid hull only.DWG"
+      ],
+      "returncode": 0,
+      "diagnostics": {
+        "stdout_bytes": 135,
+        "stderr_bytes": 0
+      },
+      "dxf_sha256": "693dceb61b6a9958661aeb1d71243cf4bc89da527e8ed2c381a076ddfae25938",
+      "dxf": {
+        "opens": true,
+        "readiness": "unverified",
+        "ezdxf_version": "1.4.4",
+        "dxf_version": "AC1015",
+        "insunits": null,
+        "header": {
+          "$INSUNITS": null,
+          "$MEASUREMENT": null,
+          "$LUNITS": 2,
+          "$DIMSCALE": 1.5
+        },
+        "dimension_entity_count": 58,
+        "entities_by_type": {
+          "INSERT": 4,
+          "TEXT": 30,
+          "POLYLINE": 9,
+          "LINE": 87,
+          "SOLID": 4,
+          "DIMENSION": 58
+        },
+        "entities_by_layer": {
+          "0": 15,
+          "withheld-39f17ec6ebcf3cec": 6,
+          "withheld-612c54af0df009ee": 43,
+          "withheld-54bef1ccfde12b92": 1,
+          "withheld-5d73ebde81987d4c": 1,
+          "withheld-726a2749e243fa32": 1,
+          "withheld-db5f1a085a445a01": 1,
+          "withheld-22ca9cf39e446698": 8,
+          "withheld-3a386d2bb69adffc": 1,
+          "withheld-68d0766ae14980da": 1,
+          "withheld-5ba2c833c5d65e64": 1,
+          "withheld-33b975be1b356015": 1,
+          "withheld-420b5fcad107dba4": 1,
+          "withheld-1ae55232c15b65f0": 1,
+          "withheld-9bf6f67741ec1888": 1,
+          "withheld-f069afe77ee40e4a": 51,
+          "withheld-ce4878d3f410d92d": 58
+        },
+        "layers": [
+          "0",
+          "BORDER",
+          "withheld-b607661a35fe8d57",
+          "withheld-49a95fd0f7ec1822",
+          "withheld-18f6028b7cf74b8d",
+          "withheld-6f953caf246f6537",
+          "withheld-ce4878d3f410d92d",
+          "withheld-68d0766ae14980da",
+          "withheld-9bf6f67741ec1888",
+          "withheld-1ae55232c15b65f0",
+          "withheld-3a386d2bb69adffc",
+          "withheld-726a2749e243fa32",
+          "withheld-5d73ebde81987d4c",
+          "withheld-54bef1ccfde12b92",
+          "withheld-5ba2c833c5d65e64",
+          "withheld-db5f1a085a445a01",
+          "withheld-33b975be1b356015",
+          "withheld-420b5fcad107dba4",
+          "withheld-612c54af0df009ee",
+          "withheld-22ca9cf39e446698",
+          "withheld-d0f0322d0a8f066e",
+          "withheld-39f17ec6ebcf3cec",
+          "withheld-f069afe77ee40e4a"
+        ],
+        "inserts": [
+          {
+            "block_name": "withheld-dfcae7d467db336f",
+            "scales": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "block_extents": {
+              "minimum": [
+                44.68878862341209,
+                3.123846218090705,
+                0.0
+              ],
+              "maximum": [
+                283.8528446726057,
+                19.50767248180366,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                67.03318293511813,
+                4.685769327136057,
+                0.0
+              ],
+              "maximum": [
+                425.7792670089086,
+                29.26150872270549,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-1eb6798cd8a894ed",
+            "scales": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "block_extents": {
+              "minimum": [
+                -4.999999999129587,
+                -4.999999999129587,
+                0.0
+              ],
+              "maximum": [
+                291.9999999491679,
+                204.999999964313,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                -7.49999999869438,
+                -7.49999999869438,
+                0.0
+              ],
+              "maximum": [
+                437.99999992375183,
+                307.4999999464695,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-851ae1d02366f569",
+            "scales": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "block_extents": {
+              "minimum": [
+                0.6842318109392443,
+                18.059577147171726,
+                0.0
+              ],
+              "maximum": [
+                286.3016145867267,
+                181.93760522111393,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                1.0263477164088664,
+                27.089365720757584,
+                0.0
+              ],
+              "maximum": [
+                429.4524218800901,
+                272.9064078316709,
+                0.0
+              ]
+            }
+          },
+          {
+            "block_name": "withheld-8bf797aa02bd65b7",
+            "scales": [
+              1.5,
+              1.5,
+              1.5
+            ],
+            "block_extents": {
+              "minimum": [
+                19.924459782996557,
+                0.3731678128894167,
+                0.0
+              ],
+              "maximum": [
+                267.0613866146695,
+                199.62401455539623,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                29.88668967449484,
+                0.5597517193341246,
+                0.0
+              ],
+              "maximum": [
+                400.5920799220043,
+                299.43602183309434,
+                0.0
+              ]
+            }
+          }
+        ],
+        "title_attribute_tags": [],
+        "paperspace_viewports": [],
+        "modelspace_bbox": {
+          "minimum": [
+            -7.49999999869438,
+            -7.49999999869438,
+            0.0
+          ],
+          "maximum": [
+            437.99999992375183,
+            307.4999999464695,
+            0.0
+          ]
+        },
+        "audit_errors": [],
+        "audit_fixes": [
+          202,
+          202,
+          202,
+          202,
+          202
+        ],
+        "qualification_required": "Establish units, scale, dimensions and station assignments independently."
+      },
+      "inspection_only": true,
+      "unit_inference": {
+        "status": "tentative-sheet-only",
+        "basis": "The same approximately 297 \u00d7 210 block and 1.5 INSERT scale suggest a millimetre sheet basis. INSUNITS and MEASUREMENT are absent from the decoded legacy header. Physical hull scale remains unverified."
+      }
+    },
+    {
+      "source": "FSO TWIN HULL LINES 3D.DWG",
+      "source_sha256": "1b9bc73fd3e6c5ca20eac1f1ab33d839c36f2b22a4342be9578b29e3c26be136",
+      "converter_version": "not emitted; binary digest identifies converter",
+      "converter_sha256": "146dc3406462425947f9d6a54796b130a7f077d4a10749b1a71c4327fa260738",
+      "command": [
+        "dwg2dxf",
+        "-v1",
+        "-o",
+        "<staged-output.dxf>",
+        "FSO TWIN HULL LINES 3D.DWG"
+      ],
+      "returncode": 0,
+      "diagnostics": {
+        "stdout_bytes": 123,
+        "stderr_bytes": 652
+      },
+      "dxf_sha256": "ead902e1fe4940a5c801972f7f5b257be30dcac557333358e8bbb682376682d7",
+      "dxf": {
+        "opens": true,
+        "readiness": "unverified",
+        "ezdxf_version": "1.4.4",
+        "dxf_version": "AC1018",
+        "insunits": 4,
+        "header": {
+          "$INSUNITS": 4,
+          "$MEASUREMENT": 1,
+          "$LUNITS": 2,
+          "$DIMSCALE": 1.0
+        },
+        "dimension_entity_count": 0,
+        "entities_by_type": {
+          "POLYLINE": 4207
+        },
+        "entities_by_layer": {
+          "0": 4207
+        },
+        "layers": [
+          "0",
+          "withheld-a8e6adc6cd134c97",
+          "Defpoints"
+        ],
+        "inserts": [],
+        "title_attribute_tags": [],
+        "paperspace_viewports": [],
+        "modelspace_bbox": {
+          "minimum": [
+            -5.502915728,
+            -44.78861147,
+            -0.01870057318
+          ],
+          "maximum": [
+            279.7964737211068,
+            44.78861147,
+            25.00000024
+          ]
+        },
+        "audit_errors": [],
+        "audit_fixes": [
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202
+        ],
+        "qualification_required": "Establish units, scale, dimensions and station assignments independently."
+      },
+      "inspection_only": true,
+      "unit_inference": {
+        "status": "declared",
+        "basis": "INSUNITS=4 explicitly declares millimetres; MEASUREMENT=1 is consistent with metric formatting. This establishes the decoded unit declaration, not independent fidelity, station mapping or publication rights."
+      }
+    },
+    {
+      "source": "H920DM-1A_Hull Lines_1.dwg",
+      "source_sha256": "3f133a773572234a2c51435215d67f8242a7187c251b740e45835992903549a4",
+      "converter_version": "not emitted; binary digest identifies converter",
+      "converter_sha256": "146dc3406462425947f9d6a54796b130a7f077d4a10749b1a71c4327fa260738",
+      "command": [
+        "dwg2dxf",
+        "-v1",
+        "-o",
+        "<staged-output.dxf>",
+        "H920DM-1A_Hull Lines_1.dwg"
+      ],
+      "returncode": 0,
+      "diagnostics": {
+        "stdout_bytes": 123,
+        "stderr_bytes": 954
+      },
+      "dxf_sha256": "ca4a29543273ffd1a8acc915f2bc4bbf1a553e90841f54d3f2e681f1bdc05e81",
+      "dxf": {
+        "opens": true,
+        "readiness": "unverified",
+        "ezdxf_version": "1.4.4",
+        "dxf_version": "AC1032",
+        "insunits": 0,
+        "header": {
+          "$INSUNITS": 0,
+          "$MEASUREMENT": 0,
+          "$LUNITS": 2,
+          "$DIMSCALE": 1.0
+        },
+        "dimension_entity_count": 0,
+        "entities_by_type": {
+          "INSERT": 1,
+          "LWPOLYLINE": 109,
+          "TEXT": 28
+        },
+        "entities_by_layer": {
+          "0": 29,
+          "15": 14,
+          "7": 26,
+          "12": 9,
+          "1": 9,
+          "9": 9,
+          "2": 42
+        },
+        "layers": [
+          "0",
+          "BORDER",
+          "15",
+          "7",
+          "12",
+          "1",
+          "9",
+          "2",
+          "Defpoints"
+        ],
+        "inserts": [
+          {
+            "block_name": "A",
+            "scales": [
+              0.87,
+              0.87,
+              0.87
+            ],
+            "block_extents": {
+              "minimum": [
+                -2.3980147521689497e-12,
+                -8.952838470577262e-13,
+                0.0
+              ],
+              "maximum": [
+                11650.0,
+                8170.000000000001,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                -4.463843685833867e-12,
+                -1.5774048733874224e-12,
+                0.0
+              ],
+              "maximum": [
+                10135.499999999998,
+                7107.9,
+                0.0
+              ]
+            }
+          }
+        ],
+        "title_attribute_tags": [
+          "DWG#",
+          "TITLE-L1",
+          "TITLE-L2"
+        ],
+        "paperspace_viewports": [
+          {
+            "viewport_id": 1,
+            "status": 1,
+            "paper_height": 6.461200561343695,
+            "view_height": 6.461200561343695,
+            "scale": 1.0
+          },
+          {
+            "viewport_id": 2,
+            "status": 1,
+            "paper_height": 6.399999618530274,
+            "view_height": 7800.92348958467,
+            "scale": 0.0008204156375940841
+          }
+        ],
+        "modelspace_bbox": {
+          "minimum": [
+            -4.463843685833867e-12,
+            -1.5774048733874224e-12,
+            0.0
+          ],
+          "maximum": [
+            10135.499999999998,
+            7107.9,
+            0.0
+          ]
+        },
+        "audit_errors": [],
+        "audit_fixes": [
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202
+        ],
+        "qualification_required": "Establish units, scale, dimensions and station assignments independently."
+      },
+      "inspection_only": true,
+      "unit_inference": {
+        "status": "unknown",
+        "basis": "Units cannot be established. Block A spans 11650 \u00d7 8170 and is inserted at 0.87, giving approximately 10135.5 \u00d7 7107.9. The active paperspace viewport ratio is approximately 0.000820416; absent a paper-unit basis, this does not establish hull units."
+      }
+    },
+    {
+      "source": "H920DM-1A_Hull Lines_2.dwg",
+      "source_sha256": "000f48653b778b17586b244cd50b6677d71d12fa68bcdd766a47e89ff5927b57",
+      "converter_version": "not emitted; binary digest identifies converter",
+      "converter_sha256": "146dc3406462425947f9d6a54796b130a7f077d4a10749b1a71c4327fa260738",
+      "command": [
+        "dwg2dxf",
+        "-v1",
+        "-o",
+        "<staged-output.dxf>",
+        "H920DM-1A_Hull Lines_2.dwg"
+      ],
+      "returncode": 0,
+      "diagnostics": {
+        "stdout_bytes": 123,
+        "stderr_bytes": 868
+      },
+      "dxf_sha256": "73963a902fcabba377ec36f984bfb571ef981b11e1b0d53ad758af42bb6c9c85",
+      "dxf": {
+        "opens": true,
+        "readiness": "unverified",
+        "ezdxf_version": "1.4.4",
+        "dxf_version": "AC1027",
+        "insunits": 0,
+        "header": {
+          "$INSUNITS": 0,
+          "$MEASUREMENT": 0,
+          "$LUNITS": 2,
+          "$DIMSCALE": 1.0
+        },
+        "dimension_entity_count": 0,
+        "entities_by_type": {
+          "INSERT": 1,
+          "LWPOLYLINE": 109,
+          "TEXT": 28
+        },
+        "entities_by_layer": {
+          "0": 29,
+          "15": 14,
+          "7": 26,
+          "12": 9,
+          "1": 9,
+          "9": 9,
+          "2": 42
+        },
+        "layers": [
+          "0",
+          "BORDER",
+          "15",
+          "7",
+          "12",
+          "1",
+          "9",
+          "2",
+          "Defpoints"
+        ],
+        "inserts": [
+          {
+            "block_name": "A",
+            "scales": [
+              0.87,
+              0.87,
+              0.87
+            ],
+            "block_extents": {
+              "minimum": [
+                -2.3980147521689497e-12,
+                -8.952838470577262e-13,
+                0.0
+              ],
+              "maximum": [
+                11650.0,
+                8170.000000000001,
+                0.0
+              ]
+            },
+            "insert_extents": {
+              "minimum": [
+                -4.463843685833867e-12,
+                -1.5774048733874224e-12,
+                0.0
+              ],
+              "maximum": [
+                10135.499999999998,
+                7107.9,
+                0.0
+              ]
+            }
+          }
+        ],
+        "title_attribute_tags": [
+          "DWG#",
+          "TITLE-L1",
+          "TITLE-L2"
+        ],
+        "paperspace_viewports": [],
+        "modelspace_bbox": {
+          "minimum": [
+            -4.463843685833867e-12,
+            -1.5774048733874224e-12,
+            0.0
+          ],
+          "maximum": [
+            10135.499999999998,
+            7107.9,
+            0.0
+          ]
+        },
+        "audit_errors": [],
+        "audit_fixes": [
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202,
+          202
+        ],
+        "qualification_required": "Establish units, scale, dimensions and station assignments independently."
+      },
+      "inspection_only": true,
+      "unit_inference": {
+        "status": "unknown",
+        "basis": "Units cannot be established. The same block A and 0.87 INSERT scale provide no unique paper-size or hull-unit basis; no paperspace VIEWPORT entity is present."
+      }
+    }
+  ],
+  "metadata_scope": "DIMENSION counts and INSERTs cover modelspace and paperspace layouts; block definition extents are local, INSERT extents are transformed drawing coordinates. Viewport scale is paper height / model view height; viewport ID 1 is the overall paperspace view."
+}

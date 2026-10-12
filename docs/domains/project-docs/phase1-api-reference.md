@@ -940,7 +940,7 @@ df.to_csv('outputs/rao_data.csv')
 
 For issues or questions:
 - GitHub Issues: https://github.com/vamseeachanta/digitalmodel/issues
-- Email: vamsee.achanta@aceengineer.com
+- Email: [email removed]
 
 ---
 

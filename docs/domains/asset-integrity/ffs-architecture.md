@@ -34,7 +34,7 @@ remaining life, verdict (ACCEPT/MONITOR/RE_RATE/REPAIR/REPLACE), a screening
 re-rated pressure, the measurement-sufficiency status, and the raw stage dicts.
 `FFSComponent`/`FFSAssessmentResult` are the single record shape that all
 downstream consumers (reports, the design showcase, parametric acceptance
-curves #1065, the indexed lookup / Deckhand API #1066, the field dashboard
+curves #1065, the indexed lookup / query layer #1066, the field dashboard
 #1067) share — no consumer re-wires the six modules or re-invents field names.
 
 **No physics here.** The coordinator orchestrates and normalises only; every

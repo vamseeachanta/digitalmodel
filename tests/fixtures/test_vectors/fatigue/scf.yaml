@@ -142,7 +142,7 @@ assumptions:
   - "Thickness correction per DNV-RP-C203 Cl. 2.4.1"
   - "SCF applied as multiplier to nominal stress range"
 references:
-  - "DNV-RP-C203 (2016) Cl. 2.4.1 — Thickness effect"
+  - "DNV-RP-C203 (edition not established) Cl. 2.4.1 — Thickness effect"
   - "Goodman, J. (1899) Mechanics Applied to Engineering"
   - "Gerber, H. (1874) Bestimmung der zulassigen Spannungen"
   - "Soderberg, C.R. (1930) Factor of Safety and Working Stress"

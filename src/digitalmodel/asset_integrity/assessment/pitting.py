@@ -417,3 +417,10 @@ def assess_pitting(
         rsf_a=rsf_a,
     )
     return {"characterization": char, "level1": l1, "level2": l2}
+
+
+def router(cfg):
+    """Dispatch the offline screening workflow without changing assessment physics."""
+    from .pitting_workflow import router as workflow_router
+
+    return workflow_router(cfg)

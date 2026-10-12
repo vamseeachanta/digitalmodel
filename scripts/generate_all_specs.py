@@ -127,17 +127,79 @@ class ProcessResult:
 # ---------------------------------------------------------------------------
 
 
+#: A text model saved by OrcaFlex carries this header near the start of its
+#: content; a batch config or a preserved record of a lost .sim file does not,
+#: and is not a model.
+_MODEL_HEADER = re.compile(r"""^(?:General|"General"|'General')\s*:""", re.MULTILINE)
+_MODEL_TYPE_COMMENT = re.compile(r"#\s*Type:\s*Model\b")
+#: A YAML document marker, bare or followed by a comment (``--- # doc``).
+_DOC_MARKER = re.compile(r"(?:---|\.\.\.)(?:\s+#.*)?")
+#: Characters of content, from its first line, searched for the header.
+_CONTENT_WINDOW = 4096
+
+
+def _is_model_yml(path: Path) -> bool:
+    """Stream past the preamble -- comments, blank lines, YAML directives and
+    document markers (``---`` or ``...``, optionally followed by a comment),
+    of any length -- then decide on the content that follows.
+
+    A ``# Type: Model`` comment in that leading block marks a model, but only
+    when a content line follows it: a comment-only file is not a model, and
+    as a ``.yml`` it would displace a valid same-stem ``.dat``. Otherwise the
+    ``General:`` key, bare or quoted, is searched in the content.
+    ``utf-8-sig`` drops a byte-order mark, which otherwise sits before an
+    initial ``General:`` and defeats the anchored match."""
+    typed = False
+    try:
+        with open(path, encoding="utf-8-sig", errors="replace") as fh:
+            for raw in fh:
+                line = raw.strip()
+                if not line or line.startswith("%") or _DOC_MARKER.fullmatch(line):
+                    continue
+                if line.startswith("#"):
+                    typed = typed or bool(_MODEL_TYPE_COMMENT.match(line))
+                    continue
+                if typed:
+                    return True
+                return bool(_MODEL_HEADER.search(raw + fh.read(_CONTENT_WINDOW)))
+    except OSError:
+        return False
+    return False
+
+
+def discover_model_files(root: Path) -> list[Path]:
+    """One path per model under *root*: its text .yml, else its binary .dat.
+
+    C13 removed the binary .dat of models that have a .yml twin; discovering
+    .dat only dropped those models. A model is keyed by folder and stem.
+    """
+    chosen: dict[tuple[Path, str], Path] = {}
+    for path in sorted(root.rglob("*")):
+        suffix = path.suffix.lower()
+        if suffix not in (".yml", ".dat") or not path.is_file():
+            continue
+        if suffix == ".yml" and not _is_model_yml(path):
+            continue
+        key = (path.parent, path.stem.lower())
+        if key not in chosen or suffix == ".yml":
+            chosen[key] = path
+    return sorted(chosen.values())
+
+
 def discover_models(raw_root: Path, name_glob: str | None = None) -> list[ModelEntry]:
-    """Find all .dat files under the raw examples directory.
+    """Find every model under the raw examples directory.
+
+    A model is its OrcaFlex text .yml, else its binary .dat (one entry per
+    model; ``ModelEntry.dat_path`` holds whichever file loads it).
 
     Args:
-        raw_root: Root directory containing example .dat files.
+        raw_root: Root directory containing example models.
         name_glob: Optional glob pattern to filter by filename stem.
 
     Returns:
         Sorted list of ModelEntry objects.
     """
-    dat_files = sorted(raw_root.rglob("*.dat"))
+    dat_files = discover_model_files(raw_root)
     entries: list[ModelEntry] = []
 
     for dat_path in dat_files:

@@ -295,7 +295,7 @@ If you encounter problems:
    - OrcaFlex version (11.6b)
 
 ### Contact Information
-- **Orcina Support**: support@orcina.com
+- **Orcina Support**: [email removed]
 - **API Documentation**: https://www.orcina.com/webhelp/OrcFxAPI/
 - **This Project**: See `ROOT_CAUSE_ANALYSIS.md` for detailed technical analysis
 

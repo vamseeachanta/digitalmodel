@@ -46,8 +46,8 @@ class LogFileAnalysisComponents():
         from digitalmodel.infrastructure.utils.data import ReadData
         read_data = ReadData()
         # For test purposes
-        # self.file_list = ['Q:\\projects\\Mole\\log_files\\30-015-45336_1_20190904_13h36m.log',
-        #                   'Q:\\projects\\Mole\\log_files\\42-389-37924_1_20190904_06h11m.log']
+        # self.file_list = ['<private-data>\\30-015-45336_1_20190904_13h36m.log',
+        #                   '<private-data>\\42-389-37924_1_20190904_06h11m.log']
 
         df_array = []
         for folder_index in range(0, len(self.cfg.files['folder'])):

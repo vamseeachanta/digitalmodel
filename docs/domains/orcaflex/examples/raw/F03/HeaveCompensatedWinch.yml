@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\github\digitalmodel\docs\modules\orcaflex\examples\raw\F03\HeaveCompensatedWinch.yml
+# File: docs/domains/orcaflex/examples/raw/F03/HeaveCompensatedWinch.yml
 # Created: 1:29 PM on 8/20/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   Comments: ! "Example of using a Python external function to model a heave-compensated winch in OrcaFlex.\r\nFor details

@@ -1,0 +1,213 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GHS Windows containment qualification</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:1060px;margin:40px auto;padding:0 24px;color:#182736}h1,h2{line-height:1.2}h2{margin-top:2em}blockquote{border-left:4px solid #bf7700;padding:12px 20px;background:#fff5db}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #ccd5df;padding:9px;text-align:left;overflow-wrap:anywhere}pre{white-space:pre-wrap;background:#edf2f7;padding:18px}a{color:#005c9b}code{overflow-wrap:anywhere}footer{border-top:1px solid #ccd5df;margin-top:40px;padding:20px 0;font-size:12px;overflow-wrap:anywhere}</style><main><h1>GHS next slice: Windows owned-process qualification</h1>
+<blockquote>
+<p>Status: plan-review; revised addendum implementation will await explicit approval.
+Issue: https://github.com/vamseeachanta/digitalmodel/issues/2089
+Complexity: T2. Client: N/A. Date: 2026-09-11. Lane: lane:codex.
+Execution: parallel-readonly review; one implementation writer.
+Baseline: 6c89b4e30c9c224cccaef6cba4cc57885ba11153.</p>
+</blockquote>
+<h2>Deliverable and authority</h2>
+<p>This slice will provide a local Windows process helper and harmless parent/child qualification harness. Qualification will cover only the exact helper, sentinels, interpreter, OS and account context observed. Approval will authorize TDD implementation, bounded Python sentinel execution on the current Windows machine, validation and PR delivery. It will not authorize GHS, Part Maker or another solver. The existing run_approved_capture hard stop and synthetic evidence labels will remain unchanged. Trusted receipt/DACL storage, approval nonces, vendor diagnostics, license recovery and the parent's concrete capture/format approval gates will remain separate.</p>
+<h2>Resource Intelligence Summary</h2>
+<p>These verified sources will constrain implementation:</p>
+<ul>
+<li>Parent docs/plans/2026-09-11-issue-2089-ghs-canary.md will supply owned-tree timeout, creation-time identity and unrelated-process survival requirements.</li>
+<li>src/digitalmodel/solvers/ghs/runner.py will retain its unconditional live refusal and synthetic-only process seam.</li>
+<li>docs/plans/evidence/issue-2082-native.ps1 will supply generic ctypes/lifetime prior art: kernel_api, job_object, run_owned and cleanup_owned at lines 59,73,84,111. Its OrcaFlex entry point will not be imported or executed.</li>
+<li>tests/solvers/smoke/test_native_cleanup_contract.py will supply two mocked cleanup-failure cases; real descendant, crash and identity proofs will be added separately.</li>
+<li>tests/DOMAINS.md will route new tests through the existing solver-smoke root.</li>
+<li>The Microsoft references below will govern native semantics. The later GHS geometry packet will use separately qualified vendor sources.</li>
+</ul>
+<p>Evidence: baseline runner.py will raise for every live call; no other open GHS PR was returned by the 2026-09-11 issue/PR inventory. The companion resource record will retain current observations. Drive-index availability/freshness limits will remain explicit. No indexed project file will become a neutral fixture. Standards-derived calculations will be out of scope. Failure reproduction will be N/A: this will add a missing qualification capability, not repair an alleged GHS runtime regression.</p>
+<h2>Architecture and launch boundary</h2>
+<p>Private Windows primitives will use lazy ctypes DLL loading and pointer-width-correct types. Non-Windows imports/pure tests will remain supported. Unsupported APIs, architectures or nesting contexts will fail before any sentinel is resumed. No pywin32 dependency will be required.</p>
+<p>The public entry point will accept only a fresh output root and closed finite timeout profile. It will derive the executable from the trusted running interpreter and select only fixed repository-owned sentinel roles. It will accept no caller command, shell, executable, arbitrary script, GHS profile or receipt. The lowest launch wrapper will also derive the interpreter and fixed sentinel path internally, validate the closed role enum and hashes, and accept no raw argv/executable/script override. No callable helper will provide a general launch interface; Python privacy will not be treated as enforcement. Direct-helper override tests will reject before CreateProcessW.</p>
+<p>An unnamed non-inheritable Job Object will set KILL_ON_JOB_CLOSE and neither breakaway flag. STARTUPINFOEX with PROC_THREAD_ATTRIBUTE_JOB_LIST, EXTENDED_STARTUPINFO_PRESENT and CREATE_SUSPENDED will create the process in the job. There will be no fallback to create-then-assign: Microsoft identifies a controller-crash orphan window in that sequence. This will preserve assignment before resume. CREATE_NO_WINDOW and bInheritHandles=false will prevent visible windows and job-handle inheritance. The attribute buffer and job handle will remain alive through CreateProcessW.</p>
+<p>Before ResumeThread, the helper will verify job membership and retain the process handle, PID and creation FILETIME. API failures, incompatible nesting, membership mismatch and resume failure will trigger owned cleanup or explicit uncertainty. All native calls will receive argtypes/restype and checked returns, including expected attribute-buffer sizing behavior. Finally paths will release the returned primary-thread handle, process/job handles and attribute buffers. Observer process handles will request QUERY_LIMITED_INFORMATION and SYNCHRONIZE; PROCESS_TERMINATE will be added only for owned cleanup. PROCESS_ALL_ACCESS will not be used.</p>
+<h2>Real sentinel experiment</h2>
+<p>Original fixed sentinels will supply parent, child, unrelated control and crash-test controller roles. Once resumed, each will self-exit within 30 seconds, perform no network/vendor actions and accept no arbitrary executable. A never-resumed process will have no executing watchdog. The parent will launch its fixed child with no breakaway and close_fds. An atomically published bounded readiness record (exclusive temporary write, flush, then rename) will identify the child; the observer will retain each handle and verify creation time and membership while alive. Missing readiness will fail qualification, preventing vacuous absence proofs.</p>
+<p>Each scenario will use an exclusive trusted local temporary directory and fixed filenames. Reparse checks will remain observational; hostile-writer storage containment will not be claimed. stdout/stderr will use null handles or bounded fixed records, never unbounded PIPE accumulation. Native tests will cover:</p>
+<ol>
+<li>Normal parent exit while child lives: final job-handle closure will stop the child.</li>
+<li>Timeout while parent/child live: closure will stop both under a bounded cleanup deadline.</li>
+<li>Before-resume controller death will use controller-origin identity publication and an explicit observer barrier, not sentinel readiness. The observer will retain and verify the suspended process handle; ResumeThread will never be called for that process. The observer will call TerminateProcess on its retained controller handle and confirm death; OS-driven job-handle closure will terminate the suspended process.</li>
+<li>Controller death after parent/child readiness will explicitly use TerminateProcess on the retained controller handle and confirm death, triggering OS-driven handle closure and termination of both contained identities.</li>
+<li>Fixed child breakaway attempt: creation will fail or the child will remain a verified job member; escape will fail qualification.</li>
+<li>The unrelated control will remain alive with matching retained identity through target-job cleanup; the harness will stop its own control separately afterward.</li>
+<li>A deliberate second-job-handle negative control will show that closing the first handle does not terminate the sentinel; closing the retained second handle will then terminate it. This handle will be registered for finally cleanup and never retained in positive crash cases.</li>
+<li>A fixed abnormal child-exit scenario will require the known nonzero code to produce the expected failed-run classification and complete cleanup. Its meta-test will pass only when that failure is correctly classified; it will not represent a successful workload.</li>
+</ol>
+<p>The harness will test the current nesting context and, where possible, a deliberate compatible enclosing job. Injected tests will cover incompatible policies; unobserved policies will not become all-Windows claims. No taskkill/image-name sweep, PID-only kill or non-owned process manipulation will occur.</p>
+<p>At each positive close/crash trigger, the controller will own the sole remaining target-job handle. Observer duplicates used for pre-trigger membership/census inspection will be closed and acknowledged before the barrier; no duplication/inheritance will occur afterward. Instrumented ownership tests and the second-handle control will verify this invariant without claiming a global system handle census. Membership/count checks will happen before closure. After last-handle closure, the observer will wait on retained process handles only, never query a closed unnamed job. Fixed sentinels will stop spawning after readiness; every expected member will be retained before triggering. Unexpected members will fail the pre-trigger census.</p>
+<p>The closed profile will use integer seconds: watchdog=30, readiness_timeout=5, trigger_budget=10, cleanup_timeout=2 and margin=5. Monotonic time from earliest owned creation will require a trigger within 10 seconds and more than cleanup_timeout+margin of remaining watchdog life. Missing lifetime evidence or delayed scheduling will fail before triggering. An ineffective-kill test will allow only natural watchdog exits; qualification must fail at the earlier cleanup deadline. Scenario 1 will exclude its intentionally exited parent from live-at-trigger checks but require its child alive. The suspended scenario will use its separate barrier and no watchdog claim.</p>
+<p>Termination proof will use retained-handle waits and the pre-close census. Wrong identity, WAIT_FAILED, unexpected pre-trigger count, early exit, unreadable evidence, leaked handles or incomplete readiness will fail qualification. Expected timeout may pass its experiment only after all required observations succeed; it will never imply production-run success.</p>
+<h2>Recovery and evidence</h2>
+<p>Before starting any sentinel, the harness will exclusively create a persistent marker in one fixed per-user/per-machine namespace: resolved Windows LocalAppData plus digitalmodel/ghs-sentinel-qualification/active.json. This path will not depend on output_root, case_id or a caller override. Calls in the same account will be single-flight even across different output roots; different accounts/machines will have independent evidence, with no cross-account exclusion claim. Missing local state resolution will block execution.</p>
+<p>After verified cleanup and durable outcome persistence, the active marker will be atomically moved without overwrite to an immutable completed-attempt record in the same state directory. This explicit completion will permit a later operator invocation; an unresolved marker will never be rotated this way. Concurrent creation will continue to use exclusive creation.</p>
+<p>An unresolved marker will block another attempt. Confirmed cleanup will atomically finalize a bounded failed/passed outcome. Ambiguous cleanup, observer crash or failed persistence will preserve unresolved state and prohibit automatic retry. The harness will not silently remove or age out the marker. Durable stages will include reserved, creation_may_have_occurred, identities_recorded and cleanup_confirmed; the uncertainty stage will be flushed before process creation. Create-before-record crashes, empty identity sets and observer loss will remain unresolved. Missing identities will never prove that nothing launched.</p>
+<p>This interlock will qualify synthetic attempts only; it will not act as a production nonce or license lock. Manual recovery will independently establish the complete synthetic identity set and termination. Elapsed watchdog time will not clear an incomplete registry or suspended process. If completeness cannot be established, the attempt will stay unresolved for operator investigation. No automatic clear command, vendor lock access or disk-full success fallback will exist.</p>
+<p>Versioned evidence will bind helper/sentinel hashes, interpreter hash/version, Windows build/architecture, profile, UTC interval, enclosing-job context, scenario triggers, identity/wait observations, cleanup and limitations. Raw local identities will remain private; a public summary will substitute role labels for PIDs/accounts/paths and reference private evidence by opaque digest.</p>
+<p>A passing result will be sentinel_containment_passed, with licensed_execution_verified=false and ghs_launch_allowed=false. It will not set the existing GHS containment_qualified flag. A changed helper, interpreter, sentinel or OS/account/job-policy context will require requalification. Saved success will not constitute an authorization credential.</p>
+<h2>Pseudocode</h2>
+<pre><code class="language-text">qualify(output_root, closed_profile):
+    validate platform, fixed trusted identities and finite bounds
+    exclusively persist unresolved attempt marker
+    for each fixed scenario:
+        create job; atomically create suspended sentinel inside it
+        retain identities/membership; close observer job duplicates
+        resume only scenarios that require running sentinels
+        require readiness and fixed trigger; observe owned termination
+        confirm unrelated survival; close handles; retain bounded evidence
+    finalize only after confirmed cleanup
+    otherwise preserve recovery_required; never automatically retry
+</code></pre>
+<h2>Artifact Map / Files to Change</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Add</td>
+<td>src/digitalmodel/solvers/ghs/_windows_job.py</td>
+<td>Checked native bindings and structures</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>src/digitalmodel/solvers/ghs/_owned_process.py</td>
+<td>Private process/job lifetime</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>src/digitalmodel/solvers/ghs/qualification.py</td>
+<td>Fixed orchestration and evidence</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>src/digitalmodel/solvers/ghs/_sentinel.py</td>
+<td>Original finite sentinel roles</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>tests/solvers/ghs/test_windows_job.py</td>
+<td>Injected native failures</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>tests/solvers/ghs/test_qualification.py</td>
+<td>Evidence/interlock contracts</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>tests/solvers/ghs/test_windows_qualification.py</td>
+<td>Real Windows acceptance</td>
+</tr>
+<tr>
+<td>Update</td>
+<td>docs/domains/ghs/neutral-hydrostatics-canary.md</td>
+<td>Invocation and limits</td>
+</tr>
+<tr>
+<td>Add</td>
+<td>scripts/review/results/issue-2089/</td>
+<td>Tests, observations and reviews</td>
+</tr>
+<tr>
+<td>Update</td>
+<td>docs/plans/README.md</td>
+<td>Addendum status</td>
+</tr>
+</tbody>
+</table>
+<p>Files will remain below 400 lines and functions below 50; further splits will preserve these boundaries. Existing solver launchers and registry activation will remain outside the write set.</p>
+<h2>TDD Test List</h2>
+<table>
+<thead>
+<tr>
+<th>Cases</th>
+<th>Required outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Non-Windows import, unavailable API, unsupported architecture</td>
+<td>No launch; truthful unqualified state</td>
+</tr>
+<tr>
+<td>Unknown fields, boolean/nonfinite/negative/oversized timeouts</td>
+<td>Reject before marker or process creation</td>
+</tr>
+<tr>
+<td>Attribute sizing/init/update, limits/create/membership/resume failures</td>
+<td>No uncontained execution; cleanup or uncertainty</td>
+</tr>
+<tr>
+<td>Job-list flags, hidden launch, no shell/inherited handles/breakaway</td>
+<td>Exact ABI configuration</td>
+</tr>
+<tr>
+<td>Wrong creation time, PID reuse, failed wait, early exit</td>
+<td>Failed observation; no identity-blind termination</td>
+</tr>
+<tr>
+<td>Existing attempt, crash, failed finalization</td>
+<td>Persistent unresolved interlock; no retry</td>
+</tr>
+<tr>
+<td>Missing/oversized readiness, unexpected roles, reparse output</td>
+<td>Bounded failure and owned cleanup</td>
+</tr>
+<tr>
+<td>Eight real Windows observations</td>
+<td>All observations required; skips will not qualify</td>
+</tr>
+<tr>
+<td>Public/private executable, script or role overrides</td>
+<td>Reject before CreateProcessW</td>
+</tr>
+<tr>
+<td>Different output root after unresolved attempt; create-before-record crash</td>
+<td>Stable interlock; persistent uncertainty</td>
+</tr>
+<tr>
+<td>Ineffective kill with later natural watchdog exit</td>
+<td>Cleanup deadline failure</td>
+</tr>
+<tr>
+<td>Suspended barrier</td>
+<td>No sentinel readiness or ResumeThread; retained identity required</td>
+</tr>
+<tr>
+<td>Changed runtime/helper identity</td>
+<td>No reuse as current evidence</td>
+</tr>
+<tr>
+<td>Existing live API/synthetic comparison</td>
+<td>Live refusal and synthetic labels preserved</td>
+</tr>
+</tbody>
+</table>
+<p>Generic Linux CI will run pure/injected tests and explicitly skip native Windows tests. No new hosted/licensed workflow will be added. Actual zero-skip Windows acceptance on the selected machine will be required separately.</p>
+<h2>Acceptance Criteria</h2>
+<ul>
+<li>New pure tests and the existing 86 GHS tests will pass.</li>
+<li>Every required native scenario will have identity-grounded observations; missing/blocked scenarios will prevent success.</li>
+<li>Confirmed cleanup will leave no owned live process, leaked handle or temporary work directory.</li>
+<li>Uncertain/crashed attempts will preserve a named unresolved interlock until manual disposition.</li>
+<li>Independent code review, legal scan and cleanup audit will precede delivery.</li>
+<li>The parent plan hash will remain unchanged, and issue 2089 will remain open for licensed work.</li>
+</ul>
+<h2>Review, risks and decisions</h2>
+<p>Actual Claude r1 and independent Codex r1 verdicts will remain MAJOR against the original draft hash. This revised addendum will incorporate executable-boundary, controller-kill, handle-ownership, suspended-readiness, timing and interlock corrections. Main disposition will map findings to revised requirements/tests without claiming provider APPROVE or consensus. Explicit user approval will precede implementation.</p>
+<p>Native vendor helpers, DACL-qualified receipt storage, approval nonces, diagnostics, geometry and entitlement will remain capture blockers. Host selection will affect later licensed qualification. A sentinel pass will cover observed process lifetime only, not vendor license recovery or filesystem isolation.</p>
+<h2>Primary references</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects">Microsoft Job Objects</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/win32/procthread/nested-jobs">Microsoft Nested Jobs</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute">UpdateProcThreadAttribute</a></li>
+<li><a href="https://devblogs.microsoft.com/oldnewthing/20230209-00/?p=107812">Atomic process assignment and the orphan window</a></li>
+</ul></main><footer>Canonical Markdown SHA256: 1e049153d18a37165aad32f781caac3615cce66806ae0bc15717458dda82c262</footer></html>

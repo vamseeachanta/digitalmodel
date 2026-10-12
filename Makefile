@@ -23,15 +23,14 @@ test:
 	@pytest -n auto --dist loadscope
 
 lint:
-	@echo "🔍 Running linters (parallel)..."
-	@echo "Running flake8..." & flake8 . & \
-	echo "Running mypy..." & mypy . & \
-	echo "Running pylint..." & pylint . & \
-	wait
+	@echo "Running linters..."
+	@ruff check src/ && mypy src/
+
+FORMAT_FILES = scripts/enforcement/check-engineering-register.py src/digitalmodel/__init__.py src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py tests/contracts/test_o04_ecosystem_config.py tests/contracts/test_o04_engineering_register.py
 
 format:
-	@echo "✨ Formatting code (parallel)..."
-	@black . & isort . & wait
+	@echo "Formatting code..."
+	@ruff check --select I --fix $(FORMAT_FILES) && ruff format $(FORMAT_FILES)
 
 clean:
 	@echo "🧹 Cleaning (parallel)..."
@@ -53,6 +52,12 @@ benchmark:
 	@echo "📊 Benchmarking parallel processing..."
 	@time $(MAKE) all
 	@echo "Parallel processing is MANDATORY for efficiency!"
+
+check-register:
+	@python scripts/enforcement/check-engineering-register.py docs/ src/
+
+check-register-self-test:
+	@python scripts/enforcement/check-engineering-register.py --self-test
 
 # Git Management Commands (MANDATORY)
 .PHONY: git-sync git-commit git-push git-pr git-clean git-status git-flow

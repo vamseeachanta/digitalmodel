@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>R01 fix-up 2 — archive selection</title>
+<style>body{max-width:1100px;margin:40px auto;padding:0 24px;font:16px/1.6 system-ui;color:#17212b}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bac4cf;padding:8px;text-align:left;overflow-wrap:anywhere}code{font-size:90%}h1,h2{line-height:1.2}</style>
+<h1>R01 fix-up 2 — archive selection</h1>
+<p>The regenerated selection contains <strong>1,026 move candidates and 257 human holds</strong>, compared with the previous R01 selection of 0 moves and 1,283 holds. Proven exclusions remain 188; feature keeps remain 0. This change corrects <a href="https://github.com/vamseeachanta/digitalmodel/pull/2293">draft PR 2293</a> under owner card R01. No repository data was moved or removed.</p>
+<h2>Fix-up plan</h2>
+<ol><li>Runtime-path and glob holds will be limited to the consuming file's own directory tree; static resolved references will retain their existing scope.</li>
+<li>Each consumer will be represented once. Candidate rows will carry consumer IDs, and distinct pattern/reason evidence will be deduplicated per consumer.</li>
+<li>The serialized summary will remain below 1,000,000 bytes. A separate machine-readable file will carry consumer-to-candidate detail.</li>
+<li>Directory isolation and output-path handling will receive failing regressions before implementation. Regeneration will use a committed, clean scanner revision.</li>
+<li>Candidate hashes, provenance and disjoint partitions will be verified before publication; the PR will remain draft for Claude review and owner disposition.</li></ol>
+<h2>Regenerated selection</h2>
+<table><tr><th>Partition</th><th>Files</th><th>Delta from prior R01</th></tr>
+<tr><td>Rule matches</td><td>1,471</td><td>0</td></tr><tr><td>Proven exclusions</td><td>188</td><td>0</td></tr>
+<tr><td>Feature keeps</td><td>0</td><td>0</td></tr><tr><td>Human holds</td><td>257</td><td>−1,026</td></tr><tr><td>Move candidates</td><td>1,026</td><td>+1,026</td></tr></table>
+<p>Table 1. Disjoint partitions; exclusions plus feature keeps, human holds and moves total 1,471 rule matches. Move candidates are a review selection, not an executed removal.</p>
+<p>The summary is <strong>104,545 bytes</strong>, below the 1,000,000-byte criterion. The candidate CSV is 588,215 bytes, and separate <a href="archive-candidates-2026-10-08.holds.json">hold detail</a> is 63,833 bytes. There are 42 consumer entries. The <a href="archive-candidates-2026-10-08.summary.json">summary</a> records distinct patterns and reasons once per consumer; CSV <code>hold_consumers</code> IDs are repository-relative consumer paths.</p>
+<h2>Top 10 hold reasons by candidate count</h2>
+<table><tr><th>Consumer</th><th>Pattern or reference</th><th>Reason</th><th>Candidate count</th></tr><tr><td>docs/domains/orcaflex/modular_input_validation_example.py</td><td><code>*.yml</code></td><td>runtime path or unresolved glob</td><td>84</td></tr>
+<tr><td>docs/collide_pe/render_brief.py</td><td><code>*/briefs/*.html</code></td><td>runtime path or unresolved glob</td><td>25</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_amplitude.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_combined.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_heatmap.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_phase.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>docs/capability-map/capabilities-sections.yml</td><td><code>../hydro/unit-box-benchmark/benchmark_report.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>scripts/benchmark/validate_owd_vs_spec.py</td><td><code>benchmark_amplitude.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>scripts/benchmark/validate_owd_vs_spec.py</td><td><code>benchmark_combined.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+<tr><td>scripts/benchmark/validate_owd_vs_spec.py</td><td><code>benchmark_heatmap.html</code></td><td>ambiguous or unresolved reference</td><td>19</td></tr>
+</table>
+<p>Table 2. Counts are distinct held candidates per consumer/pattern/reason. Rows overlap and shall not be summed as a partition count. Ties are ordered by consumer, pattern and reason.</p>
+<h2>Verification and review</h2>
+<p>All 1,283 candidate working-file and Git-blob SHA-256 digests, blob-map flags, disjoint partitions, hold IDs, consumer counts and detail mappings passed readback checks. Feature-inventory and hold-detail provenance match the summary. Actual merge base: <code>e355203bacb98e9690481b5f2d474203dfafc0cc</code>. Scanned clean revision: <code>5cbbf0bdc1f06f960af350c407aeead61bef9c12</code>.</p>
+<p>All 63 targeted tests passed in Python 3.12 and isolated Python 3.11. Regressions cover unrelated directory B, directory-prefix boundaries, runtime templates, literal leading folder patterns, root consumers, unique evidence counts, detail links and output collision rejection. The full project test command is blocked by the absent editable sibling dependency <code>../assetutilities</code>. <a href="R01-validation.json">Validation evidence</a> records commands, digests and limitations.</p>
+<p>Plan-stage and code-stage adversarial Codex review findings were resolved; the second frozen code packet was approved and verified unchanged before scanner commit. The output-path finding is recorded for reuse in <a href="https://github.com/vamseeachanta/digitalmodel/issues/2315">issue 2315</a>. Cross-provider consensus is not established; Claude re-review remains required before owner merge.</p>
+<h2>Limitations and owner checkpoint</h2>
+<p>Consumer-directory scoping is the owner-directed policy. Unresolved dynamic paths outside that tree do not create holds from this evidence; root-level consumers can cover the repository tree. Static exclusions and ambiguous literal references retain their prior semantics. Static analysis does not establish arbitrary config-driven execution dependencies or archive availability.</p>
+<p>The detail file maps each consumer to its union of held candidates. With multiple patterns per consumer, it does not encode which individual pattern matched each candidate; patterns and their counts remain available in the summary.</p>
+<p><a href="https://github.com/vamseeachanta/digitalmodel/pull/2304">Removal PR 2304</a> remains open and held. The PM owns closure after manifest review. Claude will review the regenerated selection before the owner merges. Any later removal list will require reconciliation against the 1,026 move candidates and shall preserve the 257 held files.</p>
+</html>

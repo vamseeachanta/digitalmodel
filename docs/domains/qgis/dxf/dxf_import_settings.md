@@ -7,7 +7,7 @@ https://gis.stackexchange.com/questions/221044/import-dxf-with-pyqgis
 
 <code>
 
-dxf_filename = r"\\dgi-hou-fs01\Projects\61863 Talos Lakach FEED\999 Work Space\VAchanta\qgis\inputs\lines\18inch Flowline_3.dxf"
+dxf_filename = r"<private-data>\18inch Flowline_3.dxf"
 uri = dxf_filename+"|layername=entities|geometrytype=LineString|uniqueGeometryType=yes"
 vlayer = QgsVectorLayer(uri, "18inch_flowline_main", "ogr")
 vlayer.isValid()
@@ -25,13 +25,13 @@ General
 Name
 Main Umbilical
 Path
-\\dgi-hou-fs01\Projects\61863 Talos Lakach FEED\999 Work Space\VAchanta\qgis\inputs\lines\Main Umbilical_2.1.dxf
+<private-data>\Main Umbilical_2.1.dxf
 Size
 354 KB
 Last modified
 Monday, November 25, 2024 7:50:06 AM
 Source
-//dgi-hou-fs01/Projects/61863 Talos Lakach FEED/999 Work Space/VAchanta/qgis/inputs/lines/Main Umbilical_2.1.dxf|layername=entities|geometrytype=LineString|uniqueGeometryType=yes
+<private-data>/Main Umbilical_2.1.dxf|layername=entities|geometrytype=LineString|uniqueGeometryType=yes
 Provider
 ogr
 

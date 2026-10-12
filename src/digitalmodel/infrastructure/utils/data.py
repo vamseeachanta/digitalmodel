@@ -304,7 +304,7 @@ class ReadData():
         return result
 
     def get_file_list_from_folder(self, folder_with_file_type, with_path=True, with_extension=True):
-        folder_with_file_type_example = 'Q:\projects\Mole\log_files\*.log'
+        # folder_with_file_type example: r"<folder>\*.log"
 
         import glob
         import os
@@ -925,7 +925,12 @@ class TransformData():
 
 if __name__ == '__main__':
     # write better tests
-    FileName = 'K:\\0173 KM Extreme\\SLWR\\Fatigue\\Test.xlsx'
+    import sys
+
+    from digitalmodel.infrastructure.utils.private_paths import private_data_path
+
+    # The workbook: first argument, else under DIGITALMODEL_PRIVATE_DATA.
+    FileName = sys.argv[1] if len(sys.argv) > 1 else str(private_data_path("Test.xlsx"))
     Columns = ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
     CustomData = {
         "FileName": FileName,

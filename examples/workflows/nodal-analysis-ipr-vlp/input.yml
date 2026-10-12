@@ -12,7 +12,7 @@ production:
   nodal_analysis:
     case:
       id: registry_nodal_analysis
-      description: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+      description: Well operating point from Vogel IPR / simplified homogeneous VLP intersection
     reservoir:
       ipr_model: vogel
       reservoir_pressure_psi: 3000.0

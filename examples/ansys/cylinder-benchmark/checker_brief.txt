@@ -1,0 +1,61 @@
+Independently derive the linear-elastic continuum solution for this cylindrical wall. No tools, files, network, earlier conversation or external retrieval are available. Only the following physical inputs and output syntax are supplied.
+
+Physical inputs: homogeneous isotropic linear elasticity; inner radius a=750 mm, outer radius b=810 mm, axial length 240 mm, Young modulus E=200000 MPa, Poisson ratio nu=0.3. Internal radial pressure p is either 0 or 10 MPa; outside pressure 0, no body force, no rotation, no temperature change. No end caps or applied axial loads. Every point on y=0 has axial displacement zero; radial displacement is free. Top y=240 is axially free. Axisymmetric cylinder axis Y; global X is radial, Z is hoop, XY is radial-axial shear. Tension-positive stresses. Small displacement, no material nonlinearity.
+
+Requested coordinates: r in {750,780,810} mm and y in {60,120,180} mm. Return symbolic expressions in inputs a,b,p,E,nu,r,y for sigma_r(radial normal MPa), sigma_theta(hoop normal MPa), sigma_z(axial normal MPa despite the symbol z; physical global Y), tau_rz(radial-axial shear MPa), sigma_vm(von Mises equivalent MPa), u_r(radial displacement mm), u_z(axial displacement mm despite symbol z; physical global Y). Expressions must support both pressures and all nine coordinates. Include a derivation explaining equilibrium, traction boundary conditions, axial stress state implied by the end conditions, Hooke-law displacements and the bottom reference displacement.
+
+Attribution only: ANSYS Mechanical APDL Verification Manual VM25,2024 R2, pressure-cylinder method; PLANE183 Element Reference,2024 R2, axis conventions. No vendor numeric targets or prose are supplied or requested. URLs are attribution, not retrieval instructions: https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_vm/Hlp_V_VM25.html ; https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_elem/Hlp_E_PLANE183.html
+
+Return one bare JSON object with exactly expressions and derivation keys. expressions will have exactly the seven requested quantity keys with expression-string values. All intermediate helper expressions must be inlined; only the seven input symbols are permitted. No Markdown fences, leading prose, duplicate/extra keys or repair. Derivation is a nonempty JSON string. The response is evaluated once; a syntax rejection leaves the reference unestablished, without retry.
+
+The complete frozen syntax and resource contract follows. It describes syntax only, not response formulas or expected results:
+{
+  "schema": "cylinder-checker-contract-1",
+  "output_contract": {
+    "symbols": [
+      "a",
+      "b",
+      "p",
+      "E",
+      "nu",
+      "r",
+      "y"
+    ],
+    "operators": [
+      "+",
+      "-",
+      "*",
+      "/",
+      "** (integer exponent only)",
+      "sqrt(expression)"
+    ],
+    "literals": "ASCII numeric tokens: one or more digits optionally followed by a decimal point and zero or more digits, or a decimal point followed by one or more digits; optionally followed by e or E, an optional sign and one or more digits. Signs outside exponent notation are unary operators. Literals will be converted exactly to rationals, never through binary float. NaN, Infinity, underscores, hex and implicit multiplication will be refused.",
+    "shape": "JSON object with expressions mapping exactly sigma_r,sigma_theta,sigma_z,tau_rz,sigma_vm,u_r,u_z to arithmetic strings, and derivation string; expressions will inline helper expressions, with no separately defined symbols",
+    "brief": "The exact syntax/output contract, axis/sign and unit definitions will be included in the hashed physics brief; no comparator formulas or expected values will be supplied.",
+    "unary_operators": [
+      "+",
+      "-"
+    ],
+    "integer_literals": true,
+    "grouping": "parenthesized expressions accepted",
+    "whitespace": "ASCII space/tab/CR/LF will be allowed around the response and in expression strings between tokens; each expression CR/LF will become one space before parsing, without joining tokens. Original raw output will remain unchanged. JSON control characters inside strings will require normal JSON escaping.",
+    "envelope": "The entire decoded response will be exactly one bare JSON object, allowing only surrounding ASCII space/tab/CR/LF. UTF8 decoding will be strict; BOM, fences, prose, duplicate keys and extra keys will be refused. Top-level keys will be exactly expressions and derivation; expressions will have exactly the seven specified keys with string values; derivation will be a nonempty string. No wrapper stripping or output repair will occur. Raw bytes will be retained. Noncompliant provider output will leave the gate unestablished; successful conformance is not guaranteed.",
+    "precedence": "Grouping and sqrt(one expression) first, then power, unary signs, multiplication/division, addition/subtraction. Binary +,-,*,/ will associate left. A power exponent will be a signed integer literal, optionally parenthesized: r**-2 and r**(-2) will be equivalent. Chained powers will be refused unless grouped explicitly. -a**2 will mean -(a**2), while (-a)**2 will square the signed base. Noninteger exponents and other function calls will be refused.",
+    "pre_invocation_tests": "B1 tests will cover bare JSON success; fences/prose/extra or duplicate keys/BOM refusal; literal forms including 1e-3; signed exponent equivalence; -a**2 versus (-a)**2; left association of subtraction/division; chained power refusal and explicit grouping; internal escaped newline normalization. Evaluator, envelope, grammar, schema, tests and brief will be frozen before invocation."
+  },
+  "resource_limits": {
+    "envelope_bytes": 65536,
+    "expression_characters": 8192,
+    "tokens": 1024,
+    "parse_levels": 48,
+    "numeric_token_characters": 128,
+    "literal_exponent_magnitude": 256,
+    "power_magnitude": 64,
+    "rational_numerator_or_denominator_bits": 4096,
+    "power_preallocation_bits": 8192,
+    "decimal_intermediate_adjusted_exponent_magnitude": 1024,
+    "precision": 50
+  },
+  "maximum_invocations": 1,
+  "numeric_engine": "exact rational operations; irrational square root and downstream operations use 50-digit Decimal context"
+}

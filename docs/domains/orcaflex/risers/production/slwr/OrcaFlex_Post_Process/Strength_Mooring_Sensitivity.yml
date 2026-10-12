@@ -6,11 +6,11 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
+    Name: ..\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
     Label: BaseCase,Intact Mooring 6% Offset 
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\MooringCondition\SLWR_16OD_SE1200_HE1500_8percent_Offset_GA2_Driving.sim
+    Name: ..\MooringCondition\SLWR_16OD_SE1200_HE1500_8percent_Offset_GA2_Driving.sim
     Label: Failed Mooring 8% Offset
     ObjectName: SLWR
 

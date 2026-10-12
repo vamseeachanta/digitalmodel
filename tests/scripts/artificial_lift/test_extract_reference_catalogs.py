@@ -287,7 +287,7 @@ def test_check_mode_detects_catalog_drift(tmp_path):
         "source /home/client/private",  # abs-path-allowed
         "source /opt/client/private",  # abs-path-allowed
         "source /srv/client/private",  # abs-path-allowed
-        r"source \\server\client\private",
+        r"source \\server\client\private",  # identifier-gate: example
     ],
 )
 def test_extractor_redacts_prohibited_surface_keys(tmp_path, description):

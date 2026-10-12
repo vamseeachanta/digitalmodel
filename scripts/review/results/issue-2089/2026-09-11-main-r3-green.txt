@@ -1,0 +1,18 @@
+COMMAND ["/usr/local/bin/uv", "run", "--no-project", "--python", "3.11", "--with", "pytest==8.4.2", "--with", "numpy==2.4.4", "--with", "scipy==1.17.1", "--with", "pyyaml==6.0.3", "--with", "loguru==0.7.3", "python", "-B", "-m", "pytest", "tests/solvers/ghs", "-q", "-rs", "-p", "no:cacheprovider"]
+SOURCE_HASHES {"__init__.py": "92694625a8108a6bfd920e8842cebfc1805f0b018eba06943aea11f79cabb355", "_canonical.py": "4ca7a266bdede03d6c47b8ee1079bfb2421e0cce281db9291fe267b8b98456f1", "comparison.py": "b193f80ea8476815a81499ff9372902d7a3721e540cbf4b8346ae7cc020e0676", "contracts.py": "9e68b82cd9db608b088327f8f1451c1e46d4b690f279a57d12176917973b8d0e", "runner.py": "364c67969ad59d4b19d81f3c07f3d416bb2b516c2c9161a52e381ef20d75981b"}
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-8.4.2, pluggy-1.6.0
+rootdir: /mnt/ace/ws/agent-worktrees/dm-2089-plan
+configfile: pytest.ini
+collected 86 items
+
+tests/solvers/ghs/test_boundaries.py ....................                [ 23%]
+tests/solvers/ghs/test_comparison.py ...............                     [ 40%]
+tests/solvers/ghs/test_contracts.py .................................... [ 82%]
+.....                                                                    [ 88%]
+tests/solvers/ghs/test_runner.py ..........                              [100%]
+
+============================== 86 passed in 6.75s ==============================
+
+
+EXIT 0

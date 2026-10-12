@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# ABOUTME: Deckhand wall-thickness quickcheck sweep with DNV/API utilization plots.
+# ABOUTME: Wall-thickness quickcheck sweep with DNV/API utilization plots.
 # ABOUTME: Deterministic cache mode, arrestor branch headline, and self-contained HTML.
 """Pipeline Wall Thickness — Utilization Sweep Quick Check.
 
@@ -55,7 +55,7 @@ PROPAGATION_CHECKS = {
     "API-RP-1111": {"propagation"},
 }
 
-# Per-check load premises (deckhand#227). A single load pair (full internal +
+# Per-check load premises. A single load pair (full internal +
 # full external simultaneously) is NOT a design screen: net-pressure burst at
 # the seabed is ~zero (it hid containment entirely, utilisation < 0), and
 # collapse must hold for the empty/depressurised line. Each check is taken

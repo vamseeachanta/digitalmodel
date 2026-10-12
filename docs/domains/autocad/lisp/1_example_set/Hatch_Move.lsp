@@ -1,7 +1,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2006 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
  ;
  ;     1999-12-22  First release
  ;     2000-03-02  Simplified command entry and code

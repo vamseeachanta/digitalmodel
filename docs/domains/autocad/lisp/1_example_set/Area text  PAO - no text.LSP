@@ -10,7 +10,7 @@
   )                      ; defun
 ; pao is stand for Pick Area Object
 ;        Design by  : Adesu <Ade Suharna>
-;        Email      : mteybid@yuasabattery.co.id
+;        Email      : [email removed]
 ;        Homepage   : http://www.yuasa-battery.co.id
 ;        Create     : 03 November 2006
 ;        Program no.: 0455/11/2006

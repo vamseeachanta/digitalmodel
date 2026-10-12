@@ -1,12 +1,12 @@
 # ABOUTME: Uniform FFS query router + indexed lookup table — routes pipe vs
-# ABOUTME: plate queries to the right validated engine; O(1) lookup for the API.
-"""Indexed FFS lookup + uniform query layer (Deckhand API backing).
+# ABOUTME: plate queries to the right validated engine; O(1) point lookup.
+"""Indexed FFS lookup + uniform query layer.
 
 Two things:
 
 1. A **uniform query router** ``evaluate_query(domain, **params)`` that sends a
    point query to the correct validated engine and returns one normalised
-   record — so a caller (the Deckhand API) never has to know which module
+   record — so a caller never has to know which module
    computes a corroded pipe vs a corroded plate.
 2. An **indexed lookup** (``build_lookup`` / ``write_lookup`` / ``query_index``)
    with the same shape as the buckling ``results.json``: ``meta`` + ``lookup``

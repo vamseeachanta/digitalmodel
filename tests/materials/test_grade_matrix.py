@@ -134,11 +134,15 @@ def test_psi_properties():
 
 # --- Registry integrity -------------------------------------------------------
 def test_registry_completeness():
-    # 14 API 5L + 4 hull NS + 12 hull HS + 3 EN = 33 grades.
-    assert len(GRADES) == 33
+    # 14 API 5L + 4 hull NS + 12 hull HS + 3 EN + 5 A312 + 2 A790 = 40 grades.
+    assert len(GRADES) == 40
     assert len(by_standard("API 5L")) == 14
     assert len(by_standard("IACS")) == 16
     assert len(by_standard("EN 10025")) == 3
+    assert len(by_standard("ASTM A312")) == 5
+    assert len(by_standard("ASTM A790")) == 2
+    assert all(g.material_class == "ferritic"
+               for g in all_grades() if g.standard not in ("ASTM A312", "ASTM A790"))
     assert all(isinstance(g, MaterialGrade) for g in all_grades())
 
 

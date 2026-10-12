@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\risers\completion\BOP_on_Wellhead.yml
+# File: docs/domains/orcaflex/risers/completion/BOP_on_Wellhead.yml
 # Created: 9:59 PM on 1/17/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units
@@ -139,7 +139,7 @@ VesselTypes:
     QTFConventionsRotationAxes: rotated
     QTFConventionsFrameOfReference: body
     Draughts:
-      - Name: Transocean_NB
+      - Name: Semisub_53720te
         Mass: 53.72e3
         MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ:
           - [56.776932e6, 0, 0]
@@ -1295,9 +1295,9 @@ P-yModels:
           - [0.1013, 235.6192]
           - [2.8956, 235.6192]
 Vessels:
-  - Name: Transocean_NB
+  - Name: Semisub_53720te
     VesselType: Semi
-    Draught: Transocean_NB
+    Draught: Semisub_53720te
     Length: 95.0976
     Connection: Free
     InitialPosition: [0, 0, 0]
@@ -1398,7 +1398,7 @@ Links:
   - Name: Tensioner1
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, 2.395, -2.048, 25]
+      - [Semisub_53720te, 2.395, -2.048, 25]
       - [Drilling Riser, 0, 0, 13.4116, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1412,7 +1412,7 @@ Links:
   - Name: Tensioner2
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, 2.395, 0, 25]
+      - [Semisub_53720te, 2.395, 0, 25]
       - [Drilling Riser, 0, 0, 13.4116, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1426,7 +1426,7 @@ Links:
   - Name: Tensioner3
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, 2.395, 2.048, 25]
+      - [Semisub_53720te, 2.395, 2.048, 25]
       - [Drilling Riser, 0, 0, 13.4116, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1440,7 +1440,7 @@ Links:
   - Name: Tensioner4
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, 0, 2.048, 25]
+      - [Semisub_53720te, 0, 2.048, 25]
       - [Drilling Riser, 0, 0, 13.4116, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1454,7 +1454,7 @@ Links:
   - Name: Tensioner5
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, -2.395, 2.048, 25]
+      - [Semisub_53720te, -2.395, 2.048, 25]
       - [Drilling Riser, 0, 0, 13.4116, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1468,7 +1468,7 @@ Links:
   - Name: Tensioner6
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, -2.395, 0, 25]
+      - [Semisub_53720te, -2.395, 0, 25]
       - [Drilling Riser, 0, 0, 13.4116, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1482,7 +1482,7 @@ Links:
   - Name: Tensioner7
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, -2.395, -2.048, 25]
+      - [Semisub_53720te, -2.395, -2.048, 25]
       - [Drilling Riser, 0, 0, 13.4116, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1496,7 +1496,7 @@ Links:
   - Name: Tensioner8
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, 0, -2.048, 25]
+      - [Semisub_53720te, 0, -2.048, 25]
       - [Drilling Riser, 0, 0, 13.4116, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1510,7 +1510,7 @@ Links:
   - Name: Top Tensioner
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Transocean_NB, 0, 0, 35]
+      - [Semisub_53720te, 0, 0, 35]
       - [Drilling Riser, 0, 0, 0, End A]
     ReleaseStage: ~
     LinearSpring: No
@@ -1522,7 +1522,7 @@ Links:
 Groups:
   Structure:
     Drilling Riser: Model
-    Transocean_NB: Model
+    Semisub_53720te: Model
     Tensioner1: Model
     Tensioner2: Model
     Tensioner3: Model

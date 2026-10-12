@@ -18,6 +18,6 @@ copy_cfgs:
       - C:\\3.NL\2-DYN\car-925m\C180\
       - C:\\3.NL\2-DYN\orl-718m\C000\
     files:
-      - _01_Seven Arctic_v11.yml
+      - _01_iv02_v11.yml
       - _02_stern_chute.yml
 

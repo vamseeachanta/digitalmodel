@@ -21,8 +21,8 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Base directories for OrcaFlex data
-PARENT_DIR = r"D:\1522\ctr7\orcaflex\rev_a08"  # Parent directory with .dat files
-BASE_DIR = r"D:\1522\ctr7\orcaflex\rev_a08\output\csv"  # CSV output directory
+PARENT_DIR = r"<project-root>"  # Parent directory with .dat files
+BASE_DIR = r"<project-root>"  # CSV output directory
 
 # Initialize Excel reader
 excel_reader = ExcelCollationReader(PARENT_DIR)

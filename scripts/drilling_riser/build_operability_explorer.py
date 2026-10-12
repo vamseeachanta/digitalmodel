@@ -4,7 +4,7 @@
 Renders the merged operability atlas (#1283, ``atlases/drilling_riser_operability``)
 as a PUBLIC, self-contained explorer:
 
-  * ``docs/api/drilling/results.json`` — the Deckhand O(1) index. For every one of
+  * ``docs/api/drilling/results.json`` — the O(1) index. For every one of
     the 6x11x5 = 330 nodes it serialises the EXACT per-cell verdict
     ``{uc, light in OPERABLE|INOPERABLE|ESCALATE}`` computed by
     :func:`digitalmodel.drilling_riser.operability_screening.screen_operability`

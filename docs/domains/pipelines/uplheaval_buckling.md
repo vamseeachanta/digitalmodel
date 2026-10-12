@@ -1,6 +1,6 @@
 ## Introduction
 
-Lateral buckling of pipelines is a phenomenon that occurs when a pipeline is subjected to thermal expansion or contraction. This can cause the pipeline to buckle laterally, which can lead to damage or failure of the pipeline. Lateral buckling can be caused by a number of factors, including temperature changes, pressure changes, and external forces. It is important to design pipelines to prevent lateral buckling and to ensure that they are safe and reliable.
+Upheaval buckling occurs when a buried or trenched pipeline, put into axial compression by thermal expansion and internal pressure, cannot move sideways and instead vents that compression vertically at an out-of-straightness such as an overbend. It is resisted by the download available from the pipe's submerged weight plus the uplift resistance of the cover, so the design levers are cover depth and imperfection sharpness rather than lateral friction. The surface-laid counterpart is [lateral buckling](lateral_buckling.md).
 
 Objective:  Estimate the thermal movement and associated reaction forces for single pipe or Pipe-in-Pipe (PIP) systems.
 

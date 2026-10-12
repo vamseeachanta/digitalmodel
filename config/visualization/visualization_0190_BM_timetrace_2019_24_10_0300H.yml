@@ -59,7 +59,7 @@ plot_settings:
     xlabel: Date
     ylabel: Bending Moment (ft-kips)
     suptitle: Wellhead Bending Moment Timetrace
-    title: Yellowtail Well, Noble Bob Douglas, 2019-10-24 03:00:00
+    title: Deepwater well, drillship, 2019-10-24 03:00:00
     xticklabels: NULL
     grid: True
     legend: True

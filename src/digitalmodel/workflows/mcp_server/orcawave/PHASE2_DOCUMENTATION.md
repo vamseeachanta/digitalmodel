@@ -150,7 +150,7 @@ result = await coordinator.execute_operation(
 
 # Run complete analysis with monitoring
 results = await coordinator.run_analysis_with_monitoring(
-    vessel_name="Sea Cypress",
+    vessel_name="tug_30m_1",
     frequencies=[0.1, 0.5, 1.0, 1.5, 2.0],
     directions=[0, 45, 90, 135, 180, 225, 270, 315],
     water_depth=200.0
@@ -236,7 +236,7 @@ tracker = ProgressTracker()
 # Start tracking
 progress = tracker.start_analysis(
     "analysis_001",
-    "Sea Cypress",
+    "tug_30m_1",
     frequencies=[0.1, 0.5, 1.0],
     directions=[0, 90, 180, 270]
 )

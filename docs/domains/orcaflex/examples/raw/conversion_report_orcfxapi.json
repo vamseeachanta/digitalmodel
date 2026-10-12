@@ -8,15 +8,15 @@
     "yml_files_created": 49,
     "errors": [
       {
-        "file": "D:\\github\\digitalmodel\\docs\\modules\\orcaflex\\examples\\raw\\K01\\K01 5MW spar FOWT.sim",
-        "error": "\nError code: 7\nProblem reading file\r\n\r\nFailed to register user defined result 'Generator Power':\r\n\r\nPython user defined result script module 'D:\\github\\digitalmodel\\docs\\modules\\orcaflex\\examples\\raw\\K01\\GenPower.py' not found"
+        "file": "<private-data>\\K01 5MW spar FOWT.sim",
+        "error": "\nError code: 7\nProblem reading file\r\n\r\nFailed to register user defined result 'Generator Power':\r\n\r\nPython user defined result script module '<private-data>\\GenPower.py' not found"
       },
       {
-        "file": "D:\\github\\digitalmodel\\docs\\modules\\orcaflex\\examples\\raw\\Z09\\Z09 Vessel time history.sim",
-        "error": "\nError code: 7\nProblem reading file (Problem reading time history file '' used by vessel 'Shark1' : Cannot open time history file 'D:\\github\\digitalmodel\\docs\\modules\\orcaflex\\examples\\raw\\Z09\\'. Cannot open file \"D:\\github\\digitalmodel\\docs\\modules\\orcaflex\\examples\\raw\\Z09\\\". The system cannot find the path specified)"
+        "file": "<private-data>\\Z09 Vessel time history.sim",
+        "error": "\nError code: 7\nProblem reading file (Problem reading time history file '' used by vessel 'Shark1' : Cannot open time history file '<private-data>\\'. Cannot open file \"<private-data>\". The system cannot find the path specified)"
       }
     ],
     "processing_time": 28.733747005462646
   },
-  "input_directory": "D:\\github\\digitalmodel\\docs\\modules\\orcaflex\\examples\\raw"
+  "input_directory": "<private-data>\\raw"
 }

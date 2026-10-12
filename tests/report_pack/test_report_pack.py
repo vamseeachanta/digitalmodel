@@ -1,21 +1,33 @@
 """Tests for the standard report-pack workflow (basename ``report_pack``)."""
 
 import json
+import os
+import re
 from pathlib import Path
 
 import pytest
 import yaml
 
+from digitalmodel.reporting import ProvenanceError, render_html
 from digitalmodel.report_pack.workflow import (
     MANIFEST_REQUIRED_FIELDS,
     ReportPackConfigError,
     ReportPackManifestError,
     build_report_layer_manifest,
+    build_report_spec,
+    load_pack,
     router,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE_DIR = REPO_ROOT / "examples" / "workflows" / "report-pack"
+GOLDEN_DIR = Path(__file__).parent / "golden"
+
+TINY_SVG = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20">'
+    '<rect width="80" height="20"/></svg>\n'
+)
 
 RESULTS_CSV = (
     "sea_state_index,hs,tz,tp,occurrence_fraction,"
@@ -242,13 +254,153 @@ def test_html_assembly_self_contained(tmp_path):
     router(_cfg(tmp_path, _base_settings(tmp_path)))
     html = (tmp_path / "results" / "case_report.html").read_text(encoding="utf-8")
     assert html.startswith("<!DOCTYPE html>")
-    assert '<h2 id="section-3">3. Results</h2>' in html
-    assert '<h2 id="appendix-a">Appendix A — Reference Documents</h2>' in html
+    # #2212 part 3: the HTML is the standard report engine's template, so the
+    # section is a <section id> with the number drawn by CSS counters (was
+    # '<h2 id="section-3">3. Results</h2>') and appendices carry a label span.
+    assert '<section id="section-3">' in html
+    assert "<h2>Results</h2>" in html
+    assert '<section id="appendix-a">' in html
+    assert '<span class="secnum applabel">Appendix A</span><h2>Reference Documents</h2>' in html
     assert "<th>sea_state_index</th>" in html
     assert "DNV-RP-C203" in html
     # Self-contained: no external scripts/stylesheets.
     assert "<script" not in html
     assert "http://" not in html and "https://" not in html
+
+
+# ---------------------------------------------------------------------------
+# Delegation to the standard report engine (#2212 part 3)
+# ---------------------------------------------------------------------------
+
+
+def test_html_is_the_engine_render_of_the_pack_spec(tmp_path):
+    """The pack's HTML *is* ``render_html(build_report_spec(pack))`` — no
+    parallel renderer."""
+    router(_cfg(tmp_path, _base_settings(tmp_path)))
+    html = (tmp_path / "results" / "case_report.html").read_text(encoding="utf-8")
+    spec = build_report_spec(load_pack(_cfg(tmp_path, _base_settings(tmp_path))))
+    assert html == render_html(spec)
+
+
+def test_spec_maps_document_standards_provenance_and_echo(tmp_path):
+    settings = _base_settings(tmp_path)
+    settings["document"]["date"] = "2026-07-12"
+    settings["manifest"]["source_artifacts"] = {"run_config": "repo:case.yml"}
+    spec = build_report_spec(load_pack(_cfg(tmp_path, settings)))
+    assert spec.document.number == "B0000-RPT-001-00"
+    assert spec.document.date == "2026-07-12"
+    assert spec.document.revision_history[0].description == "Issued"
+    # every distinct cited code becomes a standard/edition chip
+    assert [(s.code_id, s.edition) for s in spec.standards] == [
+        ("DNV-RP-C203", "2019 edition")
+    ]
+    assert spec.standards[0].provenance.startswith("wikis/")
+    assert spec.citations[0]["code_id"] == "DNV-RP-C203"
+    # sections keyed in order; results table lands in the Results section
+    assert [s.key for s in spec.sections] == [f"section-{i}" for i in range(1, 5)]
+    results = spec.sections[2]
+    assert results.title == "Results"
+    assert [b.kind for b in results.blocks] == ["text", "table"]
+    assert results.blocks[1].columns[0] == "sea_state_index"
+    assert results.blocks[1].source == "results.csv"
+    # appendices keep their explicit letters as labels
+    assert [(a.key, a.label) for a in spec.appendices] == [
+        ("appendix-a", "Appendix A"), ("appendix-b", "Appendix B")
+    ]
+    # provenance: manifest source ids + pointers + every CSV read (digested)
+    sources = {(s.kind, s.identifier) for s in spec.provenance.sources}
+    assert ("input_source", "TEST-SRC-1") in sources
+    assert ("source_artifact", "repo:case.yml") in sources
+    assert ("csv", "data/results.csv") in sources
+    csv_source = next(s for s in spec.provenance.sources if s.kind == "csv")
+    assert csv_source.digest.startswith("sha256:")
+    assert spec.manifest["input_source_ids"] == ["TEST-SRC-1"]
+    assert spec.input_echo["results"]["tables"] == ["data/results.csv"]
+    assert spec.input_echo["pdf"] == "off"
+
+
+def test_engine_refuses_a_spec_without_provenance(tmp_path):
+    spec = build_report_spec(load_pack(_cfg(tmp_path, _base_settings(tmp_path))))
+    spec.provenance.sources.clear()
+    with pytest.raises(ProvenanceError):
+        render_html(spec)
+
+
+def _settings_with_units_and_svg(tmp_path):
+    settings = _base_settings(tmp_path)
+    units_csv = tmp_path / "data" / "units.csv"
+    units_csv.write_text(
+        "frame,x,utilisation\n-,m,-\nMidship,50.0,0.61\n", encoding="utf-8"
+    )
+    (tmp_path / "data" / "plot.svg").write_text(TINY_SVG, encoding="utf-8")
+    settings["results"]["tables"].append(
+        {"title": "Frame utilisation", "csv": "data/units.csv", "units_row": True}
+    )
+    settings["results"]["figures"] = [{"title": "Margin plot", "path": "data/plot.svg"}]
+    return settings
+
+
+def test_units_row_and_svg_figure_render(tmp_path):
+    router(_cfg(tmp_path, _settings_with_units_and_svg(tmp_path)))
+    out = tmp_path / "results"
+    md = (out / "case_report.md").read_text(encoding="utf-8")
+    assert "| frame | x | utilisation |\n|---|---|---|\n| - | m | - |\n| Midship |" in md
+    assert "![Margin plot](plot.svg)" in md
+    html = (out / "case_report.html").read_text(encoding="utf-8")
+    assert '<tr class="units"><th>-</th><th>m</th><th>-</th></tr>' in html
+    assert "<script" not in html
+    # SVG inlined without its XML prolog; no data URI
+    assert "<?xml" not in html
+    assert '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20">' in html
+    assert "data:image/svg+xml" not in html
+
+
+def test_inline_units_list_and_conflicts(tmp_path):
+    settings = _base_settings(tmp_path)
+    settings["results"]["tables"][0]["units"] = ["-", "m", "s", "s", "-", "Pa", "1/yr"]
+    spec = build_report_spec(load_pack(_cfg(tmp_path, settings)))
+    assert spec.sections[2].blocks[1].units == ["-", "m", "s", "s", "-", "Pa", "1/yr"]
+    settings["results"]["tables"][0]["units"] = ["-"]
+    with pytest.raises(ReportPackConfigError, match="one entry per column"):
+        load_pack(_cfg(tmp_path, settings))
+    settings["results"]["tables"][0]["units_row"] = True
+    with pytest.raises(ReportPackConfigError, match="not both"):
+        load_pack(_cfg(tmp_path, settings))
+
+
+def test_svg_figure_with_script_rejected(tmp_path):
+    settings = _settings_with_units_and_svg(tmp_path)
+    (tmp_path / "data" / "plot.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+        encoding="utf-8",
+    )
+    with pytest.raises(ReportPackConfigError, match="must not contain scripts"):
+        load_pack(_cfg(tmp_path, settings))
+
+
+def test_unsupported_figure_format_rejected(tmp_path):
+    settings = _base_settings(tmp_path)
+    (tmp_path / "data" / "plot.bmp").write_bytes(b"BM")
+    settings["results"]["figures"] = [{"title": "x", "path": "data/plot.bmp"}]
+    with pytest.raises(ReportPackConfigError, match="unsupported figure format"):
+        load_pack(_cfg(tmp_path, settings))
+
+
+def test_results_section_matches_golden(tmp_path):
+    """Golden for one pack section: CSV tables (one with a units row) and an
+    inline SVG figure, as the engine renders them. Regenerate with
+    ``UPDATE_GOLDENS=1``."""
+    spec = build_report_spec(load_pack(_cfg(tmp_path, _settings_with_units_and_svg(tmp_path))))
+    html = render_html(spec)
+    match = re.search(r'<section id="section-3">.*?</section>', html, re.S)
+    assert match, "Results section missing"
+    section = match.group(0) + "\n"
+    golden = GOLDEN_DIR / "results_section.html"
+    if os.environ.get("UPDATE_GOLDENS"):
+        golden.parent.mkdir(parents=True, exist_ok=True)
+        golden.write_text(section, encoding="utf-8", newline="\n")
+    expected = golden.read_text(encoding="utf-8").replace("\r\n", "\n")
+    assert section == expected, "results_section.html differs; UPDATE_GOLDENS=1 to accept"
 
 
 def test_auto_appendix_lettering(tmp_path):
@@ -263,6 +415,11 @@ def test_auto_appendix_lettering(tmp_path):
     assert "## Appendix A — First" in md
     assert "## Appendix B — Second" in md
     assert "## Appendix D — Fourth" in md
+    # the HTML keeps the explicit letter too (engine Section.label), not a
+    # positional "Appendix C"
+    html = (tmp_path / "results" / "case_report.html").read_text(encoding="utf-8")
+    assert '<span class="secnum applabel">Appendix D</span><h2>Fourth</h2>' in html
+    assert "Appendix C" not in html
 
 
 def test_citations_sidecar(tmp_path):

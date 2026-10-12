@@ -1,0 +1,5 @@
+# Base fixture for BaseFile golden capture, placed below the output directory
+# so the comparator's Path.relative_to branch is exercised rather than its
+# os.path.relpath fallback. Only its path is used; the content is never read.
+General:
+  UnitsSystem: SI

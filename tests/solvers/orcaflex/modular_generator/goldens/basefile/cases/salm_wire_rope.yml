@@ -1,0 +1,5 @@
+%YAML 1.1
+# Generated from: salm_base.yml + wire_rope_leg.yml
+---
+BaseFile: ../base/salm_base.yml
+IncludeFile: ../variations/wire_rope_leg.yml

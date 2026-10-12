@@ -4,7 +4,7 @@
 
 This report provides a comprehensive analysis of the marine engineering Excel file `marine_analysis_data.xlsm`. The file contains extensive marine engineering calculations, mooring analysis, AQWA integration data, and OCIMF (Oil Companies International Marine Forum) related computations for vessel analysis.
 
-**File Location:** `D:\workspace-hub\_temp\marine_analysis_data.xlsm`
+**File Location:** `<private-data>\marine_analysis_data.xlsm`
 
 **Analysis Date:** 2025-10-02
 
@@ -1331,10 +1331,10 @@ numpydoc>=1.5.0        # NumPy-style docstrings
 ## 15. Appendices
 
 ### Appendix A: File Paths
-- **Source Excel:** `D:\workspace-hub\_temp\marine_analysis_data.xlsm`
-- **Analysis Script:** `D:\workspace-hub\digitalmodel\scripts\analyze_marine_excel.py`
-- **JSON Output:** `D:\workspace-hub\_temp\marine_analysis_data_analysis.json`
-- **This Report:** `D:\workspace-hub\digitalmodel\docs\marine_excel_analysis_report.md`
+- **Source Excel:** `<private-data>\marine_analysis_data.xlsm`
+- **Analysis Script:** `<private-data>\analyze_marine_excel.py`
+- **JSON Output:** `<private-data>\marine_analysis_data_analysis.json`
+- **This Report:** `<private-data>\marine_excel_analysis_report.md`
 
 ### Appendix B: Formula Statistics by Category
 

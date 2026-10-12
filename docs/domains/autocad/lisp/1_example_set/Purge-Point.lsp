@@ -15,7 +15,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2006 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; 2000-04-05 - First release
 ;;; 2000-06-05 - Strcase on wcmatch of dict. on entities
 ;;; 2000-06-19 - Buggfix on strcase of nil

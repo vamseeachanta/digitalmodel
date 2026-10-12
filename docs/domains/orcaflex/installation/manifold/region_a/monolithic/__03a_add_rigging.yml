@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_b\anl\manifold\01-SZ-00deg\w_shielding\__03a_add_rigging.yml
+# File: docs/domains/orcaflex/installation/manifold/region_a/monolithic/__03a_add_rigging.yml
 # Created: 11:11 AM on 9/3/2023
 # User: 
 # Machine: 
@@ -326,7 +326,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     CharacteristicLength: ~
     CharacteristicForce: ~
-    EndAConnection: Seven_Seas
+    EndAConnection: iv03
     EndAX: -14.21
     EndAY: 37.92
     EndAZ: 62.5

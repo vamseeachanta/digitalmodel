@@ -5,7 +5,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 2007-2009 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; 2007-09-05 - First release
 ;;; 2009-08-02 - Updated to work in both modelspace and paperspace
 

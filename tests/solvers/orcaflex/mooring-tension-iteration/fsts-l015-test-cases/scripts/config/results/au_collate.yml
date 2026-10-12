@@ -7,12 +7,12 @@ default:
 task: csv_copy_to_excel
 files:
   target:
-    path: C:\Users\ss7a2365\Desktop\
+    path: <private-data>\
     workbook: Summary_1.xlsx
     worksheet: Sheet1
     cell_range: ~
   source:
-    path: C:\Users\ss7a2365\Desktop\
+    path: <private-data>\
     workbook: S01-Dyn-FC180-2.5mHs.xlsx
     worksheet: EditingTable
     cell_range: ~

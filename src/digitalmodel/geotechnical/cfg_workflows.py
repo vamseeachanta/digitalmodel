@@ -228,6 +228,7 @@ class MudmatBearingCapacityWorkflow:
             submerged_unit_weight_kn_m3=float(soil["submerged_unit_weight_kN_m3"]),
             vertical_load_kn=float(loads["vertical_kN"]),
             moment_knm=float(loads.get("moment_kNm", 0.0)),
+            eccentricity_axis=loads.get("eccentricity_axis", "B"),
             undrained_shear_strength_kpa=(
                 None
                 if soil.get("undrained_shear_strength_kpa") is None

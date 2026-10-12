@@ -340,7 +340,26 @@ class RainflowCounter:
         
         Returns:
             Summary DataFrame with all results
+
+        Raises:
+            NonConservativeCountingError: always, pending issue #3839.
+
+                No module imports this class, so there is no in-process damage
+                consumer to block. The hand-off to damage is by file: this is
+                the documented Module 2 step whose ``*_cycles.csv`` output is
+                read by the Module 3 damage calculator
+                (``INPUT_FILE_STRUCTURE.md``), and the counter understates the
+                maximum range (169.556 of a 177.1224 span on broadband input).
+                ``process_time_series`` and ``rainflow_counting_astm`` remain
+                callable for diagnostic use.
         """
+        from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
+
+        refuse_damage_calculation(
+            "fapps_counting",
+            "fatigue_apps.rainflow_counting.RainflowCounter.process_batch",
+        )
+
         input_dir = Path(input_dir)
         files = sorted(input_dir.glob(pattern))
         

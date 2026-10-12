@@ -14,6 +14,8 @@ import logging
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import partial
 
+from digitalmodel.solvers.orcaflex.run_state import check_simulation
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -142,6 +144,9 @@ class OrcaFlexTimeTraceProcessor:
         if model.state != OrcFxAPI.ModelState.InSimulation:
             logger.info("Running simulation...")
             model.RunSimulation()
+            # #3838: RunSimulation returns success for a diverged run; traces
+            # extracted from one are not a result.
+            check_simulation(model, context=str(self.config.file_path))
         
         # Extract time traces
         time_traces = {'Time': model.GetTimeHistory('Time')}
@@ -249,7 +254,21 @@ class OrcaFlexTimeTraceProcessor:
             
         Returns:
             Dictionary with fatigue analysis results
+
+        Raises:
+            NonConservativeCountingError: always, pending issue #3839. This
+                route counts cycles with `signal_analysis.core.rainflow`
+                (`sigproc_astm`), which extracts a maximum stress range below
+                the signal's peak-to-valley span. Counting is left callable for
+                diagnostics; damage is not.
         """
+        from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
+
+        refuse_damage_calculation(
+            "sigproc_astm",
+            "OrcaFlexTimeTraceProcessor._perform_fatigue_analysis",
+        )
+
         from ..signal_analysis import RainflowCounter
         from ..signal_analysis.fatigue import FatigueDamageCalculator, SNCurve
         
@@ -431,7 +450,20 @@ class OrcaFlexTimeTraceProcessor:
     @staticmethod
     def _analyze_single_trace(signal, name, scf, sn_params, 
                              mean_stress_correction, design_life_years, fs):
-        """Analyze single trace (for parallel processing)"""
+        """Analyze single trace (for parallel processing)
+
+        Raises:
+            NonConservativeCountingError: always, pending issue #3839 — see
+                `_perform_fatigue_analysis`. This is the parallel twin of that
+                route and counts through the same non-conservative path.
+        """
+        from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
+
+        refuse_damage_calculation(
+            "sigproc_astm",
+            "OrcaFlexTimeTraceProcessor._analyze_single_trace",
+        )
+
         from ..signal_analysis import RainflowCounter
         from ..signal_analysis.fatigue import FatigueDamageCalculator
         

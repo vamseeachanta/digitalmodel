@@ -5,63 +5,8 @@ metadata:
   generated_from: production_curve_dictionaries
 standards:
   DNV:
-    curves:
-      B1:
-        A: 4220000000000000.0
-        m: 4.0
-        fatigue_limit: 106.97
-      B2:
-        A: 1010000000000000.0
-        m: 3.5
-        fatigue_limit: 93.59
-      C:
-        A: 1080000000000.0
-        m: 3.0
-        fatigue_limit: 73.1
-      C1:
-        A: 423000000000.0
-        m: 3.0
-        fatigue_limit: 65.5
-      C2:
-        A: 108000000000.0
-        m: 3.0
-        fatigue_limit: 46.78
-      D:
-        A: 573000000000.0
-        m: 3.0
-        fatigue_limit: 52.63
-      E:
-        A: 329000000000.0
-        m: 3.0
-        fatigue_limit: 45.54
-      F:
-        A: 173000000000.0
-        m: 3.0
-        fatigue_limit: 36.84
-      F1:
-        A: 108000000000.0
-        m: 3.0
-        fatigue_limit: 36.58
-      F3:
-        A: 57300000000.0
-        m: 3.0
-        fatigue_limit: 29.64
-      G:
-        A: 28200000000.0
-        m: 3.0
-        fatigue_limit: 23.44
-      W1:
-        A: 21500000000.0
-        m: 3.0
-        fatigue_limit: 21.34
-      W2:
-        A: 10800000000.0
-        m: 3.0
-        fatigue_limit: 16.92
-      W3:
-        A: 5300000000.0
-        m: 3.0
-        fatigue_limit: 13.35
+    # DNV-RP-C203 single-slope curves are not kept here: they come from
+    # digitalmodel.fatigue.c203_sn_tables, verified against the 2011 tables (#2165).
     multislope:
       D_MULTISLOPE:
         slopes:

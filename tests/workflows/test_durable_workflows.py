@@ -54,10 +54,6 @@ def test_workflow_registry(workflow, monkeypatch):
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
 
     input_path = REPO_ROOT / workflow["input"]
-    if workflow["id"] == "cathodic-protection-pipeline":
-        monkeypatch.delenv("LLM_WIKI_PATH", raising=False)
-        monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
-
     cfg = engine(inputfile=str(input_path))
 
     assert isinstance(cfg, dict)
@@ -66,83 +62,7 @@ def test_workflow_registry(workflow, monkeypatch):
     for output in workflow["outputs"]:
         assert (REPO_ROOT / output).exists()
 
-    if workflow["id"] == "cathodic-protection":
-        cp = cfg["cathodic_protection"]
-        assert cp["current_demand_A"]["totals"]["mean"] == pytest.approx(196.667146)
-        assert cp["anode_requirements"]["total_mass_kg"] == pytest.approx(5067.071173)
-        assert cp["anode_requirements"]["anode_count"] > 180
-    elif workflow["id"] == "cathodic-protection-jacket":
-        results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(101.85)
-        assert results["current_demand_A"]["total_final_A"] == pytest.approx(168.6)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(13120.68)
-        assert results["anode_requirements"]["anode_count"] == 66
-        verification = results["current_output_verification"]
-        assert verification["driving_voltage_V"] == pytest.approx(0.25)
-        assert verification["recommended_anode_count"] == 109
-    elif workflow["id"] == "cathodic-protection-pipeline":
-        results = cfg["results"]
-        densities = results["current_densities_mA_m2"]
-        coating = results["coating_breakdown_factors"]
-        demand = results["current_demand_A"]
-        anodes = results["anode_requirements"]
-        spacing = results["anode_spacing_m"]
-        attenuation = results["attenuation_analysis"]
-
-        assert densities["mean_current_density_A_m2"] == pytest.approx(0.06)
-        assert densities["temperature_band"] == ">50-80"
-        assert coating["mean_factor"] == pytest.approx(0.0145)
-        assert demand["mean_current_demand_A"] == pytest.approx(1.328)
-        assert demand["final_current_demand_A"] == pytest.approx(1.74)
-        assert anodes["total_anode_mass_kg"] == pytest.approx(218.111)
-        assert anodes["actual_total_mass_kg"] == pytest.approx(250.0)
-        assert anodes["anode_count"] == 10
-        assert spacing["spacing_m"] == pytest.approx(166.667)
-        assert spacing["spacing_valid"] is True
-        assert attenuation["protection_reach_m"] == pytest.approx(96.559)
-        assert attenuation["protection_adequate"] is True
-
-        expected_mass = demand["total_charge_Ah"] / (
-            anodes["anode_capacity_Ah_kg"] * anodes["utilization_factor"]
-        )
-        assert anodes["total_anode_mass_kg"] == pytest.approx(expected_mass, abs=1.0e-3)
-        assert anodes["anode_count"] == math.ceil(
-            anodes["total_anode_mass_kg"]
-            * anodes["contingency_factor"]
-            / anodes["individual_anode_mass_kg"]
-        )
-        citation = results["citations"][0]
-        assert citation["code_id"] == "dnv-rp-f103"
-        assert citation["publisher"] == "DNV"
-        assert citation["revision"] == "2010"
-
-        from digitalmodel.citations.resolver import resolve_wiki_path
-
-        assert resolve_wiki_path(citation["wiki_path"]) == (
-            REPO_ROOT / "knowledge" / citation["wiki_path"]
-        )
-    elif workflow["id"] == "cathodic-protection-manifold":
-        results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(29.75)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(3832.5)
-        assert results["anode_requirements"]["anode_count"] == 48
-        assert results["current_output_verification"]["adequate"] is True
-    elif workflow["id"] == "cathodic-protection-monopile":
-        results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(27.72)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(4285.19)
-        assert results["anode_requirements"]["anode_count"] == 29
-        assert results["current_output_verification"]["recommended_anode_count"] == 32
-    elif workflow["id"] == "cathodic-protection-fpso":
-        results = cfg["results"]
-        assert results["current_demand_A"]["mean"] == pytest.approx(96.0)
-        assert results["current_demand_A"]["final"] == pytest.approx(248.0)
-        assert results["anode_current_capacity_Ah_kg"] == pytest.approx(1865.0)
-        assert results["anode_mass_kg"] == pytest.approx(14091.153)
-    elif workflow["id"] == "catenary":
+    if workflow["id"] == "catenary":
         assert cfg["S"] == pytest.approx(173.2050808)
         assert cfg["X"] == pytest.approx(131.6957897)
         assert cfg["BendRadius"] == pytest.approx(100.0)
@@ -241,6 +161,40 @@ def test_workflow_registry(workflow, monkeypatch):
         assert set(seg_summary["segment_id"]) == {"TDZ-sandwave", "hangoff"}
         assert set(results["contribution"]) == {"wave", "viv"}
         assert (results["stress_range_MPa"] > 0.0).all()
+    elif workflow["id"] == "riser-viv-screening":
+        summary = cfg["viv_screening"]
+        results_path = Path(summary["results_csv"])
+        summary_path = Path(summary["summary_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+        results = pd.read_csv(results_path)
+        totals = pd.read_csv(summary_path)
+        assert summary["screening_status"] == "fail"
+        assert summary["lock_in_modes"] == [1, 2]
+        assert summary["critical_mode"] == 1
+        assert 4.0 <= summary["critical_vr"] <= 5.12
+        rate = summary["screening_damage_rate_per_year"]
+        assert rate > 0
+        assert rate == pytest.approx(0.09283365625182298)
+        assert summary["screening_life_years"] == pytest.approx(1 / rate)
+        assert set(results.columns) == {
+            "mode", "f_n_Hz", "Vr_lo", "Vr_hi", "governing_Vr", "reynolds",
+            "strouhal", "Ks", "cf_lock_in", "il_lock_in", "A_over_D",
+            "stress_range_MPa", "cycles_per_year", "damage_per_year",
+        }
+        assert {"screening_status", "cf_lock_in_count", "il_lock_in_count",
+                "il_lock_in_unassessed",
+                "screening_damage_rate_per_year", "screening_life_years",
+                "dff_margin"} <= set(totals.columns)
+        assert summary["il_lock_in_unassessed"] is True
+        assert bool(totals.iloc[0]["il_lock_in_unassessed"]) is True
+        inertia = math.pi * (0.2731**4 - 0.2287**4) / 64
+        frequency = math.pi / (2 * 60**2) * math.sqrt(2.07e11 * inertia / 180)
+        assert results.iloc[0]["f_n_Hz"] == pytest.approx(frequency)
+        assert "DNV-RP-C205" in summary["standard"]
+        assert summary["provenance"]["validated_path"] == "screening"
     elif workflow["id"] in {
         "mooring-fatigue-atlas-query",
         "synthetic-rope-atlas-query",
@@ -732,6 +686,13 @@ def test_workflow_registry(workflow, monkeypatch):
         assert results["utilisation"].map(math.isfinite).all()
         assert results["utilisation"].max() == pytest.approx(summary["max_utilisation"])
         assert results["vm_stress_Pa"].iloc[-1] > results["vm_stress_Pa"].iloc[0]
+    elif workflow["id"] == "riser-stackup-drawing":
+        summary = cfg["riser_stackup_drawing"]
+        assert summary["result"] == "pass"
+        assert set(summary["checks"].values()) == {"pass"}
+        report = json.loads(Path(summary["reconcile_report"]).read_text("utf-8"))
+        assert report["result"] == "pass"
+        assert Path(summary["svg"]).read_text("utf-8").startswith("<svg ")
     elif workflow["id"] == "riser-stackup-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(
@@ -1697,6 +1658,24 @@ def test_workflow_registry(workflow, monkeypatch):
         assert res["critical_mode"] == 2
         assert res["a_d_ratio"] == pytest.approx(0.9789, abs=1e-3)
         assert res["fatigue_proxy"] > 0.0
+    elif workflow["id"] == "api579-pitting-screen":
+        assert cfg["api579_pitting_screen"]["level2"]["rsf"] == pytest.approx(0.9569915955570703)
+    elif workflow["id"] == "api579-dent-screen":
+        assert cfg["api579_dent_screen"]["assessment"]["strain"]["eps_max"] == pytest.approx(0.04028750840314319)
+    elif workflow["id"] == "riser-joint-ffs":
+        result = cfg["riser_joint_ffs"]
+        assert len(result["scans"]) == len(result["placements"]) == 4
+        assert result["rollup"]["n_joints"] == 26
+        assert len(result["provenance"]["sources"]) == 6
+    elif workflow["id"] == "pipeline-corroded-defect-screen":
+        result = cfg["pipeline_defect_screen"]
+        assert len(result["methods"]) == 6
+        assert all("applicability" in row for row in result["methods"])
+        rstreng = next(row for row in result["methods"] if row["method"] == "RSTRENG")
+        assert rstreng["margin"] == pytest.approx(1.031735167224636, rel=1e-12)
+        report = (Path(cfg["Analysis"]["result_folder"]) / result["report_file"]).read_text(encoding="utf-8")
+        assert "Method comparison" in report
+        assert all(path in report for path in result["validation_records"])
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
 
@@ -2341,3 +2320,63 @@ def test_esp_pump_hydraulics_tdh_and_sizing_closed_form():
     assert r.stages_required == math.ceil(expected_tdh / 6.0)
     assert r.brake_power_hp == pytest.approx(r.stages_required * 0.5 * 0.85, rel=1e-12)
     assert r.screening_status == "fail"  # 405 stages > 400 housing
+
+
+@pytest.mark.parametrize("workflow_id,basename,metric,expected", [
+    ("api579-pitting-screen", "api579_pitting_screen", "rsf", 0.9569915955570703),
+    ("api579-dent-screen", "api579_dent_screen", "eps_max", 0.04028750840314319),
+])
+def test_pitting_dent_screen_reports(workflow_id, basename, metric, expected):
+    """Wave 1 formula anchors and persisted offline report readback (#2182)."""
+    cfg = engine(inputfile=str(REPO_ROOT / "examples/workflows" / workflow_id / "input.yml"))
+    result = cfg[basename]
+    value = (result["level2"][metric] if metric == "rsf"
+             else result["assessment"]["strain"][metric])
+    assert value == pytest.approx(expected, abs=1e-9)
+    report = Path(result["report_path"]).read_text(encoding="utf-8")
+    assert report == result["report_html"]
+    assert "not evaluated" in report.lower()
+
+
+@pytest.fixture(scope="module")
+def riser_joint_report_run(tmp_path_factory):
+    from digitalmodel.asset_integrity.riser_joint_ffs import RiserJointFFSWorkflow
+
+    workflow = next(w for w in _load_registry() if w["id"] == "riser-joint-ffs")
+    input_path = REPO_ROOT / workflow["input"]
+    cfg = yaml.safe_load(input_path.read_text())
+    # Resolve committed fixture paths without requiring dependency embed support.
+    cfg["Analysis"] = {
+        "result_folder": str(tmp_path_factory.mktemp("riser-ffs")),
+        "analysis_root_folder": str(input_path.parent),
+    }
+    return RiserJointFFSWorkflow().router(cfg)["riser_joint_ffs"]
+
+
+@pytest.mark.parametrize("grid_name,min_mm,depth_ft,verdict", [
+    ("ut_grid_RJ-101-boxend_ds8.csv", 15.024, 2133.7, "REPAIR"),
+    ("ut_grid_RJ-101-boxend_worstzone_fullres.csv", 15.024, 2133.7, "REPAIR"),
+    ("ut_grid_RJ-102-boxend_ds8.csv", 15.348, 2265.4, "REPAIR"),
+    ("ut_grid_RJ-103-pinend_ds8.csv", 16.549, 2791.3, "RESTRICTED"),
+])
+def test_riser_joint_ffs_grid(riser_joint_report_run, grid_name, min_mm, depth_ft, verdict):
+    import hashlib
+
+    result = riser_joint_report_run
+    scan = next(s for s in result["scans"] if s["scan"] == grid_name)
+    assert scan["measured_min_wt_in"] == pytest.approx(min_mm / 25.4, abs=1e-12)
+    placement = next(p for p in result["placements"] if p["scan"] == grid_name)
+    assert placement["acceptable_depth_ft"] == pytest.approx(depth_ft, abs=0.05)
+    assert placement["verdict"] == verdict
+    assert len(result["joint_governing"]) == 3
+    assert set(scan["envelopes"]) == {"b31g", "modified_b31g", "dnv_f101", "bs7910_option1_fad"}
+    for envelope in scan["envelopes"].values():
+        assert len(envelope["start"]["depth_in"]) == 17
+        assert all(e <= s for e, s in zip(envelope["campaign_end"]["max_acceptable_length_in"],
+                                         envelope["start"]["max_acceptable_length_in"]))
+    assert len(result["placements"]) == 4
+    assert result["rollup"]["n_joints"] == 26
+    assert all(c["fit_joints"] + c["repair_joints"] == 26 for c in result["rollup"]["campaigns"])
+    source = next(s for s in result["provenance"]["sources"] if s["path"].endswith(grid_name))
+    assert source["sha256"] == hashlib.sha256((REPO_ROOT / source["path"]).read_bytes()).hexdigest()
+    assert source["sha256"] in Path(result["report_html"]).read_text()

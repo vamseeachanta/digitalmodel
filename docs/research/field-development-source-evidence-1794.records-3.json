@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "issue": 1794,
+  "parent_file": "field-development-source-evidence-1794.json",
+  "records": [
+    {
+      "record": "Thunder Horse",
+      "host": "semi-submersible PDQ host",
+      "evidence": [
+        {
+          "row": 70,
+          "quantity": "Operator interest",
+          "value_as_stated": "BP 75% and operator",
+          "quote_cell": "\"At Thunder Horse (BP 75% and operator), as a result of a metallurgical failure during pre-commissioning checks in 2006,\"",
+          "ref": "S17",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 71,
+          "quantity": "Expected start-up (as of fiscal 2007)",
+          "value_as_stated": "by the end of 2008",
+          "quote_cell": "\"Thunder Horse is expected to start production by the end of 2008.\"",
+          "ref": "S17",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 72,
+          "quantity": "Topsides design capacity",
+          "value_as_stated": "250,000 barrels of oil per day; 200 million cubic feet per day of natural gas",
+          "quote_cell": "\"Designed to process 250,000 barrels of oil per day and 200 million cubic feet per day of natural gas,\"",
+          "ref": "S17",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 73,
+          "quantity": "Subsea wells",
+          "value_as_stated": "25",
+          "quote_cell": "UNVERIFIED: a search snippet attributes \"25 subsea wells\" to S17; not seen in the first 300,000 of 353,714 characters read",
+          "ref": "S17",
+          "class": "unverified",
+          "unverified": true
+        },
+        {
+          "row": 74,
+          "quantity": "Expansion project (2018)",
+          "value_as_stated": "new subsea manifold; two wells; about 2 miles north of the platform",
+          "quote_cell": "UNVERIFIED: trade-press snippets of an operator release",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "No primary source found: manifold count, base-development tieback distance, project cost, water depth. Tried: fiscal 2003 and 2007 20-F, operator press pages (HTTP 403 or script-only)."
+    },
+    {
+      "record": "Atlantis",
+      "host": "semi-submersible host",
+      "evidence": [
+        {
+          "row": 75,
+          "quantity": "Operator interest",
+          "value_as_stated": "BP 56% and operator",
+          "quote_cell": "\"The Atlantis platform (BP 56% and operator) was successfully commissioned\"",
+          "ref": "S17",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 76,
+          "quantity": "First production",
+          "value_as_stated": "fourth quarter of 2007",
+          "quote_cell": "fragment: \"during the fourth quarter of 2007.\"",
+          "ref": "S17",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 77,
+          "quantity": "Phase 3 expansion cost and scope",
+          "value_as_stated": "$1.3 billion; eight new wells",
+          "quote_cell": "UNVERIFIED: trade-press snippets of the January 2019 operator release; operator page did not render",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "No primary source found: tree count, manifold count, tieback distance, base-development cost, capacity, water depth. Peak uplift for Phase 3 appears as 38,000 boe/d in 2019 coverage and about 36,000 boe/d in a 2020 operator page snippet (both unverified)."
+    },
+    {
+      "record": "Mars / Mars B Olympus",
+      "host": "TLP hosts",
+      "evidence": [
+        {
+          "row": 78,
+          "quantity": "Non-operating partner interest",
+          "value_as_stated": "28.5%",
+          "quote_cell": "production-table row for Mars listing a 28.5% interest (table cell, as reported by the fetch tool)",
+          "ref": "S17",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 79,
+          "quantity": "Second-TLP facts",
+          "value_as_stated": "24 well slots; approximately 945 m (3,100 ft); estimated peak 100,000 boe/d; operator 71.5%, partner 28.5%",
+          "quote_cell": "UNVERIFIED: trade-press snippets of the February 2014 operator release",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "No primary source opened for any equipment, distance or cost quantity. Tried: wire-service search for the 2014 release (not found), archived operator investor handbook pages (redirect away)."
+    },
+    {
+      "record": "Na Kika",
+      "host": "semi-submersible hub",
+      "evidence": [
+        {
+          "row": 80,
+          "quantity": "First production and operator",
+          "value_as_stated": "November 2003; BP 50% and operator",
+          "quote_cell": "\"Production from the Na Kika Development (BP 50% and operator) commenced in November 2003.\"",
+          "ref": "S18",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 81,
+          "quantity": "Fields and subsea wells",
+          "value_as_stated": "5 fields; 10 subsea wells",
+          "quote_cell": "\"The development consists of 5 fields and 10 subsea wells connected to a centrally-located floating host facility.\"",
+          "ref": "S18",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 82,
+          "quantity": "Flowline length and well offsets",
+          "value_as_stated": "some 90 miles of flowlines; satellite wells five to 12 miles from the platform",
+          "quote_cell": "UNVERIFIED: trade project-page snippet",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "No primary source found: manifold count, tieback distance, project cost, water depth, capacity. Row 82 is the best lead for a tieback definition but is secondary and unverified."
+    }
+  ]
+}

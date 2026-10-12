@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\L01\L01 Default vessel.yml
+# File: docs/domains/orcaflex/examples/raw/L01/L01 Default vessel.yml
 # Created: 7:43 PM on 2/10/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

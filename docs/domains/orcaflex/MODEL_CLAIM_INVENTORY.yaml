@@ -96,7 +96,7 @@ inventory:
       Full-scale gas-oil M-jumper slug FIV case (Zhu et al. 2022,
       Processes 10:2133). Only full-scale published M geometry with
       explicit dimensions including bend radii; pipe size near-identical
-      to Ballymore 10.75in jumpers.
+      to GoM tieback 10.75in jumpers.
 
   - name: mj03_li2024_m_jumper_lab
     family: jumper

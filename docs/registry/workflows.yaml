@@ -1,62 +1,14 @@
-# schema_version 2 (deckhand versioned routing): a workflow row MAY carry an
+# schema_version 2 (versioned workflows): a workflow row MAY carry an
 # algorithm-version triple — all optional; absence means v1 / stable / latest:
 #   version: <int >= 1>   algorithm revision; bump when the method or curve changes
 #   status:  stable | deprecated | experimental | retired   (default: stable)
 #   latest:  true         the latest-stable resolution target for this id
 # Multiple rows may share one `id`, differing by `version` (each with its own
-# input/outputs/test). Deckhand resolves an unpinned `<repo>:<id>` to the latest
+# input/outputs/test). A caller resolves an unpinned `<repo>:<id>` to the latest
 # stable version; a pinned `<repo>:<id>@N` resolves that exact version.
 schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
-  - id: cathodic-protection
-    basename: cathodic_protection
-    title: Sacrificial anode demand for a coated offshore structure
-    input: examples/workflows/cathodic-protection/input.yml
-    outputs:
-      - examples/workflows/cathodic-protection/results/input.yml
-    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection]
-    runtime: offline
-  - id: cathodic-protection-jacket
-    basename: cathodic_protection
-    title: Sacrificial-anode CP for a fixed steel jacket (DNV-RP-B401)
-    input: examples/workflows/cathodic-protection-jacket/input.yml
-    outputs:
-      - examples/workflows/cathodic-protection-jacket/results/input.yml
-    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-jacket]
-    runtime: offline
-  - id: cathodic-protection-pipeline
-    basename: cathodic_protection
-    title: Sacrificial-anode CP for a subsea pipeline (DNV-RP-F103)
-    input: examples/workflows/cathodic-protection-pipeline/input.yml
-    outputs:
-      - examples/workflows/cathodic-protection-pipeline/results/input.yml
-    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-pipeline]
-    runtime: offline
-  - id: cathodic-protection-manifold
-    basename: cathodic_protection
-    title: Sacrificial-anode CP for a subsea manifold (DNV-RP-B401)
-    input: examples/workflows/cathodic-protection-manifold/input.yml
-    outputs:
-      - examples/workflows/cathodic-protection-manifold/results/input.yml
-    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-manifold]
-    runtime: offline
-  - id: cathodic-protection-monopile
-    basename: cathodic_protection
-    title: Sacrificial-anode CP for an offshore-wind monopile (DNV-RP-B401)
-    input: examples/workflows/cathodic-protection-monopile/input.yml
-    outputs:
-      - examples/workflows/cathodic-protection-monopile/results/input.yml
-    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-monopile]
-    runtime: offline
-  - id: cathodic-protection-fpso
-    basename: cathodic_protection
-    title: Sacrificial-anode CP for an FPSO hull (ABS Offshore 2018)
-    input: examples/workflows/cathodic-protection-fpso/input.yml
-    outputs:
-      - examples/workflows/cathodic-protection-fpso/results/input.yml
-    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-fpso]
-    runtime: offline
   - id: catenary
     basename: catenary
     title: Angle-based catenary geometry
@@ -468,6 +420,16 @@ workflows:
       - examples/workflows/tsj-sizing/results/input_tsj.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[tsj-sizing]
     runtime: offline
+  - id: riser-stackup-drawing
+    basename: riser_stackup_drawing
+    title: Data-driven riser stack-up drawing with reconciliation check
+    input: examples/workflows/riser-stackup-drawing/input.yml
+    outputs:
+      - examples/workflows/riser-stackup-drawing/results/input_stackup.svg
+      - examples/workflows/riser-stackup-drawing/results/input_stackup_spec.json
+      - examples/workflows/riser-stackup-drawing/results/input_reconcile.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup-drawing]
+    runtime: offline
   - id: riser-stackup-parametric
     basename: parametric_run
     title: Legacy-derived drilling riser stack-up parametric sweep
@@ -476,6 +438,16 @@ workflows:
       - examples/workflows/riser-stackup-parametric/results/cases.csv
       - examples/workflows/riser-stackup-parametric/results/case_0.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup-parametric]
+    runtime: offline
+  - id: riser-viv-screening
+    basename: viv_screening
+    title: Riser VIV reduced-velocity lock-in screening + damage-rate estimate (DNV-RP-C205/F105/C203)
+    input: examples/workflows/riser-viv-screening/input.yml
+    outputs:
+      - examples/workflows/riser-viv-screening/results/input.yml
+      - examples/workflows/riser-viv-screening/results/input_viv_screening.csv
+      - examples/workflows/riser-viv-screening/results/input_viv_screening_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-viv-screening]
     runtime: offline
   - id: sn-curve
     basename: sn_curve
@@ -743,7 +715,7 @@ workflows:
     runtime: offline
   - id: wall-thickness-quickcheck
     basename: wall_thickness
-    title: DNV/API wall-thickness quickcheck cached deckhand report
+    title: DNV/API wall-thickness quickcheck cached report
     input: examples/workflows/wall-thickness-quickcheck/input.yml
     outputs:
       - examples/workflows/wall-thickness-quickcheck/results/input.yml
@@ -865,7 +837,7 @@ workflows:
     runtime: offline
   - id: nodal-analysis-ipr-vlp
     basename: production
-    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    title: Well operating point from Vogel IPR / simplified homogeneous VLP intersection
     input: examples/workflows/nodal-analysis-ipr-vlp/input.yml
     outputs:
       - examples/workflows/nodal-analysis-ipr-vlp/results/input.yml
@@ -1050,9 +1022,20 @@ workflows:
       - examples/workflows/concept-selection/results/concept_selection/concept_selection_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[concept-selection]
     runtime: offline
+  - id: concept-screening
+    basename: concept_screening
+    title: Four-axis concept screening with weighted sensitivity sweep
+    input: examples/workflows/concept-screening/input.yml
+    outputs:
+      - examples/workflows/concept-screening/results/input.yml
+      - examples/workflows/concept-screening/results/concept_screening/concept_screening_summary.json
+      - examples/workflows/concept-screening/results/concept_screening/concept_comparison_note.md
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[concept-screening]
+    runtime: offline
+
   - id: nodal-analysis
     basename: nodal_analysis
-    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    title: Well operating point from Vogel IPR / simplified homogeneous VLP intersection
     input: examples/workflows/nodal-analysis/input.yml
     outputs:
       - examples/workflows/nodal-analysis/results/input.yml
@@ -1061,7 +1044,7 @@ workflows:
     runtime: offline
   - id: vlp-correlations
     basename: vlp_correlations
-    title: Hagedorn-Brown VLP curve for a vertical oil well
+    title: Simplified homogeneous VLP curve for a vertical oil well
     input: examples/workflows/vlp-correlations/input.yml
     outputs:
       - examples/workflows/vlp-correlations/results/input.yml
@@ -1288,3 +1271,53 @@ workflows:
     result:
       kind: in_memory
       key: mooring_mbl
+
+  - id: api579-pitting-screen
+    basename: api579_pitting_screen
+    title: Offline api579-pitting-screen geometric screening and FFS report
+    input: examples/workflows/api579-pitting-screen/input.yml
+    outputs:
+      - examples/workflows/api579-pitting-screen/results/pitting-report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pitting-screen]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: api579_pitting_screen
+
+  - id: api579-dent-screen
+    basename: api579_dent_screen
+    title: Offline api579-dent-screen geometric screening and FFS report
+    input: examples/workflows/api579-dent-screen/input.yml
+    outputs:
+      - examples/workflows/api579-dent-screen/results/dent-report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-dent-screen]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: api579_dent_screen
+
+  - id: riser-joint-ffs
+    basename: riser_joint_ffs
+    title: Anonymized drilling-riser joint envelopes, collapse depth, placement and fleet roll-up
+    input: examples/workflows/riser-joint-ffs/input.yml
+    outputs:
+      - examples/workflows/riser-joint-ffs/results/riser-joint-ffs.html
+      - examples/workflows/riser-joint-ffs/results/riser-joint-ffs.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-joint-ffs]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: riser_joint_ffs
+
+  - id: pipeline-corroded-defect-screen
+    basename: pipeline_defect_screen
+    title: Six-method pipeline blunt-metal-loss comparison
+    input: examples/workflows/pipeline-corroded-defect-screen/input.yml
+    outputs:
+      - examples/workflows/pipeline-corroded-defect-screen/results/input.yml
+      - examples/workflows/pipeline-corroded-defect-screen/results/input-pipeline-defect-screen.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-corroded-defect-screen]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: pipeline_defect_screen

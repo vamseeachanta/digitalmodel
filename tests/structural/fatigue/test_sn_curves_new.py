@@ -116,8 +116,9 @@ class TestStandardSNCurves:
         from digitalmodel.structural.fatigue.sn_curves import StandardSNCurves
         curve = StandardSNCurves.get_curve("DNV", "D")
         N = curve.get_allowable_cycles(100.0)
-        # N = 5.73e11 * 100^-3 = 5.73e5
-        assert N == pytest.approx(5.73e11 * (100.0 ** -3.0), rel=1e-3)
+        # DNV-RP-C203 (2011) Table 2-1 (#2165): N = 10^12.164 * 100^-3
+        # = 1,458,814 (was 5.73e11 * 100^-3 = 5.73e5)
+        assert N == pytest.approx(1_458_814, rel=1e-6)
 
 
 class TestMaterialProperties:

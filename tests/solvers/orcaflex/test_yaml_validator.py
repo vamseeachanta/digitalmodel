@@ -155,7 +155,7 @@ class TestHybridFormatDetection:
 
 class TestInvalidProperties:
     def test_implicit_variable_max_time_step(self, validator, tmp_yaml):
-        """ImplicitVariableMaxTimeStep does not exist in OrcaFlex."""
+        """A null maximum is invalid; the conditional property itself exists."""
         path = tmp_yaml("""\
             General:
               StageDuration:
@@ -166,6 +166,7 @@ class TestInvalidProperties:
         result = validator.validate_file(path)
         assert not result.valid
         assert any("ImplicitVariableMaxTimeStep" in i.message for i in result.errors)
+        assert not any("does not exist" in i.message for i in result.errors)
 
     def test_category_type_invalid(self, validator, tmp_yaml):
         """CategoryType is not a valid LineType property."""
@@ -492,6 +493,7 @@ class TestFragmentValidation:
         result = validator.validate_file(path)
         assert not result.valid
         assert any("ImplicitVariableMaxTimeStep" in i.message for i in result.errors)
+        assert not any("does not exist" in i.message for i in result.errors)
 
     def test_fragment_unknown_property_flagged(self, validator, tmp_yaml):
         """Typo'd / invented fragment properties are flagged via whitelists.

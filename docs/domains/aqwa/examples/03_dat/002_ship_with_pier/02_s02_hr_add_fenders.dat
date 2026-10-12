@@ -5535,7 +5535,7 @@ RESTART  1  5       02_s01_hd_pier
 ********************************************************************************
 ********************************************************************************
           FDR1
-      FILE          K:\b1522_ctr07\_tutorial\wb\02_s02_hr_add_fenders_files\dp0\AQW\AQW\AQ\Analysis\Analysis.hyd
+      FILE          <private-data>\<job-code>_ctr07\_tutorial\wb\02_s02_hr_add_fenders_files\dp0\AQW\AQW\AQ\Analysis\Analysis.hyd
       CSTR    1
       CPDB
  END

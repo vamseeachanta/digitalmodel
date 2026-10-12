@@ -409,7 +409,7 @@ For each listed capability:
 
 ### Future Integration Candidates
 
-- [ ] **frontierdeepwater, doris, saipem**
+- [ ] **frontierdeepwater, doris, contractor**
   - [ ] Still candidates?
   - [ ] Priority adjusted?
   - [ ] New candidates to add?

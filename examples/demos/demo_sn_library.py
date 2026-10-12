@@ -202,7 +202,7 @@ def main():
     print("  ║  ACE Engineer — Programmatic access to 221 S-N curves              ║")
     print("  ║  from 17 international standards, ready for fatigue assessment.     ║")
     print("  ║                                                                    ║")
-    print("  ║  Contact: vamsee.achanta@aceengineer.com | aceengineer.com          ║")
+    print("  ║  Contact: redacted@example.com | aceengineer.com          ║")
     print("  ╚══════════════════════════════════════════════════════════════════════╝")
     print()
 

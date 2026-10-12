@@ -16,7 +16,7 @@ echo directory=%directory%
 REM cd %directory%
 
 set output_path=%currentPath%
-REM set output_path=D:\Cosimulation\automation
+REM set output_path=<private-data>\automation
 echo output=%output_path%
 
 

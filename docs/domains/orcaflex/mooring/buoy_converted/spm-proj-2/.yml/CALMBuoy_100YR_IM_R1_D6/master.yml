@@ -1,10 +1,10 @@
 %YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\mooring\buoy\spm-proj-2\100YR\CALMBuoy_100YR_IM_R1_D6.yml
+# File: <private-data>/CALMBuoy_100YR_IM_R1_D6.yml
 # Created: 10:30 AM on 10/22/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Input Parameters (for parametric analysis)
 _inputs:

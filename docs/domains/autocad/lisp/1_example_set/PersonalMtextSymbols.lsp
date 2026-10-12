@@ -3,7 +3,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2008 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; Tested on AutoCAD 2002, 2004, 2005, 2008, 2009. Not sure about 2006. 2007 does not support this.
 ;;;
 ;;; Remember that you can change the contents to whatever you would like

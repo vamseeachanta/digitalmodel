@@ -1,0 +1,398 @@
+{
+  "anode_families": {
+    "mud": {
+      "adequacy_ratios": {
+        "final": 0.3616352201257861,
+        "initial": 0.297157622739018,
+        "mass": 0.9295501730103808
+      },
+      "anode_count": 6,
+      "anode_surface_temperature_C": 60.0,
+      "anode_type": "flush_mount",
+      "capacity_Ah_kg": 680.0,
+      "checks": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      },
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-6",
+        "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+        "dnv-rp-b401 2021-05 Table 8-7"
+      ],
+      "closed_circuit_potential_V": -1.0,
+      "count_by_final_current": 3,
+      "count_by_initial_current": 2,
+      "count_by_mass": 6,
+      "count_source": "recommended",
+      "current_demand_A": {
+        "final": 0.46,
+        "initial": 0.46,
+        "mean": 0.46
+      },
+      "current_output_final_A": 0.21200000000000002,
+      "current_output_initial_A": 0.25800000000000006,
+      "driving_voltage_V": 0.2,
+      "electrolyte_resistivity_ohm_m": 1.0,
+      "environment": "sediments",
+      "equivalent_radius_final_m": 0.019018826981554555,
+      "equivalent_radius_initial_m": 0.04910640010930738,
+      "governing_case": "mass",
+      "governing_ratio": 0.9295501730103808,
+      "individual_mass_kg": 25.0,
+      "material": "Al-based",
+      "mean_current_years_A_year": 9.200000000000001,
+      "name": "mud",
+      "recommended_anode_count": 6,
+      "required_mass_kg": 139.43252595155712,
+      "resistance_final_ohm": 0.9433962264150942,
+      "resistance_initial_ohm": 0.7751937984496123,
+      "total_output_final_A": 1.2720000000000002,
+      "total_output_initial_A": 1.5480000000000005,
+      "utilization_factor": 0.85,
+      "utilization_factor_source": "input"
+    },
+    "sea": {
+      "adequacy_ratios": {
+        "final": 0.2678905972194564,
+        "initial": 0.2802560242315638,
+        "mass": 0.7557647058823529
+      },
+      "anode_count": 3,
+      "anode_surface_temperature_C": 30.0,
+      "anode_type": "stand_off",
+      "capacity_Ah_kg": 2000.0,
+      "checks": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      },
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-6",
+        "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+        "dnv-rp-b401 2021-05 Table 8-7"
+      ],
+      "closed_circuit_potential_V": -1.05,
+      "count_by_final_current": 1,
+      "count_by_initial_current": 1,
+      "count_by_mass": 3,
+      "count_source": "recommended",
+      "current_demand_A": {
+        "final": 1.7000000000000002,
+        "initial": 2.2,
+        "mean": 1.1
+      },
+      "current_output_final_A": 2.1152913635205066,
+      "current_output_initial_A": 2.6166550222927976,
+      "driving_voltage_V": 0.25,
+      "electrolyte_resistivity_ohm_m": 0.3,
+      "environment": "seawater",
+      "equivalent_radius_final_m": 0.02083408111017064,
+      "equivalent_radius_initial_m": 0.05379336611548362,
+      "governing_case": "mass",
+      "governing_ratio": 0.7557647058823529,
+      "individual_mass_kg": 50.0,
+      "material": "Al-based",
+      "mean_current_years_A_year": 22.0,
+      "name": "sea",
+      "recommended_anode_count": 3,
+      "required_mass_kg": 113.36470588235294,
+      "resistance_final_ohm": 0.11818702818505428,
+      "resistance_initial_ohm": 0.09554182644257855,
+      "total_output_final_A": 6.345874090561519,
+      "total_output_initial_A": 7.849965066878393,
+      "utilization_factor": 0.85,
+      "utilization_factor_source": "input"
+    }
+  },
+  "anode_requirements": {
+    "recommended_anode_count": 9,
+    "total_mass_kg": 252.79723183391008
+  },
+  "citations": [
+    "dnv-rp-b401 2021-05 Table 8-1",
+    "dnv-rp-b401 2021-05 Table 8-2",
+    "dnv-rp-b401 2021-05 Table 8-3",
+    "dnv-rp-b401 2021-05 Table 8-6",
+    "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+    "dnv-rp-b401 2021-05 Table 8-7",
+    "dnv-rp-b401 2021-05 [3.3.8] (buried surfaces)"
+  ],
+  "coating_breakdown": {
+    "buried_frame": {
+      "a": 1.0,
+      "b_per_yr": 0.0,
+      "citations": [],
+      "coating_category": "bare",
+      "depth_band": "0-30",
+      "f_cf": 1.0,
+      "f_ci": 1.0,
+      "f_cm": 1.0
+    },
+    "clamp_steel": {
+      "a": 1.0,
+      "b_per_yr": 0.0,
+      "citations": [],
+      "coating_category": "bare",
+      "depth_band": ">300",
+      "f_cf": 1.0,
+      "f_ci": 1.0,
+      "f_cm": 1.0
+    },
+    "mattress_reinforcement": {
+      "a": 1.0,
+      "b_per_yr": 0.0,
+      "citations": [],
+      "coating_category": "not_applicable",
+      "depth_band": ">300",
+      "f_cf": 1.0,
+      "f_ci": 1.0,
+      "f_cm": 1.0
+    }
+  },
+  "current_demand_A": {
+    "buried_frame": {
+      "I_final_A": 0.4,
+      "I_initial_A": 0.4,
+      "I_mean_A": 0.4,
+      "anode_family": "mud",
+      "area_basis": "steel_surface",
+      "area_m2": 20.0,
+      "f_cf": 1.0,
+      "f_ci": 1.0,
+      "f_cm": 1.0,
+      "i_final_A_m2": 0.02,
+      "i_initial_A_m2": 0.02,
+      "i_mean_A_m2": 0.02
+    },
+    "clamp_steel": {
+      "I_final_A": 1.7000000000000002,
+      "I_initial_A": 2.2,
+      "I_mean_A": 1.1,
+      "anode_family": "sea",
+      "area_basis": "steel_surface",
+      "area_m2": 10.0,
+      "f_cf": 1.0,
+      "f_ci": 1.0,
+      "f_cm": 1.0,
+      "i_final_A_m2": 0.17,
+      "i_initial_A_m2": 0.22,
+      "i_mean_A_m2": 0.11
+    },
+    "mattress_reinforcement": {
+      "I_final_A": 0.06,
+      "I_initial_A": 0.06,
+      "I_mean_A": 0.06,
+      "anode_family": "mud",
+      "area_basis": "reinforcement_steel",
+      "area_m2": 100.0,
+      "f_cf": 1.0,
+      "f_ci": 1.0,
+      "f_cm": 1.0,
+      "i_final_A_m2": 0.0006,
+      "i_initial_A_m2": 0.0006,
+      "i_mean_A_m2": 0.0006
+    },
+    "total_final_A": 2.16,
+    "total_initial_A": 2.66,
+    "total_mean_A": 1.56
+  },
+  "current_densities_A_m2": {
+    "buried_frame": {
+      "base_zone": "buried",
+      "citations": [
+        "dnv-rp-b401 2021-05 [3.3.8] (buried surfaces)"
+      ],
+      "climate": "arctic",
+      "depth_band": "0-30",
+      "exposure_zone": "buried_mudline",
+      "i_final_A_m2": 0.02,
+      "i_initial_A_m2": 0.02,
+      "i_mean_A_m2": 0.02,
+      "seawater_temperature_C": 5.0
+    },
+    "clamp_steel": {
+      "base_zone": "submerged",
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-1",
+        "dnv-rp-b401 2021-05 Table 8-2"
+      ],
+      "climate": "arctic",
+      "depth_band": ">300",
+      "exposure_zone": "submerged",
+      "i_final_A_m2": 0.17,
+      "i_initial_A_m2": 0.22,
+      "i_mean_A_m2": 0.11,
+      "seawater_temperature_C": 5.0
+    },
+    "mattress_reinforcement": {
+      "base_zone": "concrete_embedded",
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-3"
+      ],
+      "climate": "arctic",
+      "depth_band": ">300",
+      "exposure_zone": "concrete_embedded",
+      "i_final_A_m2": 0.0006,
+      "i_initial_A_m2": 0.0006,
+      "i_mean_A_m2": 0.0006,
+      "seawater_temperature_C": 5.0
+    }
+  },
+  "current_output_verification": {
+    "checks": {
+      "mud": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      },
+      "sea": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      }
+    },
+    "families": {
+      "mud": {
+        "adequacy_ratios": {
+          "final": 0.3616352201257861,
+          "initial": 0.297157622739018,
+          "mass": 0.9295501730103808
+        },
+        "anode_count": 6,
+        "anode_surface_temperature_C": 60.0,
+        "anode_type": "flush_mount",
+        "capacity_Ah_kg": 680.0,
+        "checks": {
+          "final": true,
+          "initial": true,
+          "mass": true
+        },
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-6",
+          "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+          "dnv-rp-b401 2021-05 Table 8-7"
+        ],
+        "closed_circuit_potential_V": -1.0,
+        "count_by_final_current": 3,
+        "count_by_initial_current": 2,
+        "count_by_mass": 6,
+        "count_source": "recommended",
+        "current_demand_A": {
+          "final": 0.46,
+          "initial": 0.46,
+          "mean": 0.46
+        },
+        "current_output_final_A": 0.21200000000000002,
+        "current_output_initial_A": 0.25800000000000006,
+        "driving_voltage_V": 0.2,
+        "electrolyte_resistivity_ohm_m": 1.0,
+        "environment": "sediments",
+        "equivalent_radius_final_m": 0.019018826981554555,
+        "equivalent_radius_initial_m": 0.04910640010930738,
+        "governing_case": "mass",
+        "governing_ratio": 0.9295501730103808,
+        "individual_mass_kg": 25.0,
+        "material": "Al-based",
+        "mean_current_years_A_year": 9.200000000000001,
+        "name": "mud",
+        "recommended_anode_count": 6,
+        "required_mass_kg": 139.43252595155712,
+        "resistance_final_ohm": 0.9433962264150942,
+        "resistance_initial_ohm": 0.7751937984496123,
+        "total_output_final_A": 1.2720000000000002,
+        "total_output_initial_A": 1.5480000000000005,
+        "utilization_factor": 0.85,
+        "utilization_factor_source": "input"
+      },
+      "sea": {
+        "adequacy_ratios": {
+          "final": 0.2678905972194564,
+          "initial": 0.2802560242315638,
+          "mass": 0.7557647058823529
+        },
+        "anode_count": 3,
+        "anode_surface_temperature_C": 30.0,
+        "anode_type": "stand_off",
+        "capacity_Ah_kg": 2000.0,
+        "checks": {
+          "final": true,
+          "initial": true,
+          "mass": true
+        },
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-6",
+          "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+          "dnv-rp-b401 2021-05 Table 8-7"
+        ],
+        "closed_circuit_potential_V": -1.05,
+        "count_by_final_current": 1,
+        "count_by_initial_current": 1,
+        "count_by_mass": 3,
+        "count_source": "recommended",
+        "current_demand_A": {
+          "final": 1.7000000000000002,
+          "initial": 2.2,
+          "mean": 1.1
+        },
+        "current_output_final_A": 2.1152913635205066,
+        "current_output_initial_A": 2.6166550222927976,
+        "driving_voltage_V": 0.25,
+        "electrolyte_resistivity_ohm_m": 0.3,
+        "environment": "seawater",
+        "equivalent_radius_final_m": 0.02083408111017064,
+        "equivalent_radius_initial_m": 0.05379336611548362,
+        "governing_case": "mass",
+        "governing_ratio": 0.7557647058823529,
+        "individual_mass_kg": 50.0,
+        "material": "Al-based",
+        "mean_current_years_A_year": 22.0,
+        "name": "sea",
+        "recommended_anode_count": 3,
+        "required_mass_kg": 113.36470588235294,
+        "resistance_final_ohm": 0.11818702818505428,
+        "resistance_initial_ohm": 0.09554182644257855,
+        "total_output_final_A": 6.345874090561519,
+        "total_output_initial_A": 7.849965066878393,
+        "utilization_factor": 0.85,
+        "utilization_factor_source": "input"
+      }
+    },
+    "governing_case": "mass",
+    "governing_family": "mud",
+    "governing_ratio": 0.9295501730103808,
+    "reason": "mud:mass governs at adequacy ratio 0.930",
+    "result": "PASS",
+    "use_status": "client-use-with-eor-check"
+  },
+  "design_life_years": 20.0,
+  "edition": "2021",
+  "provenance": "verified-2021-tables",
+  "standard": "DNV-RP-B401 (May 2021)",
+  "status": {
+    "checks": {
+      "mud": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      },
+      "sea": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      }
+    },
+    "governing_case": "mass",
+    "governing_family": "mud",
+    "governing_ratio": 0.9295501730103808,
+    "reason": "mud:mass governs at adequacy ratio 0.930",
+    "result": "PASS",
+    "use_status": "client-use-with-eor-check"
+  },
+  "surface_areas_m2": {
+    "buried_frame": 20.0,
+    "clamp_steel": 10.0,
+    "mattress_reinforcement": 100.0,
+    "total_m2": 130.0
+  }
+}

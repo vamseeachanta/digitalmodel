@@ -1,6 +1,13 @@
 source_type: standard
 source_description: "ISO 15589-2 offshore pipeline cathodic protection calculations with temperature-dependent current density"
 extracted_date: "2026-03-16"
+revised_date: "2026-09-25"
+revision_note: >-
+  #2213: the anode-resistance example (0.4785 ohm) was produced by the earlier
+  ln(2L/r) - 0.5 expression, which is in neither ISO 15589-2 Annex A nor
+  DNV-RP-B401 Table 10-7 (review 2026-09-24, #2211). It is re-derived from the
+  long slender stand-off formula; the anode-output example that took that
+  resistance as input is updated to match.
 legal_scan_passed: true
 category: "cathodic_protection"
 subcategory: "offshore_pipeline"
@@ -14,9 +21,9 @@ equations:
   - name: "Pipeline Current Demand"
     latex: "I_c = \\pi D L f_c i_c"
     description: "Current demand for a coated pipeline section per ISO 15589-2 section 8.3"
-  - name: "Simplified Slender Anode Resistance"
-    latex: "R_a = \\frac{\\rho}{2\\pi L_a} \\left( \\ln\\frac{2L_a}{r_a} - 0.5 \\right)"
-    description: "Anode-to-electrolyte resistance per ISO 15589-2 section 8.4, Annex A"
+  - name: "Slender Stand-off Anode Resistance"
+    latex: "R_a = \\frac{\\rho}{2\\pi L_a} \\left( \\ln\\frac{4L_a}{r_a} - 1 \\right)"
+    description: "Long slender stand-off anode (L >= 4r) per ISO 15589-2 Annex A / DNV-RP-B401 Table 10-7"
   - name: "Anode Mass Requirement"
     latex: "M_a = \\frac{I_{mean} \\cdot T \\cdot 8760}{\\varepsilon \\cdot u_f}"
     description: "Total anode mass requirement per ISO 15589-2 section 8.5"
@@ -49,18 +56,21 @@ worked_examples:
       T_seawater_C: 20.0
     outputs:
       current_density_mA_m2: 150.0
+    tolerance: 0.0
     use_as_test: true
   - description: "Cold water initial current density (T=0 degC, below 7 degC threshold)"
     inputs:
       T_seawater_C: 0.0
     outputs:
       current_density_mA_m2: 200.0
+    tolerance: 0.0
     use_as_test: true
   - description: "Interpolated current density at 11 degC (150 + 50*(15-11)/(15-7) = 175)"
     inputs:
       T_seawater_C: 11.0
     outputs:
       current_density_mA_m2: 175.0
+    tolerance: 0.001
     use_as_test: true
   - description: "Coating breakdown at t=0 (fc_i=0.10)"
     inputs:
@@ -70,6 +80,7 @@ worked_examples:
       T_design_years: 25.0
     outputs:
       breakdown_factor: 0.10
+    tolerance: 0.0001
     use_as_test: true
   - description: "Coating breakdown at midlife t=15 yr (fc = 0.10 + 0.20*(15/25) = 0.22)"
     inputs:
@@ -79,8 +90,10 @@ worked_examples:
       T_design_years: 25.0
     outputs:
       breakdown_factor: 0.22
+    tolerance: 0.0001
     use_as_test: true
   - description: "Pipeline current demand benchmark (D=0.3239m, L=1000m, fc=0.15, ic=150 mA/m2)"
+    derivation: "pi * 0.3239 * 1000 * 0.15 * 0.150 = 22.895 A"
     inputs:
       D: 0.3239
       L: 1000.0
@@ -88,24 +101,31 @@ worked_examples:
       ic_mA_m2: 150.0
     outputs:
       current_demand_A: 22.90
+    tolerance: 0.01
     use_as_test: true
-  - description: "Anode resistance benchmark (rho=0.25, L_a=0.25m, r_a=0.015m)"
+  - description: "Anode resistance benchmark (rho=0.25, L_a=0.25m, r_a=0.015m; L >= 4r so long slender form)"
+    source: "ISO 15589-2 Annex A / DNV-RP-B401 Table 10-7, long slender stand-off"
+    derivation: "0.25 / (2 pi 0.25) * (ln(4 * 0.25 / 0.015) - 1) = 0.159155 * (4.19970 - 1) = 0.50925 ohm (was 0.4785 from ln(2L/r) - 0.5)"
     inputs:
       rho: 0.25
       L_a: 0.25
       r_a: 0.015
     outputs:
-      resistance_ohm: 0.4785
+      resistance_ohm: 0.50925
+    tolerance: 0.0001
     use_as_test: true
-  - description: "Anode output current (R_a=0.4785, driving voltage 0.250 V)"
+  - description: "Anode output current (R_a=0.50925, driving voltage |-1.050 - (-0.800)| = 0.250 V)"
+    derivation: "0.250 / 0.50925 = 0.49092 A (input R_a updated with the example above)"
     inputs:
-      R_a: 0.4785
+      R_a: 0.50925
       E_anode_V: -1.050
       E_struct_V: -0.800
     outputs:
-      output_current_A: 0.5225
+      output_current_A: 0.49092
+    tolerance: 0.0001
     use_as_test: true
   - description: "Anode mass requirement (I=1.0 A, T=25 yr, epsilon=2000, u_f=0.90)"
+    derivation: "1.0 * 25 * 8760 / (2000 * 0.90) = 121.667 kg"
     inputs:
       I_mean_A: 1.0
       T_design_years: 25.0
@@ -113,6 +133,7 @@ worked_examples:
       u_f: 0.90
     outputs:
       anode_mass_kg: 121.67
+    tolerance: 0.01
     use_as_test: true
 assumptions:
   - "Al-Zn-In anode: open-circuit potential -1.050 V vs Ag/AgCl"

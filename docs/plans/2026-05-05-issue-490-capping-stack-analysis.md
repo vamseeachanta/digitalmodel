@@ -7,7 +7,7 @@
 
 ## Context
 
-Post-Macondo, capping stacks (API 17W) are mandatory for deepwater wells as the emergency blowout containment system. For field-development emergency response planning we need to model deployment scenarios, wellhead-interface compatibility, and containment pressure capacity vs reservoir conditions. No code exists today.
+Post-2010 GoM blowout, capping stacks (API 17W) are mandatory for deepwater wells as the emergency blowout containment system. For field-development emergency response planning we need to model deployment scenarios, wellhead-interface compatibility, and containment pressure capacity vs reservoir conditions. No code exists today.
 
 Adjacent: future tree module (#484) provides the wellhead interface this module checks against; future ROV module (#491) provides deployment heavy-lift modeling.
 

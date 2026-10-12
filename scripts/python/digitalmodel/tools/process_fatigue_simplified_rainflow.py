@@ -276,7 +276,7 @@ def process_sample_file():
     """Process a single sample file to test the simplified output"""
     
     # Test with one file first
-    input_dir = Path(r"D:\1522\ctr7\orcaflex\rev_a08\output\csv\07c_fatigue")
+    input_dir = Path(r"<project-root>")
     output_dir = input_dir / "rainflow"
     output_dir.mkdir(exist_ok=True)
     
@@ -302,7 +302,7 @@ def process_sample_file():
 def batch_process_all_files():
     """Process all Strut files in batch"""
     
-    input_dir = Path(r"D:\1522\ctr7\orcaflex\rev_a08\output\csv\07c_fatigue")
+    input_dir = Path(r"<project-root>")
     output_dir = input_dir / "rainflow"
     output_dir.mkdir(exist_ok=True)
     

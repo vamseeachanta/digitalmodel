@@ -1,0 +1,7 @@
+# Packaged configuration; the workflow example supplies all assessment inputs.
+basename: api579_dent_screen
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

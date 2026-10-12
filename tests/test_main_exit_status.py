@@ -3,8 +3,8 @@
 Issue #1631, premise 13. ``main()`` ends with a bare ``engine()`` whose return
 value is discarded and there is no ``sys.exit`` on the engine-contract path, so
 the command exits 0 no matter what the engine concluded -- on any host,
-licensed or not. Deckhand is a thin ``subprocess.run`` wrapper, so that exit
-status is the entire success signal.
+licensed or not. A runner that wraps it in ``subprocess.run`` sees only that
+exit status, so it is the entire success signal.
 
 The end-to-end pair at the bottom is the anti-vacuity guard required by D7: it
 patches ``run_orcawave`` to inject a *completed* solve, so it exercises the
@@ -133,8 +133,8 @@ def _solve_input(tmp_path: Path) -> Path:
 
 
 # The driver runs in a real child process so the assertion is on the process
-# exit status itself -- the whole of the signal Deckhand consumes
-# (licensed_run_agent_runtime.py:37-50 is a thin subprocess.run wrapper). An
+# exit status itself -- the whole of the signal a subprocess-based
+# runner consumes. An
 # in-process SystemExit assertion would prove less.
 _DRIVER = '''
 import sys
@@ -204,7 +204,7 @@ def _run_main_end_to_end(verdict: str) -> int:
 
     env = dict(os.environ)
     # engine.py:113-121 takes a different argument-parsing branch when it
-    # detects pytest. The child must look like a real Deckhand invocation
+    # detects pytest. The child must look like a real command-line invocation
     # (`uv run python -m digitalmodel <input>`), not like a test process, or
     # this stops being an end-to-end check of the shipped path.
     for marker in [k for k in env if k.startswith("PYTEST")]:

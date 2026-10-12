@@ -1,0 +1,13 @@
+"Table 10-1 Recommended initial and final design current densities (A/m2) for seawater exposed bare metal surfaces, as a function of
+depth and ‘climatic region’ based on surface water temperature (ref. 6.3).",,,,,,,,
+"Depth
+(m)","‘Tropical’
+(> 20 °C)",,"‘Sub-Tropical’
+(12- 20 °C)",,"‘Temperate’
+(7-11 °C)",,"‘Arctic’
+(< 7 °C)",
+,initial,final,initial,final,initial,final,initial,final
+0-30,0.150,0.100,0.170,0.110,0.200,0.130,0.250,0.170
+>30-100,0.120,0.080,0.140,0.090,0.170,0.110,0.200,0.130
+>100-300,0.140,0.090,0.160,0.110,0.190,0.140,0.220,0.170
+>300,0.180,0.130,0.200,0.150,0.220,0.170,0.220,0.170

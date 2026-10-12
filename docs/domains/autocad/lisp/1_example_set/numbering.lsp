@@ -1,5 +1,5 @@
 ;;; inserts increasing numbers with or without prefix or suffix text
-;;; author paul >> paulmcz@yahoo.com
+;;; author paul >> [email removed]
 ;;; tit  = text+integer+text
 ;;; trt  = text+real+text
 ;;; nmc  = integer inside circle

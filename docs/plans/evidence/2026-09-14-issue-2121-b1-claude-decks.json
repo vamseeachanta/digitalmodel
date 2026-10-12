@@ -1,0 +1,184 @@
+{
+  "revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+  "section": "decks",
+  "seconds": "273.98399999993853",
+  "exit_code": 0,
+  "bundle_sha256": "74e7b1bc0a86a7ebb12f68743d9177f4f3f388458294d6e6da496ecfb7dfa5d0",
+  "stdout_sha256": "4387117d337d8ff1ab82bfe37084838e754efcbfdba4cd04e1ceced981c2bd03",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status": "REVIEW_RECEIVED",
+  "review": {
+    "verdict": "MINOR",
+    "reviewed_revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+    "reviewed_files": [
+      {
+        "path": ".gitattributes",
+        "sha256": "19caf877a0122d6c70151cdc9b4b9d693e64e3f4e4aab3595333f21d8e20b450"
+      },
+      {
+        "path": ".gitignore",
+        "sha256": "0b1ce1821ef56a87ed426d3a4446f51f11a213aea9858fc77827eb3aff022123"
+      },
+      {
+        "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+        "sha256": "bc08cee28154cf3c211313f3fc08d4bc65f534ad8df36617192956e0ec5b542f"
+      },
+      {
+        "path": "docs/reports/2026-09-14-issue-2121-b1-preparation.html",
+        "sha256": "980839efebbd0fef4c0c524bd5f4242e5ddecf48cdd2c871e0b9768e8b3c5248"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_brief.txt",
+        "sha256": "c738fa008bb6d6be0508d5f7678108956f80cfa8ebaeb27033568ad598c57911"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_capture.json",
+        "sha256": "487dfeda6c6a398a9cd892d267d7b85a0af4f6d12985cb4adb19627c04284363"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_contract.json",
+        "sha256": "85818d3a9203bf08ce2f931b910f9f187e97a8d5c69c82a823f5c8fb2c91da6e"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_invocation.json",
+        "sha256": "f1b57bdc9f7d9498d360f503cc0852a5dd039c7944be9cc22bd46aad61d2167c"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_process_stderr.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_response.json",
+        "sha256": "4a6c12f105980f4cb22776d0fa34df84ea729d93bbddd108363d29b838d84b2d"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_transport.json",
+        "sha256": "063ad98e481a142b150fe03244723432e5008928393bc9b01adf35af2fbf9938"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/manifest.json",
+        "sha256": "fe67fc56f5f5adf43da23648202a91524485bd7627380c3d2d5e3cadc5b579f4"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/basis-criteria.json",
+        "sha256": "ef5e0f749f7322d59dff668656e473c2a5ff8a993898b7fcf493c7e4b6cd6096"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n16.inp",
+        "sha256": "e12ec14194afba24176d34343ad8ecf0bec0d671509a1a9e27ddfb9413209f42"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n16.json",
+        "sha256": "834492a8698383a61264496bd41dea5b93735e588f08dc76a9096fe78187711e"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n4.inp",
+        "sha256": "bd2f9529412545743e4527f637190eedc42cce519033c8bd837946645c750de0"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n4.json",
+        "sha256": "7b7956d25ad848bdc781ada64eea6edc4646e40f63d0fcea9d0dcbc527a44e5b"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n8.inp",
+        "sha256": "ea4d95669f8e7922ab5ecd4e0d9f77713f14f4978d3a5ca1cc50f79f17c034e5"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n8.json",
+        "sha256": "e033de63d87051f0d6f0835318aef16965a1664eafebca5d79048f68c52a09d0"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-zero-t60-n16.inp",
+        "sha256": "1fcaf94c00c7f40ad9ccffbde512ee084e21a6600cb668204a823d23e4241448"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/ocv-zero-t60-n16.json",
+        "sha256": "1f266f7cb7751f5231f4bab3fba62bc2744ebb2e657ce396a5703dddb09c0ef7"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/preparation.json",
+        "sha256": "668c1a63b6ced8fe808da2b1214b9fb12e00e28828460e547a9d80b173501fe5"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/prepared/proposal.json",
+        "sha256": "117340d4e72b502dfa5e3a116a8019f572f08cb16e220ef5cb6a381e1287972d"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/producer_derivation.json",
+        "sha256": "405ba2af48734f66a1ad3d5738741d900587b444e6a589ed6e7b1a391ec91c9a"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/reference.json",
+        "sha256": "385ff3d42e4219faefd8cc1a72c20525f4b2731cf2fcb31aa51ba5b1de63c3b4"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/reference_comparison.json",
+        "sha256": "372e2e6658f3d43f49609d1529c4b75883a64bd418711a25f9c162ea165ecacf"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_benchmark.py",
+        "sha256": "1a4ab9ceb167a31278aa39c6fb946af8ee6b47dceedcff28d466865159b4e30b"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_deck.py",
+        "sha256": "c9dca5a7a5a0e53f4c555c95ea38d363b24896ca340c4069813e97670f3516d4"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_deck_exports.py",
+        "sha256": "48ff0fc3dce1ba196993c02b142a12d93ffea52ae25b9b5223bebbd723c69480"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_mesh.py",
+        "sha256": "82c42b9d8cc063b78201d7977229998d8e42bfbd4dbe3622707719a98e450d01"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_preparation.py",
+        "sha256": "ff4a105f09fe0145fd7b4315cdff6789514100500899f3ff31f99208f6d4a1c7"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_benchmark.py",
+        "sha256": "1b74addb1799307e574690b0a7fe55fe5433cd128e8c0f42c2715e0df778c6ad"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_deck.py",
+        "sha256": "ff66a53e8acf511c13aabe901c5cc0ec5185a28b98c6f3598190c392008ac240"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_preparation.py",
+        "sha256": "1c25f0d58a3b1cf541ad311ec32cd2f829fb2bb3f0805768f8c2e97b28774b82"
+      }
+    ],
+    "findings": [
+      {
+        "id": "DECK-1",
+        "severity": "minor",
+        "defect": "cylinder_deck.py emits /COM,OCV_LOAD_AUDIT_BEGIN and /COM,OCV_SOLVED_STATE_BEGIN without matching _END markers, unlike every other region produced through marked(). The load-audit region (SFELIST/FLIST/DLIST) therefore has no explicit terminator in the .out, so any evidence parser must infer its end from the FINISH/CONFIG echo, which is fragile and inconsistent with the paired-marker contract used for MESH/OUTRES/NERR/FORMAT/PRESOL/STRESS/DISP/SUPPORT.",
+        "correction": "Emit OCV_LOAD_AUDIT_END immediately after DLIST,ALL (before FINISH) and OCV_SOLVED_STATE_END after the last state *GET, via marked(); add a deck test asserting every OCV_*_BEGIN has exactly one matching _END. This changes deck bytes/hashes and requires regeneration of the four prepared decks and manifest."
+      },
+      {
+        "id": "DECK-2",
+        "severity": "minor",
+        "defect": "NLIST/ELIST/ETLIST/MPLIST (PREP7) and SFELIST/FLIST/DLIST (SOLU) are listed under the default /FORMAT because /FORMAT,8,E,24,16,100,240 is only issued in POST1. For N16 the node coordinates are multiples of 1.875 mm (e.g. 751.875) which are not representable at default 5-significant-digit listing precision, so these listings cannot serve as exact mesh evidence; only model.cdb and the *GET LOC exports are exact. The plan lists 'mesh/material/load/support listings' among retained evidence without stating this precision limit.",
+        "correction": "Either issue the fixed /FORMAT before the OCV_MESH block and load audit, or document explicitly (deck module docstring and B1 report) that the PREP7/SOLU listings are human-readable witnesses only and that the exact mesh/load evidence path is model.cdb plus keyed E24.16 exports; ensure the results validators never compare NLIST coordinates as exact values."
+      },
+      {
+        "id": "DECK-3",
+        "severity": "minor",
+        "defect": "/GRAPHICS,FULL and RSYS,0 are issued after SET,1,1. Batch default is already FULL so the practical risk is low, but the plan states these states govern averaging 'with ERESX YES set before solution' and the deck makes the SET-to-/GRAPHICS ordering implicit; some versions advise reissuing SET after changing graphics mode. Native behaviour is unverified.",
+        "correction": "Move /GRAPHICS,FULL and RSYS,0 to immediately after /POST1 and before SET,1,1 (or reissue SET,1,1 after them), and pin the v242 /GRAPHICS note in the deck source register so the ordering is deliberate rather than incidental."
+      },
+      {
+        "id": "DECK-4",
+        "severity": "minor",
+        "defect": "validate_deck is a byte-equality check against the regenerated deck, so test_deck_contract_refuses_mutations is tautological and does not exercise the 'audit-to-solve window' rule semantically. The window/precision assertions in test_precision_controls_and_exact_audit_to_solve_window and the export/listing tests run only for ocv-t60-p10-n4; the three larger decks (including the zero control, which has a different SFE/SFELIST branch) are not structurally asserted by these tests.",
+        "correction": "Parametrize the window, export-count (54 records, 36 ESOL *GETs), listing-selection and marker tests over all four CASES, and add a small structural parser test (independent of build_case) that asserts the exact SFELIST..SOLVE sequence and refuses an inserted command, so mutation refusal is not solely hash equality."
+      },
+      {
+        "id": "DECK-5",
+        "severity": "info",
+        "defect": "The deck relies on STAT forms whose documentation status in v242 is not pinned in the bundle: /FORMAT,STAT and /NERR,STAT (only /CONFIG,STAT and OUTRES,STAT are clearly documented). If MAPDL treats STAT as an invalid numeric argument it may emit a WARNING, which under the empty allowlist turns every attempt INCOMPLETE before any physics is observed. This is a source-pin gap, not a claimed native failure.",
+        "correction": "Record the exact v242 Command Reference basis for /FORMAT,STAT and /NERR,STAT in the vendor-source-metadata register (or replace them with documented status listings such as *STATUS/ /CONFIG,STAT equivalents), and list this as an explicit unverified grammar assumption in the B2 preview alongside the empty-stream assumption."
+      }
+    ]
+  }
+}

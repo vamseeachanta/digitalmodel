@@ -3046,7 +3046,7 @@ Environment:
   # Drawing
   Seabed3DShowDataPoints: No
 VesselTypes:
-  - Name: MDII FPU
+  - Name: GoM_FPU_137m
     Length: 137
     # Conventions
     RAOResponseUnits: degrees
@@ -7484,7 +7484,7 @@ LineTypes:
     Pen: [2, Solid, $808040]
 Vessels:
   - Name: FSU
-    VesselType: MDII FPU
+    VesselType: GoM_FPU_137m
     Draught: Phase 2A_Free_Floating
     Length: ~
     Connection: Free
@@ -7507,7 +7507,7 @@ Vessels:
     CalculationMode: QTF modification
     # Drawing
     Pen: [1, Solid, Yellow]
-  - Name: SevenNavica
+  - Name: Lay_Vessel_A
     VesselType: Full Reel 2007
     Draught: 6.636m
     Length: ~
@@ -7576,9 +7576,9 @@ Vessels:
     TotalContactArea: ~
     # Drawing
     Pen: [1, Solid, Lime]
-  - Name: Navica-Ramp
+  - Name: Lay_Ramp
     BuoyType: Lumped buoy
-    Connection: SevenNavica
+    Connection: Lay_Vessel_A
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment
@@ -7722,7 +7722,7 @@ Vessels:
     ShadedDrawingCullingMode: Anticlockwise
   - Name: A&R_Lowersheave
     BuoyType: Lumped buoy
-    Connection: Navica-Ramp
+    Connection: Lay_Ramp
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment
@@ -7822,7 +7822,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Navica-Ramp, -1.785, 0, 4.503, 180, 90.00000000000006, 0, ~]
+      - [Lay_Ramp, -1.785, 0, 4.503, 180, 90.00000000000006, 0, ~]
       - [Anchored, 2440.248434865723, -207.5793730413143, 0.21088349999990896, 354.9998994799329, 89.99215127735874, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -7873,7 +7873,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Navica-Ramp, 17.357, 0, 4.503, 180, 89.99999999999997, 0, ~]
+      - [Lay_Ramp, 17.357, 0, 4.503, 180, 89.99999999999997, 0, ~]
       - [AR_Winch_Socket, 0, 0, 0, 180, 180, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -9098,7 +9098,7 @@ Shapes:
   - Name: WeldHeight_1.5m
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: Navica-Ramp
+    Connection: Lay_Ramp
     # Geometry
     Origin: [1.415, 0, 4.503]
     Azimuth: 0
@@ -9201,8 +9201,8 @@ Groups:
     Vessel: Model
     A&RWire: Vessel
     AR_Winch_Socket: Vessel
-    SevenNavica: Vessel
-    Navica-Ramp: Vessel
+    Lay_Vessel_A: Vessel
+    Lay_Ramp: Vessel
     SCRSheave: Vessel
     A&R_Lowersheave: Vessel
     WeldHeight_1.5m: Vessel

@@ -421,6 +421,6 @@ class FractureMechanicsComponents():
         for row_index in range(0, len(df) - 1):
             if df.final_flaw_depth[row_index +
                                    1] > df.final_flaw_depth[row_index]:
-                df.ix[row_index + 1,
-                      'final_flaw_depth'] = df.final_flaw_depth[row_index]
+                df.loc[row_index + 1,
+                       'final_flaw_depth'] = df.final_flaw_depth[row_index]
         return df

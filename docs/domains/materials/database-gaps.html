@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Materials database: scope and gaps</title>
+<main>
+<h1>Materials database: scope and gaps</h1>
+<p>This slice projects the existing reconciled grade records into validated,
+immutable metadata. <code>grades.py</code> remains the strength authority; no
+separate grade matrix or dimensional table is introduced. No external numerical
+inputs or source downloads are included. Scope is limited to issue #1204.</p>
+<p><code>database_schema.py</code> defines designation, specification, nullable
+edition, nullable product level, MPa strengths, provenance and nullable foreign
+keys. <code>database.py</code> supplies <code>load_database()</code>,
+<code>database.lookup(name, psl=...)</code> and dictionary lookup by
+<code>record.key</code>. Keys comprise specification, edition, designation and
+product level; unknown edition and inapplicable level use explicit key tokens.</p>
+<p>Product-level selection follows <code>grades.smts_mpa</code>: stored PSL1
+minima receive separate records. A PSL1 request without a stored PSL1 minimum
+returns the PSL2 record, retaining the repository helper's value fallback.
+This does not establish PSL1 product qualification. Non-API product levels are
+null. Aliases, including the distinct API and hull Grade A names, follow
+<code>grades.get</code>.</p>
+<p>Each record retains its existing citation and the inspected source revision,
+repository-relative locator, SHA-256 and UTC retrieval date. The pinned source
+digest is checked at load time; a changed grade module requires inspection and
+refresh of the provenance constants. API edition metadata is extracted from the
+existing citation; editions not recorded there remain null. Repository
+<a href="../../../LICENSE">LICENSE</a> states <q>MIT License</q> for software.
+That licence does not establish original standards reuse rights. The source was
+inspected on 2026-10-11 UTC at revision
+<code>f21a12af5349c1656137a7b9daa091ec8f968738</code>; no original standard was fetched.</p>
+<table>
+<thead><tr><th>Gap</th><th>Evidence and required next input</th></tr></thead>
+<tbody>
+<tr><td>Inherited strengths</td><td>API, EN and ASTM entries are
+<q>in-repo value, original source is a paid document, not re-verified in this job</q>.
+Original edition, locator, rights and strength verification need authorized
+source evidence. IACS entries retain their existing citation but their original
+source and terms also remain unverified. All records are traceability
+projections; original-source qualification is not established.</td></tr>
+<tr><td>Dimensional catalogue and structural shapes</td><td>
+The structural-shapes catalogue work in <code>data/aisc_shapes.yaml</code>
+covers shape lookup/import work. <code>structural_shape_id</code> names that future
+target and remains null. <code>data/aisc_shapes.yaml</code> is unchanged. Linking
+needs a reviewed catalogue interface and explicit grade-to-product evidence.</td></tr>
+<tr><td>Pipe schedules</td><td>No dimensions are projected from
+<code>line_pipe.py</code> and no paid-specification values are transcribed.
+The existing schedule dimensions are in-repo values whose original source is a
+paid document, not re-verified in this job. A future catalogue needs an openly
+licensed dimensional source or separately authorized licensed-source handling.</td></tr>
+<tr><td>S–N associations</td><td><code>sn_curve_ids</code> targets
+<code>fatigue.sn_library.SNCurveRecord.curve_id</code> and remains null.
+The inspected library supplies detail/environment keys, not grade applicability.
+<code>data/riser_database/material_sn_scf_dff.csv</code> links riser weld details
+through a different consumer and does not establish a grade relationship.
+Populated links need explicit grade, detail, environment and governing-case evidence;
+neither steel strength nor a shared standard name establishes applicability.</td></tr>
+<tr><td>Standards registry and missing editions</td><td>
+<code>standards_registry_id</code> remains null. The local riser crosswalk has
+no corresponding grade-standard entry, and the issue's
+<code>data/standards-registry.json</code> target is absent. Linking needs a
+repository-owned registry/crosswalk with established identifiers and revisions.
+Missing editions need source metadata, not inference from publication dates.</td></tr>
+</tbody>
+</table>
+<p>Table. Gaps remaining in this schema-and-loader slice and the evidence each requires.</p>
+<p>Non-null foreign keys are rejected until their grade associations are
+established. Tests compare every loaded strength and citation to the reconciled
+source records and exercise malformed metadata, units, uniqueness and lookup.
+No independent source verification or engineering acceptance is claimed.</p>
+</main>
+</html>

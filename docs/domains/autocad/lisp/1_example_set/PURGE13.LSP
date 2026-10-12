@@ -9,7 +9,7 @@
 ;140 Mesa Vista Drive
 ;Bishop, CA  93514
 ;Phone: 619-387-2479
-;Email: hermit1@ix.netcom.com
+;Email: [email removed]
 
 ;modified by Erik Murray 4/30/97
 

@@ -47,6 +47,7 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
 )
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
     BenchmarkReport,
+    ComparisonPolicy,
     MultiSolverComparator,
 )
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
@@ -71,14 +72,39 @@ UNIT_BOX_COG = (0.0, 0.0, -0.25)
 UNIT_BOX_SIDE_M = 1.0
 WATER_DENSITY = 1025.0
 
-# Frequency grid: 0.1 to 2.0 rad/s — 20 steps
-N_FREQ = 20
+# Frequency grid: 0.1 to 2.0 rad/s, dense enough for the abscissa contract.
+N_FREQ = 40
 N_HEAD = 4
-FREQUENCIES = np.linspace(0.1, 2.0, N_FREQ)
+FREQUENCIES = np.geomspace(0.1, 2.0, N_FREQ)
 HEADINGS = np.array([0.0, 90.0, 180.0, 270.0])
 
-# Solver tolerance: < 1% relative difference constitutes agreement
-SOLVER_TOLERANCE = 0.01
+# The synthetic builders deliberately impose at most this per-solver variation.
+SOLVER_RELATIVE_UNCERTAINTY = 0.01
+RESPONSE_ABSOLUTE_RESOLUTION = np.finfo(np.float64).eps
+MINIMUM_EXPLAINED_VARIANCE = (1.0 - SOLVER_RELATIVE_UNCERTAINTY) ** 2
+COMPARISON_JUSTIFICATION = (
+    "Unit Box synthetic builders bound every nonzero solver sample to one "
+    "percent by multiplicative construction. The pairwise relative-RMS budget "
+    "is twice that bound because each of two solvers contributes at most one "
+    "percent. Phase is reported as diagnostic-only because no physical phase "
+    "acceptance threshold has been derived. Absolute response resolution and "
+    "the correlation criterion remain provisional and are not physical claims."
+)
+UNIT_BOX_POLICY_INPUTS = {
+    "solver_relative_uncertainty": SOLVER_RELATIVE_UNCERTAINTY,
+    "response_absolute_resolution": RESPONSE_ABSOLUTE_RESOLUTION,
+    "minimum_explained_variance": MINIMUM_EXPLAINED_VARIANCE,
+    "comparison_justification": COMPARISON_JUSTIFICATION,
+}
+
+
+def _unit_box_policy() -> ComparisonPolicy:
+    return ComparisonPolicy.from_uncertainties(
+        solver_relative_uncertainty=SOLVER_RELATIVE_UNCERTAINTY,
+        response_absolute_resolution=RESPONSE_ABSOLUTE_RESOLUTION,
+        minimum_explained_variance=MINIMUM_EXPLAINED_VARIANCE,
+        justification=COMPARISON_JUSTIFICATION,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -143,10 +169,28 @@ def _unit_box_pitch_rao(frequencies: np.ndarray) -> np.ndarray:
     return np.clip(magnitude, 0.0, 20.0)
 
 
+# RNG stream identity
+# ---------------------------------------------------------------------------
+# Every stream is keyed by the FULL tuple (solver seed, DOF, kind) as a seed
+# SEQUENCE. Summing the components — the previous `seed + dof.value` — aliases:
+# with solver seeds 0/1/2 and DOF values 1-6, AQWA-SWAY drew the same stream as
+# OrcaWave-SURGE, and five of the six sums collided three ways, so the 18
+# pair x DOF results were driven by only 8 distinct draws (#1633).
+_KIND_MAGNITUDE = 0
+_KIND_BASE_PHASE = 1
+_KIND_SOLVER_PHASE = 2
+_KIND_ADDED_MASS = 3
+_KIND_DAMPING = 4
+
+
+def _magnitude_rng(seed: int, dof: DOF) -> np.random.Generator:
+    """RNG for a solver's RAO magnitude perturbation in one DOF."""
+    return np.random.default_rng([seed, dof.value, _KIND_MAGNITUDE])
+
+
 def _unit_box_rao_component(
     dof: DOF,
     frequencies: np.ndarray,
-    solver_bias: float = 0.0,
     seed: int = 0,
 ) -> RAOComponent:
     """Build a RAOComponent for the Unit Box with controlled solver variation.
@@ -154,13 +198,11 @@ def _unit_box_rao_component(
     Args:
         dof: Degree of freedom.
         frequencies: Frequency array (rad/s).
-        solver_bias: Small bias factor (e.g. 0.005 = 0.5% offset) simulating
-            inter-solver variation below the 1% tolerance threshold.
         seed: RNG seed for repeatable phase noise.
     """
     freq_data = _make_unit_box_freq_data()
     head_data = _make_unit_box_heading_data()
-    rng = np.random.default_rng(seed=seed + dof.value)
+    rng = _magnitude_rng(seed, dof)
 
     if dof == DOF.HEAVE:
         base_mag_1d = _unit_box_heave_rao(frequencies)
@@ -180,10 +222,14 @@ def _unit_box_rao_component(
 
     magnitude = np.outer(base_mag_1d, heading_factors)
 
-    # Apply solver bias (< 1%) and tiny random noise (< 0.1%)
-    noise = rng.uniform(-0.001, 0.001, size=magnitude.shape)
-    magnitude = magnitude * (1.0 + solver_bias) + noise
-    magnitude = np.clip(magnitude, 0.0, None)
+    # Per-sample multiplicative variation makes the declared relative bound
+    # true at every scale, including the near-zero yaw response.
+    perturbation = rng.uniform(
+        -SOLVER_RELATIVE_UNCERTAINTY,
+        SOLVER_RELATIVE_UNCERTAINTY,
+        size=magnitude.shape,
+    )
+    magnitude = magnitude * (1.0 + perturbation)
 
     # Phase: physically, heave leads wave by ~90 deg near resonance
     if dof == DOF.HEAVE:
@@ -191,11 +237,34 @@ def _unit_box_rao_component(
         phase_1d = -np.degrees(np.arctan2(2 * 0.05 * frequencies / omega_n,
                                            1 - (frequencies / omega_n) ** 2))
     else:
-        phase_1d = rng.uniform(-30.0, 30.0, size=len(frequencies))
+        phase_rng = np.random.default_rng([dof.value, _KIND_BASE_PHASE])
+        phase_1d = phase_rng.uniform(-30.0, 30.0, size=len(frequencies))
 
     phase = np.outer(phase_1d, np.ones(N_HEAD))
-    phase_noise = rng.uniform(-2.0, 2.0, size=phase.shape)
-    phase = phase + phase_noise
+
+    # Per-solver phase variation, scaled from the SAME declared relative
+    # uncertainty rather than an independent invented bound.
+    #
+    # SOLVER_RELATIVE_UNCERTAINTY is treated here as a PER-COMPONENT bound: the
+    # radial (magnitude) and tangential (phase) perturbations are each bounded
+    # by u independently. A tangential perturbation of relative size u rotates
+    # the phasor by arctan(u) ~ u radians for small u, so the phase bound is
+    # degrees(u) = 0.573 deg at u = 0.01. Applying u to both components means
+    # the TOTAL complex perturbation reaches u*sqrt(2), not u — stated plainly
+    # because an earlier version of this comment claimed a single-u total,
+    # which is not what the code does. Nothing gates on phase (the policy
+    # justification declares it diagnostic-only), so the per-component reading
+    # is the honest description rather than a derivation of a bound.
+    #
+    # Without this the solver seed never reaches the phase: every solver
+    # produced a bit-identical phase array, all 18 max_phase_diff entries were
+    # exactly 0.0, and an inverted phase convention would have reported perfect
+    # agreement (#1633).
+    phase_perturbation_deg = np.degrees(SOLVER_RELATIVE_UNCERTAINTY)
+    solver_phase_rng = np.random.default_rng([seed, dof.value, _KIND_SOLVER_PHASE])
+    phase = phase + solver_phase_rng.uniform(
+        -phase_perturbation_deg, phase_perturbation_deg, size=phase.shape,
+    )
 
     return RAOComponent(
         dof=dof,
@@ -209,7 +278,6 @@ def _unit_box_rao_component(
 
 def _unit_box_added_mass(
     frequencies: np.ndarray,
-    solver_bias: float = 0.0,
     seed: int = 0,
 ) -> AddedMassSet:
     """Build frequency-dependent added mass matrices for the Unit Box.
@@ -217,7 +285,7 @@ def _unit_box_added_mass(
     For a 1x1x1 box at the waterline, diagonal added mass components are
     approximately proportional to displaced water mass (~500 kg for this geometry).
     """
-    rng = np.random.default_rng(seed=seed + 10)
+    rng = np.random.default_rng([seed, _KIND_ADDED_MASS])
     freq_data = _make_unit_box_freq_data()
     # Approximate diagonal: surge/sway added mass ~ 50% of displaced mass
     # heave added mass ~ 20% (flat bottom), roll/pitch ~ 10% * L^2
@@ -229,17 +297,24 @@ def _unit_box_added_mass(
         for k in range(6):
             # Frequency-dependent: slightly higher at low freq
             freq_factor = 1.0 + 0.1 * np.exp(-freq)
-            m[k, k] = diag_approx[k] * freq_factor * (1.0 + solver_bias)
+            m[k, k] = diag_approx[k] * freq_factor
         # Add small off-diagonal coupling
-        m[0, 4] = m[4, 0] = 5.0 * (1.0 + solver_bias)
-        m[1, 3] = m[3, 1] = 5.0 * (1.0 + solver_bias)
-        noise = rng.uniform(-0.5, 0.5, size=(6, 6))
-        m = m + noise
+        m[0, 4] = m[4, 0] = 5.0
+        m[1, 3] = m[3, 1] = 5.0
+        upper = rng.uniform(
+            -SOLVER_RELATIVE_UNCERTAINTY,
+            SOLVER_RELATIVE_UNCERTAINTY,
+            size=(6, 6),
+        )
+        perturbation = np.triu(upper)
+        perturbation = perturbation + np.triu(perturbation, 1).T
+        m = m * (1.0 + perturbation)
         matrices.append(
             HydrodynamicMatrix(
                 matrix=m,
                 frequency=float(freq),
                 matrix_type="added_mass",
+                source="solver",
                 units={"linear": "kg", "angular": "kg.m^2"},
             )
         )
@@ -256,11 +331,10 @@ def _unit_box_added_mass(
 
 def _unit_box_damping(
     frequencies: np.ndarray,
-    solver_bias: float = 0.0,
     seed: int = 0,
 ) -> DampingSet:
     """Build frequency-dependent radiation damping matrices for the Unit Box."""
-    rng = np.random.default_rng(seed=seed + 20)
+    rng = np.random.default_rng([seed, _KIND_DAMPING])
     freq_data = _make_unit_box_freq_data()
     # Radiation damping is proportional to freq^2 at low frequencies
     diag_base = np.array([50.0, 50.0, 30.0, 5.0, 5.0, 1.0])
@@ -269,15 +343,21 @@ def _unit_box_damping(
     for i, freq in enumerate(frequencies):
         m = np.zeros((6, 6))
         for k in range(6):
-            m[k, k] = diag_base[k] * (freq / 1.0) * (1.0 + solver_bias)
-        noise = rng.uniform(-0.2, 0.2, size=(6, 6))
-        m = m + noise
-        m = np.clip(m, 0.0, None)  # damping must be non-negative
+            m[k, k] = diag_base[k] * (freq / 1.0)
+        upper = rng.uniform(
+            -SOLVER_RELATIVE_UNCERTAINTY,
+            SOLVER_RELATIVE_UNCERTAINTY,
+            size=(6, 6),
+        )
+        perturbation = np.triu(upper)
+        perturbation = perturbation + np.triu(perturbation, 1).T
+        m = m * (1.0 + perturbation)
         matrices.append(
             HydrodynamicMatrix(
                 matrix=m,
                 frequency=float(freq),
                 matrix_type="damping",
+                source="solver",
                 units={"linear": "N.s/m", "angular": "N.m.s/rad"},
             )
         )
@@ -294,15 +374,12 @@ def _unit_box_damping(
 
 def _build_unit_box_results(
     solver_name: str,
-    solver_bias: float = 0.0,
     seed: int = 0,
 ) -> DiffractionResults:
     """Build DiffractionResults for the Unit Box hull.
 
     Args:
         solver_name: Solver identifier (AQWA, OrcaWave, BEMRosetta).
-        solver_bias: Small multiplicative bias (< 0.01) simulating inter-solver
-            numerical differences for the simple box geometry.
         seed: RNG seed for repeatable results.
 
     Returns:
@@ -312,7 +389,7 @@ def _build_unit_box_results(
     components: Dict = {}
     for dof in DOF:
         components[dof.name.lower()] = _unit_box_rao_component(
-            dof, FREQUENCIES, solver_bias=solver_bias, seed=seed,
+            dof, FREQUENCIES, seed=seed,
         )
 
     rao_set = RAOSet(
@@ -329,8 +406,8 @@ def _build_unit_box_results(
         analysis_tool=solver_name,
         water_depth=UNIT_BOX_WATER_DEPTH_M,
         raos=rao_set,
-        added_mass=_unit_box_added_mass(FREQUENCIES, solver_bias=solver_bias, seed=seed),
-        damping=_unit_box_damping(FREQUENCIES, solver_bias=solver_bias, seed=seed),
+        added_mass=_unit_box_added_mass(FREQUENCIES, seed=seed),
+        damping=_unit_box_damping(FREQUENCIES, seed=seed),
         created_date=now,
         source_files=[f"unit_box_{solver_name.lower()}.gdf"],
         phase_convention="iso_lead",
@@ -341,20 +418,17 @@ def _build_unit_box_results(
 def _build_unit_box_solver_set() -> Dict[str, DiffractionResults]:
     """Deterministic three-solver result set for the Unit Box.
 
-    AQWA: reference (no bias)
-    OrcaWave: +0.5% bias (GDF conversion minor scaling)
-    BEMRosetta: +0.3% bias (open-source solver numerical precision)
-
-    All biases are < 1%, expecting FULL or MAJORITY consensus.
+    Each solver uses a distinct deterministic seed for bounded per-sample
+    multiplicative variation. No solver-specific bias is assumed.
 
     Shared by the ``unit_box_solver_results`` fixture and by ``_regenerate()``
     so the committed golden artifacts and the tests are built from exactly the
     same inputs.
     """
     return {
-        "AQWA": _build_unit_box_results("AQWA", solver_bias=0.0, seed=0),
-        "OrcaWave": _build_unit_box_results("OrcaWave", solver_bias=0.005, seed=1),
-        "BEMRosetta": _build_unit_box_results("BEMRosetta", solver_bias=0.003, seed=2),
+        "AQWA": _build_unit_box_results("AQWA", seed=0),
+        "OrcaWave": _build_unit_box_results("OrcaWave", seed=1),
+        "BEMRosetta": _build_unit_box_results("BEMRosetta", seed=2),
     }
 
 
@@ -480,7 +554,7 @@ class TestUnitBoxMultiSolverComparator:
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         assert sorted(comparator.solver_names) == ["AQWA", "BEMRosetta", "OrcaWave"]
 
@@ -489,7 +563,7 @@ class TestUnitBoxMultiSolverComparator:
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         rao_comps = comparator.compare_raos()
         assert len(rao_comps) == 3  # C(3,2) = 3 pairs
@@ -500,7 +574,7 @@ class TestUnitBoxMultiSolverComparator:
     ) -> None:
         """Heave RAO correlation should be very high (>0.99) for all pairs."""
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         rao_comps = comparator.compare_raos()
         for pair_key, pair_data in rao_comps.items():
@@ -509,33 +583,29 @@ class TestUnitBoxMultiSolverComparator:
                 f"{pair_key}: heave correlation {heave_corr:.4f} < 0.99"
             )
 
-    def test_unit_box_consensus_full_or_majority(
+    def test_unit_box_heave_consensus_is_full(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         """Unit Box is simple geometry: expect FULL or MAJORITY consensus."""
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         consensus = comparator.compute_consensus()
         heave_level = consensus["HEAVE"].consensus_level
-        assert heave_level in ("FULL", "MAJORITY"), (
-            f"Heave consensus {heave_level} expected FULL or MAJORITY"
-        )
+        assert heave_level == "FULL"
 
     def test_unit_box_report_generation(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         report = comparator.generate_report()
         assert report.vessel_name == UNIT_BOX_NAME
         assert len(report.solver_names) == 3
-        assert report.overall_consensus in (
-            "FULL", "MAJORITY", "SPLIT", "NO_CONSENSUS",
-        )
+        assert report.overall_consensus == "FULL"
 
     def test_unit_box_overall_consensus_not_no_consensus(
         self,
@@ -543,12 +613,10 @@ class TestUnitBoxMultiSolverComparator:
     ) -> None:
         """For 1% solver variation, overall should not be NO_CONSENSUS."""
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         report = comparator.generate_report()
-        assert report.overall_consensus != "NO_CONSENSUS", (
-            f"Unit Box consensus is NO_CONSENSUS; solver biases are < 1%"
-        )
+        assert report.overall_consensus == "FULL"
 
 
 # ---------------------------------------------------------------------------
@@ -566,7 +634,7 @@ class TestUnitBoxBenchmarkRunner:
     ) -> None:
         config = BenchmarkConfig(
             output_dir=unit_box_output_dir,
-            tolerance=SOLVER_TOLERANCE,
+            **UNIT_BOX_POLICY_INPUTS,
         )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
@@ -580,7 +648,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -592,7 +662,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -604,7 +676,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -615,7 +689,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -628,7 +704,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -641,15 +719,15 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
         with open(result.report_json_path) as fh:
             data = json.load(fh)
-        assert data["overall_consensus"] in (
-            "FULL", "MAJORITY", "SPLIT", "NO_CONSENSUS",
-        )
+        assert data["overall_consensus"] == "FULL"
 
     def test_benchmark_runner_dry_run_skips_plots(
         self,
@@ -658,6 +736,7 @@ class TestUnitBoxBenchmarkRunner:
     ) -> None:
         config = BenchmarkConfig(
             output_dir=unit_box_output_dir, dry_run=True,
+            **UNIT_BOX_POLICY_INPUTS,
         )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
@@ -670,7 +749,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -740,7 +821,7 @@ def _run_unit_box_benchmark(
     """Run the canonical Unit Box benchmark into ``output_dir``."""
     config = BenchmarkConfig(
         output_dir=output_dir,
-        tolerance=SOLVER_TOLERANCE,
+        **UNIT_BOX_POLICY_INPUTS,
         report_title=REPORT_TITLE,
         report_subtitle=REPORT_SUBTITLE,
     )

@@ -50,7 +50,7 @@ templates:
   schema_type: generic
   structure: riser
   description: Drilling riser with tensioner system on semisub in 1020m water depth
-  source: examples/raw/B01/B01 Drilling riser.dat
+  source: examples/raw/B01/B01 Drilling riser.yml
   water_depth_m: 1020
   benchmark_validated: false
   complexity: complex
@@ -66,7 +66,7 @@ templates:
   schema_type: generic
   structure: mooring
   description: Discretised CALM buoy with 6-leg chain mooring, supply vessel, hose and hawser
-  source: examples/raw/C06/C06 Discretised CALM buoy.dat
+  source: examples/raw/C06/C06 Discretised CALM buoy.yml
   water_depth_m: 100
   benchmark_validated: false
   complexity: complex
@@ -172,7 +172,7 @@ templates:
   schema_type: generic
   structure: vessel
   description: IEA 10MW fixed-bottom offshore wind turbine on monopile with steady wind
-  source: examples/raw/K02/K02 10MW fixed-bottom OWT.dat
+  source: examples/raw/K02/K02 10MW fixed-bottom OWT.yml
   water_depth_m: 30
   benchmark_validated: false
   complexity: complex

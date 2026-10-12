@@ -325,6 +325,26 @@ class TestBuildDofReportSections:
         assert isinstance(html, str)
         assert len(html) > 0
 
+    def test_refused_dof_renders_refusal_without_no_consensus(
+        self, two_identical_results,
+    ):
+        report = _make_benchmark_report(two_identical_results)
+        names = sorted(two_identical_results.keys())
+
+        html = build_dof_report_sections(
+            report,
+            two_identical_results,
+            names,
+            x_axis="frequency",
+            heading_x_axis=False,
+        )
+
+        assert (
+            ">REFUSED<" in html.replace("\n", "").replace(" ", ""),
+            "Comparison was refused" in html,
+            "no consensus" in html,
+        ) == (True, True, False)
+
     def test_contains_all_six_dofs(self, two_identical_results):
         """HTML must include sections for all 6 DOFs."""
         report = _make_benchmark_report(two_identical_results)
@@ -357,6 +377,25 @@ class TestBuildDofReportSections:
         )
         assert "stats-table" in html
         assert "Magnitude correlation" in html
+
+    def test_unavailable_correlation_renders_quality_not_zero(
+        self, two_identical_results,
+    ):
+        report = _make_benchmark_report(two_identical_results)
+        pair = next(iter(report.pairwise_results.values()))
+        pair.rao_comparisons["heave"].magnitude_stats.correlation = None
+        pair.rao_comparisons["heave"].magnitude_stats.quality = "INSUFFICIENT_DATA"
+        names = sorted(two_identical_results.keys())
+
+        html = build_dof_report_sections(
+            report,
+            two_identical_results,
+            names,
+            x_axis="frequency",
+            heading_x_axis=False,
+        )
+
+        assert "Unavailable (INSUFFICIENT_DATA)" in html
 
     def test_contains_plotly_divs(self, two_identical_results):
         """Each DOF should have an embedded Plotly div."""

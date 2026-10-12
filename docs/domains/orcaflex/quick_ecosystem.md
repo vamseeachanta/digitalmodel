@@ -41,7 +41,7 @@ import sys
 
 def run_orcaflex():
     orcaflex_path = r"C:\Program Files (x86)\OrcaFlex\OrcaFlex.exe"
-    orcaflex_file = r"C:\Users\user\Documents\OrcaFlex\example.or6"
+    orcaflex_file = r"<private-data>\example.or6"
     subprocess.run([orcaflex_path, orcaflex_file])
 
 if __name__ == "__main__":

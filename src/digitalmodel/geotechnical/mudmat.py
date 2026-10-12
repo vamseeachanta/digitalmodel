@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from typing import Literal
 
 
 @dataclass
@@ -41,8 +42,18 @@ class BearingCapacityResult:
     notes: list[str] = field(default_factory=list)
 
 
+def _validate_finite_inputs(**inputs: float | None) -> None:
+    """Reject Boolean and non-finite inputs before calculator arithmetic."""
+    for name, value in inputs.items():
+        if value is not None and (
+            isinstance(value, bool) or not math.isfinite(value)
+        ):
+            raise ValueError(f"{name} must be a finite number")
+
+
 def bearing_capacity_factors(phi_deg: float) -> tuple[float, float, float]:
     """Brinch Hansen bearing-capacity factors (Nc, Nq, Ngamma)."""
+    _validate_finite_inputs(phi_deg=phi_deg)
     if phi_deg < 0.0:
         raise ValueError("friction angle must be non-negative")
     phi = math.radians(phi_deg)
@@ -94,14 +105,31 @@ def mudmat_bearing_capacity(
     friction_angle_deg: float | None = None,
     effective_cohesion_kpa: float = 0.0,
     interface_friction_angle_deg: float | None = None,
+    eccentricity_axis: Literal["B", "L"] = "B",
 ) -> BearingCapacityResult:
     """General bearing capacity + sliding for a rectangular mudmat.
 
     ``condition`` is ``"undrained"`` (phi = 0, total-stress, c = su) or
     ``"drained"`` (effective-stress, phi and c'). Eccentricity from
-    ``moment_knm`` reduces the effective width via Meyerhof's effective area
-    (B_eff = B - 2*M/V) applied along the width.
+    ``moment_knm`` reduces the dimension selected by ``eccentricity_axis``
+    via Meyerhof's effective area (dimension_eff = dimension - 2*abs(M)/V).
+    The axis denotes the direction of load displacement, not the moment's
+    rotation axis: ``"B"`` (default) reduces width, ``"L"`` reduces length.
+    Returned effective dimensions retain their original axis identities;
+    bearing factors use the shorter/longer effective dimensions.
     """
+    _validate_finite_inputs(
+        width_b_m=width_b_m,
+        length_l_m=length_l_m,
+        embedment_depth_m=embedment_depth_m,
+        submerged_unit_weight_kn_m3=submerged_unit_weight_kn_m3,
+        vertical_load_kn=vertical_load_kn,
+        moment_knm=moment_knm,
+        undrained_shear_strength_kpa=undrained_shear_strength_kpa,
+        friction_angle_deg=friction_angle_deg,
+        effective_cohesion_kpa=effective_cohesion_kpa,
+        interface_friction_angle_deg=interface_friction_angle_deg,
+    )
     if width_b_m <= 0.0 or length_l_m <= 0.0:
         raise ValueError("foundation width and length must be positive")
     if width_b_m > length_l_m:
@@ -110,6 +138,8 @@ def mudmat_bearing_capacity(
         raise ValueError("embedment_depth_m must be non-negative")
     if vertical_load_kn <= 0.0:
         raise ValueError("vertical_load_kn must be positive")
+    if eccentricity_axis not in ("B", "L"):
+        raise ValueError("eccentricity_axis must be 'B' or 'L'")
 
     notes: list[str] = []
     condition = condition.strip().lower()
@@ -130,19 +160,24 @@ def mudmat_bearing_capacity(
 
     # Effective dimensions (Meyerhof effective area) for moment eccentricity.
     eccentricity = abs(moment_knm) / vertical_load_kn if moment_knm else 0.0
-    b_eff = width_b_m - 2.0 * eccentricity
-    if b_eff <= 0.0:
+    b_eff = width_b_m - (2.0 * eccentricity if eccentricity_axis == "B" else 0.0)
+    l_eff = length_l_m - (2.0 * eccentricity if eccentricity_axis == "L" else 0.0)
+    if b_eff <= 0.0 or l_eff <= 0.0:
         raise ValueError(
-            "load eccentricity falls outside the base (B - 2e <= 0): foundation overturns"
+            f"load eccentricity falls outside the base ({eccentricity_axis} - 2e <= 0): "
+            "foundation overturns"
         )
     if eccentricity > 0.0:
-        notes.append(f"effective width reduced for eccentricity e={eccentricity:.3f} m")
-    l_eff = length_l_m
+        dimension = "width" if eccentricity_axis == "B" else "length"
+        notes.append(
+            f"effective {dimension} reduced for eccentricity e={eccentricity:.3f} m"
+        )
     area_eff = b_eff * l_eff
+    bearing_b, bearing_l = sorted((b_eff, l_eff))
 
     nc, nq, ngamma = bearing_capacity_factors(phi_deg)
-    shape = _shape_factors(phi_deg, b_eff, l_eff, nc, nq)
-    depth = _depth_factors(phi_deg, embedment_depth_m, b_eff, nq)
+    shape = _shape_factors(phi_deg, bearing_b, bearing_l, nc, nq)
+    depth = _depth_factors(phi_deg, embedment_depth_m, bearing_b, nq)
 
     # Effective overburden at foundation base.
     p0 = submerged_unit_weight_kn_m3 * embedment_depth_m
@@ -152,7 +187,7 @@ def mudmat_bearing_capacity(
     q_g = (
         0.5
         * submerged_unit_weight_kn_m3
-        * b_eff
+        * bearing_b
         * ngamma
         * shape["sgamma"]
         * depth["dgamma"]

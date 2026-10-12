@@ -1,0 +1,57 @@
+# Counted bold spellings: **unverified**, **Unverified**, **Not opened**, **not verified** (case-insensitive).
+schema_version: 1
+document: ffs-hull-structure-wastage-screen.md
+issue: 2202
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+sources:
+- id: S1
+  citation: '"Common Structural Rules for Bulk Carriers and Oil Tankers", class-society mirror NR606 (landing page states "Jan 2024 with corrigenda Jan 2025"; page footers in the file read 01 JUL 2025). Landing page  ; file'
+  urls:
+  - https://marine-offshore.bureauveritas.com/common-structural-rules-bulk-carriers-and-oil-tankers
+  - https://rulesexplorer-docs.bureauveritas.com/documents/nr606/jan2025/606-NR_2025-01.pdf
+  access_note: Part 1 Chapter 13 and Chapter 3 symbols opened
+- id: S2
+  citation: '"Ultrasonic Thickness Measurement of Metallic Hulls", instruction to surveyors DCV-ITS-021 (05/2026), Australian maritime regulator.'
+  urls:
+  - https://www.amsa.gov.au/sites/default/files/dcv-its-021-utm-for-metallic-vessels.pdf
+  access_note: opened
+- id: S3
+  citation: IMO Resolution MSC.108(73), adopted 5 December 2000.
+  urls:
+  - https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.108(73).pdf
+  access_note: opened
+- id: S4
+  citation: Kuznecovs, Ringsberg, Johnson, Yamada, "Ultimate limit state analysis of a double-hull tanker subjected to biaxial bending in intact and collision-damaged conditions", Ocean Engineering 209 (2020) 107519, CC BY.
+  urls:
+  - https://research.chalmers.se/publication/517350/file/517350_Fulltext.pdf
+  access_note: abstract and corrosion-model section opened
+- id: S5
+  citation: '"Structural Assessment of Aged Ships", Ship Structure Committee report SSC-474, 2018, approved for public release.'
+  urls:
+  - https://www.iims.org.uk/wp-content/uploads/2018/07/Structural-Assessment-of-Aged-Ships.pdf
+  access_note: front matter and abstract opened
+- id: S6
+  citation: IACS Recommendation 77, "Guidelines for the Surveyor on how to Control the Thickness Measurement Process", landing page.
+  urls:
+  - https://iacs.org.uk/resolutions/recommendations/61-80/rec-77-rev4-cln
+  access_note: opened
+- id: S7
+  citation: '"Gauging Accuracy and Gauging Guidelines", tanker structure forum report, 1986, bibliographic record.'
+  urls:
+  - https://trid.trb.org/View/394311
+  access_note: opened
+- id: S8
+  citation: Class-society press release on condition-assessment thickness analysis for tankers built to the common structural rules, 27 January 2026.
+  urls:
+  - https://www.lr.org/en/knowledge/press-room/press-listing/press-release/2026/lr-enhances-cap-thickness-analysis-to-improve-confidence-in-tanker-structural-assessments/
+  access_note: opened
+could_not_verify:
+- 'The text of IACS UR Z7 and UR Z10.x (substantial-corrosion definitions, pitting and grooving limits, thickness-measurement tables): mirrors refused the connection; the official site''s landing pages do not show the content.'
+- Whether [S1] is identical to the association's own current consolidated edition (a class-society mirror was opened, not the association's file).
+- IACS Recommendation 84 content; IMO Resolution A.1049(27) itself; published corrosion-rate statistics by compartment (not searched in depth); any numeric ultrasonic gauging accuracy.
+bottom_line:
+- 'The renewal logic this issue needs is **fully open** and simple enough to hand-check: one renewal-thickness formula per element, a fixed 0.5 mm reserve band, and three hull-girder zone checks. Golden tests on a synthetic thickness-measurement report are realistic.'
+- '**Three scope corrections** came out of reading the rule text itself (section 3): the renewal chapter does not define "substantial corrosion" as 75 % of a margin; it does not contain pitting, grooving or edge-corrosion limits; and the recommendation number the issue cites for pitting intensity appears to be the container-ship survey guideline, while a flag-state instruction attributes the pitting intensity diagram to an IMO resolution. The screen should therefore carry **two rule families** (ships built to the common structural rules, and everything else on percentage diminution) and say which one it applied.'
+- No published numeric accuracy for ultrasonic gauging was found; measurement uncertainty has to be an explicit input.
+unverified_mark_count: 5

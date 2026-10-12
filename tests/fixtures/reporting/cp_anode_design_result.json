@@ -1,0 +1,246 @@
+{
+  "basename": "cathodic_protection",
+  "default": {
+    "config": {
+      "cfg_sensitivities": false,
+      "overwrite": {
+        "output": true
+      }
+    },
+    "log_level": "INFO"
+  },
+  "inputs": {
+    "anode": {
+      "individual_anode_mass_kg": 200.0,
+      "length_m": 1.0,
+      "material": "aluminium",
+      "radius_m": 0.05,
+      "type": "stand_off",
+      "utilization_factor": 0.85
+    },
+    "calculation_type": "DNV_RP_B401_offshore",
+    "design_data": {
+      "design_life": 25.0,
+      "structure_type": "jacket"
+    },
+    "environment": {
+      "seawater_resistivity_ohm_m": 0.3,
+      "seawater_temperature_C": 10.0
+    },
+    "structure": {
+      "zones": [
+        {
+          "area_m2": 5000.0,
+          "coating_category": "III",
+          "zone": "submerged"
+        },
+        {
+          "area_m2": 300.0,
+          "coating_category": "III",
+          "zone": "splash"
+        },
+        {
+          "area_m2": 200.0,
+          "coating_category": "III",
+          "zone": "atmospheric"
+        }
+      ]
+    }
+  },
+  "results": {
+    "anode_requirements": {
+      "anode_count": 55,
+      "anode_material": "aluminium",
+      "anode_type": "stand_off",
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-6"
+      ],
+      "design_life_hours": 219000.0,
+      "electrochemical_capacity_Ah_kg": 2000.0,
+      "individual_mass_kg": 200.0,
+      "total_mass_kg": 10950.0,
+      "utilization_factor": 0.85,
+      "utilization_factor_source": "input"
+    },
+    "anode_resistance_ohm": 0.16148,
+    "citations": [
+      "dnv-rp-b401 2021-05 Table 8-1",
+      "dnv-rp-b401 2021-05 Table 8-2",
+      "dnv-rp-b401 2021-05 Table 8-4",
+      "dnv-rp-b401 2021-05 Table 8-6",
+      "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)"
+    ],
+    "coating_breakdown": {
+      "atmospheric": {
+        "a": 0.02,
+        "b_per_yr": 0.012,
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-4",
+          "dnv-rp-b401 2021-05 Table 8-4"
+        ],
+        "coating_category": "III",
+        "depth_band": "0-30",
+        "f_cf": 0.32,
+        "f_ci": 0.02,
+        "f_cm": 0.16999999999999998
+      },
+      "splash": {
+        "a": 0.02,
+        "b_per_yr": 0.012,
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-4",
+          "dnv-rp-b401 2021-05 Table 8-4"
+        ],
+        "coating_category": "III",
+        "depth_band": "0-30",
+        "f_cf": 0.32,
+        "f_ci": 0.02,
+        "f_cm": 0.16999999999999998
+      },
+      "submerged": {
+        "a": 0.02,
+        "b_per_yr": 0.012,
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-4",
+          "dnv-rp-b401 2021-05 Table 8-4"
+        ],
+        "coating_category": "III",
+        "depth_band": "0-30",
+        "f_cf": 0.32,
+        "f_ci": 0.02,
+        "f_cm": 0.16999999999999998
+      }
+    },
+    "current_demand_A": {
+      "atmospheric": {
+        "I_final_A": 0.0,
+        "I_initial_A": 0.0,
+        "I_mean_A": 0.0,
+        "area_m2": 200.0,
+        "f_cf": 0.32,
+        "f_ci": 0.02,
+        "f_cm": 0.16999999999999998,
+        "i_final_A_m2": 0.0,
+        "i_initial_A_m2": 0.0,
+        "i_mean_A_m2": 0.0
+      },
+      "splash": {
+        "I_final_A": 0.0,
+        "I_initial_A": 0.0,
+        "I_mean_A": 0.0,
+        "area_m2": 300.0,
+        "f_cf": 0.32,
+        "f_ci": 0.02,
+        "f_cm": 0.16999999999999998,
+        "i_final_A_m2": 0.0,
+        "i_initial_A_m2": 0.0,
+        "i_mean_A_m2": 0.0
+      },
+      "submerged": {
+        "I_final_A": 208.0,
+        "I_initial_A": 20.0,
+        "I_mean_A": 85.0,
+        "area_m2": 5000.0,
+        "f_cf": 0.32,
+        "f_ci": 0.02,
+        "f_cm": 0.16999999999999998,
+        "i_final_A_m2": 0.13,
+        "i_initial_A_m2": 0.2,
+        "i_mean_A_m2": 0.1
+      },
+      "total_final_A": 208.0,
+      "total_initial_A": 20.0,
+      "total_mean_A": 84.99999999999999
+    },
+    "current_densities_A_m2": {
+      "atmospheric": {
+        "base_zone": "atmospheric",
+        "citations": [],
+        "climate": "N/A",
+        "depth_band": "0-30",
+        "exposure_zone": "atmospheric",
+        "i_final_A_m2": 0.0,
+        "i_initial_A_m2": 0.0,
+        "i_mean_A_m2": 0.0,
+        "note": "B401 CP design current densities apply to seawater-exposed and buried surfaces only; this zone draws no CP current",
+        "seawater_temperature_C": 10.0
+      },
+      "splash": {
+        "base_zone": "splash",
+        "citations": [],
+        "climate": "N/A",
+        "depth_band": "0-30",
+        "exposure_zone": "splash",
+        "i_final_A_m2": 0.0,
+        "i_initial_A_m2": 0.0,
+        "i_mean_A_m2": 0.0,
+        "note": "B401 CP design current densities apply to seawater-exposed and buried surfaces only; this zone draws no CP current",
+        "seawater_temperature_C": 10.0
+      },
+      "submerged": {
+        "base_zone": "submerged",
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-1",
+          "dnv-rp-b401 2021-05 Table 8-2"
+        ],
+        "climate": "temperate",
+        "depth_band": "0-30",
+        "exposure_zone": "submerged",
+        "i_final_A_m2": 0.13,
+        "i_initial_A_m2": 0.2,
+        "i_mean_A_m2": 0.1,
+        "seawater_temperature_C": 10.0
+      }
+    },
+    "current_output_verification": {
+      "adequate": false,
+      "anode_count": 55,
+      "anode_count_source": "mass",
+      "anode_current_output_final_A": 1.2091,
+      "anode_current_output_initial_A": 1.5482,
+      "anode_resistance_final_ohm": 0.20677,
+      "anode_resistance_initial_ohm": 0.16148,
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)"
+      ],
+      "count_by_final_current": 173,
+      "count_by_initial_current": 13,
+      "count_by_mass": 55,
+      "driving_voltage_V": 0.25,
+      "equivalent_radius_final_m": 0.019365,
+      "equivalent_radius_initial_m": 0.05,
+      "final_current_demand_A": 208.0,
+      "final_meets_demand": false,
+      "governing_case": "final",
+      "initial_current_demand_A": 20.0,
+      "initial_meets_demand": true,
+      "mass_meets_requirement": true,
+      "mean_current_demand_A": 85.0,
+      "radius_source": "input",
+      "recommended_anode_count": 173,
+      "total_anode_current_output_final_A": 66.499,
+      "total_anode_current_output_initial_A": 85.15
+    },
+    "design_life_years": 25.0,
+    "edition": "2021",
+    "provenance": "verified-2021-tables",
+    "standard": "DNV-RP-B401 (May 2021)",
+    "status": {
+      "checks": {
+        "final_current_output": false,
+        "initial_current_output": true,
+        "mass": true
+      },
+      "governing_case": "final",
+      "reason": "55 x 200 kg stand_off anodes (mass) fail the final current output check(s); the final case governs: N_mass=55, N_initial=13, N_final=173; install 173 anodes (B401 Sec. 7.8)",
+      "result": "FAIL",
+      "use_status": "client-use-with-eor-check"
+    },
+    "surface_areas_m2": {
+      "atmospheric": 200.0,
+      "splash": 300.0,
+      "submerged": 5000.0,
+      "total_m2": 5500.0
+    }
+  }
+}

@@ -62,7 +62,7 @@ Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unli
 
 | Section | Cluster | Live explorer(s) | 1-pager PDF | Added |
 |---|---|---|---|---|
-| [`#ffs`](https://www.aceengineer.com/capabilities/#ffs) | structures-ffs | `docs/api/ffs/riser-joint-acceptance-explorer.html` | `docs/api/capabilities/pdf/sec-ffs.pdf` | unknown |
+| [`#ffs`](https://www.aceengineer.com/capabilities/#ffs) | structures-ffs | `docs/api/ffs/riser-joint-acceptance-explorer.html` | `docs/api/capabilities/pdf/sec-ffs.pdf` | 2026-09-26 (#2204) |
 | [`#structural`](https://www.aceengineer.com/capabilities/#structural) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-structural.pdf` | unknown |
 | [`#fatigue`](https://www.aceengineer.com/capabilities/#fatigue) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-fatigue.pdf` | 2026-07-04 (#1396) |
 | [`#hydro`](https://www.aceengineer.com/capabilities/#hydro) | hydro-naval | `docs/api/hydro/ocimf-coefficient-explorer.html` | `docs/api/capabilities/pdf/sec-hydro.pdf` | unknown |
@@ -93,6 +93,7 @@ Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unli
 
 Display contract: top-N below (N from `capabilities-added.yml:recent_n`), newest first; entries without PR evidence stay off the strip (honest `unknown`, never a fabricated date — repo history was truncated by the 2026-07 git slim, so recency is explicit metadata).
 
+- `#ffs` — 2026-09-26 (PR #2204)
 - `#cfd` — 2026-07-06 (PR #1442)
 - `#fatigue` — 2026-07-04 (PR #1396)
 - `#wall-thickness` — 2026-07-04 (PR #1389)
@@ -100,7 +101,6 @@ Display contract: top-N below (N from `capabilities-added.yml:recent_n`), newest
 - `#field-development` — 2026-07-04 (PR #1396)
 - `#naval-architecture` — 2026-07-04 (PR #1394)
 - `#geotechnical` — 2026-07-04 (PR #1394)
-- `#production-engineering` — 2026-07-04 (PR #1396)
 
 ## Anchor-stability contract
 

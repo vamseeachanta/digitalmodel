@@ -239,7 +239,7 @@ def process_fatigue_file(file_path, output_dir):
 
 def test_sample():
     """Test with a sample file"""
-    input_dir = Path(r"D:\1522\ctr7\orcaflex\rev_a08\output\csv\07c_fatigue")
+    input_dir = Path(r"<project-root>")
     output_dir = input_dir / "rainflow"
     output_dir.mkdir(exist_ok=True)
     
@@ -274,7 +274,7 @@ def test_sample():
 
 def batch_process():
     """Process all files in batch"""
-    input_dir = Path(r"D:\1522\ctr7\orcaflex\rev_a08\output\csv\07c_fatigue")
+    input_dir = Path(r"<project-root>")
     output_dir = input_dir / "rainflow"
     output_dir.mkdir(exist_ok=True)
     

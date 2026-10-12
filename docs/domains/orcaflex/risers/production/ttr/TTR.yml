@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 10.0e
-# File: K:\OneDrive - Occidental Petroleum Corporation\Temp\Holstein\Reference_TTR_Model_VA.yml
+# File: docs/domains/orcaflex/risers/production/ttr/TTR.yml
 # Created: 7:22 PM on 8/28/2019
-# User: Analysis_Server3
-# Machine: DESKTOP-K82UDB4
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

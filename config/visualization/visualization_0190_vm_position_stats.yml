@@ -67,7 +67,7 @@ plot_multiple:
     file_name_extension: NULL
     nrows: 6
     ncols: 1
-    suptitle: Vessel Position, Noble Bob Douglas
+    suptitle: Vessel Position, drillship
     sets:
 
     -

@@ -20,7 +20,7 @@
 | `solvers/orcaflex/modular_generator/` | — | exists; #478 wires to jumper |
 | `tests/marine_ops/installation/test_jumper_lift.py` | 599 | 81 tests claimed; #475 finalizes |
 
-The two `KNOWN_JUMPER_CONFIGS` entries: `ballymore_mf_plet` (correct), `ballymore_plet_plem` (placeholder geometry mirrors MF-PLET — #480 fixes). Specs at `docs/domains/orcaflex/subsea/jumper/installation/ballymore_{mf_plet,plet_plem}/spec.yml`.
+The two `KNOWN_JUMPER_CONFIGS` entries: `gom_tieback_mf_plet` (correct), `gom_tieback_plet_plem` (placeholder geometry mirrors MF-PLET — #480 fixes). Specs at `docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_{mf_plet,plet_plem}/spec.yml`.
 
 This issue itself does **not** ship code — it's the coordination tracker. The plan here is the close-out-checklist for the parent.
 

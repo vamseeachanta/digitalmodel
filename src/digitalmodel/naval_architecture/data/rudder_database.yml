@@ -116,34 +116,6 @@ rudder_types:
     stall_angle_deg: "wide angle range; vectoring avoids classic single-blade stall limit"
     applications: Coastal/feeder container ships, ferries; emerging energy-saving + manoeuvring installations (~10% reported saving).
 
-# Worked-example classification for the SIROCCO (B1528) reference vessel.
-worked_example_sirocco:
-  vessel: B1528 SIROCCO
-  vessel_class: Panamax / LR1 single-screw product/crude tanker  # beam 32.26 m = Panamax limit; NOT Aframax
-  lbp_m: 225.5
-  beam_m: 32.26
-  draft_laden_m: 12.2
-  draft_ballast_m: 7.0
-  estimated_Cb: 0.82
-  rudder:
-    type_inferred: semi_balanced_horn or balanced spade (standard large single-screw tanker fit)
-    projected_area_m2: 44.94
-    span_m: 9.0
-    mean_chord_m: 4.99
-    aspect_ratio_geo: 1.80
-    aspect_ratio_effective: 3.60  # idealized 2x hull-mirror upper bound
-    lift_slope_per_rad: 3.77      # a = 6.13*3.60/(3.60+2.25)
-    lift_slope_per_rad_no_mirror: 2.72
-  area_check:
-    area_ratio_pct_LT_laden: 1.63
-    area_ratio_pct_LT_ballast_nominal: 2.85  # misleading: upper blade near/above waterline at T=7 m
-    dnv_min_area_m2: 41.6           # (Lbp*T/100)*(1+25*(B/Lbp)^2) = 27.51*1.512
-    margin_over_dnv_min: 1.08
-    verdict: Compliant with ~8% margin; area ratio 1.63% is upper-normal for a full-form tanker (1.5-2.0%).
-  loading_notes:
-    laden: Full rudder immersion; maximum control authority; lowest steerage threshold.
-    ballast: Reduced rudder immersion + propeller emergence; effective area ~35 m2 (~78%); higher windage. Stern trim used to restore immersion.
-
 # Seed vessels for the manoeuvring explorer's vessel picker + type illustration.
 # tag: PUB = published/benchmark value ; EST = engineering estimate.
 # rudder_projected_area_m2 for EST vessels ~= DNV rule (Lpp*T/100)(1+25(B/Lpp)^2).

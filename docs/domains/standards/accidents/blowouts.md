@@ -5,7 +5,7 @@ A summary of all blowouts and the investigation for PRA
 ## Summary
 
 BP 
-Macondo
+2010 GoM blowout
 Transocean Deepwater Horizon
 
 Smedvig West Vangaurd 

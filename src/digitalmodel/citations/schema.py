@@ -51,7 +51,7 @@ class Citation:
     #                 Default "generic" preserves backcompat for existing call sites
     #                 during the rollout; new code should set explicitly.
     # source_project: optional — populated when the citation is project-scoped
-    #                 (e.g., "sirocco" for content under llm-wiki-acma/projects/sirocco/);
+    #                 (e.g., "example-project" for content under llm-wiki-acma/projects/example-project/);
     #                 None for client-level or generic citations.
     source_sibling: str = "generic"
     source_project: Optional[str] = None

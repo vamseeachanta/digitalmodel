@@ -1,0 +1,164 @@
+Authorized harmless Windows qualification; no vendor software invoked.
+
+__init__.py 92694625a8108a6bfd920e8842cebfc1805f0b018eba06943aea11f79cabb355
+
+_canonical.py 4ca7a266bdede03d6c47b8ee1079bfb2421e0cce281db9291fe267b8b98456f1
+
+_owned_process.py 4ec142b0bd4818269a04e323f54ab4063383acdea4787dcb999bc17e7a0c4e81
+
+_qualification_scenarios.py ea2d0ed7e906a6c0f49bbb9b9902aea8cc8c555977291dc5d4207e00ee0318e1
+
+_qualification_state.py 4e942b5995ad9175e5c8789d36465b8bcc6d7e5567279174b475ae63bde320be
+
+_sentinel.py 749f28339d1f0a6f875c2efd13c016a1f28f6f4e6dbbc26070ce127e19d7b288
+
+_windows_job.py 3254a9ade060ae2b05ef84482fcb041c0fe3ddfc200d46a4ee5ddc69e3fb725d
+
+comparison.py b193f80ea8476815a81499ff9372902d7a3721e540cbf4b8346ae7cc020e0676
+
+contracts.py 9e68b82cd9db608b088327f8f1451c1e46d4b690f279a57d12176917973b8d0e
+
+qualification.py ac165740ca76820e35a43db904502c8132e49aff7d5211223d3f012506a88267
+
+runner.py 364c67969ad59d4b19d81f3c07f3d416bb2b516c2c9161a52e381ef20d75981b
+
+COMMAND ['<USERPROFILE>\\.local\\bin\\uv.exe', 'venv', '--python', '3.11', '<OWNED_TEMP>\\venv']
+
+Using CPython 3.11.15
+Creating virtual environment at: <OWNED_TEMP>\venv
+Activate with: <OWNED_TEMP>\venv\Scripts\activate
+
+
+EXIT 0
+
+COMMAND ['<USERPROFILE>\\.local\\bin\\uv.exe', 'pip', 'install', '--python', '<OWNED_TEMP>\\venv\\Scripts\\python.exe', 'pytest==8.4.2', 'numpy==2.4.4', 'scipy==1.17.1', 'PyYAML==6.0.3', 'loguru==0.7.3']
+
+Using Python 3.11.15 environment at: <OWNED_TEMP>\venv
+Resolved 11 packages in 109ms
+Installed 11 packages in 275ms
+ + colorama==0.4.6
+ + iniconfig==2.3.0
+ + loguru==0.7.3
+ + numpy==2.4.4
+ + packaging==26.3
+ + pluggy==1.6.0
+ + pygments==2.21.0
+ + pytest==8.4.2
+ + pyyaml==6.0.3
+ + scipy==1.17.1
+ + win32-setctime==1.2.0
+
+
+EXIT 0
+
+COMMAND ['<OWNED_TEMP>\\venv\\Scripts\\python.exe', '-m', 'pytest', 'tests/solvers/ghs', '--confcutdir=tests/solvers/ghs', '--import-mode=importlib', '-q', '-rs', '-p', 'no:cacheprovider', '--override-ini', 'addopts=', '--basetemp', '<OWNED_TEMP>\\pytest']
+
+........................................................................ [ 53%]
+.................s...................................FFFF....F           [100%]
+================================== FAILURES ===================================
+___________ test_failure_never_resumes_unchecked_child[membership] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001917B697410>
+tmp_path = WindowsPath('<OWNED_TEMP>/pytest/test_failure_never_resumes_unc5')
+failure = 'membership'
+
+    @pytest.mark.parametrize('failure',['job','limits','init','update','create','membership','membership_value','resume'])
+    def test_failure_never_resumes_unchecked_child(monkeypatch,tmp_path,failure):
+        kernel=setup(monkeypatch,failure)
+        with pytest.raises((OSError,RuntimeError)):o.launch('child',tmp_path)
+        if failure!='resume':assert 'resume' not in kernel.calls
+        if failure not in {'job'}:assert 'close_10' in kernel.calls
+        if failure in {'membership','membership_value','resume'}:
+>           assert 'close_20' in kernel.calls and 'close_30' in kernel.calls
+E           AssertionError: assert ('close_20' in ['job', 'limits', 'size', 'close_10'])
+E            +  where ['job', 'limits', 'size', 'close_10'] = <ghs.test_windows_launch.Kernel object at 0x000001917B695350>.calls
+
+tests\solvers\ghs\test_windows_launch.py:59: AssertionError
+________ test_failure_never_resumes_unchecked_child[membership_value] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001917B67A9D0>
+tmp_path = WindowsPath('<OWNED_TEMP>/pytest/test_failure_never_resumes_unc6')
+failure = 'membership_value'
+
+    @pytest.mark.parametrize('failure',['job','limits','init','update','create','membership','membership_value','resume'])
+    def test_failure_never_resumes_unchecked_child(monkeypatch,tmp_path,failure):
+        kernel=setup(monkeypatch,failure)
+        with pytest.raises((OSError,RuntimeError)):o.launch('child',tmp_path)
+        if failure!='resume':assert 'resume' not in kernel.calls
+        if failure not in {'job'}:assert 'close_10' in kernel.calls
+        if failure in {'membership','membership_value','resume'}:
+>           assert 'close_20' in kernel.calls and 'close_30' in kernel.calls
+E           AssertionError: assert ('close_20' in ['job', 'limits', 'size', 'close_10'])
+E            +  where ['job', 'limits', 'size', 'close_10'] = <ghs.test_windows_launch.Kernel object at 0x000001917B656F90>.calls
+
+tests\solvers\ghs\test_windows_launch.py:59: AssertionError
+_____________ test_failure_never_resumes_unchecked_child[resume] ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001917B6D6150>
+tmp_path = WindowsPath('<OWNED_TEMP>/pytest/test_failure_never_resumes_unc7')
+failure = 'resume'
+
+    @pytest.mark.parametrize('failure',['job','limits','init','update','create','membership','membership_value','resume'])
+    def test_failure_never_resumes_unchecked_child(monkeypatch,tmp_path,failure):
+        kernel=setup(monkeypatch,failure)
+        with pytest.raises((OSError,RuntimeError)):o.launch('child',tmp_path)
+        if failure!='resume':assert 'resume' not in kernel.calls
+        if failure not in {'job'}:assert 'close_10' in kernel.calls
+        if failure in {'membership','membership_value','resume'}:
+>           assert 'close_20' in kernel.calls and 'close_30' in kernel.calls
+E           AssertionError: assert ('close_20' in ['job', 'limits', 'size', 'close_10'])
+E            +  where ['job', 'limits', 'size', 'close_10'] = <ghs.test_windows_launch.Kernel object at 0x000001917B6D6410>.calls
+
+tests\solvers\ghs\test_windows_launch.py:59: AssertionError
+___ test_suspended_launch_has_no_resume_and_attributes_live_through_create ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001917BC206D0>
+tmp_path = WindowsPath('<OWNED_TEMP>/pytest/test_suspended_launch_has_no_r0')
+
+    def test_suspended_launch_has_no_resume_and_attributes_live_through_create(monkeypatch,tmp_path):
+        kernel=setup(monkeypatch)
+>       item=o.launch('parent',tmp_path,suspended=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\solvers\ghs\test_windows_launch.py:64:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\digitalmodel\solvers\ghs\_owned_process.py:36: in launch
+    with w.Attributes(kernel,job) as attributes:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <digitalmodel.solvers.ghs._windows_job.Attributes object at 0x000001917BC21D10>
+
+    def __enter__(self):
+        size=SIZE_T()
+        result=self.kernel.InitializeProcThreadAttributeList(None,1,0,c.byref(size))
+        error=c.get_last_error() if os.name=='nt' else 122
+        if result or error!=122 or not 0<size.value<=65536:
+>           raise OSError('Unexpected attribute sizing response')
+E           OSError: Unexpected attribute sizing response
+
+src\digitalmodel\solvers\ghs\_windows_job.py:113: OSError
+_____________________ test_eight_actual_windows_scenarios _____________________
+
+tmp_path = WindowsPath('<OWNED_TEMP>/pytest/test_eight_actual_windows_scen0')
+
+    @pytest.mark.skipif(os.name!='nt' or os.environ.get('GHS_SENTINEL_ACCEPTANCE')!='1',
+                        reason='Explicit Windows harmless-sentinel acceptance only')
+    def test_eight_actual_windows_scenarios(tmp_path):
+        result=q.qualify(tmp_path/'observations')
+>       assert result['state']=='sentinel_containment_passed'
+E       AssertionError: assert 'recovery_required' == 'sentinel_containment_passed'
+E
+E         - sentinel_containment_passed
+E         + recovery_required
+
+tests\solvers\ghs\test_windows_qualification.py:11: AssertionError
+=========================== short test summary info ===========================
+SKIPPED [1] tests\solvers\ghs\test_qualification.py:38: Linux platform gate
+5 failed, 128 passed, 1 skipped in 5.12s
+
+
+EXIT 1
+
+Private original SHA256 0bea0961d6ac901509ae587744679271dee68d504c9523598805406712381b3e
+
+UNRESOLVED active marker preserved; owned temporary checkout retained pending manual investigation.

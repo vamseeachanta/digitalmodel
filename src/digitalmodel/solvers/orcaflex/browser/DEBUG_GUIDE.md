@@ -118,7 +118,7 @@ setBusyState(false)  // Force reset busy state
 ### Test Minimal Data
 ```bash
 # Create test folder with single small CSV:
-mkdir D:\1522\ctr7\orcaflex\rev_a08\output\csv\test_folder
+mkdir <project-root>
 # Add one strut CSV file with simple data
 ```
 

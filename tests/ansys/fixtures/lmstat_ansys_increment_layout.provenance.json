@@ -1,0 +1,11 @@
+{
+  "dataset_id": "ansys-licence-increment-parser-fixture",
+  "version": 1,
+  "raw_source_locator": "private-coordination:SOLVERS-PM-license-version-20260914T2107/feature-status.txt",
+  "raw_source_sha256": "b3ca07e3954109e11ad3cbd46fa0987711d0a04b8b1b80782f91f7236d2417a6",
+  "fixture": "lmstat_ansys_increment_layout.txt",
+  "fixture_sha256": "c701c3c4a71b533924f9c900f581cf5ae46cec663409ff1e42d68652a36e27a2",
+  "transformation": "Select each original ansys Feature header and immediately following totals line; omit server/customer/user lines; retain selected text and line endings; UTF-8 without source BOM.",
+  "intended_use": "Historical utility-layout parser regression only",
+  "reuse_limit": "Does not establish current licence availability, successful checkout or any engineering result. Original source remains in the existing private coordination residence."
+}

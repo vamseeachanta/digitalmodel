@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\A02\A02 Steep S.yml
+# File: docs/domains/orcaflex/library/model_library/a02_steep_s/monolithic/A02 Steep S.yml
 # Created: 6:41 PM on 2/10/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

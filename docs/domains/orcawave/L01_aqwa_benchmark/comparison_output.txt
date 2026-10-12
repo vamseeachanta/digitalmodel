@@ -1,4 +1,4 @@
-D:\workspace-hub\digitalmodel\src\digitalmodel\__init__.py:27: UserWarning: Could not import some digitalmodel modules: No module named 'assetutilities.common'
+<private-data>\__init__.py:27: UserWarning: Could not import some digitalmodel modules: No module named 'assetutilities.common'
   warnings.warn(f"Could not import some digitalmodel modules: {e}")
 [32m2026-01-06 02:26:26.203[0m | [1mINFO    [0m | [36m__main__[0m:[36m<module>[0m:[36m28[0m - [1m\u2713 OrcFxAPI loaded successfully[0m
 [32m2026-01-06 02:26:26.204[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m457[0m - [1m================================================================================[0m
@@ -8,8 +8,8 @@ D:\workspace-hub\digitalmodel\src\digitalmodel\__init__.py:27: UserWarning: Coul
 [32m2026-01-06 02:26:26.205[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m463[0m - [1m
 [1/3] Extracting AQWA data...[0m
 [32m2026-01-06 02:26:26.206[0m | [33m[1mWARNING [0m | [36mdigitalmodel.diffraction.aqwa_converter[0m:[36m__init__[0m:[36m56[0m - [33m[1mUsing first .LIS file found: 001_SHIP_RAOS_REV2.LIS[0m
-[32m2026-01-06 02:26:26.206[0m | [1mINFO    [0m | [36mdigitalmodel.diffraction.aqwa_converter[0m:[36m__init__[0m:[36m60[0m - [1mUsing AQWA .LIS file: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L01_aqwa_benchmark\001_SHIP_RAOS_REV2.LIS[0m
-[32m2026-01-06 02:26:26.206[0m | [1mINFO    [0m | [36mdigitalmodel.diffraction.aqwa_converter[0m:[36m_extract_rao_data[0m:[36m127[0m - [1mExtracting RAO data from: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L01_aqwa_benchmark\001_SHIP_RAOS_REV2.LIS[0m
+[32m2026-01-06 02:26:26.206[0m | [1mINFO    [0m | [36mdigitalmodel.diffraction.aqwa_converter[0m:[36m__init__[0m:[36m60[0m - [1mUsing AQWA .LIS file: <private-data>\001_SHIP_RAOS_REV2.LIS[0m
+[32m2026-01-06 02:26:26.206[0m | [1mINFO    [0m | [36mdigitalmodel.diffraction.aqwa_converter[0m:[36m_extract_rao_data[0m:[36m127[0m - [1mExtracting RAO data from: <private-data>\001_SHIP_RAOS_REV2.LIS[0m
 [32m2026-01-06 02:26:26.219[0m | [1mINFO    [0m | [36mdigitalmodel.diffraction.aqwa_lis_parser[0m:[36m__init__[0m:[36m46[0m - [1mLoaded AQWA .LIS file: 001_SHIP_RAOS_REV2.LIS (3391338 characters)[0m
 [32m2026-01-06 02:26:26.219[0m | [1mINFO    [0m | [36mdigitalmodel.diffraction.aqwa_lis_parser[0m:[36mparse_all[0m:[36m469[0m - [1mParsing AQWA .LIS file: 001_SHIP_RAOS_REV2.LIS[0m
 [32m2026-01-06 02:26:26.220[0m | [1mINFO    [0m | [36mdigitalmodel.diffraction.aqwa_lis_parser[0m:[36mextract_frequencies_and_periods[0m:[36m100[0m - [1mExtracted 13 frequencies from 22.000 to 2.252 rad/s[0m
@@ -549,11 +549,11 @@ OrcaWave: 20 frequencies × 9 headings[0m
 [32m2026-01-06 02:26:27.314[0m | [1mINFO    [0m | [36m__main__[0m:[36mcompare_all_headings[0m:[36m193[0m - [1m\u2713 Heading-by-heading comparison complete![0m
 [32m2026-01-06 02:26:27.314[0m | [1mINFO    [0m | [36m__main__[0m:[36mcompare_all_headings[0m:[36m194[0m - [1m================================================================================
 [0m
-[32m2026-01-06 02:26:27.316[0m | [1mINFO    [0m | [36m__main__[0m:[36mgenerate_html_report[0m:[36m398[0m - [1m\u2713 HTML report generated: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L01_aqwa_benchmark\comparison_results\final_comparison_20260106_022627.html[0m
+[32m2026-01-06 02:26:27.316[0m | [1mINFO    [0m | [36m__main__[0m:[36mgenerate_html_report[0m:[36m398[0m - [1m\u2713 HTML report generated: <private-data>\final_comparison_20260106_022627.html[0m
 [32m2026-01-06 02:26:27.316[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m504[0m - [1m
 ================================================================================[0m
 [32m2026-01-06 02:26:27.316[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m505[0m - [1m\u2713 COMPARISON COMPLETE![0m
-[32m2026-01-06 02:26:27.316[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m506[0m - [1mHTML Report: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L01_aqwa_benchmark\comparison_results\final_comparison_20260106_022627.html[0m
+[32m2026-01-06 02:26:27.316[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m506[0m - [1mHTML Report: <private-data>\final_comparison_20260106_022627.html[0m
 [32m2026-01-06 02:26:27.316[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m507[0m - [1m
 Results: 0/6 DOFs pass 20% tolerance[0m
 [32m2026-01-06 02:26:27.316[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m508[0m - [1mRAO Type Used: displacementRAOs[0m

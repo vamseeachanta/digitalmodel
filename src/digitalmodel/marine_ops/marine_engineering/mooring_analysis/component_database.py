@@ -1,20 +1,9 @@
-"""
-Mooring Component Database Manager
+"""Mooring component CSV loader and historical property helpers.
 
-Comprehensive database for mooring components including chains, wire ropes,
-and synthetic lines with industry-certified specifications and Excel-based
-property calculations.
-
-Based on Excel sheets with 336 total components and 2,434 formulas:
-- Chain Database: 60 components (473 formulas)
-- Wire Rope Database: 24 components (144 formulas)
-- Synthetic Line Database: 252 components (1,817 formulas)
-
-References
-----------
-- DNV-OS-E301: Position Mooring
-- API RP 2SK: Design and Analysis of Stationkeeping Systems
-- ISO 19901-7: Stationkeeping systems for floating offshore structures
+The default public seed contains source-qualified computed examples with a
+provenance sidecar. Coverage and engineering-readiness gaps accompany the data.
+Historical Excel formula helpers remain separate from that source-qualified
+seed and are not used to generate it.
 """
 
 from dataclasses import dataclass
@@ -23,6 +12,8 @@ from pathlib import Path
 from typing import Optional, List
 import pandas as pd
 import numpy as np
+
+from digitalmodel.data.mooring_component_schema import load_tables, find_provenance
 
 
 class ChainGrade(Enum):
@@ -279,33 +270,12 @@ class WireRopeProperties:
 
 
 class ComponentDatabase:
-    """
-    Mooring component database manager.
+    """Load chain, wire and synthetic-line libraries from CSV files.
 
-    Loads and manages component libraries from CSV files:
-    - Chain: 60 components (473 formulas)
-    - Wire: 24 components (144 formulas)
-    - Synthetic: 252 components (1,817 formulas)
-
-    Total: 336 components, 2,434 formulas
-
-    Attributes
-    ----------
-    data_dir : Path
-        Directory containing CSV database files
-    chain_db : pd.DataFrame
-        Chain component database
-    wire_db : pd.DataFrame
-        Wire rope database
-    line_db : pd.DataFrame
-        Synthetic line database
-
-    Examples
-    --------
-    >>> db = ComponentDatabase()
-    >>> chain = db.get_chain(diameter=76, grade="R4", link_type="Stud Link")
-    >>> print(f"MBL: {chain.mbl:.1f} kN")
-    MBL: 141.8 kN
+    Default public data and provenance live under
+    data/marine_engineering/mooring_components. Coverage is source-qualified
+    and partial; see the accompanying schema/gap document before selection.
+    Historical custom directories without a sidecar remain unverified.
     """
 
     def __init__(self, data_dir: Optional[Path] = None):
@@ -332,31 +302,19 @@ class ComponentDatabase:
                 f"Please ensure CSV files are in: {self.data_dir}"
             )
 
-        # Load databases from CSV (extracted from Excel)
-        chain_path = self.data_dir / "chain_properties.csv"
-        wire_path = self.data_dir / "wire_properties.csv"
-        line_path = self.data_dir / "line_properties.csv"
+        tables, self.provenance = load_tables(self.data_dir)
+        self.chain_db = tables['chain']
+        self.wire_db = tables['wire']
+        self.line_db = tables['line']
 
-        try:
-            self.chain_db = pd.read_csv(chain_path)
-            print(f"Loaded {len(self.chain_db)} chain components from {chain_path.name}")
-        except FileNotFoundError:
-            print(f"Warning: {chain_path.name} not found, initializing empty database")
-            self.chain_db = pd.DataFrame()
+    def get_provenance(self, component_type: str, diameter: float, **specification):
+        """Return a copy of the unique row's source and derivation.
 
-        try:
-            self.wire_db = pd.read_csv(wire_path)
-            print(f"Loaded {len(self.wire_db)} wire rope components from {wire_path.name}")
-        except FileNotFoundError:
-            print(f"Warning: {wire_path.name} not found, initializing empty database")
-            self.wire_db = pd.DataFrame()
-
-        try:
-            self.line_db = pd.read_csv(line_path)
-            print(f"Loaded {len(self.line_db)} synthetic line components from {line_path.name}")
-        except FileNotFoundError:
-            print(f"Warning: {line_path.name} not found, initializing empty database")
-            self.line_db = pd.DataFrame()
+        Component types are chain, wire and line. Additional identity fields
+        narrow the lookup; absent or ambiguous evidence raises ValueError.
+        Legacy libraries without a sidecar remain explicitly unverified.
+        """
+        return find_provenance(self.provenance, component_type, diameter, specification)
 
     def get_chain(
         self,

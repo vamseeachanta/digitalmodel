@@ -1,0 +1,46 @@
+{
+  "purpose": "Independent planning arithmetic probe, not GHS execution or engineering approval",
+  "method": "Python fractions; independently evaluate rectangular volume and waterplane second moments",
+  "synthetic_density_kg_m3": 1000,
+  "rows": [
+    {
+      "depth_m": 1,
+      "volume_m3": "200",
+      "mass_tonnes": "200",
+      "waterplane_area_m2": "200",
+      "kb_m": "1/2",
+      "bm_transverse_m": "25/3",
+      "bm_longitudinal_m": "100/3",
+      "lcb_m": "10",
+      "lcf_m": "10",
+      "tcb_m": "0",
+      "tcf_m": "0"
+    },
+    {
+      "depth_m": 2,
+      "volume_m3": "400",
+      "mass_tonnes": "400",
+      "waterplane_area_m2": "200",
+      "kb_m": "1",
+      "bm_transverse_m": "25/6",
+      "bm_longitudinal_m": "50/3",
+      "lcb_m": "10",
+      "lcf_m": "10",
+      "tcb_m": "0",
+      "tcf_m": "0"
+    },
+    {
+      "depth_m": 3,
+      "volume_m3": "600",
+      "mass_tonnes": "600",
+      "waterplane_area_m2": "200",
+      "kb_m": "3/2",
+      "bm_transverse_m": "25/9",
+      "bm_longitudinal_m": "100/9",
+      "lcb_m": "10",
+      "lcf_m": "10",
+      "tcb_m": "0",
+      "tcf_m": "0"
+    }
+  ]
+}

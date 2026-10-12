@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\pipeline\s-lay\bigfoot1\WD_30m.yml
+# File: docs/domains/orcaflex/pipeline/installation/s-lay/bigfoot1/WD_30m.yml
 # Created: 9:59 PM on 1/17/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

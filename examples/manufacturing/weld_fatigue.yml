@@ -28,7 +28,7 @@ weld_fatigue:
   allowable_damage: 1.0
   # Stress-range histogram (nominal hot-spot stress range, MPa) for one
   # block_years. A small two-bin spectrum here for the demo; this design
-  # passes with comfortable margin (Miner damage ~0.45 over 25 yr).
+  # passes with comfortable margin (Miner damage ~0.10 over 25 yr).
   histogram:
     - {stress_range: 28.0, cycles: 1.0e5}
     - {stress_range: 16.0, cycles: 1.0e6}

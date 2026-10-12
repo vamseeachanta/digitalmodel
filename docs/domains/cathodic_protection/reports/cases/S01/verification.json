@@ -1,0 +1,19 @@
+{
+  "calculation_result": "FAIL",
+  "children": [],
+  "engineering_review": "pending",
+  "fixture": "jacket.yml",
+  "id": "S01",
+  "pack_state": "verified",
+  "report": "cases/S01/report.html",
+  "route": "DNV_RP_B401_offshore",
+  "source_class": "synthetic_repository_regression",
+  "source_revision": "bf638ed1",
+  "title": "Jacket",
+  "use_status": "client-use-with-eor-check",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

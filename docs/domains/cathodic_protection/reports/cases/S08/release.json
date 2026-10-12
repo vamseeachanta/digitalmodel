@@ -1,0 +1,6 @@
+{
+  "input_fixture": "multi_component_riser.yml",
+  "input_sha256": "a6a64e11cba2fdd858e79639a53405c7d4ca370b8c03f5e36ad2729eb7dfcd3a",
+  "private_benchmark_data": false,
+  "source_class": "repository_regression"
+}

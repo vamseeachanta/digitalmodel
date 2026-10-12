@@ -1,7 +1,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2006 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; returns the lenght or the perimeter of selected object
 ;;; Made for AutoCAD 2000
 (vl-load-com)

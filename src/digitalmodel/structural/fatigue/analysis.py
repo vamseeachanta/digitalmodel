@@ -329,7 +329,24 @@ class FatigueAnalysisEngine:
         -------
         AnalysisResults
             Comprehensive analysis results
+
+        Raises
+        ------
+        NonConservativeCountingError
+            Always, pending issue #3839. This engine counts cycles with
+            ``structural.fatigue.rainflow.RainflowCounter`` (``struct_fatigue``),
+            which extracts a maximum stress range below the signal's
+            peak-to-valley span (169.556 of 177.1224 on broadband input), so
+            the damage it accumulates is understated. Counting itself remains
+            callable for diagnostics; damage does not.
         """
+        from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
+
+        refuse_damage_calculation(
+            "struct_fatigue",
+            "structural.fatigue.analysis.FatigueAnalysisEngine.analyze_time_series",
+        )
+
         logger.info("Starting time-domain fatigue analysis")
 
         # Validate inputs
@@ -981,7 +998,20 @@ def quick_time_domain_analysis(stress_time_series: AnalysisInput,
     -------
     AnalysisResults
         Analysis results
+
+    Raises
+    ------
+    NonConservativeCountingError
+        Always, pending issue #3839 — see
+        :meth:`FatigueAnalysisEngine.analyze_time_series`, which this wraps.
     """
+    from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
+
+    refuse_damage_calculation(
+        "struct_fatigue",
+        "structural.fatigue.analysis.quick_time_domain_analysis",
+    )
+
     config = FatigueAnalysisConfig(
         sn_standard=sn_standard,
         sn_curve_class=sn_curve_class,

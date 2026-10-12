@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\installation\pipeline\route_b\monolithic\TL-ANA-01-NL-1274m-0deg-100mLB.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_b/monolithic/TL-ANA-01-NL-1274m-0deg-100mLB.yml
 # Created: 9:09 AM on 2/11/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units
@@ -1181,13 +1181,12 @@ VesselTypes:
       - [117, 118, ~]
       - [119, 120, ~]
     # Shaded drawing
-    ShadedDrawingFileName: Q:\S7EN-SUT PIPELINES\S7EN-SUT-Project Support\Sutton Engineering\Installation Analysis\Vessels\Seven
-      Arctic\01 - Orca Model\04 - Shaded Graphic\arctic\arctic_no_lay_tower.X
+    ShadedDrawingFileName: <private-data>\iv02_no_lay_tower.X
     ShadedDrawingCullingMode: Anticlockwise
     ShadedDrawingOrigin: [-78, 0, -8.5]
     ShadedDrawingOrientation: [0, 0, -90]
 LineTypes:
-  - Name: LimeRock_4.9in
+  - Name: RouteB_4.9in
     Category: General
     # Geometry and mass
     OD: 0.1251
@@ -1237,7 +1236,7 @@ LineTypes:
     APIRP2RDTcorr: 0
     APIRP2RDSMYS: 360.00000000000023e3
 Vessels:
-  - Name: SevenArctic
+  - Name: iv02
     VesselType: C11_StartLaying_ARTempty
     Draught: 8.7m
     Length: ~
@@ -1276,7 +1275,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SevenArctic, 7.95, 0, 22.4, 180, 180, 0, ~]
+      - [iv02, 7.95, 0, 22.4, 180, 180, 0, ~]
       - [Anchored, -360, 0, 0.06925, 180, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -1288,18 +1287,18 @@ Lines:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [LimeRock_4.9in, 39.836, 0.25]
-      - [LimeRock_4.9in, 20, 0.5]
-      - [LimeRock_4.9in, 20, 1]
-      - [LimeRock_4.9in, 20, 2]
-      - [LimeRock_4.9in, 1096, 5]
-      - [LimeRock_4.9in, 20, 2]
-      - [LimeRock_4.9in, 20, 1]
-      - [LimeRock_4.9in, 20, 0.5]
-      - [LimeRock_4.9in, 170, 0.25]
-      - [LimeRock_4.9in, 20, 0.5]
-      - [LimeRock_4.9in, 20, 1]
-      - [LimeRock_4.9in, 119.5, 2]
+      - [RouteB_4.9in, 39.836, 0.25]
+      - [RouteB_4.9in, 20, 0.5]
+      - [RouteB_4.9in, 20, 1]
+      - [RouteB_4.9in, 20, 2]
+      - [RouteB_4.9in, 1096, 5]
+      - [RouteB_4.9in, 20, 2]
+      - [RouteB_4.9in, 20, 1]
+      - [RouteB_4.9in, 20, 0.5]
+      - [RouteB_4.9in, 170, 0.25]
+      - [RouteB_4.9in, 20, 0.5]
+      - [RouteB_4.9in, 20, 1]
+      - [RouteB_4.9in, 119.5, 2]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -2646,7 +2645,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [4.45, -3.6, -6.6]
     Size: [0.01, 7.2, 11.4]
@@ -2663,7 +2662,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [13.2, -3.6, -6.6]
     Size: [0.01, 7.2, 11.4]
@@ -2680,7 +2679,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [13.2, -3.6, -6.6]
     Size: [0.01, 8.75, 11.4]
@@ -2697,7 +2696,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [13.2, 3.6, -6.6]
     Size: [0.01, 8.75, 11.4]
@@ -2714,7 +2713,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [2.3499999999999943, -3.5999999999999996, -6.6]
     Orientation: [90, 90, -90.00000000000001]
@@ -2737,7 +2736,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [15.3, -3.6, -6.6]
     Orientation: [90, 90, 0]
@@ -2760,7 +2759,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [4.45, -5.7, -6.6]
     Orientation: [0, 90, 0]
@@ -2783,7 +2782,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [13.2, 5.7, -6.6]
     Orientation: [180, 90, 0]
@@ -2806,7 +2805,7 @@ Shapes:
     Locked: Yes
     ShapeType: Trapped water
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [4.45, -3.6, -6.6]
     Size: [8.75, 7.2, 6.6]
@@ -2820,7 +2819,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [7.95, 0, 4.970000000000001]
     Orientation: [0, 180, 0]
@@ -2853,7 +2852,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [7.95, 256.2649989210456e-21, 15.563526773570718]
     Azimuth: 0
@@ -2869,7 +2868,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [7.95, 256.2649989210456e-21, 32.564]
     Azimuth: 0
@@ -2884,7 +2883,7 @@ Shapes:
   - Name: A&RSheave
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [7.950000000000005, 0, 54.349999999999994]
     Azimuth: 0
@@ -2911,7 +2910,7 @@ Groups:
     Cranes: Model
     Spooler: Model
     Umbilical: Model
-    SevenArctic: Model
+    iv02: Model
     Moonpool_stern: Model
     Moonpool_bow: Model
     Moonpool_starboard: Model

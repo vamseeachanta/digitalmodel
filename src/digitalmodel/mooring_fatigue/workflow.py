@@ -49,7 +49,7 @@ def router(cfg: dict) -> dict:
         "governing_fatigue_life_years": governing["fatigue_life_years"],
         "governing_dff_margin": governing["dff_margin"],
         # Top-level pass/fail (governing line is worst-case): drives the
-        # deckhand report template's mitigation-on-fail section.
+        # report template's mitigation-on-fail section.
         "screening_status": "pass" if governing["dff_margin"] >= 1.0 else "fail",
         "lines": summaries,
         "results_csv": _display_path(csv_path),

@@ -1,7 +1,7 @@
 """Pydantic v2 input schema for jumper installation analysis (issue #506).
 
 Solver-agnostic specification for the OrcaFlex jumper installation spec.yml
-files under ``docs/domains/orcaflex/subsea/jumper/installation/`` (Ballymore
+files under ``docs/domains/orcaflex/subsea/jumper/installation/`` (GoM tieback
 MF-PLET and PLET-PLEM). These specs use a different top-level structure than
 ``ProjectInputSpec`` (``pipe``/``jumper``/``environment.metocean`` keys), and
 previously had no schema validation -- the spec audit only flagged them as a

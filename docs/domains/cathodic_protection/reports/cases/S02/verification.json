@@ -1,0 +1,19 @@
+{
+  "calculation_result": "FAIL",
+  "children": [],
+  "engineering_review": "pending",
+  "fixture": "monopile.yml",
+  "id": "S02",
+  "pack_state": "verified",
+  "report": "cases/S02/report.html",
+  "route": "DNV_RP_B401_offshore",
+  "source_class": "synthetic_repository_regression",
+  "source_revision": "bf638ed1",
+  "title": "Monopile",
+  "use_status": "client-use-with-eor-check",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

@@ -1,0 +1,29 @@
+basename: pipeline_defect_screen
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+# Synthetic river-bottom thickness grid using the B31G reference defect geometry.
+# All lengths in inches; all stresses and pressures in psi. No measured data.
+pipeline_defect_screen:
+  data_origin: synthetic demonstration grid; not measured data
+  component_id: PIPE-REFERENCE
+  nominal_od_in: 30.0
+  nominal_wt_in: 0.375
+  smys_psi: 52000.0
+  smts_psi: 66700.0
+  design_pressure_psi: 800.0
+  axial_stress_psi: 10000.0
+  safety_factor: 1.39
+  # Operational usage factor F2; Part B applies F1=0.9, total F=0.648.
+  usage_factor: 0.72
+  # The synthetic defect is defined over this complete 8 in length.
+  length_confirmed: true
+  axial_design_factor: 0.72
+  axial_positions_in: [0.0, 4.0, 8.0]
+  circumferential_width_in: 4.0
+  grid:
+    - [0.225, 0.300]
+    - [0.225, 0.275]
+    - [0.225, 0.300]

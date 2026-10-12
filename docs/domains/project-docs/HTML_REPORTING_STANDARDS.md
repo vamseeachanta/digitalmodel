@@ -242,7 +242,7 @@ df = pd.read_csv('../data/processed/results.csv')
 df = pd.read_csv('/mnt/github/workspace-hub/repo/data/results.csv')
 
 # ❌ WRONG: Hardcoded path
-df = pd.read_csv('C:/Users/user/data/results.csv')
+df = pd.read_csv('<private-data>/results.csv')
 ```
 
 ### 2. **Path Resolution Utility**

@@ -13,7 +13,7 @@ default:
 
 FatigueLifeReadingSets:
   - 
-    io: K:\0173 KM Extreme\SLWR\Fatigue\FatigueProcess_fatigueLoadingTemplateWH045_Test.xlsx
+    io: <private-data>\FatigueProcess_fatigueLoadingTemplateWH045_Test.xlsx
     sheet_name: Damage Tables
     KeyWords: ['Arc Length']
     RowsToSkip: 2
@@ -22,7 +22,7 @@ FatigueLifeReadingSets:
     Columns: ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
     FactorOfSafety: 10
   -
-    io: K:\0173 KM Extreme\SLWR\Fatigue\Rev3\out\FTG_Allruns_Corrected_Runs_Petrobras_DirProb_ThkCorr_1.0_Repaired.xlsx
+    io: <private-data>\FTG_Allruns_Corrected_Runs_Petrobras_DirProb_ThkCorr_1.0_Repaired.xlsx
     sheet_name: Damage Tables
     KeyWords: ['Arc length']
     RowsToSkip: 2

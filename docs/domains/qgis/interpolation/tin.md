@@ -2,8 +2,7 @@
 
 
 
-`{'OUTPUT': '//dgi-hou-fs01/Projects/61863 Talos Lakach FEED/999 Work '
-'Space/VAchanta/qgis/intermediate/DEM_20px_m.tif',
+`{'OUTPUT': '<private-data>/DEM_20px_m.tif',
 'TRIANGULATION': ''}`
 
 Chanigng units during TIN interpolation

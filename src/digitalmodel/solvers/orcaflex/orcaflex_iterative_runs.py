@@ -12,6 +12,8 @@ import shutil
 
 from assetutilities.common.data import SaveData
 
+from digitalmodel.solvers.orcaflex.run_state import check_simulation
+
 save_data = SaveData()
 
 
@@ -160,6 +162,9 @@ class OrcaflexIterativeRuns:
             model.LoadData(filename_with_ext)
 
             model.RunSimulation()
+            # #3838: an unstable run returns success from the call itself; the
+            # state is checked before the .sim is written.
+            check_simulation(model, context=filename_with_ext)
 
             model.SaveSimulation(filename_save_simulation)
             if self.cfg["orcaflex"]["iterate"]["overwrite_data"]:

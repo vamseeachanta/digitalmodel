@@ -19,9 +19,9 @@ Ian Dooley
 
 ====================
 
-From: Achanta Vamsee <Vamsee.Achanta.guest@saipem.com>
+From: <name> <email>
 Sent: Saturday, March 23, 2024 6:56 AM
-To: Orcina <orcina@orcina.com>
+To: Orcina <email>
 Subject: OrcaFlex | Goal Seek Analysis
 
 Dear Support,

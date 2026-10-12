@@ -72,7 +72,8 @@ sources the value from. #1246 adds the two API RP 16Q **1st Ed. 1993**
 (reaffirmed 2001) §3.3 tension factors — the revision string is pinned to
 `1993` to match the 1993-numbered clause locators (a 2nd Edition, 2017,
 exists but is not the citation basis; the wiki page's `revision_note` records
-the drift, mirroring the DNV-RP-C203 2021-vs-2024-10 precedent). The
+the drift; #2161 applies the same rule to DNV-RP-C203, pinned to the 2021
+edition whose tables the code implements). The
 top-tension safety factor (**1.25**) has **no** corresponding 16Q provision, so
 it carries no getter and stays a project default in `stackup.py`; the Barlow-SF
 likewise carries no standards attribution (generic formula, project default).

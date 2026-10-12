@@ -8,7 +8,7 @@
 | codex | MAJOR |
 | gemini | UNAVAILABLE (gemini CLI failed, rc=1: no non-interactive gemini auth configured (GEMINI_API_KEY/GOOGLE_API_KEY/~/.gemini/oauth_creds.json) ) |
 | round-2-claude | **MAJOR** |
-| round-2-codex | UNAVAILABLE (codex CLI failed, rc=124: Reading additional input from stdin... OpenAI Codex v0.144.0 -------- workdir: D:\ws\digitalmodel model: gpt-5.6-sol provider: openai approval: never sandbox: danger-full-access reasoning effort: xhigh reasoning summaries: none session id: 019f489c-8934-7563-a3e3-0fe12d2c3c95 -------- user # Adversarial plan review  You are an **adversarial reviewer**. Your job is to find what is wrong, missing, f) |
+| round-2-codex | UNAVAILABLE (codex CLI failed, rc=124: Reading additional input from stdin... OpenAI Codex v0.144.0 -------- workdir: <private-data>\digitalmodel model: gpt-5.6-sol provider: openai approval: never sandbox: danger-full-access reasoning effort: xhigh reasoning summaries: none session id: 019f489c-8934-7563-a3e3-0fe12d2c3c95 -------- user # Adversarial plan review  You are an **adversarial reviewer**. Your job is to find what is wrong, missing, f) |
 | round-2-gemini | UNAVAILABLE (gemini CLI failed, rc=1: no non-interactive gemini auth configured (GEMINI_API_KEY/GOOGLE_API_KEY/~/.gemini/oauth_creds.json) ) |
 
 ## Findings unique to each provider

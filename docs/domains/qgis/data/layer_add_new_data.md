@@ -11,7 +11,7 @@ Per video link
 <https://www.youtube.com/watch?v=AknJjNPystU&t=393s>
 ![alt text](image.png)
 
-Per Lakach profile:
+Per deepwater gas field profile:
 
 ![alt text](image-1.png)
 

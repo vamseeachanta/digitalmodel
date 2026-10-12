@@ -38,4 +38,4 @@ Missing pages: Environment overview, Sea properties, Waves page, Current page, W
 ## Open questions
 
 1. Is Playwright + Chromium acceptable on `ace-linux-1` (~300 MB browser binary) or should this run only on a build runner? If runner-only, mark the subcommand `# requires headed CI runner` in docstring.
-2. Confirm Orcina ToS permits programmatic scraping of WebHelp; if not, fall back to the Windows CHM decompile path and run on `acma-ansys05`.
+2. Confirm Orcina ToS permits programmatic scraping of WebHelp; if not, fall back to the Windows CHM decompile path and run on `ace-win-1`.

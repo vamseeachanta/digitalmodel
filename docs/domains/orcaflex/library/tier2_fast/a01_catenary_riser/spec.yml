@@ -2,7 +2,7 @@
 # A01 Catenary Riser - Simple catenary riser connected to FPSO
 #
 # Model Type: Riser (catenary configuration)
-# Source: OrcaFlex Examples - A01 Catenary riser.dat
+# Source: OrcaFlex Examples - A01 Catenary riser.yml
 # Tier: 2 (Fast validation, <10s statics)
 #
 # Usage:

@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Installation review corrections checkpoint</title>
+<style>body{font:16px system-ui;max-width:900px;margin:3rem auto;line-height:1.5}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:.5rem;text-align:left}</style>
+<h1>Installation review corrections checkpoint</h1>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/pull/2168">PR 2168</a>,
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2131">issue 2131</a> and
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/1836">issue 1836</a>.
+This checkpoint records corrections and incomplete verification; it does not establish merge readiness or engineering acceptance.</p>
+<h2>Corrections</h2><ul>
+<li>Composite substitutions bind source and derived matrices, frozen analysis settings, campaign rows and verified event audits. Missing base settings require an explicitly located, digest-bound base matrix; defaults cannot establish equivalence.</li>
+<li>PDF generation applies the shared forecast screening validator before output. Appendices retain A, B, C, D order, including per-criterion verdicts and optional sensitivity results. HTML contents follow emitted appendices and document-control labels no longer duplicate Appendix C.</li>
+<li>Runtime dependencies declare pypdf and reportlab. The integrated lock preserves the local assetutilities source used by main.</li>
+<li>The replay-report regression fixture now carries a synthetic screened case and causal forecast metadata.</li></ul>
+<h2>Verification at correction commit 4136e3df</h2>
+<table><tr><th>Evidence</th><th>Result</th><th>Limit</th></tr>
+<tr><td>Installation, vessel, mudmat and runtime-dependency suite</td><td>772 passed; one existing optional skip</td><td>One Windows process test was deselected after the sandbox denied named-pipe creation. That test remains unchanged and requires a supported runner.</td></tr>
+<tr><td>Fresh reporting environment</td><td>11 report-integrity tests passed; both report modules imported</td><td>Reporting dependency subset only. Full editable installation failed while building transitive wkhtmltopdf because temporary-directory access was denied.</td></tr>
+<tr><td>Retained composite, in-memory check</td><td>156 verified cases and 156 verified audits; cases, envelopes and critical periods unchanged</td><td>No retained output was rewritten; no solver ran; engineering acceptance remains NOT EVALUATED.</td></tr>
+<tr><td>Synthetic PDF inspection</td><td>Ten-page report; Appendix C and D pages inspected without clipping or overlap</td><td>Synthetic layout evidence does not establish retained engineering report correctness.</td></tr></table>
+<p>Table 1. Verification scope and limits. Test-only temporary-directory routing preserved assertions while avoiding sandbox-inaccessible default fixture directories.</p>
+<h2>Integration and remaining gates</h2>
+<p>Main commit 04514d120075a2ab9632229a0bd7c5fa2ff1ca71 was integrated at 7f51bca6.
+The attributes conflict retained both installation byte-identity and cathodic-protection newline rules.
+The lock was regenerated against the integrated dependency declarations. Integrated tests remain a separate checkpoint.</p>
+<p>Codex adversarial review and regression corrections have been performed. The second-provider review required for T2 has not been established. Current remote checks, the Windows process test, full clean installation and per-PR merge authorization remain unresolved. No approval record or engineering criterion was changed.</p>
+</html>

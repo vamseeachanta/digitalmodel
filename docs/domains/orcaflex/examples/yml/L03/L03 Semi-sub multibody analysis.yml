@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\yml\L03\L03 Semi-sub multibody analysis.yml
+# File: docs/domains/orcaflex/examples/yml/L03/L03 Semi-sub multibody analysis.yml
 # Created: 9:49 PM on 1/17/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

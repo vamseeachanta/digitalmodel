@@ -41,14 +41,23 @@ def test_no_executable_falls_back_to_dry_run(tmp_path: Path, monkeypatch):
     assert "No ANSYS/MAPDL executable" in result.error_message
 
 
+def test_explicit_missing_executable_never_uses_discovery(tmp_path, monkeypatch):
+    discovered = tmp_path / 'discovered.exe'
+    discovered.write_text('synthetic executable')
+    monkeypatch.setenv('ANSYS_MAPDL_PATH', str(discovered))
+    runner = ANSYSRunner(ANSYSRunConfig(executable_path=tmp_path / 'missing.exe'))
+    assert runner._detect_executable() is None
+
+
 def test_successful_solve_marks_completed(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(
         ANSYSRunner, "_detect_executable", lambda self: Path("/fake/mapdl")
     )
-    monkeypatch.setattr(
-        "digitalmodel.ansys.runner.subprocess.run",
-        lambda *a, **k: _completed(0),
-    )
+    def simulate(*args, **kwargs):
+        (Path(kwargs["cwd"]) / "model.out").write_text("completed")
+        return _completed(0)
+
+    monkeypatch.setattr("digitalmodel.ansys.runner.subprocess.run", simulate)
     result = run_ansys(_script(tmp_path), output_dir=tmp_path / "out")
     assert result.status == ANSYSRunStatus.COMPLETED
     assert result.return_code == 0
@@ -70,14 +79,14 @@ def test_nonzero_exit_marks_failed(tmp_path: Path, monkeypatch):
 def test_solver_error_in_log_marks_failed(tmp_path: Path, monkeypatch):
     out_dir = tmp_path / "out"
     out_dir.mkdir()
-    (out_dir / "model.out").write_text("... *** ERROR *** element distorted ...")
     monkeypatch.setattr(
         ANSYSRunner, "_detect_executable", lambda self: Path("/fake/mapdl")
     )
-    monkeypatch.setattr(
-        "digitalmodel.ansys.runner.subprocess.run",
-        lambda *a, **k: _completed(0),  # rc=0 but the log has an error
-    )
+    def simulate(*args, **kwargs):
+        (out_dir / "model.out").write_text("... *** ERROR *** element distorted ...")
+        return _completed(0)
+
+    monkeypatch.setattr("digitalmodel.ansys.runner.subprocess.run", simulate)
     result = run_ansys(_script(tmp_path), output_dir=out_dir)
     assert result.status == ANSYSRunStatus.FAILED
     assert "*** ERROR ***" in result.error_message

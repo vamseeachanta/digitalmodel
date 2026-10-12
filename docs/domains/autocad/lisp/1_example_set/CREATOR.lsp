@@ -14,7 +14,7 @@
 ;;;--- This program is the updated version of MAKE_LSP                             
 ;;;                                                                                
 ;;;                                                                                
-;;;--- Please send all comments/suggestions/complaints to jps@jefferypsanders.com  
+;;;--- Please send all comments/suggestions/complaints to [email removed]  
 ;;;                                                                                
 
 (vl-load-com)

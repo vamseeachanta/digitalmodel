@@ -155,7 +155,7 @@
     Frequencies: 10 |
     Headings: 5 (0.0, 30.0, 45.0, 60.0, 90.0&deg;) |
     Solver(s): OrcaWave (.owd), OrcaWave (spec.yml) |
-    Source: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_ground_truth.owr
+    Source: <private-data>\test_ground_truth.owr
   </div>
   <div class="nav-bar" style="margin:0.5em 0;padding:0.5em;background:#f0f4f8;border-radius:4px;font-size:0.95em"><a href="../body_0/benchmark_report.html" style="font-weight:bold">Body 0: Cylinder</a> | <a href="../body_1/benchmark_report.html">Body 1: Ellipsoid</a> | <a href="../index.html">Overview</a> | <a href="../coupling/">Coupling</a> | <a href="../../validation_summary.html">Master Summary</a></div>
 </div>
@@ -164,12 +164,12 @@
   <table style="max-width:700px;"><thead><tr><th>Item</th><th>Value</th><th>Status</th></tr></thead><tbody><tr><td>Mesh Quality</td><td>2080 panels, ratio 176.1</td><td style='color:#f39c12;font-weight:bold'>WARN</td></tr><tr><td>GM_T (transverse)</td><td>-0.001 m</td><td style='color:#e74c3c;font-weight:bold'>UNSTABLE</td></tr><tr><td>GM_L (longitudinal)</td><td>-0.001 m</td><td>-</td></tr></tbody></table>
   
   <div style="background:#fef9e7;border-left:4px solid #f39c12;padding:0.8em 1em;margin-top:1em;border-radius:4px;"><strong>Warnings & Alerts</strong><ul style="margin:0.3em 0;"><li style="margin:0.3em 0;">CRITICAL: Negative GM_T (-0.001m) -- vessel is statically unstable in roll.</li><li style="margin:0.3em 0;">NOTE: Global mesh area ratio is 176.1. Gradual size variation is acceptable; only abrupt transitions between adjacent panels affect BEM solver accuracy.</li></ul></div>
-  <div style="background:#eafaf1;border-left:4px solid #27ae60;padding:0.8em 1em;margin:0.8em 0;border-radius:4px;"><span style="font-size:1.3em;font-weight:700;color:#27ae60;">EXCELLENT</span><span style="margin-left:1em;color:#555;">OrcaWave (.owd) vs OrcaWave (spec.yml)</span></div><h3 style="margin-top:1em;">RAO Comparison</h3><table style="width:100%;max-width:800px;"><thead><tr><th>DOF</th><th>Mag r</th><th>Phase r</th><th>Max |diff|</th><th>Max Phase Diff</th><th>Signal</th></tr></thead><tbody><tr><td>Surge</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>1.116e-16</td><td>315.00&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Sway</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>1.333e-16</td><td>345.42&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Heave</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>9.422e-16</td><td>347.52&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Roll</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>2.783e-15</td><td>352.87&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Pitch</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>3.494e-15</td><td>359.71&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Yaw</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>5.865e-31</td><td>331.61&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr></tbody></table><h3 style="margin-top:1em;">Hydrodynamic Coefficients</h3><table style="width:100%;max-width:700px;"><thead><tr><th>Matrix</th><th>Min Diagonal r</th><th>Min Off-Diag r</th><th>Min Overall r</th></tr></thead><tbody><tr><td>Added Mass</td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td></tr><tr><td>Radiation Damping</td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td></tr></tbody></table><p style="font-size:0.85em;color:#777;">See <a href="#hydro-coefficients">full 6&times;6 heatmaps</a> below.</p><h3 style="margin-top:1em;">Semantic Equivalence</h3><p style="margin:0.3em 0;">85/111 match, <span style="color:#27ae60;font-weight:600;">0 significant</span>, 8 convention, 18 cosmetic</p><details style="margin-top:0.5em;font-size:0.85em;color:#777;"><summary>18 cosmetic + 8 convention diffs (no solver effect)</summary><ul style="margin:0.3em 0 0 1em;"><li><code>DivideNonPlanarPanels</code>: False vs True</li><li><code>FreeSurfaceMeshPen</code>: [1, 'Solid', 'Aqua'] vs MISSING</li><li><code>FreeSurfacePanelledZoneMeshFileName</code>: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/Orc vs MISSING</li><li><code>FreeSurfacePanelledZoneMeshFormat</code>: Wamit fdf vs MISSING</li><li><code>FreeSurfacePanelledZoneMeshLengthUnits</code>: m vs MISSING</li><li><code>HasResonanceDampingLid</code>: MISSING vs False</li><li><code>InteriorSurfacePanelsPen</code>: [1, 'Solid', 'Red'] vs MISSING</li><li><code>PreferredQTFCalculationMethod</code>: Direct method vs MISSING</li><li><code>PreferredQuadraticLoadCalculationMethod</code>: Pressure integration vs MISSING</li><li><code>QTFCalculationMethod</code>: Both vs MISSING</li><li><code>QTFFrequencyTypes</code>: Difference frequencies vs MISSING</li><li><code>QTFMaxCrossingAngle</code>: 180 vs MISSING</li><li><code>QTFMaxPeriodOrFrequency</code>: Infinity vs MISSING</li><li><code>QTFMinCrossingAngle</code>: 0 vs MISSING</li><li><code>QTFMinPeriodOrFrequency</code>: 0 vs MISSING</li><li><code>QuadraticLoadPressureIntegration</code>: True vs False</li><li><code>Bodies[0].BodyMeshFileName</code>: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/Orc vs Cylinder.gdf</li><li><code>Bodies[1].BodyMeshFileName</code>: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/Orc vs Ellipsoid.gdf</li><li><code>FreeSurfaceAsymptoticZoneExpansionOrder</code>: 10 vs MISSING</li><li><code>FreeSurfaceOuterCircleNumberOfSegments</code>: 64 vs MISSING</li><li><code>FreeSurfacePanelledZoneInnerRadius</code>: 5 vs MISSING</li><li><code>FreeSurfacePanelledZoneType</code>: Defined by mesh file vs MISSING</li><li><code>FreeSurfaceQuadratureZoneNumberOfAnnuli</code>: 0 vs MISSING</li><li><code>PeriodOrFrequency</code>: [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] vs [1.2566, 1.3963, 1.5708, 1.7952, 2.0944, 2.5133, 3.1416, 4.1888, 6.2832, 12.5664</li><li><code>SolveType</code>: Full QTF calculation vs Potential and source formulations</li><li><code>WavesReferredToBy</code>: frequency (rad/s) vs period (s)</li></ul><p style='margin:0.3em 0 0 0.5em;font-style:italic;'>Cosmetic: GUI pens, naming, output flags. Convention: same physics, different representation (e.g. freq vs period). QTF-related settings are dormant when QTF is disabled.</p></details>
+  <div style="background:#eafaf1;border-left:4px solid #27ae60;padding:0.8em 1em;margin:0.8em 0;border-radius:4px;"><span style="font-size:1.3em;font-weight:700;color:#27ae60;">EXCELLENT</span><span style="margin-left:1em;color:#555;">OrcaWave (.owd) vs OrcaWave (spec.yml)</span></div><h3 style="margin-top:1em;">RAO Comparison</h3><table style="width:100%;max-width:800px;"><thead><tr><th>DOF</th><th>Mag r</th><th>Phase r</th><th>Max |diff|</th><th>Max Phase Diff</th><th>Signal</th></tr></thead><tbody><tr><td>Surge</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>1.116e-16</td><td>315.00&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Sway</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>1.333e-16</td><td>345.42&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Heave</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>9.422e-16</td><td>347.52&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Roll</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>2.783e-15</td><td>352.87&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Pitch</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>3.494e-15</td><td>359.71&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr><tr><td>Yaw</td><td style='color:#27ae60;font-weight:600;'>1.0000</td><td style='color:#999;'>-</td><td>5.865e-31</td><td>331.61&deg;</td><td><span style="color:#999;">Near-zero</span></td></tr></tbody></table><h3 style="margin-top:1em;">Hydrodynamic Coefficients</h3><table style="width:100%;max-width:700px;"><thead><tr><th>Matrix</th><th>Min Diagonal r</th><th>Min Off-Diag r</th><th>Min Overall r</th></tr></thead><tbody><tr><td>Added Mass</td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td></tr><tr><td>Radiation Damping</td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td><td><span style='color:#27ae60;font-weight:600;'>1.0000</span></td></tr></tbody></table><p style="font-size:0.85em;color:#777;">See <a href="#hydro-coefficients">full 6&times;6 heatmaps</a> below.</p><h3 style="margin-top:1em;">Semantic Equivalence</h3><p style="margin:0.3em 0;">85/111 match, <span style="color:#27ae60;font-weight:600;">0 significant</span>, 8 convention, 18 cosmetic</p><details style="margin-top:0.5em;font-size:0.85em;color:#777;"><summary>18 cosmetic + 8 convention diffs (no solver effect)</summary><ul style="margin:0.3em 0 0 1em;"><li><code>DivideNonPlanarPanels</code>: False vs True</li><li><code>FreeSurfaceMeshPen</code>: [1, 'Solid', 'Aqua'] vs MISSING</li><li><code>FreeSurfacePanelledZoneMeshFileName</code>: docs/modules/orcawave/L00_validation_wamit/3.3/Orc vs MISSING</li><li><code>FreeSurfacePanelledZoneMeshFormat</code>: Wamit fdf vs MISSING</li><li><code>FreeSurfacePanelledZoneMeshLengthUnits</code>: m vs MISSING</li><li><code>HasResonanceDampingLid</code>: MISSING vs False</li><li><code>InteriorSurfacePanelsPen</code>: [1, 'Solid', 'Red'] vs MISSING</li><li><code>PreferredQTFCalculationMethod</code>: Direct method vs MISSING</li><li><code>PreferredQuadraticLoadCalculationMethod</code>: Pressure integration vs MISSING</li><li><code>QTFCalculationMethod</code>: Both vs MISSING</li><li><code>QTFFrequencyTypes</code>: Difference frequencies vs MISSING</li><li><code>QTFMaxCrossingAngle</code>: 180 vs MISSING</li><li><code>QTFMaxPeriodOrFrequency</code>: Infinity vs MISSING</li><li><code>QTFMinCrossingAngle</code>: 0 vs MISSING</li><li><code>QTFMinPeriodOrFrequency</code>: 0 vs MISSING</li><li><code>QuadraticLoadPressureIntegration</code>: True vs False</li><li><code>Bodies[0].BodyMeshFileName</code>: docs/modules/orcawave/L00_validation_wamit/3.3/Orc vs Cylinder.gdf</li><li><code>Bodies[1].BodyMeshFileName</code>: docs/modules/orcawave/L00_validation_wamit/3.3/Orc vs Ellipsoid.gdf</li><li><code>FreeSurfaceAsymptoticZoneExpansionOrder</code>: 10 vs MISSING</li><li><code>FreeSurfaceOuterCircleNumberOfSegments</code>: 64 vs MISSING</li><li><code>FreeSurfacePanelledZoneInnerRadius</code>: 5 vs MISSING</li><li><code>FreeSurfacePanelledZoneType</code>: Defined by mesh file vs MISSING</li><li><code>FreeSurfaceQuadratureZoneNumberOfAnnuli</code>: 0 vs MISSING</li><li><code>PeriodOrFrequency</code>: [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] vs [1.2566, 1.3963, 1.5708, 1.7952, 2.0944, 2.5133, 3.1416, 4.1888, 6.2832, 12.5664</li><li><code>SolveType</code>: Full QTF calculation vs Potential and source formulations</li><li><code>WavesReferredToBy</code>: frequency (rad/s) vs period (s)</li></ul><p style='margin:0.3em 0 0 0.5em;font-style:italic;'>Cosmetic: GUI pens, naming, output flags. Convention: same physics, different representation (e.g. freq vs period). QTF-related settings are dormant when QTF is disabled.</p></details>
 </div>
 <div class="section" id="hull-mesh">
 <h2>Hull Description & Mesh Quality</h2>
 <h3>Hull Metadata</h3>
-<table style="max-width:600px;"><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody><tr><td>Vessel Name</td><td>Cylinder</td></tr><tr><td>Solver(s)</td><td>OrcaWave (.owd), OrcaWave (spec.yml)</td></tr><tr><td>Source File</td><td>D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_ground_truth.owr</td></tr></tbody></table>
+<table style="max-width:600px;"><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody><tr><td>Vessel Name</td><td>Cylinder</td></tr><tr><td>Solver(s)</td><td>OrcaWave (.owd), OrcaWave (spec.yml)</td></tr><tr><td>Source File</td><td><private-data>\test_ground_truth.owr</td></tr></tbody></table>
 <h3 style="margin-top:1em;">Mesh Quality Assessment</h3>
 <table style="max-width:600px;">
   <thead><tr><th>Property</th><th>Value</th><th>Status</th></tr></thead>
@@ -220,7 +220,7 @@
 <tr class='section-row'><td colspan='3'>Mesh</td></tr>
 <tr>
 <td class='param-label'>Mesh file</td>
-<td>D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf</td>
+<td>docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf</td>
 <td>Cylinder.gdf</td>
 </tr>
 <tr>
@@ -386,7 +386,7 @@
 </tr>
 <tr>
 <td class='param-label'>Free surface zone mesh</td>
-<td>D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/PanelledZoneHalf.fdf</td>
+<td>docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/PanelledZoneHalf.fdf</td>
 <td>-</td>
 </tr>
 <tr>
@@ -407,14 +407,14 @@
 </table>
 <div style='display:inline-block;padding:4px 16px;border-radius:4px;color:white;font-weight:bold;background:#27ae60;margin-bottom:1em;'>EQUIVALENT</div>
 <details style='margin-top:0.5em;font-size:12px;'><summary>Convention Differences (8)</summary><table style='max-width:1000px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th><th style='text-align:left'>Comment</th></tr><tr><td><code>FreeSurfaceAsymptoticZoneExpansionOrder</code></td><td>10</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Same physics, different representation</td></tr><tr><td><code>FreeSurfaceOuterCircleNumberOfSegments</code></td><td>64</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Same physics, different representation</td></tr><tr><td><code>FreeSurfacePanelledZoneInnerRadius</code></td><td>5</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Same physics, different representation</td></tr><tr><td><code>FreeSurfacePanelledZoneType</code></td><td>Defined by mesh file</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Same physics, different representation</td></tr><tr><td><code>FreeSurfaceQuadratureZoneNumberOfAnnuli</code></td><td>0</td><td>MISSING</td><td style='color:#777;font-style:italic;'>Same physics, different representation</td></tr><tr><td><code>PeriodOrFrequency</code></td><td>[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]</td><td>[1.2566, 1.3963, 1.5708, 1.7952, 2.0944, 2.5133, 3.1416, 4.1888, 6.2832, 12.5664</td><td style='color:#777;font-style:italic;'>Same frequency grid expressed as rad/s vs period (s)</td></tr><tr><td><code>SolveType</code></td><td>Full QTF calculation</td><td>Potential and source formulations</td><td style='color:#777;font-style:italic;'>Same physics, different representation</td></tr><tr><td><code>WavesReferredToBy</code></td><td>frequency (rad/s)</td><td>period (s)</td><td style='color:#777;font-style:italic;'>Same frequencies, different unit label</td></tr></table></details>
-<details style='margin-top:0.5em;font-size:12px;'><summary>Cosmetic Differences (18)</summary><table style='max-width:1000px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th><th style='text-align:left'>Comment</th></tr><tr><td><code>DivideNonPlanarPanels</code></td><td>False</td><td>True</td><td style='color:#777;font-style:italic;'>Splits non-planar panels into triangles; no effect on planar meshes but matters for curved geometry</td></tr><tr><td><code>FreeSurfaceMeshPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Aqua&#x27;]</td><td>MISSING</td><td style='color:#777;font-style:italic;'>GUI display color only</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshFileName</code></td><td>D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/Orc</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshFormat</code></td><td>Wamit fdf</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshLengthUnits</code></td><td>m</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>HasResonanceDampingLid</code></td><td>MISSING</td><td>False</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>InteriorSurfacePanelsPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Red&#x27;]</td><td>MISSING</td><td style='color:#777;font-style:italic;'>GUI display color only</td></tr><tr><td><code>PreferredQTFCalculationMethod</code></td><td>Direct method</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>PreferredQuadraticLoadCalculationMethod</code></td><td>Pressure integration</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFCalculationMethod</code></td><td>Both</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFFrequencyTypes</code></td><td>Difference frequencies</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFMaxCrossingAngle</code></td><td>180</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFMaxPeriodOrFrequency</code></td><td>Infinity</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>QTFMinCrossingAngle</code></td><td>0</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFMinPeriodOrFrequency</code></td><td>0</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>QuadraticLoadPressureIntegration</code></td><td>True</td><td>False</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>Bodies[0].BodyMeshFileName</code></td><td>D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/Orc</td><td>Cylinder.gdf</td><td style='color:#777;font-style:italic;'>Different filename, same mesh geometry</td></tr><tr><td><code>Bodies[1].BodyMeshFileName</code></td><td>D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/Orc</td><td>Ellipsoid.gdf</td><td style='color:#777;font-style:italic;'>Different filename, same mesh geometry</td></tr></table></details>
+<details style='margin-top:0.5em;font-size:12px;'><summary>Cosmetic Differences (18)</summary><table style='max-width:1000px;font-size:12px;margin-top:0.5em;'><tr><th style='text-align:left'>Key</th><th style='text-align:left'>OrcaWave (.owd)</th><th style='text-align:left'>OrcaWave (spec.yml)</th><th style='text-align:left'>Comment</th></tr><tr><td><code>DivideNonPlanarPanels</code></td><td>False</td><td>True</td><td style='color:#777;font-style:italic;'>Splits non-planar panels into triangles; no effect on planar meshes but matters for curved geometry</td></tr><tr><td><code>FreeSurfaceMeshPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Aqua&#x27;]</td><td>MISSING</td><td style='color:#777;font-style:italic;'>GUI display color only</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshFileName</code></td><td>docs/modules/orcawave/L00_validation_wamit/3.3/Orc</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshFormat</code></td><td>Wamit fdf</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>FreeSurfacePanelledZoneMeshLengthUnits</code></td><td>m</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>HasResonanceDampingLid</code></td><td>MISSING</td><td>False</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>InteriorSurfacePanelsPen</code></td><td>[1, &#x27;Solid&#x27;, &#x27;Red&#x27;]</td><td>MISSING</td><td style='color:#777;font-style:italic;'>GUI display color only</td></tr><tr><td><code>PreferredQTFCalculationMethod</code></td><td>Direct method</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>PreferredQuadraticLoadCalculationMethod</code></td><td>Pressure integration</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFCalculationMethod</code></td><td>Both</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFFrequencyTypes</code></td><td>Difference frequencies</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFMaxCrossingAngle</code></td><td>180</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFMaxPeriodOrFrequency</code></td><td>Infinity</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>QTFMinCrossingAngle</code></td><td>0</td><td>MISSING</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>QTFMinPeriodOrFrequency</code></td><td>0</td><td>MISSING</td><td style='color:#777;font-style:italic;'>No solver effect</td></tr><tr><td><code>QuadraticLoadPressureIntegration</code></td><td>True</td><td>False</td><td style='color:#777;font-style:italic;'>QTF setting; dormant when QTF disabled</td></tr><tr><td><code>Bodies[0].BodyMeshFileName</code></td><td>docs/modules/orcawave/L00_validation_wamit/3.3/Orc</td><td>Cylinder.gdf</td><td style='color:#777;font-style:italic;'>Different filename, same mesh geometry</td></tr><tr><td><code>Bodies[1].BodyMeshFileName</code></td><td>docs/modules/orcawave/L00_validation_wamit/3.3/Orc</td><td>Ellipsoid.gdf</td><td style='color:#777;font-style:italic;'>Different filename, same mesh geometry</td></tr></table></details>
 <h3 style="margin-top:1.5em;margin-bottom:0.2em;">OrcaWave (.owd)</h3>
 <p style="margin:0.3em 0 0.5em;font-size:12px;color:#64748b;max-width:700px;">OrcaWave input configuration exported from the original .owd project via SaveData(). This is the ground truth — the exact parameters used by the manually-configured OrcaWave project.</p>
 <div class="file-viewer">
   <div class="file-viewer-header">
     <div>
       <span class="solver-label">OrcaWave (.owd)</span>
-      <span class="file-path">D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml</span>
+      <span class="file-path"><private-data>\test_input.yml</span>
     </div>
     <button onclick="openFileWindow_0()">Open in New Window</button>
   </div>
@@ -422,10 +422,10 @@
     <pre><span class="line">﻿%YAML 1.1</span>
 <span class="line"># Type: Diffraction</span>
 <span class="line"># Program: OrcaFlex 11.6b</span>
-<span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml</span>
+<span class="line"># File: <private-data>/test_input.yml</span>
 <span class="line"># Created: 10:02 PM on 2/19/2026</span>
-<span class="line"># User: ansystech</span>
-<span class="line"># Machine: ACMA-ANSYS05</span>
+<span class="line"># User: (removed)</span>
+<span class="line"># Machine: (removed)</span>
 <span class="line">---</span>
 <span class="line"># Model</span>
 <span class="line">UnitsSystem: SI</span>
@@ -487,7 +487,7 @@
 <span class="line">    BodyMeshPosition: [0, 1.25, 0]</span>
 <span class="line">    BodyMeshAttitude: [0, 0, 0]</span>
 <span class="line">    BodyIncludedInAnalysis: Yes</span>
-<span class="line">    BodyMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf</span>
+<span class="line">    BodyMeshFileName: docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf</span>
 <span class="line">    BodyMeshFormat: Wamit gdf</span>
 <span class="line">    BodyMeshLengthUnits: m</span>
 <span class="line">    BodyMeshSymmetry: xz and yz planes</span>
@@ -532,7 +532,7 @@
 <span class="line">    BodyMeshPosition: [0, -0.5, 0]</span>
 <span class="line">    BodyMeshAttitude: [0, 0, 0]</span>
 <span class="line">    BodyIncludedInAnalysis: Yes</span>
-<span class="line">    BodyMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Ellipsoid.gdf</span>
+<span class="line">    BodyMeshFileName: docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Ellipsoid.gdf</span>
 <span class="line">    BodyMeshFormat: Wamit gdf</span>
 <span class="line">    BodyMeshLengthUnits: m</span>
 <span class="line">    BodyMeshSymmetry: xz and yz planes</span>
@@ -581,7 +581,7 @@
 <span class="line">QTFCalculationMethod: Both</span>
 <span class="line">PreferredQTFCalculationMethod: Direct method</span>
 <span class="line">FreeSurfacePanelledZoneType: Defined by mesh file</span>
-<span class="line">FreeSurfacePanelledZoneMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave</span>
+<span class="line">FreeSurfacePanelledZoneMeshFileName: docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave</span>
 <span class="line">  v11.0 files/PanelledZoneHalf.fdf</span>
 <span class="line">FreeSurfacePanelledZoneMeshFormat: Wamit fdf</span>
 <span class="line">FreeSurfacePanelledZoneMeshLengthUnits: m</span>
@@ -598,10 +598,10 @@
   <textarea id="file_content_0" style="display:none;">﻿%YAML 1.1
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml
+# File: <private-data>/test_input.yml
 # Created: 10:02 PM on 2/19/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Model
 UnitsSystem: SI
@@ -663,7 +663,7 @@ Bodies:
     BodyMeshPosition: [0, 1.25, 0]
     BodyMeshAttitude: [0, 0, 0]
     BodyIncludedInAnalysis: Yes
-    BodyMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf
+    BodyMeshFileName: docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf
     BodyMeshFormat: Wamit gdf
     BodyMeshLengthUnits: m
     BodyMeshSymmetry: xz and yz planes
@@ -708,7 +708,7 @@ Bodies:
     BodyMeshPosition: [0, -0.5, 0]
     BodyMeshAttitude: [0, 0, 0]
     BodyIncludedInAnalysis: Yes
-    BodyMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Ellipsoid.gdf
+    BodyMeshFileName: docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Ellipsoid.gdf
     BodyMeshFormat: Wamit gdf
     BodyMeshLengthUnits: m
     BodyMeshSymmetry: xz and yz planes
@@ -757,7 +757,7 @@ DetectAndSkipFieldPointsInsideBodies: Yes
 QTFCalculationMethod: Both
 PreferredQTFCalculationMethod: Direct method
 FreeSurfacePanelledZoneType: Defined by mesh file
-FreeSurfacePanelledZoneMeshFileName: D:/workspace-hub/digitalmodel/docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave
+FreeSurfacePanelledZoneMeshFileName: docs/modules/orcawave/L00_validation_wamit/3.3/OrcaWave
   v11.0 files/PanelledZoneHalf.fdf
 FreeSurfacePanelledZoneMeshFormat: Wamit fdf
 FreeSurfacePanelledZoneMeshLengthUnits: m
@@ -774,7 +774,7 @@ FreeSurfaceMeshPen: [1, Solid, Aqua]
       var ta = document.getElementById('file_content_0');
       var w = window.open('', '_blank');
       w.document.write(
-        '<html><head><title>OrcaWave (.owd) - D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\test_input.yml</title>' +
+        '<html><head><title>OrcaWave (.owd) - <private-data>\test_input.yml</title>' +
         '<style>body{font-family:"SF Mono","Cascadia Code","Consolas",' +
         'monospace;white-space:pre;margin:1em;font-size:13px;' +
         'line-height:1.5;tab-size:4;}</style></head><body>' +
@@ -791,7 +791,7 @@ FreeSurfaceMeshPen: [1, Solid, Aqua]
   <div class="file-viewer-header">
     <div>
       <span class="solver-label">OrcaWave (spec.yml)</span>
-      <span class="file-path">D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\spec_orcawave\spec_input.yml</span>
+      <span class="file-path"><private-data>\spec_input.yml</span>
     </div>
     <button onclick="openFileWindow_1()">Open in New Window</button>
   </div>
@@ -799,10 +799,10 @@ FreeSurfaceMeshPen: [1, Solid, Aqua]
     <pre><span class="line">﻿%YAML 1.1</span>
 <span class="line"># Type: Diffraction</span>
 <span class="line"># Program: OrcaFlex 11.6b</span>
-<span class="line"># File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\spec_orcawave\spec_input.yml</span>
+<span class="line"># File: <private-data>/spec_input.yml</span>
 <span class="line"># Created: 10:02 PM on 2/19/2026</span>
-<span class="line"># User: ansystech</span>
-<span class="line"># Machine: ACMA-ANSYS05</span>
+<span class="line"># User: (removed)</span>
+<span class="line"># Machine: (removed)</span>
 <span class="line">---</span>
 <span class="line"># Model</span>
 <span class="line">UnitsSystem: SI</span>
@@ -955,10 +955,10 @@ FreeSurfaceMeshPen: [1, Solid, Aqua]
   <textarea id="file_content_1" style="display:none;">﻿%YAML 1.1
 # Type: Diffraction
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\spec_orcawave\spec_input.yml
+# File: <private-data>/spec_input.yml
 # Created: 10:02 PM on 2/19/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Model
 UnitsSystem: SI
@@ -1111,7 +1111,7 @@ DetectAndSkipFieldPointsInsideBodies: Yes
       var ta = document.getElementById('file_content_1');
       var w = window.open('', '_blank');
       w.document.write(
-        '<html><head><title>OrcaWave (spec.yml) - D:\workspace-hub\digitalmodel\docs\modules\orcawave\L00_validation_wamit\3.3\benchmark\spec_orcawave\spec_input.yml</title>' +
+        '<html><head><title>OrcaWave (spec.yml) - <private-data>\spec_input.yml</title>' +
         '<style>body{font-family:"SF Mono","Cascadia Code","Consolas",' +
         'monospace;white-space:pre;margin:1em;font-size:13px;' +
         'line-height:1.5;tab-size:4;}</style></head><body>' +

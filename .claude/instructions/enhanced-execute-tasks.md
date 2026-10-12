@@ -719,7 +719,7 @@ Task: "Implement mooring line tension analysis in OrcaFlex"
       
       Closes: [TASK_REFERENCE]
       
-      Co-authored-by: AssetUtilities Hub <hub@assetutilities.org>
+      Co-authored-by: AssetUtilities Hub [email removed]
     </commit_message_format>
     
     <enhanced_metadata>

@@ -32,8 +32,8 @@ a single governing code (field default or a single `_finalise` choke point).
 
 ## Surfaced in lookup / dashboards
 
-The FFS lookup record (`ffs_results.json`, consumed by the field dashboard /
-Deckhand API) now carries `code_reference`:
+The FFS lookup record (`ffs_results.json`, consumed by the field dashboard and
+query layers) now carries `code_reference`:
 - `ffs_lookup._record(...)` adds it as a first-class field.
 - `evaluate_pipe_corroded`, `evaluate_plate_metal_loss`, and
   `record_from_assessment` thread the result's `code_reference` through.

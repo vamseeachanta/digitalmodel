@@ -9,6 +9,7 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
 
 import pandas as pd
 import pytest
@@ -139,8 +140,7 @@ def test_no_client_identifiers_in_visualization_package_sources():
     repo_root = _repo_root()
     pkg_dir = repo_root / "src" / "digitalmodel" / "marine_ops" / "marine_engineering" / "visualization"
 
-    # Scan ONLY production source files. Test files legitimately reference SIROCCO
-    # as the consumer scenario; baseline HTML fixtures preserve pre-existing
+    # Scan ONLY production source files. Baseline HTML fixtures preserve pre-existing
     # vendor-path strings byte-for-byte by design. The legal-baseline concern is
     # what ships in production code, not what test files contain.
     targets = sorted([str(p) for p in pkg_dir.glob("*.py")])
@@ -169,27 +169,15 @@ def test_no_client_identifiers_in_visualization_package_sources():
             )
 
     if not script_accepts_files:
-        # Fallback: pattern-driven grep against a minimal denylist read from the project conventions.
-        # The workspace-hub .legal-deny-list.yaml is authoritative — duplicate ONLY when unavailable.
-        DENYLIST_PATTERNS = [
-            r"B1528", r"SIROCCO", r"acma-projects", r"acma-codes/B\d{4}",
-        ]
-        import re
-        for target in targets:
-            text = pathlib.Path(target).read_text()
-            for pattern in DENYLIST_PATTERNS:
-                m = re.search(pattern, text)
-                # Allow client-identifier strings ONLY when they appear in test fixtures
-                # explicitly labeled as such — recognized by the "test fixture" or "smoke test" annotation
-                if m:
-                    line_idx = text[:m.start()].count("\n")
-                    line = text.splitlines()[line_idx]
-                    annotation_ok = any(
-                        marker in line.lower()
-                        for marker in ("# test", "test fixture", "smoke test", "# synthetic")
-                    )
-                    if not annotation_ok:
-                        pytest.fail(
-                            f"{target}:{line_idx+1}: client identifier {pattern!r} found "
-                            f"without explicit test-fixture annotation; line={line!r}"
-                        )
+        # Fallback: this repository's own identifier gate, which reads the
+        # structural patterns and salted-hash names from .legal-deny-list.yaml.
+        # A hard-coded list here would publish the names it guards against.
+        gate = repo_root / "scripts" / "legal" / "check_identifiers.py"
+        assert gate.is_file(), "identifier gate missing"
+        out = subprocess.run(
+            [sys.executable, str(gate), *targets],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+        )
+        assert out.returncode == 0, (
+            f"identifier gate flagged production source:\n{out.stdout}\n{out.stderr}"
+        )

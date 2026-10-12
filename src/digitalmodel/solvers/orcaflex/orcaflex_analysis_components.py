@@ -70,10 +70,18 @@ class OrcaFlexAnalysis():
                 model.LoadData(filename_with_ext)
                 logging.info("Load input file successful")
 
+                # #3838: an unstable run returns success from the call itself,
+                # so the model state is checked before the result is saved.
+                from digitalmodel.solvers.orcaflex.run_state import (
+                    check_simulation,
+                    check_statics,
+                )
                 if self.cfg['Analysis']['input_files']['analysis_type'][fileIndex] == 'simulation':
                     model.RunSimulation()
+                    check_simulation(model, context=filename_with_ext)
                 elif self.cfg['Analysis']['input_files']['analysis_type'][fileIndex] == 'statics':
                     model.CalculateStatics()
+                    check_statics(model, context=filename_with_ext)
                 logging.info("Run simulation successful")
 
                 model.SaveSimulation(filename_without_ext + '.sim')
@@ -339,22 +347,44 @@ class OrcaFlexAnalysis():
         self.SummaryDFAllFiles = SummaryDFAllFiles
 
     def get_model_from_filename(self, file_name):
+        import logging
         import os
 
         import pandas as pd
+
+        from digitalmodel.solvers.orcaflex import run_state
         SimulationFileName = self.get_SimulationFileName(file_name)
         model = None
         if os.path.isfile(SimulationFileName):
             try:
                 model = self.loadSimulation(SimulationFileName)
-                RunStatus = str(model.state)
+            except Exception as e:
+                logging.info(f"Load simulation {SimulationFileName} ... FAIL: {e}")
+                return None
+
+            # #3838: the state gate runs FIRST and outside the bookkeeping
+            # try/except. It used to sit after a `from common.data import ...`
+            # whose failure was swallowed by a bare `except Exception: pass`,
+            # which returned the loaded model ungated. It also compared
+            # `str(model.state)` against member NAMES -- and ModelState is an
+            # IntEnum, so str() is the integer value and the comparison never
+            # matched. Both faults let a SimulationStoppedUnstable run through.
+            RunStatus = run_state.state_name(model)
+            if RunStatus is not None and RunStatus not in [
+                'Reset', 'InStaticState', 'SimulationStopped'
+            ]:
+                logging.info(
+                    f"Simulation {SimulationFileName} is in state {RunStatus} "
+                    "and is not usable for post-processing"
+                )
+                return None
+
+            try:
                 from common.data import PandasChainedAssignent
                 with PandasChainedAssignent():
                     self.load_matrix.loc[(self.load_matrix['fe_filename'] == file_name), 'RunStatus'] = RunStatus
-                if RunStatus not in ['Reset', 'InStaticState', 'SimulationStopped']:
-                    model = None
             except Exception as e:
-                pass
+                logging.info(f"Recording run status for {file_name} ... FAIL: {e}")
 
         return model
 

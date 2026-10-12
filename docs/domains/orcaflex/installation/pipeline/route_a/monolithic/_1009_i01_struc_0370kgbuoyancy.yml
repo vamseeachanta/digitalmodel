@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\src\_1009_i01_struc_0370kgbuoyancy.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/_1009_i01_struc_0370kgbuoyancy.yml
 # Created: 10:26 AM on 9/28/2023
 # User: 
 # Machine: 
@@ -13,7 +13,7 @@ General:
   StaticsMinDamping: 3
   StaticsMaxDamping: 5
 Vessels:
-  SevenArctic:
+  iv02:
     InitialX: 50
 6DBuoys:
   UTA:

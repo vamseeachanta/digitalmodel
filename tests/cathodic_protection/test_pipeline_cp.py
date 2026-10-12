@@ -4,6 +4,7 @@ import math
 
 import pytest
 
+from digitalmodel.cathodic_protection import dnv_rp_f106
 from digitalmodel.cathodic_protection.pipeline_cp import (
     PipelineEnvironment,
     PipelineCPInput,
@@ -86,21 +87,63 @@ def test_anode_spacing_clamp_to_minimum():
     assert result.anode_spacing_m >= 50.0
 
 
-def test_holiday_detection_voltage_fbe():
-    """FBE coating at 0.4 mm: thin-film formula gives ~316 V."""
+def test_holiday_detection_voltage_fbe_order_of_magnitude():
+    """0.4 mm FBE per NACE SP0490: V = 525 * sqrt(15.75 mil) = 2083 V (~2 kV).
+
+    The old 5 * sqrt(t_um) body gave 100 V, twenty times too low (#2209).
+    """
     voltage = holiday_detection_voltage(
-        wall_thickness_mm=0.4,
+        coating_thickness_mm=0.4,
         coating_type="FBE",
     )
-    # V = 5 * sqrt(400) = 5 * 20 = 100 V
-    assert voltage == pytest.approx(100.0, rel=0.01)
+    t_mil = 0.4 / 0.0254
+    assert voltage == pytest.approx(525.0 * math.sqrt(t_mil), rel=1e-6)
+    assert voltage == pytest.approx(2083.0, rel=0.01)
+    assert voltage > 1000.0
 
 
-def test_holiday_detection_voltage_pe():
-    """PE coating at 3 mm: thick-film formula."""
-    voltage = holiday_detection_voltage(
-        wall_thickness_mm=3.0,
-        coating_type="PE",
+@pytest.mark.parametrize(
+    "coating_type,thickness_mm,f106_type",
+    [
+        ("PE", 3.0, dnv_rp_f106.CoatingType.THREE_LAYER_PE),
+        ("3LPE", 2.0, dnv_rp_f106.CoatingType.THREE_LAYER_PE),
+        ("PP", 3.0, dnv_rp_f106.CoatingType.THREE_LAYER_PP),
+        ("ASPHALT", 5.0, dnv_rp_f106.CoatingType.ASPHALT_ENAMEL),
+        ("coal_tar", 6.0, dnv_rp_f106.CoatingType.COAL_TAR_ENAMEL),
+    ],
+)
+def test_holiday_detection_voltage_agrees_with_f106(
+    coating_type, thickness_mm, f106_type
+):
+    """Non-FBE families delegate to dnv_rp_f106.holiday_detection_voltage."""
+    voltage = holiday_detection_voltage(thickness_mm, coating_type)
+    expected = dnv_rp_f106.holiday_detection_voltage(f106_type, thickness_mm)
+    assert voltage == pytest.approx(expected, rel=1e-9)
+
+
+def test_holiday_detection_voltage_pe_hand_value():
+    """3LPE at 2.0 mm: F106 CDS No.2 rule 10 kV/mm -> 20 kV (cap 25 kV)."""
+    assert holiday_detection_voltage(2.0, "PE") == pytest.approx(20000.0)
+    assert holiday_detection_voltage(3.0, "PE") == pytest.approx(25000.0)
+
+
+def test_holiday_detection_voltage_deprecated_wall_thickness_keyword():
+    """wall_thickness_mm still works but warns; result equals the new keyword."""
+    with pytest.warns(DeprecationWarning, match="coating_thickness_mm"):
+        old = holiday_detection_voltage(wall_thickness_mm=0.4, coating_type="FBE")
+    assert old == pytest.approx(
+        holiday_detection_voltage(coating_thickness_mm=0.4, coating_type="FBE")
     )
-    # V = 3.7 * sqrt(3000) ≈ 3.7 * 54.77 = ~203 V
-    assert voltage == pytest.approx(202.6, rel=0.02)
+
+
+def test_holiday_detection_voltage_rejects_bad_inputs():
+    with pytest.raises(ValueError, match="required"):
+        holiday_detection_voltage(coating_type="FBE")
+    with pytest.raises(ValueError, match="positive"):
+        holiday_detection_voltage(0.0, "FBE")
+    with pytest.warns(DeprecationWarning):
+        with pytest.raises(ValueError, match="not both"):
+            holiday_detection_voltage(0.4, "FBE", wall_thickness_mm=0.4)
+    # F106 has no tabulated rule for polychloroprene (project-specific).
+    with pytest.raises(ValueError, match="project-specific"):
+        holiday_detection_voltage(1.0, "neoprene")

@@ -7,9 +7,9 @@ I prepared an extended example with multiple files which might be useful for som
 Thank you,
 Vamsee
 
-From: Orcina <orcina@orcina.com>
+From: Orcina <email>
 Sent: Monday, March 18, 2024 5:37 AM
-To: Achanta Vamsee <Vamsee.Achanta.guest@saipem.com>
+To: <name> <email>
 Subject: RE: OrcaFlex | Multiple BaseFile Import
 
 Hello Vamsee You can choose to use IncludeFile instead of BaseFile if you wish. I’ve attached a very simple model that shows how this would work. In the zip there are two yml files (staticmodel. yml and dynamicparamaters. yml). The dynamicparameters. yml
@@ -29,5 +29,5 @@ Best Regards
 Ian Dooley
 
 T :  +44(0)1229 584742
-E :  <orcina@orcina.com>
+E :  <email>
 W:  <www.orcina.com>

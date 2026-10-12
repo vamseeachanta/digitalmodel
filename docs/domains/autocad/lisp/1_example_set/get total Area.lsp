@@ -1,7 +1,7 @@
 ;GetArea.lsp - Total the areas of selected polyline entities.
 ;Warning....This will also return an area for an entity that is not enclosed.
 
-;By: Jeffery P Sanders  7/18/02   jeffery_p_sanders@yahoo.com
+;By: Jeffery P Sanders  7/18/02   [email removed]
 
 (defun C:GetArea()
 

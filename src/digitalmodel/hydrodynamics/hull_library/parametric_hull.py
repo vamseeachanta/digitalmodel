@@ -152,6 +152,25 @@ class HullParametricSpace(BaseModel):
                                             variation_id)
             yield variation_id, scaled_profile
 
+    def generate_signatures(
+        self, catalog: Any, mesh_config: Any = None
+    ) -> Iterator[tuple[str, Any, Any]]:
+        """Yield (variation_id, HullProfile, CurvatureSignature) per combination.
+
+        Each variant is meshed with ``HullMeshGenerator`` and screened with
+        HullProd using ``lref = length_bp`` (#2170 D2), so RAO differences
+        between variants can be attributed to form change versus pure scaling.
+        Pure L/B/T/D scaling keeps the dimensionless signature nearly constant;
+        a changed signature flags a form change or a meshing artefact.
+
+        Requires the optional ``digitalmodel[curvature]`` extra.
+        """
+        from .curvature_screen import screen_profile
+
+        for variation_id, profile in self.generate_profiles(catalog):
+            result = screen_profile(profile, mesh_config, keep_fields=False)
+            yield variation_id, profile, result.signature
+
 
 # ---------------------------------------------------------------------------
 # Private helpers
@@ -252,3 +271,14 @@ __all__ = [
     "ParametricRange",
     "HullParametricSpace",
 ]
+
+
+def form_space_profiles(base, ranges) -> Iterator[tuple[str, Any]]:
+    """Yield named form variants through the same interface as scaled hulls."""
+    from .parametric_form import _form_combinations, generate_profile
+
+    for idx, (combo, params) in enumerate(_form_combinations(base, ranges)):
+        variation_id = _make_variation_id(
+            f"parametric_monohull_{idx:04d}", idx, combo
+        )
+        yield variation_id, generate_profile(params, name=variation_id)

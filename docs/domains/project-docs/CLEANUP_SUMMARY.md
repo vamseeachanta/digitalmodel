@@ -18,10 +18,10 @@
 - example_3_minimal_test.yml
 - minimal_test_box.yml
 - orcawave_minimal_working.yml
-- sea_cypress_fixed.yml
-- sea_cypress_minimal_test.yml
-- sea_cypress_optimized.yml
-- sea_cypress_working.yml
+- tug_30m_1_fixed.yml
+- tug_30m_1_minimal_test.yml
+- tug_30m_1_optimized.yml
+- tug_30m_1_working.yml
 - simplest_test.yml
 - working_model.yml
 - working_model_fixed.yml
@@ -36,13 +36,13 @@
 
 #### 3. OrcaWave Python Scripts
 **Moved to:** `tools/orcawave/`
-- analyze_sea_cypress.py
+- analyze_tug_30m_1.py
 - create_gdf_consistent.py
 - create_orcawave_owd.py
 - create_working_examples.py
 - final_working_config.py
 - fix_orcawave_yaml.py
-- fix_sea_cypress_errors.py
+- fix_tug_30m_1_errors.py
 - fix_working_model.py
 - mcp_orcawave.py
 - orcawave_diagnostic.py
@@ -85,7 +85,7 @@
 - working_model.owd
 
 **Moved to:** `specs/modules/orcawave/diffraction-analysis/`
-- sea_cypress_analysis_report.txt
+- tug_30m_1_analysis_report.txt
 
 #### 9. Removed Files (temporary/unnecessary)
 - D:githubdigitalmodelsrcmcporcawavequick_start.py (incorrectly named)

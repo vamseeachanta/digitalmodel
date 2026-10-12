@@ -119,8 +119,14 @@ class Record:
     raw_fields: dict[str, Any] = field(default_factory=dict)
     citations: list[dict] = field(default_factory=list)
     gaps: list[str] = field(default_factory=list)
+    # Class-level records (public class particulars, no individual vessel) carry the explicit id
+    # that public models and datasets use, e.g. ``drill_<design>_<n>``.
+    vessel_db_id: str = ""
+    record_level: str = "vessel"
 
     def vessel_id(self) -> str:
+        if self.vessel_db_id:
+            return self.vessel_db_id
         base = re.sub(r"[^a-z0-9]+", "_", self.name.lower()).strip("_")
         return f"{self.scope}_{base}"[:80]
 
@@ -175,6 +181,8 @@ def iter_records(scope: str, layer: str, base: Optional[Path] = None) -> list[Re
                 raw_fields=r.get("fields", {}),
                 citations=r.get("citations", []),
                 gaps=r.get("gaps", []),
+                vessel_db_id=r.get("vessel_db_id", ""),
+                record_level=r.get("record_level", "vessel"),
             )
         )
     return recs

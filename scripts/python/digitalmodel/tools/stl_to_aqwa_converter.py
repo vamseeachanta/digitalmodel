@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 STL to AQWA DAT Converter using GMsh
-Converts Sea Cypress STL mesh to OrcaWave/AQWA compatible format
+Converts tug_30m_1 STL mesh to OrcaWave/AQWA compatible format
 """
 
 import gmsh
@@ -28,7 +28,7 @@ def convert_stl_to_aqwa_dat(stl_file: str, output_file: str, target_element_size
     
     try:
         # Create new model
-        gmsh.model.add("sea_cypress")
+        gmsh.model.add("tug_30m_1")
         
         # Import STL mesh
         print("Importing STL file...")
@@ -204,18 +204,18 @@ def main():
     input_dir = base_dir / "specs/modules/orcawave/diffraction-analysis/inputs/geometry"
     
     # Use ASCII STL file for better compatibility
-    stl_file = input_dir / "Sea Cypress_0.25 Mesh_Ascii.stl"
-    output_file = input_dir / "sea_cypress_gmsh_optimized.dat"
+    stl_file = input_dir / "tug_30m_1_0.25 Mesh_Ascii.stl"
+    output_file = input_dir / "tug_30m_1_gmsh_optimized.dat"
     
     if not stl_file.exists():
         # Fallback to binary STL
-        stl_file = input_dir / "Sea Cypress_0.25 Mesh_Binary.stl"
+        stl_file = input_dir / "tug_30m_1_0.25 Mesh_Binary.stl"
         
     if not stl_file.exists():
         print(f"Error: STL file not found at {stl_file}")
         sys.exit(1)
     
-    print("=== Sea Cypress STL to AQWA DAT Conversion ===")
+    print("=== tug_30m_1 STL to AQWA DAT Conversion ===")
     print(f"Input: {stl_file}")
     print(f"Output: {output_file}")
     print()

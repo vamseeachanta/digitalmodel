@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\installation\manifold\region_a\monolithic\sz_with_shielding.yml
+# File: docs/domains/orcaflex/installation/manifold/region_a/monolithic/sz_with_shielding.yml
 # Created: 9:08 AM on 2/11/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 BaseFile: __04_mudmat_position.yml
 General:
@@ -55,7 +55,7 @@ Environment:
   SeabedSolidFillGridDensity: 1
   SeabedSolidFillGridColour: Black
 VesselTypes:
-  C13_EndLay_SSRAO_MadDog2:
+  C13_EndLay_SSRAO:
     Draughts:
       Draught7.09m_Hs2.0m:
         HydrostaticStiffnessMethod: Displacement
@@ -86,7 +86,7 @@ LineTypes:
     DNVSTF101FyCRA: 0
     DNVSTF101FuCRA: 0
 Vessels:
-  SevenArctic:
+  iv02:
     ImposedMotionConsistentWithSolver: No
     NameLabelColourMode: Use specified colour
     NameLabelColour: White
@@ -277,7 +277,7 @@ Shapes:
   900TeMainCraneMast:
     NameLabelColourMode: Use specified colour
     NameLabelColour: White
-  SSRAOs_MadDog_Pos:
+  SSRAOs_Pos:
     NameLabelColourMode: Use specified colour
     NameLabelColour: White
 ...

@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Diffraction
 # Program: OrcaWave 11.5e
-# File: D:\github\digitalmodel\docs\modules\orcawave\tutorials\L02 OC4 Semi-sub\L02 OC4 Semi-sub.yml
+# File: docs/domains/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub.yml
 # Created: 1:01 AM on 8/22/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Model
 UnitsSystem: SI

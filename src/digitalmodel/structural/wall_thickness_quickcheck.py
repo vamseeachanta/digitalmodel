@@ -67,7 +67,7 @@ def _write_selection_csv(payload: dict[str, Any], output_path: Path) -> None:
 
 
 class WallThicknessQuickCheck:
-    """Thin adapter around the existing deckhand quickcheck scripts."""
+    """Thin adapter around the wall-thickness quickcheck example scripts."""
 
     def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
         config_dir = Path(cfg.get("_config_dir_path", Path.cwd()))

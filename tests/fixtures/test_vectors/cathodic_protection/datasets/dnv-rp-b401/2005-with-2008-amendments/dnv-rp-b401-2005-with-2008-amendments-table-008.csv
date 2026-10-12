@@ -1,0 +1,12 @@
+"Table 10-8 Recommended Anode Utilisation Factors for CP
+Design Calculations.",
+Anode Type,Anode Utilisation Factor
+"Long slender stand-off
+L ≥ 4r",0.90
+"Short slender stand-off
+L < 4r",0.85
+"Long flush mounted
+L ≥ 4 width and
+L ≥ 4 thickness",0.85
+"Short flush-mounted, bracelet
+and other types",0.80

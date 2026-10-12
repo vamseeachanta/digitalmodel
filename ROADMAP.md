@@ -69,7 +69,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 ### Asset Integrity / API 579
 
 **Current state:** Stable maturity. API 579-1/ASME FFS-1 Level 1/2 assessments, remaining strength factor (RSF), BS 7910 fracture mechanics (FAD diagrams, critical flaw size).
-**Key gap:** Level 3 assessment (elastic-plastic fracture) not automated. Creep damage (Part 10), fire damage, and dent assessment not implemented.
+**Key gap:** Level 3 assessment (elastic-plastic, buckling, crack driving force) not automated; API 579 Part 9 Level 1 curves, Annex C/E/F data and API 653 tank settlement absent; only one legacy workflow (API 579 b314) is demonstrable end to end. Program + readiness review: `docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md`, `ffs-readiness-review-2026-09-25.md` (epic #1057 Phase 4). Creep (Part 10) and fire damage not implemented.
 **Calculator potential:** Medium -- FFS screening could work as a calculator but requires significant input complexity.
 
 ### Geotechnical -- Soil Models, Anchors, Scour
@@ -99,7 +99,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 ### Production Engineering
 
 **Current state:** Production maturity for well test quality scoring, nodal analysis (IPR/VLP), and GIGO detection. 39 functions.
-**Backlog reason:** Complete for current use cases. Multiphase flow beyond Hagedorn-Brown is the next gap.
+**Backlog reason:** Complete for current use cases. The published Hagedorn-Brown and Beggs-Brill vertical-lift methods are not yet implemented and are the next gap.
 
 ### Well Engineering
 
@@ -113,26 +113,26 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 ### Candidates for Removal
 
-These stub modules contain no engineering value and clutter the namespace:
-- `specialized/digitalmarketing` -- non-engineering, no source files
-- `specialized/finance` -- utility/exploratory code, not engineering-grade
-- `specialized/project_management` -- minimal implementation, no package init
+~~These stub modules contain no engineering value and clutter the namespace:~~
+- `specialized/digitalmarketing` -- retained: actively imported by engine.py despite earlier characterization
+- `specialized/finance` -- retained during O04 reconciliation to preserve main's public-hygiene changes and package dependencies
+- `specialized/project_management` -- disabled code stubs removed; existing data and configuration retained
 
 ## Tech Debt
 
 ### Category A -- Blocks Current Work
 
-1. **0/150 structural tests runnable.** Three import path issues block all `marine_engineering` tests (see `tests/structural/analysis/TEST_STATUS_DASHBOARD.md`): (a) missing `extract_hydro_coefficients` module, (b) incorrect `RAOPlotter` import path, (c) PYTHONPATH not configured for test discovery. Estimated fix: 1-2 hours.
+1. ~~**0/150 structural tests runnable.**~~ Largely closed — 1,724 structural tests now collect successfully. Issues (b) RAOPlotter import and (c) PYTHONPATH were fixed previously; issue (a) `extract_hydro_coefficients` bare import fixed in `validate_phase2.py` (2026-10-08). The `TEST_STATUS_DASHBOARD.md` is stale (generated 2025-10-03).
 
-2. **pyproject.toml version mismatch.** `version = "0.1.1"` in pyproject.toml, but README states "Version: 3.0.0" and CHANGELOG last entry is v2.0.0. Must be resolved before PyPI publishing.
+2. ~~**pyproject.toml version mismatch.**~~ Closed — pyproject.toml, __init__.py, and CHANGELOG now all read 2.1.0 (2026-09-10).
 
 ### Category B -- Degrades Developer Experience
 
-3. **Bloated pyproject.toml dependencies.** 170+ dependencies including packages irrelevant to engineering calculations: celery, redis, newrelic, gunicorn, boto3, fastapi, alembic, asyncpg, aiofiles, aiosqlite. These inflate install time and attack surface.
+3. ~~**Bloated pyproject.toml dependencies.**~~ Closed — runtime dependencies pruned to ~50 AST-verified imports; dev/test tools moved to extras (#1632).
 
-4. **Duplicate module paths.** Catenary solver exists in 4 locations: `subsea/catenary` (stub), `subsea/catenary_riser`, `marine_ops/marine_analysis`, `marine_ops/marine_engineering`. Canonical location unclear.
+4. **Duplicate module paths.** Catenary solver canonical location is `marine_ops/marine_analysis/catenary/` (2,125 lines, ~40 import sites, proper BVP solver). `marine_ops/marine_engineering/` is a pure re-export facade. `subsea/catenary_riser/` is a complementary riser-specific domain layer with its own CLI. `subsea/catenary/` never existed.
 
-5. **Stale coverage metrics.** `coverage.json` dates from January 2026. Coverage numbers in documentation may not reflect current state.
+5. ~~**Stale coverage metrics.**~~ Closed — stale `coverage.json` removed; CI generates fresh coverage on every run.
 
 ### Category C -- Aspirational (not blocking, not in roadmap)
 
@@ -140,7 +140,7 @@ These stub modules contain no engineering value and clutter the namespace:
 
 7. ~~**No VISION.md at repo root.**~~ Closed — Phase 6 delivered `docs/vision/CALCULATIONS-VISION.md` as the canonical library vision document (2026-03-29).
 
-8. **Stub modules with no engineering value.** `specialized/digitalmarketing`, `specialized/finance`, `specialized/project_management` -- see Candidates for Removal above.
+8. ~~**Stub modules with no engineering value.**~~ Partially closed — Project-management disabled code stubs removed; finance and all existing data retained during O04 reconciliation. `specialized/digitalmarketing` retained: actively imported by engine.py.
 
 ## Document Intelligence Pipeline
 

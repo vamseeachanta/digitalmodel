@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\reference\monolithic\v_LV108_2ndEnd-Step02.yml
+# File: docs/domains/orcaflex/reference/monolithic/v_LV108_2ndEnd-Step02.yml
 # Created: 9:08 AM on 2/11/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

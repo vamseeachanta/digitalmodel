@@ -1,8 +1,13 @@
 """Superseded plate buckling calculation revision 1 (archived)."""
 
 import pandas as pd
-sheet1=pd.read_excel("C:/Users/AceEngineer-002/Desktop/PB/pandas/ParametricInputs.xlsx",sheetname='Locations')
-sheet2=pd.read_excel("C:/Users/AceEngineer-002/Desktop/PB/pandas/ParametricInputs.xlsx",sheetname='Stress')
+
+from digitalmodel.infrastructure.utils.private_paths import private_data_path
+
+# The inputs workbook sits in the private data folder (DIGITALMODEL_PRIVATE_DATA).
+_INPUTS = private_data_path("ParametricInputs.xlsx")
+sheet1=pd.read_excel(_INPUTS,sheetname='Locations')
+sheet2=pd.read_excel(_INPUTS,sheetname='Stress')
 # Gives the min value of LENGTH
 x1=sheet1[["Fr11_Plate1_Path1.txt"]].min()
 # Gives the Maximum value of LENGTH

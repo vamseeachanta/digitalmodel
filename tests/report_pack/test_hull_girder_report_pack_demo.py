@@ -80,9 +80,19 @@ def test_demo_report_pack_end_to_end(tmp_path):
 
     html = (out / "input_report.html").read_text(encoding="utf-8")
     assert "<script" not in html
-    # margin plot embedded as a self-contained data URI
-    assert "data:image/svg+xml;base64," in html
+    # #2212 part 3: the pack renders through digitalmodel.reporting.engine, which
+    # inlines SVG figures as markup (was a data:image/svg+xml URI).
+    assert "data:image/svg+xml;base64," not in html
+    assert '<figure class="card" id="figure-1-figure">' in html
+    assert "<svg xmlns=" in html and "</svg>" in html
     assert "margin plot" in html
+    # engine blocks: standard chips, references, data sources, input echo, footer
+    assert 'id="header-standards"' in html and "IACS-UR-S11" in html
+    assert 'id="references-cited"' in html
+    assert 'id="data-sources"' in html
+    assert "data/hull_girder_report_utilization.csv" in html
+    assert 'id="input-echo"' in html
+    assert 'id="report-footer"' in html
 
     manifest = json.loads(
         (out / "report-layer-manifest.json").read_text(encoding="utf-8")

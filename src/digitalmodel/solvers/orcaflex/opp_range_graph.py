@@ -2,9 +2,12 @@ import pandas as pd
 import math
 import copy
 
-try:
-    import OrcFxAPI
-except Exception:
+# #3838: routed through the facade instead of `import OrcFxAPI`, so the binding
+# is not loaded before a version can be selected.
+from digitalmodel.solvers.orcaflex.orcaflex_api import available, lazy_api
+
+OrcFxAPI = lazy_api() if available() else None
+if OrcFxAPI is None:
     print("OrcaFlex license not available. Run on different computer")
 
 

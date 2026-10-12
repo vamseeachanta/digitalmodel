@@ -389,7 +389,19 @@ class ScatterDiagramFatigue:
             ValueError: If probabilities do not sum to approximately 1.0.
             KeyError: If a (Hs, Tp) bin from the scatter is absent from
                 tension_per_seastate.
+            NonConservativeCountingError: always, pending issue #3839. Damage
+                here is accumulated from RainflowFatigue.count_cycles, which
+                extracts a maximum tension range below the history's
+                peak-to-valley span (50.0 of a 100.0 span on a pure sine).
+                Counting remains callable for diagnostics; damage does not.
         """
+        from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
+
+        refuse_damage_calculation(
+            "calm_buoy",
+            "calm_buoy_fatigue.ScatterDiagramFatigue.compute",
+        )
+
         prob_sum = float(scatter["probability"].sum())
         if abs(prob_sum - 1.0) > self._PROB_TOLERANCE:
             raise ValueError(
@@ -546,7 +558,16 @@ def compute_fatigue_life(
 
     Raises:
         ValueError: If neither tension_csv nor scatter_diagram is provided.
+        NonConservativeCountingError: always, pending issue #3839 — see
+            ScatterDiagramFatigue.compute.
     """
+    from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
+
+    refuse_damage_calculation(
+        "calm_buoy",
+        "calm_buoy_fatigue.compute_fatigue_life",
+    )
+
     if tension_csv is None and scatter_diagram is None:
         raise ValueError(
             "Either tension_csv or (scatter_diagram + tension_per_seastate) "

@@ -1,0 +1,47 @@
+<!doctype html><html lang='en'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Solver baseline: OpenFOAM on the primary Linux host</title><style>
+:root{--bg:#f9f9f7;--card:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--mute:#898781;--line:#e3e2dd}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:920px;margin:auto;padding:28px 16px 60px}
+h1{font-size:28px;line-height:1.2;margin:0 0 6px}h2{font-size:20px;margin:34px 0 10px}
+h3{font-size:16px;margin:22px 0 6px}p{margin:8px 0}.sub{color:var(--ink2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:14px 0}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--ink2);font-weight:600}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.tile b{display:block;font-size:26px;line-height:1.15}.tile span{color:var(--ink2);font-size:13.5px}
+figure{margin:12px 0}figure img,figure svg{max-width:100%;height:auto;display:block}
+figcaption{color:var(--ink2);font-size:13.5px;margin-top:6px}
+.legend{display:flex;gap:18px;font-size:13.5px;color:var(--ink2);margin:4px 0 8px}
+.sw{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.note{border-left:3px solid var(--mute);padding:2px 12px;color:var(--ink2);margin:12px 0}
+footer{color:var(--mute);font-size:13px;margin-top:36px}
+</style><main><h1>Solver baseline: OpenFOAM on the primary Linux host</h1><p class='sub'>First receipt of the fleet baseline: timing and repeatability of a fixed CFD case.</p>
+<div class='tiles'>
+<div class='tile'><b>34.9 s</b><span>median solve, 8 MPI ranks</span></div>
+<div class='tile'><b>33.1 s</b><span>median solve, 16 MPI ranks</span></div>
+<div class='tile'><b>353,578</b><span>cells in every run</span></div>
+</div>
+<div class='note'>Status: one machine of the fleet. The second Linux host was occupied by other
+CFD work and the licensed solvers (OrcaFlex, OrcaWave, AQWA, MAPDL) have not been baselined, so
+this is not yet a cross-machine comparison.</div>
+<p>The solver baseline pack runs a fixed case on each machine and records how long it takes
+and whether it returns the same answer. For OpenFOAM the case is the standard motorBike
+tutorial (v2312, simpleFoam, 100 iterations) with the mesh built serially once so every run
+solves the same 353,578 cells. Each row is three timed repeats after one warm-up, on an
+idle host: Intel(R) Xeon(R) CPU E5-2630 v3 @ 2.40GHz, 16 physical cores, 31 GB.</p>
+<div class='card'><div class='scroll'><table><thead><tr><th>Run started</th><th>MPI ranks</th><th>Median solve time (range)</th><th>Drag coefficient per repeat</th><th>Repeat-to-repeat check</th></tr></thead><tbody><tr><td>03:14 UTC</td><td class='n'>8</td><td>34.9 s (34.9 to 35.1)</td><td>0.41905, 0.41915, 0.41873 (spread 1.0e-03)</td><td>consistent</td></tr><tr><td>03:14 UTC</td><td class='n'>32</td><td>not run</td><td></td><td>Open MPI refused the rank count (digitalmodel#2320)</td></tr><tr><td>03:24 UTC</td><td class='n'>8</td><td>34.9 s (34.8 to 35.3)</td><td>0.41927, 0.41864, 0.41922 (spread 1.5e-03)</td><td>outside the 1e-3 tolerance</td></tr><tr><td>03:24 UTC</td><td class='n'>16</td><td>33.1 s (32.2 to 34.2)</td><td>0.41844, 0.41875, 0.41871 (spread 7.3e-04)</td><td>consistent</td></tr></tbody></table></div></div>
+<h2>What the numbers say</h2>
+<p><b>Timing repeats to within 1 to 6 %.</b> Doubling from 8 to 16 ranks saves about 5 %: at
+about 22,000 cells per rank the case is too small to scale further on this host, so 8 ranks is
+the sensible setting for work of this size and leaves half the machine free.</p>
+<p><b>The answer repeats to about one part in a thousand, not better.</b> Identical runs give
+drag coefficients that differ in the fourth significant figure, because 100 iterations is short
+of convergence and parallel summation order varies. The pack's tolerance is 1e-3, and one of the
+two 8-rank runs landed just outside it. The tolerance or the iteration count needs adjusting
+before this case is used as a pass/fail gate.</p>
+<p><b>One defect found and fixed.</b> The pack's "all cores" setting asked for 32 ranks on a
+16-core machine and was refused. The fix is in review (digitalmodel pull request 2321).</p>
+<footer>Compute program, 9 October 2026. Code: digitalmodel at <code>4f7bfc0c</code>. Machines are named by role only.</footer></main></html>

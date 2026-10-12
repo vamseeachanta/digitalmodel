@@ -4,7 +4,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 2003-2004 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; Tested on AutoCAD 2002,2004 and 2005
 ;;; Latest revision made 2004-11-11
 ;;; Minor code cosmetic change made 2004-11-13

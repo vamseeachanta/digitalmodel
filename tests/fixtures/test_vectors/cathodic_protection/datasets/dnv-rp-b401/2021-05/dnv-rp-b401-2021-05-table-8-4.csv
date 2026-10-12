@@ -1,0 +1,11 @@
+Table 8-4 Recommended values for a and b constants for calculation of paint coating breakdown factors (coating categories are defined in [3.4.6]),,,,
+"Depth
+[m]","Recommended values for a and b constants for
+coating categories I, II, III and IV, see [3.4.7]",,,
+,"I
+(a = 0.10)","II
+(a = 0.05)","III
+(a = 0.02)","IV
+(a = 0.02)"
+0-30,b = 0.10,b = 0.025,b = 0.012,b = 0.008
+>30,b = 0.05,b = 0.015,b = 0.008,b = 0.005

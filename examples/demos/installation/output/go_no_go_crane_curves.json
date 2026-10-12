@@ -14,7 +14,7 @@
       "note": "headline SWL only (no published radius curve) \u2014 radius not applied"
     },
     {
-      "vessel": "Saipem 7000",
+      "vessel": "SSCV-A",
       "vessel_type": "Semi-submersible crane and J-lay pipelay vessel (SSCV)",
       "swl_at_radius_te": 14000.0,
       "static_uc": 0.086,
@@ -74,7 +74,7 @@
       "note": ""
     },
     {
-      "vessel": "Saipem 3000",
+      "vessel": "crane vessel B",
       "vessel_type": "Monohull self-propelled DP derrick crane ship",
       "swl_at_radius_te": 2400.0,
       "static_uc": 0.5,

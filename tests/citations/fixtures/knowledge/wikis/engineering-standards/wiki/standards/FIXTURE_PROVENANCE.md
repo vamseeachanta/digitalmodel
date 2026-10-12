@@ -47,6 +47,9 @@ formulas, or licensed source material.
   canonical SHA at vendoring time: `acdbc9f842b59340d384392941fa0c3177af90b2`
 - `wikis/engineering-standards/wiki/standards/dnv-rp-c203.md` —
   canonical SHA at vendoring time: `23f3251def0dac360eb6b6b80e585fbcb1608efe`
+  (#2161: fixture revision re-pinned from `2024-10` to `2021`, the edition
+  whose S-N tables the code implements; the canonical page needs the
+  matching re-pin in a paired llm-wiki change)
 
 ## Vendored copies
 
@@ -114,6 +117,9 @@ or licensed source material.
   canonical SHA at vendoring time: `74aeb6f3e47806c377fc614b152d80c31b61bb5e`
   (revision `3e-2025`; the page was already citation-ready — no paired wiki PR
   was needed for #1281a).
+- #2161 (owner decision C04): the fixture revision is re-pinned to `2e-2013`
+  (API STD 2RD 2nd Edition, 2013). The canonical page needs the matching
+  re-pin in a paired llm-wiki change.
 
 ## Vendored copy
 
@@ -130,4 +136,44 @@ same commit, then rerun:
 
 ```bash
 .venv/bin/python -m pytest tests/riser_database/ tests/drilling_riser/ -q
+```
+
+---
+
+# Fixture Provenance - `dnv-rp-b401-2017.md`, `dnv-rp-b401-2021.md`, `dnv-rp-f103-2019.md` (#2208)
+
+Vendored for the edition-keyed cathodic-protection table lookups
+(`src/digitalmodel/cathodic_protection/b401_tables.py`, `f103_tables.py`).
+Same contract as the fixtures above: resolver frontmatter and a short
+description only; no standard text, tables, formulas or licensed source
+material.
+
+## Canonical sources
+
+- **Repo:** `vamseeachanta/llm-wiki`
+- `wikis/engineering-standards/wiki/standards/dnv-rp-b401-2017.md` —
+  `code_id: dnv-rp-b401`, `publisher: DNV`, `revision: "2017-06"`
+- `wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md` —
+  `code_id: dnv-rp-b401`, `publisher: DNV`, `revision: "2021-05"`
+- `wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md` —
+  `code_id: dnv-rp-f103`, `publisher: DNV`, `revision: "2019-09"`
+- The canonical pages are created in parallel with these fixtures
+  (2026-09-26) with the same frontmatter; record their SHAs here once the
+  llm-wiki change lands.
+
+## Vendored copies
+
+- **Vendored on:** 2026-09-26
+- **Used by:** `tests/cathodic_protection/test_b401_tables.py`,
+  `tests/cathodic_protection/test_f103_tables.py`,
+  `tests/cathodic_protection/test_edition_crosswalk.py`
+
+## Freshness contract
+
+Review monthly. If a canonical page's frontmatter changes, update the fixture,
+the `_SOURCE_BY_EDITION` records in `b401_tables.py` / `f103_tables.py`, and
+this provenance file in the same commit, then rerun:
+
+```bash
+.venv/bin/python -m pytest tests/cathodic_protection/ tests/citations/ -q
 ```

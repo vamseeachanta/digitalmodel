@@ -168,7 +168,7 @@ class DiffractionWorkflow:
         ``DiffractionResults.from_dict``) and, being a small JSON in the
         results tree, is picked up by the licensed-run queue's result-return
         mechanism — so RAOs leave the licensed host without extra
-        infrastructure (#1537 / deckhand#545).
+        infrastructure (#1537).
         """
         results_obj = getattr(result, "diffraction_results", None)
         if results_obj is None:

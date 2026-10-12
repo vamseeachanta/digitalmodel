@@ -50,14 +50,14 @@ PostProcessUnits:
 Files:
 -
   Label: Dr000_Hs 00.25 m Tp 02.50 s
-  Name: M:\0185\WaveFatigue\Rev2\lid02_000_2500ft_WT0750_064pcf_Dr000_Hs00.25m_Tp02.50s.dat
+  Name: <private-data>\lid02_000_2500ft_WT0750_064pcf_Dr000_Hs00.25m_Tp02.50s.dat
   ObjectName: vertical
   probability: 0.6610576923076922
   simulation_duration: 3500
  
 -
   Label: Dr000_Hs 00.25 m Tp 03.50 s
-  Name: M:\0185\WaveFatigue\Rev2\lid02_001_2500ft_WT0750_064pcf_Dr000_Hs00.25m_Tp03.50s.dat
+  Name: <private-data>\lid02_001_2500ft_WT0750_064pcf_Dr000_Hs00.25m_Tp03.50s.dat
   ObjectName: vertical
   probability: 7.852564102564101
   simulation_duration: 3500

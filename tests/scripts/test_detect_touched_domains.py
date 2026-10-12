@@ -737,3 +737,14 @@ def test_workflow_routes_push_to_touched_mode() -> None:
     push_idx = workflow_text.index('EVENT_NAME" = "push"')
     full_idx = workflow_text.index("--mode full")
     assert push_idx < full_idx, "push arm must precede the --mode full (else) arm"
+
+
+def test_rig_transcription_selects_existing_contracts_shard() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    module_path = Path("tests/contracts/test_udw_rig_fleet_external.py")
+    assert module_path.is_file()
+    selected = detector.touched_domains([module_path.as_posix()], domains)
+    assert [domain.name for domain in selected] == ["contracts"]
+    assert any(detector.path_matches_root(module_path.as_posix(), root)
+               for root in selected[0].roots)

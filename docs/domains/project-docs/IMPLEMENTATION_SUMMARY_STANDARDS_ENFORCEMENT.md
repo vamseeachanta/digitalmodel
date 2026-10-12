@@ -234,8 +234,8 @@ bash scripts/validate_cross_repo_standards.sh
 [INFO] Validating: digitalmodel
 [PASS] digitalmodel: 100%
 
-[INFO] Validating: acma-projects
-[WARN] acma-projects: 85%
+[INFO] Validating: <project-archive>
+[WARN] <project-archive>: 85%
   REPORT-001: No interactive plotting libraries found
 
 ...

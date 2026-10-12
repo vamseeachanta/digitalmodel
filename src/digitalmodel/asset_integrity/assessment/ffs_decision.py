@@ -1,44 +1,479 @@
-"""FFS decision engine — translate Level 1/2 results into action verdicts.
+"""FFS decision engine — translate assessment margins into action verdicts.
 
-Decision tree follows API 579-1/ASME FFS-1 2021 Edition Figure 2.1
-(Assessment Flowchart) and Section 2.4.2.
+One shared verdict vocabulary for every asset class (issue #2205, owner
+decision D1 = A) with a per-class *action map* that gives each class its
+native report wording.  The decision tree follows API 579-1/ASME FFS-1 2021
+Edition Figure 2.1 (Assessment Flowchart) and Section 2.4.2; other classes
+reuse the same tree with their own margin (RSF, reserve factor, thickness
+ratio, RSR, ...) and their own bands.
 
-Verdict outcomes
-----------------
-ACCEPT       Both Level 1 and Level 2 pass.  Component is fit-for-service.
-MONITOR      Level 2 passes with margin close to RSFa — increase inspection
-             frequency.  (RSFa <= RSF < RSFa + MONITOR_BAND)
-RE_RATE      Level 2 fails but reduced MAWP brings the component back to
-             acceptance.  When ``design_pressure_psi`` is supplied the
-             re-rated pressure MAWP_r = MAWP * (RSF / RSFa) per API 579-1
-             §2.4.2.2 is computed and reported (returned when RSF is between
-             RE_RATE_FLOOR and RSFa).
-REPAIR       Level 1 or Level 2 fails and re-rating is not viable.  The
-             component requires physical repair per ASME PCC-2.
-REPLACE      Remaining life is exhausted or RSF is below the safe operating
-             threshold RE_RATE_FLOOR.
+Verdict vocabulary (shared)
+---------------------------
+ACCEPT       Screening passes with margin clear of the monitor band.
+MONITOR      Screening passes but margin is close to the allowable —
+             increase inspection frequency.  (M_a <= M < M_a + monitor_band)
+DERATE       Screening fails but a reduced rating (pressure, tension limit,
+             load / exposure category) brings the component back to
+             acceptance.  ``RE_RATE`` is an alias kept for existing callers.
+             (derate_floor <= M < M_a)
+REPAIR       Screening fails and de-rating is not viable; physical repair.
+REPLACE      Margin is below the de-rating floor.
+ESCALATE     Margin cannot be evaluated by screening (non-finite) — hand off
+             to a higher assessment level.  Also issued when an applicability
+             flag was raised by a strength method (the defect lies outside
+             the method's calibrated range, #1094): no numeric verdict is
+             issued, the margin is echoed for reference only and a Level 3 /
+             engineering review is required.
 
-The ``remaining_life_yr`` is computed as:
-  (t_mm - t_min) / corrosion_rate    [simple linear projection]
+Per-class action map (report wording)
+-------------------------------------
+pressure / pipeline / tank   ACCEPT / MONITOR / RE_RATE / REPAIR / REPLACE
+mooring_chain                CONTINUE / SHORTEN INTERVAL / REDUCE TENSION
+                             LIMIT / REPLACE SEGMENT / REPLACE LINE
+hull_plating                 ACCEPT / SUBSTANTIAL CORROSION / RESTRICT
+                             LOADING / RENEW / RENEW (EXTENSIVE)
+jacket_member                ACCEPT / MONITOR / MITIGATE / REPAIR /
+                             REPLACE MEMBER
 
-A corrosion_rate of zero returns ``float('inf')``.
+Units
+-----
+Margins are dimensionless ratios (plain floats or dimensionless pint
+quantities).  Remaining life is in years (plain float) or any pint time
+quantity.  De-rating callables are built from unit-tagged limits
+(:func:`reduced_mawp`, :func:`scaled_limit`) and reject bare floats or
+mismatched dimensions with :class:`UnitTagError`.  The legacy
+:meth:`FFSDecision.decide` signature keeps its inch / psi contract by tagging
+its inputs internally.
 
 References:
   API 579-1/ASME FFS-1 2021 §2.4.2, Figure 2.1
   ASME PCC-2-2022 (repair methods)
+  API RP 2SK (mooring), IACS UR Z (hull renewal), API RP 2SIM (jackets)
 """
 
 from __future__ import annotations
 
-# Band above RSFa below which a passing result gets a MONITOR recommendation
-_MONITOR_BAND = 0.05  # RSFa + 0.05
+import math
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Callable, Mapping, Optional, Union
 
-# Minimum RSF below which re-rating is no longer sufficient — replace
-_RE_RATE_FLOOR = 0.50
+from digitalmodel.asset_integrity.applicability import Applicability
+from digitalmodel.units import Q_, ureg
+
+Number = Union[int, float]
+QuantityLike = Union[Number, "ureg.Quantity"]
 
 
+class UnitTagError(TypeError):
+    """An input is missing its unit tag or carries the wrong dimension."""
+
+
+# ---------------------------------------------------------------------------
+# Shared verdict vocabulary
+# ---------------------------------------------------------------------------
+class Verdict(str, Enum):
+    """Shared FFS verdict set.  ``RE_RATE`` is an alias of ``DERATE``."""
+
+    ACCEPT = "ACCEPT"
+    MONITOR = "MONITOR"
+    DERATE = "DERATE"
+    RE_RATE = "DERATE"  # alias — legacy name
+    REPAIR = "REPAIR"
+    REPLACE = "REPLACE"
+    ESCALATE = "ESCALATE"
+
+    @classmethod
+    def _missing_(cls, value: object):
+        if value == "RE_RATE":
+            return cls.DERATE
+        return None
+
+
+class AssetClass(str, Enum):
+    PRESSURE = "pressure"
+    PIPELINE = "pipeline"
+    MOORING_CHAIN = "mooring_chain"
+    HULL_PLATING = "hull_plating"
+    JACKET_MEMBER = "jacket_member"
+    TANK = "tank"
+
+
+@dataclass(frozen=True)
+class DecisionBands:
+    """Per-class decision thresholds (defaults are today's pressure values)."""
+
+    monitor_band: float = 0.05   # MONITOR when M_a <= M < M_a + monitor_band
+    derate_floor: float = 0.50   # REPLACE when M < derate_floor
+    repair_life_yr: float = 2.0  # REPAIR when screening fails and life is short
+
+
+@dataclass(frozen=True)
+class AssetClassPolicy:
+    """Everything class-specific: bands, wording, margin label, fallback note."""
+
+    name: str
+    bands: DecisionBands
+    actions: Mapping[Verdict, str]
+    margin_label: str
+    no_derate_note: str
+
+
+_PRESSURE_ACTIONS = {
+    Verdict.ACCEPT: "ACCEPT",
+    Verdict.MONITOR: "MONITOR",
+    Verdict.DERATE: "RE_RATE",
+    Verdict.REPAIR: "REPAIR",
+    Verdict.REPLACE: "REPLACE",
+    Verdict.ESCALATE: "ESCALATE",
+}
+_MOORING_ACTIONS = {
+    Verdict.ACCEPT: "CONTINUE",
+    Verdict.MONITOR: "SHORTEN INTERVAL",
+    Verdict.DERATE: "REDUCE TENSION LIMIT",
+    Verdict.REPAIR: "REPLACE SEGMENT",
+    Verdict.REPLACE: "REPLACE LINE",
+    Verdict.ESCALATE: "ESCALATE",
+}
+_HULL_ACTIONS = {
+    Verdict.ACCEPT: "ACCEPT",
+    Verdict.MONITOR: "SUBSTANTIAL CORROSION",
+    Verdict.DERATE: "RESTRICT LOADING",
+    Verdict.REPAIR: "RENEW",
+    Verdict.REPLACE: "RENEW (EXTENSIVE)",
+    Verdict.ESCALATE: "ESCALATE",
+}
+_JACKET_ACTIONS = {
+    Verdict.ACCEPT: "ACCEPT",
+    Verdict.MONITOR: "MONITOR",
+    Verdict.DERATE: "MITIGATE",
+    Verdict.REPAIR: "REPAIR",
+    Verdict.REPLACE: "REPLACE MEMBER",
+    Verdict.ESCALATE: "ESCALATE",
+}
+
+_PRESSURE_NOTE = "Reduce MAWP or operating pressure."
+
+ASSET_CLASSES: Mapping[str, AssetClassPolicy] = {
+    "pressure": AssetClassPolicy(
+        "pressure", DecisionBands(), _PRESSURE_ACTIONS, "RSF", _PRESSURE_NOTE
+    ),
+    "pipeline": AssetClassPolicy(
+        "pipeline", DecisionBands(), _PRESSURE_ACTIONS, "RSF", _PRESSURE_NOTE
+    ),
+    "tank": AssetClassPolicy(
+        "tank", DecisionBands(), _PRESSURE_ACTIONS, "RSF", _PRESSURE_NOTE
+    ),
+    "mooring_chain": AssetClassPolicy(
+        "mooring_chain", DecisionBands(), _MOORING_ACTIONS, "RF",
+        "Reduce the line tension limit or pretension.",
+    ),
+    "hull_plating": AssetClassPolicy(
+        "hull_plating", DecisionBands(), _HULL_ACTIONS, "t_ratio",
+        "Restrict loading until renewal.",
+    ),
+    "jacket_member": AssetClassPolicy(
+        "jacket_member", DecisionBands(), _JACKET_ACTIONS, "RSR",
+        "Mitigate: reduce loads or exposure category.",
+    ),
+}
+
+
+def _policy(asset_class: Union[str, AssetClass]) -> AssetClassPolicy:
+    key = asset_class.value if isinstance(asset_class, AssetClass) else str(asset_class)
+    try:
+        return ASSET_CLASSES[key]
+    except KeyError:
+        raise ValueError(
+            f"Unknown asset_class {key!r}; expected one of {sorted(ASSET_CLASSES)}"
+        ) from None
+
+
+def action_for(verdict: Union[Verdict, str], asset_class: Union[str, AssetClass]) -> str:
+    """Class-native report wording for a shared verdict."""
+    return _policy(asset_class).actions[Verdict(verdict)]
+
+
+# ---------------------------------------------------------------------------
+# Unit tagging helpers
+# ---------------------------------------------------------------------------
+def _is_quantity(x: Any) -> bool:
+    return isinstance(x, ureg.Quantity)
+
+
+def _require(q: Any, dimension: str, what: str) -> "ureg.Quantity":
+    if not _is_quantity(q):
+        raise UnitTagError(f"{what} must be a unit-tagged Quantity with {dimension}, got {type(q).__name__}")
+    if not q.check(dimension):
+        raise UnitTagError(f"{what} must have dimension {dimension}, got {q.units}")
+    return q
+
+
+def _dimensionless(x: QuantityLike, what: str) -> float:
+    if _is_quantity(x):
+        if not x.dimensionless:
+            raise UnitTagError(f"{what} is a ratio and must be dimensionless, got {x.units}")
+        return float(x.to("dimensionless").magnitude)
+    if isinstance(x, (int, float)):
+        return float(x)
+    raise UnitTagError(f"{what} must be a number or dimensionless Quantity, got {type(x).__name__}")
+
+
+def _years(x: QuantityLike, what: str = "remaining_life_yr") -> float:
+    if _is_quantity(x):
+        return float(_require(x, "[time]", what).to("year").magnitude)
+    if isinstance(x, (int, float)):
+        return float(x)
+    raise UnitTagError(f"{what} must be a number of years or a time Quantity, got {type(x).__name__}")
+
+
+def remaining_life(t_mm: "ureg.Quantity", t_min: "ureg.Quantity",
+                   rate: "ureg.Quantity") -> float:
+    """Linear remaining-life projection, unit-aware.  Returns years.
+
+    ``float('inf')`` when the rate is zero; ``0.0`` when t_mm <= t_min.
+    """
+    t_mm = _require(t_mm, "[length]", "t_mm")
+    t_min = _require(t_min, "[length]", "t_min")
+    rate = _require(rate, "[length]/[time]", "corrosion rate")
+    if t_mm <= t_min:
+        return 0.0
+    if rate.magnitude == 0.0:
+        return float("inf")
+    return float(((t_mm - t_min) / rate).to("year").magnitude)
+
+
+# ---------------------------------------------------------------------------
+# De-rating callables
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class Derating:
+    """A reduced rating and the sentence the report quotes for it."""
+
+    value: "ureg.Quantity"
+    note: str
+
+
+DerateFn = Callable[[float, float], Optional[Derating]]
+
+
+def scaled_limit(limit: "ureg.Quantity", dimension: str, *, label: str = "limit_r",
+                 reference: str = "limit x M/M_a") -> DerateFn:
+    """Build a de-rating callable: ``limit_r = limit * min(1, M / M_a)``.
+
+    The limit must be a unit-tagged Quantity of ``dimension`` (e.g. ``[force]``
+    for a mooring tension limit).  The callable returns ``None`` when the
+    allowable is non-positive (no meaningful ratio).
+    """
+    limit = _require(limit, dimension, "limit")
+
+    def _derate(margin: float, allowable: float) -> Optional[Derating]:
+        if allowable <= 0 or not math.isfinite(margin):
+            return None
+        value = limit * min(1.0, max(0.0, margin) / allowable)
+        note = f"{label}={value.magnitude:.0f} {value.units:~} ({reference})."
+        return Derating(value, note)
+
+    return _derate
+
+
+def reduced_mawp(design_pressure: "ureg.Quantity") -> DerateFn:
+    """Pressure default: MAWP_r = MAWP * min(1, RSF/RSFa), API 579-1 §2.4.2.2."""
+    fn = scaled_limit(
+        design_pressure, "[pressure]", label="MAWP_r",
+        reference="MAWP x RSF/RSFa, API 579-1 §2.4.2.2",
+    )
+
+    def _derate(margin: float, allowable: float) -> Optional[Derating]:
+        d = fn(margin, allowable)
+        return None if d is None else Derating(d.value, "Re-rate to " + d.note)
+
+    return _derate
+
+
+# ---------------------------------------------------------------------------
+# Decision
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class Decision:
+    verdict: Verdict
+    action: str
+    asset_class: str
+    margin: float
+    margin_allowable: float
+    remaining_life_yr: float
+    governing_criterion: str
+    derated: Optional["ureg.Quantity"] = None
+    applicability: Applicability = field(default_factory=Applicability)
+
+    def to_dict(self) -> dict:
+        """Legacy-shaped, JSON-friendly payload (``verdict`` is the shared word).
+
+        ``applicability`` echoes the ``{ok, flags, notes}`` validity record
+        (all-clear when none was supplied, #1094).
+        """
+        rerated_psi = None
+        derated_mag = derated_units = None
+        if self.derated is not None:
+            derated_mag = float(self.derated.magnitude)
+            derated_units = f"{self.derated.units:~}"
+            if self.derated.check("[pressure]"):
+                rerated_psi = float(self.derated.to("psi").magnitude)
+        return {
+            "verdict": self.verdict.value,
+            "action": self.action,
+            "asset_class": self.asset_class,
+            "remaining_life_yr": self.remaining_life_yr,
+            "governing_criterion": self.governing_criterion,
+            "margin": self.margin,
+            "margin_allowable": self.margin_allowable,
+            "rsf": self.margin,
+            "rsf_a": self.margin_allowable,
+            "rerated_mawp_psi": rerated_psi,
+            "derated": derated_mag,
+            "derated_units": derated_units,
+            "applicability": self.applicability.to_dict(),
+        }
+
+
+def decide(
+    margin: QuantityLike,
+    margin_allowable: QuantityLike,
+    remaining_life_yr: QuantityLike,
+    asset_class: Union[str, AssetClass],
+    *,
+    derate: Optional[DerateFn] = None,
+    bands: Optional[DecisionBands] = None,
+    screening_pass: Optional[bool] = None,
+    applicability: Optional[Applicability] = None,
+) -> Decision:
+    """Shared FFS decision tree for any asset class.
+
+    Args:
+        margin: Dimensionless strength margin (RSF, reserve factor, thickness
+            ratio, RSR ...).  Larger is safer; ``margin >= margin_allowable``
+            passes.  Non-finite -> ESCALATE.
+        margin_allowable: Allowable margin (e.g. RSFa = 0.90).
+        remaining_life_yr: Years (float) or a pint time quantity.
+        asset_class: One of :data:`ASSET_CLASSES`.
+        derate: Injected de-rating callable ``(margin, allowable) -> Derating``
+            built with :func:`reduced_mawp` / :func:`scaled_limit`.  Evaluated
+            on every verdict (reported alongside), quoted on DERATE.
+        bands: Override the class's :class:`DecisionBands`.
+        screening_pass: Whether the primary screening passed.  ``None``
+            derives it as ``margin >= allowable and remaining_life > 0``; the
+            legacy wrapper passes the Level 1/Level 2 outcome explicitly.
+        applicability: Validity record from the strength method(s) (#1094).
+            When any flag is raised the verdict is ESCALATE and the numeric
+            tree is bypassed; the margin is still echoed for reference.
+            ``None`` means "no flags" so existing callers are unaffected.
+    """
+    policy = _policy(asset_class)
+    app = applicability if applicability is not None else Applicability()
+    b = bands or policy.bands
+    m = _dimensionless(margin, "margin")
+    m_a = _dimensionless(margin_allowable, "margin_allowable")
+    life = _years(remaining_life_yr)
+    lbl = policy.margin_label
+
+    derating = derate(m, m_a) if derate is not None else None
+    note = derating.note if derating is not None else policy.no_derate_note
+
+    def _make(verdict: Verdict, criterion: str) -> Decision:
+        return Decision(
+            verdict=verdict,
+            action=policy.actions[verdict],
+            asset_class=policy.name,
+            margin=m,
+            margin_allowable=m_a,
+            remaining_life_yr=life,
+            governing_criterion=criterion,
+            derated=derating.value if derating is not None else None,
+            applicability=app,
+        )
+
+    # Outside a method's calibrated range: no numeric verdict (#1094).
+    if not app.ok:
+        flags = ", ".join(app.flags)
+        notes = "; ".join(app.notes)
+        return _make(
+            Verdict.ESCALATE,
+            f"Applicability flag(s) raised [{flags}]: {notes}.  Margin "
+            f"{lbl}={m:.3f} is reported for reference only; a Level 3 / "
+            "engineering review is required before a fitness verdict.",
+        )
+
+    if not math.isfinite(m):
+        return _make(
+            Verdict.ESCALATE,
+            f"{lbl} could not be evaluated (non-finite margin) — escalate to a "
+            "higher assessment level.",
+        )
+
+    if screening_pass is None:
+        screening_pass = m >= m_a and life > 0.0
+
+    if screening_pass:
+        if m < m_a + b.monitor_band:
+            return _make(
+                Verdict.MONITOR,
+                f"Screening ACCEPT; {lbl}={m:.3f} is within {b.monitor_band:.2f} of "
+                f"{lbl}a={m_a:.2f} — increased inspection frequency recommended.",
+            )
+        return _make(
+            Verdict.ACCEPT,
+            f"Screening ACCEPT ({lbl}={m:.3f} >= {lbl}a={m_a:.2f}).",
+        )
+
+    if m < b.derate_floor:
+        return _make(
+            Verdict.REPLACE,
+            f"{lbl}={m:.3f} is below the de-rating floor "
+            f"{lbl}_floor={b.derate_floor:.2f}.  Component must be replaced.",
+        )
+    if m < m_a:
+        return _make(
+            Verdict.DERATE,
+            f"Screening FAIL; {lbl}={m:.3f} in de-rating band "
+            f"[{b.derate_floor:.2f}, {m_a:.2f}).  {note}",
+        )
+    # Margin acceptable but screening failed (e.g. thickness already below
+    # t_min): repair if remaining life is short, otherwise operate de-rated.
+    if life < b.repair_life_yr:
+        return _make(
+            Verdict.REPAIR,
+            f"Screening FAIL; {lbl} acceptable but remaining life {life:.1f} yr "
+            "is short.  Repair recommended.",
+        )
+    return _make(Verdict.DERATE, f"Screening FAIL; {lbl} acceptable.  {note}")
+
+
+# ---------------------------------------------------------------------------
+# Mooring traffic-light adapter (mooring_resilience.screening)
+# ---------------------------------------------------------------------------
+_TRAFFIC_LIGHT = {
+    "GREEN": Verdict.ACCEPT,
+    "AMBER": Verdict.MONITOR,
+    "RED": Verdict.REPAIR,
+    "ESCALATE": Verdict.ESCALATE,
+}
+
+
+def from_traffic_light(light: str) -> Verdict:
+    """Map a mooring GREEN / AMBER / RED / ESCALATE light onto the shared set."""
+    try:
+        return _TRAFFIC_LIGHT[str(light).upper()]
+    except KeyError:
+        raise ValueError(
+            f"Unknown traffic light {light!r}; expected one of {sorted(_TRAFFIC_LIGHT)}"
+        ) from None
+
+
+# ---------------------------------------------------------------------------
+# Legacy pressure-class entry point (inch / psi contract preserved)
+# ---------------------------------------------------------------------------
 class FFSDecision:
-    """Static decision engine for FFS assessment verdicts."""
+    """Static decision engine for FFS assessment verdicts (pressure class)."""
 
     @staticmethod
     def decide(
@@ -50,8 +485,14 @@ class FFSDecision:
         t_min_in: float,
         corrosion_rate_in_per_yr: float,
         design_pressure_psi: float | None = None,
+        applicability: Optional[Applicability] = None,
     ) -> dict:
-        """Determine the final FFS action verdict.
+        """Determine the final FFS action verdict (legacy inch / psi signature).
+
+        Thin wrapper over :func:`decide` for ``asset_class="pressure"``; the
+        inputs are unit-tagged internally.  Returns the legacy dict (``verdict``
+        is the pressure wording, so ``RE_RATE`` not ``DERATE``) plus ``action``
+        and ``asset_class``.
 
         Args:
             level1_verdict: ``'ACCEPT'`` or ``'FAIL_LEVEL_1'``.
@@ -66,129 +507,62 @@ class FFSDecision:
                 RSF-based re-rated pressure MAWP_r = MAWP * min(1, RSF/RSFa)
                 (API 579-1 §2.4.2.2) is computed and reported on every
                 verdict; the RE_RATE criterion quotes it explicitly.
+            applicability: validity record from the strength method(s).
+                When any flag is raised the verdict is ``ESCALATE`` and the
+                numeric tree is bypassed (#1094).  ``None`` means "no flags"
+                so existing callers are unaffected.
 
         Returns:
             dict with keys:
                 verdict (str): One of ACCEPT, MONITOR, RE_RATE, REPAIR,
-                    REPLACE.
+                    REPLACE, ESCALATE (pressure wording).
+                action (str): Same as ``verdict`` for the pressure class.
+                asset_class (str): ``"pressure"``.
                 remaining_life_yr (float): Estimated remaining service life.
                     ``float('inf')`` when corrosion_rate_in_per_yr == 0.
                 governing_criterion (str): Human-readable description of the
                     governing assessment criterion.
-                rsf (float): Echoed input RSF.
-                rsf_a (float): Echoed input RSFa.
+                rsf / margin (float): Echoed input RSF.
+                rsf_a / margin_allowable (float): Echoed input RSFa.
                 rerated_mawp_psi (float | None): MAWP_r when
                     design_pressure_psi was supplied, else None.
+                applicability (dict): ``{ok, flags, notes}`` echo of the
+                    validity record (all-clear when none was supplied).
         """
-        rerated = FFSDecision._rerated_mawp(design_pressure_psi, rsf, rsf_a)
-        remaining_life = FFSDecision._remaining_life(
-            t_mm_in, t_min_in, corrosion_rate_in_per_yr
+        life = remaining_life(
+            Q_(t_mm_in, "inch"), Q_(t_min_in, "inch"),
+            Q_(corrosion_rate_in_per_yr, "inch/year"),
         )
-
-        # Both levels pass
-        if level1_verdict == "ACCEPT" and level2_verdict == "ACCEPT":
-            if rsf < rsf_a + _MONITOR_BAND:
-                verdict = "MONITOR"
-                criterion = (
-                    f"Level 1 and Level 2 ACCEPT; RSF={rsf:.3f} is within "
-                    f"{_MONITOR_BAND:.2f} of RSFa={rsf_a:.2f} — increased "
-                    "inspection frequency recommended."
-                )
-            else:
-                verdict = "ACCEPT"
-                criterion = (
-                    f"Level 1 ACCEPT (t_mm >= t_min) and Level 2 ACCEPT "
-                    f"(RSF={rsf:.3f} >= RSFa={rsf_a:.2f})."
-                )
-            return {
-                "verdict": verdict,
-                "remaining_life_yr": remaining_life,
-                "governing_criterion": criterion,
-                "rsf": rsf,
-                "rsf_a": rsf_a,
-                "rerated_mawp_psi": rerated,
-            }
-
-        # At least one level fails — determine remediation path
-        if rsf < _RE_RATE_FLOOR:
-            verdict = "REPLACE"
-            criterion = (
-                f"RSF={rsf:.3f} is below the re-rating floor "
-                f"RSF_floor={_RE_RATE_FLOOR:.2f}.  Component must be replaced."
-            )
-        elif rsf < rsf_a:
-            # Re-rating band: RSF_floor <= RSF < RSFa
-            verdict = "RE_RATE"
-            criterion = (
-                f"Level 1 or Level 2 FAIL; RSF={rsf:.3f} in re-rating band "
-                f"[{_RE_RATE_FLOOR:.2f}, {rsf_a:.2f})."
-                + (
-                    f"  Re-rate to MAWP_r={rerated:.0f} psi "
-                    "(MAWP x RSF/RSFa, API 579-1 §2.4.2.2)."
-                    if rerated is not None
-                    else "  Reduce MAWP or operating pressure."
-                )
-            )
-        else:
-            # Level 1 fails but Level 2 still passes (RSF >= RSFa) —
-            # this can occur when Level 1 is conservative; Level 2 governs.
-            # Recommend repair if remaining life is short.
-            if remaining_life < 2.0:
-                verdict = "REPAIR"
-                criterion = (
-                    "Level 1 FAIL; Level 2 RSF acceptable but remaining life "
-                    f"{remaining_life:.1f} yr is short.  Repair recommended."
-                )
-            else:
-                verdict = "RE_RATE"
-                criterion = (
-                    "Level 1 FAIL; Level 2 RSF acceptable.  "
-                    + (
-                        f"Operable at MAWP_r={rerated:.0f} psi "
-                        "(MAWP x RSF/RSFa, API 579-1 §2.4.2.2)."
-                        if rerated is not None
-                        else "Consider re-rating or accepting at reduced MAWP."
-                    )
-                )
-
-        return {
-            "verdict": verdict,
-            "remaining_life_yr": remaining_life,
-            "governing_criterion": criterion,
-            "rsf": rsf,
-            "rsf_a": rsf_a,
-            "rerated_mawp_psi": rerated,
-        }
+        derate = (
+            reduced_mawp(Q_(design_pressure_psi, "psi"))
+            if design_pressure_psi is not None else None
+        )
+        d = decide(
+            rsf, rsf_a, life, "pressure", derate=derate,
+            screening_pass=(level1_verdict == "ACCEPT" and level2_verdict == "ACCEPT"),
+            applicability=applicability,
+        )
+        out = d.to_dict()
+        out["verdict"] = d.action
+        return out
 
     # ------------------------------------------------------------------
-    # Private helpers
+    # Private helpers (kept for compatibility)
     # ------------------------------------------------------------------
 
     @staticmethod
     def _rerated_mawp(
         design_pressure_psi: float | None, rsf: float, rsf_a: float
     ) -> float | None:
-        """RSF-based re-rated pressure, API 579-1 §2.4.2.2.
-
-        MAWP_r = MAWP * (RSF / RSFa), capped at the original MAWP (a passing
-        RSF never rates the component above its design pressure).
-        """
-        if design_pressure_psi is None or rsf_a <= 0:
+        """RSF-based re-rated pressure, API 579-1 §2.4.2.2 (psi)."""
+        if design_pressure_psi is None:
             return None
-        return design_pressure_psi * min(1.0, max(0.0, rsf) / rsf_a)
+        d = reduced_mawp(Q_(design_pressure_psi, "psi"))(rsf, rsf_a)
+        return None if d is None else float(d.value.to("psi").magnitude)
 
     @staticmethod
     def _remaining_life(
         t_mm: float, t_min: float, rate: float
     ) -> float:
-        """Linear remaining-life projection.
-
-        Returns:
-            Remaining life in years.  ``float('inf')`` when rate == 0.
-            Returns 0.0 when t_mm <= t_min (no remaining life).
-        """
-        if t_mm <= t_min:
-            return 0.0
-        if rate == 0.0:
-            return float("inf")
-        return (t_mm - t_min) / rate
+        """Linear remaining-life projection in years (inch, inch/yr inputs)."""
+        return remaining_life(Q_(t_mm, "inch"), Q_(t_min, "inch"), Q_(rate, "inch/year"))

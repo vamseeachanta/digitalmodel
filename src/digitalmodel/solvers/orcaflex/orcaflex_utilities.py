@@ -3,11 +3,14 @@
 # import-time raise would be swallowed by solvers/orcaflex/__init__.py into a
 # None export -- but callers now refuse at CALL time via
 # require_orcaflex_or_raise() below.
-try:
-    import OrcFxAPI
-    ORCAFLEX_API_AVAILABLE = True
-except Exception:
-    ORCAFLEX_API_AVAILABLE = False
+# #3838: routed through the facade instead of `import OrcFxAPI`. A module-scope
+# import binds the DLL before OrcFxAPIConfig.setLibPath() can select a version,
+# and this module is on the import path of the package __init__.
+from digitalmodel.solvers.orcaflex.orcaflex_api import available as _orcaflex_available
+from digitalmodel.solvers.orcaflex.orcaflex_api import lazy_api as _lazy_orcaflex_api
+
+ORCAFLEX_API_AVAILABLE = _orcaflex_available()
+OrcFxAPI = _lazy_orcaflex_api() if ORCAFLEX_API_AVAILABLE else None
 # Standard library imports
 import glob
 from loguru import logger
@@ -36,15 +39,13 @@ from digitalmodel.solvers.orcaflex.orcaflex_model_utilities import (
 )
 
 from digitalmodel.solvers.orcaflex.core.exceptions import LicenseError
+from digitalmodel.solvers.orcaflex import run_state
 
 save_data = SaveData()
 de = DataExploration()
 colorama.init(strip=True, convert=False)
 
-try:
-    # Third party imports
-    import OrcFxAPI
-except:
+if not ORCAFLEX_API_AVAILABLE:
     logger.debug("OrcFxAPI not available")
 # Standard library imports
 from collections import OrderedDict
@@ -123,6 +124,9 @@ class OrcaflexUtilities:
         model.LoadData(yml_file)
 
         model.RunSimulation()
+        # #3838: RunSimulation returns success for a diverged run; the model
+        # state is the only signal, and it is checked before the .sim is saved.
+        run_state.check_simulation(model, context=str(yml_file))
 
         model.SaveSimulation(sim_file)
 
@@ -594,20 +598,37 @@ class OrcaflexUtilities:
     def get_model_and_metadata(self, file_name):
         SimulationFileName = self.get_SimulationFileName(file_name)
         model = None
+        # #3838: these were assigned only inside the try, so any load failure
+        # raised UnboundLocalError while building the return dict below.
+        simulation_complete = None
+        run_status = None
+        start_time = None
+        stop_time = None
+        current_time = None
         if os.path.isfile(SimulationFileName):
             try:
                 model = self.loadSimulation(SimulationFileName)
                 simulation_complete = model.simulationComplete
-                run_status = model.state.__dict__["_name_"]
+                run_status = run_state.state_name(model)
                 start_time = model.simulationStartTime
                 stop_time = model.simulationStopTime
                 current_time = model.simulationTimeStatus.CurrentTime
 
             except Exception as e:
                 model = None
-                model = None
                 logger.info(f"Model: {SimulationFileName} ... Error Loading File")
                 logger.info(str(e))
+
+            # #3838: a simulation that stopped unstable loads without error and
+            # reports a stop time; only the state distinguishes it from a
+            # converged run. Such a model is not returned for post-processing.
+            if model is not None and run_status is not None:
+                if run_status not in run_state.STATICS_COMPLETE_STATES:
+                    logger.info(
+                        f"Model: {SimulationFileName} ... state {run_status} is "
+                        "not usable for post-processing"
+                    )
+                    model = None
 
         model_dict = {
             "model": model,

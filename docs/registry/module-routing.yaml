@@ -14,6 +14,36 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/asset_integrity/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#asset_integrity
+    report_navigation:
+      - docs/domains/asset-integrity/ffs-architecture.md
+      - docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md
+      - docs/domains/circumferential-defect-validation-2026-06-29.md
+      - docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md
+      - docs/domains/asset-integrity/uniform-loss-source-audit-2026-10-06.md
+      - src/digitalmodel/asset_integrity/assessment/ffs_report.py
+    screening_study:
+      issue: https://github.com/vamseeachanta/digitalmodel/issues/2287
+      spec: docs/plans/2026-10-06-issue-2287-uniform-local-loss-screening.md
+      status: unqualified-preparation
+      diagnostic: src/digitalmodel/asset_integrity/uniform_loss_diagnostic.py
+      results_owner: digitalmodel-data
+      note: No qualified API 579 envelope; exact synthetic pressure-study outputs retained privately with verified hashes.
+      canonical_preliminary_results:
+        owner_repo: vamseeachanta/digitalmodel-data
+        dataset_id: uniform-local-loss-screening
+        run_id: preliminary-pressure-20261006T030939Z-3c238c26
+        revision: 795b35099bf29cdfc59e6e2184cbdc0da76131be
+        manifest_sha256: 428196dd032899e91bb823dbd46e3a09715767778a85eadd43e6168d4e65f807
+        manifest: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/manifest.json
+        plot: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-curves.png
+        csv: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-summary.csv
+        json: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-results.json
+        publication_receipt: https://github.com/vamseeachanta/digitalmodel-data/blob/2b91fcfb9a6412ae17ec640f2f0f009953df4d6f/reports/uniform-local-loss-screening-r1-publication.json
+        publication_receipt_sha256: ba13d25485030f4dd3a3e38697467b047abcce3aab79313dc6150ee5bbf5c4d2
+        publication_receipt_hash_scope: Exact committed LF bytes verified by fresh remote readback; working checkout line endings may differ.
+        engineering_qualified: false
+        api579_allowable_remaining_wall_in: null
+        asset_acceptance: null
   - module: benchmarks
     entry_point: src/digitalmodel/benchmarks/
     maturity: beta
@@ -22,9 +52,13 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#benchmarks
   - module: cathodic_protection
     entry_point: src/digitalmodel/cathodic_protection/
-    maturity: beta
+    engine_entry: src/digitalmodel/cathodic_protection/engine_adapter.py  # basename cathodic_protection (#2210)
+    calculation_types: [DNV_RP_B401_offshore, DNV_RP_F103, ABS_gn_ships_2018, ABS_gn_offshore_2018]
+    deprecated_calculation_types: [DNV_RP_F103_2010, DNV_RP_B401_offshore_legacy, DNV_RP_F103_2010_legacy]  # DeprecationWarning; DNV_RP_F103_2010 = DNV_RP_F103 pinned to edition 2010, *_legacy = legacy solver
+    demo_workflows: []  # retired 2026-09-25 (owner decision D5); regression inputs in tests/fixtures/cathodic_protection/workflow_inputs/
+    maturity: beta  # client use with EOR check on B401 offshore + F103 only (2026-09-27, #2206); scale has no such value, see docs/domains/cathodic_protection/_index.md#use-status
     owner_wiki: docs/domains/cathodic_protection/
-    key_tests: [tests/cathodic_protection/]
+    key_tests: [tests/cathodic_protection/, tests/specialized/cathodic_protection/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#cathodic_protection
   - module: citations
     entry_point: src/digitalmodel/citations/
@@ -176,6 +210,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/power/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#power
+  - module: process_diagrams
+    entry_point: src/digitalmodel/process_diagrams/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/process_diagrams/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#process_diagrams
   - module: production_chemistry
     entry_point: src/digitalmodel/production_chemistry/
     maturity: development
@@ -392,6 +432,12 @@ modules:
     owner_wiki: docs/domains/ship-design/vessel-stability-screening.md
     key_tests: [tests/naval_architecture/test_vessel_stability_screening.py, tests/naval_architecture/test_vessel_stability_screening_workflow.py, tests/naval_architecture/test_damage_stability_screening.py, tests/naval_architecture/test_vessel_stability_screening_damage_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#vessel_stability_screening
+  - module: viv_screening
+    entry_point: src/digitalmodel/viv_screening/
+    maturity: development
+    owner_wiki: examples/workflows/riser-viv-screening/README.md
+    key_tests: [tests/workflows/test_viv_screening_workflow.py, tests/workflows/test_durable_workflows.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#viv_screening
   - module: weather_window
     entry_point: src/digitalmodel/weather_window/
     maturity: development

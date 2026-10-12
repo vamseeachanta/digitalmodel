@@ -1,0 +1,12 @@
+"Table 10-3 Recommended mean design current densities for protection of reinforcing steel (i.e. in concrete structures) as a function
+of depth and ‘climatic region’ based on surface water temperature (ref. 6.3.12). The current densities in A/m2 refer to the steel
+reinforcement surface area, not surface area of concrete.",,,,
+"Depth
+(m)","‘Tropical’
+(> 20 °C)","‘Sub-Tropical’
+(12- 20 °C)","‘Temperate’
+(7-12 °C)","‘Arctic’
+(< 7 °C)"
+0-30,0.0025,0.0015,0.0010,0.0008
+>30-100,0.0020,0.0010,0.0008,0.0006
+>100,0.0010,0.0008,0.0006,0.0006

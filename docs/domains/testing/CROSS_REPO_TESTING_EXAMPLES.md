@@ -27,13 +27,13 @@ Running tests in parallel with 4 workers...
 [1/8] Completed digitalmodel - passed
 [2/8] Completed assethold - passed
 [3/8] Completed coordination - failed
-[4/8] Completed saipem - passed
+[4/8] Completed contractor - passed
 ...
 
 Generating reports...
-HTML dashboard: D:\workspace-hub\digitalmodel\reports\cross_repo_tests\dashboard-20260106_123456.html
-CSV results: D:\workspace-hub\digitalmodel\reports\cross_repo_tests\results-20260106_123456.csv
-JSON results: D:\workspace-hub\digitalmodel\reports\cross_repo_tests\test-results-20260106_123456.json
+HTML dashboard: <private-data>\dashboard-20260106_123456.html
+CSV results: <private-data>\results-20260106_123456.csv
+JSON results: <private-data>\test-results-20260106_123456.json
 
 ============================================================
 SUMMARY
@@ -93,7 +93,7 @@ repo_name,status,tests_passed,tests_failed,tests_skipped,tests_total,duration_se
 digitalmodel,passed,145,0,5,150,42.5,87.5,75.0,True,False,True,True,5
 assethold,passed,89,0,2,91,28.3,92.1,100.0,True,True,True,True,0
 coordination,failed,32,8,1,41,55.2,68.4,87.5,True,True,True,False,3
-saipem,passed,67,0,3,70,31.8,85.0,87.5,True,True,True,False,2
+contractor,passed,67,0,3,70,31.8,85.0,87.5,True,True,True,False,2
 ```
 
 **Column explanations:**

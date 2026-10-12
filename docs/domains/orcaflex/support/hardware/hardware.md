@@ -40,7 +40,7 @@ Mark
 Name:
 Vamsee Achanta
 E-mail:
-vamsee.achanta@aceengineer.com
+[email removed]
 What can we help you with?
 Configure/Quote for Server(s)
 Please Enter Your Supermicro Server/Chassis SKU#? (If Applicable)
@@ -109,7 +109,7 @@ Vamsee Achanta 12:42 PM
 Can you send an email to me?
 yes please...
 Mark 12:42 PM
-at vamsee.achanta@aceengineer.com?
+at [email removed]?
 Vamsee Achanta 12:42 PM
 yes Mark. Thank you.
 Mark 12:42 PM
@@ -155,10 +155,10 @@ Best regards,
 David Heffernan
 
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 18 April 2025 12:06
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>; Bram Weisman <bramw@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]; Bram Weisman [email removed]
 Subject: RE: Go-by Hardware Configurations
 
 Also is it better to directly get CPU which only allows 1 thread per core so it is a no brainer and no need to fiddle with anything?
@@ -170,18 +170,18 @@ Vamsee
 
 From: Vamsee Achanta 
 Sent: Friday, April 18, 2025 5:50 AM
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]
 Subject: RE: Go-by Hardware Configurations
 
 On the hyperthreading (2 threads per core) subject, did you find that 1 thread per core is faster? 
 
 Also, does Orcaflex automatically switch it off (or) is there a setting that we can use to switch it off in OrcaFlex or can be done in OS level?
 
-From: Orcina <orcina@orcina.com> 
+From: Orcina [email removed] 
 Sent: Friday, April 18, 2025 4:21 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Vamsee Achanta [email removed]
+Cc: Scott McClure [email removed]
 Subject: RE: Go-by Hardware Configurations
 
 Vamsee
@@ -203,10 +203,10 @@ Best regards,
 
 David Heffernan
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 18 April 2025 00:27
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]
 Subject: RE: Go-by Hardware Configurations
 
 Dear Support Team,
@@ -220,7 +220,7 @@ Vamsee
 
 From: Vamsee Achanta 
 Sent: Thursday, April 17, 2025 5:14 PM
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: Go-by Hardware Configurations
 
 Dear Support Team,

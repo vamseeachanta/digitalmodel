@@ -21,7 +21,7 @@
 #   - Unix dev/client shares:   /mnt/local-analysis|dde|ace/, and
 #                               /home|/Users/<user>/(workspace-hub|github|
 #                               projects|Desktop|Documents)
-#   - DOS developer home:       X:\Users\<name>\
+#   - DOS developer home:       <drive>:\Users\<name>\
 #   - DOS client project share: X:\<digit>...  (e.g. K:\0198\)
 
 set -euo pipefail
@@ -32,7 +32,7 @@ cd "$REPO_ROOT"
 
 # Developer-machine / client leakage patterns (extended regex). Backslashes are
 # doubled for DOS paths so the ERE sees a literal backslash.
-PATTERN='(/mnt/(local-analysis|dde|ace)/|/(home|Users)/[a-zA-Z][a-zA-Z0-9_-]+/(workspace-hub|github|projects|Desktop|Documents)|[A-Za-z]:\\Users\\[a-zA-Z]|[A-Za-z]:\\[0-9])'
+PATTERN='(/mnt/(local-analysis|dde|ace)/|/(home|Users)/[a-zA-Z][a-zA-Z0-9_-]+/(workspace-hub|github|projects|Desktop|Documents)|[A-Za-z]:\\Users\\[a-zA-Z]|[A-Za-z]:\\[0-9])'  # identifier-gate: example
 
 # Which tracked files the whole-tree / file modes consider.
 GLOBS=('src/**/*.sh' 'src/**/*.py' 'src/**/*.yml' 'src/**/*.yaml'

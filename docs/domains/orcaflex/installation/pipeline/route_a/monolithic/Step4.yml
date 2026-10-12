@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\installation\pipeline\route_a\monolithic\Step4.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/Step4.yml
 # Created: 9:09 AM on 2/11/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   Comments: ! "TC1139 LLOG Buckskin Power UMB Base Model 4/10/23  \r\n"
@@ -1213,8 +1213,7 @@ VesselTypes:
       - [117, 118, ~]
       - [119, 120, ~]
     # Shaded drawing
-    ShadedDrawingFileName: Q:\S7EN-SUT PIPELINES\S7EN-SUT-Project Support\Sutton Engineering\Installation Analysis\Vessels\Seven
-      Arctic\01 - Orca Model\04 - Shaded Graphic\arctic\arctic_no_lay_tower.X
+    ShadedDrawingFileName: <private-data>\iv02_no_lay_tower.X
     ShadedDrawingCullingMode: Anticlockwise
     ShadedDrawingOrigin: [-78, 0, -8.5]
     ShadedDrawingOrientation: [0, 0, -90]
@@ -2020,8 +2019,7 @@ VesselTypes:
       - [117, 118, ~]
       - [119, 120, ~]
     # Shaded drawing
-    ShadedDrawingFileName: Q:\S7EN-SUT PIPELINES\S7EN-SUT-Project Support\Sutton Engineering\Installation Analysis\Vessels\Seven
-      Arctic\09 Misc\01 Shaded graphic\arctic\arctic_no_lay_tower.X
+    ShadedDrawingFileName: <private-data>\iv02_no_lay_tower.X
     ShadedDrawingCullingMode: Anticlockwise
     ShadedDrawingOrigin: [-78, 0, -8.5]
     ShadedDrawingOrientation: [0, 0, -90]
@@ -3710,8 +3708,7 @@ VesselTypes:
       - [117, 118, ~]
       - [119, 120, ~]
     # Shaded drawing
-    ShadedDrawingFileName: Q:\S7EN-SUT PIPELINES\S7EN-SUT-Project Support\Sutton Engineering\Installation Analysis\Vessels\Seven
-      Arctic\09 Misc\01 Shaded graphic\arctic\arctic_no_lay_tower.X
+    ShadedDrawingFileName: <private-data>\iv02_no_lay_tower.X
     ShadedDrawingCullingMode: Anticlockwise
     ShadedDrawingOrigin: [-78, 0, -8.5]
     ShadedDrawingOrientation: [0, 0, -90]
@@ -4704,7 +4701,7 @@ LineTypes:
     RayleighDampingCoefficients: (no damping)
     # Drawing
     Pen: [4, Solid, $404080]
-  - Name: InfUmbVenice-3.84in-Orlov
+  - Name: InfUmb-3.84in-UmbB
     Category: General
     # Geometry and mass
     OD: 0.0972
@@ -4975,7 +4972,7 @@ StiffenerTypes:
     ConnectionArclengthRelativeTo: End B
     AxialLoadInertiaTransfer: at connection point
 Vessels:
-  - Name: SevenArctic
+  - Name: iv02
     VesselType: C11_StartLaying_ARTempty
     Draught: 8.7m
     Length: ~
@@ -5004,7 +5001,7 @@ Vessels:
   - Name: Dummy Reel
     Locked: Yes
     BuoyType: Lumped buoy
-    Connection: SevenArctic
+    Connection: iv02
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment
@@ -5065,7 +5062,7 @@ Vessels:
       - [4, 8, ~]
   - Name: CranePedestal
     BuoyType: Spar buoy
-    Connection: SevenArctic
+    Connection: iv02
     DampingRelativeTo: Fluid
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment
@@ -5717,12 +5714,12 @@ Lines:
       - [~, 0, 0.001]
     # Sections
     LineType, Length, TargetSegmentLength:
-      - [InfUmbVenice-3.84in-Orlov, 175, 1]
-      - [InfUmbVenice-3.84in-Orlov, 557, 2]
-      - [InfUmbVenice-3.84in-Orlov, 50, 1]
-      - [InfUmbVenice-3.84in-Orlov, 20, 0.5]
-      - [InfUmbVenice-3.84in-Orlov, 20, 1]
-      - [InfUmbVenice-3.84in-Orlov, 418, 2]
+      - [InfUmb-3.84in-UmbB, 175, 1]
+      - [InfUmb-3.84in-UmbB, 557, 2]
+      - [InfUmb-3.84in-UmbB, 50, 1]
+      - [InfUmb-3.84in-UmbB, 20, 0.5]
+      - [InfUmb-3.84in-UmbB, 20, 1]
+      - [InfUmb-3.84in-UmbB, 418, 2]
     # Seabed
     DecoupleLateralAndAxialSeabedFriction: No
     CoveredSectionsWarnIfLineLeavesCover: Yes
@@ -6545,8 +6542,8 @@ Lines:
     # Sections
     LineType, Length, TargetSegmentLength:
       - [LineArmorPot, 0.6, 0.6]
-      - [InfUmbVenice-3.84in-Orlov, 6.4, 0.33]
-      - [InfUmbVenice-3.84in-Orlov, 18.3, 0.43]
+      - [InfUmb-3.84in-UmbB, 6.4, 0.33]
+      - [InfUmb-3.84in-UmbB, 18.3, 0.43]
     # Attachments
     AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo, AttachmentName:
       - [BR_Stiffener, 0, 0, 7, End A, Stiffener1]
@@ -6768,7 +6765,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [4.45, -3.6, -6.6]
     Size: [0.01, 7.2, 11.4]
@@ -6785,7 +6782,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [13.2, -3.6, -6.6]
     Size: [0.01, 7.2, 11.4]
@@ -6802,7 +6799,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [13.2, -3.6, -6.6]
     Size: [0.01, 8.75, 11.4]
@@ -6819,7 +6816,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [13.2, 3.6, -6.6]
     Size: [0.01, 8.75, 11.4]
@@ -6836,7 +6833,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [2.3499999999999943, -3.5999999999999996, -6.6]
     Orientation: [90, 90, -90.00000000000001]
@@ -6859,7 +6856,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [15.3, -3.6, -6.6]
     Orientation: [90, 90, 0]
@@ -6882,7 +6879,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [7.95, 256.2649989210456e-21, 15.563526773570718]
     Azimuth: 0
@@ -6902,7 +6899,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-32.650000000000006, 12.1375, 4.8]
     Azimuth: 0
@@ -6941,7 +6938,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-64.85000000000001, -13.06, 4.800000000000001]
     Azimuth: 0
@@ -6962,7 +6959,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-64.85000000000001, -13.06, 14.8]
     Azimuth: 0
@@ -6983,7 +6980,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-64.85000000000001, -13.06, 24.8]
     Azimuth: 0
@@ -7000,7 +6997,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-64.85000000000001, -13.06, 24.8]
     Azimuth: 270
@@ -7018,7 +7015,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-78.15, 0, -8.7]
     Azimuth: 0
@@ -7037,7 +7034,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-7.9, 0, 3.99]
     Azimuth: 0
@@ -7056,7 +7053,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-7.83, 0, 4.5600000000000005]
     Azimuth: 0
@@ -7075,7 +7072,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-6.97, 0, 4.290000000000001]
     Azimuth: 0
@@ -7094,7 +7091,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [73.05, 0, -8.7]
     Azimuth: 0
@@ -7113,7 +7110,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-8.85, -13.95, 4.800000000000001]
     Azimuth: 0
@@ -7134,7 +7131,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-8.85, -13.95, 14.8]
     Azimuth: 0
@@ -7155,7 +7152,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-8.85, -13.95, 24.8]
     Azimuth: 0
@@ -7172,7 +7169,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-8.85, -13.95, 24.8]
     Azimuth: 270
@@ -7190,7 +7187,7 @@ Shapes:
     Locked: Yes
     ShapeType: Trapped water
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [4.45, -3.6, -6.6]
     Size: [8.75, 7.2, 6.6]
@@ -7204,7 +7201,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [7.95, 0, 4.970000000000001]
     Orientation: [0, 180, 0]
@@ -7238,7 +7235,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [7.950000000000005, 0, 54.349999999999994]
     Azimuth: 0
@@ -7256,7 +7253,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-33.6, -6.45, 7.600000000000001]
     Orientation: [270, 90, 180]
@@ -7279,7 +7276,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-23.1, -6.45, 5.100000000000001]
     Orientation: [270, 90, 90]
@@ -7302,7 +7299,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-33.6, -10.45, 9.600000000000001]
     Size: [10.5, 4.9, 1.5]
@@ -7320,7 +7317,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-17.25, -6.3, 3.6999999999999993]
     Size: [5, 8, 1]
@@ -7338,7 +7335,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-13.05, 0, 3.6999999999999993]
     Orientation: [0, 0, -59.99999999999999]
@@ -7358,7 +7355,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-13.05, 0, -5]
     Azimuth: 0
@@ -7379,7 +7376,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-13.05, 0, -6.949999999999999]
     Azimuth: 0
@@ -7399,7 +7396,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-6.75, -4.25, 3.6999999999999993]
     Size: [5, 8, 1]
@@ -7417,7 +7414,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-15.85, -6.8, 3.6999999999999993]
     Size: [4, 4, 1]
@@ -7435,7 +7432,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-6.25, -2.25, 3.6999999999999993]
     Size: [4, 4, 1]
@@ -7453,7 +7450,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-32.3, 0, 4.551]
     Azimuth: 90
@@ -7472,7 +7469,7 @@ Shapes:
     Locked: Yes
     ShapeType: Drawing
     Shape: Cylinder
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [-84.19609546291102, 0.022667107710881, 0]
     Azimuth: 0
@@ -7587,7 +7584,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [4.45, -5.7, -6.6]
     Orientation: [0, 90, 0]
@@ -7610,7 +7607,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Curved plate
-    Connection: SevenArctic
+    Connection: iv02
     # Geometry
     Origin: [13.2, 5.7, -6.6]
     Orientation: [180, 90, 0]
@@ -7749,7 +7746,7 @@ Constraints:
     HideAfterOutFrameRelease: No
 Groups:
   Structure:
-    SevenArctic: Model
+    iv02: Model
     900TeMainCraneWire: Model
     Rigging: Model
     WinchWire: Model
