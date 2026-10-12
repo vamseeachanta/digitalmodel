@@ -89,124 +89,131 @@ rigs:
   generation: null
   other_items: {value: ['7,500 psi'], source_key: S3, as_published_on: file dated 2024-07-12, as_published: 'Titan lists "20,000 psi K/C lines" on its riser and mud pumps "10,000 psi";
       Atlas lists mud pumps "7,500 psi".'}
-- name: {value: Deepwater Poseidon, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  owner_manager: {value: Transocean, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  rig_type: {value: drillships, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: DSME
+- name: {value: Deepwater Poseidon, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
       12000 Ultra Deepwater Drillship}
-  year_entered_service: {value: 2018, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  year_entered_service: {value: 2018, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted'}
-  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted'}
-  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '40,000 ft (12,192
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
       m)'}
-  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '"Two
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: undated, as_published: '"Two
       (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"'}
   hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
   generation: null
-  other_items: {value: null, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-- name: {value: Deepwater Pontus, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  owner_manager: {value: Transocean, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  rig_type: {value: drillships, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: DSME
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+- name: {value: Deepwater Pontus, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
       12000 Ultra Deepwater Drillship}
-  year_entered_service: {value: 2017, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  year_entered_service: {value: 2017, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '40,000 ft (12,192
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
       m)'}
-  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '"Two
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: undated, as_published: '"Two
       (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"', note: 'the research note records: same wording as Poseidon'}
   hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
   generation: null
-  other_items: {value: null, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-- name: {value: Deepwater Conqueror, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  owner_manager: {value: Transocean, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  rig_type: {value: drillships, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: DSME
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+- name: {value: Deepwater Conqueror, source_key: S5, as_published_on: file dated 2026-02-02}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: file dated 2026-02-02}
+  rig_type: {value: drillships, source_key: S5, as_published_on: file dated 2026-02-02}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: file dated 2026-02-02, as_published: DSME
       12000 Ultra Deepwater Drillship}
-  year_entered_service: {value: 2016/2017, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft.(3,658
+  year_entered_service: {value: 2016/2017, source_key: S5, as_published_on: file dated 2026-02-02}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: file dated 2026-02-02, as_published: '12,000 ft.(3,658
       m) designed /10,000 ft.(3,048 m) outfitted'}
-  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft.(3,658
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: file dated 2026-02-02, as_published: '12,000 ft.(3,658
       m) designed /10,000 ft.(3,048 m) outfitted'}
-  drilling_depth_ft: {value: null, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, status: not extracted (unverified)}
-  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '"Two
+  drilling_depth_ft: {value: null, unit: ft, source_key: S5, as_published_on: file dated 2026-02-02, status: not extracted (unverified)}
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: file dated 2026-02-02, as_published: '"Two
       (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"'}
   hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
   generation: null
-  other_items: {value: null, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-- name: {value: Deepwater Proteus, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  owner_manager: {value: Transocean, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  rig_type: {value: drillships, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: DSME
+  other_items: {value: null, source_key: S5, as_published_on: file dated 2026-02-02}
+- name: {value: Deepwater Proteus, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
       12000 Ultra Deepwater Drillship}
-  year_entered_service: {value: 2016, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  year_entered_service: {value: 2016, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '40,000 ft (12,192
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
       m)'}
-  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '"Two
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: undated, as_published: '"Two
       (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"', note: 'the research note records: same wording as Poseidon'}
   hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
   generation: null
-  other_items: {value: null, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-- name: {value: Deepwater Thalassa, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  owner_manager: {value: Transocean, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  rig_type: {value: drillships, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: DSME
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+- name: {value: Deepwater Thalassa, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
       12000 Ultra Deepwater Drillship}
-  year_entered_service: {value: 2016, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  year_entered_service: {value: 2016, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '40,000 ft (12,192
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
       m)'}
-  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '"Two
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: null}], source_key: S5, as_published_on: undated, as_published: '"Two
       (2) x seven (7) ram 18-3/4" x 15,000 psi BOP''s"', note: 'the research note records: same wording as Poseidon'}
   hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
   generation: null
-  other_items: {value: null, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-- name: {value: Deepwater Invictus, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  owner_manager: {value: Transocean, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  rig_type: {value: drillships, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: DSME
+  other_items: {value: null, source_key: S5, as_published_on: undated}
+- name: {value: Deepwater Invictus, source_key: S5, as_published_on: file dated 2024-07-12}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: file dated 2024-07-12}
+  rig_type: {value: drillships, source_key: S5, as_published_on: file dated 2024-07-12}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: file dated 2024-07-12, as_published: DSME
       12000 Ultra Deepwater Drillship}
-  year_entered_service: {value: 2014, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  year_entered_service: {value: 2014, source_key: S5, as_published_on: file dated 2024-07-12}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: file dated 2024-07-12, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: file dated 2024-07-12, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '40,000 ft (12,192
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: file dated 2024-07-12, as_published: '40,000 ft (12,192
       m)'}
-  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: Cameron}], source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated,
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: Cameron}], source_key: S5, as_published_on: file dated 2024-07-12,
     as_published: '"(Primary) Cameron 18-3/4", 15,000 psi 7-ram preventer" and "(Secondary) Cameron 18-3/4", 15,000 psi 7-ram preventer"'}
   hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
   generation: null
-  other_items: {value: null, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-- name: {value: Deepwater Asgard, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  owner_manager: {value: Transocean, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  rig_type: {value: drillships, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: DSME
+  other_items: {value: null, source_key: S5, as_published_on: file dated 2024-07-12}
+- name: {value: Deepwater Asgard, source_key: S5, as_published_on: undated}
+  source_date_remark: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated
+  owner_manager: {value: Transocean, source_key: S5, as_published_on: undated}
+  rig_type: {value: drillships, source_key: S5, as_published_on: undated}
+  design_as_published: {value: DSME 12000 Ultra Deepwater Drillship, source_key: S5, as_published_on: undated, as_published: DSME
       12000 Ultra Deepwater Drillship}
-  year_entered_service: {value: 2014, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
-  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  year_entered_service: {value: 2014, source_key: S5, as_published_on: undated}
+  water_depth_designed_ft: {value: 12000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '12,000 ft (3,658
+  water_depth_outfitted_ft: {value: 10000, unit: ft, source_key: S5, as_published_on: undated, as_published: '12,000 ft (3,658
       m) designed / 10,000 ft (3,048 m) outfitted', note: 'the research note records: same wording as Poseidon'}
-  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated, as_published: '40,000 ft (12,192
+  drilling_depth_ft: {value: 40000, unit: ft, source_key: S5, as_published_on: undated, as_published: '40,000 ft (12,192
       m)'}
-  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: Cameron}], source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated,
+  bop_stacks: {value: [{rating_psi: 15000, rams: 7, count: 2, maker: Cameron}], source_key: S5, as_published_on: undated,
     as_published: '"2 x Cameron 18-3/4", 15,000 psi 7-ram preventer"'}
   hookload_short_tons: {value: 1400, unit: Short Tons, source_key: S1, as_published_on: '2026-08-05', as_published: Hookload Capacity (Short Tons), source_keys: [S1, S2]}
   generation: null
-  other_items: {value: null, source_key: S5, as_published_on: Conqueror file dated 2026-02-02; Invictus 2024-07-12; others undated}
+  other_items: {value: null, source_key: S5, as_published_on: undated}
 contracts:
 - {rig: Deepwater Titan, customer: Chevron, location: USGOM, status: Firm, start: Apr-23, end: Apr-28, dayrate_usd: 463000, source_keys: [S1, S2], as_published_on: '2026-08-05', footnote_1: true,
   previous_report: {source_key: S2, as_published_on: '2026-05-04', as_published: 'S2 showed 462,000; footnote 1, cost escalation', dayrate_usd: 462000}}

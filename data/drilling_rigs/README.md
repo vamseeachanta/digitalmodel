@@ -8,6 +8,8 @@
 
 This REAL-EXTERNAL file is a transcription of the [research note on the issue](https://github.com/vamseeachanta/digitalmodel/issues/899#issuecomment-6113191084), checked 2026-10-11. It retains the note's 9 rig rows and 18 contract rows separately from other holdings. The file uses `data/drilling_rigs/` because the proposed `config/...` folder was unspecified. No model consumes this file.
 
+For S5 fields, `as_published_on` carries the rig's own file date or `undated`, while record-level `source_date_remark` preserves the shared source's combined date remark.
+
 | Block | Layout |
 |---|---|
 | Header and limits | Schema version, data class, entry source, checked date and coverage limits |
