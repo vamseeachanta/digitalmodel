@@ -1,5 +1,6 @@
 """Offline checks of the research-note transcription and database access."""
 from copy import deepcopy
+from hashlib import sha256
 import socket
 from dataclasses import FrozenInstanceError
 from pathlib import Path
@@ -13,7 +14,8 @@ DATA = Path(__file__).resolve().parents[2] / "data/geotechnical/geotech_database
 FIELDS = ("row_id", "soil_unit", "parameter", "value_or_range", "units_as_printed",
           "test_or_derivation_method", "site_or_region", "depth_range", "source_id",
           "locator", "licence", "confidence_grade")
-# Each line is the complete printed row, in column order, from the research note.
+# The duplicated transcription is a deliberate guard against accidental edits.
+# Research-note rows in column order, with the two declared reuse deviations.
 TRANSCRIPTION = """P01	Unit I, weathered clay crust	Total unit weight	17.5	kN/m3	Water content, core logging, direct measurement	Onsøy, Norway	approx. 0-1 m	S01	Sec 4.2	BY	A
 P02	Unit II clay (and top of Unit IV)	Total unit weight	16.2	kN/m3	As P01	Onsøy	approx. 1 m to 8 m (south-central) or 10.5 m (south-east corner)	S01	Sec 4.2	BY	A
 P03	Unit III clay	Total unit weight	around 17.8	kN/m3	As P01	Onsøy	below Unit II; about 5.5 m thick (south-central), about 9 m (south-east)	S01	Sec 4.2	BY	A
@@ -70,10 +72,10 @@ P53	Inorganic clay (sensitivity up to 4, liquid limit below 100)	Compression ind
 P54	Clay	Recompression index as a fraction of compression index	approximately 10 to 20	%	Attributed to Ladd	Generic	n/a	S04	"Recompression Index"	NS	B
 P55	Soil at reference monopile	Shear modulus	140E6	Pa	Assumed summary value, "representative of dense sand or gravel soils"	Generic reference site	n/a	S05	Table 4-1	NS	C
 P56	Soil at reference monopile	Poisson's ratio	0.4	-	As P55	Generic reference site	n/a	S05	Table 4-1	NS	C
-P57	Silica sand against steel pile surface	Constant-volume interface friction angle	29 (mean measured)	degrees	Ring-shear interface tests with fast pre-shearing; used "in the absence of site specific ring shear interface tests"	Generic silica sands	n/a	S06	"Interface friction angle"	CO	B
+P57	Silica sand against steel pile surface	Constant-volume interface friction angle	29 (mean measured)	degrees	Ring-shear interface tests with fast pre-shearing; the value is a default when local interface measurements are unavailable	Generic silica sands	n/a	S06	"Interface friction angle"	CO	B
 P58	Sand, driven pile shaft	Tension-to-compression coefficient on shaft friction	1.0 compression; 0.75 tension	-	Method coefficient	Generic silica sands	n/a	S06	Eq 1 and following text	CO	B
 P59	Clay	Cone factor Nkt, general	10 to 18; 14 as an average	-	Empirical; rises with plasticity, falls with sensitivity	Generic	n/a	S07	"Undrained shear strength" section	CO	B
-P60	Soft clays	Ratio of horizontal to vertical permeability	1 to 1.5 (essentially homogeneous); 2 to 4 (well-developed macrofabric); 3 to 10 (varved, continuous permeable layers)	-	Field values (modified from Jamiolkowski et al.)	Generic	n/a	S07	Table 7	CO	B"""
+P60	Soft clays	Ratio of horizontal to vertical permeability	1 to 1.5 (class A); 2 to 4 (class B); 3 to 10 (class C)	-	Field values (modified from Jamiolkowski et al.)	Generic	n/a	S07	Table 7	CO	B"""
 SOURCE_TRANSCRIPTION = """S01	Gundersen et al., "Characterization and engineering properties of the NGTS Onsøy soft clay site", AIMS Geosciences 5(3), 665-703 (2019)	https://aimspress.com/aimspress-data/aimsgeo/2019/3/PDF/geosci-05-03-665.pdf	"open access article distributed under the terms of the Creative Commons Attribution License (http://creativecommons.org/licenses/by/4.0)"
 S02	Quinteros et al., "Øysand research site: Geotechnical characterisation of deltaic sandy-silty soils", AIMS Geosciences 5(4), 750-783 (2019), doi 10.3934/geosci.2019.4.750	https://www.aimspress.com/aimspress-data/aimsgeo/2019/4/PDF/geosci-05-04-750.pdf	Same CC BY 4.0 statement
 S03	"Suction Caissons: Seafloor Characterization for Deepwater Foundation Systems" (R. Gilbert, principal investigator), OTRC Library Number 6/06B171, MMS Project 362 (PDF dated June 2006)	https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/362aa6.pdf	Terms not stated (US-agency-funded research report; carries only a views disclaimer)
@@ -91,6 +93,17 @@ S14	"Suction Caissons: Finite Element Studies", MMS Project 362 (only the header
 S15	Marine Data Exchange (UK offshore wind survey data), terms-of-use page	https://www.marinedataexchange.co.uk/content/info/terms-of-use	Bespoke: "non-exclusive non-transferable licence (without the right to sublicense)"; digital copies must not be provided to third parties. Not redistributable
 S16	EMODnet Geology landing page	https://emodnet.ec.europa.eu/en/geology	Terms page could not be opened (HTTP 403): "terms not stated" until someone reads it
 S17	WSDOT Geotechnical Design Manual M 46-03, Chapter 5	wsdot.wa.gov	Read; no typical-value tables were found in the extracted text, so it supplies no rows"""
+DEVIATIONS = [
+    {"row_id": "P57", "field": "test_or_derivation_method",
+     "reason": "source terms forbid copying text"},
+    {"row_id": "P60", "field": "value_or_range",
+     "reason": "source terms forbid copying tables"},
+]
+# Original-cell digests preserve the comparison without retaining restricted wording.
+NOTE_CELL_DIGESTS = {
+    ('P57', 'test_or_derivation_method'): "3c57518dfee7a20e2b2ef8a22867c3c458029afae629cb1d35b97ea9219358cc",
+    ('P60', 'value_or_range'): "5d50f6a4a8f896a2ffe4087af89b3f4ee281f4f7ad9e6c185af5c2b02f7a1c5e",
+}
 PRINTED_UNITS = {"kN/m3", "%", "-", "kPa", "degrees", "m/s", "psf", "psf/ft",
                  "pcf", "%; blows/ft; degrees", "Pa"}
 # Formulas, qualified text, or alternatives cannot receive SI values.
@@ -131,6 +144,31 @@ def test_file_and_transcription():
     assert [[s[f] for f in source_fields] for s in data["sources"]] == [
         line.split("\t") for line in SOURCE_TRANSCRIPTION.splitlines()]
     assert [s["source_id"] for s in data["sources"]] == [f"S{i:02d}" for i in range(1, 18)]
+
+
+def test_exact_reuse_deviations():
+    data = raw_data()
+    assert data["meta"]["transcription_deviations"] == DEVIATIONS
+    expected = [dict(zip(FIELDS, line.split("\t"))) for line in TRANSCRIPTION.splitlines()]
+    differences = set()
+    for row, original in zip(data["parameters"], expected):
+        for field in FIELDS:
+            key = (row["row_id"], field)
+            digest = NOTE_CELL_DIGESTS.get(key, sha256(original[field].encode()).hexdigest())
+            if sha256(row[field].encode()).hexdigest() != digest:
+                differences.add(key)
+    assert differences == {(d["row_id"], d["field"]) for d in DEVIATIONS}
+    assert database().rows["P60"].note == (
+        "Classes are defined only by their numeric ranges; the source's descriptors are not reproduced.")
+
+
+def test_unstated_terms_share():
+    data = raw_data()
+    count = sum(r["licence"] == "NS" for r in data["parameters"])
+    assert count == 27
+    assert data["meta"]["unstated_terms_rows"] == count
+    assert data["meta"]["unstated_terms_statement"] == (
+        '27 of the 60 rows rest on sources whose reuse terms are "not stated".')
 
 
 def test_validation_provenance_and_cite_only():
@@ -193,7 +231,14 @@ def test_quantity_splits_and_units():
     for n in range(45, 50):
         assert [q.name for q in db.quantities_for(f"P{n:02d}")] == [
             "Relative density", "SPT N", "friction angle"]
-    assert len(db.quantities_for("P60")) == 3
+    qs = db.quantities_for("P60")
+    assert len(qs) == 3
+    assert [q.name for q in qs] == [
+        f"Ratio of horizontal to vertical permeability (class {label})" for label in "ABC"]
+    assert [(q.printed.minimum, q.printed.maximum, q.printed.unit) for q in qs] == [
+        (1, 1.5, "-"), (2, 4, "-"), (3, 10, "-")]
+    assert [(q.si.minimum, q.si.maximum, q.si.unit) for q in qs] == [
+        (1, 1.5, "dimensionless"), (2, 4, "dimensionless"), (3, 10, "dimensionless")]
     for q in db.quantities:
         assert q.row is db.rows[q.parent_row_id]
         assert q.source is q.row.source
@@ -223,6 +268,11 @@ def test_hand_checkable_conversions():
     assert si("P31").value == pytest.approx(Q_(10, "force_pound/foot**3").to("kPa/m").magnitude)
     expected = (Q_(90, "pcf") * ureg.standard_gravity).to("kN/m**3").magnitude
     assert si("P37").value == pytest.approx(expected)
+    # Exact definitions: pound = 0.45359237 kg, foot = 0.3048 m,
+    # standard gravity = 9.80665 m/s**2. Plain arithmetic gives
+    # 90 * 0.45359237 / 0.3048**3 * 9.80665 / 1000 = 14.137871746162155 kN/m3.
+    # The review's rounded 14.14 has an absolute tolerance of 0.005 kN/m3.
+    assert si("P37").value == pytest.approx(14.14, abs=0.005, rel=0)
     assert si("P37").unit == "kN/m**3"
     q = si("P50")
     assert q.minimum == pytest.approx(Q_(10000, "kPa").to("Pa").magnitude)
@@ -286,5 +336,13 @@ def test_default_database_path_and_source_immutability():
 def test_reject_missing_source_field(field):
     data = raw_data()
     del data["sources"][0][field]
+    with pytest.raises(ValueError, match="required"):
+        database(data)
+
+
+@pytest.mark.parametrize("note", [None, "", 12])
+def test_reject_invalid_optional_note(note):
+    data = raw_data()
+    data["parameters"][-1]["note"] = note
     with pytest.raises(ValueError, match="required"):
         database(data)

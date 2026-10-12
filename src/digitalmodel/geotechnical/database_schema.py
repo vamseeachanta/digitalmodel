@@ -58,11 +58,14 @@ class ParameterRow:
     licence: str
     confidence_grade: str
     source: Source
+    note: str = ""
 
     @classmethod
     def from_entry(cls, entry: Mapping, sources: Mapping) -> "ParameterRow":
-        names = tuple(f.name for f in fields(cls) if f.name != "source")
+        names = tuple(f.name for f in fields(cls) if f.name not in ("source", "note"))
         required(entry, names)
+        if "note" in entry:
+            required(entry, ("note",))
         if entry["licence"] not in LICENCES:
             raise ValueError("invalid licence code")
         if entry["confidence_grade"] not in GRADES:
@@ -72,7 +75,8 @@ class ParameterRow:
         source = sources[entry["source_id"]]
         if source.read_status != "read":
             raise ValueError(f"source {source.source_id!r} is not read")
-        return cls(**{name: entry[name] for name in names}, source=source)
+        return cls(**{name: entry[name] for name in names}, source=source,
+                   note=entry.get("note", ""))
 
 
 @dataclass(frozen=True)

@@ -1,4 +1,13 @@
 meta:
+  transcription_deviations:
+  - row_id: P57
+    field: test_or_derivation_method
+    reason: source terms forbid copying text
+  - row_id: P60
+    field: value_or_range
+    reason: source terms forbid copying tables
+  unstated_terms_rows: 27
+  unstated_terms_statement: '27 of the 60 rows rest on sources whose reuse terms are "not stated".'
   description: 'First geotechnical parameter database: sources and parameters; gaps and exclusions retained.'
   source_statement: research note on the issue, 2026-10-12
   licence_codes:
@@ -824,8 +833,8 @@ parameters:
   parameter: Constant-volume interface friction angle
   value_or_range: 29 (mean measured)
   units_as_printed: degrees
-  test_or_derivation_method: Ring-shear interface tests with fast pre-shearing; used "in the absence of site specific
-    ring shear interface tests"
+  test_or_derivation_method: Ring-shear interface tests with fast pre-shearing; the value is a default when local interface measurements
+    are unavailable
   site_or_region: Generic silica sands
   depth_range: n/a
   source_id: S06
@@ -857,10 +866,10 @@ parameters:
   licence: CO
   confidence_grade: B
 - row_id: P60
+  note: Classes are defined only by their numeric ranges; the source's descriptors are not reproduced.
   soil_unit: Soft clays
   parameter: Ratio of horizontal to vertical permeability
-  value_or_range: 1 to 1.5 (essentially homogeneous); 2 to 4 (well-developed macrofabric); 3 to 10 (varved, continuous
-    permeable layers)
+  value_or_range: 1 to 1.5 (class A); 2 to 4 (class B); 3 to 10 (class C)
   units_as_printed: '-'
   test_or_derivation_method: Field values (modified from Jamiolkowski et al.)
   site_or_region: Generic
