@@ -34,7 +34,7 @@
     },
     {
       "id": "S4",
-      "citation": "\"Study on Mooring System Integrity Management for Floating Structures\", final report to the US offshore safety regulator, dated August 4, 2015.",
+      "citation": "\"Study on Mooring System Integrity Management for Floating Structures\", final report to the United States offshore safety regulator, dated August 4, 2015.",
       "urls": [
         "https://bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program//730-aa.pdf"
       ],
@@ -82,13 +82,13 @@
     }
   ],
   "could_not_verify": [
-    "The regulator's own report pages and PDFs for RR444 and RR1090-RR1098, and every page on the pitting project owner's site, returned \"not found\" from this host; claims that rest on them are marked above.",
+    "The regulator's own report pages and PDFs for RR444 and RR1090-RR1098, and every page on the pitting project owner's site, returned \"not found\" on 2026-10-11; claims that rest on them are marked above.",
     "Current publication status and scope wording of API RP 2MIM; IACS UR W22 and ISO 20438 content; the Energy Institute guidance; the 0.4 mm/year allowance.",
     "Any published accuracy figure for underwater chain dimensional measurement."
   ],
   "bottom_line": [
     "The issue's screen is buildable from open sources for **fatigue with corrosion and mean load** (a CC BY data set of 154 full-scale tests with a published corrosion-grade scale exists) and for **wear** (a regulator-published analytical method exists).",
-    "It is **not** buildable from open sources for **pitted-link residual strength**: the joint industry project that defined the pit classes validated its method against break tests, but the break-load numbers and the pit-class boundaries are in conference papers and proprietary reports I could not open. The honest design is a cross-section-loss lower-tier estimate plus an \"outside published bounds, escalate\" flag, exactly as the issue already says.",
+    "It is **not** buildable from open sources for **pitted-link residual strength**: the joint industry project that defined the pit classes validated its method against break tests, but the break-load numbers and the pit-class boundaries are in conference papers and proprietary reports that could not be opened. The supportable design is a cross-section-loss lower-tier estimate plus an \"outside published bounds, escalate\" flag, exactly as the issue already says.",
     "Discard thresholds are a licensed-text matter. One open regulator-commissioned report describes the industry inspection practice as a retirement criterion of limiting strength reduction to 10 % of minimum breaking strength; that is enough to document a default, and the value must stay an input."
   ],
   "unverified_mark_count": 6
