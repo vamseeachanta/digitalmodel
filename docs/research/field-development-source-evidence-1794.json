@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "issue": 1794,
+  "source_of_entries": "research note on the issue",
+  "checked": "2026-10-11",
+  "quote_caveat": "Quotes are the fragments returned by the fetch tool; some are part-sentences. Re-open the URL before pasting any quote into a dataset as verbatim.",
+  "source_acceptance_rule": {
+    "decision_text": "Accept contractor award scope for tree and manifold counts (labelled as-contracted) and make tieback distance optional",
+    "contractor_award_scope_label": "as-contracted",
+    "tieback_distance_required": false,
+    "recorded_in": "https://github.com/vamseeachanta/digitalmodel/issues/1794#issuecomment-6113732394"
+  },
+  "access_limits": [
+    "Operator sites (Shell, bp, BHP) and Subsea 7 returned script-only pages, HTTP 403 or a bot challenge. Shell releases were therefore read as wire-service copies (PR Newswire and its syndication); bp releases could not be opened at all, and the older bp release URLs now redirect to a listing page.",
+    "OnePetro (OTC/SPE/JPT abstracts) returned HTTP 403. **No paper-class rows.**",
+    "PDFs could not be parsed on this host (BSEE weekly deepwater activity reports, a co-owner start-up release, contractor PDF releases). **No regulator-class rows.**",
+    "SEC filings opened, but long 20-F documents were read in 100,000-character windows through a summarising fetch tool; a sentence can be missed. Where a snippet claims a sentence I did not see, it is marked unverified.",
+    "Quotes are the fragments returned by the fetch tool; some are part-sentences. Re-open the URL before pasting any quote into a dataset as verbatim."
+  ],
+  "sources": [
+    {
+      "ref": "S1",
+      "title": "Shell invests in the Whale development in the Gulf of Mexico",
+      "publisher": "Shell Offshore Inc., via PR Newswire",
+      "date": "2021-07-26",
+      "class": "operator (wire copy)",
+      "reuse_terms_as_stated": "\"Copyright © 2026 PR Newswire Europe Limited. All Rights Reserved.\"",
+      "url": "https://www.prnewswire.co.uk/news-releases/shell-invests-in-the-whale-development-in-the-gulf-of-mexico-832964558"
+    },
+    {
+      "ref": "S2",
+      "title": "Shell starts production at Whale in the US Gulf of Mexico",
+      "publisher": "Shell Offshore Inc., via PR Newswire (syndicated copy)",
+      "date": "2025-01-10",
+      "class": "operator (wire copy)",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.aap.com.au/aapreleases/cision20250109ae92810",
+      "as_written_in_document": "Shell starts production at Whale in the United States Gulf of Mexico"
+    },
+    {
+      "ref": "S3",
+      "title": "McDermott Completes EPCIC Project in Gulf of Mexico",
+      "publisher": "McDermott International, Ltd.",
+      "date": "2025-03-05",
+      "class": "contractor",
+      "reuse_terms_as_stated": "\"Copyright @ 2026 McDermott. All rights reserved.\"",
+      "url": "https://www.mcdermott.com/press-release-detail/123045/mcdermott-completes-epcic-project-gulf-mexico"
+    },
+    {
+      "ref": "S4",
+      "title": "Shell takes final investment decision for the Appomattox deep-water development in Gulf of Mexico",
+      "publisher": "Royal Dutch Shell plc, via PR Newswire, reproduced by Water Online",
+      "date": "2015-07-01",
+      "class": "operator (release reproduced on a third-party site; not compared with the original)",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.wateronline.com/doc/shell-takes-final-investment-decision-appomattox-deep-water-gulf-of-mexico-0001"
+    },
+    {
+      "ref": "S5",
+      "title": "Shell starts production at Appomattox (release of 23 May 2019)",
+      "publisher": "Shell Offshore Inc., via PR Newswire / Kyodo News PR Wire",
+      "date": "2019-05-23",
+      "class": "operator (wire copy)",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://kyodonewsprwire.jp/release/201905246755"
+    },
+    {
+      "ref": "S6",
+      "title": "FMC Technologies Awarded Contract for Shell Appomattox",
+      "publisher": "FMC Technologies (TechnipFMC archive)",
+      "date": "2015-09-22",
+      "class": "contractor",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.technipfmc.com/en/investors/archives/fmc-technologies/press-releases/fmc-technologies-awarded-contract-for-shell-appomattox"
+    },
+    {
+      "ref": "S7",
+      "title": "Presentation to the Independent Directors of Shell Midstream Partners GP LLC, Exhibit (c)(3) to Schedule 13E-3",
+      "publisher": "SEC EDGAR (prepared by the committee's financial adviser; marked preliminary working draft)",
+      "date": "2022-03-28",
+      "class": "filing",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.sec.gov/Archives/edgar/data/1610466/000119312522223312/d367578dex99c3.htm"
+    },
+    {
+      "ref": "S8",
+      "title": "BP p.l.c. Form 6-K, period ended 31 December 2016",
+      "publisher": "SEC EDGAR",
+      "date": "2017-02 (board approval 6 February 2017)",
+      "class": "filing",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.sec.gov/Archives/edgar/data/0000313807/000119312517032625/d344237d6k.htm"
+    },
+    {
+      "ref": "S9",
+      "title": "BP sanctions Mad Dog Phase 2 project",
+      "publisher": "Offshore magazine",
+      "date": "2016-12-01",
+      "class": "secondary",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.offshore-mag.com/deepwater/article/16769564/bp-sanctions-mad-dog-phase-2-project"
+    },
+    {
+      "ref": "S10",
+      "title": "FMC Technologies Awarded Subsea Contract for BP's Mad Dog Phase 2",
+      "publisher": "FMC Technologies (TechnipFMC archive)",
+      "date": "2013-03-19",
+      "class": "contractor",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.technipfmc.com/en/investors/archives/fmc-technologies/press-releases/fmc-technologies-awarded-subsea-contract-for-bps-mad-dog-phase-2/"
+    },
+    {
+      "ref": "S11",
+      "title": "BP Awards Schlumberger Contract for Mad Dog 2 Project",
+      "publisher": "OneSubsea / SLB newsroom",
+      "date": "2017-03-21",
+      "class": "contractor",
+      "reuse_terms_as_stated": "\"Copyright © 2026 SLB. All rights reserved.\"",
+      "url": "https://www.slb.com/zh-cn/newsroom/press-release/2017/pr-2017-0321-slb-bp"
+    },
+    {
+      "ref": "S12",
+      "title": "Shell starts production at Perdido",
+      "publisher": "Oilfield Technology",
+      "date": "2010-04-06",
+      "class": "secondary",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.oilfieldtechnology.com/drilling-and-production/06042010/Shell_starts_production_at_Perdido/"
+    },
+    {
+      "ref": "S13",
+      "title": "FMC Technologies Awarded Subsea Equipment Contract for Shell's Stones Field",
+      "publisher": "FMC Technologies (TechnipFMC archive)",
+      "date": "2013-05-23",
+      "class": "contractor",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.technipfmc.com/en/investors/archives/fmc-technologies/press-releases/fmc-technologies-awarded-subsea-equipment-contract-for-shells-stones-field/"
+    },
+    {
+      "ref": "S14",
+      "title": "First oil for Turritella",
+      "publisher": "SBM Offshore",
+      "date": "2016-09-09",
+      "class": "contractor",
+      "reuse_terms_as_stated": "\"Copyright © SBM Offshore 2026. All Rights Reserved\"",
+      "url": "https://www.sbmoffshore.com/newsroom/first-oil-turritella/"
+    },
+    {
+      "ref": "S15",
+      "title": "Anadarko Petroleum Corporation Form 10-K, fiscal year 2014",
+      "publisher": "SEC EDGAR",
+      "date": "2015 (cover share count as of 30 January 2015)",
+      "class": "filing",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.sec.gov/Archives/edgar/data/0000773910/000077391015000012/apc201410k-10k.htm"
+    },
+    {
+      "ref": "S16",
+      "title": "FMC Technologies Awarded Subsea Systems Contract From Anadarko Petroleum Corporation",
+      "publisher": "FMC Technologies (TechnipFMC archive)",
+      "date": "2012-01-10",
+      "class": "contractor",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.technipfmc.com/en/investors/archives/fmc-technologies/press-releases/fmc-technologies-awarded-subsea-systems-contract-from-anadarko-petroleum-corporation/"
+    },
+    {
+      "ref": "S17",
+      "title": "BP p.l.c. Form 20-F, fiscal year 2007",
+      "publisher": "SEC EDGAR",
+      "date": "2008",
+      "class": "filing",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.sec.gov/Archives/edgar/data/0000313807/000115697308000263/u54999_20f.htm"
+    },
+    {
+      "ref": "S18",
+      "title": "BP p.l.c. Form 20-F, fiscal year 2003",
+      "publisher": "SEC EDGAR",
+      "date": "2004",
+      "class": "filing",
+      "reuse_terms_as_stated": "terms not stated",
+      "url": "https://www.sec.gov/Archives/edgar/data/0000313807/000119312504110485/d20f.htm"
+    }
+  ],
+  "row_counts_by_class": {
+    "operator (all read as wire copies or reproductions)": 21,
+    "contractor": 21,
+    "filing": 16,
+    "secondary (opened, reporting an operator statement)": 10,
+    "regulator": 0,
+    "paper": 0,
+    "unverified": 14,
+    "Total": 82
+  },
+  "accepted_records": [],
+  "record_files": [
+    "field-development-source-evidence-1794.records-1.json",
+    "field-development-source-evidence-1794.records-2.json",
+    "field-development-source-evidence-1794.records-3.json"
+  ],
+  "as_written_in_document": {
+    "unverified_definition": "\"Unverified\" means the research pass did not open a page that states it (search-result snippet only, or the page would not load).",
+    "access_limits/3": "SEC filings opened, but long 20-F documents were read in 100,000-character windows through a summarising fetch tool; a sentence can be missed. Where a snippet claims a sentence the research pass did not see, it is marked unverified."
+  },
+  "unverified_definition": "\"Unverified\" means I did not open a page that states it (search-result snippet only, or the page would not load).",
+  "review_file": "field-development-source-evidence-1794.review.json"
+}

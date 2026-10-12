@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "issue": 1794,
+  "parent_file": "field-development-source-evidence-1794.json",
+  "records": [
+    {
+      "record": "Whale",
+      "host": "semi-submersible host",
+      "evidence": [
+        {
+          "row": 1,
+          "quantity": "Operator and partners",
+          "value_as_stated": "Shell Offshore Inc. 60% operator; Chevron U.S.A. Inc. 40%",
+          "quote_cell": "\"The Whale development, owned by Shell Offshore Inc. (60% operator) and Chevron U.S.A. Inc. (40%)\"",
+          "ref": "S1",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 2,
+          "quantity": "Peak production (at FID)",
+          "value_as_stated": "approximately 100,000 boe/d",
+          "quote_cell": "\"is expected to reach peak production of approximately 100,000 barrels of oil equivalent per day (boe/d)\"",
+          "ref": "S1",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 3,
+          "quantity": "Recoverable resource (at FID)",
+          "value_as_stated": "490 million boe",
+          "quote_cell": "\"currently has an estimated, recoverable resource volume of 490 million boe.\"",
+          "ref": "S1",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 4,
+          "quantity": "Scheduled first production (at FID)",
+          "value_as_stated": "2024",
+          "quote_cell": "\"is currently scheduled to begin production in 2024.\"",
+          "ref": "S1",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 5,
+          "quantity": "Sanction economics (no cost stated)",
+          "value_as_stated": "internal rate of return greater than 25%",
+          "quote_cell": "\"Shell anticipates an internal rate of return estimated to be greater than 25%.\"",
+          "ref": "S1",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 6,
+          "quantity": "Host type and water depth",
+          "value_as_stated": "more than 8,600 feet (2,600 metres)",
+          "quote_cell": "\"a semi-submersible production host in more than 8,600 feet (2,600 metres) of water\"",
+          "ref": "S2",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 7,
+          "quantity": "Wells",
+          "value_as_stated": "a total of 15 wells",
+          "quote_cell": "\"a total of 15 wells to be tied back to the host via subsea infrastructure\"",
+          "ref": "S2",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 8,
+          "quantity": "Peak production (at start-up)",
+          "value_as_stated": "100,000 boe/d",
+          "quote_cell": "\"With an estimated peak production of 100,000 barrels of oil equivalent per day (boe/d)\"",
+          "ref": "S2",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 9,
+          "quantity": "Recoverable resource (at start-up)",
+          "value_as_stated": "480 million boe (differs from row 3)",
+          "quote_cell": "\"Whale currently has an estimated recoverable resource volume of 480 million boe.\"",
+          "ref": "S2",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 10,
+          "quantity": "Location",
+          "value_as_stated": "Alaminos Canyon Block 773",
+          "quote_cell": "\"The Whale production facility is in the Alaminos Canyon Block 773\"",
+          "ref": "S2",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 11,
+          "quantity": "Pipeline installed (total, not a tieback distance)",
+          "value_as_stated": "approximately 50 kilometers (30 miles)",
+          "quote_cell": "\"installing approximately 50 kilometers (30 miles) of pipeline\"",
+          "ref": "S3",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 12,
+          "quantity": "Umbilicals installed",
+          "value_as_stated": "15 kilometers (9 miles)",
+          "quote_cell": "fetch tool paraphrased this sentence; fragment \"15 kilometers (9 miles) of umbilicals\" not captured verbatim",
+          "ref": "S3",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 13,
+          "quantity": "Subsea drill centers",
+          "value_as_stated": "five",
+          "quote_cell": "paraphrased by fetch tool: five subsea drill centers connected to the Whale floating production platform",
+          "ref": "S3",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 14,
+          "quantity": "Riser type and count",
+          "value_as_stated": "five steel catenary risers, 3,350 meters long (approximately 11,000 feet)",
+          "quote_cell": "\"it installed five 3,350 meters-long (approximately 11,000 feet), steel catenary risers\"",
+          "ref": "S3",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 15,
+          "quantity": "Water depth of installation work",
+          "value_as_stated": "nearly 2,800 meters (9,100 feet)",
+          "quote_cell": "\"reaching water depths of nearly 2,800 meters (9,100 feet)\"",
+          "ref": "S3",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 16,
+          "quantity": "Distance host to neighbouring spar",
+          "value_as_stated": "around 10 miles (16 kilometres)",
+          "quote_cell": "UNVERIFIED: search snippet of the S2 release only; the fetched copy did not return this sentence",
+          "ref": "S2",
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "tree count as such, manifold/PLEM/PLET count, drill-centre-to-host distance, sanctioned cost. Tried: both Shell releases, the McDermott release, shell.com and shell.us pages (script-only).",
+      "as_written_in_document": "tree count as such, manifold/PLEM/PLET count, drill-centre-to-host distance, sanctioned cost. Tried: both Shell releases, the McDermott release, shell.com and pages at shell.us (script-only)."
+    },
+    {
+      "record": "Appomattox",
+      "host": "semi-submersible host",
+      "evidence": [
+        {
+          "row": 17,
+          "quantity": "Water depth (at FID)",
+          "value_as_stated": "approximately 7,200 feet (2,195 metres)",
+          "quote_cell": "\"in approximately 7,200 feet (2,195 metres) of water\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 18,
+          "quantity": "Distance offshore",
+          "value_as_stated": "80 miles (129 kilometres)",
+          "quote_cell": "\"located 80 miles offshore (129 kilometres) from the nearest shoreline in Louisiana\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 19,
+          "quantity": "Drill centres and wells",
+          "value_as_stated": "six drill centres; 15 producing wells; five water injection wells",
+          "quote_cell": "\"a subsea system featuring six drill centres, 15 producing wells, and five water injection wells\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 20,
+          "quantity": "Peak production (at FID)",
+          "value_as_stated": "approximately 175,000 boe per day",
+          "quote_cell": "\"average peak production estimated to reach approximately 175,000 barrels of oil equivalent (boe) per day\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 21,
+          "quantity": "Resources sanctioned",
+          "value_as_stated": "650 million boe",
+          "quote_cell": "\"capital for the development of 650 million boe resources at Appomattox and Vicksburg\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 22,
+          "quantity": "Ownership",
+          "value_as_stated": "Shell 79%; Nexen Petroleum Offshore U.S.A. Inc. 21%",
+          "quote_cell": "\"will be owned by Shell (79%) and Nexen Petroleum Offshore U.S.A. Inc. (21%)\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 23,
+          "quantity": "Export pipeline size",
+          "value_as_stated": "24-inch",
+          "quote_cell": "\"a 24-inch corridor pipeline that will transport crude oil from the Appomattox host\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 24,
+          "quantity": "Cost statement at FID (no absolute cost)",
+          "value_as_stated": "total project cost reduced by 20%",
+          "quote_cell": "\"Shell reduced the total project cost by 20% through supply chain savings\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 25,
+          "quantity": "Breakeven at FID",
+          "value_as_stated": "around $55 per barrel Brent equivalent",
+          "quote_cell": "\"the go-forward project breakeven price is estimated to be around $55 per barrel Brent equivalent\"",
+          "ref": "S4",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 26,
+          "quantity": "Expected production (at start-up)",
+          "value_as_stated": "175,000 boe/d",
+          "quote_cell": "\"Appomattox, which currently has an expected production of 175,000 barrels of oil equivalent per day (boe/d),\"",
+          "ref": "S5",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 27,
+          "quantity": "Cost statement at start-up (no absolute cost)",
+          "value_as_stated": "cost reductions of more than 40%",
+          "quote_cell": "\"Appomattox has realised cost reductions of more than 40% since taking final investment decision in 2015.\"",
+          "ref": "S5",
+          "class": "operator",
+          "unverified": false
+        },
+        {
+          "row": 28,
+          "quantity": "Subsea equipment scope (no counts)",
+          "value_as_stated": "trees, subsea manifolds, controls, distribution",
+          "quote_cell": "\"will provide Enhanced Vertical Deepwater Trees, subsea manifolds, topside controls, a control system, and a distribution system\"",
+          "ref": "S6",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 29,
+          "quantity": "Water depth and location (contractor)",
+          "value_as_stated": "7,200 feet; 140 nautical miles southeast of New Orleans",
+          "quote_cell": "\"in 7,200 feet of water, 140 nautical miles southeast of New Orleans\"",
+          "ref": "S6",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 30,
+          "quantity": "Export pipeline length, size, capacity",
+          "value_as_stated": "90-mile, 24-inch, 300 MBbl/d",
+          "quote_cell": "\"90-mile, 24-inch system with capacity of 300 MBbl/d\"",
+          "ref": "S7",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 31,
+          "quantity": "Export pipeline ownership (2022)",
+          "value_as_stated": "79.0% held by the midstream partnership",
+          "quote_cell": "\"Shell operates the Mattox pipeline system; 79.0% ownership interest held by SHLX\"",
+          "ref": "S7",
+          "class": "filing",
+          "unverified": false
+        }
+      ],
+      "no_primary_source_found": "tree count, manifold count, well-to-host distance, absolute project cost. The 7,400 feet (2,255 m) water depth in the provisional record appears only in trade coverage of the start-up (unverified); the opened start-up release (S5) states no depth."
+    }
+  ]
+}
