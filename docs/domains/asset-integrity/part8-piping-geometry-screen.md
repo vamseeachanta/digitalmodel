@@ -3,7 +3,7 @@
 The document follows the domain placement of
 `level3-and-part9-program-2026-09-25.md`. The calculation follows
 API 579-1/ASME FFS-1, June 2016, Part 8; no equivalence to the December
-2021 edition is established. The opened 2016 copy ends at Annex 9B.
+2021 edition is established.
 
 ## Scope and inputs
 
@@ -61,8 +61,8 @@ component assessment against such an example remains outstanding.
 - Part 8 Level 2 and additional fabrication criteria are not implemented.
   Coupled stress assessment and all applicability requirements are not
   validated by these individual Table 8.4 tests.
-- Part 14 remains not started. The accessible 2016 copy omits its operative
-  clauses; another held copy is protected. The cited fatigue paper abstract
+- Part 14 remains not started because its operative 2016 clauses were not
+  available to this work. The cited fatigue paper abstract
   was opened, but the full paper and normative screening procedure were not.
 - Part 13 remains not started. The 2007 clauses 13.2 and 13.4 were opened;
   the revised 2016 method was not accessible. A validated 2007 citation
@@ -72,10 +72,10 @@ component assessment against such an example remains outstanding.
   published example solution are not established. Inspection and metallurgy
   remain prerequisites for assigning heat-exposure zones.
 - API 579-2/ASME FFS-2 2009 example solutions and WRC Bulletin 550 were not
-  found in the searched archive. The opened publisher example-manual link
-  supplies only title and contents pages, not worked solutions.
-- Full API 579-1/ASME FFS-1 December 2021 clauses were not found in the
-  searched archive; the opened publisher contents do not define methods.
+  available to this work. Validation against worked solutions remains
+  outstanding.
+- Full API 579-1/ASME FFS-1 December 2021 clauses were not
+  available to this work; equivalence to that edition is not established.
 - Workflow, routing, catalogue and decision/report integration are not
   added. Existing component-level patterns do not establish additive wiring
   for an individual-feature screen without overstating its scope.

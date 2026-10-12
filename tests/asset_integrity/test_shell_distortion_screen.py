@@ -11,7 +11,6 @@ was opened; these tests establish the individual table criteria only.
 
 from dataclasses import replace
 import math
-from pathlib import Path
 
 import pytest
 
@@ -24,11 +23,9 @@ from digitalmodel.citations.schema import CitationResolutionError
 
 
 @pytest.fixture
-def citation_root():
+def citation_root(tmp_path):
     """Use an isolated synthetic metadata fixture, never a licensed excerpt."""
-    import os
-
-    root = Path(os.environ["TMPDIR"]) / "part8-citation-fixture"
+    root = tmp_path / "part8-citation-fixture"
     page = root / "wikis/engineering-standards/wiki/standards/api-std-579.md"
     page.parent.mkdir(parents=True, exist_ok=True)
     page.write_text(
@@ -209,3 +206,63 @@ def test_utilisation_overflow(context, citation_root):
             purchase_standard="ASTM A358", context=context,
             citation_root=citation_root,
         )
+
+
+@pytest.mark.parametrize(
+    "assess,inputs",
+    [
+        (assess_angular_misalignment, {"angle_degrees": 1.0}),
+        (
+            assess_piping_ovality,
+            {
+                "specified_od_mm": 1000.0,
+                "minimum_od_mm": 1000.0,
+                "maximum_od_mm": 1001.0,
+                "thickness_mm": 20.0,
+                "purchase_standard": "ASTM A358",
+            },
+        ),
+    ],
+    ids=["angular", "ovality"],
+)
+def test_default_citation_path_resolves(
+    assess, inputs, context, citation_root, monkeypatch
+):
+    """Both screens resolve synthetic 2016 metadata with the default root."""
+    monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
+    monkeypatch.setenv("LLM_WIKI_PATH", str(citation_root))
+
+    result = assess(context=context, **inputs)
+
+    assert result.verdict == "PASS"
+    assert result.citations[0].revision == "2016"
+
+
+@pytest.mark.parametrize(
+    "assess,inputs",
+    [
+        (assess_angular_misalignment, {"angle_degrees": 1.0}),
+        (
+            assess_piping_ovality,
+            {
+                "specified_od_mm": 1000.0,
+                "minimum_od_mm": 1000.0,
+                "maximum_od_mm": 1001.0,
+                "thickness_mm": 20.0,
+                "purchase_standard": "ASTM A358",
+            },
+        ),
+    ],
+    ids=["angular", "ovality"],
+)
+def test_default_citation_path_missing_fails_closed(
+    assess, inputs, context, tmp_path, monkeypatch
+):
+    """An empty wiki fails closed without falling back to a sibling checkout."""
+    root = tmp_path / "missing-citation-fixture"
+    (root / "wikis").mkdir(parents=True)
+    monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
+    monkeypatch.setenv("LLM_WIKI_PATH", str(root))
+
+    with pytest.raises(CitationResolutionError, match="page_missing"):
+        assess(context=context, **inputs)
