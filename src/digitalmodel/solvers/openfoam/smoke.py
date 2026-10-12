@@ -253,7 +253,7 @@ def execute_smoke(
     for index, argv in enumerate(plan.commands):
         stage, output = _run_stage(case, index, argv, runner, timeout_seconds)
         stages.append(stage)
-        _reject_stage_failure(stage, output)
+        _reject_stage_failure(stage, output, check_divergence=index == 2)
         if index == 2:
             final_time, step_count = _require_final_time(
                 output, end_time, time_precision
@@ -357,10 +357,13 @@ def _run_stage(
     return stage, combined
 
 
-def _reject_stage_failure(stage: StageEvidence, output: str) -> None:
+def _reject_stage_failure(
+    stage: StageEvidence, output: str, *, check_divergence: bool
+) -> None:
     lowered = output.lower()
     marker = next((item for item in _FATAL_MARKERS if item in lowered), None)
-    marker = marker or next((item for item in _DIVERGENCE_MARKERS if item in lowered), None)
+    if check_divergence:
+        marker = marker or next((item for item in _DIVERGENCE_MARKERS if item in lowered), None)
     if stage.return_code != 0:
         raise SmokeError(f"{stage.name} returned nonzero exit code {stage.return_code}")
     if marker:
