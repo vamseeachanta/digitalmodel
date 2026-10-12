@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.solvers.openfoam.module_size_waivers import load_waivers
+
 _REPO = Path(__file__).resolve().parents[3]
 
 MAX_MODULE_LINES = 400
@@ -86,7 +88,10 @@ def test_module_is_within_the_line_limit(relative):
     path = _REPO / relative
     assert path.is_file(), f"{relative} is missing"
     lines = len(path.read_text(encoding="utf-8").splitlines())
-    assert lines <= MAX_MODULE_LINES, f"{relative} is {lines} lines"
+    waivers = load_waivers(_REPO, GOVERNED_MODULES, MAX_MODULE_LINES)
+    assert lines <= waivers.get(relative, MAX_MODULE_LINES), (
+        f"{relative} is {lines} lines; see scripts/ci/module_size_waivers.yml"
+    )
 
 
 @pytest.mark.parametrize("relative", GOVERNED_MODULES)

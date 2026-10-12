@@ -1,0 +1,12 @@
+# Dated module-size waivers, approved by the repository owner on 2026-10-12.
+# Schema: a list of mappings; path, ceiling, expires and issue are all required.
+# path: canonical repository-relative path of an explicitly governed module.
+# ceiling: positive integer raw-line count recorded when the waiver was granted.
+# expires: ISO date (YYYY-MM-DD); the run date must be before this date.
+# issue: positive integer number of the follow-up issue that plans the split.
+# A waiver may land existing work only when its split is planned in that issue.
+# A waiver is never permitted for a new module written after this mechanism exists.
+# Growth beyond the ceiling, expiry and duplicate paths fail the check.
+# Entries for missing, ungoverned or at/below-limit files fail as stale or invalid.
+# Remove stale entries; expiry requires the planned split rather than silent renewal.
+[]
