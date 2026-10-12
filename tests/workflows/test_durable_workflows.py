@@ -161,6 +161,37 @@ def test_workflow_registry(workflow, monkeypatch):
         assert set(seg_summary["segment_id"]) == {"TDZ-sandwave", "hangoff"}
         assert set(results["contribution"]) == {"wave", "viv"}
         assert (results["stress_range_MPa"] > 0.0).all()
+    elif workflow["id"] == "riser-viv-screening":
+        summary = cfg["viv_screening"]
+        results_path = Path(summary["results_csv"])
+        summary_path = Path(summary["summary_csv"])
+        if not results_path.is_absolute():
+            results_path = REPO_ROOT / results_path
+        if not summary_path.is_absolute():
+            summary_path = REPO_ROOT / summary_path
+        results = pd.read_csv(results_path)
+        totals = pd.read_csv(summary_path)
+        assert summary["screening_status"] == "fail"
+        assert summary["lock_in_modes"] == [1, 2]
+        assert summary["critical_mode"] == 1
+        assert 4.0 <= summary["critical_vr"] <= 5.12
+        rate = summary["screening_damage_rate_per_year"]
+        assert rate > 0
+        assert rate == pytest.approx(0.09283365625182298)
+        assert summary["screening_life_years"] == pytest.approx(1 / rate)
+        assert set(results.columns) == {
+            "mode", "f_n_Hz", "Vr_lo", "Vr_hi", "governing_Vr", "reynolds",
+            "strouhal", "Ks", "cf_lock_in", "il_lock_in", "A_over_D",
+            "stress_range_MPa", "cycles_per_year", "damage_per_year",
+        }
+        assert {"screening_status", "cf_lock_in_count", "il_lock_in_count",
+                "screening_damage_rate_per_year", "screening_life_years",
+                "dff_margin"} <= set(totals.columns)
+        inertia = math.pi * (0.2731**4 - 0.2287**4) / 64
+        frequency = math.pi / (2 * 60**2) * math.sqrt(2.07e11 * inertia / 180)
+        assert results.iloc[0]["f_n_Hz"] == pytest.approx(frequency)
+        assert "DNV-RP-C205" in summary["standard"]
+        assert summary["provenance"]["validated_path"] == "screening"
     elif workflow["id"] in {
         "mooring-fatigue-atlas-query",
         "synthetic-rope-atlas-query",
