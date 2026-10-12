@@ -1012,6 +1012,17 @@ workflows:
       - examples/workflows/concept-selection/results/concept_selection/concept_selection_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[concept-selection]
     runtime: offline
+  - id: concept-screening
+    basename: concept_screening
+    title: Four-axis concept screening with weighted sensitivity sweep
+    input: examples/workflows/concept-screening/input.yml
+    outputs:
+      - examples/workflows/concept-screening/results/input.yml
+      - examples/workflows/concept-screening/results/concept_screening/concept_screening_summary.json
+      - examples/workflows/concept-screening/results/concept_screening/concept_comparison_note.md
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[concept-screening]
+    runtime: offline
+
   - id: nodal-analysis
     basename: nodal_analysis
     title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection

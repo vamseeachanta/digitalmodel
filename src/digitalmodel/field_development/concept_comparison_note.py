@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: W6 concept comparison note — weighted multi-criteria + sensitivity sweep + markdown.
 # ABOUTME: Renders the deterministic screening result into a sourced FDP comparison note.
 """
@@ -57,6 +60,7 @@ def weight_sensitivity_sweep(
     params_path: Optional[str] = None,
     bsee_benchmark: Optional[float] = None,
     dominant_weight: float = 0.55,
+    capex_override: Optional[dict] = None,
 ) -> list[SensitivityRow]:
     """Re-rank the prospect under each axis made dominant, one at a time.
 
@@ -68,7 +72,10 @@ def weight_sensitivity_sweep(
     rows: list[SensitivityRow] = []
 
     # Base case first.
-    base = screen_concepts(spec, params_path=params_path, bsee_benchmark=bsee_benchmark)
+    base = screen_concepts(
+        spec, params_path=params_path, bsee_benchmark=bsee_benchmark,
+        capex_override=capex_override,
+    )
     rows.append(
         SensitivityRow(
             scenario="base weights",
@@ -82,7 +89,8 @@ def weight_sensitivity_sweep(
     for dom in axes:
         w = {a: (dominant_weight if a == dom else others_share) for a in axes}
         res = screen_concepts(
-            spec, weights=w, params_path=params_path, bsee_benchmark=bsee_benchmark
+            spec, weights=w, params_path=params_path, bsee_benchmark=bsee_benchmark,
+            capex_override=capex_override
         )
         rows.append(
             SensitivityRow(
@@ -108,6 +116,10 @@ def render_comparison_note(
     sensitivity: Optional[list[SensitivityRow]] = None,
 ) -> str:
     """Render a deterministic markdown comparison note from a screening result."""
+    overridden = sorted(
+        r.host_type.value for r in result.ranked
+        if r.axes.capex_source == "absolute_override"
+    )
     s = result.prospect
     lines: list[str] = []
     lines.append(f"# Concept screening — {s.name}")
@@ -135,6 +147,13 @@ def render_comparison_note(
     )
     lines.append("")
 
+    if overridden:
+        lines.append(
+            "CAPEX basis: absolute calibrated totals (override) for "
+            f"{', '.join(overridden)}; generic fraction-of-base for the rest."
+        )
+        lines.append("")
+
     # Ranking table
     lines.append("## Ranked concepts")
     lines.append("")
@@ -145,12 +164,17 @@ def render_comparison_note(
     lines.append("|---|---|---|---|---|---|---|---|---|")
     for i, r in enumerate(result.ranked, start=1):
         a = r.axes
+        marker = "*" if a.capex_source == "absolute_override" else ""
         lines.append(
             f"| {i} | {r.host_type.value} | {r.composite:.2f} | {r.suitability:.1f} | "
-            f"{a.schedule_weeks:.0f} | {a.rig_days:.0f} | {a.capex_base_usd_bn:.2f} | "
+            f"{a.schedule_weeks:.0f} | {a.rig_days:.0f} | {a.capex_base_usd_bn:.2f}{marker} | "
             f"{a.intervention_index:.2f} | {'yes' if r.gated else 'no'} |"
         )
     lines.append("")
+
+    if overridden:
+        lines.append("* Absolute CAPEX override; total supplied in USD bn.")
+        lines.append("")
 
     # Normalised axis scores (higher = better)
     lines.append("## Normalised axis scores (0-100, higher is better)")
@@ -172,7 +196,8 @@ def render_comparison_note(
     lines.append("| Line item | USD bn |")
     lines.append("|---|---|")
     for k, v in top.axes.capex_line_items_usd_bn.items():
-        lines.append(f"| {k} | {v:.3f} |")
+        if isinstance(v, (int, float)):
+            lines.append(f"| {k} | {v:.3f} |")
     lines.append("")
 
     # Governing trade-off
@@ -228,13 +253,18 @@ def build_comparison_note(
     params_path: Optional[str] = None,
     bsee_benchmark: Optional[float] = None,
     with_sensitivity: bool = True,
+    capex_override: Optional[dict] = None,
 ) -> tuple[ScreeningResult, str]:
     """Convenience: screen a prospect and render the markdown note in one call."""
     result = screen_concepts(
-        spec, weights=weights, params_path=params_path, bsee_benchmark=bsee_benchmark
+        spec, weights=weights, params_path=params_path, bsee_benchmark=bsee_benchmark,
+        capex_override=capex_override
     )
     sweep = (
-        weight_sensitivity_sweep(spec, params_path=params_path, bsee_benchmark=bsee_benchmark)
+        weight_sensitivity_sweep(
+            spec, params_path=params_path, bsee_benchmark=bsee_benchmark,
+            capex_override=capex_override,
+        )
         if with_sensitivity
         else None
     )

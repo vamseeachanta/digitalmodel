@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Engine-routed field-development registry workflows.
 # ABOUTME: Thin cfg adapters around existing CAPEX, OPEX, and concept-selection helpers.
 """Cfg-routed field-development workflows for the durable registry."""
@@ -135,7 +138,6 @@ class FieldDevelopmentRegistryWorkflow:
 
     def _run_concept_screening(self, cfg: dict[str, Any]) -> dict[str, Any]:
         from digitalmodel.field_development.concept_comparison_note import (
-            build_comparison_note,
             render_comparison_note,
             weight_sensitivity_sweep,
         )
@@ -170,27 +172,35 @@ class FieldDevelopmentRegistryWorkflow:
             candidates = [_host_type(c) for c in params["candidates"]]
         bsee_benchmark = params.get("bsee_per_well_rig_days")
 
-        result, note_md = build_comparison_note(
-            spec,
-            weights=weights,
-            params_path=params_path,
-            bsee_benchmark=bsee_benchmark,
-            with_sensitivity=True,
+        raw_override = params.get("capex_override")
+        capex_override = (
+            {_host_type(k).value: float(v) for k, v in raw_override.items()}
+            if raw_override is not None else None
         )
-        # candidates restriction is applied in build via screen_concepts default;
-        # re-run with candidates when supplied (keeps build_comparison_note simple).
-        if candidates is not None:
-            result = screen_concepts(
-                spec,
-                weights=weights,
-                params_path=params_path,
-                candidates=candidates,
-                bsee_benchmark=bsee_benchmark,
+        result = screen_concepts(
+            spec, weights=weights, params_path=params_path, candidates=candidates,
+            bsee_benchmark=bsee_benchmark, capex_override=capex_override,
+        )
+        # Preserve the full-candidate sweep and its DEFAULT_WEIGHTS base row,
+        # even when candidates or main-run weights restrict the primary screen.
+        sweep = weight_sensitivity_sweep(
+            spec, params_path=params_path, bsee_benchmark=bsee_benchmark,
+            capex_override=capex_override,
+        )
+        note_md = render_comparison_note(result, sweep)
+        capex_mode = "derived"
+        if raw_override is not None:
+            capex_mode = (
+                "absolute_override_full"
+                if all(r.host_type.value in (capex_override or {}) for r in result.ranked)
+                else "absolute_override_partial"
             )
-            sweep = weight_sensitivity_sweep(
-                spec, params_path=params_path, bsee_benchmark=bsee_benchmark
-            )
-            note_md = render_comparison_note(result, sweep)
+        if all(r.gated for r in result.ranked):
+            screening_status = "fail"
+        elif result.ranked[0].gated or len({row.winner for row in sweep}) > 1:
+            screening_status = "review"
+        else:
+            screening_status = "pass"
 
         output_cfg = params.get("outputs", {})
         directory = _resolve_dir(cfg, output_cfg.get("directory", "results"))
@@ -201,6 +211,9 @@ class FieldDevelopmentRegistryWorkflow:
 
         summary = {
             "calculation": "concept_screening",
+            "capex_mode": capex_mode,
+            "capex_override_input": raw_override,
+            "screening_status": screening_status,
             "selected_host": result.selected.value,
             "governing_axis": result.governing_axis,
             "params_basis": result.params_basis,
@@ -217,6 +230,7 @@ class FieldDevelopmentRegistryWorkflow:
                     "schedule_weeks": r.axes.schedule_weeks,
                     "rig_days": r.axes.rig_days,
                     "capex_total_usd_bn": r.axes.capex_base_usd_bn,
+                    "capex_source": r.axes.capex_source,
                     "intervention_index": r.axes.intervention_index,
                     "normalised": r.axes.norm,
                     "capex_line_items_usd_bn": r.axes.capex_line_items_usd_bn,
