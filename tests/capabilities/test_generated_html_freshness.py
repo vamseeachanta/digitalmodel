@@ -111,7 +111,23 @@ def test_registry_has_reasoned_complete_ownership() -> None:
         "docs/api/cfd/report_build/build_wave_tank.py",
         "docs/api/cfd/report_build/upgrade_reports.py",
     }
-    assert len(checker.MANUAL_PAGES) == 11
+    # The solved-case verification page is counted as manual because its
+    # solver output is unavailable for repository-only regeneration.
+    assert len(checker.MANUAL_PAGES) == 12
+    assert set(checker.MANUAL_PAGES) == {
+        'docs/api/buckling/ship-panel-buckling.html',
+        'docs/api/buckling/ship-plate-buckling.html',
+        'docs/api/capabilities/index.html',
+        'docs/api/cfd/index.html',
+        'docs/api/cfd/kcs-calm-water-resistance-verification.html',
+        'docs/api/cfd/tank-sloshing-verification.html',
+        'docs/api/ffs/build-wave-2026-07.html',
+        'docs/api/ffs/ffs-field-dashboard.html',
+        'docs/api/ffs/ffs-showcase.html',
+        'docs/api/hydro/rudder-maneuvering-explorer.html',
+        'docs/api/hydro/short-horizon-motion-forecast.html',
+        'docs/api/subsea/offshore-cross-section-report.html',
+    }
 
 
 def test_page_census_rejects_unclassified_html(tmp_path: Path) -> None:
