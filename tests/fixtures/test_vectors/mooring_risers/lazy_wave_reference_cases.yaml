@@ -22,6 +22,13 @@ subcategory: "lazy_wave_reference_cases"
 # buoyancy regime was never exercised by the original, so its abs() handling of that
 # case is untested legacy behaviour, not validated behaviour.
 
+# Corrected 2026-10-12 for issue #2044: vertical equilibrium gives Fv = w*S.
+# Arithmetic uses the retained submerged weight [N/m] and hang-off length [m]:
+#   A: 2456.695439714344 * 3221.0315402188266 = 7913093.4960316615 N
+#   B: 2456.695439714344 * 3221.0315402188266 = 7913093.4960316615 N
+#   C: 2456.695439714344 * 4026.2894252735327 = 9891366.870039575 N
+#   D: 2456.695439714344 * 3583.83657014062 = 8804394.958545957 N
+
 invariants:
   hangoff_span: "d_hangoff = vertical_distance - sag_bend_elevation"
   hangoff_bend_radius: "R = d_hangoff * cos(90-q) / (1 - cos(90-q))"
@@ -56,7 +63,7 @@ cases:
       total_S: 6245.264141705511
       total_X: 3400.6427273504437
       Fh: 1112112.7650103548
-      Fv: 9025206.261042016
+      Fv: 7913093.4960316615
 
   - id: B
     description: "Higher buoyancy factor; hog bend radius contracts as |w_b| grows"
@@ -86,7 +93,7 @@ cases:
       total_S: 6082.188110061969
       total_X: 3183.376409945153
       Fh: 1112112.7650103548
-      Fv: 9025206.261042016
+      Fv: 7913093.4960316615
 
   - id: C
     description: "Shallower sag/hog elevations with the highest buoyancy factor in the sweep"
@@ -116,7 +123,7 @@ cases:
       total_S: 6159.298325819812
       total_X: 3222.4860545848674
       Fh: 1390140.9562629433
-      Fv: 11281507.826302517
+      Fv: 9891366.870039575
 
   - id: D
     description: "Steeper declination angle; isolates the (depth, angle) -> bend radius binding"
@@ -146,7 +153,7 @@ cases:
       total_S: 7420.777998362524
       total_X: 5073.712567597819
       Fh: 2195182.211256832
-      Fv: 10999577.169802789
+      Fv: 8804394.958545957
 
 assumptions:
   - "Hang-off point is the datum for vertical_distance; the seabed lies vertical_distance below it."
