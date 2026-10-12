@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Synthetic final checks and ledger outcomes; no solver or engineering limits."""
 
 import pytest
@@ -176,3 +179,69 @@ def test_criterion_applicability_and_overlapping_groups_use_unique_cases():
 def test_ambiguous_inputs_are_rejected(results, cases, outcomes):
     with pytest.raises(ValueError):
         summary(results, cases, outcomes)
+
+
+
+def test_mixed_pass_and_unevaluated_case_prevents_complete_verdict():
+    s = summary(
+        [("C-1", check()), ("C-2", check("NOT_EVALUATED"))],
+        ("C-1", "C-2"),
+        {"C-1": "ok", "C-2": "ok"},
+    )
+    assert s["status"] == "NOT_EVALUATED"
+    assert s["observed_status"] == "PASS"
+    assert s["coverage_complete"] is False
+    assert s["unevaluated_cases"] == ["C-2"]
+    assert s["missing_cases"] == []
+    assert s["missing_count"] == 0
+    assert s["counts"] == {"PASS": 1, "FAIL": 0, "NOT_EVALUATED": 1}
+
+
+def test_mixed_pass_and_screening_counts_complete_recorded_coverage():
+    result = check()
+    result.u = 1 / 2  # synthetic ordering value, no acceptance calculation
+    s = summary(
+        [("C-1", result), ("C-2", check("SCREENING"))],
+        ("C-1", "C-2"),
+        {"C-1": "ok", "C-2": "ok"},
+    )
+    assert s["status"] == "PASS"
+    assert s["observed_status"] == "PASS"
+    assert s["coverage_complete"] is True
+    assert s["expected_cases"] == ["C-1", "C-2"]
+    assert s["recorded_cases"] == ["C-1", "C-2"]
+    assert s["final_outcomes"] == {"C-1": "ok", "C-2": "ok"}
+    assert s["missing_cases"] == []
+    assert s["missing_count"] == 0
+    assert s["unevaluated_cases"] == []
+    assert s["counts"] == {"PASS": 1, "FAIL": 0, "NOT_EVALUATED": 0, "SCREENING": 1}
+    assert s["governing"]["case_id"] == "C-1"
+    assert s["max_u"] == result.u
+
+
+@pytest.mark.parametrize("expected_cases", [[], "C-1", 1, ("C-1",)])
+def test_non_mapping_expected_cases_raise_value_error(expected_cases):
+    with pytest.raises(ValueError, match="expected_cases must be a mapping"):
+        summarise([], expected_cases=expected_cases)
+
+
+def test_explicit_none_expected_cases_preserves_unknown_coverage():
+    s = summarise(
+        [("C-1", check())], expected_cases=None, ledger_outcomes={"C-1": "ok"}
+    )["CR-02"]
+    assert s["status"] == "NOT_EVALUATED"
+    assert s["observed_status"] == "PASS"
+    assert s["coverage_complete"] is None
+    assert s["expected_cases"] is None
+    assert s["missing_cases"] is None
+    assert s["missing_count"] is None
+    assert s["groups"] == {}
+
+
+def test_returned_criteria_are_sorted():
+    s = summarise(
+        [("C-1", check(row="CR-02")), ("C-2", check(row="CR-01"))],
+        expected_cases={"CR-02": {"G": ["C-1"]}, "CR-01": {"G": ["C-2"]}},
+        ledger_outcomes={"C-1": "ok", "C-2": "ok"},
+    )
+    assert list(s) == ["CR-01", "CR-02"]

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Criteria evaluator: one register row on one case (static, regular wave, or the seeds of an irregular sea).
 
 Statics and regular waves give a deterministic value. The seeds of an irregular sea are combined per the
@@ -15,8 +18,9 @@ W510 / R02). A missing channel is recorded in ``missing_channel``; the caller fa
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable
 
 from digitalmodel.drilling_riser.postprocess.channels import MissingChannel, w5
 from digitalmodel.drilling_riser.postprocess.checks import (
@@ -34,6 +38,8 @@ STATUSES = ("PASS", "FAIL", "NOT_EVALUATED", "SCREENING")
 
 @dataclass
 class CaseCheck:
+    """Result and supporting values for one criterion on one case."""
+
     row_id: str
     status: str
     reason: str
@@ -49,6 +55,7 @@ class CaseCheck:
     detail: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
+        """Return the result fields as a dictionary."""
         return asdict(self)
 
 
@@ -78,7 +85,8 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
 
     An irregular case names its seeds by ``seed_ids`` (or ``seeds_expected``, meaning seeds 1..n): the documents
     must hold exactly those seeds - a missing seed, or a seed outside the set standing in for it, leaves the case
-    NOT_EVALUATED rather than fitting the Gumbel distribution to the wrong sample."""
+    NOT_EVALUATED rather than fitting the Gumbel distribution to the wrong sample.
+    """
     rid = row["id"]
     if row.get("check_key") not in CHECKS:
         return CaseCheck(rid, "NOT_EVALUATED", f"no demand function for check_key {row.get('check_key')!r}")
@@ -271,9 +279,12 @@ def summarise(results: Iterable[tuple[str, CaseCheck]], *,
     Existing counts, governing and max_u describe supplied checks. SCREENING is
     counted only when present and never governs or sets a verdict. Added coverage
     fields and the same summary per group expose absent and unevaluated cases.
+    Returned criteria are ordered by sorted criterion ID.
     Duplicate checks and observed cases outside declared applicability are rejected.
     See docs/drilling-riser-summary-coverage.html for the full contract.
     """
+    if expected_cases is not None and not isinstance(expected_cases, Mapping):
+        raise ValueError("expected_cases must be a mapping by criterion ID")
     expected = None if expected_cases is None else {
         rid: _expected_groups(groups) for rid, groups in expected_cases.items()}
     if ledger_outcomes is not None and any(
