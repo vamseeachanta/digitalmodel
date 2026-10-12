@@ -99,7 +99,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 ### Production Engineering
 
 **Current state:** Production maturity for well test quality scoring, nodal analysis (IPR/VLP), and GIGO detection. 39 functions.
-**Backlog reason:** Complete for current use cases. Multiphase flow beyond Hagedorn-Brown is the next gap.
+**Backlog reason:** Complete for current use cases. The published Hagedorn-Brown and Beggs-Brill vertical-lift methods are not yet implemented and are the next gap.
 
 ### Well Engineering
 

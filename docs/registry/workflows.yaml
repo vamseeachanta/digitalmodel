@@ -827,7 +827,7 @@ workflows:
     runtime: offline
   - id: nodal-analysis-ipr-vlp
     basename: production
-    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    title: Well operating point from Vogel IPR / simplified homogeneous VLP intersection
     input: examples/workflows/nodal-analysis-ipr-vlp/input.yml
     outputs:
       - examples/workflows/nodal-analysis-ipr-vlp/results/input.yml
@@ -1025,7 +1025,7 @@ workflows:
 
   - id: nodal-analysis
     basename: nodal_analysis
-    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    title: Well operating point from Vogel IPR / simplified homogeneous VLP intersection
     input: examples/workflows/nodal-analysis/input.yml
     outputs:
       - examples/workflows/nodal-analysis/results/input.yml
@@ -1034,7 +1034,7 @@ workflows:
     runtime: offline
   - id: vlp-correlations
     basename: vlp_correlations
-    title: Hagedorn-Brown VLP curve for a vertical oil well
+    title: Simplified homogeneous VLP curve for a vertical oil well
     input: examples/workflows/vlp-correlations/input.yml
     outputs:
       - examples/workflows/vlp-correlations/results/input.yml

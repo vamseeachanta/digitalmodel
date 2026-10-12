@@ -601,19 +601,19 @@ SPECS: list[dict] = [
                   "DNV-RP-F107 equilibrium scour for pipelines and monopiles and rock-armour thickness"]),
     dict(id="sec-production-engineering", kind="section",
          title="Production engineering — nodal analysis & well deliverability",
-         std="Vogel · Fetkovich · Hagedorn-Brown · Brent-method operating point",
+         std="Vogel · Fetkovich · simplified homogeneous lift traverse (published methods not yet implemented) · Brent-method operating point",
          path="capabilities/#production-engineering",
          blurb="A node-based well-performance engine: intersect an inflow (IPR) curve with a "
                "vertical-lift (VLP) pressure traverse to find the operating point, then bound it "
                "with a confidence band derived from the underlying test-quality score. The "
-               "correlations are textbook and each is unit-tested against its published equation; "
+               "outflow is a simplified homogeneous lift traverse (published methods not yet implemented); "
                "the distinctive layer is physics-based data reconciliation — GIGO divergence and "
                "nonlinearity flags that catch a bad test record before it corrupts the nodal "
                "model. Distinct from the rod-pump dynacard diagnostics under Artificial lift.",
          figures=[("±5 / ±15 / ±30%", "confidence bands (G/A/R)"),
                   ("≥20%", "GIGO divergence flag")],
          bullets=["Operating point by solving IPR(q) = VLP(q) with Brent's method, bracketed from zero to absolute open flow",
-                  "Vogel / Fetkovich / Klins-Clark inflow and Hagedorn-Brown / Beggs-Brill outflow correlations, each unit-tested against its published equation",
+                  "Vogel / Fetkovich / linear-plus-Vogel composite inflow and simplified homogeneous lift traverse (published methods not yet implemented) outflow",
                   "Green / Amber / Red confidence band keyed to the test-quality score",
                   "ESP sizing from total dynamic head (net lift + Hazen-Williams tubing friction + discharge head) with stage-count, motor and operating-range pass/fail",
                   "Test-to-model reconciliation: QC score, nonlinearity detection (transient / slug / gas-lift instability / high watercut), GIGO divergence diagnosis and recommendations"]),
