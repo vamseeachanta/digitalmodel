@@ -447,7 +447,18 @@ def _catenary_riser_polyline(
     hangoff_deg: float,
     sample_spacing_m: float,
 ) -> np.ndarray | None:
-    """Sample the existing solver's screening catenary, or request fallback."""
+    """The existing solver's screening catenary is sampled, or fallback is requested.
+
+    The returned chord polyline under-reads the true arc. At 25 metres
+    spacing, for a flat seabed 100 metres below the host and a hang-off
+    angle of 30 degrees from vertical, seven chords measure 173.050510
+    metres against an analytic arc of 173.205081 metres: an under-read of
+    0.089 percent (two significant figures).
+
+    The curve uses the flat-seabed datum ``host_xyz[2] - water_depth_m``.
+    In ``route_connection``, this is the seabed elevation under the host;
+    on a sloping seabed, touchdown at that datum may lie off the terrain.
+    """
     if not math.isfinite(water_depth_m) or water_depth_m <= 0:
         return None
     try:
@@ -485,7 +496,7 @@ def route_connection(
     surface: TerrainGrid,
     sample_spacing_m: float = _DEFAULT_SAMPLE_SPACING_M,
 ) -> RoutedConnection:
-    """Route one connection: from-asset -> waypoints... -> to-asset.
+    """One connection is routed: from-asset -> waypoints... -> to-asset.
 
     Piecewise straight in plan; every leg is sampled and draped over the
     surface. If an endpoint asset has an explicit (off-surface) ``z_m`` —
@@ -497,7 +508,24 @@ def route_connection(
     vertical, a screening assumption. Degenerate geometry retains the straight
     stand-in. These are geometric screens, not designed riser analyses.
     Lengths are true 3D polyline lengths.
+
+    The non-catenary (``straight``) path is a stand-in whose length depends
+    on ``sample_spacing_m``. It runs along the seabed to the last sample
+    before the host, then rises in one segment; it is not the direct line
+    between the endpoints. For the flat-seabed reference case (100 metres
+    below the host, 300 metres plan span, 30 degrees from vertical), the
+    catenary route is shorter than this stand-in at fine spacing and longer
+    than the direct line between the endpoints.
+
+    The catenary uses a flat-seabed datum at the host: the seabed elevation
+    under the host. Touchdown is placed at that datum and may lie off the
+    terrain on a sloping seabed.
     """
+    riser_shape = spec.get("riser_shape", "straight")
+    if riser_shape not in ("straight", "catenary"):
+        raise ValueError(
+            f"unknown riser_shape {riser_shape!r}; expected 'straight' or 'catenary'"
+        )
     from_id, to_id = str(spec["from"]), str(spec["to"])
     for ref in (from_id, to_id):
         if ref not in assets:
@@ -516,7 +544,7 @@ def route_connection(
         legs.append(leg if not legs else leg[1:])  # drop duplicate joint point
     path = np.vstack(legs)
 
-    if not b.on_surface and spec.get("riser_shape", "straight") == "catenary":
+    if not b.on_surface and riser_shape == "catenary":
         seabed_z = surface.elevation_at(b.x_m, b.y_m)
         curve = _catenary_riser_polyline(
             plan_points[-2], (b.x_m, b.y_m, b.z_m), b.z_m - seabed_z,
