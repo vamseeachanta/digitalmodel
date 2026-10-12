@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """OCIMF import purity and caller-directed chart output regressions."""
 
 import os
@@ -124,7 +127,7 @@ def test_explicit_generation_uses_caller_paths(tmp_path, coefficient_frame):
     assert {p.name for p in output.iterdir()} == names
     for name in names - {"ocimf_extraction_report.html"}:
         assert (output / name).read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
-    report = (output / "ocimf_extraction_report.html").read_text()
+    report = (output / "ocimf_extraction_report.html").read_text(encoding="utf-8")
     assert "Total Entries:</strong> 9" in report
     assert all(f'src="{name}"' in report for name in names if name.endswith('.png'))
     assert {p.name for p in tmp_path.iterdir()} == {"coefficients.csv", "charts"}
@@ -148,3 +151,62 @@ def test_standalone_chart_uses_caller_output(tmp_path, coefficient_frame, name, 
     expected = "ocimf_extraction_report.html" if name == "create_html_report" else "chart.png"
     assert {p.name for p in output.iterdir()} == {expected}
     assert (output / expected).stat().st_size > 0
+
+
+def test_default_output_uses_callers_working_directory(tmp_path, coefficient_frame):
+    """A library call writes only below its current working directory."""
+    csv_file = tmp_path / "coefficients.csv"
+    coefficient_frame.to_csv(csv_file, index=False)
+    work = tmp_path / "work"
+    work.mkdir()
+    source = Path(__file__).resolve().parents[3] / "src"
+    target = source / (MODULE.replace(".", "/") + ".py")
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", MPLBACKEND="Agg")
+    env["MPLCONFIGDIR"] = str(tmp_path / "plot-cache")
+    probe = """
+import importlib.util
+import os
+from pathlib import Path
+import sys
+import matplotlib.pyplot
+import pandas
+import seaborn
+
+spec = importlib.util.spec_from_file_location('chart_probe', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+frame = module.load_data(sys.argv[2])
+repository = Path(sys.argv[1]).resolve().parents[5]
+
+def audit(event, args):
+    if event == 'os.mkdir' or event == 'open':
+        path = args[0]
+        if isinstance(path, (str, bytes, os.PathLike)):
+            resolved = Path(os.fsdecode(path)).resolve()
+            if resolved.is_relative_to(repository):
+                if event == 'os.mkdir':
+                    raise AssertionError('chart attempted repository directory creation')
+                mode, flags = args[1:3]
+                if (mode and any(c in mode for c in 'wax+')) or (
+                    flags and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT)
+                ):
+                    raise AssertionError('chart attempted repository file output')
+
+sys.addaudithook(audit)
+module.plot_heatmaps(frame, filename='chart.png')
+assert (Path.cwd() / 'ocimf_charts' / 'chart.png').is_file()
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", textwrap.dedent(probe), str(target), str(csv_file)],
+        cwd=work, env=env, capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    assert {p.name for p in work.iterdir()} == {"ocimf_charts"}
+
+
+def test_cli_output_resolves_repository_folder_without_writing():
+    """Command-line output retains its historical repository location."""
+    from digitalmodel.marine_ops.marine_analysis.visualization import ocimf_charts
+
+    repository = Path(ocimf_charts.__file__).resolve().parents[5]
+    assert ocimf_charts._cli_output_dir() == repository / "docs/charts/phase2/ocimf"
