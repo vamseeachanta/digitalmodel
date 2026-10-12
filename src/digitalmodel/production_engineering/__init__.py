@@ -12,7 +12,7 @@ Public API:
     test_quality_scorer  — score a production test record (0-100 + flags)
     nonlinearity_flags   — detect nonlinear flow conditions in a test
     ipr_models           — Vogel, Fetkovich, Composite IPR
-    vlp_correlations     — Hagedorn-Brown, Beggs-Brill VLP traverses
+    vlp_correlations     — simplified traverse; Hagedorn-Brown/Beggs-Brill aliases
     nodal_solver         — IPR/VLP intersection with confidence bounds
     gigo_detector        — model vs test divergence with physics diagnosis
     reconciliation_workflow — end-to-end QC → calibrate → confidence pipeline
@@ -51,6 +51,7 @@ from digitalmodel.production_engineering.vlp_correlations import (
     TubingConfig,
     beggs_brill_pwf,
     hagedorn_brown_pwf,
+    simplified_homogeneous_pwf,
     vlp_curve,
 )
 
@@ -77,5 +78,6 @@ __all__ = [
     "WellType",
     "beggs_brill_pwf",
     "hagedorn_brown_pwf",
+    "simplified_homogeneous_pwf",
     "vlp_curve",
 ]

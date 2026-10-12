@@ -4,7 +4,7 @@
 
 Supported ``production.calculation`` values:
 - ``nodal_analysis`` -> solve the IPR/VLP intersection (well operating point) using the
-  Vogel or Linear IPR model and the Hagedorn-Brown VLP correlation.
+  Vogel or Linear IPR model and the simplified homogeneous VLP traverse.
 
 The result is the operating point (rate, flowing bottom-hole pressure) with
 confidence bounds derived from an optional well-test quality score. A JSON
@@ -154,7 +154,7 @@ class ProductionEngineeringWorkflow:
             gas_gravity=float(fluid_cfg.get("gas_gravity", 0.65)),
             temperature_f=float(fluid_cfg.get("temperature_f", 150.0)),
         )
-        correlation = str(params.get("correlation", "hagedorn_brown"))
+        correlation = str(params.get("correlation", "simplified_homogeneous"))
         pressures = vlp_curve(
             rates_bopd=rates,
             watercut=float(surface.get("watercut", 0.0)),

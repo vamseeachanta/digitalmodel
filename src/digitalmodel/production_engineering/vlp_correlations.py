@@ -1,27 +1,21 @@
-# ABOUTME: Vertical Lift Performance (VLP) correlations for multiphase tubing flow
-# ABOUTME: Implements Hagedorn-Brown (1965) and Beggs-Brill (1973) pressure traverses
+# ABOUTME: Simplified homogeneous-flow Vertical Lift Performance (VLP) traverse
+# ABOUTME: Published-correlation names are deprecated aliases, not implementations
 
 """
-Vertical Lift Performance (VLP) Correlations
-=============================================
+Vertical Lift Performance (VLP)
+==============================
 VLP curves give bottomhole flowing pressure as a function of surface liquid
 rate. Combined with an IPR curve, they define the well operating point.
 
-Physics overview:
-    P_wf = P_wh + ΔP_hydrostatic + ΔP_friction + ΔP_acceleration
-    (acceleration term is negligible for liquid-dominated flow)
-
-Correlations implemented:
-- Hagedorn-Brown (1965): vertical multiphase flow, liquid holdup correlation
-- Beggs-Brill (1973):   generalised multiphase, inclination-corrected
-
-Both correlations use a single-pass average-pressure approach for
-computational simplicity while preserving the key physical trends.
+Only a simplified homogeneous-flow traverse with a fixed slip correction is
+implemented. Hagedorn-Brown and Beggs-Brill are deprecated aliases of that
+same traverse; neither published correlation is implemented.
 """
 
 from __future__ import annotations
 
 import math
+import warnings
 from dataclasses import dataclass, field
 from typing import Sequence
 
@@ -94,7 +88,7 @@ _DAY_TO_SECOND = 86400.0
 def _gas_density_lb_ft3(
     pressure_psia: float, temperature_f: float, gas_gravity: float
 ) -> float:
-    """Gas density using simplified real gas law (Papay z-factor approximation)."""
+    """Gas density using a real gas law with a constant deviation factor."""
     mw_gas = gas_gravity * 28.97  # lb/lbmol
     R = 10.73                     # psia·ft³ / (lbmol·°R)
     T_r = temperature_f + 459.67
@@ -160,15 +154,18 @@ def _tubing_area_ft2(tubing_id_in: float) -> float:
     return math.pi * d_ft**2 / 4.0
 
 
-def _pressure_traverse(
+def simplified_homogeneous_pwf(
     flow: FlowConditions,
     tubing: TubingConfig,
     fluid: FluidProperties,
     whp_psi: float,
-    holdup_exponent: float = 0.85,
 ) -> float:
     """
-    Single-pass pressure traverse from wellhead to bottomhole.
+    Simplified homogeneous-flow pressure traverse, not a published correlation.
+
+    Single pass with a fixed slip correction, constant gas deviation factor
+    (0.85), and constant viscosity (2 cP). No flow-pattern map or inclination
+    term is included; depth is true vertical depth.
 
     Uses average-pressure approach to account for gas expansion:
     1. Estimate P_wf using hydrostatic head of liquid column
@@ -216,7 +213,7 @@ def _pressure_traverse(
 
 
 # ---------------------------------------------------------------------------
-# Public correlation functions
+# Deprecated published-correlation aliases
 # ---------------------------------------------------------------------------
 
 def hagedorn_brown_pwf(
@@ -226,16 +223,21 @@ def hagedorn_brown_pwf(
     whp_psi: float,
 ) -> float:
     """
-    Calculate bottomhole flowing pressure using Hagedorn-Brown (1965) correlation.
+    Deprecated alias of simplified_homogeneous_pwf, identical to beggs_brill_pwf.
 
-    Suitable for: vertical wells, oil and gas-condensate systems.
-    Uses holdup exponent of 0.85 (Hagedorn-Brown slip correction).
+    Does not implement the published Hagedorn-Brown method cited below.
 
     Reference: Hagedorn, A.R. & Brown, K.E. (1965). Experimental Study of Pressure
     Gradients Occurring During Continuous Two-Phase Flow in Small-Diameter Vertical
     Conduits. JPT, 17(4), 475-484.
     """
-    return _pressure_traverse(flow, tubing, fluid, whp_psi, holdup_exponent=0.85)
+    warnings.warn(
+        "hagedorn_brown_pwf does not implement the published Hagedorn-Brown "
+        "correlation; it returns the simplified homogeneous traverse and gives "
+        "the same result as beggs_brill_pwf. Use simplified_homogeneous_pwf.",
+        DeprecationWarning, stacklevel=2,
+    )
+    return simplified_homogeneous_pwf(flow, tubing, fluid, whp_psi)
 
 
 def beggs_brill_pwf(
@@ -245,15 +247,20 @@ def beggs_brill_pwf(
     whp_psi: float,
 ) -> float:
     """
-    Calculate bottomhole flowing pressure using Beggs-Brill (1973) correlation.
+    Deprecated alias of simplified_homogeneous_pwf, identical to hagedorn_brown_pwf.
 
-    Suitable for: inclined and horizontal pipes, generalised multiphase.
-    Uses holdup exponent of 0.75 (Beggs-Brill flow-pattern correction).
+    Does not implement the published Beggs-Brill method cited below.
 
-    Reference: Beggs, H.D. & Brill, J.P. (1973). A Study of Two-Phase Flow in
+    Reference: Beggs, D.H. & Brill, J.P. (1973). A Study of Two-Phase Flow in
     Inclined Pipes. JPT, 25(5), 607-617.
     """
-    return _pressure_traverse(flow, tubing, fluid, whp_psi, holdup_exponent=0.75)
+    warnings.warn(
+        "beggs_brill_pwf does not implement the published Beggs-Brill "
+        "correlation; it returns the simplified homogeneous traverse and gives "
+        "the same result as hagedorn_brown_pwf. Use simplified_homogeneous_pwf.",
+        DeprecationWarning, stacklevel=2,
+    )
+    return simplified_homogeneous_pwf(flow, tubing, fluid, whp_psi)
 
 
 def vlp_curve(
@@ -263,7 +270,7 @@ def vlp_curve(
     tubing: TubingConfig,
     fluid: FluidProperties,
     whp_psi: float,
-    correlation: str = "hagedorn_brown",
+    correlation: str = "simplified_homogeneous",
 ) -> list[float]:
     """
     Generate a VLP curve: list of Pwf values for each given surface rate.
@@ -275,12 +282,19 @@ def vlp_curve(
         tubing:           Tubing geometry
         fluid:            Fluid PVT properties
         whp_psi:          Wellhead pressure (psia)
-        correlation:      'hagedorn_brown' (default) or 'beggs_brill'
+        correlation:      'simplified_homogeneous' (default). 'hagedorn_brown'
+                          and 'beggs_brill' are deprecated aliases returning
+                          identical results, not published implementations.
 
     Returns:
         List of Pwf values (psi) corresponding to each input rate.
     """
-    fn = beggs_brill_pwf if correlation == "beggs_brill" else hagedorn_brown_pwf
+    methods = {
+        "simplified_homogeneous": simplified_homogeneous_pwf,
+        "hagedorn_brown": hagedorn_brown_pwf,
+        "beggs_brill": beggs_brill_pwf,
+    }
+    fn = methods.get(correlation, simplified_homogeneous_pwf)
     result = []
     for q in rates_bopd:
         flow = FlowConditions(

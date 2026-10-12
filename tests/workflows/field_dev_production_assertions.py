@@ -51,7 +51,7 @@ def assert_field_dev_production_workflow(workflow_id: str, cfg: dict) -> None:
     elif workflow_id == "vlp-correlations":
         block = cfg["vlp_correlations"]
         curve = block["curve"]
-        assert block["correlation"] == "hagedorn_brown"
+        assert block["correlation"] == "simplified_homogeneous"
         assert block["monotonic_increasing"] is True
         assert [row["q_bopd"] for row in curve] == pytest.approx(
             [100.0, 300.0, 500.0, 800.0, 1200.0]

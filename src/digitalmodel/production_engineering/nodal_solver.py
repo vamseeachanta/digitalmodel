@@ -32,7 +32,7 @@ from digitalmodel.production_engineering.vlp_correlations import (
     FlowConditions,
     FluidProperties,
     TubingConfig,
-    hagedorn_brown_pwf,
+    vlp_curve,
 )
 
 
@@ -115,7 +115,7 @@ class NodalSolver:
         gor_scf_per_bbl: float,
         whp_psi: float,
         test_quality_score: Optional[float] = None,
-        correlation: str = "hagedorn_brown",
+        correlation: str = "simplified_homogeneous",
         q_search_max_bopd: float = 10_000.0,
     ) -> NodalOperatingPoint:
         """
@@ -129,7 +129,9 @@ class NodalSolver:
             gor_scf_per_bbl:      Producing GOR
             whp_psi:              Wellhead pressure (psi)
             test_quality_score:   Optional quality score (0-100); drives confidence bounds
-            correlation:          VLP correlation to use
+            correlation:          Simplified traverse; 'hagedorn_brown' and
+                                  'beggs_brill' are deprecated aliases with
+                                  identical results, not published methods
             q_search_max_bopd:    Upper bound for rate search
 
         Returns:
@@ -142,7 +144,10 @@ class NodalSolver:
                 watercut=watercut,
                 gor_scf_per_bbl=gor_scf_per_bbl,
             )
-            return hagedorn_brown_pwf(flow, tubing, fluid, whp_psi)
+            return vlp_curve(
+                [flow.q_l_bopd], flow.watercut, flow.gor_scf_per_bbl,
+                tubing, fluid, whp_psi, correlation=correlation,
+            )[0]
 
         def ipr_pwf(q: float) -> float:
             return ipr.flowing_pressure(q)

@@ -12,7 +12,7 @@ Models implemented:
 - LinearIpr    — PI model; valid above bubble point (undersaturated oil)
 - VogelIpr     — Solution-gas drive below bubble point (Vogel 1968, JPT)
 - FetkovichIpr — Isochronal test-based, generalised flow exponent (SPE 4529)
-- CompositeIpr — Linear above Pb + Vogel below Pb (Klins-Clark composite)
+- CompositeIpr — Linear above Pb + Vogel below Pb (linear-plus-Vogel composite)
 
 All models expose the same interface:
     flow_rate(pwf_psi)    → q (bopd)
@@ -74,7 +74,7 @@ class VogelIpr:
     q/qmax = 1 - 0.2*(Pwf/Pr) - 0.8*(Pwf/Pr)^2
 
     Reference: Vogel, J.V. (1968). Inflow Performance Relationships for
-    Solution-Gas Drive Wells. JPT, 20(1), 83-93.
+    Solution-Gas Drive Wells. JPT, 20(1), 83-92.
     """
 
     def __init__(
@@ -164,12 +164,17 @@ class FetkovichIpr:
 
 
 # ---------------------------------------------------------------------------
-# Composite IPR — Klins-Clark: linear above Pb, Vogel below Pb
+# Composite IPR — linear above Pb, Vogel below Pb
 # ---------------------------------------------------------------------------
 
 class CompositeIpr:
     """
-    Composite IPR (Klins-Clark, 1993).
+    Composite IPR: linear-plus-Vogel form.
+
+    The form matches the open wiki's attribution to Vogel (1968), with Brown
+    (1984) and Neely (1976). These two secondary sources still need checking
+    before the attribution is finalised. The registered Klins and Clark (1993)
+    paper concerns predicting future IPR curves, not this composite form.
     - Above bubble point (Pwf ≥ Pb): linear, q = PI*(Pr - Pwf)
     - Below bubble point (Pwf < Pb): Vogel extension from q_b
 

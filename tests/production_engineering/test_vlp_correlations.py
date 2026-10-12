@@ -1,5 +1,5 @@
 # ABOUTME: TDD tests for Vertical Lift Performance (VLP) correlations
-# ABOUTME: Covers Hagedorn-Brown and Beggs-Brill pressure traverse
+# ABOUTME: Covers the simplified traverse and deprecated published-name aliases
 
 """Tests for production_engineering.vlp_correlations module."""
 
@@ -11,6 +11,7 @@ from digitalmodel.production_engineering.vlp_correlations import (
     TubingConfig,
     beggs_brill_pwf,
     hagedorn_brown_pwf,
+    simplified_homogeneous_pwf,
 )
 
 
@@ -41,17 +42,17 @@ def make_flow(**overrides) -> FlowConditions:
 
 
 # ---------------------------------------------------------------------------
-# Hagedorn-Brown VLP
+# Simplified VLP physical trends
 # ---------------------------------------------------------------------------
 
-class TestHagedornBrownVlp:
+class TestSimplifiedHomogeneousVlp:
 
     def test_pwf_greater_than_whp(self):
         """Bottomhole pressure must exceed wellhead pressure."""
         tubing = make_tubing()
         fluid = make_fluid()
         flow = make_flow()
-        pwf = hagedorn_brown_pwf(flow, tubing, fluid, whp_psi=300.0)
+        pwf = simplified_homogeneous_pwf(flow, tubing, fluid, whp_psi=300.0)
         assert pwf > 300.0
 
     def test_deeper_well_gives_higher_pwf(self):
@@ -60,8 +61,8 @@ class TestHagedornBrownVlp:
         flow = make_flow()
         tubing_shallow = make_tubing(depth_ft=3000.0)
         tubing_deep = make_tubing(depth_ft=8000.0)
-        pwf_shallow = hagedorn_brown_pwf(flow, tubing_shallow, fluid, whp_psi=300.0)
-        pwf_deep = hagedorn_brown_pwf(flow, tubing_deep, fluid, whp_psi=300.0)
+        pwf_shallow = simplified_homogeneous_pwf(flow, tubing_shallow, fluid, whp_psi=300.0)
+        pwf_deep = simplified_homogeneous_pwf(flow, tubing_deep, fluid, whp_psi=300.0)
         assert pwf_deep > pwf_shallow
 
     def test_higher_gor_reduces_pwf(self):
@@ -70,8 +71,8 @@ class TestHagedornBrownVlp:
         fluid = make_fluid()
         flow_low_gor = make_flow(gor_scf_per_bbl=100.0)
         flow_high_gor = make_flow(gor_scf_per_bbl=2000.0)
-        pwf_low = hagedorn_brown_pwf(flow_low_gor, tubing, fluid, whp_psi=300.0)
-        pwf_high = hagedorn_brown_pwf(flow_high_gor, tubing, fluid, whp_psi=300.0)
+        pwf_low = simplified_homogeneous_pwf(flow_low_gor, tubing, fluid, whp_psi=300.0)
+        pwf_high = simplified_homogeneous_pwf(flow_high_gor, tubing, fluid, whp_psi=300.0)
         assert pwf_high < pwf_low
 
     def test_higher_watercut_increases_pwf(self):
@@ -80,8 +81,8 @@ class TestHagedornBrownVlp:
         fluid = make_fluid()
         flow_dry = make_flow(watercut=0.0)
         flow_wet = make_flow(watercut=0.9)
-        pwf_dry = hagedorn_brown_pwf(flow_dry, tubing, fluid, whp_psi=300.0)
-        pwf_wet = hagedorn_brown_pwf(flow_wet, tubing, fluid, whp_psi=300.0)
+        pwf_dry = simplified_homogeneous_pwf(flow_dry, tubing, fluid, whp_psi=300.0)
+        pwf_wet = simplified_homogeneous_pwf(flow_wet, tubing, fluid, whp_psi=300.0)
         assert pwf_wet > pwf_dry
 
     def test_higher_rate_increases_pwf_due_to_friction(self):
@@ -90,8 +91,8 @@ class TestHagedornBrownVlp:
         fluid = make_fluid()
         flow_low = make_flow(q_l_bopd=100.0)
         flow_high = make_flow(q_l_bopd=2000.0)
-        pwf_low = hagedorn_brown_pwf(flow_low, tubing, fluid, whp_psi=300.0)
-        pwf_high = hagedorn_brown_pwf(flow_high, tubing, fluid, whp_psi=300.0)
+        pwf_low = simplified_homogeneous_pwf(flow_low, tubing, fluid, whp_psi=300.0)
+        pwf_high = simplified_homogeneous_pwf(flow_high, tubing, fluid, whp_psi=300.0)
         assert pwf_high > pwf_low
 
     def test_returns_positive_pressure(self):
@@ -99,7 +100,7 @@ class TestHagedornBrownVlp:
         tubing = make_tubing()
         fluid = make_fluid()
         flow = make_flow()
-        pwf = hagedorn_brown_pwf(flow, tubing, fluid, whp_psi=100.0)
+        pwf = simplified_homogeneous_pwf(flow, tubing, fluid, whp_psi=100.0)
         assert pwf > 0.0
 
     def test_reasonable_pressure_range(self):
@@ -107,21 +108,21 @@ class TestHagedornBrownVlp:
         tubing = make_tubing(depth_ft=6000.0)
         fluid = make_fluid()
         flow = make_flow(q_l_bopd=500.0, gor_scf_per_bbl=500.0, watercut=0.2)
-        pwf = hagedorn_brown_pwf(flow, tubing, fluid, whp_psi=300.0)
+        pwf = simplified_homogeneous_pwf(flow, tubing, fluid, whp_psi=300.0)
         assert 500.0 < pwf < 5000.0
 
 
 # ---------------------------------------------------------------------------
-# Beggs-Brill VLP
+# Additional simplified VLP trends
 # ---------------------------------------------------------------------------
 
-class TestBeggsBrillVlp:
+class TestSimplifiedHomogeneousAdditionalTrends:
 
     def test_pwf_greater_than_whp(self):
         tubing = make_tubing()
         fluid = make_fluid()
         flow = make_flow()
-        pwf = beggs_brill_pwf(flow, tubing, fluid, whp_psi=300.0)
+        pwf = simplified_homogeneous_pwf(flow, tubing, fluid, whp_psi=300.0)
         assert pwf > 300.0
 
     def test_deeper_well_gives_higher_pwf(self):
@@ -129,8 +130,8 @@ class TestBeggsBrillVlp:
         flow = make_flow()
         tubing_shallow = make_tubing(depth_ft=3000.0)
         tubing_deep = make_tubing(depth_ft=8000.0)
-        pwf_shallow = beggs_brill_pwf(flow, tubing_shallow, fluid, whp_psi=300.0)
-        pwf_deep = beggs_brill_pwf(flow, tubing_deep, fluid, whp_psi=300.0)
+        pwf_shallow = simplified_homogeneous_pwf(flow, tubing_shallow, fluid, whp_psi=300.0)
+        pwf_deep = simplified_homogeneous_pwf(flow, tubing_deep, fluid, whp_psi=300.0)
         assert pwf_deep > pwf_shallow
 
     def test_higher_gor_reduces_pwf(self):
@@ -138,20 +139,18 @@ class TestBeggsBrillVlp:
         fluid = make_fluid()
         flow_low = make_flow(gor_scf_per_bbl=100.0)
         flow_high = make_flow(gor_scf_per_bbl=2000.0)
-        pwf_low = beggs_brill_pwf(flow_low, tubing, fluid, whp_psi=300.0)
-        pwf_high = beggs_brill_pwf(flow_high, tubing, fluid, whp_psi=300.0)
+        pwf_low = simplified_homogeneous_pwf(flow_low, tubing, fluid, whp_psi=300.0)
+        pwf_high = simplified_homogeneous_pwf(flow_high, tubing, fluid, whp_psi=300.0)
         assert pwf_high < pwf_low
 
-    def test_both_correlations_give_similar_order_of_magnitude(self):
-        """HB and B&B should be within 30% of each other for typical conditions."""
-        tubing = make_tubing()
-        fluid = make_fluid()
-        flow = make_flow()
-        whp = 300.0
-        pwf_hb = hagedorn_brown_pwf(flow, tubing, fluid, whp_psi=whp)
-        pwf_bb = beggs_brill_pwf(flow, tubing, fluid, whp_psi=whp)
-        ratio = max(pwf_hb, pwf_bb) / min(pwf_hb, pwf_bb)
-        assert ratio < 1.5, f"Correlations too far apart: HB={pwf_hb:.0f}, BB={pwf_bb:.0f}"
+    def test_both_aliases_equal_simplified_pressure(self):
+        """Both deprecated names return exactly the same simplified pressure."""
+        tubing, fluid, flow = make_tubing(), make_fluid(), make_flow()
+        with pytest.warns(DeprecationWarning):
+            pwf_hb = hagedorn_brown_pwf(flow, tubing, fluid, whp_psi=300.0)
+        with pytest.warns(DeprecationWarning):
+            pwf_bb = beggs_brill_pwf(flow, tubing, fluid, whp_psi=300.0)
+        assert pwf_hb == pwf_bb == simplified_homogeneous_pwf(flow, tubing, fluid, 300.0)
 
 
 # ---------------------------------------------------------------------------
@@ -172,3 +171,41 @@ class TestVlpCurve:
         )
         assert len(pwfs) == len(rates)
         assert all(pwfs[i] <= pwfs[i + 1] for i in range(len(pwfs) - 1))
+
+
+@pytest.mark.parametrize("rate,watercut,gor", [
+    (100.0, 0.0, 100.0),
+    (500.0, 0.2, 500.0),
+    (2000.0, 0.9, 2000.0),
+])
+def test_deprecated_aliases_warn_and_equal_simplified(rate, watercut, gor):
+    flow = make_flow(q_l_bopd=rate, watercut=watercut, gor_scf_per_bbl=gor)
+    tubing, fluid = make_tubing(), make_fluid()
+    with pytest.warns(DeprecationWarning, match="does not implement.*simplified homogeneous.*same result"):
+        hb = hagedorn_brown_pwf(flow, tubing, fluid, 300.0)
+    with pytest.warns(DeprecationWarning, match="does not implement.*simplified homogeneous.*same result"):
+        bb = beggs_brill_pwf(flow, tubing, fluid, 300.0)
+    from digitalmodel.production_engineering.vlp_correlations import simplified_homogeneous_pwf
+    assert hb == bb == simplified_homogeneous_pwf(flow, tubing, fluid, 300.0)
+
+
+@pytest.mark.parametrize("name", ["hagedorn_brown", "beggs_brill"])
+def test_curve_selectors_are_deprecated_aliases(name):
+    from digitalmodel.production_engineering.vlp_correlations import vlp_curve
+    args = dict(rates_bopd=[100.0, 500.0, 2000.0], watercut=0.2,
+                gor_scf_per_bbl=500.0, tubing=make_tubing(),
+                fluid=make_fluid(), whp_psi=300.0)
+    with pytest.warns(DeprecationWarning, match="does not implement"):
+        actual = vlp_curve(**args, correlation=name)
+    assert actual == vlp_curve(**args, correlation="simplified_homogeneous")
+
+
+@pytest.mark.parametrize("name", ["hagedorn_brown", "beggs_brill"])
+def test_nodal_selectors_are_deprecated_aliases(name):
+    from digitalmodel.production_engineering import NodalSolver, ReservoirConditions, VogelIpr
+    ipr = VogelIpr(ReservoirConditions(3000.0, 2000.0, 1.0), qmax_bopd=3000.0)
+    args = dict(ipr=ipr, tubing=make_tubing(), fluid=make_fluid(),
+                watercut=0.2, gor_scf_per_bbl=500.0, whp_psi=300.0)
+    with pytest.warns(DeprecationWarning, match="does not implement"):
+        actual = NodalSolver().solve(**args, correlation=name)
+    assert actual == NodalSolver().solve(**args, correlation="simplified_homogeneous")

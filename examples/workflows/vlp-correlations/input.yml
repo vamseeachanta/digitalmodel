@@ -10,8 +10,8 @@ default:
 vlp_correlations:
   case:
     id: registry_vlp_correlations
-    description: Five-point Hagedorn-Brown VLP curve for a typical vertical oil well
-  correlation: hagedorn_brown
+    description: Five-point simplified homogeneous VLP curve for a typical vertical oil well
+  correlation: simplified_homogeneous
   rates_bopd:
     - 100.0
     - 300.0
