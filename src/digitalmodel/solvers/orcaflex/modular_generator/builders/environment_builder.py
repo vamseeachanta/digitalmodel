@@ -81,7 +81,10 @@ class EnvironmentBuilder(BaseBuilder):
     # Safe properties that can be overlaid from raw_properties without
     # triggering "Change not allowed" errors.  These are mode-independent
     # scalar or list properties that exist regardless of wind/wave type.
-    _SAFE_RAW_OVERLAY_KEYS: set[str] = {
+    # Seabed/current selectors retain their default positions before dependent fields.
+    # Selector-first principle: text data files, Ordering issues:
+    # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm
+    _SAFE_RAW_OVERLAY_KEYS: tuple[str, ...] = (
         "WaterSurfaceZ",
         "KinematicViscosity",
         "SeaTemperature",
@@ -116,12 +119,15 @@ class EnvironmentBuilder(BaseBuilder):
         "WindRamping",
         "AirDensity",
         "AirSpeedOfSound",
-    }
+    )
 
     # Wind-type-dependent properties keyed by WindType value.
     # Only emitted when the detected wind type matches.
-    _WIND_TYPE_PROPS: dict[str, set[str]] = {
-        "API spectrum": {
+    # WindType retains its default position before dependent fields; the source
+    # order below retains full-field format before filename. Ordering principle:
+    # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm
+    _WIND_TYPE_PROPS: dict[str, tuple[str, ...]] = {
+        "API spectrum": (
             "VerticalWindVariationFactor",
             "WindSpectrumElevation",
             "WindSpectrumFMin",
@@ -129,8 +135,8 @@ class EnvironmentBuilder(BaseBuilder):
             "WindTimeOrigin",
             "WindSeed",
             "NumberOfWindComponents",
-        },
-        "NPD spectrum": {
+        ),
+        "NPD spectrum": (
             "VerticalWindVariationFactor",
             "WindSpectrumElevation",
             "WindSpectrumFMin",
@@ -138,8 +144,8 @@ class EnvironmentBuilder(BaseBuilder):
             "WindTimeOrigin",
             "WindSeed",
             "NumberOfWindComponents",
-        },
-        "ESDU spectrum": {
+        ),
+        "ESDU spectrum": (
             "VerticalWindVariationFactor",
             "WindSpectrumElevation",
             "WindSpectrumFMin",
@@ -147,13 +153,13 @@ class EnvironmentBuilder(BaseBuilder):
             "WindTimeOrigin",
             "WindSeed",
             "NumberOfWindComponents",
-        },
-        "Full field": {
+        ),
+        "Full field": (
             "WindFullFieldFormat",
             "WindFullFieldTurbSimFileName",
             "WindTimeOrigin",
             "WindOrigin",
-        },
+        ),
     }
 
     # Wind types where WindSpeed is dormant (not settable).
@@ -186,7 +192,7 @@ class EnvironmentBuilder(BaseBuilder):
         # Step 3: Detect and apply wind type from raw_properties
         wind_type = raw.get("WindType", "Constant")
         environment["WindType"] = wind_type
-        wind_dep_keys = self._WIND_TYPE_PROPS.get(wind_type, set())
+        wind_dep_keys = self._WIND_TYPE_PROPS.get(wind_type, ())
         for key in wind_dep_keys:
             if key in raw:
                 environment[key] = raw[key]
