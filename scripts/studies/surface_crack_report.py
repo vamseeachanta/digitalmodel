@@ -181,10 +181,10 @@ table{border-collapse:collapse;font-size:13px;width:100%}td,th{border:1px solid 
 th{background:#e9eef2}h1,h2{line-height:1.2}p{line-height:1.55}code{background:#eee}</style>
 <h1>CalculiX surface-crack spike: one-solver leg</h1>
 <p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2178">issue 2178</a>.
-The two-solver verdict remains open. No production module is changed.</p>''' + conclusion(data) + method_text(data) + '<h2>Results and cost</h2>' + tables + limitations_text() + sources_text() + reproduction_text()
+The two-solver verdict remains open. No production module is changed.</p>''' + conclusion(data) + method_text(data) + '<h2>Results and cost</h2>' + tables + limitations_text(data) + sources_text() + reproduction_text()
 
 
-def limitations_text():
+def limitations_text(data):
     return '''<p>There are no wholly near-field stations on the coarse mesh; only part of the
 intermediate front meets the cited sampling range. All finest-mesh stations meet
 that distance bound, but agreement still misses the comparator. Improvement at the
@@ -202,7 +202,7 @@ free-surface vertex has a three-dimensional corner field, so its extracted scala
 K is an apparent comparison value rather than a certified endpoint SIF.
 Finite-length sensitivity and extraction-window sensitivity are not qualified.
 Only elastic mode I is tested: no J, plasticity, mixed mode, residual stress,
-material qualification or fitness-for-service acceptance follows from this spike.</p>
+material qualification or fitness-for-service acceptance follows from this spike.</p>''' + ring_sensitivity_text(data) + '''
 <p>Interim recommendation covering CalculiX only: retain the installed solver as
 an elastic displacement/stress engine, but do not promote this stress-extrapolation
 route to a Level 3 driving-force implementation. A separate investigation could
@@ -214,6 +214,24 @@ sensitivity, refinement costs and the same comparator. Code_Aster is not install
 and is not installed by this job. Licensed-solver receipts are unavailable and
 unused. The two-solver selection and the program note's recommendation wait for
 that leg and second-provider review. No follow-on issue is opened.</p>'''
+
+
+def ring_sensitivity_text(data):
+    p = data["runs"][-1]["front"][-1]
+    radii, apparent = p["radii_mm"], p["apparent_k"]
+    slope = (apparent[2]-apparent[1])/(radii[2]-radii[1])
+    intercept = apparent[1]-slope*radii[1]
+    difference = 100*(intercept/p["reference_k"]-1)
+    return f'''<p>The reported error sign depends on the node rings used in extrapolation.
+At the deepest point on the finest mesh, apparent K values are
+{apparent[0]:.6f}, {apparent[1]:.6f} and {apparent[2]:.6f} MPa sqrt(m), at radii
+{radii[0]:.9f}, {radii[1]:.9f} and {radii[2]:.9f} mm respectively.
+The first ring, the node next to the front, is the outlier. As an illustration
+only, extrapolating from the second and third rings gives {intercept:.6f} MPa sqrt(m),
+{difference:.3f}% above the {p['reference_k']:.6f} MPa sqrt(m) reference, instead of
+{100*p['relative_difference']:.3f}% for the reported fit. Both miss the
+{100*data['comparison_tolerance']:g}% comparator; the route is not usable either way.
+This illustration adds no result and changes no reported difference.</p>'''
 
 
 def reproduction_text():

@@ -19,14 +19,20 @@ import subprocess
 from pathlib import Path
 
 
-# Inputs: test_crack_fad.py uses a=5, c=25 and sigma=100 in public synthetic
-# tests; t=2*a, b=c_fixture, c=a for a semicircle. Material is the synthetic
-# STEEL fixture in test_fem_chain.py. No client geometry or standard values.
+# Benchmark dimensions and stress are chosen for this public, synthetic study.
+# The depth, half-width and stress have the same value as inputs in
+# test_crack_fad.py; thickness and semicircular shape are study choices.
+# No client geometry or values from a standard are used.
 BENCHMARK = dict(a_mm=5.0, c_mm=5.0, t_mm=2*5.0,
                  sigma_m_mpa=100.0, width_mm=25.0)
+# Material constants are chosen for this public, synthetic study; each has the
+# same value as the STEEL fixture in test_fem_chain.py, not a derived value.
+# No client material data or values from a standard are used.
 E_MPA, NU = 210000.0, 0.3
 HALF_LENGTH_MM = BENCHMARK["width_mm"]
-# Six translation/rotation DOFs in test_fem_chain.py; successive doubling.
+# Refinement levels are chosen for this public, synthetic study, with successive
+# doubling; the initial level has the same value as the DOF count in
+# test_fem_chain.py. No client geometry or values from a standard are used.
 LEVELS = (6, 2*6, 2*2*6)
 # Existing plate-validation test's relative tolerance; a research comparator.
 COMPARISON_TOLERANCE = 0.05

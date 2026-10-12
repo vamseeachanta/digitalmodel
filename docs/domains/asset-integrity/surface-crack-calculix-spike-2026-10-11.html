@@ -85,7 +85,16 @@ free-surface vertex has a three-dimensional corner field, so its extracted scala
 K is an apparent comparison value rather than a certified endpoint SIF.
 Finite-length sensitivity and extraction-window sensitivity are not qualified.
 Only elastic mode I is tested: no J, plasticity, mixed mode, residual stress,
-material qualification or fitness-for-service acceptance follows from this spike.</p>
+material qualification or fitness-for-service acceptance follows from this spike.</p><p>The reported error sign depends on the node rings used in extrapolation.
+At the deepest point on the finest mesh, apparent K values are
+7.375587, 9.495567 and 9.355543 MPa sqrt(m), at radii
+0.008680556, 0.034722222 and 0.078125000 mm respectively.
+The first ring, the node next to the front, is the outlier. As an illustration
+only, extrapolating from the second and third rings gives 9.607586 MPa sqrt(m),
+9.655% above the 8.761661 MPa sqrt(m) reference, instead of
+-11.907% for the reported fit. Both miss the
+5% comparator; the route is not usable either way.
+This illustration adds no result and changes no reported difference.</p>
 <p>Interim recommendation covering CalculiX only: retain the installed solver as
 an elastic displacement/stress engine, but do not promote this stress-extrapolation
 route to a Level 3 driving-force implementation. A separate investigation could
