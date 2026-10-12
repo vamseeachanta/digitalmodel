@@ -18,7 +18,8 @@ its LICENSE (MIT). No private original, working note or licensed table is copied
 These are computational references, not qualified complete physical designs.
 Equations follow the public dnv_rp_b401 docstrings and the fixed-length
 depletion/design-loop model documented by anode_sizing.design_cp_system.
-Every expected value below is independent arithmetic, never a production call.
+Expected values are printed source figures or independent arithmetic, never
+a production call.
 """
 
 from __future__ import annotations
@@ -110,12 +111,15 @@ def _hull_expected() -> dict[str, float | int | str]:
                 governing_case=("mass", "initial", "final")[counts.index(max(counts))])
 
 
-def _hull_actual() -> dict:
+def _hull_actual(*, source_basis: bool = False) -> dict:
     """Public sizing API, retaining source coating, alloy and geometry inputs."""
     densities = [tables.design_current_density(
         tables.Climate.TEMPERATE, tables.DepthBand.M0_30, phase, "2021"
     ).value for phase in (tables.DesignPhase.INITIAL, tables.DesignPhase.MEAN,
                          tables.DesignPhase.FINAL)]
+    if source_basis:
+        # calc-010, Input Parameters: all three bare-steel densities are 200 mA/m2.
+        densities = [.200, .200, .200]
     p = AnodeSizingInput(
         surface_area_m2=13446.04,
         initial_breakdown_factor=b401.coating_breakdown_factor(.02, .005, 0, edition="2021"),
@@ -147,32 +151,49 @@ HULL_METRICS = [
 ]
 
 
-@pytest.mark.parametrize("quantity,places,plan", [
-    pytest.param(q, places, None, id=q) for q, places in HULL_METRICS
-] + [
-    pytest.param("current_demand_A", 1, 322.7, id="plan_mean_current",
-                 marks=pytest.mark.xfail(strict=True, raises=AssertionError,
-                     reason="B401-mapped mean 161.35248 A vs plan 322.7 A: density basis differs")),
-    pytest.param("total_anode_mass_kg", 0, 66515, id="plan_mass",
-                 marks=pytest.mark.xfail(strict=True, raises=AssertionError,
-                     reason="B401-mapped mass 33257.593525 kg vs plan 66515 kg: density basis differs")),
-    pytest.param("number_of_anodes", None, 2419, id="plan_count",
-                 marks=pytest.mark.xfail(strict=True, raises=AssertionError,
-                     reason="B401-mapped count 1210 vs plan 2419: density basis differs")),
-])
-def test_floating_storage_hull(quantity: str, places: int | None, plan: float | None) -> None:
-    """Compare each independently derived quantity, or the issue's disputed figure.
+@pytest.mark.parametrize("quantity,places", HULL_METRICS)
+def test_floating_storage_hull_table_mapping(quantity: str, places: int | None) -> None:
+    """Mapping onto the recommended-practice table densities, not a reproduction
+    of the source. The source's coating, alloy and geometry are retained.
 
-    The note's Reproduction note supplies the B401 submerged temperate densities
-    instead of its source's all-phase .200 A/m2. Source coating (.005/year) and
-    alloy potential are explicitly retained; no licensed table text is copied.
+    Independent arithmetic checks API consistency for this mapped scenario;
+    it does not establish agreement with an outside design benchmark or with
+    the note's router coating mapping. No licensed table text is copied.
     """
-    expected = _hull_expected()[quantity] if plan is None else plan
+    expected = _hull_expected()[quantity]
     actual = _hull_actual()[quantity]
     if places is None:
         assert actual == expected
     else:
         _assert_rounded(actual, expected, places)
+
+
+@pytest.mark.parametrize("quantity,places,source", [
+    ("initial_current_demand_A", 3, 53.784),
+    ("current_demand_A", 3, 322.705),
+    ("final_current_demand_A", 3, 591.626),
+    ("total_anode_mass_kg", 0, 66515),
+    ("number_of_anodes_mass", None, 2419),
+    ("governing_case", None, "mass"),
+    ("anode_resistance_ohm", 3, .379),
+])
+def test_floating_storage_hull_source_basis(
+    quantity: str, places: int | None, source: float | str,
+) -> None:
+    """Benchmark calc-010 on its own basis, not the router's table mapping.
+
+    Input Parameters gives 200 mA/m2 for initial, mean and final density.
+    Calculation Results prints the currents, net mass, mass count, governing
+    criterion and initial resistance above; scratch arithmetic from those
+    inputs reproduces each within half the last printed digit.
+    Source counts by initial/final current are excluded: its depleted-anode
+    geometry differs from the sizing module's fixed-length depletion method.
+    """
+    actual = _hull_actual(source_basis=True)[quantity]
+    if places is None:
+        assert actual == source
+    else:
+        _assert_rounded(actual, source, places)
 
 
 def _riser_expected() -> dict[str, float]:
@@ -237,12 +258,8 @@ def _riser_actual() -> dict[str, float]:
     pytest.param("stand_current", 2, 2.10, id="plan_stand_current"),
     pytest.param("flush_resistance", 3, .273, id="plan_flush_resistance"),
     pytest.param("flush_current", 3, .916, id="plan_flush_current"),
-    pytest.param("mean_current", 2, 9.29, id="plan_group_current",
-                 marks=pytest.mark.xfail(strict=True, raises=AssertionError,
-                     reason="Structural mean 5.774208 A vs plan group 9.29 A: missing areas/phase basis")),
-    pytest.param("structural_mass", 2, 679.65, id="plan_group_mass",
-                 marks=pytest.mark.xfail(strict=True, raises=AssertionError,
-                     reason="Structural stand-off mass 758.730931 kg vs plan group 679.65 kg: missing mixed allocation")),
+    pytest.param("mean_current", 2, 9.29, id="plan_group_current"),
+    pytest.param("structural_mass", 2, 679.65, id="plan_group_mass"),
 ])
 def test_deepwater_riser_base(quantity: str, places: int, plan: float | None) -> None:
     """Assert known structural/anode quantities, exposing incomplete group scope.
@@ -251,7 +268,15 @@ def test_deepwater_riser_base(quantity: str, places: int, plan: float | None) ->
     (half a micro-unit absolute, no relative slack); source comparisons allow
     only half their last printed unit. No uncertainty in the source is inferred.
     Insulated surfaces, bare connectors and mixed-type allocation are excluded
-    from the subtotal; full-group figures remain disputed, never qualified.
+    from the subtotal. The plan's group figures include surface area absent
+    from the public note; the note does not identify the current as initial,
+    mean or final, and the two plan figures are inconsistent with each other.
+    They cannot be reproduced from the public note and are skipped.
     """
+    if plan is not None and quantity in ("mean_current", "structural_mass"):
+        pytest.skip(
+            "Group area is missing from the public note; current phase is unspecified; "
+            "plan current/mass figures are inconsistent and cannot be reproduced"
+        )
     expected = _riser_expected()[quantity] if plan is None else plan
     _assert_rounded(_riser_actual()[quantity], expected, places)
