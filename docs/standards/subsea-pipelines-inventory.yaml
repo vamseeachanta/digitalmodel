@@ -45,7 +45,9 @@
 # accepted_edition_by_regime: only regime incorporation or naming stated in the note; otherwise empty.
 # accepted_edition_by_regime[].regime: regime named in the note.
 # accepted_edition_by_regime[].edition_or_statement: incorporation/naming statement, including uncertainty.
-# accepted_edition_by_regime[].source_key: cited key resolved in meta.source_keys, not necessarily row sources.
+# accepted_edition_by_regime[].source_key: one cited key resolved in meta.source_keys, not necessarily row sources.
+# accepted_edition_by_regime[].source_keys: two or more distinct cited keys resolved in meta.source_keys.
+# Each regime entry has either source_key or source_keys, never both.
 meta:
   domain: subsea pipelines
   issue_reference: https://github.com/vamseeachanta/digitalmodel/issues/1813
@@ -437,11 +439,9 @@ standards:
   - regime: US
     edition_or_statement: The US regulator's pipeline design formula is tied to it, but at the 2003 edition
       (R1, R4).
-    source_key: R1
-  - regime: US
-    edition_or_statement: The US regulator's pipeline design formula is tied to it, but at the 2003 edition
-      (R1, R4).
-    source_key: R4
+    source_keys:
+    - R1
+    - R4
 - code_id: PD 8010-2
   also_known_as: []
   designation: PD 8010-2
@@ -466,7 +466,6 @@ standards:
   unverified_statements:
   - key_methods
   - relation_to_neighbours
-  - accepted_edition_by_regime
   relation_to_neighbours: UK practice; UK regulator lists it with the DNV standard as recognised (search
     summary of the regulator site; page not opened, unv.).
   boundary_flags: []
@@ -478,11 +477,7 @@ standards:
     - https://www.dnv.com/energy/services/pipelines/pipeline-codes/
     - https://knowledge.bsigroup.com/products/pipeline-systems-subsea-pipelines-code-of-practice
   date_checked: '2026-10-11'
-  accepted_edition_by_regime:
-  - regime: UK
-    edition_or_statement: UK regulator lists it with the DNV standard as recognised (search summary of
-      the regulator site; page not opened, unv.).
-    source_key: P1
+  accepted_edition_by_regime: []
 - code_id: BS EN 14161
   also_known_as: []
   designation: BS EN 14161
@@ -1726,9 +1721,6 @@ standards:
   - regime: US
     edition_or_statement: The US regulation incorporates Spec 17J at the 4th edition (R1).
     source_key: R1
-  - regime: US
-    edition_or_statement: US regulation uses API RP 2RD 1st edition for floating platform risers, R4
-    source_key: R4
   issue_designation_correction:
   - issue_text: ISO 13628-1
     issuer_page_today: ISO 13628-1:2025 (Ed 3) replaced the 2005 edition and its amendment

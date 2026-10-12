@@ -100,11 +100,20 @@ def validate_entry(entry, targets, source_catalog):
 def validate_regimes(regimes, source_catalog):
     for regime in regimes:
         require(isinstance(regime, dict), "regime mapping")
-        require(set(regime) == {"regime", "edition_or_statement", "source_key"},
+        common = {"regime", "edition_or_statement"}
+        require(set(regime) in (common | {"source_key"}, common | {"source_keys"}),
                 "regime keys")
-        require(all(isinstance(value, str) and value for value in regime.values()),
+        require(all(isinstance(regime[key], str) and regime[key] for key in common),
                 "regime strings")
-        require(regime["source_key"] in source_catalog, "regime source")
+        if "source_key" in regime:
+            keys = [regime["source_key"]]
+            strings(keys, "regime source key")
+        else:
+            keys = regime["source_keys"]
+            strings(keys, "regime source keys")
+            require(len(keys) >= 2 and len(set(keys)) == len(keys),
+                    "distinct regime sources")
+        require(all(key in source_catalog for key in keys), "regime source")
 
 
 def forbid_pages(value):
@@ -154,9 +163,19 @@ def test_inventory_schema_and_integrity(inventory):
     validate_inventory(inventory)
 
 
+def test_validator_accepts_multiple_regime_sources(inventory):
+    row = deepcopy(inventory["standards"][0])
+    regime = row["accepted_edition_by_regime"][0]
+    regime.pop("source_key")
+    regime["source_keys"] = ["R1", "R4"]
+    catalog = {source["key"]: source for source in inventory["meta"]["source_keys"]}
+    validate_regimes(row["accepted_edition_by_regime"], catalog)
+
+
 @pytest.mark.parametrize("mutation", [
     "duplicate", "type", "basis", "boundary", "uncertain", "edition",
     "url", "reference", "regime-source", "pages", "count", "source-mismatch",
+    "regime-both", "regime-single-list", "regime-duplicate", "regime-unknown-list",
 ])
 def test_validator_rejects_broken_in_memory_inventory(inventory, mutation):
     broken = deepcopy(inventory)
@@ -180,6 +199,17 @@ def test_validator_rejects_broken_in_memory_inventory(inventory, mutation):
         row["links_to"] = ["unknown"]
     elif mutation == "regime-source":
         row["accepted_edition_by_regime"][0]["source_key"] = "unknown"
+    elif mutation.startswith("regime-"):
+        regime = row["accepted_edition_by_regime"][0]
+        if mutation == "regime-both":
+            regime["source_keys"] = ["R1", "R4"]
+        else:
+            regime.pop("source_key")
+            regime["source_keys"] = {
+                "regime-single-list": ["R1"],
+                "regime-duplicate": ["R1", "R1"],
+                "regime-unknown-list": ["R1", "unknown"],
+            }[mutation]
     elif mutation == "pages":
         row["pages_relevant"] = []
     elif mutation == "count":
