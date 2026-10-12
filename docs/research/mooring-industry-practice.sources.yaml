@@ -1,0 +1,208 @@
+schema_version: 1
+document: docs/research/mooring-industry-practice.md
+issue: 1807
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+companion_file: mooring-industry-practice.records.yaml
+sources:
+- id: M1
+  citation: Usability and suitability of high strength mooring chains (project report page). Norwegian Ocean Industry
+    Authority (Havtil), 2022.
+  url: https://www.havtil.no/en/explore-technical-subjects2/technical-competence/reports-from-projects/2022/usability-and-suitability-of-high-strength-mooring-chains/
+  status: read
+- id: M2
+  citation: DNV investigates mooring lines failures. Offshore magazine, 2022.
+  url: https://www.offshore-mag.com/business-briefs/equipment-engineering/article/14287387/dnv-investigates-mooring-lines-failures
+  status: read
+- id: M3
+  citation: 'Audit report: follow-up of anchoring systems on two production floaters. Havtil, 2023.'
+  url: https://www.havtil.no/en/supervision/audit-reports/2023/aker-bp--skarv-and-alvheim--follow-up-of-anchoring-systems/
+  status: read
+- id: M4
+  citation: 'Floating Wind Joint Industry Programme: Phase V summary report (landing page). Carbon Trust, 2024.'
+  url: https://www.carbontrust.com/our-work-and-impact/guides-reports-and-tools/floating-wind-joint-industry-programme-phase-v-summary-report
+  status: read
+- id: M5
+  citation: Floating Wind Stage 3 Phase I summary report (landing page). Carbon Trust, 2025.
+  url: https://www.carbontrust.com/our-work-and-impact/guides-reports-and-tools/floating-wind-stage-3-phase-i-summary-report
+  status: read
+  as_written_in_document: Floating Wind Stage 3 Phase 1 summary report (landing page). Carbon Trust, 2025.
+- id: M6
+  citation: Mooring Integrity Guidelines, Issue 3 (catalogue page). Offshore Energies UK, undated.
+  url: https://oeuk.org.uk/product/mooring-integrity-guidelines-issue-3/
+  status: read
+- id: M7
+  citation: 'OrcaFlex help: Chain. Orcina, current web help.'
+  url: https://www.orcina.com/webhelp/OrcaFlex/Content/html/Chain.htm
+  status: read
+- id: M8
+  citation: 'OrcaFlex help: Rope/wire. Orcina.'
+  url: https://www.orcina.com/webhelp/OrcaFlex/Content/html/Ropewire.htm
+  status: read
+- id: M9
+  citation: 'OrcaFlex help: Lines. Orcina.'
+  url: https://www.orcina.com/webhelp/OrcaFlex/Content/html/Lines.htm
+  status: read
+- id: M10
+  citation: Anchors (product overview). Delmar Vryhof, 2026.
+  url: https://delmarvryhof.com/products/anchors/
+  status: read
+- id: M11
+  citation: STEVPRIS Mk6 product page. Delmar Systems, 2026.
+  url: https://delmarsystems.com/products/anchors/stevpris-mk6/
+  status: read
+- id: M12
+  citation: STEVMANTA product page. Delmar Systems, 2026.
+  url: https://delmarsystems.com/products/anchors/stevmanta/
+  status: read
+- id: M13
+  citation: STEVSHARK REX product page. Delmar Systems, 2026.
+  url: https://delmarsystems.com/products/anchors/stevshark-rex/
+  status: read
+- id: M14
+  citation: Products. Ramnäs Bruk, 2026.
+  url: https://ramnas.com/products/
+  status: read
+- id: M15
+  citation: Studless mooring chain. Ramnäs Bruk, 2026.
+  url: https://ramnas.com/products/mooring-chains/studless/
+  status: read
+- id: M16
+  citation: Downloads (list of 17 documents). Ramnäs Bruk, 2026.
+  url: https://ramnas.com/downloads/
+  status: read
+- id: M17
+  citation: Home page. Vicinay Marine, 2026.
+  url: https://www.vicinaymarine.com/
+  status: read
+- id: M18
+  citation: Marine and mooring chains manufacture. Vicinay Marine, 2026.
+  url: https://www.vicinaymarine.com/business-units/marine-and-mooring-chains-manufacture/
+  status: read
+- id: M19
+  citation: Key R&D projects. Vicinay Marine, 2026.
+  url: https://www.vicinaymarine.com/business-units/engineering-and-innovation/research-and-development/key-rd-projects/
+  status: read
+- id: M20
+  citation: Chains (product category and table index). Sotra Anchor & Chain, 2026.
+  url: https://www.sotra.net/products/chains
+  status: read
+- id: M21
+  citation: Deepwater mooring (Bexco). Bekaert, 2026.
+  url: https://ropes.bekaert.com/gb/en/bexco/industries/oil-and-gas/deepwater-mooring
+  status: read
+- id: M22
+  citation: Home page. Lankhorst Offshore, 2026.
+  url: https://www.lankhorstoffshore.com/
+  status: read
+- id: M23
+  citation: 'Deepwater mooring: rope selection. Lankhorst Offshore, 2026.'
+  url: https://www.lankhorstoffshore.com/markets/deepwater-mooring/rope-selection
+  status: read
+- id: M24
+  citation: 'Nylon ropes for floating wind taut and semi-taut moorings: a progress report. Lankhorst Offshore, 2025.'
+  url: https://www.lankhorstoffshore.com/about-us/news-events/nylon-ropes-for-fowt-taut-and-semi-taut-moorings-a-progress-report
+  status: read
+- id: M25
+  citation: MoorDyn documentation. MoorDyn project, current.
+  url: https://moordyn.readthedocs.io/en/latest/
+  status: read
+- id: M26
+  citation: MoorPy documentation. US national laboratory (wind software stack), current.
+  url: https://moorpy.readthedocs.io/en/latest/
+  status: read
+  as_written_in_document: MoorPy documentation. United States national laboratory (wind software stack), current.
+- id: M27
+  citation: MoorPy repository.
+  url: https://github.com/NREL/MoorPy
+  status: read
+- id: M28
+  citation: FloatingArrayDesign organisation (repository list).
+  url: https://github.com/FloatingArrayDesign
+  status: read
+- id: M29
+  citation: MAP++ documentation.
+  url: https://map-plus-plus.readthedocs.io/en/latest/
+  status: read
+- id: M30
+  citation: DNV-RP-E308 Mooring integrity management (catalogue page, edition 2021-10). DNV.
+  url: https://www.dnv.com/energy/standards-guidelines/dnv-rp-e308-mooring-integrity-management/
+  status: read
+- id: M31
+  citation: Mooring integrity requires life-cycle thinking as deepwater projects grow more complex. Offshore magazine,
+    2026.
+  url: https://www.offshore-mag.com/subsea/article/55393856/intermoor-mooring-integrity-requires-life-cycle-thinking-as-deepwater-projects-grow-more-complex
+  status: read
+- id: M32
+  citation: DeepStar mooring study to form basis of new API RP. Offshore magazine, 2015.
+  url: https://www.offshore-mag.com/business-briefs/equipment-engineering/article/16758300/deepstar-mooring-study-to-form-basis-of-new-api-rp
+  status: read
+- id: M33
+  citation: 'Hall, Carmo, Lozon: Frequency-domain modeling of floating wind arrays with shared mooring lines. Wind
+    Energy Science 10, 3027-3043, 2025.'
+  url: https://wes.copernicus.org/articles/10/3027/2025/
+  status: read
+- id: M34
+  citation: 'Ludot et al.: Data-driven surrogate models for real-time fatigue monitoring of chain mooring lines
+    in floating wind turbines (preprint, withdrawn). Wind Energy Science Discussions, 2025.'
+  url: https://wes.copernicus.org/preprints/wes-2024-162/
+  status: read
+- id: M35
+  citation: Sesam software for mooring and risers. DNV, 2026.
+  url: https://www.dnv.com/services/sesam-software-for-mooring-and-risers-2310/
+  status: read
+- id: M36
+  citation: 'Ariane: advanced mooring software. Bureau Veritas Marine & Offshore, 2026.'
+  url: https://marine-offshore.bureauveritas.com/node/362
+  status: read
+- id: M37
+  citation: Mooring integrity (research and development page). Bureau Veritas Marine & Offshore, 2026.
+  url: https://marine-offshore.bureauveritas.com/research-development/mooring-integrity
+  status: read
+- id: M38
+  citation: 'Technical programme session: Technological Advancements in Mooring Systems Design, Failure Detections
+    and Repair Case Studies. Offshore Technology Conference, 2025.'
+  url: https://2026.otcnet.org/2025-technical-program/technological-advancements-in-mooring-systems-design-failure-detections-and-repair-case-studies
+  status: read
+- id: M39
+  citation: 'Technical programme session: Advances in Floating Systems, Design, Monitoring, and Integrity Management.
+    Offshore Technology Conference, 2026.'
+  url: https://2027.otcnet.org/2026-technical-program/advances-in-mooring-systems-design-monitoring-and-integrity-management
+  status: read
+- id: M40
+  citation: MoniMoor JIP. MARIN, 2022.
+  url: https://www.marin.nl/en/jips/monimoor
+  status: read
+- id: M41
+  citation: Press release on the revised floating wind turbine structure standard and certification guideline. DNV,
+    2018.
+  url: https://www.dnv.com/news/2018/dnv-gl-launches-revised-design-standard-and-new-certification-guideline-for-floating-wind-turbines-130237/
+  status: read
+- id: M42
+  citation: Advanced Sensors and Digital Twin Technology for Reliable Mooring Integrity Assessment Through Physics
+    Based Models (submission 157554). ASME OMAE2025 session gallery.
+  url: https://omae.secure-platform.com/a/solicitations/246/sessiongallery/20278/application/157554
+  status: read
+- id: M43
+  citation: Recent Floating Wind Modelling Enhancements in OpenFAST (submission 123909). ASME OMAE2024 session gallery.
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15604/application/123909
+  status: read
+- id: M44
+  citation: 'Zeng et al.: Mechanical behavior of synthetic fiber ropes for mooring floating offshore wind turbines.
+    PLoS One 20(2), e0318190, 2025.'
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC11801622/
+  status: read
+- id: M45
+  citation: 'Bergua et al.: OC6 project Phase IV: validation of numerical models for novel floating offshore wind
+    support structures. Wind Energy Science 9, 1025-1051, 2024.'
+  url: https://wes.copernicus.org/articles/9/1025/2024/
+  status: read
+- id: M47
+  citation: 'Morris-Thomas, Martens: An application of machine learning to the motion response prediction of floating
+    assets. arXiv 2506.15713, 2025.'
+  url: https://arxiv.org/abs/2506.15713
+  status: read
+- id: M48
+  citation: Aqwa product page. Ansys (Synopsys), 2026.
+  url: https://ansys.synopsys.com/products/structures/ansys-aqwa
+  status: read
