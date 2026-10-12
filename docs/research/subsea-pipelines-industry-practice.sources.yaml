@@ -1,0 +1,250 @@
+schema_version: 1
+document: docs/research/subsea-pipelines-industry-practice.md
+issue: 1815
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+sources:
+- id: P1
+  citation: 'Bai et al.: Probabilistic Approach of Lateral Buckling Analyses for HPHT Pipelines With Buckle Mitigators (submission
+    126874). ASME OMAE2024 session gallery.'
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15119/application/126874
+  status: read
+- id: P2
+  citation: 'Jebali et al.: Lateral Buckling Control With the Residual Curvature Method for Ultra Deepwater Flowlines (submission
+    121344). ASME OMAE2024.'
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15119/application/121344
+  status: read
+- id: P3
+  citation: 'Hayes et al.: Pipeline Lateral Buckling Mitigation With Combined Sleepers and Mattresses (submission 123740).
+    ASME OMAE2024.'
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15119/application/123740
+  status: read
+- id: P4
+  citation: 'Teh et al.: Pipeline Field Observation After Span Rectification by Burial (submission 120824). ASME OMAE2024.'
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15120/application/120824
+  status: read
+- id: P5
+  citation: 'Xie et al.: Optimizing Subsea Rock Installation for Cost Savings: A Norwegian Shelf Case Study (submission 128176).
+    ASME OMAE2024.'
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15752/application/128176
+  status: read
+- id: P6
+  citation: Session 04-04-04 Lateral Buckling and Reeling (listing). ASME OMAE2024.
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15119
+  status: read
+- id: P7
+  citation: Session 04-04-02 Rigid Pipe Mechanics II (listing). ASME OMAE2024.
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15120
+  status: read
+- id: P8
+  citation: Pipeline tools (product overview). DNV, 2026.
+  url: https://www.dnv.com/energy/services/subsea-facilities/pipeline-tools/
+  status: read
+- id: P9
+  citation: 'Pipeline, umbilical and cable lateral stability software: PILSS. DNV, 2026.'
+  url: https://www.dnv.com/services/pipeline-umbilical-and-cable-lateral-stability-software-pilss-241930/
+  status: read
+- id: P10
+  citation: 'Joint industry project: improving on-bottom design for pipelines, cables and umbilicals. DNV, 2026.'
+  url: https://www.dnv.com/group/joint-industry-projects/improving-on-bottom-design-for-pipelines-cables-and-umbilicals/
+  status: read
+- id: P11
+  citation: DNV-RP-F109 On-bottom stability design of submarine pipelines, cables and umbilicals (catalogue page). DNV.
+  url: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f109-on-bottom-stability-design-of-submarine-pipelines/
+  status: read
+- id: P12
+  citation: DNV-RP-F110 Global buckling of submarine pipelines (catalogue page). DNV.
+  url: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f110-global-buckling-of-submarine-pipelines/
+  status: read
+- id: P13
+  citation: DNV-RP-F114 Pipe-soil interaction for submarine pipelines (catalogue page). DNV.
+  url: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f114-pipe-soil-interaction-for-submarine-pipelines/
+  status: read
+- id: P14
+  citation: DNV-RP-F105 Free spanning pipelines (catalogue page). DNV.
+  url: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f105-free-spanning-pipelines/
+  status: read
+- id: P15
+  citation: DNV-RP-F101 Corroded pipelines (catalogue page). DNV.
+  url: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f101-corroded-pipelines/
+  status: read
+- id: P16
+  citation: DNV-ST-F101 Submarine pipeline systems (catalogue page). DNV.
+  url: https://www.dnv.com/energy/standards-guidelines/dnv-st-f101-submarine-pipeline-systems/
+  status: read
+- id: P17
+  citation: 'TAP-454: Safe Design of Hot On-Bottom Pipelines with Lateral Buckling (research record). US Bureau of Safety
+    and Environmental Enforcement.'
+  url: https://www.bsee.gov/research-record/tap-454-safe-design-hot-bottom-pipelines-lateral-buckling-safebuck
+  status: read
+- id: P18
+  citation: 'TAP-664: Safebuck Phase III and Safebuck Geo JIPs (research record). US Bureau of Safety and Environmental Enforcement,
+    2014.'
+  url: https://www.bsee.gov/research-record/tap-664-safebuck-phase-iii-and-safebuck-geo-jips
+  status: read
+- id: P19
+  citation: 'Bruton, Carr: Bucking the trend. Offshore Engineer, 2010.'
+  url: https://www.oedigital.com/amp/news/460109-bucking-the-trend
+  status: read
+- id: P20
+  citation: 'Griffiths et al.: Improved stability design of subsea pipelines on mobile seabeds: learnings from the STABLEpipe
+    JIP. ASME OMAE2018 (repository record).'
+  url: https://research-repository.uwa.edu.au/en/publications/improved-stability-design-of-subsea-pipelines-on-mobile-seabeds-l/
+  status: read
+- id: P21
+  citation: Castorone extends the threshold for deepwater, large-diameter pipelay. Offshore magazine, 2013.
+  url: https://www.offshore-mag.com/vessels/article/16761539/castorone-extends-the-threshold-for-deepwater-large-diameter-pipelay
+  status: read
+- id: P22
+  citation: McDermott DLV 2000 (vessel profile). Ship Technology.
+  url: https://www.ship-technology.com/projects/mcdermott-dlv-2000/
+  status: read
+- id: P23
+  citation: Aegir (reference page). Ulstein.
+  url: https://ulstein.com/references/aegir
+  status: read
+- id: P24
+  citation: Reel-lay vessel launch report. Ship Technology, 2019.
+  url: https://www.ship-technology.com/news/reel-lay-vessel-subsea
+  status: read
+- id: P25
+  citation: 'Tavakoli: Static Analysis for Offshore Pipelay using software OrcaFlex: Development and Validation of a Model
+    (master''s thesis record). Università di Bologna, 2025.'
+  url: https://amslaurea.unibo.it/id/eprint/36480/
+  status: read
+- id: P26
+  citation: 'OrcaFlex help: Supports, Data. Orcina.'
+  url: https://www.orcina.com/webhelp/OrcaFlex/Content/html/Supports,Data.htm
+  status: read
+- id: P27
+  citation: 'OrcaFlex examples: Pipelay and recovery. Orcina.'
+  url: https://www.orcina.com/resources/examples/?key=e
+  status: read
+- id: P28
+  citation: New DNV recommended practice supports offshore hydrogen pipelines development. World Pipelines, 2026.
+  url: https://www.worldpipelines.com/regulations-and-standards/26032026/new-dnv-recommended-practice-supports-offshore-hydrogen-pipelines-development/amp/
+  status: read
+- id: P29
+  citation: 'Joint industry project: CO2 Safe and Sour. DNV.'
+  url: https://www.dnv.com/group/joint-industry-projects/hydrogen-sulfide-challenges-in-carbon-dioxide-pipelines-co2-safe-and-sour/
+  status: read
+- id: P30
+  citation: 'Joint industry project: mitigation of pressure containment capacity reduction caused by compressive true force.
+    DNV.'
+  url: https://www.dnv.com/group/joint-industry-projects/mitigation-of-pressure-containment-capacity-reduction-caused-by-compressive-true-force-preshot/
+  status: read
+- id: P31
+  citation: 'Pipeline installation: new JIP to unlock significant cost savings (press release). DNV, 2018.'
+  url: https://www.dnv.com/news/2018/pipeline-installation-dnv-gl-new-jip-to-unlock-significant-cost-savings-118250/
+  status: read
+- id: P32
+  citation: 'Birk: Freespan remediation of a gas trunk line in a tidal national park (abstract). Pipeline Technology Conference,
+    2020.'
+  url: https://www.pipeline-conference.com/abstracts/norpipe-freespan-remediation-german-wadden-sea
+  status: read
+- id: P33
+  citation: Global buckling (training course page). DNV.
+  url: https://www.dnv.com/training/global-buckling-10054
+  status: read
+- id: P34
+  citation: Sesam software for mooring and risers (lists the VIV module for free-span pipelines). DNV.
+  url: https://www.dnv.com/services/sesam-software-for-mooring-and-risers-2310/
+  status: read
+# L1, L2, ... identifiers are assigned by this transcription job.
+located_not_read:
+- id: L1
+  text: 'Contractor data sheets (PDF): S-lay vessel specification sheet 2026 (https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf);
+    S-lay/J-lay and reel-lay vessel data sheets 2025 on subsea7.com. Contractor web pages for Saipem, TechnipFMC (access refused),
+    Subsea7 (challenge page), McDermott, Heerema, Allseas ("not found").'
+  urls:
+  - https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf
+  status: located_not_read
+- id: L2
+  text: 'Pipeline and riser loss of containment 2001 to 2020, seventh edition, Energy Institute, December 2024: access refused;
+    priced report.'
+  urls: []
+  status: located_not_read
+- id: L3
+  text: UK regulator guidance on pipeline anchor hazards (PDF) and a consultancy paper on a 2007 anchor-strike assessment
+    (PDF).
+  urls: []
+  status: located_not_read
+- id: L4
+  text: 'Probabilistic lateral buckling Python package (package page failed to load; repository "not found") and two general
+    pipeline Python packages: search summaries only.'
+  urls: []
+  status: located_not_read
+- id: L5
+  text: 'Route and span analysis software from a geotechnical contractor (version 3.0 announced 2015): article page returned
+    navigation only.'
+  urls: []
+  status: located_not_read
+- id: L6
+  text: 'Trade article on free-span assessment (Pipeline & Gas Journal, April 2021): preview only.'
+  urls: []
+  status: located_not_read
+- id: L7
+  text: Orcina "OrcaFlex for pipelay" brochure and contact-modelling article (PDFs).
+  urls: []
+  status: located_not_read
+- id: L8
+  text: DNV-RP-F104 (CO2 pipelines) and DNV-RP-F123 (hydrogen) catalogue pages; subsea toolkit page.
+  urls: []
+  status: located_not_read
+- id: L9
+  text: Remaining OMAE2024 pipeline abstracts (lined pipe, reeling); all OMAE2025 pipeline sessions (gallery listing did not
+    render).
+  urls: []
+  status: located_not_read
+- id: L10
+  text: University repository records on pipe-soil and stability (two Southampton items, one open-archive item).
+  urls: []
+  status: located_not_read
+gap_analysis:
+- area: Code checks (wall thickness, collapse, propagation), simplified stability, span screening, expansion and screening-level
+    buckling
+  verdict: Open methods adequate in principle, but must be self-built and self-verified
+  basis_source_ids: []
+- area: Detailed lateral buckling, walking and upheaval analysis
+  verdict: Finite-element capability needed; a licensed solver is the norm, proprietary soil data unavoidable
+  basis_source_ids:
+  - P1
+  - P3
+  - P18
+- area: Dynamic on-bottom stability
+  verdict: Licensed tool is the accepted route
+  basis_source_ids:
+  - P9
+  - P10
+- area: Pipelay analysis
+  verdict: Licensed tools unavoidable for contractor-grade work
+  basis_source_ids:
+  - P26
+  - P27
+  - P25
+- area: Probabilistic design studies (response surfaces, Monte Carlo over soil and out-of-straightness)
+  verdict: Differentiated offering plausible
+  basis_source_ids:
+  - P1
+- area: Span and exposure trending from repeat survey data on mobile seabeds
+  verdict: Differentiated offering plausible
+  basis_source_ids:
+  - P4
+  - P32
+  - P10
+- area: Independent verification of lay or buckling analyses
+  verdict: Plausible
+  basis_source_ids:
+  - P25
+- area: Hydrogen and CO2 requalification studies
+  verdict: Standards and test data dominated; limited analysis-led opening
+  basis_source_ids:
+  - P28
+  - P29
+- area: Installation capability data (vessel limits)
+  verdict: Proprietary; request from contractors
+  basis_source_ids: []
+counts:
+  sources_read: 34
+  located_not_read_documents: about 18 documents
+  located_not_read_groups: 10
