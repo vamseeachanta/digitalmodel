@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Full field-layout model — YAML asset schema + layout engine over terrain/bathymetry.
 # ABOUTME: Issue #1509 (workstream B of epic #1507). Generalizes the #1508 onshore tracer.
 """
@@ -35,9 +38,11 @@ Scope honesty
 -------------
 Routing is piecewise straight in plan (no pathfinding, no obstacle avoidance,
 no least-cost optimization — follow-on workstreams of #1507). A floating
-host's riser is approximated by the straight final segment from the last
-draped sample up to the host's explicit ``z_m`` (screening-grade geometry,
-not a catenary). Hydraulic screening lives in workstream D and in the tracer's
+host's riser defaults to the straight final segment from the last draped
+sample up to its explicit ``z_m``. Opt-in ``riser_shape: catenary`` uses the
+existing simplified solver; degenerate geometry retains the straight fallback.
+Both shapes are screening-grade geometry, not a designed riser analysis.
+Hydraulic screening lives in workstream D and in the tracer's
 :func:`~digitalmodel.field_development.onshore_layout.screen_flowline`.
 
 Usage
@@ -61,6 +66,10 @@ from typing import Any, Optional
 
 import numpy as np
 import yaml
+
+from digitalmodel.marine_ops.marine_analysis.catenary.simplified import (
+    SimplifiedCatenarySolver,
+)
 
 from .onshore_layout import TerrainGrid, build_terrain
 
@@ -126,10 +135,14 @@ _CONNECTION_KNOWN_KEYS = frozenset(
         "roughness_m",
         "voltage_kv",
         "conductor_size_mm2",
+        "riser_shape",
+        "riser_hangoff_deg",
     }
 )
 
 _DEFAULT_SAMPLE_SPACING_M = 25.0
+# Screening assumption, not a designed value; override with riser_hangoff_deg.
+_DEFAULT_RISER_HANGOFF_DEG = 30.0  # measured from vertical
 
 
 # ---------------------------------------------------------------------------
@@ -427,6 +440,45 @@ def _drape_leg(
     return np.column_stack([xs, ys, zs])
 
 
+def _catenary_riser_polyline(
+    p_prev_xy: tuple[float, float],
+    host_xyz: tuple[float, float, float],
+    water_depth_m: float,
+    hangoff_deg: float,
+    sample_spacing_m: float,
+) -> np.ndarray | None:
+    """Sample the existing solver's screening catenary, or request fallback."""
+    if not math.isfinite(water_depth_m) or water_depth_m <= 0:
+        return None
+    try:
+        result = SimplifiedCatenarySolver().solve_from_angle(
+            angle_deg=float(hangoff_deg), vertical_distance=water_depth_m
+        )
+    except (ValueError, TypeError, ArithmeticError):
+        return None
+    arc, span = result.arc_length, result.horizontal_distance
+    radius = result.bend_radius
+    if radius is None:
+        return None
+    approach = np.asarray(host_xyz[:2]) - np.asarray(p_prev_xy)
+    leg_length = float(np.linalg.norm(approach))
+    if (
+        not all(math.isfinite(v) and v > 0 for v in (arc, span, radius))
+        or span >= leg_length
+    ):
+        return None
+    direction = approach / leg_length
+    n_segments = max(1, int(math.ceil(arc / sample_spacing_m)))
+    xs = np.linspace(0.0, span, n_segments + 1)
+    xy = np.asarray(host_xyz[:2]) - (span - xs[:, None]) * direction
+    zs = host_xyz[2] - water_depth_m + radius * (np.cosh(xs / radius) - 1)
+    curve = np.column_stack([xy, zs])
+    if not np.isfinite(curve).all():
+        return None
+    curve[-1] = host_xyz
+    return curve
+
+
 def route_connection(
     spec: dict[str, Any],
     assets: dict[str, LayoutAsset],
@@ -439,8 +491,12 @@ def route_connection(
     surface. If an endpoint asset has an explicit (off-surface) ``z_m`` —
     e.g. a floating host at the waterline — the endpoint sample takes that
     elevation, so the final segment rises straight from the last draped
-    sample to the asset (screening-grade riser stand-in). Lengths are true
-    3D polyline lengths.
+    sample to the asset by default. For an off-surface to-asset, opt-in
+    ``riser_shape: catenary`` replaces the final approach with a sampled
+    simplified catenary. ``riser_hangoff_deg`` defaults to 30 degrees from
+    vertical, a screening assumption. Degenerate geometry retains the straight
+    stand-in. These are geometric screens, not designed riser analyses.
+    Lengths are true 3D polyline lengths.
     """
     from_id, to_id = str(spec["from"]), str(spec["to"])
     for ref in (from_id, to_id):
@@ -459,6 +515,21 @@ def route_connection(
         leg = _drape_leg(surface, p0, p1, sample_spacing_m)
         legs.append(leg if not legs else leg[1:])  # drop duplicate joint point
     path = np.vstack(legs)
+
+    if not b.on_surface and spec.get("riser_shape", "straight") == "catenary":
+        seabed_z = surface.elevation_at(b.x_m, b.y_m)
+        curve = _catenary_riser_polyline(
+            plan_points[-2], (b.x_m, b.y_m, b.z_m), b.z_m - seabed_z,
+            spec.get("riser_hangoff_deg", _DEFAULT_RISER_HANGOFF_DEG),
+            sample_spacing_m,
+        )
+        if curve is not None:
+            seabed_leg = _drape_leg(
+                surface, plan_points[-2], tuple(curve[0, :2]), sample_spacing_m
+            )
+            seabed_leg[-1] = curve[0]  # share the exact touchdown point
+            prefix = [*legs[:-1], seabed_leg if len(legs) == 1 else seabed_leg[1:]]
+            path = np.vstack([*prefix, curve[1:]])
 
     # Endpoint elevation overrides (off-surface assets, e.g. floating hosts).
     if not a.on_surface:
