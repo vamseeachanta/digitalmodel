@@ -7,10 +7,13 @@ units:
   block_coefficient: dimensionless
   displacement: t
   analytic_volume_m3: m^3
+  mesh_volume_m3: m^3
 conventions:
   'null': not established; never assumed zero
   paths: repository-relative
   profile_loading: HullCatalog(data/hull_library/profiles)
+  end_closure: Committed meshes use close_ends=true; the generator default is false.
+  mesh_volume_m3: measured from the generated closed mesh; not an analytic value
   mesh_scope: Full hull; x=0 at aft extent, x increases toward the forward extent;
     y=0 at centerplane; z=0 at waterline, z negative below waterline.
   qualification: geometry only; quality checks do not establish solver validation
@@ -60,8 +63,9 @@ hulls:
     reason: Submerged surface closes; mesh volume passes the analytic box comparator
       within the recorded tolerance. Hydrodynamic coefficients and motion RAOs remain
       unvalidated.
-    relative_tolerance: 0.01
-    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    relative_tolerance: 6.502887117676437e-13
+    tolerance_source: Measured in test_public_hull_registry.py from the generated
+      closed mesh and welded GDF readback against L*B*T.
     mesh_config:
       symmetry: false
       resolution: MeshGeneratorConfig defaults
@@ -96,8 +100,9 @@ hulls:
     reason: Submerged surface closes; mesh volume passes the analytic box comparator
       within the recorded tolerance. Hydrodynamic coefficients and motion RAOs remain
       unvalidated.
-    relative_tolerance: 0.01
-    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    relative_tolerance: 6.502887117676437e-13
+    tolerance_source: Measured in test_public_hull_registry.py from the generated
+      closed mesh and welded GDF readback against L*B*T.
     mesh_config:
       symmetry: false
       resolution: MeshGeneratorConfig defaults
@@ -113,6 +118,7 @@ hulls:
     block_coefficient: null
     displacement: null
   analytic_volume_m3: null
+  mesh_volume_m3: 122368.26435506072
   mesh_files:
   - data/hull_library/panels/generic_tanker.gdf
   mesh_sha256: f97e2d1d7ab3afd8267f8cbb4114d6c6961a05282d7e7c007670879106511348
@@ -169,8 +175,9 @@ hulls:
     reason: Submerged surface closes; mesh volume passes the analytic box comparator
       within the recorded tolerance. Hydrodynamic coefficients and motion RAOs remain
       unvalidated.
-    relative_tolerance: 0.01
-    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    relative_tolerance: 6.502887117676437e-13
+    tolerance_source: Measured in test_public_hull_registry.py from the generated
+      closed mesh and welded GDF readback against L*B*T.
     mesh_config:
       symmetry: false
       resolution: MeshGeneratorConfig defaults
@@ -206,8 +213,9 @@ hulls:
     reason: Submerged surface closes; mesh volume passes the analytic box comparator
       within the recorded tolerance. Hydrodynamic coefficients and motion RAOs remain
       unvalidated.
-    relative_tolerance: 0.01
-    tolerance_source: tests/hydrodynamics/hull_library/test_parametric_form.py::test_mesh_and_hydrostatic_consumers
+    relative_tolerance: 6.502887117676437e-13
+    tolerance_source: Measured in test_public_hull_registry.py from the generated
+      closed mesh and welded GDF readback against L*B*T.
     mesh_config:
       symmetry: false
       resolution: MeshGeneratorConfig defaults

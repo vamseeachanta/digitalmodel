@@ -2,7 +2,7 @@
 
 Dimensions originate in each entry's provenance. Analytic formulae below
 derive volume from those dimensions; no fluid density or vessel mass is assumed.
-Volume tolerance reuses test_parametric_form.py::test_mesh_and_hydrostatic_consumers.
+Box volume tolerance is measured against generated meshes and welded GDF readback.
 """
 
 from collections import Counter
@@ -25,6 +25,8 @@ from digitalmodel.visualization.design_tools.hull_hydrostatics import HullHydros
 
 ROOT = Path(__file__).resolve().parents[3]
 LIBRARY = ROOT / "data" / "hull_library"
+# Ten times the largest generated/readback relative volume error for the boxes.
+BOX_VOLUME_RELATIVE_TOLERANCE = 6.502887117676437e-13
 HULL_IDS = (
     "unit_box", "generic_barge", "generic_tanker", "rebuilt_wamit_test04_barge",
     "rebuilt_wamit_test16_barge", "rebuilt_wamit_test01_cylinder",
@@ -62,7 +64,7 @@ def generated(entry, catalog):
     # Default resolution is repository-defined; full hull avoids implicit
     # symmetry factors in signed-volume and submerged-boundary checks.
     mesh = HullMeshGenerator().generate(
-        profile, MeshGeneratorConfig(symmetry=False)
+        profile, MeshGeneratorConfig(symmetry=False, close_ends=True)
     )
     return profile, mesh
 
@@ -155,6 +157,12 @@ def test_gdf_export_preserves_geometry(entry, generated, tmp_path):
         assert report.is_valid, report.errors
         assert report.n_degenerate_panels == report.n_duplicate_vertices == 0
         assert report.has_consistent_normals
+        assert not submerged_boundary_edges(candidate)
+        if entry["analytic_volume_m3"] is not None:
+            assert signed_mesh_volume(candidate) == pytest.approx(
+                entry["analytic_volume_m3"],
+                rel=entry["validation"]["relative_tolerance"],
+            )
 
 
 def test_geometry_qualification_and_analytic_particular(entry, generated):
@@ -207,7 +215,7 @@ def test_generic_shapes_are_scaled_repository_fixtures(catalog, box_profile,
 @pytest.mark.parametrize("symmetry", [False, True])
 def test_box_end_caps_close_submerged_surface(box_profile, symmetry):
     mesh = HullMeshGenerator().generate(
-        box_profile, MeshGeneratorConfig(symmetry=symmetry)
+        box_profile, MeshGeneratorConfig(symmetry=symmetry, close_ends=True)
     )
     edges = Counter()
     faces = []
@@ -226,7 +234,9 @@ def test_box_end_caps_close_submerged_surface(box_profile, symmetry):
         assert count == (1 if boundary else 2)
     multiplier = 2 if symmetry else 1
     expected = box_profile.length_bp * box_profile.beam * box_profile.draft
-    assert multiplier * signed_mesh_volume(mesh) == pytest.approx(expected, rel=0.01)
+    assert multiplier * signed_mesh_volume(mesh) == pytest.approx(
+        expected, rel=BOX_VOLUME_RELATIVE_TOLERANCE
+    )
     for x, direction in ((0, -1), (box_profile.length_bp, 1)):
         caps = np.all(mesh.vertices[mesh.panels, 0] == x, axis=1)
         assert np.any(caps)
@@ -243,7 +253,7 @@ def test_zero_area_end_sections_preserve_pre_fix_panels(catalog, symmetry,
     # Vertex and panel bytes derived at the reviewed PR head, before end caps.
     profile = catalog.get_hull("rebuilt_wamit_test01_cylinder").profile
     mesh = HullMeshGenerator().generate(
-        profile, MeshGeneratorConfig(symmetry=symmetry)
+        profile, MeshGeneratorConfig(symmetry=symmetry, close_ends=True)
     )
     digest = hashlib.sha256(mesh.vertices.tobytes() + mesh.panels.tobytes()).hexdigest()
     assert digest == expected_digest
@@ -281,3 +291,49 @@ def test_rebuilt_manual_terms_and_fixture_name(registry):
             assert isinstance(raw_profile["block_coefficient"], float)
     box = next(h for h in registry["hulls"] if h["hull_id"] == "unit_box")
     assert "not a unit-dimension box" in box["provenance"]["derivation"]
+
+
+def test_end_closure_defaults_off():
+    assert MeshGeneratorConfig().close_ends is False
+
+
+@pytest.mark.parametrize("symmetry", [False, True])
+def test_default_box_mesh_keeps_open_ends_and_panel_count(box_profile, symmetry):
+    generator = HullMeshGenerator()
+    config = MeshGeneratorConfig(symmetry=symmetry)
+    mesh = generator.generate(box_profile, config)
+    n_x, n_z = generator._compute_grid_resolution(box_profile, config)
+    multiplier = 1 if symmetry else 2
+    assert mesh.n_panels == multiplier * n_x * (n_z + 1)
+    unmatched = submerged_boundary_edges(mesh)
+    for x in (0, box_profile.length_bp):
+        assert any(np.all(mesh.vertices[list(edge), 0] == x)
+                   for edge in unmatched)
+
+
+def test_box_volume_tolerances_are_measured(registry):
+    for hull in registry["hulls"]:
+        if hull["hull_type"] == "barge":
+            validation = hull["validation"]
+            assert validation["relative_tolerance"] <= 1e-6
+            assert validation["tolerance_source"] == (
+                "Measured in test_public_hull_registry.py from the generated "
+                "closed mesh and welded GDF readback against L*B*T."
+            )
+
+
+def test_tanker_measured_mesh_volume(registry, catalog):
+    tanker = next(h for h in registry["hulls"] if h["hull_id"] == "generic_tanker")
+    mesh = HullMeshGenerator().generate(
+        catalog.get_hull("generic_tanker").profile,
+        MeshGeneratorConfig(symmetry=False, close_ends=True),
+    )
+    # Repeated generated measurements agree; allow the numerical tolerance
+    # measured for the same signed-volume integration on the exact boxes.
+    assert signed_mesh_volume(mesh) == pytest.approx(
+        tanker["mesh_volume_m3"], rel=BOX_VOLUME_RELATIVE_TOLERANCE
+    )
+    assert tanker["analytic_volume_m3"] is None
+    assert tanker["validation"]["status"] == "reference-only"
+    assert all("mesh_volume_m3" not in h for h in registry["hulls"]
+               if h["hull_id"] != "generic_tanker")

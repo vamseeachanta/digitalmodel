@@ -5,7 +5,7 @@ grading. Mesh coarsening lives in coarsen_mesh.py.
 
 Steps: normalise waterline offsets to marine z-convention, compute (n_x, n_z)
 subdivisions, interpolate half-breadth y(x,z), build starboard quads + flat
-bottom and submerged end caps, optionally mirror to port, orient normals
+bottom and optional submerged end caps, optionally mirror to port, orient normals
 outward, return PanelMesh.
 """
 
@@ -72,6 +72,11 @@ class MeshGeneratorConfig(BaseModel):
     target_panels: int = Field(default=1000, gt=0)
     waterline_refinement: float = Field(default=2.0, gt=0)
     symmetry: bool = True
+    close_ends: bool = Field(
+        default=False,
+        description="add flat panels closing non-zero submerged end sections; "
+        "off by default so existing consumers keep their panel counts",
+    )
     adaptive_density: bool = Field(
         default=False,
         description="Use curvature-adaptive panel distribution. "
@@ -129,11 +134,12 @@ class HullMeshGenerator:
             panels = np.vstack([panels, bottom_panels + offset])
 
         # Close nonzero submerged end sections before mirroring to port.
-        cap_verts, cap_panels = self._build_end_caps(x_values, z_values, y_grid)
-        if len(cap_panels) > 0:
-            offset = len(vertices)
-            vertices = np.vstack([vertices, cap_verts])
-            panels = np.vstack([panels, cap_panels + offset])
+        if config.close_ends:
+            cap_verts, cap_panels = self._build_end_caps(x_values, z_values, y_grid)
+            if len(cap_panels) > 0:
+                offset = len(vertices)
+                vertices = np.vstack([vertices, cap_verts])
+                panels = np.vstack([panels, cap_panels + offset])
 
         # 6. Handle symmetry
         if not config.symmetry:
