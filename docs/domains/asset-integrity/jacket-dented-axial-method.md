@@ -49,7 +49,14 @@ mid-thickness diameter/thickness from 20 to 60; reduced slenderness from
 0.0005 to 0.02. Elastic modulus/yield stress is held at 600.
 The extrema bound the implemented envelope. Continuous interpolation between
 study points is an implementation assumption, not independent validation.
-Values outside the envelope or a material ratio other than 600 are excluded.
+Applicability requires the study material ratio of 600. The named absolute
+`MATERIAL_RATIO_ROUNDOFF_TOLERANCE` is four double-precision units in the last
+place at 600 (approximately 0.000000000000455), with zero relative tolerance.
+It covers floating-point round-off only when modulus is divided by yield stress;
+it is not an engineering material range. Values outside the study envelope
+remain excluded. Material ratios beyond this numerical tolerance return the
+existing material-ratio flag.
+The input docstring and each result's applicability text state this restriction.
 
 Section 6.4.2.1, page 197, limits the formulation to simply supported members
 with a sharp midlength dent and warns about the bow reference. An
@@ -66,11 +73,24 @@ equation (6.17) gives capacity/yield 0.4081429636.
 Demand/capacity is 0.4900243734, below the comparison threshold of one.
 The test tolerance of 0.0000000001 covers decimal rounding only.
 
-Cho Tables 4.1 and 4.3, pages 113 and 122, were opened. Specimen B1 measured
-collapse load is 43.1 kilonewtons and measured stress/yield is 0.45. Its elastic
-modulus/yield ratio is 212000/516, approximately 410.853, rather than 600.
-The specimen is excluded by the study-material guard. This is an applicability
-regression, not a golden experimental validation of predicted capacity.
+The rendered pages of Cho (1987), Volume I, confirm the quoted B1 values:
+
+- Table 4.1, printed page 113, row B1: the
+  compressive static yield stress is 516 newtons per square millimetre.
+- Table 4.3, printed page 122, row B1: column values are
+  diameter/thickness 41.4, reduced slenderness 1.25,
+  dent depth/diameter 0.062, bow/length 0.0023,
+  axial compressive collapse load 43.1 kilonewtons, and
+  collapse stress/compressive yield stress 0.45.
+- Table 4.3, printed page 122, footnote to reduced slenderness: the mean
+  tensile-test elastic modulus of 212000 newtons per square millimetre is used.
+
+All quoted values agree with the page images; none requires correction.
+The derived modulus/yield ratio is 212000/516, approximately 410.853, rather
+than 600. The specimen remains excluded by the study-material guard. Two
+source-value tests pin the named constants, one check per table. The exclusion
+test is an applicability regression, not a golden experimental validation
+of predicted capacity. Golden experimental validation remains unmet.
 Section 6.4.2.1 and Table 6.1 discuss prediction scatter; measured capacity
 cannot be substituted for an exact formula output.
 
@@ -83,12 +103,11 @@ inputs, and citation locators. They do not establish fixed-platform qualificatio
 - Applied bending, hydrostatic-pressure capacity, and fixed-platform end-restraint
   corrections are not implemented in this axial subset.
 - Uniform corrosion assessment is described by NORSOK N-004, revision 2 (2004),
-  section 10.6.3. Full existing member/joint re-check reuse is blocked by the
-  current simplified checks: API RP 2A-WSD, edition 21 (2000), equation
-  (3.2.2-1) has an inelastic column denominator absent from the existing
-  compression implementation; bending equations (3.2.3-1b) and (3.2.3-1c)
-  are absent from the unconditional bending allowable. Existing behavior
-  is preserved; correction requires separate work.
+  section 10.6.3. The existing compression and bending checks were
+  not verified against API RP 2A-WSD, edition 21 (2000), equations
+  (3.2.2-1), (3.2.3-1b), and (3.2.3-1c) by this work. Their
+  reuse for the corroded-member re-check remains a gap. No defect in the
+  existing checks is established by this work; their behavior is preserved.
 - Flooded/severed-member Level 3 mapping is not implemented. An eligible
   assessment clause establishing that mapping was not opened. The held API
   RP 2SIM edition 1 (2014) copy is excluded because of a third-party marking.
