@@ -1,5 +1,5 @@
 # Copy to a private location, replace placeholders, and set DM_CFD_STATUS_CONFIG.
-cache: data/cfd-status.cache
+cache: ~/.cache/digitalmodel/cfd-status.cache
 lanes:
   - name: lane-A
     ssh: lane-A

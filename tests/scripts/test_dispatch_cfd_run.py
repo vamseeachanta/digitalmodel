@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def test_load_benchmark_skips_oversubscribed_rows(tmp_path: Path) -> None:
     manifest = tmp_path / "gpu.json"
     write_manifest(
         manifest,
-        box="gpu-host",
+        box="gpu-claw",
         rows=[
             completed_row(4, 0.8821),
             completed_row(8, 0.5899),
@@ -69,17 +69,17 @@ def test_load_benchmark_skips_oversubscribed_rows(tmp_path: Path) -> None:
 def test_load_gate_rejects_busy_shared_host(tmp_path: Path) -> None:
     dispatcher = load_dispatcher()
     manifest = tmp_path / "ace.json"
-    write_manifest(manifest, box="linux-workstation", rows=[completed_row(8, 1.0582)])
+    write_manifest(manifest, box="ace-linux-2", rows=[completed_row(8, 1.0582)])
     host = dispatcher.HostConfig(
-        name="linux-workstation",
-        ssh_target="linux-workstation",
+        name="ace-linux-2",
+        ssh_target="ace-linux-2",
         manifest=manifest,
         dedicated=False,
     )
     probe = dispatcher.HostProbe(
-        host="linux-workstation",
+        host="ace-linux-2",
         reachable=True,
-        hostname="linux-workstation",
+        hostname="ace-linux-2",
         cores=8,
         load1=24.0,
         reason="ok",
@@ -102,9 +102,9 @@ def test_projected_load_gate_rejects_rank_that_would_overcommit_host(
 ) -> None:
     dispatcher = load_dispatcher()
     manifest = tmp_path / "gpu.json"
-    write_manifest(manifest, box="gpu-host", rows=[completed_row(8, 0.5899)])
-    host = dispatcher.HostConfig("gpu-host", "gpu-host", manifest, True)
-    probe = dispatcher.HostProbe("gpu-host", True, "gpu-host", 8, 11.9, "ok")
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
+    host = dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True)
+    probe = dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 11.9, "ok")
 
     candidate = dispatcher.evaluate_host(
         host,
@@ -122,19 +122,19 @@ def test_select_host_prefers_fastest_eligible_candidate(tmp_path: Path) -> None:
     dispatcher = load_dispatcher()
     ace_manifest = tmp_path / "ace.json"
     gpu_manifest = tmp_path / "gpu.json"
-    write_manifest(ace_manifest, box="linux-workstation", rows=[completed_row(8, 1.0582)])
-    write_manifest(gpu_manifest, box="gpu-host", rows=[completed_row(8, 0.5899)])
+    write_manifest(ace_manifest, box="ace-linux-2", rows=[completed_row(8, 1.0582)])
+    write_manifest(gpu_manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
     candidates = [
         dispatcher.evaluate_host(
-            dispatcher.HostConfig("linux-workstation", "linux-workstation", ace_manifest, False),
-            dispatcher.HostProbe("linux-workstation", True, "linux-workstation", 32, 2.0, "ok"),
+            dispatcher.HostConfig("ace-linux-2", "ace-linux-2", ace_manifest, False),
+            dispatcher.HostProbe("ace-linux-2", True, "ace-linux-2", 32, 2.0, "ok"),
             dispatcher.load_benchmark(ace_manifest),
             requested_ranks=8,
             max_load_per_core=1.5,
         ),
         dispatcher.evaluate_host(
-            dispatcher.HostConfig("gpu-host", "gpu-host", gpu_manifest, True),
-            dispatcher.HostProbe("gpu-host", True, "gpu-host", 8, 0.5, "ok"),
+            dispatcher.HostConfig("gpu-claw", "gpu-claw", gpu_manifest, True),
+            dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
             dispatcher.load_benchmark(gpu_manifest),
             requested_ranks=8,
             max_load_per_core=1.5,
@@ -143,7 +143,7 @@ def test_select_host_prefers_fastest_eligible_candidate(tmp_path: Path) -> None:
 
     selected = dispatcher.select_candidate(candidates)
 
-    assert selected.host.name == "gpu-host"
+    assert selected.host.name == "gpu-claw"
     assert selected.row.ranks == 8
     assert selected.predicted_s_per_step == 0.5899
 
@@ -151,10 +151,10 @@ def test_select_host_prefers_fastest_eligible_candidate(tmp_path: Path) -> None:
 def test_dispatch_dry_run_builds_openfoam_ssh_command(tmp_path: Path) -> None:
     dispatcher = load_dispatcher()
     manifest = tmp_path / "gpu.json"
-    write_manifest(manifest, box="gpu-host", rows=[completed_row(8, 0.5899)])
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
     candidate = dispatcher.evaluate_host(
-        dispatcher.HostConfig("gpu-host", "gpu-host", manifest, True),
-        dispatcher.HostProbe("gpu-host", True, "gpu-host", 8, 0.5, "ok"),
+        dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True),
+        dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
         dispatcher.load_benchmark(manifest),
         requested_ranks=8,
         max_load_per_core=1.5,
@@ -167,7 +167,7 @@ def test_dispatch_dry_run_builds_openfoam_ssh_command(tmp_path: Path) -> None:
     )
 
     assert argv[:4] == ["ssh", "-o", "BatchMode=yes", "-o"]
-    assert "gpu-host" in argv
+    assert "gpu-claw" in argv
     remote_shell = argv[-1]
     assert "source /usr/lib/openfoam/openfoam2312/etc/bashrc" in remote_shell
     source_offset = remote_shell.index("source /usr/lib/openfoam/openfoam2312/etc/bashrc")
@@ -184,22 +184,22 @@ def test_remote_command_preserves_non_dispatch_braces() -> None:
 
     rendered = dispatcher._render_remote_command(
         ["awk", "{print $1}", "run-on-{host}-np-{ranks}", '{"rank": 8}'],
-        host="gpu-host",
+        host="gpu-claw",
         ranks=8,
     )
 
     assert "'{print $1}'" in rendered
-    assert "run-on-gpu-host-np-8" in rendered
+    assert "run-on-gpu-claw-np-8" in rendered
     assert "'{\"rank\": 8}'" in rendered
 
 
 def test_build_ssh_command_quotes_repo_dir_with_spaces(tmp_path: Path) -> None:
     dispatcher = load_dispatcher()
     manifest = tmp_path / "gpu.json"
-    write_manifest(manifest, box="gpu-host", rows=[completed_row(8, 0.5899)])
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
     candidate = dispatcher.evaluate_host(
-        dispatcher.HostConfig("gpu-host", "gpu-host", manifest, True),
-        dispatcher.HostProbe("gpu-host", True, "gpu-host", 8, 0.5, "ok"),
+        dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True),
+        dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
         dispatcher.load_benchmark(manifest),
         requested_ranks=8,
         max_load_per_core=1.5,
@@ -214,27 +214,27 @@ def test_build_ssh_command_quotes_repo_dir_with_spaces(tmp_path: Path) -> None:
     assert "cd -- \"$HOME\"/'digital model';" in argv[-1]
 
 
-def test_default_hosts_use_neutral_gpu_claw_target(monkeypatch) -> None:
+def test_default_hosts_use_gpu_claw_target(monkeypatch) -> None:
     dispatcher = load_dispatcher()
     monkeypatch.delenv("CFD_GPU_CLAW_SSH", raising=False)
 
     gpu_host = dispatcher.default_hosts()[0]
 
-    assert gpu_host.name == "gpu-host"
-    assert gpu_host.ssh_target == "gpu-host"
+    assert gpu_host.name == "gpu-claw"
+    assert gpu_host.ssh_target == "gpu-claw"
 
 
 def test_cli_dry_run_does_not_invoke_ssh(tmp_path: Path) -> None:
     manifest = tmp_path / "gpu.json"
-    write_manifest(manifest, box="gpu-host", rows=[completed_row(8, 0.5899)])
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
     result = subprocess.run(
         [
             sys.executable,
             str(SCRIPT),
             "--host",
-            f"gpu-host=gpu-host,{manifest},dedicated",
+            f"gpu-claw=gpu-claw,{manifest},dedicated",
             "--assume-probe",
-            "gpu-host=8,0.5",
+            "gpu-claw=8,0.5",
             "--ranks",
             "8",
             "--dry-run",
@@ -248,7 +248,7 @@ def test_cli_dry_run_does_not_invoke_ssh(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert "selected: gpu-host" in result.stdout
+    assert "selected: gpu-claw" in result.stdout
     assert "ssh " in result.stdout
     assert "echo run" in result.stdout
 
@@ -258,10 +258,10 @@ def test_dispatch_default_threshold_is_fixed_at_one_point_five(
 ) -> None:
     dispatcher = load_dispatcher()
     manifest = tmp_path / "gpu.json"
-    write_manifest(manifest, box="gpu-host", rows=[completed_row(8, 0.5899)])
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
     candidate = dispatcher.evaluate_host(
-        dispatcher.HostConfig("gpu-host", "gpu-host", manifest, True),
-        dispatcher.HostProbe("gpu-host", True, "gpu-host", 8, 0.5, "ok"),
+        dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True),
+        dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
         dispatcher.load_benchmark(manifest),
         requested_ranks=8,
         max_load_per_core=dispatcher.build_parser().parse_args([]).max_load_per_core,
@@ -274,10 +274,10 @@ def test_dispatch_default_threshold_is_fixed_at_one_point_five(
 def test_dispatch_exports_selected_rank_for_smoke_driver(tmp_path: Path) -> None:
     dispatcher = load_dispatcher()
     manifest = tmp_path / "gpu.json"
-    write_manifest(manifest, box="gpu-host", rows=[completed_row(8, 0.5899)])
+    write_manifest(manifest, box="gpu-claw", rows=[completed_row(8, 0.5899)])
     candidate = dispatcher.evaluate_host(
-        dispatcher.HostConfig("gpu-host", "gpu-host", manifest, True),
-        dispatcher.HostProbe("gpu-host", True, "gpu-host", 8, 0.5, "ok"),
+        dispatcher.HostConfig("gpu-claw", "gpu-claw", manifest, True),
+        dispatcher.HostProbe("gpu-claw", True, "gpu-claw", 8, 0.5, "ok"),
         dispatcher.load_benchmark(manifest),
         requested_ranks=8,
         max_load_per_core=1.5,
@@ -424,3 +424,20 @@ def test_compute_collector_default_root_is_portable(monkeypatch, configured_root
         module.main([])
     expected = Path(configured_root or "data/sloshing_cfd_work")
     assert observed == [str(expected / "*" / "_result.json")]
+
+def test_default_dedicated_manifest_is_tracked(monkeypatch) -> None:
+    """The default dedicated host retains a readable repository manifest."""
+    dispatcher = load_dispatcher()
+    monkeypatch.delenv("CFD_GPU_BENCHMARK", raising=False)
+    host = next(host for host in dispatcher.default_hosts() if host.dedicated)
+    relative = host.manifest.relative_to(dispatcher.REPO_ROOT)
+    subprocess.run(
+        ["git", "ls-files", "--error-unmatch", str(relative)],
+        cwd=dispatcher.REPO_ROOT, capture_output=True, check=True,
+    )
+    probe = dispatcher.HostProbe(host.name, True, host.name, 8, 0.0, "assumed")
+    candidate = dispatcher.evaluate_host(
+        host, probe, dispatcher.load_benchmark(host.manifest),
+        requested_ranks=None, max_load_per_core=1.5,
+    )
+    assert candidate.eligible, candidate.reason

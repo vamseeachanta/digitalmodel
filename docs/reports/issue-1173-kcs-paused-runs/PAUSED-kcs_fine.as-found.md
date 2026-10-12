@@ -15,7 +15,7 @@ read the stop as a result.
     cd $HOME/cfd/dm1173/kcs_cases/kcs_fine
     source /usr/lib/openfoam/openfoam2312/etc/bashrc   # no set -e / set -u
     setsid nohup mpirun -np NRANKS interFoam -parallel > log.interFoam.resume 2>&1 < /dev/null &
-    setsid nohup <data-root>/cfd/dm1173/ittc_watch.sh >/dev/null 2>&1 < /dev/null &
+    setsid nohup ~/cfd/dm1173/ittc_watch.sh >/dev/null 2>&1 < /dev/null &
 
 controlDict already carries startFrom latestTime, so it picks up at $LAST.
 NRANKS: 8 for kcs_fine, 16 for kcs_prod_yplus -- must match the existing

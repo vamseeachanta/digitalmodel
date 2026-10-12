@@ -4,7 +4,7 @@ Bash that runs ON a CFD lane under OpenFOAM v2312, driven by a case registry at
 the campaign root and the environment `DM_CFD_ROOT`, `DM_CFD_CONFIG`,
 `DM_CFD_CASES_DIR`. `DM_CFD_ROOT` and `DM_CFD_CAMPAIGN` are authoritative when
 set. Otherwise the shared resolver infers the first component below
-`<data-root>/cfd/<campaign>/` from the working directory (campaign root, `scripts/`, or
+`~/cfd/<campaign>/` from the working directory (campaign root, `scripts/`, or
 `cases/<case>`) and prints the reason to stderr; only an unrelated working
 directory uses the literal `campaign` fallback. `deploy_lane.sh` retains its
 positional campaign override. Private project configuration supplies the real

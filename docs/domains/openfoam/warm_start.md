@@ -4,9 +4,9 @@
 fail-closed: a case is touched only after all admissibility checks pass and the expected
 iteration saving clears the configured margin. Campaign and lane identity remain external.
 `DM_CFD_ROOT` and `DM_CFD_CAMPAIGN` are authoritative when set. Without either override,
-commands run below `<data-root>/cfd/<campaign>/` infer the first directory below `<data-root>/cfd` (including
+commands run below `~/cfd/<campaign>/` infer the first directory below `~/cfd` (including
 the campaign root, `scripts/`, and `cases/<case>`); otherwise they retain the literal
-`<data-root>/cfd/campaign` fallback. The resolver writes one explanatory line to stderr. Keep lane
+`~/cfd/campaign` fallback. The resolver writes one explanatory line to stderr. Keep lane
 identity in `DM_CFD_LANES_FILE`; do not put deployment identifiers in cases.
 
 ## Usage

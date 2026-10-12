@@ -76,5 +76,5 @@ rsync -a $DRY --itemize-changes \
 [ -n "$DRY" ] && exit 0
 $SSH "$HOST" "cd cfd/$CAMPAIGN && bash -n scripts/stage45_driver.sh scripts/mesh_store.sh scripts/prune_case.sh scripts/solve_case.sh && echo 'deploy_lane: remote scripts parse OK'" </dev/null
 rev=$(git -C "$HERE" rev-parse --short HEAD 2>/dev/null || echo unknown)
-$SSH "$HOST" "echo '$(date -u +%FT%TZ) digitalmodel@$rev scripts/cfd from deployment host' >> cfd/$CAMPAIGN/scripts/DEPLOYED.txt" </dev/null
+$SSH "$HOST" "echo '$(date -u +%FT%TZ) digitalmodel@$rev scripts/cfd from $(hostname -s)' >> ~/cfd/$CAMPAIGN/scripts/DEPLOYED.txt" </dev/null
 echo "deploy_lane: recorded digitalmodel@$rev in $HOST:cfd/$CAMPAIGN/scripts/DEPLOYED.txt"

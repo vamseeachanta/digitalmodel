@@ -63,17 +63,17 @@ class Candidate:
 
 
 def default_hosts() -> list[HostConfig]:
-    gpu_target = os.environ.get("CFD_GPU_CLAW_SSH", "gpu-host")
-    ace_target = os.environ.get("CFD_ACE_LINUX_2_SSH", "linux-workstation")
+    gpu_target = os.environ.get("CFD_GPU_CLAW_SSH", "gpu-claw")
+    ace_target = os.environ.get("CFD_ACE_LINUX_2_SSH", "ace-linux-2")
     return [
         HostConfig(
-            name="gpu-host",
+            name="gpu-claw",
             ssh_target=gpu_target,
-            manifest=Path(os.environ.get("CFD_GPU_BENCHMARK", str(REPO_ROOT / "docs/api/cfd/sloshing-3d-benchmark-gpu-host.json"))),
+            manifest=REPO_ROOT / "docs/api/cfd/sloshing-3d-benchmark-gpu-claw.json",
             dedicated=True,
         ),
         HostConfig(
-            name="linux-workstation",
+            name="ace-linux-2",
             ssh_target=ace_target,
             manifest=REPO_ROOT / "docs/api/cfd/sloshing-3d-benchmark.json",
             dedicated=False,

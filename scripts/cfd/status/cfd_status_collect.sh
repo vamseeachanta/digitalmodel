@@ -23,7 +23,7 @@ import yaml
 
 with open(sys.argv[1], encoding="utf-8") as stream:
     cfg = yaml.safe_load(stream) or {}
-print("cache\t" + str(cfg.get("cache", "data/cfd-status.cache")))
+print("cache\t" + str(cfg.get("cache", "~/.cache/digitalmodel/cfd-status.cache")))
 campaign = cfg.get("campaign")
 if not campaign:
     for lane in cfg.get("lanes", []):
