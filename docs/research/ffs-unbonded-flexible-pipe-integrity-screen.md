@@ -4,7 +4,9 @@ Public-source research screen for issue #2200; not an implementation.
 
 Single source: research note on the issue, sources checked 2026-10-11.
 
-Research only; no code. All sources were checked on 2026-10-11. "Opened" means I read the page or the document text myself; "search snippet" means I only saw a search-engine summary and the claim is **unverified**. Standards are cited by designation; an edition is given only where the opened source states it. No normative text from a paid standard is reproduced.
+First-person wording of the research note was restated in the third person with no change of content.
+
+Research only; no code. All sources were checked on 2026-10-11. "Opened" means the page or the document text was read for this screen; "search snippet" means only a search-engine summary was seen and the claim is **unverified**. Standards are cited by designation; an edition is given only where the opened source states it. No normative text from a paid standard is reproduced.
 
 ## 1. Bottom line
 
@@ -35,7 +37,7 @@ Counts from the refreshed industry data set (556 events; 424 damage without fail
 | Carcass tearing / pull-out | 9 | 1.6 % |
 | Tensile armour wire breakage | 6 | 1.1 % |
 
-The source's slide text is a flattened table; I checked that these sixteen rows sum to 556. The per-row split between risers and flowlines, and between damage, leak and rupture, is in the slide but the text extraction is ambiguous for some rows, so it is not repeated here. The same source notes that sheath damage and annulus flooding events recorded no failures in themselves; ruptures sit in the armour-corrosion and armour-breakage rows (4 riser ruptures under corrosion of armours is legible).
+The source's slide text is a flattened table; these sixteen rows were checked to sum to 556. The per-row split between risers and flowlines, and between damage, leak and rupture, is in the slide but the text extraction is ambiguous for some rows, so it is not repeated here. The same source notes that sheath damage and annulus flooding events recorded no failures in themselves; ruptures sit in the armour-corrosion and armour-breakage rows (4 riser ruptures under corrosion of armours is legible).
 
 Regulator-commissioned report, one national shelf [S1, opened]:
 - "Updated Norwegian statistics for 2010-13 show at least 1.5% probability of failure per riser per operational year."
@@ -97,7 +99,7 @@ About forty inspection and monitoring methods were peer reviewed and categorised
 
 ## 8. Who buys the work, and when
 
-- **Regulatory duty:** in the UK, operators must keep pipelines "maintained in an efficient state, in efficient working order and in good repair", and the safety-case verification scheme must cover all hydrocarbon risers: "There should be independent and competent assurance on ongoing suitability of flexible hydrocarbon risers." The regulator's inspectors had found "a lack of knowledge and use of recognised good practice" after failures between 2002 and 2007 [S3, opened].
+- **Regulatory duty:** in the UK, operators have a duty to keep pipelines "maintained in an efficient state, in efficient working order and in good repair", and the safety-case verification scheme has to cover all hydrocarbon risers: "There should be independent and competent assurance on ongoing suitability of flexible hydrocarbon risers." The regulator's inspectors had found "a lack of knowledge and use of recognised good practice" after failures between 2002 and 2007 [S3, opened].
 - **Regulator pressure elsewhere:** the Norwegian regulator is quoted as saying flexible risers are "an area where the industry still has a clear and pressing potential for improvement" and asking for integrity management with continuous monitoring and documented operating history [S1 section 1.1].
 - **Life extension:** only a few risers reached their documented life [S1]; an industry-institute life-extension guidance exists for exactly this decision [S2].
 - **Inspection finding or incident response:** a breach "could have occurred as much as 2 years before the time of detection" and the question is whether the riser can stay in service after repair [S1 section 5.5].
@@ -126,7 +128,7 @@ About forty inspection and monitoring methods were peer reviewed and categorised
 
 ## Could not verify
 
-- The open joint-project report itself (revision 05, December 2023): its host page returned access denied from this host. It is the first document a reviewer should open; its statistics may supersede the 556-event table.
+- The open joint-project report itself (revision 05, December 2023): its host page returned access denied. It is the first document a reviewer should open; its statistics may supersede the 556-event table.
 - The industry-institute life-extension guidance and its mechanism-by-mechanism tables (access denied).
 - Current editions and scope wording of API RP 17B and API Spec 17J from the publisher (not opened; the report [S1] said new editions were in final review in late 2013).
 - Any published measurement uncertainty for annulus free-volume tests (the report only says providers disagree).

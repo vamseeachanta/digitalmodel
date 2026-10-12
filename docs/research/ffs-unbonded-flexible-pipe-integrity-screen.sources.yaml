@@ -30,7 +30,7 @@ sources:
   - https://jpt.spe.org/lessons-from-the-sureflex-jip-latest-industry-data-and-flexible-pipe-integrity-management
   access_note: opened; states that the full joint-project report, revision 05 dated December 2023, is an open industry publication with 14 conclusions, but lists none of them
 could_not_verify:
-- 'The open joint-project report itself (revision 05, December 2023): its host page returned access denied from this host. It is the first document a reviewer should open; its statistics may supersede the 556-event table.'
+- 'The open joint-project report itself (revision 05, December 2023): its host page returned access denied. It is the first document a reviewer should open; its statistics may supersede the 556-event table.'
 - The industry-institute life-extension guidance and its mechanism-by-mechanism tables (access denied).
 - Current editions and scope wording of API RP 17B and API Spec 17J from the publisher (not opened; the report [S1] said new editions were in final review in late 2013).
 - Any published measurement uncertainty for annulus free-volume tests (the report only says providers disagree).
