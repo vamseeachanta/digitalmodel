@@ -294,7 +294,12 @@ def vlp_curve(
         "hagedorn_brown": hagedorn_brown_pwf,
         "beggs_brill": beggs_brill_pwf,
     }
-    fn = methods.get(correlation, simplified_homogeneous_pwf)
+    if correlation not in methods:
+        raise ValueError(
+            f"Unknown VLP correlation {correlation!r}; "
+            f"accepted names: {', '.join(methods)}"
+        )
+    fn = methods[correlation]
     result = []
     for q in rates_bopd:
         flow = FlowConditions(

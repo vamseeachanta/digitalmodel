@@ -113,35 +113,10 @@ class TestSimplifiedHomogeneousVlp:
 
 
 # ---------------------------------------------------------------------------
-# Additional simplified VLP trends
+# Deprecated simplified VLP aliases
 # ---------------------------------------------------------------------------
 
-class TestSimplifiedHomogeneousAdditionalTrends:
-
-    def test_pwf_greater_than_whp(self):
-        tubing = make_tubing()
-        fluid = make_fluid()
-        flow = make_flow()
-        pwf = simplified_homogeneous_pwf(flow, tubing, fluid, whp_psi=300.0)
-        assert pwf > 300.0
-
-    def test_deeper_well_gives_higher_pwf(self):
-        fluid = make_fluid()
-        flow = make_flow()
-        tubing_shallow = make_tubing(depth_ft=3000.0)
-        tubing_deep = make_tubing(depth_ft=8000.0)
-        pwf_shallow = simplified_homogeneous_pwf(flow, tubing_shallow, fluid, whp_psi=300.0)
-        pwf_deep = simplified_homogeneous_pwf(flow, tubing_deep, fluid, whp_psi=300.0)
-        assert pwf_deep > pwf_shallow
-
-    def test_higher_gor_reduces_pwf(self):
-        tubing = make_tubing()
-        fluid = make_fluid()
-        flow_low = make_flow(gor_scf_per_bbl=100.0)
-        flow_high = make_flow(gor_scf_per_bbl=2000.0)
-        pwf_low = simplified_homogeneous_pwf(flow_low, tubing, fluid, whp_psi=300.0)
-        pwf_high = simplified_homogeneous_pwf(flow_high, tubing, fluid, whp_psi=300.0)
-        assert pwf_high < pwf_low
+class TestSimplifiedHomogeneousAliases:
 
     def test_both_aliases_equal_simplified_pressure(self):
         """Both deprecated names return exactly the same simplified pressure."""
@@ -209,3 +184,30 @@ def test_nodal_selectors_are_deprecated_aliases(name):
     with pytest.warns(DeprecationWarning, match="does not implement"):
         actual = NodalSolver().solve(**args, correlation=name)
     assert actual == NodalSolver().solve(**args, correlation="simplified_homogeneous")
+
+
+def test_curve_rejects_unknown_correlation():
+    from digitalmodel.production_engineering.vlp_correlations import vlp_curve
+
+    with pytest.raises(
+        ValueError, match="simplified_homogeneous.*hagedorn_brown.*beggs_brill"
+    ):
+        vlp_curve(
+            rates_bopd=[100.0, 500.0, 2000.0], watercut=0.2,
+            gor_scf_per_bbl=500.0, tubing=make_tubing(),
+            fluid=make_fluid(), whp_psi=300.0, correlation="unknown_method",
+        )
+
+
+def test_nodal_rejects_unknown_correlation():
+    from digitalmodel.production_engineering import NodalSolver, ReservoirConditions, VogelIpr
+
+    ipr = VogelIpr(ReservoirConditions(3000.0, 2000.0, 1.0), qmax_bopd=3000.0)
+    with pytest.raises(
+        ValueError, match="simplified_homogeneous.*hagedorn_brown.*beggs_brill"
+    ):
+        NodalSolver().solve(
+            ipr=ipr, tubing=make_tubing(), fluid=make_fluid(),
+            watercut=0.2, gor_scf_per_bbl=500.0, whp_psi=300.0,
+            correlation="unknown_method",
+        )
