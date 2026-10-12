@@ -251,9 +251,6 @@
   ],
   "recommendation": "Keep the parent data-backfill issue open and keep the downstream benchmark issue on `status:needs-data`: fewer than 10 records pass (0 pass all four fields; 2 pass trees plus manifolds at contractor-scope level). Two decisions would change what is achievable: whether contractor award scope counts as an accepted source for tree and manifold counts (as-contracted, not as-built), and whether the gate should require `tieback_distance_km` at all given no public primary statement was found for any of the ten. A follow-up pass from a host that can read PDFs and reach OnePetro and regulator data would close gaps 1, 5 and 6 fastest.",
   "as_contracted_rows": [
-    13,
-    14,
-    28,
     52,
     53,
     67
