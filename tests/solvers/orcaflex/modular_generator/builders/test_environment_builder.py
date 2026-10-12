@@ -525,3 +525,139 @@ class TestDefaults:
     def test_default_air_density(self):
         env = _build(_make_env_spec())
         assert env["AirDensity"] == pytest.approx(0.00128)
+
+
+# Literal membership pins copied from the pre-change builder declarations.
+_PRE_CHANGE_OVERLAY_KEYS = {
+    "WaterSurfaceZ", "KinematicViscosity", "SeaTemperature",
+    "ReynoldsNumberCalculation", "HorizontalWaterDensityFactor",
+    "VerticalDensityVariation", "SeabedType", "SeabedOrigin", "WaterDepth",
+    "SeabedSlopeDirection", "SeabedSlope", "SeabedModel",
+    "SeabedNormalStiffness", "SeabedShearStiffness", "KinematicStretchingMethod",
+    "UserSpecifiedRandomWaveSeeds", "WaveFrequencySpectrumDiscretisationMethod",
+    "WaveKinematicsCutoffDepth", "WaveCalculationMethod",
+    "WaveCalculationTimeInterval", "WaveCalculationSpatialInterval",
+    "MultipleCurrentDataCanBeDefined", "CurrentModel", "CurrentRamped",
+    "CurrentApplyVerticalStretching", "HorizontalCurrentFactor",
+    "VerticalCurrentVariationMethod", "IncludeVesselWindLoads",
+    "IncludeLineWindLoads", "IncludeBuoyWindLoads", "IncludeBuoyWingWindLoads",
+    "WindRamping", "AirDensity", "AirSpeedOfSound",
+}
+_PRE_CHANGE_WIND_KEYS = {
+    "API spectrum": {
+        "VerticalWindVariationFactor", "WindSpectrumElevation",
+        "WindSpectrumFMin", "WindSpectrumFMax", "WindTimeOrigin", "WindSeed",
+        "NumberOfWindComponents",
+    },
+    "NPD spectrum": {
+        "VerticalWindVariationFactor", "WindSpectrumElevation",
+        "WindSpectrumFMin", "WindSpectrumFMax", "WindTimeOrigin", "WindSeed",
+        "NumberOfWindComponents",
+    },
+    "ESDU spectrum": {
+        "VerticalWindVariationFactor", "WindSpectrumElevation",
+        "WindSpectrumFMin", "WindSpectrumFMax", "WindTimeOrigin", "WindSeed",
+        "NumberOfWindComponents",
+    },
+    "Full field": {
+        "WindFullFieldFormat", "WindFullFieldTurbSimFileName", "WindTimeOrigin",
+        "WindOrigin",
+    },
+}
+
+
+def _hash_seed_raw_properties():
+    """Exercise appended overlay and API-spectrum keys in reversed input order."""
+    return {
+        "NumberOfWindComponents": 100, "WindSeed": 123, "WindTimeOrigin": 0,
+        "WindSpectrumFMax": 1, "WindSpectrumFMin": 0.01,
+        "WindSpectrumElevation": 10, "VerticalWindVariationFactor": 1,
+        "WindType": "API spectrum",
+        "WaveFrequencySpectrumDiscretisationMethod": "Equal energy",
+        "UserSpecifiedRandomWaveSeeds": "Yes",
+        "KinematicStretchingMethod": "Vertical stretching",
+        "SeabedShearStiffness": 50, "SeabedNormalStiffness": 100,
+        "SeabedSlope": 0, "WaterDepth": 100,
+    }
+
+
+def test_environment_membership_regression_pin():
+    """Pin overlay membership, wind modes and absence of duplicate entries."""
+    overlay = EnvironmentBuilder._SAFE_RAW_OVERLAY_KEYS
+    assert set(overlay) == _PRE_CHANGE_OVERLAY_KEYS
+    assert len(overlay) == len(set(overlay))
+    wind_props = EnvironmentBuilder._WIND_TYPE_PROPS
+    assert set(wind_props) == set(_PRE_CHANGE_WIND_KEYS)
+    for wind_type, expected in _PRE_CHANGE_WIND_KEYS.items():
+        assert set(wind_props[wind_type]) == expected
+        assert len(wind_props[wind_type]) == len(set(wind_props[wind_type]))
+
+
+def test_environment_overlay_collections_are_ordered_tuples():
+    """Require explicit ordering for both iterated overlay collections."""
+    assert isinstance(EnvironmentBuilder._SAFE_RAW_OVERLAY_KEYS, tuple)
+    assert all(isinstance(keys, tuple)
+               for keys in EnvironmentBuilder._WIND_TYPE_PROPS.values())
+
+
+def test_environment_appended_overlay_key_order():
+    """Append non-default raw keys in declaration order, before wind fields."""
+    raw = _hash_seed_raw_properties()
+    env = _build(_make_env_spec(raw_properties=raw))
+    appended_raw_keys = [key for key in env
+                         if key in raw and key not in EnvironmentBuilder._DEFAULTS]
+    assert appended_raw_keys == [
+        "WaterDepth", "SeabedSlope", "SeabedNormalStiffness",
+        "SeabedShearStiffness", "KinematicStretchingMethod",
+        "UserSpecifiedRandomWaveSeeds", "WaveFrequencySpectrumDiscretisationMethod",
+        "VerticalWindVariationFactor", "WindSpectrumElevation",
+        "WindSpectrumFMin", "WindSpectrumFMax", "WindTimeOrigin", "WindSeed",
+        "NumberOfWindComponents",
+    ]
+    keys = list(env)
+    assert keys.index("WindType") < keys.index("VerticalWindVariationFactor")
+    assert keys.index("SeabedType") < keys.index("WaterDepth")
+    assert keys.index("SeabedModel") < keys.index("SeabedNormalStiffness")
+
+
+def test_environment_serialized_bytes_across_hash_seeds(tmp_path):
+    """Compare production YAML bytes across five separate Python processes.
+
+    At BASE, seeds 1, 2, 42 and 12345 differed from seed 0.
+    """
+    import os
+    from pathlib import Path
+    import subprocess
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[5]
+    spec = _make_env_spec(raw_properties=_hash_seed_raw_properties())
+    spec_input = spec.model_dump_json().encode("utf-8")
+    assert ProjectInputSpec.model_validate_json(spec_input).environment == spec.environment
+    child = """
+import sys
+import yaml
+from digitalmodel.solvers.orcaflex.modular_generator import (
+    BuilderContext, EnvironmentBuilder, ProjectInputSpec, _NoAliasDumper,
+)
+spec = ProjectInputSpec.model_validate_json(sys.stdin.buffer.read())
+data = EnvironmentBuilder(spec, BuilderContext()).build()
+text = yaml.dump(data, Dumper=_NoAliasDumper, default_flow_style=False,
+                 allow_unicode=True, sort_keys=False)
+sys.stdout.buffer.write(text.encode('utf-8'))
+"""
+    outputs = {}
+    for seed in (0, 1, 2, 42, 12345):
+        child_env = {**os.environ, "PYTHONHASHSEED": str(seed),
+                     "PYTHONDONTWRITEBYTECODE": "1",
+                     "PYTHONPATH": str(repo_root / "src")}
+        for binding in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+            child_env.pop(binding, None)
+        result = subprocess.run(
+            [sys.executable, "-c", child], env=child_env, input=spec_input,
+            cwd=tmp_path, capture_output=True, timeout=600, check=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        outputs[seed] = result.stdout
+    differing = [seed for seed, data in outputs.items() if data != outputs[0]]
+    assert not differing, f"Serialized bytes differ from seed 0 for seeds {differing}"
