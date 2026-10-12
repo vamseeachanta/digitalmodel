@@ -116,10 +116,50 @@ def prose_lines(lines: list[str]) -> list[tuple[int, str]]:
     return result
 
 
+def register_prose(line: str) -> str:
+    """Mask additional source tokens only for the subject and adjective rules."""
+    line = re.sub(
+        r"(?<!`)(`+)(?!`)(.*?)(?<!`)\1(?!`)",
+        lambda m: " " * len(m[0]) if len(m[1]) % 2 == 0 else m[0],
+        line,
+    )
+    # Keep the existing single/odd-backtick removal and word-joining behavior.
+    line = re.sub(r"`[^`]*`", "", line)
+    for match in re.finditer(r"(?<!\\)\[[^\[\]]*\]\(", line):
+        start = match.end()
+        depth = 1
+        escaped = False
+        for end in range(start, len(line)):
+            char = line[end]
+            if escaped:
+                escaped = False
+                continue
+            if char == "\\":
+                escaped = True
+            elif char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    if re.fullmatch(
+                        r"""(?:<[^<>]*>|[^\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*""",
+                        line[start:end],
+                    ):
+                        line = line[:start] + " " * (end - start) + line[end:]
+                    break
+    return re.sub(
+        r"(?<!\w)(?:https?://|www\.)[^\s<>`\"\[\]]+",
+        lambda m: " " * len(m[0]),
+        line,
+        flags=re.IGNORECASE,
+    )
+
+
 def check_line(line: str, number: int, lines: list[str]) -> list[tuple[int, str, str]]:
     """Check register rules that apply to an individual prose line."""
     findings = []
-    match = FIRST_PERSON.search(line)
+    register_line = register_prose(lines[number - 1])
+    match = FIRST_PERSON.search(register_line)
     if match:
         findings.append(
             (
@@ -133,7 +173,7 @@ def check_line(line: str, number: int, lines: list[str]) -> list[tuple[int, str,
         findings.append(
             (number, "R4-shall-should", "Requirement and advisory language are mixed")
         )
-    match = ADJECTIVES_WITHOUT_CRITERION.search(line)
+    match = ADJECTIVES_WITHOUT_CRITERION.search(register_line)
     if match and not has_criterion_nearby(lines, number - 1):
         findings.append(
             (
@@ -223,6 +263,17 @@ FIXTURES: list[tuple[str, str, str | None]] = [
         None,
         "inches with 3 decimals",
     ),
+    ("https://example.org/conservative-design", None, "URL adjective masked"),
+    ("www.example.org/safe-design", None, "www URL adjective masked"),
+    ("[source](conservative-design)", None, "relative link target masked"),
+    ("![diagram](safe-design)", None, "relative image target masked"),
+    ("[id]: https://example.org/conservative-design", None, "reference URL masked"),
+    ("Text ``conservative`` end.", None, "double-backtick span masked"),
+    ("Text ``our analysis`` end.", None, "double-backtick first person masked"),
+    ("Text `safe` end.", None, "regression pin: single-backtick span"),
+    ("Text ```safe``` end.", None, "regression pin: triple-backtick span"),
+    ("Text `` safe prose.", "R5-unsupported-adj", "regression pin: unclosed span"),
+    ("Text `` safe ` end.", "R5-unsupported-adj", "regression pin: mismatched span"),
 ]
 
 
