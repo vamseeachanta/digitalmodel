@@ -33,9 +33,9 @@ of numeric columns:
 * **block 1 — the normalised-power diagram.** Not a load card; not reproduced. Reading
   block 1 as a load card is the obvious way to get this wrong.
 
-Coordinates are the plate's own arbitrary plotting units. Nothing downstream
-depends on their scale: the comparison normalises each axis to 0–1 before
-measuring anything, because the plate carries no engineering units.
+The workbook's embedded chart titles establish normalised displacement,
+normalised load and normalised power, rather than engineering units. The
+comparison normalises each axis to 0–1 before measuring anything.
 
 ### Sheets and the modes they map to
 

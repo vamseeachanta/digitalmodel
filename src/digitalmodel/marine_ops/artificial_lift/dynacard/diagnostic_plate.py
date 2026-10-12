@@ -1,5 +1,8 @@
 """Read the CC0 Mendeley diagnostic plate without inventing engineering units.
 
+This package module is a reader for the one retained public-domain fixture
+under tests/, pinned by digest; it is not a general ingestion interface.
+
 Source version: DOI 10.17632/hnfwm9mjs6.1, retrieved 2026-10-11.
 Provenance and independent inventory: testdata/mendeley_plate/manifest.json in
 this module's tests. Embedded chart titles establish normalised displacement,

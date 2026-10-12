@@ -145,6 +145,9 @@ def test_empty_pair_is_rejected():
 def test_ordinate_schema_matches_embedded_chart_titles():
     # Titles live in BIFF chart records, not text cells. This checks the source
     # interpretation independently of both the loader and its numeric parsing.
+    # Private xlrd attributes are used to count embedded chart titles. A library
+    # change may break this test without a data change; re-derive the counts
+    # another way if that happens, keeping the data and digest unchanged.
     from xlrd.compdoc import CompDoc
     raw = WORKBOOK.read_bytes()
     stream = CompDoc(raw).get_named_stream("Workbook")
