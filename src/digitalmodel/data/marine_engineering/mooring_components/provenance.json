@@ -1,0 +1,386 @@
+{
+  "schema_version": 1,
+  "owner_repo": "digitalmodel",
+  "units": {
+    "diameter": "mm",
+    "mbl": "kN",
+    "stiffness": "kN",
+    "weight_air": "kg/m",
+    "weight_water": "kg/m",
+    "bend_radius": "m"
+  },
+  "intended_use": "offline coefficient examples; not certified component selection",
+  "readiness": "partial",
+  "sources": {
+    "moorpy": {
+      "source_id": "nrel-iea-reference-turbines",
+      "name": "MoorPy old default line-property coefficient set",
+      "url": "https://github.com/NREL/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/moorpy/library/MoorProps_default.yaml",
+      "commit": "1fb29f8eca2618543b2df7056adfdfce0265737b",
+      "file": "moorpy/library/MoorProps_default.yaml",
+      "locator": "wire lines 85-89; polyester lines 93-99; nylon lines 105-112; helpers.py getLineProps and loadLineProps",
+      "retrieved_at": "2026-10-11T23:39:03Z",
+      "license": "BSD 3-Clause License",
+      "terms": "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:",
+      "terms_url": "https://github.com/NREL/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/LICENSE.txt",
+      "sha256": "4f0b8d9b10eb1a7def04709350e8bc4a7afa6f4461f40cb0d2b4a4e700732cac",
+      "formula_url": "https://github.com/NREL/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/moorpy/helpers.py",
+      "formula_sha256": "8ac9c719d05e88a1e709cb9c2e110721f4414ff2c847bd39325a34c399f48199",
+      "readiness": "computed examples only; not certified component selection"
+    }
+  },
+  "excerpt_sha256": "dc9ec64bafdaa0015847572e40f37e47cf804cead2f72c973b3857f1fb297cad",
+  "rows": {
+    "chain": [],
+    "wire": [
+      {
+        "identity": {
+          "diameter": 20.0,
+          "construction": "MoorPy generic wire",
+          "grade": "not specified"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 5293.0,
+          "dvol_dnom": 1.18,
+          "MBL_d2": 1022000000.0,
+          "EA_d2": 97100000000.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 24.0,
+          "construction": "MoorPy generic wire",
+          "grade": "not specified"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 5293.0,
+          "dvol_dnom": 1.18,
+          "MBL_d2": 1022000000.0,
+          "EA_d2": 97100000000.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 28.0,
+          "construction": "MoorPy generic wire",
+          "grade": "not specified"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 5293.0,
+          "dvol_dnom": 1.18,
+          "MBL_d2": 1022000000.0,
+          "EA_d2": 97100000000.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 32.0,
+          "construction": "MoorPy generic wire",
+          "grade": "not specified"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 5293.0,
+          "dvol_dnom": 1.18,
+          "MBL_d2": 1022000000.0,
+          "EA_d2": 97100000000.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 36.0,
+          "construction": "MoorPy generic wire",
+          "grade": "not specified"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 5293.0,
+          "dvol_dnom": 1.18,
+          "MBL_d2": 1022000000.0,
+          "EA_d2": 97100000000.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 40.0,
+          "construction": "MoorPy generic wire",
+          "grade": "not specified"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 5293.0,
+          "dvol_dnom": 1.18,
+          "MBL_d2": 1022000000.0,
+          "EA_d2": 97100000000.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 44.0,
+          "construction": "MoorPy generic wire",
+          "grade": "not specified"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 5293.0,
+          "dvol_dnom": 1.18,
+          "MBL_d2": 1022000000.0,
+          "EA_d2": 97100000000.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 48.0,
+          "construction": "MoorPy generic wire",
+          "grade": "not specified"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 5293.0,
+          "dvol_dnom": 1.18,
+          "MBL_d2": 1022000000.0,
+          "EA_d2": 97100000000.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      }
+    ],
+    "line": [
+      {
+        "identity": {
+          "diameter": 50.0,
+          "material": "polyester"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 679.0,
+          "MBL_d2": 308000000.0,
+          "EA_MBL": 14.0,
+          "density": 1380.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 76.0,
+          "material": "polyester"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 679.0,
+          "MBL_d2": 308000000.0,
+          "EA_MBL": 14.0,
+          "density": 1380.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 50.0,
+          "material": "nylon"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 585.0,
+          "MBL_d3": 230000000.0,
+          "MBL_d2": 207000000.0,
+          "EA_MBL": 5.0,
+          "density": 1140.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      },
+      {
+        "identity": {
+          "diameter": 76.0,
+          "material": "nylon"
+        },
+        "source": "moorpy",
+        "kind": "computed",
+        "formula": "d = diameter / mm_per_m [m]; mass = mass_d2 * d**2 [kg/m]; MBL_N = MBL_d2 * d**2 + MBL_d3 * d**3; EA_N = EA_d2 * d**2 + EA_MBL * MBL_N; mbl = MBL_N / n_per_kn [kN]; stiffness = EA_N / n_per_kn [kN]; weight_water = mass * (1 - water_density / density) for fibre, or mass - pi/4 * (dvol_dnom * d)**2 * water_density for wire [kg/m]. Unprovided polynomial coefficients are zero, per loadLineProps.",
+        "coefficients": {
+          "mass_d2": 585.0,
+          "MBL_d3": 230000000.0,
+          "MBL_d2": 207000000.0,
+          "EA_MBL": 5.0,
+          "density": 1140.0
+        },
+        "water_density_kg_m3": 1025.0,
+        "mm_per_m": 1000,
+        "n_per_kn": 1000,
+        "valid_diameter_range": "not established; fixture sampling only"
+      }
+    ]
+  },
+  "tables": {
+    "chain": {
+      "sha256": "1f49bf6faef88db8bd7dc8f5b7931981ae157c4859db52a32cb1f882f5340898",
+      "row_count": 0
+    },
+    "wire": {
+      "sha256": "d9f6e963f22d5ecdcd1aa1ba9177fc2e4b5799cb778cd550cc03d2970a99271e",
+      "row_count": 8
+    },
+    "line": {
+      "sha256": "7bc008b7fac06ba6e6dd19bbecf84146c7e76d0f5803aec0188599b700fb3e36",
+      "row_count": 4
+    }
+  },
+  "excluded_sources": [
+    {
+      "name": "IEA reference platform",
+      "commit": "e4993d63de10f165389534461dd544006750fe60",
+      "file": "OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_MoorDyn.dat",
+      "url": "https://github.com/IEAWindTask37/IEA-15-240-RWT/blob/e4993d63de10f165389534461dd544006750fe60/OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_MoorDyn.dat",
+      "terms": "Apache License, Version 2.0",
+      "terms_url": "https://github.com/IEAWindTask37/IEA-15-240-RWT/blob/e4993d63de10f165389534461dd544006750fe60/LICENSE",
+      "retrieval_date_utc": "2026-10-11",
+      "reason": "No breaking strength in inspected model; equivalent/model diameter cannot be treated as nominal catalogue diameter."
+    },
+    {
+      "name": "OC4 reference platform",
+      "commit": "dd5feaaaa500ba7283140107806300d551cff0a7",
+      "file": "glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC4DeepCwindSemi_MoorDyn.dat",
+      "url": "https://github.com/OpenFAST/r-test/blob/dd5feaaaa500ba7283140107806300d551cff0a7/glue-codes/openfast/5MW_OC4Semi_WSt_WavesWN/NRELOffshrBsline5MW_OC4DeepCwindSemi_MoorDyn.dat",
+      "terms": "Apache License, Version 2.0",
+      "terms_url": "https://github.com/OpenFAST/r-test/blob/dd5feaaaa500ba7283140107806300d551cff0a7/LICENSE",
+      "retrieval_date_utc": "2026-10-11",
+      "reason": "No breaking strength in inspected model; no complete chain row."
+    }
+  ],
+  "retained_large_discovery_file": {
+    "scratch_relative_path": "sources/oc4-commit.json",
+    "size_bytes": 1264083,
+    "sha256": "946a5dbd2fa9c3e96aeea27a9fe5852535b2dcce7602043f0e2caf0eab8746dc",
+    "purpose": "source revision discovery; retained in the job scratch area on the data disk of the Linux workstation"
+  },
+  "diameter_source": {
+    "owner_repo": "digitalmodel",
+    "url": "https://github.com/vamseeachanta/digitalmodel/blob/f21a12af5349c1656137a7b9daa091ec8f968738/tests/marine_ops/marine_engineering/test_component_database.py",
+    "commit": "f21a12af5349c1656137a7b9daa091ec8f968738",
+    "file": "tests/marine_ops/marine_engineering/test_component_database.py",
+    "locator": "_generate_wire_database diameter list; _generate_chain_database diameter list; sampling only, not a valid manufacturer range",
+    "retrieved_at": "2026-10-12T00:46:08.513880+00:00",
+    "license": "MIT License",
+    "terms": "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction",
+    "terms_url": "https://github.com/vamseeachanta/digitalmodel/blob/f21a12af5349c1656137a7b9daa091ec8f968738/LICENSE",
+    "sha256": "f6738b3651a13c078fb8bc65a2cf2d22e76a4b840c4b81736b401855e7d67ed7"
+  },
+  "schema": {
+    "chain": {
+      "columns": [
+        "diameter",
+        "grade",
+        "link_type",
+        "mbl",
+        "stiffness",
+        "weight_air",
+        "weight_water",
+        "bend_radius",
+        "fatigue_category",
+        "certification",
+        "manufacturer",
+        "part_number",
+        "notes"
+      ],
+      "identity": [
+        "diameter",
+        "grade",
+        "link_type"
+      ]
+    },
+    "wire": {
+      "columns": [
+        "diameter",
+        "construction",
+        "grade",
+        "mbl",
+        "stiffness",
+        "weight_air",
+        "weight_water"
+      ],
+      "identity": [
+        "diameter",
+        "construction",
+        "grade"
+      ]
+    },
+    "line": {
+      "columns": [
+        "diameter",
+        "material",
+        "mbl",
+        "stiffness",
+        "weight_air",
+        "weight_water"
+      ],
+      "identity": [
+        "diameter",
+        "material"
+      ]
+    }
+  }
+}
