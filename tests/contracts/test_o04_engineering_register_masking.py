@@ -217,13 +217,13 @@ def test_regression_pin_malformed_links_leave_prose(text):
 @pytest.mark.parametrize(
     "text",
     [
-        '[source](conservative-design "note")',
-        "[source](conservative-design 'note')",
+        '[source](conservative-design "our safe note")',
+        "[source](conservative-design 'our safe note')",
     ],
     ids=["double-quoted-title", "single-quoted-title"],
 )
-def test_new_link_target_with_title_is_masked(text):
-    assert CHECKER.check_file_text(text) == []
+def test_fix_link_destination_mask_leaves_title(text):
+    assert CHECKER.check_file_text(text) == CHECKER.check_file_text("our safe note")
 
 
 def test_regression_pin_angle_link_target_with_title():
@@ -236,3 +236,110 @@ def test_new_angle_link_destination_first_person_is_masked():
 
 def test_extended_self_test():
     assert CHECKER.run_self_test()
+
+
+@pytest.mark.parametrize(
+    "text, prose",
+    [
+        ("|https://example.org/a|conservative|", "conservative"),
+        ("| https://example.org/a|conservative estimate |", "conservative estimate"),
+        ("www.example.org/a|safe|", "safe"),
+        ("**https://example.org/a**conservative", "conservative"),
+        ("(https://example.org/a)conservative", "conservative"),
+        ("https://example.org/a,conservative design", "conservative design"),
+        ("|https://example.org/a|our notes|", "our notes"),
+        ("|https://example.org/safe-design|conservative|", "conservative"),
+        ("**https://example.org/safe-design**conservative", "conservative"),
+        ("(https://example.org/safe-design)conservative", "conservative"),
+        ("_https://example.org/a_our notes", ""),
+        ("https://example.org/a;safe value", "safe value"),
+        ("https://example.org/a'safe value", "safe value"),
+    ],
+    ids=[
+        "table",
+        "table-spaces",
+        "www",
+        "bold",
+        "parenthesis",
+        "comma",
+        "subject",
+        "table-slug",
+        "bold-slug",
+        "parenthesis-slug",
+        "pin-italic",
+        "semicolon",
+        "quote",
+    ],
+)
+def test_fix_url_boundary_preserves_adjacent_prose(text, prose):
+    """The italic case pins MAIN's lack of a word boundary after an underscore."""
+    assert CHECKER.check_file_text(text) == CHECKER.check_file_text(prose)
+
+
+@pytest.mark.parametrize("image", [False, True], ids=["link", "image"])
+@pytest.mark.parametrize(
+    "target, title, prose",
+    [
+        ("conservative-design", '"our safe note"', "our safe note"),
+        ("safe-design", "'we use conservative values'", "we use conservative values"),
+        ("<our notes>", '"we use safe values"', "we use values"),
+    ],
+    ids=["double-title", "single-title", "angle-title"],
+)
+def test_fix_link_and_image_titles_remain_prose(image, target, title, prose):
+    text = ("!" if image else "") + f"[source]({target} {title})"
+    assert CHECKER.check_file_text(text) == CHECKER.check_file_text(prose)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "[id]: docs/conservative-design.md",
+        "   [id]: docs/conservative-design.md",
+        "[id]: <our notes>",
+    ],
+    ids=["relative", "indent-three", "angle-subject"],
+)
+def test_fix_reference_destination_is_masked(text):
+    assert CHECKER.check_file_text(text) == []
+
+
+@pytest.mark.parametrize(
+    "text, prose",
+    [
+        ('[id]: docs/conservative-design.md "our safe note"', "our safe note"),
+        (
+            "[id]: docs/safe-design.md 'we use conservative values'",
+            "we use conservative values",
+        ),
+        ('[id]: <our notes> "we use safe values"', "we use values"),
+    ],
+    ids=["double-title", "single-title", "angle-title"],
+)
+def test_fix_reference_relative_destination_leaves_title(text, prose):
+    assert CHECKER.check_file_text(text) == CHECKER.check_file_text(prose)
+
+
+@pytest.mark.parametrize(
+    "text, prose",
+    [
+        ("https://example.org/conservative-design_(draft) SAFE prose.", "SAFE prose."),
+        ("https://example.org/conservative_design*value SAFE prose.", "SAFE prose."),
+        ("[id]: https://example.org/conservative-design", ""),
+        ('[id]: https://example.org/a "our safe note"', "our safe note"),
+        ('[id]: <https://example.org/a> "we use safe values"', "we use values"),
+        ("Text [id]: docs/conservative-design.md", "conservative"),
+        ("Text [id]: docs/safe-design.md", "safe"),
+    ],
+    ids=[
+        "balanced-url",
+        "internal-emphasis",
+        "absolute-definition",
+        "absolute-title",
+        "angle-absolute-title",
+        "embedded-definition",
+        "embedded-safe",
+    ],
+)
+def test_regression_pin_boundary_and_reference_forms(text, prose):
+    assert CHECKER.check_file_text(text) == CHECKER.check_file_text(prose)

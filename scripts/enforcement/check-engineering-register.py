@@ -116,15 +116,8 @@ def prose_lines(lines: list[str]) -> list[tuple[int, str]]:
     return result
 
 
-def register_prose(line: str) -> str:
-    """Mask additional source tokens only for the subject and adjective rules."""
-    line = re.sub(
-        r"(?<!`)(`+)(?!`)(.*?)(?<!`)\1(?!`)",
-        lambda m: " " * len(m[0]) if len(m[1]) % 2 == 0 else m[0],
-        line,
-    )
-    # Keep the existing single/odd-backtick removal and word-joining behavior.
-    line = re.sub(r"`[^`]*`", "", line)
+def mask_link_destinations(line: str) -> str:
+    """Leave labels and optional titles checked while masking destinations."""
     for match in re.finditer(r"(?<!\\)\[[^\[\]]*\]\(", line):
         start = match.end()
         depth = 1
@@ -141,15 +134,68 @@ def register_prose(line: str) -> str:
             elif char == ")":
                 depth -= 1
                 if depth == 0:
-                    if re.fullmatch(
-                        r"""(?:<[^<>]*>|[^\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*""",
+                    destination = re.fullmatch(
+                        r"""(<[^<>]*>|[^\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*""",
                         line[start:end],
-                    ):
-                        line = line[:start] + " " * (end - start) + line[end:]
+                    )
+                    if destination:
+                        stop = start + len(destination[1])
+                        line = line[:start] + " " * (stop - start) + line[stop:]
                     break
+    definition = re.match(
+        r"""^ {0,3}\[[^\[\]]+\]:[ \t]*(<[^<>]*>|[^\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*$""",
+        line,
+    )
+    if definition:
+        depth = 0
+        for char in re.sub(r"\\.", "", definition[1]):
+            depth += (char == "(") - (char == ")")
+            if depth < 0:
+                break
+        if not definition[1].startswith("<") and depth != 0:
+            return line
+        start, stop = definition.span(1)
+        line = line[:start] + " " * (stop - start) + line[stop:]
+    return line
+
+
+def mask_bare_url(match: re.Match) -> str:
+    """Stop at prose delimiters, keeping balanced URL parentheses."""
+    token = match[0]
+    wrapper = match.string[match.start() - 1 : match.start()]
+    depth = 0
+    stop = len(token)
+    for index, char in enumerate(token):
+        if char in ",;" or token[index : index + 2] in ("**", "__"):
+            stop = index
+            break
+        if char in "*_" and char == wrapper:
+            stop = index
+            break
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            if depth == 0:
+                stop = index
+                break
+            depth -= 1
+    stop = len(token[:stop].rstrip(".,;:!?*_"))
+    return " " * stop + token[stop:]
+
+
+def register_prose(line: str) -> str:
+    """Mask additional source tokens only for the subject and adjective rules."""
+    line = re.sub(
+        r"(?<!`)(`+)(?!`)(.*?)(?<!`)\1(?!`)",
+        lambda m: " " * len(m[0]) if len(m[1]) % 2 == 0 else m[0],
+        line,
+    )
+    # Keep the existing single/odd-backtick removal and word-joining behavior.
+    line = re.sub(r"`[^`]*`", "", line)
+    line = mask_link_destinations(line)
     return re.sub(
-        r"(?<!\w)(?:https?://|www\.)[^\s<>`\"\[\]]+",
-        lambda m: " " * len(m[0]),
+        r"(?<![^\W_])(?:https?://|www\.)[^\s<>`\"'\[\]|]+",
+        mask_bare_url,
         line,
         flags=re.IGNORECASE,
     )
@@ -274,6 +320,9 @@ FIXTURES: list[tuple[str, str, str | None]] = [
     ("Text ```safe``` end.", None, "regression pin: triple-backtick span"),
     ("Text `` safe prose.", "R5-unsupported-adj", "regression pin: unclosed span"),
     ("Text `` safe ` end.", "R5-unsupported-adj", "regression pin: mismatched span"),
+    ("|https://example.org/a|safe|", "R5-unsupported-adj", "adjacent URL cell"),
+    ('[source](safe-design "our note")', "R1-subject", "link title checked"),
+    ("[id]: docs/conservative-design.md", None, "relative definition masked"),
 ]
 
 
