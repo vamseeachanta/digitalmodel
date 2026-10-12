@@ -1,0 +1,152 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<title>CalculiX surface-crack spike: one-solver leg</title>
+<style>body{font:16px system-ui;max-width:1200px;margin:2em auto;padding:1em;color:#17212b}
+table{border-collapse:collapse;font-size:13px;width:100%}td,th{border:1px solid #bbb;padding:.4em}
+th{background:#e9eef2}h1,h2{line-height:1.2}p{line-height:1.55}code{background:#eee}</style>
+<h1>CalculiX surface-crack spike: one-solver leg</h1>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2178">issue 2178</a>.
+The two-solver verdict remains open. No production module is changed.</p><h2>Interim result</h2><p>3 native runs completed;
+0 qualified benchmark results against the 5% research comparator.
+Deepest-point signed differences are -16.017%, -13.102%, -11.907%; surface differences are -5.563%, -8.724%, -6.691%.
+The finest maximum absolute front difference is 11.907%.
+The tested linear-element stress-extrapolation route misses the comparator at the
+finest mesh. The deepest error decreases, but the surface error is nonmonotonic.
+No tuned agreement is claimed. The native campaign stops after the predeclared
+refinement sequence. This conclusion covers CalculiX only.</p><h2>Benchmark and method</h2>
+<p>The fixed flaw has a = c = 5 mm, t = 10 mm,
+plate full width = 50 mm and full length = 50 mm.
+Thus a/t = 0.5, a/c = 1,
+c/b = 0.2, full width/c = 10,
+and full length/c = 10.
+Remote membrane stress is 100 MPa, with no bending. The synthetic,
+isotropic linear-elastic material has E = 210000 MPa and
+nu = 0.3; no yield or toughness assumption is used.</p>
+<p>The semicircle is a member of the semi-elliptical family. It makes the radial
+sampling rays normal to the front and avoids a geometric interpretation parameter.
+The in-repo Newman–Raju implementation requires positive a/c no greater than unity,
+a below t and c/b below its stated bound; this benchmark is within those bounds.
+The public NASA memorandum supports this shape and finite-thickness regime.
+The benchmark was selected before solver results and was unchanged afterwards.</p>
+<p>Dimensional seed inputs a, b and remote stress come from the public synthetic
+Newman–Raju tests (a = 5, c = 25, stress = 100 in their respective cases),
+with t = 2a and the benchmark c = a. E and nu come from the synthetic STEEL
+fixture in the CalculiX tests. The refinement seed is the six beam DOFs in those
+tests, doubled successively. These are numerical design choices derived from
+repository fixtures, not measured material or geometry. File digests and the
+source revision are in the JSON artifact; repository terms are MIT License.</p><p>A quarter plate is meshed explicitly, without installing or invoking a mesher.
+The x-z cross-section uses polar layers ending on a rectangle, with the rectangle
+corner angle included. Crack-front nodes lie on r = a; faces between them are
+chords, whose angular resolution is refined. The y-direction is extruded to the
+loaded end. The radial coordinates inside the flaw are a[1-(1-i/n)^2]; outside
+the flaw they are a+(R(phi)-a)(j/n)^2, where R terminates at the plate perimeter.
+Extrusion coordinates are L(j/n)^2. Linear fully integrated C3D8 elements surround
+the front; C3D6 wedges close the polar centre. No quarter-point elements are used.</p>
+<p>The x = 0 symmetry plane has ux = 0. The intact part of y = 0 has uy = 0;
+the crack face is traction-free. One uz anchor at the loaded-end origin removes
+rigid translation. The surface and back face remain traction-free. Negative P2
+pressure imposes tensile loading at the extrusion end, following manual section
+7.43 face numbering. Native summed y reactions are compared with stress times
+the quarter-plate end area. Tests check mesh orientation, rectangular area,
+front radii, crack opening and intact-face closure.</p><p>CalculiX 2.21 manual section 6.9.27 (pp. 368–372), section 10.14 and the
+*CRACK PROPAGATION entry describe an empirical growth route that interpolates
+uncracked stresses and applies shape factors. That route is not an independently
+solved cracked-body contour integral. No built-in contour-integral route usable
+for this benchmark was established by the manual inspection. Its empirical
+K route is not used to validate another empirical K solution.</p>
+<p>The cracked-body FRD nodal stress syy is read through the unchanged repository
+parser. Roylance's public Westergaard opening-mode field (p. 7, Eq. 4) reduces on
+theta = 0 to sigma_yy = K/sqrt(2 pi r). Consequently apparent K is
+sigma_yy sqrt(2 pi r/1000) when r is in mm and K is in MPa sqrt(m).
+The first three exterior-ring nodes at each front station are sampled. A least
+squares line apparent K = K0 + slope*r supplies the intercept. The linear fit is
+a numerical spike choice, not a textbook guarantee of 3D extraction accuracy.
+The individual samples and their spread are retained. The cited leading-field
+range r no greater than 0.1a is flagged separately for each station. The synthetic
+test generates the leading stress field from a known K and also checks a derived
+linear apparent-K correction; it does not establish FE accuracy.</p>
+<p>Reference values at every sampled parametric angle are obtained by calling
+newman_raju_k from the unchanged in-repo source file. Direct file loading avoids
+eager imports of unrelated assessment modules; the wrapper test compares against
+an independent import of the unchanged file. No coefficients or results are transcribed from a paid
+fitness-for-service standard.</p><h2>Results and cost</h2><table><thead><tr><th>n</th><th>Elements</th><th>Count</th><th>Nodes</th><th>Front segments (quarter)</th><th>Time (s)</th><th>Peak RSS (KiB)</th><th>Deepest difference (%)</th><th>Surface difference (%)</th><th>Max |front difference| (%)</th><th>Force residual</th></tr></thead><tbody><tr><td>6</td><td>C3D8+C3D6</td><td>504</td><td>679</td><td>7</td><td>2.36</td><td>19384</td><td>-16.017</td><td>-5.563</td><td>16.017</td><td>0</td></tr><tr><td>12</td><td>C3D8+C3D6</td><td>3744</td><td>4381</td><td>13</td><td>6.76</td><td>123868</td><td>-13.102</td><td>-8.724</td><td>13.102</td><td>0</td></tr><tr><td>24</td><td>C3D8+C3D6</td><td>28800</td><td>31225</td><td>25</td><td>54.70</td><td>1546644</td><td>-11.907</td><td>-6.691</td><td>11.907</td><td>0</td></tr></tbody></table><p>Table 1. Native costs and signed differences relative to the in-repo reference.</p><table><thead><tr><th>n</th><th>phi (deg)</th><th>Reference K (MPa sqrt(m))</th><th>Extracted K (MPa sqrt(m))</th><th>Difference (%)</th><th>Sample spread (MPa sqrt(m))</th><th>All r within near field</th></tr></thead><tbody><tr><td>6</td><td>0.000</td><td>10.404472</td><td>9.825674</td><td>-5.563</td><td>9.479142</td><td>false</td></tr><tr><td>6</td><td>15.000</td><td>9.664138</td><td>9.893063</td><td>2.369</td><td>8.888328</td><td>false</td></tr><tr><td>6</td><td>21.801</td><td>9.410817</td><td>9.546065</td><td>1.437</td><td>9.164330</td><td>false</td></tr><tr><td>6</td><td>30.000</td><td>9.172363</td><td>9.147050</td><td>-0.276</td><td>6.978628</td><td>false</td></tr><tr><td>6</td><td>45.000</td><td>8.902592</td><td>8.487641</td><td>-4.661</td><td>5.001235</td><td>false</td></tr><tr><td>6</td><td>60.000</td><td>8.791148</td><td>7.937486</td><td>-9.710</td><td>4.390720</td><td>false</td></tr><tr><td>6</td><td>75.000</td><td>8.763568</td><td>7.514199</td><td>-14.256</td><td>4.297807</td><td>false</td></tr><tr><td>6</td><td>90.000</td><td>8.761661</td><td>7.358266</td><td>-16.017</td><td>4.299855</td><td>false</td></tr><tr><td>12</td><td>0.000</td><td>10.404472</td><td>9.496833</td><td>-8.724</td><td>2.439340</td><td>false</td></tr><tr><td>12</td><td>7.500</td><td>10.003601</td><td>10.082637</td><td>0.790</td><td>2.387536</td><td>false</td></tr><tr><td>12</td><td>15.000</td><td>9.664138</td><td>9.502070</td><td>-1.677</td><td>2.682798</td><td>false</td></tr><tr><td>12</td><td>21.801</td><td>9.410817</td><td>9.286037</td><td>-1.326</td><td>2.737378</td><td>false</td></tr><tr><td>12</td><td>22.500</td><td>9.387703</td><td>9.318483</td><td>-0.737</td><td>2.635367</td><td>false</td></tr><tr><td>12</td><td>30.000</td><td>9.172363</td><td>9.177640</td><td>0.058</td><td>1.885275</td><td>false</td></tr><tr><td>12</td><td>37.500</td><td>9.013122</td><td>9.012351</td><td>-0.009</td><td>1.582194</td><td>false</td></tr><tr><td>12</td><td>45.000</td><td>8.902592</td><td>8.755678</td><td>-1.650</td><td>1.602754</td><td>false</td></tr><tr><td>12</td><td>52.500</td><td>8.831813</td><td>8.475698</td><td>-4.032</td><td>1.755812</td><td>true</td></tr><tr><td>12</td><td>60.000</td><td>8.791148</td><td>8.202427</td><td>-6.697</td><td>1.960038</td><td>true</td></tr><tr><td>12</td><td>67.500</td><td>8.771180</td><td>7.961617</td><td>-9.230</td><td>2.161811</td><td>true</td></tr><tr><td>12</td><td>75.000</td><td>8.763568</td><td>7.773790</td><td>-11.294</td><td>2.326870</td><td>true</td></tr><tr><td>12</td><td>82.500</td><td>8.761781</td><td>7.654590</td><td>-12.637</td><td>2.433558</td><td>true</td></tr><tr><td>12</td><td>90.000</td><td>8.761661</td><td>7.613740</td><td>-13.102</td><td>2.470328</td><td>true</td></tr><tr><td>24</td><td>0.000</td><td>10.404472</td><td>9.708350</td><td>-6.691</td><td>0.790529</td><td>true</td></tr><tr><td>24</td><td>3.750</td><td>10.196609</td><td>10.498254</td><td>2.958</td><td>0.318035</td><td>true</td></tr><tr><td>24</td><td>7.500</td><td>10.003601</td><td>10.014768</td><td>0.112</td><td>0.496610</td><td>true</td></tr><tr><td>24</td><td>11.250</td><td>9.826005</td><td>9.908607</td><td>0.841</td><td>0.446413</td><td>true</td></tr><tr><td>24</td><td>15.000</td><td>9.664138</td><td>9.706570</td><td>0.439</td><td>0.493799</td><td>true</td></tr><tr><td>24</td><td>18.750</td><td>9.518084</td><td>9.545949</td><td>0.293</td><td>0.534126</td><td>true</td></tr><tr><td>24</td><td>21.801</td><td>9.410817</td><td>9.419524</td><td>0.093</td><td>0.566012</td><td>true</td></tr><tr><td>24</td><td>22.500</td><td>9.387703</td><td>9.419377</td><td>0.337</td><td>0.554660</td><td>true</td></tr><tr><td>24</td><td>26.250</td><td>9.272644</td><td>9.392621</td><td>1.294</td><td>0.383886</td><td>true</td></tr><tr><td>24</td><td>30.000</td><td>9.172363</td><td>9.346368</td><td>1.897</td><td>0.312383</td><td>true</td></tr><tr><td>24</td><td>33.750</td><td>9.086145</td><td>9.259840</td><td>1.912</td><td>0.333260</td><td>true</td></tr><tr><td>24</td><td>37.500</td><td>9.013122</td><td>9.151359</td><td>1.534</td><td>0.407350</td><td>true</td></tr><tr><td>24</td><td>41.250</td><td>8.952301</td><td>9.025239</td><td>0.815</td><td>0.520985</td><td>true</td></tr><tr><td>24</td><td>45.000</td><td>8.902592</td><td>8.888249</td><td>-0.161</td><td>0.720089</td><td>true</td></tr><tr><td>24</td><td>48.750</td><td>8.862831</td><td>8.745280</td><td>-1.326</td><td>0.925896</td><td>true</td></tr><tr><td>24</td><td>52.500</td><td>8.831813</td><td>8.600646</td><td>-2.617</td><td>1.126015</td><td>true</td></tr><tr><td>24</td><td>56.250</td><td>8.808321</td><td>8.458030</td><td>-3.977</td><td>1.313937</td><td>true</td></tr><tr><td>24</td><td>60.000</td><td>8.791148</td><td>8.320787</td><td>-5.350</td><td>1.485168</td><td>true</td></tr><tr><td>24</td><td>63.750</td><td>8.779132</td><td>8.191933</td><td>-6.689</td><td>1.636948</td><td>true</td></tr><tr><td>24</td><td>67.500</td><td>8.771180</td><td>8.074261</td><td>-7.946</td><td>1.767884</td><td>true</td></tr><tr><td>24</td><td>71.250</td><td>8.766287</td><td>7.970270</td><td>-9.080</td><td>1.877547</td><td>true</td></tr><tr><td>24</td><td>75.000</td><td>8.763568</td><td>7.882102</td><td>-10.058</td><td>1.966093</td><td>true</td></tr><tr><td>24</td><td>78.750</td><td>8.762267</td><td>7.811602</td><td>-10.850</td><td>2.034033</td><td>true</td></tr><tr><td>24</td><td>82.500</td><td>8.761781</td><td>7.760204</td><td>-11.431</td><td>2.081995</td><td>true</td></tr><tr><td>24</td><td>86.250</td><td>8.761668</td><td>7.728939</td><td>-11.787</td><td>2.110521</td><td>true</td></tr><tr><td>24</td><td>90.000</td><td>8.761661</td><td>7.718448</td><td>-11.907</td><td>2.119980</td><td>true</td></tr></tbody></table><p>Table 2. All quarter-front stations, including the free-surface endpoint.</p><p>There are no wholly near-field stations on the coarse mesh; only part of the
+intermediate front meets the cited sampling range. All finest-mesh stations meet
+that distance bound, but agreement still misses the comparator. Improvement at the
+deepest point is evidence of a trend, not demonstrated convergence to the reference.</p>
+<p>Each run uses at most four solver threads, a bounded runtime and an address-space
+ceiling set by the job. Peak RSS is measured by the time tool; it is not total host
+memory. Runs are sequential. Meshing and file-import time are excluded from solver
+time. The explicit mesh avoids an external mesher setup cost, but does not establish
+cost or accuracy for singular quadratic or arbitrary elliptical meshes.</p>
+<h2>Limitations, recommendation and remaining leg</h2>
+<p>FRD stresses are extrapolated and averaged at nodes; the near-front result is
+sensitive to that recovery. Linear elements do not reproduce the square-root
+singularity. A fit to three distances is not a contour-independence check. The
+free-surface vertex has a three-dimensional corner field, so its extracted scalar
+K is an apparent comparison value rather than a certified endpoint SIF.
+Finite-length sensitivity and extraction-window sensitivity are not qualified.
+Only elastic mode I is tested: no J, plasticity, mixed mode, residual stress,
+material qualification or fitness-for-service acceptance follows from this spike.</p>
+<p>Interim recommendation covering CalculiX only: retain the installed solver as
+an elastic displacement/stress engine, but do not promote this stress-extrapolation
+route to a Level 3 driving-force implementation. A separate investigation could
+compare quadratic singular elements and a domain/interaction-integral extraction.
+That proposed investigation is outside this time box.</p>
+<p>The Code_Aster leg will need the unchanged geometry, load, elastic material,
+reference wrapper and front angles, plus native driving-force readback, contour
+sensitivity, refinement costs and the same comparator. Code_Aster is not installed
+and is not installed by this job. Licensed-solver receipts are unavailable and
+unused. The two-solver selection and the program note's recommendation wait for
+that leg and second-provider review. No follow-on issue is opened.</p><h2>Sources and reuse terms</h2>
+<p>Retrieval date for the following sources: 2026-10-11 UTC. HTTP requests were
+sequential, bounded by a timeout, without automatic retries and with a repository
+URL in the User-Agent. Same-site requests were separated by more than two seconds.
+No fetcher is part of the committed scripts; all tests and regeneration are offline.</p>
+<ul>
+<li><a href="https://www.dhondt.de/ccx_2.21.pdf">CalculiX CrunchiX manual 2.21</a>,
+sections 6.2.1/6.2.9 (elements), 6.9.27, 7.43 and 10.14. The
+<a href="https://www.dhondt.de/">project site</a> links the
+<a href="https://www.dhondt.de/gpl-2.0.txt">GNU GENERAL PUBLIC LICENSE Version 2</a>.
+The installed package also identifies GPL-2. A distinct manual-content licence
+is terms not stated; no manual numerical engineering constants are reused.
+Feature descriptions and section citations are recorded.</li>
+<li>David Roylance,
+<a href="https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/e5bca953e1dbd0cd0376f0f77033dc0d_MIT3_11F99_frac.pdf">Introduction to Fracture Mechanics</a>,
+p. 7, Eq. (4) and the following near-field discussion. MIT OCW
+<a href="https://ocw.mit.edu/pages/privacy-and-terms-of-use/">terms</a> identify
+<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International</a>. Intended use is this
+noncommercial research spike; no source prose, figure or dataset is redistributed.
+The mathematical field is independently expressed in the tests.</li>
+<li>Newman and Raju,
+<a href="https://ntrs.nasa.gov/api/citations/19810023035/downloads/19810023035.pdf">NASA TM-83200</a>,
+Semi-elliptical Surface Crack section, pp. 11–13, Eqs. (16)–(21).
+The <a href="https://ntrs.nasa.gov/citations/19810023035">source record and rights
+statement</a> states “Work of the US Gov. Public Use Permitted.”
+This is the public companion to the implementation's Newman–Raju (1981) citation,
+<a href="https://doi.org/10.1016/0013-7944(81)90116-8">journal DOI</a>.
+The journal record has no available download and does not establish reuse rights;
+no journal values were extracted. All reference values are computed by the module.</li>
+<li>Repository source and synthetic fixture paths, revision and SHA-256 digests
+are recorded in the result JSON. Terms: MIT License, as stated in the repository
+<a href="../../../LICENSE">LICENSE</a>; no fixture containing client data is used.</li>
+</ul><p>The manual PDF, the NASA PDF and their extracted text exceed the non-source
+commit limit and remain in the job scratch area on the data disk of the Linux
+workstation. All retained source and solver files, their paths relative to that
+scratch root, byte sizes and SHA-256 digests are listed in the JSON manifest.
+Local retention is not an archive replica or a backup. No paid standards, licensed
+solver receipts or client data were accessed.</p>
+<p>Actual fetches returned HTTP 200 for the versioned manual, solver homepage and
+GPL text, Roylance PDF and MIT terms, NASA memorandum and its metadata. An initial
+NASA citation locator returned HTTP 404; the valid public memorandum locator was
+subsequently identified from search. No refusal or credential challenge occurred.
+The existing source catalog and domain index were inspected; no matching solver
+or Roylance source identity was found in the scoped search. Catalog registration
+and authoritative result archival remain gaps; no replacement registry is created.</p><h2>Offline reproduction</h2>
+<p>From the repository root, with an existing Python environment and PYTHONPATH=src:</p>
+<pre>python scripts/studies/surface_crack_post.py --scratch &lt;job-scratch&gt; --output docs/domains/asset-integrity/surface-crack-calculix-results.json
+python scripts/studies/surface_crack_report.py --results docs/domains/asset-integrity/surface-crack-calculix-results.json --output docs/domains/asset-integrity/surface-crack-calculix-spike-2026-10-11.html</pre>
+<p>The first command reads retained native results without rerunning the solver.
+For new runs use --run with a fresh scratch directory. Inputs are intentionally
+fixed. Neither script performs network access. The compact JSON and this note
+are exact generated outputs; detailed native outputs remain in scratch.</p>
+</html>
