@@ -641,7 +641,10 @@ pytest tests/domains/viv_analysis/ -v
    - VIV screening procedures
    - Fatigue assessment guidelines
 
-3. **DNV-RP-C203** (2016): "Fatigue Design of Offshore Steel Structures"
+3. **DNV-RP-C203** (edition not established in the implementation): "Fatigue Design of Offshore Steel Structures"
+   - `src/digitalmodel/subsea/viv_analysis/fatigue.py:27` cites DNV-RP-C203 without an edition.
+   - The former 2016 attribution in this document was more specific than the code citation; the edition label now matches that evidence.
+   - Correspondence of the implemented values and table locator below to a licensed edition is not verified.
    - S-N curve parameters (Table 2-1)
    - Thickness correction factors
    - Damage accumulation methodology
