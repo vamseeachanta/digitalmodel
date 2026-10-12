@@ -5,7 +5,7 @@ source_of_entries: research note on the issue
 checked: '2026-10-11'
 sources:
 - id: S1
-  citation: '"Assessment of Fixed Offshore Platform Performance in Hurricanes Katrina and Rita", final report to the US offshore regulator, May 2007.'
+  citation: '"Assessment of Fixed Offshore Platform Performance in Hurricanes Katrina and Rita", final report to the United States offshore regulator, May 2007.'
   urls:
   - https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/578aa.pdf
   access_note: executive summary, sections 5 and 7 opened
@@ -50,12 +50,12 @@ sources:
   access_note: opened
 could_not_verify:
 - Any content of API RP 2SIM, ISO 19902, NORSOK N-004 or NORSOK N-006 (not opened).
-- UK regulator reports on ageing and life extension and on dented tubulars (pages returned "not found" from this host).
+- UK regulator reports on ageing and life extension and on dented tubulars (pages returned "not found" on 2026-10-11).
 - Specimen-level data for every test series except what the bibliographic records state.
-- The later hurricane assessment report for the 2008 season (file too large to fetch from this host).
+- The later hurricane assessment report for the 2008 season (file too large to fetch on 2026-10-11).
 bottom_line:
 - 'Demand is real and documented by the regulator: one hurricane season left 116 fixed platforms destroyed and 163 with major damage, and the damage list reads like this issue''s scope (dents, bows, holes, severed members) [S1].'
 - '**Public test series for dented tubulars exist, but the data tables are in journal and conference papers, not in open reports.** Bibliographic records confirm test counts, D/t values and dent depths for the main series [S2, S3, S4]; the specimen-level numbers needed for golden tests must be taken from the papers through a licensed route, or from one open doctoral thesis [S5].'
-- No open source that I opened states the capacity-reduction formulas used in the design codes. The issue's own knowledge note is right that the formulas must come from citable papers; the codes' text is licensed.
+- No opened source states the capacity-reduction formulas used in the design codes. The issue's own knowledge note is right that the formulas must come from citable papers; the codes' text is licensed.
 # Counts bold **unverified**, **Unverified**, **Not opened**, **not verified**; legend excluded.
 unverified_mark_count: 5

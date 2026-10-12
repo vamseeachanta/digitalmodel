@@ -4,13 +4,13 @@ Public-source research screen for issue #2198; not an implementation.
 
 research note on the issue, sources checked 2026-10-11
 
-Research only; no code. All sources were checked on 2026-10-11. "Opened" means I read the page or document text myself; "search snippet" means I only saw a search-engine summary and the claim is **unverified**. Standards are cited by designation; no edition is given unless an opened source states it. This screen is shallower than the three priority screens posted today (mooring chain, flexible pipe, hull wastage); section 9 lists what a reviewer should open next.
+Research only; no code. All sources were checked on 2026-10-11. "Opened" means the page or document text was read directly; "search snippet" means only a search-engine summary was seen and the claim is **unverified**. Standards are cited by designation; no edition is given unless an opened source states it. This screen is shallower than the three priority screens posted on 2026-10-11 (mooring chain, flexible pipe, hull wastage); section 9 lists what a reviewer should open next.
 
 ## 1. Bottom line
 
 - Demand is real and documented by the regulator: one hurricane season left 116 fixed platforms destroyed and 163 with major damage, and the damage list reads like this issue's scope (dents, bows, holes, severed members) [S1].
 - **Public test series for dented tubulars exist, but the data tables are in journal and conference papers, not in open reports.** Bibliographic records confirm test counts, D/t values and dent depths for the main series [S2, S3, S4]; the specimen-level numbers needed for golden tests must be taken from the papers through a licensed route, or from one open doctoral thesis [S5].
-- No open source that I opened states the capacity-reduction formulas used in the design codes. The issue's own knowledge note is right that the formulas must come from citable papers; the codes' text is licensed.
+- No opened source states the capacity-reduction formulas used in the design codes. The issue's own knowledge note is right that the formulas must come from citable papers; the codes' text is licensed.
 
 ## 2. Damage mechanisms
 
@@ -25,7 +25,7 @@ Dropped objects and vessel collision are the usual sources of dent damage outsid
 
 ## 3. Governing standards and recommended practices (designations only)
 
-| Document | Role | Status of my check |
+| Document | Role | Status of check |
 |---|---|---|
 | API RP 2SIM | Structural integrity management of existing fixed offshore structures; described in press coverage as "a continuous process used for demonstrating the fitness-for-purpose of an offshore structure from installation through to decommissioning". | Search snippet; **unverified**. A regulator workshop file lists it alongside API RP 2RIM and API RP 2MIM [S8, opened, headings only]. |
 | API RP 2A | Design of fixed platforms; the hurricane study ties platform performance to its design practices and notes that most destroyed platforms were of 1960s-1970s design, before industry guidance matured [S1]. | [S1] opened |
@@ -39,7 +39,7 @@ Dropped objects and vessel collision are the usual sources of dent damage outsid
 
 ## 5. Input data
 
-Underwater inspection findings (dent depth and length, bow, wall thickness in corroded patches, flooded-member detection, crack indications), member geometry and material, and loads from the structural model. The hurricane study notes how uneven reported damage data is: minor and moderate damage reports were "sometimes vague and open to interpretation", while major damage reports were more descriptive [S1, section 5]. No published measurement-uncertainty figures for underwater dent or bow measurement were found in the sources I opened.
+Underwater inspection findings (dent depth and length, bow, wall thickness in corroded patches, flooded-member detection, crack indications), member geometry and material, and loads from the structural model. The hurricane study notes how uneven reported damage data is: minor and moderate damage reports were "sometimes vague and open to interpretation", while major damage reports were more descriptive [S1, section 5]. No published measurement-uncertainty figures for underwater dent or bow measurement were found in the opened sources.
 
 ## 6. Published validation and benchmark material
 
@@ -68,12 +68,12 @@ Underwater inspection findings (dent depth and length, bow, wall thickness in co
 ## 9. What a reviewer should open next
 
 1. The two 1992 test papers [S2, S3] for specimen tables, and the thesis [S5] for open data.
-2. The regulator's research-report series on dented and grout-filled tubulars (referenced in the bibliographies of the papers above; not found online today).
+2. The regulator's research-report series on dented and grout-filled tubulars (referenced in the bibliographies of the papers above; not found online on 2026-10-11).
 3. The publisher scope pages for API RP 2SIM and ISO 19902 to confirm the damage-evaluation wording.
 
 ## Sources
 
-- [S1] "Assessment of Fixed Offshore Platform Performance in Hurricanes Katrina and Rita", final report to the US offshore regulator, May 2007. https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/578aa.pdf (executive summary, sections 5 and 7 opened)
+- [S1] "Assessment of Fixed Offshore Platform Performance in Hurricanes Katrina and Rita", final report to the United States offshore regulator, May 2007. https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/578aa.pdf (executive summary, sections 5 and 7 opened)
 - [S2] Landet and Lotsberg, "Laboratory Testing of Ultimate Capacity of Dented Tubular Members", Journal of Structural Engineering 118(4), 1992, bibliographic record. https://trid.trb.org/View/440978 (opened)
 - [S3] Ricles, Lamport, Gillum, "Residual Strength of Damaged Offshore Steel Tubular Bracing", conference paper OTC 6938, 1992, bibliographic record. https://trid.trb.org/View/441898 (opened)
 - [S4] Search results listing further records in the same database (combined bending and dent damage; collapse and residual strength of damaged tubular members): not opened.
@@ -86,6 +86,6 @@ Underwater inspection findings (dent depth and length, bow, wall thickness in co
 ## Could not verify
 
 - Any content of API RP 2SIM, ISO 19902, NORSOK N-004 or NORSOK N-006 (not opened).
-- UK regulator reports on ageing and life extension and on dented tubulars (pages returned "not found" from this host).
+- UK regulator reports on ageing and life extension and on dented tubulars (pages returned "not found" on 2026-10-11).
 - Specimen-level data for every test series except what the bibliographic records state.
-- The later hurricane assessment report for the 2008 season (file too large to fetch from this host).
+- The later hurricane assessment report for the 2008 season (file too large to fetch on 2026-10-11).
