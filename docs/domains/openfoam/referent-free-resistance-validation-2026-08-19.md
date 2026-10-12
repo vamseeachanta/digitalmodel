@@ -172,8 +172,8 @@ criterion*. Plausibility bands gate nothing here for the same reason.
 
 The band declines outside its declared hull class rather than guessing — a
 planing hull or a multihull gets `not_applicable`, not a stretched interval.
-That is the same discipline §4 demands of Holtrop & Mennen, applied to this
-band so the standard is also applied to other methods.
+The discipline §4 demands of Holtrop & Mennen is also applied to this
+band; the standard is not imposed solely on other methods.
 
 ### 3.2 What the form factor says about V2b — a real finding
 

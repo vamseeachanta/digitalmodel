@@ -214,7 +214,7 @@ def test_build_ssh_command_quotes_repo_dir_with_spaces(tmp_path: Path) -> None:
     assert "cd -- \"$HOME\"/'digital model';" in argv[-1]
 
 
-def test_default_hosts_use_gpu_claw_target(monkeypatch) -> None:
+def test_default_hosts_use_neutral_gpu_claw_target(monkeypatch) -> None:
     dispatcher = load_dispatcher()
     monkeypatch.delenv("CFD_GPU_CLAW_SSH", raising=False)
 

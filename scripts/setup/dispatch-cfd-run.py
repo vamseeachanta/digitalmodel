@@ -345,7 +345,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--ranks", type=int, default=None, help="rank count to compare and dispatch")
     parser.add_argument("--max-load-per-core", type=float, choices=(1.5,), default=1.5)
-    parser.add_argument("--repo-dir", default=os.environ.get("CFD_REPO_DIR", "digitalmodel"))
+    parser.add_argument("--repo-dir", default="~/digitalmodel")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--poll",
