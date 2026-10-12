@@ -1,0 +1,258 @@
+schema_version: 1
+document: docs/research/hydrodynamics-industry-practice.md
+issue: 1800
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+sources:
+- id: H1
+  citation: 'Robertson et al.: OC6 Phase I: Investigating the underprediction of low-frequency hydrodynamic loads and responses of a floating wind turbine. J. Phys.: Conf. Ser. 1618, 032033, IOP, 2020.'
+  url: https://iopscience.iop.org/article/10.1088/1742-6596/1618/3/032033
+  status: read
+- id: H2
+  citation: 'Wang, Robertson, Jonkman, Yu: OC6 phase I: Improvements to the OpenFAST predictions of nonlinear, low-frequency responses of a floating offshore wind turbine platform. Renewable Energy 187, 282-301, Elsevier, 2022 (bibliographic record with abstract).'
+  url: https://ideas.repec.org/a/eee/renene/v187y2022icp282-301.html
+  status: read
+- id: H3
+  citation: 'Bergua et al.: OC6 project Phase IV: validation of numerical models for novel floating offshore wind support structures. Wind Energy Science 9, 1025-1051, Copernicus, 2024.'
+  url: https://wes.copernicus.org/articles/9/1025/2024/
+  status: read
+- id: H4
+  citation: 'Behrens de Luna et al.: Quantifying the impact of modeling fidelity on different substructure concepts for floating offshore wind turbines, Part 1. Wind Energy Science 9, 623-649, 2024.'
+  url: https://wes.copernicus.org/articles/9/623/2024/
+  status: read
+- id: H5
+  citation: 'Hall, Carmo, Lozon: Frequency-domain modeling of floating wind arrays with shared mooring lines. Wind Energy Science 10, 3027-3043, 2025.'
+  url: https://wes.copernicus.org/articles/10/3027/2025/
+  status: read
+- id: H6
+  citation: 'Ancellin, Nguyen: Case Studies of BEM Solver Accuracy With the Open-Source Code Capytaine (submission 127995). ASME OMAE2024 session gallery.'
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15622/application/127995
+  status: read
+- id: H7
+  citation: 'Kurnia, Ducrozet, Gilloteaux: Second Order Difference- and Sum-Frequency Wave Loads in the Open-Source Potential Flow Solver NEMOH (submission 79163). ASME OMAE2022 session gallery.'
+  url: https://omae.secure-platform.com/a/solicitations/165/sessiongallery/10383/application/79163
+  status: read
+- id: H8
+  citation: 'Jonkman: Recent Floating Wind Modelling Enhancements in OpenFAST (submission 123909). ASME OMAE2024 session gallery.'
+  url: https://omae.secure-platform.com/a/solicitations/214/sessiongallery/15604/application/123909
+  status: read
+- id: H9
+  citation: 'Sridhar, Sannasiraj, Sundaravadivelu: Hydrodynamic Response Analysis of Ultra-Deep Water FPSO System Using Ansys Aqwa, Wamit, and HydRA (submission 100687). ASME OMAE2023 session gallery.'
+  url: https://omae.secure-platform.com/a/solicitations/190/sessiongallery/13822/application/100687
+  status: read
+- id: H10
+  citation: 'Raghavan, Lavidas, Metrikine: Comparing Open-Source BEM solvers for analysing wave energy converters. J. Phys.: Conf. Ser. 2647, 072002, 2024 (repository record).'
+  url: https://tethys-engineering.pnnl.gov/publications/comparing-open-source-bem-solvers-analysing-wave-energy-converters
+  status: read
+- id: H11
+  citation: Release of NEMOH v3.0.0. LHEEA, Centrale Nantes, 2022/2023.
+  url: https://lheea.ec-nantes.fr/lheea/news-and-events/release-of-nemoh-v3-0-0
+  status: read
+- id: H12
+  citation: 'Kurnia, Ducrozet: NEMOH: Open-source boundary element solver for computation of first- and second-order hydrodynamic loads in the frequency domain (data set). Mendeley Data, 2023.'
+  url: https://data.mendeley.com/datasets/k9v4hjb5xj/1
+  status: read
+- id: H13
+  citation: 'Al-Ghuwaidi, Pribadi: Benchmark study of NEMOH vs WAMIT for the OC4-DeepCwind semi-submersible FOWT (data set, CC BY 4.0). Zenodo, 2025.'
+  url: https://zenodo.org/records/16940342
+  status: read
+- id: H14
+  citation: Capytaine documentation, version 3.0.0. 2026.
+  url: https://capytaine.org/stable/
+  status: read
+- id: H15
+  citation: 'Capytaine documentation: Features. 2026.'
+  url: https://capytaine.org/stable/features.html
+  status: read
+- id: H16
+  citation: HAMS repository.
+  url: https://github.com/YingyiLiu/HAMS
+  status: read
+- id: H17
+  citation: 'OrcaWave help: Introduction. Orcina.'
+  url: https://www.orcina.com/webhelp/OrcaWave/Content/html/Introduction.htm
+  status: read
+- id: H18
+  citation: WAMIT home page. WAMIT, Inc.
+  url: https://www.wamit.com/
+  status: read
+- id: H19
+  citation: 'Frequency domain hydrodynamic analysis of stationary vessels: Wadam. DNV.'
+  url: https://www.dnv.com/services/frequency-domain-hydrodynamic-analysis-of-stationary-vessels-wadam-2412/
+  status: read
+- id: H20
+  citation: HydroStar software page. Bureau Veritas Marine & Offshore, 2025.
+  url: https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic
+  status: read
+- id: H21
+  citation: BEMRosetta repository.
+  url: https://github.com/BEMRosetta/BEMRosetta
+  status: read
+- id: H22
+  citation: 'OpenFAST documentation: HydroDyn user guide.'
+  url: https://openfast.readthedocs.io/en/main/source/user/hydrodyn/index.html
+  status: read
+- id: H23
+  citation: WEC-Sim documentation.
+  url: https://wec-sim.github.io/WEC-Sim/main/index.html
+  status: read
+- id: H24
+  citation: 'Aliyar et al.: Directional focused wave group response of a Floating Wind Turbine: Harmonic separation in experiment and CFD. arXiv 2412.16718, 2024.'
+  url: https://arxiv.org/abs/2412.16718
+  status: read
+- id: H25
+  citation: 'van Essen, Seyffert: Design loads for wave impacts: introducing the Probabilistic Adaptive Screening (PAS) method. Ocean Engineering 357, 125440, 2026 (preprint page).'
+  url: https://arxiv.org/abs/2511.23156
+  status: read
+- id: H26
+  citation: 'Dermatis et al.: A time-domain approach for motion-explicit evaluation of loads on floating structures in fully nonlinear waves. arXiv 2604.09247, 2026.'
+  url: https://arxiv.org/abs/2604.09247
+  status: read
+- id: H27
+  citation: 'Sarker et al.: Hydrodynamic Modeling Improvements for Floating Offshore Wind Turbines with Validation Results. arXiv 2508.01093, 2025.'
+  url: https://arxiv.org/abs/2508.01093
+  status: read
+- id: H28
+  citation: 'Sakif et al.: Enhanced Hydrodynamic Modeling of Offshore Wind Turbines using Morison''s Equation with Frequency-Dependent Coefficients. arXiv 2509.12536, 2025.'
+  url: https://arxiv.org/abs/2509.12536
+  status: read
+- id: H29
+  citation: 'Morris-Thomas, Martens: An application of machine learning to the motion response prediction of floating assets. arXiv 2506.15713, 2025.'
+  url: https://arxiv.org/abs/2506.15713
+  status: read
+- id: H30
+  citation: 'Ransley et al.: Focused wave interactions with floating structures: a blind comparative study. Proc. ICE Engineering and Computational Mechanics 174(1), 46-61, 2021 (repository record).'
+  url: https://researchportal.bath.ac.uk/en/publications/focused-wave-interactions-with-floating-structures-a-blind-compar/
+  status: read
+- id: H31
+  citation: 'CCP-WSI data repository: test cases.'
+  url: https://www.ccp-wsi.ac.uk/data_repository/test_cases
+  status: read
+- id: H32
+  citation: Investigation of incident with fatal consequences on a mobile unit (investigation summary page). Havtil, 2016.
+  url: https://www.havtil.no/en/supervision/investigation-reports/2016/cosl-drilling---coslinnovator---investigation-of-incident-with-fatal-consequences/
+  status: read
+- id: H33
+  citation: PSA cites air gap inconsistencies in rig damage study. Offshore magazine, 2016.
+  url: https://www.offshore-mag.com/vessels/article/16770375/psa-cites-air-gap-inconsistencies-in-rig-damage-study
+  status: read
+- id: H34
+  citation: Modifications or operational limitations for a limited number of rigs (press release). DNV, 2016.
+  url: https://www.dnv.com/news/2016/modifications-or-operational-limitations-for-a-limited-number-of-rigs-77136/
+  status: read
+- id: H35
+  citation: Offshore technical guidance documents. DNV, 2026.
+  url: https://www.dnv.com/maritime/offshore-classification/technical-guidance-otg/
+  status: read
+- id: H36
+  citation: Aqwa product page. Ansys (Synopsys), 2026.
+  url: https://ansys.synopsys.com/products/structures/ansys-aqwa
+  status: read
+- id: H37
+  citation: Sesam software for mooring and risers. DNV, 2026.
+  url: https://www.dnv.com/services/sesam-software-for-mooring-and-risers-2310/
+  status: read
+# L1 onward are identifiers assigned by this transcription job.
+located_not_read:
+- id: L1
+  text: 'International code-comparison task page for the current phase series (viscous loads 2024, floater structural dynamics 2025 to 2026, farm aerodynamics 2026 to 2027): site error on the day; plan seen in search summary only. https://iea-wind.org/task-56-oc7-project-offshore-code-comparison-collaboration-7/'
+  urls:
+  - https://iea-wind.org/task-56-oc7-project-offshore-code-comparison-collaboration-7/
+  status: located_not_read
+- id: L2
+  text: 'US wind laboratory project and publication pages for the OC series and the 1:70 control co-design basin campaign: hosts did not resolve.'
+  urls: []
+  status: located_not_read
+- id: L3
+  text: 'ITTC 2024 Ocean Engineering and Seakeeping committee reports: not searched to a readable page.'
+  urls: []
+  status: located_not_read
+- id: L4
+  text: 'University data set for a first floating-wind comparative study at 1:70 scale: "not found" at the handle returned by search.'
+  urls: []
+  status: located_not_read
+- id: L5
+  text: 'Blind focused-wave series 3 paper (Int. J. Offshore and Polar Engineering 30(1), 2020): repository records only.'
+  urls: []
+  status: located_not_read
+- id: L6
+  text: 'Raghavan et al. 2022 three-code comparison; a university repository study of two open codes against WAMIT with incomplete and overlapped panels: search summaries only.'
+  urls: []
+  status: located_not_read
+- id: L7
+  text: Kurnia and Ducrozet journal paper on bi-directional QTFs for wind platforms; companion CFD paper on difference-frequency excitation (Sustainability, 2021).
+  urls: []
+  status: located_not_read
+- id: L8
+  text: DNV-RP-0613 and DNV-RP-0614 texts; ABS air-gap and wave-impact guidance (2020).
+  urls: []
+  status: located_not_read
+- id: L9
+  text: 'OMAE papers on CFD credibility for green water and breaking-wave impact, and on a joint-industry CFD verification effort: seen in a reference list only.'
+  urls: []
+  status: located_not_read
+- id: L10
+  text: 'MDPI J. Mar. Sci. Eng. 13(12) 2407 (2025) two-solver comparison (deviations "below 1%" for coefficients *(unverified)*): access refused.'
+  urls: []
+  status: located_not_read
+- id: L11
+  text: OrcaWave theory/validation pages, HydroD and time-domain seakeeping solver pages, Aqwa technical documentation.
+  urls: []
+  status: located_not_read
+- id: L12
+  text: Any ISOPE or OTC hydrodynamics paper; any paper from Marine Structures, Applied Ocean Research or J. Offshore Mechanics and Arctic Engineering.
+  urls: []
+  status: located_not_read
+gap_analysis:
+- area: First-order diffraction/radiation, hydrostatics, motion transfer functions for stationary floaters
+  verdict: Open methods adequate
+  basis_source_ids:
+  - H6
+  - H12
+  - H13
+  - H14
+  - H16
+- area: Difference-frequency (slow-drift) QTFs
+  verdict: Open methods usable with independent checks
+  basis_source_ids:
+  - H12
+  - H13
+- area: Coupled time-domain floater and mooring analysis
+  verdict: Open methods adequate for floating wind; evidence thinner for oil and gas units
+  basis_source_ids:
+  - H1
+  - H3
+- area: Forward-speed seakeeping, hydroelastic load transfer to structural models, tank sloshing coupling, side-by-side operations
+  verdict: Licensed tools largely unavoidable
+  basis_source_ids:
+  - H18
+  - H19
+  - H20
+  - H15
+- area: Extreme events (air gap, wave impact, green water)
+  verdict: Model tests or CFD needed; proprietary basin data unavoidable for design values
+  basis_source_ids:
+  - H34
+  - H35
+  - H30
+- area: Independent verification of supplied coefficient sets and transfer functions (format conversion, re-run on an open code, documented differences)
+  verdict: Differentiated offering plausible
+  basis_source_ids:
+  - H21
+  - H6
+  - H13
+- area: Calibrated mid-fidelity models for low-frequency response (documented viscous tuning against public basin data)
+  verdict: Differentiated offering plausible
+  basis_source_ids:
+  - H1
+  - H2
+  - H4
+  - H28
+- area: Surrogate models for operations (heading, motions, mooring response)
+  verdict: Plausible, but needs asset data
+  basis_source_ids:
+  - H29
+counts:
+  sources_read: 37
+  located_not_read_documents: about 20 documents
+  located_not_read_groups: 12
