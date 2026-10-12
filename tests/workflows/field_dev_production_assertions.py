@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Assertions for field-development and production durable workflows."""
 
 from __future__ import annotations
@@ -9,6 +12,7 @@ FIELD_DEV_PRODUCTION_WORKFLOWS = {
     "capex-estimate",
     "opex-estimate",
     "concept-selection",
+    "concept-screening",
     "nodal-analysis",
     "vlp-correlations",
 }
@@ -40,6 +44,15 @@ def assert_field_dev_production_workflow(workflow_id: str, cfg: dict) -> None:
         assert top["host_type"] == "TLP"
         assert top["score"] == pytest.approx(87.0)
         assert top["capex_estimate_usd_bn"] == pytest.approx([2.0, 6.0])
+    elif workflow_id == "concept-screening":
+        summary = cfg["concept_screening"]
+        assert summary["screening_status"] in {"pass", "review", "fail"}
+        assert summary["capex_mode"] == "derived"
+        assert all(
+            isinstance(value, (int, float))
+            for row in summary["ranked"]
+            for value in row["capex_line_items_usd_bn"].values()
+        )
     elif workflow_id == "nodal-analysis":
         block = cfg["nodal_analysis"]
         op = block["operating_point"]

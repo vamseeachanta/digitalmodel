@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for W6 concept_comparison_note — markdown render, sensitivity, determinism.
 # ABOUTME: Asserts scope banner + no client names + byte-identical repeat render.
 """Tests for digitalmodel.field_development.concept_comparison_note (W6)."""
@@ -70,3 +73,38 @@ class TestDeterminism:
         _, md1 = build_comparison_note(spec)
         _, md2 = build_comparison_note(spec)
         assert md1 == md2
+
+
+class TestOverrideNote:
+    def test_override_provenance_marker_and_determinism(self, spec):
+        override = {"Spar": 0.5}
+        result, note = build_comparison_note(spec, capex_override=override)
+        assert "CAPEX basis: absolute calibrated totals (override) for Spar" in note
+        assert "0.50*" in note
+        assert "* Absolute CAPEX override" in note
+        assert note == build_comparison_note(spec, capex_override=override)[1]
+
+    def test_top_override_and_raw_breakdown_render(self, spec):
+        result = screen_concepts(spec)
+        top = result.ranked[0]
+        top.axes.capex_line_items_usd_bn = {"total": 0.5, "source": "absolute_override"}
+        note = render_comparison_note(result)
+        assert "| total | 0.500 |" in note
+        assert "| source |" not in note
+        override = {top.host_type.value: 0.5}
+        result, note = build_comparison_note(spec, capex_override=override)
+        assert result.ranked[0].host_type == top.host_type
+        assert "0.50*" in note
+
+    def test_sweep_override_flips_capex_winner(self, spec):
+        default = weight_sensitivity_sweep(spec)
+        winner = next(row.winner for row in default if row.scenario == "capex-dominant")
+        assert winner != "Spar"
+        rows = weight_sensitivity_sweep(spec, capex_override={"Spar": 0.5})
+        assert next(row.winner for row in rows if row.scenario == "capex-dominant") == "Spar"
+
+    def test_default_has_no_override_text(self, spec):
+        _, note = build_comparison_note(spec)
+        assert "CAPEX basis:" not in note
+        assert "Absolute CAPEX override" not in note
+        assert "calibrated totals" not in note
