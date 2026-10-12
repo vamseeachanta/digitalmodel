@@ -500,7 +500,7 @@ def test_evidence_cli_validates_schema_and_privacy(tmp_path: Path) -> None:
     assert "valid smoke evidence" in process.stdout
 
 
-# Exact output excerpts from https://github.com/vamseeachanta/digitalmodel/issues/2021.
+# Exact output excerpts from the repository issue 2021.
 _MESH_BOUNDING_LINES = (
     "boundingBox: (-26 -19 -16) (16 0 4)",
     "Overall mesh bounding box  : (-26 -19 -16) (16 0 4)",

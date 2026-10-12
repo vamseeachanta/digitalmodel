@@ -4,7 +4,7 @@ Bash that runs ON a CFD lane under OpenFOAM v2312, driven by a case registry at
 the campaign root and the environment `DM_CFD_ROOT`, `DM_CFD_CONFIG`,
 `DM_CFD_CASES_DIR`. `DM_CFD_ROOT` and `DM_CFD_CAMPAIGN` are authoritative when
 set. Otherwise the shared resolver infers the first component below
-`~/cfd/<campaign>/` from the working directory (campaign root, `scripts/`, or
+`<data-root>/cfd/<campaign>/` from the working directory (campaign root, `scripts/`, or
 `cases/<case>`) and prints the reason to stderr; only an unrelated working
 directory uses the literal `campaign` fallback. `deploy_lane.sh` retains its
 positional campaign override. Private project configuration supplies the real
@@ -27,7 +27,7 @@ Deployed from this directory with `deploy_lane.sh`; never edited on a lane.
 | `bench_prep.sh`, `bench_run.sh` | Prepare rank/PIMPLE/smoother variants from identical serial initial states, then run them one at a time and write `bench_results.tsv`, `BENCH_STATUS`, and `BENCH_DONE`; supports a readiness marker, host-load guard, and resume epilogue. |
 | `ittc_watch.sh`, `poller.sh` | Convergence watcher and wall-clock budget poller for a running solve. |
 | `check_face_resolution.py` | The mesh-phase face-resolution gate the driver runs before decomposition. |
-| `deploy_lane.sh` | rsync this directory to `<host>:~/cfd/<campaign>/scripts/`; refuses while a chain driver runs there. |
+| `deploy_lane.sh` | rsync this directory to `<host>:<data-root>/cfd/<campaign>/scripts/`; refuses while a chain driver runs there. |
 | `lib/cfd_chain.sh`, `lib/cfd_config.py` | Shared shell library and registry reader. |
 | `setup_*.sh`, `stage1_dtchull.sh`, `yplus_after.sh`, `auto_solve.sh`, `chain_stage45.sh`, `solve_chain.sh` | KCS/DTC verification chain (#1173). |
 | `run_sloshing_*.py`, `reduce_*.py`, `render_sloshing_viz.py`, `run_spheric_test10.py`, `run_outlet_vent_study.py`, `collect_compute_stats.py` | Sloshing and vent studies (see their headers). |
@@ -67,7 +67,7 @@ replace the lane SSH aliases, `<campaign>` placeholders, and case paths, then
 set `DM_CFD_STATUS_CONFIG` for the collector and renderer. A missing, empty, or
 `local` lane `ssh` value runs `lane_probe.sh` locally. Remote probe paths use
 `DM_CFD_CAMPAIGN`, then the YAML `campaign` key, then the campaign inferred from
-the first `~/cfd/<campaign>/cases/...` path. The collector atomically writes and
+the first `<data-root>/cfd/<campaign>/cases/...` path. The collector atomically writes and
 both renderers read the cache selected by `DM_CFD_STATUS_CACHE` (override) or the
 YAML `cache` key.
 Optional `bench_status` and `queue_status` paths are also cached. Install the

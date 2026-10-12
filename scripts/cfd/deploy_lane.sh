@@ -35,7 +35,7 @@ source "$SCRIPT_DIR/lib/cfd_chain.sh"
 CAMPAIGN="${2:-$(cfd_campaign)}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SSH="ssh -o BatchMode=yes -o ConnectTimeout=15"
-DEST="~/cfd/$CAMPAIGN/scripts/"
+DEST="cfd/$CAMPAIGN/scripts/"
 
 # shellcheck disable=SC2016
 state=$($SSH "$HOST" '
@@ -66,15 +66,15 @@ fi
 # the chain so the gate can run on a lane that has no checkout (fail-closed
 # otherwise: "cannot import digitalmodel" reads as a FAILED mesh).
 SRC="$(cd "$HERE/../../src" && pwd)"
-echo "deploy_lane: $SRC/digitalmodel -> $HOST:~/cfd/dm_src/digitalmodel/ ${DRY:+(dry run)}"
-[ -n "$DRY" ] || $SSH "$HOST" "mkdir -p ~/cfd/dm_src ~/cfd/$CAMPAIGN/scripts" </dev/null
-rsync -a $DRY --delete --exclude '__pycache__' --exclude '*.pyc' "$SRC/digitalmodel/" "$HOST:~/cfd/dm_src/digitalmodel/"
+echo "deploy_lane: $SRC/digitalmodel -> $HOST:cfd/dm_src/digitalmodel/ ${DRY:+(dry run)}"
+[ -n "$DRY" ] || $SSH "$HOST" "mkdir -p cfd/dm_src cfd/$CAMPAIGN/scripts" </dev/null
+rsync -a $DRY --delete --exclude '__pycache__' --exclude '*.pyc' "$SRC/digitalmodel/" "$HOST:cfd/dm_src/digitalmodel/"
 echo "deploy_lane: $HERE -> $HOST:$DEST ${DRY:+(dry run)}"
 rsync -a $DRY --itemize-changes \
   --exclude '__pycache__' --exclude '*.bak' --exclude '*.stale-bak' --exclude '*.upstream.sh' --exclude 'README.md' \
   "$HERE/" "$HOST:$DEST"
 [ -n "$DRY" ] && exit 0
-$SSH "$HOST" "cd ~/cfd/$CAMPAIGN && bash -n scripts/stage45_driver.sh scripts/mesh_store.sh scripts/prune_case.sh scripts/solve_case.sh && echo 'deploy_lane: remote scripts parse OK'" </dev/null
+$SSH "$HOST" "cd cfd/$CAMPAIGN && bash -n scripts/stage45_driver.sh scripts/mesh_store.sh scripts/prune_case.sh scripts/solve_case.sh && echo 'deploy_lane: remote scripts parse OK'" </dev/null
 rev=$(git -C "$HERE" rev-parse --short HEAD 2>/dev/null || echo unknown)
-$SSH "$HOST" "echo '$(date -u +%FT%TZ) digitalmodel@$rev scripts/cfd from $(hostname -s)' >> ~/cfd/$CAMPAIGN/scripts/DEPLOYED.txt" </dev/null
-echo "deploy_lane: recorded digitalmodel@$rev in $HOST:~/cfd/$CAMPAIGN/scripts/DEPLOYED.txt"
+$SSH "$HOST" "echo '$(date -u +%FT%TZ) digitalmodel@$rev scripts/cfd from deployment host' >> cfd/$CAMPAIGN/scripts/DEPLOYED.txt" </dev/null
+echo "deploy_lane: recorded digitalmodel@$rev in $HOST:cfd/$CAMPAIGN/scripts/DEPLOYED.txt"

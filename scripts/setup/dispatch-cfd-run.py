@@ -63,17 +63,17 @@ class Candidate:
 
 
 def default_hosts() -> list[HostConfig]:
-    gpu_target = os.environ.get("CFD_GPU_CLAW_SSH", "gpu-claw")
-    ace_target = os.environ.get("CFD_ACE_LINUX_2_SSH", "ace-linux-2")
+    gpu_target = os.environ.get("CFD_GPU_CLAW_SSH", "gpu-host")
+    ace_target = os.environ.get("CFD_ACE_LINUX_2_SSH", "linux-workstation")
     return [
         HostConfig(
-            name="gpu-claw",
+            name="gpu-host",
             ssh_target=gpu_target,
-            manifest=REPO_ROOT / "docs/api/cfd/sloshing-3d-benchmark-gpu-claw.json",
+            manifest=Path(os.environ.get("CFD_GPU_BENCHMARK", str(REPO_ROOT / "docs/api/cfd/sloshing-3d-benchmark-gpu-host.json"))),
             dedicated=True,
         ),
         HostConfig(
-            name="ace-linux-2",
+            name="linux-workstation",
             ssh_target=ace_target,
             manifest=REPO_ROOT / "docs/api/cfd/sloshing-3d-benchmark.json",
             dedicated=False,
@@ -345,7 +345,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--ranks", type=int, default=None, help="rank count to compare and dispatch")
     parser.add_argument("--max-load-per-core", type=float, choices=(1.5,), default=1.5)
-    parser.add_argument("--repo-dir", default="~/digitalmodel")
+    parser.add_argument("--repo-dir", default=os.environ.get("CFD_REPO_DIR", "digitalmodel"))
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--poll",

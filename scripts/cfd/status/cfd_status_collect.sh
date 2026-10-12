@@ -23,7 +23,7 @@ import yaml
 
 with open(sys.argv[1], encoding="utf-8") as stream:
     cfg = yaml.safe_load(stream) or {}
-print("cache\t" + str(cfg.get("cache", "~/.cache/digitalmodel/cfd-status.cache")))
+print("cache\t" + str(cfg.get("cache", "data/cfd-status.cache")))
 campaign = cfg.get("campaign")
 if not campaign:
     for lane in cfg.get("lanes", []):
@@ -75,7 +75,7 @@ for record in "${records[@]:2}"; do
       row=$("$PROBE" "$lane" "$path" "$extra" 2>/dev/null) || row="$lane|$name|unreachable|-|-|-|-|-|-|-|-|-|-|-"
     else
       [ -n "$CAMPAIGN" ] || { echo "cfd_status_collect: campaign is not configured and cannot be inferred" >&2; exit 65; }
-      remote="~/cfd/$CAMPAIGN/scripts/lane_probe.sh"
+      remote="${DM_CFD_REMOTE_ROOT:-cfd}/$CAMPAIGN/scripts/lane_probe.sh"
       if [ "$DRY_RUN" = true ]; then quote_cmd ssh -o BatchMode=yes -o ConnectTimeout=8 "$host" "$remote" "$lane" "$path" "$extra"; continue; fi
       row=$(timeout 25 ssh -o BatchMode=yes -o ConnectTimeout=8 "$host" "$remote" "$lane" "$path" "$extra" 2>/dev/null) \
         || row="$lane|$name|unreachable|-|-|-|-|-|-|-|-|-|-|-"

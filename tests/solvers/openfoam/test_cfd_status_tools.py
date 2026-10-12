@@ -93,7 +93,7 @@ def test_collect_dry_run_treats_missing_or_empty_ssh_as_local(
         "  - name: local-lane\n"
         f"{ssh_line}"
         "    cases:\n"
-        "      - {name: first-case, path: ~/cfd/demo/cases/first-case}\n"
+        "      - {name: first-case, path: cfd/demo/cases/first-case}\n"
     )
     result = subprocess.run(
         ["bash", str(STATUS / "cfd_status_collect.sh"), "--dry-run"],
@@ -138,7 +138,7 @@ def test_collect_infers_campaign_from_first_case_path(tmp_path: Path) -> None:
         "lanes:\n"
         "  - name: remote\n"
         "    ssh: cfd-remote\n"
-        "    cases: [{name: fine, path: ~/cfd/inferred-campaign/cases/fine}]\n"
+        "    cases: [{name: fine, path: cfd/inferred-campaign/cases/fine}]\n"
     )
     result = subprocess.run(
         ["bash", str(STATUS / "cfd_status_collect.sh"), "--dry-run"],
