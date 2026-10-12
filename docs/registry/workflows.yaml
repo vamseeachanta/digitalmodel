@@ -439,6 +439,16 @@ workflows:
       - examples/workflows/riser-stackup-parametric/results/case_0.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup-parametric]
     runtime: offline
+  - id: riser-viv-screening
+    basename: viv_screening
+    title: Riser VIV reduced-velocity lock-in screening + damage-rate estimate (DNV-RP-C205/F105/C203)
+    input: examples/workflows/riser-viv-screening/input.yml
+    outputs:
+      - examples/workflows/riser-viv-screening/results/input.yml
+      - examples/workflows/riser-viv-screening/results/input_viv_screening.csv
+      - examples/workflows/riser-viv-screening/results/input_viv_screening_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-viv-screening]
+    runtime: offline
   - id: sn-curve
     basename: sn_curve
     title: DNV-RP-C203 S-N endurance curve grid

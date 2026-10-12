@@ -323,6 +323,10 @@ def engine(
         from digitalmodel.riser_fatigue.workflow import router as riser_fatigue
 
         cfg_base = riser_fatigue(cfg_base)
+    elif basename == "viv_screening":
+        from digitalmodel.viv_screening.workflow import router as viv_screening
+
+        cfg_base = viv_screening(cfg_base)
     elif basename == "synthetic_rope_mooring_fatigue":
         from digitalmodel.synthetic_rope_mooring_fatigue.workflow import (
             router as synthetic_rope_mooring_fatigue,
@@ -871,6 +875,11 @@ def engine(
         maybe_render_report(cfg_base, basename)
 
     logger.debug(f"{basename}, application ... END")
-    app_manager.save_cfg(cfg_base=cfg_base)
+    if basename == "viv_screening":
+        from digitalmodel.viv_screening.workflow import save_echo
+
+        save_echo(cfg_base)
+    else:
+        app_manager.save_cfg(cfg_base=cfg_base)
 
     return cfg_base
