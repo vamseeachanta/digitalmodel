@@ -1,0 +1,31 @@
+# Bold mark spellings counted: **unverified**, **Unverified**, **Not opened**, **not verified** (case insensitive).
+schema_version: 1
+document: ffs-worn-corroded-casing-collapse-burst-screen.md
+issue: 2201
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+sources:
+- id: S1
+  citation: US offshore regulator, Safety Alert No. 226, "Pressure Rise to Surface after Cementing Leads to Burst Casing and Loss of Control", 28 January 2005.
+  urls:
+  - https://www.bsee.gov/sites/bsee.gov/files/safety-alerts/safety/safety-alert-no-226.pdf
+  access_note: opened
+- id: S2
+  citation: Silva, Lima Junior, Gouveia, "Elastoplastic numerical evaluation on the collapse pressure of a worn casing tube", Revista de Engenharia e Tecnologia 11(3), 2019.
+  urls:
+  - https://revistas.uepg.br/index.php/ret/article/download/13194/209209211470
+  access_note: opened
+- id: S3
+  citation: Norwegian offshore safety regulator, "Knowledge acquisition for temporarily plugged and abandoned wells", 12 November 2024.
+  urls:
+  - https://www.havtil.no/en/explore-technical-subjects2/technical-competence/news/2024/knowledge-acquisition-for-temporarily-plugged-and-abandoned-wells/
+  access_note: opened
+could_not_verify:
+- Every thesis and model paper named in section 4 (repositories unreachable or redirecting to an empty page from this host).
+- Scope wording of API TR 5C3, ISO/TR 10400 and API 7CW from their publishers.
+- Any independent, published accuracy figure for casing inspection logs.
+bottom_line:
+- 'The calculation in this issue (reduced wall into the standard performance-property formulas) is the industry''s baseline practice, and published work says it is **conservative for collapse and not reliable for a local groove**: a uniform-wall reduction is "very conservative" (thesis abstract, search snippet), while standard burst and collapse models were "not suitable" for a single crescent groove (thesis abstract, search snippet). Both are **unverified** here because the repositories refused the connection. The screen should present the uniform-wall result as a lower-tier estimate and flag local grooves for a higher tier.'
+- The golden-test source named in the acceptance criteria (the technical report's own example properties) is a **licensed document**; I found no open copy. Open alternatives exist for the unworn baseline (the formulas' regime structure is described in open papers) but not, from what I could open, for worn-pipe test data.
+- 'A regulator safety alert documents the failure mode exactly: casing "extensively worn during operations, allowing failure at pressures significantly below rated burst" [S1].'
+unverified_mark_count: 6
