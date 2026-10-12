@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from digitalmodel.parametric import refresh
+import json
+from types import SimpleNamespace
+
+import pytest
+
+from digitalmodel.parametric import build, refresh
 from digitalmodel.parametric.build import build_atlas_from_registry
 from digitalmodel.parametric.query import _staleness, router
 
@@ -115,3 +120,89 @@ def test_riser_fatigue_fingerprint_tracks_touchdown(tmp_path):
     touchdown.write_bytes(touchdown.read_bytes() + b"\n# edited\n")
     after = refresh.content_fingerprint("riser-fatigue", repo_root=tmp_path)
     assert after != before
+
+
+@pytest.fixture
+def stub_refresh_builds(monkeypatch, tmp_path):
+    """Replace registry builds with validation records saved in temporary storage."""
+    def configure(validations, stale_library=False):
+        ids = [f"workflow-{index}" for index in range(len(validations))]
+        records = dict(zip(ids, validations))
+        built = []
+        monkeypatch.setattr(refresh, "DEFAULT_ATLAS_ROOT", tmp_path)
+        monkeypatch.setattr(refresh, "parametric_workflow_ids", lambda: ids)
+        monkeypatch.setattr(
+            refresh, "refresh_status",
+            lambda wid: {"stale": True, "reason": "basis changed"},
+        )
+        monkeypatch.setattr(
+            refresh, "LIBRARY_EXPECTATIONS",
+            {"stub_library": {}} if stale_library else {},
+        )
+        monkeypatch.setattr(
+            refresh, "library_status",
+            lambda basename: {"stale": True, "reason": "needs licensed run"},
+        )
+
+        def stub_build(workflow_id):
+            built.append(workflow_id)
+            destination = tmp_path / workflow_id
+            destination.mkdir()
+            (destination / "validation.json").write_text(
+                json.dumps(records[workflow_id]) + "\n", encoding="utf-8",
+            )
+            return SimpleNamespace(validation=records[workflow_id])
+
+        monkeypatch.setattr(build, "build_atlas_from_registry", stub_build)
+        return ids, built
+
+    return configure
+
+
+@pytest.mark.parametrize(
+    "passes,strict",
+    [([False], False), ([False, True], False),
+     ([True, False], False), ([False], True)],
+    ids=["single-failure", "failure-then-success", "success-then-failure",
+         "failure-with-strict-library"],
+)
+def test_apply_failed_validation_returns_distinct_status(
+    stub_refresh_builds, tmp_path, capsys, passes, strict,
+):
+    records = [{"passes": value} for value in passes]
+    ids, built = stub_refresh_builds(records, stale_library=strict)
+    arguments = ["--apply", "--strict-libraries"] if strict else ["--apply"]
+    result = refresh.main(arguments)
+    output = capsys.readouterr().out
+    assert result == 2
+    assert built == ids
+    assert "all atlases current" not in output
+    for workflow_id, record in zip(ids, records):
+        assert json.loads((tmp_path / workflow_id / "validation.json").read_text()) == record
+        if not record["passes"]:
+            assert f"WARNING: {workflow_id} regenerated but failed validation gate" in output
+
+
+@pytest.mark.parametrize("strict,expected", [(False, 0), (True, 1)])
+def test_apply_passing_rebuild_library_status_pin(stub_refresh_builds, strict, expected):
+    """Regression pin: passing builds preserve report-only and strict library statuses."""
+    ids, built = stub_refresh_builds([{"passes": True}], stale_library=True)
+    arguments = ["--apply", "--strict-libraries"] if strict else ["--apply"]
+    assert refresh.main(arguments) == expected
+    assert built == ids
+
+
+def test_apply_no_stale_atlas_status_pin(stub_refresh_builds, capsys):
+    """Regression pin: a current apply run succeeds without calling the builder."""
+    _, built = stub_refresh_builds([])
+    assert refresh.main(["--apply"]) == 0
+    assert built == []
+    assert "all atlases current" in capsys.readouterr().out
+
+
+def test_apply_missing_passes_key_pin(stub_refresh_builds):
+    """Regression pin: a missing passes key retains the existing KeyError."""
+    ids, built = stub_refresh_builds([{}])
+    with pytest.raises(KeyError, match="passes"):
+        refresh.main(["--apply"])
+    assert built == ids

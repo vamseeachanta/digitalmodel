@@ -292,9 +292,12 @@ def main(argv: list[str]) -> int:
     """CI drift gate (#833). Exit non-zero when a COMPUTED atlas is stale — a
     code/standard/template change that wasn't regenerated. Libraries (#801) are
     reported but do NOT fail the build (CI can't run a licensed solve) unless
-    --strict-libraries is given. --apply regenerates stale computed atlases."""
+    --strict-libraries is given. --apply regenerates stale computed atlases.
+    Exit 2 when a rebuilt computed atlas fails validation; otherwise exit 1
+    for enforced staleness or 0 for success."""
     apply = "--apply" in argv
     strict_libraries = "--strict-libraries" in argv
+    validation_failed = False
 
     stale_ids = []
     for wid in parametric_workflow_ids():
@@ -320,14 +323,17 @@ def main(argv: list[str]) -> int:
             print(f"refreshing {wid} ...")
             atlas = build_atlas_from_registry(wid)
             if not atlas.validation["passes"]:
+                validation_failed = True
                 print(f"  WARNING: {wid} regenerated but failed validation gate")
         stale_ids = []  # regenerated; commit the result
 
-    if not stale_ids and not stale_libs:
+    if not stale_ids and not stale_libs and not validation_failed:
         print("all atlases current")
     fail = bool(stale_ids) or (strict_libraries and bool(stale_libs))
     if stale_ids and not apply:
         print(f"\n{len(stale_ids)} stale computed atlas(es); run with --apply to regenerate")
+    if validation_failed:
+        return 2
     return 1 if fail else 0
 
 
