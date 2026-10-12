@@ -2,6 +2,8 @@
 
 No dimensional values, independent grade matrix or external source fetch is
 introduced. Compatibility lookup delegates name handling to grades.get.
+The provenance digest hashes the grade module bytes decoded as UTF-8, with
+every CRLF and lone CR replaced by LF, then encoded as UTF-8.
 """
 from __future__ import annotations
 
@@ -14,8 +16,10 @@ from types import MappingProxyType
 from . import grades
 from .database_schema import MaterialRecord, RepositoryProvenance, Strengths
 
-# Inspected source bytes, not a standards-derived numerical dataset.
+# Inspected source text, not a standards-derived numerical dataset.
 _SOURCE_REVISION = "f21a12af5349c1656137a7b9daa091ec8f968738"
+# SHA-256 of UTF-8-decoded grade text, CRLF and lone CR replaced by LF,
+# then encoded as UTF-8.
 _SOURCE_SHA256 = "3cc745f599faefdb3c6b08218c383026445662796faa23fba0806691de4017ab"
 _RETRIEVED_ON_UTC = "2026-10-11"
 _SOURCE_PATH = "src/digitalmodel/materials/grades.py"
@@ -30,7 +34,9 @@ class MaterialDatabase(Mapping[str, MaterialRecord]):
     establishes neither grade-to-detail associations nor registry/shape links.
     """
 
-    def __init__(self, records: Iterable[MaterialRecord]) -> None:
+    def __init__(
+        self, records: Iterable[MaterialRecord], *, source_digest_matches: bool = False
+    ) -> None:
         indexed: dict[str, MaterialRecord] = {}
         by_grade: dict[tuple[str, str | None], MaterialRecord] = {}
         for record in records:
@@ -46,8 +52,19 @@ class MaterialDatabase(Mapping[str, MaterialRecord]):
                 raise ValueError(f"ambiguous grade lookup: {identity}")
             indexed[record.key] = record
             by_grade[identity] = record
+        self._source_digest_matches = source_digest_matches
         self._records = MappingProxyType(indexed)
         self._by_grade = MappingProxyType(by_grade)
+
+    @property
+    def source_digest_matches(self) -> bool:
+        """Whether the loaded source matched the inspected normalised digest.
+
+        False on a loader result means the grade source changed since inspection
+        and the records carry stale pinned provenance. Directly constructed
+        indexes default to False because no source comparison is established.
+        """
+        return self._source_digest_matches
 
     def __getitem__(self, key: str) -> MaterialRecord:
         return self._records[key]
@@ -99,16 +116,21 @@ def _record(grade: grades.MaterialGrade, level: str | None) -> MaterialRecord:
     )
 
 
-def load_database() -> MaterialDatabase:
-    """Build from grades.py reconciliation; reject uninspected source drift.
+def normalised_source_digest(source: bytes) -> str:
+    """Hash UTF-8-decoded text after replacing CRLF and lone CR with LF."""
+    text = source.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    return sha256(text.encode("utf-8")).hexdigest()
 
-    A changed grade source requires refreshed provenance after inspection;
-    unchanged source bytes remain traceable even on a later repository commit.
-    Original standards and reuse terms are not re-verified by this loader.
+
+def load_database() -> MaterialDatabase:
+    """Build from grades.py reconciliation, including when its digest drifts.
+
+    A False source_digest_matches flag means the grade source changed since
+    inspection and the records carry stale pinned provenance. Drift is reported
+    by the flag and a test, without a loader error. Original standards and reuse
+    terms are not re-verified by this loader.
     """
-    digest = sha256(Path(grades.__file__).read_bytes()).hexdigest()
-    if digest != _SOURCE_SHA256:
-        raise ValueError("grades.py source digest changed; inspect and refresh database provenance")
+    digest = normalised_source_digest(Path(grades.__file__).read_bytes())
     records = []
     for grade in grades.all_grades():
         if grade.standard == "API 5L":
@@ -116,4 +138,4 @@ def load_database() -> MaterialDatabase:
         else:
             levels = (None,)
         records.extend(_record(grade, level) for level in levels)
-    return MaterialDatabase(records)
+    return MaterialDatabase(records, source_digest_matches=digest == _SOURCE_SHA256)

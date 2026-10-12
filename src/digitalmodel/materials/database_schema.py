@@ -39,8 +39,10 @@ class Strengths:
 
 @dataclass(frozen=True)
 class RepositoryProvenance:
-    """Traceability to inspected repository bytes, without original verification.
+    """Traceability to inspected repository text, without original verification.
 
+    sha256 hashes the grade module bytes decoded as UTF-8, with every CRLF
+    and lone CR replaced by LF, then encoded as UTF-8.
     The repository licence describes software reuse. It does not establish
     redistribution rights for the original specification or qualify its values.
     """
@@ -78,7 +80,7 @@ class MaterialRecord:
     sn_curve_ids targets fatigue.sn_library.SNCurveRecord.curve_id.
     standards_registry_id targets the future standards-registry crosswalk.
     structural_shape_id names the structural-shapes catalogue target; linkage
-    remains unresolved in this slice. See database_gaps.html.
+    remains unresolved in this slice. See docs/domains/materials/database-gaps.html.
     """
 
     designation: str

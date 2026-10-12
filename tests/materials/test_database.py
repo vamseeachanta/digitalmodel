@@ -1,6 +1,5 @@
 """Offline database contracts; strength fixtures remain in test_grade_matrix.py."""
 from dataclasses import FrozenInstanceError, replace
-from hashlib import sha256
 from pathlib import Path
 
 import pytest
@@ -65,7 +64,7 @@ def test_values_and_citations_equal_the_source_records(database):
 
 
 def test_provenance_pins_the_repository_source(database):
-    digest = sha256(Path(grades.__file__).read_bytes()).hexdigest()
+    digest = database_module.normalised_source_digest(Path(grades.__file__).read_bytes())
     for record in database.values():
         provenance = record.provenance
         assert provenance.repository_path == "src/digitalmodel/materials/grades.py"
@@ -79,6 +78,7 @@ def test_provenance_pins_the_repository_source(database):
 def test_edition_metadata_is_not_inferred(database):
     for record in database.values():
         if record.specification == "API 5L":
+            assert record.edition is not None, f"missing edition for {record.key}"
             assert record.edition in record.provenance.citation
         else:
             assert record.edition is None
@@ -148,13 +148,38 @@ def test_missing_strengths_are_rejected(database):
         replace(database.lookup("X52"), strengths=None)
 
 
-def test_source_drift_requires_new_inspection(monkeypatch):
-    source = Path(grades.__file__).read_bytes()
-    changed_digest = sha256(source + b"changed").hexdigest()
+@pytest.mark.parametrize("line_ending", ["\r\n", "\r"])
+def test_source_digest_normalises_line_endings(line_ending):
+    source = Path(grades.__file__).read_text(encoding="utf-8")
+    converted = source.replace("\n", line_ending).encode("utf-8")
+    assert database_module.normalised_source_digest(converted) == (
+        database_module.normalised_source_digest(source.encode("utf-8"))
+    )
+
+
+def test_source_digest_detects_changed_text():
+    source = Path(grades.__file__).read_text(encoding="utf-8")
+    changed = source.replace("MaterialGrade", "materialGrade", 1)
+    assert changed != source
+    assert database_module.normalised_source_digest(changed.encode("utf-8")) != (
+        database_module.normalised_source_digest(source.encode("utf-8"))
+    )
+
+
+def test_source_drift_does_not_block_loading(monkeypatch, database):
+    changed_digest = database_module._SOURCE_SHA256[::-1]
     monkeypatch.setattr(database_module, "_SOURCE_SHA256", changed_digest)
-    with pytest.raises(ValueError, match="source digest changed"):
-        load_database()
-    assert sha256(Path(grades.__file__).read_bytes()).hexdigest() == sha256(source).hexdigest()
+    drifted = load_database()
+    assert set(drifted) == set(database)
+    assert drifted.source_digest_matches is False
+
+
+def test_source_drift_requires_refreshed_provenance():
+    assert load_database().source_digest_matches, (
+        "the grade module's text changed since the pinned digest was recorded: "
+        "inspect the change, then refresh the pinned revision, digest and date "
+        "in the database module"
+    )
 
 
 def test_distinct_editions_cannot_silently_overwrite_grade_lookup(database):
@@ -185,6 +210,8 @@ def test_record_and_database_cannot_be_mutated(database):
         record.designation = "changed"
     with pytest.raises(TypeError):
         database[record.key] = record
+    with pytest.raises(AttributeError):
+        database.source_digest_matches = False
 
 
 def test_unknown_stable_key_and_grade_are_rejected(database):
