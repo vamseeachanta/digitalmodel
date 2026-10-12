@@ -27,16 +27,53 @@ KNOWN_NOTE_ANOMALIES = []
 
 
 def load_pack():
-    """Load parent and every declared record part without network access."""
+    """Load and validate every companion before combining its content."""
     parent = json.loads((DIRECTORY / (BASE + ".json")).read_text())
+    companions = {p.name: json.loads(p.read_text())
+                  for p in DIRECTORY.glob(BASE + "*.json") if p.name != BASE + ".json"}
+    validate_companions(parent, companions)
+    combined = dict(parent)
+    for name in [parent["review_file"]] + ([parent["sources_file"]]
+                                          if "sources_file" in parent else []):
+        combined.update({k: v for k, v in companions[name].items()
+                         if k not in {"schema_version", "issue", "parent_file"}})
     records = []
     for name in parent["record_files"]:
-        part = json.loads((DIRECTORY / name).read_text())
+        part = companions[name]
         assert part["schema_version"] == parent["schema_version"]
         assert part["issue"] == 1794
         assert part["parent_file"] == BASE + ".json"
         records.extend(part["records"])
-    return parent, records
+    return combined, records
+
+
+def validate_companions(parent, companions):
+    """Reject mismatched headers, missing files and duplicate metadata ownership."""
+    names = [parent["review_file"], *parent["record_files"]]
+    if "sources_file" in parent:
+        names.append(parent["sources_file"])
+    assert len(names) == len(set(names))
+    assert set(names) == set(companions)
+    headers = {"schema_version", "issue", "parent_file"}
+    seen = set(parent) - headers
+    for name in names:
+        part = companions[name]
+        assert headers <= part.keys()
+        assert part["schema_version"] == parent["schema_version"]
+        assert part["issue"] == parent["issue"] == 1794
+        assert part["parent_file"] == BASE + ".json"
+        content = set(part) - headers
+        if name in parent["record_files"]:
+            # The committed record parts shard this one collection by record.
+            assert content == {"records"} and "records" not in seen
+        else:
+            assert "records" not in content and not content & seen
+            seen.update(content)
+
+
+def validate_line_cap(text, name="synthetic file"):
+    """Apply the same 400-line limit to documents, data and tests."""
+    assert len(text.splitlines()) <= 400, name
 
 
 def cited_rows(finding):
@@ -165,9 +202,57 @@ def test_pack_line_caps_and_json_loading():
     files = list(DIRECTORY.glob(BASE + "*")) + list(
         (ROOT / "tests/docs").glob("test_field_development_source_evidence_1794*.py"))
     for path in files:
-        assert len(path.read_text().splitlines()) <= 400, path.name
+        validate_line_cap(path.read_text(), path.name)
         if path.suffix == ".json":
             json.loads(path.read_text())
+
+
+def synthetic_companions():
+    """Return only synthetic headers and payloads for split-file checks."""
+    parent = {"schema_version": 1, "issue": 1794,
+              "review_file": "synthetic.review.json",
+              "sources_file": "synthetic.sources.json",
+              "record_files": ["synthetic.records.json"]}
+    companions = {}
+    for name, key in (("synthetic.review.json", "gate_review"),
+                      ("synthetic.sources.json", "sources"),
+                      ("synthetic.records.json", "records")):
+        companions[name] = {"schema_version": 1, "issue": 1794,
+                            "parent_file": BASE + ".json", key: []}
+    return parent, companions
+
+
+def test_synthetic_split_headers_and_content():
+    parent, companions = synthetic_companions()
+    validate_companions(parent, companions)
+
+
+@pytest.mark.parametrize("defect", [
+    "schema", "issue", "parent", "missing-review", "missing-sources",
+    "missing-records", "duplicate-content", "duplicate-names", "extra-file",
+])
+def test_synthetic_split_rejects_broken_companion(defect):
+    parent, companions = synthetic_companions()
+    review = companions["synthetic.review.json"]
+    if defect in {"schema", "issue", "parent"}:
+        key = {"schema": "schema_version", "issue": "issue", "parent": "parent_file"}[defect]
+        review[key] = "synthetic mismatch"
+    elif defect.startswith("missing-"):
+        del companions["synthetic." + defect.removeprefix("missing-") + ".json"]
+    elif defect == "duplicate-content":
+        review["sources"] = []
+    elif defect == "duplicate-names":
+        parent["record_files"] *= 2
+    else:
+        companions["synthetic.extra.json"] = deepcopy(review)
+    with pytest.raises(AssertionError):
+        validate_companions(parent, companions)
+
+
+def test_synthetic_line_cap_rejects_overlong_file():
+    validate_line_cap("synthetic line\n" * 400)
+    with pytest.raises(AssertionError):
+        validate_line_cap("synthetic line\n" * 401)
 
 
 @pytest.mark.parametrize("defect", ["missing-quantity", "bad-ref", "wrong-unverified"])
