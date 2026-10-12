@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Reference warm-aware case launcher.
 # Usage: solve_chain_warm_aware.sh CASE COMMAND [ARG ...]
 set -euo pipefail
