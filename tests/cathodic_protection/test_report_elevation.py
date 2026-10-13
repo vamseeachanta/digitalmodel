@@ -460,17 +460,17 @@ def test_reference_member_form_preserves_unestablished_geometry() -> None:
     assert form["drawing_node_heights_above_mudline_m"]["values"] == [
         1, 17.8, 32.8, 45.8, 74.1
     ]
-    missing = form["unestablished_geometry"]
-    assert missing["complete_node_coordinates_3d_m"] is None
-    assert missing["width_definition_in_leg_plan"] is None
-    assert missing["leg_section_transition_lengths_m"] is None
-    assert missing["complete_member_inventory"] is None
+    model = form["structural_model"]
+    assert len(model["joints"]) == 30
+    assert len(model["members"]) == 63
+    assert len(model["section_classes"]) == 7
+    assert model["revision"] == "da77a393569b6c5ddf7aa424e5b0a92d37eba833"
     sections = form["member_sections"]
     assert [(m["diameter_m"], m["wall_thickness_mm"]) for m in sections] == [
         (1.1, 70), (1.0, 20), (1.2, 52), (1.4, 45),
         (1.5, 48), (2.0, 50), (3.0, 50),
     ]
-    assert all(m["true_length_m"] is None and m["count"] is None for m in sections)
+    assert all(m["true_length_m"] > 0 and m["count"] > 0 for m in sections)
     assert "report_geometry" not in form
     assert "inputs" not in form
 
