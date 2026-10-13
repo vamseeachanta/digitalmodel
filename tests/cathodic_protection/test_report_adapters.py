@@ -773,3 +773,16 @@ def test_verification_labels_use_clause_titles_without_legacy_numbers() -> None:
         for block in section.blocks:
             if isinstance(block, TableBlock):
                 assert all('Sec. 7.' not in str(row[0]) for row in block.rows)
+
+
+def test_published_effective_densities_are_not_presented_as_standard_coating_constants() -> None:
+    """Published effective demands retain their independent source basis."""
+    report = anode_design_report(_run('published_jacket_84m'))
+    tables = _tables(report)
+    zones = tables['Published zone areas and effective-density treatment']
+    assert 'Demand treatment' in zones.columns
+    assert all('effective' in str(row) for row in zones.rows)
+    figure = next(f for f in report.figure_blocks() if f.figure_id == FIG_DEMAND_VS_TIME)
+    assert 'Published effective mean densities' in figure.caption
+    assert 'connected allowances' in figure.caption
+    assert 'breakdown constants' not in figure.caption

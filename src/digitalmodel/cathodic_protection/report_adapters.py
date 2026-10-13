@@ -1639,7 +1639,7 @@ def _b401_report_additions(
         caveats.append("Equivalent-cylinder alternatives require fabrication, core, attachment, clearance and anode-interaction assessment. A recurring survey interval and numerical depletion trigger require measured remaining mass, elapsed service and future demand; only baseline and post-intervention surveys are specified here.")
     caveats.extend(evidence.get("limitations", []))
     if modern:
-        _verification_presentation(sections)
+        _verification_presentation(sections, published=bool(evidence))
     return [Section(
         key="cp-limitations", title="Limitations and items not evaluated",
         label="Appendix A",
@@ -1647,12 +1647,20 @@ def _b401_report_additions(
     )]
 
 
-def _verification_presentation(sections: list[Section]) -> None:
+def _verification_presentation(sections: list[Section], *, published: bool = False) -> None:
     """Use engineering wording and whole kilograms for display-enabled cases."""
     for section in sections:
         section.subtitle = re.sub(r"Sec\.\s*\d+(?:\.\d+)*(?:-\d+(?:\.\d+)*)?", "", section.subtitle or "")
         for block in section.blocks:
+            if isinstance(block, FigureBlock) and published and block.figure_id == FIG_DEMAND_VS_TIME:
+                block.caption = "Published effective mean densities are held constant over the assumed design life and connected allowances are added. Initial and final effective densities determine the endpoint checks; no independent coating deterioration is inferred."
             if isinstance(block, TableBlock):
+                if published and block.title.startswith("Zones and coating breakdown constants"):
+                    block.title = "Published zone areas and effective-density treatment"
+                    index = block.columns.index("Coating")
+                    block.columns[index] = "Demand treatment"
+                    for row in block.rows:
+                        row[index] = "published effective phase density; unity multiplier"
                 block.source = None
                 for row in block.rows:
                     if row and isinstance(row[0], str):
