@@ -1,5 +1,7 @@
-"""
-ABOUTME: Build OrcaWave diffraction decks from vessel-database records.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Build OrcaWave diffraction decks from vessel-database records.
 
 Bridges vessel_db -> hull_library -> diffraction (#622): for a vessel record it
 takes mass/inertia from ``vessel_db.mass_properties``, generates a parametric
@@ -8,9 +10,10 @@ and assembles a ``DiffractionSpec`` -> OrcaWave ``.yml`` via ``orcawave_backend`
 
 Honesty: the parametric mesh is a wall-sided, plan-form-tapered approximation
 for first-pass screening — NOT a class-approved hull. The mesh path is a single
-swappable field (``hull.gdf``); drop in a real mesh and re-run. Forms that a
-single hull surface cannot represent (semisub columns+pontoons, spar) get a deck
-referencing a mesh to supply (``PROVIDE_HULL_MESH.gdf``).
+swappable field (``hull.gdf``); drop in a real mesh and re-run.
+Drilling semi-submersibles use an assumed four-column, twin-pontoon mesh.
+Crane semi-submersibles, spars and TLPs reference a mesh to supply
+(``PROVIDE_HULL_MESH.gdf``).
 
 The solver run itself needs a licensed OrcaWave/AQWA machine; this module only
 *prepares* the decks.
@@ -37,6 +40,8 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     WaveHeadingSpec,
 )
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
+from digitalmodel.hydrodynamics.hull_library.column_pontoon_form import generate_column_pontoon
+from digitalmodel.hydrodynamics.hull_library.generic_semi import generic_semi_parameters
 from digitalmodel.hydrodynamics.hull_library.line_generator.exporter import export_gdf
 from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
     HullMeshGenerator,
@@ -68,8 +73,10 @@ DEFAULT_HEADINGS = [0.0, 45.0, 90.0, 135.0, 180.0]
 
 
 def clean_vessel_name(name: str) -> str:
-    """Filesystem/deck-safe vessel name (the backend uses the name as the .yml
-    filename). Drops parentheticals and path-unsafe characters."""
+    """Return a filesystem and deck name without unsafe characters.
+
+    Parenthetical suffixes are removed from the backend's YAML filename.
+    """
     base = name.split("(")[0].strip() or name
     base = re.sub(r"[^A-Za-z0-9 _\-]+", "", base).strip()
     return base or "vessel"
@@ -79,12 +86,18 @@ def select_form(record: Record) -> str:
     """Pick a parametric hull form for a vessel record.
 
     Returns one of: ``box`` (FPSO/FSO/barge), ``full`` (tanker/gas carrier),
-    ``ship`` (drillship / monohull construction / default), or ``placeholder``
-    (semisub / spar — not representable as a single hull surface).
+    ``ship`` (drillship / monohull construction / default), ``column_pontoon``
+    (drilling semi-submersible), or ``placeholder`` (crane semi / spar / TLP).
     """
     vt = (record.vessel_type or "").lower()
-    if any(k in vt for k in ("semi", "spar", "column", "tlp", "pontoon")):
+    if any(k in vt for k in ("spar", "tlp")):
         return "placeholder"
+    if any(k in vt for k in ("semi", "column", "pontoon")):
+        # Crane and SSCV wording occurs in the curated particulars records;
+        # heavy-lift occurs in the installation records. Space form is equivalent.
+        if any(k in vt for k in ("crane", "sscv", "heavy-lift", "heavy lift")):
+            return "placeholder"
+        return "column_pontoon"
     if any(k in vt for k in ("tanker", "vlcc", "crude", "lng", "lpg", "gas carrier")):
         return "full"
     if any(k in vt for k in ("fpso", "fso", "barge")):
@@ -140,6 +153,8 @@ def parametric_hull_profile(
 
 @dataclass
 class DeckResult:
+    """Paths, mesh classification and mass basis of a prepared deck."""
+
     vessel: str
     form: str
     deck_path: Path  # OrcaWave-native deck (.yml)
@@ -152,8 +167,10 @@ class DeckResult:
 
 
 def _inertia_for(record: Record, dims: dict) -> tuple[VesselInertia, str, list[str]]:
-    """Build VesselInertia from the record; explicit if displacement known,
-    else free_floating (solver derives mass from the mesh)."""
+    """Build explicit inertia when displacement is known, otherwise free-floating.
+
+    In free-floating mode, displaced volume supplies the solver's mass.
+    """
     notes: list[str] = []
     mp = from_record(record)
     if mp is not None and mp.mass_te and mp.mass_te > 0:
@@ -264,6 +281,17 @@ def build_deck(
     notes: list[str] = []
     mesh_path: Optional[Path] = None
     n_panels: Optional[int] = None
+    column_mesh = None
+    if form == "column_pontoon":
+        try:
+            # The generic screening geometry uses the specified coarse 4.0 m
+            # target size; target_panels controls the single-surface generator.
+            parameters = generic_semi_parameters(loa, beam, draft, 4.0)
+        except ValueError:
+            form = "placeholder"
+            notes.append("invalid column-and-pontoon parameters; supply a measured mesh")
+        else:
+            column_mesh, _ = generate_column_pontoon(parameters)
     if form == "placeholder":
         mesh_file = PLACEHOLDER_MESH
         mesh_kind = "placeholder"
@@ -271,6 +299,12 @@ def build_deck(
             f"'{record.vessel_type}' is not representable as a single hull surface "
             f"(columns/pontoons); supply a real mesh as '{PLACEHOLDER_MESH}' and re-run."
         )
+    elif column_mesh is not None:
+        mesh_path = export_gdf(column_mesh, deck_dir / MESH_FILE)
+        n_panels = len(column_mesh.panels)
+        mesh_file, mesh_kind = MESH_FILE, "parametric"
+        notes.append("column-and-pontoon proportions: assumed, based on previous experience")
+        notes.append("no braces, column rotation or pontoon overhangs; geometric lid disabled")
     else:
         profile = parametric_hull_profile(record.name, loa, beam, draft, depth, form)
         mesh = HullMeshGenerator().generate(
@@ -285,6 +319,9 @@ def build_deck(
         )
 
     inertia, mass_basis, inertia_notes = _inertia_for(record, dims)
+    if column_mesh is not None and mass_basis == "explicit":
+        # Column-and-pontoon x=0 is amidships; the single-surface x=0 is aft.
+        inertia.centre_of_gravity[0] -= loa / 2.0
     notes.extend(inertia_notes)
 
     spec = DiffractionSpec(
