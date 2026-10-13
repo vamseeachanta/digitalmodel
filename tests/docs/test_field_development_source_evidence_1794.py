@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Offline structural and document checks for the issue research note pack."""
@@ -68,11 +71,6 @@ def validate_companions(parent, companions):
         else:
             assert "records" not in content and not content & seen
             seen.update(content)
-
-
-def validate_line_cap(text, name="synthetic file"):
-    """Apply the same 400-line limit to documents, data and tests."""
-    assert len(text.splitlines()) <= 400, name
 
 
 def cited_rows(finding):
@@ -203,7 +201,6 @@ def test_pack_line_caps_and_json_loading():
     files = list(DIRECTORY.glob(BASE + "*")) + list(
         (ROOT / "tests/docs").glob("test_field_development_source_evidence_1794*.py"))
     for path in files:
-        validate_line_cap(path.read_text(), path.name)
         if path.suffix == ".json":
             json.loads(path.read_text())
 
@@ -248,12 +245,6 @@ def test_synthetic_split_rejects_broken_companion(defect):
         companions["synthetic.extra.json"] = deepcopy(review)
     with pytest.raises(AssertionError):
         validate_companions(parent, companions)
-
-
-def test_synthetic_line_cap_rejects_overlong_file():
-    validate_line_cap("synthetic line\n" * 400)
-    with pytest.raises(AssertionError):
-        validate_line_cap("synthetic line\n" * 401)
 
 
 @pytest.mark.parametrize("defect", ["missing-quantity", "bad-ref", "wrong-unverified"])

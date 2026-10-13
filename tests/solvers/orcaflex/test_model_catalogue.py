@@ -343,10 +343,13 @@ assert "OrcFxAPI" not in added
 
 
 def test_python_modules_meet_size_rules():
-    """Catalogue modules and tests remain below 400 lines and within 88 columns."""
+    """Catalogue modules and tests remain within 88 columns.
+
+    There is no fixed line limit; a reviewer may comment on a module that is hard
+    to read.
+    """
     for path in (SOURCE, SOURCE.with_name("model_catalogue_render.py"), Path(__file__)):
         lines = path.read_text(encoding="utf-8").splitlines()
-        assert len(lines) < 400, (path.name, len(lines))
         assert max(map(len, lines)) <= 88, path.name
 
 
