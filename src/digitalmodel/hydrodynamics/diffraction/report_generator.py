@@ -490,6 +490,7 @@ def generate_diffraction_report(
     mode: str = "full",
     validation_report: Optional[dict[str, Any]] = None,
     assumption_ledger: Optional["AssumptionLedger"] = None,
+    page_title: Optional[str] = None,
 ) -> Path:
     """Generate a self-contained HTML diffraction report.
 
@@ -508,6 +509,8 @@ def generate_diffraction_report(
             instantiated here).
         assumption_ledger: Optional assumption provenance ledger. When
             provided, an Assumptions section is rendered.
+        page_title: Optional document title; the existing title is retained
+            when omitted, independently of the main heading.
 
     Returns:
         Path to the generated HTML file.
@@ -542,7 +545,8 @@ def generate_diffraction_report(
     renderer = ReportRenderer()
     html = renderer.render_html(
         sections,
-        title=f"Diffraction Report - {report_data.vessel_name}",
+        title=(page_title if page_title is not None
+               else f"Diffraction Report - {report_data.vessel_name}"),
         css=css,
         plotlyjs_src=plotly_src,
         container_class="container",

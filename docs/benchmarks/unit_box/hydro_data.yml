@@ -1,10 +1,10 @@
 metadata:
   vessel_name: UnitBox
-  generated: '2026-08-04T06:25:39'
+  generated: '2026-10-13T13:01:05'
   solver_names:
-  - AQWA
-  - BEMRosetta
-  - OrcaWave
+  - Series A
+  - Series C
+  - Series B
 grid:
   frequencies_rad_s:
   - 0.1
@@ -94,9 +94,9 @@ grid:
   - 180.0
   - 270.0
 solvers:
-  AQWA:
+  Series A:
     vessel_name: UnitBox
-    analysis_tool: AQWA
+    analysis_tool: Series A
     water_depth: 50.0
     phase_convention: iso_lead
     unit_system: SI
@@ -4927,9 +4927,9 @@ solvers:
         - 0.0
         - 0.0
         - 2.003058
-  OrcaWave:
+  Series B:
     vessel_name: UnitBox
-    analysis_tool: OrcaWave
+    analysis_tool: Series B
     water_depth: 50.0
     phase_convention: iso_lead
     unit_system: SI
@@ -9760,9 +9760,9 @@ solvers:
         - 0.0
         - 0.0
         - 1.999801
-  BEMRosetta:
+  Series C:
     vessel_name: UnitBox
-    analysis_tool: BEMRosetta
+    analysis_tool: Series C
     water_depth: 50.0
     phase_convention: iso_lead
     unit_system: SI
@@ -14597,7 +14597,7 @@ comparison:
   overall_consensus: FULL
   comparison_status: DECIDED
   refusal_reasons: []
-  AQWA-vs-BEMRosetta:
+  Series A-vs-Series C:
     overall_agreement: EXCELLENT
     comparison_status: DECIDED
     refusal_reason: null
@@ -14798,7 +14798,7 @@ comparison:
       6,4: NOT_APPLICABLE
       6,5: NOT_APPLICABLE
       6,6: COMPARED
-  AQWA-vs-OrcaWave:
+  Series A-vs-Series B:
     overall_agreement: EXCELLENT
     comparison_status: DECIDED
     refusal_reason: null
@@ -14999,7 +14999,7 @@ comparison:
       6,4: NOT_APPLICABLE
       6,5: NOT_APPLICABLE
       6,6: COMPARED
-  BEMRosetta-vs-OrcaWave:
+  Series B-vs-Series C:
     overall_agreement: EXCELLENT
     comparison_status: DECIDED
     refusal_reason: null
