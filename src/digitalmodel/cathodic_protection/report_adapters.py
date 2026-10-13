@@ -1674,6 +1674,7 @@ def _verification_presentation(sections: list[Section], *, published: bool = Fal
             elif isinstance(block, TextBlock):
                 block.markdown = block.markdown.replace("route's", "calculation's").replace("routed", "calculated")
             elif isinstance(block, StatusBlock):
+                block.detail = block.detail.replace("B401 Sec. 7.8", "B401 current-output verification")
                 block.detail = re.sub(r"(\d+(?:\.\d+)?) kg", lambda match: f"{float(match[1]):.0f} kg", block.detail)
 
 
