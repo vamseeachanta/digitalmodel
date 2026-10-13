@@ -248,3 +248,38 @@ def test_census_classifies_only_specification_print_sources(tmp_path, monkeypatc
     assert checker.validate_page_census(tmp_path) == [
         "unclassified docs/api HTML page(s): docs/api/capabilities/pdf/unknown.html"
     ]
+
+
+def test_kept_print_sources_are_git_ignored_and_pdf_siblings_are_not():
+    import os
+    from scripts.generated_html_ownership import build_output_pages
+
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+    pages = build_output_pages()
+    assert pages
+    for page in sorted(pages):
+        for path, expected in ((page, 0), (page.removesuffix(".html") + ".pdf", 1)):
+            result = subprocess.run(
+                ["git", "check-ignore", "--no-index", "--quiet", "--", path],
+                cwd=builder._REPO, env=env,
+            )
+            assert result.returncode == expected, path
+
+
+def test_print_source_ignore_does_not_cover_other_html():
+    import os
+
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+    for path in ("docs/api/capabilities/example.html", "docs/api/other/pdf/example.html",
+                 "docs/api/capabilities/pdf/nested/example.html"):
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", "--quiet", "--", path],
+            cwd=builder._REPO, env=env,
+        )
+        assert result.returncode == 1, path
+
+
+def test_docstring_identifies_html_as_ignored_build_output():
+    assert "git-ignored and not committed" in builder.__doc__

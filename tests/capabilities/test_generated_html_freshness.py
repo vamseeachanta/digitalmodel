@@ -115,3 +115,122 @@ def test_page_census_rejects_unclassified_html(tmp_path: Path) -> None:
 
     assert "docs/api/new-output.HTML" in message
     assert "docs/api/_assets/new-output.html" in message
+
+
+@pytest.fixture
+def build_output_registry(tmp_path, monkeypatch):
+    from scripts import generated_html_ownership as ownership
+
+    script = "scripts/capabilities/build_onepagers.py"
+    source = tmp_path / script
+    source.parent.mkdir(parents=True)
+    source.write_text('SPECS: list = [dict(id="example")]\n', encoding="utf-8", newline="\n")
+    monkeypatch.setattr(ownership, "__file__", str(tmp_path / "scripts/generated_html_ownership.py"))
+    monkeypatch.setattr(checker, "GENERATORS", ())
+    for name in ("DISCOVERY_FALSE_POSITIVES", "EXCLUDED_GENERATORS", "PAGE_EXCLUSIONS", "MANUAL_PAGES"):
+        monkeypatch.setattr(checker, name, {})
+    monkeypatch.setattr(checker, "discover_candidate_generators", lambda repo: {script})
+    monkeypatch.setattr(checker, "build_output_pages", lambda: set())
+    entries = {script: dict(ownership.BUILD_OUTPUT_GENERATORS[script])}
+    monkeypatch.setattr(checker, "BUILD_OUTPUT_GENERATORS", entries, raising=False)
+    return tmp_path, script, entries, ownership
+
+
+@pytest.mark.parametrize(
+    "fault,field,value",
+    [
+        ("missing script", "script", "scripts/missing.py"),
+        ("empty reason", "reason", ""),
+        ("empty command", "command", ""),
+        ("empty pattern", "output_pattern", ""),
+        ("missing placeholder", "output_pattern", "docs/api/example.html"),
+        ("outside docs/api", "output_pattern", "docs/example/<specification-id>.html"),
+        ("non-HTML pattern", "output_pattern", "docs/api/<specification-id>.pdf"),
+        ("extra placeholder", "output_pattern", "docs/api/<other>/<specification-id>.html"),
+        ("repeated placeholder", "output_pattern", "docs/api/<specification-id>/<specification-id>.html"),
+        ("parent traversal", "output_pattern", "docs/api/../<specification-id>.html"),
+    ],
+)
+def test_build_output_registry_rejects_invalid_entries(build_output_registry, fault, field, value):
+    repo, script, entries, _ownership = build_output_registry
+    if field == "script":
+        entries[value] = entries.pop(script)
+        script = value
+    else:
+        entries[script][field] = value
+    message = "\n".join(checker.validate_registry(repo))
+    assert script in message
+    expected = "missing script" if field == "script" else field.replace("_", " ")
+    assert f"build-output generator {expected}" in message, (fault, message)
+
+
+def test_build_output_generator_cannot_be_discovery_false_positive(build_output_registry):
+    repo, script, _entries, _ownership = build_output_registry
+    checker.DISCOVERY_FALSE_POSITIVES[script] = "synthetic explanation"
+    assert f"generator has conflicting classifications: {script}" in checker.validate_registry(repo)
+
+
+def test_build_output_enumeration_uses_every_registry_entry(build_output_registry, monkeypatch):
+    repo, script, entries, ownership = build_output_registry
+    second = repo / "scripts/second.py"
+    second.write_text('SPECS: list = [dict(id="second")]\n', encoding="utf-8", newline="\n")
+    entries[script]["output_pattern"] = "docs/api/print/<specification-id>.html"
+    entries["scripts/second.py"] = dict(entries[script], output_pattern="docs/api/second/<specification-id>.html")
+    monkeypatch.setattr(ownership, "BUILD_OUTPUT_GENERATORS", entries)
+    assert ownership.build_output_pages() == {"docs/api/print/example.html", "docs/api/second/second.html"}
+
+
+@pytest.mark.parametrize("classification", ["manual", "excluded", "owned"])
+def test_build_output_page_conflicts_with_other_classes(tmp_path, monkeypatch, classification):
+    page = "docs/api/example.html"
+    destination = tmp_path / page
+    destination.parent.mkdir(parents=True)
+    destination.write_text("<html></html>\n", encoding="utf-8", newline="\n")
+    monkeypatch.setattr(checker, "build_output_pages", lambda: {page})
+    monkeypatch.setattr(checker, "MANUAL_PAGES", {page: "synthetic manual page"} if classification == "manual" else {})
+    monkeypatch.setattr(checker, "PAGE_EXCLUSIONS", {page: "synthetic exclusion"} if classification == "excluded" else {})
+    monkeypatch.setattr(checker, "all_registered_outputs", lambda repo: {destination} if classification == "owned" else set())
+    assert checker.validate_page_census(tmp_path) == [f"page has conflicting classifications: {page}"]
+
+
+@pytest.mark.parametrize(
+    "source,expected,found",
+    [
+        ("SPECS = []\n", "annotated assignment named SPECS", "no annotated SPECS"),
+        ("SPECS: list = ()\n", "literal list", "Tuple"),
+        ("SPECS: list\n", "literal list", "NoneType"),
+        ('SPECS: list = [{"id": "example"}]\n', "dict(...) call with a literal id", "Dict"),
+        ('SPECS: list = [other(id="example")]\n', "dict(...) call with a literal id", "Call"),
+        ("SPECS: list = [dict()]\n", "dict(...) call with a literal id", "missing id"),
+        ("SPECS: list = [dict(id=identifier)]\n", "dict(...) call with a literal id", "Name"),
+        ('SPECS: list = [dict(id="")]\n', "dict(...) call with a literal id", "empty string"),
+        ("SPECS: list = [dict(id=1)]\n", "dict(...) call with a literal id", "int"),
+        ("SPECS: list = []\n", "at least one specification id", "empty list"),
+    ],
+    ids=["no-annotated-SPECS", "not-list", "no-list-value", "not-call", "not-dict", "missing-id", "nonliteral-id", "empty-id", "nonstring-id", "no-ids"],
+)
+def test_build_output_specs_fail_with_clear_error(build_output_registry, source, expected, found):
+    repo, script, _entries, ownership = build_output_registry
+    (repo / script).write_text(source, encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError) as error:
+        ownership.build_output_pages()
+    message = str(error.value)
+    assert script in message
+    assert expected in message
+    assert found in message
+
+
+def test_census_propagates_malformed_specification_error(build_output_registry, monkeypatch):
+    repo, script, _entries, ownership = build_output_registry
+    (repo / script).write_text("SPECS: list = []\n", encoding="utf-8", newline="\n")
+    monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
+    with pytest.raises(ValueError, match="at least one specification id"):
+        checker.validate_page_census(repo)
+
+
+def test_real_build_output_pages_match_specifications():
+    from scripts.capabilities.build_onepagers import SPECS
+    from scripts.generated_html_ownership import build_output_pages
+
+    assert build_output_pages() == {f"docs/api/capabilities/pdf/{spec['id']}.html" for spec in SPECS}
+    assert checker.validate_page_census(checker.REPO) == []

@@ -89,10 +89,6 @@ DISCOVERY_FALSE_POSITIVES = {
     "docs/api/cfd/report_build/house.py": (
         "shared HTML rendering helpers; it does not write a page"
     ),
-    "scripts/capabilities/build_onepagers.py": (
-        "writes uncommitted HTML print sources beside committed one-pager PDFs; "
-        "the build-output classification below owns these pages"
-    ),
 }
 
 # Active generators which cannot run from repository-owned deterministic inputs.
@@ -239,23 +235,65 @@ BUILD_OUTPUT_GENERATORS = {
 }
 
 
-def build_output_pages() -> set[str]:
-    """Enumerate print-source paths from specification ids, without a folder glob."""
+def _specification_ids(script, label: str) -> set[str]:
+    """Read literal specification ids and explain unsupported source forms."""
     import ast
+
+    tree = ast.parse(script.read_text(encoding="utf-8"))
+    spec_node = next(
+        (node for node in tree.body
+         if isinstance(node, ast.AnnAssign)
+         and isinstance(node.target, ast.Name) and node.target.id == "SPECS"),
+        None,
+    )
+    if spec_node is None:
+        raise ValueError(
+            f"{label}: expected annotated assignment named SPECS; "
+            "found no annotated SPECS assignment"
+        )
+    specs = spec_node.value
+    if not isinstance(specs, ast.List):
+        raise ValueError(
+            f"{label}: expected SPECS to be a literal list; "
+            f"found {type(specs).__name__}"
+        )
+    ids = {_literal_specification_id(entry, label, index)
+           for index, entry in enumerate(specs.elts)}
+    if not ids:
+        raise ValueError(
+            f"{label}: expected at least one specification id; found empty list"
+        )
+    return ids
+
+
+def _literal_specification_id(entry, label: str, index: int) -> str:
+    """Require each list element to declare a literal nonempty string id."""
+    import ast
+
+    expected = f"{label}: expected dict(...) call with a literal id at SPECS[{index}]"
+    if not (isinstance(entry, ast.Call) and isinstance(entry.func, ast.Name)
+            and entry.func.id == "dict"):
+        raise ValueError(f"{expected}; found {type(entry).__name__}")
+    values = [keyword.value for keyword in entry.keywords if keyword.arg == "id"]
+    if len(values) != 1:
+        raise ValueError(f"{expected}; found missing id or multiple id keywords")
+    value = values[0]
+    if not isinstance(value, ast.Constant):
+        raise ValueError(f"{expected}; found {type(value).__name__}")
+    if not isinstance(value.value, str) or not value.value:
+        found = "empty string" if value.value == "" else type(value.value).__name__
+        raise ValueError(f"{expected}; found {found}")
+    return value.value
+
+
+def build_output_pages() -> set[str]:
+    """Enumerate registered print-source paths from ids, without a folder glob."""
     from pathlib import Path
 
-    script = Path(__file__).parent / "capabilities" / "build_onepagers.py"
-    tree = ast.parse(script.read_text(encoding="utf-8"))
-    specs = next(
-        node.value for node in tree.body
-        if isinstance(node, ast.AnnAssign)
-        and isinstance(node.target, ast.Name) and node.target.id == "SPECS"
-    )
-    if not isinstance(specs, ast.List):
-        raise ValueError("Specification registry must be a literal list")
-    ids = {
-        ast.literal_eval(keyword.value)
-        for entry in specs.elts if isinstance(entry, ast.Call)
-        for keyword in entry.keywords if keyword.arg == "id"
-    }
-    return {f"docs/api/capabilities/pdf/{spec_id}.html" for spec_id in ids}
+    repo = Path(__file__).resolve().parents[1]
+    pages = set()
+    for script, entry in BUILD_OUTPUT_GENERATORS.items():
+        ids = _specification_ids(repo / script, script)
+        pages.update(entry["output_pattern"].replace("<specification-id>", spec_id)
+                     for spec_id in ids)
+    return pages

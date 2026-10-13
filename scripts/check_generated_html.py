@@ -33,6 +33,7 @@ from pathlib import Path
 if __package__:
     from .generated_html_ownership import (
         build_output_pages,
+        BUILD_OUTPUT_GENERATORS,
         DISCOVERY_FALSE_POSITIVES,
         EXCLUDED_GENERATORS,
         MANUAL_PAGES,
@@ -41,6 +42,7 @@ if __package__:
 else:
     from generated_html_ownership import (
         build_output_pages,
+        BUILD_OUTPUT_GENERATORS,
         DISCOVERY_FALSE_POSITIVES,
         EXCLUDED_GENERATORS,
         MANUAL_PAGES,
@@ -209,7 +211,8 @@ def validate_page_census(repo: Path) -> list[str]:
         for path in all_registered_outputs(repo)
     }
     pages = docs_api_pages(repo)
-    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES) | build_output_pages()
+    build_output = build_output_pages()
+    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES) | build_output
     errors = []
     if unclassified := sorted(pages - classified):
         errors.append(f"unclassified docs/api HTML page(s): {', '.join(unclassified)}")
@@ -219,6 +222,7 @@ def validate_page_census(repo: Path) -> list[str]:
         (owned & set(PAGE_EXCLUSIONS))
         | (owned & set(MANUAL_PAGES))
         | (set(PAGE_EXCLUSIONS) & set(MANUAL_PAGES))
+        | (build_output & (owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES)))
     )
     if overlaps:
         errors.append(
@@ -230,12 +234,46 @@ def validate_page_census(repo: Path) -> list[str]:
     return errors
 
 
+def validate_build_output_generators(repo: Path) -> list[str]:
+    """Validate build-output scripts, required fields and enumeration patterns."""
+    errors = []
+    placeholder = "<specification-id>"
+    for script, entry in BUILD_OUTPUT_GENERATORS.items():
+        path = Path(script)
+        if (path.is_absolute() or ".." in path.parts
+                or path.suffix != ".py" or not (repo / path).is_file()):
+            errors.append(f"build-output generator missing script: {script}")
+        for field in ("command", "output_pattern", "reason"):
+            value = entry.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(
+                    f"build-output generator {field.replace('_', ' ')} is empty: {script}"
+                )
+        pattern = entry.get("output_pattern", "")
+        if not isinstance(pattern, str) or not pattern.strip():
+            continue
+        remainder = pattern.replace(placeholder, "")
+        if (not pattern.startswith("docs/api/") or not pattern.endswith(".html")
+                or ".." in Path(pattern).parts or "\\" in pattern
+                or pattern.count(placeholder) != 1
+                or any(character in remainder for character in "<>")):
+            errors.append(
+                f"build-output generator output pattern must lie under docs/api/, "
+                f"end in .html and contain exactly {placeholder}: {script}"
+            )
+    return errors
+
+
 def validate_registry(repo: Path) -> list[str]:
     """Validate generator discovery, reasons, and page ownership."""
     registered = {entry.script for entry in GENERATORS}
     candidates = discover_candidate_generators(repo)
     explained = set(DISCOVERY_FALSE_POSITIVES) | set(EXCLUDED_GENERATORS)
+    build_output = set(BUILD_OUTPUT_GENERATORS)
     errors = []
+    if conflicts := sorted(build_output & (registered | explained)):
+        errors.append(f"generator has conflicting classifications: {', '.join(conflicts)}")
+    explained |= build_output
     if missing := sorted(candidates - registered - explained):
         errors.append(f"unregistered candidate generator(s): {', '.join(missing)}")
     if stale := sorted((registered | explained) - candidates):
@@ -251,7 +289,10 @@ def validate_registry(repo: Path) -> list[str]:
             errors.append(f"stale generated-page exclusion: {path}")
         if not reason.strip():
             errors.append(f"generated-page exclusion lacks a reason: {path}")
-    errors.extend(validate_page_census(repo))
+    build_errors = validate_build_output_generators(repo)
+    errors.extend(build_errors)
+    if not build_errors:
+        errors.extend(validate_page_census(repo))
     return errors
 
 
