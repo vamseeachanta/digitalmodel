@@ -181,3 +181,56 @@ def test_reference_drawing_bands_bar_and_dimension_labels():
     assert f"water depth: {-min(zs):.1f} m" in text
     assert f"Projected top span: {max(upper)-min(upper):.3f} m" in text
     assert f"mudline span: {max(lower)-min(lower):.3f} m" in text
+
+
+def test_reference_zone_areas_match_independent_axis_intersections():
+    from digitalmodel.cathodic_protection.report_reference import reference_zone_rows
+
+    model = schedule()
+    form = yaml.safe_load(FORM.read_text())
+    rows = reference_zone_rows(model, form["initial_pile_estimate"])
+    joints = {j["id"]: j["coordinates_m"] for j in model["joints"]}
+    props = {p["id"]: p for p in model["property_sets"]}
+    intervals = {"Water-column steel, undivided": (-60, 0),
+                 "Above-water steel, undivided": (0, 14.1)}
+    assigned = 0
+    for row in rows:
+        if row["zone"] == "Buried piles, initial estimate":
+            assert row["count"] == 3
+            assert row["length_m"] == 3 * 65
+            assert row["area_m2"] == pytest.approx(3 * math.pi * 3 * 65)
+            continue
+        lower, upper = intervals[row["zone"]]
+        length, count = 0, 0
+        for m in model["members"]:
+            if m["section_class"] != row["section_class"]:
+                continue
+            a, b = (joints[i] for i in m["joint_ids"])
+            low, high = sorted((a[2], b[2]))
+            overlap = max(0, min(upper, high) - max(lower, low))
+            piece = math.dist(a, b) * overlap / (high - low)
+            length += piece
+            count += piece > 0
+        assert row["count"] == count
+        assert row["length_m"] == pytest.approx(length)
+        assert row["area_m2"] == pytest.approx(math.pi * row["diameter_m"] * length)
+        assert row["diameter_m"] == props[row["section_class"]]["diameter_m"]
+        assigned += row["length_m"]
+    assert assigned == pytest.approx(model["total_true_length_m"])
+
+
+def test_reference_zone_derivation_prints_formula_totals_and_limits():
+    from digitalmodel.cathodic_protection.report_reference import reference_zone_blocks
+    from digitalmodel.reporting.spec import TableBlock, TextBlock
+
+    form = yaml.safe_load(FORM.read_text())
+    blocks = reference_zone_blocks(schedule(), form["initial_pile_estimate"])
+    text = " ".join(b.markdown for b in blocks if isinstance(b, TextBlock))
+    assert "π × outside diameter × axis length in the elevation interval" in text
+    assert "Splash separation is not evaluated" in text
+    assert "initial pile estimate" in text
+    assert "974.549 m" in text
+    assert "outside the reported intervals: 0.000 m" in text
+    table = next(b for b in blocks if isinstance(b, TableBlock))
+    assert len(table.rows) == 15
+    assert table.columns[-1] == "Locator"
