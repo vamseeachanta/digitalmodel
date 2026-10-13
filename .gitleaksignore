@@ -1,0 +1,24 @@
+# Published source metadata identifier; the adjacent fields identify its issuer and document.
+data/ship_structure_reference/source_metadata.yml:generic-api-key:22
+# Browser local-storage identifier; the same variable is used by getItem and setItem.
+docs/plans/assets/2026-09-25-issue-1057-owner-decisions.html:generic-api-key:219
+# Bibliographic reference identifier in a citation record, not authentication material.
+docs/research/hydrodynamics-academic-references.md:generic-api-key:48
+# Bibliographic reference identifier in a citation record, not authentication material.
+docs/research/mooring-academic-references.md:generic-api-key:32
+# Bibliographic reference identifier in a citation record, not authentication material.
+docs/research/hydrodynamics-academic-references.md:generic-api-key:220
+# Bibliographic reference identifier in a citation record, not authentication material.
+docs/research/hydrodynamics-academic-references.md:generic-api-key:246
+# Bibliographic reference identifier in a citation record, not authentication material.
+docs/research/subsea-pipelines-academic-references.md:generic-api-key:168
+# Mooring material lookup identifier beside a segment length.
+examples/workflows/mooring-design-mbl/input.yml:generic-api-key:28
+# Inside-diameter arithmetic using outside diameter and nominal wall thickness.
+scripts/python/digitalmodel/analysis/APIRP2RD_equationFunctionFile.py:generic-api-key:14
+# Inside-diameter arithmetic using outside diameter and minimum wall thickness.
+scripts/python/digitalmodel/analysis/APIRP2RD_equationFunctionFile.py:generic-api-key:17
+# Selection between two engineering configuration constants in the legacy adapter.
+src/digitalmodel/cathodic_protection/engine_adapter.py:generic-api-key:1126
+# Mooring material lookup identifier in a segment constructor.
+src/digitalmodel/orcaflex/mooring_design.py:generic-api-key:375
