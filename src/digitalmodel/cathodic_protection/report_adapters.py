@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from dataclasses import asdict
 from pathlib import Path
@@ -1620,7 +1621,8 @@ def _b401_report_additions(
     adequacy = by_key["adequacy"]
     failures = failed_keys(results)
     evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
-    if evidence:
+    modern = bool(evidence or _mapping(inputs.get("structure")).get("report_geometry"))
+    if modern:
         adequacy.blocks.extend(arrangement_options(inputs, results))
         adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\nThe rechecked alternatives pass the aggregate mass and current checks. " + monitoring_conclusion(inputs) + " Monitoring and intervention triggers are stated above; local retrofit quantity requires spatial demand and allocation evidence."))
     else:
@@ -1631,16 +1633,38 @@ def _b401_report_additions(
                 adequacy.blocks.append(recommendation_block(results, key))
         adequacy.blocks.append(conclusions_block(results))
     caveats = geometry_caveats(inputs, results)
-    if not evidence:
+    if not modern:
         caveats += recommendation_caveats(results)
     else:
         caveats.append("Equivalent-cylinder alternatives require fabrication, core, attachment, clearance and anode-interaction assessment. A recurring survey interval and numerical depletion trigger require measured remaining mass, elapsed service and future demand; only baseline and post-intervention surveys are specified here.")
     caveats.extend(evidence.get("limitations", []))
+    if modern:
+        _verification_presentation(sections)
     return [Section(
         key="cp-limitations", title="Limitations and items not evaluated",
         label="Appendix A",
         blocks=[TextBlock(markdown="\n\n".join(f"- {item}" for item in caveats))],
     )]
+
+
+def _verification_presentation(sections: list[Section]) -> None:
+    """Use engineering wording and whole kilograms for display-enabled cases."""
+    for section in sections:
+        section.subtitle = re.sub(r"Sec\.\s*\d+(?:\.\d+)*(?:-\d+(?:\.\d+)*)?", "", section.subtitle or "")
+        for block in section.blocks:
+            if isinstance(block, TableBlock):
+                block.source = None
+                for row in block.rows:
+                    if row and isinstance(row[0], str):
+                        row[0] = re.sub(r"\s*\(Sec\.\s*[0-9.]+\)", "", row[0])
+                    if len(row) == 3 and row[-1] == "kg" and isinstance(row[1], (int, float)):
+                        row[1] = f"{row[1]:.0f}"
+                    elif row and "(kg)" in str(row[0]):
+                        for index in range(1, len(row)):
+                            if isinstance(row[index], (int, float)):
+                                row[index] = f"{row[index]:.0f}"
+            elif isinstance(block, TextBlock):
+                block.markdown = block.markdown.replace("route's", "calculation's").replace("routed", "calculated")
 
 
 @report_adapter("cathodic_protection.anode_design")
@@ -1668,9 +1692,20 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
     standard = str(
         results.get("standard") or _ABS_STANDARDS.get(calc_type, ("", ""))[0]
     )
-    document, doc_note = _document(
-        cfg, f"Cathodic protection anode design - {standard}".strip(" -")
-    )
+    display = _mapping(_mapping(inputs.get("structure")).get("report_geometry"))
+    default_title = f"Cathodic protection anode design - {standard}".strip(" -")
+    if calc_type == KEY_B401 and display and _mapping(inputs.get("design_data")).get("structure_type") == "jacket":
+        evaluated = "count" in _mapping(inputs.get("anode")) or _mapping(results.get("status")).get("result") != STATUS_PASS
+        purpose = "verification" if evaluated else "design"
+        try:
+            depth = abs(float(display["mudline_m"]) - float(display["waterline_m"]))
+            if not math.isfinite(depth) or depth <= 0:
+                raise ValueError("depth is not established")
+            description = f"jacket at {depth:g} m water depth"
+        except (ValueError, TypeError, KeyError, OverflowError):
+            description = "jacket with incomplete display data"
+        default_title = f"Cathodic protection {purpose}: {description}"
+    document, doc_note = _document(cfg, default_title)
     note = f"{standard}: {results.get('provenance', 'legacy solver')}"
     echo: dict[str, Any] = {"inputs": dict(inputs)}
     if doc_note:

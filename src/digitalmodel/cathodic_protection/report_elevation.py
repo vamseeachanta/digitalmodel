@@ -170,6 +170,18 @@ def _braces(raw: Any) -> tuple[list[Member], tuple[float, ...]]:
     return members, tuple(levels)
 
 
+def _geometry_basis(item: Mapping[str, Any]) -> tuple[str, str, str, str]:
+    """Require attribution and licensing appropriate to the stated basis."""
+    basis = _text(item["basis"])
+    sourced = basis in {"published_source", "openly_licensed_reference"}
+    if basis not in {"design_data", "illustrative_regression_case", "published_source", "openly_licensed_reference"}:
+        raise ValueError("geometry basis must identify design or illustrative data")
+    citation = _text(item.get("citation")) if sourced else ""
+    attribution = _text(item.get("attribution")) if sourced else ""
+    licence = _text(item.get("licence")) if basis == "openly_licensed_reference" else ""
+    return basis, citation, attribution, licence
+
+
 def validate_geometry(raw: Any) -> Geometry:
     """Validate optional report geometry without modifying calculation inputs."""
     required = {
@@ -184,13 +196,7 @@ def validate_geometry(raw: Any) -> Geometry:
     }
     fields = required | {"conductors", "risers", "citation", "attribution", "licence"}
     item = _mapping(raw, fields, required)
-    basis = _text(item["basis"])
-    sourced = basis in {"published_source", "openly_licensed_reference"}
-    if basis not in {"design_data", "illustrative_regression_case", "published_source", "openly_licensed_reference"}:
-        raise ValueError("geometry basis must identify design or illustrative data")
-    citation = _text(item.get("citation")) if sourced else ""
-    attribution = _text(item.get("attribution")) if sourced else ""
-    licence = _text(item.get("licence")) if basis == "openly_licensed_reference" else ""
+    basis, citation, attribution, licence = _geometry_basis(item)
     waterline = _number(item["waterline_m"])
     mudline = _number(item["mudline_m"])
     if mudline >= waterline:
@@ -360,6 +366,8 @@ def _svg(geometry: Geometry) -> str:
         )
     )
     parts.append(_label(55, 20, f"Datum: {geometry.datum}"))
+    if geometry.basis == "illustrative_regression_case":
+        parts.append(_label(55, 34, "ILLUSTRATIVE"))
     for index, line in enumerate(source_lines):
         parts.append(_label(45, height + 100 + index * 14, line))
     y = height + 65
@@ -458,7 +466,13 @@ def _depth_blocks(raw: Mapping[str, Any]) -> list[Block]:
     for reading in readings:
         x = 350 + (reading["potential_V"] - centre) * potential_scale
         y = 50 + (waterline - reading["elevation_m"]) * scale
-        parts.append(f'<circle data-potential="{_n(reading["potential_V"])}" data-elevation-m="{_n(reading["elevation_m"])}" cx="{_n(x)}" cy="{_n(y)}" r="4" fill="black"/>' + _label(560, y + 15, f"{reading['elevation_m']:g} m; day {reading['elapsed_days']:g}"))
+        parts.append(f'<circle data-potential="{_n(reading["potential_V"])}" data-elevation-m="{_n(reading["elevation_m"])}" cx="{_n(x)}" cy="{_n(y)}" r="4" fill="black"/>')
+    surveys: dict[float, list[float]] = {}
+    for reading in readings:
+        surveys.setdefault(reading["elevation_m"], []).append(reading["elapsed_days"])
+    for elevation, times in surveys.items():
+        days = ", ".join(f"{day:g}" for day in sorted(set(times)))
+        parts.append(_label(560, 65 + (waterline - elevation) * scale, f"{elevation:g} m; days {days}"))
     for index, line in enumerate(textwrap.wrap(f"PUBLISHED SOURCE; {raw['attribution']}; {raw['citation']}", 80)):
         parts.append(_label(30, 590 + index * 14, line))
     parts.append(_label(30, 650, f"Criterion: more negative than {criterion:.3f} V versus Ag/AgCl/seawater"))
@@ -487,6 +501,7 @@ def design_blocks(inputs: Mapping[str, Any]) -> list[Block]:
             svg=_svg(geometry),
             caption=(
                 f"Datum: {geometry.datum}. "
+                + ("ILLUSTRATIVE. " if geometry.basis == "illustrative_regression_case" else "")
                 + ("Elevation derived from the cited member dimensions. " if geometry.citation else "Elevation drawn from the design data of the case. ")
                 + (f"Basis: {geometry.basis}; {geometry.attribution}; {geometry.licence}; {geometry.citation}. " if geometry.citation else "")
                 +
@@ -522,8 +537,8 @@ def geometry_caveats(
     caveats = []
     if geometry.basis == "illustrative_regression_case":
         caveats.append(
-            "The supplied member coordinates are illustrative geometry of the "
-            "regression case, not surveyed structure geometry."
+            "The supplied coordinates and member sizes are illustrative and do not "
+            "establish surveyed geometry or structural section selection."
         )
     caveats.append(
         "External steel area is the cylinder lateral surface area π × diameter × "

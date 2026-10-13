@@ -149,7 +149,7 @@ def test_published_jacket_monitoring_is_depth_true_and_attributed() -> None:
     assert [r[-1] for r in table.rows] == ["FAIL"] * 4 + ["PASS", "PASS", "FAIL", "FAIL"]
     assert all(str(r[2]).startswith("approximately") for r in table.rows[4:])
     text = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock))
-    assert "Xu attributes" in text and "clamped sacrificial anodes" in text
+    assert "The paper attributes" in text and "clamped sacrificial anodes" in text
     assert "-70.5 m and -84.1 m" in text
     assert "measured under-protection" in text
 
@@ -263,7 +263,7 @@ def test_render_jacket_report_example(tmp_path: Path) -> None:
     path.write_text(render_html(spec), encoding="utf-8")
     rendered = path.read_text(encoding="utf-8")
     assert 'data-member="leg-1"' in rendered
-    assert "Recommendation for final current output" in rendered
+    assert "Original and increased-count arrangement" in rendered
     assert "#### Recommendation" not in rendered
     assert 'id="cp-limitations"' in rendered
 
@@ -387,7 +387,7 @@ def test_input_file_named_in_provenance(tmp_path: Path) -> None:
 
 
 def test_jacket_html_matches_golden() -> None:
-    spec = anode_design_report(_load_fixture())
+    spec = anode_design_report(_run("jacket_report_example"))
     spec.tool_version = "0.0-test"
     html = render_html(spec)
     assert "<script src=" not in html
@@ -740,3 +740,36 @@ def test_assessment_adapter_reads_cfg_block_and_document() -> None:
     assert spec.provenance.sources[0].identifier == "cfg[assessment]"
     with pytest.raises(ValueError, match="assessment"):
         assessment_report({"assessment": {}})
+
+
+@pytest.mark.parametrize("name", ["published_jacket_84m", "jacket_report_example"])
+def test_arrangement_report_title_is_verification(name: str) -> None:
+    """An evaluated arrangement is titled as a verification."""
+    report = anode_design_report(_run(name))
+    assert report.document.title.startswith("Cathodic protection verification:")
+
+
+def test_illustrative_report_rechecks_options_once_and_prints_whole_mass() -> None:
+    """The example presents checked alternatives without duplicated advice."""
+    report = anode_design_report(_run("jacket_report_example"))
+    tables = _tables(report)
+    assert tables["Original and increased-count arrangement"].rows[-1][1:] == ["FAIL", "PASS"]
+    text = " ".join(b.markdown for s in report.sections for b in s.blocks if isinstance(b, TextBlock))
+    assert text.count("### Design increase") == 1
+    assert text.count("### Monitoring") == 1
+    assert text.count("### Retrofit") == 1
+    assert "Recommendation for overall status" not in text
+    for table in tables.values():
+        for row in table.rows:
+            if len(row) == 3 and row[-1] == "kg":
+                assert "." not in str(row[1])
+
+
+def test_verification_labels_use_clause_titles_without_legacy_numbers() -> None:
+    """Display-enabled reports do not mix obsolete clause-number styles."""
+    report = anode_design_report(_run('published_jacket_84m'))
+    for section in report.sections:
+        assert 'Sec. 7.' not in (section.subtitle or '')
+        for block in section.blocks:
+            if isinstance(block, TableBlock):
+                assert all('Sec. 7.' not in str(row[0]) for row in block.rows)

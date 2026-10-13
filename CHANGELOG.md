@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- cathodic_protection: add a cited published-jacket verification, depth monitoring, re-checked anode alternatives and a reference-member input form; complete reference geometry remains unavailable ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
+
 - cathodic_protection: add a design-data jacket elevation and phase-specific failure recommendations, with limitations in an appendix and unchanged calculation results ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
 
 - cathodic_protection: add eleven repository-owned structure/mode review packs, offline comment sidecars, fixed component/phase coverage and exact-artifact publication checks ([#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281)); benchmark A–E packs remain explicitly blocked and the overall portfolio incomplete. Shared engines/templates and numerical results are unchanged.

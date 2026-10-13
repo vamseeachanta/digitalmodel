@@ -178,7 +178,7 @@ def test_elevation_appendix_compares_areas_without_changing_design_areas() -> No
         for block in section.blocks
         if isinstance(block, TextBlock)
     )
-    assert "illustrative geometry of the regression case" in appendix
+    assert "coordinates and member sizes are illustrative" in appendix
     assert "cylinder lateral surface" in appendix
     for name, area in (
         ("submerged", 5000.0),
@@ -535,3 +535,35 @@ def test_synthetic_all_face_areas_match_independent_three_dimensional_sum() -> N
     caveats = " ".join(geometry_caveats({"structure": {"report_geometry": raw}}, {}))
     unassigned = math.pi * 0.2 * 8 * 3
     assert f"Unassigned member area: {unassigned:.3f} m²" in caveats
+
+
+def test_illustrative_basis_is_visible_on_figure_and_caption() -> None:
+    """Illustrative members cannot be mistaken for surveyed geometry."""
+    spec = anode_design_report(_run(_cfg()))
+    figure = next(f for f in spec.figure_blocks() if f.figure_id == "fig-cp-jacket-elevation")
+    assert "ILLUSTRATIVE" in figure.svg
+    assert "ILLUSTRATIVE" in figure.caption
+    assert "regression case" not in figure.caption
+
+
+def test_non_jacket_display_does_not_change_title() -> None:
+    """Display metadata cannot classify another structure as a jacket."""
+    cfg = _cfg()
+    cfg['inputs']['design_data']['structure_type'] = 'monopile'
+    assert 'jacket at' not in anode_design_report(_run(cfg)).document.title
+
+
+def test_invalid_depth_does_not_enter_title() -> None:
+    """Nonfinite display depth remains missing evidence."""
+    cfg = _cfg()
+    cfg['inputs']['structure']['report_geometry']['mudline_m'] = float('nan')
+    assert 'incomplete display data' in anode_design_report(_run(cfg)).document.title
+
+
+def test_depth_diagram_groups_surveys_without_overprinted_labels() -> None:
+    """One annotation per depth lists both published survey times."""
+    cfg = yaml.safe_load((INPUTS / 'published_jacket_84m.yml').read_text())
+    figure = next(f for f in anode_design_report(_run(cfg)).figure_blocks() if f.svg)
+    labels = [n for n in ET.fromstring(figure.svg).iter() if n.tag.endswith('text') and 'days 52, 518' in (n.text or '')]
+    assert len(labels) == 4
+    assert len({(n.attrib['x'], n.attrib['y']) for n in labels}) == 4
