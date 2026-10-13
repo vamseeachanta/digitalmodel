@@ -1574,3 +1574,6 @@ cp_limitations:
     load.
   - No measured potentials are available for this structure. Aggregate capacity does
     not establish protection at remote or shielded locations.
+
+report:
+  presentation: reference_analysis

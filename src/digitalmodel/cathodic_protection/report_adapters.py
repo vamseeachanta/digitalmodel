@@ -1583,7 +1583,7 @@ def _published_checkpoint_section(
             raise ValueError("published comparison requires positive checkpoints")
         calculated = quantities[target["quantity"]]
         difference = 100 * (calculated - value) / value
-        rows.append(["Independent-estimate count" if target["quantity"] == "count" else target["label"], target["printed"], calculated, f"{difference:+.2f}",
+        rows.append(["Independent-estimate count" if target["quantity"] == "count" else target["label"], target["printed"], calculated, f"{difference:+.1f}",
                      target["unit"], target.get("locator", "not established")])
     summary = (
         f"Calculated initial, mean and final demands are {quantities['initial_demand']:.3f}, "
@@ -1652,7 +1652,7 @@ def _b401_report_additions(
             if key != "overall_status":
                 adequacy.blocks.append(recommendation_block(results, key))
         adequacy.blocks.append(conclusions_block(results))
-    caveats = geometry_caveats(inputs, results)
+    caveats = geometry_caveats(inputs, results, percentage_precision=1 if evidence else 3)
     if not modern:
         caveats += recommendation_caveats(results)
     else:
@@ -1838,6 +1838,15 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
     standard = str(
         results.get("standard") or _ABS_STANDARDS.get(calc_type, ("", ""))[0]
     )
+    if calc_type == KEY_B401 and _mapping(cfg.get("report")).get("presentation") == "reference_analysis":
+        from digitalmodel.cathodic_protection.report_reference import reference_sections
+
+        depth = float(cfg["structural_model"]["water_depth_m"])
+        document, _ = _document(cfg, f"Cathodic protection analysis: jacket at {depth:g} m water depth")
+        return ReportSpec(document=document, sections=reference_sections(cfg),
+                          standards=_standards(results, calc_type),
+                          provenance=_provenance(cfg, results, "results"),
+                          verification_presentation=True)
     display = _mapping(_mapping(inputs.get("structure")).get("report_geometry"))
     default_title = f"Cathodic protection anode design - {standard}".strip(" -")
     if calc_type == KEY_B401 and display and _mapping(inputs.get("design_data")).get("structure_type") == "jacket":

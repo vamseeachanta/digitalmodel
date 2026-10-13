@@ -355,3 +355,132 @@ def test_reference_reduced_arrangement_rechecks_without_mutating_inputs():
                 capacity = result["current_output_verification"][f"total_anode_current_output_{phase}_A"]
                 assert row[3] == f"{capacity:.3f}"
                 assert row[5] == ("PASS" if result["status"]["checks"][f"{phase}_current_output"] else "FAIL")
+
+
+@pytest.fixture(scope="module")
+def reference_spec():
+    from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+    from digitalmodel.cathodic_protection.report_adapters import anode_design_report
+
+    cfg = run_cathodic_protection(yaml.safe_load(FORM.read_text()))
+    cfg["report"] = {"presentation": "reference_analysis"}
+    return anode_design_report(cfg)
+
+
+def test_reference_report_opens_with_analysis_summary_and_checks(reference_spec):
+    from digitalmodel.reporting.spec import TableBlock, TextBlock
+    from digitalmodel.reporting import render_html
+
+    assert reference_spec.document.title == "Cathodic protection analysis: jacket at 60 m water depth"
+    assert reference_spec.sections[0].title == "Summary"
+    summary = next(b.markdown for b in reference_spec.sections[0].blocks if isinstance(b, TextBlock))
+    assert summary.startswith("The 252-anode arrangement on the reference jacket is analysed")
+    assert "All evaluated aggregate checks PASS" in summary
+    assert "30.6%" in summary
+    assert "published CP outputs are not available" in summary
+    text = _visible_text(render_html(reference_spec))
+    assert text.count("based on previous project experience") == 1
+    assert "Draft for review" in text
+    assert "No measured potentials are available for this structure" in text
+    assert "Increase at design" not in text and "Retrofit" not in text
+    checks = next(b for s in reference_spec.sections for b in s.blocks if isinstance(b, TableBlock) and b.title == "Aggregate mass and current checks")
+    assert len(checks.rows) == 3
+    assert all(r[5] == "PASS" for r in checks.rows)
+
+
+def test_reference_report_has_numbered_sources_geometry_and_area_arithmetic(reference_spec):
+    from digitalmodel.reporting.spec import TableBlock, TextBlock
+
+    sections = {s.key: s for s in reference_spec.sections}
+    assert {"references", "structural-comparison", "zone-areas", "member-schedule"} <= sections.keys()
+    refs = " ".join(b.markdown for b in sections["references"].blocks if isinstance(b, TextBlock))
+    assert "[1]" in refs and "[2]" in refs and "[3]" in refs
+    assert "Apache License 2.0" in refs and "CC BY 4.0" in refs
+    assert "da77a393569b6c5ddf7aa424e5b0a92d37eba833" in refs
+    assert "IEA-15-240-RWT-Jacket_SubDyn.dat" in refs
+    tables = [b for s in reference_spec.sections for b in s.blocks if isinstance(b, TableBlock)]
+    assert any(len(t.rows) == 63 and "Joint A" in t.columns for t in tables)
+    comparison = next(t for t in tables if t.title == "Structural dimensions and mass compared with the paper")
+    for row in comparison.rows:
+        assert row[3].endswith("%")
+        assert __import__("re").fullmatch(r"[+-]\d+\.\d%", row[3])
+    body = " ".join(b.markdown for s in reference_spec.sections if s.key != "references" for b in s.blocks if isinstance(b, TextBlock))
+    assert "OpenFAST" not in body and "SubDyn" not in body
+
+
+REMOVED_VERIFICATION_TEXT = ['adopted from the existing three-zone example', 'adopted\nfrom the existing three-zone example', 'the existing aluminium alloy density', 'No assumption is tuned separately to a target', 'One declared assumption set is used unchanged', 'the existing aluminium calculation basis', 'digitalmodel', 'verified-2021-tables', 'Edition provenance', 'Wiki path', 'wikis/engineering-standards/', 'This report is a view over the sources below', 'cfg[results]', 'engine-adapter results mapping', 'report.document', 'placeholder', 'Engine digitalmodel.reporting.engine', 'Tool version', 'stand_off', 'buried_mudline', 'Table 8-8 (long_slender_standoff)', 'long_slender_standoff', '[published-jacket-paper', '[b401-', 'published area category', 'published basis', 'a = 1', 'b = 0', 'approved for client use', 'Prepared by', 'Checked by', 'Approved by', 'Issued', 'X0000-CP-000-00', 'unassigned', 'DNV-RP-B401 :', 'from the design data of the case', 'route', 'routed', 'regression case', 'citation not held', 'Input echo', 'Sources declared', 'manifest']
+
+def _visible_text(html: str) -> str:
+    from html.parser import HTMLParser
+
+    class Reader(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.skip = 0
+            self.parts = []
+        def handle_starttag(self, tag, attrs):
+            if tag in {"script", "style"}:
+                self.skip += 1
+        def handle_endtag(self, tag):
+            if tag in {"script", "style"}:
+                self.skip -= 1
+        def handle_data(self, data):
+            if not self.skip:
+                self.parts.append(data)
+    reader = Reader()
+    reader.feed(html)
+    return " ".join(" ".join(reader.parts).split())
+
+
+@pytest.mark.parametrize("removed", REMOVED_VERIFICATION_TEXT)
+def test_reference_report_excludes_each_removed_string(reference_spec, removed):
+    from digitalmodel.reporting import render_html
+
+    assert removed not in _visible_text(render_html(reference_spec))
+
+
+def test_published_presentation_uses_one_decimal_and_upward_bound():
+    from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+    from digitalmodel.cathodic_protection.report_adapters import anode_design_report
+    from digitalmodel.reporting.spec import TableBlock, TextBlock
+
+    cfg = run_cathodic_protection(yaml.safe_load(FORM.with_name("published_jacket_84m.yml").read_text()))
+    spec = anode_design_report(cfg)
+    summary = next(b.markdown for b in spec.sections[0].blocks if isinstance(b, TextBlock))
+    assert "within 0.1%" in summary
+    table = next(b for s in spec.sections for b in s.blocks if isinstance(b, TableBlock) and b.title.startswith("Installed arrangement:"))
+    assert table.rows[0][4] == "+6.0%"
+    assert table.rows[1][4] == "+9.2%"
+
+
+def test_reference_failing_report_sizes_recheck_and_removes_process_wording():
+    from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+    from digitalmodel.cathodic_protection.report_adapters import anode_design_report
+    from digitalmodel.reporting import render_html
+
+    cfg = yaml.safe_load(FORM.read_text())
+    cfg["inputs"]["anode"]["count"] = 251
+    spec = anode_design_report(run_cathodic_protection(cfg))
+    text = _visible_text(render_html(spec))
+    summary = spec.sections[0].blocks[0].markdown
+    assert "252 anodes" in summary and "rechecked" in summary
+    assert "251 anodes" in text and "mass-only requirement of 252" in text
+    for removed in REMOVED_VERIFICATION_TEXT:
+        assert " ".join(removed.split()).lower() not in text.lower()
+    assert "Increase at design" in text and "Retrofit" in text
+    assert not __import__("re").search(r"\d+\.\d+ kg", text)
+
+
+def test_reference_failed_recheck_retains_report_and_discloses_limit(monkeypatch):
+    from digitalmodel.cathodic_protection import report_reference
+    from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+    from digitalmodel.cathodic_protection.report_adapters import anode_design_report
+
+    def unavailable(cfg):
+        raise ValueError("a passing aggregate arrangement is not established")
+    monkeypatch.setattr(report_reference, "reference_arrangements", unavailable)
+    cfg = yaml.safe_load(FORM.read_text())
+    cfg["inputs"]["anode"]["count"] = 251
+    spec = anode_design_report(run_cathodic_protection(cfg))
+    assert "Rechecked arrangement is not evaluated" in spec.sections[0].blocks[0].markdown
+    assert "All evaluated aggregate checks PASS" not in spec.sections[0].blocks[0].markdown

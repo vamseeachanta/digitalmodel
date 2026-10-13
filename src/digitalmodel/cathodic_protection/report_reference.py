@@ -207,3 +207,131 @@ def reference_checks(cfg: Mapping[str, Any], arrangements: Mapping[str, Any]) ->
                          "[3], anode mass; anode resistance; output adequacy"])
     return TableBlock(title="Aggregate mass and current checks",
                       columns=["Arrangement", "Check", "Demand", "Capacity", "Margin", "Result", "Unit", "Locator"], rows=rows)
+
+
+def reference_sections(cfg: Mapping[str, Any]) -> list[Any]:
+    """Build an analysis with source checks separated from CP adequacy."""
+    from digitalmodel.reporting.spec import Section, TextBlock
+
+    model = cfg["structural_model"]
+    try:
+        arrangements = reference_arrangements(cfg)
+    except (KeyError, TypeError, ValueError, OverflowError):
+        arrangements = {"stated": cfg["results"], "rechecked": None}
+    count = arrangements["stated"]["current_output_verification"]["anode_count"]
+    passed = arrangements["stated"]["status"]["result"] == "PASS"
+    finding = ("All evaluated aggregate checks PASS for the stated arrangement. "
+               if passed else "The stated arrangement fails an aggregate check; the increased arrangement is rechecked below. ")
+    if not passed:
+        revised = arrangements["rechecked"]
+        finding = (f"The stated arrangement fails an aggregate check. Increasing to {revised['current_output_verification']['anode_count']} anodes is rechecked and passes the aggregate mass and current checks. "
+                   if revised is not None else "Rechecked arrangement is not evaluated: complete demand, output, mass and arrangement data are required. ")
+    mass_difference = abs(next(c["difference_percent"] for c in model["comparisons"] if c["quantity"] == "Tubular jacket steel mass"))
+    summary = (f"The {count}-anode arrangement on the reference jacket is analysed against "
+               "aggregate mass and initial and final current requirements. The paper provides "
+               "structural comparisons; published CP outputs are not available. " + finding +
+               f"Tubular steel mass is {mass_difference:.1f}% below the paper's printed jacket mass on the stated "
+               "exclusion basis; this discrepancy is not resolved. Confirmation of the mass basis, "
+               "splash boundaries, installed piles and spatial protection is recommended before "
+               "a final design is established. Structural comparisons, area derivation and "
+               "the limitations below identify the evidence required.")
+    sections = [Section(key="summary", title="Summary", blocks=[TextBlock(markdown=summary)]),
+                Section(key="design-basis", title="Design basis", blocks=reference_basis(cfg)),
+                Section(key="elevation", title="Reference jacket geometry", blocks=[reference_figure(model)]),
+                Section(key="member-schedule", title="Member schedule", blocks=reference_member_tables(model)),
+                Section(key="structural-comparison", title="Verification of structural dimensions", blocks=reference_comparison(model)),
+                Section(key="zone-areas", title="External area derivation", blocks=reference_zone_blocks(model, cfg["initial_pile_estimate"])),
+                Section(key="adequacy", title="Aggregate adequacy", blocks=[reference_checks(cfg, arrangements)]),
+                Section(key="limitations", title="Limitations and way forward", blocks=[TextBlock(markdown="\n\n".join(cfg["cp_limitations"]) + "\n\n" + model["mass_limitation"])]),
+                Section(key="references", title="References", blocks=reference_references(model))]
+    if not passed:
+        from digitalmodel.cathodic_protection.report_adapters import _report_options, _verification_presentation
+        options = Section(key="options", title="Options", blocks=_report_options(cfg["inputs"], arrangements["stated"]))
+        _verification_presentation([options])
+        for block in options.blocks:
+            if isinstance(block, TextBlock):
+                block.markdown = block.markdown.replace("Design increase and recheck", "Increase at design and recheck")
+        options.blocks.append(TextBlock(markdown="A recurring monitoring interval is not evaluated; elapsed service, remaining anode condition and spatial survey evidence are required to set a date."))
+        for block in options.blocks:
+            if isinstance(block, TextBlock):
+                block.markdown = block.markdown.replace("[1]", "[3]")
+            if hasattr(block, "rows"):
+                block.rows = [[v.replace("[1]", "[3]") if isinstance(v, str) else v for v in row] for row in block.rows]
+        sections[-3].blocks.extend(options.blocks)
+    return sections
+
+
+def reference_basis(cfg: Mapping[str, Any]) -> list[Any]:
+    """State the calculation assumptions once and identify standard values."""
+    from digitalmodel.reporting.spec import TextBlock
+
+    inputs = cfg["inputs"]
+    env, anode = inputs["environment"], inputs["anode"]
+    result = cfg["results"]
+    req = result["anode_requirements"]
+    count = result["current_output_verification"]["count_by_mass"]
+    return [TextBlock(markdown=(
+        f"Seawater temperature {env['seawater_temperature_C']:g} °C, seawater resistivity "
+        f"{env['seawater_resistivity_ohm_m']:g} Ω m, coating category III, design life "
+        f"{inputs['design_data']['design_life']:g} years and aluminium stand-off cylindrical "
+        f"anodes of length {anode['length_m']:g} m and radius {anode['radius_m']:g} m "
+        "are based on previous project experience. Net alloy mass is derived from these "
+        f"dimensions: π × radius² × length × 2750 kg/m³ = {anode['individual_anode_mass_kg']:.0f} kg; "
+        "no core is specified or deducted. Fabrication and attachment are not evaluated. "
+        f"The stated arrangement is {result['current_output_verification']['anode_count']} anodes, compared with the mass-only requirement of {count} anodes: "
+        "mean current × 8760 hours/year × design life / (capacity × utilisation × net anode mass), rounded upward. "
+        f"Capacity is {req['electrochemical_capacity_Ah_kg']:g} Ah/kg and utilisation is "
+        f"{req['utilization_factor']:g}; standard potentials, current densities and coating breakdown "
+        "are applied under [3], Design current densities; Coating breakdown factors; "
+        "Anode materials; Anode resistance; Anode current output. "
+        "Water-column current areas are divided at the 30 m depth boundary; the upper and "
+        "lower seawater rows and the buried row are evaluated. Above-water steel is excluded "
+        "from current demand because electrolyte contact is not established. "
+        "No measured potentials are available for this structure."))]
+
+
+def reference_member_tables(model: Mapping[str, Any]) -> list[Any]:
+    """Show class totals and every member with its row locator."""
+    from digitalmodel.reporting.spec import TableBlock
+
+    return [TableBlock(title="Section classes and true axis lengths",
+                       columns=["Class", "Count", "Diameter (m)", "Wall (m)", "Total true length (m)", "Locator"],
+                       rows=[[s["section_class"], s["count"], f"{s['diameter_m']:.3f}", f"{s['wall_thickness_m']:.3f}", f"{s['total_true_length_m']:.3f}", "[2], circular tubular properties"] for s in model["section_classes"]]),
+            TableBlock(title="Complete member inventory", columns=["Member", "Joint A", "Joint B", "Class", "True length (m)", "Locator"],
+                       rows=[[m["id"], *m["joint_ids"], m["section_class"], f"{m['true_length_m']:.3f}", f"[2], members, row {m['id']}, revision da77a393"] for m in model["members"]])]
+
+
+def reference_comparison(model: Mapping[str, Any]) -> list[Any]:
+    """Print each sourced comparison without tuning geometric differences."""
+    from digitalmodel.reporting.spec import TableBlock, TextBlock
+
+    rows = []
+    for c in model["comparisons"]:
+        digits = 0 if c["unit"] == "kg" else 3
+        rows.append([c["quantity"], f"{c['printed']:.{digits}f}", f"{c['model']:.{digits}f}",
+                     f"{c['difference_percent']:+.1f}%", c["unit"], "[1], " + c["locator"]])
+    return [TableBlock(title="Structural dimensions and mass compared with the paper",
+                       columns=["Quantity", "Paper", "Structural model", "Difference", "Unit", "Locator"], rows=rows),
+            TextBlock(markdown=model["mass_limitation"])]
+
+
+def reference_references(model: Mapping[str, Any]) -> list[Any]:
+    """Attribute public sources and record changes and licence conditions."""
+    from digitalmodel.reporting.spec import TextBlock
+
+    return [TextBlock(markdown=(
+        "[1] Mroczek, Arwade and Lackner (2023), Design optimization of offshore wind jacket piles "
+        "by assessing support structure orientation relative to metocean conditions, Wind Energy Science "
+        "8, 807–817. https://doi.org/10.5194/wes-8-807-2023. CC BY 4.0, p. 807.\n\n"
+        "[2] Mroczek (2023), IEA-15-240-RWT jacket structural model, OpenFAST, "
+        "IEA-15-240-RWT-Jacket_SubDyn.dat. "
+        "https://github.com/mmrocze2/IEA-15-240-RWT/tree/da77a393569b6c5ddf7aa424e5b0a92d37eba833/"
+        "OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth. Revision da77a393569b6c5ddf7aa424e5b0a92d37eba833. "
+        "Apache License 2.0: https://github.com/mmrocze2/IEA-15-240-RWT/blob/da77a393569b6c5ddf7aa424e5b0a92d37eba833/LICENSE. "
+        "Values were transcribed and converted in form; lengths, areas and mass were calculated from "
+        "the coordinate and section schedule. Original attribution is retained; a verbatim licence "
+        "copy accompanies the case input. No source figure is reproduced or adapted.\n\n"
+        "[3] DNV-RP-B401, Cathodic protection design, May 2021. Design current densities; "
+        "Coating breakdown factors; Anode materials; Anode mass; Anode resistance; "
+        "Anode current output; Cathodic protection of offshore structures. "
+        "Clause titles identify the calculation basis; splash boundaries are not established."))]

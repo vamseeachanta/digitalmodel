@@ -573,7 +573,7 @@ def design_blocks(inputs: Mapping[str, Any]) -> list[Block]:
 
 
 def geometry_caveats(
-    inputs: Mapping[str, Any], results: Mapping[str, Any]
+    inputs: Mapping[str, Any], results: Mapping[str, Any], *, percentage_precision: int = 3
 ) -> list[str]:
     """Return geometry limitations and area comparisons for the appendix."""
     raw = _raw_geometry(inputs)
@@ -623,6 +623,6 @@ def geometry_caveats(
             caveats.append(
                 f"{name}: drawn-member area {area:.3f} m²; "
                 f"stated area {float(reference):.3f} m²; "
-                f"percentage difference {difference:+.3f}% relative to the stated area."
+                f"percentage difference {difference:+.{percentage_precision}f}% relative to the stated area."
             )
     return caveats

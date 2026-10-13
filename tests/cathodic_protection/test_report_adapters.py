@@ -120,7 +120,7 @@ def test_published_jacket_reproduction_uses_one_unchanged_assumption_set() -> No
     for row, computed, target in zip(table.rows, expected, targets):
         assert float(row[1]) == target
         assert float(row[2]) == pytest.approx(computed, abs=0.0001)
-        assert row[3] == f"{100 * (computed - target) / target:+.2f}"
+        assert row[3] == f"{100 * (computed - target) / target:+.1f}"
     text = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock))
     assert "based on previous project experience" in text
     assert "[1]" in text and "[2]" in text
@@ -809,11 +809,11 @@ def test_published_outputs_govern_aggregate_verdict_without_changing_results() -
     for row, required, capacity, model in zip(table.rows, demand, published, independent):
         assert float(row[1]) == pytest.approx(required, abs=.51 if row[0] == "Mass" else .0001)
         assert float(row[3]) == pytest.approx(capacity, abs=.51 if row[0] == "Mass" else .0001)
-        assert row[4] == f"{100 * (capacity / required - 1):+.2f}%"
+        assert row[4] == f"{100 * (capacity / required - 1):+.1f}%"
         assert row[5] == "PASS"
         assert float(row[6]) == pytest.approx(model, abs=.51 if row[0] == "Mass" else .0001)
-        assert row[7] == f"{100 * (model / required - 1):+.2f}%"
-        assert row[8] == f"{100 * (model / capacity - 1):+.2f}%"
+        assert row[7] == f"{100 * (model / required - 1):+.1f}%"
+        assert row[8] == f"{100 * (model / capacity - 1):+.1f}%"
         assert "p. 242, Section 2" in row[-1]
     status = _statuses(spec)[0]
     assert status.status == "PASS"
@@ -965,7 +965,7 @@ def test_published_numbered_references_locators_precision_and_abstract_boundary(
     assert not re.search(r"[-+]?\d+\.\d+[eE][-+]?\d+", text)
     assert not re.search(r"\d+\.\d+ kg", text)
     for row in _tables(spec)["Published checkpoints and calculated differences"].rows:
-        assert re.fullmatch(r"[-+]\d+\.\d{2}", str(row[3]))
+        assert re.fullmatch(r"[-+]\d+\.\d", str(row[3]))
     for title, table in _tables(spec).items():
         if title == "Design data" or title.startswith(("Published zone", "Current density", "Measured potentials", "Independent estimate", "Installed arrangement", "Increase at design", "Retrofit:", "Published checkpoints")):
             assert "p. 24" in str(table.source) or any("p. 24" in str(r[-1]) for r in table.rows), title

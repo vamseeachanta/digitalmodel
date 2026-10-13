@@ -57,19 +57,19 @@ def aggregate_table(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> Ta
         capacity = count * float(targets[f"{phase}_output"]["printed"])
         model = count * outputs[phase]
         rows.append([f"{phase.capitalize()} current", f"{demand:.3f}",
-                     f"{100 * (demand / float(target['printed']) - 1):+.2f}%",
-                     f"{capacity:.3f}", f"{100 * (capacity / demand - 1):+.2f}%",
+                     f"{100 * (demand / float(target['printed']) - 1):+.1f}%",
+                     f"{capacity:.3f}", f"{100 * (capacity / demand - 1):+.1f}%",
                      "PASS" if capacity >= demand else "FAIL", f"{model:.3f}",
-                     f"{100 * (model / demand - 1):+.2f}%",
-                     f"{100 * (model / capacity - 1):+.2f}%",
+                     f"{100 * (model / demand - 1):+.1f}%",
+                     f"{100 * (model / capacity - 1):+.1f}%",
                      "PASS" if model >= demand else "FAIL", "A",
                      f"[1], {target['locator']}; installed count × individual output"])
     required = float(req["total_mass_kg"])
     installed = count * float(req["individual_mass_kg"])
-    margin = f"{100 * (installed / required - 1):+.2f}%"
+    margin = f"{100 * (installed / required - 1):+.1f}%"
     result = "PASS" if installed >= required else "FAIL"
     rows.append(["Mass", f"{required:.0f}", "not published", f"{installed:.0f}",
-                 margin, result, f"{installed:.0f}", margin, "+0.00%", result, "kg",
+                 margin, result, f"{installed:.0f}", margin, "+0.0%", result, "kg",
                  "[1], p. 242, Section 2; life, capacity and utilisation are declared "
                  "assumptions, not printed in the paper"])
     return TableBlock(
@@ -217,7 +217,7 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
         statement = published_status(inputs, results).detail
         targets = published_outputs(inputs)
         difference = max(abs(100 * (float(results["current_demand_A"][f"total_{phase}_A"]) / float(targets[f"{phase}_demand"]["printed"]) - 1)) for phase in ("initial", "mean", "final"))
-        bound = math.ceil(difference * 1000) / 1000
+        bound = math.ceil(difference * 10) / 10
         finding = ("Retrofit assessment of the affected lower zone is recommended because "
                    "the monitoring trigger is met; design, retrofit and monitoring options "
                    "and their rechecks are in Adequacy. " if measured_failure(inputs) else
@@ -227,7 +227,7 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
         return (f"The published {ver['anode_count']}-anode arrangement is verified against "
                 "the paper's printed outputs and the measured potentials. " + statement +
                 " Computed initial, mean and final demands reproduce the printed totals "
-                f"within {bound:.3f}%. " + finding +
+                f"within {bound:.1f}%. " + finding +
                 "Aggregate checks do not establish spatial protection; geometry, allocation, "
                 "remaining condition and timing limits are stated in Appendix A. "
                 "Published values and locators are in Published values and comparison.")
