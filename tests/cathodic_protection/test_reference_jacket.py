@@ -118,3 +118,66 @@ def test_reference_classes_and_licence_are_independently_bound():
     record = next(r for r in model["source_files"] if r["filename"] == "LICENSE")
     assert licence.stat().st_size == record["size_bytes"]
     assert hashlib.sha256(licence.read_bytes()).hexdigest() == record["sha256"]
+
+
+def test_reference_drawing_projects_every_member_on_one_scale():
+    from xml.etree import ElementTree as ET
+    from digitalmodel.cathodic_protection.report_reference import reference_figure
+
+    model = schedule()
+    figure = reference_figure(model)
+    root = ET.fromstring(figure.svg)
+    scale = float(root.attrib["data-scale"])
+    lines = {int(n.attrib["data-member"].split("-")[-1]): n for n in root.iter() if "data-member" in n.attrib}
+    assert len(lines) == len(model["members"])
+    joints = {j["id"]: j["coordinates_m"] for j in model["joints"]}
+    props = {p["id"]: p for p in model["property_sets"]}
+    min_y = min(joints[i][1] - props[m["property_set_id"]]["diameter_m"] / 2 for m in model["members"] for i in m["joint_ids"])
+    top = max(joints[i][2] + props[m["property_set_id"]]["diameter_m"] / 2 for m in model["members"] for i in m["joint_ids"])
+    for m in model["members"]:
+        a, b = (joints[i] for i in m["joint_ids"])
+        line = lines[m["id"]]
+        assert float(line.attrib["x1"]) == pytest.approx(55 + (a[1] - min_y) * scale)
+        assert float(line.attrib["x2"]) == pytest.approx(55 + (b[1] - min_y) * scale)
+        assert float(line.attrib["y1"]) == pytest.approx(35 + (top - a[2]) * scale)
+        assert float(line.attrib["y2"]) == pytest.approx(35 + (top - b[2]) * scale)
+        assert abs(float(line.attrib["x2"]) - float(line.attrib["x1"])) == pytest.approx(abs(b[1] - a[1]) * scale)
+        assert abs(float(line.attrib["y2"]) - float(line.attrib["y1"])) == pytest.approx(abs(b[2] - a[2]) * scale)
+    text = " ".join(root.itertext())
+    for value in ("Apache License 2.0", "CC BY 4.0", "Mroczek", "da77a393", "[1]", "[2]"):
+        assert value in text
+        assert value in figure.caption
+    assert any("data-scale-bar-m" in n.attrib for n in root.iter())
+    assert "y–z" in figure.caption
+    levels = {n.attrib["data-level"]: float(n.attrib["data-elevation-m"]) for n in root.iter() if "data-level" in n.attrib}
+    assert levels == {"waterline": 0, "mudline": -60}
+
+
+def test_reference_drawing_bands_bar_and_dimension_labels():
+    import re
+    from xml.etree import ElementTree as ET
+    from digitalmodel.cathodic_protection.report_reference import reference_figure
+
+    model = schedule()
+    root = ET.fromstring(reference_figure(model).svg)
+    scale = float(root.attrib["data-scale"])
+    joints = {j["id"]: j["coordinates_m"] for j in model["joints"]}
+    props = {p["id"]: p for p in model["property_sets"]}
+    top = max(joints[i][2] + props[m["property_set_id"]]["diameter_m"] / 2 for m in model["members"] for i in m["joint_ids"])
+    for group in (n for n in root.iter() if "data-zone" in n.attrib):
+        lower, upper = float(group.attrib["data-lower-m"]), float(group.attrib["data-upper-m"])
+        rect = next(n for n in group if n.tag.endswith("rect"))
+        assert float(rect.attrib["y"]) == pytest.approx(35 + (top - upper) * scale)
+        assert float(rect.attrib["height"]) == pytest.approx((upper - lower) * scale)
+        assert (lower, upper) in ((-60, 0), (0, 14.1))
+    bar = next(n for n in root.iter() if "data-scale-bar-m" in n.attrib)
+    length = float(re.search(r" h ([^ ]+)", bar.attrib["d"])[1])
+    assert length == pytest.approx(float(bar.attrib["data-scale-bar-m"]) * scale, abs=0.001)
+    text = " ".join(root.itertext())
+    zs = [j[2] for j in joints.values()]
+    upper = [j[1] for j in joints.values() if j[2] == max(zs)]
+    lower = [j[1] for j in joints.values() if j[2] == min(zs)]
+    assert f"Axis height above mudline: {max(zs)-min(zs):.1f} m" in text
+    assert f"water depth: {-min(zs):.1f} m" in text
+    assert f"Projected top span: {max(upper)-min(upper):.3f} m" in text
+    assert f"mudline span: {max(lower)-min(lower):.3f} m" in text
