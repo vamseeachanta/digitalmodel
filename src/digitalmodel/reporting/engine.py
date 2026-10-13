@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Standard report engine — renders a :class:`ReportSpec` to HTML (+ PDF).
 
 ABOUTME: One Jinja2 template, one CSS, one PDF chain for every domain report
@@ -210,7 +213,8 @@ def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER) -
     """
     spec.provenance.require()
     house_css, _script = _template_parts(_DEFAULT_TEMPLATE)
-    template = _environment().get_template(TEMPLATE_NAME)
+    template_name = "verification_report.html.j2" if spec.verification_presentation else TEMPLATE_NAME
+    template = _environment().get_template(template_name)
     return template.render(
         brand=BRAND,
         doc=spec.document,
@@ -245,8 +249,9 @@ def write_report(
     stem: str,
     pdf: PdfMode = "auto",
 ) -> ReportArtifacts:
-    """Write ``<stem>.html``, ``<stem>.pdf`` (best effort), the citations
-    sidecar and a manifest under ``out_dir``.
+    """Write report artifacts and their manifest under the output directory.
+
+    HTML, best-effort PDF and citation sidecars use the supplied stem.
 
     The manifest lists artifact names (pack-relative, portable), the
     standards, the citation count and the PDF status; keys are sorted and no

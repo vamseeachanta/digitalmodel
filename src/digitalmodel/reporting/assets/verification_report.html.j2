@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ doc.title }} — Draft for review</title>
+{%- if plotlyjs %}
+<script type="text/javascript">{{ plotlyjs|safe }}</script>
+{%- endif %}
+{{ house_css|safe }}
+<style>
+{{ engine_css|safe }}
+@media print {
+.doc .toc{display:none}
+.doc .shell{display:block}
+.doc .main{padding:0}
+.doc .tbl table{min-width:0;width:100%;table-layout:fixed}
+.doc .tbl-wrap{overflow:visible}
+.doc .tbl th,.doc .tbl td{font-size:9px;padding:4px 2px;white-space:normal;overflow-wrap:normal}
+.doc .tbl{break-inside:auto;page-break-inside:auto}
+}
+</style>
+</head>
+<body class="doc">
+<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Draft for review</span></div></header>
+<div class="hero"><div class="wrap"><h1>{{ doc.title }}</h1><p>Draft for review</p>
+{%- for std in standards %}
+<p>{{ std.code_id }} — {{ std.edition }}</p>
+{%- endfor %}
+</div></div>
+<div class="wrap shell">
+<nav class="toc" aria-label="Contents"><p class="tt">Contents</p><ol>
+{%- for section in sections %}
+<li><a href="#{{ section.key }}">{{ section.title }}</a></li>
+{%- endfor %}
+{%- for section in appendices %}
+<li><a href="#{{ section.key }}">{{ section.label }} — {{ section.title }}</a></li>
+{%- endfor %}
+</ol></nav>
+<main class="main">
+{%- set fig = namespace(n=0) %}
+{%- set tbl = namespace(n=0) %}
+{%- macro render_blocks(section) %}
+{%- for block in section.blocks %}
+{%- if block.kind == 'text' %}
+    <div class="prose">
+{{ block.markdown|md }}
+    </div>
+{%- elif block.kind == 'table' %}
+{%- set tbl.n = tbl.n + 1 %}
+    <div class="tbl" id="table-{{ tbl.n }}">
+      <div class="cap">Table {{ tbl.n }}. {{ block.title }}</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>{% for col in block.columns %}<th>{{ col }}</th>{% endfor %}</tr>
+{%- if block.units %}
+            <tr class="units">{% for unit in block.units %}<th>{{ unit }}</th>{% endfor %}</tr>
+{%- endif %}
+          </thead>
+          <tbody>
+{%- for row in block.rows %}
+            <tr>{% for cell in row %}<td>{{ cell|cell }}</td>{% endfor %}</tr>
+{%- endfor %}
+          </tbody>
+        </table>
+      </div>
+{%- if block.source %}
+      <p class="src">Source: {{ block.source }}</p>
+{%- endif %}
+    </div>
+{%- elif block.kind == 'figure' %}
+{%- set fig.n = fig.n + 1 %}
+    <figure class="card" id="{{ block.figure_id }}-figure">
+      <div class="chart-title">Figure {{ fig.n }}. {{ block.title }}</div>
+{%- if block.plotly is not none %}
+      {{ figure_html[block.figure_id]|safe }}
+{%- elif block.svg is not none %}
+      {{ block.svg|safe }}
+{%- else %}
+      <img id="{{ block.figure_id }}" src="{{ figure_html[block.figure_id] }}" alt="{{ block.title }}">
+{%- endif %}
+{%- if block.caption %}
+      <figcaption class="fig-cap">{{ block.caption }}</figcaption>
+{%- endif %}
+    </figure>
+{%- elif block.kind == 'status' %}
+    <div class="status">
+      <div class="st {{ 'ok' if block.status == 'PASS' else 'fail' }}">
+        <span class="icon">{{ '&#10003;'|safe if block.status == 'PASS' else '&#10007;'|safe }}</span>
+        <div>
+          <div class="lab">{{ block.label }}</div>
+          <div class="sub">{% if block.governing_case %}<b>Governing case:</b> {{ block.governing_case }}{% if block.detail %} &middot; {% endif %}{% endif %}{{ block.detail }}</div>
+        </div>
+        <span class="pill">{{ block.status }}</span>
+      </div>
+    </div>
+{%- endif %}
+{%- endfor %}
+{%- endmacro %}
+{%- for section in sections %}
+<section id="{{ section.key }}">
+<div class="l1head"><span class="secnum"></span><h2>{{ section.title }}</h2></div>
+{%- if section.subtitle %}
+<p class="l1sub">{{ section.subtitle }}</p>
+{%- endif %}
+{{ render_blocks(section) }}
+</section>
+{%- endfor %}
+{%- for section in appendices %}
+<section id="{{ section.key }}">
+<div class="l1head"><span class="secnum applabel">{{ section.label }}</span><h2>{{ section.title }}</h2></div>
+{{ render_blocks(section) }}
+</section>
+{%- endfor %}
+</main></div>
+<footer><div class="wrap">Draft for review</div></footer>
+</body>
+</html>
