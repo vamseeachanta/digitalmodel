@@ -1,51 +1,45 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """YAML-only catalogue; run this file directly with --output page.html."""
 
 import argparse
 from html import escape
-import math
+import importlib.util
 from pathlib import Path
 import re
-from typing import Any, Iterable
+from types import ModuleType
+from typing import Iterable, cast
 
 import yaml
 
 ROOTS = ("library/model_library", "templates", "library/templates")
-MISSING = "not stated"
-SAFE_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
-OBJECTS = """Lines Vessels 6DBuoys 3DBuoys LineTypes VesselTypes BuoyTypes Shapes Constraints Winches Links ClumpTypes WingTypes FlexJointTypes FlexJoints DragChainTypes DragChains StiffenerTypes SupportTypes MorisonElementTypes Turbines AttachedBuoys VariableData ExpansionTables PyModels WakeModels MultibodyGroups BrowserGroups""".split()
-SPEC_OBJECTS = {re.sub(r"(?<!^)(?=[A-Z])", "_", key).lower(): key for key in OBJECTS}
-SPEC_OBJECTS.update(
-    buoys_6d="6DBuoys", buoys_3d="3DBuoys", variable_data_sources="VariableData"
+STRUCTURAL_FOLDERS = (
+    "base",
+    "cases",
+    "variations",
+    "includes",
+    "inputs",
+    "modular",
+    "monolithic",
 )
-ENV_KEYS = """WaterDepth WaterSurfaceZ Density WaveHeight WavePeriod WaveDirection WaveHs WaveTp WaveTz RefCurrentSpeed RefCurrentDirection WindSpeed WindDirection depth density height period direction speed hs tp""".split()
-ENV_TYPES = "airy|Airy|dean_stream|Dean stream|JONSWAP|jonswap|Flat".split("|")
-COUNT_RULE = """Counting rule: object lists count entries; named object mappings count definitions (New/Deleted are directives). Include-only objects count under IncludeFile; BaseFile/IncludeFile references are counted, never expanded. Specification objects are labelled generic.section; other top-level sections are not object counts."""
 
 
-def mapping(value: Any) -> dict:
-    """Return a mapping without inventing absent values."""
-    return value if isinstance(value, dict) else {}
+def load_renderer() -> ModuleType:
+    """Load the sibling renderer without executing the solver initializer."""
+    path = Path(__file__).with_name("model_catalogue_render.py")
+    spec = importlib.util.spec_from_file_location("model_catalogue_render", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
-def number(value: Any) -> bool:
-    """Recognise finite numerical values, excluding YAML booleans."""
-    return type(value) in (int, float) and math.isfinite(value)
-
-
-def fmt(value: Any) -> str:
-    """Format stated numbers consistently."""
-    return f"{value:.3f}" if number(value) else MISSING
-
-
-def records(value: Any) -> list[dict]:
-    """Read list and named-mapping object representations."""
-    if isinstance(value, list):
-        return [v for v in value if isinstance(v, dict)]
-    return [
-        v
-        for k, v in mapping(value).items()
-        if k not in ("New", "Deleted") and isinstance(v, dict)
-    ]
+renderer = load_renderer()
+MISSING: str = renderer.MISSING
+SAFE_LOADER = renderer.SAFE_LOADER
+mapping = renderer.mapping
+render_card = renderer.render_card
 
 
 def classify_provenance(name: str, readme: str, header: str) -> str:
@@ -81,196 +75,12 @@ def claim_levels(registry: str, inventory: str) -> dict[str, str]:
     return claims
 
 
-def object_sections(data: dict) -> list[tuple[str, list[dict]]]:
-    """Enumerate collections from the generic schema's section registry."""
-    result = [(key, records(data[key])) for key in OBJECTS if key in data]
-    generic = mapping(data.get("generic"))
-    result += [
-        ("generic." + key, records(generic[key]))
-        for key in SPEC_OBJECTS
-        if key in generic
-    ]
-    return result
-
-
-def object_counts(data: dict) -> str:
-    """Count definitions in each source without expanding include references."""
-    counts = []
-    includes = 0
-    for key, rows in object_sections(data):
-        only_include = sum(
-            set(row) <= {"Name", "name", "IncludeFile"} and "IncludeFile" in row
-            for row in rows
-        )
-        includes += only_include
-        counts.append(f"{key}: {len(rows) - only_include}")
-    for key in ("BaseFile", "IncludeFile"):
-        value = data.get(key)
-        count = len(value) if isinstance(value, list) else int(value is not None)
-        if key == "IncludeFile":
-            count += includes
-        if count:
-            counts.append(f"{key}: {count}")
-    return "; ".join(counts) or MISSING
-
-
-def environment_summary(env: dict, prefix: str = "", depth: int = 0) -> list[str]:
-    """Read bounded environment metadata without echoing names or free text."""
-    result: list[str] = []
-    if depth > 3:
-        return result
-    for key, value in sorted(env.items(), key=lambda item: str(item[0])):
-        if key in ENV_KEYS and number(value):
-            result.append(f"{prefix}{key}={fmt(value)}")
-        elif key in ("WaveType", "type", "SeabedType") and value in ENV_TYPES:
-            result.append(f"{prefix}{key}={value}")
-        elif key in ("water", "waves", "current", "wind"):
-            result += environment_summary(mapping(value), f"{key}.", depth + 1)
-        elif key in ("WaveTrains", "trains") and isinstance(value, list):
-            for index, train in enumerate(value):
-                result += environment_summary(
-                    mapping(train), f"wave {index + 1}.", depth + 1
-                )
-    return result
-
-
-def position(row: dict, prefix: str) -> tuple | None:
-    """Require all three coordinates; never substitute zero."""
-    values = row.get(prefix + "Position")
-    if values is None:
-        values = [row.get(prefix + axis) for axis in "XYZ"]
-    if not isinstance(values, (list, tuple)) or len(values) != 3:
-        return None
-    return tuple(values) if all(map(number, values)) else None
-
-
-def line_ends(props: dict) -> tuple[list, list]:
-    """Read explicit scalar ends or tabular connection rows."""
-    for key, value in props.items():
-        if isinstance(key, str) and key.startswith("Connection, ConnectionX,"):
-            if isinstance(value, list) and len(value) == 2:
-                fields = [field.strip() for field in key.split(",")]
-                rows = [
-                    dict(zip(fields, row)) for row in value if isinstance(row, list)
-                ]
-                if len(rows) == 2:
-                    return [position(r, "Connection") for r in rows], [
-                        r.get("Connection") for r in rows
-                    ]
-    return (
-        [position(props, "End" + end) for end in "AB"],
-        [props.get("End" + end + "Connection") for end in "AB"],
-    )
-
-
-def geometry(data: dict) -> tuple[list, list, int]:
-    """Extract explicit global frames; report other frames as unresolved."""
-    chords, points, unresolved = [], [], 0
-    for section, rows in object_sections(data):
-        kind = SPEC_OBJECTS.get(section.removeprefix("generic."), section)
-        if kind not in ("Lines", "Vessels", "6DBuoys", "3DBuoys"):
-            continue
-        for row in rows:
-            props = mapping(row.get("properties")) | row
-            if kind == "Lines":
-                ends, frames = line_ends(props)
-                if all(ends) and all(frame in ("Free", "Fixed") for frame in frames):
-                    chords.append(ends)
-                else:
-                    unresolved += 1
-            else:
-                props = dict(props)
-                if "initial_position" in props:
-                    props["InitialPosition"] = props["initial_position"]
-                point = position(props, "Initial")
-                frame = props.get("Connection", props.get("connection"))
-                if point and frame in ("Free", "Fixed"):
-                    points.append((kind, point))
-                else:
-                    unresolved += 1
-    return chords, points, unresolved
-
-
-def sketch(chords: list, points: list, axis: int, depth: Any, surface: Any) -> str:
-    """Project actual coordinates, preserving the aspect ratio and vertical sign."""
-    coords = [point for chord in chords for point in chord] + [p for _, p in points]
-    xs, ys = [p[0] for p in coords], [p[axis] for p in coords]
-    references = []
-    if axis == 2 and number(surface):
-        references.append(("still water", surface))
-        if number(depth):
-            references.append(("seabed", surface - depth))
-        ys += [value for _, value in references]
-    span = max(max(xs) - min(xs), max(ys) - min(ys), 1)
-    pad = span * 0.08
-    x, y = min(xs) - pad, -max(ys) - pad
-    width, height = max(xs) - min(xs) + 2 * pad, max(ys) - min(ys) + 2 * pad
-    label = "Plan (X/Y)" if axis == 1 else "Elevation (X/Z)"
-    out = f'<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{label}" viewBox="{fmt(x)} {fmt(y)} {fmt(width)} {fmt(height)}"><title>{label}; chords, not solved shapes; coordinates in file length units</title><g transform="scale(1,-1)">'
-    for first, last in chords:
-        out += f'<line class="chord" x1="{fmt(first[0])}" y1="{fmt(first[axis])}" x2="{fmt(last[0])}" y2="{fmt(last[axis])}"/>'
-    for kind, point in points:
-        out += f'<circle cx="{fmt(point[0])}" cy="{fmt(point[axis])}" r="{fmt(span * 0.012)}"><title>{kind} position</title></circle>'
-    for kind, value in references:
-        out += f'<line class="{kind.replace(" ", "-")}" x1="{fmt(x)}" y1="{fmt(value)}" x2="{fmt(x + width)}" y2="{fmt(value)}"><title>{kind}: {fmt(value)}</title></line>'
-    return out + "</g></svg>"
-
-
-def render_card(
-    path: str,
-    text: str,
-    provenance: str = MISSING,
-    claim: str = "no claim",
-    usage: Iterable[str] = (),
-) -> str:
-    """Render metadata and geometry without embedding source names or raw YAML."""
-    out = [f"<article><h3>{escape(path)}</h3>"]
-    try:
-        if "\ufffd" in text:
-            raise ValueError("invalid source encoding")
-        data = yaml.load(text, Loader=SAFE_LOADER)
-        if not isinstance(data, dict):
-            raise ValueError("not a model mapping")
-    except (yaml.YAMLError, ValueError, RecursionError):
-        data = {}
-        out.append(
-            "<p>YAML parse failure, invalid UTF-8 or non-mapping document; no fields inferred.</p>"
-        )
-    env = mapping(data.get("Environment", data.get("environment")))
-    depth = env.get("WaterDepth", mapping(env.get("water")).get("depth"))
-    surface = env.get("WaterSurfaceZ")
-    system = mapping(data.get("metadata")).get(
-        "structure", mapping(data.get("model")).get("type")
-    )
-    if not isinstance(system, str) or not re.fullmatch(r"[a-z_ -]{1,60}", system):
-        system = MISSING
-    summary = "; ".join(environment_summary(env)) or MISSING
-    references = "; ".join(sorted(set(usage))) or MISSING
-    out.append(f"""<p>System type: {escape(system)}</p><p>Object counts: {escape(object_counts(data))}</p>
-<p>Water depth: {fmt(depth)}</p><p>Environment: {escape(summary)}</p><p>Provenance: {escape(provenance)}</p><p>Claim: {escape(claim)}</p><p>Tests and workflows (text references, not proof): {escape(references)}</p>""")
-    if provenance == "vendor example":
-        out.append(
-            "<p>vendor example models; metadata and schematic only; redistribution terms to be checked before any model file is shared outside</p>"
-        )
-    chords, points, unresolved = geometry(data)
-    if chords or points:
-        for axis, title in ((1, "Plan"), (2, "Elevation")):
-            out += [f"<h4>{title}</h4>", sketch(chords, points, axis, depth, surface)]
-        out.append(
-            f"<p>Lines are straight chords, not solved shapes. Blue: chords; dots: body positions; cyan: still water; brown: seabed depth reference, not bathymetry. Axes: file length units; still water elevation: {fmt(surface)}.</p>"
-        )
-    if unresolved or not (chords or points):
-        out.append(
-            f"<p>Unresolved geometry cannot be drawn without the solver or additional coordinate-frame data; unresolved objects: {unresolved}.</p>"
-        )
-    return "".join(out) + "</article>"
-
-
 def render_catalogue(
     entries: Iterable[tuple[str, str, str]],
     claims: dict | None = None,
     usage: dict | None = None,
     omissions: Iterable[str] = (),
+    extracted_models: set[str] | None = None,
 ) -> str:
     """Consume one source at a time, then sort rendered cards deterministically."""
     cards = []
@@ -283,28 +93,41 @@ def render_catalogue(
             omitted.append(path + ": excluded: project-derived")
             continue
         name = model_name(path)
-        claim, refs = (claims or {}).get(name, "no claim"), (usage or {}).get(name, [])
-        cards.append((path, render_card(path, text, provenance, claim, refs)))
+        owner = model_path(path)
+        claim = (claims or {}).get(name, "no claim")
+        if claim != "no claim":
+            claim += "; model-level claim"
+        refs = (usage or {}).get(owner, [])
+        card = render_card(
+            path,
+            text,
+            provenance,
+            claim,
+            refs,
+            extracted=owner in (extracted_models or set()),
+        )
+        cards.append((path, card))
     body = "".join(card for _, card in sorted(cards))
     listing = "".join("<li>" + escape(item) + "</li>" for item in sorted(omitted))
-    return f"""<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OrcaFlex model library catalogue</title><style>body{{font:16px system-ui;margin:2em auto;max-width:1000px;padding:0 1em;color:#172b3a}}article{{border:1px solid #ccd;padding:1em;margin:1em 0;break-inside:avoid}}
-h3,p{{overflow-wrap:anywhere}}svg{{width:46%;height:240px;background:#f5f9fb}}svg line{{stroke:#1570aa;stroke-width:2;vector-effect:non-scaling-stroke}}
-svg circle{{fill:#172b3a}}svg .still-water{{stroke:#159aa0}}svg .seabed{{stroke:#946338}}</style><h1>OrcaFlex model library catalogue</h1><p>{COUNT_RULE}</p>
-<p>One card per YAML source variant; includes are not assembled. No loadability or solved-shape claim is implied. Selected environment fields only; values retain file units. Missing fields are not stated.</p>
-{body}<h2>Files without cards</h2><ul>{listing}</ul></html>
-"""
+    return cast(str, renderer.page_template(body, listing))
 
 
 def model_name(path: str) -> str:
     """Identify the owning model for registry matching and reference searches."""
+    return Path(model_path(path)).name
+
+
+def model_path(path: str) -> str:
+    """Resolve the model folder above all structural directories."""
     parts = Path(path).parts
     if "model_library" in parts:
-        return parts[parts.index("model_library") + 1]
-    parent = Path(path).parent
-    if parent.name in ("base", "cases", "variations"):
-        parent = parent.parent
-    return parent.name
+        stop = parts.index("model_library") + 2
+        return Path(*parts[:stop]).as_posix()
+    stop = next(
+        (i for i, part in enumerate(parts[:-1]) if part in STRUCTURAL_FOLDERS),
+        len(parts) - 1,
+    )
+    return Path(*parts[:stop]).as_posix()
 
 
 def read_text(path: Path) -> str:
@@ -363,6 +186,61 @@ def catalogue_entries(root: Path, groups: list, omissions: list) -> Iterable:
             yield relative, read_text(path), origin
 
 
+def find_usage(root: Path, groups: list) -> dict[str, list[str]]:
+    """Report model references only when a model appears in a path token."""
+    owners = sorted(
+        {
+            model_path(p.relative_to(root).as_posix())
+            for _, paths in groups
+            for p in paths
+        }
+    )
+    patterns = {
+        owner: re.compile(
+            r"(?<![\w-])"
+            + re.escape(Path(owner).name)
+            + r"/"
+            + r"|/"
+            + re.escape(Path(owner).name)
+            + r"(?![\w-])"
+        )
+        for owner in owners
+    }
+    usage: dict[str, list[str]] = {owner: [] for owner in owners}
+    candidates = [root / "docs/registry/workflows.yaml"]
+    for folder in ("tests", "examples/workflows"):
+        candidates += sorted((root / folder).rglob("*"))
+    for path in candidates:
+        if path.is_file() and path.suffix in (".py", ".yaml", ".yml", ".md", ".json"):
+            text = read_text(path).replace("\\", "/")
+            for owner, pattern in patterns.items():
+                if pattern.search(text):
+                    usage[owner].append(path.relative_to(root).as_posix())
+    return usage
+
+
+def extracted_models(root: Path, groups: list) -> set[str]:
+    """Propagate extraction evidence from reference outputs and specifications."""
+    extracted = set()
+    for _, paths in groups:
+        for path in paths:
+            relative = path.relative_to(root).as_posix()
+            if "monolithic" in Path(relative).parts:
+                extracted.add(model_path(relative))
+            elif path.name in ("spec.yml", "model-spec.yml"):
+                data, _ = renderer.parse_model(read_text(path))
+                descriptions = [data.get("description")] + [
+                    mapping(data.get(key)).get("description")
+                    for key in ("metadata", "model")
+                ]
+                if any(
+                    isinstance(v, str) and v.startswith("Extracted from")
+                    for v in descriptions
+                ):
+                    extracted.add(model_path(relative))
+    return extracted
+
+
 def build(root: Path) -> str:
     """Build from repository metadata and file text, without resolving includes."""
     domain = root / "docs/domains/orcaflex"
@@ -371,22 +249,16 @@ def build(root: Path) -> str:
         read_text(domain / "MODEL_CLAIM_INVENTORY.yaml"),
     )
     groups = source_groups(domain)
-    names = {
-        model_name(p.relative_to(root).as_posix()) for _, paths in groups for p in paths
-    }
-    usage: dict[str, list[str]] = {name: [] for name in names}
-    candidates = [root / "docs/registry/workflows.yaml"]
-    for folder in ("tests", "examples/workflows"):
-        candidates += sorted((root / folder).rglob("*"))
-    for path in candidates:
-        if path.is_file() and path.suffix in (".py", ".yaml", ".yml", ".md", ".json"):
-            text = read_text(path)
-            for name in names:
-                if re.search(r"(?<![\w-])" + re.escape(name) + r"(?![\w-])", text):
-                    usage[name].append(path.relative_to(root).as_posix())
+    usage = find_usage(root, groups)
     omissions: list[str] = []
 
-    page = render_catalogue(catalogue_entries(root, groups, omissions), claims, usage)
+    extracted = extracted_models(root, groups)
+    page = render_catalogue(
+        catalogue_entries(root, groups, omissions),
+        claims,
+        usage,
+        extracted_models=extracted,
+    )
     listing = "".join("<li>" + escape(item) + "</li>" for item in sorted(omissions))
     return page.replace("</ul></html>", listing + "</ul></html>")
 

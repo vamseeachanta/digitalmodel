@@ -1,7 +1,10 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Synthetic text-in/text-out checks; also runnable directly with unittest.
 
-Direct loading avoids executing the solver package initializer. No temporary
-directories, repository pytest setup, solver bindings or network are needed.
+Direct loading avoids executing the solver package initializer. Pytest fixtures
+use isolated temporary directories; no solver bindings or network are needed.
 """
 
 import importlib.util
@@ -195,6 +198,201 @@ class TestModelCatalogue(unittest.TestCase):
         card = self.card(fixture("no_depth"), usage=["tests/<synthetic>.py"])
         self.assertIn("tests/&lt;synthetic&gt;.py", card)
         self.assertNotIn("tests/<synthetic>", card)
+
+
+def test_structural_owners_and_path_references(tmp_path):
+    """Include fragments belong to the model and ignore ordinary prose."""
+    module = load_module()
+    owner = "docs/domains/orcaflex/templates/synthetic_model"
+    leaves = ("includes/line.yml", "inputs/parameters.yml", "includes/nested/a.yml")
+    paths = [f"{owner}/{leaf}" for leaf in leaves]
+    for relative in paths:
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("General: {}\n", encoding="utf-8")
+        assert module.model_name(relative) == "synthetic_model"
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "prose.py").write_text("includes inputs synthetic_model", encoding="utf-8")
+    (tests / "reference.py").write_text(
+        f"'{owner}/includes/line.yml'", encoding="utf-8"
+    )
+    groups = [(tmp_path / owner, [tmp_path / p for p in paths])]
+    usage = module.find_usage(tmp_path, groups)
+    assert usage[owner] == ["tests/reference.py"]
+    page = module.render_catalogue(
+        [(p, "General: {}", "not stated") for p in paths], usage=usage
+    )
+    assert page.count("tests/reference.py") == 3
+    assert "tests/prose.py" not in page
+
+
+def test_package_word_requires_path_context(tmp_path):
+    """An ordinary package word alone cannot constitute a model reference."""
+    module = load_module()
+    path = "docs/domains/orcaflex/library/templates/geometry/model.yml"
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "prose.py").write_text("geometry", encoding="utf-8")
+    (tests / "reference.py").write_text("'geometry/model.yml'", encoding="utf-8")
+    (tests / "windows.py").write_text(r"'geometry\model.yml'", encoding="utf-8")
+    (tests / "suffix.py").write_text("'other_geometry/model.yml'", encoding="utf-8")
+    owner = path.rsplit("/", 1)[0]
+    usage = module.find_usage(tmp_path, [(tmp_path / owner, [tmp_path / path])])
+    assert usage[owner] == ["tests/reference.py", "tests/windows.py"]
+
+
+def test_real_references_have_path_context():
+    """Every reported reference on the real tree names that model as a path."""
+    import re
+
+    module = load_module()
+    groups = module.source_groups(ROOT / "docs/domains/orcaflex")
+    for owner, references in module.find_usage(ROOT, groups).items():
+        name = owner.rsplit("/", 1)[-1]
+        pattern = re.compile(
+            r"(?<![\w-])"
+            + re.escape(name)
+            + r"[\\/]"
+            + r"|[\\/]"
+            + re.escape(name)
+            + r"(?![\w-])"
+        )
+        for reference in references:
+            text = (ROOT / reference).read_text(encoding="utf-8-sig", errors="replace")
+            assert owner in text or pattern.search(text), (owner, reference)
+
+
+def test_unknown_origin_requires_caution():
+    """Unstated origin retains its class and receives redistribution caution."""
+    card = load_module().render_card("synthetic/model.yml", "General: {}")
+    assert "Provenance: not stated" in card
+    assert "redistribution terms to be checked" in card
+
+
+def test_extracted_description_requires_caution():
+    """Extraction requires caution even when another provenance class is stated."""
+    card = load_module().render_card(
+        "synthetic/spec.yml",
+        "metadata: {description: Extracted from synthetic.yml}",
+        provenance="generic",
+    )
+    assert "Provenance: generic" in card
+    assert "redistribution terms to be checked" in card
+
+
+def test_monolithic_sibling_requires_caution():
+    """A reference output requires caution on every variant of its model."""
+    page = load_module().render_catalogue(
+        [("synthetic/model/includes/line.yml", "General: {}", "generic")],
+        extracted_models={"synthetic/model"},
+    )
+    assert "redistribution terms to be checked" in page
+
+
+def test_stated_generic_origin_without_extraction():
+    """Affirmative generic origin without extraction needs no redistribution caution."""
+    card = load_module().render_card(
+        "synthetic/model.yml", "General: {}", provenance="generic"
+    )
+    assert "redistribution terms to be checked" not in card
+
+
+def test_fixture_base_exists():
+    """The committed include fixture references a committed synthetic base."""
+    data = yaml.safe_load(fixture("no_depth"))
+    target = FIXTURES / data["BaseFile"]
+    assert target.is_file()
+    assert "Synthetic" in target.read_text(encoding="utf-8")
+
+
+def test_generated_header_and_master_count():
+    """The page declares its command, inputs, freshness check and master failures."""
+    page = load_module().render_catalogue(
+        [("synthetic/model/modular/master.yml", "General: {}\n- invalid", "generic")]
+    )
+    assert "Generated by" in page
+    assert (
+        "python src/digitalmodel/solvers/orcaflex/model_catalogue.py --output" in page
+    )
+    assert "Inputs:" in page
+    assert "test_committed_page_is_fresh" in page
+    assert "master-file form: 1" in page
+    committed = ROOT / "docs/domains/orcaflex/library/model_catalogue.html"
+    assert "Generated by" in committed.read_text(encoding="utf-8")
+
+
+def test_inherited_claim_is_model_level():
+    """An include fragment labels its inherited registry claim as model-level."""
+    page = load_module().render_catalogue(
+        [("synthetic/model/includes/line.yml", "General: {}", "generic")],
+        claims={"model": "L1 (registry)"},
+    )
+    assert "model-level claim" in page
+    assert "L1 (registry)" in page
+
+
+def test_renderer_loads_without_solver_initializer():
+    """Both modules load by path in a fresh interpreter without solver imports."""
+    import subprocess
+    import sys
+
+    probe = """
+import importlib.util
+from pathlib import Path
+import sys
+before = set(sys.modules)
+for filename in ("model_catalogue.py", "model_catalogue_render.py"):
+    spec = importlib.util.spec_from_file_location("probe", Path(sys.argv[1]) / filename)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+added = set(sys.modules) - before
+assert not any(name.startswith("digitalmodel.solvers.orcaflex") for name in added)
+assert "OrcFxAPI" not in added
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", probe, str(SOURCE.parent)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_python_modules_meet_size_rules():
+    """Catalogue modules and tests remain below 400 lines and within 88 columns."""
+    for path in (SOURCE, SOURCE.with_name("model_catalogue_render.py"), Path(__file__)):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        assert len(lines) < 400, (path.name, len(lines))
+        assert max(map(len, lines)) <= 88, path.name
+
+
+def test_committed_page_is_fresh():
+    """Two consecutive builds equal each other and the committed UTF-8 bytes."""
+    module = load_module()
+    first = module.build(ROOT).encode("utf-8")
+    assert first == module.build(ROOT).encode("utf-8")
+    assert (
+        first
+        == (ROOT / "docs/domains/orcaflex/library/model_catalogue.html").read_bytes()
+    )
+
+
+def test_extracted_specification_cautions_siblings(tmp_path):
+    """Extraction recorded by the model applies to its include variants."""
+    module = load_module()
+    model = tmp_path / "synthetic/model"
+    model.mkdir(parents=True)
+    spec = model / "spec.yml"
+    spec.write_text("metadata: {description: Extracted from synthetic.yml}")
+    fragment = model / "includes/line.yml"
+    groups = [(model, [spec, fragment])]
+    extracted = module.extracted_models(tmp_path, groups)
+    page = module.render_catalogue(
+        [("synthetic/model/includes/line.yml", "General: {}", "generic")],
+        extracted_models=extracted,
+    )
+    assert "redistribution terms to be checked" in page
 
 
 if __name__ == "__main__":
