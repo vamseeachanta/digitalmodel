@@ -82,6 +82,7 @@ from digitalmodel.cathodic_protection.report_elevation import (
     design_blocks,
     geometry_caveats,
     monitoring_conclusion,
+    percentage_text,
 )
 from digitalmodel.cathodic_protection.report_recommendations import (
     arrangement_options,
@@ -1583,7 +1584,7 @@ def _published_checkpoint_section(
             raise ValueError("published comparison requires positive checkpoints")
         calculated = quantities[target["quantity"]]
         difference = 100 * (calculated - value) / value
-        rows.append(["Independent-estimate count" if target["quantity"] == "count" else target["label"], target["printed"], calculated, f"{difference:+.1f}",
+        rows.append(["Independent-estimate count" if target["quantity"] == "count" else target["label"], target["printed"], calculated, percentage_text(difference, suffix=""),
                      target["unit"], target.get("locator", "not established")])
     summary = (
         f"Calculated initial, mean and final demands are {quantities['initial_demand']:.3f}, "
@@ -1652,7 +1653,7 @@ def _b401_report_additions(
             if key != "overall_status":
                 adequacy.blocks.append(recommendation_block(results, key))
         adequacy.blocks.append(conclusions_block(results))
-    caveats = geometry_caveats(inputs, results, percentage_precision=1 if evidence else 3)
+    caveats = geometry_caveats(inputs, results, percentage_precision=1)
     if not modern:
         caveats += recommendation_caveats(results)
     else:
@@ -1664,9 +1665,9 @@ def _b401_report_additions(
         by_key["design-basis"].blocks.append(TextBlock(markdown=(
             f"Design life {life:g} years and seawater temperature {temperature:g} °C, "
             "nominal mass interpreted as net alloy, and equivalent-cylinder alternatives "
-            f"with alloy density {kernel.ANODE_DENSITY_ALZNI:g} kg/m³ are based on previous project experience. "
+            f"with alloy density {kernel.ANODE_DENSITY_ALZNI:g} kg/m³ are declared illustrative inputs (source: illustrative input). "
             "The original radius is the stated input; alternative radii follow net mass, length "
-            "and alloy density. Capacity and utilisation references are listed in References [1].")))
+            "and alloy density. Capacity and utilisation are illustrative inputs; governing practice is listed in References [1].")))
     if modern:
         sections[sections.index(by_key["references"])] = _verification_references(inputs, results)
         sections.insert(0, Section(key="summary", title="Summary", blocks=[
@@ -1702,7 +1703,7 @@ def _verification_wording(text: str, published: bool) -> str:
         "published basis": "published effective density",
         "Input echo: structure zones, environment and anode data": "Engineering inputs",
         "Use status: approved for client use subject to an engineer-of-record check of this deliverable.": "Draft for review",
-        "the existing aluminium calculation basis": "based on previous project experience",
+        "the existing aluminium calculation basis": "based on previous project experience" if published else "illustrative input",
         "Elevation drawn from the design data of the case.": "Illustrative elevation.",
         "DNV-RP-B401 :": "DNV-RP-B401:",
         "citation not held": "source evidence is not established",
@@ -1718,7 +1719,8 @@ def _verification_wording(text: str, published: bool) -> str:
     if not published:
         text = text.replace("alloy density is based on previous project experience.", "alloy density is stated in Design basis.")
     text = re.sub(r"(\d+(?:\.\d+)?) kg", lambda m: f"{float(m[1]):.0f} kg", text)
-    text = re.sub(r"\s*\(\s*\)", "", text)
+    text = re.sub(r"dnv-rp-b401\s+\d{4}(?:-\d{2})?\s+.*?\((anode mass|output adequacy|retrofit evidence|retrofit documentation)\)", r"\1", text)
+    text = re.sub(r"\s*\((?:B401)?\s*\)", "", text)
     return text.strip()
 
 

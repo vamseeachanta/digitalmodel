@@ -403,7 +403,7 @@ def test_reference_report_has_numbered_sources_geometry_and_area_arithmetic(refe
     comparison = next(t for t in tables if t.title == "Structural dimensions and mass compared with the paper")
     for row in comparison.rows:
         assert row[3].endswith("%")
-        assert __import__("re").fullmatch(r"[+-]\d+\.\d%", row[3])
+        assert __import__("re").fullmatch(r"(?:[+-]\d+\.\d%|less than 0\.1%)", row[3])
     body = " ".join(b.markdown for s in reference_spec.sections if s.key != "references" for b in s.blocks if isinstance(b, TextBlock))
     assert "OpenFAST" not in body and "SubDyn" not in body
 

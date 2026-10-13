@@ -11,7 +11,7 @@ from typing import Any, Mapping
 from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection.anode_sizing import AnodeType, calculate_anode_resistance
 from digitalmodel.cathodic_protection.engine_adapter import _b401_anode_geometry
-from digitalmodel.cathodic_protection.report_elevation import monitoring_conclusion
+from digitalmodel.cathodic_protection.report_elevation import monitoring_conclusion, percentage_text
 from digitalmodel.reporting.spec import StatusBlock, TableBlock
 
 
@@ -57,16 +57,16 @@ def aggregate_table(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> Ta
         capacity = count * float(targets[f"{phase}_output"]["printed"])
         model = count * outputs[phase]
         rows.append([f"{phase.capitalize()} current", f"{demand:.3f}",
-                     f"{100 * (demand / float(target['printed']) - 1):+.1f}%",
-                     f"{capacity:.3f}", f"{100 * (capacity / demand - 1):+.1f}%",
+                     percentage_text(100 * (demand / float(target["printed"]) - 1)),
+                     f"{capacity:.3f}", percentage_text(100 * (capacity / demand - 1)),
                      "PASS" if capacity >= demand else "FAIL", f"{model:.3f}",
-                     f"{100 * (model / demand - 1):+.1f}%",
-                     f"{100 * (model / capacity - 1):+.1f}%",
+                     percentage_text(100 * (model / demand - 1)),
+                     percentage_text(100 * (model / capacity - 1)),
                      "PASS" if model >= demand else "FAIL", "A",
                      f"[1], {target['locator']}; installed count × individual output"])
     required = float(req["total_mass_kg"])
     installed = count * float(req["individual_mass_kg"])
-    margin = f"{100 * (installed / required - 1):+.1f}%"
+    margin = percentage_text(100 * (installed / required - 1))
     result = "PASS" if installed >= required else "FAIL"
     rows.append(["Mass", f"{required:.0f}", "not published", f"{installed:.0f}",
                  margin, result, f"{installed:.0f}", margin, "+0.0%", result, "kg",

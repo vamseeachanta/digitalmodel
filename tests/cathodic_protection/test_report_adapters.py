@@ -120,7 +120,9 @@ def test_published_jacket_reproduction_uses_one_unchanged_assumption_set() -> No
     for row, computed, target in zip(table.rows, expected, targets):
         assert float(row[1]) == target
         assert float(row[2]) == pytest.approx(computed, abs=0.0001)
-        assert row[3] == f"{100 * (computed - target) / target:+.1f}"
+        difference = 100 * (computed - target) / target
+        expected_difference = "less than 0.1" if difference != 0 and abs(difference) < 0.05 else f"{difference:+.1f}"
+        assert row[3] == expected_difference
     text = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock))
     assert "based on previous project experience" in text
     assert "[1]" in text and "[2]" in text
@@ -965,7 +967,7 @@ def test_published_numbered_references_locators_precision_and_abstract_boundary(
     assert not re.search(r"[-+]?\d+\.\d+[eE][-+]?\d+", text)
     assert not re.search(r"\d+\.\d+ kg", text)
     for row in _tables(spec)["Published checkpoints and calculated differences"].rows:
-        assert re.fullmatch(r"[-+]\d+\.\d", str(row[3]))
+        assert re.fullmatch(r"(?:[-+]\d+\.\d|less than 0\.1)", str(row[3]))
     for title, table in _tables(spec).items():
         if title == "Design data" or title.startswith(("Published zone", "Current density", "Measured potentials", "Independent estimate", "Installed arrangement", "Increase at design", "Retrofit:", "Published checkpoints")):
             assert "p. 24" in str(table.source) or any("p. 24" in str(r[-1]) for r in table.rows), title
@@ -1072,9 +1074,9 @@ def test_illustrative_assumptions_are_declared_once_as_experience_based() -> Non
     text = " ".join(b.markdown for b in design.blocks if isinstance(b,TextBlock))
     assert "Design life 25 years and seawater temperature 10" in text
     assert "net alloy" in text and "equivalent-cylinder" in text
-    assert "based on previous project experience" in text
+    assert "source: illustrative input" in text
     body = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b,TextBlock))
-    assert body.count("based on previous project experience") == 1
+    assert body.count("source: illustrative input") == 1
 
 
 def test_option_model_capacities_use_unrounded_resistance_outputs() -> None:
@@ -1198,3 +1200,35 @@ def test_reference_example_inputs_are_labelled_individually() -> None:
     rows = {r[0]: r for r in _tables(spec)["Design input sources"].rows}
     for quantity in ("Seawater temperature", "Seawater resistivity", "Coating category", "Design life", "Anode length", "Anode radius"):
         assert rows[quantity][-1] == "illustrative input"
+
+
+@pytest.mark.parametrize("name,title", _ANALYSIS_CASES)
+def test_analysis_percentages_and_citation_residue(name: str, title: str) -> None:
+    """All visible differences use one decimal without residual citation keys."""
+    html = render_html(anode_design_report(_run(name)))
+    text = _visible_text(html)
+    assert not re.search(r"[+-]?\d+\.\d{2,}\s*%", text)
+    assert "-0.0%" not in text
+    assert not re.search(r"dnv-rp-b401\s+20\d\d\s+\[", text, re.I)
+    assert not re.search(r"\bEq\.\s*\(", text)
+    assert "(B401 )" not in text
+    if name == "jacket_report_example":
+        appendix = next(s for s in anode_design_report(_run(name)).appendices if s.key == "cp-limitations")
+        body = " ".join(b.markdown for b in appendix.blocks if isinstance(b, TextBlock))
+        assert body.count("percentage difference less than 0.1%") == 3
+
+
+def test_signed_zero_difference_is_printed_without_negative_zero() -> None:
+    """An exact signed zero remains a true zero in report text."""
+    from digitalmodel.cathodic_protection.report_elevation import percentage_text
+
+    assert percentage_text(-0.0) == "+0.0%"
+
+
+def test_illustrative_design_basis_uses_example_input_label() -> None:
+    """The example basis uses the same source label as its input table."""
+    spec = anode_design_report(_run("jacket_report_example"))
+    section = next(s for s in spec.sections if s.key == "design-basis")
+    prose = " ".join(b.markdown for b in section.blocks if isinstance(b, TextBlock))
+    assert "source: illustrative input" in prose
+    assert "based on previous project experience" not in prose

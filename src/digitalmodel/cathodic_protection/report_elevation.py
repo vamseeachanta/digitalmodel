@@ -572,6 +572,15 @@ def design_blocks(inputs: Mapping[str, Any]) -> list[Block]:
     return blocks
 
 
+def percentage_text(value: float, *, precision: int = 1, suffix: str = "%") -> str:
+    """Format signed differences without implying an exact rounded zero."""
+    if value == 0:
+        value = 0.0
+    if precision == 1 and value != 0 and abs(value) < 0.05:
+        return "less than 0.1" + suffix
+    return f"{value:+.{precision}f}" + suffix
+
+
 def geometry_caveats(
     inputs: Mapping[str, Any], results: Mapping[str, Any], *, percentage_precision: int = 3
 ) -> list[str]:
@@ -623,6 +632,6 @@ def geometry_caveats(
             caveats.append(
                 f"{name}: drawn-member area {area:.3f} m²; "
                 f"stated area {float(reference):.3f} m²; "
-                f"percentage difference {difference:+.{percentage_precision}f}% relative to the stated area."
+                f"percentage difference {percentage_text(difference, precision=percentage_precision)} relative to the stated area."
             )
     return caveats

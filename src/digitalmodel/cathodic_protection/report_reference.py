@@ -10,7 +10,7 @@ from typing import Any
 import re
 
 
-from digitalmodel.cathodic_protection.report_elevation import _svg, validate_geometry
+from digitalmodel.cathodic_protection.report_elevation import _svg, percentage_text, validate_geometry
 from digitalmodel.reporting.spec import FigureBlock
 
 ATTRIBUTION = (
@@ -319,7 +319,7 @@ def reference_comparison(model: Mapping[str, Any]) -> list[Any]:
     for c in model["comparisons"]:
         digits = 0 if c["unit"] == "kg" else 3
         rows.append([c["quantity"], f"{c['printed']:.{digits}f}", f"{c['model']:.{digits}f}",
-                     f"{c['difference_percent']:+.1f}%", c["unit"], "[1], " + c["locator"]])
+                     percentage_text(c["difference_percent"]), c["unit"], "[1], " + c["locator"]])
     return [TableBlock(title="Structural dimensions and mass compared with the paper",
                        columns=["Quantity", "Paper", "Structural model", "Difference", "Unit", "Locator"], rows=rows),
             TextBlock(markdown=model["mass_limitation"])]
