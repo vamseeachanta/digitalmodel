@@ -91,7 +91,7 @@ from digitalmodel.cathodic_protection.report_recommendations import (
     recommendation_caveats,
 )
 from digitalmodel.cathodic_protection.report_verification import (
-    aggregate_table, measured_options, published_outputs, published_status,
+    aggregate_table, measured_options, published_outputs, published_status, verification_summary,
 )
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting.adapters import report_adapter
@@ -1659,6 +1659,8 @@ def _b401_report_additions(
         caveats.append("Equivalent-cylinder alternatives require fabrication, core, attachment, clearance and anode-interaction assessment. A recurring survey interval and numerical depletion trigger require measured remaining mass, elapsed service and future demand; only baseline and post-intervention surveys are specified here.")
     caveats.extend(evidence.get("limitations", []))
     if modern:
+        sections.insert(0, Section(key="summary", title="Summary", blocks=[
+            TextBlock(markdown=verification_summary(inputs, results))]))
         _verification_presentation(sections, published=bool(evidence))
     return [Section(
         key="cp-limitations", title="Limitations and items not evaluated",

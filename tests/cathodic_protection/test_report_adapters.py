@@ -896,3 +896,26 @@ def test_option_errors_do_not_stop_verification_report(monkeypatch) -> None:
     assert "Options are not evaluated: complete demand, output, mass and arrangement data are required." in rendered
     assert "Original and increased-count arrangement" not in rendered
     assert "The rechecked alternatives pass" not in rendered
+
+
+@pytest.mark.parametrize("name", ["published_jacket_84m", "jacket_report_example"])
+def test_verification_summary_is_first_and_binds_result_to_criterion(name) -> None:
+    """Every verification presentation opens with a result-led summary."""
+    cfg = _run(name)
+    spec = anode_design_report(cfg)
+    assert spec.sections[0].key == "summary"
+    text = spec.sections[0].blocks[0].markdown
+    assert text.startswith("The ")
+    assert "arrangement is verified" in text
+    if name == "published_jacket_84m":
+        assert text.startswith("The published 569-anode arrangement is verified against the paper's printed outputs")
+        assert "Aggregate checks PASS using published outputs." in text
+        assert "Measured under-protection" in text
+        assert "day 518" in text
+        assert "Retrofit assessment" in text
+        assert "Appendix A" in text
+    else:
+        assert "FAIL" in text
+        assert "final current" in text
+    rendered = render_html(spec)
+    assert rendered.index('<section id="summary">') < rendered.index('<section id="design-basis">')

@@ -184,3 +184,33 @@ def measured_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> l
             TextBlock(markdown="### Retrofit\n\nThe 30 m to mudline bare zone includes both failing levels. Additional phase current equals its published area multiplied by the density increment [1], pp. 242 and 244, Tables 1–3. End-of-life output first sizes the addition, then initial output and remaining-life mass are rechecked. The final-only count fails the initial and mass rechecks; the all-check count below passes these additional-load checks. The paper's authors propose clamped anodes at -70.5 m and -84.1 m [1], p. 244, Section 5; installation is not established. Added anodes belong in this zone. The split is not evaluated: per-level anode distribution and member geometry are required. A potential more positive than -0.800 V triggers intervention planning; this trigger is met at both lowest levels at day 518. A date is not evaluated: current readings, measured depletion of the lower anodes, corrosion allowance and wall-thickness evidence are needed. The addition does not establish total zone adequacy or measured protection without the existing allocation and post-intervention readings."),
             TableBlock(title="Retrofit: lower-zone addition and recheck",columns=["Quantity","Value","Unit","Source or arithmetic"],rows=zone_rows),
             TextBlock(markdown="### Monitoring\n\nAll levels and remote or shielded locations require potential surveys versus Ag/AgCl/seawater; protection requires more negative than -0.800 V [2], protective potential criterion. Readings more positive than -0.800 V trigger investigation and intervention planning. Surveys before and after intervention should use the same locations. Remaining mass and depletion should be measured against remaining life. The recurring interval is not evaluated: current surveys, depletion history, corrosion allowance and affected-member condition are needed. Monitoring alone is not a demonstrated correction of the measured failure; retrofit assessment is recommended because the trigger is already met.")]
+
+
+def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> str:
+    """Open verification reports with result, finding, advice and limitations."""
+    ver = results["current_output_verification"]
+    if published_outputs(inputs):
+        statement = published_status(inputs, results).detail
+        targets = published_outputs(inputs)
+        difference = max(abs(100 * (float(results["current_demand_A"][f"total_{phase}_A"]) / float(targets[f"{phase}_demand"]["printed"]) - 1)) for phase in ("initial", "mean", "final"))
+        bound = math.ceil(difference * 1000) / 1000
+        finding = ("Retrofit assessment of the affected lower zone is recommended because "
+                   "the monitoring trigger is met; design, retrofit and monitoring options "
+                   "and their rechecks are in Adequacy. " if measured_failure(inputs) else
+                   "No measured failure is established by the latest readings. ")
+        return (f"The published {ver['anode_count']}-anode arrangement is verified against "
+                "the paper's printed outputs and the measured potentials. " + statement +
+                " Computed initial, mean and final demands reproduce the printed totals "
+                f"within {bound:.3f}%. " + finding +
+                "Aggregate checks do not establish spatial protection; geometry, allocation, "
+                "remaining condition and timing limits are stated in Appendix A. "
+                "Published values and locators are in Published basis and comparison.")
+    status = results["status"]
+    governing = str(status["governing_case"]) + (" current" if status["governing_case"] != "mass" else "")
+    return (f"The {ver['anode_count']}-anode arrangement is verified against computed mass "
+            f"and initial and final current demands: {status['result']}; "
+            f"{governing} governs. "
+            + ("Rechecked design alternatives and monitoring requirements are in Adequacy. "
+               if status["result"] == "FAIL" else "No aggregate check fails. ")
+            + monitoring_conclusion(inputs) +
+            " The elevation is illustrative; geometry and condition limitations are in Appendix A.")
