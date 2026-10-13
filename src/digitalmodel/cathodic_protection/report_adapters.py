@@ -1689,6 +1689,9 @@ def _verification_wording(text: str, published: bool) -> str:
     text = re.sub(r"Sec\.\s*\d+(?:\.\d+)*(?:-\d+(?:\.\d+)*)?", "", text)
     replacements = {
         "stand_off": "stand-off", "buried_mudline": "buried at mudline",
+        "Count verified": "Installed count",
+        "current-output verification": "current-output check",
+        "arrangement verification": "arrangement assessment",
         "Table 8-8 (long_slender_standoff)": "anode utilisation factor",
         "long_slender_standoff": "long slender stand-off",
         "published area category": "published zone area",
@@ -1850,13 +1853,13 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
     display = _mapping(_mapping(inputs.get("structure")).get("report_geometry"))
     default_title = f"Cathodic protection anode design - {standard}".strip(" -")
     if calc_type == KEY_B401 and display and _mapping(inputs.get("design_data")).get("structure_type") == "jacket":
-        evaluated = "count" in _mapping(inputs.get("anode")) or _mapping(results.get("status")).get("result") != STATUS_PASS
-        purpose = "verification" if evaluated else "design"
+        purpose = "analysis"
+        example = "illustrative example " if display.get("basis") == "illustrative_regression_case" else ""
         try:
             depth = abs(float(display["mudline_m"]) - float(display["waterline_m"]))
             if not math.isfinite(depth) or depth <= 0:
                 raise ValueError("depth is not established")
-            description = f"jacket at {depth:g} m water depth"
+            description = f"{example}jacket at {depth:g} m water depth"
         except (ValueError, TypeError, KeyError, OverflowError):
             description = "jacket with incomplete display data"
         default_title = f"Cathodic protection {purpose}: {description}"

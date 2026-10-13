@@ -742,7 +742,7 @@ def test_assessment_adapter_reads_cfg_block_and_document() -> None:
 def test_arrangement_report_title_is_verification(name: str) -> None:
     """An evaluated arrangement is titled as a verification."""
     report = anode_design_report(_run(name))
-    assert report.document.title.startswith("Cathodic protection verification:")
+    assert report.document.title.startswith("Cathodic protection analysis:")
 
 
 def test_illustrative_report_rechecks_options_once_and_prints_whole_mass() -> None:
@@ -906,9 +906,9 @@ def test_verification_summary_is_first_and_binds_result_to_criterion(name) -> No
     assert spec.sections[0].key == "summary"
     text = spec.sections[0].blocks[0].markdown
     assert text.startswith("The ")
-    assert "arrangement is verified" in text
+    assert "arrangement is analysed" in text
     if name == "published_jacket_84m":
-        assert text.startswith("The published 569-anode arrangement is verified against the paper's printed outputs")
+        assert text.startswith("The published 569-anode arrangement is analysed against the paper's printed outputs")
         assert "Aggregate checks PASS using published outputs." in text
         assert "Measured under-protection" in text
         assert "day 518" in text
@@ -1108,3 +1108,37 @@ def test_verification_labels_have_no_empty_clause_parentheses() -> None:
     for name in ["published_jacket_84m","jacket_report_example"]:
         text = _visible_text(render_html(anode_design_report(_run(name))))
         assert "required ()" not in text
+
+
+_ANALYSIS_CASES = (
+    ("published_jacket_84m", "Cathodic protection analysis: jacket at 84.1 m water depth"),
+    ("reference_jacket_60m_members", "Cathodic protection analysis: jacket at 60 m water depth"),
+    ("jacket_report_example", "Cathodic protection analysis: illustrative example jacket at 70 m water depth"),
+)
+
+
+def _assert_comparison_only_wording(html: str) -> None:
+    """Reject comparison wording in any other visible part of a page."""
+    outside = re.sub(
+        r'<section id="(?:published-comparison|structural-comparison)">.*?</section>',
+        "", html, flags=re.S,
+    )
+    assert not re.search(r"\bverif\w*", _visible_text(outside), re.I)
+
+
+@pytest.mark.parametrize("name,title", _ANALYSIS_CASES)
+def test_analysis_titles_and_comparison_only_wording(name: str, title: str) -> None:
+    """Each analysis declares its purpose without stray comparison wording."""
+    spec = anode_design_report(_run(name))
+    assert spec.document.title == title
+    _assert_comparison_only_wording(render_html(spec))
+
+
+@pytest.mark.parametrize("name,title", _ANALYSIS_CASES)
+def test_comparison_wording_check_rejects_summary_injection(name: str, title: str) -> None:
+    """A negative control catches wording injected into the summary."""
+    html = render_html(anode_design_report(_run(name)))
+    injected = html.replace('<section id="summary">',
+                            '<section id="summary"><p>Verification</p>')
+    with pytest.raises(AssertionError):
+        _assert_comparison_only_wording(injected)

@@ -179,7 +179,7 @@ def test_elevation_appendix_compares_areas_without_changing_design_areas() -> No
         if isinstance(block, TextBlock)
     )
     assert "coordinates and member sizes are illustrative" in appendix
-    assert "not an independent verification of the stated areas" in appendix
+    assert "not an independent check of the stated areas" in appendix
     assert "cylinder lateral surface" in appendix
     for name, area in (
         ("submerged", 5000.0),

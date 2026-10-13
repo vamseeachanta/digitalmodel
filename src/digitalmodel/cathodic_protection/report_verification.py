@@ -202,7 +202,7 @@ def measured_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> l
     zone_rows += [[f"Remaining life at day {elapsed:g}", f"{remaining:.4f}", "yr",
                    f"{life:g} − {elapsed:g}/365; remaining life at that reading"]]
     zone_rows += _quantity_rows(addition,remaining*8760,view,retrofit=True)
-    return [TextBlock(markdown="### Increase at design\n\nThe higher seawater bare-steel densities identified by the paper are used to recheck initial design [1], p. 244, Table 3. Other density rows retain Table 2 values [1], p. 242. Count is the maximum of mass, initial-output and final-output requirements. The arithmetic establishes aggregate capacity, not potentials. Member geometry, distribution and electrical continuity are needed to verify local protection."),
+    return [TextBlock(markdown="### Increase at design\n\nThe higher seawater bare-steel densities identified by the paper are used to recheck initial design [1], p. 244, Table 3. Other density rows retain Table 2 values [1], p. 242. Count is the maximum of mass, initial-output and final-output requirements. The arithmetic establishes aggregate capacity, not potentials. Member geometry, distribution and electrical continuity are needed to establish local protection."),
             TableBlock(title="Increase at design: demand and recheck",columns=["Quantity","Value","Unit","Source or arithmetic"],rows=design_rows),
             TextBlock(markdown="### Retrofit\n\nThe 30 m to mudline bare zone includes both failing levels. Additional phase current equals its published area multiplied by the density increment [1], pp. 242 and 244, Tables 1–3. End-of-life output first sizes the addition, then initial output and remaining-life mass are rechecked. The final-only count fails the initial and mass rechecks; the all-check count below passes these additional-load checks. The paper's authors propose clamped anodes at -70.5 m and -84.1 m [1], p. 244, Section 5; installation is not established. Added anodes belong in this zone. The split is not evaluated: per-level anode distribution and member geometry are required. A potential more positive than -0.800 V triggers intervention planning; this trigger is met at both lowest levels at day 518. A date is not evaluated: current readings, measured depletion of the lower anodes, corrosion allowance and wall-thickness evidence are needed. The addition does not establish total zone adequacy or measured protection without the existing allocation and post-intervention readings."),
             TableBlock(title="Retrofit: lower-zone addition and recheck",columns=["Quantity","Value","Unit","Source or arithmetic"],rows=zone_rows),
@@ -224,7 +224,7 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
                    "No measured failure is established by the latest readings. ")
         if measured_failure(inputs) and not options_available:
             finding = "Retrofit sizing is not evaluated: complete demand, output, mass and arrangement data are required. "
-        return (f"The published {ver['anode_count']}-anode arrangement is verified against "
+        return (f"The published {ver['anode_count']}-anode arrangement is analysed against "
                 "the paper's printed outputs and the measured potentials. " + statement +
                 " Computed initial, mean and final demands reproduce the printed totals "
                 f"within {bound:.1f}%. " + finding +
@@ -233,7 +233,7 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
                 "Published values and locators are in Published values and comparison.")
     status = results["status"]
     governing = str(status["governing_case"]) + (" current" if status["governing_case"] != "mass" else "")
-    return (f"The {ver['anode_count']}-anode arrangement is verified against computed mass "
+    return (f"The {ver['anode_count']}-anode arrangement is analysed against computed mass "
             f"and initial and final current demands: {status['result']}; "
             f"{governing} governs. "
             + ("Rechecked design alternatives and monitoring requirements are in Adequacy. "

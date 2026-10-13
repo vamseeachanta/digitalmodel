@@ -77,7 +77,7 @@ def reference_figure(model: Mapping[str, Any]) -> FigureBlock:
             "contains no horizontal plan-bracing members. Joint offsets and can lengths "
             "are not deducted. Water depth is 60 m; tubular height above mudline is 74.1 m. "
             "The projected top and mudline spans are distinct from triangle side widths; "
-            "both measures are compared in Verification of structural dimensions. "
+            "both measures are compared in Published values and comparison. "
             "Splash separation is not evaluated: water-level and lower splash-limit "
             "evidence are required. Values were transcribed and converted in form; "
             "the figure is drawn from coordinates, with no source figure adapted. "
@@ -239,7 +239,7 @@ def reference_sections(cfg: Mapping[str, Any]) -> list[Any]:
                 Section(key="design-basis", title="Design basis", blocks=reference_basis(cfg)),
                 Section(key="elevation", title="Reference jacket geometry", blocks=[reference_figure(model)]),
                 Section(key="member-schedule", title="Member schedule", blocks=reference_member_tables(model)),
-                Section(key="structural-comparison", title="Verification of structural dimensions", blocks=reference_comparison(model)),
+                Section(key="structural-comparison", title="Published values and comparison", blocks=reference_comparison(model)),
                 Section(key="zone-areas", title="External area derivation", blocks=reference_zone_blocks(model, cfg["initial_pile_estimate"])),
                 Section(key="adequacy", title="Aggregate adequacy", blocks=[reference_checks(cfg, arrangements)]),
                 Section(key="limitations", title="Limitations and way forward", blocks=[TextBlock(markdown="\n\n".join(cfg["cp_limitations"]) + "\n\n" + model["mass_limitation"])]),

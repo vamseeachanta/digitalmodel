@@ -592,7 +592,7 @@ def geometry_caveats(
             "The supplied coordinates and member sizes are illustrative and do not "
             "establish surveyed geometry or structural section selection. "
             "Agreement of the illustrative member areas with the stated areas is "
-            "not an independent verification of the stated areas."
+            "not an independent check of the stated areas."
         )
     caveats.append(
         "External steel area is the cylinder lateral surface area π × diameter × "
