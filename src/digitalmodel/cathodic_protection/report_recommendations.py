@@ -8,15 +8,119 @@
 from __future__ import annotations
 
 import math
+from copy import deepcopy
 from collections.abc import Mapping
 from typing import Any
 
-from digitalmodel.cathodic_protection._edition import normalize_edition
+from digitalmodel.cathodic_protection._edition import normalize_edition, standard_for_edition
 from digitalmodel.cathodic_protection.b401_structures_phases_schema import (
     rule_citations,
 )
 from digitalmodel.cathodic_protection.b401_tables import protection_potential
-from digitalmodel.reporting import TextBlock
+from digitalmodel.reporting.spec import Block, TableBlock, TextBlock
+from digitalmodel.cathodic_protection import _kernels as kernel
+from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+
+
+def _check_arrangement(inputs: Mapping[str, Any], count: int, length: float | None = None,
+                       mass: float | None = None) -> dict[str, Any]:
+    """Recalculate a proposed arrangement with the shared engine."""
+    candidate = deepcopy(dict(inputs))
+    anode = candidate["anode"]
+    anode["count"] = count
+    if length is not None:
+        anode["length_m"] = length
+        anode["individual_anode_mass_kg"] = mass
+        anode.pop("radius_m", None)
+    calculated = run_cathodic_protection({"inputs": candidate})
+    return dict(_mapping(calculated["results"]))
+
+
+def _geometry_option(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> dict[str, Any]:
+    """Size an equivalent-cylinder option at fixed count and recheck it."""
+    values = _quantities(results)
+    count = int(values["checked"])
+    mass = math.ceil(max(values["mass"], values["required_mass"] / count))
+    lower = 0.0
+    upper = float(_mapping(inputs.get("anode"))["length_m"])
+    checked = _check_arrangement(inputs, count, upper, mass)
+    for _ in range(32):
+        if checked["status"]["result"] == "PASS":
+            break
+        lower, upper = upper, upper * 2
+        checked = _check_arrangement(inputs, count, upper, mass)
+    else:
+        raise ValueError("a passing equivalent-cylinder option was not established")
+    for _ in range(24):
+        middle = (lower + upper) / 2
+        trial = _check_arrangement(inputs, count, middle, mass)
+        if trial["status"]["result"] == "PASS":
+            upper = middle
+        else:
+            lower = middle
+    length = math.ceil(upper * 1000) / 1000
+    checked = _check_arrangement(inputs, count, length, mass)
+    if checked["status"]["result"] != "PASS":
+        raise ValueError("the dimensioned arrangement did not pass its recheck")
+    return {"length": length, "mass": mass, "radius": kernel.equivalent_radius_from_mass(mass, length),
+            "results": checked}
+
+
+def _arrangement_rows(results: Mapping[str, Any]) -> list[list[Any]]:
+    """Return the installed quantity, outputs and verdict from native results."""
+    verification = _mapping(results["current_output_verification"])
+    requirements = _mapping(results["anode_requirements"])
+    return [["Anode count", verification["anode_count"]],
+            ["Installed net mass (kg)", f"{verification['anode_count'] * requirements['individual_mass_kg']:.0f}"],
+            ["Initial current output (A)", verification["total_anode_current_output_initial_A"]],
+            ["Final current output (A)", verification["total_anode_current_output_final_A"]],
+            ["Mass check", "PASS" if verification["mass_meets_requirement"] else "FAIL"],
+            ["Initial current check", "PASS" if verification["initial_meets_demand"] else "FAIL"],
+            ["Final current check", "PASS" if verification["final_meets_demand"] else "FAIL"],
+            ["Overall", results["status"]["result"]]]
+
+
+def arrangement_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Block]:
+    """Show independently rechecked design choices and condition-based actions."""
+    values = _quantities(results)
+    increased = _check_arrangement(inputs, int(values["needed"]))
+    if increased["status"]["result"] != "PASS":
+        raise ValueError("increased-count arrangement did not pass its recheck")
+    geometry = _geometry_option(inputs, results)
+    original_rows, increased_rows = _arrangement_rows(results), _arrangement_rows(increased)
+    rows = [[a[0], a[1], b[1]] for a, b in zip(original_rows, increased_rows)]
+    criterion = protection_potential(normalize_edition(str(results.get("edition")))).value
+    edition = normalize_edition(str(results["edition"]))
+    retrofit_subject = "retrofit evidence" if edition == "2021" else "retrofit documentation"
+    for subject in ("anode mass", "output adequacy", retrofit_subject):
+        _rule_source(edition, subject)
+    standard = f"{standard_for_edition(edition)}, Cathodic protection design"
+    sources = (
+        f"[b401-anode-mass] {standard}, anode mass; "
+        f"[b401-output-adequacy] {standard}, output adequacy; "
+        f"[b401-protection-criterion] {standard}, protective potential criterion; "
+        f"[b401-retrofit] {standard}, {retrofit_subject}."
+    )
+    evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
+    attachment = (
+        "Clamped attachment is the published proposal for the measured lower-level deficiency "
+        "[published-jacket-paper, p. 244, Section 5]. "
+        if evidence.get("source_key") == "published-jacket-paper" else
+        "Attachment and electrical continuity require condition and structural records [b401-retrofit]. "
+    )
+    retrofit_count = max(0, int(values["needed"] - values["checked"]))
+    geometry_rows = [["Anode count", int(values["checked"]), int(values["checked"])],
+                     ["Length (m)", _mapping(inputs["anode"])["length_m"], geometry["length"]],
+                     ["Net mass per anode (kg)", values["mass"], geometry["mass"]],
+                     ["Equivalent radius (m)", _mapping(results["current_output_verification"])["equivalent_radius_initial_m"], geometry["radius"]],
+                     *[[a[0], a[1], b[1]] for a, b in zip(original_rows[2:], _arrangement_rows(geometry["results"])[2:])]]
+    return [TextBlock(markdown=f"### Design increase and recheck\n\nAn increase to {values['needed']:.0f} anodes adds {values['additional']:.0f} units and {values['additional'] * values['mass']:.0f} kg net alloy. Count = max(count by mass, initial output, final output). Each option below is recalculated against the same demands [b401-anode-mass; b401-output-adequacy]."),
+            TableBlock(title="Original and increased-count arrangement", columns=["Check or quantity", "Original", "Rechecked"], rows=rows),
+            TextBlock(markdown=f"### Anode geometry alternative\n\nThe count can instead remain {values['checked']:.0f} with the equivalent-cylinder dimensions below. Radius = sqrt(net mass / (π × length × {kernel.ANODE_DENSITY_ALZNI:g} kg/m³)); alloy density is the existing aluminium calculation basis. The increased-count option retains the original unit dimensions and is preferred until attachment, clearance and fabrication constraints qualify the geometry alternative [b401-output-adequacy]."),
+            TableBlock(title="Original and dimensioned equivalent-cylinder arrangement", columns=["Check or quantity", "Original", "Rechecked"], rows=geometry_rows),
+            TextBlock(markdown=f"### Monitoring\n\nStructure potentials versus Ag/AgCl/seawater should be recorded at all monitoring levels and at remote or shielded members, buried interfaces and locations distant from anodes. A potential more positive than {criterion:.3f} V triggers investigation and intervention planning; protection requires a potential more negative than {criterion:.3f} V [b401-protection-criterion]. Remaining anode mass and output should be recorded with elapsed service time. A survey before intervention and a survey after connection should verify the response at the same locations. A measured depletion rate that cannot support the remaining life triggers additional sizing [b401-retrofit]."),
+            TextBlock(markdown=f"### Retrofit\n\nAdditional electrically connected aluminium stand-off anodes provide a provisional aggregate allowance of {retrofit_count} units ({retrofit_count * values['mass']:.0f} kg), from the maximum mass and phase-output shortfall [b401-retrofit; b401-output-adequacy]. This aggregate quantity does not determine lower-level allocation. {attachment}Intervention planning is triggered at the time a potential exceeds the stated criterion or measured remaining capacity cannot support the remaining life. Latest intervention year and local retrofit quantity are not evaluated: elapsed service, remaining mass, future demand and a spatial survey are required."),
+            TextBlock(markdown=sources)]
 
 _CHECKS = {"mass", "initial_current_output", "final_current_output"}
 

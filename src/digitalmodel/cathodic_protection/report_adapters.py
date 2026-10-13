@@ -82,6 +82,7 @@ from digitalmodel.cathodic_protection.report_elevation import (
     geometry_caveats,
 )
 from digitalmodel.cathodic_protection.report_recommendations import (
+    arrangement_options,
     conclusions_block,
     failed_keys,
     recommendation_block,
@@ -1617,14 +1618,22 @@ def _b401_report_additions(
     by_key["design-basis"].blocks.extend(design_blocks(inputs))
     adequacy = by_key["adequacy"]
     failures = failed_keys(results)
-    if "overall_status" in failures:
-        adequacy.blocks.insert(2, recommendation_block(results, "overall_status"))
-    for key in failures:
-        if key != "overall_status":
-            adequacy.blocks.append(recommendation_block(results, key))
-    adequacy.blocks.append(conclusions_block(results))
     evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
-    caveats = geometry_caveats(inputs, results) + recommendation_caveats(results)
+    if evidence:
+        adequacy.blocks.extend(arrangement_options(inputs, results))
+        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\nThe increased-count and dimensioned alternatives pass the aggregate mass and current checks. Measured protection at the two lowest levels remains below the stated criterion; a spatial survey and local allocation assessment are needed before retrofit sizing. Monitoring and intervention triggers are stated above."))
+    else:
+        if "overall_status" in failures:
+            adequacy.blocks.insert(2, recommendation_block(results, "overall_status"))
+        for key in failures:
+            if key != "overall_status":
+                adequacy.blocks.append(recommendation_block(results, key))
+        adequacy.blocks.append(conclusions_block(results))
+    caveats = geometry_caveats(inputs, results)
+    if not evidence:
+        caveats += recommendation_caveats(results)
+    else:
+        caveats.append("Equivalent-cylinder alternatives require fabrication, core, attachment, clearance and anode-interaction assessment. A recurring survey interval and numerical depletion trigger require measured remaining mass, elapsed service and future demand; only baseline and post-intervention surveys are specified here.")
     caveats.extend(evidence.get("limitations", []))
     return [Section(
         key="cp-limitations", title="Limitations and items not evaluated",

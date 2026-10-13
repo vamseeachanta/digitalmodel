@@ -154,6 +154,21 @@ def test_published_jacket_monitoring_is_depth_true_and_attributed() -> None:
     assert "measured under-protection" in text
 
 
+def test_published_report_includes_native_rechecks_and_distinct_options() -> None:
+    spec = anode_design_report(_run("published_jacket_84m"))
+    tables = _tables(spec)
+    increased = tables["Original and increased-count arrangement"]
+    assert increased.rows[-1][1:] == ["FAIL", "PASS"]
+    dimensioned = tables["Original and dimensioned equivalent-cylinder arrangement"]
+    assert dimensioned.rows[-1][1:] == ["FAIL", "PASS"]
+    text = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock))
+    for phrase in ["### Design increase", "### Monitoring", "### Retrofit", "remote or shielded",
+                   "more positive than -0.800 V", "[b401-retrofit]"]:
+        assert phrase in text
+    assert "the route's recommended count" not in text
+    assert "not re-checked by this calculation" not in text
+
+
 def _statuses(spec: ReportSpec) -> list[StatusBlock]:
     return [b for s in spec.sections for b in s.blocks if isinstance(b, StatusBlock)]
 

@@ -174,3 +174,44 @@ def test_recommendation_sources_are_selected_by_key(edition, monkeypatch):
     output = next(c for c in expected if c.endswith("(output adequacy)"))
     assert f"anodes (`{mass}`)" in text
     assert f"anodes (`{output}`)" in text
+
+
+def test_verified_options_recheck_count_and_consistent_geometry() -> None:
+    from digitalmodel.cathodic_protection.report_recommendations import arrangement_options
+    from digitalmodel.reporting import TableBlock
+
+    routed = cfg()
+    blocks = arrangement_options(routed["inputs"], routed["results"])
+    tables = [b for b in blocks if isinstance(b, TableBlock)]
+    assert len(tables) == 2
+    count_rows = tables[0].rows
+    assert count_rows[0][1:3] == [55, 173]
+    assert count_rows[-1][1:3] == ["FAIL", "PASS"]
+    assert count_rows[3][2] == pytest.approx(173 * routed["results"]["current_output_verification"]["anode_current_output_final_A"], abs=.01)
+    geometry = tables[1].rows
+    candidate = deepcopy(routed["inputs"])
+    candidate["anode"]["count"] = 55
+    candidate["anode"]["length_m"] = geometry[1][2]
+    candidate["anode"]["individual_anode_mass_kg"] = geometry[2][2]
+    candidate["anode"].pop("radius_m", None)
+    checked = run_cathodic_protection({"inputs": candidate})["results"]
+    assert checked["status"]["result"] == "PASS"
+    assert geometry[3][2] == pytest.approx(kernel.equivalent_radius_from_mass(geometry[2][2], geometry[1][2]), abs=.000001)
+    text = " ".join(b.markdown for b in blocks if isinstance(b, TextBlock))
+    assert "remote or shielded" in text
+    assert "more positive than -0.800 V" in text
+    assert "[b401-retrofit]" in text
+    assert "118" in text and "23600 kg" in text
+
+
+@pytest.mark.parametrize("edition", ["2005", "2010", "2017", "2021"])
+def test_verified_options_use_edition_specific_retrofit_subject(edition):
+    from digitalmodel.cathodic_protection.report_recommendations import arrangement_options
+
+    routed = cfg()
+    routed["results"]["edition"] = edition
+    routed["inputs"]["design_data"]["edition"] = edition
+    text = " ".join(b.markdown for b in arrangement_options(routed["inputs"], routed["results"])
+                    if isinstance(b, TextBlock))
+    assert ("retrofit evidence" if edition == "2021" else "retrofit documentation") in text
+    assert "published-jacket-paper" not in text
