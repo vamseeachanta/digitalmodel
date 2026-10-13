@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline header-only repository-reference guard; synthetic scanner examples.
 
 Run directly with Python as well as through the hosted pytest suite. No model
@@ -106,6 +109,47 @@ class TestDuplicateInventory(unittest.TestCase):
         self.assertEqual(family, "buoy")
         chosen = min(paths, key=lambda p: self.tool["canonical_key"](p, family))
         self.assertEqual(chosen, paths[1])
+
+
+
+class TestProvenanceNotes(unittest.TestCase):
+    """Unrecorded redistribution terms will remain explicit in all notes."""
+
+    def test_redistribution_terms_not_stated(self) -> None:
+        """Every added note will state the same unverified redistribution terms."""
+        root = Path(__file__).resolve().parents[3]
+        paths = (
+            "docs/domains/orcaflex/aqwa/to_orcaflex/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/buoy/modular/spm-proj-1/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/buoy/modular/spm-proj-2/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/buoy/spm-proj-1/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/buoy/spm-proj-2/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-1/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/buoy_converted/spm-proj-2/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/drillship-riser/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/reference/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/riser/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring/semi/PROVENANCE.md",
+            "docs/domains/orcaflex/mooring_fender/PROVENANCE.md",
+            "docs/domains/orcaflex/reference/PROVENANCE.md",
+            "docs/domains/orcaflex/regional/PROVENANCE.md",
+            "docs/domains/orcaflex/risers/completion/PROVENANCE.md",
+            "docs/domains/orcaflex/risers/disconnect/PROVENANCE.md",
+            "docs/domains/orcaflex/risers/drilling/PROVENANCE.md",
+            "docs/domains/orcaflex/risers/intervention/PROVENANCE.md",
+            "docs/domains/orcaflex/risers/production/PROVENANCE.md",
+            "tests/solvers/orcaflex/analysis/moorings/PROVENANCE.md",
+        )
+        expected = (
+            "not stated; redistribution terms to be checked "
+            "before any model file is shared outside"
+        )
+        self.assertEqual(len(paths), 20)
+        for name in paths:
+            with self.subTest(path=name):
+                text = (root / name).read_text(encoding="utf-8")
+                self.assertIn(expected, text)
+                self.assertNotIn("internal use only", text.casefold())
 
 
 if __name__ == "__main__":

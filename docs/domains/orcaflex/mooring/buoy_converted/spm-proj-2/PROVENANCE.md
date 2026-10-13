@@ -18,4 +18,4 @@ not stated
 
 ## Permitted use
 
-internal use only until provenance is recorded
+not stated; redistribution terms to be checked before any model file is shared outside
