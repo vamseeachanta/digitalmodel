@@ -1754,9 +1754,16 @@ def _verification_presentation(sections: list[Section], *, published: bool = Fal
     """Apply engineering labels and declared precision only to verification reports."""
     for section in sections:
         section.subtitle = _verification_wording(section.subtitle, published)
+        if section.key == "adequacy":
+            section.subtitle = "Current-output check"
         for block in section.blocks:
             if isinstance(block, FigureBlock):
                 block.caption = _verification_wording(block.caption, published)
+                if not published and block.figure_id == FIG_DEMAND_VS_TIME:
+                    block.caption = block.caption.replace(
+                        "with declared input basis breakdown constants",
+                        "with the declared coating breakdown constants",
+                    )
                 if published and block.svg and 'data-type="depth_true"' in block.svg:
                     block.caption += " Criterion input: based on previous project experience."
                 if block.svg:
@@ -1790,7 +1797,7 @@ def _verification_table(block: TableBlock, published: bool) -> None:
             source = label
             if published and row[0] in {"Seawater resistivity", "Anode net mass", "Anode length"}:
                 source = "[1], p. 242, Section 2"
-            elif row[0] in {"Total surface area", "Anode equivalent radius (fresh)"}:
+            elif row[0] == "Total surface area" or (published and row[0] == "Anode equivalent radius (fresh)"):
                 source = "calculated from declared inputs"
             row.append(source)
         block.columns.append("Source")

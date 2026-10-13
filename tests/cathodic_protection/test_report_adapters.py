@@ -1212,10 +1212,47 @@ def test_analysis_percentages_and_citation_residue(name: str, title: str) -> Non
     assert not re.search(r"dnv-rp-b401\s+20\d\d\s+\[", text, re.I)
     assert not re.search(r"\bEq\.\s*\(", text)
     assert "(B401 )" not in text
+    assert "declared input basis resistance" not in text
+    assert "with declared input basis breakdown constants" not in text
     if name == "jacket_report_example":
         appendix = next(s for s in anode_design_report(_run(name)).appendices if s.key == "cp-limitations")
         body = " ".join(b.markdown for b in appendix.blocks if isinstance(b, TextBlock))
         assert body.count("percentage difference less than 0.1%") == 3
+
+
+@pytest.mark.parametrize("name", ["published_jacket_84m", "jacket_report_example"])
+def test_analysis_adequacy_subtitle_states_current_output_check(name: str) -> None:
+    """The analysis subtitle identifies the check without a spurious basis."""
+    spec = anode_design_report(_run(name))
+    adequacy = next(s for s in spec.sections if s.key == "adequacy")
+    assert adequacy.subtitle == "Current-output check"
+
+
+def test_illustrative_current_demand_caption_names_declared_coating_constants() -> None:
+    """The demand figure describes the declared coating breakdown inputs."""
+    spec = anode_design_report(_run("jacket_report_example"))
+    figure = next(f for f in spec.figure_blocks() if f.figure_id == FIG_DEMAND_VS_TIME)
+    assert "with the declared coating breakdown constants" in figure.caption
+
+
+def test_illustrative_fresh_anode_radius_is_labelled_as_input() -> None:
+    """The fresh radius retains its stated value and illustrative input source."""
+    spec = anode_design_report(_run("jacket_report_example"))
+    row = next(r for r in _tables(spec)["Design data"].rows
+               if r[0] == "Anode equivalent radius (fresh)")
+    assert row[1] == 0.05
+    assert row[-1] == "illustrative input"
+    assert "calculated from declared inputs" not in row
+
+
+def test_published_fresh_anode_radius_source_regression_pin() -> None:
+    """The published radius source remains calculated from declared inputs."""
+    cfg = _run("published_jacket_84m")
+    spec = anode_design_report(cfg)
+    row = next(r for r in _tables(spec)["Design data"].rows
+               if r[0] == "Anode equivalent radius (fresh)")
+    assert row[1] == cfg["results"]["current_output_verification"]["equivalent_radius_initial_m"]
+    assert row[-1] == "calculated from declared inputs"
 
 
 def test_signed_zero_difference_is_printed_without_negative_zero() -> None:
