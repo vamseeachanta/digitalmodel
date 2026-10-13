@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Validate dated waivers for the explicitly governed module-size check."""
 
 from datetime import date
@@ -93,6 +96,8 @@ def _validate_file(root, relative, governed, limit, record, expires, today, labe
                          f"follow-up issue #{record['issue']}")
     if lines > record["ceiling"]:
         raise ValueError(f"{label}: {lines} lines exceeds ceiling {record['ceiling']}")
+    if lines < record["ceiling"]:
+        raise ValueError(f"{label}: stale ceiling; lower it to {lines}")
 
 
 def load_waivers(root: Path, governed, limit: int, *, today: date | None = None):

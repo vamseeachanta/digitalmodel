@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: Size limits for the modules this issue touches (dm#1574): 400 lines per
 module and 50 lines per function. The limits are the repository's universal

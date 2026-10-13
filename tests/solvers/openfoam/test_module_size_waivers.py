@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Dated module-size waivers on synthetic temporary files."""
 
 from datetime import date
@@ -24,7 +27,8 @@ def write_waivers(root, entries):
 
 
 def entry(**changes):
-    return {"path": "module.py", "ceiling": 420, "expires": "2026-10-13",
+    return {"path": "module.py", "ceiling": 410,
+            "expires": "2026-10-13",
             "issue": 2052, **changes}
 
 
@@ -55,7 +59,13 @@ def test_unlisted_over_limit_regression_pin(module_tree, monkeypatch):
 @pytest.mark.parametrize("lines", [410, 420])
 def test_active_waiver_at_or_below_ceiling(module_tree, lines):
     (module_tree / "module.py").write_text("# line\n" * lines, encoding="utf-8")
-    assert load(module_tree, [entry()]) == {"module.py": 420}
+    if lines == 410:
+        with pytest.raises(
+            ValueError, match=r"module.py.*stale ceiling; lower it to 410"
+        ):
+            load(module_tree, [entry(ceiling=420)])
+    else:
+        assert load(module_tree, [entry(ceiling=420)]) == {"module.py": 420}
 
 
 def test_waiver_over_ceiling(module_tree):
@@ -65,7 +75,9 @@ def test_waiver_over_ceiling(module_tree):
 
 @pytest.mark.parametrize("today", [date(2026, 10, 13), date(2026, 10, 14)])
 def test_waiver_expired_on_or_after_date(module_tree, today):
-    with pytest.raises(ValueError, match=r"entry 1.*module.py.*expired.*2026-10-13.*2052"):
+    with pytest.raises(
+        ValueError, match=r"entry 1.*module.py.*expired.*2026-10-13.*2052"
+    ):
         load(module_tree, [entry()], today=today)
 
 
@@ -117,7 +129,10 @@ def test_waiver_rejects_invalid_schema(module_tree, entries):
 
 
 def test_waiver_accepts_yaml_date(module_tree):
-    assert load(module_tree, [entry(expires=date(2026, 10, 13))]) == {"module.py": 420}
+    (module_tree / "module.py").write_text("# line\n" * 420, encoding="utf-8")
+    assert load(
+        module_tree, [entry(ceiling=420, expires=date(2026, 10, 13))]
+    ) == {"module.py": 420}
 
 
 def test_all_entries_are_validated(module_tree):
@@ -141,15 +156,21 @@ def test_missing_waiver_file_fails(module_tree):
     from tests.solvers.openfoam.module_size_waivers import load_waivers
 
     with pytest.raises(ValueError, match="waiver file.*missing"):
-        load_waivers(module_tree, ("module.py",), guard.MAX_MODULE_LINES, today=RUN_DATE)
+        load_waivers(
+            module_tree, ("module.py",), guard.MAX_MODULE_LINES, today=RUN_DATE
+        )
 
 
 def test_malformed_yaml_fails(module_tree):
-    (module_tree / "scripts/ci/module_size_waivers.yml").write_text("[", encoding="utf-8")
+    (module_tree / "scripts/ci/module_size_waivers.yml").write_text(
+        "[", encoding="utf-8"
+    )
     from tests.solvers.openfoam.module_size_waivers import load_waivers
 
     with pytest.raises(ValueError, match="waiver file.*invalid YAML"):
-        load_waivers(module_tree, ("module.py",), guard.MAX_MODULE_LINES, today=RUN_DATE)
+        load_waivers(
+            module_tree, ("module.py",), guard.MAX_MODULE_LINES, today=RUN_DATE
+        )
 
 
 def test_unknown_field_fails(module_tree):
@@ -165,7 +186,9 @@ def test_duplicate_yaml_field_fails(module_tree):
     from tests.solvers.openfoam.module_size_waivers import load_waivers
 
     with pytest.raises(ValueError, match="waiver file.*duplicate field.*ceiling"):
-        load_waivers(module_tree, ("module.py",), guard.MAX_MODULE_LINES, today=RUN_DATE)
+        load_waivers(
+            module_tree, ("module.py",), guard.MAX_MODULE_LINES, today=RUN_DATE
+        )
 
 
 def test_waiver_cannot_escape_root_through_symlink(module_tree):
@@ -174,3 +197,23 @@ def test_waiver_cannot_escape_root_through_symlink(module_tree):
     (module_tree / "link.py").symlink_to(outside)
     with pytest.raises(ValueError, match=r"entry 1.*link.py.*outside repository"):
         load(module_tree, [entry(path="link.py")], governed=("link.py",))
+
+
+def test_waiver_one_line_under_ceiling(module_tree):
+    with pytest.raises(ValueError, match=r"module.py.*stale ceiling; lower it to 410"):
+        load(module_tree, [entry(ceiling=411)])
+
+
+def test_committed_waiver_list_is_empty():
+    from tests.solvers.openfoam.module_size_waivers import _read_entries
+
+    assert _read_entries(guard._REPO) == []
+
+
+def test_waiver_far_future_expiry_is_valid(module_tree):
+    assert load(module_tree, [entry(expires="2099-10-13")]) == {"module.py": 410}
+
+
+def test_waiver_added_field_is_rejected(module_tree):
+    with pytest.raises(ValueError, match=r"unexpected fields.*added"):
+        load(module_tree, [entry(added="2026-10-12")])
