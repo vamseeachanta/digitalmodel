@@ -5,10 +5,26 @@ from flask_wtf import FlaskForm
 from wtforms import SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired
 
+def load_signing_key():
+    """Return DIGITALTWINFEED_SECRET_KEY without a default or generated fallback."""
+    import os
+
+    value = os.environ.get("DIGITALTWINFEED_SECRET_KEY")
+    if value is None or not value.strip():
+        raise RuntimeError(
+            "DIGITALTWINFEED_SECRET_KEY must be set; the application does not start "
+            "without it and the repository holds no value for it. For a development "
+            "run, generate a fresh random value locally and export it in your shell: "
+            "export DIGITALTWINFEED_SECRET_KEY=\"$(python -c 'import secrets; "
+            "print(secrets.token_hex(32))')\"."
+        )
+    return value
+
+
 # Flask app object
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-app.secret_key = b'm\xb7\x12\x97\xb4\x98\x88~\xf4o'
+app.secret_key = load_signing_key()
 
 
 def register_blueprint(mod_name, is_service=True):
