@@ -55,8 +55,8 @@ repos:
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: [-r, src/]
-        pass_filenames: false
+        additional_dependencies: ["pbr>=2.0.0"]
+        files: ^src/
 
   # Secrets detection
   - repo: https://github.com/gitleaks/gitleaks
