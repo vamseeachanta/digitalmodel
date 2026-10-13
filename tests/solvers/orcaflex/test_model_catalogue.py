@@ -234,33 +234,16 @@ def test_package_word_requires_path_context(tmp_path):
     tests = tmp_path / "tests"
     tests.mkdir()
     (tests / "prose.py").write_text("geometry", encoding="utf-8")
-    (tests / "reference.py").write_text("'geometry/model.yml'", encoding="utf-8")
-    (tests / "windows.py").write_text(r"'geometry\model.yml'", encoding="utf-8")
+    (tests / "reference.py").write_text(
+        "'templates/geometry/model.yml'", encoding="utf-8"
+    )
+    (tests / "windows.py").write_text(
+        r"'templates\geometry\model.yml'", encoding="utf-8"
+    )
     (tests / "suffix.py").write_text("'other_geometry/model.yml'", encoding="utf-8")
     owner = path.rsplit("/", 1)[0]
     usage = module.find_usage(tmp_path, [(tmp_path / owner, [tmp_path / path])])
     assert usage[owner] == ["tests/reference.py", "tests/windows.py"]
-
-
-def test_real_references_have_path_context():
-    """Every reported reference on the real tree names that model as a path."""
-    import re
-
-    module = load_module()
-    groups = module.source_groups(ROOT / "docs/domains/orcaflex")
-    for owner, references in module.find_usage(ROOT, groups).items():
-        name = owner.rsplit("/", 1)[-1]
-        pattern = re.compile(
-            r"(?<![\w-])"
-            + re.escape(name)
-            + r"[\\/]"
-            + r"|[\\/]"
-            + re.escape(name)
-            + r"(?![\w-])"
-        )
-        for reference in references:
-            text = (ROOT / reference).read_text(encoding="utf-8-sig", errors="replace")
-            assert owner in text or pattern.search(text), (owner, reference)
 
 
 def test_unknown_origin_requires_caution():

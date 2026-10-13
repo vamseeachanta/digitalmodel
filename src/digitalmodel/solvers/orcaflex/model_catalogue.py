@@ -187,7 +187,7 @@ def catalogue_entries(root: Path, groups: list, omissions: list) -> Iterable:
 
 
 def find_usage(root: Path, groups: list) -> dict[str, list[str]]:
-    """Report model references only when a model appears in a path token."""
+    """Report references naming the model's parent and folder as path components."""
     owners = sorted(
         {
             model_path(p.relative_to(root).as_posix())
@@ -197,12 +197,9 @@ def find_usage(root: Path, groups: list) -> dict[str, list[str]]:
     )
     patterns = {
         owner: re.compile(
-            r"(?<![\w-])"
-            + re.escape(Path(owner).name)
-            + r"/"
-            + r"|/"
-            + re.escape(Path(owner).name)
-            + r"(?![\w-])"
+            r"(?<![\w.-])"
+            + re.escape("/".join(owner.split("/")[-2:]))
+            + r"(?![\w.-])"
         )
         for owner in owners
     }

@@ -351,7 +351,7 @@ def render_card(
 
 def page_template(body: str, listing: str) -> str:
     """Emit a self-contained page with generation and staleness instructions."""
-    masters = body.count("/modular/master.yml</h3><p>YAML parse failure")
+    masters = body.count("/master.yml</h3><p>YAML parse failure")
     return (
         '<!doctype html><html lang="en"><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
@@ -374,7 +374,7 @@ def page_template(body: str, listing: str) -> str:
         "tests/solvers/orcaflex/test_model_catalogue.py, comparing committed bytes "
         "with two consecutive builds.</p>"
         "<p>Plain-reader failures in the repository's master-file form: "
-        f"{masters}; modular/master.yml files are not assembled.</p>"
+        f"{masters}; all master.yml files are counted; includes are not assembled.</p>"
         f"<p>{COUNT_RULE}</p>"
         "<p>One card per YAML source variant; includes are not assembled. No "
         "loadability or solved-shape claim is implied. Selected environment fields "
