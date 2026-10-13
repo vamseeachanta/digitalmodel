@@ -1232,3 +1232,98 @@ def test_illustrative_design_basis_uses_example_input_label() -> None:
     prose = " ".join(b.markdown for b in section.blocks if isinstance(b, TextBlock))
     assert "source: illustrative input" in prose
     assert "based on previous project experience" not in prose
+
+
+def test_published_summary_and_conclusions_give_computed_retrofit_quantities() -> None:
+    """Recommendations reproduce independent sizing from the routed basis."""
+    import math
+    from digitalmodel.cathodic_protection import _kernels as kernel
+
+    cfg = _run("published_jacket_84m")
+    inputs, result = cfg["inputs"], cfg["results"]
+    basis = inputs["structure"]["verification_evidence"]["higher_density_basis"]
+    targets = {t["quantity"]: t["printed"] for t in inputs["structure"]["verification_evidence"]["targets"]}
+    zone = next(z for z in inputs["structure"]["zones"] if z["zone"] == basis["affected_zone"])
+    added = [zone["area_m2"] * (basis["zones"][zone["zone"]][p] - zone["effective_current_density_A_m2"][p]) for p in ("initial", "mean", "final")]
+    req = result["anode_requirements"]
+    elapsed = max(r["elapsed_days"] for r in inputs["structure"]["report_geometry"]["monitoring"])
+    hours = (result["design_life_years"] - elapsed / 365) * kernel.HOURS_PER_YEAR
+    required_mass = added[1] * hours / (req["electrochemical_capacity_Ah_kg"] * req["utilization_factor"])
+    counts = [math.ceil(required_mass / req["individual_mass_kg"]), math.ceil(added[0] / targets["initial_output"]), math.ceil(added[2] / targets["final_output"])]
+    count = max(counts)
+    demands = [result["connected_current_allowance_A"] + sum(z["area_m2"] * basis["zones"].get(z["zone"], z["effective_current_density_A_m2"])[p] for z in inputs["structure"]["zones"]) for p in ("initial", "mean", "final")]
+    design_mass = demands[1] * result["design_life_years"] * kernel.HOURS_PER_YEAR / (req["electrochemical_capacity_Ah_kg"] * req["utilization_factor"])
+    design_count = max(math.ceil(design_mass / req["individual_mass_kg"]), math.ceil(demands[0] / targets["initial_output"]), math.ceil(demands[2] / targets["final_output"]))
+    spec = anode_design_report(cfg)
+    summary = spec.sections[0].blocks[0].markdown
+    conclusion = next(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock) and b.markdown.startswith("### Conclusions and recommendations"))
+    for text in (summary, conclusion):
+        assert f"{count} additional anodes" in text
+        assert f"{count * req['individual_mass_kg']:.0f} kg net alloy" in text
+        assert "additional-load checks PASS" in text
+    assert f"{design_count} anodes" in conclusion
+    assert "mass governs" in conclusion
+    assert "sensitivity only" in conclusion
+    assert "split and intervention date are not evaluated" in conclusion
+    assert count * req["individual_mass_kg"] >= required_mass
+    assert count * targets["initial_output"] >= added[0]
+    assert count * targets["final_output"] >= added[2]
+
+
+def test_each_analysis_summary_states_the_recommended_quantity() -> None:
+    """The reference and illustrative summaries state their routed counts."""
+    for name in ("reference_jacket_60m_members", "jacket_report_example"):
+        cfg = _run(name)
+        summary = anode_design_report(cfg).sections[0].blocks[0].markdown
+        count = cfg["results"]["current_output_verification"]["recommended_anode_count"]
+        assert f"{count} anodes" in summary or f"{count}-anode" in summary
+        assert "recommended" in summary
+
+
+def test_spatial_and_reference_comparison_limitations_are_explicit() -> None:
+    """Local findings and unlike geometric quantities retain their limitations."""
+    published = render_html(anode_design_report(_run("published_jacket_84m")))
+    assert "Aggregate checks cannot detect this local under-protection." in _visible_text(published)
+    cfg = _run("reference_jacket_60m_members")
+    spec = anode_design_report(cfg)
+    summary = spec.sections[0].blocks[0].markdown
+    angle = next(c for c in cfg["structural_model"]["comparisons"] if c["quantity"] == "Leg 1 inclination in 3D")
+    assert f"{angle['difference_percent']:+.1f}%" in summary
+    assert "remain unresolved" in summary
+    assert "minimum aggregate arrangement" in summary
+    assert "no selected anode product" in summary
+    assert "anode size requires confirmation" in summary
+    table = _tables(spec)["Structural dimensions and mass compared with the paper"]
+    projection = [r for r in table.rows if "y-projection" in r[0] or "y projection" in r[0]]
+    assert projection
+    assert all(r[3] == "not comparable" for r in projection)
+
+
+def test_reference_summary_recommends_rechecked_count_after_stated_failure() -> None:
+    """A failing stated count is never labelled as the recommended quantity."""
+    cfg = yaml.safe_load((INPUT_DIR / "reference_jacket_60m_members.yml").read_text())
+    needed = _run("reference_jacket_60m_members")["results"]["current_output_verification"]["recommended_anode_count"]
+    cfg["inputs"]["anode"]["count"] = needed - 1
+    cfg = run_cathodic_protection(cfg)
+    checked = cfg["inputs"]["anode"]["count"]
+    summary = anode_design_report(cfg).sections[0].blocks[0].markdown
+    assert f"recommended at {checked} anodes" not in summary
+    needed = cfg["results"]["current_output_verification"]["recommended_anode_count"]
+    assert f"recommended at {needed} anodes" in summary
+
+
+def test_reference_unavailable_recheck_does_not_claim_a_minimum(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unavailable sizing is not described as a qualified minimum arrangement."""
+    from digitalmodel.cathodic_protection import report_reference
+
+    cfg = yaml.safe_load((INPUT_DIR / "reference_jacket_60m_members.yml").read_text())
+    cfg["inputs"]["anode"]["count"] = _run("reference_jacket_60m_members")["results"]["current_output_verification"]["recommended_anode_count"] - 1
+    cfg = run_cathodic_protection(cfg)
+
+    def unavailable(config: Any) -> Any:
+        raise ValueError("a passing aggregate arrangement is not established")
+
+    monkeypatch.setattr(report_reference, "reference_arrangements", unavailable)
+    summary = anode_design_report(cfg).sections[0].blocks[0].markdown
+    assert "minimum aggregate arrangement" not in summary
+    assert "A passing aggregate quantity is not evaluated" in summary

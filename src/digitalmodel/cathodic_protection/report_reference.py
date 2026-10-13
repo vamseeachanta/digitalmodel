@@ -226,12 +226,21 @@ def reference_sections(cfg: Mapping[str, Any]) -> list[Any]:
         revised = arrangements["rechecked"]
         finding = (f"The stated arrangement fails an aggregate check. Increasing to {revised['current_output_verification']['anode_count']} anodes is rechecked and passes the aggregate mass and current checks. "
                    if revised is not None else "Rechecked arrangement is not evaluated: complete demand, output, mass and arrangement data are required. ")
+    qualified = arrangements["stated"] if passed else arrangements["rechecked"]
+    recommendation = (f"The rechecked aggregate quantity is recommended at {qualified['current_output_verification']['anode_count']} anodes on the stated basis. "
+                      if qualified is not None else "A passing aggregate quantity is not evaluated. ")
+    minimum = qualified is not None and qualified["current_output_verification"]["anode_count"] == qualified["current_output_verification"]["recommended_anode_count"]
+    kind = "minimum aggregate arrangement" if minimum else "evaluated aggregate arrangement"
+    qualification = (f"The recommended option is a {kind}, with no selected anode product; anode size requires confirmation. "
+                     if qualified is not None else "No selected anode product is established; anode size requires confirmation. ")
     mass_difference = abs(next(c["difference_percent"] for c in model["comparisons"] if c["quantity"] == "Tubular jacket steel mass"))
+    angle_difference = next(c["difference_percent"] for c in model["comparisons"] if c["quantity"] == "Leg 1 inclination in 3D")
     summary = (f"The {count}-anode arrangement on the reference jacket is analysed against "
                "aggregate mass and initial and final current requirements. The paper provides "
                "structural comparisons; published CP outputs are not available. " + finding +
                f"Tubular steel mass is {mass_difference:.1f}% below the paper's printed jacket mass on the stated "
-               "exclusion basis; this discrepancy is not resolved. Confirmation of the mass basis, "
+               f"exclusion basis; the mass discrepancy and 3D leg inclination difference ({angle_difference:+.1f}%) remain unresolved. "
+               + qualification + recommendation + "Confirmation of the mass basis, "
                "splash boundaries, installed piles and spatial protection is recommended before "
                "a final design is established. Structural comparisons, area derivation and "
                "the limitations below identify the evidence required.")
@@ -319,7 +328,7 @@ def reference_comparison(model: Mapping[str, Any]) -> list[Any]:
     for c in model["comparisons"]:
         digits = 0 if c["unit"] == "kg" else 3
         rows.append([c["quantity"], f"{c['printed']:.{digits}f}", f"{c['model']:.{digits}f}",
-                     percentage_text(c["difference_percent"]), c["unit"], "[1], " + c["locator"]])
+                     ("not comparable" if "y-projection" in c["quantity"] or "y projection" in c["quantity"] else percentage_text(c["difference_percent"])), c["unit"], "[1], " + c["locator"]])
     return [TableBlock(title="Structural dimensions and mass compared with the paper",
                        columns=["Quantity", "Paper", "Structural model", "Difference", "Unit", "Locator"], rows=rows),
             TextBlock(markdown=model["mass_limitation"])]

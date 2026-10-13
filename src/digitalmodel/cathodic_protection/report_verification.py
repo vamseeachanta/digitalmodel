@@ -101,7 +101,7 @@ def measured_statement(inputs: Mapping[str, Any]) -> str:
     relation = "at or more positive than" if any(float(r["potential_V"]) == criterion for r in failing) else "more positive than"
     return (f"Measured under-protection at {levels}: potentials are {relation} "
             f"{criterion:.3f} V versus Ag/AgCl/seawater; protection requires more negative than "
-            f"{criterion:.3f} V. This spatial finding is not established by aggregate checks.")
+            f"{criterion:.3f} V. Aggregate checks cannot detect this local under-protection.")
 
 
 def published_status(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> StatusBlock:
@@ -209,8 +209,37 @@ def measured_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> l
             TextBlock(markdown="### Monitoring\n\nAll levels and remote or shielded locations require potential surveys versus Ag/AgCl/seawater; protection requires more negative than -0.800 V (input: based on previous project experience). Readings more positive than -0.800 V trigger investigation and intervention planning. Surveys before and after intervention should use the same locations. Remaining mass and depletion should be measured against remaining life. The recurring interval is not evaluated: current surveys, depletion history, corrosion allowance and affected-member condition are needed. Monitoring alone is not a demonstrated correction of the measured failure; retrofit assessment is recommended because the trigger is already met.")]
 
 
+def published_recommendations(inputs: Mapping[str, Any], results: Mapping[str, Any],
+                              options: list[Any]) -> list[str]:
+    """State quantities from the evaluated option tables and their governing checks."""
+    tables = {b.title: {r[0]: r[1] for r in b.rows} for b in options if isinstance(b, TableBlock)}
+    design = tables.get("Increase at design: demand and recheck")
+    retrofit = tables.get("Retrofit: lower-zone addition and recheck")
+    if not design or not retrofit:
+        return ["Retrofit sizing is not evaluated: complete demand, output, mass and arrangement data are required."]
+    if retrofit["Published outputs all-check recheck"] != "PASS":
+        return ["A passing additional-load arrangement is not established; sizing and condition evidence are required."]
+    count = retrofit["Published outputs all-check count"]
+    net_mass = count * float(results["anode_requirements"]["individual_mass_kg"])
+    zone = inputs["structure"]["verification_evidence"]["higher_density_basis"]["affected_zone"]
+    return [
+        f"Retrofit assessment recommends {count} additional anodes of the published type "
+        f"({net_mass:.0f} kg net alloy) in {zone}; additional-load checks PASS on published outputs. "
+        "Existing zone allocation and post-intervention potentials are needed to establish local protection.",
+        f"For a new design at the higher densities, {design['Published outputs count']} anodes "
+        f"are recommended on published outputs; {design['Published outputs governing check']} governs "
+        f"and the aggregate recheck is {design['Published outputs recheck']}. "
+        "Member geometry, electrical continuity, distribution, core and attachment details require confirmation.",
+        f"Independent-estimate counts are {retrofit['Independent estimate all-check count']} "
+        f"additional retrofit anodes and {design['Independent estimate count']} design anodes, "
+        "as sensitivity only.",
+        "A per-level split and intervention date are not evaluated: existing allocation, member geometry, "
+        "current readings, remaining anode condition, corrosion allowance and wall-thickness evidence are required.",
+    ]
+
+
 def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
-                         *, options_available: bool = True) -> str:
+                         *, options_available: bool = True, options: list[Any] | None = None) -> str:
     """Open verification reports with result, finding, advice and limitations."""
     ver = results["current_output_verification"]
     if published_outputs(inputs):
@@ -222,6 +251,8 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
                    "the monitoring trigger is met; design, retrofit and monitoring options "
                    "and their rechecks are in Adequacy. " if measured_failure(inputs) else
                    "No measured failure is established by the latest readings. ")
+        if measured_failure(inputs) and options_available and options is not None:
+            finding = published_recommendations(inputs, results, options)[0] + " "
         if measured_failure(inputs) and not options_available:
             finding = "Retrofit sizing is not evaluated: complete demand, output, mass and arrangement data are required. "
         return (f"The published {ver['anode_count']}-anode arrangement is analysed against "
@@ -236,6 +267,8 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
     return (f"The {ver['anode_count']}-anode arrangement is analysed against computed mass "
             f"and initial and final current demands: {status['result']}; "
             f"{governing} governs. "
+            + (f"An increase to {ver['recommended_anode_count']} anodes is recommended on the rechecked aggregate basis. "
+               if status["result"] == "FAIL" and options_available else "")
             + ("Rechecked design alternatives and monitoring requirements are in Adequacy. "
                if status["result"] == "FAIL" and options_available else
                "Design alternatives are not evaluated: complete demand, output, mass and arrangement data are required. "

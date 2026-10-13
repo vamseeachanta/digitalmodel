@@ -92,7 +92,7 @@ from digitalmodel.cathodic_protection.report_recommendations import (
     recommendation_caveats,
 )
 from digitalmodel.cathodic_protection.report_verification import (
-    aggregate_table, measured_options, published_outputs, published_status, verification_summary,
+    aggregate_table, measured_options, published_outputs, published_recommendations, published_status, verification_summary,
 )
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting.adapters import report_adapter
@@ -1639,7 +1639,7 @@ def _b401_report_additions(
         adequacy.blocks = [adequacy.blocks[0], verdict, aggregate_table(inputs, results)]
         options = _report_options(inputs, results, published=True)
         adequacy.blocks.extend(options)
-        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\n" + verdict.detail))
+        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\n" + verdict.detail + "\n\n" + "\n\n".join(published_recommendations(inputs, results, options))))
     elif modern:
         options = _report_options(inputs, results)
         adequacy.blocks.extend(options)
@@ -1671,7 +1671,7 @@ def _b401_report_additions(
     if modern:
         sections[sections.index(by_key["references"])] = _verification_references(inputs, results)
         sections.insert(0, Section(key="summary", title="Summary", blocks=[
-            TextBlock(markdown=verification_summary(inputs, results, options_available=any(isinstance(b, TableBlock) for b in options)))]))
+            TextBlock(markdown=verification_summary(inputs, results, options_available=any(isinstance(b, TableBlock) for b in options), options=options))]))
         _verification_presentation(sections, published=bool(evidence))
     if modern:
         caveats = [_verification_wording(str(item), bool(evidence)) for item in caveats]
