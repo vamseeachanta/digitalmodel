@@ -551,7 +551,9 @@ def geometry_caveats(
     if geometry.basis == "illustrative_regression_case":
         caveats.append(
             "The supplied coordinates and member sizes are illustrative and do not "
-            "establish surveyed geometry or structural section selection."
+            "establish surveyed geometry or structural section selection. "
+            "Agreement of the illustrative member areas with the stated areas is "
+            "not an independent verification of the stated areas."
         )
     caveats.append(
         "External steel area is the cylinder lateral surface area π × diameter × "
