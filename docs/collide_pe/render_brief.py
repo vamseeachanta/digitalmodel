@@ -119,8 +119,11 @@ def render(problem: dict) -> str:
         out = out.replace(k, v)
     label = working_note_label(problem)
     if label:
+        marker = '  <div class="sheet">\n'
+        if marker not in out:
+            raise ValueError("Working-note label marker is missing from the brief template")
         out = out.replace(
-            '  <div class="sheet">\n',
+            marker,
             f'  <div class="sheet">\n    <p class="panel">{_esc(label)}</p>\n',
             1,
         )

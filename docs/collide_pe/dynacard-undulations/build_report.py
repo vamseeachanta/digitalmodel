@@ -44,7 +44,7 @@ report = CalcReport(
     revision="A",
     preliminary=True,
     lede=(
-        STUDY_VALUES_NOTE + "<br />" +
+        STUDY_VALUES_NOTE + '</p>\n    <p class="lede">' +
         "Why a 4,200 ft rod string produces load undulations on the surface card, "
         "what the card confirms about the well, and what is required to progress to "
         "a downhole pump diagnosis. <strong>Preliminary results</strong> &mdash; "

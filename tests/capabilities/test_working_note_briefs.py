@@ -82,6 +82,14 @@ def test_rendered_pending_note_is_first_visible_text(renderer, tmp_path, monkeyp
     assert VisibleText(page.read_text(encoding="utf-8")).text[0] == NOTE
 
 
+def test_rendered_note_rejects_template_without_marker(renderer, tmp_path, monkeypatch):
+    template = tmp_path / "missing-marker.html"
+    template.write_text("<html><body>Practice answer</body></html>\n", encoding="utf-8")
+    monkeypatch.setattr(renderer, "TEMPLATE", template)
+    with pytest.raises(ValueError, match="Working-note label marker is missing"):
+        renderer.render({"solution": {}})
+
+
 PROBLEMS = tuple(sorted((ROOT / "docs/collide_pe/problems").glob("pe-*.yml")))
 
 

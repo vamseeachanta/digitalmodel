@@ -30,6 +30,10 @@ PAGES = tuple(
     for name in builder.DOCS_ARTIFACT_NAMES
     if name.endswith(".html")
 )
+PLOT_PAGES = tuple(
+    relative for relative in PAGES
+    if relative.endswith(("benchmark_amplitude.html", "benchmark_phase.html"))
+)
 
 
 class Headings(HTMLParser):
@@ -56,12 +60,48 @@ class Headings(HTMLParser):
             self.current[-1] += text
 
 
+def plotly_layout(text):
+    """Decode the layout argument of the figure that the page renders."""
+    call = re.search(r"Plotly\.newPlot\(\s*", text)
+    assert call, "missing Plotly figure"
+    decoder = json.JSONDecoder()
+    offset = call.end()
+    for _ in range(2):
+        _, offset = decoder.raw_decode(text, offset)
+        separator = re.match(r"\s*,\s*", text[offset:])
+        assert separator, "missing Plotly argument separator"
+        offset += separator.end()
+    layout, end = decoder.raw_decode(text, offset)
+    return layout, offset, end
+
+
+def assert_visible_plot_title(text):
+    layout, _, _ = plotly_layout(text)
+    assert layout.get("title", {}).get("text") == EXPECTED_TITLE, "missing visible label"
+
+
 @pytest.mark.parametrize("relative", PAGES)
 def test_committed_selftest_titles(relative):
-    page = Headings((ROOT / relative).read_text(encoding="utf-8"))
+    text = (ROOT / relative).read_text(encoding="utf-8")
+    page = Headings(text)
     assert page.titles == [EXPECTED_TITLE]
+    if relative in PLOT_PAGES:
+        assert_visible_plot_title(text)
     if relative.endswith("benchmark_report.html"):
         assert page.headings == [EXPECTED_TITLE]
+
+
+@pytest.mark.parametrize("relative", PLOT_PAGES)
+def test_plot_title_label_cannot_be_replaced_by_document_title(relative, tmp_path):
+    text = (ROOT / relative).read_text(encoding="utf-8")
+    layout, start, end = plotly_layout(text)
+    del layout["title"]
+    copy = tmp_path / "missing-figure-title.html"
+    copy.write_text(text[:start] + json.dumps(layout) + text[end:], encoding="utf-8")
+    altered = copy.read_text(encoding="utf-8")
+    assert Headings(altered).titles == [EXPECTED_TITLE]
+    with pytest.raises(AssertionError, match="missing visible label"):
+        assert_visible_plot_title(altered)
 
 
 @pytest.mark.parametrize("relative", PAGES)
@@ -90,8 +130,11 @@ def test_fresh_selftest_titles(tmp_path):
     assert result.success, result.error_message
     for name in builder.DOCS_ARTIFACT_NAMES:
         if name.endswith(".html"):
-            page = Headings((tmp_path / name).read_text(encoding="utf-8"))
+            text = (tmp_path / name).read_text(encoding="utf-8")
+            page = Headings(text)
             assert page.titles == [EXPECTED_TITLE], name
+            if name in ("benchmark_amplitude.html", "benchmark_phase.html"):
+                assert_visible_plot_title(text)
 
 
 def test_default_document_title_is_unchanged(tmp_path):
