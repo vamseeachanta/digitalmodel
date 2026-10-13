@@ -8,12 +8,13 @@
 from __future__ import annotations
 
 import math
+import textwrap
 from collections.abc import Mapping
 from dataclasses import dataclass
 from html import escape
 from typing import Any
 
-from digitalmodel.reporting.spec import Block, FigureBlock, TextBlock
+from digitalmodel.reporting.spec import Block, FigureBlock, TableBlock, TextBlock
 
 NO_GEOMETRY = (
     "Member geometry and zone elevations are not supplied for this case; "
@@ -33,6 +34,8 @@ class Member:
     start: Point
     end: Point
     diameter: float
+    true_length: float
+    count: int
 
 
 @dataclass(frozen=True)
@@ -42,6 +45,7 @@ class Zone:
     name: str
     lower: float
     upper: float
+    calculation_zone: str
 
 
 @dataclass(frozen=True)
@@ -55,6 +59,9 @@ class Geometry:
     zones: tuple[Zone, ...]
     members: tuple[Member, ...]
     brace_levels: tuple[float, ...]
+    citation: str
+    attribution: str
+    licence: str
 
 
 def _mapping(raw: Any, fields: set[str], required: set[str]) -> Mapping[str, Any]:
@@ -97,31 +104,44 @@ def _point(raw: Any) -> Point:
 
 
 def _member(raw: Any, kind: str) -> Member:
-    fields = {"name", "start", "end", "diameter_m"}
-    item = _mapping(raw, fields, fields)
+    required = {"name", "start", "end", "diameter_m"}
+    item = _mapping(raw, required | {"true_length_m", "count"}, required)
     start, end = _point(item["start"]), _point(item["end"])
     diameter = _number(item["diameter_m"])
-    if diameter <= 0 or start == end:
+    if diameter <= 0 or (start == end and "true_length_m" not in item):
         raise ValueError("member requires positive diameter and non-zero length")
     if not math.isfinite(math.dist(start, end) * math.pi * diameter):
         raise ValueError("member surface area must be finite")
     if kind == "leg" and start[1] <= end[1]:
         raise ValueError("leg start must be above its end")
-    return Member(_text(item["name"]), kind, start, end, diameter)
+    length = _number(item.get("true_length_m", math.dist(start, end)))
+    count = item.get("count", 1)
+    if length < math.dist(start, end) or length <= 0:
+        raise ValueError("true length must be positive and at least the projection length")
+    if isinstance(count, bool) or not isinstance(count, int) or count < 1:
+        raise ValueError("member count must be a positive integer")
+    try:
+        area = length * count * diameter * math.pi
+    except OverflowError as error:
+        raise ValueError("member surface area must be finite") from error
+    if not math.isfinite(area):
+        raise ValueError("member surface area must be finite")
+    return Member(_text(item["name"]), kind, start, end, diameter, length, count)
 
 
 def _zones(raw: Any) -> tuple[Zone, ...]:
     zones = []
     for item in _list(raw):
         fields = {"name", "lower_m", "upper_m"}
-        item = _mapping(item, fields, fields)
+        item = _mapping(item, fields | {"calculation_zone"}, fields)
         zone = Zone(
-            _text(item["name"]), _number(item["lower_m"]), _number(item["upper_m"])
+            _text(item["name"]), _number(item["lower_m"]), _number(item["upper_m"]),
+            _text(item.get("calculation_zone", item["name"])),
         )
-        if zone.name not in ZONE_NAMES or zone.lower >= zone.upper:
-            raise ValueError("zone requires known exposure and ordered elevations")
+        if ("calculation_zone" not in item and zone.name not in ZONE_NAMES) or zone.lower >= zone.upper:
+            raise ValueError("zone requires a calculation id and ordered elevations")
         zones.append(zone)
-    if not zones or len({zone.name for zone in zones}) != len(zones):
+    if not zones or len({zone.calculation_zone for zone in zones}) != len(zones):
         raise ValueError("zone names must be unique and non-empty")
     for lower, upper in zip(zones, zones[1:]):
         if lower.upper > upper.lower:
@@ -160,12 +180,17 @@ def validate_geometry(raw: Any) -> Geometry:
         "legs",
         "brace_levels",
         "diagonals",
+        "basis",
     }
-    fields = required | {"basis", "conductors", "risers"}
+    fields = required | {"conductors", "risers", "citation", "attribution", "licence"}
     item = _mapping(raw, fields, required)
-    basis = _text(item.get("basis", "design_data"))
-    if basis not in {"design_data", "illustrative_regression_case"}:
+    basis = _text(item["basis"])
+    sourced = basis in {"published_source", "openly_licensed_reference"}
+    if basis not in {"design_data", "illustrative_regression_case", "published_source", "openly_licensed_reference"}:
         raise ValueError("geometry basis must identify design or illustrative data")
+    citation = _text(item.get("citation")) if sourced else ""
+    attribution = _text(item.get("attribution")) if sourced else ""
+    licence = _text(item.get("licence")) if basis == "openly_licensed_reference" else ""
     waterline = _number(item["waterline_m"])
     mudline = _number(item["mudline_m"])
     if mudline >= waterline:
@@ -183,6 +208,8 @@ def validate_geometry(raw: Any) -> Geometry:
         members.extend(_member(member, kind) for member in _list(item.get(key, [])))
     if len({member.name for member in members}) != len(members):
         raise ValueError("member names must be unique")
+    if not math.isfinite(sum(m.true_length * m.count * m.diameter * math.pi for m in members)):
+        raise ValueError("aggregate member area must be finite")
     geometry = Geometry(
         _text(item["datum"]),
         basis,
@@ -191,6 +218,9 @@ def validate_geometry(raw: Any) -> Geometry:
         _zones(item["zones"]),
         tuple(members),
         levels,
+        citation,
+        attribution,
+        licence,
     )
     minimum_x, maximum_x, bottom, top = _extent(geometry)
     if not all(
@@ -212,10 +242,11 @@ def geometry_zone_areas(raw: Any) -> dict[str, float]:
     geometry = raw if isinstance(raw, Geometry) else validate_geometry(raw)
     top = max(zone.upper for zone in geometry.zones)
     return {
-        zone.name: sum(
+        zone.calculation_zone: sum(
             math.pi
             * member.diameter
-            * math.dist(member.start, member.end)
+            * member.true_length
+            * member.count
             * _fraction(member, zone, top)
             for member in geometry.members
         )
@@ -310,11 +341,15 @@ def _datum_lines(
 
 def _svg(geometry: Geometry) -> str:
     minimum_x, maximum_x, bottom, top = _extent(geometry)
-    scale = 5.0
+    scale = 5.0 if not geometry.citation else min(500 / (top - bottom), 400 / (maximum_x - minimum_x))
     width = (maximum_x - minimum_x) * scale
     height = (top - bottom) * scale
+    source_lines = textwrap.wrap(
+        f"{geometry.basis.replace('_', ' ').upper()}; {geometry.attribution}; "
+        f"{geometry.licence}; {geometry.citation}", width=40,
+    ) if geometry.citation else []
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {_n(width + 290)} {_n(height + 95)}" data-scale="{_n(scale)}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Jacket elevation">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {_n(width + 290)} {_n(height + 95 + 14 * len(source_lines))}" data-scale="{_n(scale)}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Jacket elevation">'
     ]
     parts.extend(
         (
@@ -325,6 +360,8 @@ def _svg(geometry: Geometry) -> str:
         )
     )
     parts.append(_label(55, 20, f"Datum: {geometry.datum}"))
+    for index, line in enumerate(source_lines):
+        parts.append(_label(45, height + 100 + index * 14, line))
     y = height + 65
     parts.append(
         f'<path d="M 55 {y:g} h {5 * scale:g} m {-5 * scale:g} -3 v 6 m {5 * scale:g} -6 v 6" stroke="black" fill="none"/>'
@@ -344,19 +381,33 @@ def design_blocks(inputs: Mapping[str, Any]) -> list[Block]:
     raw = _raw_geometry(inputs)
     if raw is None:
         return [TextBlock(markdown=NO_GEOMETRY + " See Appendix A.")]
-    geometry = validate_geometry(raw)
-    return [
+    try:
+        geometry = validate_geometry(raw)
+    except (ValueError, TypeError, KeyError) as error:
+        return [TextBlock(markdown=f"Elevation not evaluated: {error}.")]
+    blocks: list[Block] = [
         FigureBlock(
             title="Jacket elevation",
             figure_id=FIG_ELEVATION,
             svg=_svg(geometry),
             caption=(
                 f"Datum: {geometry.datum}. "
-                "Elevation drawn from the design data of the case. "
+                + ("Elevation derived from the cited member dimensions. " if geometry.citation else "Elevation drawn from the design data of the case. ")
+                + (f"Basis: {geometry.basis}; {geometry.attribution}; {geometry.licence}; {geometry.citation}. " if geometry.citation else "")
+                +
                 "See Appendix A for the geometry basis and surface-area comparison."
             ),
         )
     ]
+    if geometry.citation:
+        blocks.append(TableBlock(
+            title="Member dimensions and area derivation",
+            columns=["Member", "Count", "True length", "Diameter", "Lateral area"],
+            units=["-", "-", "m", "m", "m2"],
+            rows=[[m.name, m.count, m.true_length, m.diameter,
+                   math.pi * m.diameter * m.true_length * m.count] for m in geometry.members],
+        ))
+    return blocks
 
 
 def geometry_caveats(
@@ -366,7 +417,10 @@ def geometry_caveats(
     raw = _raw_geometry(inputs)
     if raw is None:
         return [NO_GEOMETRY]
-    geometry = validate_geometry(raw)
+    try:
+        geometry = validate_geometry(raw)
+    except (ValueError, TypeError, KeyError) as error:
+        return [f"Elevation not evaluated: {error}."]
     caveats = []
     if geometry.basis == "illustrative_regression_case":
         caveats.append(
@@ -381,6 +435,10 @@ def geometry_caveats(
         "to the highest zone. The calculation uses the stated zone areas."
     )
     areas = geometry_zone_areas(geometry)
+    total_area = sum(math.pi * m.diameter * m.true_length * m.count for m in geometry.members)
+    unassigned = max(0.0, total_area - sum(areas.values()))
+    if unassigned > 1e-8:
+        caveats.append(f"Unassigned member area: {unassigned:.3f} m²; zone limits do not cover all supplied members.")
     stated = results.get("surface_areas_m2", {})
     for name, area in areas.items():
         reference = stated.get(name) if isinstance(stated, Mapping) else None

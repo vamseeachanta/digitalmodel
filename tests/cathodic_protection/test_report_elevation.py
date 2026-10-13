@@ -228,6 +228,7 @@ def test_geometry_zone_areas_clip_members_and_count_boundaries_once() -> None:
     from digitalmodel.cathodic_protection.report_elevation import geometry_zone_areas
 
     geometry = {
+        "basis": "design_data",
         "datum": "still-water level",
         "waterline_m": 0.0,
         "mudline_m": -10.0,
@@ -287,3 +288,102 @@ def test_elevation_draws_optional_risers_from_data() -> None:
     assert float(risers[0].attrib["stroke-width"]) == 0.3 * float(
         svg.attrib["data-scale"]
     )
+
+
+def test_sourced_members_use_true_length_and_count() -> None:
+    """Area includes all frames while the drawing remains a projection."""
+    from digitalmodel.cathodic_protection.report_elevation import geometry_zone_areas
+
+    raw = _cfg()["inputs"]["structure"]["report_geometry"]
+    raw["basis"] = "openly_licensed_reference"
+    raw["citation"] = "Reference paper, member table"
+    raw["attribution"] = "Reference authors"
+    raw["licence"] = "CC BY 4.0"
+    raw["legs"] = [{"name": "all legs", "start": [0, 10], "end": [0, -70],
+                    "diameter_m": 1, "true_length_m": 100, "count": 3}]
+    raw["brace_levels"] = []
+    raw["diagonals"] = []
+    raw["conductors"] = []
+    raw["zones"] = [{"name": "deep steel", "calculation_zone": "deep",
+                     "lower_m": -70, "upper_m": -30},
+                    {"name": "upper steel", "calculation_zone": "upper",
+                     "lower_m": -30, "upper_m": 10}]
+    areas = geometry_zone_areas(raw)
+    assert areas == pytest.approx({"deep": 150 * math.pi, "upper": 150 * math.pi})
+    cfg = _cfg()
+    cfg["inputs"]["structure"]["report_geometry"] = raw
+    spec = anode_design_report(_run(cfg))
+    figure = next(f for f in spec.figure_blocks() if f.svg)
+    visible = " ".join(ET.fromstring(figure.svg).itertext())
+    assert "Reference authors" in visible and "CC BY 4.0" in visible
+    assert "OPENLY LICENSED REFERENCE" in visible
+    assert "Reference paper, member table" in visible
+    assert "Reference authors" in figure.caption and "CC BY 4.0" in figure.caption
+
+
+def test_missing_geometry_basis_is_rejected() -> None:
+    from digitalmodel.cathodic_protection.report_elevation import validate_geometry
+
+    raw = _cfg()["inputs"]["structure"]["report_geometry"]
+    del raw["basis"]
+    with pytest.raises(ValueError, match="missing fields"):
+        validate_geometry(raw)
+
+
+def test_bad_display_data_still_produces_report() -> None:
+    cfg = _cfg()
+    cfg["inputs"]["structure"]["report_geometry"]["waterline_m"] = "missing"
+    spec = anode_design_report(_run(cfg))
+    design = next(s for s in spec.sections if s.key == "design-basis")
+    assert not any(isinstance(b, FigureBlock) and b.svg for b in design.blocks)
+    assert any("Elevation not evaluated:" in b.markdown for b in design.blocks
+               if isinstance(b, TextBlock))
+
+
+def test_unassigned_member_area_is_reported() -> None:
+    from digitalmodel.cathodic_protection.report_elevation import geometry_caveats
+
+    cfg = _cfg()
+    raw = cfg["inputs"]["structure"]["report_geometry"]
+    raw["risers"] = [{"name": "outside", "start": [0, -80], "end": [0, -90],
+                      "diameter_m": 1}]
+    text = " ".join(geometry_caveats(cfg["inputs"], {}))
+    assert "Unassigned member area: 31.416 m²" in text
+
+
+def test_zone_rectangles_and_visible_labels_follow_scale() -> None:
+    cfg = _cfg()
+    raw = cfg["inputs"]["structure"]["report_geometry"]
+    svg = _svg(cfg)
+    scale = float(svg.attrib["data-scale"])
+    waterline = next(n for n in svg.iter() if n.attrib.get("data-level") == "waterline")
+    line = next(n for n in waterline if n.tag.endswith("line"))
+    zero_y = float(line.attrib["y1"])
+    for zone in raw["zones"]:
+        group = next(n for n in svg.iter() if n.attrib.get("data-zone") == zone["name"])
+        rect = next(n for n in group if n.tag.endswith("rect"))
+        assert float(rect.attrib["y"]) == pytest.approx(zero_y - zone["upper_m"] * scale)
+        assert float(rect.attrib["height"]) == pytest.approx((zone["upper_m"] - zone["lower_m"]) * scale)
+        assert f"{zone['name']}: {zone['lower_m']:g} to {zone['upper_m']:g} m" in "".join(group.itertext())
+
+
+@pytest.mark.parametrize("count", [True, 0, 1.5, 10**400])
+def test_invalid_member_count_is_display_limitation(count: Any) -> None:
+    cfg = _cfg()
+    cfg["inputs"]["structure"]["report_geometry"]["legs"][0]["count"] = count
+    spec = anode_design_report(_run(cfg))
+    assert not any(f.svg for f in spec.figure_blocks())
+    assert "Elevation not evaluated:" in " ".join(
+        b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock)
+    )
+
+
+def test_physical_length_can_project_to_a_point() -> None:
+    from digitalmodel.cathodic_protection.report_elevation import geometry_zone_areas
+
+    raw = _cfg()["inputs"]["structure"]["report_geometry"]
+    raw["risers"] = [{"name": "perpendicular", "start": [0, -20], "end": [0, -20],
+                      "true_length_m": 4, "diameter_m": 1, "count": 3}]
+    without = copy.deepcopy(raw)
+    without["risers"] = []
+    assert geometry_zone_areas(raw)["submerged"] - geometry_zone_areas(without)["submerged"] == pytest.approx(12 * math.pi)
