@@ -21,6 +21,14 @@ from digitalmodel.reporting import TextBlock
 _CHECKS = {"mass", "initial_current_output", "final_current_output"}
 
 
+def _rule_source(edition: Any, key: str) -> str:
+    """Select a rule by its subject, independent of register ordering."""
+    matches = [label for label in rule_citations(edition) if label.endswith(f"({key})")]
+    if len(matches) != 1:
+        raise ValueError(f"one citation is required for {key}")
+    return matches[0]
+
+
 def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
@@ -84,7 +92,8 @@ def _quantities(results: Mapping[str, Any]) -> dict[str, float]:
 def _initial_design(results: Mapping[str, Any], key: str) -> str:
     values = _quantities(results)
     edition = normalize_edition(str(results.get("edition")))
-    citations = rule_citations(edition)
+    mass_source = _rule_source(edition, "anode mass")
+    output_source = _rule_source(edition, "output adequacy")
     text = (
         f"The initial arrangement should use the route's recommended count of "
         f"{values['needed']:.0f} anodes; count checked: {values['checked']:.0f} anodes; "
@@ -94,14 +103,14 @@ def _initial_design(results: Mapping[str, Any], key: str) -> str:
         f"({values['utilisation']:g} · {values['capacity']:g} Ah/kg) = "
         f"{values['required_mass']:.3f} kg; "
         f"ceil({values['required_mass']:.3f} kg / {values['mass']:.3f} kg per anode) "
-        f"= {values['mass_count']:.0f} anodes (`{citations[4]}`). "
+        f"= {values['mass_count']:.0f} anodes (`{mass_source}`). "
     )
     for phase in ("initial", "final"):
         text += (
             f"{phase.capitalize()} current sizing: "
             f"ceil({values[f'{phase}_demand']:.3f} A / "
             f"{values[f'{phase}_output']:.4f} A per anode) = "
-            f"{values[f'{phase}_count']:.0f} anodes (`{citations[5]}`). "
+            f"{values[f'{phase}_count']:.0f} anodes (`{output_source}`). "
         )
     if key == "overall_status":
         governing = _mapping(results.get("current_output_verification")).get(

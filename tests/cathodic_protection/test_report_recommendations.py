@@ -158,3 +158,19 @@ def test_added_caveats_sit_in_the_appendix():
         assert statement in appendix(spec)
         assert statement not in body(spec)
     assert "Appendix A" in body(spec)
+
+
+@pytest.mark.parametrize("edition", ["2005", "2010", "2017", "2021"])
+def test_recommendation_sources_are_selected_by_key(edition, monkeypatch):
+    """Reordering a citation register cannot change its engineering meaning."""
+    from digitalmodel.cathodic_protection import report_recommendations as recommendations
+
+    routed = cfg()
+    routed["results"]["edition"] = edition
+    expected = rule_citations(edition)
+    monkeypatch.setattr(recommendations, "rule_citations", lambda selected: list(reversed(rule_citations(selected))))
+    text = recommendations.recommendation_block(routed["results"], "final_current_output").markdown
+    mass = next(c for c in expected if c.endswith("(anode mass)"))
+    output = next(c for c in expected if c.endswith("(output adequacy)"))
+    assert f"anodes (`{mass}`)" in text
+    assert f"anodes (`{output}`)" in text
