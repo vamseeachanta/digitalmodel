@@ -1711,6 +1711,7 @@ def _verification_wording(text: str, published: bool) -> str:
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
+    text = re.sub(r"Table 8-\d+", "declared input basis", text)
     text = re.sub(r"\brouted\b", "calculated", text)
     text = re.sub(r"\broute(?:'s|s)?\b", "calculation", text)
     text = text.replace("regression case", "illustrative example")
@@ -1755,7 +1756,7 @@ def _verification_presentation(sections: list[Section], *, published: bool = Fal
             if isinstance(block, FigureBlock):
                 block.caption = _verification_wording(block.caption, published)
                 if published and block.svg and 'data-type="depth_true"' in block.svg:
-                    block.caption += " [2], protective potential criterion."
+                    block.caption += " Criterion input: based on previous project experience."
                 if block.svg:
                     block.svg = re.sub(r">([^<>]+)<", lambda m: ">" + _verification_wording(m[1], published) + "<", block.svg)
                 if block.plotly:
@@ -1779,11 +1780,24 @@ def _verification_table(block: TableBlock, published: bool) -> None:
     """Keep published locators and remove framework cells without changing quantities."""
     block.source = None
     if block.title == "Design data":
-        block.rows = [r for r in block.rows if r[0] != "Edition provenance"]
+        block.rows = [r for r in block.rows if r[0] not in {"Edition provenance", "Standard"}]
+        label = "based on previous project experience" if published else "illustrative input"
+        for row in block.rows:
+            if row[0] == "Utilisation factor source":
+                row[1] = label
+            source = label
+            if published and row[0] in {"Seawater resistivity", "Anode net mass", "Anode length"}:
+                source = "[1], p. 242, Section 2"
+            elif row[0] in {"Total surface area", "Anode equivalent radius (fresh)"}:
+                source = "calculated from declared inputs"
+            row.append(source)
+        block.columns.append("Source")
+        if block.units:
+            block.units.append("-")
     if published:
         if block.title.startswith("Zones and coating breakdown"):
             block.title = "Published zone areas and effective-density treatment"
-        block.source = "[1], p. 242, Section 2; declared life, capacity, utilisation and electrode potentials are independent assumptions."
+        block.source = "Published quantities: [1], p. 242, Section 2; other inputs: based on previous project experience."
         if block.title.startswith("Published zone areas"):
             columns = [block.columns.index(c) for c in ("Zone", "Area")]
             block.columns = ["Zone", "Area"]
@@ -1791,13 +1805,16 @@ def _verification_table(block: TableBlock, published: bool) -> None:
             block.rows = [[r[i] for i in columns] for r in block.rows]
             block.source = "[1], p. 242, Table 1; phase densities are effective densities without a separate coating law."
         elif block.title.startswith("Current density"):
-            block.source = "[1], p. 242, Tables 1–2 and Section 2."
+            block.source = "Effective densities: [1], p. 242, Table 2; unity coating multipliers: based on previous project experience; demand is calculated from declared inputs."
         elif block.title.startswith("Measured potentials"):
             block.source = "[1], pp. 243–244, Section 3; day 52 and day 518."
         elif block.title == "Anode mass and count":
             block.title = "Independent estimate: anode mass and count"
         elif block.title.startswith("Anode resistance"):
             block.title = "Independent estimate: anode resistance and output"
+    if not published and (block.title.startswith("Zones and coating") or block.title.startswith("Current density")):
+        block.source = "illustrative input; demands are calculated from the declared inputs."
+        block.title = re.sub(r"\s*\(Table 8-\d+\)", "", block.title)
     for row in block.rows:
         for i, value in enumerate(row):
             if isinstance(value, str):

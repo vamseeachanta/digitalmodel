@@ -204,7 +204,7 @@ def reference_checks(cfg: Mapping[str, Any], arrangements: Mapping[str, Any]) ->
             rows.append([name, check, f"{demand:.{decimals}f}", f"{capacity:.{decimals}f}",
                          f"{100 * (capacity / demand - 1):+.1f}%",
                          "PASS" if capacity >= demand else "FAIL", unit,
-                         "[3], anode mass; anode resistance; output adequacy"])
+                         "calculated from declared inputs"])
     return TableBlock(title="Aggregate mass and current checks",
                       columns=["Arrangement", "Check", "Demand", "Capacity", "Margin", "Result", "Unit", "Locator"], rows=rows)
 
@@ -263,7 +263,7 @@ def reference_sections(cfg: Mapping[str, Any]) -> list[Any]:
 
 def reference_basis(cfg: Mapping[str, Any]) -> list[Any]:
     """State the calculation assumptions once and identify standard values."""
-    from digitalmodel.reporting.spec import TextBlock
+    from digitalmodel.reporting.spec import TableBlock, TextBlock
 
     inputs = cfg["inputs"]
     env, anode = inputs["environment"], inputs["anode"]
@@ -271,23 +271,33 @@ def reference_basis(cfg: Mapping[str, Any]) -> list[Any]:
     req = result["anode_requirements"]
     count = result["current_output_verification"]["count_by_mass"]
     return [TextBlock(markdown=(
-        f"Seawater temperature {env['seawater_temperature_C']:g} °C, seawater resistivity "
-        f"{env['seawater_resistivity_ohm_m']:g} Ω m, coating category III, design life "
-        f"{inputs['design_data']['design_life']:g} years and aluminium stand-off cylindrical "
-        f"anodes of length {anode['length_m']:g} m and radius {anode['radius_m']:g} m "
-        "are based on previous project experience. Net alloy mass is derived from these "
+        "Environment, coating, design life and cylinder dimensions are declared "
+        "example inputs (source: illustrative input), stated in Design input sources. "
+        "Net alloy mass is derived from the cylinder "
         f"dimensions: π × radius² × length × 2750 kg/m³ = {anode['individual_anode_mass_kg']:.0f} kg; "
         "no core is specified or deducted. Fabrication and attachment are not evaluated. "
         f"The stated arrangement is {result['current_output_verification']['anode_count']} anodes, compared with the mass-only requirement of {count} anodes: "
         "mean current × 8760 hours/year × design life / (capacity × utilisation × net anode mass), rounded upward. "
         f"Capacity is {req['electrochemical_capacity_Ah_kg']:g} Ah/kg and utilisation is "
-        f"{req['utilization_factor']:g}; standard potentials, current densities and coating breakdown "
-        "are applied under [3], Design current densities; Coating breakdown factors; "
-        "Anode materials; Anode resistance; Anode current output. "
+        f"{req['utilization_factor']:g}; these inputs, electrode potentials, current densities "
+        "and coating breakdown are based on previous project experience. "
         "Water-column current areas are divided at the 30 m depth boundary; the upper and "
         "lower seawater rows and the buried row are evaluated. Above-water steel is excluded "
         "from current demand because electrolyte contact is not established. "
-        "No measured potentials are available for this structure."))]
+        "No measured potentials are available for this structure.")),
+        TableBlock(title="Design input sources", columns=["Quantity", "Value", "Unit", "Source"], rows=[
+            ["Seawater temperature", env["seawater_temperature_C"], "°C", "illustrative input"],
+            ["Seawater resistivity", env["seawater_resistivity_ohm_m"], "Ω m", "illustrative input"],
+            ["Coating category", "III", "-", "illustrative input"],
+            ["Design life", inputs["design_data"]["design_life"], "yr", "illustrative input"],
+            ["Anode length", anode["length_m"], "m", "illustrative input"],
+            ["Anode radius", anode["radius_m"], "m", "illustrative input"],
+            ["Electrochemical capacity", req["electrochemical_capacity_Ah_kg"], "Ah/kg", "based on previous project experience"],
+            ["Utilisation factor", req["utilization_factor"], "-", "based on previous project experience"],
+        ]),
+        TextBlock(markdown="Governing practice: DNV-RP-B401, Cathodic protection design, May 2021. "
+                  "Design current densities; Coating breakdown factors; Anode materials; "
+                  "Anode resistance; Anode current output [3].")]
 
 
 def reference_member_tables(model: Mapping[str, Any]) -> list[Any]:

@@ -318,7 +318,7 @@ def test_reference_checks_show_every_demand_capacity_margin_and_verdict():
         assert float(row[4].removesuffix("%")) == pytest.approx(100 * (capacity / demand - 1), abs=0.051)
         assert row[5] == ("PASS" if capacity >= demand else "FAIL")
         assert row[6] == unit
-        assert row[7].startswith("[3]")
+        assert row[7] == "calculated from declared inputs"
 
 
 def test_reference_reduced_arrangement_rechecks_without_mutating_inputs():
@@ -379,7 +379,7 @@ def test_reference_report_opens_with_analysis_summary_and_checks(reference_spec)
     assert "30.6%" in summary
     assert "published CP outputs are not available" in summary
     text = _visible_text(render_html(reference_spec))
-    assert text.count("based on previous project experience") == 1
+    assert text.count("based on previous project experience") == 3
     assert "Draft for review" in text
     assert "No measured potentials are available for this structure" in text
     assert "Increase at design" not in text and "Retrofit" not in text

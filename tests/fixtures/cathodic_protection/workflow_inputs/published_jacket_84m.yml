@@ -91,9 +91,9 @@ inputs:
         Design life 25 years, seawater temperature 10 °C, nominal mass interpreted as net alloy,
         the equivalent-cylinder resistance model at published length 2.020 m, and alloy density
         2750 kg/m³ are based on previous project experience. Equivalent radius is sqrt(m / (π L ρ)).
-        DNV-RP-B401, Cathodic protection design, May 2021 [2] supplies capacity 2000 Ah/kg,
+        Capacity 2000 Ah/kg,
         utilisation 0.90 and protective and closed-circuit potentials -0.800 and -1.050 V
-        (design electrochemical capacity, anode utilisation factor and protective potential criterion).
+        are based on previous project experience.
         The paper prints driving voltage 0.25 V and resistivity 0.22 ohm.m [1], p. 242, Section 2.
         Effective phase densities use unity multipliers without a separate coating deterioration
         law. The unsplit nine-well allowance is applied at all phases. The printed cross-section
@@ -187,9 +187,7 @@ inputs:
       citation: "[published-jacket-paper], pp. 242–244, Sections 2–3"
       attribution: Dezhu Xu (2023)
       criterion_V: -0.8
-      criterion_source:
-        DNV-RP-B401, Cathodic protection design, May 2021, protective potential
-        criterion
+      criterion_source: based on previous project experience
       coated_area_m2: 652.9
       zones:
         - name: 0–30 m

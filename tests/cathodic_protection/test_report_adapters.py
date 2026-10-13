@@ -1003,7 +1003,7 @@ def test_diagram_criterion_has_numbered_standard_reference() -> None:
     """The standard criterion is distinguished from the paper measurements."""
     spec = anode_design_report(_run("published_jacket_84m"))
     figure = next(f for f in spec.figure_blocks() if f.svg)
-    assert "[2], protective potential criterion" in figure.caption
+    assert "Criterion input: based on previous project experience" in figure.caption
 
 
 def test_all_option_counts_capacities_and_mass_values_match_independent_arithmetic() -> None:
@@ -1142,3 +1142,59 @@ def test_comparison_wording_check_rejects_summary_injection(name: str, title: st
                             '<section id="summary"><p>Verification</p>')
     with pytest.raises(AssertionError):
         _assert_comparison_only_wording(injected)
+
+
+def _assert_no_standard_value_sources(html: str) -> None:
+    """Reject numerical table rows attributed to a licensed standard."""
+    standard = re.compile(r"DNV[\s-]*RP[\s-]*B\s*401", re.I)
+    for table in re.findall(r"<table\b.*?</table>", html, re.S):
+        heading = re.search(r"<tr>(.*?)</tr>", table, re.S)
+        if heading is None:
+            continue
+        columns = [_visible_text(c).lower() for c in re.findall(r"<th[^>]*>(.*?)</th>", heading[1], re.S)]
+        source_indices = [i for i, c in enumerate(columns) if re.search(r"source|basis|reference|locator", c)]
+        for row in re.findall(r"<tr>(.*?)</tr>", table, re.S):
+            cells = [_visible_text(c) for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)]
+            for i in source_indices:
+                if i < len(cells) and standard.search(cells[i]):
+                    assert not any(re.search(r"\d", c) for j, c in enumerate(cells) if j != i), cells[0]
+
+
+@pytest.mark.parametrize("name,title", _ANALYSIS_CASES)
+def test_analysis_design_values_have_declared_sources(name: str, title: str) -> None:
+    """Design inputs retain numbers while sources distinguish papers and assumptions."""
+    spec = anode_design_report(_run(name))
+    html = render_html(spec)
+    _assert_no_standard_value_sources(html)
+    table = _tables(spec)["Design input sources" if name == "reference_jacket_60m_members" else "Design data"]
+    for quantity in ("Utilisation factor", "Electrochemical capacity"):
+        row = next(r for r in table.rows if r[0] == quantity)
+        assert row[-1] == ("illustrative input" if name == "jacket_report_example" else "based on previous project experience")
+    for section in spec.sections:
+        for block in section.blocks:
+            if isinstance(block, FigureBlock) and block.svg:
+                for label in re.findall(r"<text\b[^>]*>(.*?)</text>", block.svg, re.S):
+                    if "-0.800" in label:
+                        assert "DNV" not in label and "[2]" not in label
+    if name == "published_jacket_84m":
+        text = _visible_text(html)
+        assert "supplies capacity" not in text
+        assert "potentials -0.800 and -1.050 V" in text
+        assert "based on previous project experience" in text
+
+
+@pytest.mark.parametrize("name,title", _ANALYSIS_CASES)
+def test_standard_source_check_rejects_injected_numeric_row(name: str, title: str) -> None:
+    """The source-column rule is checked with an injected negative control."""
+    html = render_html(anode_design_report(_run(name)))
+    html += '<table><tr><th>Value</th><th>Source</th></tr><tr><td>1</td><td>dnv rp b401</td></tr></table>'
+    with pytest.raises(AssertionError):
+        _assert_no_standard_value_sources(html)
+
+
+def test_reference_example_inputs_are_labelled_individually() -> None:
+    """The recorded example inputs do not imply historical engineering evidence."""
+    spec = anode_design_report(_run("reference_jacket_60m_members"))
+    rows = {r[0]: r for r in _tables(spec)["Design input sources"].rows}
+    for quantity in ("Seawater temperature", "Seawater resistivity", "Coating category", "Design life", "Anode length", "Anode radius"):
+        assert rows[quantity][-1] == "illustrative input"

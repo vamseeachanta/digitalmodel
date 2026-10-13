@@ -134,7 +134,7 @@ def _quantity_rows(demands: list[float], hours: float, results: Mapping[str, Any
     required = demands[1] * hours / (float(req["electrochemical_capacity_Ah_kg"]) *
                                     float(req["utilization_factor"]))
     rows: list[list[Any]] = [["Required net mass", f"{required:.0f}", "kg",
-                              "[2], anode mass; mean current × hours / (capacity × utilisation)"]]
+                              "calculated from declared inputs; mean current × hours / (capacity × utilisation)"]]
     outputs = [("Published outputs", float(results["published_initial_output"]),
                 float(results["published_final_output"])),
                ("Independent estimate", float(results["model_initial_output"]),
@@ -143,7 +143,7 @@ def _quantity_rows(demands: list[float], hours: float, results: Mapping[str, Any
         counts = [math.ceil(required / mass), math.ceil(demands[0] / initial), math.ceil(demands[2] / final)]
         count = max(counts)
         governing = ["mass", "initial current", "final current"][counts.index(count)]
-        source = "[1], p. 242, Section 2" if label == "Published outputs" else "[2], anode resistance"
+        source = "[1], p. 242, Section 2" if label == "Published outputs" else "calculated from declared inputs"
         if retrofit:
             first = counts[2]
             rows.extend([[label+" final-only count", first, "anodes", f"ceil(final addition / {final:.4f} A)"],
@@ -206,7 +206,7 @@ def measured_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> l
             TableBlock(title="Increase at design: demand and recheck",columns=["Quantity","Value","Unit","Source or arithmetic"],rows=design_rows),
             TextBlock(markdown="### Retrofit\n\nThe 30 m to mudline bare zone includes both failing levels. Additional phase current equals its published area multiplied by the density increment [1], pp. 242 and 244, Tables 1–3. End-of-life output first sizes the addition, then initial output and remaining-life mass are rechecked. The final-only count fails the initial and mass rechecks; the all-check count below passes these additional-load checks. The paper's authors propose clamped anodes at -70.5 m and -84.1 m [1], p. 244, Section 5; installation is not established. Added anodes belong in this zone. The split is not evaluated: per-level anode distribution and member geometry are required. A potential more positive than -0.800 V triggers intervention planning; this trigger is met at both lowest levels at day 518. A date is not evaluated: current readings, measured depletion of the lower anodes, corrosion allowance and wall-thickness evidence are needed. The addition does not establish total zone adequacy or measured protection without the existing allocation and post-intervention readings."),
             TableBlock(title="Retrofit: lower-zone addition and recheck",columns=["Quantity","Value","Unit","Source or arithmetic"],rows=zone_rows),
-            TextBlock(markdown="### Monitoring\n\nAll levels and remote or shielded locations require potential surveys versus Ag/AgCl/seawater; protection requires more negative than -0.800 V [2], protective potential criterion. Readings more positive than -0.800 V trigger investigation and intervention planning. Surveys before and after intervention should use the same locations. Remaining mass and depletion should be measured against remaining life. The recurring interval is not evaluated: current surveys, depletion history, corrosion allowance and affected-member condition are needed. Monitoring alone is not a demonstrated correction of the measured failure; retrofit assessment is recommended because the trigger is already met.")]
+            TextBlock(markdown="### Monitoring\n\nAll levels and remote or shielded locations require potential surveys versus Ag/AgCl/seawater; protection requires more negative than -0.800 V (input: based on previous project experience). Readings more positive than -0.800 V trigger investigation and intervention planning. Surveys before and after intervention should use the same locations. Remaining mass and depletion should be measured against remaining life. The recurring interval is not evaluated: current surveys, depletion history, corrosion allowance and affected-member condition are needed. Monitoring alone is not a demonstrated correction of the measured failure; retrofit assessment is recommended because the trigger is already met.")]
 
 
 def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
