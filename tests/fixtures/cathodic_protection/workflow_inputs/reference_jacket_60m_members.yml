@@ -146,227 +146,305 @@ structural_model:
         - 0.0
         - 8.66
         - 14.1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 1
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 1
     - id: 2
       coordinates_m:
         - 7.5
         - -4.33
         - 14.1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 2
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 2
     - id: 3
       coordinates_m:
         - -7.5
         - -4.33
         - 14.1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 3
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 3
     - id: 4
       coordinates_m:
         - 0.0
         - 12.46
         - -14.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 4
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 4
     - id: 5
       coordinates_m:
         - 10.791
         - -6.23
         - -14.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 5
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 5
     - id: 6
       coordinates_m:
         - -10.791
         - -6.23
         - -14.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 6
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 6
     - id: 7
       coordinates_m:
         - 0.0
         - 14.206
         - -27.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 7
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 7
     - id: 8
       coordinates_m:
         - 12.302
         - -7.103
         - -27.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 8
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 8
     - id: 9
       coordinates_m:
         - -12.302
         - -7.103
         - -27.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 9
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 9
     - id: 10
       coordinates_m:
         - 0.0
         - 16.22
         - -42.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 10
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 10
     - id: 11
       coordinates_m:
         - 14.047
         - -8.11
         - -42.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 11
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 11
     - id: 12
       coordinates_m:
         - -14.047
         - -8.11
         - -42.2
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 12
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 12
     - id: 13
       coordinates_m:
         - 0.0
         - 18.475
         - -59.0
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 13
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 13
     - id: 14
       coordinates_m:
         - 16.0
         - -9.238
         - -59.0
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 14
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 14
     - id: 15
       coordinates_m:
         - -16.0
         - -9.238
         - -59.0
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 15
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 15
     - id: 16
       coordinates_m:
         - 0.0
         - 18.475
         - -60.0
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 16
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 16
     - id: 17
       coordinates_m:
         - 16.0
         - -9.238
         - -60.0
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 17
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 17
     - id: 18
       coordinates_m:
         - -16.0
         - -9.238
         - -60.0
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 18
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 18
     - id: 19
       coordinates_m:
         - 4.573
         - 2.64
         - 2.496
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 19
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 19
     - id: 20
       coordinates_m:
         - 0.0
         - -5.28
         - 2.496
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 20
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 20
     - id: 21
       coordinates_m:
         - -4.573
         - 2.64
         - 2.496
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 21
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 21
     - id: 22
       coordinates_m:
         - 5.773
         - 3.333
         - -20.275
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 22
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 22
     - id: 23
       coordinates_m:
         - 0.0
         - -6.666
         - -20.275
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 23
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 23
     - id: 24
       coordinates_m:
         - -5.773
         - 3.333
         - -20.275
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 24
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 24
     - id: 25
       coordinates_m:
         - 6.587
         - 3.803
         - -34.204
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 25
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 25
     - id: 26
       coordinates_m:
         - 0.0
         - -7.606
         - -34.204
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 26
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 26
     - id: 27
       coordinates_m:
         - -6.587
         - 3.803
         - -34.204
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 27
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 27
     - id: 28
       coordinates_m:
         - 7.512
         - 4.337
         - -50.054
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 28
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 28
     - id: 29
       coordinates_m:
         - 0.0
         - -8.674
         - -50.054
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 29
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 29
     - id: 30
       coordinates_m:
         - -7.512
         - 4.337
         - -50.054
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS, JointID 30
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, STRUCTURE JOINTS,
+        JointID 30
   property_sets:
     - id: 1
       density_kg_m3: 7850.0
       diameter_m: 1.2
       wall_thickness_m: 0.052
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 1
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 1
     - id: 2
       density_kg_m3: 7850.0
       diameter_m: 1.4
       wall_thickness_m: 0.045
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 2
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 2
     - id: 3
       density_kg_m3: 7850.0
       diameter_m: 1.5
       wall_thickness_m: 0.048
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 3
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 3
     - id: 4
       density_kg_m3: 7850.0
       diameter_m: 2.0
       wall_thickness_m: 0.05
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 4
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 4
     - id: 5
       density_kg_m3: 7850.0
       diameter_m: 3.0
       wall_thickness_m: 0.05
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 5
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 5
     - id: 6
       density_kg_m3: 7850.0
       diameter_m: 1.1
       wall_thickness_m: 0.07
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 6
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 6
     - id: 7
       density_kg_m3: 7850.0
       diameter_m: 1.0
       wall_thickness_m: 0.02
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 7
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 7
     - id: 8
       density_kg_m3: 7850.0
       diameter_m: 1.0
       wall_thickness_m: 0.02
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 8
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 8
     - id: 9
       density_kg_m3: 7850.0
       diameter_m: 1.0
       wall_thickness_m: 0.02
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION PROPERTY data 1/2, PropSetID 9
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBER X-SECTION
+        PROPERTY data 1/2, PropSetID 9
   members:
     - id: 1
       joint_ids:
@@ -376,7 +454,9 @@ structural_model:
       section_class: 1
       true_length_m: 28.553983960211223
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 1
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        1
     - id: 2
       joint_ids:
         - 2
@@ -385,7 +465,9 @@ structural_model:
       section_class: 1
       true_length_m: 28.553995884989543
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 2
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        2
     - id: 3
       joint_ids:
         - 3
@@ -394,7 +476,9 @@ structural_model:
       section_class: 1
       true_length_m: 28.553995884989543
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 3
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        3
     - id: 4
       joint_ids:
         - 4
@@ -403,7 +487,9 @@ structural_model:
       section_class: 2
       true_length_m: 13.116726573349007
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 4
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        4
     - id: 5
       joint_ids:
         - 5
@@ -412,7 +498,9 @@ structural_model:
       section_class: 2
       true_length_m: 13.116602075232747
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 5
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        5
     - id: 6
       joint_ids:
         - 6
@@ -421,7 +509,9 @@ structural_model:
       section_class: 2
       true_length_m: 13.116602075232747
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 6
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        6
     - id: 7
       joint_ids:
         - 7
@@ -430,7 +520,9 @@ structural_model:
       section_class: 3
       true_length_m: 15.134602604627586
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 7
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        7
     - id: 8
       joint_ids:
         - 8
@@ -439,7 +531,9 @@ structural_model:
       section_class: 3
       true_length_m: 15.13469768446004
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 8
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        8
     - id: 9
       joint_ids:
         - 9
@@ -448,7 +542,9 @@ structural_model:
       section_class: 3
       true_length_m: 15.13469768446004
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 9
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        9
     - id: 10
       joint_ids:
         - 10
@@ -457,7 +553,9 @@ structural_model:
       section_class: 4
       true_length_m: 16.95066444125421
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 10
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        10
     - id: 11
       joint_ids:
         - 11
@@ -466,7 +564,9 @@ structural_model:
       section_class: 4
       true_length_m: 16.950710693065346
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 11
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        11
     - id: 12
       joint_ids:
         - 12
@@ -475,7 +575,9 @@ structural_model:
       section_class: 4
       true_length_m: 16.950710693065346
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 12
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        12
     - id: 13
       joint_ids:
         - 13
@@ -484,7 +586,9 @@ structural_model:
       section_class: 5
       true_length_m: 1.0
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 13
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        13
     - id: 14
       joint_ids:
         - 14
@@ -493,7 +597,9 @@ structural_model:
       section_class: 5
       true_length_m: 1.0
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 14
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        14
     - id: 15
       joint_ids:
         - 15
@@ -502,7 +608,9 @@ structural_model:
       section_class: 5
       true_length_m: 1.0
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 15
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        15
     - id: 16
       joint_ids:
         - 19
@@ -511,7 +619,9 @@ structural_model:
       section_class: 6
       true_length_m: 13.849387892610993
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 16
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        16
     - id: 17
       joint_ids:
         - 19
@@ -520,7 +630,9 @@ structural_model:
       section_class: 6
       true_length_m: 13.849225429604356
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 17
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        17
     - id: 18
       joint_ids:
         - 19
@@ -529,7 +641,9 @@ structural_model:
       section_class: 6
       true_length_m: 19.902289943622065
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 18
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        18
     - id: 19
       joint_ids:
         - 19
@@ -538,7 +652,9 @@ structural_model:
       section_class: 6
       true_length_m: 19.90218178994454
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 19
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        19
     - id: 20
       joint_ids:
         - 20
@@ -547,7 +663,9 @@ structural_model:
       section_class: 6
       true_length_m: 13.849379625095125
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 20
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        20
     - id: 21
       joint_ids:
         - 20
@@ -556,7 +674,9 @@ structural_model:
       section_class: 6
       true_length_m: 13.849379625095125
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 21
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        21
     - id: 22
       joint_ids:
         - 20
@@ -565,7 +685,9 @@ structural_model:
       section_class: 6
       true_length_m: 19.902376667121942
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 22
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        22
     - id: 23
       joint_ids:
         - 20
@@ -574,7 +696,9 @@ structural_model:
       section_class: 6
       true_length_m: 19.902376667121942
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 23
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        23
     - id: 24
       joint_ids:
         - 21
@@ -583,7 +707,9 @@ structural_model:
       section_class: 6
       true_length_m: 13.849225429604356
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 24
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        24
     - id: 25
       joint_ids:
         - 21
@@ -592,7 +718,9 @@ structural_model:
       section_class: 6
       true_length_m: 13.849387892610993
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 25
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        25
     - id: 26
       joint_ids:
         - 21
@@ -601,7 +729,9 @@ structural_model:
       section_class: 6
       true_length_m: 19.90218178994454
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 26
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        26
     - id: 27
       joint_ids:
         - 21
@@ -610,7 +740,9 @@ structural_model:
       section_class: 6
       true_length_m: 19.902289943622065
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 27
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        27
     - id: 28
       joint_ids:
         - 22
@@ -619,7 +751,9 @@ structural_model:
       section_class: 7
       true_length_m: 12.390935517546687
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 28
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        28
     - id: 29
       joint_ids:
         - 22
@@ -628,7 +762,9 @@ structural_model:
       section_class: 7
       true_length_m: 12.391001493019036
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 29
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        29
     - id: 30
       joint_ids:
         - 22
@@ -637,7 +773,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.124633906760202
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 30
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        30
     - id: 31
       joint_ids:
         - 22
@@ -646,7 +784,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.124218987257313
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 31
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        31
     - id: 32
       joint_ids:
         - 23
@@ -655,7 +795,9 @@ structural_model:
       section_class: 7
       true_length_m: 12.391182429453615
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 32
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        32
     - id: 33
       joint_ids:
         - 23
@@ -664,7 +806,9 @@ structural_model:
       section_class: 7
       true_length_m: 12.391182429453615
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 33
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        33
     - id: 34
       joint_ids:
         - 23
@@ -673,7 +817,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.123944137527591
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 34
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        34
     - id: 35
       joint_ids:
         - 23
@@ -682,7 +828,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.123944137527591
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 35
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        35
     - id: 36
       joint_ids:
         - 24
@@ -691,7 +839,9 @@ structural_model:
       section_class: 7
       true_length_m: 12.391001493019036
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 36
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        36
     - id: 37
       joint_ids:
         - 24
@@ -700,7 +850,9 @@ structural_model:
       section_class: 7
       true_length_m: 12.390935517546687
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 37
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        37
     - id: 38
       joint_ids:
         - 24
@@ -709,7 +861,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.124218987257313
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 38
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        38
     - id: 39
       joint_ids:
         - 24
@@ -718,7 +872,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.124633906760202
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 39
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        39
     - id: 40
       joint_ids:
         - 25
@@ -727,7 +883,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.165697794319911
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 40
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        40
     - id: 41
       joint_ids:
         - 25
@@ -736,7 +894,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.16538305165095
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 41
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        41
     - id: 42
       joint_ids:
         - 25
@@ -745,7 +905,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.171161801181757
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 42
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        42
     - id: 43
       joint_ids:
         - 25
@@ -754,7 +916,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.171183784745015
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 43
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        43
     - id: 44
       joint_ids:
         - 26
@@ -763,7 +927,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.165035439419134
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 44
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        44
     - id: 45
       joint_ids:
         - 26
@@ -772,7 +938,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.165035439419134
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 45
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        45
     - id: 46
       joint_ids:
         - 26
@@ -781,7 +949,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.171216435382963
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 46
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        46
     - id: 47
       joint_ids:
         - 26
@@ -790,7 +960,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.171216435382963
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 47
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        47
     - id: 48
       joint_ids:
         - 27
@@ -799,7 +971,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.16538305165095
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 48
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        48
     - id: 49
       joint_ids:
         - 27
@@ -808,7 +982,9 @@ structural_model:
       section_class: 7
       true_length_m: 14.165697794319911
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 49
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        49
     - id: 50
       joint_ids:
         - 27
@@ -817,7 +993,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.171183784745015
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 50
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        50
     - id: 51
       joint_ids:
         - 27
@@ -826,7 +1004,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.171161801181757
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 51
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        51
     - id: 52
       joint_ids:
         - 28
@@ -835,7 +1015,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.10345146234185
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 52
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        52
     - id: 53
       joint_ids:
         - 28
@@ -844,7 +1026,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.103395604654317
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 53
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        53
     - id: 54
       joint_ids:
         - 28
@@ -853,7 +1037,9 @@ structural_model:
       section_class: 7
       true_length_m: 18.339686584017734
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 54
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        54
     - id: 55
       joint_ids:
         - 28
@@ -862,7 +1048,9 @@ structural_model:
       section_class: 7
       true_length_m: 18.340056842878102
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 55
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        55
     - id: 56
       joint_ids:
         - 29
@@ -871,7 +1059,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.103466117578538
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 56
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        56
     - id: 57
       joint_ids:
         - 29
@@ -880,7 +1070,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.103466117578538
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 57
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        57
     - id: 58
       joint_ids:
         - 29
@@ -889,7 +1081,9 @@ structural_model:
       section_class: 7
       true_length_m: 18.33982039170504
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 58
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        58
     - id: 59
       joint_ids:
         - 29
@@ -898,7 +1092,9 @@ structural_model:
       section_class: 7
       true_length_m: 18.33982039170504
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 59
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        59
     - id: 60
       joint_ids:
         - 30
@@ -907,7 +1103,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.103395604654317
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 60
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        60
     - id: 61
       joint_ids:
         - 30
@@ -916,7 +1114,9 @@ structural_model:
       section_class: 7
       true_length_m: 16.10345146234185
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 61
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        61
     - id: 62
       joint_ids:
         - 30
@@ -925,7 +1125,9 @@ structural_model:
       section_class: 7
       true_length_m: 18.340056842878102
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 62
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        62
     - id: 63
       joint_ids:
         - 30
@@ -934,7 +1136,9 @@ structural_model:
       section_class: 7
       true_length_m: 18.339686584017734
       count: 1
-      locator: IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID 63
+      locator:
+        IEA-15-240-RWT-Jacket_SubDyn.dat, revision da77a393, MEMBERS, MemberID
+        63
   section_classes:
     - section_class: 1
       property_set_ids: *id001
@@ -1304,3 +1508,69 @@ structural_model:
     Tubular steel sums to 1021365 kg (-30.6%). Adding the separately excluded 450000
     kg concentrated transition-piece masses gives 1471365 kg (+0.0%); that is a different
     basis and does not resolve the discrepancy.
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+  design_data:
+    design_life: 25.0
+    structure_type: jacket
+    edition: "2021"
+  structure:
+    zones:
+      - zone: water-upper
+        base_zone: submerged
+        area_m2: 1332.5662984774517
+        coating_category: III
+        depth_m: 15.0
+        axis_interval_m:
+          - -30.0
+          - 0.0
+      - zone: water-lower
+        base_zone: submerged
+        area_m2: 1636.1373148635394
+        coating_category: III
+        depth_m: 45.0
+        axis_interval_m:
+          - -60
+          - -30.0
+      - zone: buried
+        area_m2: 1837.831702350029
+        coating_category: III
+  environment:
+    seawater_temperature_C: 10.0
+    seawater_resistivity_ohm_m: 0.3
+  anode:
+    material: aluminium
+    type: stand_off
+    length_m: 1.0
+    radius_m: 0.05
+    individual_anode_mass_kg: 21.59844949342983
+cp_input_sources:
+  - quantity:
+      Environment, coating category, design life, anode material/type and cylinder
+      dimensions
+    source: tests/fixtures/cathodic_protection/workflow_inputs/jacket.yml
+  - quantity: Alloy density and net mass derivation
+    source: src/digitalmodel/cathodic_protection/_kernels.py, ANODE_DENSITY_ALZNI
+  - quantity:
+      Edition, electrochemical capacity, utilisation, potentials, current densities
+      and coating breakdown
+    source: src/digitalmodel/cathodic_protection/_edition.py and b401_tables.py
+  - quantity: Current-area depth division at 30 m
+    source: src/digitalmodel/cathodic_protection/b401_tables.py, depth_band
+  - quantity: Arrangement count
+    source: Mass requirement alone; native anode count before current-output checks
+cp_limitations:
+  - Splash boundaries and formal splash/submerged/atmospheric partition are not established;
+    water-level range, applicable wave data and the governing definition are needed.
+  - Above-water steel is reported undivided and is excluded from the current-demand
+    calculation; continuous electrolyte contact and applicable protection measures are
+    not established.
+  - The evaluated water-column load uses the seawater-exposed density rows, split at
+    the held 30 m table boundary; it does not establish protection in intermittent splash
+    exposure.
+  - Buried current paths, soil resistivity, installed pile geometry and coating condition
+    are not established; estimated pile area and declared coating are used for the aggregate
+    load.
+  - No measured potentials are available for this structure. Aggregate capacity does
+    not establish protection at remote or shielded locations.

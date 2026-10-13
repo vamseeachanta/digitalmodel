@@ -472,7 +472,7 @@ def test_reference_member_form_preserves_unestablished_geometry() -> None:
     ]
     assert all(m["true_length_m"] > 0 and m["count"] > 0 for m in sections)
     assert "report_geometry" not in form
-    assert "inputs" not in form
+    assert form["inputs"]["calculation_type"] == "DNV_RP_B401_offshore"
 
 
 def _synthetic_three_face_member_schedule() -> dict[str, Any]:

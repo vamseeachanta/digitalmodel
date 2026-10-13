@@ -161,3 +161,49 @@ def reference_zone_blocks(model: Mapping[str, Any],
         "The jacket axes end at the mudline. Buried area uses the paper's initial pile "
         "estimate, one pile per leg; the final installed pile geometry is not established "
         "[1], pp. 810–811, Soil–structure interaction.")), table, totals]
+
+
+def reference_arrangements(cfg: Mapping[str, Any]) -> dict[str, Any]:
+    """Evaluate the stated arrangement and recheck a required count increase."""
+    from copy import deepcopy
+    from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+
+    evaluated = run_cathodic_protection(deepcopy(dict(cfg)))
+    stated = evaluated["results"]
+    if stated["status"]["result"] == "PASS":
+        return {"stated": stated, "rechecked": None}
+    candidate = deepcopy(dict(cfg))
+    candidate["inputs"]["anode"]["count"] = stated["current_output_verification"]["recommended_anode_count"]
+    checked = run_cathodic_protection(candidate)["results"]
+    if checked["status"]["result"] != "PASS":
+        raise ValueError("a passing aggregate arrangement is not established")
+    return {"stated": stated, "rechecked": checked}
+
+
+def reference_checks(cfg: Mapping[str, Any], arrangements: Mapping[str, Any]) -> Any:
+    """Bind each aggregate conclusion to its demand, capacity and margin."""
+    from digitalmodel.cathodic_protection import _kernels as kernel
+    from digitalmodel.cathodic_protection.report_verification import _model_outputs
+    from digitalmodel.reporting.spec import TableBlock
+
+    rows = []
+    for name, result in (("Stated arrangement", arrangements["stated"]),
+                         ("Rechecked arrangement", arrangements["rechecked"])):
+        if result is None:
+            continue
+        count = result["current_output_verification"]["anode_count"]
+        req = result["anode_requirements"]
+        initial, final = _model_outputs(cfg["inputs"], result)
+        demands = result["current_demand_A"]
+        mass = demands["total_mean_A"] * kernel.HOURS_PER_YEAR * result["design_life_years"] / (req["electrochemical_capacity_Ah_kg"] * req["utilization_factor"])
+        values = [("Initial current", demands["total_initial_A"], count * initial, "A"),
+                  ("Final current", demands["total_final_A"], count * final, "A"),
+                  ("Mass", mass, count * cfg["inputs"]["anode"]["individual_anode_mass_kg"], "kg")]
+        for check, demand, capacity, unit in values:
+            decimals = 0 if unit == "kg" else 3
+            rows.append([name, check, f"{demand:.{decimals}f}", f"{capacity:.{decimals}f}",
+                         f"{100 * (capacity / demand - 1):+.1f}%",
+                         "PASS" if capacity >= demand else "FAIL", unit,
+                         "[3], anode mass; anode resistance; output adequacy"])
+    return TableBlock(title="Aggregate mass and current checks",
+                      columns=["Arrangement", "Check", "Demand", "Capacity", "Margin", "Result", "Unit", "Locator"], rows=rows)

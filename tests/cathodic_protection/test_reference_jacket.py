@@ -234,3 +234,124 @@ def test_reference_zone_derivation_prints_formula_totals_and_limits():
     table = next(b for b in blocks if isinstance(b, TableBlock))
     assert len(table.rows) == 15
     assert table.columns[-1] == "Locator"
+
+
+def test_reference_inputs_anode_mass_and_mass_only_arrangement():
+    from digitalmodel.cathodic_protection import _kernels as kernel
+    from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+    from digitalmodel.cathodic_protection.report_reference import reference_arrangements
+
+    form = yaml.safe_load(FORM.read_text())
+    anode = form["inputs"]["anode"]
+    mass = math.pi * anode["radius_m"] ** 2 * anode["length_m"] * kernel.ANODE_DENSITY_ALZNI
+    assert anode["individual_anode_mass_kg"] == pytest.approx(mass)
+    assert anode["length_m"] == 1
+    assert anode["radius_m"] == 0.05
+    cfg = run_cathodic_protection(form)
+    result = cfg["results"]
+    req, ver = result["anode_requirements"], result["current_output_verification"]
+    needed = result["current_demand_A"]["total_mean_A"] * kernel.HOURS_PER_YEAR * result["design_life_years"] / (req["electrochemical_capacity_Ah_kg"] * req["utilization_factor"])
+    assert ver["anode_count_source"] == "mass"
+    assert ver["anode_count"] == math.ceil(needed / mass)
+    arrangements = reference_arrangements(cfg)
+    assert arrangements["stated"]["current_output_verification"] == ver
+    if result["status"]["result"] == "PASS":
+        assert arrangements["rechecked"] is None
+    else:
+        assert arrangements["rechecked"]["status"]["result"] == "PASS"
+
+
+def test_reference_current_areas_match_independent_depth_splits():
+    form = yaml.safe_load(FORM.read_text())
+    model = schedule()
+    joints = {j["id"]: j["coordinates_m"] for j in model["joints"]}
+    props = {p["id"]: p for p in model["property_sets"]}
+    for row in form["inputs"]["structure"]["zones"]:
+        if row["zone"] == "buried":
+            area = 3 * math.pi * 3 * 65
+        else:
+            lower, upper = row["axis_interval_m"]
+            area = 0
+            for member in model["members"]:
+                a, b = (joints[i] for i in member["joint_ids"])
+                low, high = sorted((a[2], b[2]))
+                piece = math.dist(a, b) * max(0, min(high, upper) - max(low, lower)) / (high - low)
+                area += math.pi * props[member["property_set_id"]]["diameter_m"] * piece
+        assert row["area_m2"] == pytest.approx(area)
+
+
+def test_reference_case_retains_the_repository_held_cp_basis():
+    from digitalmodel.cathodic_protection._edition import DEFAULT_EDITION
+
+    cfg = yaml.safe_load(FORM.read_text())["inputs"]
+    held = yaml.safe_load(FORM.with_name("jacket.yml").read_text())["inputs"]
+    assert cfg["environment"] == held["environment"]
+    assert cfg["design_data"]["design_life"] == held["design_data"]["design_life"]
+    assert cfg["design_data"]["edition"] == DEFAULT_EDITION
+    for name in ("material", "type", "length_m", "radius_m"):
+        assert cfg["anode"][name] == held["anode"][name]
+    assert "utilization_factor" not in cfg["anode"]
+    assert all(z["coating_category"] == held["structure"]["zones"][0]["coating_category"] for z in cfg["structure"]["zones"])
+
+
+def test_reference_checks_show_every_demand_capacity_margin_and_verdict():
+    from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+    from digitalmodel.cathodic_protection.report_reference import reference_arrangements, reference_checks
+    from digitalmodel.cathodic_protection import _kernels as kernel
+
+    cfg = run_cathodic_protection(yaml.safe_load(FORM.read_text()))
+    arrangements = reference_arrangements(cfg)
+    table = reference_checks(cfg, arrangements)
+    result = cfg["results"]
+    ver, req = result["current_output_verification"], result["anode_requirements"]
+    expected = {
+        "Initial current": (result["current_demand_A"]["total_initial_A"], ver["total_anode_current_output_initial_A"], "A"),
+        "Final current": (result["current_demand_A"]["total_final_A"], ver["total_anode_current_output_final_A"], "A"),
+        "Mass": (result["current_demand_A"]["total_mean_A"] * kernel.HOURS_PER_YEAR * result["design_life_years"] / (req["electrochemical_capacity_Ah_kg"] * req["utilization_factor"]), ver["anode_count"] * cfg["inputs"]["anode"]["individual_anode_mass_kg"], "kg")}
+    assert table.columns == ["Arrangement", "Check", "Demand", "Capacity", "Margin", "Result", "Unit", "Locator"]
+    assert len(table.rows) == 3
+    for row in table.rows:
+        demand, capacity, unit = expected[row[1]]
+        decimals = 0 if unit == "kg" else 3
+        assert row[2] == f"{demand:.{decimals}f}"
+        assert row[3] == f"{capacity:.{decimals}f}"
+        assert float(row[4].removesuffix("%")) == pytest.approx(100 * (capacity / demand - 1), abs=0.051)
+        assert row[5] == ("PASS" if capacity >= demand else "FAIL")
+        assert row[6] == unit
+        assert row[7].startswith("[3]")
+
+
+def test_reference_reduced_arrangement_rechecks_without_mutating_inputs():
+    from copy import deepcopy
+    from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+    from digitalmodel.cathodic_protection.report_reference import reference_arrangements, reference_checks
+
+    cfg = run_cathodic_protection(yaml.safe_load(FORM.read_text()))
+    cfg["inputs"]["anode"]["count"] = cfg["results"]["current_output_verification"]["count_by_mass"] - 1
+    cfg = run_cathodic_protection(cfg)
+    before = deepcopy(cfg)
+    arrangements = reference_arrangements(cfg)
+    assert cfg == before
+    stated, revised = arrangements["stated"], arrangements["rechecked"]
+    assert stated["status"]["result"] == "FAIL"
+    assert revised["status"]["result"] == "PASS"
+    assert revised["current_output_verification"]["anode_count"] == stated["current_output_verification"]["recommended_anode_count"]
+    assert all(revised["status"]["checks"].values())
+    assert revised["anode_requirements"]["individual_mass_kg"] == stated["anode_requirements"]["individual_mass_kg"]
+    for name in ("equivalent_radius_initial_m", "equivalent_radius_final_m", "anode_resistance_initial_ohm", "anode_resistance_final_ohm"):
+        assert revised["current_output_verification"][name] == stated["current_output_verification"][name]
+    table = reference_checks(cfg, arrangements)
+    assert len(table.rows) == 6
+    for name, result in (("Stated arrangement", stated), ("Rechecked arrangement", revised)):
+        rows = [r for r in table.rows if r[0] == name]
+        count = result["current_output_verification"]["anode_count"]
+        for row in rows:
+            if row[1] == "Mass":
+                capacity = count * cfg["inputs"]["anode"]["individual_anode_mass_kg"]
+                assert row[3] == f"{capacity:.0f}"
+                assert row[5] == ("PASS" if result["status"]["checks"]["mass"] else "FAIL")
+            else:
+                phase = row[1].split()[0].lower()
+                capacity = result["current_output_verification"][f"total_anode_current_output_{phase}_A"]
+                assert row[3] == f"{capacity:.3f}"
+                assert row[5] == ("PASS" if result["status"]["checks"][f"{phase}_current_output"] else "FAIL")
