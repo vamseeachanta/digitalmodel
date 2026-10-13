@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Engine adapter for ``basename: cathodic_protection`` (issue #2210).
 
 ``run_cathodic_protection(cfg)`` is the single entry the YAML engine calls.
@@ -61,6 +64,7 @@ from __future__ import annotations
 import math
 import warnings
 from collections.abc import Mapping
+from datetime import date
 from typing import Any, Final, NamedTuple, cast
 
 from loguru import logger
@@ -427,6 +431,73 @@ def _b401_densities(
     return out, cited
 
 
+def _public_input_source(raw: Any) -> dict[str, str]:
+    """Require a public-source locator before published inputs are consumed."""
+    if not isinstance(raw, Mapping):
+        raise ValueError("published input source is required")
+    result: dict[str, str] = {}
+    for key in ("url", "title", "locator", "read_on"):
+        value = raw.get(key)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"published input source requires {key}")
+        result[key] = value.strip()
+    if not result["url"].startswith("https://"):
+        raise ValueError("published input source requires a public HTTPS address")
+    date.fromisoformat(result["read_on"])
+    return result
+
+
+def _published_densities(
+    raw: Mapping[str, Any], densities: dict[str, Any], breakdown: dict[str, Any]
+) -> dict[str, str] | None:
+    """Apply cited effective phase densities without a second coating factor."""
+    values = raw.get("effective_current_density_A_m2")
+    if values is None:
+        return None
+    source = _public_input_source(raw.get("density_source"))
+    if not isinstance(values, Mapping) or set(values) != {"initial", "mean", "final"}:
+        raise ValueError("published density requires initial, mean and final values")
+    if raw.get("coating_category") != "bare":
+        raise ValueError("published effective density requires unity coating breakdown")
+    for phase in ("initial", "mean", "final"):
+        value = values[phase]
+        if isinstance(value, bool):
+            raise ValueError("published density must be a finite non-negative number")
+        number = float(value)
+        if not math.isfinite(number) or number < 0:
+            raise ValueError("published density must be a finite non-negative number")
+        densities[f"i_{phase}_A_m2"] = number
+    densities["citations"] = []
+    densities["basis"] = "Published effective phase densities; unity coating breakdown."
+    breakdown["citations"] = []
+    return source
+
+
+def _connected_allowances(structure: Mapping[str, Any]) -> tuple[float, list[dict[str, Any]]]:
+    """Sum cited connected-item allowances with one declared phase interpretation."""
+    raw = structure.get("connected_current_allowances", [])
+    if not isinstance(raw, list):
+        raise ValueError("connected current allowances must be a list")
+    total = 0.0
+    sources: list[dict[str, Any]] = []
+    for item in raw:
+        if not isinstance(item, Mapping):
+            raise ValueError("connected current allowance must be a mapping")
+        source = _public_input_source(item.get("source"))
+        count = item.get("count")
+        if isinstance(count, bool) or not isinstance(count, int) or count < 1:
+            raise ValueError("connected allowance count must be a positive integer")
+        current = _positive(item.get("current_A_each"), "connected current allowance")
+        basis = item.get("phase_basis")
+        if not isinstance(basis, str) or not basis.strip():
+            raise ValueError("connected allowance requires a phase basis")
+        total += count * current
+        sources.append({**source, "count": count, "current_A_each": current, "phase_basis": basis})
+    if not math.isfinite(total):
+        raise ValueError("connected current allowance must be finite")
+    return total, sources
+
+
 class _AnodeGeometry(NamedTuple):
     """Fresh and depleted anode geometry for the Sec. 7.8 checks."""
 
@@ -556,11 +627,18 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
     breakdown: dict[str, Any] = {}
     densities: dict[str, Any] = {}
     demand: dict[str, Any] = {}
-    total_initial = total_mean = total_final = 0.0
+    connected_current, input_sources = _connected_allowances(structure)
+    total_initial = total_mean = total_final = connected_current
+    raw_zones = {str(z["zone"]): z for z in structure["zones"]}
     for zone_id, base_zone, category, zone in zones:
         areas[zone_id] = zone.design_area_m2
         fc, fc_cited = _b401_breakdown(category, zone, design_life, edition)
         dens, dens_cited = _b401_densities(zone, base_zone, temp_c, edition)
+        published_source = _published_densities(raw_zones[zone_id], dens, fc)
+        if published_source:
+            input_sources.append({**published_source, "zone": zone_id})
+            dens_cited = []
+            fc_cited = []
         fc["citations"] = sorted(citation_label(cv.citation) for cv in fc_cited)
         dens["citations"] = sorted({citation_label(cv.citation) for cv in dens_cited})
         _cite(citations, *fc_cited, *dens_cited)
@@ -714,6 +792,9 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
         "current_output_verification": verification,
         "citations": sorted(citations),
     }
+    if input_sources:
+        results["input_sources"] = input_sources
+        results["connected_current_allowance_A"] = connected_current
     cfg["results"] = results
 
     if adequate:

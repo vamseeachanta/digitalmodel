@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Engine adapter regression tests (issue #2210).
 
 Each retired demo input (owner decision D5) now lives under
@@ -61,6 +64,41 @@ EXPECTED_USE_STATUS = {
     "ships": USE_STATUS_CLIENT_EOR,
     "fpso": USE_STATUS_LEGACY_UNCITED,
 }
+
+
+def test_published_phase_densities_and_connected_drain_feed_all_checks() -> None:
+    """Published effective densities share the sizing and verification basis."""
+    cfg = _load("jacket")
+    source = {"url": "https://www.hillpublisher.com/UpFile/202308/20230803150221.pdf",
+              "title": "Xu, Engineering Advances, 2023", "locator": "p. 242, Tables 1–2",
+              "read_on": "2026-10-13"}
+    areas = [652.9, 3726.8, 15737.0, 10814.8]
+    densities = [(0.01, 0.02, 0.04), (0.15, 0.07, 0.10),
+                 (0.12, 0.06, 0.08), (0.02, 0.02, 0.02)]
+    cfg["inputs"]["structure"]["zones"] = [
+        {"zone": f"published-{i}", "base_zone": "submerged" if i < 3 else "buried",
+         "area_m2": area, "coating_category": "bare",
+         "effective_current_density_A_m2": dict(zip(["initial", "mean", "final"], density)),
+         "density_source": source}
+        for i, (area, density) in enumerate(zip(areas, densities))
+    ]
+    cfg["inputs"]["structure"]["connected_current_allowances"] = [
+        {"count": 9, "current_A_each": 2, "source": source,
+         "phase_basis": "The unsplit well allowance is applied at all three phases."}
+    ]
+    result = run_cathodic_protection(cfg)["results"]
+    for phase, expected in [("initial", 2688.285), ("mean", 1452.450), ("final", 1892.052)]:
+        assert result["current_demand_A"][f"total_{phase}_A"] == pytest.approx(expected)
+        assert result["current_output_verification"][f"{phase}_current_demand_A"] == pytest.approx(round(expected, 3))
+    assert result["input_sources"]
+
+
+def test_published_density_requires_a_source_before_calculation() -> None:
+    cfg = _load("jacket")
+    zone = cfg["inputs"]["structure"]["zones"][0]
+    zone["effective_current_density_A_m2"] = {"initial": 0.15, "mean": 0.07, "final": 0.10}
+    with pytest.raises(ValueError, match="source"):
+        run_cathodic_protection(cfg)
 
 B401_KEYS = {
     "standard",
