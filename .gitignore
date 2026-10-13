@@ -263,6 +263,8 @@ node_modules/
 
 /output/
 /results/
+# Build output: one-pager print sources written beside committed PDFs.
+/docs/api/capabilities/pdf/*.html
 reports/
 !docs/reports/
 docs/reports/*

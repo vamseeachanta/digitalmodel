@@ -10,8 +10,9 @@ surfaced on ``/capabilities/``.
 
 Each one-pager is a self-contained, light-themed, A4 page (digitalmodel logo,
 what-it-is, key figures, what-you-get, and the live link) rendered to PDF with
-headless Chrome. Outputs (committed frozen artifacts; mkdocs serves them as static
-files under ``docs/api``):
+headless Chrome. PDFs are committed frozen artifacts, served by mkdocs as static
+files under ``docs/api``. Kept HTML pages are self-contained print sources:
+build output, git-ignored and not committed.
 
     docs/api/capabilities/pdf/<id>.pdf        # section + work one-pagers
     docs/api/capabilities/pdf/<id>.html       # self-contained source pages
