@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Cathodic-protection consumers of the standard report engine (#2212 part 2).
 
 ABOUTME: Two ``@report_adapter`` registrations turn engine-adapter results
@@ -73,6 +76,16 @@ from digitalmodel.cathodic_protection.engine_adapter import (
 from digitalmodel.cathodic_protection.f103_tables import (
     F103_WIKI_PATH,
     F103_WIKI_PATH_2019,
+)
+from digitalmodel.cathodic_protection.report_elevation import (
+    design_blocks,
+    geometry_caveats,
+)
+from digitalmodel.cathodic_protection.report_recommendations import (
+    conclusions_block,
+    failed_keys,
+    recommendation_block,
+    recommendation_caveats,
 )
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting.adapters import report_adapter
@@ -1534,6 +1547,34 @@ _SECTION_BUILDERS = {
 }
 
 
+def _b401_report_additions(
+    inputs: Mapping[str, Any], results: Mapping[str, Any], sections: list[Section]
+) -> list[Section]:
+    """Add display geometry and advice to the single-arrangement B401 layout."""
+    if (
+        results.get("mode") == "b401_components"
+        or results.get("riser_base_assessment")
+        or results.get("anode_families")
+    ):
+        return []
+    by_key = {section.key: section for section in sections}
+    by_key["design-basis"].blocks.extend(design_blocks(inputs))
+    adequacy = by_key["adequacy"]
+    failures = failed_keys(results)
+    if "overall_status" in failures:
+        adequacy.blocks.insert(2, recommendation_block(results, "overall_status"))
+    for key in failures:
+        if key != "overall_status":
+            adequacy.blocks.append(recommendation_block(results, key))
+    adequacy.blocks.append(conclusions_block(results))
+    caveats = geometry_caveats(inputs, results) + recommendation_caveats(results)
+    return [Section(
+        key="cp-limitations", title="Limitations and items not evaluated",
+        label="Appendix A",
+        blocks=[TextBlock(markdown="\n\n".join(f"- {item}" for item in caveats))],
+    )]
+
+
 @report_adapter("cathodic_protection.anode_design")
 def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
     """Anode-design report from a routed ``cathodic_protection`` cfg.
@@ -1566,6 +1607,11 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
     echo: dict[str, Any] = {"inputs": dict(inputs)}
     if doc_note:
         echo["report.document"] = doc_note
+    sections = builder(inputs, results)
+    appendices = (
+        _b401_report_additions(inputs, results, sections)
+        if calc_type == KEY_B401 else []
+    )
     return ReportSpec(
         document=document,
         standards=_standards(results, calc_type),
@@ -1573,9 +1619,10 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
             asdict(c)
             for c in _citations_from_labels(results.get("citations") or [], note)
         ],
-        sections=builder(inputs, results),
+        sections=sections,
         provenance=_provenance(cfg, results, "results"),
         input_echo=echo,
+        appendices=appendices,
     )
 
 
