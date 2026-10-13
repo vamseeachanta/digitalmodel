@@ -1673,6 +1673,8 @@ def _verification_presentation(sections: list[Section], *, published: bool = Fal
                                 row[index] = f"{row[index]:.0f}"
             elif isinstance(block, TextBlock):
                 block.markdown = block.markdown.replace("route's", "calculation's").replace("routed", "calculated")
+            elif isinstance(block, StatusBlock):
+                block.detail = re.sub(r"(\d+(?:\.\d+)?) kg", lambda match: f"{float(match[1]):.0f} kg", block.detail)
 
 
 @report_adapter("cathodic_protection.anode_design")

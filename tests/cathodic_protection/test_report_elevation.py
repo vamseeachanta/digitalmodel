@@ -567,3 +567,24 @@ def test_depth_diagram_groups_surveys_without_overprinted_labels() -> None:
     labels = [n for n in ET.fromstring(figure.svg).iter() if n.tag.endswith('text') and 'days 52, 518' in (n.text or '')]
     assert len(labels) == 4
     assert len({(n.attrib['x'], n.attrib['y']) for n in labels}) == 4
+
+
+def test_sourced_dimension_table_and_scale_bar_fit_small_structure() -> None:
+    """Synthetic short members retain dimensions and a fitted physical scale."""
+    from digitalmodel.cathodic_protection.report_elevation import design_blocks
+    from digitalmodel.reporting import TableBlock
+
+    raw = {'basis': 'openly_licensed_reference', 'citation': 'Synthetic geometry',
+           'attribution': 'Synthetic dimensions', 'licence': 'CC BY 4.0',
+           'datum': 'waterline', 'waterline_m': 0, 'mudline_m': -.1,
+           'zones': [{'name': 'submerged', 'lower_m': -.1, 'upper_m': 0}],
+           'legs': [{'name': 'leg', 'start': [0, 0], 'end': [0, -.1], 'diameter_m': .1}],
+           'brace_levels': [], 'diagonals': []}
+    blocks = design_blocks({'structure': {'report_geometry': raw}})
+    figure = next(b for b in blocks if isinstance(b, FigureBlock))
+    svg = ET.fromstring(figure.svg)
+    bar = next(n for n in svg.iter() if 'data-scale-bar-m' in n.attrib)
+    assert float(bar.attrib['data-scale-bar-m']) * float(svg.attrib['data-scale']) <= 200
+    table = next(b for b in blocks if isinstance(b, TableBlock))
+    assert table.columns[-4:] == ['Start x', 'Start elevation', 'End x', 'End elevation']
+    assert table.rows[0][-4:] == [0, 0, 0, -.1]

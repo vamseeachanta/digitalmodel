@@ -786,3 +786,10 @@ def test_published_effective_densities_are_not_presented_as_standard_coating_con
     assert 'Published effective mean densities' in figure.caption
     assert 'connected allowances' in figure.caption
     assert 'breakdown constants' not in figure.caption
+
+
+def test_published_status_prints_whole_kilograms() -> None:
+    """Native status quantities retain their values but display whole masses."""
+    report = anode_design_report(_run('published_jacket_84m'))
+    details = ' '.join(b.detail for s in report.sections for b in s.blocks if isinstance(b, StatusBlock))
+    assert not re.search(r'\d+\.\d+ kg', details)

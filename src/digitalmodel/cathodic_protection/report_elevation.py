@@ -371,12 +371,23 @@ def _svg(geometry: Geometry) -> str:
     for index, line in enumerate(source_lines):
         parts.append(_label(45, height + 100 + index * 14, line))
     y = height + 65
+    bar = _scale_bar_length(geometry, scale)
+    attribute = f' data-scale-bar-m="{_n(bar)}"' if geometry.citation else ""
     parts.append(
-        f'<path d="M 55 {y:g} h {5 * scale:g} m {-5 * scale:g} -3 v 6 m {5 * scale:g} -6 v 6" stroke="black" fill="none"/>'
+        f'<path{attribute} d="M 55 {y:g} h {bar * scale:g} m {-bar * scale:g} -3 v 6 m {bar * scale:g} -6 v 6" stroke="black" fill="none"/>'
     )
-    parts.append(_label(55, y + 17, "5 m; common horizontal and vertical scale"))
+    parts.append(_label(55, y + 17, f"{bar:g} m; common horizontal and vertical scale"))
     parts.append("</svg>")
     return "".join(parts)
+
+
+def _scale_bar_length(geometry: Geometry, scale: float) -> float:
+    """Fit a source-based scale bar to the annotation gutter."""
+    if not geometry.citation:
+        return 5.0
+    limit = 200 / scale
+    decade = 10 ** math.floor(math.log10(limit))
+    return max(factor * decade for factor in (1, 2, 5) if factor * decade <= limit)
 
 
 def _raw_geometry(inputs: Mapping[str, Any]) -> Any:
@@ -512,10 +523,12 @@ def design_blocks(inputs: Mapping[str, Any]) -> list[Block]:
     if geometry.citation:
         blocks.append(TableBlock(
             title="Member dimensions and area derivation",
-            columns=["Member", "Count", "True length", "Diameter", "Lateral area"],
-            units=["-", "-", "m", "m", "m2"],
+            columns=["Member", "Count", "True length", "Diameter", "Lateral area",
+                     "Start x", "Start elevation", "End x", "End elevation"],
+            units=["-", "-", "m", "m", "m2", "m", "m", "m", "m"],
             rows=[[m.name, m.count, m.true_length, m.diameter,
-                   math.pi * m.diameter * m.true_length * m.count] for m in geometry.members],
+                   math.pi * m.diameter * m.true_length * m.count,
+                   *m.start, *m.end] for m in geometry.members],
         ))
     return blocks
 
