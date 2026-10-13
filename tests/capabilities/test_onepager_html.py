@@ -73,7 +73,7 @@ def test_html_written_and_renderer_receives_kept_file(output):
 def test_title_is_unique_and_escaped(output):
     spec = dict(builder.SPECS[0], title='Strength & <limits> "quoted"')
     builder.build_onepager(spec, output, renderer=fake_pdf)
-    text = (output / f"{spec['id']}.html").read_text()
+    text = (output / f"{spec['id']}.html").read_text(encoding="utf-8")
     assert Page(text).titles == [spec["title"]]
     assert f"<title>{html.escape(spec['title'])}</title>" in text
 
@@ -87,7 +87,7 @@ def test_build_leaves_only_named_outputs_and_no_temporary_paths(output, tmp_path
         kept.name,
         kept.with_suffix(".pdf").name,
     }
-    text = kept.read_text()
+    text = kept.read_text(encoding="utf-8")
     assert str(tmp_path) not in text
     assert not re.search(r"tmp[\w-]+\.html|file://|/(?:home|mnt)/", text)
     assert set(tmp_path.iterdir()) - before == {output}
@@ -97,7 +97,7 @@ def test_build_leaves_only_named_outputs_and_no_temporary_paths(output, tmp_path
 def test_kept_page_is_self_contained(output, brand):
     spec = builder.SPECS[0]
     builder.build_onepager(spec, output, brand_css=brand, renderer=fake_pdf)
-    text = (output / f"{spec['id']}.html").read_text()
+    text = (output / f"{spec['id']}.html").read_text(encoding="utf-8")
     assert Page(text).resources == []
     assert "<svg" in text
     assert not re.search(r"@import|url\s*\(", text, re.I)
@@ -107,10 +107,10 @@ def test_kept_page_is_self_contained(output, brand):
 def test_brand_cli_inlines_styles_after_defaults(output, tmp_path):
     css = tmp_path / "brand.css"
     content = "body { color: purple; }"
-    css.write_text(content)
+    css.write_text(content, encoding="utf-8", newline="\n")
     spec = builder.SPECS[0]
     builder.main(["--brand", str(css), spec["id"]], renderer=fake_pdf)
-    text = (output / f"{spec['id']}.html").read_text()
+    text = (output / f"{spec['id']}.html").read_text(encoding="utf-8")
     assert text.index(content) > text.index(".cta")
     assert str(css) not in text
 
@@ -184,3 +184,67 @@ def test_brand_resource_loads_and_markup_are_rejected_before_writing(output, css
             builder.SPECS[0], output, brand_css=css, renderer=fake_pdf
         )
     assert not output.exists()
+
+
+def test_kept_page_is_utf8_with_explicit_lf(output, monkeypatch):
+    original = type(output).write_text
+    writes = []
+
+    def write_text(path, text, **kwargs):
+        writes.append(kwargs)
+        # Model a platform default whose text files use CRLF.
+        options = dict(kwargs)
+        options.setdefault("newline", "\r\n")
+        return original(path, text, **options)
+
+    monkeypatch.setattr(type(output), "write_text", write_text)
+    spec = dict(builder.SPECS[0], title="Strength – café")
+    page = builder.build_onepager(spec, output, renderer=fake_pdf)
+    data = page.read_bytes()
+    assert "\r" not in data.decode("utf-8")
+    assert spec["title"] in data.decode("utf-8")
+    assert writes == [{"encoding": "utf-8", "newline": "\n"}]
+
+
+@pytest.mark.parametrize(
+    "css",
+    [
+        'body { background: image-set("x.png" 1x); }',
+        "body { background: image-set('x.png' 1x); }",
+        'body { background: -webkit-image-set("x.png" 1x); }',
+        "body { background: -WEBKIT-IMAGE-SET ( 'x.png' 1x); }",
+        'body { background: image-set(linear-gradient(red, blue) 1x, "x.png" 2x); }',
+    ],
+)
+def test_brand_string_image_set_is_rejected(output, css):
+    with pytest.raises(ValueError, match="self-contained"):
+        builder.build_onepager(builder.SPECS[0], output, brand_css=css, renderer=fake_pdf)
+    assert not output.exists()
+
+
+def test_brand_image_setting_class_is_accepted(output):
+    builder.build_onepager(
+        builder.SPECS[0], output,
+        brand_css=".image-setting { color: purple; }", renderer=fake_pdf,
+    )
+    assert output.is_dir()
+
+
+def test_closing_message_counts_kept_pages_and_pdfs(output, capsys):
+    builder.main([builder.SPECS[0]["id"]], renderer=fake_pdf)
+    assert "1 kept HTML page(s) and 1 one-pager PDF(s)" in capsys.readouterr().out
+
+
+def test_census_classifies_only_specification_print_sources(tmp_path, monkeypatch):
+    from scripts import check_generated_html as checker
+
+    output = tmp_path / "docs/api/capabilities/pdf"
+    for spec in builder.SPECS:
+        builder.build_onepager(spec, output, renderer=fake_pdf)
+    monkeypatch.setattr(checker, "MANUAL_PAGES", {})
+    assert checker.validate_page_census(tmp_path) == []
+    unknown = output / "unknown.html"
+    unknown.write_text("<html></html>", encoding="utf-8", newline="\n")
+    assert checker.validate_page_census(tmp_path) == [
+        "unclassified docs/api HTML page(s): docs/api/capabilities/pdf/unknown.html"
+    ]

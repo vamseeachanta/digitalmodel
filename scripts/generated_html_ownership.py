@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Reasoned classifications used by the generated HTML freshness census.
 
 This census is scoped to ``docs/api/**`` and it is **no longer the only
@@ -87,7 +90,8 @@ DISCOVERY_FALSE_POSITIVES = {
         "shared HTML rendering helpers; it does not write a page"
     ),
     "scripts/capabilities/build_onepagers.py": (
-        "writes one-pager PDFs under docs/api/capabilities/pdf, not HTML pages"
+        "writes uncommitted HTML print sources beside committed one-pager PDFs; "
+        "the build-output classification below owns these pages"
     ),
 }
 
@@ -222,3 +226,36 @@ MANUAL_PAGES = {
         "hand-maintained report; no scripts producer found"
     ),
 }
+
+
+# Build-output pages are generated working-tree print sources of committed PDFs;
+# they are not committed pages and are not included in byte-for-byte drift checks.
+BUILD_OUTPUT_GENERATORS = {
+    "scripts/capabilities/build_onepagers.py": {
+        "command": "python3 scripts/capabilities/build_onepagers.py",
+        "output_pattern": "docs/api/capabilities/pdf/<specification-id>.html",
+        "reason": "kept self-contained print sources beside committed one-pager PDFs",
+    },
+}
+
+
+def build_output_pages() -> set[str]:
+    """Enumerate print-source paths from specification ids, without a folder glob."""
+    import ast
+    from pathlib import Path
+
+    script = Path(__file__).parent / "capabilities" / "build_onepagers.py"
+    tree = ast.parse(script.read_text(encoding="utf-8"))
+    specs = next(
+        node.value for node in tree.body
+        if isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name) and node.target.id == "SPECS"
+    )
+    if not isinstance(specs, ast.List):
+        raise ValueError("Specification registry must be a literal list")
+    ids = {
+        ast.literal_eval(keyword.value)
+        for entry in specs.elts if isinstance(entry, ast.Call)
+        for keyword in entry.keywords if keyword.arg == "id"
+    }
+    return {f"docs/api/capabilities/pdf/{spec_id}.html" for spec_id in ids}

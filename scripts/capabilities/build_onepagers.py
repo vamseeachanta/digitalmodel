@@ -722,7 +722,12 @@ def _validate_brand_css(css: str) -> None:
         normalized,
     )
     normalized = re.sub(r"/\*.*?\*/", "", normalized, flags=re.S)
-    if re.search(r"@\s*import\b|\burl\s*\(|<\s*/\s*style\b", normalized, re.I):
+    if re.search(
+        r"""@\s*import\b|\burl\s*\(|<\s*/\s*style\b"""
+        r"""|\b(?:-webkit-)?image-set\s*\([^;{}]*["']""",
+        normalized,
+        re.I,
+    ):
         raise ValueError(
             "Brand stylesheet must be self-contained: resource loads and "
             "HTML markup are not supported"
@@ -784,7 +789,7 @@ def build_onepager(
     text = _render_html(spec, brand_css)
     output.mkdir(parents=True, exist_ok=True)
     source = output / f"{spec['id']}.html"
-    source.write_text(text, encoding="utf-8")
+    source.write_text(text, encoding="utf-8", newline="\n")
     renderer(source, source.with_suffix(".pdf"))
     return source
 
@@ -795,7 +800,7 @@ def main(
     renderer: Callable[[Path, Path], None] = _to_pdf,
 ) -> None:
     """Build all one-pagers, or only the supplied specification ids."""
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument(
         "ids",
         nargs="*",
@@ -834,7 +839,10 @@ def main(
             continue
         build_onepager(spec, _OUT, brand_css=brand_css, renderer=renderer)
         n_pdf += 1
-    print(f"Wrote {n_pdf} one-pager PDFs into {_OUT.relative_to(_REPO)}/")
+    print(
+        f"Wrote {n_pdf} kept HTML page(s) and {n_pdf} one-pager PDF(s) "
+        f"into {_OUT.relative_to(_REPO)}/"
+    )
 
 
 if __name__ == "__main__":
