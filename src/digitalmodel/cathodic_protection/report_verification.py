@@ -8,6 +8,9 @@ from __future__ import annotations
 import math
 from typing import Any, Mapping
 
+from digitalmodel.cathodic_protection import _kernels as kernel
+from digitalmodel.cathodic_protection.anode_sizing import AnodeType, calculate_anode_resistance
+from digitalmodel.cathodic_protection.engine_adapter import _b401_anode_geometry
 from digitalmodel.cathodic_protection.report_elevation import monitoring_conclusion
 from digitalmodel.reporting.spec import StatusBlock, TableBlock
 
@@ -25,6 +28,21 @@ def published_outputs(inputs: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]
     return targets
 
 
+def _model_outputs(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> tuple[float, float]:
+    """Reuse native geometry and resistance without rounding intermediate outputs."""
+    req = results["anode_requirements"]
+    ver = results["current_output_verification"]
+    geometry = _b401_anode_geometry(inputs["anode"], float(req["utilization_factor"]))
+    kind = AnodeType(str(req["anode_type"]))
+    rho = float(inputs["environment"]["seawater_resistivity_ohm_m"])
+    initial = calculate_anode_resistance(kind, geometry.length_m, geometry.radius_initial_m, rho,
+                                        width_m=geometry.width_m, thickness_m=geometry.thickness_m,
+                                        exposed_area_m2=geometry.exposed_area_m2)
+    final = calculate_anode_resistance(kind, geometry.length_m, geometry.radius_final_m, rho)
+    voltage = float(ver["driving_voltage_V"])
+    return kernel.anode_current_output(voltage, initial), kernel.anode_current_output(voltage, final)
+
+
 def aggregate_table(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> TableBlock:
     """Compare installed capacity with demand under both output bases."""
     targets = published_outputs(inputs)
@@ -32,11 +50,12 @@ def aggregate_table(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> Ta
     req = results["anode_requirements"]
     count = ver["anode_count"]
     rows = []
+    outputs = dict(zip(("initial", "final"), _model_outputs(inputs, results)))
     for phase in ("initial", "final"):
         demand = float(ver[f"{phase}_current_demand_A"])
         target = targets[f"{phase}_demand"]
         capacity = count * float(targets[f"{phase}_output"]["printed"])
-        model = float(ver[f"total_anode_current_output_{phase}_A"])
+        model = count * outputs[phase]
         rows.append([f"{phase.capitalize()} current", f"{demand:.3f}",
                      f"{100 * (demand / float(target['printed']) - 1):+.2f}%",
                      f"{capacity:.3f}", f"{100 * (capacity / demand - 1):+.2f}%",
@@ -79,7 +98,8 @@ def measured_statement(inputs: Mapping[str, Any]) -> str:
     if not failing:
         return monitoring_conclusion(inputs)
     levels = " and ".join(f"{r['elevation_m']:g} m (day {r['elapsed_days']:g})" for r in failing)
-    return (f"Measured under-protection at {levels}: potentials are more positive than "
+    relation = "at or more positive than" if any(float(r["potential_V"]) == criterion for r in failing) else "more positive than"
+    return (f"Measured under-protection at {levels}: potentials are {relation} "
             f"{criterion:.3f} V versus Ag/AgCl/seawater; protection requires more negative than "
             f"{criterion:.3f} V. This spatial finding is not established by aggregate checks.")
 
@@ -110,7 +130,6 @@ def _quantity_rows(demands: list[float], hours: float, results: Mapping[str, Any
                    *, retrofit: bool) -> list[list[Any]]:
     """Size and recheck every phase and usable mass for both output bases."""
     req = results["anode_requirements"]
-    ver = results["current_output_verification"]
     mass = float(req["individual_mass_kg"])
     required = demands[1] * hours / (float(req["electrochemical_capacity_Ah_kg"]) *
                                     float(req["utilization_factor"]))
@@ -118,8 +137,8 @@ def _quantity_rows(demands: list[float], hours: float, results: Mapping[str, Any
                               "[2], anode mass; mean current × hours / (capacity × utilisation)"]]
     outputs = [("Published outputs", float(results["published_initial_output"]),
                 float(results["published_final_output"])),
-               ("Independent estimate", float(ver["anode_current_output_initial_A"]),
-                float(ver["anode_current_output_final_A"]))]
+               ("Independent estimate", float(results["model_initial_output"]),
+                float(results["model_final_output"]))]
     for label, initial, final in outputs:
         counts = [math.ceil(required / mass), math.ceil(demands[0] / initial), math.ceil(demands[2] / final)]
         count = max(counts)
@@ -157,7 +176,8 @@ def measured_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> l
     structure = inputs["structure"]
     basis = structure["verification_evidence"]["higher_density_basis"]
     targets = published_outputs(inputs)
-    view = dict(results, published_initial_output=targets["initial_output"]["printed"],
+    initial, final = _model_outputs(inputs, results)
+    view = dict(results, model_initial_output=initial, model_final_output=final, published_initial_output=targets["initial_output"]["printed"],
                 published_final_output=targets["final_output"]["printed"])
     demands = [float(results["connected_current_allowance_A"])] * 3
     addition = []
@@ -189,7 +209,8 @@ def measured_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> l
             TextBlock(markdown="### Monitoring\n\nAll levels and remote or shielded locations require potential surveys versus Ag/AgCl/seawater; protection requires more negative than -0.800 V [2], protective potential criterion. Readings more positive than -0.800 V trigger investigation and intervention planning. Surveys before and after intervention should use the same locations. Remaining mass and depletion should be measured against remaining life. The recurring interval is not evaluated: current surveys, depletion history, corrosion allowance and affected-member condition are needed. Monitoring alone is not a demonstrated correction of the measured failure; retrofit assessment is recommended because the trigger is already met.")]
 
 
-def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> str:
+def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any],
+                         *, options_available: bool = True) -> str:
     """Open verification reports with result, finding, advice and limitations."""
     ver = results["current_output_verification"]
     if published_outputs(inputs):
@@ -201,6 +222,8 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any]) 
                    "the monitoring trigger is met; design, retrofit and monitoring options "
                    "and their rechecks are in Adequacy. " if measured_failure(inputs) else
                    "No measured failure is established by the latest readings. ")
+        if measured_failure(inputs) and not options_available:
+            finding = "Retrofit sizing is not evaluated: complete demand, output, mass and arrangement data are required. "
         return (f"The published {ver['anode_count']}-anode arrangement is verified against "
                 "the paper's printed outputs and the measured potentials. " + statement +
                 " Computed initial, mean and final demands reproduce the printed totals "
@@ -214,6 +237,8 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any]) 
             f"and initial and final current demands: {status['result']}; "
             f"{governing} governs. "
             + ("Rechecked design alternatives and monitoring requirements are in Adequacy. "
+               if status["result"] == "FAIL" and options_available else
+               "Design alternatives are not evaluated: complete demand, output, mass and arrangement data are required. "
                if status["result"] == "FAIL" else "No aggregate check fails. ")
             + monitoring_conclusion(inputs) +
             " The elevation is illustrative; geometry and condition limitations are in Appendix A.")

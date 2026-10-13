@@ -1592,7 +1592,6 @@ def _published_checkpoint_section(
         f"the published installed arrangement contains {verification['anode_count']} anodes. "
         "Aggregate mass and output checks do not establish protection at remote or shielded areas."
     )
-    source = _mapping(evidence.get("source"))
     return Section(key="published-comparison", title="Published values and comparison", blocks=[
         TextBlock(markdown=summary),
         TextBlock(markdown=str(evidence["assumptions"])),
@@ -1637,7 +1636,8 @@ def _b401_report_additions(
     if published_outputs(inputs):
         verdict = published_status(inputs, results)
         adequacy.blocks = [adequacy.blocks[0], verdict, aggregate_table(inputs, results)]
-        adequacy.blocks.extend(_report_options(inputs, results, published=True))
+        options = _report_options(inputs, results, published=True)
+        adequacy.blocks.extend(options)
         adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\n" + verdict.detail))
     elif modern:
         options = _report_options(inputs, results)
@@ -1658,10 +1658,19 @@ def _b401_report_additions(
     else:
         caveats.append("Equivalent-cylinder alternatives require fabrication, core, attachment, clearance and anode-interaction assessment. A recurring survey interval and numerical depletion trigger require measured remaining mass, elapsed service and future demand; only baseline and post-intervention surveys are specified here.")
     caveats.extend(evidence.get("limitations", []))
+    if modern and not evidence:
+        life = float(results["design_life_years"])
+        temperature = float(_mapping(inputs.get("environment"))["seawater_temperature_C"])
+        by_key["design-basis"].blocks.append(TextBlock(markdown=(
+            f"Design life {life:g} years and seawater temperature {temperature:g} °C, "
+            "nominal mass interpreted as net alloy, and equivalent-cylinder alternatives "
+            f"with alloy density {kernel.ANODE_DENSITY_ALZNI:g} kg/m³ are based on previous project experience. "
+            "The original radius is the stated input; alternative radii follow net mass, length "
+            "and alloy density. Capacity and utilisation references are listed in References [1].")))
     if modern:
         sections[sections.index(by_key["references"])] = _verification_references(inputs, results)
         sections.insert(0, Section(key="summary", title="Summary", blocks=[
-            TextBlock(markdown=verification_summary(inputs, results))]))
+            TextBlock(markdown=verification_summary(inputs, results, options_available=any(isinstance(b, TableBlock) for b in options)))]))
         _verification_presentation(sections, published=bool(evidence))
     if modern:
         caveats = [_verification_wording(str(item), bool(evidence)) for item in caveats]
@@ -1702,7 +1711,10 @@ def _verification_wording(text: str, published: bool) -> str:
     text = re.sub(r"\brouted\b", "calculated", text)
     text = re.sub(r"\broute(?:'s|s)?\b", "calculation", text)
     text = text.replace("regression case", "illustrative example")
+    if not published:
+        text = text.replace("alloy density is based on previous project experience.", "alloy density is stated in Design basis.")
     text = re.sub(r"(\d+(?:\.\d+)?) kg", lambda m: f"{float(m[1]):.0f} kg", text)
+    text = re.sub(r"\s*\(\s*\)", "", text)
     return text.strip()
 
 
@@ -1739,6 +1751,8 @@ def _verification_presentation(sections: list[Section], *, published: bool = Fal
         for block in section.blocks:
             if isinstance(block, FigureBlock):
                 block.caption = _verification_wording(block.caption, published)
+                if published and block.svg and 'data-type="depth_true"' in block.svg:
+                    block.caption += " [2], protective potential criterion."
                 if block.svg:
                     block.svg = re.sub(r">([^<>]+)<", lambda m: ">" + _verification_wording(m[1], published) + "<", block.svg)
                 if block.plotly:

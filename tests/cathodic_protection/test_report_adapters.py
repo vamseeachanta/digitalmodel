@@ -975,3 +975,136 @@ def test_published_numbered_references_locators_precision_and_abstract_boundary(
     assert spec.verification_presentation is True
     assert _load_fixture()["results"]["status"]["result"] == "FAIL"
     assert anode_design_report(_load_fixture()).verification_presentation is False
+
+
+def test_summary_does_not_claim_unavailable_options_are_rechecked(monkeypatch) -> None:
+    """An unavailable advice calculation is also disclosed in the first section."""
+    from digitalmodel.cathodic_protection import report_adapters as adapters
+
+    def unavailable(*args):
+        raise ValueError("increased-count arrangement did not pass its recheck")
+    monkeypatch.setattr(adapters, "arrangement_options", unavailable)
+    spec = anode_design_report(_run("jacket_report_example"))
+    summary = spec.sections[0].blocks[0].markdown
+    assert "Rechecked design alternatives" not in summary
+    assert "Design alternatives are not evaluated" in summary
+
+
+def test_criterion_equality_is_not_described_as_more_positive() -> None:
+    """Equality fails a strict more-negative criterion without changing its sign."""
+    cfg = _run("published_jacket_84m")
+    for r in cfg["inputs"]["structure"]["report_geometry"]["monitoring"]:
+        r["potential_V"] = cfg["inputs"]["structure"]["report_geometry"]["criterion_V"]
+    detail = _statuses(anode_design_report(cfg))[0].detail
+    assert "at or more positive than -0.800 V" in detail
+
+
+def test_diagram_criterion_has_numbered_standard_reference() -> None:
+    """The standard criterion is distinguished from the paper measurements."""
+    spec = anode_design_report(_run("published_jacket_84m"))
+    figure = next(f for f in spec.figure_blocks() if f.svg)
+    assert "[2], protective potential criterion" in figure.caption
+
+
+def test_all_option_counts_capacities_and_mass_values_match_independent_arithmetic() -> None:
+    """Every recheck quantity matches independent current and remaining-life sums."""
+    import math
+
+    cfg = _run("published_jacket_84m")
+    tables = _tables(anode_design_report(cfg))
+    design = [3077.561, 1647.088, 2086.69]
+    zone = [15737*(.14-.12),15737*(.07-.06),15737*(.09-.08)]
+    radius = math.sqrt(323.4/(math.pi*2.02*2750))
+    model = [.25/(.22/(2*math.pi*2.02)*(math.log(4*2.02/r)-1))
+             for r in [radius,radius*math.sqrt(1-.9)]]
+    for title, demands, hours, retrofit in [
+        ("Increase at design: demand and recheck", design,25*8760,False),
+        ("Retrofit: lower-zone addition and recheck",zone,(25-518/365)*8760,True),
+    ]:
+        rows = {r[0]:r[1] for r in tables[title].rows}
+        mass = demands[1]*hours/(2000*.9)
+        assert float(rows["Required net mass"]) == pytest.approx(mass,abs=.51)
+        for label, initial, final in [
+            ("Published outputs",5.01,3.63),
+            ("Independent estimate",*model),
+        ]:
+            counts = [math.ceil(mass/323.4),math.ceil(demands[0]/initial),math.ceil(demands[2]/final)]
+            for phase,value in zip(["mass","initial","final"],counts):
+                assert rows[label+" "+phase+" count"] == value
+            n = max(counts)
+            for suffix,value in [(" initial capacity",n*initial),(" final capacity",n*final),(" net mass",n*323.4)]:
+                assert float(rows[label+suffix]) == pytest.approx(value,abs=.51 if "mass" in suffix else .00051)
+            assert rows[label+(" all-check recheck" if retrofit else " recheck")]=="PASS"
+            if retrofit:
+                first=counts[-1]
+                for suffix,value in [(" final-only final capacity",first*final),(" final-only initial capacity",first*initial),(" final-only net mass",first*323.4)]:
+                    assert float(rows[label+suffix]) == pytest.approx(value,abs=.51 if "mass" in suffix else .00051)
+
+
+def test_published_aggregate_pass_without_measured_failure_has_no_options() -> None:
+    """A published-output PASS with protected latest readings prints no options."""
+    cfg = _run("published_jacket_84m")
+    for r in cfg["inputs"]["structure"]["report_geometry"]["monitoring"]:
+        r["potential_V"] = -.950
+    spec = anode_design_report(cfg)
+    assert _statuses(spec)[0].status == "PASS"
+    text = " ".join(b.markdown for s in spec.sections if s.key == "adequacy"
+                    for b in s.blocks if isinstance(b,TextBlock))
+    for phrase in ["### Increase at design","### Retrofit","### Monitoring",
+                   "adds 0 units","allowance of 0 units","rechecked alternatives"]:
+        assert phrase not in text
+    assert "All latest reported monitoring readings" in text
+
+
+def test_incomplete_routed_option_quantities_still_render() -> None:
+    """A real quantity-validation error cannot stop a verification report."""
+    cfg = _run("jacket_report_example")
+    cfg["results"]["current_output_verification"]["recommended_anode_count"] = 1
+    rendered = render_html(anode_design_report(cfg))
+    assert "Options are not evaluated: complete demand, output, mass and arrangement data are required." in rendered
+    assert "Original and increased-count arrangement" not in rendered
+
+
+def test_illustrative_assumptions_are_declared_once_as_experience_based() -> None:
+    """The illustrative verification states its own assumptions in Design basis."""
+    spec = anode_design_report(_run("jacket_report_example"))
+    design = next(s for s in spec.sections if s.key=="design-basis")
+    text = " ".join(b.markdown for b in design.blocks if isinstance(b,TextBlock))
+    assert "Design life 25 years and seawater temperature 10" in text
+    assert "net alloy" in text and "equivalent-cylinder" in text
+    assert "based on previous project experience" in text
+    body = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b,TextBlock))
+    assert body.count("based on previous project experience") == 1
+
+
+def test_option_model_capacities_use_unrounded_resistance_outputs() -> None:
+    """Independent resistance arithmetic is rounded only for printed capacities."""
+    import math
+
+    cfg = _run("published_jacket_84m")
+    radius = math.sqrt(323.4/(math.pi*2.02*2750))
+    outputs = [.25/(.22/(2*math.pi*2.02)*(math.log(4*2.02/r)-1))
+               for r in [radius,radius*math.sqrt(1-.9)]]
+    tables = _tables(anode_design_report(cfg))
+    for title,suffix in [("Increase at design: demand and recheck"," count"),
+                         ("Retrofit: lower-zone addition and recheck"," all-check count")]:
+        rows = {r[0]:r[1] for r in tables[title].rows}
+        count = rows["Independent estimate"+suffix]
+        for phase,output in zip(["initial","final"],outputs):
+            assert float(rows["Independent estimate "+phase+" capacity"]) == pytest.approx(count*output,abs=.00051)
+
+
+def test_verification_print_tables_override_scroll_width_and_nowrap() -> None:
+    """Wide verification checks are fitted for print rather than horizontally cropped."""
+    rendered = render_html(anode_design_report(_run("published_jacket_84m")))
+    assert ".doc .tbl table" in rendered
+    assert "table-layout:fixed" in rendered
+    assert ".doc .tbl-wrap{overflow:visible}" in rendered
+    assert ".doc .tbl td" in rendered and "white-space:normal" in rendered
+
+
+def test_verification_labels_have_no_empty_clause_parentheses() -> None:
+    """Removing obsolete section numbers does not leave empty annotation punctuation."""
+    for name in ["published_jacket_84m","jacket_report_example"]:
+        text = _visible_text(render_html(anode_design_report(_run(name))))
+        assert "required ()" not in text

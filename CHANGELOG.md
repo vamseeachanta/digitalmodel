@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- cathodic_protection: verify aggregate capacity using cited published outputs separately from measured protection; size density-based design and lower-zone retrofit options, label survey axes, and present verification reports as cited drafts with result-led summaries. Existing calculation results and released reports remain unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
+
 - cathodic_protection: add a cited published-jacket verification, depth monitoring, re-checked anode alternatives and a reference-member input form; complete reference geometry remains unavailable ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
 
 - cathodic_protection: add a design-data jacket elevation and phase-specific failure recommendations, with limitations in an appendix and unchanged calculation results ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).

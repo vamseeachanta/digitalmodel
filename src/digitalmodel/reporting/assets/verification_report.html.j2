@@ -8,7 +8,18 @@
 <script type="text/javascript">{{ plotlyjs|safe }}</script>
 {%- endif %}
 {{ house_css|safe }}
-<style>{{ engine_css|safe }}</style>
+<style>
+{{ engine_css|safe }}
+@media print {
+.doc .toc{display:none}
+.doc .shell{display:block}
+.doc .main{padding:0}
+.doc .tbl table{min-width:0;width:100%;table-layout:fixed}
+.doc .tbl-wrap{overflow:visible}
+.doc .tbl th,.doc .tbl td{font-size:9px;padding:4px 2px;white-space:normal;overflow-wrap:normal}
+.doc .tbl{break-inside:auto;page-break-inside:auto}
+}
+</style>
 </head>
 <body class="doc">
 <header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Draft for review</span></div></header>
