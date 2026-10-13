@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """OrcaWave-strict GDF header compatibility (#740).
 
 The first licensed #610 run failed because the fixture mesh carried three
@@ -94,13 +97,12 @@ class TestFixtureMeshOrientation:
     )
     def test_heave_hydrostatic_stiffness_positive(self, mesh_path):
         cpt = pytest.importorskip("capytaine")
-        from capytaine.io.mesh_loaders import load_GDF
-
-        mesh = load_GDF(str(mesh_path))
+        mesh = cpt.load_mesh(str(mesh_path))
         body = cpt.FloatingBody(
-            mesh=mesh, center_of_mass=(0.5, 0.5, -0.5)
+            mesh=mesh,
+            dofs=cpt.rigid_body_dofs(rotation_center=(0.5, 0.5, -0.5)),
+            center_of_mass=(0.5, 0.5, -0.5),
         )
-        body.add_all_rigid_body_dofs()
         hs = body.compute_hydrostatic_stiffness(rho=1025.0, g=9.81)
         k33 = float(
             hs.sel(influenced_dof="Heave", radiating_dof="Heave").values

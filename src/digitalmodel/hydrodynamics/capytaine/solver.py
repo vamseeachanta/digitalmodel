@@ -1,6 +1,9 @@
-"""
-ABOUTME: BEM solver wrapper for Capytaine hydrodynamic analysis.
-ABOUTME: Runs diffraction + radiation problems and extracts hydrodynamic coefficients.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Solve Capytaine diffraction and radiation boundary-element problems.
+
+Hydrodynamic coefficients are extracted into the existing BEMResult model.
 """
 
 from __future__ import annotations
@@ -41,6 +44,13 @@ class CapytaineSolver:
         wave_conditions: WaveConditions,
         solver_config: Optional[SolverConfig] = None,
     ):
+        """Configure the body, wave conditions and solver settings.
+
+        Args:
+            body_config: Mesh, rigid-body DOFs and mass properties.
+            wave_conditions: Frequencies, headings and fluid properties.
+            solver_config: Optional numerical solver settings.
+        """
         self.body_config = body_config
         self.wave_conditions = wave_conditions
         self.solver_config = solver_config or SolverConfig()
@@ -131,15 +141,18 @@ class CapytaineSolver:
         gf = gf_cls() if gf_cls else cpt.Delhommeau()
 
         # Engine
-        engine = cpt.BasicMatrixEngine(
-            matrix_cache_size=sc.matrix_cache_size,
+        # Capytaine (2026), 3.0 changelog, Internals: the Green function
+        # belongs to DefaultMatrixEngine; the previous engine was removed.
+        # https://capytaine.org/stable/changelog.html
+        engine = cpt.DefaultMatrixEngine(
+            green_function=gf,
             linear_solver=sc.linear_solver,
         )
 
-        solver = cpt.BEMSolver(green_function=gf, engine=engine)
+        solver = cpt.BEMSolver(engine=engine)
         logger.info(
             "BEMSolver created: gf=%s, engine=%s, method=%s",
-            sc.green_function, sc.engine, sc.method,
+            sc.green_function, type(engine).__name__, sc.method,
         )
         return solver
 

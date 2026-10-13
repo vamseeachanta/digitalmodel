@@ -1,6 +1,13 @@
-"""
-ABOUTME: Mesh adapter for importing geometry into Capytaine FloatingBody objects.
-ABOUTME: Supports STL, GDF, MSH, meshio formats and predefined test shapes.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Import geometry into Capytaine FloatingBody objects.
+
+The optional solver dependency is Capytaine >= 3.0.0. The public load_mesh()
+and non-mutating immersed_part() calls also exist in the preceding major
+version; the solver wrapper uses the version 3 matrix engine.
+Reference: Capytaine (2026), version 3.0 changelog, new mesh module:
+https://capytaine.org/stable/changelog.html
 """
 
 from __future__ import annotations
@@ -67,7 +74,7 @@ def create_floating_body(config: BodyConfig):
             del body.dofs[dof_name]
 
     # Keep only the immersed part (panels below z=0)
-    body.keep_immersed_part()
+    body = body.immersed_part()
 
     # Lid mesh for irregular frequency removal
     if config.use_lid:
