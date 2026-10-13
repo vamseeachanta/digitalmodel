@@ -1594,6 +1594,7 @@ def _published_checkpoint_section(
                    columns=["Checkpoint", "Published", "Calculated", "Difference", "Unit", "Locator"],
                    units=["-", "-", "-", "%", "-", "-"], rows=rows),
         TextBlock(markdown=f"[{evidence['source_key']}] {source['title']}. {source['url']}. Read {source['read_on']}."),
+        *[TextBlock(markdown=str(finding)) for finding in evidence.get("findings", [])],
     ])
 
 

@@ -127,6 +127,33 @@ def test_published_jacket_reproduction_uses_one_unchanged_assumption_set() -> No
     assert "published-jacket-paper" in text
 
 
+def test_published_jacket_monitoring_is_depth_true_and_attributed() -> None:
+    from xml.etree import ElementTree as ET
+
+    cfg = _run("published_jacket_84m")
+    spec = anode_design_report(cfg)
+    figure = next(f for f in spec.figure_blocks() if f.svg)
+    svg = ET.fromstring(figure.svg)
+    assert svg.attrib["data-type"] == "depth_true"
+    assert not any("data-member" in n.attrib for n in svg.iter())
+    points = [n for n in svg.iter() if "data-potential" in n.attrib]
+    scale = 500 / 84.1
+    elevations = [-14, -40, -70.5, -84.1] * 2
+    potentials = [-0.736, -0.789, -0.637, -0.628, -0.925, -0.950, -0.700, -0.650]
+    for point, elevation, potential in zip(points, elevations, potentials):
+        assert float(point.attrib["cy"]) == pytest.approx(50 - elevation * scale)
+        assert float(point.attrib["cx"]) == pytest.approx(350 + (potential + .8) * 50 / .172)
+    assert len(points) == 8
+    assert "more negative than -0.800 V" in figure.caption
+    table = _tables(spec)["Measured potentials at the stated time of measurement"]
+    assert [r[-1] for r in table.rows] == ["FAIL"] * 4 + ["PASS", "PASS", "FAIL", "FAIL"]
+    assert all(str(r[2]).startswith("approximately") for r in table.rows[4:])
+    text = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock))
+    assert "Xu attributes" in text and "clamped sacrificial anodes" in text
+    assert "-70.5 m and -84.1 m" in text
+    assert "measured under-protection" in text
+
+
 def _statuses(spec: ReportSpec) -> list[StatusBlock]:
     return [b for s in spec.sections for b in s.blocks if isinstance(b, StatusBlock)]
 

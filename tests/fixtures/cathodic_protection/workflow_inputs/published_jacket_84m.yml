@@ -146,6 +146,88 @@ inputs:
           not established. No buried member band is inferred.
         - Member geometry and per-level anode allocation are not published; spatial protection
           and a local retrofit quantity cannot be established from aggregate demand.
+        - Completion of the proposed retrofit and post-installation potentials are not established
+          by the published remedy section.
+      findings:
+        - The day-518 discussion reports approximate potentials of -0.925 and -0.950 V versus
+          Ag/AgCl at -14 and -40 m, more negative than the report criterion of -0.800 V. At -70.5
+          m and -84.1 m, approximately -0.700 and -0.650 V are more positive than that criterion.
+          This measured under-protection at the two lowest levels is the spatial finding that
+          an aggregate calculation alone would not show [published-jacket-paper, p. 244, Section
+          3].
+        - Xu attributes the lower-level difficulty to the tropical current-density selection,
+          temperature and depth effects on calcareous deposition, current drainage to connected
+          buried steel, and a low concentration of bottom anodes [published-jacket-paper, p. 244,
+          Section 4].
+        - The author's proposed remedy is clamped sacrificial anodes at -70.5 m and -84.1 m [published-jacket-paper,
+          p. 244, Section 5]. The report's own recommendations are stated separately.
+      input_locators:
+        water_depth_m: p. 242, Section 1
+        seawater_resistivity_ohm_m: p. 242, Section 2; 22 ohm.cm × 0.01 = 0.22 ohm.m
+        anode_length_m: p. 242, Section 2; 2020 mm / 1000 = 2.020 m
+        anode_nominal_mass_kg: p. 242, Section 2
+        installed_count: p. 242, Section 2
+        day_52_potentials: p. 243, Section 3, prose beside Figure 1
+        day_518_potentials: p. 244, Section 3, prose beside Figure 2
+        reference_electrode: p. 243, Section 3
+    report_geometry:
+      type: depth_true
+      basis: published_source
+      datum: still-water level
+      waterline_m: 0
+      mudline_m: -84.1
+      citation: "[published-jacket-paper], pp. 242–244, Sections 2–3"
+      attribution: Dezhu Xu (2023)
+      criterion_V: -0.8
+      criterion_source:
+        DNV-RP-B401, Cathodic protection design, May 2021, protective potential
+        criterion
+      zones:
+        - name: Coated
+          calculation_zone: coated-seawater
+          lower_m: -84.1
+          upper_m: 0
+        - name: 0–30 m
+          calculation_zone: upper-bare-seawater
+          lower_m: -30
+          upper_m: 0
+        - name: 30–84.1 m
+          calculation_zone: lower-bare-seawater
+          lower_m: -84.1
+          upper_m: -30
+      monitoring:
+        - elevation_m: -14
+          elapsed_days: 52
+          potential_V: -0.736
+          approximate: false
+        - elevation_m: -40
+          elapsed_days: 52
+          potential_V: -0.789
+          approximate: false
+        - elevation_m: -70.5
+          elapsed_days: 52
+          potential_V: -0.637
+          approximate: false
+        - elevation_m: -84.1
+          elapsed_days: 52
+          potential_V: -0.628
+          approximate: false
+        - elevation_m: -14
+          elapsed_days: 518
+          potential_V: -0.925
+          approximate: true
+        - elevation_m: -40
+          elapsed_days: 518
+          potential_V: -0.95
+          approximate: true
+        - elevation_m: -70.5
+          elapsed_days: 518
+          potential_V: -0.7
+          approximate: true
+        - elevation_m: -84.1
+          elapsed_days: 518
+          potential_V: -0.65
+          approximate: true
   environment:
     seawater_temperature_C: 10.0
     seawater_resistivity_ohm_m: 0.22
