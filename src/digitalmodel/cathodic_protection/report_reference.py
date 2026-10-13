@@ -333,5 +333,5 @@ def reference_references(model: Mapping[str, Any]) -> list[Any]:
         "copy accompanies the case input. No source figure is reproduced or adapted.\n\n"
         "[3] DNV-RP-B401, Cathodic protection design, May 2021. Design current densities; "
         "Coating breakdown factors; Anode materials; Anode mass; Anode resistance; "
-        "Anode current output; Cathodic protection of offshore structures. "
+        "Anode current output; Output adequacy; Fresh/depleted resistance; Buried surfaces. "
         "Clause titles identify the calculation basis; splash boundaries are not established."))]

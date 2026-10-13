@@ -484,3 +484,10 @@ def test_reference_failed_recheck_retains_report_and_discloses_limit(monkeypatch
     spec = anode_design_report(run_cathodic_protection(cfg))
     assert "Rechecked arrangement is not evaluated" in spec.sections[0].blocks[0].markdown
     assert "All evaluated aggregate checks PASS" not in spec.sections[0].blocks[0].markdown
+
+
+def test_reference_standard_titles_use_held_calculation_locators(reference_spec):
+    refs = next(s for s in reference_spec.sections if s.key == "references")
+    text = " ".join(b.markdown for b in refs.blocks)
+    assert "Cathodic protection of offshore structures" not in text
+    assert "Output adequacy" in text and "Fresh/depleted resistance" in text
