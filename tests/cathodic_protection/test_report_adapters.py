@@ -157,14 +157,11 @@ def test_published_jacket_monitoring_is_depth_true_and_attributed() -> None:
 def test_published_report_includes_native_rechecks_and_distinct_options() -> None:
     spec = anode_design_report(_run("published_jacket_84m"))
     tables = _tables(spec)
-    increased = tables["Original and increased-count arrangement"]
-    assert increased.rows[-1][1:] == ["FAIL", "PASS"]
-    dimensioned = tables["Original and dimensioned equivalent-cylinder arrangement"]
-    assert dimensioned.rows[-1][1:] == ["FAIL", "PASS"]
+    checked = tables["Installed arrangement: published outputs and independent estimate"]
+    assert all(row[5] == "PASS" for row in checked.rows)
+    assert "Original and dimensioned equivalent-cylinder arrangement" not in tables
     text = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock))
-    for phrase in ["### Design increase", "### Monitoring", "### Retrofit", "remote or shielded",
-                   "more positive than -0.800 V", "[b401-retrofit]"]:
-        assert phrase in text
+    assert "Measured under-protection" in text
     assert "the route's recommended count" not in text
     assert "not re-checked by this calculation" not in text
 
@@ -794,3 +791,47 @@ def test_published_status_prints_whole_kilograms() -> None:
     details = ' '.join(b.detail for s in report.sections for b in s.blocks if isinstance(b, StatusBlock))
     assert not re.search(r'\d+\.\d+ kg', details)
     assert 'Sec. 7.8' not in details
+
+
+def test_published_outputs_govern_aggregate_verdict_without_changing_results() -> None:
+    """Published outputs with locators govern only the report aggregate checks."""
+    from copy import deepcopy
+
+    cfg = _run("published_jacket_84m")
+    before = deepcopy(cfg["results"])
+    spec = anode_design_report(cfg)
+    table = _tables(spec)["Installed arrangement: published outputs and independent estimate"]
+    demand = [2688.285, 1892.052, 1452.45 * 25 * 8760 / (2000 * .9)]
+    published = [569 * 5.01, 569 * 3.63, 569 * 323.4]
+    ver = cfg["results"]["current_output_verification"]
+    independent = [ver["total_anode_current_output_initial_A"],
+                   ver["total_anode_current_output_final_A"], published[-1]]
+    for row, required, capacity, model in zip(table.rows, demand, published, independent):
+        assert float(row[1]) == pytest.approx(required, abs=.51 if row[0] == "Mass" else .0001)
+        assert float(row[3]) == pytest.approx(capacity, abs=.51 if row[0] == "Mass" else .0001)
+        assert row[4] == f"{100 * (capacity / required - 1):+.2f}%"
+        assert row[5] == "PASS"
+        assert float(row[6]) == pytest.approx(model, abs=.51 if row[0] == "Mass" else .0001)
+        assert row[7] == f"{100 * (model / required - 1):+.2f}%"
+        assert row[8] == f"{100 * (model / capacity - 1):+.2f}%"
+        assert "p. 242, Section 2" in row[-1]
+    status = _statuses(spec)[0]
+    assert status.status == "PASS"
+    assert "Aggregate checks PASS using published outputs" in status.detail
+    for text in [status.detail, *[b.markdown for s in spec.sections if s.key == "adequacy"
+                                 for b in s.blocks if isinstance(b, TextBlock)]]:
+        assert "install 575" not in text
+    assert "more positive than -0.800 V" in status.detail
+    assert "-70.5" in status.detail and "-84.1" in status.detail
+    assert "day 518" in status.detail
+    assert cfg["results"] == before
+
+
+def test_published_output_rule_requires_locators_and_is_independent_of_case_name() -> None:
+    """Unlocated outputs do not silently become the aggregate basis."""
+    cfg = _run("published_jacket_84m")
+    cfg["inputs"]["structure"]["verification_evidence"]["source_key"] = "public-source"
+    assert _statuses(anode_design_report(cfg))[0].status == "PASS"
+    for target in cfg["inputs"]["structure"]["verification_evidence"]["targets"]:
+        target.pop("locator")
+    assert _statuses(anode_design_report(cfg))[0].status == "FAIL"

@@ -90,6 +90,9 @@ from digitalmodel.cathodic_protection.report_recommendations import (
     recommendation_block,
     recommendation_caveats,
 )
+from digitalmodel.cathodic_protection.report_verification import (
+    aggregate_table, published_outputs, published_status,
+)
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting.adapters import report_adapter
 from digitalmodel.reporting.figures import figure_from_columns
@@ -1581,7 +1584,7 @@ def _published_checkpoint_section(
         calculated = quantities[target["quantity"]]
         difference = 100 * (calculated - value) / value
         rows.append([target["label"], target["printed"], calculated, difference,
-                     target["unit"], target["locator"]])
+                     target["unit"], target.get("locator", "not established")])
     summary = (
         f"Calculated initial, mean and final demands are {quantities['initial_demand']:.3f}, "
         f"{quantities['mean_demand']:.3f} and {quantities['final_demand']:.3f} A. "
@@ -1622,7 +1625,11 @@ def _b401_report_additions(
     failures = failed_keys(results)
     evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
     modern = bool(evidence or _mapping(inputs.get("structure")).get("report_geometry"))
-    if modern:
+    if published_outputs(inputs):
+        verdict = published_status(inputs, results)
+        adequacy.blocks = [adequacy.blocks[0], verdict, aggregate_table(inputs, results)]
+        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\n" + verdict.detail))
+    elif modern:
         adequacy.blocks.extend(arrangement_options(inputs, results))
         adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\nThe rechecked alternatives pass the aggregate mass and current checks. " + monitoring_conclusion(inputs) + " Monitoring and intervention triggers are stated above; local retrofit quantity requires spatial demand and allocation evidence."))
     else:
