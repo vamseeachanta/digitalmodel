@@ -45,6 +45,7 @@ def row():
         "crane_capacity_basis": "combined",
         "deck_area_m2": None,
         "dp_class": None,
+        "dp_notation_source": None,
         "bollard_pull_tonnes": None,
         "source_url": URL,
         "retrieved_utc": DATE,
@@ -146,6 +147,7 @@ def test_rejects_reversed_operating_depths(validator, manifest, field, value):
         "vessel_name": "Example Lay",
         "owner": "Example Operator",
         "dp_class": None,
+        "dp_notation_source": None,
         "source_url": URL,
         "retrieved_utc": DATE,
         "lay_methods": ["S-lay"],
@@ -179,3 +181,22 @@ def test_rejects_incomplete_manifest(validator, manifest, row, field, value):
     manifest["sources"][0][field] = value
     with pytest.raises(ValueError):
         validator([row], DATA / "vessel_specs_hlv.schema.json", manifest)
+
+
+def test_rejects_mixed_positioning_vocabulary(validator, manifest, row):
+    row["dp_class"] = "NMD Class III"
+    row["field_sources"]["dp_class"] = URL
+    with pytest.raises(ValueError, match="Schema"):
+        validator([row], DATA / "vessel_specs_hlv.schema.json", manifest)
+
+
+def test_source_notation_retains_only_normalised_class_and_locator(
+    validator, manifest, row
+):
+    row["dp_notation_source"] = "DP-3; printed page 3"
+    row["field_sources"]["dp_notation_source"] = URL
+    validator([row], DATA / "vessel_specs_hlv.schema.json", manifest)
+    for wording in ("DP3", "NMD Class III", "DP-3", "Unmapped notation"):
+        row["dp_notation_source"] = wording
+        with pytest.raises(ValueError, match="Schema"):
+            validator([row], DATA / "vessel_specs_hlv.schema.json", manifest)

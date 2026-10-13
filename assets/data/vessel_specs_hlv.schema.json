@@ -10,6 +10,7 @@
       "vessel_name",
       "owner",
       "dp_class",
+      "dp_notation_source",
       "source_url",
       "retrieved_utc",
       "field_sources",
@@ -42,10 +43,9 @@
           "DP-1",
           "DP-2",
           "DP-3",
-          "NMD Class III",
           null
         ],
-        "description": "Explicit published dynamic-positioning class; DP1/DP2/DP3 hyphenated, NMD notation preserved.",
+        "description": "Normalised IMO equipment-class vocabulary; not a statement of current class status.",
         "x-unit": "1"
       },
       "source_url": {
@@ -113,6 +113,16 @@
         "description": "Published bollard pull in metric tonnes-force.",
         "x-unit": "tf",
         "exclusiveMinimum": 0
+      },
+      "dp_notation_source": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "pattern": "^DP-[123]; printed page [1-9][0-9]*$",
+        "description": "Normalised positioning class and printed page locator; source link in field_sources; no copied wording or assertion of current class status.",
+        "x-unit": "1"
       }
     }
   }

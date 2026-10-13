@@ -1,4 +1,4 @@
-"""Offline JSON Schema and provenance checks for public vessel specifications."""
+"""Offline checks for the contracts documented in assets/data/vessel_specs_README.md."""
 
 import argparse
 import json
@@ -140,6 +140,8 @@ def validate_rows(rows: Any, schema_path: Path, manifest: dict[str, Any]) -> Non
 
     Source authenticity and factual transcription require human readback; an
     offline validator cannot prove what a remote source actually published.
+    Schemas restrict dp_class to IMO vocabulary; unclassified source notation
+    may remain non-null and requires the same per-field provenance as other facts.
     """
     schema = read_json(schema_path)
     Draft202012Validator.check_schema(schema)
