@@ -88,7 +88,9 @@ Refresh exit statuses are:
   `--strict-libraries`.
 - 2: a computed atlas rebuilt by `--apply` fails validation. This status takes
   precedence over a strict library failure. All stale computed atlases are still
-  rebuilt; builder writes and missing-validation-key handling are unchanged.
+  rebuilt; a rebuilt atlas replaces the previous atlas only after its validation
+  passes. A result without the `passes` key counts as failed validation (status
+  2); the previous atlas is kept.
 
 The shipped library is a STUB; its expectation also says `version: STUB`, so it
 reads current. When the operator runs real diffraction and bumps the expected
