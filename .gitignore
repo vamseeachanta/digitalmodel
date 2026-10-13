@@ -458,3 +458,7 @@ docs/reports/abstracted-hulls/*
 # Compute program first results (workspace-hub#4034): generic cases only, no project data.
 !docs/reports/2026-10-09-compute-program/
 !docs/reports/2026-10-09-compute-program/**
+
+# Retain the synthetic worked pipeline assessment.
+!docs/reports/pipeline-ffs-assessment.html
+!docs/reports/pipeline-ffs-assessment.manifest.json
