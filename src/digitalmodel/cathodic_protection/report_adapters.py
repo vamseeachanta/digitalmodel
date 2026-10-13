@@ -91,7 +91,7 @@ from digitalmodel.cathodic_protection.report_recommendations import (
     recommendation_caveats,
 )
 from digitalmodel.cathodic_protection.report_verification import (
-    aggregate_table, published_outputs, published_status,
+    aggregate_table, measured_options, published_outputs, published_status,
 )
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting.adapters import report_adapter
@@ -1604,6 +1604,15 @@ def _published_checkpoint_section(
     ])
 
 
+def _report_options(inputs: Mapping[str, Any], results: Mapping[str, Any],
+                    *, published: bool = False) -> list[Block]:
+    """Keep incomplete recommendation data from stopping the report."""
+    try:
+        return measured_options(inputs, results) if published else arrangement_options(inputs, results)
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return [TextBlock(markdown="Options are not evaluated: complete demand, output, mass and arrangement data are required.")]
+
+
 def _b401_report_additions(
     inputs: Mapping[str, Any], results: Mapping[str, Any], sections: list[Section]
 ) -> list[Section]:
@@ -1628,10 +1637,14 @@ def _b401_report_additions(
     if published_outputs(inputs):
         verdict = published_status(inputs, results)
         adequacy.blocks = [adequacy.blocks[0], verdict, aggregate_table(inputs, results)]
+        adequacy.blocks.extend(_report_options(inputs, results, published=True))
         adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\n" + verdict.detail))
     elif modern:
-        adequacy.blocks.extend(arrangement_options(inputs, results))
-        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\nThe rechecked alternatives pass the aggregate mass and current checks. " + monitoring_conclusion(inputs) + " Monitoring and intervention triggers are stated above; local retrofit quantity requires spatial demand and allocation evidence."))
+        options = _report_options(inputs, results)
+        adequacy.blocks.extend(options)
+        conclusion = "The rechecked alternatives pass the aggregate mass and current checks. " if options and any(isinstance(b, TableBlock) for b in options) else ""
+        suffix = " Monitoring and intervention triggers are stated above; local retrofit quantity requires spatial demand and allocation evidence." if conclusion else ""
+        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\n" + conclusion + monitoring_conclusion(inputs) + suffix))
     else:
         if "overall_status" in failures:
             adequacy.blocks.insert(2, recommendation_block(results, "overall_status"))

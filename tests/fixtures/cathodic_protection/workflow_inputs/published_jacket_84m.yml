@@ -102,6 +102,18 @@ inputs:
         applied with unity breakdown, without inferring an additional coating law. The unsplit
         nine-well allowance is applied at all phases. No assumption is tuned separately to a
         target.
+      higher_density_basis:
+        locator: p. 244, Table 3, Section 4
+        affected_zone: lower-bare-seawater
+        zones:
+          upper-bare-seawater:
+            initial: 0.17
+            mean: 0.08
+            final: 0.11
+          lower-bare-seawater:
+            initial: 0.14
+            mean: 0.07
+            final: 0.09
       targets:
         - quantity: initial_demand
           label: Initial demand

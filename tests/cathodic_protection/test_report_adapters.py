@@ -835,3 +835,64 @@ def test_published_output_rule_requires_locators_and_is_independent_of_case_name
     for target in cfg["inputs"]["structure"]["verification_evidence"]["targets"]:
         target.pop("locator")
     assert _statuses(anode_design_report(cfg))[0].status == "FAIL"
+
+
+def test_measured_failure_options_recheck_each_density_based_quantity() -> None:
+    """Density increments size distinct design and lower-zone retrofit options."""
+    import math
+
+    cfg = _run("published_jacket_84m")
+    tables = _tables(anode_design_report(cfg))
+    totals = [652.9*.01+3726.8*.17+15737*.14+10814.8*.02+18,
+              652.9*.02+3726.8*.08+15737*.07+10814.8*.02+18,
+              652.9*.04+3726.8*.11+15737*.09+10814.8*.02+18]
+    ver = cfg["results"]["current_output_verification"]
+    req = cfg["results"]["anode_requirements"]
+    mass = totals[1]*25*8760/(2000*.9)
+    rows = dict((r[0], r[1:]) for r in tables["Increase at design: demand and recheck"].rows)
+    for phase, value in zip(["Initial", "Mean", "Final"], totals):
+        assert float(rows[phase+" demand"][0]) == pytest.approx(value, abs=.0001)
+    for label, outputs in [("Published outputs", [5.01,3.63]),
+                           ("Independent estimate", [ver["anode_current_output_initial_A"],ver["anode_current_output_final_A"]])]:
+        n = max(math.ceil(mass/323.4),math.ceil(totals[0]/outputs[0]),math.ceil(totals[2]/outputs[1]))
+        assert int(rows[label+" count"][0]) == n
+        assert rows[label+" recheck"][0] == "PASS"
+        assert float(rows[label+" initial capacity"][0]) >= totals[0]
+        assert float(rows[label+" final capacity"][0]) >= totals[2]
+        assert float(rows[label+" net mass"][0]) >= mass-.5
+    remaining = 25-518/365
+    increments = [15737*.02,15737*.01,15737*.01]
+    retrofit = dict((r[0],r[1:]) for r in tables["Retrofit: lower-zone addition and recheck"].rows)
+    for phase,value in zip(["Initial","Mean","Final"],increments):
+        assert float(retrofit[phase+" addition"][0]) == pytest.approx(value,abs=.0001)
+    needed_mass = increments[1]*remaining*8760/(2000*.9)
+    assert float(retrofit["Remaining life at day 518"][0]) == pytest.approx(remaining,abs=.0001)
+    for label,outputs in [("Published outputs",[5.01,3.63]),("Independent estimate",[ver["anode_current_output_initial_A"],ver["anode_current_output_final_A"]])]:
+        first = math.ceil(increments[2]/outputs[1])
+        n = max(first, math.ceil(needed_mass/323.4),math.ceil(increments[0]/outputs[0]))
+        assert int(retrofit[label+" final-only count"][0]) == first
+        assert retrofit[label+" final-only mass check"][0] == "FAIL"
+        assert retrofit[label+" final-only initial check"][0] == "FAIL"
+        assert int(retrofit[label+" all-check count"][0]) == n
+        assert retrofit[label+" all-check recheck"][0] == "PASS"
+        assert retrofit[label+" governing check"][0] == "initial current"
+    text = render_html(anode_design_report(cfg))
+    for phrase in ["### Anode geometry alternative", "adds 6 units", "allowance of 6 units"]:
+        assert phrase not in text
+    for phrase in ["trigger is met", "more positive than -0.800 V", "interval is not evaluated",
+                   "wall-thickness", "per-level anode distribution", "remaining life at that reading"]:
+        assert phrase in text
+
+
+def test_option_errors_do_not_stop_verification_report(monkeypatch) -> None:
+    """A failed advice recheck preserves the report with one missing-data line."""
+    from digitalmodel.cathodic_protection import report_adapters as adapters
+
+    cfg = _run("jacket_report_example")
+    def unavailable(*args):
+        raise ValueError("a passing equivalent-cylinder option was not established")
+    monkeypatch.setattr(adapters, "arrangement_options", unavailable)
+    rendered = render_html(anode_design_report(cfg))
+    assert "Options are not evaluated: complete demand, output, mass and arrangement data are required." in rendered
+    assert "Original and increased-count arrangement" not in rendered
+    assert "The rechecked alternatives pass" not in rendered

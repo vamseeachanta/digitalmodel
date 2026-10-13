@@ -82,6 +82,8 @@ def _arrangement_rows(results: Mapping[str, Any]) -> list[list[Any]]:
 
 def arrangement_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Block]:
     """Show independently rechecked design choices and condition-based actions."""
+    if not failed_keys(results):
+        return []
     values = _quantities(results)
     values["needed"] = max(values["needed"], values["checked"])
     values["additional"] = values["needed"] - values["checked"]
