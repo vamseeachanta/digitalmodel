@@ -1297,6 +1297,8 @@ def test_spatial_and_reference_comparison_limitations_are_explicit() -> None:
     projection = [r for r in table.rows if "y-projection" in r[0] or "y projection" in r[0]]
     assert projection
     assert all(r[3] == "not comparable" for r in projection)
+    figure = next(f for f in spec.figure_blocks() if f.figure_id == "fig-reference-jacket-elevation")
+    assert "both measures are listed" in figure.caption
 
 
 def test_reference_summary_recommends_rechecked_count_after_stated_failure() -> None:

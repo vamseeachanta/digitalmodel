@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- cathodic_protection: title published, reference and illustrative jacket reports as analyses; state computed recommended quantities, distinguish public sources from declared inputs, use one-decimal comparison differences, and remove citation residue. Existing calculation results and released reports are unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
+
 - cathodic_protection: complete the openly licensed reference-jacket member schedule, scaled elevation, zone-area derivation and draft analysis; disclose the structural mass discrepancy and unresolved splash division. A dimension-consistent mass-only anode arrangement passes the aggregate checks; existing results and protected reports remain unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
 
 - cathodic_protection: verify aggregate capacity using cited published outputs separately from measured protection; size density-based design and lower-zone retrofit options, label survey axes, and present verification reports as cited drafts with result-led summaries. Existing calculation results and released reports remain unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).

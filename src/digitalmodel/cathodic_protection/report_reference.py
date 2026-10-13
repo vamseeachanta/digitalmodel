@@ -77,7 +77,7 @@ def reference_figure(model: Mapping[str, Any]) -> FigureBlock:
             "contains no horizontal plan-bracing members. Joint offsets and can lengths "
             "are not deducted. Water depth is 60 m; tubular height above mudline is 74.1 m. "
             "The projected top and mudline spans are distinct from triangle side widths; "
-            "both measures are compared in Published values and comparison. "
+            "both measures are listed in Published values and comparison. "
             "Splash separation is not evaluated: water-level and lower splash-limit "
             "evidence are required. Values were transcribed and converted in form; "
             "the figure is drawn from coordinates, with no source figure adapted. "
