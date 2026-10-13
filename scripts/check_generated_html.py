@@ -211,9 +211,13 @@ def validate_page_census(repo: Path) -> list[str]:
         for path in all_registered_outputs(repo)
     }
     pages = docs_api_pages(repo)
-    build_output = build_output_pages()
-    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES) | build_output
     errors = []
+    try:
+        build_output = build_output_pages(repo)
+    except ValueError as error:
+        errors.append(str(error))
+        build_output = set()
+    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES) | build_output
     if unclassified := sorted(pages - classified):
         errors.append(f"unclassified docs/api HTML page(s): {', '.join(unclassified)}")
     if stale := sorted(set(MANUAL_PAGES) - pages):

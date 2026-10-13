@@ -27,6 +27,9 @@ Nothing here changes what this census does. It records what it does *not* do,
 so the next reader does not mistake its scope for coverage.
 """
 
+from pathlib import Path
+
+
 DISCOVERY_FALSE_POSITIVES = {
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
@@ -257,18 +260,26 @@ def _specification_ids(script, label: str) -> set[str]:
             f"{label}: expected SPECS to be a literal list; "
             f"found {type(specs).__name__}"
         )
-    ids = {_literal_specification_id(entry, label, index)
-           for index, entry in enumerate(specs.elts)}
+    ids: dict[str, int] = {}
+    for index, entry in enumerate(specs.elts):
+        spec_id = _literal_specification_id(entry, label, index)
+        if spec_id in ids:
+            raise ValueError(
+                f"{label}: duplicate specification id {spec_id!r} at "
+                f"SPECS[{ids[spec_id]}] and SPECS[{index}]"
+            )
+        ids[spec_id] = index
     if not ids:
         raise ValueError(
             f"{label}: expected at least one specification id; found empty list"
         )
-    return ids
+    return set(ids)
 
 
 def _literal_specification_id(entry, label: str, index: int) -> str:
-    """Require each list element to declare a literal nonempty string id."""
+    """Require a literal id containing lower-case letters, digits or hyphens."""
     import ast
+    import re
 
     expected = f"{label}: expected dict(...) call with a literal id at SPECS[{index}]"
     if not (isinstance(entry, ast.Call) and isinstance(entry.func, ast.Name)
@@ -280,17 +291,17 @@ def _literal_specification_id(entry, label: str, index: int) -> str:
     value = values[0]
     if not isinstance(value, ast.Constant):
         raise ValueError(f"{expected}; found {type(value).__name__}")
-    if not isinstance(value.value, str) or not value.value:
-        found = "empty string" if value.value == "" else type(value.value).__name__
-        raise ValueError(f"{expected}; found {found}")
+    if not isinstance(value.value, str) or not re.fullmatch(r"[a-z0-9-]+", value.value):
+        if not isinstance(value.value, str):
+            found = f"{type(value.value).__name__} {value.value!r}"
+        else:
+            found = "empty string ''" if value.value == "" else repr(value.value)
+        raise ValueError(f"{expected} matching [a-z0-9-]+; found {found}")
     return value.value
 
 
-def build_output_pages() -> set[str]:
-    """Enumerate registered print-source paths from ids, without a folder glob."""
-    from pathlib import Path
-
-    repo = Path(__file__).resolve().parents[1]
+def build_output_pages(repo: Path) -> set[str]:
+    """Enumerate registered print-source paths within the supplied repository."""
     pages = set()
     for script, entry in BUILD_OUTPUT_GENERATORS.items():
         ids = _specification_ids(repo / script, script)

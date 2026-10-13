@@ -238,6 +238,9 @@ def test_closing_message_counts_kept_pages_and_pdfs(output, capsys):
 def test_census_classifies_only_specification_print_sources(tmp_path, monkeypatch):
     from scripts import check_generated_html as checker
 
+    script = tmp_path / "scripts/capabilities/build_onepagers.py"
+    script.parent.mkdir(parents=True)
+    script.write_bytes((builder._REPO / "scripts/capabilities/build_onepagers.py").read_bytes())
     output = tmp_path / "docs/api/capabilities/pdf"
     for spec in builder.SPECS:
         builder.build_onepager(spec, output, renderer=fake_pdf)
@@ -251,12 +254,14 @@ def test_census_classifies_only_specification_print_sources(tmp_path, monkeypatc
 
 
 def test_kept_print_sources_are_git_ignored_and_pdf_siblings_are_not():
+    # git check-ignore also reads per-user and per-clone exclude files;
+    # checkout-specific excludes can therefore change its answer.
     import os
     from scripts.generated_html_ownership import build_output_pages
 
     env = {key: value for key, value in os.environ.items()
            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
-    pages = build_output_pages()
+    pages = build_output_pages(builder._REPO)
     assert pages
     for page in sorted(pages):
         for path, expected in ((page, 0), (page.removesuffix(".html") + ".pdf", 1)):
@@ -268,6 +273,8 @@ def test_kept_print_sources_are_git_ignored_and_pdf_siblings_are_not():
 
 
 def test_print_source_ignore_does_not_cover_other_html():
+    # git check-ignore also reads per-user and per-clone exclude files;
+    # checkout-specific excludes can therefore change its answer.
     import os
 
     env = {key: value for key, value in os.environ.items()
@@ -283,3 +290,83 @@ def test_print_source_ignore_does_not_cover_other_html():
 
 def test_docstring_identifies_html_as_ignored_build_output():
     assert "git-ignored and not committed" in builder.__doc__
+
+
+def test_build_rejects_missing_pdf(output):
+    spec = builder.SPECS[0]
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, output, renderer=lambda source, pdf: None)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.pdf" in message
+    assert "missing" in message
+
+
+def test_build_rejects_empty_pdf(output):
+    spec = builder.SPECS[0]
+
+    def render(source, pdf):
+        pdf.write_bytes(b"")
+
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, output, renderer=render)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.pdf" in message
+    assert "empty" in message
+
+
+def test_build_rejects_rewritten_title(output):
+    spec = builder.SPECS[0]
+
+    def render(source, pdf):
+        pdf.write_bytes(b"pdf")
+        source.write_text("<title>Other title</title>", encoding="utf-8")
+
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, output, renderer=render)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.html" in message
+    assert "Other title" in message
+    assert spec["title"] in message
+    assert "expected" in message
+
+
+@pytest.mark.parametrize("fault", ["missing", "empty"])
+def test_build_rechecks_html_after_renderer(output, fault):
+    spec = builder.SPECS[0]
+
+    def render(source, pdf):
+        pdf.write_bytes(b"pdf")
+        if fault == "missing":
+            source.unlink()
+        else:
+            source.write_bytes(b"")
+
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, output, renderer=render)
+    assert spec["id"] in str(error.value)
+    assert f"{spec['id']}.html" in str(error.value)
+    assert fault in str(error.value)
+
+
+def test_closing_message_counts_two_validated_output_pairs(output, capsys):
+    specs = builder.SPECS[:2]
+    builder.main([spec["id"] for spec in specs], renderer=fake_pdf)
+    assert "2 kept HTML page(s) and 2 one-pager PDF(s)" in capsys.readouterr().out
+    assert len(list(output.glob("*.html"))) == 2
+    assert len(list(output.glob("*.pdf"))) == 2
+
+
+def test_main_stops_after_first_failed_build(output, capsys):
+    calls = []
+
+    def render(source, pdf):
+        calls.append(source.stem)
+
+    with pytest.raises(RuntimeError, match="missing"):
+        builder.main([spec["id"] for spec in builder.SPECS[:2]], renderer=render)
+    assert calls == [builder.SPECS[0]["id"]]
+    assert not (output / f"{builder.SPECS[1]['id']}.html").exists()
+    assert "Wrote" not in capsys.readouterr().out

@@ -125,7 +125,6 @@ Current Tier 1 priorities:
 - [docs/vision/CALCULATIONS-VISION.md](docs/vision/CALCULATIONS-VISION.md) -- Ecosystem vision, current state, gap register
 - [docs/maps/digitalmodel-operator-map.md](docs/maps/digitalmodel-operator-map.md) -- Canonical repo-wide operator map for source, tests, docs, and issue routing
 - [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml) -- Canonical machine-readable module routing registry
-- [specs/data-needs.yaml](specs/data-needs.yaml) -- Data dependency lifecycle tracker
 - [CHANGELOG.md](CHANGELOG.md) -- Release history
 
 ## CLI Tools
