@@ -228,11 +228,7 @@ def validate_geometry(raw: Any) -> Geometry:
         attribution,
         licence,
     )
-    minimum_x, maximum_x, bottom, top = _extent(geometry)
-    if not all(
-        math.isfinite(value * 5) for value in (maximum_x - minimum_x, top - bottom)
-    ):
-        raise ValueError("scaled geometry extent must be finite")
+    _extent(geometry)
     return geometry
 
 
@@ -268,7 +264,11 @@ def _extent(geometry: Geometry) -> tuple[float, float, float, float]:
             xs.extend((x - member.diameter / 2, x + member.diameter / 2))
             zs.extend((z - member.diameter / 2, z + member.diameter / 2))
     zs.extend(value for zone in geometry.zones for value in (zone.lower, zone.upper))
-    return min(xs), max(xs), min(zs), max(zs)
+    extent = min(xs), max(xs), min(zs), max(zs)
+    minimum_x, maximum_x, bottom, top = extent
+    if not all(math.isfinite(value * 5) for value in (maximum_x - minimum_x, top - bottom)):
+        raise ValueError("scaled geometry extent must be finite")
+    return extent
 
 
 def _n(value: float) -> str:
