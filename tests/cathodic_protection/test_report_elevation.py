@@ -446,3 +446,92 @@ def test_depth_diagram_allows_separate_categories_at_the_same_depth() -> None:
     rects = [next(n for n in g if n.tag.endswith("rect")) for g in bands]
     assert rects[0].attrib["x"] != rects[1].attrib["x"]
     assert [float(n.attrib["height"]) for n in rects] == [500, 500]
+
+
+def test_reference_member_form_preserves_unestablished_geometry() -> None:
+    """Published sections do not substitute for a complete member schedule."""
+    form = yaml.safe_load((INPUTS / "reference_jacket_60m_members.yml").read_text())
+    assert form["source"]["licence"] == "CC BY 4.0"
+    assert form["dimensions"]["water_depth_m"]["value"] == 60
+    assert form["dimensions"]["top_width_m"]["value"] == 15
+    assert form["dimensions"]["mudline_width_m"]["value"] == 32
+    assert form["dimensions"]["height_above_mudline_m"]["value"] == 74.1
+    assert form["drawing_node_heights_above_mudline_m"]["values"] == [
+        1, 17.8, 32.8, 45.8, 74.1
+    ]
+    missing = form["unestablished_geometry"]
+    assert missing["complete_node_coordinates_3d_m"] is None
+    assert missing["width_definition_in_leg_plan"] is None
+    assert missing["leg_section_transition_lengths_m"] is None
+    assert missing["complete_member_inventory"] is None
+    sections = form["member_sections"]
+    assert [(m["diameter_m"], m["wall_thickness_mm"]) for m in sections] == [
+        (1.1, 70), (1.0, 20), (1.2, 52), (1.4, 45),
+        (1.5, 48), (2.0, 50), (3.0, 50),
+    ]
+    assert all(m["true_length_m"] is None and m["count"] is None for m in sections)
+    assert "report_geometry" not in form
+    assert "inputs" not in form
+
+
+def _synthetic_three_face_member_schedule() -> dict[str, Any]:
+    """Supply synthetic grouped members of an equilateral three-face frame."""
+    leg_length = math.sqrt(10**2 + (2 / math.sqrt(3)) ** 2)
+    diagonal_length = math.sqrt(10**2 + 11**2 + (1 / math.sqrt(3)) ** 2)
+    return {
+        "basis": "design_data", "datum": "synthetic still-water level",
+        "waterline_m": 0, "mudline_m": -10,
+        "zones": [
+            {"name": "lower synthetic steel", "calculation_zone": "lower",
+             "lower_m": -10, "upper_m": -5},
+            {"name": "upper synthetic steel", "calculation_zone": "upper",
+             "lower_m": -5, "upper_m": 0},
+        ],
+        "legs": [{"name": "synthetic three legs", "start": [-5, 0],
+                  "end": [-6, -10], "diameter_m": 1,
+                  "true_length_m": leg_length, "count": 3}],
+        "diagonals": [{"name": "synthetic six face diagonals", "start": [-5, 0],
+                       "end": [6, -10], "diameter_m": 0.5,
+                       "true_length_m": diagonal_length, "count": 6}],
+        "brace_levels": [{"elevation_m": -5, "members": [{
+            "name": "synthetic three midlevel sides", "start": [-5.5, -5],
+            "end": [5.5, -5], "diameter_m": 0.4,
+            "true_length_m": 11, "count": 3,
+        }]}],
+        "risers": [{"name": "synthetic unassigned members", "start": [0, -12],
+                    "end": [0, -20], "diameter_m": 0.2,
+                    "true_length_m": 8, "count": 3}],
+    }
+
+
+def test_synthetic_all_face_areas_match_independent_three_dimensional_sum() -> None:
+    """Synthetic geometry verifies true lengths, multiplicity and zone clipping."""
+    from digitalmodel.cathodic_protection.report_elevation import (
+        geometry_caveats,
+        geometry_zone_areas,
+    )
+
+    upper = [(5, -5 / math.sqrt(3), 0), (-5, -5 / math.sqrt(3), 0),
+             (0, 10 / math.sqrt(3), 0)]
+    lower = [(6, -6 / math.sqrt(3), -10), (-6, -6 / math.sqrt(3), -10),
+             (0, 12 / math.sqrt(3), -10)]
+    leg_area = sum(math.pi * math.dist(a, b) for a, b in zip(upper, lower))
+    diagonal_area = sum(
+        math.pi * 0.5 * math.dist(upper[i], lower[j])
+        for i in range(3) for j in range(3) if i != j
+    )
+    middle = [tuple((a + b) / 2 for a, b in zip(p, q))
+              for p, q in zip(upper, lower)]
+    horizontal_area = sum(
+        math.pi * 0.4 * math.dist(middle[i], middle[(i + 1) % 3])
+        for i in range(3)
+    )
+    raw = _synthetic_three_face_member_schedule()
+    areas = geometry_zone_areas(raw)
+    assert areas["lower"] == pytest.approx((leg_area + diagonal_area) / 2)
+    assert areas["upper"] == pytest.approx(
+        (leg_area + diagonal_area) / 2 + horizontal_area
+    )
+    caveats = " ".join(geometry_caveats({"structure": {"report_geometry": raw}}, {}))
+    unassigned = math.pi * 0.2 * 8 * 3
+    assert f"Unassigned member area: {unassigned:.3f} m²" in caveats

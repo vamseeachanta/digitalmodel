@@ -1,0 +1,121 @@
+# Source-supported dimensions; a complete member schedule is not established.
+# This form is not a cathodic-protection calculation or report input.
+source:
+  key: reference-jacket-paper
+  authors: Maciej M. Mroczek, Sanjay Raja Arwade and Matthew A. Lackner
+  title: Design optimization of offshore wind jacket piles by assessing support structure orientation relative to metocean conditions
+  publication: Wind Energy Science
+  year: 2023
+  volume: 8
+  pages: 807–817
+  doi: 10.5194/wes-8-807-2023
+  url: https://wes.copernicus.org/articles/8/807/2023/wes-8-807-2023.pdf
+  licence: CC BY 4.0
+  licence_locator: p. 807, first-page licence statement
+  read_on: 2026-10-13
+
+dimensions:
+  leg_count:
+    value: 3
+    locator: p. 810, Section 3.2, Jacket design
+  water_depth_m:
+    value: 60
+    locator: p. 810, Section 3.2, Jacket design
+  tower_interface_above_still_water_m:
+    value: 30
+    locator: p. 810, Section 3.1, Turbine characteristics
+  transition_piece_height_m:
+    value: 15.9
+    locator: p. 810, Section 3.2, Jacket design
+  top_width_m:
+    value: 15
+    locator: p. 811, Figure 3(a), upper width label
+  mudline_width_m:
+    value: 32
+    locator: p. 811, Figure 3(a), lower width label
+  height_above_mudline_m:
+    value: 74.1
+    locator: p. 811, Figure 3(a), overall height label
+  maximum_crest_above_still_water_m:
+    value: 13.5
+    locator: p. 811, Figure 3(a), maximum crest label
+  top_above_maximum_crest_m:
+    value: 0.6
+    locator: p. 811, Figure 3(a), upper extension label
+  lower_extension_height_m:
+    value: 1
+    locator: p. 811, Figure 3(a), lower extension label
+  printed_batter_degrees:
+    value: 7
+    locator: p. 811, Figure 3(a), leg angle label
+
+drawing_node_heights_above_mudline_m:
+  values: [1, 17.8, 32.8, 45.8, 74.1]
+  locator: p. 811, Figure 3(a), elevation and lower extension labels
+
+drawing_bay_heights_m:
+  values: [16.8, 15, 13, 28.3]
+  locator: p. 811, Figure 3(a), four bay height labels
+
+plan_symmetry:
+  rotation_degrees: 120
+  locator: p. 813, Section 4.2, Jacket orientations
+  interpretation: Three-leg rotational symmetry supports an equilateral leg plan; the dimensioned elevation does not identify its plan-width convention.
+
+member_sections:
+  - description: Uppermost brace members
+    diameter_m: 1.1
+    wall_thickness_mm: 70
+    true_length_m: null
+    count: null
+    locator: p. 811, Table 4, uppermost brace members
+  - description: Remaining brace members
+    diameter_m: 1.0
+    wall_thickness_mm: 20
+    true_length_m: null
+    count: null
+    locator: p. 811, Table 4, remaining brace members
+  - description: Uppermost brace frame legs
+    diameter_m: 1.2
+    wall_thickness_mm: 52
+    true_length_m: null
+    count: null
+    locator: p. 811, Table 4, uppermost brace frame legs
+  - description: Second brace frame legs
+    diameter_m: 1.4
+    wall_thickness_mm: 45
+    true_length_m: null
+    count: null
+    locator: p. 811, Table 4, second brace frame legs
+  - description: Third brace frame legs
+    diameter_m: 1.5
+    wall_thickness_mm: 48
+    true_length_m: null
+    count: null
+    locator: p. 811, Table 4, third brace frame legs
+  - description: Lowest brace frame legs
+    diameter_m: 2.0
+    wall_thickness_mm: 50
+    true_length_m: null
+    count: null
+    locator: p. 811, Table 4, lowest brace frame legs
+  - description: Legs at mudline
+    diameter_m: 3.0
+    wall_thickness_mm: 50
+    true_length_m: null
+    count: null
+    locator: p. 811, Table 4, legs at mudline
+
+initial_pile_estimate:
+  diameter_m: 3.0
+  wall_thickness_mm: 50
+  embedment_m: 65
+  locator: pp. 810–811, Section 3.3, Soil–structure interaction
+  limitation: The initial pile estimate does not establish the jacket leg section-transition lengths or a complete jacket member schedule.
+
+unestablished_geometry:
+  complete_node_coordinates_3d_m: null
+  width_definition_in_leg_plan: null
+  leg_section_transition_lengths_m: null
+  complete_member_inventory: null
+  evidence_boundary: Figure 3 gives a dimensioned elevation, Table 4 gives member sections, and Section 4.2 gives symmetry; a complete node and member schedule is needed to establish true lengths and all-frame zone areas.
