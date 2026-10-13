@@ -134,8 +134,11 @@ def _quantity_rows(demands: list[float], hours: float, results: Mapping[str, Any
                          [label+" final-only final check", "PASS" if first*final >= demands[2] else "FAIL", "-", source],
                          [label+" final-only mass check", "PASS" if first*mass >= required else "FAIL", "-", source],
                          [label+" final-only initial check", "PASS" if first*initial >= demands[0] else "FAIL", "-", source]])
-        rows.extend([[label+(" all-check count" if retrofit else " count"), count, "anodes",
-                      f"max(ceil({required:.0f} / {mass:.0f}), ceil({demands[0]:.3f} / {initial:.4f}), ceil({demands[2]:.3f} / {final:.4f})); unrounded values used"],
+        rows.extend([[label+" mass count", counts[0], "anodes", "ceil(required net mass / nominal unit mass); original unrounded mass [1], p. 242, Section 2"],
+                     [label+" initial count", counts[1], "anodes", f"ceil({demands[0]:.3f} / {initial:.4f})"],
+                     [label+" final count", counts[2], "anodes", f"ceil({demands[2]:.3f} / {final:.4f})"],
+                     [label+(" all-check count" if retrofit else " count"), count, "anodes",
+                      f"max({counts[0]}, {counts[1]}, {counts[2]})"],
                      [label+" governing check", governing, "-", source],
                      [label+" initial capacity", f"{count*initial:.3f}", "A", source],
                      [label+" final capacity", f"{count*final:.3f}", "A", source],
@@ -204,7 +207,7 @@ def verification_summary(inputs: Mapping[str, Any], results: Mapping[str, Any]) 
                 f"within {bound:.3f}%. " + finding +
                 "Aggregate checks do not establish spatial protection; geometry, allocation, "
                 "remaining condition and timing limits are stated in Appendix A. "
-                "Published values and locators are in Published basis and comparison.")
+                "Published values and locators are in Published values and comparison.")
     status = results["status"]
     governing = str(status["governing_case"]) + (" current" if status["governing_case"] != "mass" else "")
     return (f"The {ver['anode_count']}-anode arrangement is verified against computed mass "

@@ -88,20 +88,16 @@ inputs:
       source_key: published-jacket-paper
       source: *id001
       assumptions:
-        One declared assumption set is used unchanged for every comparison; it is
-        not the designers' basis. Design life 25 years and seawater temperature 10 °C are adopted
-        from the existing three-zone example. The May 2021 edition of DNV-RP-B401, Cathodic
-        protection design, supplies seawater aluminium capacity 2000 Ah/kg, long stand-off utilisation
-        0.90, protective potential -0.800 V and closed-circuit anode potential -1.050 V (design
-        electrochemical capacity, anode utilisation factor and protective potential criterion).
-        The published nominal unit mass is interpreted as net alloy mass; the anode is represented
-        by a cylindrical long stand-off model of published length 2.020 m. Equivalent radius
-        follows r = sqrt(m / (π L ρ)) with the existing aluminium alloy density 2750 kg/m³.
-        The printed cross-section expression does not establish net volume or core dimensions,
-        so that expression is not used to fit output. Published effective phase densities are
-        applied with unity breakdown, without inferring an additional coating law. The unsplit
-        nine-well allowance is applied at all phases. No assumption is tuned separately to a
-        target.
+        Design life 25 years, seawater temperature 10 °C, nominal mass interpreted as net alloy,
+        the equivalent-cylinder resistance model at published length 2.020 m, and alloy density
+        2750 kg/m³ are based on previous project experience. Equivalent radius is sqrt(m / (π L ρ)).
+        DNV-RP-B401, Cathodic protection design, May 2021 [2] supplies capacity 2000 Ah/kg,
+        utilisation 0.90 and protective and closed-circuit potentials -0.800 and -1.050 V
+        (design electrochemical capacity, anode utilisation factor and protective potential criterion).
+        The paper prints driving voltage 0.25 V and resistivity 0.22 ohm.m [1], p. 242, Section 2.
+        Effective phase densities use unity multipliers without a separate coating deterioration
+        law. The unsplit nine-well allowance is applied at all phases. The printed cross-section
+        does not establish net volume or core dimensions.
       higher_density_basis:
         locator: p. 244, Table 3, Section 4
         affected_zone: lower-bare-seawater
@@ -157,7 +153,7 @@ inputs:
         - Buried area is published but pile geometry, burial depth and sediment resistivity are
           not established. No buried member band is inferred.
         - Member geometry and per-level anode allocation are not published; spatial protection
-          and a local retrofit quantity cannot be established from aggregate demand.
+          and the per-level retrofit split cannot be established from aggregate demand.
         - Completion of the proposed retrofit and post-installation potentials are not established
           by the published remedy section.
       findings:

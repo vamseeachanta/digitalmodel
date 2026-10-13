@@ -120,11 +120,10 @@ def test_published_jacket_reproduction_uses_one_unchanged_assumption_set() -> No
     for row, computed, target in zip(table.rows, expected, targets):
         assert float(row[1]) == target
         assert float(row[2]) == pytest.approx(computed, abs=0.0001)
-        assert float(row[3]) == pytest.approx(100 * (computed - target) / target, abs=0.00001)
+        assert row[3] == f"{100 * (computed - target) / target:+.2f}"
     text = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock))
-    assert "One declared assumption set" in text
-    assert "not the designers' basis" in text
-    assert "published-jacket-paper" in text
+    assert "based on previous project experience" in text
+    assert "[1]" in text and "[2]" in text
 
 
 def test_published_jacket_monitoring_is_depth_true_and_attributed() -> None:
@@ -777,8 +776,9 @@ def test_published_effective_densities_are_not_presented_as_standard_coating_con
     report = anode_design_report(_run('published_jacket_84m'))
     tables = _tables(report)
     zones = tables['Published zone areas and effective-density treatment']
-    assert 'Demand treatment' in zones.columns
-    assert all('effective' in str(row) for row in zones.rows)
+    assert zones.columns == ['Zone', 'Area']
+    assert 'effective' in zones.source
+    assert 'a' not in zones.columns and 'b' not in zones.columns
     figure = next(f for f in report.figure_blocks() if f.figure_id == FIG_DEMAND_VS_TIME)
     assert 'Published effective mean densities' in figure.caption
     assert 'connected allowances' in figure.caption
@@ -919,3 +919,59 @@ def test_verification_summary_is_first_and_binds_result_to_criterion(name) -> No
         assert "final current" in text
     rendered = render_html(spec)
     assert rendered.index('<section id="summary">') < rendered.index('<section id="design-basis">')
+
+
+REMOVED_VERIFICATION_TEXT = ['adopted from the existing three-zone example', 'adopted\nfrom the existing three-zone example', 'the existing aluminium alloy density', 'No assumption is tuned separately to a target', 'One declared assumption set is used unchanged', 'the existing aluminium calculation basis', 'digitalmodel', 'verified-2021-tables', 'Edition provenance', 'Wiki path', 'wikis/engineering-standards/', 'This report is a view over the sources below', 'cfg[results]', 'engine-adapter results mapping', 'report.document', 'placeholder', 'Engine digitalmodel.reporting.engine', 'Tool version', 'stand_off', 'buried_mudline', 'Table 8-8 (long_slender_standoff)', 'long_slender_standoff', '[published-jacket-paper', '[b401-', 'published area category', 'published basis', 'a = 1', 'b = 0', 'approved for client use', 'Prepared by', 'Checked by', 'Approved by', 'Issued', 'X0000-CP-000-00', 'unassigned', 'DNV-RP-B401 :', 'from the design data of the case', 'route', 'routed', 'regression case', 'citation not held', 'Input echo', 'Sources declared', 'manifest']
+
+def _visible_text(html: str) -> str:
+    from html.parser import HTMLParser
+
+    class Reader(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.skip = 0
+            self.parts = []
+        def handle_starttag(self, tag, attrs):
+            if tag in {"script", "style"}:
+                self.skip += 1
+        def handle_endtag(self, tag):
+            if tag in {"script", "style"}:
+                self.skip -= 1
+        def handle_data(self, data):
+            if not self.skip:
+                self.parts.append(data)
+    reader = Reader()
+    reader.feed(html)
+    return " ".join(" ".join(reader.parts).split())
+
+
+@pytest.mark.parametrize("name", ["published_jacket_84m", "jacket_report_example"])
+@pytest.mark.parametrize("removed", REMOVED_VERIFICATION_TEXT)
+def test_verification_visible_text_excludes_framework_and_draft_placeholders(name, removed) -> None:
+    """Each named presentation defect is absent from the visible report."""
+    text = _visible_text(render_html(anode_design_report(_run(name))))
+    assert " ".join(removed.split()).lower() not in text.lower()
+
+
+def test_published_numbered_references_locators_precision_and_abstract_boundary() -> None:
+    """Published tables retain locators while comparisons use fixed precision."""
+    spec = anode_design_report(_run("published_jacket_84m"))
+    text = _visible_text(render_html(spec))
+    assert "Draft for review" in text
+    assert "based on previous project experience" in text
+    assert "References" in text and "Dezhu Xu" in text and "10.26855/ea.2023.06.017" in text
+    assert "[1], p. 242" in text and "[2]" in text
+    assert "not attached to a level or date and are not used" in text
+    assert not re.search(r"[-+]?\d+\.\d+[eE][-+]?\d+", text)
+    assert not re.search(r"\d+\.\d+ kg", text)
+    for row in _tables(spec)["Published checkpoints and calculated differences"].rows:
+        assert re.fullmatch(r"[-+]\d+\.\d{2}", str(row[3]))
+    for title, table in _tables(spec).items():
+        if title == "Design data" or title.startswith(("Published zone", "Current density", "Measured potentials", "Independent estimate", "Installed arrangement", "Increase at design", "Retrofit:", "Published checkpoints")):
+            assert "p. 24" in str(table.source) or any("p. 24" in str(r[-1]) for r in table.rows), title
+    reference = next(s for s in spec.sections if s.key == "references")
+    reftext = " ".join(b.markdown for b in reference.blocks if isinstance(b, TextBlock))
+    assert reftext.count("10.26855/ea.2023.06.017") == 1
+    assert spec.verification_presentation is True
+    assert _load_fixture()["results"]["status"]["result"] == "FAIL"
+    assert anode_design_report(_load_fixture()).verification_presentation is False
