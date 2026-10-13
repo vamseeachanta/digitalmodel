@@ -387,3 +387,62 @@ def test_physical_length_can_project_to_a_point() -> None:
     without = copy.deepcopy(raw)
     without["risers"] = []
     assert geometry_zone_areas(raw)["submerged"] - geometry_zone_areas(without)["submerged"] == pytest.approx(12 * math.pi)
+
+
+def test_jacket_additions_do_not_apply_to_other_structures() -> None:
+    cfg = _cfg()
+    cfg["inputs"]["design_data"]["structure_type"] = "monopile"
+    cfg["inputs"]["structure"]["report_geometry"] = {"invalid": True}
+    spec = anode_design_report(_run(cfg))
+    assert not spec.appendices
+    assert not any(f.svg for f in spec.figure_blocks())
+
+
+def test_depth_diagram_has_scaled_levels_potentials_and_criterion() -> None:
+    """Synthetic display values pin positions independently of jacket geometry."""
+    cfg = _cfg()
+    cfg["inputs"]["structure"]["report_geometry"] = {
+        "type": "depth_true", "basis": "published_source",
+        "datum": "still-water level", "waterline_m": 0, "mudline_m": -80,
+        "citation": "Published paper, survey section", "attribution": "Survey authors",
+        "criterion_V": -0.8, "criterion_source": "Protection potential criterion",
+        "zones": [{"name": "deep", "calculation_zone": "submerged", "lower_m": -80, "upper_m": 0}],
+        "monitoring": [{"elevation_m": -20, "elapsed_days": 52, "potential_V": -0.7,
+                        "approximate": True},
+                       {"elevation_m": -80, "elapsed_days": 518, "potential_V": -0.9,
+                        "approximate": False}],
+    }
+    spec = anode_design_report(_run(cfg))
+    figure = next(f for f in spec.figure_blocks() if f.svg)
+    svg = ET.fromstring(figure.svg)
+    assert svg.attrib["data-type"] == "depth_true"
+    assert not any("data-member" in n.attrib for n in svg.iter())
+    scale = float(svg.attrib["data-scale"])
+    criterion = next(n for n in svg.iter() if n.attrib.get("data-criterion") == "-0.8")
+    assert float(criterion.attrib["x1"]) == pytest.approx(350)
+    points = [n for n in svg.iter() if "data-potential" in n.attrib]
+    assert len(points) == 2
+    assert [float(n.attrib["cy"]) for n in points] == pytest.approx([50 + 20 * scale, 50 + 80 * scale])
+    assert [float(n.attrib["cx"]) for n in points] == pytest.approx([400, 300])
+    assert "more negative than -0.800 V" in figure.caption
+    assert "Survey authors" in figure.caption
+
+
+def test_depth_diagram_allows_separate_categories_at_the_same_depth() -> None:
+    from digitalmodel.cathodic_protection.report_elevation import design_blocks
+
+    raw = {"type": "depth_true", "basis": "published_source", "datum": "still-water level",
+           "waterline_m": 0, "mudline_m": -80, "citation": "Published survey",
+           "attribution": "Survey authors", "criterion_V": -0.8,
+           "criterion_source": "Protection criterion",
+           "zones": [{"name": "bare", "calculation_zone": "bare", "lower_m": -80, "upper_m": 0},
+                     {"name": "coated", "calculation_zone": "coated", "lower_m": -80, "upper_m": 0}],
+           "monitoring": [{"elevation_m": -20, "elapsed_days": 52, "potential_V": -0.7, "approximate": True}]}
+    blocks = design_blocks({"structure": {"report_geometry": raw}})
+    assert isinstance(blocks[0], FigureBlock)
+    svg = ET.fromstring(blocks[0].svg)
+    bands = [n for n in svg.iter() if "data-zone" in n.attrib]
+    assert len(bands) == 2
+    rects = [next(n for n in g if n.tag.endswith("rect")) for g in bands]
+    assert rects[0].attrib["x"] != rects[1].attrib["x"]
+    assert [float(n.attrib["height"]) for n in rects] == [500, 500]

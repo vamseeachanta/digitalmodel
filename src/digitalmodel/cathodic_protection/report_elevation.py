@@ -129,7 +129,7 @@ def _member(raw: Any, kind: str) -> Member:
     return Member(_text(item["name"]), kind, start, end, diameter, length, count)
 
 
-def _zones(raw: Any) -> tuple[Zone, ...]:
+def _zones(raw: Any, *, allow_overlap: bool = False) -> tuple[Zone, ...]:
     zones = []
     for item in _list(raw):
         fields = {"name", "lower_m", "upper_m"}
@@ -144,7 +144,7 @@ def _zones(raw: Any) -> tuple[Zone, ...]:
     if not zones or len({zone.calculation_zone for zone in zones}) != len(zones):
         raise ValueError("zone names must be unique and non-empty")
     for lower, upper in zip(zones, zones[1:]):
-        if lower.upper > upper.lower:
+        if not allow_overlap and lower.upper > upper.lower:
             raise ValueError("zone intervals must be ordered without overlap")
     return tuple(zones)
 
@@ -376,12 +376,84 @@ def _raw_geometry(inputs: Mapping[str, Any]) -> Any:
     return structure.get("report_geometry") if isinstance(structure, Mapping) else None
 
 
+def _depth_data(raw: Any) -> tuple[float, float, tuple[Zone, ...], list[dict[str, Any]]]:
+    """Validate a depth diagram independently of unavailable member geometry."""
+    item = _mapping(raw, {"type", "basis", "datum", "waterline_m", "mudline_m",
+                          "citation", "attribution", "criterion_V", "criterion_source",
+                          "zones", "monitoring"},
+                    {"type", "basis", "datum", "waterline_m", "mudline_m",
+                     "citation", "attribution", "criterion_V", "criterion_source",
+                     "zones", "monitoring"})
+    if item["basis"] != "published_source":
+        raise ValueError("depth diagram requires published_source basis")
+    for key in ("datum", "citation", "attribution", "criterion_source"):
+        _text(item[key])
+    waterline, mudline = _number(item["waterline_m"]), _number(item["mudline_m"])
+    if mudline >= waterline or not math.isfinite(waterline - mudline):
+        raise ValueError("depth diagram requires waterline above mudline")
+    criterion = _number(item["criterion_V"])
+    if criterion >= 0:
+        raise ValueError("protection criterion must be negative")
+    readings = []
+    for raw_reading in _list(item["monitoring"]):
+        fields = {"elevation_m", "elapsed_days", "potential_V", "approximate"}
+        reading = dict(_mapping(raw_reading, fields, fields))
+        for key in ("elevation_m", "elapsed_days", "potential_V"):
+            reading[key] = _number(reading[key])
+        if not mudline <= reading["elevation_m"] <= waterline or reading["elapsed_days"] < 0:
+            raise ValueError("monitoring level or elapsed time is outside its bounds")
+        if not isinstance(reading["approximate"], bool):
+            raise ValueError("monitoring approximation must be explicit")
+        readings.append(reading)
+    if not readings:
+        raise ValueError("depth diagram requires measured potentials")
+    zones = _zones(item["zones"], allow_overlap=True)
+    if any(z.lower < mudline or z.upper > waterline for z in zones):
+        raise ValueError("depth diagram zone exceeds the water column")
+    return waterline, mudline, zones, readings
+
+
+def _depth_blocks(raw: Mapping[str, Any]) -> list[Block]:
+    """Draw measured potentials on a depth scale, without inferred members."""
+    waterline, mudline, zones, readings = _depth_data(raw)
+    scale = 500 / (waterline - mudline)
+    criterion = float(raw["criterion_V"])
+    potentials = [r["potential_V"] for r in readings] + [criterion]
+    centre = criterion
+    span = max(abs(p - centre) for p in potentials)
+    potential_scale = 50 / span if span else 1
+    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 680" data-type="depth_true" data-scale="{_n(scale)}" role="img" aria-label="Depth-true potential diagram">']
+    band_width = 150 / len(zones)
+    for index, zone in enumerate(zones):
+        y, height = 50 + (waterline - zone.upper) * scale, (zone.upper - zone.lower) * scale
+        left = 30 + index * band_width
+        parts.append(f'<g data-zone="{escape(zone.calculation_zone)}"><rect x="{_n(left)}" y="{_n(y)}" width="{_n(band_width)}" height="{_n(height)}" fill="none" stroke="black"/>' + _label(left + 5, y + 14, zone.name) + '</g>')
+    for name, elevation in (("waterline", waterline), ("mudline", mudline)):
+        y = 50 + (waterline - elevation) * scale
+        parts.append(f'<line data-level="{name}" x1="30" x2="560" y1="{_n(y)}" y2="{_n(y)}" stroke="black"/>' + _label(560, y, f"{name}: {elevation:g} m"))
+    parts.append(f'<line data-criterion="{criterion:g}" x1="350" x2="350" y1="50" y2="550" stroke="black" stroke-dasharray="5 3"/>')
+    for reading in readings:
+        x = 350 + (reading["potential_V"] - centre) * potential_scale
+        y = 50 + (waterline - reading["elevation_m"]) * scale
+        parts.append(f'<circle data-potential="{_n(reading["potential_V"])}" data-elevation-m="{_n(reading["elevation_m"])}" cx="{_n(x)}" cy="{_n(y)}" r="4" fill="black"/>' + _label(560, y + 15, f"{reading['elevation_m']:g} m; day {reading['elapsed_days']:g}"))
+    for index, line in enumerate(textwrap.wrap(f"PUBLISHED SOURCE; {raw['attribution']}; {raw['citation']}", 80)):
+        parts.append(_label(30, 590 + index * 14, line))
+    parts.append(_label(30, 650, f"Criterion: more negative than {criterion:.3f} V versus Ag/AgCl/seawater"))
+    parts.append('</svg>')
+    rows = [[r["elevation_m"], r["elapsed_days"], ("approximately " if r["approximate"] else "") + f"{r['potential_V']:.3f}", "PASS" if r["potential_V"] < criterion else "FAIL"] for r in readings]
+    return [FigureBlock(title="Depth-true potential diagram", figure_id=FIG_ELEVATION,
+                        svg="".join(parts), caption=f"Published-source depth diagram; {raw['attribution']}; {raw['citation']}. Member geometry is not published. Criterion: more negative than {criterion:.3f} V versus Ag/AgCl/seawater ({raw['criterion_source']})."),
+            TableBlock(title="Measured potentials at the stated time of measurement", columns=["Elevation", "Elapsed time", "Potential versus Ag/AgCl", "Criterion check"], units=["m", "days", "V", "-"], rows=rows)]
+
+
 def design_blocks(inputs: Mapping[str, Any]) -> list[Block]:
     """Return an elevation only when member geometry is supplied."""
     raw = _raw_geometry(inputs)
     if raw is None:
         return [TextBlock(markdown=NO_GEOMETRY + " See Appendix A.")]
     try:
+        if isinstance(raw, Mapping) and raw.get("type") == "depth_true":
+            return _depth_blocks(raw)
         geometry = validate_geometry(raw)
     except (ValueError, TypeError, KeyError) as error:
         return [TextBlock(markdown=f"Elevation not evaluated: {error}.")]
@@ -418,6 +490,9 @@ def geometry_caveats(
     if raw is None:
         return [NO_GEOMETRY]
     try:
+        if isinstance(raw, Mapping) and raw.get("type") == "depth_true":
+            _depth_data(raw)
+            return ["Member geometry, anode distribution and local current demand are not published; aggregate current checks do not establish protection at remote or shielded areas."]
         geometry = validate_geometry(raw)
     except (ValueError, TypeError, KeyError) as error:
         return [f"Elevation not evaluated: {error}."]

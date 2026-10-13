@@ -1552,6 +1552,8 @@ def _b401_report_additions(
 ) -> list[Section]:
     """Add display geometry and advice to the single-arrangement B401 layout."""
     if (
+        _mapping(inputs.get("design_data")).get("structure_type") != "jacket"
+        or
         results.get("mode") == "b401_components"
         or results.get("riser_base_assessment")
         or results.get("anode_families")
