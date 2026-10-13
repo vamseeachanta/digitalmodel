@@ -102,6 +102,31 @@ def _run(name: str) -> dict[str, Any]:
         return run_cathodic_protection(cfg)
 
 
+def test_published_jacket_reproduction_uses_one_unchanged_assumption_set() -> None:
+    """Source totals and untuned anode checkpoints are printed independently."""
+    cfg = _run("published_jacket_84m")
+    spec = anode_design_report(cfg)
+    table = _tables(spec)["Published checkpoints and calculated differences"]
+    result = cfg["results"]
+    allowances = _tables(spec)["Current density, coating breakdown and demand by zone"].rows[-2]
+    assert allowances[0] == "Connected allowances"
+    assert allowances[-3:] == [18, 18, 18]
+    assert result["current_densities_A_m2"]["upper-bare-seawater"]["climate"] == "published basis"
+    ver = result["current_output_verification"]
+    expected = [2688.285, 1452.450, 1892.052,
+                ver["anode_current_output_initial_A"],
+                ver["recommended_anode_count"], ver["anode_current_output_final_A"]]
+    targets = [2688.3, 1452.5, 1892.1, 5.01, 569, 3.63]
+    for row, computed, target in zip(table.rows, expected, targets):
+        assert float(row[1]) == target
+        assert float(row[2]) == pytest.approx(computed, abs=0.0001)
+        assert float(row[3]) == pytest.approx(100 * (computed - target) / target, abs=0.00001)
+    text = " ".join(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock))
+    assert "One declared assumption set" in text
+    assert "not the designers' basis" in text
+    assert "published-jacket-paper" in text
+
+
 def _statuses(spec: ReportSpec) -> list[StatusBlock]:
     return [b for s in spec.sections for b in s.blocks if isinstance(b, StatusBlock)]
 

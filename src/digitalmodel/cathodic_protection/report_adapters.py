@@ -564,6 +564,10 @@ def _b401_sections(
                 d.get("I_final_A", ""),
             ]
         )
+    connected = results.get("connected_current_allowance_A")
+    if connected is not None:
+        demand_rows.append(["Connected allowances", "", *([""] if has_area_basis else []),
+                            *([""] * 6), connected, connected, connected])
     demand_rows.append(
         [
             "Total",
@@ -598,6 +602,8 @@ def _b401_sections(
             )
             for t in t_years
         ]
+    if connected is not None:
+        series["Connected allowances"] = [float(connected) for _ in t_years]
     current_demand = Section(
         key="current-demand",
         title="Current demand",
@@ -1547,6 +1553,50 @@ _SECTION_BUILDERS = {
 }
 
 
+def _published_checkpoint_section(
+    inputs: Mapping[str, Any], results: Mapping[str, Any]
+) -> Section | None:
+    """Compare published checkpoints using one declared calculation basis."""
+    evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
+    if not evidence:
+        return None
+    demand = _mapping(results.get("current_demand_A"))
+    verification = _mapping(results.get("current_output_verification"))
+    quantities = {
+        "initial_demand": demand["total_initial_A"],
+        "mean_demand": demand["total_mean_A"],
+        "final_demand": demand["total_final_A"],
+        "initial_output": verification["anode_current_output_initial_A"],
+        "final_output": verification["anode_current_output_final_A"],
+        "count": verification["recommended_anode_count"],
+    }
+    rows: list[Row] = []
+    for target in evidence["targets"]:
+        value = float(target["printed"])
+        if value <= 0:
+            raise ValueError("published comparison requires positive checkpoints")
+        calculated = quantities[target["quantity"]]
+        difference = 100 * (calculated - value) / value
+        rows.append([target["label"], target["printed"], calculated, difference,
+                     target["unit"], target["locator"]])
+    summary = (
+        f"Calculated initial, mean and final demands are {quantities['initial_demand']:.3f}, "
+        f"{quantities['mean_demand']:.3f} and {quantities['final_demand']:.3f} A. "
+        f"The declared anode assumptions require {quantities['count']} anodes; "
+        f"the published installed arrangement contains {verification['anode_count']} anodes. "
+        "Aggregate mass and output checks do not establish protection at remote or shielded areas."
+    )
+    source = _mapping(evidence.get("source"))
+    return Section(key="published-comparison", title="Published basis and comparison", blocks=[
+        TextBlock(markdown=summary),
+        TextBlock(markdown=str(evidence["assumptions"])),
+        TableBlock(title="Published checkpoints and calculated differences",
+                   columns=["Checkpoint", "Published", "Calculated", "Difference", "Unit", "Locator"],
+                   units=["-", "-", "-", "%", "-", "-"], rows=rows),
+        TextBlock(markdown=f"[{evidence['source_key']}] {source['title']}. {source['url']}. Read {source['read_on']}."),
+    ])
+
+
 def _b401_report_additions(
     inputs: Mapping[str, Any], results: Mapping[str, Any], sections: list[Section]
 ) -> list[Section]:
@@ -1560,6 +1610,9 @@ def _b401_report_additions(
     ):
         return []
     by_key = {section.key: section for section in sections}
+    comparison = _published_checkpoint_section(inputs, results)
+    if comparison:
+        sections.insert(sections.index(by_key["references"]), comparison)
     by_key["design-basis"].blocks.extend(design_blocks(inputs))
     adequacy = by_key["adequacy"]
     failures = failed_keys(results)
@@ -1569,7 +1622,9 @@ def _b401_report_additions(
         if key != "overall_status":
             adequacy.blocks.append(recommendation_block(results, key))
     adequacy.blocks.append(conclusions_block(results))
+    evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
     caveats = geometry_caveats(inputs, results) + recommendation_caveats(results)
+    caveats.extend(evidence.get("limitations", []))
     return [Section(
         key="cp-limitations", title="Limitations and items not evaluated",
         label="Appendix A",

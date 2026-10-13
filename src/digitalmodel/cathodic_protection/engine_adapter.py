@@ -468,6 +468,8 @@ def _published_densities(
             raise ValueError("published density must be a finite non-negative number")
         densities[f"i_{phase}_A_m2"] = number
     densities["citations"] = []
+    densities["climate"] = "published basis"
+    densities["depth_band"] = "published area category"
     densities["basis"] = "Published effective phase densities; unity coating breakdown."
     breakdown["citations"] = []
     return source
