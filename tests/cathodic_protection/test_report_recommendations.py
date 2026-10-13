@@ -215,3 +215,20 @@ def test_verified_options_use_edition_specific_retrofit_subject(edition):
                     if isinstance(b, TextBlock))
     assert ("retrofit evidence" if edition == "2021" else "retrofit documentation") in text
     assert "published-jacket-paper" not in text
+
+
+def test_verified_options_preserve_passing_count_and_selected_source(monkeypatch):
+    from digitalmodel.cathodic_protection import report_recommendations as recommendations
+    from digitalmodel.reporting import TableBlock
+
+    routed = with_count(200)
+    held = rule_citations("2021")
+    reordered = list(reversed(held))
+    monkeypatch.setattr(recommendations, "rule_citations", lambda edition: reordered)
+    blocks = recommendations.arrangement_options(routed["inputs"], routed["results"])
+    table = next(b for b in blocks if isinstance(b, TableBlock))
+    assert table.rows[0][1:] == [200, 200]
+    text = " ".join(b.markdown for b in blocks if isinstance(b, TextBlock))
+    assert next(c for c in held if c.endswith("(anode mass)")) in text
+    assert next(c for c in held if c.endswith("(output adequacy)")) in text
+    assert next(c for c in held if c.endswith("(retrofit evidence)")) in text

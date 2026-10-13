@@ -169,6 +169,23 @@ def test_published_report_includes_native_rechecks_and_distinct_options() -> Non
     assert "not re-checked by this calculation" not in text
 
 
+def test_verification_conclusion_requires_measured_failures() -> None:
+    cfg = _run("published_jacket_84m")
+    del cfg["inputs"]["structure"]["report_geometry"]
+    spec = anode_design_report(cfg)
+    text = " ".join(b.markdown for s in spec.sections if s.key == "adequacy"
+                    for b in s.blocks if isinstance(b, TextBlock))
+    assert "two lowest levels" not in text
+    assert "Measured protection is not evaluated" in text
+    cfg = _run("published_jacket_84m")
+    for reading in cfg["inputs"]["structure"]["report_geometry"]["monitoring"]:
+        reading["potential_V"] = -.95
+    text = " ".join(b.markdown for s in anode_design_report(cfg).sections if s.key == "adequacy"
+                    for b in s.blocks if isinstance(b, TextBlock))
+    assert "All latest reported monitoring readings" in text
+    assert "two lowest levels" not in text
+
+
 def _statuses(spec: ReportSpec) -> list[StatusBlock]:
     return [b for s in spec.sections for b in s.blocks if isinstance(b, StatusBlock)]
 

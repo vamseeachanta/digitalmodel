@@ -80,6 +80,7 @@ from digitalmodel.cathodic_protection.f103_tables import (
 from digitalmodel.cathodic_protection.report_elevation import (
     design_blocks,
     geometry_caveats,
+    monitoring_conclusion,
 )
 from digitalmodel.cathodic_protection.report_recommendations import (
     arrangement_options,
@@ -1621,7 +1622,7 @@ def _b401_report_additions(
     evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
     if evidence:
         adequacy.blocks.extend(arrangement_options(inputs, results))
-        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\nThe increased-count and dimensioned alternatives pass the aggregate mass and current checks. Measured protection at the two lowest levels remains below the stated criterion; a spatial survey and local allocation assessment are needed before retrofit sizing. Monitoring and intervention triggers are stated above."))
+        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\nThe rechecked alternatives pass the aggregate mass and current checks. " + monitoring_conclusion(inputs) + " Monitoring and intervention triggers are stated above; local retrofit quantity requires spatial demand and allocation evidence."))
     else:
         if "overall_status" in failures:
             adequacy.blocks.insert(2, recommendation_block(results, "overall_status"))

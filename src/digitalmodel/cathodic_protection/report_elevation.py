@@ -376,6 +376,29 @@ def _raw_geometry(inputs: Mapping[str, Any]) -> Any:
     return structure.get("report_geometry") if isinstance(structure, Mapping) else None
 
 
+def monitoring_conclusion(inputs: Mapping[str, Any]) -> str:
+    """Bind the survey conclusion to validated latest readings and criterion."""
+    raw = _raw_geometry(inputs)
+    missing = "Measured protection is not evaluated; valid monitoring levels, potentials, survey times and a criterion are required."
+    if not isinstance(raw, Mapping) or raw.get("type") != "depth_true":
+        return missing
+    try:
+        _, _, _, readings = _depth_data(raw)
+    except (ValueError, TypeError, KeyError, OverflowError):
+        return missing
+    latest: dict[float, dict[str, Any]] = {}
+    for reading in readings:
+        elevation = reading["elevation_m"]
+        if elevation not in latest or reading["elapsed_days"] > latest[elevation]["elapsed_days"]:
+            latest[elevation] = reading
+    criterion = float(raw["criterion_V"])
+    failing = [z for z, reading in sorted(latest.items()) if reading["potential_V"] >= criterion]
+    if not failing:
+        return f"All latest reported monitoring readings are more negative than {criterion:.3f} V versus Ag/AgCl/seawater at their stated times of measurement."
+    levels = ", ".join(f"{z:g}" for z in failing)
+    return f"At each level's latest stated time of measurement, potentials at {levels} m do not meet the requirement of a potential more negative than {criterion:.3f} V versus Ag/AgCl/seawater. Aggregate current checks do not establish spatial protection."
+
+
 def _depth_data(raw: Any) -> tuple[float, float, tuple[Zone, ...], list[dict[str, Any]]]:
     """Validate a depth diagram independently of unavailable member geometry."""
     item = _mapping(raw, {"type", "basis", "datum", "waterline_m", "mudline_m",

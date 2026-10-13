@@ -83,6 +83,8 @@ def _arrangement_rows(results: Mapping[str, Any]) -> list[list[Any]]:
 def arrangement_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Block]:
     """Show independently rechecked design choices and condition-based actions."""
     values = _quantities(results)
+    values["needed"] = max(values["needed"], values["checked"])
+    values["additional"] = values["needed"] - values["checked"]
     increased = _check_arrangement(inputs, int(values["needed"]))
     if increased["status"]["result"] != "PASS":
         raise ValueError("increased-count arrangement did not pass its recheck")
@@ -92,14 +94,14 @@ def arrangement_options(inputs: Mapping[str, Any], results: Mapping[str, Any]) -
     criterion = protection_potential(normalize_edition(str(results.get("edition")))).value
     edition = normalize_edition(str(results["edition"]))
     retrofit_subject = "retrofit evidence" if edition == "2021" else "retrofit documentation"
-    for subject in ("anode mass", "output adequacy", retrofit_subject):
-        _rule_source(edition, subject)
+    selected = {subject: _rule_source(edition, subject)
+                for subject in ("anode mass", "output adequacy", retrofit_subject)}
     standard = f"{standard_for_edition(edition)}, Cathodic protection design"
     sources = (
-        f"[b401-anode-mass] {standard}, anode mass; "
-        f"[b401-output-adequacy] {standard}, output adequacy; "
+        f"[b401-anode-mass] {standard}, {selected['anode mass']}; "
+        f"[b401-output-adequacy] {standard}, {selected['output adequacy']}; "
         f"[b401-protection-criterion] {standard}, protective potential criterion; "
-        f"[b401-retrofit] {standard}, {retrofit_subject}."
+        f"[b401-retrofit] {standard}, {selected[retrofit_subject]}."
     )
     evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
     attachment = (
