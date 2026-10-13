@@ -18,11 +18,7 @@ from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 from urllib.robotparser import RobotFileParser
 
-USER_AGENT = (
-    "PublicVesselSpecResearch/1.1 "
-    "(+https://github.com/vamseeachanta/digitalmodel; "
-    "public specification curation; sequential requests)"
-)
+USER_AGENT = "PublicVesselSpecResearch/1.1"
 ROOT = Path(__file__).resolve().parents[1]
 Transport = Callable[[str, str, int], tuple[int, str, bytes]]
 Response = tuple[str, bytes]

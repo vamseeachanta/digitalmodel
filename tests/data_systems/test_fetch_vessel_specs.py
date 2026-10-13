@@ -4,6 +4,7 @@
 """Offline retrieval contracts; no transport reaches a real site."""
 
 import json
+import re
 import runpy
 from copy import deepcopy
 from pathlib import Path
@@ -54,7 +55,8 @@ def shape(value):
 
 
 def transport(url, user_agent, timeout):
-    assert "(+https://github.com/vamseeachanta/digitalmodel;" in user_agent
+    assert user_agent == "PublicVesselSpecResearch/1.1"
+    assert re.fullmatch(r"^[A-Za-z0-9._-]+/[0-9]+(\.[0-9]+)*$", user_agent)
     assert timeout == 30
     body = b"User-agent: *\nAllow: /\n" if url.endswith("robots.txt") else b"facts"
     return 200, url, body

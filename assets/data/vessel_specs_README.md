@@ -3,7 +3,7 @@
 This document describes only the `vessel_specs_*` files.
 Refs [issue 1773](https://github.com/vamseeachanta/digitalmodel/issues/1773).
 The arrays at repo-root `assets/data/` contain two HLV rows and three pipelay
-rows read from owner/operator pages and specification sheets during this run.
+rows read from owner/operator pages and specification sheets on 2026-10-11.
 These are partial demonstration references, not qualified operating envelopes.
 They neither replace the vessel fleet collection nor certify current capabilities.
 Existing representative-class GTM data and demo scripts are unchanged.
@@ -47,11 +47,11 @@ in the manifest. Nothing establishes engineering-use qualification.
 
 Requests used one connection, a descriptive User-Agent, a 30-second timeout,
 one retry maximum and a three-second same-site pause. Both robots policies
-allowed the requested pages. No site refused access during this run.
+allowed the requested pages. No site refused access on 2026-10-11.
 
 The committed `scripts/fetch_vessel_specs.py` reads source URLs and human
 statements from the manifest and emits the same manifest structure, with new
-retrieval observations and the repository contact URL in its User-Agent.
+retrieval observations and a product token and version only in its User-Agent.
 Run it once into a new empty directory **outside the checkout**:
 
 ```sh
@@ -68,16 +68,16 @@ transport; the command is never run by tests. Documents and extracted text
 are retained outside Git and shall not be committed to this public repository.
 Factual transcription remains a separate readback with a page locator.
 
-| Vessel            | Observed specification                                               | Source locator                                                                                                                               |
-| ----------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Thialf            | 14,200 metric tonnes combined crane lifting capacity                 | Heerema fleet page, Main data / Lift Capacity; tandem basis in June 2020 sheet, page 2                                                       |
-| Thialf            | DP-3                                                                 | [June 2020 operator sheet](https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf), printed page 3                          |
-| Sleipnir          | 20,000 metric tonnes combined; two 10,000-tonne cranes               | Heerema fleet page, Main data and vessel description                                                                                         |
-| Solitaire         | 1,050 t tension capacity; 2–60 inches outside diameter; DP-3         | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf), printed page 09       |
-| Solitaire         | S-lay; achieved depth 2,775 m                                        | Operator fleet page, Setting the pipelay standard                                                                                            |
-| Lorelay           | 165 t installed tension capacity; 2–41 inches outside diameter; DP-3 | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf), printed page 11           |
-| Pioneering Spirit | 2,000 t tension capacity; 6–68 inches outside diameter; DP-3         | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf), printed page 08 |
-| Pioneering Spirit | S-lay                                                                | Operator fleet page, Unmatched pipelay capacity                                                                                              |
+| Vessel            | Observed specification                                               | Source locator                                                                                                                                            |
+| ----------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Thialf            | 14,200 metric tonnes combined crane lifting capacity                 | [Heerema fleet page](https://www.heerema.com/heerema-marine-contractors/fleet/thialf), Main data / Lift Capacity; tandem basis in June 2020 sheet, page 2 |
+| Thialf            | DP-3                                                                 | [June 2020 operator sheet](https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf), printed page 3                                       |
+| Sleipnir          | 20,000 metric tonnes combined; two 10,000-tonne cranes               | [Heerema fleet page](https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir), Main data and vessel description                                 |
+| Solitaire         | 1,050 t tension capacity; 2–60 inches outside diameter; DP-3         | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf), printed page 09                    |
+| Solitaire         | S-lay; achieved depth 2,775 m                                        | [Operator fleet page](https://www.allseas.com/en/who-we-are/our-fleet/solitaire), Setting the pipelay standard                                            |
+| Lorelay           | 165 t installed tension capacity; 2–41 inches outside diameter; DP-3 | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf), printed page 11                        |
+| Pioneering Spirit | 2,000 t tension capacity; 6–68 inches outside diameter; DP-3         | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf), printed page 08              |
+| Pioneering Spirit | S-lay                                                                | [Operator fleet page](https://www.allseas.com/en/who-we-are/our-fleet/pioneering-spirit), Unmatched pipelay capacity                                      |
 
 Table 2. Readback anchors; exact URLs and per-source retrieval instants appear in JSON.
 
@@ -97,7 +97,7 @@ Related legacy research was found in
 `data/vessels/raw/install__crane_deck.json` and `install__particulars.json`.
 Those records contain unparsed brochure citations and flagged identifiers.
 They were used as source leads only; none of their numbers were copied.
-The research issue links in the task now point to unrelated hydrodynamics work.
+The research issue links in issue 1773 now point to unrelated hydrodynamics work.
 
 ## Gaps and remaining work
 
