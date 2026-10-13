@@ -20,7 +20,7 @@ metadata:
   description: "Pipeline floating installation - QA variant (50m mesh)"
   structure: pipeline
   operation: installation/floating
-  project: "SESA"
+  project: "generic"
 
 environment:
   water:
