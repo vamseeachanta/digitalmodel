@@ -30,7 +30,7 @@ tree and against the CFD node before this plan was written. Two claims changed.
 | 1 | `alpha.water` is lumped into a turbulence regex group | **CONFIRMED** | `src/digitalmodel/solvers/openfoam/templates/__init__.py:37,44` — `"(k|omega|epsilon|alpha.water)"` and its `Final` twin. No `nAlphaCorr`, `nAlphaSubCycles`, `cAlpha`, or MULES controls anywhere in the file |
 | 2 | `p_rgh` and `p_rghFinal` are absent | **CONFIRMED** | `templates/__init__.py:9-22` provides `p` / `pFinal` only. `interFoam` solves `p_rgh`; `p` does not match it |
 | 3 | "There is no `PIMPLE` block" | **REFUTED** | `PIMPLE_BLOCK` exists at `templates/__init__.py:54-61` and **is** emitted for `interFoam` at `case_builder.py:252-257`. It carries `nOuterCorrectors 3`, `nCorrectors 2`, `nNonOrthogonalCorrectors 1`. Only `momentumPredictor` is absent — and that key is **optional** in `interFoam` (it defaults to `yes`), so its absence is not a start-up error. Carrying this claim forward unexamined would have put a non-defect in the TDD list |
-| 4 | A node-local script overwrites nine generated files | **CONFIRMED, with a correction** | `/home/undi/ws/cfd_work/dm1528/patch_case.sh` on `gpu-claw`, 6137 bytes, mtime 2026-07-11. Exactly nine `cat >` overwrites, enumerated in D5 below. It also performs a **tenth** action the issue does not mention: `rm -f 0/k 0/nut 0/omega 0/epsilon`. The issue cites the script at `~/ws/cfd_work/...` but the script's own internal target is `C=~/cfd_work/dm1528/coupled_run/...`, a path that **does not exist** on the node — so the script as committed cannot run unmodified |
+| 4 | A node-local script overwrites nine generated files | **CONFIRMED, with a correction** | `<home>/ws/cfd_work/dm1528/patch_case.sh` on `dev-gpu`, 6137 bytes, mtime 2026-07-11. Exactly nine `cat >` overwrites, enumerated in D5 below. It also performs a **tenth** action the issue does not mention: `rm -f 0/k 0/nut 0/omega 0/epsilon`. The issue cites the script at `~/ws/cfd_work/...` but the script's own internal target is `C=~/cfd_work/dm1528/coupled_run/...`, a path that **does not exist** on the node — so the script as committed cannot run unmodified |
 | 5 | Earlier slice-7 evidence came from a patched, not emitted, tree | **CONFIRMED, and stronger than filed** | See "The builder has never been validated" below |
 
 **New finding, not in the issue — the defect is wider than `fvSolution`.**
@@ -54,7 +54,7 @@ bound is not a case anyone can defend as runnable.
 The issue says earlier evidence came from a patched tree. Sweeping the node
 turns that into a number:
 
-| measurement on `gpu-claw`, `~/ws/cfd_work` | value |
+| measurement on `dev-gpu`, `~/ws/cfd_work` | value |
 |---|---|
 | `system/fvSolution` files across all case dirs | **139** |
 | distinct content hashes among them | **18** |
@@ -137,7 +137,7 @@ that a rendered case is consistent with the application named in its own
 **Issue states** (2026-08-04): `#1959` OPEN (no labels) · `#1528` OPEN · `#1575`
 **CLOSED — landed on `main` as `85c3c4af`** · `#1576` OPEN.
 
-**Execution host verified 2026-08-04**: `gpu-claw` reachable over SSH
+**Execution host verified 2026-08-04**: `dev-gpu` reachable over SSH
 `BatchMode=yes`; OpenFOAM **v2312** at `/usr/lib/openfoam/openfoam2312`;
 `interFoam`, `blockMesh`, `setFields` all resolve after sourcing
 `etc/bashrc`; `nproc` = **8**.
@@ -175,7 +175,7 @@ The gate is therefore two-layer, and the layers do different jobs:
   (`cAlpha`, `p_rgh`, `div(rhoPhi,U)`, …). These are hand-written assertions about
   what `interFoam` needs, red on `origin/main`, green after. They are
   regression-locks, and they are honestly *not* independent of the author.
-- **Layer 2 (`gpu-claw`, the oracle)** — start `interFoam` on a freshly emitted,
+- **Layer 2 (`dev-gpu`, the oracle)** — start `interFoam` on a freshly emitted,
   unpatched case and require it to **advance at least one timestep**. This is the
   only layer whose correctness does not depend on the author having guessed the
   requirement list right, and it is the layer that would have caught the original
@@ -184,7 +184,7 @@ The gate is therefore two-layer, and the layers do different jobs:
 
 **D4 — Values are derived from the OpenFOAM v2312 upstream tutorial set, never
 from the node's patch scripts.**
-There are eighteen hand-authored `fvSolution` variants on `gpu-claw`;
+There are eighteen hand-authored `fvSolution` variants on `dev-gpu`;
 `patch_case.sh` is one of them and is **not** the one that produced the
 successful slice-7 runs. Adopting any node variant means adopting numbers whose
 provenance is "someone tuned this once", which is a fitted constant. The
@@ -223,7 +223,7 @@ break every case that wants the other answer:
 - `system/blockMeshDict` — a closed single-patch tank is a **modelling decision**
   specific to the roll-only fallback, not a builder defect. The builder's
   multi-patch topology is correct for the general case.
-- `system/decomposeParDict` — `numberOfSubdomains 8` is `gpu-claw`'s core count
+- `system/decomposeParDict` — `numberOfSubdomains 8` is `dev-gpu`'s core count
   (`nproc` = 8, verified). Rank count is a property of the host, not of the case.
 - `system/controlDict`'s `endTime` / `writeInterval` — driven by env `ENDT`/`WI`;
   a run-window choice.
@@ -314,7 +314,7 @@ is where it is closed.
 | Create | `tests/solvers/openfoam/test_case_runnable.py` | D3 Layer 2, behind `@pytest.mark.requires_openfoam`, skipped where no solver exists |
 | Modify | `tests/solvers/openfoam/test_case_builder.py` | extend; `:156-162` no-shorthand constraint must still hold for `p_rghFinal` |
 | Regenerate | `tests/solvers/openfoam/validation/fixtures/sloshing_3d_case_sha256.json` | `:20` pins the old `fvSolution` hash; regenerate **deliberately**, with the new hashes justified in the commit body |
-| Create | `docs/reports/2026-08-04-issue-1959-solver-start-evidence.html` | the `gpu-claw` run log and its provenance, per the repo's HTML-default rule |
+| Create | `docs/reports/2026-08-04-issue-1959-solver-start-evidence.html` | the `dev-gpu` run log and its provenance, per the repo's HTML-default rule |
 | Update | `docs/plans/README.md` | index row |
 
 **Explicitly untouched**, to stay clear of live lanes:
@@ -357,7 +357,7 @@ checkout is on an unrelated branch and is **not** used. The root filesystem is
 full, so worktrees live on the large data volume; the scratchpad cannot hold
 another 2.8 G checkout.
 
-Layer 2 runs on `gpu-claw`, verified 2026-08-04:
+Layer 2 runs on `dev-gpu`, verified 2026-08-04:
 
 | check | result |
 |---|---|
@@ -377,12 +377,12 @@ timeout. Parallel decomposition remains [#1576](https://github.com/vamseeachanta
 
 - [ ] **Every test above fails on `origin/main` @ `85c3c4af` and passes after.** The failure list is captured by running the new test files against a clean `origin/main` worktree and recorded in the PR body. Any row green before the change is removed or rewritten.
 - [ ] `pytest tests/solvers/openfoam/ -q` compared **node-ID by node-ID** against a baseline captured in the same worktree at the branch point. No new failure node IDs. (Counts alone are not evidence.)
-- [ ] **A freshly emitted, unpatched `interFoam` case starts on `gpu-claw` and advances at least one timestep.** Evidence is the solver log, showing ≥2 distinct `Time =` values with the last strictly greater than the first, and no `FOAM FATAL` marker. The log is committed under `docs/reports/`. A `blockMesh`/`setFields` `rc=0` **does not** satisfy this criterion, and neither does a clean exit at `Time = 0`.
+- [ ] **A freshly emitted, unpatched `interFoam` case starts on `dev-gpu` and advances at least one timestep.** Evidence is the solver log, showing ≥2 distinct `Time =` values with the last strictly greater than the first, and no `FOAM FATAL` marker. The log is committed under `docs/reports/`. A `blockMesh`/`setFields` `rc=0` **does not** satisfy this criterion, and neither does a clean exit at `Time = 0`.
 - [ ] The case used for that run is emitted by `OpenFOAMCaseBuilder` and **no file in it is modified between emission and solver start** — asserted by recording a sha256 manifest of the emitted tree immediately after `build()` and re-verifying it immediately before the solver is invoked. This is what makes the run evidence about *the builder* rather than about a tree someone touched.
 - [ ] `set(SOLVER_DICTS)` equals the pinned literal `{"interFoam","simpleFoam","pimpleFoam"}` **and** equals `set(_CASE_SOLVER_MAP.values())`.
 - [ ] A `simpleFoam` case still emits `p` and contains no `cAlpha` — the fix does not leak VOF entries into single-phase cases.
 - [ ] `sloshing_3d_case_sha256.json` is regenerated, and the commit body states which files' hashes changed and why.
-- [ ] **No numeric value introduced by this PR is taken from `patch_case.sh` or from any case directory on `gpu-claw`.** Each traces to the v2312 tutorial or to an existing declared case input (D7).
+- [ ] **No numeric value introduced by this PR is taken from `patch_case.sh` or from any case directory on `dev-gpu`.** Each traces to the v2312 tutorial or to an existing declared case input (D7).
 - [ ] **No legal-scan criterion is stated, and its absence is deliberate.** `scripts/legal/legal-sanity-scan.sh` does not exist in this repository (verified 2026-08-04; it lives in `workspace-hub`, `worldenergydata`, `llm-wiki` and others, but not here). Both invocations of workspace-hub's copy are unusable for a digitalmodel worktree: the `--repo=<name>` form is **fail-open** under OPEN workspace-hub issue [#3804](https://github.com/vamseeachanta/workspace-hub/issues/3804) — it resolves an empty scan path, scans nothing and exits 0 — and the root form scans workspace-hub rather than this repo. An earlier revision of this plan cited the `--repo=` form as returning `PASS`; **that PASS was the fail-open**, and citing it would have been evidence of nothing. This work touches solver dictionaries and carries no client-identifier surface, so no substitute gate is proposed here; [#1965](https://github.com/vamseeachanta/digitalmodel/issues/1965)'s plan carries the repo-local detector for work that does.
 - [ ] r1 review artifact recorded.
 
@@ -391,7 +391,7 @@ timeout. Parallel decomposition remains [#1576](https://github.com/vamseeachanta
 ## Out of scope
 
 - **The 144-case matrix run itself** — [#1528](https://github.com/vamseeachanta/digitalmodel/issues/1528). This plan unblocks it; it does not run it.
-- **Deleting `patch_case.sh` from `gpu-claw`** — the file is not in this repository. This plan makes it unnecessary and says so; retiring it belongs to [#1528](https://github.com/vamseeachanta/digitalmodel/issues/1528)'s run lane.
+- **Deleting `patch_case.sh` from `dev-gpu`** — the file is not in this repository. This plan makes it unnecessary and says so; retiring it belongs to [#1528](https://github.com/vamseeachanta/digitalmodel/issues/1528)'s run lane.
 - **Re-validating slice-7 evidence already posted on [#1528](https://github.com/vamseeachanta/digitalmodel/issues/1528)** — that evidence came from hand-authored trees and its status is a question for [#1528](https://github.com/vamseeachanta/digitalmodel/issues/1528), not a code change here. This plan's finding that eighteen variants exist should be carried there.
 - **MPI/parallel post-processing and VTK artifacts** — [#1576](https://github.com/vamseeachanta/digitalmodel/issues/1576).
 - **Mesh topology and `blockMeshDict`** — D5 Bucket C. The closed single-patch tank is a modelling choice.
@@ -458,10 +458,10 @@ Replaced by the serial one-timestep criterion.
 
 - **Layer 2 is not CI-portable, and this plan does not pretend otherwise.** The
   only non-circular test requires an OpenFOAM installation, so it runs on
-  `gpu-claw` and is `skipif`-guarded elsewhere. A skipped test proves nothing —
+  `dev-gpu` and is `skipif`-guarded elsewhere. A skipped test proves nothing —
   so the acceptance criterion demands a **committed log artifact**, not a green
   tick. Residual risk: a future regression is caught by Layer 1 only, which is
-  weaker. Making Layer 2 a scheduled job on `gpu-claw` is the durable answer and
+  weaker. Making Layer 2 a scheduled job on `dev-gpu` is the durable answer and
   is a candidate follow-on issue, not scope here.
 - **Risk — the tutorial reference is a version-pinned input.** The v2312
   `damBreak` values are correct for v2312. If the node upgrades, the reference

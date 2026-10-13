@@ -18,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/vamseeachanta/digitalmodel/main/scr
 REPO_DIR=$HOME/digitalmodel WORK_DIR=$HOME/cfd_work bash provision-cfd-box.sh
 ```
 Installs OpenFOAM ESI **v2312** (`dl.openfoam.com`), OpenMPI 4.1.x, uv, gh, git,
-clones `digitalmodel`, installs its Python deps. Idempotent — safe to re-run.
+clones `digitalmodel`, installs its Python deps. Idempotent — can be re-run.
 
 ## 2. Verify
 ```bash
@@ -44,7 +44,7 @@ throughput AND wall-clock predictability** — a-l-2's real limit was contention
 a shared box, not the solver.
 
 ## 4. Dispatch between CFD Linux hosts
-Use the dispatcher from `ace-linux-1` when both `gpu-claw` and `ace-linux-2` are
+Use the dispatcher from `ace-linux-1` when both `dev-gpu` and `ace-linux-2` are
 available over SSH. It probes each host for reachability, core count, and current
 load, then selects the fastest eligible host from the benchmark manifests.
 
@@ -56,6 +56,7 @@ uv run python scripts/setup/dispatch-cfd-run.py --ranks 8 --dry-run -- \
 Remove `--dry-run` to execute the command on the selected host. The remote
 command runs with OpenFOAM v2312 sourced, from `~/digitalmodel`, and receives:
 `CFD_DISPATCH_HOST`, `CFD_DISPATCH_RANKS`, and `CFD_DISPATCH_S_PER_STEP`.
+The prose alias `dev-gpu` denotes the host addressed by the first dispatcher key in the Host defaults list below.
 
 Host defaults:
 - `gpu-claw`: `CFD_GPU_CLAW_SSH` or `gpu-claw`; manifest
