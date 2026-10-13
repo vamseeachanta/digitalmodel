@@ -589,3 +589,33 @@ def test_sourced_dimension_table_and_scale_bar_fit_small_structure() -> None:
     table = next(b for b in blocks if isinstance(b, TableBlock))
     assert table.columns[-4:] == ['Start x', 'Start elevation', 'End x', 'End elevation']
     assert table.rows[0][-4:] == [0, 0, 0, -.1]
+
+
+def test_published_depth_axes_markers_legend_and_unlocated_coating() -> None:
+    """Axis positions and survey symbols make the printed readings interpretable."""
+    cfg = yaml.safe_load((INPUTS / "published_jacket_84m.yml").read_text())
+    figure = next(f for f in anode_design_report(_run(cfg)).figure_blocks() if f.svg)
+    svg = ET.fromstring(figure.svg)
+    ticks = [n for n in svg.iter() if "data-potential-tick" in n.attrib]
+    assert len(ticks) >= 4
+    for tick in ticks:
+        v = float(tick.attrib["data-potential-tick"])
+        assert float(tick.attrib["x1"]) == pytest.approx(350 + (v+.8)*50/.172)
+    text = " ".join(n.text or "" for n in svg.iter() if n.tag.endswith("text"))
+    for phrase in ["V vs Ag/AgCl", "more negative: protected", "Criterion -0.800 V",
+                   "Day 52", "Day 518", "Depth (m)", "652.9 m²", "location is not published"]:
+        assert phrase in text
+    for day in [52,518]:
+        marks = [n for n in svg.iter() if n.attrib.get("data-survey-days")==str(day) and "data-potential" in n.attrib]
+        assert len(marks) == 4
+        assert len({n.tag for n in marks}) == 1
+    marks = [n for n in svg.iter() if "data-potential" in n.attrib]
+    assert len({n.tag for n in marks}) == 2
+    depth_ticks = [n for n in svg.iter() if "data-depth-tick" in n.attrib]
+    assert {float(n.attrib["data-depth-tick"]) for n in depth_ticks} >= {0,-14,-40,-70.5,-84.1}
+    for tick in depth_ticks:
+        assert float(tick.attrib["y1"]) == pytest.approx(50-float(tick.attrib["data-depth-tick"])*500/84.1)
+    assert not any(n.attrib.get("data-zone")=="coated-seawater" for n in svg.iter())
+    for v in ["-0.736", "-0.789", "-0.637", "-0.628", "-0.925", "-0.950", "-0.700", "-0.650"]:
+        assert v in text
+    assert text.count("approximately") == 4

@@ -422,7 +422,7 @@ def _depth_data(raw: Any) -> tuple[float, float, tuple[Zone, ...], list[dict[str
     """Validate a depth diagram independently of unavailable member geometry."""
     item = _mapping(raw, {"type", "basis", "datum", "waterline_m", "mudline_m",
                           "citation", "attribution", "criterion_V", "criterion_source",
-                          "zones", "monitoring"},
+                          "zones", "monitoring", "coated_area_m2"},
                     {"type", "basis", "datum", "waterline_m", "mudline_m",
                      "citation", "attribution", "criterion_V", "criterion_source",
                      "zones", "monitoring"})
@@ -455,6 +455,42 @@ def _depth_data(raw: Any) -> tuple[float, float, tuple[Zone, ...], list[dict[str
     return waterline, mudline, zones, readings
 
 
+def _depth_axes(waterline: float, mudline: float, readings: list[dict[str, Any]],
+                criterion: float, scale: float, potential_scale: float) -> str:
+    """Label the fitted potential and depth scales and survey symbols."""
+    parts = [_label(270, 585, "Potential (V vs Ag/AgCl)"),
+             _label(235, 25, f"Criterion {criterion:.3f} V"),
+             _label(220, 42, "more negative: protected"),
+             _label(180, 25, "Depth (m)"),
+             '<line x1="280" x2="430" y1="560" y2="560" stroke="black"/>']
+    potentials = [r["potential_V"] for r in readings] + [criterion]
+    first, last = math.floor(min(potentials)*10), math.ceil(max(potentials)*10)
+    for value in range(first, last+1):
+        tick = value / 10
+        x = 350 + (tick-criterion)*potential_scale
+        parts.append(f'<line data-potential-tick="{tick:g}" x1="{_n(x)}" x2="{_n(x)}" y1="555" y2="565" stroke="black"/>' + _label(x-12, 576, f"{tick:.1f}"))
+    levels = {waterline, mudline, *[r["elevation_m"] for r in readings]}
+    for depth in sorted(levels):
+        y = 50+(waterline-depth)*scale
+        parts.append(f'<line data-depth-tick="{depth:g}" x1="190" x2="200" y1="{_n(y)}" y2="{_n(y)}" stroke="black"/>' + _label(200, y-4, f"{depth:g}"))
+    for index,day in enumerate(sorted({r["elapsed_days"] for r in readings})):
+        x = 250+index*150
+        shape = f'<circle cx="{x}" cy="615" r="4" fill="black"/>' if index == 0 else f'<rect x="{x-4}" y="611" width="8" height="8" fill="black"/>'
+        parts.append(shape+_label(x+10, 619, f"Day {day:g}"))
+    return "".join(parts)
+
+
+def _potential_marker(reading: Mapping[str, Any], first_day: float, x: float, y: float) -> str:
+    """Distinguish surveys and label each printed value without curve readings."""
+    attrs = (f'data-potential="{_n(reading["potential_V"])}" '
+             f'data-elevation-m="{_n(reading["elevation_m"])}" '
+             f'data-survey-days="{reading["elapsed_days"]:g}" cx="{_n(x)}" cy="{_n(y)}"')
+    first = reading["elapsed_days"] == first_day
+    shape = f'<circle {attrs} r="4" fill="black"/>' if first else f'<rect {attrs} x="{_n(x-4)}" y="{_n(y-4)}" width="8" height="8" fill="black"/>'
+    text = ("approximately " if reading["approximate"] else "") + f'{reading["potential_V"]:.3f}'
+    return shape + _label(x-20, y+16 if first else y-10, text)
+
+
 def _depth_blocks(raw: Mapping[str, Any]) -> list[Block]:
     """Draw measured potentials on a depth scale, without inferred members."""
     waterline, mudline, zones, readings = _depth_data(raw)
@@ -464,7 +500,7 @@ def _depth_blocks(raw: Mapping[str, Any]) -> list[Block]:
     centre = criterion
     span = max(abs(p - centre) for p in potentials)
     potential_scale = 50 / span if span else 1
-    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 680" data-type="depth_true" data-scale="{_n(scale)}" role="img" aria-label="Depth-true potential diagram">']
+    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 740" data-type="depth_true" data-scale="{_n(scale)}" role="img" aria-label="Depth-true potential diagram">']
     band_width = 150 / len(zones)
     for index, zone in enumerate(zones):
         y, height = 50 + (waterline - zone.upper) * scale, (zone.upper - zone.lower) * scale
@@ -477,7 +513,10 @@ def _depth_blocks(raw: Mapping[str, Any]) -> list[Block]:
     for reading in readings:
         x = 350 + (reading["potential_V"] - centre) * potential_scale
         y = 50 + (waterline - reading["elevation_m"]) * scale
-        parts.append(f'<circle data-potential="{_n(reading["potential_V"])}" data-elevation-m="{_n(reading["elevation_m"])}" cx="{_n(x)}" cy="{_n(y)}" r="4" fill="black"/>')
+        parts.append(_potential_marker(reading, min(r["elapsed_days"] for r in readings), x, y))
+    parts.append(_depth_axes(waterline, mudline, readings, criterion, scale, potential_scale))
+    if raw.get("coated_area_m2") is not None:
+        parts.append(_label(30, 655, f"Coated area {float(raw['coated_area_m2']):g} m²; location is not published."))
     surveys: dict[float, list[float]] = {}
     for reading in readings:
         surveys.setdefault(reading["elevation_m"], []).append(reading["elapsed_days"])
@@ -485,8 +524,8 @@ def _depth_blocks(raw: Mapping[str, Any]) -> list[Block]:
         days = ", ".join(f"{day:g}" for day in sorted(set(times)))
         parts.append(_label(560, 65 + (waterline - elevation) * scale, f"{elevation:g} m; days {days}"))
     for index, line in enumerate(textwrap.wrap(f"PUBLISHED SOURCE; {raw['attribution']}; {raw['citation']}", 80)):
-        parts.append(_label(30, 590 + index * 14, line))
-    parts.append(_label(30, 650, f"Criterion: more negative than {criterion:.3f} V versus Ag/AgCl/seawater"))
+        parts.append(_label(30, 695 + index * 14, line))
+    parts.append(_label(30, 675, f"Criterion: more negative than {criterion:.3f} V versus Ag/AgCl/seawater"))
     parts.append('</svg>')
     rows = [[r["elevation_m"], r["elapsed_days"], ("approximately " if r["approximate"] else "") + f"{r['potential_V']:.3f}", "PASS" if r["potential_V"] < criterion else "FAIL"] for r in readings]
     return [FigureBlock(title="Depth-true potential diagram", figure_id=FIG_ELEVATION,

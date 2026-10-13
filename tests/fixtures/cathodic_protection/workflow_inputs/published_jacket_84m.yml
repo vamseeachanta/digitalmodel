@@ -194,11 +194,8 @@ inputs:
       criterion_source:
         DNV-RP-B401, Cathodic protection design, May 2021, protective potential
         criterion
+      coated_area_m2: 652.9
       zones:
-        - name: Coated
-          calculation_zone: coated-seawater
-          lower_m: -84.1
-          upper_m: 0
         - name: 0–30 m
           calculation_zone: upper-bare-seawater
           lower_m: -30
