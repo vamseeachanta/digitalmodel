@@ -736,6 +736,11 @@ def _validate_brand_css(css: str) -> None:
         )
 
 
+def _page_title(spec: dict) -> str:
+    """Use the specification title for both the template and output check."""
+    return spec["title"]
+
+
 def _render_html(spec: dict, brand_css: str = "") -> str:
     _validate_brand_css(brand_css)
     figs = ""
@@ -752,7 +757,7 @@ def _render_html(spec: dict, brand_css: str = "") -> str:
         brand_style=f"<style>{brand_css}</style>" if brand_css else "",
         logo=_LOGO,
         std=html.escape(spec["std"]),
-        title=html.escape(spec["title"]),
+        title=html.escape(_page_title(spec)),
         blurb=html.escape(spec["blurb"]),
         figs=figs,
         bullets=bullets,
@@ -804,7 +809,7 @@ class _DocumentTitleParser(HTMLParser):
 
 
 def _check_build_outputs(spec_id: str, source: Path, expected: list[str]) -> None:
-    """Require nonempty siblings and the writer's title after rendering."""
+    """Require nonempty siblings and the specification title after rendering."""
     for path in (source, source.with_suffix(".pdf")):
         if not path.is_file():
             raise RuntimeError(f"{spec_id}: {path.name} missing")
@@ -824,13 +829,29 @@ def build_onepager(
     brand_css: str = "",
     renderer: Callable[[Path, Path], None] = _to_pdf,
 ) -> Path:
-    """Write a self-contained page and print that same file."""
+    """Validate newly rendered siblings before replacing the final files."""
     text = _render_html(spec, brand_css)
     output.mkdir(parents=True, exist_ok=True)
     source = output / f"{spec['id']}.html"
-    source.write_text(text, encoding="utf-8", newline="\n")
-    renderer(source, source.with_suffix(".pdf"))
-    _check_build_outputs(spec["id"], source, _DocumentTitleParser(text).titles)
+    temporary = output / f".build-{spec['id']}.html"
+    temporary_pdf = temporary.with_suffix(".pdf")
+    try:
+        # Remove interrupted output at these reserved, dot-prefixed names.
+        temporary.unlink(missing_ok=True)
+        temporary_pdf.unlink(missing_ok=True)
+        temporary.write_text(text, encoding="utf-8", newline="\n")
+        try:
+            renderer(temporary, temporary_pdf)
+        except (Exception, SystemExit) as error:
+            raise RuntimeError(
+                f"{spec['id']}: {temporary_pdf.name} render failed: {error}"
+            ) from error
+        _check_build_outputs(spec["id"], temporary, [_page_title(spec)])
+        os.replace(temporary_pdf, source.with_suffix(".pdf"))
+        os.replace(temporary, source)
+    finally:
+        temporary.unlink(missing_ok=True)
+        temporary_pdf.unlink(missing_ok=True)
     return source
 
 
@@ -878,7 +899,10 @@ def main(
         ids.add(spec["id"])
         if only and spec["id"] not in only:
             continue
-        page = build_onepager(spec, _OUT, brand_css=brand_css, renderer=renderer)
+        try:
+            page = build_onepager(spec, _OUT, brand_css=brand_css, renderer=renderer)
+        except RuntimeError as error:
+            raise SystemExit(str(error)) from error
         pages.add(page)
         pdfs.add(page.with_suffix(".pdf"))
     print(

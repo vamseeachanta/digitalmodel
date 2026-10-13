@@ -15,8 +15,8 @@ Engineering calculation library for offshore, subsea, and marine analysis. Singl
 
 `digitalmodel` and `worldenergydata` are two halves of one loop.
 
-- **digitalmodel** is the engineering brain — deterministic, code-based analysis (mooring, riser, fitness-for-service, hydrodynamics, structural, tubulars, installation): *what is possible and safe via engineering*.
-- **worldenergydata** is the real-world asset ledger — public-source, reproducible field / well / facility data across the whole life cycle: *what was actually built, and how it performs*.
+- **digitalmodel** holds the engineering analysis code: mooring, riser, fitness-for-service, hydrodynamics, structural, tubulars and installation.
+- **worldenergydata** holds public-source field, well and facility data across the life cycle.
 
 Together they close a circle. Engineering designs an asset; it gets built and operated; operations feed back into engineering (inspection, fitness-for-service, fatigue re-assessment); at end of life it is decommissioned — itself an engineering problem — and the outcomes loop back as empirical priors for the next design. The **life-cycle timeline** is the shared spine: `worldenergydata` supplies each stage's real dates and assets, `digitalmodel` supplies each stage's engineering.
 

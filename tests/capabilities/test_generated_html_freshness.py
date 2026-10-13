@@ -289,7 +289,7 @@ def test_build_output_rejects_invalid_id_forms(build_output_registry, identifier
     message = str(error.value)
     assert script in message
     assert "SPECS[0]" in message
-    assert "[a-z0-9-]+" in message
+    assert "[a-z0-9]+(?:-[a-z0-9]+)*" in message
     assert repr(identifier) in message
 
 
@@ -307,3 +307,82 @@ def test_build_output_rejects_duplicate_ids(build_output_registry):
     assert "SPECS[0]" in message
     assert "SPECS[2]" in message
     assert "duplicate" in message
+
+
+@pytest.mark.parametrize(
+    "identifier", ["-", "-leading", "trailing-", "double--hyphen"],
+    ids=["lone", "leading", "trailing", "doubled"],
+)
+def test_build_output_rejects_hyphen_edges(build_output_registry, identifier):
+    repo, script, _entries, ownership = build_output_registry
+    (repo / script).write_text(
+        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8",
+    )
+    with pytest.raises(ValueError) as error:
+        ownership.build_output_pages(repo)
+    message = str(error.value)
+    assert script in message and "SPECS[0]" in message
+    assert repr(identifier) in message
+    assert "[a-z0-9]+(?:-[a-z0-9]+)*" in message
+
+
+def test_build_output_accepts_single_internal_hyphens(build_output_registry):
+    """Regression pin: single internal hyphens remain accepted."""
+    repo, script, _entries, ownership = build_output_registry
+    (repo / script).write_text(
+        'SPECS: list = [dict(id="part-2-example")]\n', encoding="utf-8",
+    )
+    assert ownership.build_output_pages(repo) == {
+        "docs/api/capabilities/pdf/part-2-example.html"
+    }
+
+
+def test_failed_enumeration_withholds_unclassified_pages(
+    build_output_registry, monkeypatch, capsys,
+):
+    repo, script, _entries, ownership = build_output_registry
+    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8")
+    page = repo / "docs/api/capabilities/pdf/example.html"
+    page.parent.mkdir(parents=True)
+    page.write_text("<title>Example</title>", encoding="utf-8")
+    monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
+    checker.MANUAL_PAGES["docs/api/missing.html"] = "synthetic manual page"
+    assert checker.check(repo) == 1
+    text = capsys.readouterr().out
+    assert "GENERATED HTML CHECK FAILED — registry coverage error" in text
+    assert f"{script}: expected SPECS to be a literal list; found Tuple" in text
+    assert "stale manual-page classification(s): docs/api/missing.html" in text
+    assert "unclassified" not in text
+    assert "docs/api/capabilities/pdf/example.html" not in text
+
+
+def test_working_enumeration_reports_unclassified_page(
+    build_output_registry, monkeypatch, capsys,
+):
+    """Regression pin: an unknown page is still reported after enumeration."""
+    repo, _script, _entries, ownership = build_output_registry
+    page = repo / "docs/api/capabilities/pdf/unknown.html"
+    page.parent.mkdir(parents=True)
+    page.write_text("<title>Unknown</title>", encoding="utf-8")
+    monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
+    assert checker.check(repo) == 1
+    assert "unclassified docs/api HTML page(s): docs/api/capabilities/pdf/unknown.html" in capsys.readouterr().out
+
+
+def test_registry_reports_registered_script_syntax_error(
+    build_output_registry, monkeypatch, capsys,
+):
+    repo, script, _entries, ownership = build_output_registry
+    (repo / script).write_text("SPECS: list = [\n", encoding="utf-8")
+    monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
+    errors = checker.validate_registry(repo)
+    assert len(errors) == 1
+    assert script in errors[0]
+    assert "1" in errors[0] and "never closed" in errors[0]
+    assert checker.check(repo) == 1
+    text = capsys.readouterr().out
+    assert text == (
+        "GENERATED HTML CHECK FAILED — registry coverage error\n"
+        f"  x {errors[0]}\n"
+    )
+    assert "Traceback" not in text

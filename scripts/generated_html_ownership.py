@@ -242,7 +242,7 @@ def _specification_ids(script, label: str) -> set[str]:
     """Read literal specification ids and explain unsupported source forms."""
     import ast
 
-    tree = ast.parse(script.read_text(encoding="utf-8"))
+    tree = ast.parse(script.read_text(encoding="utf-8"), filename=label)
     spec_node = next(
         (node for node in tree.body
          if isinstance(node, ast.AnnAssign)
@@ -277,7 +277,7 @@ def _specification_ids(script, label: str) -> set[str]:
 
 
 def _literal_specification_id(entry, label: str, index: int) -> str:
-    """Require a literal id containing lower-case letters, digits or hyphens."""
+    """Require lowercase alphanumeric groups separated by single hyphens."""
     import ast
     import re
 
@@ -291,12 +291,12 @@ def _literal_specification_id(entry, label: str, index: int) -> str:
     value = values[0]
     if not isinstance(value, ast.Constant):
         raise ValueError(f"{expected}; found {type(value).__name__}")
-    if not isinstance(value.value, str) or not re.fullmatch(r"[a-z0-9-]+", value.value):
+    if not isinstance(value.value, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", value.value):
         if not isinstance(value.value, str):
             found = f"{type(value.value).__name__} {value.value!r}"
         else:
             found = "empty string ''" if value.value == "" else repr(value.value)
-        raise ValueError(f"{expected} matching [a-z0-9-]+; found {found}")
+        raise ValueError(f"{expected} matching [a-z0-9]+(?:-[a-z0-9]+)*; found {found}")
     return value.value
 
 
