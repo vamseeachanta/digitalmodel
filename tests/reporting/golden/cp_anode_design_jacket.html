@@ -466,6 +466,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <li><a href="#references-cited">References cited</a></li>
       <li><a href="#data-sources">Data sources</a></li>
       <li><a href="#input-echo">Input echo</a></li>
+      <li><a href="#cp-limitations">Appendix A &mdash; Limitations and items not evaluated</a></li>
     </ol>
   </nav>
   <main class="main">
@@ -516,6 +517,9 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
         </table>
       </div>
       <p class="src">Source: cfg[results][coating_breakdown], cfg[results][current_densities_A_m2]</p>
+    </div>
+    <div class="prose">
+<p>Member geometry and zone elevations are not supplied for this case; no elevation is drawn. See Appendix A.</p>
     </div>
     </section>
     <section id="current-demand">
@@ -595,6 +599,12 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
         <span class="pill">FAIL</span>
       </div>
     </div>
+    <div class="prose">
+<h4>Recommendation for overall status</h4>
+<p><strong>Initial design:</strong> The initial arrangement should use the route&#x27;s recommended count of 173 anodes; count checked: 55 anodes; additional count: 118 anodes; additional net mass: 23600.000 kg. Mass demand = 85.000 A · 219000.0 h / (0.85 · 2000 Ah/kg) = 10950.000 kg; ceil(10950.000 kg / 200.000 kg per anode) = 55 anodes (<code>dnv-rp-b401 2021 [4.7.1] Eq. (4.2) (anode mass)</code>). Initial current sizing: ceil(20.000 A / 1.5482 A per anode) = 13 anodes (<code>dnv-rp-b401 2021 [4.8.1]-[4.8.5] / Eq. (4.3), Eqs. (4.5)-(4.7) (output adequacy)</code>). Final current sizing: ceil(208.000 A / 1.2091 A per anode) = 173 anodes (<code>dnv-rp-b401 2021 [4.8.1]-[4.8.5] / Eq. (4.3), Eqs. (4.5)-(4.7) (output adequacy)</code>). Checked final current output is 66.499 A, a signed difference of -68.029% relative to the 208.000 A demand. See Appendix A for arrangement verification.</p>
+<p><strong>Installed structure:</strong> A structure-to-seawater potential survey is recommended against -0.800 V versus Ag/AgCl/seawater (<code>dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)</code>); a measured potential above -0.800 V should trigger investigation of protection performance. Anode remaining mass should be measured to assess depletion. See Appendix A for monitoring intervals, depletion criteria and condition data.</p>
+<p><strong>Retrofit:</strong> See Appendix A for quantity, timing and required condition data.</p>
+    </div>
     <div class="tbl" id="table-5">
       <div class="cap">Table 5. Anode resistance and current output, 55 anodes, fresh vs depleted</div>
       <div class="tbl-wrap">
@@ -625,6 +635,17 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
           </tbody>
         </table>
       </div>
+    </div>
+    <div class="prose">
+<p><strong>final current output: FAIL.</strong></p>
+<h4>Recommendation for final current output</h4>
+<p><strong>Initial design:</strong> The initial arrangement should use the route&#x27;s recommended count of 173 anodes; count checked: 55 anodes; additional count: 118 anodes; additional net mass: 23600.000 kg. Mass demand = 85.000 A · 219000.0 h / (0.85 · 2000 Ah/kg) = 10950.000 kg; ceil(10950.000 kg / 200.000 kg per anode) = 55 anodes (<code>dnv-rp-b401 2021 [4.7.1] Eq. (4.2) (anode mass)</code>). Initial current sizing: ceil(20.000 A / 1.5482 A per anode) = 13 anodes (<code>dnv-rp-b401 2021 [4.8.1]-[4.8.5] / Eq. (4.3), Eqs. (4.5)-(4.7) (output adequacy)</code>). Final current sizing: ceil(208.000 A / 1.2091 A per anode) = 173 anodes (<code>dnv-rp-b401 2021 [4.8.1]-[4.8.5] / Eq. (4.3), Eqs. (4.5)-(4.7) (output adequacy)</code>). Checked final current output is 66.499 A, a signed difference of -68.029% relative to the 208.000 A demand. See Appendix A for arrangement verification.</p>
+<p><strong>Installed structure:</strong> A structure-to-seawater potential survey is recommended against -0.800 V versus Ag/AgCl/seawater (<code>dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)</code>); a measured potential above -0.800 V should trigger investigation of protection performance. Anode remaining mass should be measured to assess depletion. See Appendix A for monitoring intervals, depletion criteria and condition data.</p>
+<p><strong>Retrofit:</strong> See Appendix A for quantity, timing and required condition data.</p>
+    </div>
+    <div class="prose">
+<h4>Conclusions and recommendations</h4>
+<ul><li>Recommendation for overall status: initial design should use 118 additional anodes (23600.000 kg additional net mass); an installed structure should receive a potential survey against the criterion and action trigger in that block. Retrofit quantity and timing: Appendix A.</li><li>Recommendation for final current output: initial design should use 118 additional anodes (23600.000 kg additional net mass); an installed structure should receive a potential survey against the criterion and action trigger in that block. Retrofit quantity and timing: Appendix A.</li></ul>
     </div>
     </section>
     <section id="references">
@@ -707,6 +728,16 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
           </table>
         </div>
       </details>
+    </section>
+    <section id="cp-limitations">
+      <div class="l1head"><span class="secnum applabel">Appendix A</span><h2>Limitations and items not evaluated</h2></div>
+
+    <div class="prose">
+<ul><li>Member geometry and zone elevations are not supplied for this case; no elevation is drawn.</li></ul>
+<ul><li>For the route&#x27;s recommended count, the recommended arrangement is not re-checked by this calculation; output and mass checks use the count checked.</li></ul>
+<ul><li>retrofit quantity not evaluated; retrofit timing not evaluated: confirmed installed count and original installed net mass, installation date or elapsed service, measured remaining mass or consumption, measured potentials, and historical and future current demand are required for an installed-system assessment. The constant-demand depletion profile does not establish the latest intervention year for a current-output failure.</li></ul>
+<ul><li>Monitoring interval and depletion action trigger are not evaluated: an applicable interval and action criterion are required; citation not held in the repository for these items in the selected route and edition.</li></ul>
+    </div>
     </section>
   </main>
 </div>

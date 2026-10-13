@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the CP consumers of the standard report engine (#2212 part 2).
 # ABOUTME: anode_design across the four routes, the jacket golden HTML, assessment.
 """Tests for :mod:`digitalmodel.cathodic_protection.report_adapters`.
@@ -167,6 +170,18 @@ def test_fixture_is_fresh() -> None:
     """The JSON fixture equals a fresh run of the jacket input (sorted keys)."""
     fresh = json.loads(json.dumps(_run("jacket"), sort_keys=True))
     assert _load_fixture() == fresh
+
+
+def test_render_jacket_report_example(tmp_path: Path) -> None:
+    """Read back the example HTML without starting a browser."""
+    spec = anode_design_report(_run("jacket_report_example"))
+    path = tmp_path / "jacket_report_example.html"
+    path.write_text(render_html(spec), encoding="utf-8")
+    rendered = path.read_text(encoding="utf-8")
+    assert 'data-member="leg-1"' in rendered
+    assert "Recommendation for final current output" in rendered
+    assert "#### Recommendation" not in rendered
+    assert 'id="cp-limitations"' in rendered
 
 
 def test_adapters_are_registered_on_import() -> None:
