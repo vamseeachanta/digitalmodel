@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline checks for the contracts documented in assets/data/vessel_specs_README.md."""
 
 import argparse
@@ -34,6 +37,7 @@ def parse_json(text: str) -> Any:
 
 
 def read_json(path: Path) -> Any:
+    """Read JSON while rejecting duplicate keys and non-finite values."""
     return parse_json(path.read_text(encoding="utf-8"))
 
 
@@ -161,6 +165,7 @@ def validate_rows(rows: Any, schema_path: Path, manifest: dict[str, Any]) -> Non
 
 
 def validate_dataset(data_dir: Path, kind: str) -> None:
+    """Validate one dataset against its schema and provenance manifest."""
     if kind not in ("hlv", "pipelay"):
         raise ValueError("Dataset kind must be hlv or pipelay")
     validate_rows(
@@ -171,6 +176,7 @@ def validate_dataset(data_dir: Path, kind: str) -> None:
 
 
 def main() -> None:
+    """Validate both reference datasets from the supplied directory."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("data_dir", type=Path)
     args = parser.parse_args()

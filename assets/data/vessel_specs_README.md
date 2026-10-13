@@ -14,24 +14,24 @@ Every schema property documents its meaning and unit with `description` and
 `x-unit`. All listed fields are required; an unknown technical value is `null`.
 The schemas forbid undeclared fields. Values are transcribed without estimates.
 
-| Field | Unit | Meaning |
-| --- | --- | --- |
-| `vessel_name` | dimensionless | Publicly marketed vessel name |
-| `owner` | dimensionless | Fleet owner/operator brand on the source, not legal ownership certification |
-| `source_url` | dimensionless | Primary retrieved public HTTPS source |
-| `retrieved_utc` | UTC | RFC3339 retrieval instant of that primary source |
-| `field_sources` | dimensionless | Map of every non-null fact field to a retrieved manifest URL |
-| `dp_class` | dimensionless | Normalised IMO equipment-class vocabulary: DP-1, DP-2, DP-3 or null |
-| `dp_notation_source` | dimensionless | Normalised class and printed page locator or null; source link in `field_sources` |
-| `crane_capacity_tonnes` | metric tonnes | Headline crane lifting capacity, with the stated basis; not topsides-lifting-system capacity |
-| `crane_capacity_basis` | dimensionless | `combined` vessel crane capacity or `individual` crane capacity |
-| `deck_area_m2` | square metres | Published usable deck area, never hull length multiplied by breadth |
-| `bollard_pull_tonnes` | metric tonnes-force | Published bollard pull |
-| `lay_methods` | dimensionless | Explicitly stated S-lay/J-lay/reel-lay methods; unknown is null |
-| `tensioner_capacity_tonnes` | metric tonnes-force | Published total installed capacity; optional tensioners excluded |
-| `max_pipe_diameter_inches` | inches | Maximum outside diameter in the published equipment range |
-| `water_depth_min_m`, `water_depth_max_m` | metres | Explicit operating bounds for the stated methods; not vessel draught or achieved records |
-| `record_water_depth_m` | metres | Achieved pipelay record, kept separate from operating limits |
+| Field                                    | Unit                | Meaning                                                                                      |
+| ---------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------- |
+| `vessel_name`                            | dimensionless       | Publicly marketed vessel name                                                                |
+| `owner`                                  | dimensionless       | Fleet owner/operator brand on the source, not legal ownership certification                  |
+| `source_url`                             | dimensionless       | Primary retrieved public HTTPS source                                                        |
+| `retrieved_utc`                          | UTC                 | RFC3339 retrieval instant of that primary source                                             |
+| `field_sources`                          | dimensionless       | Map of every non-null fact field to a retrieved manifest URL                                 |
+| `dp_class`                               | dimensionless       | Normalised IMO equipment-class vocabulary: DP-1, DP-2, DP-3 or null                          |
+| `dp_notation_source`                     | dimensionless       | Normalised class and printed page locator or null; source link in `field_sources`            |
+| `crane_capacity_tonnes`                  | metric tonnes       | Headline crane lifting capacity, with the stated basis; not topsides-lifting-system capacity |
+| `crane_capacity_basis`                   | dimensionless       | `combined` vessel crane capacity or `individual` crane capacity                              |
+| `deck_area_m2`                           | square metres       | Published usable deck area, never hull length multiplied by breadth                          |
+| `bollard_pull_tonnes`                    | metric tonnes-force | Published bollard pull                                                                       |
+| `lay_methods`                            | dimensionless       | Explicitly stated S-lay/J-lay/reel-lay methods; unknown is null                              |
+| `tensioner_capacity_tonnes`              | metric tonnes-force | Published total installed capacity; optional tensioners excluded                             |
+| `max_pipe_diameter_inches`               | inches              | Maximum outside diameter in the published equipment range                                    |
+| `water_depth_min_m`, `water_depth_max_m` | metres              | Explicit operating bounds for the stated methods; not vessel draught or achieved records     |
+| `record_water_depth_m`                   | metres              | Achieved pipelay record, kept separate from operating limits                                 |
 
 Table 1. Schema field meanings; technical fields apply only to their respective dataset.
 
@@ -68,16 +68,16 @@ transport; the command is never run by tests. Documents and extracted text
 are retained outside Git and shall not be committed to this public repository.
 Factual transcription remains a separate readback with a page locator.
 
-| Vessel | Observed specification | Source locator |
-| --- | --- | --- |
-| Thialf | 14,200 metric tonnes combined crane lifting capacity | Heerema fleet page, Main data / Lift Capacity; tandem basis in June 2020 sheet, page 2 |
-| Thialf | DP-3 | [June 2020 operator sheet](https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf), printed page 3 |
-| Sleipnir | 20,000 metric tonnes combined; two 10,000-tonne cranes | Heerema fleet page, Main data and vessel description |
-| Solitaire | 1,050 t tension capacity; 2–60 inches outside diameter; DP-3 | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf), printed page 09 |
-| Solitaire | S-lay; achieved depth 2,775 m | Operator fleet page, Setting the pipelay standard |
-| Lorelay | 165 t installed tension capacity; 2–41 inches outside diameter; DP-3 | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf), printed page 11 |
-| Pioneering Spirit | 2,000 t tension capacity; 6–68 inches outside diameter; DP-3 | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf), printed page 08 |
-| Pioneering Spirit | S-lay | Operator fleet page, Unmatched pipelay capacity |
+| Vessel            | Observed specification                                               | Source locator                                                                                                                               |
+| ----------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Thialf            | 14,200 metric tonnes combined crane lifting capacity                 | Heerema fleet page, Main data / Lift Capacity; tandem basis in June 2020 sheet, page 2                                                       |
+| Thialf            | DP-3                                                                 | [June 2020 operator sheet](https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf), printed page 3                          |
+| Sleipnir          | 20,000 metric tonnes combined; two 10,000-tonne cranes               | Heerema fleet page, Main data and vessel description                                                                                         |
+| Solitaire         | 1,050 t tension capacity; 2–60 inches outside diameter; DP-3         | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf), printed page 09       |
+| Solitaire         | S-lay; achieved depth 2,775 m                                        | Operator fleet page, Setting the pipelay standard                                                                                            |
+| Lorelay           | 165 t installed tension capacity; 2–41 inches outside diameter; DP-3 | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf), printed page 11           |
+| Pioneering Spirit | 2,000 t tension capacity; 6–68 inches outside diameter; DP-3         | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf), printed page 08 |
+| Pioneering Spirit | S-lay                                                                | Operator fleet page, Unmatched pipelay capacity                                                                                              |
 
 Table 2. Readback anchors; exact URLs and per-source retrieval instants appear in JSON.
 

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Retrieve reference documents outside Git; factual readback remains manual."""
 
 import argparse
@@ -31,10 +34,12 @@ class NoRedirect(HTTPRedirectHandler):
     def redirect_request(
         self, req: Request, fp: Any, code: int, msg: str, headers: Any, newurl: str
     ) -> None:
+        """Refuse automatic redirects pending access-policy review."""
         return None
 
 
 def request_document(url: str, user_agent: str, timeout: int) -> tuple[int, str, bytes]:
+    """Request one document without following redirects."""
     request = Request(url, headers={"User-Agent": user_agent})
     try:
         with build_opener(NoRedirect()).open(request, timeout=timeout) as response:
@@ -44,6 +49,7 @@ def request_document(url: str, user_agent: str, timeout: int) -> tuple[int, str,
 
 
 def prepare_output(output: Path, checkout: Path) -> Path:
+    """Require an empty output directory outside the checkout."""
     output = Path(output).resolve()
     checkout = Path(checkout).resolve()
     if output == checkout or checkout in output.parents:
@@ -55,6 +61,7 @@ def prepare_output(output: Path, checkout: Path) -> Path:
 
 
 def is_challenge(body: bytes) -> bool:
+    """Detect access-challenge markers in the response sample."""
     sample = body[:262144].lower()
     return any(
         token in sample
@@ -75,6 +82,7 @@ def fetch_with_policy(
     pause: Callable[[float], None],
     last_request: set[str],
 ) -> tuple[Response | None, str | None]:
+    """Apply the recorded retry and pause limits to one request."""
     site = urlsplit(url).netloc
     for attempt in range(policy["retry_limit"] + 1):
         if site in last_request:
@@ -99,6 +107,7 @@ def fetch_with_policy(
 
 
 def extract_pdf(document: Path, output: Path) -> None:
+    """Extract PDF text externally when the tool is available."""
     tool = shutil.which("pdftotext")
     if tool is None:
         print(f"PDF text extraction skipped: pdftotext unavailable ({document.name})")
@@ -118,6 +127,7 @@ def extract_pdf(document: Path, output: Path) -> None:
 def save_source(
     source: dict[str, Any], response: Response, output: Path, index: int
 ) -> dict[str, Any]:
+    """Save one document and record its retrieval observations."""
     resolved, body = response
     document = output / f"{index:02d}.document"
     with document.open("xb") as stream:
@@ -141,6 +151,7 @@ def source_policy(
     stopped: set[str],
     policy: dict[str, Any],
 ) -> tuple[str, str | None]:
+    """Check HTTPS and robots permission before content access."""
     url = source["source_url"]
     parsed = urlsplit(url)
     if parsed.scheme != "https" or not parsed.netloc:
@@ -160,6 +171,7 @@ def source_policy(
 def write_manifest(
     template: dict[str, Any], result: dict[str, Any], stopped: set[str], output: Path
 ) -> None:
+    """Write observations while retaining prior evidence for stopped sites."""
     if stopped:
         result["sources"] = [
             original if urlsplit(original["source_url"]).netloc in stopped else new
@@ -219,6 +231,7 @@ def retrieve(
 
 
 def main() -> None:
+    """Read command arguments and emit the retrieval manifest."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "output", type=Path, help="New empty directory outside checkout"
