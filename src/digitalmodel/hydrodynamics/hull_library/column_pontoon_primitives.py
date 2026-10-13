@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Target-sized convex columns, tanks, keel plates and pontoon sweeps."""
 from math import ceil, pi
 from typing import Any, TYPE_CHECKING, cast
@@ -104,6 +107,10 @@ def _primitives(p: "ColumnPontoonParameters") -> tuple[list[Solid], float]:
     target, solids = p.panel_target_size, []
     angles = np.arange(p.count)*2*pi/p.count + (pi/4 if p.count == 4 else pi/3)
     centres = np.column_stack((p.radius*np.cos(angles), p.radius*np.sin(angles), np.zeros(p.count)))
+    if p.transverse_spacing is not None:
+        # Retain column order: northeast, northwest, southwest, southeast.
+        centres = np.array(((1, 1, 0), (-1, 1, 0), (-1, -1, 0), (1, -1, 0))) * (
+            np.array((p.resolved_spacing / 2, p.transverse_spacing / 2, 0)))
     for i, centre in enumerate(centres):
         plate_height, tank_depth = p.heave_plate_thickness, p.resolved_tank_depth
         width = p.diameter or p.square_side or 0
