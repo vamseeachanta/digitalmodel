@@ -227,10 +227,10 @@ def reference_sections(cfg: Mapping[str, Any]) -> list[Any]:
         finding = (f"The stated arrangement fails an aggregate check. Increasing to {revised['current_output_verification']['anode_count']} anodes is rechecked and passes the aggregate mass and current checks. "
                    if revised is not None else "Rechecked arrangement is not evaluated: complete demand, output, mass and arrangement data are required. ")
     qualified = arrangements["stated"] if passed else arrangements["rechecked"]
-    recommendation = (f"The rechecked aggregate quantity is recommended at {qualified['current_output_verification']['anode_count']} anodes on the stated basis. "
-                      if qualified is not None else "A passing aggregate quantity is not evaluated. ")
     minimum = qualified is not None and qualified["current_output_verification"]["anode_count"] == qualified["current_output_verification"]["recommended_anode_count"]
     kind = "minimum aggregate arrangement" if minimum else "evaluated aggregate arrangement"
+    recommendation = (f"The {kind} is recommended at {qualified['current_output_verification']['anode_count']} anodes on the stated basis. "
+                      if qualified is not None else "A passing aggregate quantity is not evaluated. ")
     qualification = (f"The recommended option is a {kind}, with no selected anode product; anode size requires confirmation. "
                      if qualified is not None else "No selected anode product is established; anode size requires confirmation. ")
     mass_difference = abs(next(c["difference_percent"] for c in model["comparisons"] if c["quantity"] == "Tubular jacket steel mass"))

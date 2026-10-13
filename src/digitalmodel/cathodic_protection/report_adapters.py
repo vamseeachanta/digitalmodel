@@ -1712,6 +1712,7 @@ def _verification_wording(text: str, published: bool) -> str:
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
+    text = text.replace("in Bare steel in seawater", "in bare steel in seawater")
     text = re.sub(r"Table 8-\d+", "declared input basis", text)
     text = re.sub(r"\brouted\b", "calculated", text)
     text = re.sub(r"\broute(?:'s|s)?\b", "calculation", text)
@@ -1794,7 +1795,7 @@ def _verification_table(block: TableBlock, published: bool) -> None:
         for row in block.rows:
             if row[0] == "Utilisation factor source":
                 row[1] = label
-            source = label
+            source = "" if row[0] == "Utilisation factor source" else label
             if published and row[0] in {"Seawater resistivity", "Anode net mass", "Anode length"}:
                 source = "[1], p. 242, Section 2"
             elif row[0] == "Total surface area" or (published and row[0] == "Anode equivalent radius (fresh)"):

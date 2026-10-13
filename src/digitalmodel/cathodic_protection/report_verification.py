@@ -224,7 +224,7 @@ def published_recommendations(inputs: Mapping[str, Any], results: Mapping[str, A
     zone = inputs["structure"]["verification_evidence"]["higher_density_basis"]["affected_zone"]
     return [
         f"Retrofit assessment recommends {count} additional anodes of the published type "
-        f"({net_mass:.0f} kg net alloy) in {zone}; additional-load checks PASS on published outputs. "
+        f"({net_mass:,.0f} kg net alloy) in {zone}; additional-load checks PASS on published outputs. "
         "Existing zone allocation and post-intervention potentials are needed to establish local protection.",
         f"For a new design at the higher densities, {design['Published outputs count']} anodes "
         f"are recommended on published outputs; {design['Published outputs governing check']} governs "

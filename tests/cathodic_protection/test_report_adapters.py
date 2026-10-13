@@ -741,7 +741,7 @@ def test_assessment_adapter_reads_cfg_block_and_document() -> None:
 
 
 @pytest.mark.parametrize("name", ["published_jacket_84m", "jacket_report_example"])
-def test_arrangement_report_title_is_verification(name: str) -> None:
+def test_arrangement_report_title_is_analysis(name: str) -> None:
     """An evaluated arrangement is titled as a verification."""
     report = anode_design_report(_run(name))
     assert report.document.title.startswith("Cathodic protection analysis:")
@@ -1296,7 +1296,7 @@ def test_published_summary_and_conclusions_give_computed_retrofit_quantities() -
     conclusion = next(b.markdown for s in spec.sections for b in s.blocks if isinstance(b, TextBlock) and b.markdown.startswith("### Conclusions and recommendations"))
     for text in (summary, conclusion):
         assert f"{count} additional anodes" in text
-        assert f"{count * req['individual_mass_kg']:.0f} kg net alloy" in text
+        assert f"{count * req['individual_mass_kg']:,.0f} kg net alloy" in text
         assert "additional-load checks PASS" in text
     assert f"{design_count} anodes" in conclusion
     assert "mass governs" in conclusion
@@ -1305,6 +1305,35 @@ def test_published_summary_and_conclusions_give_computed_retrofit_quantities() -
     assert count * req["individual_mass_kg"] >= required_mass
     assert count * targets["initial_output"] >= added[0]
     assert count * targets["final_output"] >= added[2]
+
+
+def test_published_retrofit_zone_uses_lower_case_in_prose() -> None:
+    """The zone name uses sentence case in prose and retains cell capitals."""
+    spec = anode_design_report(_run("published_jacket_84m"))
+    summary = spec.sections[0].blocks[0].markdown
+    assert "in bare steel in seawater, 30 m to mudline;" in summary
+    rows = _tables(spec)["Current density, coating breakdown and demand by zone"].rows
+    assert any(r[0] == "Bare steel in seawater, 30 m to mudline" for r in rows)
+
+
+@pytest.mark.parametrize("name", ["published_jacket_84m", "jacket_report_example"])
+def test_utilisation_source_row_does_not_repeat_its_source(name: str) -> None:
+    """The source value is stated once without duplication in its source cell."""
+    spec = anode_design_report(_run(name))
+    row = next(r for r in _tables(spec)["Design data"].rows
+               if r[0] == "Utilisation factor source")
+    assert row[1] == ("based on previous project experience"
+                      if name == "published_jacket_84m" else "illustrative input")
+    assert row[-1] == ""
+
+
+def test_reference_summary_recommends_the_minimum_aggregate_arrangement() -> None:
+    """The passing stated arrangement is named consistently in its summary."""
+    cfg = _run("reference_jacket_60m_members")
+    summary = anode_design_report(cfg).sections[0].blocks[0].markdown
+    count = cfg["results"]["current_output_verification"]["anode_count"]
+    assert f"The minimum aggregate arrangement is recommended at {count} anodes" in summary
+    assert "The rechecked aggregate quantity" not in summary
 
 
 def test_each_analysis_summary_states_the_recommended_quantity() -> None:
