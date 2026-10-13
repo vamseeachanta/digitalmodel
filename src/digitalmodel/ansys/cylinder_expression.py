@@ -181,11 +181,11 @@ class _Parser:
 
     def atom(self, depth):
         token = self.pop()
-        if token == "(":
+        if token == "(":  # nosec B105 # Expression grammar symbol, not authentication data.
             value = self.expression(depth + 1)
             self.require(")")
             return value
-        if token == "sqrt":
+        if token == "sqrt":  # nosec B105 # Expression grammar symbol, not authentication data.
             self.require("(")
             value = self.expression(depth + 1)
             self.require(")")

@@ -46,7 +46,7 @@ from digitalmodel.hydrodynamics.diffraction.output_validator import (
 
 # Canonical verdicts the underlying validator can produce. Must never be
 # normalized (e.g. WARNING -> WARN).
-VERDICT_PASS = "PASS"
+VERDICT_PASS = "PASS"  # nosec B105 # Public validator outcome label, not a credential.
 VERDICT_WARNING = "WARNING"
 VERDICT_FAIL = "FAIL"
 

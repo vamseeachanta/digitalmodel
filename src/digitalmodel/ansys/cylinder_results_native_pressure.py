@@ -68,7 +68,7 @@ def _verify_pressure_loads(raw, case):
     rows = lines(raw)
     pressure = decimal_value(case['pressure_mpa'])
     token = case.get('case_token')
-    if pressure <= 0 or token != 'P10N4':
+    if pressure <= 0 or token != 'P10N4':  # nosec B105 # Pressure-case marker, not authentication data.
         raise EvidenceError('Native pressure branch requires the observed N4 positive-pressure case')
     if len(rows) < 8 or rows[0] != PREAMBLE or rows[5] != HEADER:
         raise EvidenceError('Unsupported native pressure preamble or column header')

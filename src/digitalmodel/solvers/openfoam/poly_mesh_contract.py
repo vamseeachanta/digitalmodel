@@ -164,7 +164,7 @@ def _parse_value(stream: _TokenStream) -> tuple[str, ...]:
     depth = 0
     while True:
         token = stream.pop()
-        if token == ";" and depth == 0:
+        if token == ";" and depth == 0:  # nosec B105 # Mesh grammar terminator, not authentication data.
             return tuple(value)
         if token in ("(", "["):
             depth += 1

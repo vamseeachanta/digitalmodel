@@ -215,18 +215,19 @@ class DashboardServer:
                 analysis["status"] = "completed"
                 break
     
-    async def start_server(self):
-        """Start the dashboard server"""
+    async def start_server(self, host="127.0.0.1", debug=False):
+        """Start on loopback; debug enables event-loop diagnostics."""
+        asyncio.get_running_loop().set_debug(debug)
         runner = web.AppRunner(self.app)
         await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', self.port)
+        site = web.TCPSite(runner, host, self.port)
         
         print(f"""
 ╔══════════════════════════════════════════════════════════════╗
 ║           OrcaWave MCP Dashboard Server                     ║
 ╚══════════════════════════════════════════════════════════════╝
 
-Dashboard URL: http://localhost:{self.port}
+Dashboard URL: http://{host}:{self.port}
 API Endpoints:
   - GET  /api/status         - Server status
   - GET  /api/sessions       - Active analyses
@@ -246,6 +247,8 @@ async def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description="OrcaWave Dashboard Server")
     parser.add_argument("--port", type=int, default=8080, help="Dashboard port")
+    parser.add_argument("--host", default="127.0.0.1", help="Bind address")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument("--mcp-host", default="localhost", help="MCP server host")
     parser.add_argument("--mcp-port", type=int, default=3100, help="MCP server port")
     
@@ -254,7 +257,7 @@ async def main():
     server = DashboardServer(args.port, args.mcp_host, args.mcp_port)
     
     try:
-        await server.start_server()
+        await server.start_server(host=args.host, debug=args.debug)
         # Keep server running
         await asyncio.Event().wait()
     except KeyboardInterrupt:
