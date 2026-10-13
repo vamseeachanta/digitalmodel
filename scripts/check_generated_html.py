@@ -211,10 +211,19 @@ def validate_page_census(repo: Path) -> list[str]:
         for path in all_registered_outputs(repo)
     }
     pages = docs_api_pages(repo)
-    build_output = build_output_pages()
-    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES) | build_output
     errors = []
-    if unclassified := sorted(pages - classified):
+    enumeration_succeeded = True
+    try:
+        build_output = build_output_pages(repo)
+    except (ValueError, SyntaxError) as error:
+        errors.append(
+            f"{error.filename}:{error.lineno}: {error.msg}"
+            if isinstance(error, SyntaxError) else str(error)
+        )
+        enumeration_succeeded = False
+        build_output = set()
+    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES) | build_output
+    if enumeration_succeeded and (unclassified := sorted(pages - classified)):
         errors.append(f"unclassified docs/api HTML page(s): {', '.join(unclassified)}")
     if stale := sorted(set(MANUAL_PAGES) - pages):
         errors.append(f"stale manual-page classification(s): {', '.join(stale)}")

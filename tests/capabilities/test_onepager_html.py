@@ -66,7 +66,11 @@ def test_html_written_and_renderer_receives_kept_file(output):
     builder.build_onepager(spec, output, renderer=render)
     kept = output / f"{spec['id']}.html"
     pdf = kept.with_suffix(".pdf")
-    assert calls == [(kept, pdf)]
+    assert len(calls) == 1
+    source, destination = calls[0]
+    assert source.parent == destination.parent == output
+    assert source.suffix == ".html" and destination.suffix == ".pdf"
+    assert source != kept and destination != pdf
     assert kept.read_bytes() == pdf.read_bytes()
 
 
@@ -238,6 +242,9 @@ def test_closing_message_counts_kept_pages_and_pdfs(output, capsys):
 def test_census_classifies_only_specification_print_sources(tmp_path, monkeypatch):
     from scripts import check_generated_html as checker
 
+    script = tmp_path / "scripts/capabilities/build_onepagers.py"
+    script.parent.mkdir(parents=True)
+    script.write_bytes((builder._REPO / "scripts/capabilities/build_onepagers.py").read_bytes())
     output = tmp_path / "docs/api/capabilities/pdf"
     for spec in builder.SPECS:
         builder.build_onepager(spec, output, renderer=fake_pdf)
@@ -251,12 +258,14 @@ def test_census_classifies_only_specification_print_sources(tmp_path, monkeypatc
 
 
 def test_kept_print_sources_are_git_ignored_and_pdf_siblings_are_not():
+    # git check-ignore also reads per-user and per-clone exclude files;
+    # checkout-specific excludes can therefore change its answer.
     import os
     from scripts.generated_html_ownership import build_output_pages
 
     env = {key: value for key, value in os.environ.items()
            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
-    pages = build_output_pages()
+    pages = build_output_pages(builder._REPO)
     assert pages
     for page in sorted(pages):
         for path, expected in ((page, 0), (page.removesuffix(".html") + ".pdf", 1)):
@@ -268,6 +277,8 @@ def test_kept_print_sources_are_git_ignored_and_pdf_siblings_are_not():
 
 
 def test_print_source_ignore_does_not_cover_other_html():
+    # git check-ignore also reads per-user and per-clone exclude files;
+    # checkout-specific excludes can therefore change its answer.
     import os
 
     env = {key: value for key, value in os.environ.items()
@@ -283,3 +294,244 @@ def test_print_source_ignore_does_not_cover_other_html():
 
 def test_docstring_identifies_html_as_ignored_build_output():
     assert "git-ignored and not committed" in builder.__doc__
+
+
+def test_build_rejects_missing_pdf(output):
+    spec = builder.SPECS[0]
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, output, renderer=lambda source, pdf: None)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.pdf" in message
+    assert "missing" in message
+
+
+def test_build_rejects_empty_pdf(output):
+    spec = builder.SPECS[0]
+
+    def render(source, pdf):
+        pdf.write_bytes(b"")
+
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, output, renderer=render)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.pdf" in message
+    assert "empty" in message
+
+
+def test_build_rejects_rewritten_title(output):
+    spec = builder.SPECS[0]
+
+    def render(source, pdf):
+        pdf.write_bytes(b"pdf")
+        source.write_text("<title>Other title</title>", encoding="utf-8")
+
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, output, renderer=render)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.html" in message
+    assert "Other title" in message
+    assert spec["title"] in message
+    assert "expected" in message
+
+
+@pytest.mark.parametrize("fault", ["missing", "empty"])
+def test_build_rechecks_html_after_renderer(output, fault):
+    spec = builder.SPECS[0]
+
+    def render(source, pdf):
+        pdf.write_bytes(b"pdf")
+        if fault == "missing":
+            source.unlink()
+        else:
+            source.write_bytes(b"")
+
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, output, renderer=render)
+    assert spec["id"] in str(error.value)
+    assert f"{spec['id']}.html" in str(error.value)
+    assert fault in str(error.value)
+
+
+def test_closing_message_counts_two_validated_output_pairs(output, capsys):
+    specs = builder.SPECS[:2]
+    builder.main([spec["id"] for spec in specs], renderer=fake_pdf)
+    assert "2 kept HTML page(s) and 2 one-pager PDF(s)" in capsys.readouterr().out
+    assert len(list(output.glob("*.html"))) == 2
+    assert len(list(output.glob("*.pdf"))) == 2
+
+
+def test_main_stops_after_first_failed_build(output, capsys):
+    calls = []
+
+    def render(source, pdf):
+        calls.append(source)
+
+    with pytest.raises(SystemExit, match="missing"):
+        builder.main([spec["id"] for spec in builder.SPECS[:2]], renderer=render)
+    assert len(calls) == 1
+    assert calls[0].name.endswith(f"{builder.SPECS[0]['id']}.html")
+    assert not (output / f"{builder.SPECS[1]['id']}.html").exists()
+    assert "Wrote" not in capsys.readouterr().out
+
+
+@pytest.fixture
+def old_outputs(output):
+    spec = builder.SPECS[0]
+    output.mkdir()
+    page = output / f"{spec['id']}.html"
+    pdf = page.with_suffix(".pdf")
+    page.write_bytes(b"old page")
+    pdf.write_bytes(b"old pdf")
+    return spec, page, pdf
+
+
+@pytest.mark.parametrize("fault", ["missing", "empty"])
+def test_build_rejects_stale_pdf_and_preserves_old_outputs(old_outputs, fault):
+    spec, page, pdf = old_outputs
+
+    def render(source, destination):
+        if fault == "empty":
+            destination.write_bytes(b"")
+
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, page.parent, renderer=render)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.pdf" in message
+    assert fault in message
+    assert page.read_bytes() == b"old page"
+    assert pdf.read_bytes() == b"old pdf"
+    assert set(page.parent.iterdir()) == {page, pdf}
+
+
+@pytest.mark.parametrize("title", ["missing", "empty"])
+def test_build_requires_specification_title(old_outputs, monkeypatch, title):
+    spec, page, pdf = old_outputs
+    template = "<html><head></head></html>" if title == "missing" else "<title></title>"
+    monkeypatch.setattr(builder, "_TEMPLATE", template)
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, page.parent, renderer=fake_pdf)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.html" in message
+    assert spec["title"] in message
+    assert "expected" in message
+    assert page.read_bytes() == b"old page"
+    assert pdf.read_bytes() == b"old pdf"
+    assert set(page.parent.iterdir()) == {page, pdf}
+
+
+def test_good_build_replaces_old_outputs_and_counts(old_outputs, capsys):
+    """Regression pin: replacement content and closing counts already pass."""
+    spec, page, pdf = old_outputs
+
+    def render(source, destination):
+        destination.write_bytes(b"new pdf")
+
+    builder.main([spec["id"]], renderer=render)
+    assert page.read_text(encoding="utf-8") == builder._render_html(spec)
+    assert pdf.read_bytes() == b"new pdf"
+    assert set(page.parent.iterdir()) == {page, pdf}
+    assert "1 kept HTML page(s) and 1 one-pager PDF(s)" in capsys.readouterr().out
+
+
+def test_renderer_receives_temporary_siblings_before_replacement(old_outputs):
+    spec, page, pdf = old_outputs
+    observations = []
+
+    def render(source, destination):
+        observations.append((source, destination, page.read_bytes(), pdf.read_bytes()))
+        destination.write_bytes(b"new pdf")
+
+    builder.build_onepager(spec, page.parent, renderer=render)
+    source, destination, old_page, old_pdf = observations[0]
+    assert source.parent == destination.parent == page.parent
+    assert source.suffix == ".html" and destination.suffix == ".pdf"
+    final_names = {f"{entry['id']}{suffix}" for entry in builder.SPECS
+                   for suffix in (".html", ".pdf")}
+    assert source.name not in final_names and destination.name not in final_names
+    assert old_page == b"old page" and old_pdf == b"old pdf"
+    assert set(page.parent.iterdir()) == {page, pdf}
+
+
+def test_renderer_failure_preserves_old_outputs(old_outputs):
+    spec, page, pdf = old_outputs
+
+    def render(source, destination):
+        destination.write_bytes(b"partial pdf")
+        raise ValueError("render failed")
+
+    with pytest.raises(RuntimeError) as error:
+        builder.build_onepager(spec, page.parent, renderer=render)
+    message = str(error.value)
+    assert spec["id"] in message
+    assert f"{spec['id']}.pdf" in message
+    assert "render failed" in message
+    assert page.read_bytes() == b"old page"
+    assert pdf.read_bytes() == b"old pdf"
+    assert set(page.parent.iterdir()) == {page, pdf}
+
+
+def test_leftover_temporary_pdf_cannot_satisfy_build_check(old_outputs):
+    spec, page, pdf = old_outputs
+    stale_page = page.parent / f".build-{spec['id']}.html"
+    stale_pdf = stale_page.with_suffix(".pdf")
+    stale_page.write_bytes(b"interrupted page")
+    stale_pdf.write_bytes(b"interrupted pdf")
+    with pytest.raises(RuntimeError, match="missing"):
+        builder.build_onepager(spec, page.parent, renderer=lambda source, destination: None)
+    assert page.read_bytes() == b"old page"
+    assert pdf.read_bytes() == b"old pdf"
+    assert set(page.parent.iterdir()) == {page, pdf}
+
+
+def test_main_reports_failed_build_as_exit_message(output, capsys):
+    calls = []
+
+    def render(source, destination):
+        calls.append((source, destination))
+
+    first, second = builder.SPECS[:2]
+    with pytest.raises(SystemExit) as error:
+        builder.main([first["id"], second["id"]], renderer=render)
+    assert error.value.code != 0
+    message = str(error.value)
+    assert first["id"] in message
+    assert f"{first['id']}.pdf" in message
+    assert "missing" in message
+    assert len(calls) == 1
+    assert not (output / f"{second['id']}.html").exists()
+    captured = capsys.readouterr()
+    assert "Wrote" not in captured.out
+    assert "Traceback" not in captured.out + captured.err + message
+
+
+def test_failed_build_cli_has_message_without_traceback(output, tmp_path):
+    import sys
+
+    calls = tmp_path / "renderer-calls.txt"
+    first, second = builder.SPECS[:2]
+    program = (
+        "from pathlib import Path\n"
+        "from scripts.capabilities import build_onepagers as builder\n"
+        f"builder._REPO = Path({str(tmp_path)!r})\n"
+        f"builder._OUT = Path({str(output)!r})\n"
+        f"calls = Path({str(calls)!r})\n"
+        "def render(source, destination):\n"
+        "    with calls.open('a', encoding='utf-8') as stream:\n"
+        "        stream.write(source.name + '\\n')\n"
+        f"builder.main({[first['id'], second['id']]!r}, renderer=render)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", program], capture_output=True, text=True, check=False,
+    )
+    assert result.returncode != 0
+    assert first["id"] in result.stderr
+    assert f"{first['id']}.pdf" in result.stderr and "missing" in result.stderr
+    assert "Traceback" not in result.stderr
+    assert "Wrote" not in result.stdout
+    assert len(calls.read_text(encoding="utf-8").splitlines()) == 1
+    assert not (output / f"{second['id']}.html").exists()
