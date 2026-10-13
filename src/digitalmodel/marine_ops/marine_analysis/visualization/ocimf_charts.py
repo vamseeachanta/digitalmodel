@@ -1,5 +1,7 @@
-"""
-OCIMF Data Visualization Suite.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""OCIMF Data Visualization Suite.
 
 Generates comprehensive visualization charts for OCIMF coefficient database:
 - 3D surface plots for all 6 coefficients
@@ -10,42 +12,68 @@ Generates comprehensive visualization charts for OCIMF coefficient database:
 - HTML report with embedded charts
 """
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-import seaborn as sns
+from functools import wraps
 from pathlib import Path
-from scipy.interpolate import griddata
-import warnings
-warnings.filterwarnings('ignore')
-
-# Set matplotlib style
-plt.style.use('seaborn-v0_8-darkgrid')
-sns.set_palette("husl")
-
-# Paths
-# The repository root: these defaults were absolute paths into a
-# developer checkout; they resolve the same place from any checkout.
-_REPO_ROOT = Path(__file__).resolve().parents[5]
-CSV_FILE = str(_REPO_ROOT / "data" / "ocimf_database.csv")
-OUTPUT_DIR = str(_REPO_ROOT / "docs" / "charts" / "phase2" / "ocimf")
-
-# Create output directory
-Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+from typing import Any, Callable
 
 
-def load_data():
+def _repo_root() -> Path:
+    """Resolve repository defaults only at an explicit call boundary."""
+    return Path(__file__).resolve().parents[5]
+
+
+def _output_dir(output_dir: str | Path | None) -> Path:
+    """Create the selected chart directory when output is requested."""
+    if output_dir is None:
+        output_dir = Path.cwd() / "ocimf_charts"
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir
+
+
+def _cli_output_dir() -> Path:
+    """Resolve the historical command-line folder without creating it."""
+    return _repo_root() / "docs" / "charts" / "phase2" / "ocimf"
+
+
+def _chart_style(function: Callable[..., Any]) -> Callable[..., Any]:
+    """Apply the chart palette and style during explicit plotting only."""
+    @wraps(function)
+    def styled(*args: Any, **kwargs: Any) -> Any:
+        import warnings
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
+        with plt.style.context('seaborn-v0_8-darkgrid'), sns.color_palette("husl"):
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                return function(*args, **kwargs)
+
+    return styled
+
+
+def load_data(csv_file: str | Path | None = None) -> Any:
     """Load OCIMF database."""
-    df = pd.read_csv(CSV_FILE)
+    import pandas as pd
+
+    if csv_file is None:
+        csv_file = _repo_root() / "data" / "ocimf_database.csv"
+    df = pd.read_csv(csv_file)
     print(f"Loaded {len(df)} entries from database")
     print(f"Columns: {list(df.columns)}")
     return df
 
 
-def plot_3d_surface(df, coefficient, title=None, filename=None):
+@_chart_style
+def plot_3d_surface(
+    df: Any, coefficient: str, title: str | None = None,
+    filename: str | None = None, output_dir: str | Path | None = None,
+) -> None:
     """Create 3D surface plot for a coefficient."""
+    import matplotlib.pyplot as plt
+    from matplotlib import cm
+    import numpy as np
+    from scipy.interpolate import griddata
     fig = plt.figure(figsize=(14, 10))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -91,19 +119,26 @@ def plot_3d_surface(df, coefficient, title=None, filename=None):
     plt.tight_layout()
 
     if filename:
-        plt.savefig(Path(OUTPUT_DIR) / filename, dpi=300, bbox_inches='tight')
+        plt.savefig(_output_dir(output_dir) / filename, dpi=300, bbox_inches='tight')
         print(f"  Saved: {filename}")
         plt.close()
     else:
         plt.show()
 
 
-def plot_polar_diagrams(df, displacements=None, filename=None):
+@_chart_style
+def plot_polar_diagrams(
+    df: Any, displacements: list[float] | None = None,
+    filename: str | None = None, output_dir: str | Path | None = None,
+) -> None:
     """Create polar diagrams for wind coefficients at multiple displacements.
 
     Handles multiple vessel types/displacement ratios by selecting the first combination
     for each displacement, and extends data from 0-180° to 0-360° using symmetry.
     """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
     if displacements is None:
         displacements = sorted(df['displacement'].unique())[:3]  # Use first 3
 
@@ -161,15 +196,21 @@ def plot_polar_diagrams(df, displacements=None, filename=None):
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
     if filename:
-        plt.savefig(Path(OUTPUT_DIR) / filename, dpi=300, bbox_inches='tight')
+        plt.savefig(_output_dir(output_dir) / filename, dpi=300, bbox_inches='tight')
         print(f"  Saved: {filename}")
         plt.close()
     else:
         plt.show()
 
 
-def plot_vector_field(df, displacement, filename=None):
+@_chart_style
+def plot_vector_field(
+    df: Any, displacement: float, filename: str | None = None,
+    output_dir: str | Path | None = None,
+) -> None:
     """Create force vector field diagram."""
+    import matplotlib.pyplot as plt
+    import numpy as np
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
 
     # Filter data for specific displacement
@@ -207,15 +248,20 @@ def plot_vector_field(df, displacement, filename=None):
     plt.tight_layout()
 
     if filename:
-        plt.savefig(Path(OUTPUT_DIR) / filename, dpi=300, bbox_inches='tight')
+        plt.savefig(_output_dir(output_dir) / filename, dpi=300, bbox_inches='tight')
         print(f"  Saved: {filename}")
         plt.close()
     else:
         plt.show()
 
 
-def plot_heatmaps(df, filename=None):
+@_chart_style
+def plot_heatmaps(
+    df: Any, filename: str | None = None, output_dir: str | Path | None = None,
+) -> None:
     """Create coefficient heatmaps."""
+    import matplotlib.pyplot as plt
+    import seaborn as sns
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
 
     coefficients = ['CXw', 'CYw', 'CMw', 'CXc', 'CYc', 'CMc']
@@ -236,15 +282,19 @@ def plot_heatmaps(df, filename=None):
     plt.tight_layout()
 
     if filename:
-        plt.savefig(Path(OUTPUT_DIR) / filename, dpi=300, bbox_inches='tight')
+        plt.savefig(_output_dir(output_dir) / filename, dpi=300, bbox_inches='tight')
         print(f"  Saved: {filename}")
         plt.close()
     else:
         plt.show()
 
 
-def plot_heading_sensitivity(df, filename=None):
+@_chart_style
+def plot_heading_sensitivity(
+    df: Any, filename: str | None = None, output_dir: str | Path | None = None,
+) -> None:
     """Create heading sensitivity charts."""
+    import matplotlib.pyplot as plt
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
 
     coefficients = ['CXw', 'CYw', 'CMw', 'CXc', 'CYc', 'CMc']
@@ -269,14 +319,14 @@ def plot_heading_sensitivity(df, filename=None):
     plt.tight_layout()
 
     if filename:
-        plt.savefig(Path(OUTPUT_DIR) / filename, dpi=300, bbox_inches='tight')
+        plt.savefig(_output_dir(output_dir) / filename, dpi=300, bbox_inches='tight')
         print(f"  Saved: {filename}")
         plt.close()
     else:
         plt.show()
 
 
-def create_html_report(df):
+def create_html_report(df: Any, output_dir: str | Path | None = None) -> None:
     """Create HTML report with embedded charts."""
     html_content = f"""
     <!DOCTYPE html>
@@ -388,57 +438,60 @@ def create_html_report(df):
     </html>
     """
 
-    output_file = Path(OUTPUT_DIR) / "ocimf_extraction_report.html"
+    output_file = _output_dir(output_dir) / "ocimf_extraction_report.html"
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
     print(f"\n[SUCCESS] HTML report created: {output_file}")
 
 
-def main():
+def main(
+    csv_file: str | Path | None = None, output_dir: str | Path | None = None,
+) -> None:
     """Generate all visualizations."""
     print("="*70)
     print("OCIMF DATABASE VISUALIZATION SUITE")
     print("="*70)
 
     # Load data
-    df = load_data()
+    df = load_data(csv_file)
+    output_dir = _output_dir(output_dir)
 
     # Generate 3D surface plots
     print("\n[1/6] Generating 3D surface plots...")
-    plot_3d_surface(df, 'CXw', filename='3d_cxw.png')
-    plot_3d_surface(df, 'CYw', filename='3d_cyw.png')
-    plot_3d_surface(df, 'CMw', filename='3d_cmw.png')
-    plot_3d_surface(df, 'CXc', filename='3d_cxc.png')
-    plot_3d_surface(df, 'CYc', filename='3d_cyc.png')
-    plot_3d_surface(df, 'CMc', filename='3d_cmc.png')
+    plot_3d_surface(df, 'CXw', filename='3d_cxw.png', output_dir=output_dir)
+    plot_3d_surface(df, 'CYw', filename='3d_cyw.png', output_dir=output_dir)
+    plot_3d_surface(df, 'CMw', filename='3d_cmw.png', output_dir=output_dir)
+    plot_3d_surface(df, 'CXc', filename='3d_cxc.png', output_dir=output_dir)
+    plot_3d_surface(df, 'CYc', filename='3d_cyc.png', output_dir=output_dir)
+    plot_3d_surface(df, 'CMc', filename='3d_cmc.png', output_dir=output_dir)
 
     # Generate polar diagrams
     print("\n[2/6] Generating polar diagrams...")
-    plot_polar_diagrams(df, filename='polar_diagrams.png')
+    plot_polar_diagrams(df, filename='polar_diagrams.png', output_dir=output_dir)
 
     # Generate vector field
     print("\n[3/6] Generating force vector fields...")
     mid_disp = sorted(df['displacement'].unique())[len(df['displacement'].unique())//2]
-    plot_vector_field(df, mid_disp, filename='vector_field.png')
+    plot_vector_field(df, mid_disp, filename='vector_field.png', output_dir=output_dir)
 
     # Generate heatmaps
     print("\n[4/6] Generating coefficient heatmaps...")
-    plot_heatmaps(df, filename='heatmaps.png')
+    plot_heatmaps(df, filename='heatmaps.png', output_dir=output_dir)
 
     # Generate heading sensitivity
     print("\n[5/6] Generating heading sensitivity charts...")
-    plot_heading_sensitivity(df, filename='heading_sensitivity.png')
+    plot_heading_sensitivity(df, filename='heading_sensitivity.png', output_dir=output_dir)
 
     # Create HTML report
     print("\n[6/6] Creating HTML report...")
-    create_html_report(df)
+    create_html_report(df, output_dir=output_dir)
 
     print("\n" + "="*70)
     print("[SUCCESS] All visualizations generated!")
-    print(f"Output directory: {OUTPUT_DIR}")
+    print(f"Output directory: {output_dir}")
     print("="*70)
 
 
 if __name__ == "__main__":
-    main()
+    main(output_dir=_cli_output_dir())

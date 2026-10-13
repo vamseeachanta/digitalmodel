@@ -20,14 +20,14 @@ def _metadata(config,key):
     return ''.join('<p>'+escape(item)+'</p>' for item in items)
 
 
-_COVERAGE_CLAIMS=((r'\b(\d+) of \d+ baseline cases verified','VERIFIED'),
-    (r'\b(\d+) numerical failures','FAILED'),(r'\b(\d+) missing cells','MISSING'))
+_COVERAGE_CLAIMS=((r'\b(\d+)\s+of\s+\d+\s+baseline\s+cases\s+verified','VERIFIED'),
+    (r'\b(\d+)\s+numerical\s+failures?','FAILED'),(r'\b(\d+)\s+missing\s+cells?','MISSING'))
 
 
 def _coverage_status_errors(status,counts):
     """Return why a configured coverage status contradicts the source counts (empty when it agrees or makes no claim)."""
     errors=[]
-    for planned in re.finditer(r'\b\d+ of (\d+) baseline cases verified',status,re.IGNORECASE):
+    for planned in re.finditer(r'\b\d+\s+of\s+(\d+)\s+baseline\s+cases\s+verified',status,re.IGNORECASE):
         if int(planned.group(1))!=sum(counts.values()):
             errors.append(f'{planned.group(1)} planned cases stated, source lists {sum(counts.values())}')
     for pattern,key in _COVERAGE_CLAIMS:
