@@ -57,6 +57,16 @@ def create_floating_body(config: BodyConfig):
     if config.mesh.use_symmetry and config.mesh.symmetry_plane:
         mesh = _apply_symmetry(cpt, mesh, config.mesh.symmetry_plane)
 
+    mesh = mesh.immersed_part()
+    lid_mesh = None
+    if config.use_lid:
+        lid_z = config.lid_z if config.lid_z is not None else 0.0
+        if not np.isfinite(lid_z) or lid_z > 0.0:
+            raise ValueError("The lid must be at or below the free surface")
+        lid_mesh = mesh.generate_lid(z=lid_z)
+        if lid_mesh.nb_faces == 0:
+            raise ValueError("The requested lid is empty")
+
     # Create body with all rigid body DOFs, then remove unwanted ones.
     # Capytaine 2.3+ returns a RigidBodyDofsPlaceholder from rigid_body_dofs()
     # that is resolved inside FloatingBody.__init__.
@@ -64,6 +74,8 @@ def create_floating_body(config: BodyConfig):
         mesh=mesh,
         dofs=cpt.rigid_body_dofs(rotation_center=config.rotation_center_or_com),
         center_of_mass=config.center_of_mass,
+        mass=config.mass,
+        lid_mesh=lid_mesh,
         name=config.mesh.name,
     )
 
@@ -73,17 +85,8 @@ def create_floating_body(config: BodyConfig):
         if dof_name not in requested_dof_names:
             del body.dofs[dof_name]
 
-    # Keep only the immersed part (panels below z=0)
-    body = body.immersed_part()
-
-    # Lid mesh for irregular frequency removal
-    if config.use_lid:
-        lid_z = config.lid_z if config.lid_z is not None else 0.0
-        try:
-            body.add_lid(z=lid_z)
-            logger.info("Added lid mesh at z=%.2f for irregular frequency removal", lid_z)
-        except Exception:
-            logger.warning("Failed to add lid mesh — continuing without it")
+    if config.use_lid and body.lid_mesh is None:
+        raise ValueError("The requested lid was not attached")
 
     logger.info(
         "Created FloatingBody '%s': %d panels, %d DOFs",
