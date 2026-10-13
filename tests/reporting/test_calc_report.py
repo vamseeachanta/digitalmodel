@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the standard AceEngineer engineering calculation report.
 # ABOUTME: Guards the section order, provenance colouring, and print-safety fix.
 """Tests for :mod:`digitalmodel.reporting.calc_report`.
@@ -252,7 +255,18 @@ def test_design_data_tables_have_no_lower_minimum_width():
         if re.search(r"\btable\b", selector)
         for width in re.findall(r"\bmin-width\s*:\s*([^;}]+)", declarations)
     ]
-    assert minimum_widths == ["440px"], minimum_widths
+    assert minimum_widths == ["440px"], f"Expected the 440px floor; found {minimum_widths}"
+
+
+def test_design_data_container_allows_horizontal_scroll() -> None:
+    """A table wider than its container remains reachable by scrolling."""
+    html_out = minimal_report().render_html()
+    styles = "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", html_out, re.S))
+    css = re.sub(r"/\*.*?\*/", "", styles, flags=re.S)
+    container = re.search(r"\.kv\{([^}]*)\}", css)
+    assert container, "the design-data container rule must exist"
+    assert re.search(r"overflow-x\s*:\s*auto(?:;|$)", container.group(1)), (
+        "tables above the 440px floor must be reachable by horizontal scrolling")
 
 
 # ---------------------------------------------------------------------------
@@ -278,7 +292,7 @@ HOUSE_FOOT_BAR = '<div class="foot-bar"><span>AceEngineer &middot; Test</span>'
 #: change is expected to move it -- regenerate it then, having first read the
 #: diff and confirmed the marks above are still intact.
 HOUSE_RENDER_SHA256 = (
-    "5eb71f39d71f9fb581244fffce3176d84891814549302fe7e1925694e1a58c2a")
+    "55ba8ed4a8b65a2c62613fd60dadc6ee21fb9aa47a766428a6746efab4e206c9")
 
 
 def test_default_organisation_renders_the_house_marks_unchanged():
@@ -390,7 +404,7 @@ SINGLE_TIER_REVHIST = (
 #: *before* `InternalRevision` and `incorporates` were added, not by copying
 #: the value the changed code happened to produce.
 SINGLE_TIER_RENDER_SHA256 = (
-    "d719824b30f06e75f75afbc6942639bd16080d31fa2fc0b50045f24d65f8a2ee")
+    "62dbfa2209b0642d878c70c1f435b5113f4f84a38b9a00131aa7603cb53607f9")
 
 
 def test_a_single_tier_report_is_unmoved_by_the_internal_tier():
