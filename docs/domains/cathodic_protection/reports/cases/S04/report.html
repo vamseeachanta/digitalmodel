@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>R2281-CP-004-00 Rev 00 - CP module review: Ship hull</title>
-<meta name="description" content="CP module review: Ship hull (R2281-CP-004-00 Rev 00) - Digitalmodel CP regression portfolio / Internal module review - no client issuance">
+<title>R2281-CP-004-00 Rev 01 - Hull cathodic protection analysis</title>
+<meta name="description" content="Hull cathodic protection analysis (R2281-CP-004-00 Rev 01) - Digitalmodel CP regression portfolio / Internal module review - no client issuance">
 <style>
   /* ============================ TOKENS ============================ */
   :root{
@@ -423,7 +423,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <header class="masthead" id="report-header">
   <div class="wrap">
     <span class="brand">digitalmodel</span>
-    <span class="docno num"><b>R2281-CP-004-00</b> &middot; Rev 00</span>
+    <span class="docno num"><b>R2281-CP-004-00</b> &middot; Rev 01</span>
     <div class="mh-legend chips" id="header-standards">
       <span class="chip std">ABS GN Ships<span class="ed">2017-12</span><span class="prov">guide table/equation locators; generic wiki citation target</span></span>
       <span class="chip std">ABS-GN-SHIPS<span class="ed">2017-12</span><span class="prov">tables cited through the ABS_gn_ships_2018 route</span></span>
@@ -434,16 +434,16 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <div class="hero" id="title-block">
   <div class="wrap">
     <div class="kicker"><span class="dot"></span><span>Engineering report</span></div>
-    <h1>CP module review: Ship hull</h1>
+    <h1>Hull cathodic protection analysis</h1>
     <div class="titleblock">
       <div class="kv">
         <div class="cap">Document</div>
         <table>
           <tr><td>Document number</td><td>R2281-CP-004-00</td></tr>
-          <tr><td>Revision</td><td>00</td></tr>
+          <tr><td>Revision</td><td>01</td></tr>
           <tr><td>Project</td><td>Digitalmodel CP regression portfolio</td></tr>
           <tr><td>Client</td><td>Internal module review - no client issuance</td></tr>
-          <tr><td>Date</td><td>2026-10-03</td></tr>
+          <tr><td>Date</td><td>2026-10-14</td></tr>
         </table>
       </div>
       <div class="kv">
@@ -456,8 +456,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
         </table>
       </div>
     </div>
-    <div class="kv revhist">
-      <div class="cap">Revision history</div>
+
       <table>
         <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
         <tbody>
@@ -473,7 +472,9 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
     <p class="tt">Contents</p>
     <ol>
       <li><a href="#review-1">Executive Summary</a></li>
-      <li><a href="#review-2">Introduction</a></li>
+      <li><a href="#revision-history">Revision history</a></li>
+<li><a href="#source-provenance">Provenance note</a></li>
+<li><a href="#review-2">Introduction</a></li>
       <li><a href="#review-3">Design Data</a></li>
       <li><a href="#review-4">Analysis Methodology</a></li>
       <li><a href="#review-5">Detailed Results</a></li>
@@ -497,12 +498,17 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
     <section id="review-1">
       <div class="l1head"><span class="secnum"></span><h2>Executive Summary</h2></div>
 
-    <div class="prose">
+    <div class="prose"><p>Source qualification is pending. Historical calculation results are retained without a numerical rebuild; calculation PASS does not establish design applicability or release rights. Client-derived inputs require a maintainer decision before further use.</p>
+
 <p>Internal review draft. No engineering acceptance is implied. Calculation PASS/FAIL and route use restrictions remain in the original adequacy records.</p>
-<ul><li>Assessed hull CP design scope: PASS. general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated; Use status: approved for client use subject to an engineer-of-record check of this deliverable. Governing case: mean_current_output. [Calculation evidence](#adequacy).</li></ul>
+<ul><li>Assessed hull CP design scope: PASS. general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated; Use status: historical assessment retained; source qualification pending. Governing case: mean_current_output. [Calculation evidence](#adequacy).</li></ul>
 <p>Independent engineering review is required before design use.</p>
     </div>
     </section>
+<section id="revision-history">    <div class="kv revhist">
+      <h2>Revision history</h2></section>
+<section id="source-provenance"><h2>Provenance note</h2><p>The hull area is inherited from src/digitalmodel/base_configs/modules/cathodic_protection/cathodic_protection.yml at commit 19e8eae30db110d8d0fe6efa3bd3e0ccb8333097. The same commit includes an example explicitly classified as an abstracted client calculation, with the identical hull area attributed to a maximum-draft submerged surface and a source hull-area table. The demo input was moved to tests/fixtures/cathodic_protection/workflow_inputs/ships.yml at commit 0cfda2ec0dfe387aadbe3c5fe6ac27df17c228c0; the report echoes that fixture. The matching data is treated as client-derived pending qualification; a synthetic origin is not established.</p><p>The original capacity scalar is inherited from the same base configuration. The rebuilt ABS route at commit d1d112d0ec3b6ad6e6ffd75d4c9703744febd593 does not read that scalar: src/digitalmodel/cathodic_protection/abs_ships.py::_alloy selects alloy A1 when no alloy is supplied, and abs_ships_result.py::build_result records its cited table capacity. The input echo and the calculated capacity therefore describe different bases. The ignored scalar is removed and the existing A1 selection is made explicit; no replacement table value is copied into the input. Capacity remains read from the existing owned ABS table implementation. ABS Guidance Notes on Cathodic Protection of Ships, December 2017, Section 3, Table 4, Typical Properties of Aluminum Anodes in Normal Operation Conditions.</p><p>The repository does not establish the original hull geometry, a reproducible wetted-area derivation, the original source identity or publication rights. The matching client-derived example is evidence of a provenance concern, not proof of a documented transfer chain. Historical results and citation files are retained byte for byte, with their existing execution revision; they are not a new calculation. No licensed recommended-practice values are reproduced in this note.</p><p>The maintainer must establish input ownership and release rights, qualify or replace the hull-area basis, and confirm the alloy before a numerical rebuild or design use. The synthetic fixture release gate remains closed for this case. Other cases retain their existing results and release records.</p></section>
+
     <section id="review-2">
       <div class="l1head"><span class="secnum"></span><h2>Introduction</h2></div>
 
@@ -537,7 +543,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 
     <div class="prose">
 <h4>6.1 Assessed hull CP design scope</h4>
-<p>Assessed hull CP design scope: PASS. general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated; Use status: approved for client use subject to an engineer-of-record check of this deliverable. Governing case: mean_current_output. [Calculation evidence](#adequacy).</p>
+<p>Assessed hull CP design scope: PASS. general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated; Use status: historical assessment retained; source qualification pending. Governing case: mean_current_output. [Calculation evidence](#adequacy).</p>
 <p>A failed assessed arrangement remains FAIL; a recommended count is not independently accepted. Comparator class: source analytical criterion. Independent validation and numerical uncertainty bounds are not supplied; plausibility verdict: not evaluated. Review focus: qualify the physical inputs, criterion and anode arrangement. Preparer recommendation: resolve failures and obtain EOR review; reviewer decision remains pending.</p>
     </div>
     </section>
@@ -620,7 +626,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
               <tr><td>inputs.anode.protection_potential</td><td>0.8</td></tr>
               <tr><td>inputs.anode.closed_circuit_anode_potential</td><td>-1.09</td></tr>
               <tr><td>inputs.anode.anode_density</td><td>2750</td></tr>
-              <tr><td>inputs.anode.anode_current_capacity</td><td>2270</td></tr>
+              <tr><td>inputs.anode.alloy</td><td>A1</td></tr>
               <tr><td>inputs.anode.anode_Utilisation_factor</td><td>0.85</td></tr>
               <tr><td>inputs.anode.physical_properties.mean_length</td><td>1.4</td></tr>
               <tr><td>inputs.anode.physical_properties.width</td><td>0.15</td></tr>
@@ -811,14 +817,14 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum applabel">Appendix D</span><h2>Adequacy</h2></div>
 
     <div class="prose">
-<p>Use status: approved for client use subject to an engineer-of-record check of this deliverable.</p>
+<p>Use status: historical assessment retained; source qualification pending.</p>
     </div>
     <div class="status">
       <div class="st ok">
         <span class="icon">&#10003;</span>
         <div>
           <div class="lab">Assessed hull CP design scope</div>
-          <div class="sub"><b>Governing case:</b> mean_current_output &middot; general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated; Use status: approved for client use subject to an engineer-of-record check of this deliverable.</div>
+          <div class="sub"><b>Governing case:</b> mean_current_output &middot; general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated; Use status: historical assessment retained; source qualification pending.</div>
         </div>
         <span class="pill">PASS</span>
       </div>
@@ -931,7 +937,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum applabel">Appendix F</span><h2>Result review: Assessed hull CP design scope</h2></div>
 
     <div class="prose">
-<p>Observed source verdict: PASS. Evidence: general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated; Use status: approved for client use subject to an engineer-of-record check of this deliverable.</p>
+<p>Observed source verdict: PASS. Evidence: general Section 3/5.2 distribution and bilge-spacing scope checked; special stern, propeller and opening geometry remains not evaluated; Use status: historical assessment retained; source qualification pending.</p>
 <p>Governing case: mean_current_output. [Source record](#adequacy). Comparator class: source analytical criterion; criterion values remain in the original check table. No additional independent tolerance was supplied or selected.</p>
 <p>Physical expectation: the qualified physical arrangement should satisfy the declared check. Plausibility verdict: not evaluated; independent comparator evidence is not supplied. Review focus: check criterion applicability, assumptions and governing evidence. Preparer recommendation: retain reported failures and use restrictions until independently resolved. Reviewer assignment and decision: pending.</p>
     </div>
@@ -945,7 +951,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div>
         <h3>Document</h3>
         <ul>
-          <li><span class="k">Number</span> R2281-CP-004-00 &middot; Rev 00</li>
+          <li><span class="k">Number</span> R2281-CP-004-00 &middot; Rev 01</li>
           <li><span class="k">Project</span> Digitalmodel CP regression portfolio</li>
           <li><span class="k">Client</span> Internal module review - no client issuance</li>
         </ul>
@@ -968,7 +974,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       </div>
     </div>
     <div class="foot-bar">
-      <span>R2281-CP-004-00 Rev 00 &middot; CP module review: Ship hull</span>
+      <span>R2281-CP-004-00 Rev 01 &middot; Hull cathodic protection analysis</span>
       <span class="pdf" id="pdf-status">PDF: not generated; manual print review deferred</span>
     </div>
   </div>
@@ -994,7 +1000,7 @@ Re-select the HTML before each Save or Copy. Files remain on your computer.</p>
 <p>Save As is used where supported; otherwise Save uses your browser's Downloads
 destination. Re-load the saved JSON to verify the durable copy.</p>
 <p id="cp-message" role="status">Not bound to a report file.</p>
-<pre id="cp-preview"></pre></section><script id="cp-review-config" type="application/json">{"report_id": "S04", "revision": "00", "sections": [{"id": "review-1", "title": "Executive Summary"}, {"id": "review-2", "title": "Introduction"}, {"id": "review-3", "title": "Design Data"}, {"id": "review-4", "title": "Analysis Methodology"}, {"id": "review-5", "title": "Detailed Results"}, {"id": "review-6", "title": "Key Findings"}, {"id": "review-7", "title": "Limitations"}, {"id": "review-8", "title": "Recommendations"}, {"id": "review-9", "title": "References"}, {"id": "review-10", "title": "Acronyms and Symbols"}, {"id": "design-basis", "title": "Design basis"}, {"id": "current-demand", "title": "Current demand"}, {"id": "anode-requirements", "title": "Anode requirements"}, {"id": "adequacy", "title": "Adequacy"}, {"id": "references", "title": "References"}, {"id": "result-adequacy-1", "title": "Result review: Assessed hull CP design scope"}], "content_sha256": "c263d41ae251998fec8fe4f27ed7b424596344a79ca589e04af8e81d83198e55"}</script><script>/* Offline portfolio review: bind full HTML to a separately supplied receipt. */
+<pre id="cp-preview"></pre></section><script id="cp-review-config" type="application/json">{"report_id": "S04", "revision": "01", "sections": [{"id": "review-1", "title": "Executive Summary"}, {"id": "revision-history", "title": "Revision history"}, {"id": "source-provenance", "title": "Provenance note"}, {"id": "review-2", "title": "Introduction"}, {"id": "review-3", "title": "Design Data"}, {"id": "review-4", "title": "Analysis Methodology"}, {"id": "review-5", "title": "Detailed Results"}, {"id": "review-6", "title": "Key Findings"}, {"id": "review-7", "title": "Limitations"}, {"id": "review-8", "title": "Recommendations"}, {"id": "review-9", "title": "References"}, {"id": "review-10", "title": "Acronyms and Symbols"}, {"id": "design-basis", "title": "Design basis"}, {"id": "current-demand", "title": "Current demand"}, {"id": "anode-requirements", "title": "Anode requirements"}, {"id": "adequacy", "title": "Adequacy"}, {"id": "references", "title": "References"}, {"id": "result-adequacy-1", "title": "Result review: Assessed hull CP design scope"}], "content_sha256": "6f80c5825e76619e815a4b1978aaef61eccb74e23f0fd8fb0c4d958276dcaf52"}</script><script>/* Offline portfolio review: bind full HTML to a separately supplied receipt. */
 (() => {
   'use strict';
   const config = JSON.parse(document.getElementById('cp-review-config').textContent);
