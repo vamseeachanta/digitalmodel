@@ -5,11 +5,10 @@
 
 import hashlib
 import json
-import os
 from pathlib import Path
 import shutil
+import re
 import sys
-import subprocess
 
 import pytest
 import yaml
@@ -23,20 +22,59 @@ from cp_review_document import validate_comments
 REPORTS = ROOT / "docs/domains/cathodic_protection/reports"
 
 
+def _historical_page(page: str) -> str:
+    """Reconstruct prior presentation controls without accessing Git history."""
+    history = re.search(r'<section id="revision-history">(.*?)</section>', page, re.S)
+    assert history is not None
+    prior = history.group(1).replace("<h2>Revision history</h2>", '<div class="cap">Revision history</div>')
+    prior = re.sub(r"<tr><td>01</td>.*?</tr>", "", prior)
+    page = page[:history.start()] + page[history.end():]
+    page = re.sub(r'<section id="source-provenance">.*?</section>', "", page, flags=re.S)
+    page = page.replace('<section id="review-1">', prior + '<section id="review-1">', 1)
+    page = page.replace("Hull cathodic protection analysis", "CP module review: Ship hull")
+    page = page.replace("<td>Revision</td><td>01</td>", "<td>Revision</td><td>00</td>")
+    page = page.replace("Rev 01", "Rev 00")
+    page = page.replace("<td>Date</td><td>2026-10-14</td>", "<td>Date</td><td>2026-10-03</td>")
+    page = page.replace(
+        "<tr><td>inputs.anode.alloy</td><td>A1</td></tr>",
+        "<tr><td>inputs.anode.anode_current_capacity</td><td>retired input</td></tr>",
+    )
+    for key, title in (("revision-history", "Revision history"), ("source-provenance", "Provenance note")):
+        page = page.replace(f'<li><a href="#{key}">{title}</a></li>', "")
+    pattern = r'<script id="cp-review-config" type="application/json">(.*?)</script>'
+    match = re.search(pattern, page, re.S)
+    assert match is not None
+    config = json.loads(match.group(1))
+    config["revision"] = "00"
+    config["sections"] = [item for item in config["sections"] if item["id"] not in {"revision-history", "source-provenance"}]
+    core = re.sub(r"<!--CP_REVIEW_START-->.*?<!--CP_REVIEW_END-->", "", page, flags=re.S)
+    config["content_sha256"] = hashlib.sha256(core.encode()).hexdigest()
+    return page[:match.start(1)] + json.dumps(config) + page[match.end(1):]
+
+
 def _historical_candidate(tmp_path: Path) -> Path:
-    """Exercise the original report bytes, independent of the corrected checkout."""
+    """Make a presentation fixture with unchanged numerical records and citations."""
+    from build_cp_review_portfolio import write_json, write_receipt
+    from cp_review_document import comment_seed
+
     candidate = tmp_path / "reports"
     shutil.copytree(REPORTS, candidate)
-    entry = json.loads((ROOT / "scripts/reporting/cp_portfolio_inputs.json").read_text())["ships.yml"]
-    basis = entry["provenance"]["inspected_revision"]
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
-    for target in (candidate / "cases/S04").iterdir():
-        relative = (REPORTS / target.relative_to(candidate)).relative_to(ROOT)
-        original = subprocess.run(
-            ["git", "-C", str(ROOT), "show", f"{basis}:{relative.as_posix()}"],
-            env=environment, check=True, capture_output=True,
-        ).stdout
-        target.write_bytes(original)
+    case = candidate / "cases/S04"
+    page = _historical_page((case / "report.html").read_text())
+    (case / "report.html").write_text(page)
+    write_json(case / "report.comments.json", comment_seed(page, "S04", "00"))
+    cfg = yaml.safe_load((case / "input.yml").read_text())
+    cfg["inputs"]["anode"].pop("alloy")
+    cfg["inputs"]["anode"]["anode_current_capacity"] = "retired input"
+    document = cfg["report"]["document"]
+    document.update(title="CP module review: Ship hull", revision="00", date="2026-10-03")
+    document["revision_history"] = [row for row in document["revision_history"] if row["rev"] == "00"]
+    (case / "input.yml").write_text(yaml.safe_dump(cfg, sort_keys=False))
+    release = json.loads((case / "release.json").read_text())
+    release.pop("provenance_correction")
+    write_json(case / "release.json", release)
+    write_receipt(case)
+    write_json(candidate / "portfolio-receipt.json", tree_digest(candidate))
     return candidate
 
 
@@ -124,3 +162,11 @@ def test_correction_refuses_a_damaged_pack(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="checksum mismatch"):
         correct_ship_provenance(candidate)
     assert tree_digest(candidate) == before
+
+
+def test_historical_fixture_preserves_numerical_records(tmp_path: Path) -> None:
+    """Reconstructing presentation controls changes no result or citation bytes."""
+    candidate = _historical_candidate(tmp_path)
+    for name in ("results.json", "report_citations.json", "source-citations.json"):
+        assert (candidate / "cases/S04" / name).read_bytes() == (REPORTS / "cases/S04" / name).read_bytes()
+    verify_pack(candidate / "cases/S04")
