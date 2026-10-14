@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """API RP 1111 internal pressure checks and config-driven sizing workflow.
 
 WRK-355: Pipeline and flexibles module — pressure containment checks.
@@ -265,6 +268,12 @@ class WallThicknessSizingWorkflow:
     """
 
     def __init__(self, config: dict[str, Any]) -> None:
+        """Read the pipeline configuration without reducing design pressure.
+
+        Args:
+            config: Mapping with a pipeline entry; hipps_setpoint_MPa is an
+                optional trip-setpoint screen, not a surge qualification.
+        """
         self._cfg = config["pipeline"]
 
     def run(self) -> dict[str, Any]:
@@ -284,6 +293,20 @@ class WallThicknessSizingWorkflow:
         safety_class = str(cfg.get("safety_class", "normal"))
         t_corr = float(cfg.get("corrosion_allowance_m", 0.001))
         fab_tol = float(cfg.get("fab_tol_pct", 12.5))
+        hipps_check: dict[str, object] | None = None
+        if "hipps_setpoint_MPa" in cfg:
+            setpoint = float(cfg["hipps_setpoint_MPa"])
+            if not math.isfinite(setpoint) or setpoint <= 0:
+                raise ValueError("hipps_setpoint_MPa must be finite and positive")
+            if not math.isfinite(p_d) or p_d <= 0:
+                raise ValueError("design_pressure_MPa must be finite and positive")
+            hipps_check = {
+                "pass": setpoint <= p_d,
+                "setpoint_MPa": setpoint,
+                "maop_MPa": p_d,
+                "margin_MPa": p_d - setpoint,
+                "basis": "setpoint screen only; response-time/surge adequacy not established",
+            }
 
         mat = MATERIAL_LIBRARY[grade]
         p_water = api_water_pressure(depth=depth)
@@ -328,6 +351,7 @@ class WallThicknessSizingWorkflow:
             "api_propagating_buckle": api_prop_result,
             "dnv_external_collapse": dnv_collapse_result,
             "dnv_propagating_buckle": dnv_prop_result,
+            "hipps_maop_check": hipps_check,
         }
 
 
