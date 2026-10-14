@@ -151,7 +151,7 @@ def design_data(cfg: dict[str, Any]) -> list[Any]:
             "water-column depth bands and buried steel); Coating breakdown factors "
             "(category III water-column steel, bare buried piles); Anode materials "
             "(aluminium capacity, utilisation and protective potential). "
-            "The existing edition route [I2] applies this basis; no standard table is reproduced. "
+            "The calculation applies this selection [I2]; no standard table is reproduced. "
             "An aggregate PASS denotes these comparisons only; no local potential criterion is evaluated.")),
         TextBlock(markdown="## 3.6 Method\n\nThe physical method and equations are presented in Section 4."),
         TextBlock(markdown=(f"## 3.7 Load cases\n\nThe stated {anode['count']}-anode trial arrangement "
@@ -159,7 +159,7 @@ def design_data(cfg: dict[str, Any]) -> list[Any]:
             "arrangement are evaluated for initial, mean and final conditions. "
             "Water-column steel is split at the depth-band boundary of the design current-density clause; buried pile "
             "area is evaluated separately as bare steel. Illustrative design-life scenarios "
-            "retain the reference count and geometry and recompute the required counts; "
+            "keep the anode geometry and recompute the required count; "
             "the doubled-life case also includes increased water-column coating breakdown.")),
     ]
 
@@ -175,7 +175,7 @@ def comparison_tables(evidence: dict[str, Any]) -> list[TableBlock]:
                 rows=[[c["quantity"], f"{c['required']:.1f}", f"{c['provided']:.1f}",
                        f"{c['margin_percent']:+.1f}", "PASS" if c["passes"] else "FAIL"]
                       for c in arrangement["checks"] if c["unit"] == unit],
-                source="[I2]; criterion: provided ≥ required; native values retained in the citation sidecar.",
+                source="[I2]; criterion: provided ≥ required",
             ))
     return blocks
 
@@ -216,16 +216,10 @@ def sensitivity_table(evidence: dict[str, Any]) -> TableBlock:
 
 
 def revision_history() -> Section:
-    """Preserve the original issue row and add the issued analysis row."""
+    """Record the single issued revision of the sample analysis."""
     return Section(key="revision-history", title="Revision history", blocks=[
         TableBlock(title="Revision history", columns=["Revision", "Date", "What changed and why"],
-            rows=[
-                ["00", "2026-10-14", "Draft reference-jacket analysis; sourced geometry and conditional CP comparisons."],
-                ["0", "2026-10-14", "Issued for information: bare buried piles, re-sized anodes, "
-                 "declared anode basis and interactive life and current comparisons."],
-                ["1", "2026-10-14", "Assumption reasons, trial arrangement and structural mass "
-                 "interpretation clarified to align the basis with the calculated findings."],
-            ]),
+            rows=[["0", "2026-10-14", "Issued for information."]]),
     ])
 
 
@@ -253,7 +247,7 @@ def build_document() -> tuple[ReportSpec, dict[str, Any]]:
                      for i, (title, content) in enumerate(zip(SECTION_TITLES, blocks), 1)]
     spec.appendices = [Section(key="structural-evidence", title="Structural evidence", blocks=[
         *reference_member_tables(cfg["structural_model"]),
-        *reference_comparison(cfg["structural_model"]),
+        *structural_comparison(cfg["structural_model"]),
     ]), Section(key="reproduction", title="Reproduction", blocks=[
         TextBlock(markdown="```\nPYTHONPATH=src uv run --no-sources python "
                   "scripts/reporting/build_reference_jacket_analysis.py\n```"),
@@ -266,6 +260,23 @@ def build_document() -> tuple[ReportSpec, dict[str, Any]]:
     evidence["geometry_sources"] = cfg["structural_model"]["source_files"]
     evidence["reporting_standard_revision"] = STANDARD_REVISION
     return spec, evidence
+
+
+def structural_comparison(model: dict[str, Any]) -> list[Any]:
+    """Compare printed structural mass on the transition-piece-inclusive basis."""
+    table = reference_comparison(model)[0]
+    combined = model["steel_mass_kg"] + model["excluded_concentrated_mass_kg"]
+    for row, comparison in zip(table.rows, model["comparisons"]):
+        if comparison["quantity"] == "Tubular jacket steel mass":
+            printed = comparison["printed"]
+            row[:4] = ["Structural mass, tubular steel plus transition piece",
+                       f"{printed:,.1f}", f"{combined:,.1f}",
+                       f"{100 * (combined / printed - 1):+.1f} %"]
+            row[5] = "[1], pp. 810–811, Section 3.2; transition piece included"
+    return [table, TableBlock(title="Tubular steel mass (informative)",
+        columns=["Quantity", "Mass (kg)", "Source"],
+        rows=[["Tubular jacket steel alone", f"{model['steel_mass_kg']:,.0f}",
+               "[2]; derived from tubular sections and lengths"]])]
 
 
 
@@ -326,9 +337,8 @@ def finding_blocks(evidence: dict[str, Any], count: int) -> list[TextBlock]:
         f"Bare-pile cases: {cases}. Required count is the maximum of lifetime mass, "
         "initial output and final output requirements. Lifetime mass governs each case. "
         "Doubled life increases exposure duration and water-column coating breakdown, "
-        "so required count is recomputed rather than simply doubled. Failure of a "
-        "mass-sized arrangement at longer life is expected by construction and is not "
-        "an independent finding. The count curve quantifies the sizing consequence "
+        "so required count is recomputed rather than simply doubled. "
+        "The count curve quantifies the sizing consequence "
         "of the assumed life; it does not qualify that assumption.")))
     findings.append(TextBlock(markdown=("## 6.5 Anode selection\n\n"
         "The anode size is not optimised. A larger stand-off anode would reduce the "
@@ -348,14 +358,13 @@ def reference_text(spec: ReportSpec, evidence: dict[str, Any]) -> str:
         "[2] Mroczek (2023), IEA-15-240-RWT jacket model, public OpenFAST coordinate "
         "and circular tubular schedules, revision da77a393569b6c5ddf7aa424e5b0a92d37eba833. "
         "Apache License 2.0. Values were transcribed; lengths, areas and mass are derived. "
-        "Source attribution and the licence remain with the input fixture.\n\n"
+        "\n\n"
         "[3] DNV-RP-B401, Cathodic protection design, May 2021: Design current densities; "
         "Coating breakdown factors; Anode materials; Anode mass; Anode resistance; "
         "Anode current output.\n\n"
         "## 9.2 Internal references\n\n"
         f"[I1] Input data file, SHA-256 {evidence['input_sha256']} (Appendix: Reproduction).\n\n"
-        "[I2] digitalmodel CP engine adapter, kernels and edition route; "
-        f"software version {spec.tool_version}. Citation schema: digitalmodel.citations.schema.Citation.")
+        f"[I2] digitalmodel cathodic protection module, version {spec.tool_version}")
     return references
 
 
@@ -371,11 +380,11 @@ def section_blocks(cfg: dict[str, Any], evidence: dict[str, Any],
     printed_mass = next(row["printed"] for row in model["comparisons"]
                         if row["quantity"] == "Tubular jacket steel mass")
     combined_mass = model["steel_mass_kg"] + model["excluded_concentrated_mass_kg"]
-    mass_reading = (f"Printed structural mass is {printed_mass / 1000:.1f} t. "
-        f"Tubular steel plus concentrated transition-piece masses gives {combined_mass:.1f} kg "
-        f"({100 * (combined_mass / printed_mass - 1):+.1f} % against the printed total). "
-        "This agreement supports the reading that the printed mass includes the transition piece; "
-        "it does not establish installed pile mass.")
+    mass_reading = (f"Printed structural mass is {printed_mass / 1000:,.1f} t; "
+        f"tubular steel plus transition-piece masses give {combined_mass / 1000:,.1f} t "
+        f"({100 * (combined_mass / printed_mass - 1):+.1f} %). "
+        "The printed figure is read as including the transition piece. "
+        "Installed pile mass is not established.")
     blocks = [
         [TextBlock(markdown=summary)],
         [TextBlock(markdown="The reference-jacket geometry is used to evaluate aggregate "
@@ -388,7 +397,7 @@ def section_blocks(cfg: dict[str, Any], evidence: dict[str, Any],
          *reference_zone_blocks(cfg["structural_model"], cfg["initial_pile_estimate"])],
         findings,
         [TextBlock(markdown="\n\n".join(cfg["cp_limitations"]) + "\n\n" +
-            cfg["structural_model"]["mass_limitation"] + "\n\n" + mass_reading + "\n\n"
+            mass_reading + "\n\n"
             "Environment, coating, design life, cylinder geometry, no deducted core and "
             f"alloy applicability are {ASSUMED}. Aggregate outputs are approximate "
             "until these inputs are qualified; no spatial protection acceptance is established.")],
@@ -413,7 +422,8 @@ def build(destination: Path) -> list[Path]:
     """Write deterministic HTML and its numerical/citation evidence sidecar."""
     spec, evidence = build_document()
     spec.sections.insert(1, revision_history())
-    page = presentation(render_html(spec))
+    revision = spec.sections[1].blocks[0].rows[-1][0]
+    page = presentation(render_html(spec), revision)
     destination.mkdir(parents=True, exist_ok=True)
     report = destination / "cathodic-protection-analysis.html"
     report.write_text(page, encoding="utf-8", newline="\n")
@@ -423,7 +433,7 @@ def build(destination: Path) -> list[Path]:
     return [report, sidecar]
 
 
-def presentation(page: str) -> str:
+def presentation(page: str, revision: str) -> str:
     """Apply section captions and reference links without changing templates."""
     def section(match: re.Match[str]) -> str:
         body = match.group()
@@ -467,7 +477,7 @@ def presentation(page: str) -> str:
         return body
 
     page = re.sub(r'<section id="([^"]+)">.*?</section>', section, page, flags=re.S)
-    page = page.replace("Draft for review", "Revision 1 — Issued for information")
+    page = page.replace("Draft for review", f"Revision {revision} — Issued for information")
     page = re.sub(r'(?<!>)(\[(I?\d+)\])',
                   lambda m: f'<a href="#reference-{m.group(2)}">{m.group(1)}</a>', page)
     return page

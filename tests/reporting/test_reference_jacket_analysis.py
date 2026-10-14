@@ -143,7 +143,48 @@ def test_client_text_has_declared_basis_without_process_narrative(builder):
     assert "anode size is not optimised" in text
     assert "larger stand-off anode" in text
     assert "Input data file, SHA-256" in text
-    assert "includes the transition piece" in text
+    assert "including the transition piece" in text
+
+
+def test_structural_mass_comparison_uses_the_printed_total_basis(builder):
+    spec, _ = builder.build_document()
+    limitation = spec.sections[6].blocks[0].markdown
+    assert limitation.count("Printed structural mass") == 1
+    assert ("Printed structural mass is 1,471.0 t; tubular steel plus transition-piece "
+            "masses give 1,471.4 t (+0.0 %). The printed figure is read as including "
+            "the transition piece. Installed pile mass is not established.") in limitation
+    tables = [b for b in spec.appendices[0].blocks if b.kind == "table"]
+    comparison = next(t for t in tables if "compared with the paper" in t.title)
+    mass = next(r for r in comparison.rows if r[0].startswith("Structural mass,"))
+    assert mass[1:5] == ["1,471,000.0", "1,471,364.8", "+0.0 %", "kg"]
+    informative = next(t for t in tables if t.title == "Tubular steel mass (informative)")
+    assert "Difference" not in informative.columns
+    assert informative.rows[0][1] == "1,021,365"
+
+
+def test_single_issued_revision_matches_masthead_and_footer(builder, tmp_path):
+    history = builder.revision_history().blocks[0]
+    assert history.rows == [["0", "2026-10-14", "Issued for information."]]
+    page = builder.build(tmp_path)[0].read_text()
+    for tag in ("header", "footer"):
+        content = re.search(fr"<{tag}.*?</{tag}>", page, re.S).group()
+        assert "Revision 0" in content
+    assert "to align the basis with" not in page
+
+
+def test_report_uses_plain_calculation_and_scenario_wording(builder):
+    spec, _ = builder.build_document()
+    text = " ".join(b.markdown for s in spec.sections for b in s.blocks if b.kind == "text")
+    assert "The calculation applies this selection [I2]" in text
+    assert "[I2] digitalmodel cathodic protection module, version 2.1.0" in text
+    assert ("Illustrative design-life scenarios keep the anode geometry and recompute "
+            "the required count") in text
+    for phrase in ("existing edition route", "Citation schema:", "native values retained",
+                   "Source attribution and the licence remain", "mass-sized arrangement",
+                   "retain the reference count"):
+        assert phrase not in text
+    assert all(t.source == "[I2]; criterion: provided ≥ required"
+               for t in builder.comparison_tables({"arrangements": {"stated": {"checks": []}}}))
 
 
 def test_trial_and_resized_counts_are_computed_in_load_cases(builder):
