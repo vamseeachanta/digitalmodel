@@ -18,8 +18,9 @@ hang-off-to-seabed span before calculating geometry.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-14 | Static function coverage and four generic analytical cases are recorded to distinguish equilibrium kernels from sizing screens before configuration ranking. |
+| 1 | 2026-10-14 | Legacy driver, unit conversion, model generation and extraction surfaces are inventoried to define the production migration boundary. |
 
-Table 1. Initial issue of the static coverage analysis.
+Table 1. Revision history of the static coverage analysis.
 
 ## Scope and evidence basis
 
@@ -141,6 +142,7 @@ they are not independently qualified elastic reference answers.
 - `subsea/catenary_riser/lazy_wave.py` remains quarantined as settled by
   [#1949](https://github.com/vamseeachanta/digitalmodel/issues/1949). Its CLI
   rejects analysis; neither is counted as a functioning equilibrium kernel.
+  Its separately callable buoyancy-sizing helper remains an empirical screen.
 
 ## Function coverage inventory
 
@@ -185,6 +187,30 @@ explicitly. Imported third-party classes and private functions are excluded.
 
 Table 3. Inspected public function coverage and numerical grade.
 
+### Legacy support and quarantined interfaces
+
+The following paths are relative to `src/digitalmodel/subsea/catenary_riser/`
+at the same source revision. Their presence is not evidence of validated model
+generation or dynamic response. They were inspected as source only.
+
+| Module and public surface | Calculation and units | Inspected coverage and grade |
+| --- | --- | --- |
+| `legacy/catenary.py`: `Catenary.router` | Dispatches configuration to a duplicate equation calculator or the riser driver; preserves configuration units | `tests/test_engine.py` mocks the router class; no direct physical qualification established; configuration support |
+| `legacy/catenary_equation.py`: `CatenaryCalculator.calculate` | Force/angle dictionary calculations; angle [deg], distance and force/weight inputs → length, offset, horizontal force and shape parameter. The force branch lacks the square root in `S = d*(2F/w-d)` and applies an additional gravity factor to the shape parameter; its dimensional contract is inconsistent. X-driven input raises `NotImplementedError` | No direct test coverage established; unqualified static legacy variant, not selected as canonical |
+| `legacy/catenary_riser.py`: `catenary_riser` | SCR/SLWR driver, filled/empty section properties, plots and model generation; mixed configuration units feed geometry [m], force [N] and weight [N/m] equations | No direct driver qualification established; mapping and generation support |
+| `legacy/pipeProperties.py`: `pipeProperties`, `steelSectionProperties`, `insulationSectionProperties`, `buoyancySectionProperties`, `sectionProperties`, `equivalentPipe`, `buoyancyFactorAndDiameter` | Section dimensions [in] → area [in²], second moment [in⁴]; explicit conversion produces mass [kg/m] and weight [N/m] using density [kg/m³]. `buoyancyFactorAndDiameter` is an empty placeholder | No direct coverage established; static section-property support with mixed units |
+| `legacy/orcaflexModel.py`: `orcaflexModel`, `general`, `environment`, `seaAndSeabed`, `wave`, `current`, `wind`, `vesselTypes`, `supportTypes`, `codeChecks`, `RayleighDampingCoefficients`, `lineTypes`, `lines`, `VariableData`, `BendingConnectionStiffness`, `LineTypeOuterDiameter`, `vessels`, `winches`, `groups`, `WriteOrcaflexModel`, `build_model` | SI model dictionary/YAML generation with inch/metre and density conversions; full field-level unit contract unverified. `codeChecks` copies input fields, not calculated utilization; `supportTypes` is an empty placeholder | No direct coverage established; generation/export only, no licensed-interface execution or result validation |
+| `legacy/getFatigueLoading.py`: `getFatigueData`, `prepareFatigueLoading`, `prepareFatiguePostProcessing`, `FatiguePostProcessing`, `SNCurves`, `LoadCase`, `AnalysisData`, `Outputs` | Spreadsheet loading and wave-bin model/postprocessor configuration; wave height [m], period [s], direction and probability, simulation references. Damage/year is requested, not computed. Exposure units unverified; `SNCurves` and `AnalysisData` are empty placeholders | No direct coverage established; input preparation, not a dynamic or fatigue result |
+| `legacy/extractData.py`: `extractData`, `extractPlotData` | Saved YAML dictionary values → tables and SCR/SLWR plot partitions; preserves input units | No direct coverage established; extraction support |
+| `legacy/saveData.py`: `saveDataJson`, `saveDataYaml`, `saveDataFrame`, `setup_yaml` | JSON/YAML/CSV serialization and representer registration; no physical calculation or unit conversion | No direct coverage established; serialization |
+| `legacy/fileList.py`: `fileList` | File discovery with working-directory changes; no physical units | No direct coverage established; file support |
+| `legacy/catenary_riser_summary.py`: no defined public functions | Import-time configuration loading, saved-result extraction, CSV export and shape plots [m] | `tests/test_catenary_riser_summary.py` uses a module substituted by a test mock; production-script qualification is not established; presentation/extraction |
+| `legacy/catenaryRiserSummary.py`: no defined public functions | Import-time saved-result extraction and shape plotting [m] | No direct coverage established; presentation/extraction |
+| `legacy/__init__.py`: no public functions | Package marker | Physical qualification not applicable |
+| `lazy_wave.py`: `LazyWaveAnalyzer.analyze`, `estimate_required_buoyancy` | `analyze` always raises; subsequent analysis code is unreachable. The callable sizing helper uses bare weight [N/m] and arch/depth [m] → estimated requirement [N/m] | `tests/subsea/catenary_riser/test_lazy_wave_quarantine.py` covers analysis refusal; helper direct coverage not established; empirical sizing only |
+
+Table 4. Legacy support surfaces and their qualification boundaries.
+
 ## SCR gaps
 
 1. General-solver elastic formulation remains approximate; independent full-strain
@@ -195,6 +221,8 @@ Table 3. Inspected public function coverage and numerical grade.
    and nonpositive-span rejection are corrected here with three failing-first
    regressions. The simplified angle-comment contradiction remains a
    documentation gap before wider use.
+   Legacy force-driven duplicate equations and inch/SI driver boundaries are
+   unqualified; isolated equation parity does not establish driver correctness.
 3. Current-loaded, bending-stiffness, seabed-interaction and dynamic response
    are not established by the inspected cable kernels. Stress extraction is
    tracked by [#810](https://github.com/vamseeachanta/digitalmodel/issues/810),
