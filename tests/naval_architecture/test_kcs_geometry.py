@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """KCS hull surface generation from the workshop grid (#1173, Stage 4).
 
 The acceptance criterion these tests exist to enforce: the source STL passes
@@ -10,7 +13,6 @@ how the shipped Wigley asset was scoped for a repair that could not have worked
 
 from __future__ import annotations
 
-import math
 
 import pytest
 

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """KCS calm-water hull resistance (#1173) - referent, gates, emitter.
 
 The tests in this module are the structural guard against the failure mode that
@@ -464,7 +467,6 @@ from pathlib import Path
 
 from digitalmodel.solvers.openfoam.validation.ship_resistance import (
     DECLARED_DEVIATIONS,
-    DTC_HULL_BOUNDS,
     DTC_WATERLINE_Z,
     HullForce,
     ShipResistanceConfig,
@@ -473,7 +475,6 @@ from digitalmodel.solvers.openfoam.validation.ship_resistance import (
     emesh_name_for,
     hull_placement,
     parse_hull_force,
-    ship_resistance_templates_dir,
     ship_resistance_tokens,
     _provenance,
 )

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-"""
-ABOUTME: N-surface support for the arbitrary-hull resistance case (#2023).
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Build dictionary blocks for hull and appendage surfaces.
+
 Turns a list of closed STL regions -- hull plus appendages -- into the
 snappyHexMeshDict, surfaceFeatureExtractDict and controlDict blocks that
 declare all of them, and decides how forces are reported over them.
@@ -38,7 +41,6 @@ rather than a coefficient ratio that hides an area convention.
 
 from __future__ import annotations
 
-import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -93,6 +95,7 @@ class SurfaceRegion:
     n_surface_layers: int = 3
 
     def __post_init__(self) -> None:
+        """Validate the patch name, refinement levels and surface layer count."""
         if not self.name or not self.name.replace("_", "").isalnum():
             raise ValueError(
                 f"region name {self.name!r} is not a usable OpenFOAM patch "
@@ -111,6 +114,7 @@ class SurfaceRegion:
 
     @property
     def stl_name(self) -> str:
+        """Return the STL filename used in the surface dictionary."""
         return Path(self.stl_path).name
 
     @property
@@ -126,8 +130,10 @@ class SurfaceRegion:
 
 
 def hull_region(stl_path: Path | str, **options: Any) -> SurfaceRegion:
-    """The hull region, with its patch name pinned to :data:`HULL_PATCH` and
-    its surface refinement floored at :data:`HULL_REFINEMENT_LEVEL`.
+    """Create the hull region with its pinned patch and refinement floor.
+
+    The patch name is pinned to :data:`HULL_PATCH`, and the surface refinement
+    is floored at :data:`HULL_REFINEMENT_LEVEL`.
 
     A DEFAULT here rather than a case-config field so every construction route
     inherits it, including callers that build the hull region themselves to
