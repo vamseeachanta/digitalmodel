@@ -4,6 +4,7 @@
 """Validated fatigue assessment and report export on synthetic loads."""
 
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -15,7 +16,7 @@ from pydantic import ValidationError
 from digitalmodel.fatigue.assessment import AssessmentInput, assess_fatigue
 from digitalmodel.fatigue.assessment_export import export_assessment
 from digitalmodel.fatigue.sn_curves import get_sn_curve
-from digitalmodel.reporting import DocumentMeta
+from digitalmodel.reporting import DocumentMeta, RevisionRow
 
 
 def histogram_input(**changes):
@@ -98,9 +99,14 @@ def test_schema_is_generated_from_runtime_contract():
 
 def test_export_reads_native_output_and_workbook_back(tmp_path):
     inp = AssessmentInput.model_validate(histogram_input())
-    document = DocumentMeta(number="B0000-RPT-001-00", revision="00",
+    document = DocumentMeta(number="B0000-RPT-001-01", revision="01",
                             title="Fatigue analysis", project="Synthetic analysis",
-                            client="Synthetic input", date="2026-10-14")
+                            client="Synthetic input", date="2026-10-14",
+                            revision_history=[
+                                RevisionRow(rev="00", date="2026-10-14", description="Issued"),
+                                RevisionRow(rev="01", date="2026-10-14",
+                                            description="Display precision aligned with report format"),
+                            ])
     artifacts = export_assessment(inp, tmp_path, document=document, pdf="auto")
     native = json.loads(artifacts.native_path.read_text())
     assert native["result"]["block_damage"] == pytest.approx(0.25)
@@ -110,9 +116,15 @@ def test_export_reads_native_output_and_workbook_back(tmp_path):
     assert html.index('id="summary"') < html.index('id="revision-history"')
     assert "Governing load case" in html
     assert "synthetic" in html
+    echo = html.split('id="input-echo"', 1)[1].split("</section>", 1)[0]
+    assert not re.search(r"\d+\.\d{2,}", echo)
     book = load_workbook(artifacts.excel_path, data_only=True)
     assert book["Summary"]["B2"].value == pytest.approx(0.25)
     assert book["Cycles"]["E2"].value == pytest.approx(0.25)
+    assert book["Summary"]["B2"].number_format == "0.0E+00"
+    assert book["Cycles"]["E2"].number_format == "0.0E+00"
+    for row in book["Input"].iter_rows(min_row=2):
+        assert not re.search(r"\d+\.\d{2,}", row[1].value)
     manifest = json.loads(artifacts.manifest_path.read_text())
     assert manifest["native_sha256"]
     assert manifest["pdf_rendered"] == artifacts.report.pdf_status.rendered

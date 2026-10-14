@@ -50,6 +50,17 @@ def _summary_rows(result: AssessmentResult) -> list[list[Any]]:
             ["Result", "PASS" if result.passed else "FAIL"]]
 
 
+def _display_values(value: Any) -> Any:
+    """Format input echo numbers without modifying the native calculation."""
+    if isinstance(value, float):
+        return f"{value:.1e}"
+    if isinstance(value, list):
+        return [_display_values(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _display_values(item) for key, item in value.items()}
+    return value
+
+
 def _write_excel(path: Path, result: AssessmentResult, inp: AssessmentInput) -> None:
     """Write native result tables and echo the engineering input."""
     book = Workbook()
@@ -69,7 +80,12 @@ def _write_excel(path: Path, result: AssessmentResult, inp: AssessmentInput) -> 
     echo = book.create_sheet("Input")
     echo.append(["Quantity", "Value"])
     for key, value in inp.model_dump().items():
-        echo.append([key, json.dumps(value, allow_nan=False)])
+        echo.append([key, json.dumps(_display_values(value), allow_nan=False)])
+    for sheet in (summary, cycles):
+        for row in sheet.iter_rows(min_row=2):
+            for cell in row:
+                if isinstance(cell.value, (int, float)):
+                    cell.number_format = "0.0E+00"
     book.save(path)
     book.close()
 
@@ -99,6 +115,8 @@ def _report_sections(result: AssessmentResult, document: DocumentMeta) -> list[S
             "duration divided by block damage; design utilisation equals block damage "
             "times design/block duration times the supplied design fatigue factor. "
             "Null life means zero damage under the supplied loading, not measured life.\n\n"
+            "Displayed numbers use one decimal in scientific notation. Native JSON "
+            "retains calculation precision.\n\n"
             f"DNV-RP-C203, Fatigue design of offshore steel structures, "
             f"{DNV_RP_C203_IMPLEMENTED_EDITION}, S-N curves. Library values were checked "
             f"against {DNV_RP_C203_VERIFIED_EDITION}; agreement with the implemented "
@@ -142,7 +160,7 @@ def export_assessment(
                       standards=[StandardLabel(code_id=inp.design_code,
                                                edition=DNV_RP_C203_IMPLEMENTED_EDITION,
                                                provenance="Repository S-N library")],
-                      provenance=provenance, input_echo=readback["input"])
+                      provenance=provenance, input_echo=_display_values(readback["input"]))
     report = write_report(spec, output_dir, "fatigue-analysis", pdf=pdf)
     excel_path = output_dir / "fatigue-analysis.xlsx"
     _write_excel(excel_path, result, inp)

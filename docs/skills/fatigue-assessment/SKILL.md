@@ -43,6 +43,8 @@ date and revision description; re-issues retain earlier revision rows. Native
 JSON is read back before report assembly. The export manifest records its digest
 and PDF availability. Read the JSON and workbook back against the criterion;
 unit tests on synthetic loads do not establish a real component's fatigue life.
+HTML/PDF and workbook displays use one decimal in scientific notation; native
+JSON and numeric workbook cells retain calculation precision.
 
 ## Connector hook
 
