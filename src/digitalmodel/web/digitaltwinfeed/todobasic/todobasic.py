@@ -4,6 +4,7 @@ Provides a simple RESTful-style TODO list API using Flask blueprint
 routing with HTTP basic authentication for all task endpoints.
 """
 
+from basic_auth import basic_auth_password_for
 from flask import Blueprint, abort, jsonify, make_response, request, url_for
 from flask_httpauth import HTTPBasicAuth
 
@@ -22,9 +23,7 @@ def get_password(username):
     Returns:
         The password string if username is valid, None otherwise.
     """
-    if username == 'dtf_beta':
-        return 'dtf_gamma'
-    return None
+    return basic_auth_password_for(username)
 
 
 @auth.error_handler

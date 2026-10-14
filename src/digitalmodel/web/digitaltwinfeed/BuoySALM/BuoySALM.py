@@ -4,6 +4,7 @@ Provides RESTful API endpoints for SALM buoy data retrieval
 and OrcaFlex model rendering within the digitaltwinfeed application.
 """
 
+from basic_auth import basic_auth_password_for
 import os
 
 from flask import (Blueprint, Response, abort, jsonify, make_response,
@@ -29,9 +30,7 @@ def get_password(username):
     Returns:
         The password string if username is valid, None otherwise.
     """
-    if username == 'dtf_beta':
-        return 'dtf_gamma'
-    return None
+    return basic_auth_password_for(username)
 
 
 @auth.error_handler

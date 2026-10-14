@@ -1,4 +1,5 @@
 import logging
+from basic_auth import warn_if_basic_auth_closed
 
 from flask import Flask, redirect, render_template, request, url_for
 from flask_wtf import FlaskForm
@@ -7,6 +8,7 @@ from wtforms.validators import DataRequired
 
 def load_signing_key():
     """Return DIGITALTWINFEED_SECRET_KEY without a default or generated fallback."""
+    # Keep this import local so tests can compile the function on its own.
     import os
 
     value = os.environ.get("DIGITALTWINFEED_SECRET_KEY")
@@ -25,6 +27,7 @@ def load_signing_key():
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 app.secret_key = load_signing_key()
+warn_if_basic_auth_closed()
 
 
 def register_blueprint(mod_name, is_service=True):

@@ -4,6 +4,7 @@ Provides Flask routes that generate and serve Plotly.js charts
 embedded in HTML templates.
 """
 
+from basic_auth import basic_auth_password_for
 import json
 import os
 
@@ -34,9 +35,7 @@ def get_password(username):
     Returns:
         The password string if username is valid, None otherwise.
     """
-    if username == 'dtf_beta':
-        return 'dtf_gamma'
-    return None
+    return basic_auth_password_for(username)
 
 
 # @auth.error_handler
