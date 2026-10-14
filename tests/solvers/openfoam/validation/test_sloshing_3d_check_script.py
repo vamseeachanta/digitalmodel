@@ -295,3 +295,59 @@ def test_partial_vertical_layer_partition_is_rejected(tmp_path, driver):
     with pytest.raises(ValueError, match="vertical cell count must be divisible"):
         driver.build_case(tmp_path, spec)
     assert not (tmp_path / spec["name"]).exists()
+
+
+@pytest.mark.parametrize("direction", ["roll", "pitch"])
+@pytest.mark.parametrize("smoke", [False, True])
+def test_time_step_refinement_preserves_physical_output_times(tmp_path, driver, direction, smoke):
+    controls = []
+    for group in ("medium-3d", "time-step-3d"):
+        spec = next(s for s in driver.case_specs(smoke=smoke)
+                    if s["group"] == group and s["direction"] == direction and s["ratio"] == 1.0)
+        case = driver.build_case(tmp_path, spec)
+        top, functions = (case / "system/controlDict").read_text().split("functions", 1)
+        values = {key: float(re.search(rf"\b{key}\s+([\d.e+-]+);", top)[1])
+                  for key in ("deltaT", "maxDeltaT", "maxCo", "writeInterval", "endTime")}
+        assert re.search(r"writeControl\s+adjustableRunTime;", top)
+        intervals = {"fields": values["writeInterval"]}
+        for name, body in re.findall(r"(interfaceHeight\d+|tankRollMoment)\s*\{([^{}]+)\}", functions):
+            assert re.search(r"writeControl\s+timeStep;", body)
+            intervals[name] = int(re.search(r"writeInterval\s+(\d+);", body)[1]) * values["deltaT"]
+        assert set(intervals) == {"fields", "tankRollMoment", *(f"interfaceHeight{i}" for i in range(1, 7))}
+        controls.append((values, intervals))
+    medium, refined = [c[0] for c in controls]
+    assert [medium["deltaT"], refined["deltaT"]] == pytest.approx([0.001, 0.0005])
+    assert [medium["maxDeltaT"], refined["maxDeltaT"]] == pytest.approx([0.001, 0.0005])
+    assert len({medium["maxDeltaT"], refined["maxDeltaT"]}) == 2
+    assert refined["deltaT"] == medium["deltaT"] / 2
+    assert refined["maxDeltaT"] == medium["maxDeltaT"] / 2
+    assert [medium["maxCo"], refined["maxCo"]] == [0.5, 0.25]
+    assert medium["endTime"] == refined["endTime"]
+    assert controls[0][1] == controls[1][1]
+    for name, interval in controls[0][1].items():
+        assert interval == pytest.approx(min(0.05, medium["endTime"]) if name == "fields"
+                                         else 0.001 if name == "tankRollMoment" else 0.005)
+        # At the capped step, both cases write at the same simulated times.
+        count = int(medium["endTime"] / interval)
+        assert [i * interval for i in range(1, count + 1)] == [
+            i * controls[1][1][name] for i in range(1, count + 1)]
+
+
+@pytest.mark.parametrize("direction", ["roll", "pitch"])
+@pytest.mark.parametrize("missing", [False, True])
+def test_refined_step_reduction_uses_preserved_probe_interval(tmp_path, driver, direction, missing):
+    spec = next(s for s in driver.case_specs(smoke=True)
+                if s["group"] == "time-step-3d" and s["direction"] == direction)
+    spec["delta_t"] = 0.0005
+    case = driver.build_case(tmp_path, spec)
+    folder = case / "postProcessing/interfaceHeight1/0"
+    folder.mkdir(parents=True)
+    indices = [i for i in range(7) if not (missing and i == 3)]
+    (folder / "height.dat").write_text("\n".join(f"{i * 0.005} 0.45 0" for i in indices) + "\n")
+    if missing:
+        with pytest.raises(ValueError, match="missing sampling interval"):
+            driver._signal(case, "interfaceHeight1", "height.dat", spec)
+    else:
+        times, heights = driver._signal(case, "interfaceHeight1", "height.dat", spec)
+        assert times == pytest.approx([i * 0.005 for i in indices])
+        assert heights == pytest.approx([0.45] * len(indices))

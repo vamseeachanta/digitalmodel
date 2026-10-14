@@ -71,7 +71,7 @@ def case_specs(*, t1_roll=None, t1_pitch=None, ranks=4, smoke=False):
                         cpb=cpb, nx=nx, ny=cpb, nz=1 if dimension == 2 else round(1.35 / 0.9 * cpb),
                         decomposition=None if dimension == 2 else dict(method="simple", n=[1, ranks, 1], delta=0.001),
                         ranks=1 if dimension == 2 else ranks, max_co=0.25 if group == "time-step-3d" else 0.5,
-                        delta_t=0.002 if kind == "free-decay" else 0.001,
+                        delta_t=0.002 if kind == "free-decay" else 0.0005 if group == "time-step-3d" else 0.001,
                         end_time=0.03 if smoke else (10 * t1 if kind == "free-decay" else 6 * period),
                         smoke=smoke,
                     ))
@@ -157,6 +157,10 @@ def build_case(work_dir, spec):
     head, functions = text.split("functions", 1)
     head = re.sub(r"writeInterval\s+[\d.e+-]+;", f'writeInterval {min(0.05, spec["end_time"]):.8g};', head)
     head = re.sub(r"purgeWrite\s+\d+;", "purgeWrite 0;", head)
+    if spec["group"] == "time-step-3d":
+        # Preserve probe and moment intervals when the step is halved.
+        functions = re.sub(r"(writeInterval\s+)(\d+);",
+                           lambda match: f"{match[1]}{2 * int(match[2])};", functions)
     control.write_text(head + "functions" + functions)
     shutil.copytree(case / "0", case / "_input_fields")
     (case / "_spec.json").write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n")
@@ -244,7 +248,7 @@ def _signal(case, name, filename, spec):
     """Reuse the held parsers after numeric ordering and axis selection."""
     from digitalmodel.solvers.openfoam.validation.sloshing_2d import parse_interface_height, parse_roll_moment
     rows = _merged_history(case, name, filename)
-    stride = 10 if spec["kind"] == "free-decay" else 5
+    stride = 10 if spec["kind"] == "free-decay" or spec["group"] == "time-step-3d" else 5
     tolerance = stride * spec["delta_t"] * 1.1
     if rows[0][0] > tolerance or rows[-1][0] < spec["end_time"] - tolerance:
         raise ValueError("native output does not cover configured duration")
