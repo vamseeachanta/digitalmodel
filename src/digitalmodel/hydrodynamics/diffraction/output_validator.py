@@ -77,7 +77,12 @@ class OutputValidator:
         # Resonance checks (WRK-030)
         resonance_issues = self._validate_resonance()
 
-        equilibrium_issues = self._validate_equilibrium()
+        equilibrium_issues, not_evaluated = self._validate_equilibrium()
+        equilibrium_failed = any(equilibrium_issues.values())
+        equilibrium_status = (
+            'FAIL' if equilibrium_failed else
+            'NOT_EVALUATED' if not_evaluated else 'PASS'
+        )
 
         # Compile comprehensive report
         self.validation_report = {
@@ -92,6 +97,8 @@ class OutputValidator:
             'symmetry_checks': symmetry_issues,
             'resonance_checks': resonance_issues,
             'equilibrium_checks': equilibrium_issues,
+            'equilibrium_status': equilibrium_status,
+            'equilibrium_not_evaluated': not_evaluated,
             'overall_status': self._determine_overall_status(
                 schema_issues, physical_issues, range_issues,
                 freq_issues, heading_issues, symmetry_issues,
@@ -99,37 +106,42 @@ class OutputValidator:
             )
         }
 
-        if any(issues and not issues[0].startswith("Not evaluated:")
-               for issues in equilibrium_issues.values()):
+        if equilibrium_failed:
             self.validation_report['overall_status'] = 'FAIL'
 
         self._print_validation_summary()
 
         return self.validation_report
 
-    def _validate_equilibrium(self) -> Dict[str, List[str]]:
-        """Run three explicit evidence checks; absent inputs never imply PASS.
+    def _validate_equilibrium(self) -> Tuple[Dict[str, List[str]], Dict[str, str]]:
+        """Return failures separately from reasons for unevaluated rules.
 
         See equilibrium_checks for the physical assumptions, units and required
         caller-selected tolerances. Invalid evidence is a failed check.
+        Missing evidence does not change the overall validation verdict. The
+        equilibrium status is NOT_EVALUATED unless every rule passes; any
+        failure takes precedence, including when other rules lack evidence.
+        Scalar reasons remain separate from the lists consumed as issues.
         """
         rules = {"cog_cob": check_cog_cob,
                  "mass_displacement": check_mass_displacement,
                  "force_balance": check_force_balance}
         issues = {}
+        not_evaluated = {}
         unknown = set(self.equilibrium_inputs) - set(rules)
         if unknown:
             issues["input_errors"] = [f"Unknown equilibrium rules: {sorted(unknown)}"]
         for name, check in rules.items():
             inputs = self.equilibrium_inputs.get(name)
             if inputs is None:
-                issues[name] = ["Not evaluated: explicit evidence and tolerance required"]
+                issues[name] = []
+                not_evaluated[name] = "Not evaluated: explicit evidence and tolerance required"
                 continue
             try:
                 issues[name] = check(**inputs)
             except (TypeError, ValueError, OverflowError) as error:
                 issues[name] = [f"Invalid evidence: {error}"]
-        return issues
+        return issues, not_evaluated
 
     def _validate_physical_validity(self) -> Dict[str, List[str]]:
         """
