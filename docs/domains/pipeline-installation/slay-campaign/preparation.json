@@ -1,8 +1,8 @@
 {
   "schema": "slay-preparation-1",
   "model_digest_serialization": "parsed-yaml-json-sort-keys-compact-ascii-v1",
-  "criteria_revision": "preparation-1",
-  "case_table_sha256": "1a463d57165dfc6e0fa68f9ebb28db03a80db39e64159f8b658fe95cb0cda1ef",
+  "criteria_revision": "execution-1",
+  "case_table_sha256": "be696c0da761ef657980621a651058aef5d0025584272c12c0cb108c3153c0a4",
   "native_attempted": 0,
   "native_completed": 0,
   "qualified_results": 0,
@@ -36,7 +36,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": 0.15898240683600307,
+      "preparation_wall_seconds": 0.16325261583551764,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -69,7 +69,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": 0.12950072204694152,
+      "preparation_wall_seconds": 0.1289269868284464,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -102,7 +102,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": 0.12939800694584846,
+      "preparation_wall_seconds": 0.12843820685520768,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -135,7 +135,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": 0.1303477706387639,
+      "preparation_wall_seconds": 0.12818004470318556,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -168,7 +168,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": 0.1291473121382296,
+      "preparation_wall_seconds": 0.127776806242764,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -201,7 +201,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": 0.12919580191373825,
+      "preparation_wall_seconds": 0.1278980579227209,
       "native_wall_seconds": null,
       "native_status": "not_run"
     }
