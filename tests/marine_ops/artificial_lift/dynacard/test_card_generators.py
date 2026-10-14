@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for synthetic dynacard generators.
 # ABOUTME: Validates all 20 failure mode generators produce valid CardData.
 
@@ -34,6 +37,8 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
 from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter import (
     solve_downhole_card,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings import units as U
+from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import PhysicsError
 from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.solver import (
     DEFAULT_SAVGOL_ORDER,
     DEFAULT_SAVGOL_WINDOW,
@@ -241,6 +246,26 @@ class TestSurfaceCardForwardModel:
         pump_card = gen_func(seed=711)
 
         surface_card = surface_card_from_pump_card(pump_card, ctx)
+        # These four existing boundaries produce a pump range larger than the
+        # measured, forward-modelled surface range. Algebraic invertibility
+        # does not exempt a card from the universal stroke ceiling (#1857).
+        if mode in {"PLUNGER_OUT_OF_BARREL", "ROD_PARTING", "WORN_BARREL", "GAS_LOCK"}:
+            surface_stroke_m = float(np.ptp(np.array(surface_card.position) * U.IN2M))
+            pump_stroke_m = float(np.ptp(np.array(pump_card.position) * U.IN2M))
+            assert pump_stroke_m > surface_stroke_m
+            with pytest.raises(PhysicsError, match="downhole stroke exceeds surface stroke") as caught:
+                solve_downhole_card(
+                    ctx.model_copy(update={"surface_card": surface_card}), n_nodes=200
+                )
+            assert caught.value.solver == "everitt_jennings"
+            assert caught.value.details["surface_stroke"] == surface_stroke_m
+            # The original position assertion below allows 1e-6 in per point;
+            # a range difference has two endpoints, hence at most 2e-6 in.
+            assert caught.value.details["downhole_stroke"] == pytest.approx(
+                pump_stroke_m, rel=0.0, abs=2.0e-6 * U.IN2M
+            )
+            assert caught.value.details["downhole_stroke"] > surface_stroke_m
+            return
         recovered = solve_downhole_card(
             ctx.model_copy(update={"surface_card": surface_card}), n_nodes=200
         )
