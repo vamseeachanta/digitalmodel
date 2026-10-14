@@ -579,6 +579,8 @@ def report_spec(root, result):
     summary, findings, recommendations, detailed, appendix = section_material(result)
     assumptions = load_yaml(root / WORKFLOW / "assumptions.yml")
     config = load_yaml(root / WORKFLOW / "input.yml")
+    revision_history = [RevisionRow(**row) for row in config["revision_history"]]
+    latest_revision = revision_history[-1]
     assumption_rows = [[a["parameter"], a["value"], a["units"], a.get("report_label", ASSUMED)]
                        for a in assumptions["assumptions"] if a.get("used_for_assessment", True)]
     appendix.append(table("Assumptions", ["Parameter", "Value or basis", "Units", "Status"], assumption_rows))
@@ -607,11 +609,12 @@ def report_spec(root, result):
     for source in result["sources"]:
         provenance.add("synthetic", source["path"], digest="sha256-lf:" + source["sha256_lf"])
     return ReportSpec(
-        document=AssessmentDocumentMeta(number="B0000-RPT-001-00", revision="00", title=TITLE,
-                              project="Synthetic assessment", client="Demonstration", date="2026-10-13",
+        document=AssessmentDocumentMeta(number=f"B0000-RPT-001-{latest_revision.rev}",
+                              revision=latest_revision.rev, title=TITLE,
+                              project="Synthetic assessment", client="Demonstration", date=latest_revision.date,
                               assessment_label="Synthetic example",
                               prepared_by="—", checked_by="—", approved_by="—",
-                              revision_history=[RevisionRow(**row) for row in config["revision_history"]]),
+                              revision_history=revision_history),
         sections=[Section(key=f"section-{i}", title=title, blocks=body)
                   for i, (title, body) in enumerate(zip(SECTION_TITLES, blocks), 1)],
         appendices=[Section(key="appendices", title="Appendices", blocks=appendix)],

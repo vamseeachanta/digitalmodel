@@ -213,9 +213,10 @@ def test_report_contract_and_determinism(tmp_path, result):
     manifest = json.loads(first[1].read_text(encoding="utf-8"))
     assert manifest["assessment"] == json.loads(json.dumps(builder.public_assessment(result)))
     assert manifest["report_sha256"] == hashlib.sha256(before[0]).hexdigest()
-    assert "B0000-RPT-001-00" in visible
-    assert "Revision 00" in visible
-    assert "2026-10-13" in visible
+    revision = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")["revision_history"][-1]
+    assert f"B0000-RPT-001-{revision['rev']}" in visible
+    assert f"Revision {revision['rev']}" in visible
+    assert revision["date"] in visible
     control = page.split('<div id="document-control">')[1].split('</div>')[0]
     assert re.sub(r"<[^>]+>", "", control).strip() == (
         "Synthetic example\nPrepared: — | Checked: — | Approved: —"
@@ -500,3 +501,35 @@ def test_revision_history_follows_summary(tmp_path, result):
     assert [row.model_dump() for row in spec.document.revision_history] == [
         builder.RevisionRow(**row).model_dump() for row in config["revision_history"]
     ]
+
+
+@pytest.mark.parametrize("additional_revision", [False, True], ids=["current", "further-row"])
+def test_cover_matches_latest_revision_history(tmp_path, monkeypatch, additional_revision):
+    from datetime import date, timedelta
+
+    config_path = ROOT / builder.WORKFLOW / "input.yml"
+    load_yaml = builder.load_yaml
+    config = load_yaml(config_path)
+    if additional_revision:
+        latest = config["revision_history"][-1]
+        config["revision_history"].append({
+            "rev": f"{int(latest['rev']) + 1:02d}",
+            "date": (date.fromisoformat(latest["date"]) + timedelta(days=1)).isoformat(),
+            "description": "Fixture amendment",
+        })
+
+    def fixture_config(path):
+        return config if path == config_path else load_yaml(path)
+
+    monkeypatch.setattr(builder, "load_yaml", fixture_config)
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    history = page.split('<div id="revision-history">')[1].split('</div>')[0]
+    rows = TableRows()
+    rows.feed(history)
+    revision, revision_date, _ = rows.rows[-1]
+    assert [revision, revision_date] == [
+        config["revision_history"][-1]["rev"], config["revision_history"][-1]["date"],
+    ]
+    cover = VisibleText()
+    cover.feed(page.split('<header>')[1].split('</header>')[0])
+    assert f"Document B0000-RPT-001-{revision} | Revision {revision} | {revision_date}" in " ".join(cover.text)

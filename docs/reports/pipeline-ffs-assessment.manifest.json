@@ -744,7 +744,7 @@
     ]
   },
   "assumptions_sha256_lf": "a3149daeec132383752f45cdc9dd3b743a3752e6dd60495fd7a92d11a2d51f58",
-  "builder_sha256_lf": "d522520955903d8da8947313d4d782bb5dc709d9d08f19d1d29eebb2ba98f92b",
+  "builder_sha256_lf": "871f3c243462be458aa8335b10d4bdfe669279c8ce2d088edb22b73e21ed8a2a",
   "calculation_sources_sha256_lf": {
     "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e40c309ae0a5a847b640973fb6e4e2a1ad2f43bdbcf77126e484c744a09bb239",
@@ -776,6 +776,6 @@
   ],
   "figures": "inline vector figures; 680-unit width; no raster or external dependencies",
   "intended_use": "worked example; no actual operating asset qualification",
-  "report_sha256": "8d31ec0f9cdb6625b096bc3ba3b1df9c98426247dce44d5f65b5406a993110fc",
+  "report_sha256": "20854c742db9447652f15830f6bf324b47516d7601ce347a76dfc454a543e3d2",
   "schema_version": 1
 }
