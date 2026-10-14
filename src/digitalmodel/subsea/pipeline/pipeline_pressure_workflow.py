@@ -303,7 +303,7 @@ class WallThicknessSizingWorkflow:
             hipps_check = {
                 "pass": setpoint <= p_d,
                 "setpoint_MPa": setpoint,
-                "maop_MPa": p_d,
+                "design_pressure_MPa": p_d,
                 "margin_MPa": p_d - setpoint,
                 "basis": "setpoint screen only; response-time/surge adequacy not established",
             }
@@ -351,7 +351,7 @@ class WallThicknessSizingWorkflow:
             "api_propagating_buckle": api_prop_result,
             "dnv_external_collapse": dnv_collapse_result,
             "dnv_propagating_buckle": dnv_prop_result,
-            "hipps_maop_check": hipps_check,
+            "hipps_setpoint_check": hipps_check,
         }
 
 

@@ -139,10 +139,11 @@ def test_hipps_workflow_setpoint_screen_preserves_wall_sizing():
     protected = WallThicknessSizingWorkflow(
         {"pipeline": dict(cfg, hipps_setpoint_MPa=18.0)}
     ).run()
-    assert protected["hipps_maop_check"]["pass"]
-    assert protected["hipps_maop_check"]["margin_MPa"] == 2.0
+    assert protected["hipps_setpoint_check"]["pass"]
+    assert protected["hipps_setpoint_check"]["design_pressure_MPa"] == 20.0
+    assert protected["hipps_setpoint_check"]["margin_MPa"] == 2.0
     assert protected["t_min_m"] == base["t_min_m"]
     excessive = WallThicknessSizingWorkflow(
         {"pipeline": dict(cfg, hipps_setpoint_MPa=21.0)}
     ).run()
-    assert not excessive["hipps_maop_check"]["pass"]
+    assert not excessive["hipps_setpoint_check"]["pass"]
