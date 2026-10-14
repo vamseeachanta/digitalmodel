@@ -38,6 +38,44 @@ The two PDF sources were fetched successfully with HTTP 200 on 2026-10-14 UTC.
 The source documents are read as text using `pdftotext`; the source PDFs remain
 outside the committed deliverables.
 
+## Open-source solver versions
+
+The numerical environment uses Capytaine 3.0.0 and MoorPy 1.3.0 without changing
+the project's dependency definition or lock. Both are pinned to the latest
+published releases returned by their public release endpoints on 2026-10-14
+at 04:20:04 UTC (HTTP 200):
+
+- <https://github.com/capytaine/capytaine/releases/tag/v3.0.0>
+- <https://github.com/NatLabRockies/MoorPy/releases/tag/v1.3.0>
+
+The tagged line and catenary formulations were opened with HTTP 200 on
+2026-10-14 at 04:25:11 UTC:
+
+- <https://github.com/NatLabRockies/MoorPy/blob/v1.3.0/moorpy/line.py>,
+  lines 18 and 34: the default seabed-friction coefficient is zero.
+- <https://github.com/NatLabRockies/MoorPy/blob/v1.3.0/moorpy/Catenary.py>,
+  elastic grounded and suspended catenary equations.
+
+The response convention is identified from the tagged impedance formulation
+(HTTP 200, 2026-10-14 UTC):
+<https://github.com/capytaine/capytaine/blob/v3.0.0/src/capytaine/post_pro/impedance.py>,
+function `rao_transfer_function`: K minus omega-squared times M+A minus
+the imaginary unit times omega times damping. This fixes the excitation/response phasor
+convention; the full complex response is tested against that implementation.
+
+Zero seabed friction is retained as an assumption. Anchor holding capacity
+and allowable excursion are not established by the tension-strength criterion.
+
+Bibliographic metadata for Longuet-Higgins (1952) was opened from the public
+wave-analysis bibliography at revision
+`cc06f14d54f21692ae87a1a4858979841cf531c7` (HTTP 200, 2026-10-14 UTC):
+<https://github.com/dionhaefner/dionsthesis/blob/cc06f14d54f21692ae87a1a4858979841cf531c7/phd-thesis/src/references.bib>,
+entry `longuet1952statisticaldistribution`, lines 98–104. It lists
+*On the statistical distribution of the height of sea waves*, JMR 11,
+245–266. This confirms bibliographic metadata only; the original paper has
+not been opened. The Rayleigh maximum is an explicitly stated narrow-band
+approximation, not a digitised or tabulated result from that paper.
+
 ## Reuse findings
 
 The platform definition report describes a publicly available benchmark that
@@ -113,7 +151,9 @@ HTTP 200. The source PDFs are identified by SHA-256:
 
 ## Publisher data notice
 
-Data and SoftwareAccess to or use of any data or software made available on this server ("Data") shall
+Data and Software
+
+Access to or use of any data or software made available on this server ("Data") shall
     impose the following obligations on the user, and use of the Data constitutes user's
     agreement to these terms. The user is granted the right, without any fee or cost,
     to use or copy the Data, provided that this entire notice appears in all copies of
@@ -138,6 +178,18 @@ USER AGREES TO INDEMNIFY DOE/NLR/ALLIANCE AND ITS SUBSIDIARIES, AFFILIATES, OFFI
     OR OTHER TORTIOUS CLAIM THAT ARISES OUT OF OR IN CONNECTION WITH THE ACCESS, USE OR
     PERFORMANCE OF THE DATA.
 
+
+## Method bibliography qualification
+
+API RP 2SK, *Design and Analysis of Stationkeeping Systems*, 2005,
+is identified by the existing `code_check_engine.py`
+module, lines 18 and 278, at commit
+`55a91491cad7730d4469e8a379f0f9b533b21a03`. The platform
+definition report's bibliography identifies DNVGL-OS-E301, *Position Mooring*,
+2018. These bibliographic identifications do not establish clause titles or
+licensed clause contents. Clause titles remain unconfirmed; no clause content,
+tabulated coefficient or standard-derived factor is reproduced. The intact and
+damaged factors remain explicitly assumed, based on previous experience.
 
 ## Reference input licence
 
