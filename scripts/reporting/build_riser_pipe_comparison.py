@@ -185,7 +185,7 @@ def _number(values, key):
 
 def _summary(model, values):
     """State the largest returned result without claiming complete code coverage."""
-    lines = ['<h2>Summary</h2><p>Internal program benchmarking analysis for one public nominal pipe. '
+    lines = ['<h2>Summary</h2><p>Internal program benchmarking analysis for one generic assumed pipe. '
              'The comparison covers repository-module outputs; standard conformity is not established.</p>']
     for code, result in model["governing"].items():
         disposition = "within" if result["utilisation"] <= 1 else "above"
@@ -216,7 +216,9 @@ def _input_table(model, values):
               "depth": "Water depth (m)"}
     rows = []
     for key, label in labels.items():
-        basis = "Public source" if key in {"od", "wall", "smys", "smts"} else "Assumed"
+        field = {"od": "outer_diameter_mm", "wall": "wall_thickness_mm",
+                 "smys": "smys", "smts": "smts"}.get(key)
+        basis = html.escape(model["config"].get("input_basis", {}).get(field, "Assumed"))
         rows.append(f'<tr><td>{label}</td><td>{_number(values, key)}</td><td>{basis}</td></tr>')
     for index, case in enumerate(model["config"]["cases"]):
         for field, label in (("internal_pressure_pa", "Internal pressure (MPa)"),
@@ -225,13 +227,13 @@ def _input_table(model, values):
                              ("effective_tension_n", "Effective tension (kN)")):
             rows.append(f'<tr><td>{html.escape(case["name"])}: {label}</td>'
                         f'<td>{_number(values, f"case-{index}-{field}")}</td><td>Assumed</td></tr>')
-    return ('<h2>Input pipe</h2><p>Grade: ' + html.escape(model["config"]["pipe"]["grade"]) +
+    return ('<h2>Input pipe</h2><p>Material: ' + html.escape(model["config"]["pipe"]["grade"]) +
             '.</p><table><thead><tr><th>Quantity (units)</th><th>Value</th><th>Basis</th></tr></thead><tbody>' +
             ''.join(rows) + '</tbody></table><p class="caption">Nominal properties and supplied load cases.</p>'
             '<p>Loads, depth and elastic properties are assumed, based on previous experience. '
             'Zero corrosion allowance and fabrication deduction are assumed. Both modules use nominal wall; '
             'collapse credits no internal-pressure support. Water depth is context and does not determine '
-            'the independently supplied absolute external pressure. Grade suitability, tolerance allowances '
+            'the independently supplied absolute external pressure. Material suitability, tolerance allowances '
             'and material certification are not established.</p>')
 
 
@@ -240,7 +242,8 @@ def _state_table(state, model, values, criteria):
     rows, bars = [], []
     for code, states in model["results"].items():
         if state not in states:
-            gap = "NOT DONE -> new issue" if state == "combined" else "Not returned by this strategy"
+            gap = ("Not Evaluated: the legacy module returns no combined-load check (tracked in #377)"
+                   if state == "combined" else "Not returned by this strategy")
             rows.append(f'<tr><td>{code}</td><td colspan="4">{html.escape(gap)}</td></tr>')
             continue
         result, key = states[state], _code_key(code)
@@ -279,9 +282,10 @@ def _discussion(model):
             lines.append(f'<p>{code} {state} utilisation is {difference:.1f}% higher than its comparator '
                          'for the same supplied pipe and loads. The modules return equal characteristic '
                          'pressure capacities and different design capacities for these pressure checks.</p>')
-    lines.append('<p>The legacy combined-load result is NOT DONE -&gt; new issue. '
-                 'A ranking of complete code assessments is not established. Exact legacy edition and clause '
-                 'qualification remain NOT DONE -&gt; new issue; STD clause locators are inherited from repository '
+    lines.append('<p>Not Evaluated: the legacy module returns no combined-load check (tracked in #377). '
+                 'A ranking of complete code assessments is not established. '
+                 'Not Evaluated: legacy edition and clause locators are not established; '
+                 'STD clause locators are inherited from repository '
                  'references and have not been checked against a licensed standard. Required minimum wall '
                  'and a second sourced pipe configuration are not calculated. The next step is to qualify '
                  'the citation basis and complete legacy combined-load coverage before a design disposition.</p>')
@@ -315,7 +319,8 @@ def _page(model, criteria, record):
     links = ''.join(f'<li><a href="{html.escape(source["url"], quote=True)}">'
                     f'{html.escape(source["title"])}</a>; retrieved '
                     f'{html.escape(source["retrieved_at"])}</li>' for source in model["config"]["sources"])
-    body.append('<h2>Public input sources</h2><ul>' + links + '</ul>')
+    body.append('<h2>Input basis</h2><p>Dimensions and strengths are assumed generic properties; '
+                'no schedule or grade designation is used.</p><ul>' + links + '</ul>')
     return ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             '<title>Program benchmarking analysis: riser pipe modules</title><style>'

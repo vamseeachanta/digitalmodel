@@ -1,5 +1,5 @@
 {
-  "criteria_revision": "0",
+  "criteria_revision": "1",
   "comparison_kind": "repository-module outputs; standard conformity not established",
   "limit": 1.0,
   "codes": {
@@ -74,5 +74,5 @@
     "src/digitalmodel/drilling_riser/postprocess/pressure.py",
     "src/digitalmodel/riser_database/getters.py"
   ],
-  "qualification": "Clause mapping is inherited from repository references, not checked against a licensed standard. Legacy edition and exact clause locators remain NOT DONE -> new issue."
+  "qualification": "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established."
 }

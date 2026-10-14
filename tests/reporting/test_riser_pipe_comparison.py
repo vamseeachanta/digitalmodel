@@ -146,7 +146,9 @@ def test_page_is_self_contained_and_gaps_are_not_zero(tmp_path):
     assert "@import" not in page and "url(" not in page
     assert "<svg" in page
     assert "API RP 1111 is not compared" in page
-    assert "NOT DONE -&gt; new issue" in page
+    assert "Not Evaluated: the legacy module returns no combined-load check (tracked in #377)" in page
+    assert "Not Evaluated: legacy edition and clause locators are not established" in page
+    assert "NOT DONE" not in page
     assert all(f'id="{state}"' in page for state in ("burst", "collapse", "hoop", "combined"))
     assert "assumed, based on previous experience" in page
 
@@ -208,7 +210,7 @@ def test_unbounded_combined_result_is_preserved(tmp_path):
 def test_revision_mismatch_rejects_issue(tmp_path):
     builder, source = builder_and_input()
     record = json.loads((ROOT / "scripts/reporting/riser_pipe_comparison.revisions.json").read_text())
-    record["revision"] = "1"
+    record["revision"] = "invalid"
     changed = tmp_path / "revision.json"
     changed.write_text(json.dumps(record))
     with pytest.raises(ValueError, match="revision"):
@@ -228,3 +230,24 @@ def test_default_output_is_not_ignored():
     result = subprocess.run(["git", "check-ignore", "--", relative.as_posix()],
                             cwd=ROOT, env=env, capture_output=True, text=True)
     assert result.returncode == 1
+
+
+def test_input_pipe_has_assumed_generic_properties(tmp_path):
+    """The published pipe basis uses assumptions without a schedule or grade."""
+    builder, source = builder_and_input()
+    config = yaml.safe_load(source.read_text())
+    pipe = config["pipe"]
+    assert pipe["grade"] == "generic assumed material"
+    assert pipe["outer_diameter_mm"] == 273
+    assert pipe["wall_thickness_mm"] == 21.4
+    assert (pipe["smys"], pipe["smts"], pipe["strength_unit"]) == (240, 415, "MPa")
+    assert config["sources"] == []
+    for field in ("outer_diameter_mm", "wall_thickness_mm", "smys", "smts"):
+        assert config["input_basis"][field] == "Assumed"
+    builder.build(source, tmp_path)
+    page = (tmp_path / "riser-pipe-comparison.html").read_text()
+    assert "Public source" not in page
+    assert "wermac" not in page
+    assert "ASTM A106" not in page
+    for key in ("od", "wall", "smys", "smts"):
+        assert re.search(rf'data-number="{key}">[^<]+</span></td><td>Assumed</td>', page)
