@@ -1,0 +1,50 @@
+{
+  "bank_and_extremes": {
+    "centre_factor": 1.5,
+    "confinement_factor": 1.1111111111111112,
+    "gumbel_10_year_m_s": 4.125183663656223,
+    "gumbel_location_m_s": 3.0,
+    "gumbel_scale_m_s": 0.5,
+    "outer_bank_bias_factor": 1.2,
+    "quarter_width_factor": 1.125,
+    "seasons": {
+      "dry": {
+        "count": 2,
+        "maximum": 2.0,
+        "mean": 1.5
+      },
+      "flood": {
+        "count": 2,
+        "maximum": 4.0,
+        "mean": 3.5
+      }
+    },
+    "superelevation_m": 0.20835886822349764,
+    "weibull_10_year_m_s": 3.0348542587702925,
+    "weibull_scale_m_s": 2.0,
+    "weibull_shape": 2.0
+  },
+  "towing": {
+    "assessment": {
+      "available_bollard_pull_N": 150000,
+      "go": false,
+      "required_bollard_pull_N": 903170.7106854887,
+      "required_yaw_capacity_Nm": 0.0,
+      "yaw_ok": true
+    },
+    "loads": {
+      "Fx_surge_N": 602113.8071236592,
+      "Fy_sway_N": 0.0,
+      "Mz_yaw_Nm": 0.0
+    },
+    "section_mean_m_s": 2.0,
+    "shallow_drag_factor": 9.0,
+    "surface_speed_m_s": 3.7500000000000004,
+    "surge_reduction_percent": 13.501046788071424,
+    "uniform_surface_loads": {
+      "Fx_surge_N": 696093.7500000001,
+      "Fy_sway_N": 0.0,
+      "Mz_yaw_Nm": 0.0
+    }
+  }
+}
