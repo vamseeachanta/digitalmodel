@@ -181,7 +181,9 @@ def test_report_uses_plain_calculation_and_scenario_wording(builder):
             "the required count") in text
     for phrase in ("existing edition route", "Citation schema:", "native values retained",
                    "Source attribution and the licence remain", "mass-sized arrangement",
-                   "retain the reference count"):
+                   "retain the reference count", "j is the edition-selected current density",
+                   "The existing CP route [I2] supplies the calculation; "
+                   "it is not an independent solver benchmark"):
         assert phrase not in text
     assert all(t.source == "[I2]; criterion: provided ≥ required"
                for t in builder.comparison_tables({"arrangements": {"stated": {"checks": []}}}))
