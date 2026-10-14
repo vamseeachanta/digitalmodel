@@ -8,6 +8,7 @@ No circular dependencies.
 """
 from __future__ import annotations
 
+import html
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -230,8 +231,19 @@ def apply_layout(fig: go.Figure, title: str) -> None:
     )
 
 
-def save_figure(fig: go.Figure, filename: str, output_dir: Path) -> Path:
+def save_figure(
+    fig: go.Figure, filename: str, output_dir: Path,
+    page_title: Optional[str] = None,
+) -> Path:
     """Write figure to HTML with CDN Plotly.js and return the path."""
     path = output_dir / f"{filename}.html"
-    fig.write_html(str(path), include_plotlyjs="cdn")
+    if page_title is None:
+        fig.write_html(str(path), include_plotlyjs="cdn")
+    else:
+        title = html.escape(page_title)
+        plot = fig.to_html(full_html=False, include_plotlyjs="cdn")
+        path.write_text(
+            f"<html><head><title>{title}</title></head><body>"
+            f"<h1>{title}</h1>{plot}</body></html>\n", encoding="utf-8",
+        )
     return path

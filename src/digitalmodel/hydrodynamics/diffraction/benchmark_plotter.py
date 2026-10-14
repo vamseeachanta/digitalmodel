@@ -88,6 +88,7 @@ class BenchmarkPlotter:
         output_dir: Path,
         x_axis: Literal["period", "frequency"] = "period",
         solver_metadata: Optional[Dict[str, Dict[str, Any]]] = None,
+        plot_title: Optional[str] = None,
     ) -> None:
         self._solver_results = solver_results
         self._solver_names = sorted(solver_results.keys())
@@ -95,6 +96,7 @@ class BenchmarkPlotter:
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self.x_axis = x_axis
         self._solver_metadata = solver_metadata or {}
+        self._plot_title = plot_title
         _first = self._solver_names[0]
         _first_comp = self._solver_results[_first].raos.get_component(
             DOF_ORDER[0],
@@ -115,7 +117,7 @@ class BenchmarkPlotter:
         return _plot_amplitude_overlay(
             self._solver_results, self._solver_names,
             self._output_dir, self.x_axis, self._heading_x_axis,
-            headings=headings,
+            headings=headings, page_title=self._plot_title,
         )
 
     def plot_phase_overlay(
@@ -126,7 +128,7 @@ class BenchmarkPlotter:
         return _plot_phase_overlay(
             self._solver_results, self._solver_names,
             self._output_dir, self.x_axis, self._heading_x_axis,
-            headings=headings,
+            headings=headings, page_title=self._plot_title,
         )
 
     def plot_combined_overlay(
@@ -137,7 +139,7 @@ class BenchmarkPlotter:
         return _plot_combined_overlay(
             self._solver_results, self._solver_names,
             self._output_dir, self.x_axis, self._heading_x_axis,
-            headings=headings,
+            headings=headings, page_title=self._plot_title,
         )
 
     def plot_difference(
@@ -182,7 +184,7 @@ class BenchmarkPlotter:
     def plot_pairwise_correlation_heatmap(self, report) -> Path:
         """Heatmap of mean pairwise magnitude correlation across all DOFs."""
         return _plot_pairwise_correlation_heatmap(
-            report, self._output_dir,
+            report, self._output_dir, page_title=self._plot_title,
         )
 
     def build_hydro_coefficients_html(self, report) -> str:

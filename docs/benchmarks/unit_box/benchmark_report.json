@@ -1,11 +1,11 @@
 {
   "vessel_name": "UnitBox",
   "solver_names": [
-    "AQWA",
-    "BEMRosetta",
-    "OrcaWave"
+    "Series A",
+    "Series C",
+    "Series B"
   ],
-  "comparison_date": "2026-08-04 06:25:38",
+  "comparison_date": "2026-10-13 13:01:01",
   "overall_consensus": "FULL",
   "comparison_status": "DECIDED",
   "refusal_reasons": [],
@@ -27,9 +27,9 @@
     }
   },
   "pairwise_results": {
-    "AQWA-vs-BEMRosetta": {
-      "solver_a": "AQWA",
-      "solver_b": "BEMRosetta",
+    "Series A-vs-Series C": {
+      "solver_a": "Series A",
+      "solver_b": "Series C",
       "overall_agreement": "EXCELLENT",
       "comparison_status": "DECIDED",
       "refusal_reason": null,
@@ -271,9 +271,9 @@
       },
       "hydrostatic_comparison": null
     },
-    "AQWA-vs-OrcaWave": {
-      "solver_a": "AQWA",
-      "solver_b": "OrcaWave",
+    "Series A-vs-Series B": {
+      "solver_a": "Series A",
+      "solver_b": "Series B",
       "overall_agreement": "EXCELLENT",
       "comparison_status": "DECIDED",
       "refusal_reason": null,
@@ -515,9 +515,9 @@
       },
       "hydrostatic_comparison": null
     },
-    "BEMRosetta-vs-OrcaWave": {
-      "solver_a": "BEMRosetta",
-      "solver_b": "OrcaWave",
+    "Series B-vs-Series C": {
+      "solver_a": "Series C",
+      "solver_b": "Series B",
       "overall_agreement": "EXCELLENT",
       "comparison_status": "DECIDED",
       "refusal_reason": null,
@@ -769,16 +769,16 @@
       "outlier_solver": null,
       "agreement_pairs": [
         [
-          "AQWA",
-          "BEMRosetta"
+          "Series A",
+          "Series C"
         ],
         [
-          "AQWA",
-          "OrcaWave"
+          "Series A",
+          "Series B"
         ],
         [
-          "BEMRosetta",
-          "OrcaWave"
+          "Series B",
+          "Series C"
         ]
       ]
     },
@@ -790,16 +790,16 @@
       "outlier_solver": null,
       "agreement_pairs": [
         [
-          "AQWA",
-          "BEMRosetta"
+          "Series A",
+          "Series C"
         ],
         [
-          "AQWA",
-          "OrcaWave"
+          "Series A",
+          "Series B"
         ],
         [
-          "BEMRosetta",
-          "OrcaWave"
+          "Series B",
+          "Series C"
         ]
       ]
     },
@@ -811,16 +811,16 @@
       "outlier_solver": null,
       "agreement_pairs": [
         [
-          "AQWA",
-          "BEMRosetta"
+          "Series A",
+          "Series C"
         ],
         [
-          "AQWA",
-          "OrcaWave"
+          "Series A",
+          "Series B"
         ],
         [
-          "BEMRosetta",
-          "OrcaWave"
+          "Series B",
+          "Series C"
         ]
       ]
     },
@@ -832,16 +832,16 @@
       "outlier_solver": null,
       "agreement_pairs": [
         [
-          "AQWA",
-          "BEMRosetta"
+          "Series A",
+          "Series C"
         ],
         [
-          "AQWA",
-          "OrcaWave"
+          "Series A",
+          "Series B"
         ],
         [
-          "BEMRosetta",
-          "OrcaWave"
+          "Series B",
+          "Series C"
         ]
       ]
     },
@@ -853,16 +853,16 @@
       "outlier_solver": null,
       "agreement_pairs": [
         [
-          "AQWA",
-          "BEMRosetta"
+          "Series A",
+          "Series C"
         ],
         [
-          "AQWA",
-          "OrcaWave"
+          "Series A",
+          "Series B"
         ],
         [
-          "BEMRosetta",
-          "OrcaWave"
+          "Series B",
+          "Series C"
         ]
       ]
     },
@@ -874,16 +874,16 @@
       "outlier_solver": null,
       "agreement_pairs": [
         [
-          "AQWA",
-          "BEMRosetta"
+          "Series A",
+          "Series C"
         ],
         [
-          "AQWA",
-          "OrcaWave"
+          "Series A",
+          "Series B"
         ],
         [
-          "BEMRosetta",
-          "OrcaWave"
+          "Series B",
+          "Series C"
         ]
       ]
     }
