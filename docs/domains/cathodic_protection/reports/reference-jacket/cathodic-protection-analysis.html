@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cathodic protection analysis: jacket at 60 m water depth — Draft for review</title>
+<style>
+  /* ============================ TOKENS ============================ */
+  :root{
+    --paper:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2;
+    --ink:#0d2230; --ink-2:#3f5563; --ink-muted:#6b8291; --hairline:#d8e0e2;
+    --sea:#0d2a36; --sea-ink:#eaf2f2;
+    --cfd:#009B84; --ro:#2563C9; --proj:#D9820A;
+    --cfd-soft:rgba(0,155,132,.12); --ro-soft:rgba(37,99,201,.12); --proj-soft:rgba(217,130,10,.14);
+    --good:#0f9d6b; --pend:#D9820A;
+    --shadow:0 1px 2px rgba(13,34,48,.05), 0 8px 28px -12px rgba(13,34,48,.18);
+    --maxw:1080px;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0a1a22; --surface:#0f2530; --surface-2:#132e3a;
+      --ink:#e8f0f0; --ink-2:#a9c0c8; --ink-muted:#7593a0; --hairline:#1e3a45;
+      --sea:#081419; --sea-ink:#eaf2f2;
+      --cfd:#12A38C; --ro:#5B8DEF; --proj:#BC8024;
+      --cfd-soft:rgba(18,163,140,.16); --ro-soft:rgba(91,141,239,.16); --proj-soft:rgba(188,128,36,.18);
+      --good:#37c08a; --pend:#e0a13a;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2;
+    --ink:#0d2230; --ink-2:#3f5563; --ink-muted:#6b8291; --hairline:#d8e0e2;
+    --sea:#0d2a36; --sea-ink:#eaf2f2;
+    --cfd:#009B84; --ro:#2563C9; --proj:#D9820A;
+    --cfd-soft:rgba(0,155,132,.12); --ro-soft:rgba(37,99,201,.12); --proj-soft:rgba(217,130,10,.14);
+    --good:#0f9d6b; --pend:#D9820A;
+    --shadow:0 1px 2px rgba(13,34,48,.05), 0 8px 28px -12px rgba(13,34,48,.18);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0a1a22; --surface:#0f2530; --surface-2:#132e3a;
+    --ink:#e8f0f0; --ink-2:#a9c0c8; --ink-muted:#7593a0; --hairline:#1e3a45;
+    --sea:#081419; --sea-ink:#eaf2f2;
+    --cfd:#12A38C; --ro:#5B8DEF; --proj:#BC8024;
+    --cfd-soft:rgba(18,163,140,.16); --ro-soft:rgba(91,141,239,.16); --proj-soft:rgba(188,128,36,.18);
+    --good:#37c08a; --pend:#e0a13a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+
+  /* ============================ BASE ============================ */
+  *{box-sizing:border-box}
+  .doc{background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.62;font-size:17px;-webkit-font-smoothing:antialiased;
+    font-feature-settings:"kern" 1;overflow-x:hidden}
+  .doc :where(p,li){color:var(--ink-2)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,5vw,40px)}
+  h1,h2,h3{color:var(--ink);text-wrap:balance;line-height:1.15;letter-spacing:-.02em;margin:0}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-muted);font-weight:600}
+  .num{font-variant-numeric:tabular-nums}
+  var{font-style:italic;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+  a{color:var(--cfd);text-underline-offset:2px}
+
+  /* ============================ MASTHEAD ============================ */
+  .masthead{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 86%,transparent);
+    backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--hairline)}
+  .masthead .wrap{display:flex;align-items:center;gap:16px;height:56px}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:-.01em;font-size:14px;color:var(--ink);white-space:nowrap}
+  .brand b{color:var(--cfd)}
+  .mh-legend{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .lg{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;color:var(--ink-muted);letter-spacing:.02em}
+  .lg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+
+  /* ============================ HERO ============================ */
+  .hero{position:relative;background:
+      radial-gradient(120% 80% at 82% -10%, var(--cfd-soft), transparent 60%),
+      radial-gradient(90% 70% at 10% 0%, var(--ro-soft), transparent 55%);
+    border-bottom:1px solid var(--hairline)}
+  .hero .wrap{padding-top:clamp(40px,7vw,76px);padding-bottom:clamp(30px,5vw,48px)}
+  .kicker{display:inline-flex;gap:9px;align-items:center;padding:5px 12px;border:1px solid var(--hairline);
+    border-radius:999px;background:var(--surface);box-shadow:var(--shadow);margin-bottom:22px}
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--cfd);box-shadow:0 0 0 4px var(--cfd-soft)}
+  .kicker span{font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2)}
+  h1{font-size:clamp(30px,5.4vw,52px);font-weight:800}
+  .lede{font-size:clamp(17px,2.2vw,21px);max-width:60ch;margin-top:18px;color:var(--ink-2)}
+  .lede b{color:var(--ink);font-weight:600}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:38px;
+    background:var(--hairline);border:1px solid var(--hairline);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+  .kpi{background:var(--surface);padding:18px 20px}
+  .kpi .v{font-family:var(--mono);font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.05}
+  .kpi .v .u{font-size:.5em;color:var(--ink-muted);font-weight:500;margin-left:2px}
+  .kpi .k{font-size:12.5px;color:var(--ink-muted);margin-top:8px;line-height:1.35}
+  .kpi.teal .v{color:var(--cfd)} .kpi.amber .v{color:var(--proj)}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+  /* ============================ SECTIONS ============================ */
+  section{padding:clamp(40px,6vw,68px) 0;border-bottom:1px solid var(--hairline)}
+  .sec-head{display:flex;gap:16px;align-items:baseline;margin-bottom:26px}
+  .sec-no{font-family:var(--mono);font-size:13px;color:var(--cfd);font-weight:700;letter-spacing:.05em;flex:none}
+  h2{font-size:clamp(22px,3.4vw,32px);font-weight:750}
+  .sec-head p{margin:8px 0 0;max-width:64ch}
+  .prose{max-width:68ch}
+  .prose p{margin:0 0 16px}
+  .prose p:last-child{margin-bottom:0}
+
+  /* device layout */
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,48px);align-items:center}
+  @media(max-width:820px){.split{grid-template-columns:1fr}}
+  .steps{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:14px}
+  .steps li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+  .steps .n{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cfd);background:var(--cfd-soft);
+    width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none}
+  .steps b{color:var(--ink)}
+
+  /* formula */
+  .formula{font-family:var(--mono);background:var(--surface-2);border:1px solid var(--hairline);border-radius:10px;
+    padding:14px 16px;font-size:15px;color:var(--ink);overflow-x:auto;letter-spacing:.01em}
+  .formula .lbl{color:var(--ink-muted);font-size:12px}
+  .def{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-family:var(--mono);font-size:12.5px;color:var(--ink-muted)}
+  .def b{color:var(--ink-2);font-weight:600}
+
+  /* figure / card */
+  .card{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;box-shadow:var(--shadow);
+    padding:clamp(16px,2.4vw,26px)}
+  .fig-cap{font-size:13.5px;color:var(--ink-muted);margin-top:14px;padding-top:14px;border-top:1px solid var(--hairline);
+    display:flex;gap:10px}
+  .fig-cap .tag{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 8px;border-radius:6px;flex:none;height:fit-content}
+  .tag.cfd{background:var(--cfd-soft);color:var(--cfd)} .tag.proj{background:var(--proj-soft);color:var(--proj)}
+  .chart-legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:6px;justify-content:flex-end}
+  .chart-legend .lg{font-size:12px;color:var(--ink-2)}
+  .chart-title{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:4px}
+  svg .grid{stroke:var(--hairline);stroke-width:1}
+  svg .axis{stroke:var(--ink-muted);stroke-width:1}
+  svg text{fill:var(--ink-muted);font-family:var(--mono);font-size:11px}
+  svg .axtitle{fill:var(--ink-2);font-size:12.5px;font-weight:600}
+
+  /* stat callouts row */
+  .callrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+  @media(max-width:760px){.callrow{grid-template-columns:1fr}}
+  .call{background:var(--surface);border:1px solid var(--hairline);border-radius:13px;padding:18px 18px;box-shadow:var(--shadow)}
+  .call .v{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--cfd);letter-spacing:-.02em}
+  .call .k{font-size:13px;color:var(--ink-2);margin-top:6px} .call .s{font-size:12px;color:var(--ink-muted);margin-top:4px}
+
+  /* tables */
+  .tbl-wrap{overflow-x:auto;margin-top:20px;border:1px solid var(--hairline);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:440px}
+  th,td{padding:11px 15px;text-align:right;border-bottom:1px solid var(--hairline);font-variant-numeric:tabular-nums;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-muted);font-weight:600;background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td.hl{color:var(--ink);font-weight:600}
+  tbody tr:hover{background:var(--surface-2)}
+
+  /* status list */
+  .status{display:grid;gap:12px;margin-top:8px}
+  .st{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:var(--surface);
+    border:1px solid var(--hairline);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow)}
+  .st .icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none;font-family:var(--mono);font-weight:700;font-size:15px}
+  .st.ok .icon{background:var(--cfd-soft);color:var(--cfd)}
+  .st.proj .icon{background:var(--proj-soft);color:var(--proj)}
+  .st.pend .icon{background:var(--surface-2);color:var(--ink-muted);border:1px dashed var(--hairline)}
+  .st .lab{color:var(--ink);font-weight:600;font-size:15px}
+  .st .sub{color:var(--ink-muted);font-size:13px;margin-top:2px}
+  .st .pill{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:5px 11px;border-radius:999px;flex:none}
+  .st.ok .pill{background:var(--cfd-soft);color:var(--cfd)}
+  .st.proj .pill{background:var(--proj-soft);color:var(--proj)}
+  .st.pend .pill{background:var(--surface-2);color:var(--ink-muted)}
+
+  .note{background:var(--proj-soft);border:1px solid color-mix(in srgb,var(--proj) 35%,transparent);border-radius:12px;
+    padding:16px 18px;margin-top:22px;font-size:14.5px;color:var(--ink-2);display:flex;gap:12px}
+  .note .b{font-family:var(--mono);color:var(--proj);font-weight:700;font-size:12px;letter-spacing:.05em;flex:none;padding-top:1px}
+
+  /* footer */
+  footer{background:var(--sea);color:var(--sea-ink);border-bottom:none}
+  footer .wrap{padding:44px clamp(18px,5vw,40px)}
+  footer h3{color:var(--sea-ink);font-size:16px;margin-bottom:14px;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+  .foot-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px}
+  @media(max-width:760px){.foot-grid{grid-template-columns:1fr;gap:24px}}
+  footer p,footer li{color:color-mix(in srgb,var(--sea-ink) 72%,transparent);font-size:13.5px;line-height:1.6}
+  footer ul{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+  footer .k{font-family:var(--mono);color:color-mix(in srgb,var(--sea-ink) 55%,transparent);font-size:11px}
+  .foot-bar{border-top:1px solid rgba(255,255,255,.1);margin-top:30px;padding-top:18px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:color-mix(in srgb,var(--sea-ink) 55%,transparent)}
+
+  /* tooltip */
+  #tip{position:fixed;pointer-events:none;z-index:60;background:var(--ink);color:var(--paper);font-family:var(--mono);
+    font-size:12px;padding:8px 11px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;transform:translateY(4px);
+    transition:opacity .1s;max-width:240px;line-height:1.5}
+  #tip.on{opacity:1;transform:none}
+  #tip .t{color:#fff;font-weight:700}
+  .hit{cursor:crosshair}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  :focus-visible{outline:2px solid var(--cfd);outline-offset:2px;border-radius:4px}
+
+  /* ============================ STANDARD-REPORT SHELL ============================ */
+  html{scroll-behavior:smooth}
+  .shell{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;align-items:start}
+  .toc{position:sticky;top:56px;align-self:start;max-height:calc(100vh - 56px);overflow-y:auto;
+    padding:26px 20px 40px 0;border-right:1px solid var(--hairline)}
+  .toc .tt{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 12px 4px}
+  .toc ol{list-style:none;margin:0;padding:0;counter-reset:l1}
+  .toc>ol>li{counter-increment:l1;margin:2px 0}
+  .toc a{display:block;text-decoration:none;color:var(--ink-2);font-size:13.5px;padding:5px 10px;border-radius:7px;border-left:2px solid transparent;line-height:1.3}
+  .toc>ol>li>a::before{content:counter(l1) ".  ";color:var(--ink-muted);font-family:var(--mono);font-size:12px}
+  .toc a:hover{background:var(--surface-2);color:var(--ink)}
+  .toc a.active{color:var(--cfd);border-left-color:var(--cfd);background:var(--cfd-soft);font-weight:600}
+  .toc .sub{list-style:none;margin:0 0 6px;padding:0;counter-reset:l2}
+  .toc .sub li{counter-increment:l2}
+  .toc .sub a{font-size:12.5px;color:var(--ink-muted);padding:3px 10px 3px 22px}
+  .toc .sub a::before{content:counter(l1) "." counter(l2) "  ";font-family:var(--mono);font-size:11px;opacity:.8}
+  .main{min-width:0;padding:8px 0 0 clamp(20px,3vw,44px)}
+  @media(max-width:900px){
+    .shell{grid-template-columns:1fr}
+    .toc{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--hairline);padding:18px 0 22px}
+    .toc ol{columns:2;column-gap:20px} .toc .sub{columns:1}
+    .main{padding-left:0}
+  }
+
+  /* numbered L1 / L2 sections */
+  .main>section{counter-increment:sec;border-bottom:1px solid var(--hairline);padding:38px 0 40px;scroll-margin-top:72px}
+  .main{counter-reset:sec}
+  .main>section:last-child{border-bottom:none}
+  .l1head{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}
+  .l1head .secnum{font-family:var(--mono);font-weight:700;color:var(--cfd);font-size:15px;flex:none}
+  .l1head .secnum::after{content:counter(sec)}
+  .main>section>h2{font-size:clamp(21px,3vw,30px);font-weight:750}
+  .l1sub{color:var(--ink-muted);font-size:15px;max-width:66ch;margin:2px 0 0}
+  .l2{counter-increment:sub;padding-top:26px;scroll-margin-top:72px}
+  section{counter-reset:sub}
+  .l2head{display:flex;gap:11px;align-items:baseline;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--hairline)}
+  .l2head .n{font-family:var(--mono);font-size:12.5px;color:var(--cfd);font-weight:700;flex:none}
+  .l2head .n::after{content:counter(sec) "." counter(sub)}
+  .l2head h3{font-size:clamp(16px,2vw,20px);font-weight:700}
+
+  /* objective callout */
+  .objective{background:var(--cfd-soft);border:1px solid color-mix(in srgb,var(--cfd) 30%,transparent);border-radius:14px;padding:20px 22px;display:grid;gap:10px}
+  .objective .oh{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--cfd);font-weight:700}
+  .objective p{color:var(--ink);margin:0;font-size:16px}
+  .objective .scope{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chip{font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--hairline);border-radius:999px;padding:5px 11px;color:var(--ink-2)}
+
+  /* data / definition tables */
+  .datagrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:4px}
+  .kv{border:1px solid var(--hairline);border-radius:12px;overflow-x:auto;background:var(--surface);box-shadow:var(--shadow)}
+  .kv .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);
+    padding:11px 15px;background:var(--surface-2);border-bottom:1px solid var(--hairline);font-weight:600}
+  .kv td{border-bottom:1px solid var(--hairline)}
+  .kv tr:last-child td{border-bottom:none}
+  /* Label sized to its own content, value takes the remaining measure, so a
+     row reads as one line across the page instead of a stub with dead space
+     beside it -- and a long value wraps rather than being clipped. */
+  .kv td:first-child{color:var(--ink-2);width:1%;white-space:nowrap;padding-right:30px}
+  .kv td:last-child{width:99%;white-space:normal;overflow-wrap:break-word}
+  .kv td:last-child{color:var(--ink);font-weight:600;font-family:var(--mono);font-size:13px}
+  .kv td .un{color:var(--ink-muted);font-weight:400;font-size:11px}
+
+  /* equation cards */
+  .eq{display:grid;grid-template-columns:1fr auto;align-items:center;gap:18px;background:var(--surface);
+    border:1px solid var(--hairline);border-left:3px solid var(--cfd);border-radius:11px;padding:16px 20px;margin:14px 0;box-shadow:var(--shadow)}
+  .eq .m{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:20px;color:var(--ink);
+    overflow-x:auto;line-height:2;letter-spacing:.01em}
+  .eq .m var{font-size:1em}
+  .eq .eno{font-family:var(--mono);font-size:13px;color:var(--ink-muted);flex:none}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .18em;font-size:.86em}
+  .frac>.n{border-bottom:1.6px solid currentColor;padding:0 .4em 1px}
+  .frac>.d{padding:1px .4em 0}
+  .rad{white-space:nowrap}
+  .rad>.rc{border-top:1.6px solid currentColor;padding:0 .18em;margin-left:-.08em}
+  .op{color:var(--ink-muted);margin:0 .12em}
+  .defs{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px 22px}
+  .defs .d{display:flex;gap:9px;font-size:13.5px;color:var(--ink-2);align-items:baseline}
+  .defs .d var{color:var(--ink);font-weight:600;min-width:2.4em;font-family:"Iowan Old Style",Palatino,Georgia,serif}
+  .defs .d .u{color:var(--ink-muted);font-family:var(--mono);font-size:11px;margin-left:auto;white-space:nowrap}
+
+  /* flowchart */
+  .flow{background:var(--surface);border:1px solid var(--hairline);border-radius:14px;padding:20px;box-shadow:var(--shadow);overflow-x:auto}
+  .flow svg{display:block;min-width:560px;margin:0 auto}
+  .flow .fb{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:1.5}
+  .flow .fb.cfd{fill:var(--cfd-soft);stroke:var(--cfd)}
+  .flow .fb.ro{fill:var(--ro-soft);stroke:var(--ro)}
+  .flow .fb.proj{fill:var(--proj-soft);stroke:var(--proj);stroke-dasharray:5 3}
+  .flow .fl{fill:var(--ink);font-family:var(--sans);font-size:12.5px;font-weight:600}
+  .flow .fs{fill:var(--ink-muted);font-family:var(--mono);font-size:10.5px}
+  .flow .fa{stroke:var(--ink-muted);stroke-width:1.6;fill:none}
+  .flow .fd{fill:var(--ink-muted)}
+
+  .refs{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:10px}
+  .refs li{display:grid;grid-template-columns:auto 1fr;gap:12px;font-size:14px;color:var(--ink-2);align-items:baseline}
+  .refs .rn{font-family:var(--mono);font-size:12px;color:var(--cfd);font-weight:700}
+  .backtop{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-muted);text-decoration:none}
+  .backtop:hover{color:var(--cfd)}
+</style>
+<style>
+@media print {
+  @page { size: Letter; margin: 14mm 12mm; }
+  html, body { background: #fff !important; }
+  .doc, .wrap, .shell, .main { max-width: 100% !important; width: 100% !important;
+                               margin: 0 !important; padding-left: 0 !important;
+                               padding-right: 0 !important; }
+  .shell { display: block !important; }
+  .toc { display: none !important; }          /* anchors are dead on paper */
+  .backtop { display: none !important; }
+  .datagrid { display: block !important; }
+  .datagrid > .kv { width: 100% !important; margin: 0 0 10px 0 !important;
+                    break-inside: avoid; page-break-inside: avoid; }
+  /* auto, not fixed: `fixed` split every row 50/50, spending half the page
+     measure on a short label while the value wrapped beside it. */
+  .kv table { width: 100% !important; table-layout: auto !important; }
+  .kv td:first-child { white-space: nowrap !important; width: 1% !important; }
+  .kv td:last-child { white-space: normal !important; word-break: break-word !important;
+                      width: 99% !important; text-align: right; }
+  .kpis { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+  section { break-inside: auto; }
+  .l1head, .l2head { break-after: avoid; page-break-after: avoid; }
+  .eq, .defs, .st, .flow, .fig-cap { break-inside: avoid; page-break-inside: avoid; }
+  .hero { padding-bottom: 12px !important; }
+}
+</style>
+<style>
+/* ABOUTME: Engine-specific additions to the house calc-report CSS (#2212). */
+/* ABOUTME: Title block, standard chips, status rows, input echo, Plotly print. */
+
+/* masthead: document number + standard chips */
+.masthead .docno{font-family:var(--mono);font-size:13px;color:var(--ink-2);white-space:nowrap}
+.masthead .docno b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip.std{background:var(--cfd-soft);border-color:color-mix(in srgb,var(--cfd) 35%,transparent);color:var(--ink)}
+.chip.std .ed{color:var(--cfd);font-weight:700;margin-left:6px}
+.chip.std .prov{color:var(--ink-muted);margin-left:6px}
+.masthead .mh-legend{margin-left:auto}
+
+/* title block */
+.titleblock{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:760px){.titleblock{grid-template-columns:1fr}}
+.titleblock .kv table{min-width:0}
+.titleblock .kv td:first-child{width:38%;white-space:normal}
+.revhist{margin-top:18px}
+.revhist table{min-width:0;font-size:13px}
+.revhist th,.revhist td{text-align:left;white-space:normal}
+
+/* tables */
+.tbl{margin-top:22px}
+.tbl .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px}
+.tbl thead tr.units th{font-family:var(--mono);font-size:10.5px;text-transform:none;letter-spacing:0;color:var(--ink-muted);
+  background:var(--surface);border-top:none;padding-top:0}
+.tbl .src{font-size:12.5px;color:var(--ink-muted);margin:8px 0 0;font-family:var(--mono)}
+
+/* figures */
+figure{margin:22px 0 0}
+figure .chart-title{margin-bottom:8px}
+figure figcaption.fig-cap{display:block}
+figure img,figure svg{max-width:100%;height:auto;display:block}
+.plotly-graph-div{width:100%}
+.js-plotly-plot{break-inside:avoid;page-break-inside:avoid;height:420px}
+
+/* status: PASS / FAIL */
+.status{margin-top:18px}
+.st.ok .icon,.st.ok .pill{background:var(--cfd-soft);color:var(--cfd)}
+.st.fail .icon,.st.fail .pill{background:rgba(220,38,38,.12);color:#b91c1c}
+.st .sub b{color:var(--ink-2);font-weight:600}
+
+/* prose blocks */
+.prose h3{font-size:18px;margin:18px 0 8px}
+.prose h4{font-size:15px;margin:14px 0 6px}
+.prose ul,.prose ol{margin:0 0 16px;padding-left:22px}
+.prose li{margin:4px 0}
+.prose pre{font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--hairline);
+  border-radius:10px;padding:12px 14px;overflow-x:auto}
+.prose code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.prose pre code{background:none;padding:0}
+
+/* references / data sources / input echo */
+.refs-table th,.refs-table td{text-align:left;white-space:normal}
+.refs-table td.path{font-family:var(--mono);font-size:12px}
+.sources th,.sources td{text-align:left;white-space:normal}
+.input-echo{margin-top:8px}
+.input-echo summary{cursor:pointer;font-family:var(--mono);font-size:13px;color:var(--ink-2);padding:10px 0}
+.input-echo table{min-width:0;font-size:13px}
+.input-echo td:first-child{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.input-echo td:last-child{text-align:left;white-space:normal;font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+
+/* appendix section labels */
+.secnum.applabel::after{content:none}
+.secnum.applabel{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+
+/* footer PDF status */
+.foot-bar .pdf{font-family:var(--mono)}
+
+@media print{
+  .masthead{position:static}
+  .titleblock{display:block}
+  .titleblock .kv{margin-bottom:10px;break-inside:avoid}
+  .input-echo{display:block}
+  .input-echo[open] summary,.input-echo summary{list-style:none}
+  details.input-echo:not([open])>*:not(summary){display:block}
+  figure,.tbl{break-inside:avoid;page-break-inside:avoid}
+  .st{break-inside:avoid}
+  .chips{gap:6px}
+  a{color:inherit;text-decoration:none}
+}
+
+@media print {
+.doc .toc{display:none}
+.doc .shell{display:block}
+.doc .main{padding:0}
+.doc .tbl table{min-width:0;width:100%;table-layout:fixed}
+.doc .tbl-wrap{overflow:visible}
+.doc .tbl th,.doc .tbl td{font-size:9px;padding:4px 2px;white-space:normal;overflow-wrap:normal}
+.doc .tbl{break-inside:auto;page-break-inside:auto}
+}
+</style>
+</head>
+<body class="doc">
+<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Draft for review</span></div></header>
+<div class="hero"><div class="wrap"><h1>Cathodic protection analysis: jacket at 60 m water depth</h1><p>Draft for review</p>
+<p>DNV-RP-B401 — May 2021</p>
+</div></div>
+<div class="wrap shell">
+<nav class="toc" aria-label="Contents"><p class="tt">Contents</p><ol>
+<li><a href="#analysis-1">Executive Summary</a></li>
+<li><a href="#analysis-2">Introduction</a></li>
+<li><a href="#analysis-3">Design Data</a></li>
+<li><a href="#analysis-4">Analysis Methodology</a></li>
+<li><a href="#analysis-5">Detailed Results</a></li>
+<li><a href="#analysis-6">Key Findings</a></li>
+<li><a href="#analysis-7">Limitations</a></li>
+<li><a href="#analysis-8">Recommendations</a></li>
+<li><a href="#analysis-9">References</a></li>
+<li><a href="#analysis-10">Acronyms and Symbols</a></li>
+<li><a href="#structural-evidence"> — Structural evidence</a></li>
+</ol></nav>
+<main class="main">
+<section id="analysis-1">
+<div class="l1head"><span class="secnum applabel">1</span><h2>Executive Summary</h2></div>
+
+    <div class="prose">
+<p>The reference jacket at 60.0 m water depth is analysed with 252 anodes. Aggregate lifetime mass and initial and final current output are compared with the required quantities below, using DNV-RP-B401, Cathodic protection design, May 2021 <a href="#reference-3">[3]</a>. Draft: input qualification required. The arrangement is a conditional solution on the declared basis; environmental, coating, lifetime and anode inputs are assumed. The doubled-life sensitivity changes the conclusion. Spatial protection, splash exposure, installed piles and the structural mass discrepancy remain unresolved. The way forward is input confirmation and a spatial protection assessment.</p>
+    </div>
+    <div class="tbl" id="table-1">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>00</td><td>2026-10-14</td><td>Draft reference-jacket analysis; sourced geometry and conditional CP comparisons.</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table 1.1 – Revision history</div>
+    </div>
+    <div class="tbl" id="table-2">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Check</th><th>Required (kg)</th><th>Provided (kg)</th><th>Margin (%)</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Mean-current lifetime mass</td><td>5427.4</td><td>5442.8</td><td>+0.3</td><td>PASS</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table 1.2 – Stated arrangement: kg comparison</div>
+      <p class="src">Source: <a href="#reference-I2">[I2]</a>; criterion: provided ≥ required; native values retained in the citation sidecar.</p>
+    </div>
+    <div class="tbl" id="table-3">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Check</th><th>Required (A)</th><th>Provided (A)</th><th>Margin (%)</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Initial current output</td><td>11.6</td><td>390.1</td><td>+3255.1</td><td>PASS</td></tr>
+            <tr><td>Final current output</td><td>106.8</td><td>291.1</td><td>+172.6</td><td>PASS</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table 1.3 – Stated arrangement: A comparison</div>
+      <p class="src">Source: <a href="#reference-I2">[I2]</a>; criterion: provided ≥ required; native values retained in the citation sidecar.</p>
+    </div>
+</section>
+<section id="analysis-2">
+<div class="l1head"><span class="secnum applabel">2</span><h2>Introduction</h2></div>
+
+    <div class="prose">
+<p>The reference-jacket geometry is used to evaluate aggregate sacrificial-anode requirements. Public structural data qualify the geometry; they do not qualify the CP environmental or product basis. The analysis covers one reference configuration and its diagnostic lifetime sensitivity.</p>
+    </div>
+</section>
+<section id="analysis-3">
+<div class="l1head"><span class="secnum applabel">3</span><h2>Design Data</h2></div>
+
+    <div class="prose">
+<h4>3.1 Site data</h4>
+<p>Water depth is 60.0 m from the pinned public model <a href="#reference-2">[2]</a>. The site is a reference geometry, with no installation location selected. Water-level range, splash boundaries and wave conditions are not established; above-water protection is therefore not evaluated.</p>
+    </div>
+    <div class="prose">
+<h4>3.2 Structure and equipment data</h4>
+<p>The 3-leg tubular jacket is represented by 63 members <a href="#reference-2">[2]</a>. Section properties and axis coordinates are sourced; true lengths, external areas and steel mass are derived. Pile embedment is an initial estimate in the paper <a href="#reference-1">[1]</a>, not an installed schedule. Design life is 25.0 yr; coating category is III; both are assumed, based on previous experience <a href="#reference-I1">[I1]</a>. They control lifetime mass and current demand. The aluminium stand-off cylinder is 1.0 m long with radius 0.050 m, assumed, based on previous experience <a href="#reference-I1">[I1]</a>. Net mass is 21.6 kg, derived from π × radius² × length × the repository alloy density <a href="#reference-I2">[I2]</a>; no core is deducted. Dimensions and alloy performance affect both mass and output. Attachment, core, product qualification and spatial layout are not established.</p>
+    </div>
+    <div class="prose">
+<h4>3.3 Environmental data</h4>
+<p>Temperature 10.0 °C and seawater resistivity 0.3 Ω m are assumed, based on previous experience <a href="#reference-I1">[I1]</a>. Temperature selects current-demand and alloy-performance lookups; resistivity controls anode resistance and current output. Soil resistivity, burial condition and measured potentials are not established; buried and spatial adequacy remain conditional.</p>
+    </div>
+    <div class="prose">
+<h4>3.4 Vessel data</h4>
+<p>Not applicable: the assessed configuration is a fixed jacket; no vessel installation analysis is performed.</p>
+    </div>
+    <div class="prose">
+<h4>3.5 Criteria and source clauses</h4>
+<p>DNV-RP-B401, Cathodic protection design, May 2021 <a href="#reference-3">[3]</a>: Anode mass; Anode resistance; Anode current output. The aggregate mass criterion is provided net mass ≥ lifetime required mass; initial and final output criteria are provided current ≥ corresponding current demand. Current densities, coating breakdown, capacity, utilisation and potentials are selected by the repository edition route <a href="#reference-I2">[I2]</a>, not independently verified against the licensed standard in this analysis. Their applicability is assumed and requires confirmation; no standard table is reproduced. An aggregate PASS denotes these comparisons only; no local potential criterion is evaluated.</p>
+    </div>
+    <div class="prose">
+<h4>3.6 Method</h4>
+<p>The physical method and equations are presented in Section 4.</p>
+    </div>
+    <div class="prose">
+<h4>3.7 Load cases</h4>
+<p>The stated arrangement is the mass-sized quantity evaluated for initial, mean and final coating conditions. Water-column steel is split at the repository depth-band boundary; buried pile area is evaluated separately. A doubled-design-life sensitivity retains the same anode count and all other inputs; it is a diagnostic scenario, not a selected design.</p>
+    </div>
+</section>
+<section id="analysis-4">
+<div class="l1head"><span class="secnum applabel">4</span><h2>Analysis Methodology</h2></div>
+
+    <div class="prose">
+<p>The tubular external area is calculated as A = π D L (4.1), with axis length L split by elevation and depth. Phase current demand is I = Σ A j f (4.2), where j is the edition-selected current density and f is coating breakdown. Lifetime required mass is M = I_mean × hours/year × life / (capacity × utilisation) (4.3). Individual output is i = driving potential / resistance (4.4); aggregate output is N i. Fresh and depleted resistance are evaluated separately. The required count is the upward-rounded maximum of mass, initial-output and final-output counts. Native comparisons precede display rounding. The existing CP route <a href="#reference-I2">[I2]</a> supplies the calculation; it is not an independent solver benchmark. The coordinate model uses metres with z positive upward from still-water level. Tubular intersections, caps, internal surfaces, shielding and current distribution are not resolved. Source dimensions and mass are compared separately from CP adequacy.</p>
+    </div>
+</section>
+<section id="analysis-5">
+<div class="l1head"><span class="secnum applabel">5</span><h2>Detailed Results</h2></div>
+
+    <figure class="card" id="fig-reference-jacket-elevation-figure">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 491.529 710" data-scale="6.5616797900262469" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Jacket elevation"><defs><pattern id="elevation-zone-0" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(0)"><rect width="9" height="9" fill="white"/><path d="M 0 0 L 0 9" stroke="#888" stroke-width="0.35"/></pattern><pattern id="elevation-zone-1" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="9" height="9" fill="white"/><path d="M 0 0 L 0 9" stroke="#888" stroke-width="0.35"/></pattern></defs><g data-zone="Submerged and splash, undivided" data-lower-m="-60" data-upper-m="0"><rect x="45" y="131.45669291338584" width="221.52887139107614" height="393.70078740157481" fill="url(#elevation-zone-0)" stroke="#888" stroke-width="0.5"/><text x="276.52887139107611" y="331.30708661417327" font-size="10" fill="black">Submerged and splash, undivided: -60 to 0 m</text></g><g data-zone="Splash and atmospheric, undivided" data-lower-m="0" data-upper-m="14.1"><rect x="45" y="38.937007874015748" width="221.52887139107614" height="92.519685039370074" fill="url(#elevation-zone-1)" stroke="#888" stroke-width="0.5"/><text x="276.52887139107611" y="88.196850393700785" font-size="10" fill="black">Splash and atmospheric, undivided: 0 to 14.1 m</text></g><line data-member="member-1" data-kind="leg" x1="182.28346456692913" y1="38.937007874015748" x2="207.21784776902888" y2="224.63254593175853" stroke="black" stroke-width="7.8740157480314963"/><line data-member="member-2" data-kind="leg" x1="97.047244094488178" y1="38.937007874015748" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="7.8740157480314963"/><line data-member="member-3" data-kind="leg" x1="97.047244094488178" y1="38.937007874015748" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="7.8740157480314963"/><line data-member="member-4" data-kind="leg" x1="207.21784776902888" y1="224.63254593175853" x2="218.67454068241469" y2="309.93438320209975" stroke="black" stroke-width="9.1863517060367457"/><line data-member="member-5" data-kind="leg" x1="84.580052493438316" y1="224.63254593175853" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="9.1863517060367457"/><line data-member="member-6" data-kind="leg" x1="84.580052493438316" y1="224.63254593175853" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="9.1863517060367457"/><line data-member="member-7" data-kind="leg" x1="218.67454068241469" y1="309.93438320209975" x2="231.88976377952756" y2="408.35958005249347" stroke="black" stroke-width="9.8425196850393704"/><line data-member="member-8" data-kind="leg" x1="78.851706036745412" y1="309.93438320209975" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="9.8425196850393704"/><line data-member="member-9" data-kind="leg" x1="78.851706036745412" y1="309.93438320209975" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="9.8425196850393704"/><line data-member="member-10" data-kind="leg" x1="231.88976377952756" y1="408.35958005249347" x2="246.68635170603676" y2="518.59580052493448" stroke="black" stroke-width="13.123359580052494"/><line data-member="member-11" data-kind="leg" x1="72.244094488188978" y1="408.35958005249347" x2="64.842519685039377" y2="518.59580052493448" stroke="black" stroke-width="13.123359580052494"/><line data-member="member-12" data-kind="leg" x1="72.244094488188978" y1="408.35958005249347" x2="64.842519685039377" y2="518.59580052493448" stroke="black" stroke-width="13.123359580052494"/><line data-member="member-13" data-kind="leg" x1="246.68635170603676" y1="518.59580052493448" x2="246.68635170603676" y2="525.15748031496059" stroke="black" stroke-width="19.685039370078741"/><line data-member="member-14" data-kind="leg" x1="64.842519685039377" y1="518.59580052493448" x2="64.842519685039377" y2="525.15748031496059" stroke="black" stroke-width="19.685039370078741"/><line data-member="member-15" data-kind="leg" x1="64.842519685039377" y1="518.59580052493448" x2="64.842519685039377" y2="525.15748031496059" stroke="black" stroke-width="19.685039370078741"/><line data-member="member-16" data-kind="diagonal" x1="142.78215223097112" y1="115.07874015748031" x2="182.28346456692913" y2="38.937007874015748" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-17" data-kind="diagonal" x1="142.78215223097112" y1="115.07874015748031" x2="97.047244094488178" y2="38.937007874015748" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-18" data-kind="diagonal" x1="142.78215223097112" y1="115.07874015748031" x2="207.21784776902888" y2="224.63254593175853" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-19" data-kind="diagonal" x1="142.78215223097112" y1="115.07874015748031" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-20" data-kind="diagonal" x1="90.813648293963254" y1="115.07874015748031" x2="97.047244094488178" y2="38.937007874015748" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-21" data-kind="diagonal" x1="90.813648293963254" y1="115.07874015748031" x2="97.047244094488178" y2="38.937007874015748" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-22" data-kind="diagonal" x1="90.813648293963254" y1="115.07874015748031" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-23" data-kind="diagonal" x1="90.813648293963254" y1="115.07874015748031" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-24" data-kind="diagonal" x1="142.78215223097112" y1="115.07874015748031" x2="97.047244094488178" y2="38.937007874015748" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-25" data-kind="diagonal" x1="142.78215223097112" y1="115.07874015748031" x2="182.28346456692913" y2="38.937007874015748" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-26" data-kind="diagonal" x1="142.78215223097112" y1="115.07874015748031" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-27" data-kind="diagonal" x1="142.78215223097112" y1="115.07874015748031" x2="207.21784776902888" y2="224.63254593175853" stroke="black" stroke-width="7.2178477690288725"/><line data-member="member-28" data-kind="diagonal" x1="147.3293963254593" y1="264.49475065616798" x2="207.21784776902888" y2="224.63254593175853" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-29" data-kind="diagonal" x1="147.3293963254593" y1="264.49475065616798" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-30" data-kind="diagonal" x1="147.3293963254593" y1="264.49475065616798" x2="218.67454068241469" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-31" data-kind="diagonal" x1="147.3293963254593" y1="264.49475065616798" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-32" data-kind="diagonal" x1="81.719160104986869" y1="264.49475065616798" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-33" data-kind="diagonal" x1="81.719160104986869" y1="264.49475065616798" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-34" data-kind="diagonal" x1="81.719160104986869" y1="264.49475065616798" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-35" data-kind="diagonal" x1="81.719160104986869" y1="264.49475065616798" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-36" data-kind="diagonal" x1="147.3293963254593" y1="264.49475065616798" x2="84.580052493438316" y2="224.63254593175853" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-37" data-kind="diagonal" x1="147.3293963254593" y1="264.49475065616798" x2="207.21784776902888" y2="224.63254593175853" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-38" data-kind="diagonal" x1="147.3293963254593" y1="264.49475065616798" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-39" data-kind="diagonal" x1="147.3293963254593" y1="264.49475065616798" x2="218.67454068241469" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-40" data-kind="diagonal" x1="150.41338582677167" y1="355.89238845144354" x2="218.67454068241469" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-41" data-kind="diagonal" x1="150.41338582677167" y1="355.89238845144354" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-42" data-kind="diagonal" x1="150.41338582677167" y1="355.89238845144354" x2="231.88976377952756" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-43" data-kind="diagonal" x1="150.41338582677167" y1="355.89238845144354" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-44" data-kind="diagonal" x1="75.551181102362207" y1="355.89238845144354" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-45" data-kind="diagonal" x1="75.551181102362207" y1="355.89238845144354" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-46" data-kind="diagonal" x1="75.551181102362207" y1="355.89238845144354" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-47" data-kind="diagonal" x1="75.551181102362207" y1="355.89238845144354" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-48" data-kind="diagonal" x1="150.41338582677167" y1="355.89238845144354" x2="78.851706036745412" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-49" data-kind="diagonal" x1="150.41338582677167" y1="355.89238845144354" x2="218.67454068241469" y2="309.93438320209975" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-50" data-kind="diagonal" x1="150.41338582677167" y1="355.89238845144354" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-51" data-kind="diagonal" x1="150.41338582677167" y1="355.89238845144354" x2="231.88976377952756" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-52" data-kind="diagonal" x1="153.91732283464569" y1="459.8950131233596" x2="231.88976377952756" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-53" data-kind="diagonal" x1="153.91732283464569" y1="459.8950131233596" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-54" data-kind="diagonal" x1="153.91732283464569" y1="459.8950131233596" x2="246.68635170603676" y2="518.59580052493448" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-55" data-kind="diagonal" x1="153.91732283464569" y1="459.8950131233596" x2="64.842519685039377" y2="518.59580052493448" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-56" data-kind="diagonal" x1="68.543307086614178" y1="459.8950131233596" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-57" data-kind="diagonal" x1="68.543307086614178" y1="459.8950131233596" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-58" data-kind="diagonal" x1="68.543307086614178" y1="459.8950131233596" x2="64.842519685039377" y2="518.59580052493448" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-59" data-kind="diagonal" x1="68.543307086614178" y1="459.8950131233596" x2="64.842519685039377" y2="518.59580052493448" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-60" data-kind="diagonal" x1="153.91732283464569" y1="459.8950131233596" x2="72.244094488188978" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-61" data-kind="diagonal" x1="153.91732283464569" y1="459.8950131233596" x2="231.88976377952756" y2="408.35958005249347" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-62" data-kind="diagonal" x1="153.91732283464569" y1="459.8950131233596" x2="64.842519685039377" y2="518.59580052493448" stroke="black" stroke-width="6.5616797900262469"/><line data-member="member-63" data-kind="diagonal" x1="153.91732283464569" y1="459.8950131233596" x2="246.68635170603676" y2="518.59580052493448" stroke="black" stroke-width="6.5616797900262469"/><g data-level="waterline" data-elevation-m="0"><line x1="45" x2="266.52887139107611" y1="131.45669291338584" y2="131.45669291338584" stroke="black" stroke-width="1" stroke-dasharray="7 3"/><text x="276.52887139107611" y="127.45669291338584" font-size="10" fill="black">waterline: 0 m</text></g><g data-level="mudline" data-elevation-m="-60"><line x1="45" x2="266.52887139107611" y1="525.15748031496059" y2="525.15748031496059" stroke="black" stroke-width="1" stroke-dasharray="2 3"/><text x="276.52887139107611" y="521.15748031496059" font-size="10" fill="black">mudline: -60 m</text></g><text x="55" y="20" font-size="10" fill="black">Datum: still-water level</text><text x="45" y="600" font-size="10" fill="black">OPENLY LICENSED REFERENCE; <a href="#reference-2">[2]</a> Mroczek,</text><text x="45" y="614" font-size="10" fill="black">2023, revision da77a393; Apache License</text><text x="45" y="628" font-size="10" fill="black">2.0. <a href="#reference-1">[1]</a> Mroczek, Arwade and Lackner,</text><text x="45" y="642" font-size="10" fill="black">2023; CC BY 4.0.; Apache License 2.0; CC</text><text x="45" y="656" font-size="10" fill="black">BY 4.0; <a href="#reference-1">[1]</a>; <a href="#reference-2">[2]</a></text><path data-scale-bar-m="20" d="M 55 565 h 131.234 m -131.234 -3 v 6 m 131.234 -6 v 6" stroke="black" fill="none"/><text x="55" y="582" font-size="10" fill="black">20 m; common horizontal and vertical scale</text><text x="45" y="680" font-size="10">Axis height above mudline: 74.1 m; water depth: 60.0 m</text><text x="45" y="694" font-size="10">Projected top span: 12.990 m; mudline span: 27.713 m</text></svg>
+      <figcaption class="fig-cap">Figure 5.1 – Reference jacket elevation. Projection onto the vertical y–z plane of all 63 tubular members; axis true lengths are computed in three dimensions. The source inventory contains no horizontal plan-bracing members. Joint offsets and can lengths are not deducted. Water depth is 60 m; tubular height above mudline is 74.1 m. The projected top and mudline spans are distinct from triangle side widths; both measures are listed in Published values and comparison. Splash separation is not evaluated: water-level and lower splash-limit evidence are required. Values were transcribed and converted in form; the figure is drawn from coordinates, with no source figure adapted. <a href="#reference-2">[2]</a> Mroczek, 2023, revision da77a393; Apache License 2.0. <a href="#reference-1">[1]</a> Mroczek, Arwade and Lackner, 2023; CC BY 4.0.</figcaption>
+    </figure>
+    <div class="tbl" id="table-4">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Check</th><th>Required (kg)</th><th>Provided (kg)</th><th>Margin (%)</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Mean-current lifetime mass</td><td>5427.4</td><td>5442.8</td><td>+0.3</td><td>PASS</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table 5.1 – Stated arrangement: kg comparison</div>
+      <p class="src">Source: <a href="#reference-I2">[I2]</a>; criterion: provided ≥ required; native values retained in the citation sidecar.</p>
+    </div>
+    <div class="tbl" id="table-5">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Check</th><th>Required (A)</th><th>Provided (A)</th><th>Margin (%)</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Initial current output</td><td>11.6</td><td>390.1</td><td>+3255.1</td><td>PASS</td></tr>
+            <tr><td>Final current output</td><td>106.8</td><td>291.1</td><td>+172.6</td><td>PASS</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table 5.2 – Stated arrangement: A comparison</div>
+      <p class="src">Source: <a href="#reference-I2">[I2]</a>; criterion: provided ≥ required; native values retained in the citation sidecar.</p>
+    </div>
+    <div class="prose">
+<p>External area = π × outside diameter × axis length in the elevation interval. Crossing axes are split at each interval boundary. Joint offsets, can lengths, end caps, member intersections and internal surfaces are not deducted or added. Jacket interval lengths sum to 974.549 m against 974.549 m; axis length outside the reported intervals: 0.000 m. Splash separation is not evaluated: a held definition of its boundaries, water-level range and applicable wave data are required. The printed maximum crest does not establish the lower splash boundary <a href="#reference-1">[1]</a>, p. 811, Figure 3. Above-water steel remains undivided between splash and atmospheric exposure. The jacket axes end at the mudline. Buried area uses the paper&#x27;s initial pile estimate, one pile per leg; the final installed pile geometry is not established <a href="#reference-1">[1]</a>, pp. 810–811, Soil–structure interaction.</p>
+    </div>
+    <div class="tbl" id="table-6">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Elevation interval</th><th>Section class</th><th>Count intersecting</th><th>Axis length</th><th>Outside diameter</th><th>External area</th><th>Locator</th></tr>
+            <tr class="units"><th>-</th><th>-</th><th>-</th><th>m</th><th>m</th><th>m2</th><th>-</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Water-column steel, undivided</td><td>1</td><td>3</td><td>42.982</td><td>1.200</td><td>162.040</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Water-column steel, undivided</td><td>2</td><td>3</td><td>39.350</td><td>1.400</td><td>173.070</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Water-column steel, undivided</td><td>3</td><td>3</td><td>45.404</td><td>1.500</td><td>213.961</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Water-column steel, undivided</td><td>4</td><td>3</td><td>50.852</td><td>2.000</td><td>319.513</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Water-column steel, undivided</td><td>5</td><td>3</td><td>3.000</td><td>3.000</td><td>28.274</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Water-column steel, undivided</td><td>6</td><td>6</td><td>101.562</td><td>1.100</td><td>350.972</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Water-column steel, undivided</td><td>7</td><td>36</td><td>547.771</td><td>1.000</td><td>1720.873</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Above-water steel, undivided</td><td>1</td><td>3</td><td>42.680</td><td>1.200</td><td>160.898</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Above-water steel, undivided</td><td>2</td><td>0</td><td>0.000</td><td>1.400</td><td>0.000</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Above-water steel, undivided</td><td>3</td><td>0</td><td>0.000</td><td>1.500</td><td>0.000</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Above-water steel, undivided</td><td>4</td><td>0</td><td>0.000</td><td>2.000</td><td>0.000</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Above-water steel, undivided</td><td>5</td><td>0</td><td>0.000</td><td>3.000</td><td>0.000</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Above-water steel, undivided</td><td>6</td><td>12</td><td>100.948</td><td>1.100</td><td>348.851</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Above-water steel, undivided</td><td>7</td><td>0</td><td>0.000</td><td>1.000</td><td>0.000</td><td>[2], joints, members and circular tubular properties</td></tr>
+            <tr><td>Buried piles, initial estimate</td><td>Pile estimate</td><td>3</td><td>195.000</td><td>3.000</td><td>1837.832</td><td>[1], pp. 810–811, Section 3.3, Soil–structure interaction</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table 5.3 – External area derivation by elevation interval and section class</div>
+    </div>
+    <div class="tbl" id="table-7">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Elevation interval</th><th>Area</th><th>Locator</th></tr>
+            <tr class="units"><th>-</th><th>m2</th><th>-</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Water-column steel, undivided</td><td>2968.704</td><td>[2], complete member schedule</td></tr>
+            <tr><td>Above-water steel, undivided</td><td>509.750</td><td>[2], complete member schedule</td></tr>
+            <tr><td>Buried piles, initial estimate</td><td>1837.832</td><td>[1], initial pile estimate</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table 5.4 – External area totals</div>
+    </div>
+</section>
+<section id="analysis-6">
+<div class="l1head"><span class="secnum applabel">6</span><h2>Key Findings</h2></div>
+
+    <div class="prose">
+<h4>6.1 Mean-current lifetime mass</h4>
+<p>The stated 252-anode arrangement passes the aggregate criterion: 5442.8 kg provided against 5427.4 kg required; margin +0.3 %. Criterion: provided ≥ required <a href="#reference-3">[3]</a>; the comparison applies only to the declared inputs, not local protection.</p>
+    </div>
+    <div class="prose">
+<h4>6.2 Initial current output</h4>
+<p>The stated 252-anode arrangement passes the aggregate criterion: 390.1 A provided against 11.6 A required; margin +3255.1 %. Criterion: provided ≥ required <a href="#reference-3">[3]</a>; the comparison applies only to the declared inputs, not local protection.</p>
+    </div>
+    <div class="prose">
+<h4>6.3 Final current output</h4>
+<p>The stated 252-anode arrangement passes the aggregate criterion: 291.1 A provided against 106.8 A required; margin +172.6 %. Criterion: provided ≥ required <a href="#reference-3">[3]</a>; the comparison applies only to the declared inputs, not local protection.</p>
+    </div>
+    <div class="prose">
+<h4>6.4 Input qualification</h4>
+<p>Increasing the assumed lifetime from 25.0 to 50.0 yr while retaining 252 anodes fails at least one aggregate criterion. Design life has no qualified source and changes the conclusion; the report remains a draft. Other assumed inputs also require confirmation; no uncertainty bound is established.</p>
+    </div>
+</section>
+<section id="analysis-7">
+<div class="l1head"><span class="secnum applabel">7</span><h2>Limitations</h2></div>
+
+    <div class="prose">
+<p>Splash boundaries and formal splash/submerged/atmospheric partition are not established; water-level range, applicable wave data and the governing definition are needed.</p>
+<p>Above-water steel is reported undivided and is excluded from the current-demand calculation; continuous electrolyte contact and applicable protection measures are not established.</p>
+<p>The evaluated water-column load uses the seawater-exposed density rows, split at the held 30 m table boundary; it does not establish protection in intermittent splash exposure.</p>
+<p>Buried current paths, soil resistivity, installed pile geometry and coating condition are not established; estimated pile area and declared coating are used for the aggregate load.</p>
+<p>No measured potentials are available for this structure. Aggregate capacity does not establish protection at remote or shielded locations.</p>
+<p>The printed 1471 MT excludes transition piece and jacket piles. Tubular steel sums to 1021365 kg (-30.6%). Adding the separately excluded 450000 kg concentrated transition-piece masses gives 1471365 kg (+0.0%); that is a different basis and does not resolve the discrepancy.</p>
+<p>Environment, coating, design life, cylinder geometry, no deducted core and alloy applicability are assumed, based on previous experience. Aggregate outputs are approximate until these inputs are qualified; no spatial protection acceptance is established.</p>
+    </div>
+</section>
+<section id="analysis-8">
+<div class="l1head"><span class="secnum applabel">8</span><h2>Recommendations</h2></div>
+
+    <div class="prose">
+<p>Confirm design life, coating condition, seawater and soil properties and qualified anode product data before selecting the arrangement. Resolve the structural mass discrepancy and installed pile geometry before finalising exposed area. Establish splash boundaries and above-water measures. Assess spacing, shielding and remote potentials against the applicable protection criterion before design acceptance. A dated monitoring interval requires installed condition and survey evidence, which are not available.</p>
+    </div>
+</section>
+<section id="analysis-9">
+<div class="l1head"><span class="secnum applabel">9</span><h2>References</h2></div>
+
+    <div class="prose">
+<h4>9.1 Published references</h4>
+<p><span id="reference-1">[1]</span> Mroczek, Arwade and Lackner (2023), Design optimization of offshore wind jacket piles by assessing support structure orientation relative to metocean conditions, Wind Energy Science 8, 807–817, DOI 10.5194/wes-8-807-2023. CC BY 4.0. The held fixture supplies the paper locators; the paper was not reopened.</p>
+<p><span id="reference-2">[2]</span> Mroczek (2023), IEA-15-240-RWT jacket model, public OpenFAST coordinate and circular tubular schedules, revision da77a393569b6c5ddf7aa424e5b0a92d37eba833. Apache License 2.0. Values were transcribed; lengths, areas and mass are derived. Source attribution and the licence remain with the input fixture.</p>
+<p><span id="reference-3">[3]</span> DNV-RP-B401, Cathodic protection design, May 2021: Design current densities; Coating breakdown factors; Anode materials; Anode mass; Anode resistance; Anode current output. Clause titles follow the repository calculation basis; the licensed document was not reopened.</p>
+<h4>9.2 Internal references</h4>
+<p><span id="reference-I1">[I1]</span> tests/fixtures/cathodic_protection/workflow_inputs/reference_jacket_60m_members.yml; jacket.yml supplies the assumed CP inputs.</p>
+<p><span id="reference-I2">[I2]</span> digitalmodel CP engine adapter, kernels and edition route; software version 2.1.0. Citation schema: digitalmodel.citations.schema.Citation.</p>
+<p><span id="reference-I3">[I3]</span> Proposed engineering reporting conventions, P6, 13 October 2026; workspace-hub revision bc2472877b0af9e399ccb4b4fcb8eb8a8b7b5721.</p>
+<p><span id="reference-I4">[I4]</span> Reproduction: PYTHONPATH=src uv run --no-sources python scripts/reporting/build_reference_jacket_analysis.py; LLM_WIKI_PATH identifies the existing citation wiki. The report and sidecar are emitted together; no website publication is performed.</p>
+    </div>
+</section>
+<section id="analysis-10">
+<div class="l1head"><span class="secnum applabel">10</span><h2>Acronyms and Symbols</h2></div>
+
+    <div class="prose">
+<p>CP: cathodic protection; A: ampere; Ah: ampere-hour; kg: kilogram; m: metre; yr: year; Ω m: resistivity. N: anode count; D: outside diameter (m); L: axis length (m); A in equation 4.1: area (m²); I: aggregate current (A); i: individual output (A); j: current density (A/m²); f: dimensionless coating breakdown; M: net alloy mass (kg). PASS/FAIL: satisfaction of a named aggregate comparison, not design acceptance.</p>
+    </div>
+</section>
+<section id="structural-evidence">
+<div class="l1head"><span class="secnum applabel"></span><h2>Structural evidence</h2></div>
+
+    <div class="tbl" id="table-8">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Class</th><th>Count</th><th>Diameter (m)</th><th>Wall (m)</th><th>Total true length (m)</th><th>Locator</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>3</td><td>1.200</td><td>0.052</td><td>85.662</td><td>[2], circular tubular properties</td></tr>
+            <tr><td>2</td><td>3</td><td>1.400</td><td>0.045</td><td>39.350</td><td>[2], circular tubular properties</td></tr>
+            <tr><td>3</td><td>3</td><td>1.500</td><td>0.048</td><td>45.404</td><td>[2], circular tubular properties</td></tr>
+            <tr><td>4</td><td>3</td><td>2.000</td><td>0.050</td><td>50.852</td><td>[2], circular tubular properties</td></tr>
+            <tr><td>5</td><td>3</td><td>3.000</td><td>0.050</td><td>3.000</td><td>[2], circular tubular properties</td></tr>
+            <tr><td>6</td><td>12</td><td>1.100</td><td>0.070</td><td>202.510</td><td>[2], circular tubular properties</td></tr>
+            <tr><td>7</td><td>36</td><td>1.000</td><td>0.020</td><td>547.771</td><td>[2], circular tubular properties</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table A.1 – Section classes and true axis lengths</div>
+    </div>
+    <div class="tbl" id="table-9">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Member</th><th>Joint A</th><th>Joint B</th><th>Class</th><th>True length (m)</th><th>Locator</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>1</td><td>4</td><td>1</td><td>28.554</td><td>[2], members, row 1, revision da77a393</td></tr>
+            <tr><td>2</td><td>2</td><td>5</td><td>1</td><td>28.554</td><td>[2], members, row 2, revision da77a393</td></tr>
+            <tr><td>3</td><td>3</td><td>6</td><td>1</td><td>28.554</td><td>[2], members, row 3, revision da77a393</td></tr>
+            <tr><td>4</td><td>4</td><td>7</td><td>2</td><td>13.117</td><td>[2], members, row 4, revision da77a393</td></tr>
+            <tr><td>5</td><td>5</td><td>8</td><td>2</td><td>13.117</td><td>[2], members, row 5, revision da77a393</td></tr>
+            <tr><td>6</td><td>6</td><td>9</td><td>2</td><td>13.117</td><td>[2], members, row 6, revision da77a393</td></tr>
+            <tr><td>7</td><td>7</td><td>10</td><td>3</td><td>15.135</td><td>[2], members, row 7, revision da77a393</td></tr>
+            <tr><td>8</td><td>8</td><td>11</td><td>3</td><td>15.135</td><td>[2], members, row 8, revision da77a393</td></tr>
+            <tr><td>9</td><td>9</td><td>12</td><td>3</td><td>15.135</td><td>[2], members, row 9, revision da77a393</td></tr>
+            <tr><td>10</td><td>10</td><td>13</td><td>4</td><td>16.951</td><td>[2], members, row 10, revision da77a393</td></tr>
+            <tr><td>11</td><td>11</td><td>14</td><td>4</td><td>16.951</td><td>[2], members, row 11, revision da77a393</td></tr>
+            <tr><td>12</td><td>12</td><td>15</td><td>4</td><td>16.951</td><td>[2], members, row 12, revision da77a393</td></tr>
+            <tr><td>13</td><td>13</td><td>16</td><td>5</td><td>1.000</td><td>[2], members, row 13, revision da77a393</td></tr>
+            <tr><td>14</td><td>14</td><td>17</td><td>5</td><td>1.000</td><td>[2], members, row 14, revision da77a393</td></tr>
+            <tr><td>15</td><td>15</td><td>18</td><td>5</td><td>1.000</td><td>[2], members, row 15, revision da77a393</td></tr>
+            <tr><td>16</td><td>19</td><td>1</td><td>6</td><td>13.849</td><td>[2], members, row 16, revision da77a393</td></tr>
+            <tr><td>17</td><td>19</td><td>2</td><td>6</td><td>13.849</td><td>[2], members, row 17, revision da77a393</td></tr>
+            <tr><td>18</td><td>19</td><td>4</td><td>6</td><td>19.902</td><td>[2], members, row 18, revision da77a393</td></tr>
+            <tr><td>19</td><td>19</td><td>5</td><td>6</td><td>19.902</td><td>[2], members, row 19, revision da77a393</td></tr>
+            <tr><td>20</td><td>20</td><td>2</td><td>6</td><td>13.849</td><td>[2], members, row 20, revision da77a393</td></tr>
+            <tr><td>21</td><td>20</td><td>3</td><td>6</td><td>13.849</td><td>[2], members, row 21, revision da77a393</td></tr>
+            <tr><td>22</td><td>20</td><td>5</td><td>6</td><td>19.902</td><td>[2], members, row 22, revision da77a393</td></tr>
+            <tr><td>23</td><td>20</td><td>6</td><td>6</td><td>19.902</td><td>[2], members, row 23, revision da77a393</td></tr>
+            <tr><td>24</td><td>21</td><td>3</td><td>6</td><td>13.849</td><td>[2], members, row 24, revision da77a393</td></tr>
+            <tr><td>25</td><td>21</td><td>1</td><td>6</td><td>13.849</td><td>[2], members, row 25, revision da77a393</td></tr>
+            <tr><td>26</td><td>21</td><td>6</td><td>6</td><td>19.902</td><td>[2], members, row 26, revision da77a393</td></tr>
+            <tr><td>27</td><td>21</td><td>4</td><td>6</td><td>19.902</td><td>[2], members, row 27, revision da77a393</td></tr>
+            <tr><td>28</td><td>22</td><td>4</td><td>7</td><td>12.391</td><td>[2], members, row 28, revision da77a393</td></tr>
+            <tr><td>29</td><td>22</td><td>5</td><td>7</td><td>12.391</td><td>[2], members, row 29, revision da77a393</td></tr>
+            <tr><td>30</td><td>22</td><td>7</td><td>7</td><td>14.125</td><td>[2], members, row 30, revision da77a393</td></tr>
+            <tr><td>31</td><td>22</td><td>8</td><td>7</td><td>14.124</td><td>[2], members, row 31, revision da77a393</td></tr>
+            <tr><td>32</td><td>23</td><td>5</td><td>7</td><td>12.391</td><td>[2], members, row 32, revision da77a393</td></tr>
+            <tr><td>33</td><td>23</td><td>6</td><td>7</td><td>12.391</td><td>[2], members, row 33, revision da77a393</td></tr>
+            <tr><td>34</td><td>23</td><td>8</td><td>7</td><td>14.124</td><td>[2], members, row 34, revision da77a393</td></tr>
+            <tr><td>35</td><td>23</td><td>9</td><td>7</td><td>14.124</td><td>[2], members, row 35, revision da77a393</td></tr>
+            <tr><td>36</td><td>24</td><td>6</td><td>7</td><td>12.391</td><td>[2], members, row 36, revision da77a393</td></tr>
+            <tr><td>37</td><td>24</td><td>4</td><td>7</td><td>12.391</td><td>[2], members, row 37, revision da77a393</td></tr>
+            <tr><td>38</td><td>24</td><td>9</td><td>7</td><td>14.124</td><td>[2], members, row 38, revision da77a393</td></tr>
+            <tr><td>39</td><td>24</td><td>7</td><td>7</td><td>14.125</td><td>[2], members, row 39, revision da77a393</td></tr>
+            <tr><td>40</td><td>25</td><td>7</td><td>7</td><td>14.166</td><td>[2], members, row 40, revision da77a393</td></tr>
+            <tr><td>41</td><td>25</td><td>8</td><td>7</td><td>14.165</td><td>[2], members, row 41, revision da77a393</td></tr>
+            <tr><td>42</td><td>25</td><td>10</td><td>7</td><td>16.171</td><td>[2], members, row 42, revision da77a393</td></tr>
+            <tr><td>43</td><td>25</td><td>11</td><td>7</td><td>16.171</td><td>[2], members, row 43, revision da77a393</td></tr>
+            <tr><td>44</td><td>26</td><td>8</td><td>7</td><td>14.165</td><td>[2], members, row 44, revision da77a393</td></tr>
+            <tr><td>45</td><td>26</td><td>9</td><td>7</td><td>14.165</td><td>[2], members, row 45, revision da77a393</td></tr>
+            <tr><td>46</td><td>26</td><td>11</td><td>7</td><td>16.171</td><td>[2], members, row 46, revision da77a393</td></tr>
+            <tr><td>47</td><td>26</td><td>12</td><td>7</td><td>16.171</td><td>[2], members, row 47, revision da77a393</td></tr>
+            <tr><td>48</td><td>27</td><td>9</td><td>7</td><td>14.165</td><td>[2], members, row 48, revision da77a393</td></tr>
+            <tr><td>49</td><td>27</td><td>7</td><td>7</td><td>14.166</td><td>[2], members, row 49, revision da77a393</td></tr>
+            <tr><td>50</td><td>27</td><td>12</td><td>7</td><td>16.171</td><td>[2], members, row 50, revision da77a393</td></tr>
+            <tr><td>51</td><td>27</td><td>10</td><td>7</td><td>16.171</td><td>[2], members, row 51, revision da77a393</td></tr>
+            <tr><td>52</td><td>28</td><td>10</td><td>7</td><td>16.103</td><td>[2], members, row 52, revision da77a393</td></tr>
+            <tr><td>53</td><td>28</td><td>11</td><td>7</td><td>16.103</td><td>[2], members, row 53, revision da77a393</td></tr>
+            <tr><td>54</td><td>28</td><td>13</td><td>7</td><td>18.340</td><td>[2], members, row 54, revision da77a393</td></tr>
+            <tr><td>55</td><td>28</td><td>14</td><td>7</td><td>18.340</td><td>[2], members, row 55, revision da77a393</td></tr>
+            <tr><td>56</td><td>29</td><td>11</td><td>7</td><td>16.103</td><td>[2], members, row 56, revision da77a393</td></tr>
+            <tr><td>57</td><td>29</td><td>12</td><td>7</td><td>16.103</td><td>[2], members, row 57, revision da77a393</td></tr>
+            <tr><td>58</td><td>29</td><td>14</td><td>7</td><td>18.340</td><td>[2], members, row 58, revision da77a393</td></tr>
+            <tr><td>59</td><td>29</td><td>15</td><td>7</td><td>18.340</td><td>[2], members, row 59, revision da77a393</td></tr>
+            <tr><td>60</td><td>30</td><td>12</td><td>7</td><td>16.103</td><td>[2], members, row 60, revision da77a393</td></tr>
+            <tr><td>61</td><td>30</td><td>10</td><td>7</td><td>16.103</td><td>[2], members, row 61, revision da77a393</td></tr>
+            <tr><td>62</td><td>30</td><td>15</td><td>7</td><td>18.340</td><td>[2], members, row 62, revision da77a393</td></tr>
+            <tr><td>63</td><td>30</td><td>13</td><td>7</td><td>18.340</td><td>[2], members, row 63, revision da77a393</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table A.2 – Complete member inventory</div>
+    </div>
+    <div class="tbl" id="table-10">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Quantity</th><th>Paper</th><th>Structural model</th><th>Difference</th><th>Unit</th><th>Locator</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Leg count</td><td>3.000</td><td>3.000</td><td>+0.0%</td><td>-</td><td>[1], p. 810, Section 3.2, Jacket design</td></tr>
+            <tr><td>Water depth</td><td>60.000</td><td>60.000</td><td>+0.0%</td><td>m</td><td>[1], p. 810, Section 3.2, Jacket design</td></tr>
+            <tr><td>Top triangle side 1-2</td><td>15.000</td><td>15.000</td><td>less than 0.1%</td><td>m</td><td>[1], p. 811, Figure 3(a), upper width label</td></tr>
+            <tr><td>Top triangle side 2-3</td><td>15.000</td><td>15.000</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), upper width label</td></tr>
+            <tr><td>Top triangle side 3-1</td><td>15.000</td><td>15.000</td><td>less than 0.1%</td><td>m</td><td>[1], p. 811, Figure 3(a), upper width label</td></tr>
+            <tr><td>Top y-projection span</td><td>15.000</td><td>12.990</td><td>not comparable</td><td>m</td><td>[1], p. 811, Figure 3(a), upper width label</td></tr>
+            <tr><td>Mudline triangle side 16-17</td><td>32.000</td><td>32.000</td><td>less than 0.1%</td><td>m</td><td>[1], p. 811, Figure 3(a), lower width label</td></tr>
+            <tr><td>Mudline triangle side 17-18</td><td>32.000</td><td>32.000</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), lower width label</td></tr>
+            <tr><td>Mudline triangle side 18-16</td><td>32.000</td><td>32.000</td><td>less than 0.1%</td><td>m</td><td>[1], p. 811, Figure 3(a), lower width label</td></tr>
+            <tr><td>Mudline y-projection span</td><td>32.000</td><td>27.713</td><td>not comparable</td><td>m</td><td>[1], p. 811, Figure 3(a), lower width label</td></tr>
+            <tr><td>Height above mudline</td><td>74.100</td><td>74.100</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), overall height label</td></tr>
+            <tr><td>Frame node height 1</td><td>1.000</td><td>1.000</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), elevation and lower extension labels</td></tr>
+            <tr><td>Frame node height 2</td><td>17.800</td><td>17.800</td><td>less than 0.1%</td><td>m</td><td>[1], p. 811, Figure 3(a), elevation and lower extension labels</td></tr>
+            <tr><td>Frame node height 3</td><td>32.800</td><td>32.800</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), elevation and lower extension labels</td></tr>
+            <tr><td>Frame node height 4</td><td>45.800</td><td>45.800</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), elevation and lower extension labels</td></tr>
+            <tr><td>Frame node height 5</td><td>74.100</td><td>74.100</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), elevation and lower extension labels</td></tr>
+            <tr><td>Bay height 1</td><td>16.800</td><td>16.800</td><td>less than 0.1%</td><td>m</td><td>[1], p. 811, Figure 3(a), four bay height labels</td></tr>
+            <tr><td>Bay height 2</td><td>15.000</td><td>15.000</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), four bay height labels</td></tr>
+            <tr><td>Bay height 3</td><td>13.000</td><td>13.000</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Figure 3(a), four bay height labels</td></tr>
+            <tr><td>Bay height 4</td><td>28.300</td><td>28.300</td><td>less than 0.1%</td><td>m</td><td>[1], p. 811, Figure 3(a), four bay height labels</td></tr>
+            <tr><td>Leg 1 inclination in 3D</td><td>7.000</td><td>7.647</td><td>+9.2%</td><td>degrees</td><td>[1], p. 811, Figure 3(a), leg angle label</td></tr>
+            <tr><td>Leg 1 inclination in y projection</td><td>7.000</td><td>7.647</td><td>not comparable</td><td>degrees</td><td>[1], p. 811, Figure 3(a), leg angle label</td></tr>
+            <tr><td>Leg 2 inclination in 3D</td><td>7.000</td><td>7.647</td><td>+9.2%</td><td>degrees</td><td>[1], p. 811, Figure 3(a), leg angle label</td></tr>
+            <tr><td>Leg 2 inclination in y projection</td><td>7.000</td><td>3.841</td><td>not comparable</td><td>degrees</td><td>[1], p. 811, Figure 3(a), leg angle label</td></tr>
+            <tr><td>Leg 3 inclination in 3D</td><td>7.000</td><td>7.647</td><td>+9.2%</td><td>degrees</td><td>[1], p. 811, Figure 3(a), leg angle label</td></tr>
+            <tr><td>Leg 3 inclination in y projection</td><td>7.000</td><td>3.841</td><td>not comparable</td><td>degrees</td><td>[1], p. 811, Figure 3(a), leg angle label</td></tr>
+            <tr><td>Uppermost brace members diameter</td><td>1.100</td><td>1.100</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Table 4, uppermost brace members</td></tr>
+            <tr><td>Uppermost brace members wall thickness</td><td>70.000</td><td>70.000</td><td>+0.0%</td><td>mm</td><td>[1], p. 811, Table 4, uppermost brace members</td></tr>
+            <tr><td>Remaining brace members diameter</td><td>1.000</td><td>1.000</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Table 4, remaining brace members</td></tr>
+            <tr><td>Remaining brace members wall thickness</td><td>20.000</td><td>20.000</td><td>+0.0%</td><td>mm</td><td>[1], p. 811, Table 4, remaining brace members</td></tr>
+            <tr><td>Uppermost brace frame legs diameter</td><td>1.200</td><td>1.200</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Table 4, uppermost brace frame legs</td></tr>
+            <tr><td>Uppermost brace frame legs wall thickness</td><td>52.000</td><td>52.000</td><td>+0.0%</td><td>mm</td><td>[1], p. 811, Table 4, uppermost brace frame legs</td></tr>
+            <tr><td>Second brace frame legs diameter</td><td>1.400</td><td>1.400</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Table 4, second brace frame legs</td></tr>
+            <tr><td>Second brace frame legs wall thickness</td><td>45.000</td><td>45.000</td><td>+0.0%</td><td>mm</td><td>[1], p. 811, Table 4, second brace frame legs</td></tr>
+            <tr><td>Third brace frame legs diameter</td><td>1.500</td><td>1.500</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Table 4, third brace frame legs</td></tr>
+            <tr><td>Third brace frame legs wall thickness</td><td>48.000</td><td>48.000</td><td>+0.0%</td><td>mm</td><td>[1], p. 811, Table 4, third brace frame legs</td></tr>
+            <tr><td>Lowest brace frame legs diameter</td><td>2.000</td><td>2.000</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Table 4, lowest brace frame legs</td></tr>
+            <tr><td>Lowest brace frame legs wall thickness</td><td>50.000</td><td>50.000</td><td>+0.0%</td><td>mm</td><td>[1], p. 811, Table 4, lowest brace frame legs</td></tr>
+            <tr><td>Legs at mudline diameter</td><td>3.000</td><td>3.000</td><td>+0.0%</td><td>m</td><td>[1], p. 811, Table 4, legs at mudline</td></tr>
+            <tr><td>Legs at mudline wall thickness</td><td>50.000</td><td>50.000</td><td>+0.0%</td><td>mm</td><td>[1], p. 811, Table 4, legs at mudline</td></tr>
+            <tr><td>Tubular jacket steel mass</td><td>1471000</td><td>1021365</td><td>-30.6%</td><td>kg</td><td>[1], pp. 810–811, Section 3.2; printed 1471 MT excludes transition piece and jacket piles</td></tr>
+          </tbody>
+        </table>
+      </div><div class="cap">Table A.3 – Structural dimensions and mass compared with the paper</div>
+    </div>
+    <div class="prose">
+<p>The printed 1471 MT excludes transition piece and jacket piles. Tubular steel sums to 1021365 kg (-30.6%). Adding the separately excluded 450000 kg concentrated transition-piece masses gives 1471365 kg (+0.0%); that is a different basis and does not resolve the discrepancy.</p>
+    </div>
+</section>
+</main></div>
+<footer><div class="wrap">Draft for review</div></footer>
+</body>
+</html>
