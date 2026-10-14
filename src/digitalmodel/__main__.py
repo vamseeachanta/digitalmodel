@@ -87,9 +87,8 @@ def _run_configuration_screen() -> bool:
 def main():
     """Dispatch console commands and configuration workflows."""
     # -h/--help prints usage and exits 0. Without this, engine() treats
-    # "--help" as an input filename and raises, which also fails the ace-win-2
-    # licensed-run verify probe (`python -m digitalmodel --help` must exit 0 to
-    # write the go-live marker). Bare invocation still goes to engine() (#713
+    # "--help" as an input filename and raises. Help must exit 0 before
+    # analysis dependencies load. Bare invocation still goes to engine() (#713
     # contract); the engine contract `python -m digitalmodel <input.yml>` is
     # unaffected: a real file still takes the path below.
     argv = sys.argv[1:]
