@@ -154,7 +154,7 @@ def reference_zone_blocks(model: Mapping[str, Any],
         "end caps, member intersections and internal surfaces are not deducted or added. "
         f"Jacket interval lengths sum to {lengths:.3f} m against {model['total_true_length_m']:.3f} m; "
         f"axis length outside the reported intervals: {missing:.3f} m. "
-        "Splash separation is not evaluated: a held definition of its boundaries, "
+        "Splash separation is not evaluated: a defined splash boundary, "
         "water-level range and applicable wave data are required. The printed maximum "
         "crest does not establish the lower splash boundary [1], p. 811, Figure 3. "
         "Above-water steel remains undivided between splash and atmospheric exposure. "
