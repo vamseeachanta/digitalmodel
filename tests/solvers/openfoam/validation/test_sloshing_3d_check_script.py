@@ -21,9 +21,9 @@ def driver(monkeypatch):
 
 def test_matrix_builds_requested_meshes_and_period_basis(tmp_path, driver):
     specs = driver.case_specs(t1_roll=1.12, t1_pitch=1.49, ranks=4)
-    assert len(specs) == 25
+    assert len(specs) == 27
     assert sum(s["dimension"] == 2 for s in specs) == 7
-    assert sum(s["dimension"] == 3 for s in specs) == 18
+    assert sum(s["dimension"] == 3 for s in specs) == 20
     assert all(s["ranks"] == (1 if s["dimension"] == 2 else 4) for s in specs)
     for spec in specs:
         case = driver.build_case(tmp_path, spec)
@@ -321,7 +321,7 @@ def test_time_step_refinement_preserves_physical_output_times(tmp_path, driver, 
     assert len({medium["maxDeltaT"], refined["maxDeltaT"]}) == 2
     assert refined["deltaT"] == medium["deltaT"] / 2
     assert refined["maxDeltaT"] == medium["maxDeltaT"] / 2
-    assert [medium["maxCo"], refined["maxCo"]] == [0.5, 0.25]
+    assert [medium["maxCo"], refined["maxCo"]] == [0.5, 0.5]
     assert medium["endTime"] == refined["endTime"]
     assert controls[0][1] == controls[1][1]
     for name, interval in controls[0][1].items():
@@ -339,6 +339,78 @@ def test_refined_step_reduction_uses_preserved_probe_interval(tmp_path, driver, 
     spec = next(s for s in driver.case_specs(smoke=True)
                 if s["group"] == "time-step-3d" and s["direction"] == direction)
     spec["delta_t"] = 0.0005
+    case = driver.build_case(tmp_path, spec)
+    folder = case / "postProcessing/interfaceHeight1/0"
+    folder.mkdir(parents=True)
+    indices = [i for i in range(7) if not (missing and i == 3)]
+    (folder / "height.dat").write_text("\n".join(f"{i * 0.005} 0.45 0" for i in indices) + "\n")
+    if missing:
+        with pytest.raises(ValueError, match="missing sampling interval"):
+            driver._signal(case, "interfaceHeight1", "height.dat", spec)
+    else:
+        times, heights = driver._signal(case, "interfaceHeight1", "height.dat", spec)
+        assert times == pytest.approx([i * 0.005 for i in indices])
+        assert heights == pytest.approx([0.45] * len(indices))
+
+
+@pytest.mark.parametrize("direction", ["roll", "pitch"])
+@pytest.mark.parametrize("smoke", [False, True])
+def test_time_step_study_has_three_rendered_levels(tmp_path, driver, direction, smoke):
+    specs = [s for s in driver.case_specs(smoke=smoke)
+             if s["group"] in ("medium-3d", "time-step-3d")
+             and s["direction"] == direction and s["ratio"] == 1.0]
+    specs.sort(key=lambda s: s["delta_t"], reverse=True)
+    assert len(specs) == 3
+    common = {k: v for k, v in specs[0].items() if k not in ("name", "group", "delta_t")}
+    controls = []
+    intervals = []
+    normalized = []
+    for spec in specs:
+        assert {k: v for k, v in spec.items() if k not in ("name", "group", "delta_t")} == common
+        case = driver.build_case(tmp_path, spec)
+        top, functions = (case / "system/controlDict").read_text().split("functions", 1)
+        values = {key: float(re.search(rf"\b{key}\s+([\d.e+-]+);", top)[1])
+                  for key in ("deltaT", "maxDeltaT", "maxCo", "endTime", "writeInterval")}
+        assert values["deltaT"] == values["maxDeltaT"]
+        assert re.search(r"writeControl\s+adjustableRunTime;", top)
+        physical = {"fields": values["writeInterval"]}
+        for name, body in re.findall(r"(interfaceHeight\d+|tankRollMoment)\s*\{([^{}]+)\}", functions):
+            assert re.search(r"writeControl\s+timeStep;", body)
+            stride = int(re.search(r"writeInterval\s+(\d+);", body)[1])
+            physical[name] = stride * values["deltaT"]
+        assert set(physical) == {"fields", "tankRollMoment", *(f"interfaceHeight{i}" for i in range(1, 7))}
+        controls.append(values)
+        intervals.append(physical)
+        # Apart from the step and dependent strides, the controls stay equal.
+        top = re.sub(r"(\b(?:deltaT|maxDeltaT)\s+)[\d.e+-]+;", r"\1STEP;", top)
+        scale = round(0.001 / values["deltaT"])
+        functions = re.sub(r"(writeInterval\s+)(\d+);",
+                           lambda match: f"{match[1]}{int(match[2]) // scale};", functions)
+        normalized.append(top + "functions" + functions)
+    for key in ("deltaT", "maxDeltaT"):
+        steps = [values[key] for values in controls]
+        assert len(set(steps)) == 3
+        assert steps == pytest.approx([0.001, 0.0005, 0.00025])
+        assert all(a / b == 2 for a, b in zip(steps, steps[1:]))
+    assert {values["maxCo"] for values in controls} == {0.5}
+    assert len({values["endTime"] for values in controls}) == 1
+    assert normalized[0] == normalized[1] == normalized[2]
+    assert intervals[0] == intervals[1] == intervals[2]
+    for name, interval in intervals[0].items():
+        expected = min(0.05, controls[0]["endTime"]) if name == "fields" else 0.001 if name == "tankRollMoment" else 0.005
+        assert interval == pytest.approx(expected)
+        count = int(controls[0]["endTime"] / interval)
+        times = [[i * values[name] for i in range(1, count + 1)] for values in intervals]
+        assert times[0] == times[1] == times[2]
+
+
+@pytest.mark.parametrize("direction", ["roll", "pitch"])
+@pytest.mark.parametrize("missing", [False, True])
+def test_quarter_step_reduction_uses_preserved_probe_interval(tmp_path, driver, direction, missing):
+    spec = next(s for s in driver.case_specs(smoke=True)
+                if s["group"] == "time-step-3d" and s["direction"] == direction)
+    # Exercise the reduction at the next step independently of enumeration.
+    spec["delta_t"] = 0.00025
     case = driver.build_case(tmp_path, spec)
     folder = case / "postProcessing/interfaceHeight1/0"
     folder.mkdir(parents=True)

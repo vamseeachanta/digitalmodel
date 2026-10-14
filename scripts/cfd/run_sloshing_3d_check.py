@@ -18,6 +18,7 @@ import subprocess
 import tempfile
 import time
 from datetime import datetime, timezone
+from itertools import product
 import re
 from pathlib import Path
 
@@ -59,10 +60,12 @@ def case_specs(*, t1_roll=None, t1_pitch=None, ranks=4, smoke=False):
                 cpb = 80 if group == "fine-3d" or (group == "longitudinal-2d" and kind == "free-decay") else 40 if group == "coarse-3d" else 60
                 dimension = 2 if group.endswith("2d") else 3
                 nx = round((section if dimension == 2 else 0.9) / 0.9 * cpb)
-                for ratio in ratios:
+                steps = (0.0005, 0.00025) if group == "time-step-3d" else (0.002 if kind == "free-decay" else 0.001,)
+                for ratio, delta_t in product(ratios, steps):
                     period = t1 * ratio
                     specs.append(dict(
-                        name=f'{"smoke-" if smoke else ""}{group}-{direction}-{kind}-r{ratio:.2f}',
+                        name=f'{"smoke-" if smoke else ""}{group}-{direction}-{kind}-r{ratio:.2f}'
+                             + (f'-dt{delta_t:.5f}' if group == "time-step-3d" and delta_t == 0.00025 else ''),
                         group=group, dimension=dimension, direction=direction, kind=kind,
                         ratio=ratio, period=period, t1_s=t1, analytical_t1_s=analytical,
                         period_basis="analytical" if supplied is None else "two-dimensional-input",
@@ -70,8 +73,8 @@ def case_specs(*, t1_roll=None, t1_pitch=None, ranks=4, smoke=False):
                         length=0.01 if dimension == 2 else 1.35, fill_depth=0.45,
                         cpb=cpb, nx=nx, ny=cpb, nz=1 if dimension == 2 else round(1.35 / 0.9 * cpb),
                         decomposition=None if dimension == 2 else dict(method="simple", n=[1, ranks, 1], delta=0.001),
-                        ranks=1 if dimension == 2 else ranks, max_co=0.25 if group == "time-step-3d" else 0.5,
-                        delta_t=0.002 if kind == "free-decay" else 0.0005 if group == "time-step-3d" else 0.001,
+                        ranks=1 if dimension == 2 else ranks, max_co=0.5,
+                        delta_t=delta_t,
                         end_time=0.03 if smoke else (10 * t1 if kind == "free-decay" else 6 * period),
                         smoke=smoke,
                     ))
@@ -158,9 +161,10 @@ def build_case(work_dir, spec):
     head = re.sub(r"writeInterval\s+[\d.e+-]+;", f'writeInterval {min(0.05, spec["end_time"]):.8g};', head)
     head = re.sub(r"purgeWrite\s+\d+;", "purgeWrite 0;", head)
     if spec["group"] == "time-step-3d":
-        # Preserve probe and moment intervals when the step is halved.
+        # Preserve probe and moment intervals at each refinement level.
+        scale = round(0.001 / spec["delta_t"])
         functions = re.sub(r"(writeInterval\s+)(\d+);",
-                           lambda match: f"{match[1]}{2 * int(match[2])};", functions)
+                           lambda match: f"{match[1]}{scale * int(match[2])};", functions)
     control.write_text(head + "functions" + functions)
     shutil.copytree(case / "0", case / "_input_fields")
     (case / "_spec.json").write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n")
@@ -248,7 +252,8 @@ def _signal(case, name, filename, spec):
     """Reuse the held parsers after numeric ordering and axis selection."""
     from digitalmodel.solvers.openfoam.validation.sloshing_2d import parse_interface_height, parse_roll_moment
     rows = _merged_history(case, name, filename)
-    stride = 10 if spec["kind"] == "free-decay" or spec["group"] == "time-step-3d" else 5
+    stride = (round(0.005 / spec["delta_t"]) if spec["group"] == "time-step-3d"
+              else 10 if spec["kind"] == "free-decay" else 5)
     tolerance = stride * spec["delta_t"] * 1.1
     if rows[0][0] > tolerance or rows[-1][0] < spec["end_time"] - tolerance:
         raise ValueError("native output does not cover configured duration")
