@@ -1,0 +1,163 @@
+{
+  "$defs": {
+    "HistogramCase": {
+      "additionalProperties": false,
+      "description": "Applied ranges in MPa and cycle counts for one load case.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "kind": {
+          "const": "histogram",
+          "title": "Kind",
+          "type": "string"
+        },
+        "stress_ranges_mpa": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "minItems": 1,
+          "title": "Stress Ranges Mpa",
+          "type": "array"
+        },
+        "cycle_counts": {
+          "items": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "minItems": 1,
+          "title": "Cycle Counts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "stress_ranges_mpa",
+        "cycle_counts"
+      ],
+      "title": "HistogramCase",
+      "type": "object"
+    },
+    "HistoryCase": {
+      "additionalProperties": false,
+      "description": "Ordered stress samples in MPa; residuals remain half cycles.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "kind": {
+          "const": "history",
+          "title": "Kind",
+          "type": "string"
+        },
+        "stress_history_mpa": {
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "title": "Stress History Mpa",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "stress_history_mpa"
+      ],
+      "title": "HistoryCase",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Explicit duration, environment and curve selection contract.\n\nCurve choice is supplied by the engineer; geometry does not establish\na weld class. Mean-stress, thickness and environmental corrections beyond\nthe selected library environment are not applied automatically.",
+  "properties": {
+    "design_code": {
+      "const": "DNV-RP-C203",
+      "default": "DNV-RP-C203",
+      "title": "Design Code",
+      "type": "string"
+    },
+    "sn_curve_name": {
+      "default": "D",
+      "enum": [
+        "B1",
+        "B2",
+        "C",
+        "C1",
+        "C2",
+        "D",
+        "E",
+        "F",
+        "F1",
+        "F3",
+        "G",
+        "W1",
+        "W2",
+        "W3"
+      ],
+      "title": "Sn Curve Name",
+      "type": "string"
+    },
+    "environment": {
+      "default": "air",
+      "enum": [
+        "air",
+        "seawater_cp",
+        "free_corrosion"
+      ],
+      "title": "Environment",
+      "type": "string"
+    },
+    "block_years": {
+      "exclusiveMinimum": 0,
+      "title": "Block Years",
+      "type": "number"
+    },
+    "design_years": {
+      "exclusiveMinimum": 0,
+      "title": "Design Years",
+      "type": "number"
+    },
+    "design_fatigue_factor": {
+      "default": 1.0,
+      "minimum": 1,
+      "title": "Design Fatigue Factor",
+      "type": "number"
+    },
+    "load_cases": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "histogram": "#/$defs/HistogramCase",
+            "history": "#/$defs/HistoryCase"
+          },
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/HistogramCase"
+          },
+          {
+            "$ref": "#/$defs/HistoryCase"
+          }
+        ]
+      },
+      "minItems": 1,
+      "title": "Load Cases",
+      "type": "array"
+    }
+  },
+  "required": [
+    "block_years",
+    "design_years",
+    "load_cases"
+  ],
+  "title": "AssessmentInput",
+  "type": "object"
+}

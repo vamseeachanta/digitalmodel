@@ -1328,10 +1328,10 @@ def test_utilisation_source_row_does_not_repeat_its_source(name: str) -> None:
 
 
 def test_reference_summary_recommends_the_minimum_aggregate_arrangement() -> None:
-    """The passing stated arrangement is named consistently in its summary."""
+    """The re-sized arrangement is named consistently in its summary."""
     cfg = _run("reference_jacket_60m_members")
     summary = anode_design_report(cfg).sections[0].blocks[0].markdown
-    count = cfg["results"]["current_output_verification"]["anode_count"]
+    count = cfg["results"]["current_output_verification"]["recommended_anode_count"]
     assert f"The minimum aggregate arrangement is recommended at {count} anodes" in summary
     assert "The rechecked aggregate quantity" not in summary
 

@@ -1,0 +1,49 @@
+Lines:
+- Name: Generic pipe
+  IncludeTorsion: 'Yes'
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Generic lay hull
+      - 0
+      - 0
+      - 0
+      - 0
+      - 90
+      - 0
+      - null
+    - - Anchored
+      - 0
+      - 0
+      - 0
+      - 0
+      - 90.0
+      - 0
+      - null
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - null
+    - Infinity
+  - - Infinity
+    - null
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
+    ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - null
+      - 0
+      - 0.001
+    - - null
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - X65+CWC
+    - 2000.0
+    - 5.0

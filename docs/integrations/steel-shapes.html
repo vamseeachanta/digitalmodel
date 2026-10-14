@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Steel section lookup and local catalogue import</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 55rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.6; color: #203040; }
+pre { background: #f0f4f7; padding: 1rem; overflow: auto; }
+table { border-collapse: collapse; width: 100%; } td, th { text-align: left; padding: .5rem; border-bottom: 1px solid #ccd; }
+</style>
+<main>
+<h1>Steel section lookup and local catalogue import</h1>
+<p>The repository ships a synthetic sample for tests only. For real section
+properties, obtain the shapes database from the publisher yourself, under the
+publisher's terms, then run the importer on your local copy; nothing imported
+is committed. The <a href="https://www.aisc.org/aisc/publications/steel-construction-manual/aisc-shapes-database-v160/">publisher's site</a>
+is the source for the database.</p>
+<p>The eight hand-written profiles cover each supported geometry family. Every
+sample name and alias begins with <code>SYN-</code>, including the made-up metric
+aliases. Every sample row and the catalogue carry <code>synthetic: true</code>.
+Area is computed from the module's own geometry model, not a publisher table.
+The sample cannot supply real section properties. The all-shapes acceptance item in
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/1694">issue 1694</a>
+depends on the user's own full import.</p>
+<pre><code>from digitalmodel.steel_shapes import (
+    clear_catalog_cache, get_section, get_section_data, list_sections,
+)
+
+geometry = get_section("SYN-W")                  # test geometry in mm; warns synthetic
+inches = get_section("SYN-METRIC-W", unit="imperial")
+reference = get_section_data("SYN-W")            # synthetic=True; inch dimensions
+available = list_sections("W")
+clear_catalog_cache()                            # next lookup will validate again
+</code></pre>
+<p>Names ignore case and whitespace and accept the multiplication sign in place of
+<code>x</code>. EDI and manual labels in imported catalogues are stored explicitly.
+Other fraction, decimal, punctuation or schedule spellings are accepted only when
+present as aliases; the lookup does not infer metric names by arithmetic. Unknown
+names raise <code>KeyError</code>; invalid names, units and catalogue values raise errors.</p>
+<p>Some full-catalogue labels can collide across naming systems. Ambiguous names
+raise <code>KeyError</code>. Select <code>name_system="imperial"</code> or
+<code>name_system="metric"</code> explicitly; <code>unit</code> controls coordinates.</p>
+<p>Coordinates default to mm. Raw metadata retains inch dimensions and square-inch
+areas. Metric geometry uses exactly 25.4 mm per inch; rounded metric dimension
+columns are not substituted for imperial source figures.</p>
+<table>
+<thead><tr><th>Family</th><th>Nominal geometry model</th></tr></thead>
+<tbody>
+<tr><td>W, HP</td><td>Parallel-flange I-section; root radius kdes-tf.</td></tr>
+<tr><td>S, C</td><td>Approximate tapered flanges at 2:12; mid-outstand tf and tangency root radius, sharp toes. A warning identifies the unverified nominal thickness interpretation.</td></tr>
+<tr><td>L</td><td>Angle; root radius kdes-t, sharp toes.</td></tr>
+<tr><td>Rectangular HSS</td><td>Design wall thickness; circular outer corner radius 2*t.</td></tr>
+<tr><td>Round HSS, Pipe</td><td>Outside diameter and design wall thickness; 64 polygon segments.</td></tr>
+</tbody>
+</table>
+<p>Table 1. Nominal model assumptions; synthetic area derivations are recorded in
+<code>src/digitalmodel/data_systems/data/steel_shapes_provenance.yaml</code>.</p>
+<p>The model does not infer material or capacity. Synthetic area agreement verifies
+model self-consistency only. Original rolled-profile validation remains required
+for real sections, including the tapered-flange approximation.</p>
+<h2>Local full catalogue</h2>
+<p>Obtain the publisher's workbook yourself under its terms. From the repository
+root, import your local copy or supply a current publisher XLSX URL:</p>
+<pre><code>PYTHONPATH=src python scripts/integrations/fetch_steel_shapes.py --workbook source.xlsx
+PYTHONPATH=src python scripts/integrations/fetch_steel_shapes.py --url PUBLISHER_XLSX_URL
+# Restore all-or-nothing validation:
+PYTHONPATH=src python scripts/integrations/fetch_steel_shapes.py --workbook source.xlsx --strict
+
+# Use a designation from your imported catalogue:
+geometry = get_section(user_designation, catalog_path="data/steel_shapes_local/catalog.json")
+</code></pre>
+<p>A local file import requires no network access. Fetch accepts publisher HTTPS
+URLs, stops on access failures, refuses an existing destination, retains the raw
+workbook and records its digest and source cells. Files are verified by readback.
+The utility refuses to write unless <code>data/steel_shapes_local/</code> is ignored
+by Git. The workbook and derived catalogue remain there; nothing imported is committed.</p>
+<p>The converter accepts the named v16 worksheet and separates duplicate imperial
+and metric headings. Each supported row is validated independently. Valid rows are
+imported; each rejection is reported to standard error with its worksheet row number,
+designation when readable and reason. The returned catalogue's <code>import_report</code>
+and CLI output report imported and rejected counts. Unsupported families are excluded
+and counted as skipped. Duplicate designations and alias collisions reject the affected
+row. The command succeeds when any supported row imports; <code>--strict</code>
+rejects the complete import if any supported row is invalid. Zero valid rows also fail.
+On failure the raw workbook is retained and no catalogue is emitted. An existing
+destination is never overwritten.</p>
+<p>Imported catalogues are cached by resolved path, modification time in nanoseconds
+and size; a changed file is reloaded and validated. The packaged sample validates once
+until <code>clear_catalog_cache()</code> is called. Metadata returned to callers is
+an independent deep copy. Clear the cache explicitly after edits preserving both file
+metadata attributes.</p>
+<h2>Dependencies and limits</h2>
+<p><code>sectionproperties</code> and <code>openpyxl</code> are existing dependencies.
+Geometry construction imports <code>sectionproperties</code> lazily; metadata lookup
+remains available when it is absent. No dependency is added. The importer has only
+been run on synthetic workbooks, never on the publisher's real file. Import success
+alone does not establish completeness or engineering qualification.</p>
+</main>
+</html>

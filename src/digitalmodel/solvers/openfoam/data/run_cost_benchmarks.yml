@@ -1,0 +1,185 @@
+# Measured cost of hull-resistance CFD runs.
+#
+# PURPOSE: size a campaign and choose a lane BEFORE committing compute. Every
+# figure here is wall-clock read from a case's own logs -- none is an estimate.
+#
+# Headline finding: on comparable cell counts and identical iteration counts,
+# LANE CHOICE changed cost by 5x, while no numerical setting in the accompanying
+# sweep changed the ANSWER by more than a few per cent. Measure the lane first.
+#
+# Provenance: model-scale benchmark validation campaign, 2026-08, OpenFOAM
+# v2312, simpleFoam, k-omega SST, double-body, nutUSpaldingWallFunction unless
+# stated otherwise. Regenerate by re-reading log.snappyHexMesh and
+# log.simpleFoam (ExecutionTime) in each case directory.
+
+schema_version: 1
+measured_on: 2026-08-26
+solver:
+  application: simpleFoam
+  version: openfoam2312
+  turbulence: kOmegaSST
+
+lane_config:
+  env: DM_CFD_LANES_FILE
+  default: lanes.example.yml
+
+lanes:
+  # Throughput is per-RANK, so a lane with fewer cores can win outright.
+  lane-A:
+    cores: 8
+    ranks_used: 8
+    seconds_per_iteration: 8.0         # at 3.95e6 cells
+    mesh_seconds: 1118                 # snappyHexMesh, 3.95e6 cells
+    relative_per_core_throughput: 4.2  # lane-B == 1.0
+    preferred: true
+    note: >-
+      Twice the wall-clock speed of the 16-rank lane on HALF the cores, and 8.2x
+      faster at meshing. Preferred lane for hull work.
+  lane-B:
+    cores: 32
+    ranks_used: 16
+    seconds_per_iteration: 16.9        # at 3.82e6 cells
+    mesh_seconds: 9218                 # snappyHexMesh, 3.82e6 cells
+    relative_per_core_throughput: 1.0
+    preferred: false
+    note: >-
+      More cores, far less throughput per core. Useful for running several cases
+      concurrently, not for making any single case finish sooner.
+
+# layers_grown is recorded beside cells because the two move in OPPOSITE
+# directions under refinement, and the layer count is the one that tracks the
+# answer. A case with more cells and fewer layers is a worse mesh, not a better
+# one -- see cost_to_information/mesh_statistic.
+cases:
+  - {id: model_baseline,     lane: lane-B, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 2.56, solve_h: 6.57,  s_per_iter: 16.9, iterations: 1400, core_hours: 146}
+  - {id: model_alt_wallfn,   lane: lane-B, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 1.97, solve_h: 5.00,  s_per_iter: 12.9, iterations: 1400, core_hours: 112}
+  - {id: model_yplus30,      lane: lane-A, ranks: 8,  cells: 3945132, layers_grown: "2.99/3",    mesh_h: 0.31, solve_h: 3.10,  s_per_iter: 8.0,  iterations: 1400, core_hours: 27}
+  - {id: model_yplus15,      lane: lane-A, ranks: 8,  cells: 4184191, layers_grown: "4.93/5",    mesh_h: 0.47, solve_h: 8.64,  s_per_iter: 7.8,  iterations: 4000, core_hours: 73}
+  - {id: model_refined_L2,   lane: lane-A, ranks: 8,  cells: 5583857, layers_grown: "1/1",       mesh_h: 0.52, solve_h: 6.06,  s_per_iter: 13.7, iterations: 1591, core_hours: 53}
+  - {id: model_coarse_L0,    lane: lane-B, ranks: 16, cells: 3396518, layers_grown: "2.98/3",    mesh_h: 0.40, solve_h: 2.64,  s_per_iter: 6.8,  iterations: 1400, core_hours: 49}
+  - {id: model_re_corrected, lane: lane-B, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 0.66, solve_h: 10.07, s_per_iter: 13.1, iterations: 2768, core_hours: 172}
+  - {id: full_scale_hull,    lane: lane-B, ranks: 16, cells: 2312314, layers_grown: "6.8/11",    mesh_h: 0.76, solve_h: 7.58,  s_per_iter: 4.6,  iterations: 6000, core_hours: 148}
+  # MESH FAILURE, retained deliberately: a full-scale hull asked for a y+ 30
+  # first layer against a 0.164 m near-hull cell -- a 429:1 ratio -- and the
+  # stack collapsed to 0.3 % of the request. The mesh cost 0.22 h and saved ten
+  # conditions from being run on an unusable grid. See mesh_ratio_limits below.
+  - {id: full_scale_yplus30, lane: lane-A, ranks: 8,  cells: 1740803, layers_grown: "0.01/21",   mesh_h: 0.22, solve_h: null,  s_per_iter: null, iterations: 0,    core_hours: 2, outcome: mesh_failed}
+
+# ---------------------------------------------------------------------------
+# MESH RATIO LIMITS
+#
+# The ratio of near-hull CELL to the y+-sized FIRST LAYER governs whether a
+# prism stack grows at all. Measured on this campaign:
+mesh_ratio_limits:
+  measurements:
+    - {ratio: 7,     context: "model Re, y+ 30",  grown: "99.5 %"}
+    - {ratio: 14,    context: "model Re, y+ 15",  grown: "98.9 %"}
+    - {ratio: 62,    context: "ship Re, y+ 207",  grown: "62 %"}
+    - {ratio: 429,   context: "ship Re, y+ 30",   grown: "0.3 % -- COLLAPSE"}
+  rule: >-
+    Keep the cell-to-first-layer ratio below roughly 15:1. It is fixed by the
+    hull length, the y+ target and the near-hull cell together, so check it
+    ARITHMETICALLY before meshing -- it costs nothing and the failure mode is a
+    wasted mesh. At ship Reynolds number a y+ inside ITTC's 30-100 band cannot
+    reach that ratio at any affordable cell count, which is a structural
+    argument for determining the form factor at model Reynolds number.
+  note: >-
+    A double-body run has no free surface, so only Re and geometric similarity
+    matter. The full-scale geometry run at model Re is the model test: no
+    rescaling of geometry, drafts, trims or hydrostatics is required, and
+    Re_model = Re_ship / lambda^1.5.
+
+# ---------------------------------------------------------------------------
+# COST-TO-INFORMATION LADDER
+#
+# Rank a candidate experiment by what it can ELIMINATE per unit compute, not by
+# how relevant it feels. All rungs below were exercised in one campaign; the
+# cheap rungs eliminated more causes than the expensive ones did.
+cost_to_information:
+  - rung: 1
+    name: arithmetic_or_source_check
+    typical_cost: seconds
+    causes_eliminated: 3
+    examples:
+      - >-
+        Recompute the reference area from the source's own S/L^2 -- confirmed
+        the area basis to 0.09 % and retired a suspected 1.3 % error.
+      - >-
+        Back-calculate the benchmark's viscosity from its stated Reynolds number
+        -- found our runs 11.3 % high in Re.
+      - >-
+        Check a quoted uncertainty band against the source table -- the band in
+        campaign-wide use was not in the paper at all.
+
+  - rung: 2
+    name: mesh_statistic
+    typical_cost: free, already in the meshing log
+    causes_eliminated: 1
+    examples:
+      - >-
+        Layers GROWN vs requested -- one of two variables controlling the answer.
+        A case with 4x the cells and one fewer prism layer was materially worse;
+        a case with a quarter of the faces and one MORE layer was also worse.
+        Record both counts and gate on both.
+      - >-
+        Max hull face area vs target cell -- catches refinement that missed part
+        of the surface.
+    rule: >-
+      Record layers-grown beside cell count in every mesh summary and treat a
+      fall as a regression, whatever the cell count did.
+
+  - rung: 3
+    name: flat_plate_numerical_friction_line
+    typical_cost: ~2 minutes per case, ~140 iterations
+    causes_eliminated: 3
+    purpose: >-
+      C_F0 computed with the SAME solver, closure, wall treatment and Reynolds
+      number as the hull, so the solver's own friction bias cancels in the ratio
+      instead of accumulating into the answer.
+    examples:
+      - Six plates across two scales cost under 1 % of one hull solve.
+      - >-
+        Eliminated normalisation, friction-line choice, and solver/closure/
+        schemes as causes of an out-of-family result.
+      - >-
+        Exposed a spurious sensitivity -- half of an apparent y+ effect on the
+        hull belonged to the normaliser, not the hull.
+    caveat: >-
+      Valid for the DENOMINATOR only. A flat plate does not predict how a
+      wall-function change will affect a hull: measured to err 14x in one
+      direction at one scale and to reverse sign at another, because hull
+      wall-treatment sensitivity tracks the y+ DISTRIBUTION, which no flat plate
+      reproduces.
+
+  - rung: 4
+    name: single_hull_solve
+    typical_cost: 3-7 hours
+    note: >-
+      Buy only once the rungs above are exhausted for the question at hand. One
+      case in this campaign cost 2x the baseline solve for 46 % more cells and
+      returned a WORSE answer, because the finer cell left room for only one
+      prism layer.
+
+  - rung: 5
+    name: grid_convergence_study
+    typical_cost: 3x a hull solve, minimum
+    note: >-
+      Required before any number is quotable (>=3 grids at ratio ~sqrt(2) with
+      U_G attached to the result). Running it before the settings are settled
+      produces a rigorously grid-converged wrong answer.
+
+campaign_budgeting:
+  per_condition_hours:
+    mesh: 0.8
+    solve_min: 3.0
+    solve_max: 4.0
+  worked_example: >-
+    11 conditions at ~2.3e6 cells across three concurrent slots: about 18 hours
+    wall-clock, plus margin for cases that fail their layer gate and need
+    remeshing.
+  rules:
+    - Measure both candidate lanes with ONE case before committing the rest.
+    - Do not buy cells that come out of the prism stack.
+    - >-
+      The form factor is speed-independent, so N conditions x M speeds needs N
+      solves, not N*M.
