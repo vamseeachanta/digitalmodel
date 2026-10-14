@@ -63,7 +63,14 @@ def create_floating_body(config: BodyConfig):
         lid_z = config.lid_z if config.lid_z is not None else 0.0
         if not np.isfinite(lid_z) or lid_z > 0.0:
             raise ValueError("The lid must be at or below the free surface")
-        lid_mesh = mesh.generate_lid(z=lid_z)
+        radius = config.lid_faces_max_radius
+        if radius is not None and (not np.isfinite(radius) or radius <= 0.0):
+            raise ValueError("The lid panel radius must be finite and positive")
+        if radius is None:
+            lid_mesh = mesh.generate_lid(z=lid_z)
+        else:
+            from .lid import resolved_lid
+            lid_mesh = resolved_lid(mesh, lid_z, radius)
         if lid_mesh.nb_faces == 0:
             raise ValueError("The requested lid is empty")
 
