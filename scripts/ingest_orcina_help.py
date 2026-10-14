@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Download and convert Orcina help documentation to LLM-friendly markdown.
+
+Historical conversion defaults write below the repository root; they do not
+establish the active retrieval corpus location. Private retrieval uses an
+explicit owner-relative corpus prefix through scripts/retrieve_orcina_help.py.
+Corpus placement remains an open decision under issue #2004. This ingestion
+command is not run by the retrieval tool.
 
 Usage:
     python scripts/ingest_orcina_help.py --product orcaflex --output docs/domains/orcaflex/reference/
