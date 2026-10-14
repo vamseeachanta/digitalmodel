@@ -71,9 +71,9 @@ Standards references
 
 Citation posture
 ----------------
-A configured wiki tree is validated at calculation time; a missing page or
-mismatched frontmatter raises CitationResolutionError. With no wiki configured,
-the geometric screen retains the pilot's standalone warning and empty sidecar:
+A page that exists is validated at calculation time; missing or mismatched
+frontmatter raises CitationResolutionError. With no wiki configured or with the
+page not yet published, the geometric screen warns once and returns an empty sidecar:
 no universal standards-derived MBR is computed, and the caller supplies the
 cable-specific limit. This exception does not establish standards compliance.
 * DNV-OS-E301 (position mooring), API RP 2SK (mooring) — covered in
@@ -245,8 +245,8 @@ class WatchCircleConstraint(BaseModel):
     def _emit_citation(self, repo_root: Optional[Path]) -> List[Citation]:
         """Emit a DNV-RP-0360 MBR citation when a live wiki tree is available.
 
-        Configured trees fail closed on missing or mismatched metadata.
-        Only an unconfigured standalone installation retains the pilot warning.
+        Existing pages fail closed on missing or mismatched metadata.
+        Unconfigured installations and missing pages warn once and omit citations.
         """
         from digitalmodel.citations.resolver import resolve_wiki_base, resolve_wiki_path
         from digitalmodel.citations import CitationResolutionError
@@ -272,11 +272,16 @@ class WatchCircleConstraint(BaseModel):
 
         page = resolve_wiki_path(_DNV_RP_0360_WIKI_PATH, override=wiki_base)
         if not page.is_file():
-            raise CitationResolutionError(
-                code_id="DNV-RP-0360",
-                wiki_path=_DNV_RP_0360_WIKI_PATH,
-                reason="page_missing",
-            )
+            warning_key = str(page)
+            if warning_key not in _CITATION_EMITTED_CACHE:
+                warnings.warn(
+                    "DNV-RP-0360 citation unavailable "
+                    f"(wiki page missing: {page}). Watch-circle check proceeds.",
+                    RuntimeWarning,
+                    stacklevel=3,
+                )
+                _CITATION_EMITTED_CACHE[warning_key] = True
+            return []
 
         citation = Citation(
             code_id="DNV-RP-0360",

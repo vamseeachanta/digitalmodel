@@ -4,6 +4,7 @@
 """Test watch-circle citation resolution using synthetic wiki metadata."""
 
 from pathlib import Path
+import warnings
 
 import pytest
 
@@ -45,13 +46,20 @@ def test_emitted_citation_resolves(tmp_path: Path, layout: str) -> None:
     validate_citation(citation, repo_root=tmp_path)
 
 
-def test_missing_page_fails_at_call_site(tmp_path: Path) -> None:
-    """Distinguish a missing page from an invalid wiki base."""
+def test_missing_page_warns_once_and_returns_empty_sidecar(tmp_path: Path) -> None:
+    """Keep the geometric check available until the standards page exists."""
     (tmp_path / "wikis").mkdir()
-    with pytest.raises(CitationResolutionError) as caught:
-        check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
-    assert caught.value.reason == "page_missing"
-    assert caught.value.code_id == "DNV-RP-0360"
+    with pytest.warns(RuntimeWarning, match="Watch-circle check proceeds") as caught:
+        result = check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+    assert len(caught) == 1
+    assert str(tmp_path / WIKI_PATH) in str(caught[0].message)
+    assert result.passes
+    assert result.citations == []
+    with warnings.catch_warnings(record=True) as repeated:
+        warnings.simplefilter("always")
+        result = check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+    assert repeated == []
+    assert result.citations == []
 
 
 def test_invalid_wiki_base_fails_at_call_site(tmp_path: Path) -> None:
