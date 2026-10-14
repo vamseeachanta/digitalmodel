@@ -1,0 +1,15 @@
+Vessels:
+- Name: Generic lay hull
+  VesselType: Generic lay hull Type
+  Length: 182.2
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - 0
+  InitialHeading: 0
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludedInStatics: None
+  WaveCalculationMethod: Specified by environment
+  SupportGeometrySpecification: Explicit

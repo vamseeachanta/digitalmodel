@@ -1,0 +1,18 @@
+MorisonElementTypes:
+- Name: Morison element type1
+  NormalDragDiameter: 0
+  AxialDragDiameter: null
+  Cd:
+  - 0
+  - null
+  - 0
+  NormalHydrodynamicDiameter: 0
+  AxialHydrodynamicDiameter: null
+  Ca:
+  - 0
+  - null
+  - 0
+  Cm:
+  - null
+  - null
+  - null

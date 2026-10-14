@@ -1,0 +1,102 @@
+criteria_revision: preparation-1
+source_revision: c9ae7591129b40732846b50661045f99ab249aba
+qualification: assumed, based on previous experience; generic scenario only, no previous
+  model used
+provenance:
+  public_hull:
+    repository: worldenergydata
+    commit: 0cef59201f817c28d91ef25e1bfcba99bfc9d588
+    dataset: packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv
+    csv_line: 12
+    columns:
+    - LOA_M
+    - BEAM_M
+    - DRAFT_M
+    - PIPELAY_TENSION_T
+    capacity_conversion: tonne-force times gravity_m_s2 gives kN; interpretation assumed
+      pending source qualification
+  pipeline_seabed_and_generic_hull_properties: tests/solvers/orcaflex/modular_generator/schema/test_campaign.py::_make_base_spec_data
+  stinger: tests/solvers/orcaflex/modular_generator/test_slay_schema.py::stinger_data
+  water_density: schema/environment.py::Water
+  steel_density: builders/linetype_builder.py::MATERIAL_PROPERTIES; modelling default
+  gravity: src/digitalmodel/installation/pipelay/integrity.py::G_STANDARD
+  depth: stinger section length times 1 and 2; method choice
+  tension: submerged_weight * depth * factor; factors 2, 3, 4 are method choices
+  defaults: ProjectInputSpec and builder defaults; no wave/current input, empty pipe
+    contents, no calibrated RAO
+basis:
+  gravity_m_s2: 9.80665
+  steel_density_te_m3: 7.85
+  water_density_te_m3: 1.025
+  seabed:
+    slope: 0
+    stiffness:
+      normal: 1000
+      shear: 100
+  pipeline:
+    name: Generic pipe
+    material: X65
+    dimensions:
+      outer_diameter: 0.762
+      wall_thickness: 0.0254
+    coatings:
+      corrosion:
+        thickness: 0.004
+        density: 0.95
+      weight:
+      - name: CWC
+        thickness: 0.1
+        density: 3.0
+    segments:
+    - type: X65+CWC
+      length: 2000
+      segment_length: 5
+  equipment:
+    vessel:
+      name: Generic lay hull
+      properties:
+        loa: 182.2
+        beam: 46.2
+        draft: 9.5
+        gmt: 2.5
+        cog:
+        - 0
+        - 0
+        - 3
+        gyration_radii:
+        - 10
+        - 30
+        - 30
+    stinger:
+      radius: 150
+      sections:
+      - length: 40
+        bend_radius: 150
+    tensioner:
+      capacity_kn: 5393.657499999999
+      tension_value: 400
+cases:
+- id: d0-t0
+  depth_m: 40
+  top_tension_kn: 418.19666603382643
+  tension_factor: 2
+- id: d0-t1
+  depth_m: 40
+  top_tension_kn: 627.2949990507396
+  tension_factor: 3
+- id: d0-t2
+  depth_m: 40
+  top_tension_kn: 836.3933320676529
+  tension_factor: 4
+- id: d1-t0
+  depth_m: 80
+  top_tension_kn: 836.3933320676529
+  tension_factor: 2
+- id: d1-t1
+  depth_m: 80
+  top_tension_kn: 1254.5899981014793
+  tension_factor: 3
+- id: d1-t2
+  depth_m: 80
+  top_tension_kn: 1672.7866641353057
+  tension_factor: 4
