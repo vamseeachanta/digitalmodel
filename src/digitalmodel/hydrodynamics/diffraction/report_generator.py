@@ -483,14 +483,38 @@ _DIFFRACTION_BACKBONE = ReportBackbone(
 )
 
 
+def _hull_catalogue_html(hull_id, profile):
+    """Render catalogue geometry as metadata, not solver-derived hydrostatics."""
+    values = {
+        "Hull ID": hull_id,
+        "Hull type": profile.hull_type.value,
+        "Length between perpendiculars (m)": f"{profile.length_bp:.1f}",
+        "Beam (m)": f"{profile.beam:.1f}",
+        "Draft (m)": f"{profile.draft:.1f}",
+        "Depth (m)": f"{profile.depth:.1f}",
+        "Source": profile.source,
+    }
+    rows = "".join(f"<tr><td>{html.escape(key)}</td><td>{html.escape(str(value))}</td></tr>"
+                   for key, value in values.items())
+    return ('<div class="section" id="hull-catalogue"><h2>Hull catalogue</h2>'
+            '<p>Catalogue geometry; correspondence with the analyzed mesh and '
+            'loading condition requires confirmation. Hydrostatics are not inferred.</p>'
+            '<table><thead><tr><th>Property</th><th>Value</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table></div>')
+
+
 def generate_diffraction_report(
-    report_data: DiffractionReportData,
-    output_path: Path,
+    report_data: Optional[DiffractionReportData] = None,
+    output_path: Optional[Path] = None,
     include_plotlyjs: str = "cdn",
     mode: str = "full",
     validation_report: Optional[dict[str, Any]] = None,
     assumption_ledger: Optional["AssumptionLedger"] = None,
     page_title: Optional[str] = None,
+    *,
+    hull_id: Optional[str] = None,
+    solver_results: Optional[Dict[str, Any]] = None,
+    catalog: Any = None,
 ) -> Path:
     """Generate a self-contained HTML diffraction report.
 
@@ -499,7 +523,14 @@ def generate_diffraction_report(
     Coefficients -> Excitation -> Response -> Damping -> Summary
 
     Args:
-        report_data: Populated DiffractionReportData.
+        report_data: Populated DiffractionReportData (original API).
+        hull_id: Alternative hull-keyed API; requires catalog and solver_results.
+        solver_results: Non-empty mapping of solver names to already extracted
+            DiffractionResults. No native result files are opened. The existing
+            minimal extraction path supplies coefficient diagonals and grids;
+            absent hydrostatics, load RAOs and mesh quality remain unavailable.
+        catalog: HullCatalog used for exact ID lookup and geometry metadata.
+            No catalogue directory is guessed and no solver is run.
         output_path: Path for the output HTML file.
         include_plotlyjs: 'cdn' for CDN link, True for inline JS.
         mode: 'full' for all sections, 'compact' for executive summary only.
@@ -515,6 +546,28 @@ def generate_diffraction_report(
     Returns:
         Path to the generated HTML file.
     """
+    catalogue_html = None
+    if hull_id is not None:
+        if report_data is not None:
+            raise ValueError("Provide report_data or hull_id, not both")
+        if catalog is None or not solver_results:
+            raise ValueError("hull_id requires catalog and non-empty solver_results")
+        profile = catalog.get_hull(hull_id).profile
+        if build_report_data_from_solver_results is None:
+            raise RuntimeError("Solver-result report adapter is unavailable")
+        report_data = build_report_data_from_solver_results(
+            solver_results, vessel_name=profile.name,
+        )
+        report_data.hull_type = profile.hull_type.value
+        report_data.executive_warnings.append(
+            "Catalogue-linked coefficient report only: hydrostatics, load RAOs "
+            "and mesh quality are not established by this extraction path."
+        )
+        catalogue_html = _hull_catalogue_html(hull_id, profile)
+    elif solver_results is not None or catalog is not None:
+        raise ValueError("solver_results and catalog require hull_id")
+    if report_data is None or output_path is None:
+        raise ValueError("report_data (or hull_id) and output_path are required")
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -533,6 +586,23 @@ def generate_diffraction_report(
         assumption_ledger=assumption_ledger,
     )
 
+    if catalogue_html is not None:
+        revision = (
+            '<div class="section" id="revision-history"><h2>Revision history</h2>'
+            '<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>'
+            f'<tr><td>1</td><td>{html.escape(report_data.report_date[:10])}</td>'
+            '<td>Initial report with catalogue metadata for hull identification.</td>'
+            '</tr></table></div>'
+        )
+        # The summary precedes the validation and geometry blocks.
+        summary = next((i for i, section in enumerate(sections)
+                        if 'id="executive-summary"' in section), None)
+        if summary is not None:
+            sections.insert(summary + 1, revision)
+        else:
+            sections.insert(0, revision)
+        sections.append(catalogue_html)
+
     plotly_src = (
         '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
         if include_plotlyjs == "cdn"
@@ -543,7 +613,7 @@ def generate_diffraction_report(
     css = _BASE_CSS + (_BENCHMARK_CSS if bm else "")
 
     renderer = ReportRenderer()
-    html = renderer.render_html(
+    document_html = renderer.render_html(
         sections,
         title=(page_title if page_title is not None
                else f"Diffraction Report - {report_data.vessel_name}"),
@@ -551,7 +621,7 @@ def generate_diffraction_report(
         plotlyjs_src=plotly_src,
         container_class="container",
     )
-    return renderer.write_html(html, output_path)
+    return renderer.write_html(document_html, output_path)
 
 
 # ---------------------------------------------------------------------------

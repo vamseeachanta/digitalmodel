@@ -156,12 +156,11 @@ def _scaling_factors(
 
 def _validate_target(target: HullLookupTarget) -> None:
     """Raise ValueError for missing or non-positive required dimensions."""
-    if target.loa_m is None or target.loa_m <= 0:
-        raise ValueError("loa_m must be a positive number")
-    if target.beam_m is None or target.beam_m <= 0:
-        raise ValueError("beam_m must be a positive number")
-    if target.draft_m is None or target.draft_m <= 0:
-        raise ValueError("draft_m must be a positive number")
+    for name in ("loa_m", "beam_m", "draft_m"):
+        value = getattr(target, name)
+        if value is None or not math.isfinite(value) or value <= 0:
+            raise ValueError(f"{name} must be a finite positive number")
+
 
 
 # ---------------------------------------------------------------------------
@@ -367,9 +366,25 @@ def get_hull_form(target_dimensions: dict) -> HullMatch:
     return lookup.get_hull_form(target)
 
 
+def closest_hull(length: float, beam: float, draft: float, *,
+                 catalog: Optional[Union[HullCatalog, PanelCatalog]] = None) -> HullMatch:
+    """Return the nearest catalogue hull for dimensions in metres.
+
+    Reuses HullLookup: distance = sqrt((delta_length / 200)^2 +
+    (delta_beam / 40)^2 + (delta_draft / 12)^2), score = exp(-distance).
+    These are existing lookup normalization scales, not physical tolerances.
+    Ties retain catalogue order. HullCatalog length is between perpendiculars;
+    PanelCatalog length is overall length. Match the target length convention
+    to the supplied catalogue. With no usable catalogue entries, the existing
+    built-in fallback is used; HullMatch.source makes that provenance explicit.
+    """
+    return HullLookup(catalog).get_hull_form(HullLookupTarget(length, beam, draft))
+
+
 __all__ = [
     "HullLookupTarget",
     "HullMatch",
     "HullLookup",
     "get_hull_form",
+    "closest_hull",
 ]
