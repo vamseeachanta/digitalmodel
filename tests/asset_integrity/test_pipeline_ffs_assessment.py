@@ -270,7 +270,7 @@ def test_public_assumptions_exclude_method_coefficients(tmp_path):
     report, _ = builder.build(ROOT, tmp_path)
     page = report.read_text(encoding="utf-8")
     assert re.findall(r"<h3>(.*?)</h3>", page) == [
-        "3.1 Site data", "3.2 Equipment data", "3.3 Environmental data",
+        "Revision history", "3.1 Site data", "3.2 Equipment data", "3.3 Environmental data",
         "3.4 Vessel data", "3.5 Criteria", "3.6 Method", "3.7 Load cases",
         "Section A, 24 in line", "Section B, 12.75 in line",
     ]
@@ -458,3 +458,45 @@ def test_disclosure_negative_control(artifact, tmp_path):
     assert hashlib.sha256(before).digest() != hashlib.sha256(path.read_bytes()).digest()
     path.write_bytes(before)
     assert hashlib.sha256(before).digest() == hashlib.sha256(path.read_bytes()).digest()
+
+
+@pytest.mark.parametrize("section_number", [1, 6, 8])
+def test_section_b_deferred_strength_referral(tmp_path, section_number):
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    fragment = page.split(f'<section id="section-{section_number}">')[1].split('</section>')[0]
+    section_b = fragment.split("Section B, 12.75 in line")[1]
+    sentence = (
+        "Its strength factor is also below the allowable factor, so after the added readings "
+        "a formal local-loss evaluation follows unless the repeat assessment changes that."
+    )
+    assert sentence in section_b
+    assert section_b.count(sentence) == 1
+    assert "take more measurements" in section_b
+
+
+def test_methodology_sampling_before_strength_referral(tmp_path):
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    methodology = page.split('<section id="section-4">')[1].split('</section>')[0]
+    assert "the strength-factor referral is evaluated only after sampling is adequate" in methodology
+    assert "Applicability flags and severe loss below the replacement floor require escalation regardless of sampling" in methodology
+    assert "Any applicability flag, escalation, repair or replacement takes priority over inadequate sampling" not in methodology
+
+
+def test_revision_history_follows_summary(tmp_path, result):
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    history_start = page.index('<div id="revision-history">')
+    assert page.index('<section id="section-1">') < history_start
+    assert page.index('</section>', page.index('<section id="section-1">')) < history_start
+    assert history_start < page.index('<section id="section-2">')
+    history = page[history_start:].split('</div>')[0]
+    rows = TableRows()
+    rows.feed(history)
+    assert rows.rows == [
+        ["00", "2026-10-13", "Issued"],
+        ["01", "2026-10-14", "Clarified sampling before the strength-factor referral and Section B's deferred formal local-loss evaluation to match the assessment order."],
+    ]
+    config = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")
+    spec = builder.report_spec(ROOT, result)
+    assert [row.model_dump() for row in spec.document.revision_history] == [
+        builder.RevisionRow(**row).model_dump() for row in config["revision_history"]
+    ]

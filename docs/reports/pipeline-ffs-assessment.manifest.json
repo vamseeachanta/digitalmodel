@@ -743,8 +743,8 @@
       }
     ]
   },
-  "assumptions_sha256_lf": "b34f5c5626969269a055507a0c1a6046f66b8a0942c1251ead2a0c95b44f30c4",
-  "builder_sha256_lf": "cbd0d7df046ccc3acfc5354f09eb14b2d3ec3f5aa8b1e0263182368ee4d93487",
+  "assumptions_sha256_lf": "a3149daeec132383752f45cdc9dd3b743a3752e6dd60495fd7a92d11a2d51f58",
+  "builder_sha256_lf": "d522520955903d8da8947313d4d782bb5dc709d9d08f19d1d29eebb2ba98f92b",
   "calculation_sources_sha256_lf": {
     "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e40c309ae0a5a847b640973fb6e4e2a1ad2f43bdbcf77126e484c744a09bb239",
@@ -764,11 +764,11 @@
     "src/digitalmodel/asset_integrity/rstreng_2d.py": "79ada328af4155a77f812134c21fd5f524dfbbdcc4eaf3d0b3d0ffd63e2aa1b9",
     "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
     "src/digitalmodel/materials/grades.py": "3cc745f599faefdb3c6b08218c383026445662796faa23fba0806691de4017ab",
-    "src/digitalmodel/reporting/assets/assessment_report.html.j2": "7493b8f7c05e4f8b0bef5f17b7479488927df8409bde9b03e00d666f0f4b07ed",
+    "src/digitalmodel/reporting/assets/assessment_report.html.j2": "852d123fc72d2c4687da05d85968da91423dc4e2562a9d002093ab275977d94a",
     "src/digitalmodel/reporting/engine.py": "c2166904cb93dedf00e8f80955eabc23c187fa8b778f70176db93cb1409531de",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
   },
-  "configuration_sha256_lf": "5af960ee0abd31e5b48e594824e637f1d797efd81bc85a963da82502c57fd430",
+  "configuration_sha256_lf": "8cbf9269bf05dd03c281747894ad8eec67022fc30a83705592cfb0e1a8605997",
   "data_status": "synthetic, for demonstration",
   "digest_convention": "Input SHA-256 after CRLF to LF normalisation; output SHA-256 over exact UTF-8 bytes",
   "excluded_outputs": [
@@ -776,6 +776,6 @@
   ],
   "figures": "inline vector figures; 680-unit width; no raster or external dependencies",
   "intended_use": "worked example; no actual operating asset qualification",
-  "report_sha256": "83181a8dec1c87083bdca8fb3aa9c21da334d5992b6f7d69db83a69933f125b7",
+  "report_sha256": "8d31ec0f9cdb6625b096bc3ba3b1df9c98426247dce44d5f65b5406a993110fc",
   "schema_version": 1
 }

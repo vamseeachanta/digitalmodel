@@ -17,3 +17,13 @@ section_b_supplement:
   axial_positions_in: [0, 1, 2, 3, 4, 5]
   circumferential_width_in: 4.0
 supplement_basis: Supplementary strength, axial stress and circumferential extent are copied from Section A; 1 in row spacing is an assessment assumption.
+revision_history:
+  - rev: '00'
+    date: '2026-10-13'
+    description: Issued
+    prepared: '—'
+    checked: '—'
+    approved: '—'
+  - rev: '01'
+    date: '2026-10-14'
+    description: Clarified sampling before the strength-factor referral and Section B's deferred formal local-loss evaluation to match the assessment order.

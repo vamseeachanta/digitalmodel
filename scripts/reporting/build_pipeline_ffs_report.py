@@ -30,7 +30,7 @@ from digitalmodel.asset_integrity.assessment.ffs_decision import (
 )
 from digitalmodel.reporting.engine import render_html
 from digitalmodel.reporting.provenance import Provenance
-from digitalmodel.reporting.spec import DocumentMeta, FigureBlock, ReportSpec, Section, TableBlock, TextBlock
+from digitalmodel.reporting.spec import DocumentMeta, FigureBlock, ReportSpec, RevisionRow, Section, TableBlock, TextBlock
 from digitalmodel.units import Q_
 
 TITLE = "Fitness-for-service assessment: two corroded pipeline sections, remaining strength and operating decision"
@@ -509,14 +509,23 @@ def methodology():
         "The validation record reproduces the cited DNV worked-example capacities to better than 0.001%. "
         "That accuracy claim does not extend to all methods: the B31G published comparisons have coarser reported tolerances, "
         "and Modified B31G and RSTRENG are checked only against previous calculations. No published example values are reproduced here.",
-        "Assumed decision precedence: **escalate**, then **take more measurements**, then **re-rate**, then **accept**. "
-        "Any applicability flag, escalation, repair or replacement takes priority over inadequate sampling. "
-        "Otherwise an under-sampled result requires more measurements; a de-rating retains both pressure and axial restrictions. "
+        "Applicability flags and severe loss below the replacement floor require escalation regardless of sampling. "
+        "Otherwise sampling adequacy is checked first; the strength-factor referral is evaluated only after sampling is adequate. "
+        "An under-sampled result requires more measurements; a de-rating retains both pressure and axial restrictions. "
         "Acceptance or monitoring gives **accept** only with "
         "positive remaining life. Other outcomes give **escalate**. "
         "The pressure reduction uses only pressure ratios and the corrected local-loss pressure rating, never an axial ratio. "
         "The reduced rating participates in the strength decision even when the remaining strength factor is below its allowable value.",
     )]
+
+
+def deferred_referral(section):
+    """Describe the strength referral deferred by a sampling gap."""
+    if (section["decision"] == "take more measurements"
+            and section["level2"]["rsf"] < section["level2"]["rsf_a"]):
+        return ("Its strength factor is also below the allowable factor, so after the added readings "
+                "a formal local-loss evaluation follows unless the repeat assessment changes that. ")
+    return ""
 
 
 def section_material(result):
@@ -528,7 +537,7 @@ def section_material(result):
         governing_rating = min(s["local_loss_rating_psi"], row["allowable_pressure_psi"])
         governing_name = ("Reduced local-loss rating" if governing_rating == s["local_loss_rating_psi"]
                           else method_name(row["method"]))
-        summary.append(text(f"**{s['name']}: {s['decision']}.** {action_text(s)} "
+        summary.append(text(f"**{s['name']}: {s['decision']}.** {action_text(s)} {deferred_referral(s)}"
                             "A changed minimum, defect extent or loss pattern will require reassessment; "
                             "a repeat-inspection corrosion rate will change the life projection. "
                             f"{governing_name} governs at {number(governing_rating)} psi against "
@@ -546,9 +555,10 @@ def section_material(result):
                              f"{number(s['inputs']['design_pressure_psi'])} psi, a ratio of "
                              f"{ratio(s['local_loss_rating_psi'] / s['inputs']['design_pressure_psi'])}. "
                              "The lower pressure rating participates in the decision. "
-                             + sampling_basis + f"The final decision is {s['decision']}; strength alone does not resolve measurement adequacy."))
-        recommendations.append(text(s["name"] + ": **" + s["decision"] + "**. " + action_text(s) +
-                                    " Source: the measurement-sufficiency criteria in Section 3.5 and the assessed thickness/strength results in Section 5."))
+                             + sampling_basis + f"The final decision is {s['decision']}; strength alone does not resolve measurement adequacy. "
+                             + deferred_referral(s)))
+        recommendations.append(text(s["name"] + ": **" + s["decision"] + "**. " + action_text(s) + " " + deferred_referral(s) +
+                                    "Source: the measurement-sufficiency criteria in Section 3.5 and the assessed thickness/strength results in Section 5."))
         detailed.extend(result_blocks(s, f"section-{index + 1}"))
         grid = s["inputs"]["grid"]
         appendix.append(table(s["name"] + " — complete thickness grid",
@@ -568,6 +578,7 @@ class AssessmentDocumentMeta(DocumentMeta):
 def report_spec(root, result):
     summary, findings, recommendations, detailed, appendix = section_material(result)
     assumptions = load_yaml(root / WORKFLOW / "assumptions.yml")
+    config = load_yaml(root / WORKFLOW / "input.yml")
     assumption_rows = [[a["parameter"], a["value"], a["units"], a.get("report_label", ASSUMED)]
                        for a in assumptions["assumptions"] if a.get("used_for_assessment", True)]
     appendix.append(table("Assumptions", ["Parameter", "Value or basis", "Units", "Status"], assumption_rows))
@@ -599,7 +610,8 @@ def report_spec(root, result):
         document=AssessmentDocumentMeta(number="B0000-RPT-001-00", revision="00", title=TITLE,
                               project="Synthetic assessment", client="Demonstration", date="2026-10-13",
                               assessment_label="Synthetic example",
-                              prepared_by="—", checked_by="—", approved_by="—"),
+                              prepared_by="—", checked_by="—", approved_by="—",
+                              revision_history=[RevisionRow(**row) for row in config["revision_history"]]),
         sections=[Section(key=f"section-{i}", title=title, blocks=body)
                   for i, (title, body) in enumerate(zip(SECTION_TITLES, blocks), 1)],
         appendices=[Section(key="appendices", title="Appendices", blocks=appendix)],
