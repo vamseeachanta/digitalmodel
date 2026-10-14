@@ -1,0 +1,494 @@
+schema_version: generic-steel-riser-basis-v1
+summary: Generic steel catenary and distributed-buoyancy lazy-wave inputs from assumed repository
+  defaults and public buoy observations, with solver-free analytical references.
+revision_history:
+- revision: '0'
+  date: '2026-10-14'
+  change: Initial parameter basis and analytical calibration inputs; native equilibrium and design
+    acceptance remain unverified.
+- revision: '1'
+  date: '2026-10-14'
+  change: Assumed defaults are distinguished from public buoy observations; the retained example
+    host redistribution status is made explicit. Models are regenerated in fresh processes.
+readiness: prepared; not qualified for design or outward use
+pipe_grade: X65
+host:
+  selection: Solver example vessel type; public hull alternative remains unmerged.
+  type_name: Vessel Type1
+  motion: None; RAOs and coupled host motion are not established.
+  redistribution_status: NO_VESSEL_TYPE_DATA_COMMITTED
+  rights: No vessel-type data is committed; the models reference the solver's default vessel type
+    name only, with no motion.
+  replacement_limit: The existing riser vessel builder emits only a VesselType reference, not a
+    type definition. The schema forbids combining riser and generic definitions; replacing the
+    host with a defined type would require changing the generator or converting the riser specs.
+  definition_source: src/digitalmodel/solvers/orcaflex/modular_generator/builders/riser_vessel_builder.py
+hangoff: Ideal pinned flex-joint approximation; zero rotational stiffness.
+metocean:
+  agency: NOAA National Data Buoy Center
+  station: '42001'
+  region: Gulf of Mexico
+  extreme: Observed storm pair only; no return period assigned.
+  fatigue: Illustrative ordinary observation only; no scatter diagram or exposure weights established.
+  current: Assumed scaled template profile; calibration models use zero current.
+  wind: Omitted from static reference.
+analytical_scope: Zero mean host offset, quiescent water, inextensible OO geometry and elastic general
+  catenary segment checks. Pipe centre at contact radius above seabed. No pressure, bending/contact
+  soil response, wave dynamics, VIV or code acceptance.
+sources:
+  pipe_defaults:
+    title: Repository generic riser property and geometry defaults
+    revision: c9ae7591129b40732846b50661045f99ab249aba
+    locator: src/digitalmodel/orcaflex/riser_config.py
+  material_defaults:
+    title: Repository elastic and density defaults; no strength criterion copied
+    revision: c9ae7591129b40732846b50661045f99ab249aba
+    locator: src/digitalmodel/materials/grades.py
+  scr_template:
+    title: Repository example-derived catenary template
+    revision: c9ae7591129b40732846b50661045f99ab249aba
+    locator: docs/domains/orcaflex/library/templates/riser_catenary/spec.yml
+  slwr_template:
+    title: Repository example-derived distributed-buoyancy template
+    revision: c9ae7591129b40732846b50661045f99ab249aba
+    locator: docs/domains/orcaflex/library/templates/riser_lazy_wave/spec.yml
+  soil_bracket:
+    title: Generic contact-stiffness upper bracket
+    revision: c9ae7591129b40732846b50661045f99ab249aba
+    locator: docs/domains/orcaflex/library/templates/pipeline_installation/spec.yml
+  offset_grid:
+    title: Generic drilling-riser campaign offset grid
+    locator: https://github.com/vamseeachanta/digitalmodel/pull/2469
+    revision: 14998ee8a2d28ed7bcf3f0d8ad209504bad714fa
+  ndbc_2002:
+    title: NOAA National Data Buoy Center, station 42001, standard meteorological observations, 2002
+    locator: https://www.ndbc.noaa.gov/data/historical/stdmet/42001h2002.txt.gz
+    sha256: 3ac189473a1fabda16fed87d3ce8ee0c8cb91136ef728f89dddbb95522940d4a
+    record: 2002-10-02 21:00 UTC; source line 6599; WVHT 11.20 m; DPD 12.90 s
+    ordinary_record: 2002-01-01 00:00 UTC; source line 2; WVHT 2.13 m; DPD 7.69 s
+    qualification: Retained compressed bytes match the source manifest. Observation pairs only; neither
+      return-period estimates nor fatigue exposure.
+    observed_at: '2026-10-14'
+    live_access: Station page returned HTTP 403; archive fetch returned cache miss. Retained source
+      read instead.
+  generator_defaults:
+    title: Existing typed schema and builder numeric defaults
+    revision: c9ae7591129b40732846b50661045f99ab249aba
+    locator: src/digitalmodel/solvers/orcaflex/modular_generator/
+    reason: Unspecified environmental, line, vessel and simulation properties are inherited unchanged
+      from the existing generator; they are illustrative assumptions, not qualified engineering input.
+  criteria_titles:
+    title: Repository criteria references and method outline
+    revision: c9ae7591129b40732846b50661045f99ab249aba
+    locator: src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f201.py
+    reason: The 2021 edition and Bursting clause title are read from the repository. Other code titles
+      identify the requested future checks; their editions and clauses remain unknown.
+parameters:
+  water_depth:
+    value: 1500.0
+    unit: m
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Proposed deep-water parameter; a published site at this exact depth is not established.
+      Buoy station depth is not transferred to the model.
+  outer_diameter:
+    value: 0.2731
+    unit: m
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  wall_thickness:
+    value: 0.0254
+    unit: m
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  coating_thickness:
+    value: 0.04
+    unit: m
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  coating_density:
+    value: 900.0
+    unit: kg/m3
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  contents_density:
+    value: 800.0
+    unit: kg/m3
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  flooded_density:
+    value: 1025.0
+    unit: kg/m3
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  seawater_density:
+    value: 1025.0
+    unit: kg/m3
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  corrosion_allowance:
+    value: 0.003
+    unit: m
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  hangoff_depth:
+    value: 10.0
+    unit: m
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  scr_angle:
+    value: 12.0
+    unit: deg
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  slwr_angle:
+    value: 8.0
+    unit: deg
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  hog_depth:
+    value: 800.0
+    unit: m
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  sag_elevation:
+    value: 50.0
+    unit: m
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  module_density:
+    value: 450.0
+    unit: kg/m3
+    status: ASSUMED
+    source: pipe_defaults
+    reason: Generic repository default adopted for preparation; not a measured site or qualified
+      component property.
+  steel_density:
+    value: 7850.0
+    unit: kg/m3
+    status: ASSUMED
+    source: material_defaults
+    reason: Repository elastic/density default; no supplier material qualification.
+  young_modulus:
+    value: 207000000000.0
+    unit: Pa
+    status: ASSUMED
+    source: material_defaults
+    reason: Repository elastic/density default; no supplier material qualification.
+  poisson_ratio:
+    value: 0.3
+    unit: '1'
+    status: ASSUMED
+    source: material_defaults
+    reason: Repository elastic/density default; no supplier material qualification.
+  gravity:
+    value: 9.80665
+    unit: m/s2
+    status: SOURCED
+    source: pipe_defaults
+  host_length:
+    value: 103.0
+    unit: m
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  joint_stiffness:
+    value: 0.0
+    unit: kN m/rad
+    status: ASSUMED
+    source: scr_template
+    reason: Ideal flexible pinned connection from the example; finite flex-joint stiffness is not
+      established.
+  bottom_length:
+    value: 20.0
+    unit: m
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  mesh_coarse:
+    value: 3.0
+    unit: m
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  mesh_fine:
+    value: 0.5
+    unit: m
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  drag_coefficient:
+    value: 1.2
+    unit: '1'
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  axial_drag_coefficient:
+    value: 0.008
+    unit: '1'
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  added_mass_coefficient:
+    value: 1.0
+    unit: '1'
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  normal_stiffness:
+    value: 100.0
+    unit: kN/m/m2
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  shear_stiffness:
+    value: 100.0
+    unit: kN/m/m2
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  static_current_speed:
+    value: 0.0
+    unit: m/s
+    status: ASSUMED
+    source: scr_template
+    reason: Quiescent static calibration reference; current-loaded response is not represented.
+  wind_speed:
+    value: 0.0
+    unit: m/s
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  direction:
+    value: 0.0
+    unit: deg
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  wave_direction:
+    value: 180.0
+    unit: deg
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  duration:
+    value: 42.0
+    unit: s
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  time_step:
+    value: 0.1
+    unit: s
+    status: ASSUMED
+    source: scr_template
+    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
+      qualification.
+  module_diameter:
+    value: 1.2
+    unit: m
+    status: ASSUMED
+    source: slwr_template
+    reason: Generic example dimensions/profile; contact diameter used as module diameter; profile
+      depths scaled by model water depth. Not supplier or site data.
+  module_length:
+    value: 1.0
+    unit: m
+    status: ASSUMED
+    source: slwr_template
+    reason: Generic example dimensions/profile; contact diameter used as module diameter; profile
+      depths scaled by model water depth. Not supplier or site data.
+  module_pitch:
+    value: 2.5
+    unit: m
+    status: ASSUMED
+    source: slwr_template
+    reason: Generic example dimensions/profile; contact diameter used as module diameter; profile
+      depths scaled by model water depth. Not supplier or site data.
+  current_speed:
+    value: 0.7
+    unit: m/s
+    status: ASSUMED
+    source: slwr_template
+    reason: Generic example dimensions/profile; contact diameter used as module diameter; profile
+      depths scaled by model water depth. Not supplier or site data.
+  current_factors:
+    value:
+    - 1.0
+    - 0.9
+    - 0.3
+    unit: '1'
+    status: ASSUMED
+    source: slwr_template
+    reason: Generic example dimensions/profile; contact diameter used as module diameter; profile
+      depths scaled by model water depth. Not supplier or site data.
+  current_depth_fractions:
+    value:
+    - 0.0
+    - 0.7
+    - 1.0
+    unit: '1'
+    status: ASSUMED
+    source: slwr_template
+    reason: Generic example dimensions/profile; contact diameter used as module diameter; profile
+      depths scaled by model water depth. Not supplier or site data.
+  soil_stiffness_range:
+    value:
+    - 100.0
+    - 1000.0
+    unit: kN/m/m2
+    status: ASSUMED
+    source: soil_bracket
+    reason: Lower value from riser template; upper value from installation template. Sensitivity
+      bracket, not measured soil.
+  intact_offset_pct:
+    value: 5.0
+    unit: '% water depth'
+    status: ASSUMED
+    source: offset_grid
+    reason: Maximum prepared offset in the repository generic drilling-riser campaign adopted as a study parameter,
+      not a mooring result.
+  damaged_offset_pct:
+    value: 10.0
+    unit: '% water depth'
+    status: ASSUMED
+    source: offset_grid
+    reason: Twice the intact study offset, computed as 2 * 5; no damaged mooring analysis establishes
+      it.
+  extreme_hs:
+    value: 11.2
+    unit: m
+    status: ASSUMED
+    source: ndbc_2002
+    reason: Observed pair used as an illustrative sea state only. Extreme return period and fatigue
+      occurrence probability are not established; DPD is assumed to represent Tp.
+  extreme_tp:
+    value: 12.9
+    unit: s
+    status: ASSUMED
+    source: ndbc_2002
+    reason: Observed pair used as an illustrative sea state only. Extreme return period and fatigue
+      occurrence probability are not established; DPD is assumed to represent Tp.
+  fatigue_hs:
+    value: 2.13
+    unit: m
+    status: ASSUMED
+    source: ndbc_2002
+    reason: Observed pair used as an illustrative sea state only. Extreme return period and fatigue
+      occurrence probability are not established; DPD is assumed to represent Tp.
+  fatigue_tp:
+    value: 7.69
+    unit: s
+    status: ASSUMED
+    source: ndbc_2002
+    reason: Observed pair used as an illustrative sea state only. Extreme return period and fatigue
+      occurrence probability are not established; DPD is assumed to represent Tp.
+  wave_gamma:
+    value: 3.3
+    unit: '1'
+    status: ASSUMED
+    source: generator_defaults
+    reason: Existing JONSWAP schema default; spectral shape is not established by one buoy observation.
+criteria:
+- response: Combined tension, bending and pressure; burst and collapse
+  code: API STD 2RD
+  title: Dynamic Risers for Floating Production Systems
+  edition: null
+  clause_title: null
+  limit: null
+  status: Not evaluated; edition, clause and qualified engineering limit required before design acceptance.
+  source: criteria_titles
+- response: Global riser limit states and tension/curvature
+  code: DNV-ST-F201
+  title: Dynamic risers
+  edition: '2021'
+  clause_title: Bursting
+  limit: null
+  status: Not evaluated; clause and engineering limits for all other responses remain unqualified.
+  source: criteria_titles
+- response: Touchdown and hang-off fatigue; fatigue life and design fatigue factor
+  code: DNV-RP-C203
+  title: Fatigue Design of Offshore Steel Structures
+  edition: null
+  clause_title: null
+  limit: null
+  status: Not evaluated; load history and qualified fatigue criteria required.
+  source: criteria_titles
+- response: Riser fatigue, including VIV contribution
+  code: DNV-RP-F204
+  title: Riser Fatigue
+  edition: null
+  clause_title: null
+  limit: null
+  status: Not evaluated; modal and native stress results required.
+  source: criteria_titles
+- response: Intact and one-line-damaged host offsets
+  code: API RP 2SK
+  title: Design and Analysis of Stationkeeping Systems for Floating Structures
+  edition: null
+  clause_title: null
+  limit: null
+  status: Not evaluated; qualified mooring offset envelope required.
+  source: criteria_titles
+- response: Seabed contact and touchdown stiffness sensitivity
+  code: DNV-RP-F114
+  title: Pipe-soil Interaction for Submarine Pipelines
+  edition: null
+  clause_title: null
+  limit: null
+  status: Not evaluated; site soil data and riser applicability required.
+  source: criteria_titles
+- response: Extreme and fatigue environmental conditions
+  code: API RP 2MET
+  title: Derivation of Metocean Design and Operating Conditions
+  edition: null
+  clause_title: null
+  limit: null
+  status: Not evaluated; site-specific extremes and fatigue exposure required.
+  source: criteria_titles
+criteria_basis: Code numbers and titles identify future checks only. No licensed table value or numerical
+  acceptance limit is emitted. Unknown edition and clause fields are null, not inferred.
+inherited_settings:
+  status: ASSUMED
+  source: generator_defaults
+  reason: All numerical defaults emitted by existing builders but not selected as study parameters
+    are inherited unchanged; no engineering qualification is asserted.
