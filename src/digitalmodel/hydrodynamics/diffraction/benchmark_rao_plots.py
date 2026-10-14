@@ -49,6 +49,7 @@ def plot_amplitude_overlay(
     x_axis: str,
     heading_x_axis: bool,
     headings: Optional[List[float]] = None,
+    page_title: Optional[str] = None,
 ) -> Path:
     """6-row subplot of RAO amplitude with one trace per solver/heading."""
     subplot_titles = [
@@ -71,7 +72,7 @@ def plot_amplitude_overlay(
     fig.update_xaxes(
         title_text=x_axis_label(x_axis, heading_x_axis), row=6, col=1,
     )
-    apply_layout(fig, "Benchmark RAO Amplitude Overlay")
+    apply_layout(fig, page_title or "Benchmark RAO Amplitude Overlay")
     fig.update_layout(height=1200)
     summary = compute_amplitude_summary(solver_results, solver_names, headings)
     return render_html_with_table(
@@ -86,6 +87,7 @@ def plot_phase_overlay(
     x_axis: str,
     heading_x_axis: bool,
     headings: Optional[List[float]] = None,
+    page_title: Optional[str] = None,
 ) -> Path:
     """6-row subplot of RAO phase with one trace per solver/heading."""
     subplot_titles = [
@@ -107,7 +109,7 @@ def plot_phase_overlay(
     fig.update_xaxes(
         title_text=x_axis_label(x_axis, heading_x_axis), row=6, col=1,
     )
-    apply_layout(fig, "Benchmark RAO Phase Overlay")
+    apply_layout(fig, page_title or "Benchmark RAO Phase Overlay")
     fig.update_layout(height=1200)
     summary = compute_phase_summary(solver_results, solver_names, headings)
     return render_html_with_table(
@@ -122,6 +124,7 @@ def plot_combined_overlay(
     x_axis: str,
     heading_x_axis: bool,
     headings: Optional[List[float]] = None,
+    page_title: Optional[str] = None,
 ) -> Path:
     """6 rows x 2 cols: amplitude left, phase right."""
     subplot_titles: List[str] = []
@@ -154,9 +157,13 @@ def plot_combined_overlay(
     label = x_axis_label(x_axis, heading_x_axis)
     fig.update_xaxes(title_text=label, row=6, col=1)
     fig.update_xaxes(title_text=label, row=6, col=2)
-    apply_layout(fig, "Benchmark RAO Combined (Amplitude | Phase)")
+    apply_layout(fig, page_title or "Benchmark RAO Combined (Amplitude | Phase)")
     fig.update_layout(height=1400)
-    return save_figure(fig, "benchmark_combined", output_dir)
+    if page_title is None:
+        return save_figure(fig, "benchmark_combined", output_dir)
+    return save_figure(
+        fig, "benchmark_combined", output_dir, page_title=page_title,
+    )
 
 
 def plot_difference(

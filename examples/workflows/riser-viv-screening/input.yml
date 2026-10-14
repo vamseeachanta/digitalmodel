@@ -1,0 +1,32 @@
+basename: viv_screening
+
+viv_screening:
+  design_life_years: 20.0
+  dff: 3.0
+  n_modes: 10
+  sn_curve:
+    curve: F1
+    environment: seawater_cp
+  structure:
+    length_m: 60.0
+    outer_diameter_m: 0.2731
+    inner_diameter_m: 0.2287
+    youngs_modulus_Pa: 2.07e11
+    mass_per_length_kg_m: 180.0
+    effective_tension_N: 0.0
+    boundary: pinned_pinned
+  environment:
+    kinematic_viscosity_m2_s: 1.19e-6
+    mass_ratio: 1.8
+    damping_ratio: 0.01
+    current:
+      speed_m_s: 0.22
+    exposure_fraction: 0.05
+  unit_modal_stress_MPa: 45.0
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

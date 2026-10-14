@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for W6 concept_screening — four axes, normalisation, determinism, DRY_TREE_UNIT.
 # ABOUTME: Pure parameter-based screening; no network, no solver.
 """Tests for digitalmodel.field_development.concept_screening (W6)."""
@@ -220,3 +223,37 @@ class TestAbsoluteCapexOverride:
         assert [(r.host_type, r.composite) for r in a.ranked] == [
             (r.host_type, r.composite) for r in b.ranked
         ]
+
+
+class TestCapexProvenance:
+    @pytest.mark.parametrize("override", [None, {"Spar": 0.5}])
+    def test_numeric_items_and_source(self, spec, override):
+        result = screen_concepts(spec, capex_override=override)
+        for row in result.ranked:
+            expected = (
+                "absolute_override"
+                if override and row.host_type.value in override
+                else "derived_fraction_of_base"
+            )
+            assert row.axes.capex_source == expected
+            assert all(isinstance(v, (int, float))
+                       for v in row.axes.capex_line_items_usd_bn.values())
+
+    def test_capex_order_and_ranking_invert(self, spec):
+        hosts = [HostType.SPAR, HostType.SEMI]
+        weights = {"capex": 1, "schedule": 0, "rig_days": 0, "intervention": 0}
+        derived = screen_concepts(spec, candidates=hosts, weights=weights)
+        cheap, expensive = sorted(
+            derived.ranked, key=lambda row: row.axes.capex_base_usd_bn
+        )
+        totals = {cheap.host_type.value: 9.0, expensive.host_type.value: 0.5}
+        overridden = screen_concepts(
+            spec, candidates=hosts, weights=weights, capex_override=totals
+        )
+        assert derived.ranked[0].host_type == cheap.host_type
+        assert overridden.ranked[0].host_type == expensive.host_type
+        assert cheap.axes.norm["capex"] == 100
+        assert expensive.axes.norm["capex"] == 0
+        norms = {row.host_type: row.axes.norm["capex"] for row in overridden.ranked}
+        assert norms[cheap.host_type] == 0
+        assert norms[expensive.host_type] == 100

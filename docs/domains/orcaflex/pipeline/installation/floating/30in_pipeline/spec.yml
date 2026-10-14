@@ -13,7 +13,7 @@ metadata:
   description: "30-inch pipeline floating installation with 5 tugs"
   structure: pipeline
   operation: installation/floating
-  project: "SESA"
+  project: "generic"
 
 environment:
   water:

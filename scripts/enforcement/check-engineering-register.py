@@ -12,6 +12,25 @@ Exclusions:
   - The unsupported-adjective rule (rule 5) accepts a criterion that appears
     in the same sentence OR the immediately following sentence.
 
+Source masking for R1 and R5:
+  - Bare HTTP/HTTPS and www URL tokens contain ASCII URL characters only:
+    letters, digits, percent escapes, and . _ ~ : / ? # @ ! $ & ( ) * + , ; = -.
+    Tokens end at whitespace, non-ASCII characters, {, }, backslash, caret,
+    backtick, quotes, angle/square brackets, or table pipes. Commas, semicolons,
+    closing emphasis/strikethrough markers, and unmatched closing parentheses
+    delimit adjacent prose; trailing punctuation remains outside the mask.
+  - Markdown link/image destinations and single-line reference-definition
+    destinations are masked. Labels, alt text, titles, and footnote text remain
+    checked; reference labels beginning with ^ are footnotes.
+  - Paired even-length backtick spans are masked with same-length spaces.
+    Escaped opening backticks are not delimiters for this additional mask.
+    Existing single/odd-backtick removal and word joining remain unchanged.
+
+Documented limit (PM ruling R-D): without whitespace, a word joined to a bare
+URL by a legal URL character is part of the token. With U=https://example.org/a,
+U.conservative, U:conservative, U!conservative, U?conservative, U=conservative,
+U/conservative, U*conservative*, and U_(b)conservative cannot be separated.
+
 Usage:
   python scripts/enforcement/check-engineering-register.py [paths...]
   python scripts/enforcement/check-engineering-register.py --self-test
@@ -116,10 +135,96 @@ def prose_lines(lines: list[str]) -> list[tuple[int, str]]:
     return result
 
 
+def mask_link_destinations(line: str) -> str:
+    """Leave labels and optional titles checked while masking destinations."""
+    for match in re.finditer(r"(?<!\\)\[[^\[\]]*\]\(", line):
+        start = match.end()
+        depth = 1
+        escaped = False
+        for end in range(start, len(line)):
+            char = line[end]
+            if escaped:
+                escaped = False
+                continue
+            if char == "\\":
+                escaped = True
+            elif char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    destination = re.fullmatch(
+                        r"""(<[^<>]*>|[^\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*""",
+                        line[start:end],
+                    )
+                    if destination:
+                        stop = start + len(destination[1])
+                        line = line[:start] + " " * (stop - start) + line[stop:]
+                    break
+    definition = re.match(
+        r"""^ {0,3}\[(?!\^)[^\[\]]+\]:[ \t]*(<[^<>]*>|[^\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*$""",
+        line,
+    )
+    if definition:
+        depth = 0
+        for char in re.sub(r"\\.", "", definition[1]):
+            depth += (char == "(") - (char == ")")
+            if depth < 0:
+                break
+        if not definition[1].startswith("<") and depth != 0:
+            return line
+        start, stop = definition.span(1)
+        line = line[:start] + " " * (stop - start) + line[stop:]
+    return line
+
+
+def mask_bare_url(match: re.Match) -> str:
+    """Stop at prose delimiters, keeping balanced URL parentheses."""
+    token = match[0]
+    wrapper = match.string[match.start() - 1 : match.start()]
+    depth = 0
+    stop = len(token)
+    for index, char in enumerate(token):
+        if char in ",;" or token[index : index + 2] in ("**", "__", "~~"):
+            stop = index
+            break
+        if char in "*_" and char == wrapper:
+            stop = index
+            break
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            if depth == 0:
+                stop = index
+                break
+            depth -= 1
+    stop = len(token[:stop].rstrip(".,;:!?*_"))
+    return " " * stop + token[stop:]
+
+
+def register_prose(line: str) -> str:
+    """Mask additional source tokens only for the subject and adjective rules."""
+    line = re.sub(
+        r"(?<![`\\])(`+)(?!`)(.*?)(?<!`)\1(?!`)",
+        lambda m: " " * len(m[0]) if len(m[1]) % 2 == 0 else m[0],
+        line,
+    )
+    # Keep the existing single/odd-backtick removal and word-joining behavior.
+    line = re.sub(r"`[^`]*`", "", line)
+    line = mask_link_destinations(line)
+    return re.sub(
+        r"(?<![^\W_])(?:https?://|www\.)(?a:[a-z0-9._~:/?#@!$&()*+,;=%-]+)",
+        mask_bare_url,
+        line,
+        flags=re.IGNORECASE,
+    )
+
+
 def check_line(line: str, number: int, lines: list[str]) -> list[tuple[int, str, str]]:
     """Check register rules that apply to an individual prose line."""
     findings = []
-    match = FIRST_PERSON.search(line)
+    register_line = register_prose(lines[number - 1])
+    match = FIRST_PERSON.search(register_line)
     if match:
         findings.append(
             (
@@ -133,7 +238,7 @@ def check_line(line: str, number: int, lines: list[str]) -> list[tuple[int, str,
         findings.append(
             (number, "R4-shall-should", "Requirement and advisory language are mixed")
         )
-    match = ADJECTIVES_WITHOUT_CRITERION.search(line)
+    match = ADJECTIVES_WITHOUT_CRITERION.search(register_line)
     if match and not has_criterion_nearby(lines, number - 1):
         findings.append(
             (
@@ -223,6 +328,23 @@ FIXTURES: list[tuple[str, str, str | None]] = [
         None,
         "inches with 3 decimals",
     ),
+    ("https://example.org/conservative-design", None, "URL adjective masked"),
+    ("www.example.org/safe-design", None, "www URL adjective masked"),
+    ("[source](conservative-design)", None, "relative link target masked"),
+    ("![diagram](safe-design)", None, "relative image target masked"),
+    ("[id]: https://example.org/conservative-design", None, "reference URL masked"),
+    ("Text ``conservative`` end.", None, "double-backtick span masked"),
+    ("Text ``our analysis`` end.", None, "double-backtick first person masked"),
+    ("Text `safe` end.", None, "regression pin: single-backtick span"),
+    ("Text ```safe``` end.", None, "regression pin: triple-backtick span"),
+    ("Text `` safe prose.", "R5-unsupported-adj", "regression pin: unclosed span"),
+    ("Text `` safe ` end.", "R5-unsupported-adj", "regression pin: mismatched span"),
+    ("|https://example.org/a|safe|", "R5-unsupported-adj", "adjacent URL cell"),
+    ('[source](safe-design "our note")', "R1-subject", "link title checked"),
+    ("[id]: docs/conservative-design.md", None, "relative definition masked"),
+    ("[^1]: Conservative.", "R5-unsupported-adj", "footnote text checked"),
+    ("https://example.org/a—safe", "R5-unsupported-adj", "non-ASCII URL boundary"),
+    (r"Text \`` conservative \`` end.", "R5-unsupported-adj", "escaped even ticks"),
 ]
 
 

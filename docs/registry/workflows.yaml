@@ -439,6 +439,16 @@ workflows:
       - examples/workflows/riser-stackup-parametric/results/case_0.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup-parametric]
     runtime: offline
+  - id: riser-viv-screening
+    basename: viv_screening
+    title: Riser VIV reduced-velocity lock-in screening + damage-rate estimate (DNV-RP-C205/F105/C203)
+    input: examples/workflows/riser-viv-screening/input.yml
+    outputs:
+      - examples/workflows/riser-viv-screening/results/input.yml
+      - examples/workflows/riser-viv-screening/results/input_viv_screening.csv
+      - examples/workflows/riser-viv-screening/results/input_viv_screening_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-viv-screening]
+    runtime: offline
   - id: sn-curve
     basename: sn_curve
     title: DNV-RP-C203 S-N endurance curve grid
@@ -827,7 +837,7 @@ workflows:
     runtime: offline
   - id: nodal-analysis-ipr-vlp
     basename: production
-    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    title: Well operating point from Vogel IPR / simplified homogeneous VLP intersection
     input: examples/workflows/nodal-analysis-ipr-vlp/input.yml
     outputs:
       - examples/workflows/nodal-analysis-ipr-vlp/results/input.yml
@@ -1012,9 +1022,20 @@ workflows:
       - examples/workflows/concept-selection/results/concept_selection/concept_selection_summary.json
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[concept-selection]
     runtime: offline
+  - id: concept-screening
+    basename: concept_screening
+    title: Four-axis concept screening with weighted sensitivity sweep
+    input: examples/workflows/concept-screening/input.yml
+    outputs:
+      - examples/workflows/concept-screening/results/input.yml
+      - examples/workflows/concept-screening/results/concept_screening/concept_screening_summary.json
+      - examples/workflows/concept-screening/results/concept_screening/concept_comparison_note.md
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[concept-screening]
+    runtime: offline
+
   - id: nodal-analysis
     basename: nodal_analysis
-    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    title: Well operating point from Vogel IPR / simplified homogeneous VLP intersection
     input: examples/workflows/nodal-analysis/input.yml
     outputs:
       - examples/workflows/nodal-analysis/results/input.yml
@@ -1023,7 +1044,7 @@ workflows:
     runtime: offline
   - id: vlp-correlations
     basename: vlp_correlations
-    title: Hagedorn-Brown VLP curve for a vertical oil well
+    title: Simplified homogeneous VLP curve for a vertical oil well
     input: examples/workflows/vlp-correlations/input.yml
     outputs:
       - examples/workflows/vlp-correlations/results/input.yml

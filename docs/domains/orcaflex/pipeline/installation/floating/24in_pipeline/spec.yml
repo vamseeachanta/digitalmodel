@@ -19,7 +19,7 @@ metadata:
   description: "Pipeline floating installation with 5 tugs (OD=0.762m, 30in NPS)"
   structure: pipeline
   operation: installation/floating
-  project: "SESA"
+  project: "generic"
 
 environment:
   water:

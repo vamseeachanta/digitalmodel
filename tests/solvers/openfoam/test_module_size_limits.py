@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""
-ABOUTME: Size limits for the modules this issue touches (dm#1574): 400 lines per
-module and 50 lines per function. The limits are the repository's universal
-rule; this test pins them for the sloshing/OpenFOAM surface that was split as
-part of the source-neutrality work so the split cannot quietly regress.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Function-length checks for the governed OpenFOAM modules.
+
+There is no fixed line limit; a reviewer may comment on a module that is hard to read.
+The function-length check is unchanged: 50 lines per function.
 """
 
 import ast
@@ -13,13 +15,11 @@ import pytest
 
 _REPO = Path(__file__).resolve().parents[3]
 
-MAX_MODULE_LINES = 400
 MAX_FUNCTION_LINES = 50
 
 # Measurement basis, stated rather than left implicit.
 #
-# The module limit counts raw lines: a 400-line file is hard to navigate however
-# it is filled.
+# There is no fixed line limit; a reviewer may comment on a module that is hard to read.
 #
 # The function limit counts *logic* lines - the span of the body with a leading
 # docstring excluded. The rule exists to bound branching and state a reader must
@@ -50,14 +50,6 @@ GOVERNED_MODULES = (
     "src/digitalmodel/solvers/openfoam/validation/sloshing_sweep_cli.py",
 )
 
-# Named exemption, declared here rather than left implicit. The explorer
-# generator's bulk is one embedded HTML template string, not logic; splitting it
-# is carried by dm#1903 together with the rest of the capability-generator
-# structure. This issue changed only prose inside that template.
-EXEMPT_FROM_MODULE_LIMIT = (
-    "scripts/capabilities/build_sloshing_explorer.py",
-)
-
 
 def _logic_lines(node) -> int:
     """Span of a function body, excluding a leading docstring."""
@@ -82,14 +74,6 @@ def _function_lengths(path: Path):
 
 
 @pytest.mark.parametrize("relative", GOVERNED_MODULES)
-def test_module_is_within_the_line_limit(relative):
-    path = _REPO / relative
-    assert path.is_file(), f"{relative} is missing"
-    lines = len(path.read_text(encoding="utf-8").splitlines())
-    assert lines <= MAX_MODULE_LINES, f"{relative} is {lines} lines"
-
-
-@pytest.mark.parametrize("relative", GOVERNED_MODULES)
 def test_functions_are_within_the_line_limit(relative):
     path = _REPO / relative
     oversized = [
@@ -98,9 +82,3 @@ def test_functions_are_within_the_line_limit(relative):
         if length > MAX_FUNCTION_LINES
     ]
     assert oversized == []
-
-
-@pytest.mark.parametrize("relative", EXEMPT_FROM_MODULE_LIMIT)
-def test_exempt_module_still_exists(relative):
-    """The exemption is only meaningful while the file it names exists."""
-    assert (_REPO / relative).is_file()

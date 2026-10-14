@@ -186,7 +186,7 @@ class TestRaoRegistry:
             phases=phases,
         )
         raos = registry.get_raos("idempotent_test")
-        assert len(raos) == 1  # only one entry
+        assert len(raos) == 2  # changed content retains both revisions
 
     def test_list_hulls(self, raos_dir, sample_rao_data):
         freqs, dirs, amps, phases = sample_rao_data

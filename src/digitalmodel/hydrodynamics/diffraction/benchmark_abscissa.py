@@ -1,6 +1,7 @@
 """Fail-closed abscissa alignment for diffraction benchmarks."""
 
 from dataclasses import dataclass
+from numbers import Integral, Real
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -60,7 +61,15 @@ class AbscissaGapError(ValueError):
 
 @dataclass(frozen=True)
 class AbscissaConfig:
-    """Physics-based thresholds for an abscissa comparison."""
+    """Physics-based thresholds for an abscissa comparison.
+
+    ``min_samples`` must be an integer, excluding booleans, of at least two:
+    abscissa validation requires two points to define an interval.
+    ``min_coverage`` must be None or a finite real in (0, 1]: shared-interval
+    coverage is a positive ratio bounded by the smaller source span.
+    ``max_relative_gap`` must be a finite, strictly positive real: it bounds
+    d(omega)/omega, and a non-finite threshold disables the gap comparison.
+    """
 
     min_samples: int = MIN_SAMPLES
     min_coverage: float | None = None
@@ -68,6 +77,22 @@ class AbscissaConfig:
     justification: str = DEFAULT_JUSTIFICATION
 
     def __post_init__(self) -> None:
+        if (
+            isinstance(self.min_samples, bool)
+            or not isinstance(self.min_samples, Integral)
+            or self.min_samples < 2
+        ):
+            raise ValueError("min_samples must be an integer of at least 2, not a boolean")
+        if self.min_coverage is not None and (
+            not isinstance(self.min_coverage, Real)
+            or not 0.0 < self.min_coverage <= 1.0
+        ):
+            raise ValueError("min_coverage must be None or a finite real in (0, 1]")
+        if (
+            not isinstance(self.max_relative_gap, Real)
+            or not 0.0 < self.max_relative_gap < np.inf
+        ):
+            raise ValueError("max_relative_gap must be a finite, strictly positive real")
         custom_threshold = (
             self.min_samples != MIN_SAMPLES
             or self.min_coverage is not None

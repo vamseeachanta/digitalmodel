@@ -58,17 +58,10 @@ class MeshFamilyMember:
 def refine_mesh(mesh: PanelMesh, levels: int = 1) -> PanelMesh:
     """Subdivide each quad panel into 4 sub-quads by inserting midpoints.
 
-    For each quad [v0, v1, v2, v3]:
-      - Insert edge midpoints: m01, m12, m23, m30
-      - Insert center point: mc (average of 4 vertices)
-      - Create 4 sub-quads:
-        [v0, m01, mc, m30]
-        [m01, v1, m12, mc]
-        [mc, m12, v2, m23]
-        [m30, mc, m23, v3]
-
-    Apply ``levels`` times for 4^levels panel multiplier.
-    Deduplicates vertices after each level.
+    Apply ``levels`` times, welding vertices and removing collapsed children.
+    The panel-aligned ``moonpool_wall`` and ``moonpool_index`` lists defined by
+    ``mesh_cutouts._assemble`` follow retained children in panel order. Other
+    metadata (including cumulative ``cutouts``) is carried unchanged.
 
     Args:
         mesh: Source panel mesh to refine.
@@ -78,7 +71,7 @@ def refine_mesh(mesh: PanelMesh, levels: int = 1) -> PanelMesh:
         A new PanelMesh with refined geometry.
 
     Raises:
-        ValueError: If *levels* is less than 1.
+        ValueError: If *levels* is less than 1 or classifications do not align.
     """
     if levels < 1:
         raise ValueError(f"levels must be >= 1, got {levels}")
@@ -91,9 +84,21 @@ def refine_mesh(mesh: PanelMesh, levels: int = 1) -> PanelMesh:
 
 def _subdivide_once(mesh: PanelMesh) -> PanelMesh:
     """Single level of quad subdivision."""
+    classifications = {}
+    for key in ("moonpool_wall", "moonpool_index"):
+        if key not in mesh.metadata:
+            continue
+        try:
+            values = np.asarray(mesh.metadata[key])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{key} must be a panel-aligned sequence") from exc
+        if values.shape != (mesh.n_panels,):
+            raise ValueError(f"{key} must have one entry per source panel")
+        classifications[key] = values.tolist()
     verts = mesh.vertices.copy()
     new_verts_list: list[np.ndarray] = list(verts)
     new_panels: list[list[int]] = []
+    parents: list[int] = []
 
     # Cache for edge midpoints to avoid duplicates.
     # Key: (min_idx, max_idx) -> new vertex index
@@ -110,7 +115,7 @@ def _subdivide_once(mesh: PanelMesh) -> PanelMesh:
         edge_cache[key] = idx
         return idx
 
-    for panel in mesh.panels:
+    for parent, panel in enumerate(mesh.panels):
         v0, v1, v2, v3 = int(panel[0]), int(panel[1]), int(panel[2]), int(panel[3])
 
         # Edge midpoints
@@ -129,6 +134,7 @@ def _subdivide_once(mesh: PanelMesh) -> PanelMesh:
         mc = len(new_verts_list)
         new_verts_list.append(center)
 
+        parents.extend([parent] * 4)
         # 4 sub-quads (preserve CCW winding order)
         new_panels.append([v0, m01, mc, m30])
         new_panels.append([m01, v1, m12, mc])
@@ -146,9 +152,11 @@ def _subdivide_once(mesh: PanelMesh) -> PanelMesh:
 
     # Remove degenerate panels (fewer than 3 unique vertices)
     valid: list[np.ndarray] = []
-    for p in remapped_panels:
+    retained_parents: list[int] = []
+    for parent, p in zip(parents, remapped_panels):
         if len(set(int(x) for x in p)) >= 3:
             valid.append(p)
+            retained_parents.append(parent)
 
     valid_panels = (
         np.array(valid, dtype=np.int32)
@@ -168,6 +176,10 @@ def _subdivide_once(mesh: PanelMesh) -> PanelMesh:
         reference_point=list(mesh.reference_point),
         metadata={
             **mesh.metadata,
+            **{
+                key: [values[p] for p in retained_parents]
+                for key, values in classifications.items()
+            },
             "refinement_levels": mesh.metadata.get("refinement_levels", 0) + 1,
         },
     )

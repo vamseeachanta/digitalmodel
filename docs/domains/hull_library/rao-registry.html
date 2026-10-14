@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAO registry identity and upgrade</title>
+<style>
+body { max-width: 54rem; margin: 3rem auto; padding: 0 1rem;
+       font: 1rem/1.6 system-ui, sans-serif; color: #172438; }
+code { background: #eef2f5; padding: .1rem .25rem; }
+</style>
+<main>
+<h1>RAO registry identity and upgrade</h1>
+<p><code>RaoRegistry</code> stores JSON datasets in per-hull directories and
+references in <code>registry.yaml</code>. This is separate from
+<code>RAODatabase</code> and its fixture population workflow.</p>
+<h2>Registration and corrections</h2>
+<p>New filenames are <code>sha256_&lt;digest&gt;.json</code>. The standard-library
+SHA-256 digest covers canonical JSON: keys sorted, compact separators, default
+ASCII escaping, UTF-8 encoding, and non-finite numbers rejected. The complete
+payload participates except the registration date. Hull, solver, exact draft,
+loading condition, benchmark revision, headings, frequencies, amplitudes and
+phases therefore distinguish datasets. Draft and headings are stored as floats;
+arrays retain their serialized numeric values. JSON integer and float encodings
+are distinct. Units and field definitions remain those of the registry payload.</p>
+<p>Identical serialized content returns the original reference and date without
+rewriting the file or index. Different content, even under the same hull, solver,
+draft, condition and benchmark revision, creates a retained revision. Corrections
+never replace earlier content. Existing digest files are verified before reuse;
+corrupt history is not repaired by re-registration.</p>
+<p>New revisions appear first in lookup results; an identical repeat does not
+reorder them. The existing inclusive 0.5 m draft lookup tolerance remains only a
+search rule. It does not determine storage identity. Conditions and benchmark
+revisions can be selected from the returned reference metadata.</p>
+<h2>Historical references</h2>
+<p>The <code>RaoReference</code> schema and existing relative-path anchor (the
+registry directory's grandparent) remain unchanged. New references use forward
+slashes and carry their digest in the path. Loading verifies content against that
+digest and checks all reference metadata, including the original date. Missing,
+unreadable, changed or mismatched data raises <code>ValueError</code> with an
+integrity message. References outside this registry are rejected. Preserve the
+original reference when checking history; the index is not a trusted replacement
+for it.</p>
+<h2>Legacy upgrade</h2>
+<p>Version 1.0 indexes remain readable. Their entries remain discoverable and
+retain their metadata when new entries are added. Legacy date-based filenames
+carry no original content digest: loading such a reference now fails explicitly,
+even if its current JSON looks plausible. This cannot determine whether an older
+writer already overwrote the original dataset. No legacy reference or dataset is
+automatically renamed, migrated, deleted or declared qualified.</p>
+<p>For reuse, independently establish the legacy dataset's intended identity and
+provenance, then register the verified inputs to create a new reference. Preserve
+the old reference and evidence separately. A digest establishes content integrity,
+not engineering qualification, coordinate conventions or source validity.</p>
+<h2>Caller behavior and limits</h2>
+<p><code>analysis_setup._attempt_rao_lookup</code> still consumes the first match;
+this now means the newest retained revision. Its existing exception handling
+returns unavailable data for integrity failures, including legacy references.
+Catalog linking continues to attach all matching references. Callers needing a
+specific condition must select that reference explicitly. Registration supports
+single-writer use; concurrent index transactions and legacy data recovery are
+not provided.</p>
+<p>Implementation: <code>src/digitalmodel/hydrodynamics/hull_library/rao_registry.py</code>.
+Synthetic regression coverage:
+<code>tests/hydrodynamics/hull_library/test_rao_registry_identity.py</code>.</p>
+</main>
+</html>

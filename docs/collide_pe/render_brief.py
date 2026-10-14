@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import html
+import math
 import sys
 from pathlib import Path
 
@@ -29,6 +30,31 @@ HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE / "templates" / "letterhead.html"
 PROBLEMS = HERE / "problems"
 BRIEFS = HERE / "briefs"
+WORKING_NOTE_LABEL = "Internal working note: not a diagnostic report"
+
+
+def working_note_label(problem: dict) -> str:
+    """Label pending answers and results without recorded repository provenance."""
+    solution = problem.get("solution") or {}
+    answer = solution.get("answer")
+    values = answer.values() if isinstance(answer, dict) else (answer,)
+    numeric_result = any(
+        isinstance(value, (int, float)) and not isinstance(value, bool)
+        and math.isfinite(value) for value in values
+    )
+    function = solution.get("domain_function")
+    repository_function = (
+        isinstance(function, str) and function.startswith("digitalmodel.")
+        and function != "digitalmodel."
+    )
+    pending = any(
+        "pending solver run" in str(value).casefold()
+        for value in (
+            solution.get("method", "Pending solver run."),
+            solution.get("steps") or "Pending solver run.", answer,
+        )
+    )
+    return "" if numeric_result and repository_function and not pending else WORKING_NOTE_LABEL
 
 
 def _esc(x) -> str:
@@ -91,6 +117,16 @@ def render(problem: dict) -> str:
     out = tpl
     for k, v in repl.items():
         out = out.replace(k, v)
+    label = working_note_label(problem)
+    if label:
+        marker = '  <div class="sheet">\n'
+        if marker not in out:
+            raise ValueError("Working-note label marker is missing from the brief template")
+        out = out.replace(
+            marker,
+            f'  <div class="sheet">\n    <p class="panel">{_esc(label)}</p>\n',
+            1,
+        )
     return out
 
 

@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "issue": 1794,
+  "parent_file": "field-development-source-evidence-1794.json",
+  "gate_review": [
+    {
+      "record": "Perdido",
+      "num_trees": {
+        "provisional_value_as_given": "35",
+        "finding": "unsupported as a tree count; secondary wording is \"perhaps as many as 35 wells\" (row 45)",
+        "cell_as_given": "35: unsupported as a tree count; secondary wording is \"perhaps as many as 35 wells\" (row 45)"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "3",
+        "finding": "unsupported (proxy); unverified leads say two (rows 49, 50)",
+        "cell_as_given": "3: unsupported (proxy); unverified leads say two (rows 49, 50)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "110",
+        "finding": "unsupported",
+        "cell_as_given": "110: unsupported"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "3.0",
+        "finding": "unsupported (seed)",
+        "cell_as_given": "3.0: unsupported (seed)"
+      }
+    },
+    {
+      "record": "Appomattox",
+      "num_trees": {
+        "provisional_value_as_given": "18",
+        "finding": "unsupported; operator states 15 producing wells and five water injection wells (row 19)",
+        "cell_as_given": "18: unsupported; operator states 15 producing wells and five water injection wells (row 19)"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "4",
+        "finding": "unsupported; contractor release gives no count (row 28)",
+        "cell_as_given": "4: unsupported; contractor release gives no count (row 28)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "145",
+        "finding": "wrong definition (export pipeline); filing states \"90-mile\" export line (row 30)",
+        "cell_as_given": "145: wrong definition (export pipeline); filing states \"90-mile\" export line (row 30)"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "4.0",
+        "finding": "unsupported; only percentage reductions stated (rows 24, 27)",
+        "cell_as_given": "4.0: unsupported; only percentage reductions stated (rows 24, 27)"
+      }
+    },
+    {
+      "record": "Whale",
+      "num_trees": {
+        "provisional_value_as_given": "15",
+        "finding": "confirmed as a well count, \"a total of 15 wells\" (row 7)",
+        "cell_as_given": "15: confirmed as a well count, \"a total of 15 wells\" (row 7)"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "5",
+        "finding": "unsupported; five is the riser count and the drill-center count (rows 13, 14)",
+        "cell_as_given": "5: unsupported; five is the riser count and the drill-center count (rows 13, 14)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "16",
+        "finding": "wrong definition (host-to-neighbouring-host), and that sentence is unverified (row 16)",
+        "cell_as_given": "16: wrong definition (host-to-neighbouring-host), and that sentence is unverified (row 16)"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "5.0",
+        "finding": "unsupported (seed); release gives a rate of return only (row 5)",
+        "cell_as_given": "5.0: unsupported (seed); release gives a rate of return only (row 5)"
+      }
+    },
+    {
+      "record": "Atlantis",
+      "num_trees": {
+        "provisional_value_as_given": "18",
+        "finding": "unsupported",
+        "cell_as_given": "18: unsupported"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "2",
+        "finding": "unsupported (proxy)",
+        "cell_as_given": "2: unsupported (proxy)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "0",
+        "finding": "unsupported (placeholder)",
+        "cell_as_given": "0: unsupported (placeholder)"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "1.3",
+        "finding": "phase-only and unverified (row 77)",
+        "cell_as_given": "1.3: phase-only and unverified (row 77)"
+      }
+    },
+    {
+      "record": "Thunder Horse",
+      "num_trees": {
+        "provisional_value_as_given": "25",
+        "finding": "unverified lead (row 73)",
+        "cell_as_given": "25: unverified lead (row 73)"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "2",
+        "finding": "unsupported (proxy)",
+        "cell_as_given": "2: unsupported (proxy)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "3.2",
+        "finding": "expansion-only and unverified (row 74)",
+        "cell_as_given": "3.2: expansion-only and unverified (row 74)"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "5.0",
+        "finding": "unsupported (seed)",
+        "cell_as_given": "5.0: unsupported (seed)"
+      }
+    },
+    {
+      "record": "Mars / Olympus",
+      "num_trees": {
+        "provisional_value_as_given": "24",
+        "finding": "unsupported as a tree count (well slots; unverified, row 79)",
+        "cell_as_given": "24: unsupported as a tree count (well slots; unverified, row 79)"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "2",
+        "finding": "unsupported (proxy)",
+        "cell_as_given": "2: unsupported (proxy)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "0",
+        "finding": "unsupported (placeholder)",
+        "cell_as_given": "0: unsupported (placeholder)"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "1.0",
+        "finding": "unsupported (trade page only)",
+        "cell_as_given": "1.0: unsupported (trade page only)"
+      }
+    },
+    {
+      "record": "Mad Dog Phase 2",
+      "num_trees": {
+        "provisional_value_as_given": "22",
+        "finding": "the sum is not sourced; \"up to 14 production wells\" is secondary (row 34), eight injectors unverified (row 41)",
+        "cell_as_given": "22: the sum is not sourced; \"up to 14 production wells\" is secondary (row 34), eight injectors unverified (row 41)"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "5",
+        "finding": "unsupported (drill-centre proxy)",
+        "cell_as_given": "5: unsupported (drill-centre proxy)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "10",
+        "finding": "wrong definition (host-to-host separation, row 36)",
+        "cell_as_given": "10: wrong definition (host-to-host separation, row 36)"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "9.0",
+        "finding": "supported at secondary level only, \"$9-billion\" (row 33)",
+        "cell_as_given": "9.0: supported at secondary level only, \"$9-billion\" (row 33)"
+      }
+    },
+    {
+      "record": "Stones",
+      "num_trees": {
+        "provisional_value_as_given": "8",
+        "finding": "confirmed, \"eight subsea trees\" in contract scope (row 52)",
+        "cell_as_given": "8: confirmed, \"eight subsea trees\" in contract scope (row 52)"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "2",
+        "finding": "corrected to one, \"a subsea manifold\" in contract scope (row 53)",
+        "cell_as_given": "2: corrected to one, \"a subsea manifold\" in contract scope (row 53)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "20",
+        "finding": "unsupported",
+        "cell_as_given": "20: unsupported"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "2.0",
+        "finding": "unsupported (seed)",
+        "cell_as_given": "2.0: unsupported (seed)"
+      }
+    },
+    {
+      "record": "Lucius",
+      "num_trees": {
+        "provisional_value_as_given": "6",
+        "finding": "confirmed as wells (row 63); contract scope states five subsea production trees (row 67); both kept",
+        "cell_as_given": "6: confirmed as wells (row 63); contract scope states five subsea production trees (row 67); both kept"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "2",
+        "finding": "confirmed, \"two manifolds\" in contract scope (row 67)",
+        "cell_as_given": "2: confirmed, \"two manifolds\" in contract scope (row 67)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "0",
+        "finding": "unsupported (placeholder)",
+        "cell_as_given": "0: unsupported (placeholder)"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "2.0",
+        "finding": "unsupported (seed)",
+        "cell_as_given": "2.0: unsupported (seed)"
+      }
+    },
+    {
+      "record": "Na Kika",
+      "num_trees": {
+        "provisional_value_as_given": "10",
+        "finding": "confirmed as \"10 subsea wells\" (row 81)",
+        "cell_as_given": "10: confirmed as \"10 subsea wells\" (row 81)"
+      },
+      "num_manifolds": {
+        "provisional_value_as_given": "6",
+        "finding": "unsupported; filing states 5 fields, not six (row 81)",
+        "cell_as_given": "6: unsupported; filing states 5 fields, not six (row 81)"
+      },
+      "tieback_distance_km": {
+        "provisional_value_as_given": "0",
+        "finding": "unsupported (placeholder)",
+        "cell_as_given": "0: unsupported (placeholder)"
+      },
+      "cost_usd_bn": {
+        "provisional_value_as_given": "1.3",
+        "finding": "unsupported (seed)",
+        "cell_as_given": "1.3: unsupported (seed)"
+      }
+    }
+  ],
+  "context_fields": {
+    "confirmed": "Whale water depth 2,600 m (\"more than\") and 2025 start-up; Stones water depth 2,900 m, 60,000 bopd and 2016 start-up; Lucius 2,160 m, 80,000 bopd and 2015 start-up; Thunder Horse 250,000 bopd design capacity; Na Kika 2003 start-up.",
+    "corrected": "Appomattox capacity 125,000 bopd to \"approximately 175,000 boe per day\" (rows 20, 26); Appomattox water depth 2,255 m against \"approximately 7,200 feet (2,195 metres)\" at FID (row 17); Whale capacity unit is boe/d, not bopd (rows 2, 8); Mad Dog Phase 2 water depth 1,800 m against 4,500 ft (1,372 m) and about 5,100 feet (1,550 meters) (rows 35, 38); Lucius operator is the filer of S15, not the \"context\" pairing in the record (row 62); Na Kika operator at production is BP per S18 (row 80); Perdido capacity is stated as \"more than 100 000 bpd of oil equivalent\" (secondary, row 47).",
+    "unsupported": "Atlantis 200,000 bopd and 2,156 m; Thunder Horse 1,844 m and actual 2008 start-up (filing gives an expectation only); Mars 896 m, 1996 start-up and 100,000 bopd; Na Kika 1,920 m and 110,000 bopd; Perdido 2,438 m (secondary states approximately 2450 m)."
+  },
+  "gap_list": [
+    "Tieback distance, all ten records: no primary source states a well, cluster or drill-centre distance to host. Needs OTC/SPE paper text or regulator pipeline-segment data, neither reachable here.",
+    "Manifold/PLEM/PLET count: missing for eight of ten (all but Stones and Lucius). Contractor releases for Appomattox and Mad Dog Phase 2 name manifolds without counts.",
+    "Tree count as such: stated only for Stones and Lucius. Elsewhere only well counts are stated, and wells are not trees.",
+    "Project cost with year and scope: no primary statement for any record. Mad Dog Phase 2 has a secondary report of the operator figure; Appomattox and Whale operators published percentages and a rate of return, not costs.",
+    "Regulator data (BSEE/BOEM water depths, structure and pipeline records): not read, PDF and interactive-query formats only.",
+    "Paper abstracts (OTC/SPE/JPT) for Perdido, Stones, Na Kika, Thunder Horse: blocked.",
+    "Operator originals for all Shell and bp releases: wire copies were used for Shell; nothing for bp. The Appomattox FID quotes (rows 17 to 25, source S4) come from a third-party reproduction and should be re-checked against the original.",
+    "Whale umbilical and drill-center sentences (rows 12, 13) need a verbatim re-capture from S3."
+  ],
+  "recommendation": "Keep the parent data-backfill issue open and keep the downstream benchmark issue on `status:needs-data`: fewer than 10 records pass (0 pass all four fields; 2 pass trees plus manifolds at contractor-scope level). Two decisions would change what is achievable: whether contractor award scope counts as an accepted source for tree and manifold counts (as-contracted, not as-built), and whether the gate should require `tieback_distance_km` at all given no public primary statement was found for any of the ten. A follow-up pass from a host that can read PDFs and reach OnePetro and regulator data would close gaps 1, 5 and 6 fastest.",
+  "as_contracted_rows": [
+    52,
+    53,
+    67
+  ]
+}
