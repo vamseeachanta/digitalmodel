@@ -422,10 +422,12 @@ def generate_tubing_movement_card(seed: int = 0) -> CardData:
     describes unanchored tubing as consuming part of the surface stroke:
     https://www.swpshortcourse.org/paper/17-over-travel-can-occur-both-upstroke-and-down-stroke
 
-    That mechanism does not establish this generator's travel relative to
-    NORMAL: the two independent absolute draws have no matched surface stroke
-    or tubing-compliance inputs. The legacy interval is retained as not
-    established, rather than assigning a new interval from one example well.
+    At otherwise matched inputs, eliminating tubing stretch recovers lost
+    plunger travel. This mechanism does not establish this generator's travel
+    relative to NORMAL: the two independent absolute draws have no matched
+    surface stroke or tubing-compliance inputs. The legacy interval is
+    retained as not established, rather than assigning a new interval from
+    one example well.
     """
     # Stroke, load and area bounds: not established.
     # Assumed, based on previous experience; see the envelope basis above.
