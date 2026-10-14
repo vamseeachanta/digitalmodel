@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Builder for the Winches section of OrcaFlex models.
 
 Generates winch definitions connecting vessel tensioner to pipeline
@@ -41,32 +44,38 @@ class WinchBuilder(BaseBuilder):
         """
         tensioner = self.spec.equipment.tensioner
         vessel = self.spec.equipment.vessel
+        if tensioner is None or vessel is None:
+            raise ValueError("Winch requires tensioner and vessel")
         pipeline_name = self.context.main_pipeline_name or self.spec.pipeline.name
 
         winch_name = tensioner.name
 
         # Tensioner position on vessel (default to stern area)
-        position = tensioner.position_on_vessel or [0, 0, 0]
+        origin = self.spec.equipment.stinger.origin_position if self.spec.equipment.stinger else [0, 0, 0]
+        # Reuse the previous 10 m initial wire length as the forward lead.
+        position = tensioner.position_on_vessel or [origin[0] + 10, origin[1], origin[2]]
+        if position == origin:
+            raise ValueError("Tensioner lead must be separated from the pipe upper end")
 
-        winch_def = {
+        winch_def: dict[str, Any] = {
             "Name": winch_name,
             "Connection": [vessel.name, pipeline_name],
             "ConnectionPoint": [position, [0, 0, 0]],
             "ConnectionzRelativeTo": [None, "End A"],
             "StageMode": [
-                "Specified length",  # Stage 0: build-up
+                "Specified tension",  # Stage 0: build-up
                 "Specified tension",  # Stage 1: operational
             ],
             "StageTension": [
-                0,  # Stage 0: no tension during build-up
+                tensioner.tension_value,
                 tensioner.tension_value,  # Stage 1: operational tension
             ],
             "StageValue": [
-                10,  # Stage 0: initial wire length
+                None,
                 None,  # Stage 1: tension-controlled
             ],
             "WireType": "Winch wire_LT",
-            "StaticsStep1": "Specified length",
+            "StaticsStep1": "Specified tension",
         }
 
         # Stiffness and damping if provided

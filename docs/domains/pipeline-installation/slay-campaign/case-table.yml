@@ -17,6 +17,14 @@ provenance:
       pending source qualification
   pipeline_seabed_and_generic_hull_properties: tests/solvers/orcaflex/modular_generator/schema/test_campaign.py::_make_base_spec_data
   stinger: tests/solvers/orcaflex/modular_generator/test_slay_schema.py::stinger_data
+  layout: Stern origin is minus half declared hull length; roller arc stations use
+    declared pipe mesh spacing through the 40 m stinger section. Roller centre offset
+    is minus half coated pipe diameter minus half Support type2 diameter (2 m,
+    builders/supports_builder.py). Generic geometry assumed, based on previous experience.
+  endpoint_seed: builders/lines_builder.py::_slay_endpoints; span equals pipe length
+    minus endpoint height, leaving slack; not an equilibrium solution.
+  tensioner_lead: builders/winch_builder.py; prior initial wire length of 10 m reused
+    as forward lead from the stinger origin; assumed, based on previous experience.
   water_density: schema/environment.py::Water
   steel_density: builders/linetype_builder.py::MATERIAL_PROPERTIES; modelling default
   gravity: src/digitalmodel/installation/pipelay/integrity.py::G_STANDARD
@@ -69,9 +77,20 @@ basis:
         - 30
     stinger:
       radius: 150
+      origin_position: [-91.1, 0, 0]
       sections:
       - length: 40
         bend_radius: 150
+      rollers:
+      - {arc_length: 0, z_offset: -1.485}
+      - {arc_length: 5, z_offset: -1.485}
+      - {arc_length: 10, z_offset: -1.485}
+      - {arc_length: 15, z_offset: -1.485}
+      - {arc_length: 20, z_offset: -1.485}
+      - {arc_length: 25, z_offset: -1.485}
+      - {arc_length: 30, z_offset: -1.485}
+      - {arc_length: 35, z_offset: -1.485}
+      - {arc_length: 40, z_offset: -1.485}
     tensioner:
       capacity_kn: 5393.657499999999
       tension_value: 400

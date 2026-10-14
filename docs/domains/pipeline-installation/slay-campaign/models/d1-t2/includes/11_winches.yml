@@ -4,9 +4,9 @@ Winches:
   - Generic lay hull
   - Generic pipe
   ConnectionPoint:
-  - - 0
-    - 0
-    - 0
+  - - -81.1
+    - 0.0
+    - 0.0
   - - 0
     - 0
     - 0
@@ -14,13 +14,13 @@ Winches:
   - ~
   - End A
   StageMode:
-  - Specified length
+  - Specified tension
   - Specified tension
   StageTension:
-  - 0
+  - 1672.7866641353057
   - 1672.7866641353057
   StageValue:
-  - 10
+  - ~
   - ~
   WireType: Winch wire_LT
-  StaticsStep1: Specified length
+  StaticsStep1: Specified tension

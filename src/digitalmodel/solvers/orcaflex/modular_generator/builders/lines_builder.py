@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Builder for the Lines section of OrcaFlex models.
 
 This builder generates Lines with pipeline configuration including:
@@ -6,6 +9,7 @@ This builder generates Lines with pipeline configuration including:
 - Attachments at arc-length positions based on buoyancy module spacing
 """
 
+import math
 from typing import Any
 
 from .base import BaseBuilder
@@ -178,31 +182,7 @@ class LinesBuilder(BaseBuilder):
         is_s_lay = self.spec.is_s_lay()
 
         if is_s_lay:
-            vessel_name = self.spec.equipment.vessel.name
-
-            # End A: Free - pipeline pays out from vessel
-            end_a = [
-                vessel_name,  # Connected to vessel
-                0,  # X offset
-                0,  # Y offset
-                0,  # Z offset
-                0,  # Azimuth
-                90,  # Declination
-                0,  # Gamma
-                None,  # ReleaseStage
-            ]
-
-            # End B: Anchored at seabed
-            end_b = [
-                "Anchored",  # Anchored at seabed
-                0,  # X position
-                0,  # Y position
-                0,  # Z position (at seabed)
-                0,  # Azimuth
-                90 + seabed_slope,  # Declination
-                0,  # Gamma
-                None,  # ReleaseStage
-            ]
+            end_a, end_b = self._slay_endpoints()
         else:
             # Floating installation (existing logic)
             end_a = [
@@ -228,10 +208,12 @@ class LinesBuilder(BaseBuilder):
             ]
 
         # Connection stiffness (End A, End B)
-        stiffness = [
+        stiffness: list[list[Any]] = [
             ["Infinity", None, "Infinity"],  # End A: rigid
             ["Infinity", None, "Infinity"],  # End B: rigid
         ]
+        if is_s_lay:
+            stiffness = [[0, 0, 0], [0, 0, 0]]
 
         # Arclength settings (End A, End B)
         arclength = [
@@ -244,6 +226,33 @@ class LinesBuilder(BaseBuilder):
             "stiffness": stiffness,
             "arclength": arclength,
         }
+
+    def _slay_endpoints(self) -> list[list]:
+        """Seed a free upper end and a separated seabed anchor.
+
+        The horizontal seed is pipe length minus endpoint height. It leaves
+        slack for bending and contact; it is not a solved touchdown position.
+        Only planar, level-hull geometry is supported by this seed.
+        """
+        vessel = self.spec.equipment.vessel
+        stinger = self.spec.equipment.stinger
+        pipeline = self.spec.pipeline
+        if vessel is None or pipeline is None:
+            raise ValueError("S-lay endpoints require vessel and pipeline")
+        if any(vessel.orientation[:2]) or self.spec.environment.seabed.slope:
+            raise ValueError("S-lay endpoint seed requires level hull and seabed")
+        origin = stinger.origin_position if stinger else [0, 0, 0]
+        heading = math.radians(vessel.orientation[2])
+        c, s = math.cos(heading), math.sin(heading)
+        x = vessel.position[0] + c * origin[0] - s * origin[1]
+        y = vessel.position[1] + s * origin[0] + c * origin[1]
+        z = vessel.position[2] + origin[2]
+        height = self.spec.environment.water.depth + z
+        span = sum(segment.length for segment in pipeline.segments) - height
+        if height <= 0 or span <= 0:
+            raise ValueError("S-lay endpoint height must be positive and below pipe length")
+        return [["Free", x, y, z, 180, 90, 0, None],
+                ["Anchored", x - span * c, y - span * s, 0, 180, 90, 0, None]]
 
     def _build_attachments(self, bm_buoy_name: str) -> list[dict[str, Any]]:
         """Build attachment list for buoyancy modules.

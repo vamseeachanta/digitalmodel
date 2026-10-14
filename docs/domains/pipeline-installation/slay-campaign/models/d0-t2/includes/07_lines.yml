@@ -12,29 +12,29 @@ Lines:
   WaveCalculationMethod: Specified by environment
   ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
     ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
-  : - - Generic lay hull
-      - 0
-      - 0
-      - 0
-      - 0
+  : - - Free
+      - -91.1
+      - 0.0
+      - 0.0
+      - 180
       - 90
       - 0
       - ~
     - - Anchored
+      - -2051.1
+      - 0.0
       - 0
-      - 0
-      - 0
-      - 0
-      - 90.0
+      - 180
+      - 90
       - 0
       - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
-  - - Infinity
-    - ~
-    - Infinity
-  - - Infinity
-    - ~
-    - Infinity
+  - - 0
+    - 0
+    - 0
+  - - 0
+    - 0
+    - 0
   ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
     ConnectionApplyRamp, ConnectionUseSmoothGrowth
   : - - ~
