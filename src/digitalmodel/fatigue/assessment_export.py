@@ -61,6 +61,17 @@ def _display_values(value: Any) -> Any:
     return value
 
 
+def _format_cells(book: Workbook) -> None:
+    """Keep supplied text literal and apply numeric display precision."""
+    for sheet in book.worksheets:
+        for row in sheet.iter_rows(min_row=2):
+            for cell in row:
+                if isinstance(cell.value, (int, float)):
+                    cell.number_format = "0.0E+00"
+                elif isinstance(cell.value, str):
+                    cell.data_type = "s"
+
+
 def _write_excel(path: Path, result: AssessmentResult, inp: AssessmentInput) -> None:
     """Write native result tables and echo the engineering input."""
     book = Workbook()
@@ -81,11 +92,7 @@ def _write_excel(path: Path, result: AssessmentResult, inp: AssessmentInput) -> 
     echo.append(["Quantity", "Value"])
     for key, value in inp.model_dump().items():
         echo.append([key, json.dumps(_display_values(value), allow_nan=False)])
-    for sheet in (summary, cycles):
-        for row in sheet.iter_rows(min_row=2):
-            for cell in row:
-                if isinstance(cell.value, (int, float)):
-                    cell.number_format = "0.0E+00"
+    _format_cells(book)
     book.save(path)
     book.close()
 
@@ -130,6 +137,19 @@ def _report_sections(result: AssessmentResult, document: DocumentMeta) -> list[S
     ]
 
 
+def _native_readback(
+    path: Path, inp: AssessmentInput, result: AssessmentResult,
+) -> tuple[dict[str, Any], str]:
+    """Persist and validate native output, hashing the validated bytes."""
+    payload = {"input": inp.model_dump(), "result": result.model_dump()}
+    _write_json(path, payload)
+    native_bytes = path.read_bytes()
+    readback: dict[str, Any] = json.loads(native_bytes)
+    if readback != payload:
+        raise ValueError("native fatigue output readback differs from calculated output")
+    return readback, hashlib.sha256(native_bytes).hexdigest()
+
+
 def export_assessment(
     inp: AssessmentInput,
     output_dir: Path | str,
@@ -148,13 +168,8 @@ def export_assessment(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     native_path = output_dir / "fatigue-native.json"
-    payload = {"input": inp.model_dump(), "result": result.model_dump()}
-    _write_json(native_path, payload)
-    readback = json.loads(native_path.read_text(encoding="utf-8"))
-    if readback != payload:
-        raise ValueError("native fatigue output readback differs from calculated output")
+    readback, digest = _native_readback(native_path, inp, result)
     result = AssessmentResult.model_validate(readback["result"])
-    digest = hashlib.sha256(native_path.read_bytes()).hexdigest()
     provenance = Provenance().add("native_calculation", native_path.name, digest=digest)
     spec = ReportSpec(document=document, sections=_report_sections(result, document),
                       standards=[StandardLabel(code_id=inp.design_code,

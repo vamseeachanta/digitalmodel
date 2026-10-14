@@ -129,3 +129,36 @@ def test_export_reads_native_output_and_workbook_back(tmp_path):
     assert manifest["native_sha256"]
     assert manifest["pdf_rendered"] == artifacts.report.pdf_status.rendered
     book.close()
+
+
+def test_workbook_preserves_supplied_case_names_as_literal_text(tmp_path):
+    data = histogram_input()
+    data["load_cases"][0]["name"] = "=1+1"
+    document = DocumentMeta(number="B0000-RPT-001-00", revision="00",
+                            title="Fatigue analysis", project="Synthetic analysis",
+                            client="Synthetic input")
+    artifacts = export_assessment(AssessmentInput.model_validate(data), tmp_path,
+                                  document=document, pdf="auto")
+    book = load_workbook(artifacts.excel_path, data_only=False)
+    assert book["Summary"]["B5"].value == "=1+1"
+    assert book["Summary"]["B5"].data_type == "s"
+    assert book["Cycles"]["A2"].data_type == "s"
+    book.close()
+
+
+def test_native_readback_bytes_are_checked_before_report_export(tmp_path, monkeypatch):
+    original = Path.read_bytes
+
+    def tampered_read(path):
+        if path.name == "fatigue-native.json":
+            return b"{}"
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", tampered_read)
+    document = DocumentMeta(number="B0000-RPT-001-00", revision="00",
+                            title="Fatigue analysis", project="Synthetic analysis",
+                            client="Synthetic input")
+    with pytest.raises(ValueError, match="readback differs"):
+        export_assessment(AssessmentInput.model_validate(histogram_input()), tmp_path,
+                          document=document, pdf="auto")
+    assert not (tmp_path / "fatigue-analysis.html").exists()
