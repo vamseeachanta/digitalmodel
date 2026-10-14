@@ -14,6 +14,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import time
 from typing import Any, Callable
@@ -174,14 +175,27 @@ def retain_governing(output: Path, summaries: list[dict[str, Any]], criteria: di
 
 
 def run_campaign(campaign: Path, output: Path, *,
+                 criteria_file: Path | None = None,
                  case_runner: Callable[[Path, Path], dict[str, Any]] | None = None) -> int:
     """Resume matching cases and retain native evidence for governing cases."""
     runner = run_case if case_runner is None else case_runner
     if output.resolve().is_relative_to(campaign.resolve()):
         raise ValueError('Results must be outside the prepared input directory')
     table = yaml.safe_load((campaign / 'case-table.yml').read_text(encoding='utf-8'))
+    from digitalmodel.drilling_riser.generic_campaign import SPEC, load_criteria, source_digest
+    source = Path(__file__).resolve().parents[2] / SPEC
+    manifest = json.loads((campaign / 'manifest.campaign.json').read_text(encoding='utf-8'))
+    expected = manifest['env']['SOURCE_SHA256']
+    if (expected != source_digest(source) or table['template_sha256'] != expected
+            or os.environ.get('SOURCE_SHA256', expected) != expected):
+        raise ValueError('Source specification digest mismatch')
+    criteria, criteria_identity = load_criteria(criteria_file, table)
+    criterion_rows({name: 1.0 for name in METRICS}, criteria)
+    # Retention depends on criteria; a new set requires a complete new output set.
+    for summary in output.glob('*.summary.json'):
+        if json.loads(summary.read_text(encoding='utf-8')).get('criteria_sha256') != criteria_identity:
+            raise ValueError('Criteria changed; use a new output directory for a complete rerun')
     cases = table['cases']
-    criterion_rows({name: 1.0 for name in METRICS}, table['criteria'])
     if len(cases) != 24 or len({c['id'] for c in cases}) != 24:
         raise ValueError('Exactly 24 unique cases are required')
     output.mkdir(parents=True, exist_ok=True)
@@ -219,6 +233,7 @@ def run_campaign(campaign: Path, output: Path, *,
                     raise ValueError('Solver version changed; use a new output directory for a complete rerun')
                 result.update(case_id=case_id, input_sha256=identity, status='complete',
                               current_mps=case['current_mps']['value'], extraction_version=EXTRACTION_VERSION,
+                              criteria_sha256=criteria_identity,
                               simulation_retained=True, simulation_sha256=hashlib.sha256(
                                   (output / f'{case_id}.sim').read_bytes()).hexdigest())
                 write_json(summary_path, result)
@@ -240,7 +255,7 @@ def run_campaign(campaign: Path, output: Path, *,
         completed.append(result)
     if failures:
         return 1
-    retain_governing(output, completed, table['criteria'])
+    retain_governing(output, completed, criteria)
     return 0
 
 
@@ -248,5 +263,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--campaign', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--criteria', type=Path, required=True)
     args = parser.parse_args()
-    raise SystemExit(run_campaign(args.campaign, args.output))
+    raise SystemExit(run_campaign(args.campaign, args.output, criteria_file=args.criteria))

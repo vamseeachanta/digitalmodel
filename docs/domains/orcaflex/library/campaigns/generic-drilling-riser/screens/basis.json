@@ -1,10 +1,10 @@
 {
   "template_sha256": "88c1d0fb97506bfceee244e3ade85f6d4de9c3436802123e6553107359dbf2d0",
-  "limitations": "Approximate riser-column screen; constant tension, uniform drag, pinned ends; attached members, nonlinear tensioner response, pressure stress and wave loading omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.",
-  "case_table_sha256": "5014d2953b5b79fc41d9946ae6f5c18778b9bc1e98fbeaa1a5998a2c01537486",
-  "screen_csv_sha256": "dc81da4d56996d09ef8daa8c90552108225b25325fa2972f11096e865111507c",
+  "limitations": "Approximate riser-column screen; constant assumed top tension, uniform drag, pinned ends; lower joint angle is not established because effective tension varies along the column. Upper angle and stress retain the constant-tension approximation. Screen tension is an assumed criterion value, not the modelled tension. attached members, nonlinear tensioner response, pressure stress and wave loading omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.",
+  "case_table_sha256": "5a0768d4aea543504d12c5561b699f94c00f271087afeaaaee261b83ec465e85",
+  "screen_csv_sha256": "cd083b5e445fbba998eff249080bc3710ba019cb61f99a7825a61c156f58fe6a",
   "calculation_fingerprints": {
-    "generic_campaign.py": "8f1de7adfe5ce7aa2c28587be5364ab1b90bee5d7e08ba03f1520d2b4b30c751",
+    "generic_campaign.py": "be92fff1984a481f9d889600e54e8c42acbe97ab7f56f16d34da420f4d016ac3",
     "operability.py": "08a7a80df8ceb4104fe19709bda3df89d6b71528a34c6271f4844347b2391c5b",
     "riser_response.py": "444dbd62bcc1923515a98dece2de62aed14c373516c2d916604fff3782886f1f",
     "section.py": "b7b8c7436c86d1bf72a0d9b9fbf3e113a31c6ed0ebf2205b48e2f721b006178b",
@@ -12,14 +12,14 @@
   },
   "criteria": {
     "mean_angle_deg": {
-      "value": 2.0,
+      "value": null,
       "unit": "degrees",
-      "source": "assumed, based on previous experience"
+      "source": "runtime criteria file; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, April 2017"
     },
     "max_angle_deg": {
-      "value": 4.0,
+      "value": null,
       "unit": "degrees",
-      "source": "assumed, based on previous experience"
+      "source": "runtime criteria file; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, April 2017"
     },
     "min_top_tension_kn": {
       "value": 8345.731487302544,
@@ -37,9 +37,9 @@
       "source": "assumed, based on previous experience"
     },
     "stress_limit_mpa": {
-      "value": 298.66666666666663,
+      "value": null,
       "unit": "MPa",
-      "source": "assumed, based on previous experience"
+      "source": "runtime yield strength times design factor; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, April 2017"
     }
   },
   "assumptions": {
@@ -54,14 +54,14 @@
       "source": "assumed, based on previous experience"
     },
     "yield_strength_mpa": {
-      "value": 448.0,
+      "value": null,
       "unit": "MPa",
-      "source": "assumed, based on previous experience"
+      "source": "runtime criteria file; API Spec 5L, Line Pipe, 46th edition, April 2018"
     },
     "stress_design_factor": {
-      "value": 0.6666666666666666,
+      "value": null,
       "unit": "1",
-      "source": "assumed, based on previous experience"
+      "source": "runtime criteria file; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, April 2017"
     },
     "stroke_reference": {
       "value": "vertical ring displacement from initial elevation relative to fixed vessel",

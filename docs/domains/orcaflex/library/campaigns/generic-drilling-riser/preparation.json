@@ -1,15 +1,13 @@
 {
   "state": "prepared; no native execution",
   "bibliographic_sources": {
-    "16Q_title": "American Petroleum Institute, API Standards Plan, RP 16Q row; https://www.api.org/products-and-services/standards/standards-plan",
-    "16Q_edition": "src/digitalmodel/riser_database/getters.py:61",
-    "2RD_title": "docs/domains/project-docs/MODEL_GENERATOR_IMPLEMENTATION_SUMMARY.md:312",
-    "2RD_edition": "docs/standards/hydrodynamics-inventory.yaml:93"
+    "16Q_and_5L": "API, 2019 Publications Catalog, Exploration and Production, pages 30 and 10; https://www.api.org/~/media/files/publications/2019_catalog/2019-pubs-catalog-exploration-and-production.pdf; opened 2026-10-13",
+    "2RD": "API, public errata notice dated June 10, 2009, affected-publication heading; https://www.api.org/publications-standards-and-statistics/standards-addenda-and-errata/standards-addenda-and-errata/~/media/fd3ebd590ffd42e5b9313e9e2247b691.ashx; opened 2026-10-13"
   },
   "duration_basis": "No timed case exists. Six hours is an estimate assuming fifteen minutes per case for twenty-four cases; assumed, based on previous experience. Maximum duration is three times that estimate.",
   "template_digest_basis": "UTF-8 source text normalized to LF; SOURCE_SHA256 in the runner manifest records that digest.",
-  "criteria_basis": "All selected numerical acceptance limits are assumptions, based on previous experience. The top-tension estimate covers the main riser column and contents only. Connected assembly capacity is not established.",
-  "method": "vessel offset applied as a static mean position; no prescribed vessel motion; wave-frequency response is outside this sweep",
+  "criteria_basis": "Joint angle criteria, yield strength and stress design factor require an external criteria file; criteria-form.json contains no numerical defaults. The report and driver require --criteria. The top-tension estimate is an assumed criterion value, not the modelled tension. Connected assembly capacity is not established.",
+  "method": "vessel offset applied as a static mean position; no prescribed vessel motion; no wave is applied: this sweep covers vessel offset and current only",
   "extraction": {
     "period": "main stage only; stage index one; build-up excluded",
     "lower_angle": "Flex Joint Rigid Piece, End B, connection-relative Ez-Angle; mean and maximum absolute degrees",
@@ -20,13 +18,14 @@
     "qualification": "Actual channel availability, units and interpretation require native readback before engineering acceptance. Missing channels and incomplete states are refused."
   },
   "retention": "Every completed case retains summary metrics and input identity. Native simulation files remain only for the greatest normalized criterion demand at each current speed; the first case resolves ties. Stale summaries are preserved outside the progress glob.",
-  "recovery": "A solver-version change requires a new output directory and a complete rerun. Preserve the previous output directory as evidence.",
+  "recovery": "A solver-version change requires a new output directory and a complete rerun. Preserve the previous output directory as evidence. A criteria-file change also requires a new output directory and a complete rerun.",
   "approval_steps": [
     "Re-pin ref to the merged commit.",
     "Replace every SOLVER_REPO_DIR placeholder, including progress.glob; copy the manifest under the campaign-id filename generic-drilling-riser-r1.json.",
+    "Supply the external criteria file and replace CRITERIA_FILE; retain its digest with the results.",
     "Run runner validation against the resolved approval copy.",
     "Add its new digest to approvals.tsv only after approval."
   ],
-  "screen_comparison_boundary": "The analytical screen uses constant tension and uniform drag with pinned ends. Attached members, pressure stress, nonlinear tensioners and waves are omitted. Geometric extension is not a mechanical stroke prediction.",
-  "release_boundary": "External sharing of results and method remains conditional on owner acceptance of the derivative basis and redistribution terms."
+  "screen_comparison_boundary": "The analytical screen uses constant assumed top tension and uniform drag with pinned ends. The lower joint angle is not established and is omitted because effective tension varies along the column. Upper angle and stress remain approximate. Attached members, pressure stress and nonlinear tensioners are omitted. Geometric extension is not a mechanical stroke prediction.",
+  "release_boundary": "External sharing of results and method remains conditional on maintainer acceptance of the derivative basis and redistribution terms."
 }

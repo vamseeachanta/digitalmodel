@@ -41,12 +41,10 @@ Environment:
     - 0
     - 0
     WaveTimeOrigin: 0
-    WaveType: Dean stream
+    WaveType: Airy
     WaveDirection: 180.0
-    WaveHeight: 1.5
+    WaveHeight: 0.0
     WavePeriod: 8.0
-    WaveStreamFunctionOrder: 5
-    WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: null
   RefCurrentSpeed: 1.5
   RefCurrentDirection: 180.0
   CurrentDepth, CurrentFactor, CurrentRotation:

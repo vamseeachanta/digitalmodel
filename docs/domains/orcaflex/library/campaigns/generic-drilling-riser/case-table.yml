@@ -1,6 +1,6 @@
 schema_version: 1
-method: vessel offset applied as a static mean position; no prescribed vessel motion;
-  wave-frequency response is outside this sweep
+method: 'vessel offset applied as a static mean position; no prescribed vessel motion;
+  no wave is applied: this sweep covers vessel offset and current only'
 template_sha256: 88c1d0fb97506bfceee244e3ade85f6d4de9c3436802123e6553107359dbf2d0
 template_digest_basis: UTF-8 source text normalized to LF
 basis:
@@ -33,11 +33,11 @@ basis:
         value: Dean stream
         unit: as specified
         source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:38
-      height: &id002
+      height:
         value: 1.5
         unit: as specified
         source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:39
-      period: &id003
+      period:
         value: 8
         unit: as specified
         source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:40
@@ -4551,13 +4551,15 @@ profile_description: Uniform current from surface to seabed; assumed, based on p
   experience
 criteria:
   mean_angle_deg:
-    value: 2.0
+    value: null
     unit: degrees
-    source: assumed, based on previous experience
+    source: runtime criteria file; API RP 16Q, Design, Selection, Operation and Maintenance
+      of Marine Drilling Riser Systems, second edition, April 2017
   max_angle_deg:
-    value: 4.0
+    value: null
     unit: degrees
-    source: assumed, based on previous experience
+    source: runtime criteria file; API RP 16Q, Design, Selection, Operation and Maintenance
+      of Marine Drilling Riser Systems, second edition, April 2017
   min_top_tension_kn:
     value: 8345.731487302544
     unit: kN
@@ -4572,9 +4574,11 @@ criteria:
     unit: m
     source: assumed, based on previous experience
   stress_limit_mpa:
-    value: 298.66666666666663
+    value: null
     unit: MPa
-    source: assumed, based on previous experience
+    source: runtime yield strength times design factor; API RP 16Q, Design, Selection,
+      Operation and Maintenance of Marine Drilling Riser Systems, second edition,
+      April 2017
 assumptions:
   gravity_mps2:
     value: 9.81
@@ -4585,13 +4589,14 @@ assumptions:
     unit: '1'
     source: assumed, based on previous experience
   yield_strength_mpa:
-    value: 448.0
+    value: null
     unit: MPa
-    source: assumed, based on previous experience
+    source: runtime criteria file; API Spec 5L, Line Pipe, 46th edition, April 2018
   stress_design_factor:
-    value: 0.6666666666666666
+    value: null
     unit: '1'
-    source: assumed, based on previous experience
+    source: runtime criteria file; API RP 16Q, Design, Selection, Operation and Maintenance
+      of Marine Drilling Riser Systems, second edition, April 2017
   stroke_reference:
     value: vertical ring displacement from initial elevation relative to fixed vessel
     unit: '1'
@@ -4600,10 +4605,13 @@ assumptions:
     value: independent assumed range; model line length is not equipment capacity
     unit: '1'
     source: assumed, based on previous experience
-screen_limitations: Approximate riser-column screen; constant tension, uniform drag,
-  pinned ends; attached members, nonlinear tensioner response, pressure stress and
-  wave loading omitted. Geometric extension is not mechanical tensioner stroke. No
-  assembly acceptance is established.
+screen_limitations: Approximate riser-column screen; constant assumed top tension,
+  uniform drag, pinned ends; lower joint angle is not established because effective
+  tension varies along the column. Upper angle and stress retain the constant-tension
+  approximation. Screen tension is an assumed criterion value, not the modelled tension.
+  attached members, nonlinear tensioner response, pressure stress and wave loading
+  omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance
+  is established.
 cases:
 - id: o0-c0
   offset_pct:
@@ -4628,14 +4636,25 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -0.0
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: &id004
+    value: &id002
     - 8
     - 42
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o0-c1
   offset_pct:
     value: 0
@@ -4659,12 +4678,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -0.0
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o0-c2
   offset_pct:
     value: 0
@@ -4688,12 +4718,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -0.0
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o0-c3
   offset_pct:
     value: 0
@@ -4717,12 +4758,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -0.0
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o1-c0
   offset_pct:
     value: 1
@@ -4746,12 +4798,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -10.2
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o1-c1
   offset_pct:
     value: 1
@@ -4775,12 +4838,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -10.2
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o1-c2
   offset_pct:
     value: 1
@@ -4804,12 +4878,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -10.2
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o1-c3
   offset_pct:
     value: 1
@@ -4833,12 +4918,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -10.2
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o2-c0
   offset_pct:
     value: 2
@@ -4862,12 +4958,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -20.4
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o2-c1
   offset_pct:
     value: 2
@@ -4891,12 +4998,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -20.4
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o2-c2
   offset_pct:
     value: 2
@@ -4920,12 +5038,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -20.4
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o2-c3
   offset_pct:
     value: 2
@@ -4949,12 +5078,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -20.4
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o3-c0
   offset_pct:
     value: 3
@@ -4978,12 +5118,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -30.6
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o3-c1
   offset_pct:
     value: 3
@@ -5007,12 +5158,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -30.6
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o3-c2
   offset_pct:
     value: 3
@@ -5036,12 +5198,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -30.6
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o3-c3
   offset_pct:
     value: 3
@@ -5065,12 +5238,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -30.6
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o4-c0
   offset_pct:
     value: 4
@@ -5094,12 +5278,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -40.8
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o4-c1
   offset_pct:
     value: 4
@@ -5123,12 +5318,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -40.8
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o4-c2
   offset_pct:
     value: 4
@@ -5152,12 +5358,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -40.8
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o4-c3
   offset_pct:
     value: 4
@@ -5181,12 +5398,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -40.8
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o5-c0
   offset_pct:
     value: 5
@@ -5210,12 +5438,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -51.0
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o5-c1
   offset_pct:
     value: 5
@@ -5239,12 +5478,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -51.0
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o5-c2
   offset_pct:
     value: 5
@@ -5268,12 +5518,23 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -51.0
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o5-c3
   offset_pct:
     value: 5
@@ -5297,9 +5558,20 @@ cases:
       - 1
     unit: m, 1
     source: assumed, based on previous experience
-  wave_height_m: *id002
-  wave_period_s: *id003
+  wave_applied:
+    value: false
+    unit: '1'
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+      specification wave is not applied; offset and current only by scope
+  ring_initial_position_m:
+    value:
+    - -51.0
+    - 0.0
+    - 20
+    unit: m
+    source: assumed; same horizontal shift as vessel, offset_m times cosine/sine of
+      current direction; initial elevation retained from specification
   stages_s:
-    value: *id004
+    value: *id002
     unit: s
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:54
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57

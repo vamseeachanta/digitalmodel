@@ -4,7 +4,6 @@
 """Report tests consume synthetic summaries, never licensed software."""
 import importlib.util
 import json
-import os
 import shutil
 from pathlib import Path
 import tempfile
@@ -12,6 +11,7 @@ import unittest
 
 from bs4 import BeautifulSoup
 
+CRITERIA = Path(__file__).parent / 'fixtures/generic_synthetic_criteria.json'
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -29,18 +29,23 @@ class ReportTests(unittest.TestCase):
         from digitalmodel.drilling_riser.generic_campaign import DEST, METHOD
         campaign = ROOT / DEST
         fixture = json.loads((Path(__file__).parent / 'fixtures/generic_synthetic_result.json').read_text(encoding='utf-8'))
-        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as temporary:
+        with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary)
             def fake(model, simulation):
                 simulation.write_text('synthetic only', encoding='utf-8')
                 return dict(fixture)
-            self.assertEqual(driver.run_campaign(campaign, output, case_runner=fake), 0)
-            with self.assertRaisesRegex(ValueError, 'Synthetic'):
+            self.assertEqual(driver.run_campaign(campaign, output, criteria_file=CRITERIA, case_runner=fake), 0)
+            with self.assertRaisesRegex(ValueError, 'criteria file'):
                 builder.build_spec(campaign, output)
-            spec = builder.build_spec(campaign, output, allow_synthetic=True)
+            with self.assertRaisesRegex(ValueError, 'Synthetic'):
+                builder.build_spec(campaign, output, criteria_file=CRITERIA)
+            spec = builder.build_spec(campaign, output, criteria_file=CRITERIA, allow_synthetic=True)
             self.assertEqual(len(spec.sections), 10)
             self.assertIn(METHOD, spec.sections[3].blocks[0].markdown)
-            html = builder.render(campaign, output, allow_synthetic=True)
+            self.assertIn(METHOD, spec.sections[6].blocks[0].markdown)
+            self.assertIn('not the modelled tension', spec.sections[2].blocks[0].markdown)
+            self.assertNotIn('lower mean angle', str(spec.appendices))
+            html = builder.render(campaign, output, criteria_file=CRITERIA, allow_synthetic=True)
             soup = BeautifulSoup(html, 'html.parser')
             main_sections = soup.select('main.main > section')
             self.assertEqual([item['id'] for item in main_sections],
@@ -50,6 +55,12 @@ class ReportTests(unittest.TestCase):
             for table in soup.select('.tbl'):
                 self.assertIsNotNone(table.select_one('.tbl-wrap').find_next_sibling(class_='cap'))
             text = soup.get_text(' ', strip=True)
+            self.assertNotIn('src/', text)
+            supplied = json.loads(CRITERIA.read_text(encoding='utf-8'))
+            self.assertIn(f"mean angle ≤ {supplied['mean_angle_deg']['value']:g}°", text)
+            self.assertIn(f"maximum angle ≤ {supplied['max_angle_deg']['value']:g}°", text)
+            self.assertNotIn('wave-frequency', text)
+            self.assertNotIn('regular wave', text.lower())
             self.assertFalse(builder.FORBIDDEN.search(text))
             for element in soup.find_all(string=lambda value: value and 'OrcaFlex' in value):
                 self.assertIn(element.find_parent('section')['id'], ('method', 'references'))
@@ -63,14 +74,14 @@ class ReportTests(unittest.TestCase):
             payload['input_sha256'] = 'stale'
             first.write_text(json.dumps(payload), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'identity'):
-                builder.build_spec(campaign, output)
+                builder.build_spec(campaign, output, criteria_file=CRITERIA)
             first.write_text(original, encoding='utf-8')
             copied = output / 'copied-inputs'
             shutil.copytree(campaign, copied)
             csv = copied / 'screens/column-screen.csv'
             csv.write_text(csv.read_text(encoding='utf-8').replace('0.0', '9.0', 1), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'Screen identity'):
-                builder.build_spec(copied, output, allow_synthetic=True)
+                builder.build_spec(copied, output, criteria_file=CRITERIA, allow_synthetic=True)
 
 
 if __name__ == '__main__':

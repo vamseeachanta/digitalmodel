@@ -1044,7 +1044,7 @@ Shapes:
   SeabedFrictionCoefficient: 0
   TotalContactArea: 0
   InitialPosition:
-  - 0.0
+  - -51.0
   - 0.0
   - 20.0
   Mass: 0.001
