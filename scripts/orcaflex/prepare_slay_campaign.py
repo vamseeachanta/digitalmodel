@@ -76,6 +76,14 @@ def case_spec(basis: dict[str, Any], case: dict[str, Any]) -> ProjectInputSpec:
     return ProjectInputSpec.model_validate(data)
 
 
+def model_digest(path: Path) -> str:
+    """Bind parsed YAML values to sorted compact JSON, independent of null style."""
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    canonical = json.dumps(data, sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=True, allow_nan=False).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
 def prepare_case(basis: dict[str, Any], case: dict[str, Any], output: Path) -> dict[str, Any]:
     """Generate one model, reject validator errors and bind every output by digest."""
     started = time.perf_counter()
@@ -89,7 +97,7 @@ def prepare_case(basis: dict[str, Any], case: dict[str, Any], output: Path) -> d
     findings = PostGenerationValidator().validate_directory(folder / "includes")
     if any(f.level == "error" for f in findings):
         raise ValueError("Post-generation validation failed")
-    files = {p.relative_to(output).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+    files = {p.relative_to(output).as_posix(): model_digest(p)
              for p in sorted(folder.rglob("*.yml"))}
     weight = submerged_weight(basis)
     screen = catenary(weight, case["depth_m"], case["top_tension_kn"])
@@ -115,7 +123,9 @@ def prepare(campaign: Path, output: Path) -> dict[str, Any]:
         catenary(submerged_weight(table["basis"]), case["depth_m"], case["top_tension_kn"])
     output.mkdir(parents=True, exist_ok=True)
     records = [prepare_case(table["basis"], case, output) for case in table["cases"]]
-    result = {"schema": "slay-preparation-1", "criteria_revision": table["criteria_revision"],
+    result = {"schema": "slay-preparation-1",
+              "model_digest_serialization": "parsed-yaml-json-sort-keys-compact-ascii-v1",
+              "criteria_revision": table["criteria_revision"],
               "case_table_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
               "native_attempted": 0, "native_completed": 0, "qualified_results": 0,
               "cases": records}

@@ -5,6 +5,7 @@
 
 from html.parser import HTMLParser
 from pathlib import Path
+import re
 
 import pytest
 
@@ -41,3 +42,10 @@ def test_plan_has_revision_history_and_evidence_contract(filename, terms):
     assert parser.headings[:2] == ["Summary", "Revision history"]
     assert all(term in text for term in terms)
     assert "Not Evaluated" in text
+
+
+@pytest.mark.parametrize("filename", ["analysis.html", "calibration.html", "vessel-pipe-matrix.html"])
+def test_plan_uses_neutral_public_roles(filename):
+    text = (CAMPAIGN / filename).read_text(encoding="utf-8").lower()
+    forbidden = r"\bow[n]er\b|\bsolver\s+(?:manager|workstation)\b|\bauthorized\s+private\b"
+    assert re.search(forbidden, text) is None

@@ -4,6 +4,7 @@
 """Solver-free S-lay campaign preparation and independent comparator tests."""
 
 import importlib.util
+import json
 import math
 from pathlib import Path
 import subprocess
@@ -70,12 +71,23 @@ def test_launch_requires_a_later_execution_adapter(tmp_path):
     assert "execution adapter" in result.stderr
 
 
-def test_generated_models_match_committed_models(tmp_path):
+@pytest.mark.parametrize("null_style", ["null", "~"])
+def test_generated_models_match_committed_models(tmp_path, monkeypatch, null_style):
+    import yaml
+    monkeypatch.setitem(yaml.Dumper.yaml_representers, type(None),
+                        lambda dumper, value: dumper.represent_scalar(
+                            "tag:yaml.org,2002:null", null_style))
     driver = load_driver()
     manifest = driver.prepare(CAMPAIGN, tmp_path)
+    committed = json.loads((CAMPAIGN / "preparation.json").read_text(encoding="utf-8"))
+    assert manifest["model_digest_serialization"] == committed["model_digest_serialization"]
     for case in manifest["cases"]:
         for relative in case["files"]:
-            assert (tmp_path / relative).read_bytes() == (CAMPAIGN / relative).read_bytes()
+            assert yaml.safe_load((tmp_path / relative).read_text(encoding="utf-8")) == yaml.safe_load(
+                (CAMPAIGN / relative).read_text(encoding="utf-8"))
+            assert case["files"][relative] == driver.model_digest(CAMPAIGN / relative)
+            record = next(row for row in committed["cases"] if row["id"] == case["id"])
+            assert case["files"][relative] == record["files"][relative]
 
 
 def test_validator_errors_block_preparation(monkeypatch, tmp_path):
