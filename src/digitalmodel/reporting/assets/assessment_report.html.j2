@@ -26,7 +26,11 @@ figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption
 </style>
 </head>
 <body>
-<header><h1>{{ doc.title }}</h1></header>
+<header><h1>{{ doc.title }}</h1>
+<p>Document {{ doc.number }} | Revision {{ doc.revision }}{% if doc.date %} | {{ doc.date }}{% endif %}</p>
+<div id="document-control"><p>Synthetic example</p>
+<p>Prepared: — | Checked: — | Approved: —</p></div>
+</header>
 <div class="layout">
 <nav aria-label="Contents"><ol>
 {% for section in sections %}<li><a href="#{{ section.key }}">{{ section.title }}</a></li>{% endfor %}

@@ -1,4 +1,4 @@
-"""Build a deterministic synthetic assessment using the held numerical methods.
+"""Build a deterministic synthetic assessment using the existing numerical methods.
 
 Run with the package source on PYTHONPATH. No external process is launched.
 """
@@ -10,6 +10,7 @@ import hashlib
 import json
 import math
 from dataclasses import asdict
+from decimal import Decimal
 from html import escape
 from pathlib import Path
 
@@ -19,6 +20,8 @@ import yaml
 from digitalmodel.asset_integrity.applicability import merge, Applicability
 from digitalmodel.asset_integrity.pipeline_defect_screen import assess
 from digitalmodel.asset_integrity.assessment.ffs_coordinator import FFSComponent, assess_component
+from digitalmodel.asset_integrity.assessment.level2_engine import Level2Engine
+from digitalmodel.asset_integrity.assessment.measurement_sufficiency import MeasurementSufficiency
 from digitalmodel.asset_integrity.assessment.ffs_decision import (
     DecisionBands, decide, reduced_mawp, remaining_life,
 )
@@ -60,17 +63,14 @@ CALCULATION_SOURCES = (
 )
 REFERENCES = (
     "ASME B31G, Manual for Determining the Remaining Strength of Corroded Pipelines, "
-    "2012; original and modified remaining-strength methods. The validation "
-    "basis also identifies the 1991 Nonmandatory Appendix A worked example.",
-    "DNV-RP-F101, Corroded Pipelines, October 2010; Section 8.2, single-defect capacity. "
-    "Part B, Calibrated Safety Factor, supplies the method description. "
-    "Equivalence to the 2021 edition is not established for this validation basis.",
-    "API 579-1/ASME FFS-1, Fitness-For-Service, 2021; Part 4, General Metal Loss; "
-    "Part 5, Local Metal Loss; Level 1 and Level 2 assessment. "
-    "Circumferential extent is evaluated by a bounded net-section membrane calculation.",
-    "ASME B31.8, Gas Transmission Piping, 2022; pressure design, minimum wall thickness. "
-    "The 2022 pressure design basis is assumed; edition qualification is required "
-    "before application to an operating line.",
+    "2012. Edition-matched qualification of the legacy validation evidence is not established.",
+    "DNV-RP-F101, Corroded Pipelines, 2010-10. No clause title is asserted; "
+    "the public archive identifies the document and edition only.",
+    "API 579-1/ASME FFS-1, Fitness-For-Service, 2021; "
+    "Part 5, Assessment of Local Metal Loss. The local-loss relation is simplified; "
+    "this demonstration is not a complete qualification to the standard.",
+    "ASME B31.8, Gas Transmission and Distribution Piping Systems, 2022; "
+    "841, Steel Pipe. Edition qualification is required before application to an operating line.",
 )
 
 
@@ -84,14 +84,14 @@ def load_yaml(path):
 
 
 def map_decision(verdict, status, life, interval, *, flags=False, supplemental=()):
-    """Applicability first; inadequate sampling overrides numerical strength."""
+    """Escalation precedes measurement gaps, de-rating and acceptance."""
     if flags:
         return "escalate"
-    if status == "TAKE_MORE":
-        return "take more measurements"
     outcomes = {verdict, *supplemental}
     if status == "ESCALATE" or outcomes & {"ESCALATE", "REPAIR", "REPLACE"}:
         return "escalate"
+    if status == "TAKE_MORE":
+        return "take more measurements"
     if outcomes & {"DERATE", "RE_RATE"}:
         return "re-rate"
     if outcomes <= {"ACCEPT", "MONITOR"} and life >= interval and life > 0:
@@ -136,8 +136,27 @@ def evaluate(root):
 def evaluate_section(data, component, cfg):
     strength = assess(data)
     frame = pd.DataFrame(data["grid"], index=data["axial_positions_in"])
-    detailed = assess_component(component, frame)
-    app = merge(Applicability(**strength["applicability"]), detailed.applicability)
+    # Both grids bound local patches; degraded-cell fraction within a selected
+    # window does not establish general loss around the pipe circumference.
+    detailed = assess_component(component, frame, force_type="LML")
+    reference_wall = component.nominal_wt_in - component.fca_in
+    # This constructor argument is named t_min_in, but is used only as t_c by
+    # the existing local-loss relation. Keep the pressure-design wall separate.
+    local_loss = Level2Engine(
+        "LML", component.nominal_od_in, component.nominal_wt_in,
+        reference_wall, component.rsf_a,
+    ).evaluate(frame)
+    sufficiency = MeasurementSufficiency().evaluate(
+        frame, nominal_wt_in=component.nominal_wt_in, assessment_type="LML",
+        level1_result=detailed.level1, level2_result=local_loss,
+    )
+    # Invert the linear pressure-wall relation already evaluated by the
+    # B31.8 implementation; no design coefficient is duplicated here.
+    uncorroded_rating = component.design_pressure_psi * reference_wall / detailed.t_min_in
+    local_rating = float(reduced_mawp(Q_(uncorroded_rating, "psi"))(
+        local_loss["rsf"], component.rsf_a,
+    ).value.to("psi").magnitude)
+    app = merge(Applicability(**strength["applicability"]), local_loss["applicability"])
     rate = cfg["corrosion_rate_in_per_yr"]
     life_rows = []
     for factor in cfg["sensitivity_multipliers"]:
@@ -149,26 +168,34 @@ def evaluate_section(data, component, cfg):
     life = remaining_life(Q_(detailed.t_measured_min_in, "inch"),
                           Q_(detailed.t_min_in, "inch"), Q_(rate, "inch/year"))
     interval = life * cfg["interval_life_fraction"]
-    minimum = min(row["margin"] for row in strength["methods"])
+    minimum = min(min(row["margin"] for row in strength["methods"]),
+                  local_rating / component.design_pressure_psi)
     pressure_margin = min(row["margin"] for row in strength["methods"] if row["allowable_pressure_psi"] is not None)
-    # Current strength has its own criterion; the coordinator retains wall/life
-    # intervention. A finite life must not relabel an unchanged strength result.
+    # Current strength includes the corrected local-loss rating. The declared
+    # point-minimum life rule separately retains the intervention requirement.
     decision = decide(minimum, 1.0, life, "pipeline", applicability=app,
                       screening_pass=minimum >= 1.0,
                       bands=DecisionBands(monitor_band=0, derate_floor=0, repair_life_yr=0))
-    final = map_decision(decision.verdict.value, detailed.sufficiency_status, life, interval,
-                         flags=not app.ok, supplemental=(detailed.verdict,))
+    final = map_decision(decision.verdict.value, sufficiency.status, life, interval,
+                         flags=not app.ok)
     rating = min(pressure_rating(data["design_pressure_psi"], pressure_margin),
-                 detailed.rerated_pressure_psi)
+                 local_rating)
     coordinator = detailed.to_dict()
     # The automatic repair helper lacks a repair-specific design basis here.
     # Its default repair-life interval must not be confused with assessed life.
     coordinator.pop("repair_recommendation", None)
+    # Coordinator RSF/rating and decision use a different reference wall and
+    # are diagnostic only. Do not mix them with the issued local-loss result.
+    for field in ("rsf", "rsf_a", "folias_factor", "verdict", "rerated_pressure_psi",
+                  "sufficiency_status", "passes", "code_reference"):
+        coordinator.pop(field, None)
     return {
         "name": data["component_id"], "inputs": data, "component": asdict(component),
         "strength": strength, "coordinator": coordinator,
-        "level1": detailed.level1, "level2": serialise(detailed.level2),
-        "sufficiency": asdict(detailed.sufficiency), "applicability": app.to_dict(),
+        "level1": detailed.level1, "level2": serialise(local_loss),
+        "reference_wall_in": reference_wall,
+        "uncorroded_rating_psi": uncorroded_rating, "local_loss_rating_psi": local_rating,
+        "sufficiency": asdict(sufficiency), "applicability": app.to_dict(),
         "remaining_life_yr": life, "interval_yr": interval, "life_sensitivity": life_rows,
         "strength_decision": decision.to_dict(), "decision": final,
         "pressure_rating_psi": rating,
@@ -191,7 +218,9 @@ def number(value, *, thickness=False):
         return "not applicable"
     if not math.isfinite(float(value)):
         return "not established"
-    return f"{value:.3f}" if thickness else f"{value:.4g}"
+    if thickness:
+        return f"{value:.3f}"
+    return format(Decimal(f"{value:.4g}"), ",f")
 
 
 def ratio(value):
@@ -212,22 +241,23 @@ def method_name(value):
 
 def action_text(section):
     status = section["decision"]
+    row, col = section["sufficiency"]["metrics"]["min_location"]
+    axial = section["inputs"]["axial_positions_in"][row]
+    location = f"around axial position {number(axial)} in, column {col + 1}"
     if status == "take more measurements":
-        actions = []
-        for action in section["sufficiency"]["actions"]:
-            count = f"{action['count']} additional readings " if action["count"] is not None else "readings "
-            actions.append(action["action"].replace("_", " ") + ": " + count + action["location"])
-        tail = " Repeat the strength and thickness assessments after resolving the minimum and the complete defect extent."
-        if section["remaining_life_yr"] == 0:
-            tail += " Immediate engineering assessment is required; no operating extension is established at the stated pressure."
-        return "; ".join(actions).capitalize() + "." + tail
+        return (f"Add readings {location}, "
+                "and extend coverage to bound the complete defect. Repeat the strength and thickness assessments. "
+                f"Continued operation at {number(section['inputs']['design_pressure_psi'])} psi is not justified "
+                "by this assessment while the local profile remains under-sampled; strength margin alone does not establish measurement adequacy.")
     if status == "re-rate":
         return (f"Reduce pressure to {number(section['pressure_rating_psi'])} psi or lower and maintain "
                 f"axial membrane stress at or below {number(section['axial_limit_psi'])} psi. "
                 "Confirm the operating basis and reassess at the stated interval.")
     if status == "escalate":
         return ("Obtain complete defect geometry, material and load evidence for a higher-level assessment; "
-                "resolve applicability and separate pressure and axial restrictions before operation is justified.")
+                "resolve the minimum-wall deficit and separate pressure and axial restrictions before operation is justified. "
+                f"For that assessment, add readings {location}. "
+                f"Continued operation at {number(section['inputs']['design_pressure_psi'])} psi is not justified by this assessment.")
     return f"Maintain the stated loads and repeat inspection within {number(section['interval_yr'])} yr."
 
 
@@ -292,32 +322,31 @@ def method_table(section, title):
 
 
 def result_blocks(section, key):
-    c, suff = section["coordinator"], section["sufficiency"]
+    c, suff, local = section["coordinator"], section["sufficiency"], section["level2"]
     blocks = [text("# " + section["name"]), *figures(section, key), method_table(section, "Remaining strength")]
-    blocks.append(table("Thickness and assessment levels", ["Quantity", "Result", "Criterion or basis"], [
+    blocks.append(table("Thickness and local-loss assessment", ["Quantity", "Result", "Criterion or basis"], [
         ["Minimum remaining wall (in)", number(c["t_measured_min_in"], thickness=True), "Synthetic grid"],
         ["Mean remaining wall (in)", number(c["t_measured_avg_in"], thickness=True), "Synthetic grid"],
-        ["Required pressure wall (in)", number(c["t_min_in"], thickness=True), "Assumed pressure design factors"],
-        ["Level 1", "minimum wall meets criterion" if section["level1"]["verdict"] == "ACCEPT" else "minimum wall below criterion", "Minimum wall ≥ required pressure wall"],
-        ["Level 2 remaining strength factor", number(c["rsf"]), "≥ " + number(c["rsf_a"])],
-        ["Assessment path", "General metal loss" if c["assessment_type"] == "GML" else "Local metal loss", "Automatic morphology classification"],
-        ["Bulging factor", number(c["folias_factor"]), "Not used for general-loss averaging" if c["assessment_type"] == "GML" else "Simplified local-loss relation"],
+        ["Required pressure wall (in)", number(c["t_min_in"], thickness=True), "Pressure design: Reference 4"],
+        ["Point-minimum pressure-wall comparison", "minimum wall meets criterion" if section["level1"]["verdict"] == "ACCEPT" else "minimum wall below criterion", "Assumed intervention rule: minimum wall ≥ required pressure wall; not an API Level 1 criterion"],
+        ["Reference wall away from flaw (in)", number(section["reference_wall_in"], thickness=True), "Full-wall background; future allowance deducted"],
+        ["Level 2 remaining strength factor", number(local["rsf"]), "Below the allowable factor; reduced pressure rating evaluated (Reference 3)" if local["rsf"] < local["rsf_a"] else "At or above the allowable factor (Reference 3)"],
+        ["Reduced local-loss rating (psi)", number(section["local_loss_rating_psi"]), "Reference 3; pressure rating before loss from Reference 4"],
+        ["Assessment path", "Local metal loss", "Bounded patch; general-loss averaging is not applied"],
+        ["Bulging factor", number(local["folias_factor"]), "Simplified local-loss relation"],
         ["Measurement sufficiency", "additional readings required" if suff["status"] == "TAKE_MORE" else suff["status"].lower(), "Retained independently of strength"],
-        ["Valid readings / degraded cells", f"{suff['metrics']['n_readings']} / {suff['metrics']['profile_cells']}", "Minimum 15 readings; local profile minimum 5 cells"],
-        ["Coefficient of variation", ratio(suff["metrics"]["cov"]), "General-loss limit 10.0%"],
+        ["Valid readings / degraded cells", f"{suff['metrics']['n_readings']} / {suff['metrics']['profile_cells']}", "Local-profile adequacy; see Section 3.5"],
+        ["Coefficient of variation", ratio(suff["metrics"]["cov"]), "Descriptive only; no general-loss averaging criterion applied"],
         ["Nominal re-inspection interval (yr)", number(section["interval_yr"]), "Assumed half-life; not an operating authorization"],
     ]))
     blocks.append(table("Declared-rate remaining-life sensitivity", ["Rate (in/yr)", "Remaining life (yr)"],
                         [[number(rate), number(life)] for rate, life in section["life_sensitivity"]]))
     blocks.append(text(f"Decision: **{section['decision']}**. {action_text(section)}"))
-    if c["verdict"] in ("REPAIR", "REPLACE", "ESCALATE"):
-        blocks.append(text("The supplemental thickness assessment calls for engineering intervention. "
-                           "Additional measurements do not establish an operating extension or negate the wall deficiency."))
     return blocks
 
 
 def design_blocks(result):
-    blocks = [text("# 3.1 Site data\n\nNo site data are used. A generic onshore line is assumed; all inputs are synthetic, for demonstration."),
+    blocks = [text("# 3.1 Site data\n\nNo site data are used. A generic onshore line in location Class 1, Division 1 is assumed for both sections; all inputs are synthetic, for demonstration."),
               text("# 3.2 Equipment data")]
     rows = []
     for s in result["sections"]:
@@ -325,34 +354,34 @@ def design_blocks(result):
         values = [("Outside diameter (in)", number(d["nominal_od_in"])),
                   ("Nominal wall (in)", number(d["nominal_wt_in"], thickness=True)),
                   ("Strength class", "X52-equivalent; assumed from yield strength"),
-                  ("Pressure design basis", "B31.8; assumed for Section A"),
+                  ("Pressure design basis", "B31.8; assumed" if s is result["sections"][0] else "B31.8; supplied synthetic basis"),
                   ("Yield / tensile strengths (psi)", number(d["smys_psi"]) + " / " + number(d["smts_psi"])),
                   ("Design pressure (psi [MPa])", number(d["design_pressure_psi"]) + " [" + number(Q_(d["design_pressure_psi"], "psi").to("MPa").magnitude) + "]"),
                   ("Axial membrane stress (psi [MPa])", number(d["axial_stress_psi"]) + " [" + number(Q_(d["axial_stress_psi"], "psi").to("MPa").magnitude) + "]"),
                   ("Circumferential extent (in)", number(d["circumferential_width_in"])),
                   ("Axial positions (in)", ", ".join(number(x) for x in d["axial_positions_in"])),
-                  ("Corrosion rate (in/yr)", "0.005")]
+                  ("Corrosion rate (in/yr)", number(s["component"]["corrosion_rate_in_per_yr"]))]
         rows.extend([[s["name"], key, val, "synthetic, for demonstration"] for key, val in values])
     blocks.append(table("Pipe geometry, loading and rate", ["Section", "Input", "Value", "Origin"], rows))
     blocks.extend([
-        text("Section B tensile strength, axial stress, circumferential extent and factors are assumed from Section A; "
+        text("Section B tensile strength, axial stress and circumferential extent are assumed from Section A; "
              "its 1 in row spacing is assumed from the default unit index. These are not additional measured inputs. "
-             "The pressure design basis for Section A is assumed to match Section B. "
              "Both rates are assumed for this assessment; to be replaced by a rate from repeat inspection. "
              "Displayed values are rounded; calculations retain full precision."),
         text("# 3.3 Environmental data\n\nNot applicable. Internal pressure and separate tensile axial membrane stress only.\n\n"
              "# 3.4 Vessel data\n\nNot applicable."),
         text("# 3.5 Criteria\n\nAllowable-to-demand ratio ≥ 1 (100.0%) with no applicability flag is the current-strength criterion. "
-             "Original-family depth loss is limited to 80.0%; the tensile-strength method to 85.0%; through-wall loss requires escalation. "
-             "The measurement defaults are assumed, based on previous experience: at least 15 readings, general-loss coefficient of "
-             "variation ≤ 10.0%, at least 5 degraded cells for a local profile, and 0.020 in measurement tolerance. "
-             "A boundary minimum requires extended coverage. A remaining strength factor below 0.50 requires higher-level assessment. "
-             "Remaining life is the linear time to the required pressure wall, zero when already below it. "
+             "The method applicability limits are applied without reproducing their licensed values (References 1–3). "
+             "Local-profile coverage, reading count and measurement tolerance are evaluated using the existing assessment defaults, "
+             "informed by Reference 3 and inspection practice; they are not represented as code mandates. "
+             "A boundary minimum requires extended coverage. General-loss averaging is not applied to either bounded local patch. "
+             "Remaining life is the linear time from the point minimum to the required pressure wall, zero when already below it. "
+             "This is an assumed intervention rule using the pressure-design wall from Reference 4, not an API Level 1 assessment. "
              "Re-inspection at half that time is assumed, based on previous experience; zero means immediate action. "
              "Under-sampled data do not support operation, regardless of the calculated strength."),
         text("# 3.6 Method\n\nThe methods and precedence rules are stated in Section 4.\n\n"
              "# 3.7 Load cases\n\nTwo sections are assessed by six strength methods each. Each section also receives "
-             "Level 1 and Level 2 thickness assessments and three corrosion-rate cases: half, nominal and double. "
+             "a point-minimum pressure-wall comparison, a simplified Level 2 local-loss assessment and three corrosion-rate cases: half, nominal and double. "
              "Pressure and axial membrane stress are evaluated separately; no combined-load qualification is implied."),
     ])
     return blocks
@@ -368,22 +397,29 @@ def methodology():
         "RSTRENG-2D projects each axial row to its greatest depth before applying the same effective-area calculation. "
         "It equals RSTRENG by construction and does not establish two-dimensional interaction capacity. Method source: Reference 1.",
         "DNV-RP-F101 uses tensile strength, maximum depth and length correction for a single longitudinal defect. "
-        "The allowable pressure multiplies capacity by the assumed modelling and operating factors; partial-safety-factor tables are not used. Method source: Reference 2.",
+        "The allowable pressure applies modelling and operating factors to capacity. Method source: Reference 2; "
+        "no unverified part or clause title is asserted.",
         "Circumferential net-section balance reduces axial membrane capacity in proportion to lost circumferential area. "
         "The extent comparison uses the supplied axial length and joint factors; exceeding that comparison does not invalidate the subsequent net-section balance. "
         "Through-wall loss raises an applicability flag. This is not a burst-pressure or combined-loading calculation. Method source: Reference 3.",
-        "Level 1 compares minimum remaining wall with required pressure wall using the assumed pressure-design factors (Reference 4). "
-        "Level 2 uses area-average wall for general loss or a simplified local-loss bulging relation (Reference 3). "
+        "The point-minimum comparison uses the required pressure wall (Reference 4) as an assumed intervention criterion, not an API Level 1 criterion. "
+        "Both sections are local metal loss: Section A is a single bounded patch, not general loss around the pipe. "
+        "The Level 2 calculation uses the wall away from the flaw, after uniform loss and future allowance, "
+        "as the reference wall in the existing simplified local-loss relation (Reference 3). "
+        "The full-wall background establishes that reference for these synthetic grids. The reduced rating uses the uncorroded "
+        "pressure rating obtained by inverting the linear pressure-wall calculation (Reference 4), then applies the remaining-strength reduction. "
         "The local-loss length equals the count of degraded axial rows times the index spacing, whereas the six-method maximum-depth calculations use the full window. "
-        "This difference is retained explicitly. The local-loss shell parameter is bounded at 20; a used value outside that range raises an applicability flag.",
+        "This difference is retained explicitly. A shell parameter outside the supported range raises an applicability flag.",
         "The validation record reproduces the cited DNV worked-example capacities to better than 0.001%. "
         "That accuracy claim does not extend to all methods: the B31G published comparisons have coarser reported tolerances, "
         "and Modified B31G and RSTRENG are regression-anchored only. No published example values are reproduced here.",
-        "Decision precedence: any applicability flag gives **escalate**. Otherwise an under-sampled result gives **take more measurements**, "
-        "whatever the strength result. With sufficient data, escalation, repair or replacement from either assessment gives **escalate**; "
-        "a de-rating gives **re-rate** with both pressure and axial restrictions retained. Acceptance or monitoring gives **accept** only with "
+        "Assumed decision precedence: **escalate**, then **take more measurements**, then **re-rate**, then **accept**. "
+        "Any applicability flag, escalation, repair or replacement takes priority over inadequate sampling. "
+        "Otherwise an under-sampled result requires more measurements; a de-rating retains both pressure and axial restrictions. "
+        "Acceptance or monitoring gives **accept** only with "
         "positive remaining life at least as long as the assumed re-inspection interval. Other outcomes give **escalate**. "
-        "The pressure reduction uses only pressure ratios and the supplemental pressure rating, never an axial ratio.",
+        "The pressure reduction uses only pressure ratios and the corrected local-loss pressure rating, never an axial ratio. "
+        "The reduced rating participates in the strength decision even when the remaining strength factor is below its allowable value.",
     )]
 
 
@@ -391,19 +427,27 @@ def section_material(result):
     summary, findings, recommendations = [], [], []
     detailed, appendix = [], []
     for index, s in enumerate(result["sections"]):
+        row = min(s["strength"]["methods"], key=lambda r: r["margin"])
         summary.append(text(f"**{s['name']}: {s['decision']}.** {action_text(s)} "
                             "The decision will change if denser measurements resolve a different minimum, defect extent or loss pattern; "
-                            "a repeat-inspection corrosion rate will change the remaining-life projection."))
-        row = min(s["strength"]["methods"], key=lambda r: r["margin"])
+                            "a repeat-inspection corrosion rate will change the remaining-life projection. "
+                            f"{method_name(row['method'])} governs the six-method comparison: "
+                            f"{number(row['allowable_pressure_psi'])} psi against {number(row['demand_psi'])} psi, "
+                            f"a ratio of {ratio(row['margin'])} and margin of {ratio(row['margin'] - 1)}. "
+                            f"Minimum wall is {number(s['coordinator']['t_measured_min_in'], thickness=True)} in. "
+                            f"The reduced local-loss rating is {number(s['local_loss_rating_psi'])} psi."))
         suff = s["sufficiency"]["metrics"]
-        sampling_basis = (f"General-loss variation is {ratio(suff['cov'])} against the 10.0% limit. "
-                          if s["coordinator"]["assessment_type"] == "GML" else
-                          f"The local profile contains {suff['profile_cells']} degraded cells against the minimum of 5. ")
-        findings.append(text(f"{s['name']}: {method_name(row['method'])} governs the current-demand comparison at "
+        sampling_basis = (f"The local profile contains {suff['profile_cells']} degraded cells. "
+                          "The assumed point-minimum intervention rule takes precedence over sampling gaps. ")
+        findings.append(text(f"{s['name']}: {method_name(row['method'])} governs the six-method comparison at "
                              f"{number(row['allowable_pressure_psi'])} psi versus {number(row['demand_psi'])} psi, "
                              f"a ratio of {ratio(row['margin'])} against 100.0%. "
+                             f"The reduced local-loss rating is {number(s['local_loss_rating_psi'])} psi against "
+                             f"{number(s['inputs']['design_pressure_psi'])} psi, a ratio of "
+                             f"{ratio(s['local_loss_rating_psi'] / s['inputs']['design_pressure_psi'])}. "
+                             "The lower pressure rating participates in the decision. "
                              + sampling_basis + f"The final decision is {s['decision']}; strength alone does not resolve measurement adequacy."))
-        recommendations.append(text(s["name"] + ": " + action_text(s) +
+        recommendations.append(text(s["name"] + ": **" + s["decision"] + "**. " + action_text(s) +
                                     " Source: the measurement-sufficiency criteria in Section 3.5 and the assessed thickness/strength results in Section 5."))
         detailed.extend(result_blocks(s, f"section-{index + 1}"))
         grid = s["inputs"]["grid"]
@@ -431,7 +475,8 @@ def report_spec(root, result):
                     "Corrosion rates are declared assumptions rather than evidence from repeat inspection. "
                     "Remaining life refers only to the required pressure-wall criterion and does not predict the future crossing of every six-method capacity curve. "
                     "RSTRENG-2D equals RSTRENG by construction; Modified B31G and RSTRENG have no external validation beyond regression anchors. "
-                    "The Level 2 relations are simplified; edition-matched API 579 Part 5 qualification is not established. "
+                    "The corrected Level 2 reference wall does not establish complete edition-matched qualification to Reference 3; "
+                    "the bulging relation remains simplified. "
                     "A strength ratio above unity does not overcome deficient wall or inadequate measurements. "
                     "Section B spacing and supplementary loads and material strength require confirmation for any physical application.")],
               recommendations, [text("\n".join(f"{i}. {ref}" for i, ref in enumerate(REFERENCES, 1)))],
@@ -446,7 +491,7 @@ def report_spec(root, result):
         provenance.add("synthetic", source["path"], digest="sha256-lf:" + source["sha256_lf"])
     return ReportSpec(
         document=DocumentMeta(number="B0000-RPT-001-00", revision="00", title=TITLE,
-                              project="Synthetic assessment", client="Demonstration"),
+                              project="Synthetic assessment", client="Demonstration", date="2026-10-13"),
         sections=[Section(key=f"section-{i}", title=title, blocks=body)
                   for i, (title, body) in enumerate(zip(SECTION_TITLES, blocks), 1)],
         appendices=[Section(key="appendices", title="Appendices", blocks=appendix)],

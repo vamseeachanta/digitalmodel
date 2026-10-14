@@ -80,27 +80,30 @@ def test_source_pins(result):
         assert hashlib.sha256(payload).hexdigest() == source["sha256_lf"]
 
 
-def test_every_result_matches_held_methods(result):
+def test_every_result_matches_existing_methods(result):
+    from digitalmodel.asset_integrity.assessment.measurement_sufficiency import MeasurementSufficiency
+
     for section in result["sections"]:
         assert section["strength"] == assess(section["inputs"])
-        assert section["strength_decision"]["verdict"] == section["strength"]["decision"]["verdict"]
         inputs = section["inputs"]
         frame = pd.DataFrame(inputs["grid"], index=inputs["axial_positions_in"])
         component = FFSComponent(**section["component"])
-        held = assess_component(component, frame)
-        assert section["coordinator"]["rsf"] == held.rsf
-        assert section["sufficiency"]["status"] == held.sufficiency_status
-        assert section["sufficiency"]["metrics"] == builder.serialise(held.sufficiency.metrics)
+        existing = assess_component(component, frame, force_type="LML")
+        sufficiency = MeasurementSufficiency().evaluate(
+            frame, nominal_wt_in=component.nominal_wt_in, assessment_type="LML",
+            level1_result=existing.level1, level2_result=section["level2"],
+        )
+        assert section["sufficiency"]["status"] == sufficiency.status
+        assert section["sufficiency"]["metrics"] == builder.serialise(sufficiency.metrics)
         for rate, life in section["life_sensitivity"]:
             assert life == remaining_life(
-                Q_(held.t_measured_min_in, "inch"), Q_(held.t_min_in, "inch"),
+                Q_(existing.t_measured_min_in, "inch"), Q_(existing.t_min_in, "inch"),
                 Q_(rate, "inch/year"),
             )
         assert section["decision"] == builder.map_decision(
-            section["strength_decision"]["verdict"], held.sufficiency_status,
+            section["strength_decision"]["verdict"], sufficiency.status,
             section["remaining_life_yr"], section["interval_yr"],
             flags=not section["applicability"]["ok"],
-            supplemental=(held.verdict,),
         )
 
 
@@ -110,7 +113,7 @@ def test_every_result_matches_held_methods(result):
     ("MONITOR", "SUFFICIENT", 2, 5, False, "escalate"),
     ("DERATE", "SUFFICIENT", 10, 5, False, "re-rate"),
     ("ACCEPT", "TAKE_MORE", 10, 5, False, "take more measurements"),
-    ("REPAIR", "TAKE_MORE", 0, 0, False, "take more measurements"),
+    ("REPAIR", "TAKE_MORE", 0, 0, False, "escalate"),
     ("ESCALATE", "SUFFICIENT", 10, 5, False, "escalate"),
     ("REPAIR", "SUFFICIENT", 0, 0, False, "escalate"),
     ("REPLACE", "SUFFICIENT", 0, 0, False, "escalate"),
@@ -124,6 +127,49 @@ def test_supplemental_escalation():
     assert builder.map_decision("ACCEPT", "SUFFICIENT", 10, 5,
                                 supplemental=("REPAIR",)) == "escalate"
     assert builder.map_decision("ACCEPT", "ESCALATE", 10, 5) == "escalate"
+    assert builder.map_decision("ACCEPT", "TAKE_MORE", 0, 0,
+                                supplemental=("REPAIR",)) == "escalate"
+
+
+def test_local_loss_and_reference_wall(result):
+    from digitalmodel.asset_integrity.assessment.level2_engine import Level2Engine
+
+    for section in result["sections"]:
+        data = section["inputs"]
+        component = FFSComponent(**section["component"])
+        reference_wall = component.nominal_wt_in - component.fca_in
+        expected = Level2Engine(
+            "LML", component.nominal_od_in, component.nominal_wt_in,
+            reference_wall, component.rsf_a,
+        ).evaluate(pd.DataFrame(data["grid"], index=data["axial_positions_in"]))
+        assert section["coordinator"]["assessment_type"] == "LML"
+        assert section["level2"] == builder.serialise(expected)
+        assert section["reference_wall_in"] == reference_wall
+        assert section["level2"]["rsf"] < 1
+        rating = reduced_mawp(Q_(section["uncorroded_rating_psi"], "psi"))(
+            expected["rsf"], component.rsf_a,
+        ).value.to("psi").magnitude
+        assert section["local_loss_rating_psi"] == rating
+        demand = component.design_pressure_psi
+        assert section["strength_decision"]["margin"] == min(
+            rating / demand, min(row["margin"] for row in section["strength"]["methods"]),
+        )
+        assert section["pressure_rating_psi"] <= demand
+
+
+def test_tampered_source_digest_is_rejected(tmp_path):
+    workflow = tmp_path / builder.WORKFLOW
+    workflow.mkdir(parents=True)
+    config = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")
+    (workflow / "input.yml").write_bytes((ROOT / builder.WORKFLOW / "input.yml").read_bytes())
+    for source in config["sections"]:
+        target = tmp_path / source["path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / source["path"]).read_bytes())
+    target = tmp_path / config["sections"][0]["path"]
+    target.write_bytes(target.read_bytes() + b"\n# tampered input\n")
+    with pytest.raises(ValueError, match="Synthetic input digest mismatch"):
+        builder.evaluate(tmp_path)
 
 
 def test_rate_sensitivity(result):
@@ -156,8 +202,7 @@ def test_report_contract_and_determinism(tmp_path, result):
     assert references.count("<ol>") == 1
     assert references.count("<li>") == 4
     for word in ("screen", "pass", "fail", "verdict", "review", "script", "repository",
-                 "Checked", "Approved", "PIPE-SYNTHETIC-RIVER-BOTTOM", "LINE-001",
-                 "digitalmodel", "Prepared"):
+                 "PIPE-SYNTHETIC-RIVER-BOTTOM", "LINE-001", "digitalmodel"):
         assert not re.search(r"\b" + re.escape(word) + r"\b", visible, re.I), word
     assert not re.search(r"(?:src|docs|examples)/", visible)
     for match in re.findall(r"(?<![A-Za-z])\d+\.\d+(?:e[+-]?\d+)?", visible):
@@ -167,17 +212,25 @@ def test_report_contract_and_determinism(tmp_path, result):
     manifest = json.loads(first[1].read_text(encoding="utf-8"))
     assert manifest["assessment"] == json.loads(json.dumps(result))
     assert manifest["report_sha256"] == hashlib.sha256(before[0]).hexdigest()
+    assert "B0000-RPT-001-00" in visible
+    assert "Revision 00" in visible
+    assert "2026-10-13" in visible
+    control = page.split('<div id="document-control">')[1].split('</div>')[0]
+    assert re.sub(r"<[^>]+>", "", control).strip() == (
+        "Synthetic example\nPrepared: — | Checked: — | Approved: —"
+    )
+    assert not re.search(r"\b\d+(?:\.\d+)?e[+-]\d+\b", visible)
 
 
 def test_actual_sufficiency_is_not_tuned(result):
     assert [s["decision"] for s in result["sections"]] == [
-        "take more measurements", "take more measurements",
+        "escalate", "take more measurements",
     ]
     assert result["sections"][0]["remaining_life_yr"] == 0
     assert result["sections"][1]["sufficiency"]["metrics"]["profile_cells"] == 2
 
 
-def test_rendered_numbers_against_independent_calculations(tmp_path, result):
+def test_rendered_numbers_match_existing_engine_outputs(tmp_path, result):
     report, _ = builder.build(ROOT, tmp_path)
     html = report.read_text(encoding="utf-8")
     details = html.split('<section id="section-5">')[1].split("</section>")[0]
@@ -194,17 +247,73 @@ def test_rendered_numbers_against_independent_calculations(tmp_path, result):
                 "within stated limits" if row["applicability"]["ok"] else "outside stated limits",
             ] in parsed.rows
         inputs = section["inputs"]
-        held = assess_component(FFSComponent(**section["component"]),
-                               pd.DataFrame(inputs["grid"], index=inputs["axial_positions_in"]))
+        existing = assess_component(FFSComponent(**section["component"]),
+                               pd.DataFrame(inputs["grid"], index=inputs["axial_positions_in"]),
+                               force_type="LML")
         for rate, _ in section["life_sensitivity"]:
-            life = remaining_life(Q_(held.t_measured_min_in, "inch"), Q_(held.t_min_in, "inch"),
+            life = remaining_life(Q_(existing.t_measured_min_in, "inch"), Q_(existing.t_min_in, "inch"),
                                   Q_(rate, "inch/year"))
             assert [builder.number(rate), builder.number(life)] in parsed.rows
-        assert ["Minimum remaining wall (in)", builder.number(held.t_measured_min_in, thickness=True),
+        assert ["Minimum remaining wall (in)", builder.number(existing.t_measured_min_in, thickness=True),
                 "Synthetic grid"] in parsed.rows
-        assert ["Coefficient of variation", builder.ratio(held.sufficiency.metrics["cov"]),
-                "General-loss limit 10.0%"] in parsed.rows
-        assert held.sufficiency_status == "TAKE_MORE"
-        assert ["Measurement sufficiency", "additional readings required",
+        assert ["Coefficient of variation", builder.ratio(section["sufficiency"]["metrics"]["cov"]),
+                "Descriptive only; no general-loss averaging criterion applied"] in parsed.rows
+        status = section["sufficiency"]["status"]
+        assert ["Measurement sufficiency", "additional readings required" if status == "TAKE_MORE" else status.lower(),
                 "Retained independently of strength"] in parsed.rows
-        assert "Decision: <strong>take more measurements</strong>" in fragment
+        assert f"Decision: <strong>{section['decision']}</strong>" in fragment
+
+
+def test_public_assumptions_exclude_method_coefficients(tmp_path):
+    report, _ = builder.build(ROOT, tmp_path)
+    page = report.read_text(encoding="utf-8")
+    assert re.findall(r"<h3>(.*?)</h3>", page) == [
+        "3.1 Site data", "3.2 Equipment data", "3.3 Environmental data",
+        "3.4 Vessel data", "3.5 Criteria", "3.6 Method", "3.7 Load cases",
+        "Section A, 24 in line", "Section B, 12.75 in line",
+    ]
+    # Numbered headings are document structure, not coefficient values. Their
+    # exact content is checked above; scan all remaining visible text below.
+    parser = VisibleText()
+    parser.feed(re.sub(r"<h3>.*?</h3>", "", page))
+    visible = " ".join(parser.text)
+    assumptions = builder.load_yaml(ROOT / builder.WORKFLOW / "assumptions.yml")
+    assert {row["parameter"] for row in assumptions["assumptions"]} == {
+        "Corrosion rate", "Re-inspection interval",
+        "Section B supplementary strength, loads and geometry", "Decision precedence",
+        "Point-minimum intervention rule", "Location class",
+    }
+    # Reject coefficient disclosures, allowing unrelated grid readings and
+    # synthetic input quantities that happen to share digits with constants.
+    for token in ("1.39", "0.72", "0.648", "1.285", "0.6275", "0.003375",
+                  "0.354", "0.032", "0.9", "0.90", "1.1", "2/3", "0.8", "0.80",
+                  "0.85", "3.3", "0.999", "0.5", "0.50", "0.31", "0.48", "0.25",
+                  "0.10", "0.02", "0.020", "0.95", "0.05", "80.0%", "85.0%", "10.0%"):
+        pattern = r"(?<![\d.])" + re.escape(token) + r"(?![\d.])"
+        assert not re.search(pattern, visible), token
+        assert not re.search(pattern, str(assumptions)), token
+    assert "Minimum 15 readings" not in visible
+    assert "minimum of 5" not in visible
+    assert "assumed modelling" not in visible
+
+
+def test_single_decision_in_all_decision_sections(tmp_path, result):
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    for number in (1, 5, 6, 8):
+        fragment = page.split(f'<section id="section-{number}">')[1].split('</section>')[0]
+        assert "escalate" in fragment
+        assert "take more measurements" in fragment
+    assert "while the local profile remains under-sampled" in page
+    assert "around axial position 4 in, column 2" in page
+    assert "around axial position 2 in, column 4" in page
+
+
+def test_design_rate_is_read_from_configuration(result):
+    from copy import deepcopy
+
+    changed = deepcopy(result)
+    for section in changed["sections"]:
+        section["component"]["corrosion_rate_in_per_yr"] *= 2
+    tables = [block for block in builder.design_blocks(changed) if isinstance(block, builder.TableBlock)]
+    rows = [row for block in tables for row in block.rows if row[1] == "Corrosion rate (in/yr)"]
+    assert all(row[2] == builder.number(changed["sections"][0]["component"]["corrosion_rate_in_per_yr"]) for row in rows)

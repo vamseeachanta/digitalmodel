@@ -19,4 +19,4 @@ section_b_supplement:
   axial_design_factor: 0.72
   axial_positions_in: [0, 1, 2, 3, 4, 5]
   circumferential_width_in: 4.0
-supplement_basis: assumed, based on previous experience; values shared with Section A except unit row spacing, which follows the held assessment default
+supplement_basis: assumed, based on previous experience; values shared with Section A except unit row spacing, which follows the existing assessment default
