@@ -19,7 +19,7 @@ Lines:
       - 0
       - 90
       - 0
-      - null
+      - ~
     - - Anchored
       - 0
       - 0
@@ -27,20 +27,20 @@ Lines:
       - 0
       - 90.0
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - - Infinity
-    - null
+    - ~
     - Infinity
   - - Infinity
-    - null
+    - ~
     - Infinity
   ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
     ConnectionApplyRamp, ConnectionUseSmoothGrowth
-  : - - null
+  : - - ~
       - 0
       - 0.001
-    - - null
+    - - ~
       - 0
       - 0.001
   LineType, Length, TargetSegmentLength:

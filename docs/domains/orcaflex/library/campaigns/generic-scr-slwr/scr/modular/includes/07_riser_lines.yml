@@ -19,7 +19,7 @@ Lines:
       - 0.0
       - 168.0
       - 0
-      - null
+      - ~
     - - Anchored
       - 900.9743655506445
       - 0.0
@@ -27,14 +27,14 @@ Lines:
       - 0.0
       - 90.0
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - - 0.0
-    - null
-    - null
+    - ~
+    - ~
   - - 0.0
-    - null
-    - null
+    - ~
+    - ~
   LineType, Length, TargetSegmentLength:
   - - SteelPipe
     - 1839.7787421442401

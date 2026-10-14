@@ -5,6 +5,7 @@
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -124,11 +125,11 @@ def test_models_validate_and_reproduce(kind, tmp_path):
     expected = {p.relative_to(model) for p in model.rglob("*.yml")}
     assert expected == {p.relative_to(generated) for p in generated.rglob("*.yml")}
     loaded = tmp_path / (kind + "-loaded")
-    # Reproduce a prior import that registers the repository's tilde representer.
+    # A prior import may register PyYAML's incompatible null spelling globally.
     prior_import = (
         "import yaml; "
-        "from digitalmodel.solvers.orcaflex.yaml_utils import _represent_none; "
-        "yaml.add_representer(type(None), _represent_none); "
+        "yaml.add_representer(type(None), lambda dumper, value: "
+        "dumper.represent_scalar('tag:yaml.org,2002:null', 'null')); "
     )
     subprocess.run([sys.executable, "-c", prior_import + command,
                     str(CAMPAIGN / kind / "spec.yml"), str(loaded)], check=True)
@@ -137,8 +138,8 @@ def test_models_validate_and_reproduce(kind, tmp_path):
         retained = (model / path).read_bytes()
         for directory in (generated, loaded):
             raw = (directory / path).read_bytes()
-            # Imported packages can change the unpinned YAML None representer.
             assert yaml.safe_load(retained) == yaml.safe_load(raw), path
+            assert not re.search(rb"(?<!\w)null(?!\w)", raw), path
             if path == Path("master.yml"):
                 # The master is written directly, without a YAML dumper.
                 # The EOF hook adds its missing final newline.

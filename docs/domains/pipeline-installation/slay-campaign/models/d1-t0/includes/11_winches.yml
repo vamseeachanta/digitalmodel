@@ -11,7 +11,7 @@ Winches:
     - 0
     - 0
   ConnectionzRelativeTo:
-  - null
+  - ~
   - End A
   StageMode:
   - Specified length
@@ -21,6 +21,6 @@ Winches:
   - 836.3933320676529
   StageValue:
   - 10
-  - null
+  - ~
   WireType: Winch wire_LT
   StaticsStep1: Specified length
