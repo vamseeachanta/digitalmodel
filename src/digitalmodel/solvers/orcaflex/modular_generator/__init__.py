@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """OrcaFlex Modular Model Generator from Project Spec."""
 
 import logging
@@ -6,6 +9,8 @@ from pathlib import Path
 from typing import Any, Dict
 
 import yaml
+
+from ..yaml_utils import _represent_none
 
 from .schema import ProjectInputSpec
 from .builders.base import BaseBuilder
@@ -53,6 +58,10 @@ class _NoAliasDumper(yaml.Dumper):
         return True
 
 
+# Pin defaults locally; prior imports shall not select PyYAML's null spelling.
+_NoAliasDumper.add_representer(type(None), _represent_none)
+
+
 # Backward-compatible constant: ordered list of include file names
 INCLUDE_ORDER = BuilderRegistry.get_include_order()
 
@@ -71,6 +80,7 @@ class ModularModelGenerator:
     """Generates complete OrcaFlex modular model structure from spec file."""
 
     def __init__(self, spec_file: Path):
+        """Load and validate the specification used to generate model inputs."""
         self.spec_file = Path(spec_file)
         self.spec = self._load_and_validate_spec()
 
@@ -142,6 +152,7 @@ class ModularModelGenerator:
         return ProjectInputSpec(**data)
 
     def generate(self, output_dir: Path) -> None:
+        """Write and validate the modular inputs in the selected directory."""
         output_dir = Path(output_dir)
         includes_dir = output_dir / 'includes'
         inputs_dir = output_dir / 'inputs'

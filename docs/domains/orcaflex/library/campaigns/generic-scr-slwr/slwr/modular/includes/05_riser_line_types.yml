@@ -10,45 +10,45 @@ LineTypes:
   MassPerUnitLength: 0.1905705905878617
   CompressionIsLimited: 'No'
   MinRadius:
-  - null
-  - null
+  - ~
+  - ~
   EI:
   - 31709.1642788524
-  - null
+  - ~
   EA: 4091475.3720468036
   PoissonRatio: 0.3
   ExpansionTable: None
   GJ: 24391.66482988646
   TensionTorqueCoupling: 0
-  OuterContactDiameter: null
-  InnerContactDiameter: null
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
   ClashStiffness: 0
   Ca:
   - 1.0
-  - null
+  - ~
   - 0
   Cm:
-  - null
-  - null
-  - null
+  - ~
+  - ~
+  - ~
   Cs: 0
   Ce: 0
   Cd:
   - 1.2
-  - null
+  - ~
   - 0.008
   Cl: 0
-  NormalDragLiftDiameter: null
-  AxialDragLiftDiameter: null
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
   StressOD: 0.2731
   StressID: 0.2223
-  AllowableStress: null
+  AllowableStress: ~
   TensileStressLoadingFactor: 1
   BendingStressLoadingFactor: 1
   ShearStressLoadingFactor: 1
   TorsionalStressLoadingFactor: 1
   SeabedLateralFrictionCoefficient: 0.5
-  SeabedAxialFrictionCoefficient: null
+  SeabedAxialFrictionCoefficient: ~
   RayleighDampingCoefficients: (no damping)
 - Name: SteelPipeBuoyed
   Category: General
@@ -61,43 +61,43 @@ LineTypes:
   MassPerUnitLength: 0.37651962993320043
   CompressionIsLimited: 'No'
   MinRadius:
-  - null
-  - null
+  - ~
+  - ~
   EI:
   - 31709.1642788524
-  - null
+  - ~
   EA: 4091475.3720468036
   PoissonRatio: 0.3
   ExpansionTable: None
   GJ: 24391.66482988646
   TensionTorqueCoupling: 0
   OuterContactDiameter: 1.2
-  InnerContactDiameter: null
+  InnerContactDiameter: ~
   ClashStiffness: 0
   Ca:
   - 1.0
-  - null
+  - ~
   - 0
   Cm:
-  - null
-  - null
-  - null
+  - ~
+  - ~
+  - ~
   Cs: 0
   Ce: 0
   Cd:
   - 1.2
-  - null
+  - ~
   - 0.008
   Cl: 0
-  NormalDragLiftDiameter: null
-  AxialDragLiftDiameter: null
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
   StressOD: 0.2731
   StressID: 0.2223
-  AllowableStress: null
+  AllowableStress: ~
   TensileStressLoadingFactor: 1
   BendingStressLoadingFactor: 1
   ShearStressLoadingFactor: 1
   TorsionalStressLoadingFactor: 1
   SeabedLateralFrictionCoefficient: 0.5
-  SeabedAxialFrictionCoefficient: null
+  SeabedAxialFrictionCoefficient: ~
   RayleighDampingCoefficients: (no damping)

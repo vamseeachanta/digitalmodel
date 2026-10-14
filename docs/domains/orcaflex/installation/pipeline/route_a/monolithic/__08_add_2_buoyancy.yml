@@ -1,10 +1,10 @@
-﻿%YAML 1.1
+%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
 # File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/__08_add_2_buoyancy.yml
 # Created: 1:29 PM on 7/19/2023
-# User: 
-# Machine: 
+# User:
+# Machine:
 ---
 BaseFile: _05_def_01.yml
 LineTypes:
@@ -348,7 +348,7 @@ LineTypes:
       - [2, 6, ~]
       - [3, 7, ~]
       - [4, 8, ~]
-    ShadedDrawingFileName: 
+    ShadedDrawingFileName:
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored
@@ -428,7 +428,7 @@ LineTypes:
       - [2, 6, ~]
       - [3, 7, ~]
       - [4, 8, ~]
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored
