@@ -1,9 +1,13 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Time-domain finite difference solver for sucker rod wave equation.
 # ABOUTME: Provides comparison against Gibbs analytical solver for validation.
 
 import numpy as np
 from scipy.signal import savgol_filter
 from typing import Optional, Tuple
+from .solver_guards import annotate_results, validate_stroke
 from .models import (
     DynacardAnalysisContext, CardData, AnalysisResults,
     RodSection
@@ -162,6 +166,8 @@ class FiniteDifferenceSolver:
         # Normalize position to start at 0
         U_dh = U_dh - np.min(U_dh)
 
+        validate_stroke(u_surf, U_dh, F_dh, "finite_difference")
+
         # Store results
         self.results.downhole_card = CardData(
             position=U_dh.tolist(),
@@ -172,7 +178,7 @@ class FiniteDifferenceSolver:
         self.results.ctx = self.ctx
         self.results.solver_method = "finite_difference"
 
-        return self.results
+        return annotate_results(self.results, self.ctx, "finite_difference")
 
     def _build_rod_properties(self, x: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """

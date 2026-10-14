@@ -1,10 +1,19 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Main orchestrator for Dynacard analysis in digitalmodel.
 # ABOUTME: Integrates physics solvers, calculations, and diagnostics into unified workflow.
 
+from dataclasses import asdict
 from pathlib import Path
+
+import numpy as np
 from typing import Any, Literal
 
 from .models import DynacardAnalysisContext, AnalysisResults
+from .comparison import compare_cards
+from .exceptions import PhysicsError
+from .solver_guards import COMPARISON_LOAD_NRMSE_LIMIT_PCT, validate_stroke
 from .physics import DynacardPhysicsSolver
 from .finite_difference import FiniteDifferenceSolver
 from .diagnostics import PumpDiagnostics
@@ -79,8 +88,10 @@ class DynacardWorkflow:
             # import path of callers that never select it.
             from .everitt_jennings.adapter import EverittJenningsContextSolver
             self.solver = EverittJenningsContextSolver(self.ctx)
-        else:
+        elif self.solver_method == 'gibbs':
             self.solver = DynacardPhysicsSolver(self.ctx)
+        else:
+            raise ValueError(f"unknown solver method: {self.solver_method!r}")
 
     def router(self, cfg: dict) -> dict:
         """
@@ -231,6 +242,13 @@ class DynacardWorkflow:
         else:
             results = self.solver.solve_wave_equation()
 
+        if results.downhole_card is None:
+            raise PhysicsError("solver returned no downhole card", solver=self.solver_method)
+        validate_stroke(
+            self.ctx.surface_card.position, results.downhole_card.position,
+            results.downhole_card.load, self.solver_method,
+        )
+
         results.ctx = self.ctx
         results.solver_method = self.solver_method
 
@@ -257,59 +275,89 @@ class DynacardWorkflow:
 
         return results
 
-    def compare_solvers(self) -> dict:
+    def compare_solvers(self, *, allow_divergence: bool = False) -> dict:
+        """Compare each alternative against the default Everitt-Jennings card.
+
+        Load nRMSE is phase- and direction-invariant, normalized by the
+        reference card's load range. The 4.40% envelope is twice the 2.20%
+        maximum reference-parity bound in ``test_solver_parity.py``: two
+        outputs at opposite ends of that bound can differ by twice the bound.
+        This stated engineering comparison envelope is not a guarantee of
+        physical accuracy or an exact bound under changing normalization.
+        Stroke differences are reported separately; exceeding the measured
+        surface stroke invalidates an output before any comparison.
+
+        Invalid cards and load nRMSE above the envelope raise PhysicsError.
+        ``allow_divergence=True`` returns the failed gate and its evidence for
+        inspection, without returning invalid cards or waiving stroke guards.
+        The reference is always the default solver, even when this workflow
+        explicitly selects a comparison-only alternative.
         """
-        Run both solvers and compare results.
+        from .everitt_jennings.adapter import EverittJenningsContextSolver
 
-        Useful for validation and understanding solver differences.
-        """
-        # Run Gibbs solver
-        gibbs_solver = DynacardPhysicsSolver(self.ctx)
-        gibbs_results = gibbs_solver.solve_wave_equation()
+        if type(allow_divergence) is not bool:
+            raise ValueError("allow_divergence must be a boolean")
+        if self.ctx is None:
+            raise ValueError("solver comparison requires a context")
+        reference_results = EverittJenningsContextSolver(self.ctx).solve()
+        reference = reference_results.downhole_card
+        if reference is None:
+            raise PhysicsError("default solver returned no downhole card")
+        validate_stroke(self.ctx.surface_card.position, reference.position,
+                        reference.load, "everitt_jennings")
+        report = self._comparison_report(reference_results)
+        if not report["within_threshold"] and not allow_divergence:
+            raise PhysicsError(
+                "solver disagreement exceeds comparison envelope or output is invalid",
+                solver="comparison",
+                details={key: report[key] for key in
+                         ("comparisons", "threshold_load_nrmse_pct")},
+            )
+        return report
 
-        # Run FD solver
-        fd_solver = FiniteDifferenceSolver(self.ctx)
-        fd_results = fd_solver.solve()
-
-        # Compare key metrics
-        import numpy as np
-
-        gibbs_pos = np.array(gibbs_results.downhole_card.position)
-        fd_pos = np.array(fd_results.downhole_card.position)
-        gibbs_load = np.array(gibbs_results.downhole_card.load)
-        fd_load = np.array(fd_results.downhole_card.load)
-
-        # Stroke comparison
-        gibbs_stroke = np.max(gibbs_pos) - np.min(gibbs_pos)
-        fd_stroke = np.max(fd_pos) - np.min(fd_pos)
-        stroke_diff_pct = abs(gibbs_stroke - fd_stroke) / gibbs_stroke * 100
-
-        # Load comparison (RMSE)
-        # Resample if different lengths
-        if len(gibbs_load) != len(fd_load):
-            from scipy.interpolate import interp1d
-            x_gibbs = np.linspace(0, 1, len(gibbs_load))
-            x_fd = np.linspace(0, 1, len(fd_load))
-            f_fd = interp1d(x_fd, fd_load, kind='linear')
-            fd_load_resampled = f_fd(x_gibbs)
-        else:
-            fd_load_resampled = fd_load
-
-        load_rmse = np.sqrt(np.mean((gibbs_load - fd_load_resampled) ** 2))
-        load_max = np.max(gibbs_load)
-        load_rmse_pct = load_rmse / load_max * 100
-
-        return {
-            'gibbs_results': gibbs_results,
-            'fd_results': fd_results,
-            'comparison': {
-                'gibbs_stroke': float(gibbs_stroke),
-                'fd_stroke': float(fd_stroke),
-                'stroke_diff_pct': float(stroke_diff_pct),
-                'load_rmse': float(load_rmse),
-                'load_rmse_pct': float(load_rmse_pct),
-            }
+    def _comparison_report(self, reference_results):
+        """Run both alternatives once and retain the gate for each candidate."""
+        report = {
+            "reference_solver": "everitt_jennings",
+            "reference_results": reference_results,
+            "threshold_load_nrmse_pct": COMPARISON_LOAD_NRMSE_LIMIT_PCT,
+            "solver_results": {},
+            "comparisons": {},
+            "within_threshold": True,
         }
+        candidates = {
+            "gibbs": DynacardPhysicsSolver(self.ctx).solve_wave_equation,
+            "finite_difference": FiniteDifferenceSolver(self.ctx).solve,
+        }
+        for method, solve in candidates.items():
+            comparison, results = self._compare_candidate(method, solve, reference_results.downhole_card)
+            report["comparisons"][method] = comparison
+            if results is not None:
+                report["solver_results"][method] = results
+            if not comparison["within_threshold"]:
+                report["within_threshold"] = False
+        return report
+
+    def _compare_candidate(self, method, solve, reference):
+        """Keep invalid candidate output visible without treating it as a score."""
+        try:
+            results = solve()
+            candidate = results.downhole_card
+            if candidate is None:
+                raise PhysicsError("solver returned no downhole card", solver=method)
+            validate_stroke(self.ctx.surface_card.position, candidate.position,
+                            candidate.load, method)
+            with np.errstate(over="raise", invalid="raise", divide="raise"):
+                metrics = asdict(compare_cards(candidate, reference))
+            metrics["reference_stroke"] = float(np.ptp(reference.position))
+            metrics["candidate_stroke"] = float(np.ptp(candidate.position))
+            metrics["within_threshold"] = (
+                metrics["load_nrmse_pct"] <= COMPARISON_LOAD_NRMSE_LIMIT_PCT
+            )
+            return metrics, results
+        except (PhysicsError, ValueError, FloatingPointError) as error:
+            return {"error": str(error), "within_threshold": False,
+                    "details": getattr(error, "details", None)}, None
 
 
 def perform_well_troubleshooting(
