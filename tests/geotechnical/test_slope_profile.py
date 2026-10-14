@@ -79,3 +79,30 @@ def test_crossing_layer_boundaries_rejected():
                            "phi_deg": 30, "top_boundary_m": [[0, -1], [100, 21]]})
     with pytest.raises(ValueError, match="boundary"):
         validate_profile(data)
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf"), True])
+@pytest.mark.parametrize("field", ["Su_kpa", "su_gradient_kpa_per_m",
+                                   "reference_elevation_m",
+                                   "saturated_unit_weight_kn_m3", "permeability_m_s"])
+def test_optional_soil_fields_reject_nonfinite(field, value):
+    data = profile()
+    layer = {"unit_weight_kn_m3": 20, "Su_kpa": 10}
+    layer[field] = value
+    data["layers"] = [layer]
+    with pytest.raises(ValueError):
+        validate_profile(data)
+
+
+def test_conflicting_aliases_rejected():
+    data = profile()
+    data["layers"][0]["gamma_kn_m3"] = 18
+    with pytest.raises(ValueError, match="conflicting"):
+        validate_profile(data)
+
+
+def test_unsupported_layer_fields_rejected():
+    data = profile()
+    data["layers"][0]["N1_60cs"] = 10
+    with pytest.raises(ValueError, match="unsupported"):
+        validate_profile(data)
