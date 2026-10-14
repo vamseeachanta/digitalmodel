@@ -15,10 +15,10 @@ flowing wellhead):
 * ``deployment`` — deployment lift feasibility screen: crane SWL vs
   submerged + dynamic hook load and sea-state limit (DNV-ST-N001).
 * ``containment_flow`` — constant-density IPR–VLP/choke operating point,
-  staged quasi-steady closure and explicit caller-supplied transient bounds.
+  native elastic well/choke transients and optional caller-bounded stages.
 
-Deferred follow-on (see issue #1997): coupled transient flowing-well solver
-and standards qualification. Other deferred work: compositional gas gradient,
+Deferred follow-on (see issue #1997): standards qualification.
+Other deferred work: compositional gas gradient,
 ROV heavy-lift and lower-line current dynamics, and #484 tree-module integration.
 """
 
@@ -49,6 +49,7 @@ from .deployment import (
 from .containment_flow import (
     FlowOperatingPoint, StagedContainment, linear_inflow, vogel_inflow,
     gas_backpressure_inflow, solve_operating_point, staged_shut_in,
+    TransientContainment, transient_shut_in,
 )
 
 __all__ = [
@@ -80,4 +81,6 @@ __all__ = [
     "gas_backpressure_inflow",
     "solve_operating_point",
     "staged_shut_in",
+    "TransientContainment",
+    "transient_shut_in",
 ]

@@ -139,3 +139,95 @@ def test_nonfinite_capacity_fails_closed():
     inputs["choke_capacity"] = lambda p: float("nan")
     with pytest.raises(ValueError):
         solve_operating_point(opening=1.0, **inputs)
+
+
+def transient_case():
+    """Construct an elastic single-density well with a measured-input form."""
+    from digitalmodel.subsea.capping_stack.containment_flow import linear_inflow
+    from digitalmodel.subsea.capping_stack.containment_capacity import G
+
+    reservoir = 10e6 + 1000 * G * 1000
+    return dict(inflow=lambda p: linear_inflow(p, reservoir, 1e-6),
+                reservoir_pressure=reservoir, column_density=1000.0,
+                vertical_depth=1000.0, gravity=G,
+                bore_length=1000.0, bore_diameter=0.2, friction_factor=0.0,
+                outlet_pressure=1e6,
+                choke_capacity=lambda p: 1e-5*math.sqrt(max(p-1e6, 0)))
+
+
+def test_native_shut_in_computes_peak_and_feeds_pressure_check():
+    from digitalmodel.subsea.capping_stack.containment_flow import transient_shut_in
+
+    result = transient_shut_in(
+        time_s=[0, 0.01], openings=[1, 0], acoustic_speed=1000,
+        cells=20, duration=8, reverse_productivity=1e-6,
+        rated_working_pressure=10.5e6, **transient_case(),
+    )
+    assert result.peak_pressure_pa > 10.5e6
+    assert result.peak_containment.siwhp == pytest.approx(result.peak_pressure_pa)
+    assert not result.peak_containment.is_contained
+    assert result.terminal_containment.siwhp == pytest.approx(10e6)
+    assert result.terminal_containment.is_contained
+    assert result.flow_rate_m3_s[0] > 0
+    assert result.flow_rate_m3_s[-1] == 0
+
+
+def test_native_first_step_matches_joukowsky_at_valve():
+    from digitalmodel.subsea.capping_stack.containment_flow import transient_shut_in
+
+    inputs = transient_case()
+    result = transient_shut_in(
+        time_s=[0, 0.01], openings=[1, 0], acoustic_speed=1000,
+        cells=20, duration=2, reverse_productivity=1e-6,
+        rated_working_pressure=20e6, **inputs,
+    )
+    velocity = result.flow_rate_m3_s[0] / (math.pi * inputs["bore_diameter"]**2 / 4)
+    expected_rise = inputs["column_density"] * 1000 * velocity
+    assert result.wellhead_pressure_pa[1] - result.wellhead_pressure_pa[0] == pytest.approx(
+        expected_rise, rel=0.05
+    )
+
+
+def test_native_finite_closure_and_grid_refinement():
+    from digitalmodel.subsea.capping_stack.containment_flow import transient_shut_in
+
+    common = dict(time_s=[0, 4, 8], openings=[1, 0.5, 0],
+                  acoustic_speed=1000, duration=10, reverse_productivity=1e-6,
+                  rated_working_pressure=20e6, **transient_case())
+    coarse = transient_shut_in(cells=20, **common)
+    fine = transient_shut_in(cells=40, **common)
+    assert fine.peak_pressure_pa == pytest.approx(coarse.peak_pressure_pa, rel=0.02)
+    assert coarse.flow_rate_m3_s[-1] == 0
+    assert 9e6 < coarse.wellhead_pressure_pa[-1] < 11e6
+
+
+def test_native_open_state_preserves_steady_friction_solution():
+    from digitalmodel.subsea.capping_stack.containment_flow import transient_shut_in
+
+    inputs = transient_case()
+    inputs["friction_factor"] = 0.02
+    result = transient_shut_in(
+        time_s=[0, 2, 4], openings=[1, 1, 0], acoustic_speed=1000,
+        cells=20, duration=6, reverse_productivity=1e-6,
+        rated_working_pressure=20e6, **inputs,
+    )
+    # The first two seconds hold the valve fully open.
+    assert result.wellhead_pressure_pa[:40] == pytest.approx(
+        [result.wellhead_pressure_pa[0]]*40, rel=1e-8
+    )
+    assert result.flow_rate_m3_s[:40] == pytest.approx(
+        [result.flow_rate_m3_s[0]]*40, rel=1e-8
+    )
+
+
+@pytest.mark.parametrize("key,value", [("cells", 1), ("reverse_productivity", -1),
+                                      ("duration", 0.001)])
+def test_native_transient_rejects_invalid_grid_or_boundary(key, value):
+    from digitalmodel.subsea.capping_stack.containment_flow import transient_shut_in
+
+    inputs = dict(time_s=[0, 0.01], openings=[1, 0], acoustic_speed=1000,
+                  cells=20, duration=2, reverse_productivity=1e-6,
+                  rated_working_pressure=20e6, **transient_case())
+    inputs[key] = value
+    with pytest.raises(ValueError):
+        transient_shut_in(**inputs)

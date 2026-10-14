@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Single-density containment operating points and caller-bounded shut-in.
+"""Single-density containment operating points and elastic well transients.
 
 The inflow equations reuse the forms already documented in
 production_engineering/ipr_models.py: linear PI, Vogel and the empirical
@@ -14,17 +14,21 @@ caller-supplied pressure-dependent choke capacity. A choke callback may wrap
 hipps.valve_sizing liquid_capacity or gas_mass_capacity; its output must be
 converted to the same local volumetric-rate basis as inflow. A fixed-density
 gas approximation requires caller-qualified local volume conversion. This is
-not a compressible, multiphase or transient wellbore model.
+not a compositional or multiphase wellbore model.
 
 All pressures are absolute Pa and rates are local m3/s. Geometry, gravity,
 density, friction and inflow/choke coefficients are explicit inputs. No
 catalogue rating or proprietary calibration is supplied. The staged trajectory
 is a sequence of quasi-steady states, with required caller-qualified transient
 pressure allowances. These allowances are inputs, not computed surge results.
-The maximum bounded wellhead pressure, including each stage's allowance, is
+The quasi-steady maximum bounded pressure, including each stage's allowance, is
 passed to check_containment via an explicitly equivalent reservoir pressure
 (peak + rho*g*h). The unchanged pressure check also evaluates the physical
-terminal shut-in state separately. No API 17W / API STD 53 edition or clause
+terminal shut-in state separately. The native ``transient_shut_in`` path instead
+computes the time history and peak internally from elastic characteristics,
+an IPR/injection formation boundary and the nonlinear choke boundary. No
+external surge allowance is required for that single-density model. No
+API 17W / API STD 53 edition or clause
 compliance is claimed; that qualification remains open under issue 1997.
 """
 
@@ -291,3 +295,156 @@ def _validate_stages(
         raise ValueError("stage times must increase strictly")
     if any(b > a for a, b in zip(openings, openings[1:])) or openings[-1] != 0:
         raise ValueError("stages must close monotonically to zero")
+
+
+@dataclass(frozen=True)
+class TransientContainment:
+    """Native elastic wellhead trajectory and computed peak pressure check."""
+
+    time_s: tuple[float, ...]
+    wellhead_pressure_pa: tuple[float, ...]
+    flow_rate_m3_s: tuple[float, ...]
+    peak_pressure_pa: float
+    peak_time_s: float
+    terminal_containment: ContainmentResult
+    peak_containment: ContainmentResult
+
+
+def transient_shut_in(
+    *, time_s: Sequence[float], openings: Sequence[float], acoustic_speed: float,
+    cells: int, duration: float, reverse_productivity: float,
+    rated_working_pressure: float, **well_inputs: Any,
+) -> TransientContainment:
+    """Compute an elastic, constant-density well/choke transient natively.
+
+    Args:
+        time_s: Closure-knot times [s], beginning at zero and increasing.
+        openings: Capacity fractions at knots, nonincreasing and ending at zero.
+        acoustic_speed: Qualified constant acoustic speed [m/s].
+        cells: Equal well-reach intervals, integer >= 2.
+        duration: Duration [s], including full closure and at least one grid step.
+        reverse_productivity: Explicit injection PI [m3/(s*Pa)] above reservoir
+            pressure; zero models a nonreturn formation boundary.
+        rated_working_pressure: Qualified stack working pressure [Pa].
+        **well_inputs: solve_operating_point inputs, excluding opening.
+
+    Returns:
+        Native wellhead pressure/rate history and peak containment check.
+        Terminal_containment checks static SIWHP separately, not the last
+        oscillating sample. Time rounds up by less than one grid step.
+
+    Raises:
+        ValueError: For invalid histories, model-domain exit or nonconvergence.
+
+    Notes:
+        Pressure potential removes constant-density vertical head. The
+        characteristic invariants are p +/- Z*q with Z=rho*a/area; explicit
+        Darcy losses are applied along each interval. The formation boundary
+        intersects the incoming characteristic with the supplied production IPR
+        or explicit reverse PI. The choke boundary intersects the outgoing
+        characteristic with the supplied pressure-dependent capacity. Opening
+        is interpolated linearly between closure knots. The grid has dt=dx/a;
+        closure faster than dt is unresolved, and cavitation is not modeled.
+    """
+    _validate_stages(time_s, openings, [0.0]*len(time_s))
+    _positive(acoustic_speed=acoustic_speed, duration=duration,
+              rated_working_pressure=rated_working_pressure)
+    _nonnegative(reverse_productivity=reverse_productivity)
+    if time_s[0] != 0 or duration < time_s[-1]:
+        raise ValueError("closure history must start at zero and fit within duration")
+    if isinstance(cells, bool) or not isinstance(cells, int) or cells < 2:
+        raise ValueError("cells must be an integer >= 2")
+    initial = solve_operating_point(opening=openings[0], **well_inputs)
+    length = float(well_inputs["bore_length"])
+    _positive(bore_length=length, initial_flow=initial.flow_rate_m3_s)
+    dt = length / (cells * acoustic_speed)
+    if duration < dt:
+        raise ValueError("duration must include at least one characteristic step")
+    return _well_march(initial, time_s, openings, acoustic_speed, cells, dt,
+                       math.ceil(duration / dt), reverse_productivity,
+                       rated_working_pressure, well_inputs)
+
+
+def _opening_at(time: float, knots: Sequence[float], fractions: Sequence[float]) -> float:
+    """Interpolate the specified conductance history without extrapolating travel."""
+    for index in range(1, len(knots)):
+        if time < knots[index]:
+            fraction = (time-knots[index-1]) / (knots[index]-knots[index-1])
+            return fractions[index-1] + fraction*(fractions[index]-fractions[index-1])
+    return 0.0
+
+
+def _formation_boundary(
+    incoming: float, impedance: float, head: float, reservoir: float,
+    reverse_pi: float, inflow: Callable[[float], float],
+) -> tuple[float, float]:
+    """Intersect production/injection response with the incoming characteristic."""
+    bottom_at_zero = incoming + head
+    if bottom_at_zero <= 0:
+        raise ValueError("formation boundary left the positive-pressure model domain")
+    if bottom_at_zero >= reservoir:
+        flow = -reverse_pi*(bottom_at_zero-reservoir)/(1+reverse_pi*impedance)
+    else:
+        upper = _rate(inflow, bottom_at_zero)
+        flow = _bisect(lambda q: q-_rate(inflow, incoming+impedance*q+head), 0, upper)
+    return incoming + impedance*flow, flow
+
+
+def _choke_boundary(
+    outgoing: float, impedance: float, outlet: float, opening: float,
+    capacity: Callable[[float], float],
+) -> tuple[float, float]:
+    """Intersect nonlinear or choked capacity with the outgoing characteristic."""
+    if opening == 0 or outgoing <= outlet:
+        return outgoing, 0.0
+    upper = (outgoing-outlet) / impedance
+
+    def residual(flow: float) -> float:
+        pressure = outgoing-impedance*flow
+        rate = 0.0 if pressure <= outlet else opening*_rate(capacity, pressure)
+        return flow-rate
+
+    flow = _bisect(residual, 0, upper)
+    return outgoing-impedance*flow, flow
+
+
+def _well_march(
+    initial: FlowOperatingPoint, knots: Sequence[float], fractions: Sequence[float],
+    speed: float, cells: int, dt: float, steps: int, reverse_pi: float,
+    rated: float, inputs: dict[str, Any],
+) -> TransientContainment:
+    """Advance characteristic pressure potential with distributed bore losses."""
+    density = float(inputs["column_density"])
+    depth, gravity = float(inputs["vertical_depth"]), float(inputs["gravity"])
+    length, diameter = float(inputs["bore_length"]), float(inputs["bore_diameter"])
+    reservoir, outlet = float(inputs["reservoir_pressure"]), float(inputs["outlet_pressure"])
+    inflow: Callable[[float], float] = inputs["inflow"]
+    capacity: Callable[[float], float] = inputs["choke_capacity"]
+    head = density*gravity*depth
+    area = math.pi*diameter**2/4
+    impedance = density*speed/area
+    loss = float(inputs["friction_factor"])*length/cells/diameter*density/(2*area**2)
+    flow = [initial.flow_rate_m3_s]*(cells+1)
+    pressure = [initial.wellhead_pressure_pa + loss*flow[0]**2*(cells-i)
+                for i in range(cells+1)]
+    times, history_p, history_q = [0.0], [pressure[-1]], [flow[-1]]
+    for step in range(1, steps+1):
+        plus = [p+impedance*q-loss*q*abs(q) for p, q in zip(pressure, flow)]
+        minus = [p-impedance*q+loss*q*abs(q) for p, q in zip(pressure, flow)]
+        pressure = [0.0] + [(plus[i-1]+minus[i+1])/2 for i in range(1, cells)] + [0.0]
+        flow = [0.0] + [(plus[i-1]-minus[i+1])/(2*impedance) for i in range(1, cells)] + [0.0]
+        pressure[0], flow[0] = _formation_boundary(
+            minus[1], impedance, head, reservoir, reverse_pi, inflow)
+        pressure[-1], flow[-1] = _choke_boundary(
+            plus[-2], impedance, outlet, _opening_at(step*dt, knots, fractions), capacity)
+        actual = [p+head*(1-i/cells) for i, p in enumerate(pressure)]
+        if min(actual) <= 0 or not all(math.isfinite(p) for p in actual):
+            raise ValueError("well transient left the positive-pressure model domain")
+        times.append(step*dt)
+        history_p.append(pressure[-1])
+        history_q.append(flow[-1])
+    index = max(range(len(history_p)), key=history_p.__getitem__)
+    terminal = check_containment(rated, reservoir, depth*gravity/G, density)
+    peak = check_containment(rated, history_p[index]+head, depth*gravity/G, density)
+    return TransientContainment(tuple(times), tuple(history_p), tuple(history_q),
+                                history_p[index], times[index], terminal, peak)
