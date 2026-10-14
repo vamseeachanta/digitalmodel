@@ -1,0 +1,21 @@
+VesselTypes:
+- Name: Generic lay hull Type
+  Length: 182.2
+  Draughts:
+  - 9.5
+  Symmetry: xz plane
+  CalculationMethod: Single draught
+  Displacement:
+  - 57376.738649999985
+  WaveReferencePoint:
+  - 0
+  - 0
+  - 0
+  CentreOfGravityRelativeToCoG:
+  - 0
+  - 0
+  - 0
+  MomentsOfInertia:
+  - - 5737673.864999998
+    - 51639064.78499999
+    - 51639064.78499999
