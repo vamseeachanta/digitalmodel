@@ -66,3 +66,18 @@ def test_scr_matches_independent_inextensible_catenary():
     assert row["suspended_length_m"] == pytest.approx(length, rel=1e-7)
     assert row["horizontal_span_m"] == pytest.approx(expected_span, rel=1e-7)
     assert row["top_angle_deg"] == pytest.approx(10.0, abs=1e-6)
+
+
+def test_scr_shape_uses_material_arc_length():
+    row = kernel().scr_offsets(case(), [0.0])[0]
+    a = row["horizontal_tension_n"] / 1000.0
+    for arc, x, _ in row["shape"]:
+        length_from_touchdown = a * math.sinh((row["horizontal_span_m"] - x) / a)
+        assert arc == pytest.approx(row["suspended_length_m"] - length_from_touchdown, abs=1e-6)
+
+
+def test_cross_offset_preserves_buoyancy_and_closes():
+    rows = kernel().lazy_wave_offsets(case(), [0.0, {"x_m": 0.0, "y_m": 50.0}])
+    assert abs(rows[1]["horizontal_closure_error_m"]) < 1e-6
+    assert rows[1]["buoyed_start_m"] == pytest.approx(rows[0]["buoyed_start_m"], abs=1e-6)
+    assert rows[1]["horizontal_tension_n"] != rows[0]["horizontal_tension_n"]

@@ -1,4 +1,7 @@
-"""Python package for digital model
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Python package for digital model.
 
 Usage:
 ------
@@ -32,7 +35,7 @@ import sys
 from importlib import metadata
 from pathlib import Path
 
-from digitalmodel import __version__, run_contract
+from digitalmodel import __version__
 
 # Entry points that would re-enter this module rather than dispatch to a CLI.
 _SELF_NAMES = {"digital_model", "digitalmodel"}
@@ -65,7 +68,24 @@ def _resolve_cli(name: str):
     return None
 
 
+def _run_configuration_screen() -> bool:
+    """Dispatch the static screen before loading solver-dependent contracts."""
+    if len(sys.argv) != 2 or not Path(sys.argv[1]).is_file():
+        return False
+    import yaml
+
+    with Path(sys.argv[1]).open(encoding="utf-8") as stream:
+        cfg = yaml.safe_load(stream)
+    if not isinstance(cfg, dict) or cfg.get("basename") != "riser_configuration_screen":
+        return False
+    from digitalmodel.riser_configuration_screen.workflow import router
+
+    router(cfg)
+    return True
+
+
 def main():
+    """Dispatch console commands and configuration workflows."""
     # -h/--help prints usage and exits 0. Without this, engine() treats
     # "--help" as an input filename and raises, which also fails the ace-win-2
     # licensed-run verify probe (`python -m digitalmodel --help` must exit 0 to
@@ -90,6 +110,10 @@ def main():
     # cfg_base and its value was discarded here, so this command exited 0
     # whatever the run concluded -- on any host, licensed or not. A caller that runs
     # this command as a subprocess sees only this status as its success signal.
+    if _run_configuration_screen():
+        return 0
+    from digitalmodel import run_contract
+
     cfg = engine()
     verdict = run_contract.from_cfg(cfg)
     if verdict is None:
