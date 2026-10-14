@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Synthetic tank bridge acceptance run</title>
+<style>body{font:16px sans-serif;max-width:960px;margin:2rem auto;padding:1rem;color:#17212b}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:.5rem;text-align:left}code{font-size:.9em}</style>
+<h1>Synthetic tank bridge acceptance run</h1>
+<h2>Summary</h2>
+<p>The repository synthetic L-tank is meshed by Gmsh 4.15.1, converted to OpenFOAM v2312 and advanced through the prescribed short sloshing run. Mesh and execution criteria pass. This result establishes the synthetic bridge execution only. Numerical uncertainty, experimental agreement and production geometry readiness are not established.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr><tr><td>1</td><td>2026-10-14</td><td>Initial native acceptance evidence is recorded to distinguish execution from synthetic methodology evidence.</td></tr></table><p>Table 1. Report revision history.</p>
+<h2>Basis and method</h2>
+<p>BASE is <code>64c14740da3acae9dffa0cea2c83edab1ef783e9</code>. The bridge originated in commit <code>6d60f6e3ee7f26f7a9a2fb224e63abb518e4da96</code>. Input is <code>examples/cfd/synthetic_l_tank/input.yml</code>: breadth 1.2 m, height 0.8 m and length 1.6 m, with two perforated internal members. The existing <code>write_sloshing_case</code> writer supplies prebuilt-mesh fields, laminar volume-of-fluid dictionaries and rigid prescribed roll. The existing fixture and bridge contracts supply deterministic first-order tetrahedra, wall/atmosphere patches and the all-cell fluid zone. No change from the open sloshing-controls pull request is used.</p>
+<p>The writer uses 50 % breadth as the fill elevation and 4 degrees roll. Its analytical period is used for prescribed motion; no experimental period is substituted. The existing pressure-tap renderer samples p_rgh at a point derived from the fixture dimensions; the existing roll-moment renderer integrates the walls about the prescribed axis origin. These are execution diagnostics, without a reference force or pressure comparator.</p>
+<p>The criteria are frozen in <code>criteria.json</code> before meshing. Recorded SHA-256 and UTC time prove that order because the change is committed once after computation. The native sequence is fixture generation twice, gmshToFoam, changeDictionary, checkMesh -allGeometry -allTopology, setFields, decomposePar, mpirun -np 2 interFoam -parallel, reconstructParMesh and reconstructPar. Cases and fields remain external to the repository. The separate run record gives the measured duration of each command.</p>
+<h2>Criteria and findings</h2>
+<table><tr><th>Quantity</th><th>Criterion</th><th>Native result</th></tr>
+<tr><td>Cells</td><td>Positive, with complete fluid zone</td><td>3,618; complete zone accepted by bridge parser</td></tr>
+<tr><td>Mesh checks</td><td>Mesh OK and zero failed checks</td><td>Mesh OK; zero failed checks</td></tr>
+<tr><td>Source rebuild</td><td>Byte-identical</td><td>Identical</td></tr>
+<tr><td>MPI ranks</td><td>At most 8</td><td>2</td></tr>
+<tr><td>Time steps</td><td>At least 2 advancing steps</td><td>81 time steps; 7,696 total reported linear-solver iterations</td></tr>
+<tr><td>Final time (s)</td><td>0.3 with 1e-8 tolerance</td><td>0.3</td></tr>
+<tr><td>Rigid-rotation error (m)</td><td>At most 1.6e-6</td><td>5.0e-8</td></tr>
+<tr><td>Probe, force and moment rows</td><td>Finite, increasing time; end at 0.3 s</td><td>81 rows in each history</td></tr>
+</table><p>Table 2. Native results against frozen execution criteria. Time and motion tolerances are assumed, based on previous experience, and inherit repository contracts; they are not experimental accuracy criteria.</p>
+<h2>Computation cost</h2>
+<p>Each deterministic mesh build uses one thread and takes 1.7 s. Conversion and mesh checks take 0.4 s. The native parallel solver command takes 2.5 s; the execution sequence including field initialization, decomposition and reconstruction takes 3.6 s. These times are measured for this small case at two ranks. An equivalent rerun is projected at approximately 7.4 s of preparation and execution, assumed, based on previous experience with this run. Scaling to eight ranks or a production case is not established.</p>
+<h2>Evidence and limitations</h2>
+<p>The manifest binds committed text evidence to its SHA-256 digests and records criteria timing. Header lines containing private paths or host identity are replaced with fixed removal markers; numerical output is unchanged. The complete unsanitized logs, mesh and fields are retained outside Git. Probe pressure is p_rgh, not reconstructed physical pressure. Force and moment histories establish finite execution outputs only. No published comparison value is used, no plot is digitised, and no source-data uncertainty is claimed. Further work will require grid and time-step refinement plus an opened public benchmark before quantitative sloshing validation.</p>
+<p>Repository basis: <code>tank_fixture.py</code>, <code>_tank_fixture_gmsh.py</code>, <code>gmsh_bridge.py</code>, <code>poly_mesh_contract.py</code>, <code>validation/sloshing_3d.py</code>, <code>smoke.py</code>, <code>pressure_taps.py</code> and <code>validation/sloshing_2d_dicts.py</code>. Acceptance readback is exercised by <code>test_tank_acceptance_record.py</code>.</p>
+</html>
