@@ -1,0 +1,51 @@
+basis: docs/domains/orcaflex/wind/fowt-volturnus/basis.yml
+analysis:
+  headings:
+    value:
+      - 0.0
+      - 30.0
+      - 60.0
+    unit: degree
+    source:
+      Three-line rotational symmetry; selected headings spanning half of the
+      120-degree sector.
+  additional_damping:
+    value: 0.05
+    unit: fraction of critical
+    source: assumed, based on previous experience; linear surge,heave,pitch damping
+  damping_sensitivity:
+    value:
+      - 0.02
+      - 0.1
+    unit: fraction of critical
+    source: assumed, based on previous experience
+  intact_tension_factor:
+    value: 2.0
+    unit: dimensionless
+    source:
+      assumed, based on previous experience; digitalmodel src/digitalmodel/subsea/mooring_analysis/designer.py
+      SAFETY_FACTORS INTACT quasi_static; commit 55a91491cad7730d4469e8a379f0f9b533b21a03;
+      no standard-derived value claimed
+  damaged_tension_factor:
+    value: 1.43
+    unit: dimensionless
+    source:
+      assumed, based on previous experience; digitalmodel src/digitalmodel/subsea/mooring_analysis/designer.py
+      SAFETY_FACTORS DAMAGED quasi_static; commit 55a91491cad7730d4469e8a379f0f9b533b21a03;
+      no standard-derived value claimed
+  utilisation_limit:
+    value: 1.0
+    unit: dimensionless
+    source:
+      "Definition: factored tension divided by minimum breaking load is limited
+      to unity."
+  wave_frequency_range:
+    value:
+      - 0.05
+      - 2.0
+    unit: rad/s
+    source: Prescribed analysis range.
+  duration:
+    value: 10800.0
+    unit: s
+    source: Three-hour exposure; computed 3*60*60 seconds.

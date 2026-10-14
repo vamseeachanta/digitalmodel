@@ -1,0 +1,666 @@
+description: Public reference platform; current component inputs and original published
+  comparators are retained separately.
+reference_commit: e4993d63de10f165389534461dd544006750fe60
+qualification:
+  readiness: partial
+  use_for_analysis: assumed
+  reason: 'Both readings of published F24:K24 are propagated: at the RNA CG, or at
+    tower top with CG tensor F-P. The tower-top reading is adopted as assumed because
+    swapping the source tensor labels gives the lower relative identity residual.
+    Retaining F rather than L as the trusted endpoint is an additional assumption;
+    L24:Q24 remains the independent published comparator. Neither resolves the source
+    discrepancy.'
+  source: IEA-15-240-RWT; Nacelle Mass Properties B24:Q24; commit e4993d63de10f165389534461dd544006750fe60
+  identity_discrepancy:
+    value:
+    - 27.19699731401448
+    - 34.20860600181909
+    - 35.86921727859948
+    unit: percent
+    source: 100*abs(L-diag(F+P))/diag(F+P), P=m*((r dot r)*I-r outer r); B24:Q24;
+      commit e4993d63de10f165389534461dd544006750fe60
+  swapped_discrepancy:
+    value:
+    - 25.441264673235203
+    - 0.005497669579547727
+    - 13.176867329495117
+    unit: percent
+    source: 100*abs(F-diag(L+P))/diag(L+P); B24:Q24; commit e4993d63de10f165389534461dd544006750fe60
+geometry:
+  central_column_diameter:
+    value: 10.0
+    unit: m
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; floating_platform.members.main_column.outer_shape;
+      commit e4993d63de10f165389534461dd544006750fe60
+  outer_column_diameter:
+    value: 12.5
+    unit: m
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; floating_platform.members.column1.outer_shape;
+      commit e4993d63de10f165389534461dd544006750fe60
+  outer_column_radius:
+    value: 51.75
+    unit: m
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; floating_platform.joints.col1_keel.location;
+      commit e4993d63de10f165389534461dd544006750fe60
+  column_azimuths:
+    value:
+    - 180.0
+    - 60.0
+    - -60.0
+    unit: degree
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; floating_platform.joints.col1_keel,col2_keel,col3_keel.location;
+      commit e4993d63de10f165389534461dd544006750fe60
+  draft:
+    value: 20.0
+    unit: m
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; floating_platform.joints.main_keel.location;
+      commit e4993d63de10f165389534461dd544006750fe60
+  freeboard:
+    value: 15.0
+    unit: m
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; floating_platform.joints.main_freeboard.location;
+      commit e4993d63de10f165389534461dd544006750fe60
+  pontoon_width:
+    value: 12.5
+    unit: m
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; floating_platform.members.Y_pontoon_lower1.outer_shape;
+      commented rectangular side_length_a; commit e4993d63de10f165389534461dd544006750fe60
+  pontoon_height:
+    value: 7.0
+    unit: m
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; floating_platform.members.Y_pontoon_lower1.outer_shape;
+      commented rectangular side_length_b; commit e4993d63de10f165389534461dd544006750fe60
+  pontoon_vertical_center:
+    value: -16.5
+    unit: m
+    source: IEA-15-240-RWT; WT_Ontology/IEA-15-240-RWT_VolturnUS-S.yaml; main_keel=-20,
+      main_freeboard=15, main_lower_pontoon.grid=0.1; computed -20+0.1*(15+20); commit
+      e4993d63de10f165389534461dd544006750fe60
+  geometry_note: The rectangular pontoon dimensions are explicitly recorded in input
+    comments; the active ontology uses circular equivalent pontoons. This analysis
+    uses the original rectangular dimensions, not the equivalent diameter.
+published:
+  displacement:
+    value: 20206.0
+    unit: m^3
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 2; printed page 6
+  system_mass:
+    value: 20093000.0
+    unit: kg
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 1; metric tonnes converted
+      to kg; printed page 3
+  platform_center_of_gravity:
+    value:
+    - 0.0
+    - 0.0
+    - -14.94
+    unit: m
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 2; horizontal coordinates
+      follow reference symmetry; printed page 6
+  center_of_buoyancy:
+    value:
+    - 0.0
+    - 0.0
+    - -13.63
+    unit: m
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 2; horizontal coordinates
+      follow reference symmetry; printed page 6
+  hydrostatic_stiffness:
+    value:
+    - 0.0
+    - 0.0
+    - 4470000.0
+    - 2190000000.0
+    - 2190000000.0
+    - 0.0
+    unit: N/m for translations; N m/rad for rotations
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 3; rotational entries exclude
+      gravitational restoring; printed page 7
+  waterplane_area:
+    value: 444.5438949802342
+    unit: m^2
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 3 C33/(rho*g); rho,g from
+      pinned primary input; printed page 7; IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi.fst;
+      WtrDens,Gravity; commit e4993d63de10f165389534461dd544006750fe60
+  natural_frequencies:
+    value:
+    - 0.007
+    - 0.007
+    - 0.049
+    - 0.036
+    - 0.036
+    - 0.011
+    unit: Hz
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 11; surge,sway,heave,roll,pitch,yaw;
+      printed page 21
+  natural_periods:
+    value:
+    - 142.85714285714286
+    - 142.85714285714286
+    - 20.408163265306122
+    - 27.77777777777778
+    - 27.77777777777778
+    - 90.90909090909092
+    unit: s
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 11; computed T=1/f; surge,sway,heave,roll,pitch,yaw;
+      printed page 21
+  static_offsets: not tabulated; Section 3.1 printed page 20 shows Figure 12 only;
+    no offset comparison is made
+environment:
+  water_depth:
+    value: 200.0
+    unit: m
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 1; printed page 3
+  water_density:
+    value: 1025.0
+    unit: kg/m^3
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi.fst;
+      WtrDens; commit e4993d63de10f165389534461dd544006750fe60
+  air_density:
+    value: 1.225
+    unit: kg/m^3
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi.fst;
+      AirDens; commit e4993d63de10f165389534461dd544006750fe60
+  gravity:
+    value: 9.81
+    unit: m/s^2
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi.fst;
+      Gravity; commit e4993d63de10f165389534461dd544006750fe60
+  operating:
+    significant_wave_height:
+      value: 1.84
+      unit: m
+      source: Allen et al. (2020), NREL/TP-5000-76773; Table 12; DLC 1.1, wind 12.00
+        m/s row; printed page 27
+    peak_period:
+      value: 7.44
+      unit: s
+      source: Allen et al. (2020), NREL/TP-5000-76773; Table 12; DLC 1.1, wind 12.00
+        m/s row; printed page 27
+    jonswap_gamma:
+      value: 1.0
+      unit: dimensionless
+      source: Allen et al. (2020), NREL/TP-5000-76773; Table 12; DLC 1.1, wind 12.00
+        m/s row; printed page 27
+    wind_speed:
+      value: 12.0
+      unit: m/s
+      source: Allen et al. (2020), NREL/TP-5000-76773; Table 12; DLC 1.1; printed
+        page 27
+  extreme:
+    significant_wave_height:
+      value: 10.7
+      unit: m
+      source: Allen et al. (2020), NREL/TP-5000-76773; Table 12; DLC 6.1; printed
+        page 27
+    peak_period:
+      value: 14.2
+      unit: s
+      source: Allen et al. (2020), NREL/TP-5000-76773; Table 12; DLC 6.1; printed
+        page 27
+    jonswap_gamma:
+      value: 2.75
+      unit: dimensionless
+      source: Allen et al. (2020), NREL/TP-5000-76773; Table 12; DLC 6.1; printed
+        page 27
+    wind_speed:
+      value: 47.5
+      unit: m/s
+      source: Allen et al. (2020), NREL/TP-5000-76773; Table 12; DLC 6.1; printed
+        page 27
+  mean_current_drag: not included; no assumed current load is applied
+mooring:
+  line_count:
+    value: 3
+    unit: count
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 6; printed page 13
+  line_type:
+    value: R3 studless chain
+    unit: description
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 6; printed page 13
+  nominal_diameter:
+    value: 0.185
+    unit: m
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 6; mm converted to m; printed
+      page 13
+  volume_equivalent_diameter:
+    value: 0.333
+    unit: m
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_MoorDyn.dat;
+      LINE TYPES main Diam; use for buoyancy, not nominal chain size; commit e4993d63de10f165389534461dd544006750fe60
+  mass_per_length:
+    value: 685.0
+    unit: kg/m
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 6; printed page 13
+  axial_stiffness:
+    value: 3270000000.0
+    unit: N
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 6; MN converted to N; printed
+      page 13
+  minimum_breaking_load:
+    value: 22286000.0
+    unit: N
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 6; kN converted to N; printed
+      page 13
+  unstretched_length:
+    value: 850.0
+    unit: m
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 6; printed page 13
+  fairleads:
+    value:
+    - - -58.0
+      - 0.0
+      - -14.0
+    - - 29.0
+      - 50.229
+      - -14.0
+    - - 29.0
+      - -50.229
+      - -14.0
+    unit: m
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_MoorDyn.dat;
+      POINTS 1,3,5; Cartesian coordinate precision as supplied; commit e4993d63de10f165389534461dd544006750fe60
+  anchors:
+    value:
+    - - -837.6
+      - 0.0
+      - -200.0
+    - - 418.8
+      - 725.383
+      - -200.0
+    - - 418.8
+      - -725.383
+      - -200.0
+    unit: m
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_MoorDyn.dat;
+      POINTS 2,4,6; Cartesian coordinate precision as supplied; commit e4993d63de10f165389534461dd544006750fe60
+  published_pretension:
+    value: 2437000.0
+    unit: N
+    source: Allen et al. (2020), NREL/TP-5000-76773; Table 6; kN converted to N; printed
+      page 13
+system:
+  mass:
+    value: 20266852.231247578
+    unit: kg
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      PtfmMass,PtfmCMzt,PtfmRIner,PtfmPIner,PtfmYIner,TowerHt; commit e4993d63de10f165389534461dd544006750fe60;
+      IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower Properties
+      rows 2:21 and Nacelle Mass Properties RNA row24; piecewise-linear integration;
+      M=sum(m), CG=sum(m*r)/M, I_SWL=sum(I_CG+m*((r dot r)*identity-r outer r)), I_CG=I_SWL-M*((CG
+      dot CG)*identity-CG outer CG); commit e4993d63de10f165389534461dd544006750fe60
+  center_of_gravity:
+    value:
+    - -0.34163875215896955
+    - -0.004656729112467846
+    - -1.5745464905882514
+    unit: m
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      PtfmMass,PtfmCMzt,PtfmRIner,PtfmPIner,PtfmYIner,TowerHt; commit e4993d63de10f165389534461dd544006750fe60;
+      IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower Properties
+      rows 2:21 and Nacelle Mass Properties RNA row24; piecewise-linear integration;
+      M=sum(m), CG=sum(m*r)/M, I_SWL=sum(I_CG+m*((r dot r)*identity-r outer r)), I_CG=I_SWL-M*((CG
+      dot CG)*identity-CG outer CG); commit e4993d63de10f165389534461dd544006750fe60
+  inertia_swl:
+    value:
+    - - 43815646561.13133
+      - 691780.4070305955
+      - 986962327.2085749
+    - - 691780.4070305955
+      - 43658410253.94233
+      - 13362925.17480802
+    - - 986962327.2085749
+      - 13362925.17480802
+      - 24046987039.00406
+    unit: kg m^2
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      PtfmMass,PtfmCMzt,PtfmRIner,PtfmPIner,PtfmYIner,TowerHt; commit e4993d63de10f165389534461dd544006750fe60;
+      IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower Properties
+      rows 2:21 and Nacelle Mass Properties RNA row24; piecewise-linear integration;
+      M=sum(m), CG=sum(m*r)/M, I_SWL=sum(I_CG+m*((r dot r)*identity-r outer r)), I_CG=I_SWL-M*((CG
+      dot CG)*identity-CG outer CG); commit e4993d63de10f165389534461dd544006750fe60;
+      adopted F24:K24 interpreted at tower top; assumed
+  inertia_cg:
+    value:
+    - - 43765400609.463585
+      - 724023.3298108532
+      - 997864395.9533592
+    - - 724023.3298108532
+      - 43605799254.82255
+      - 13511526.528106313
+    - - 997864395.9533592
+      - 13511526.528106313
+      - 24044621112.573536
+    unit: kg m^2
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      PtfmMass,PtfmCMzt,PtfmRIner,PtfmPIner,PtfmYIner,TowerHt; commit e4993d63de10f165389534461dd544006750fe60;
+      IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower Properties
+      rows 2:21 and Nacelle Mass Properties RNA row24; piecewise-linear integration;
+      M=sum(m), CG=sum(m*r)/M, I_SWL=sum(I_CG+m*((r dot r)*identity-r outer r)), I_CG=I_SWL-M*((CG
+      dot CG)*identity-CG outer CG); commit e4993d63de10f165389534461dd544006750fe60;
+      adopted F24:K24 interpreted at tower top; assumed
+  tower_mass:
+    value: 1483082.5369741758
+    unit: kg
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower
+      Properties; integral rho_line(z) dz, piecewise-linear interpolation; commit
+      e4993d63de10f165389534461dd544006750fe60
+  tower_center_of_gravity:
+    value: 56.673536964694286
+    unit: m
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower
+      Properties; integral z*rho_line(z) dz / tower_mass; commit e4993d63de10f165389534461dd544006750fe60
+  rna_mass:
+    value: 945769.6942734006
+    unit: kg
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Nacelle Mass
+      Properties RNA row24 column B; commit e4993d63de10f165389534461dd544006750fe60
+  aggregation_note: 'Both readings of published F24:K24 are propagated: at the RNA
+    CG, or at tower top with CG tensor F-P. The tower-top reading is adopted as assumed
+    because swapping the source tensor labels gives the lower relative identity residual.
+    Retaining F rather than L as the trusted endpoint is an additional assumption;
+    L24:Q24 remains the independent published comparator. Neither resolves the source
+    discrepancy.'
+  tower_table:
+    value:
+    - - 15.0
+      - 10.0
+      - 88.528
+      - 23006.31513515858
+      - 282532.2578360318
+      - 282532.2578360318
+    - - 28.0
+      - 10.0
+      - 88.528
+      - 23006.31513515858
+      - 282532.2578360318
+      - 282532.2578360318
+    - - 28.001
+      - 10.0
+      - 78.377
+      - 20389.17296175965
+      - 250900.8689374946
+      - 250900.8689374946
+    - - 41.0
+      - 10.0
+      - 78.377
+      - 20389.17296175965
+      - 250900.8689374946
+      - 250900.8689374946
+    - - 41.001
+      - 10.0
+      - 68.146
+      - 17745.93754420522
+      - 218821.53514205
+      - 218821.53514205
+    - - 54.0
+      - 10.0
+      - 68.146
+      - 17745.93754420522
+      - 218821.53514205
+      - 218821.53514205
+    - - 54.001
+      - 10.0
+      - 57.782
+      - 15062.74432910412
+      - 186120.988102012
+      - 186120.988102012
+    - - 67.0
+      - 10.0
+      - 57.782
+      - 15062.74432910412
+      - 186120.988102012
+      - 186120.988102012
+    - - 67.001
+      - 10.0
+      - 47.297
+      - 12342.49307579243
+      - 152828.6587683027
+      - 152828.6587683027
+    - - 80.0
+      - 10.0
+      - 47.297
+      - 12342.49307579243
+      - 152828.6587683027
+      - 152828.6587683027
+    - - 80.001
+      - 10.0
+      - 36.876
+      - 9633.133853710919
+      - 119529.3694400947
+      - 119529.3694400947
+    - - 93.0
+      - 10.0
+      - 36.876
+      - 9633.133853710919
+      - 119529.3694400947
+      - 119529.3694400947
+    - - 93.001
+      - 10.0
+      - 26.873
+      - 7027.093864636849
+      - 87367.84424263946
+      - 87367.84424263946
+    - - 106.0
+      - 10.0
+      - 26.873
+      - 7027.093864636849
+      - 87367.84424263946
+      - 87367.84424263946
+    - - 106.001
+      - 10.0
+      - 17.749
+      - 4645.480359965536
+      - 57862.7387852333
+      - 57862.7387852333
+    - - 119.0
+      - 10.0
+      - 17.749
+      - 4645.480359965536
+      - 57862.7387852333
+      - 57862.7387852333
+    - - 119.001
+      - 10.0
+      - 9.911
+      - 2596.062157158992
+      - 32386.51678583542
+      - 32386.51678583542
+    - - 132.0
+      - 10.0
+      - 9.911
+      - 2596.062157158992
+      - 32386.51678583542
+      - 32386.51678583542
+    - - 132.001
+      - 10.0
+      - 7.936
+      - 2079.146633028738
+      - 25948.11537987292
+      - 25948.11537987292
+    - - 144.386
+      - 6.5
+      - 7.936
+      - 1350.867349028873
+      - 7116.868671164507
+      - 7116.868671164507
+    unit: height m; OD m; thickness mm; density kg/m; transverse section inertia kg
+      m; transverse section inertia kg m
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower
+      Properties columns B:G rows2:21; commit e4993d63de10f165389534461dd544006750fe60
+  rna_center_of_gravity:
+    value:
+    - -7.320960005800414
+    - -0.09978881896383983
+    - 148.98401462458747
+    unit: m
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Nacelle Mass
+      Properties RNA row24 C:E plus primary input TowerHt; commit e4993d63de10f165389534461dd544006750fe60;
+      IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      TowerHt; commit e4993d63de10f165389534461dd544006750fe60
+  rna_inertia_cg:
+    value:
+    - - 499865525.6141458
+      - 691780.4070305955
+      - -12757977.77672961
+    - - 691780.4070305955
+      - 342629218.4251445
+      - -263827.1158222368
+    - - -12757977.77672961
+      - -263827.1158222368
+      - 343480100.4671802
+    unit: kg m^2
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Nacelle Mass
+      Properties RNA row24 F:K; symmetric tensor; commit e4993d63de10f165389534461dd544006750fe60
+  platform_mass:
+    value: 17838000.0
+    unit: kg
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      PtfmMass; commit e4993d63de10f165389534461dd544006750fe60
+  platform_center_of_gravity:
+    value:
+    - 0.0
+    - 0.0
+    - -14.4
+    unit: m
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      PtfmCMxt,PtfmCMyt,PtfmCMzt; commit e4993d63de10f165389534461dd544006750fe60
+  platform_inertia_cg:
+    value:
+    - - 12507000000.0
+      - 0.0
+      - 0.0
+    - - 0.0
+      - 12507000000.0
+      - 0.0
+    - - 0.0
+      - 0.0
+      - 23667000000.0
+    unit: kg m^2
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      PtfmRIner,PtfmPIner,PtfmYIner; products are zero; commit e4993d63de10f165389534461dd544006750fe60
+  rna_inertia_other:
+    value:
+    - - 378481085.7866784
+      - 848.4016515885596
+      - 19078409.28863317
+    - - 848.4016515885596
+      - 271925264.0482513
+      - 170120.8176197082
+    - - 19078409.28863317
+      - 170120.8176197082
+      - 252790348.3375553
+    unit: kg m^2
+    source: IEA-15-240-RWT; Nacelle Mass Properties L24:Q24; named tower-top columns;
+      commit e4993d63de10f165389534461dd544006750fe60
+  tower_top:
+    value: 144.386
+    unit: m
+    source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+      TowerHt; commit e4993d63de10f165389534461dd544006750fe60
+  inertia_readings:
+    at_cg:
+      value:
+      - - 43835651194.470856
+        - 848.4016515885014
+        - 1018798714.2739378
+      - - 848.4016515885014
+        - 43729095372.73243
+        - 13796873.108249966
+      - - 1018798714.2739378
+        - 13796873.108249966
+        - 24097686360.041424
+      unit: kg m^2
+      source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+        PtfmMass,PtfmCMzt,PtfmRIner,PtfmPIner,PtfmYIner,TowerHt; commit e4993d63de10f165389534461dd544006750fe60;
+        IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower
+        Properties rows 2:21 and Nacelle Mass Properties RNA row24; piecewise-linear
+        integration; M=sum(m), CG=sum(m*r)/M, I_SWL=sum(I_CG+m*((r dot r)*identity-r
+        outer r)), I_CG=I_SWL-M*((CG dot CG)*identity-CG outer CG); commit e4993d63de10f165389534461dd544006750fe60;
+        published F24:K24 interpreted at_cg; assumed
+    at_tower_top:
+      value:
+      - - 43815646561.13133
+        - 691780.4070305955
+        - 986962327.2085749
+      - - 691780.4070305955
+        - 43658410253.94233
+        - 13362925.17480802
+      - - 986962327.2085749
+        - 13362925.17480802
+        - 24046987039.00406
+      unit: kg m^2
+      source: IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
+        PtfmMass,PtfmCMzt,PtfmRIner,PtfmPIner,PtfmYIner,TowerHt; commit e4993d63de10f165389534461dd544006750fe60;
+        IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Floating Tower
+        Properties rows 2:21 and Nacelle Mass Properties RNA row24; piecewise-linear
+        integration; M=sum(m), CG=sum(m*r)/M, I_SWL=sum(I_CG+m*((r dot r)*identity-r
+        outer r)), I_CG=I_SWL-M*((CG dot CG)*identity-CG outer CG); commit e4993d63de10f165389534461dd544006750fe60;
+        published F24:K24 interpreted at_tower_top; assumed
+  adopted_reading: at_tower_top
+turbine:
+  rating:
+    value: 15.0
+    unit: MW
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Overview B2;
+      commit e4993d63de10f165389534461dd544006750fe60
+  hub_height:
+    value: 150.0
+    unit: m
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Overview B13;
+      commit e4993d63de10f165389534461dd544006750fe60
+  rated_wind_speed:
+    value: 10.65937063700931
+    unit: m/s
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Overview B10
+      and Rotor Performance A30; commit e4993d63de10f165389534461dd544006750fe60
+  rated_rotor_thrust:
+    value: 2457229.448975228
+    unit: N
+    source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Rotor Performance
+      row30 H30; power C30=15 MW; MN converted to N; commit e4993d63de10f165389534461dd544006750fe60
+analysis:
+  headings:
+    value:
+    - 0.0
+    - 30.0
+    - 60.0
+    unit: degree
+    source: Three-line rotational symmetry; selected headings spanning half of the
+      120-degree sector.
+  additional_damping:
+    value: 0.05
+    unit: fraction of critical
+    source: assumed, based on previous experience; linear surge,heave,pitch damping
+  damping_sensitivity:
+    value:
+    - 0.02
+    - 0.1
+    unit: fraction of critical
+    source: assumed, based on previous experience
+  intact_tension_factor:
+    value: 2.0
+    unit: dimensionless
+    source: assumed, based on previous experience; digitalmodel src/digitalmodel/subsea/mooring_analysis/designer.py
+      SAFETY_FACTORS INTACT quasi_static; commit 55a91491cad7730d4469e8a379f0f9b533b21a03;
+      no standard-derived value claimed
+  damaged_tension_factor:
+    value: 1.43
+    unit: dimensionless
+    source: assumed, based on previous experience; digitalmodel src/digitalmodel/subsea/mooring_analysis/designer.py
+      SAFETY_FACTORS DAMAGED quasi_static; commit 55a91491cad7730d4469e8a379f0f9b533b21a03;
+      no standard-derived value claimed
+  utilisation_limit:
+    value: 1.0
+    unit: dimensionless
+    source: 'Definition: factored tension divided by minimum breaking load is limited
+      to unity.'
+  wave_frequency_range:
+    value:
+    - 0.05
+    - 2.0
+    unit: rad/s
+    source: Prescribed analysis range.
+  duration:
+    value: 10800.0
+    unit: s
+    source: Three-hour exposure; computed 3*60*60 seconds.
