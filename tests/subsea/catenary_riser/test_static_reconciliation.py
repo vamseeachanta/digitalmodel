@@ -139,7 +139,7 @@ def test_scr_design_and_general_solver_in_inextensible_limit(case):
 
 @pytest.mark.parametrize("case", SLWR_CASES, ids=lambda case: case["id"])
 def test_slwr_equilibrium_and_recorded_legacy_force_divergence(case):
-    """Check every segment and pin the legacy excess without accepting it."""
+    """Check every segment, equilibrium force and legacy geometry."""
     reference = references(case)
     result, legacy = lazy_results(case)
     for segment, expected in zip(result.segments, reference["segments"], strict=True):
@@ -150,7 +150,15 @@ def test_slwr_equilibrium_and_recorded_legacy_force_divergence(case):
     assert result.horizontal_force == pytest.approx(reference["horizontal"], rel=1e-12)
     assert math.degrees(math.atan2(result.horizontal_force, result.vertical_force)) == pytest.approx(case["values"]["angle"])
     assert legacy["Summary"]["HangoffToTDP"]["S"] == pytest.approx(reference["length"], rel=1e-9)
-    assert legacy["Summary"]["Fv"] - reference["vertical"] == pytest.approx(reference["horizontal"], rel=1e-12)
+
+
+@pytest.mark.parametrize("case", SLWR_CASES, ids=lambda case: case["id"])
+@pytest.mark.xfail(strict=True, reason="#2044: legacy lazy-wave Fv exceeds equilibrium by H")
+def test_legacy_lazy_wave_vertical_force_matches_equilibrium(case):
+    """Require the legacy vertical force to satisfy independent equilibrium."""
+    reference = references(case)
+    _, legacy = lazy_results(case)
+    assert legacy["Summary"]["Fv"] == pytest.approx(reference["vertical"], rel=1e-12)
 
 
 @pytest.mark.parametrize("case", SLWR_CASES, ids=lambda case: case["id"])

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "owner": "digitalmodel",
+  "dataset": "digitalmodel",
   "intended_use": "Analytical static reconciliation only; no design qualification.",
   "basis": "Generic assumed cases; no claim of a published benchmark.",
   "cases": [

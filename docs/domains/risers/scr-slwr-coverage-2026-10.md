@@ -30,7 +30,7 @@ relative. The new input fixture is
 `tests/fixtures/test_vectors/mooring_risers/scr_slwr_generic_cases.json`.
 Each numeric input carries units, assumed status and its reason. These are
 generic analytical cases, not measurements or literature validation cases.
-No earlier project result supplies a reference value. The fixture owns inputs;
+No earlier project result supplies a reference value. The fixture holds the inputs;
 expected results are recomputed by the independent check rather than stored.
 
 The checker is
