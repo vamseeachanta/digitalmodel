@@ -77,7 +77,7 @@ def _run_configuration_screen() -> bool:
     try:
         with Path(sys.argv[1]).open(encoding="utf-8") as stream:
             cfg = yaml.safe_load(stream)
-    except (yaml.YAMLError, OSError):
+    except (yaml.YAMLError, OSError, UnicodeDecodeError):
         return False
     if not isinstance(cfg, dict) or cfg.get("basename") != "riser_configuration_screen":
         return False

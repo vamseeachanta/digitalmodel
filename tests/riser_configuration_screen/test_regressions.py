@@ -17,17 +17,22 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_screen_tests_have_one_hosted_domain():
     """Keep the screening suite assigned to the subsea domain."""
-    rows = [line for line in (ROOT / "tests/DOMAINS.md").read_text().splitlines()
+    rows = [line for line in (ROOT / "tests/DOMAINS.md").read_text(encoding="utf-8").splitlines()
             if "`tests/riser_configuration_screen/`" in line]
     assert len(rows) == 1
     assert rows[0].split("|")[1].strip() == "subsea"
 
 
-@pytest.mark.parametrize("text", ["value: [", "value: !custom-tag payload"])
+@pytest.mark.parametrize("text", [
+    "value: [", "value: !custom-tag payload", b"basename: x\n# \xb0\n",
+])
 def test_unparseable_non_screen_input_reaches_engine(tmp_path, monkeypatch, text):
     """A failed screen pre-check leaves the existing engine path available."""
     source = tmp_path / "input.yml"
-    source.write_text(text)
+    if isinstance(text, bytes):
+        source.write_bytes(text)
+    else:
+        source.write_text(text, encoding="utf-8")
     monkeypatch.setattr(sys, "argv", ["digitalmodel", str(source)])
     calls = []
 
@@ -73,7 +78,7 @@ def test_unreadable_input_reaches_engine(tmp_path, monkeypatch):
 def test_example_inputs_reproduce_screen_selection(name, grid_size, feasible_count, selection):
     """Run each shipped example and pin its grid, feasibility and shortlist."""
     source = ROOT / "examples/workflows/riser-configuration-screen" / f"{name}.yml"
-    settings = yaml.safe_load(source.read_text())["riser_configuration_screen"]
+    settings = yaml.safe_load(source.read_text(encoding="utf-8"))["riser_configuration_screen"]
     result = screen(settings)
     assert result["grid_size"] == grid_size
     assert sum(row["feasible"] for row in result["ranked_candidates"]) == feasible_count
