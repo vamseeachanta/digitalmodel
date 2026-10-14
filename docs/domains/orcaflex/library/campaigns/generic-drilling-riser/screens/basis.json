@@ -1,0 +1,78 @@
+{
+  "template_sha256": "88c1d0fb97506bfceee244e3ade85f6d4de9c3436802123e6553107359dbf2d0",
+  "limitations": "Approximate riser-column screen; constant tension, uniform drag, pinned ends; attached members, nonlinear tensioner response, pressure stress and wave loading omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.",
+  "case_table_sha256": "5014d2953b5b79fc41d9946ae6f5c18778b9bc1e98fbeaa1a5998a2c01537486",
+  "screen_csv_sha256": "dc81da4d56996d09ef8daa8c90552108225b25325fa2972f11096e865111507c",
+  "calculation_fingerprints": {
+    "generic_campaign.py": "8f1de7adfe5ce7aa2c28587be5364ab1b90bee5d7e08ba03f1520d2b4b30c751",
+    "operability.py": "08a7a80df8ceb4104fe19709bda3df89d6b71528a34c6271f4844347b2391c5b",
+    "riser_response.py": "444dbd62bcc1923515a98dece2de62aed14c373516c2d916604fff3782886f1f",
+    "section.py": "b7b8c7436c86d1bf72a0d9b9fbf3e113a31c6ed0ebf2205b48e2f721b006178b",
+    "stackup.py": "1ca27fd4a41dad98f30989988cbc32365d0b09149b2771b4e5a185e873b09790"
+  },
+  "criteria": {
+    "mean_angle_deg": {
+      "value": 2.0,
+      "unit": "degrees",
+      "source": "assumed, based on previous experience"
+    },
+    "max_angle_deg": {
+      "value": 4.0,
+      "unit": "degrees",
+      "source": "assumed, based on previous experience"
+    },
+    "min_top_tension_kn": {
+      "value": 8345.731487302544,
+      "unit": "kN",
+      "source": "assumed, based on previous experience; 1.25 times approximate riser-column submerged weight; src/digitalmodel/drilling_riser/stackup.py:28"
+    },
+    "stroke_min_m": {
+      "value": -5.0,
+      "unit": "m",
+      "source": "assumed, based on previous experience"
+    },
+    "stroke_max_m": {
+      "value": 5.0,
+      "unit": "m",
+      "source": "assumed, based on previous experience"
+    },
+    "stress_limit_mpa": {
+      "value": 298.66666666666663,
+      "unit": "MPa",
+      "source": "assumed, based on previous experience"
+    }
+  },
+  "assumptions": {
+    "gravity_mps2": {
+      "value": 9.81,
+      "unit": "m/s²",
+      "source": "assumed, based on previous experience"
+    },
+    "top_tension_factor": {
+      "value": 1.25,
+      "unit": "1",
+      "source": "assumed, based on previous experience"
+    },
+    "yield_strength_mpa": {
+      "value": 448.0,
+      "unit": "MPa",
+      "source": "assumed, based on previous experience"
+    },
+    "stress_design_factor": {
+      "value": 0.6666666666666666,
+      "unit": "1",
+      "source": "assumed, based on previous experience"
+    },
+    "stroke_reference": {
+      "value": "vertical ring displacement from initial elevation relative to fixed vessel",
+      "unit": "1",
+      "source": "assumed, based on previous experience"
+    },
+    "stroke_capacity_basis": {
+      "value": "independent assumed range; model line length is not equipment capacity",
+      "unit": "1",
+      "source": "assumed, based on previous experience"
+    }
+  },
+  "units": "Column suffixes: kn = kN, mpa = MPa, m = m, deg = degrees, mps = m/s, pct = %"
+}

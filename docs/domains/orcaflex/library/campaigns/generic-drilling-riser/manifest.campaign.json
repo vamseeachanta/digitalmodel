@@ -1,0 +1,34 @@
+{
+  "id": "generic-drilling-riser-r1",
+  "title": "Generic connected drilling riser offset and current sweep",
+  "repo_dir": "<SOLVER_REPO_DIR>",
+  "ref": "1630afc1c0692c21042d69dd7be446f6f1ab6767",
+  "driver": [
+    "python",
+    "scripts/orcaflex/run_generic_drilling_riser_campaign.py",
+    "--campaign",
+    "docs/domains/orcaflex/library/campaigns/generic-drilling-riser",
+    "--output",
+    "results/generic-drilling-riser"
+  ],
+  "cwd": "<SOLVER_REPO_DIR>",
+  "env": {
+    "SOURCE_SHA256": "88c1d0fb97506bfceee244e3ade85f6d4de9c3436802123e6553107359dbf2d0"
+  },
+  "expected_hours": 6,
+  "max_hours": 18,
+  "progress": {
+    "glob": "<SOLVER_REPO_DIR>/results/generic-drilling-riser/*.summary.json",
+    "total": 24
+  },
+  "licence_exit_codes": [
+    12
+  ],
+  "retry": {
+    "max_attempts": 3,
+    "backoff_minutes": 30,
+    "licence_tries_per_day": 3
+  },
+  "priority": 40,
+  "after": []
+}

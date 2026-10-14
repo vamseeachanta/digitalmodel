@@ -1,0 +1,32 @@
+{
+  "state": "prepared; no native execution",
+  "bibliographic_sources": {
+    "16Q_title": "American Petroleum Institute, API Standards Plan, RP 16Q row; https://www.api.org/products-and-services/standards/standards-plan",
+    "16Q_edition": "src/digitalmodel/riser_database/getters.py:61",
+    "2RD_title": "docs/domains/project-docs/MODEL_GENERATOR_IMPLEMENTATION_SUMMARY.md:312",
+    "2RD_edition": "docs/standards/hydrodynamics-inventory.yaml:93"
+  },
+  "duration_basis": "No timed case exists. Six hours is an estimate assuming fifteen minutes per case for twenty-four cases; assumed, based on previous experience. Maximum duration is three times that estimate.",
+  "template_digest_basis": "UTF-8 source text normalized to LF; SOURCE_SHA256 in the runner manifest records that digest.",
+  "criteria_basis": "All selected numerical acceptance limits are assumptions, based on previous experience. The top-tension estimate covers the main riser column and contents only. Connected assembly capacity is not established.",
+  "method": "vessel offset applied as a static mean position; no prescribed vessel motion; wave-frequency response is outside this sweep",
+  "extraction": {
+    "period": "main stage only; stage index one; build-up excluded",
+    "lower_angle": "Flex Joint Rigid Piece, End B, connection-relative Ez-Angle; mean and maximum absolute degrees",
+    "upper_angle": "Riser Slip Joint, End A, connection-relative Ez-Angle; mean and maximum absolute degrees",
+    "top_tension": "Riser, End A, Effective tension; minimum and maximum kN",
+    "stroke": "Tensioner Ring vertical displacement from initial elevation relative to fixed vessel; minimum and maximum m; not individual tensioner-link extension",
+    "stress": "Riser, Max von Mises stress range-graph maximum; native kN/m2 converted to MPa",
+    "qualification": "Actual channel availability, units and interpretation require native readback before engineering acceptance. Missing channels and incomplete states are refused."
+  },
+  "retention": "Every completed case retains summary metrics and input identity. Native simulation files remain only for the greatest normalized criterion demand at each current speed; the first case resolves ties. Stale summaries are preserved outside the progress glob.",
+  "recovery": "A solver-version change requires a new output directory and a complete rerun. Preserve the previous output directory as evidence.",
+  "approval_steps": [
+    "Re-pin ref to the merged commit.",
+    "Replace every SOLVER_REPO_DIR placeholder, including progress.glob; copy the manifest under the campaign-id filename generic-drilling-riser-r1.json.",
+    "Run runner validation against the resolved approval copy.",
+    "Add its new digest to approvals.tsv only after approval."
+  ],
+  "screen_comparison_boundary": "The analytical screen uses constant tension and uniform drag with pinned ends. Attached members, pressure stress, nonlinear tensioners and waves are omitted. Geometric extension is not a mechanical stroke prediction.",
+  "release_boundary": "External sharing of results and method remains conditional on owner acceptance of the derivative basis and redistribution terms."
+}
