@@ -40,8 +40,9 @@ outside the committed deliverables.
 
 ## Open-source solver versions
 
-The numerical environment uses Capytaine 3.0.0 and MoorPy 1.3.0 without changing
-the project's dependency definition or lock. Both are pinned to the latest
+The numerical environment uses Capytaine 3.0.0 and MoorPy 1.3.0, declared in
+the optional `fowt` extra with lazy solver imports. The dependency lock is
+unchanged. Both are pinned to the latest
 published releases returned by their public release endpoints on 2026-10-14
 at 04:20:04 UTC (HTTP 200):
 
@@ -120,9 +121,12 @@ contributors are credited for the openly licensed inputs.
 - Static offsets are not tabulated in Section 3.1. Figure 12 is not digitised,
   and no numerical offset comparison against that figure is made.
 - Added damping and tension factors are labelled "assumed, based on previous
-  experience". The quasi-static factors are selected from existing analysis
-  inputs, with revision provenance; no factor is attributed to a licensed
-  standard.
+  experience". The independent strength-screening criterion uses three
+  multiplicative 25% uncertainty allowances for mean loading, wave excursion
+  and quasi-static line demand, computed as 1.25**3 for both configurations.
+  These are assumed analysis allowances, not licensed-standard factors or a
+  demonstrated reliability target. Strength utilisation cannot establish
+  damaged stationkeeping capacity.
 
 ## Inertia-source finding
 
@@ -181,15 +185,11 @@ USER AGREES TO INDEMNIFY DOE/NLR/ALLIANCE AND ITS SUBSIDIARIES, AFFILIATES, OFFI
 
 ## Method bibliography qualification
 
-API RP 2SK, *Design and Analysis of Stationkeeping Systems*, 2005,
-is identified by the existing `code_check_engine.py`
-module, lines 18 and 278, at commit
-`55a91491cad7730d4469e8a379f0f9b533b21a03`. The platform
-definition report's bibliography identifies DNVGL-OS-E301, *Position Mooring*,
-2018. These bibliographic identifications do not establish clause titles or
-licensed clause contents. Clause titles remain unconfirmed; no clause content,
-tabulated coefficient or standard-derived factor is reproduced. The intact and
-damaged factors remain explicitly assumed, based on previous experience.
+Licensed stationkeeping references are omitted from the issued report because
+their clause titles are not established from the accessible source evidence.
+The tension factors use the independently assumed uncertainty allowance
+defined above. No licensed clause content or tabulated factor is quoted or
+attributed. Code compliance is not established.
 
 ## Reference input licence
 

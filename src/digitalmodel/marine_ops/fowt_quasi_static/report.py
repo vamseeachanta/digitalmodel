@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import base64
+from decimal import Decimal, ROUND_HALF_UP
 from hashlib import sha256
 from html import escape
 from io import BytesIO
@@ -51,6 +52,16 @@ def number(value: Any) -> str:
 def delta(value: float, reference: float) -> str:
     """Format a signed comparison against its named reference to 0.1 percent."""
     return f"{100*(value/reference-1):+.1f} %"
+
+
+def offset(value: float) -> str:
+    """Display offsets to 0.1 m, treating magnitudes below 1e-6 m as zero."""
+    value = float(value)
+    if not np.isfinite(value):
+        raise ValueError("A finite offset is required")
+    rounded = Decimal(str(0.0 if abs(value) < 1e-6 else value)).quantize(
+        Decimal("0.1"), rounding=ROUND_HALF_UP)
+    return "0.0" if rounded == 0 else str(rounded)
 
 
 def table(headers: tuple, rows: list, caption: str) -> str:
@@ -129,7 +140,7 @@ def _design_data(basis: dict, results: dict) -> str:
             "<h3>3.3 Environmental data</h3>"+seas+
             "<p>Mean current drag is not included. Rated thrust is applied to both seas as an envelope; the extreme combination does not represent parked aerodynamic loading.</p>"
             "<h3>3.4 Vessel data: platform and mooring</h3>"+dimensions+line_data+coordinates+
-            "<h3>3.5 Criteria</h3><p>Utilisation is tension multiplied by a factor and divided by minimum breaking load; the limit is 1.0. Intact factor 2 and damaged factor 1.43 are assumed, based on previous experience. No factor is attributed to a standard. No offset limit is established; tension utilisation alone does not establish stationkeeping acceptance.</p>"
+            f"<h3>3.5 Criteria</h3><p>Utilisation is tension multiplied by a factor and divided by minimum breaking load; the limit is 1.0. The intact factor {number(basis['analysis']['intact_tension_factor']['value'])} and damaged factor {number(basis['analysis']['damaged_tension_factor']['value'])} are assumed, based on previous experience, as independent project screening criteria. Their basis is three multiplicative 25 % allowances for uncertainty in mean loading, wave excursion and quasi-static line demand: 1.25 × 1.25 × 1.25. Equal allowances are assumed for both configurations; they do not establish compliance with a licensed standard. No offset limit is established; tension utilisation alone does not establish stationkeeping acceptance.</p>"
             "<h3>3.6 Method</h3><p>The method and assumptions are defined in Section 4.</p>"
             "<h3>3.7 Load cases</h3><p>Three headings × two sea states × two configurations give 12 cases. Headings 0°, 30° and 60° span half the 120° sector of the three-line geometry. RNA orientation remains on the reference axis while the applied horizontal load and wave headings vary. An all-heading response envelope of the asymmetric turbine–platform system is not established. The damaged configuration removes the most loaded intact line for each sea and heading.</p>")
 
@@ -177,14 +188,14 @@ def _case_tables(results: dict) -> str:
     for case in results["cases"]:
         name = _case_name(case)
         stats = case["statistics"]
-        motions.append((name, *(number(case["mean"][i]) for i in (0, 1)),
-                        *(number(s["significant"]) for s in stats), *(number(s["maximum"]) for s in stats),
-                        *(number(case["design"][i]) for i in (0, 1))))
+        motions.append((name, *(offset(case["mean"][i]) for i in (0, 1)),
+                        *(offset(s["significant"]) for s in stats), *(offset(s["maximum"]) for s in stats),
+                        *(offset(case["design"][i]) for i in (0, 1))))
         for line in case["lines"]:
             lines.append((name, line["line"], number(line["tension"]/1e6), number(line["utilisation"]), number(line["grounded_length"]), number(line["anchor_angle"])))
         reactions.append((name, *(number(x) for x in case["constraint_reaction"]), number(case["mean_mooring_vertical"])))
     return (table(("Case", "Mean x [m]", "Mean y [m]", "Significant x [m]", "Significant y [m]", "MPM x [m]", "MPM y [m]", "Design x [m]", "Design y [m]"), motions,
-                  "Table 8. Horizontal offsets; significant values are single amplitudes 2√m₀. MPM denotes the three-hour most probable maximum. Design coordinates identify the governing four-sign combination.")+
+                  "Table 8. Horizontal offsets to 0.1 m; magnitudes below 0.000001 m are displayed as zero. Significant values are single amplitudes 2√m₀. MPM denotes the three-hour most probable maximum. Design coordinates identify the governing four-sign combination.")+
             table(("Case", "Line", "Tension [MN]", "Utilisation [–]", "Grounded length [m]", "Anchor angle [°]"), lines,
                   "Table 9. All surviving line results at the governing design offset. Anchor angle is the upward angle of the line force at the anchor.")+
             table(("Case", "Heave reaction [N]", "Roll reaction [N m]", "Pitch reaction [N m]", "Yaw reaction [N m]", "Mooring vertical [N]"), reactions,
@@ -237,7 +248,7 @@ def _remedies(results: dict) -> str:
             raise ValueError("Every over-limit case requires a recomputed solution within unity")
         rows.append((_case_name(case), number(case["governing"]["utilisation"]), number(solution["length_change"]), number(solution["governing"]["tension"]/1e6), number(solution["governing"]["utilisation"])))
     if not rows:
-        return "<p>No evaluated utilisation exceeds 1.0 under the stated factors and assumptions.</p>"
+        return ""
     return table(("Case", "Original utilisation [–]", "Line length change [m]", "Recomputed tension [MN]", "Recomputed utilisation [–]"), rows,
                  "Table 12. Recomputed line-length solutions for each original over-limit case; further coupled assessment remains necessary.")
 
@@ -255,7 +266,7 @@ def _contents() -> str:
 
 def _findings(results: dict, intact: dict, damaged: dict) -> str:
     """Bind numbered findings to their governing cases and stated criteria."""
-    output = "<h3>6.1 Governing line demand</h3>"
+    output = "<h3>6.1 Governing stationkeeping condition</h3>"+_damaged_capacity()
     for case in (intact, damaged):
         output += (f"<p>For {escape(_case_name(case))}, line {case['governing']['line']} "
                    f"governs at utilisation {number(case['governing']['utilisation'])} "
@@ -295,6 +306,27 @@ def _excursion_finding(results: dict) -> str:
             "The calculated two-line equilibrium lies at a large displacement. "
             "A mooring-layout and allowable-excursion assessment is required before "
             "stationkeeping acceptance; no allowable-excursion criterion is established.</p>")
+
+
+def _damaged_capacity() -> str:
+    """State the lost-line capacity finding before the secondary strength result."""
+    return ("<p>The damaged condition has no stationkeeping capacity at rated thrust "
+            "for headings aligned with the lost windward line; this governs. "
+            "The large two-line excursion carries the platform downwind of the "
+            "remaining anchors. Tension utilisation is a secondary strength result "
+            "and does not restore the stationkeeping function. A revised mooring "
+            "layout and an allowable-excursion assessment are required.</p>")
+
+
+def _revision_history() -> str:
+    """Retain the initial issue and append the current report revision."""
+    rows = [
+        ("A", "14 October 2026", "Initial public-reference analysis; both published RNA inertia readings are propagated through natural periods, response and line demand, with the tower-top reading assumed because of the source inconsistency."),
+        ("B", "14 October 2026", "Add the revision record, clarify the governing lost-line capacity limitation, round offsets, and recalculate strength utilisation with an independently assumed uncertainty allowance."),
+    ]
+    return ("<section id='revision-history'><h2>Revision history</h2>"+
+            table(("Revision", "Date", "Change and reason"), rows,
+                  "Report issues; earlier entries are retained.")+"</section>")
 
 
 def validate_cases(cases: list[dict]) -> None:
@@ -350,7 +382,7 @@ def _references() -> str:
         "<p>IEA-15-240-RWT public reference inputs, Apache-2.0; the source attribution and exact revision accompany the numerical design basis. The U.S. Department of Energy, National Laboratory of the Rockies, and ALLIANCE are credited for the published reference data. Reference-design contributors are credited for the openly licensed inputs.</p>"
         "<p>Capytaine and MoorPy: open-source boundary-element and quasi-static mooring formulations, versions identified in Section 4.</p>"
         "<p>Longuet-Higgins, M. S. (1952). On the statistical distribution of the height of sea waves. JMR 11, 245–266. Irvine (1981). Cable Structures; elastic catenary formulation.</p>"
-        "<p>API RP 2SK (2005), Design and Analysis of Stationkeeping Systems. DNVGL-OS-E301 (2018), Position Mooring, the cited edition of DNV-OS-E301. Clause titles are not established from the accessible source evidence. These are method references only; no clause content or tabulated factor is reproduced or attributed to them.</p>")
+        )
     return references
 
 
@@ -359,20 +391,21 @@ def _document_sections(basis: dict, results: dict) -> list[str]:
     remedies = _remedies(results)
     intact = max((c for c in results["cases"] if c["state"] == "intact"), key=lambda c: c["governing"]["utilisation"])
     damaged = max((c for c in results["cases"] if c["state"] == "damaged"), key=lambda c: c["governing"]["utilisation"])
-    summary = "<p>"
+    summary = _damaged_capacity()+"<p>"
     for case in (intact, damaged):
-        summary += (f"The governing {case['state']} design offset is ({number(case['design'][0])}, {number(case['design'][1])}) m, with line utilisation {number(case['governing']['utilisation'])} at {number(case['heading'])}° in the {case['sea']} sea; ")
+        summary += (f"The governing {case['state']} design offset is ({offset(case['design'][0])}, {offset(case['design'][1])}) m, with line utilisation {number(case['governing']['utilisation'])} at {number(case['heading'])}° in the {case['sea']} sea; ")
     summary = summary.rstrip("; ")+". Coupled dynamics and mean wave drift are not included. No allowable excursion or anchor holding criterion is established; tension strength alone does not establish stationkeeping acceptance.</p>"+remedies
-    cover = f"<header class='cover'><p class='eyebrow'>AceEngineer Inc. · Floating wind and mooring</p><h1>{TITLE}</h1><p>14 October 2026 · Revision A</p></header>"
+    cover = f"<header class='cover'><p class='eyebrow'>AceEngineer Inc. · Floating wind and mooring</p><h1>{TITLE}</h1><p>14 October 2026 · Revision B</p></header>"
     methodology = _methodology(results)
     references = _references()
     sections = [
         cover+_contents(),
         section(1, "Executive Summary", summary),
+        _revision_history(),
         section(2, "Introduction", "<p>This analysis quantifies first-order motions, constrained static offsets and quasi-static mooring demand of the public IEA 15 MW reference turbine on the VolturnUS-S semi-submersible. It supports selection of subsequent coupled assessments; it does not establish a site-specific design.</p>"),
         section(3, "Design Data", _design_data(basis, results)),
         section(4, "Analysis Methodology", methodology),
-        section(5, "Detailed Results", _validation(basis, results)+_plots(results)+_case_tables(results)+remedies+"<p>Additional damping and inertia sensitivities are in <a href='#appendix-a'>Appendix A</a>; phase response is in <a href='#appendix-b'>Appendix B</a>.</p>"),
+        section(5, "Detailed Results", _damaged_capacity()+_validation(basis, results)+_plots(results)+_case_tables(results)+remedies+"<p>Additional damping and inertia sensitivities are in <a href='#appendix-a'>Appendix A</a>; phase response is in <a href='#appendix-b'>Appendix B</a>.</p>"),
         section(6, "Key Findings", _findings(results, intact, damaged)),
         section(7, "Limitations", "<p>The calculation is quasi-static, at one draft, for a public reference platform with no site. Mean drift, low-frequency response, line dynamics, coupled aero-hydro-servo dynamics, aerodynamic damping and control are absent. Additional linear damping, symmetry projection, aligned headings, independently combined horizontal maxima and fixed mean attitude are assumed. The required constraint reactions are external to the free-floating system. The extreme sea combined with rated thrust is an envelope, not a parked load case. Inertia ambiguity and period-validation differences limit quantitative confidence; line acceptance remains conditional on that basis. No offset limit is established; tension utilisation alone does not establish stationkeeping acceptance. Linearisation and the evaluated frequency band cannot represent every response outside this model.</p>"),
         section(8, "Recommendations", "<p>The next campaign should include coupled time-domain statics, six free decays, and operating and parked cases using a licensed coupled solver. It requires the controller source, a load-case table with source attribution and an execution manifest. Mean drift should be obtained from a second-order solution and evaluated with low-frequency response. A site-specific environment, resolved RNA inertia origin, free mean attitude, line dynamics and a physical pretension/design assessment are required before design acceptance.</p>"),

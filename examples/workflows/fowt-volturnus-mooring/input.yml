@@ -20,19 +20,23 @@ analysis:
     unit: fraction of critical
     source: assumed, based on previous experience
   intact_tension_factor:
-    value: 2.0
+    value: 1.953125
     unit: dimensionless
     source:
-      assumed, based on previous experience; digitalmodel src/digitalmodel/subsea/mooring_analysis/designer.py
-      SAFETY_FACTORS INTACT quasi_static; commit 55a91491cad7730d4469e8a379f0f9b533b21a03;
-      no standard-derived value claimed
+      "assumed, based on previous experience; independent project screening
+      criterion: three multiplicative 25% allowances for uncertainty in mean loading,
+      wave excursion and quasi-static line demand; computed as 1.25**3. Equal allowances
+      are assumed for intact and damaged configurations. This criterion does not establish
+      standard compliance."
   damaged_tension_factor:
-    value: 1.43
+    value: 1.953125
     unit: dimensionless
     source:
-      assumed, based on previous experience; digitalmodel src/digitalmodel/subsea/mooring_analysis/designer.py
-      SAFETY_FACTORS DAMAGED quasi_static; commit 55a91491cad7730d4469e8a379f0f9b533b21a03;
-      no standard-derived value claimed
+      "assumed, based on previous experience; independent project screening
+      criterion: three multiplicative 25% allowances for uncertainty in mean loading,
+      wave excursion and quasi-static line demand; computed as 1.25**3. Equal allowances
+      are assumed for intact and damaged configurations. This criterion does not establish
+      standard compliance."
   utilisation_limit:
     value: 1.0
     unit: dimensionless

@@ -136,3 +136,60 @@ def test_case_completeness_requires_unique_heading_sea_state_combinations():
                  "governing": {"utilisation": 0.5}}
     with pytest.raises(ValueError, match="unique"):
         validate_cases([duplicate.copy() for _ in range(12)])
+
+
+def test_revision_history_follows_summary_and_retains_initial_issue():
+    parser = Text()
+    parser.feed(REPORT.read_text())
+    assert parser.headings[:3] == ["1 Executive Summary", "Revision history", "2 Introduction"]
+    history = " ".join(parser.section_text["revision-history"])
+    assert "A" in history and "B" in history
+    assert "14 October 2026" in history
+    assert "both published RNA inertia readings" in history
+    assert "Revision B" in REPORT.read_text()
+
+
+def test_offsets_use_one_decimal_and_document_roundoff_tolerance():
+    parser = Text()
+    parser.feed(REPORT.read_text())
+    summary = " ".join(parser.section_text["section-1"])
+    assert "(29.3, 0.0) m" in summary
+    assert not re.search(r"e-\d+", summary)
+    assert "below 0.000001 m" in " ".join(parser.visible)
+    from digitalmodel.marine_ops.fowt_quasi_static.report import offset
+    assert offset(-9.781e-16) == "0.0"
+    assert offset(-1e-7) == "0.0"
+    assert offset(29.25) == "29.3"
+    assert offset(-0.051) == "-0.1"
+
+
+def test_damaged_capacity_governs_and_strength_is_secondary():
+    parser = Text()
+    parser.feed(REPORT.read_text())
+    for identifier in ("section-1", "section-5", "section-6"):
+        content = " ".join(parser.section_text[identifier])
+        assert "no stationkeeping capacity at rated thrust" in content
+        assert content.index("no stationkeeping capacity") < content.index("utilisation")
+    assert "No evaluated utilisation exceeds" not in " ".join(parser.visible)
+
+
+def test_project_strength_criterion_has_independent_stated_basis():
+    import yaml
+    parser = Text()
+    parser.feed(REPORT.read_text())
+    criteria = " ".join(parser.section_text["section-3"])
+    assert "three multiplicative 25 % allowances" in criteria
+    assert "assumed" in criteria
+    basis = yaml.safe_load((ROOT / "docs/domains/orcaflex/wind/fowt-volturnus/basis.yml").read_text())
+    from digitalmodel.marine_ops.fowt_quasi_static.workflow import load_basis
+    assert load_basis(ROOT)["analysis"] == basis["analysis"]
+    for state in ("intact", "damaged"):
+        factor = basis["analysis"][f"{state}_tension_factor"]
+        assert factor["value"] == 1.25 ** 3
+        assert "assumed" in factor["source"]
+    assert "Clause titles are not established" not in " ".join(parser.visible)
+    manifest = json.loads(REPORT.with_suffix(".manifest.json").read_text())
+    strength = basis["mooring"]["minimum_breaking_load"]["value"]
+    for case in manifest["results"]["cases"]:
+        for line in case["lines"]:
+            assert line["utilisation"] == pytest.approx(line["tension"] * 1.25 ** 3 / strength)
