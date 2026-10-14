@@ -12,6 +12,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
+# Hosted checks do not install Capytaine, so this file is skipped there.
+# Local: PYTHONPATH=src uv run --no-sources --with capytaine==3.0.0 python -m pytest \
+#   tests/hydrodynamics/capytaine/test_lid_and_export.py -q
 cpt = pytest.importorskip('capytaine')
 pytestmark = pytest.mark.slow
 

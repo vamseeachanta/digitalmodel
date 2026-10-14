@@ -58,6 +58,7 @@ from digitalmodel.marine_ops.vessel_db.mass_properties import from_record
 
 PLACEHOLDER_MESH = "PROVIDE_HULL_MESH.gdf"
 MESH_FILE = "hull.gdf"
+ASSUMED_SEMI_NAME = "Generic semi-submersible - assumed proportions"
 
 # Plan-form fineness per form: 1.0 = pure box; lower = finer (more tapered) ends.
 _FORM_TAPER = {"box": 0.95, "full": 0.86, "ship": 0.74}
@@ -88,6 +89,7 @@ def select_form(record: Record) -> str:
     Returns one of: ``box`` (FPSO/FSO/barge), ``full`` (tanker/gas carrier),
     ``ship`` (drillship / monohull construction / default), ``column_pontoon``
     (drilling semi-submersible), or ``placeholder`` (crane semi / spar / TLP).
+    Column-and-pontoon outputs are labelled "assumed proportions".
     """
     vt = (record.vessel_type or "").lower()
     if any(k in vt for k in ("spar", "tlp")):
@@ -300,10 +302,11 @@ def build_deck(
             f"(columns/pontoons); supply a real mesh as '{PLACEHOLDER_MESH}' and re-run."
         )
     elif column_mesh is not None:
+        column_mesh.name = ASSUMED_SEMI_NAME
         mesh_path = export_gdf(column_mesh, deck_dir / MESH_FILE)
         n_panels = len(column_mesh.panels)
         mesh_file, mesh_kind = MESH_FILE, "parametric"
-        notes.append("column-and-pontoon proportions: assumed, based on previous experience")
+        notes.append("assumed proportions: based on previous experience")
         notes.append("no braces, column rotation or pontoon overhangs; geometric lid disabled")
     else:
         profile = parametric_hull_profile(record.name, loa, beam, draft, depth, form)
@@ -323,11 +326,16 @@ def build_deck(
         # Column-and-pontoon x=0 is amidships; the single-surface x=0 is aft.
         inertia.centre_of_gravity[0] -= loa / 2.0
     notes.extend(inertia_notes)
+    deck_name = ASSUMED_SEMI_NAME if column_mesh is not None else clean_vessel_name(record.name)
+    deck_type = (
+        "generic drilling semi-submersible (assumed proportions)"
+        if column_mesh is not None else record.vessel_type or form
+    )
 
     spec = DiffractionSpec(
         vessel=VesselSpec(
-            name=clean_vessel_name(record.name),
-            type=record.vessel_type or form,
+            name=deck_name,
+            type=deck_type,
             geometry=VesselGeometry(mesh_file=mesh_file),
             inertia=inertia,
         ),
@@ -345,7 +353,7 @@ def build_deck(
     deck_path = OrcaWaveBackend().generate_single(spec, deck_dir)
 
     manifest = {
-        "vessel": record.name,
+        "vessel": deck_name if column_mesh is not None else record.name,
         "vessel_id": vid,
         "vessel_type": record.vessel_type,
         "form": form,
@@ -365,10 +373,13 @@ def build_deck(
         "notes": notes,
         "provenance": "parametric prep from vessel_db; run on a licensed OrcaWave/AQWA machine",
     }
+    if column_mesh is not None:
+        manifest["source_record_id"] = manifest.pop("vessel_id")
+        manifest["geometry_basis"] = "assumed proportions"
     (deck_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
     return DeckResult(
-        vessel=record.name,
+        vessel=deck_name if column_mesh is not None else record.name,
         form=form,
         deck_path=deck_path,
         spec_path=spec_path,

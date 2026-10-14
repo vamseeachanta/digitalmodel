@@ -10,6 +10,9 @@ from pathlib import Path
 
 import pytest
 
+# Hosted checks do not install Capytaine, so this file is skipped there.
+# Local: PYTHONPATH=src uv run --no-sources --with capytaine==3.0.0 python -m pytest \
+#   tests/hydrodynamics/capytaine/test_reference_lid.py -q
 pytest.importorskip('capytaine')
 pytestmark = pytest.mark.slow
 

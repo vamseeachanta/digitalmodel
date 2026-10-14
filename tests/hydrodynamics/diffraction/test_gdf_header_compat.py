@@ -11,6 +11,10 @@ new blocking structural preflight, and the CLI exit-code contract.
 
 from __future__ import annotations
 
+# Hosted checks do not install Capytaine: only the native stiffness assertion skips.
+# Local: PYTHONPATH=src uv run --no-sources --with capytaine==3.0.0 python -m pytest \
+#   tests/hydrodynamics/diffraction/test_gdf_header_compat.py -q
+
 import shutil
 from pathlib import Path
 from unittest.mock import patch

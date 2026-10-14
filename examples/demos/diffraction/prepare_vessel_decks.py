@@ -108,7 +108,7 @@ def main() -> None:
             continue
         panels = f"{res.n_panels} panels" if res.n_panels else "mesh-to-supply"
         print(
-            f"  [{res.form:11}] {rec.name[:32]:32} {res.mesh_kind:11} {panels:16} "
+            f"  [{res.form:11}] {res.vessel:32} {res.mesh_kind:11} {panels:16} "
             f"mass={res.mass_basis}"
         )
         for n in res.notes:
@@ -116,7 +116,7 @@ def main() -> None:
         index.append(
             {
                 "form_label": label,
-                "vessel": rec.name,
+                "vessel": res.vessel,
                 "form": res.form,
                 "deck_dir": res.deck_path.parent.name,
                 "deck": res.deck_path.name,

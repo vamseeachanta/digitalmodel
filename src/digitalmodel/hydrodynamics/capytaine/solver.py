@@ -9,6 +9,7 @@ Hydrodynamic coefficients are extracted into the existing BEMResult model.
 from __future__ import annotations
 
 import logging
+import warnings
 from typing import Dict, List, Optional, Tuple, Any
 
 import numpy as np
@@ -28,6 +29,19 @@ def _import_capytaine():
         raise ImportError(
             "Capytaine is required. Activate the capytaine-env."
         ) from e
+
+
+def _require_capytaine3(cpt):
+    """Check the matrix-engine requirement before any native preparation."""
+    version = str(getattr(cpt, "__version__", "unknown"))
+    try:
+        major = int(version.split(".", 1)[0])
+    except ValueError:
+        major = 0
+    if major < 3:
+        raise RuntimeError(
+            f"Installed Capytaine version {version}; Capytaine 3 or later is required."
+        )
 
 
 class CapytaineSolver:
@@ -97,6 +111,7 @@ class CapytaineSolver:
             RuntimeError: If the solver encounters an error.
         """
         cpt = _import_capytaine()
+        _require_capytaine3(cpt)
 
         # Validate
         valid, errors = self.validate_inputs()
@@ -152,7 +167,14 @@ class CapytaineSolver:
 
     def _build_solver(self, cpt):
         """Construct the Capytaine BEMSolver with configured options."""
+        _require_capytaine3(cpt)
         sc = self.solver_config
+        if sc.matrix_cache_size != 1:
+            warnings.warn(
+                "matrix_cache_size has no effect with Capytaine 3.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
         # Green function
         gf_map = {
