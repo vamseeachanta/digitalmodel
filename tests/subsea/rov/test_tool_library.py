@@ -51,3 +51,12 @@ def test_invalid_capacities_raise(bad):
         find_tools([tool()], TaskDuty(ToolKind.TORQUE, torque_nm=bad))
     with pytest.raises(ValueError):
         find_tools([replace(tool(), torque_nm=bad)], TaskDuty(ToolKind.TORQUE))
+
+
+@pytest.mark.parametrize("bad", [-1, float("nan"), float("inf")])
+def test_invalid_tool_approach_is_rejected(bad):
+    candidate = tool()
+    candidate = replace(candidate, interface=replace(candidate.interface,
+                                                   required_approach_m=bad))
+    with pytest.raises(ValueError):
+        find_tools([candidate], TaskDuty(ToolKind.TORQUE))

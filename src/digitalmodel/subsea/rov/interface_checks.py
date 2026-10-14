@@ -77,6 +77,8 @@ def _validate_interface(spec: ToolInterface | InterfaceSpec) -> None:
     if len(spec.envelope_m) != 3:
         raise ValueError("envelope_m must have three dimensions")
     _finite_nonnegative(spec.envelope_m)
+    if isinstance(spec, ToolInterface):
+        _finite_nonnegative((spec.required_approach_m,))
     if any(value == 0 for value in spec.envelope_m):
         raise ValueError("envelope dimensions must be positive")
 

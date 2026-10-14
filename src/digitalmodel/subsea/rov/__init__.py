@@ -20,9 +20,10 @@ This package implements that bounded, deterministic core:
 - ``interface_checks`` — caller-supplied interface geometry and reach screening.
 - ``tool_library`` — caller-supplied capability lookup without embedded ratings.
 
+- ``intervention_sequence`` — serial dependency and weather-window planning.
+
 Deferred (integration / requires solver, RAO data, or proprietary catalogues):
-spectral vessel-motion / snatch-load LARS dynamics (``hydrodynamics/seakeeping``),
-and intervention task sequencing.
+spectral vessel-motion / snatch-load LARS dynamics (``hydrodynamics/seakeeping``).
 """
 
 from digitalmodel.subsea.rov.seastate_limits import (
@@ -49,4 +50,12 @@ from digitalmodel.subsea.rov.tool_library import (
 __all__ += [
     "InterfaceKind", "InterfaceSpec", "InterfaceResult", "ToolInterface",
     "check_interface", "TaskDuty", "ToolKind", "ToolSpec", "find_tools",
+]
+
+from digitalmodel.subsea.rov.intervention_sequence import (
+    InterventionPlan, InterventionTask, ScheduledTask, plan_intervention,
+)
+
+__all__ += [
+    "InterventionPlan", "InterventionTask", "ScheduledTask", "plan_intervention",
 ]
