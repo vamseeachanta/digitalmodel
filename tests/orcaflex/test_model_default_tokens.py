@@ -43,14 +43,25 @@ def model_files():
         path = ROOT / name
         if path.is_symlink():
             continue
+        raw = path.read_bytes()
+        encoding = "utf-16" if raw.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8-sig"
         try:
-            text = path.read_text(encoding="utf-8-sig")
+            text = raw.decode(encoding)
         except UnicodeError:
-            continue
+            try:
+                text = raw.decode("cp1252")
+            except UnicodeError:
+                continue
         if re.search(r"^(?:basename|metadata|basis|cases):", text, re.MULTILINE):
             continue
         native_header = re.search(r"^# Type: Model\s*$", text, re.MULTILINE)
-        if "OrcaWave" not in text[:500] and (native_header or MODEL_SECTION.search(text)):
+        native_include = "/includes/" in name and (
+            "orcaflex" in name.lower() or "slay-campaign" in name
+        )
+        wave_header = re.search(r"^#\s*Program:\s*OrcaWave\b", text, re.MULTILINE)
+        if not wave_header and (
+            native_header or native_include or MODEL_SECTION.search(text)
+        ):
             yield path, text
 
 
@@ -276,3 +287,45 @@ def test_value_preservation_needs_no_parent_git_objects(monkeypatch):
 
     monkeypatch.setitem(globals(), "git_output", deny_git)
     test_model_changes_preserve_parsed_base_values()
+
+
+@pytest.mark.parametrize("section", ["General", "Links", "Constraints"])
+def test_model_discovery_includes_partial_native_sections(tmp_path, monkeypatch, section):
+    """Native include fragments shall be scanned without a complete model header."""
+    relative = "docs/domains/orcaflex/templates/modular/includes/fragment.yml"
+    path = tmp_path / relative
+    path.parent.mkdir(parents=True)
+    text = f"{section}:\n  Default: null\n"
+    path.write_text(text)
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
+    assert list(model_files()) == [(path, text)]
+
+
+@pytest.mark.parametrize("encoding", ["utf-8-sig", "cp1252", "utf-16"])
+def test_model_discovery_retains_native_text_encodings(tmp_path, monkeypatch, encoding):
+    """Legacy text and byte-order-mark exports shall retain model coverage."""
+    relative = "docs/domains/orcaflex/templates/model.yml"
+    path = tmp_path / relative
+    path.parent.mkdir(parents=True)
+    text = "General:\n  UnitsSystem: SI\n  # Angle °\n  Default: null\n"
+    path.write_bytes(text.encode(encoding))
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
+    assert list(model_files()) == [(path, text)]
+
+
+@pytest.mark.parametrize("header,expected", [
+    ("# RAOs imported from OrcaWave", True),
+    ("# Program: OrcaWave", False),
+])
+def test_model_discovery_uses_program_header(tmp_path, monkeypatch, header, expected):
+    """An OrcaWave reference shall not exclude an OrcaFlex vessel-type fragment."""
+    relative = "docs/domains/orcaflex/templates/modular/includes/vessel_types.yml"
+    path = tmp_path / relative
+    path.parent.mkdir(parents=True)
+    text = header + "\nVesselTypes: []\n"
+    path.write_text(text)
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
+    assert bool(list(model_files())) == expected
