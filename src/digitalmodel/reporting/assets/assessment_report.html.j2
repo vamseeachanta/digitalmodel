@@ -28,8 +28,8 @@ figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption
 <body>
 <header><h1>{{ doc.title }}</h1>
 <p>Document {{ doc.number }} | Revision {{ doc.revision }}{% if doc.date %} | {{ doc.date }}{% endif %}</p>
-<div id="document-control"><p>Synthetic example</p>
-<p>Prepared: — | Checked: — | Approved: —</p></div>
+{% if doc.assessment_label or doc.prepared_by or doc.checked_by or doc.approved_by %}<div id="document-control">{% if doc.assessment_label %}<p>{{ doc.assessment_label }}</p>{% endif %}
+{% if doc.prepared_by or doc.checked_by or doc.approved_by %}<p>{% if doc.prepared_by %}Prepared: {{ doc.prepared_by }}{% endif %}{% if doc.checked_by %}{% if doc.prepared_by %} | {% endif %}Checked: {{ doc.checked_by }}{% endif %}{% if doc.approved_by %}{% if doc.prepared_by or doc.checked_by %} | {% endif %}Approved: {{ doc.approved_by }}{% endif %}</p>{% endif %}</div>{% endif %}
 </header>
 <div class="layout">
 <nav aria-label="Contents"><ol>

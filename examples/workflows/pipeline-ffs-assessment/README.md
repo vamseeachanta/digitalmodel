@@ -17,20 +17,23 @@ pins normalise CRLF to LF without rewriting the originals. Supplementary values
 needed by the six-method comparison are explicit assumptions; no grids are
 invented or adjusted. `assumptions.yml` records genuine assessment assumptions
 and method citations. Licensed factors, limits and equation constants are not
-reproduced in that file or the report.
+reproduced in the workflow, report or companion manifest. The builder obtains
+the Section B factors from named numerical-method defaults at calculation time.
 
 Both grids are bounded local patches; general-loss averaging is not applied.
-Section A requires escalation under the declared point-minimum pressure-wall
-intervention rule. Section B requires more measurements to resolve its local
-profile. Neither decision establishes continued operation while the stated
-evidence gap remains unresolved.
+Section A requires formal local-loss evaluation because its remaining strength
+factor is below the allowable factor; its field data is adequate. The current
+reduced rating exceeds demand. Section B requires three additional readings:
+two degraded cells resolve its flaw against an assessment default of five.
+Interim operation is a decision for the maintainer of the pipeline record.
 
 Decision precedence is escalation, additional measurements, re-rating, then
 acceptance. Applicability flags and zero projected life require escalation.
 Pressure reduction uses pressure ratios only; the axial limit remains
-a separate restriction. Remaining life is a linear projection to the pressure
-wall criterion, not a prediction of all future defect-capacity crossings or an
-API Level 1 assessment.
+a separate restriction. Section A life is projected to design pressure on the
+reduced local-loss route, holding the flaw extent, background wall and loads
+fixed. Section B retains the linear pressure-wall projection. Neither route
+predicts all future defect-capacity crossings or authorizes operation.
 
 The local-loss calculation calls the existing relation with the wall away from
 the flaw as its reference. The constructor argument named `t_min_in` supplies
@@ -41,10 +44,14 @@ The reduced rating participates in the decision. This correction does not
 establish complete edition-matched qualification of the simplified relation.
 
 The HTML contains inline vector figures and requires no network. Its companion
-manifest retains full-precision results and source/content digests. Text outputs
+manifest retains full-precision results and source/content digests, excluding
+method factors and quoted thresholds. Diagnostic pressure-wall and strength-factor
+comparisons are labelled separately from the reduced-rating pressure criterion. Text outputs
 are UTF-8 with LF. The fixed document date is not read from the clock; repeat
 builds are intended to be byte-identical. The document-control block is marked
-synthetic example and names no person or unperformed check or approval.
+synthetic example through document metadata and names no person or unperformed
+check or approval. Other assessments receive no implicit synthetic label or
+signature placeholders.
 Provenance remains mandatory and is retained in the manifest. The generated-page
 registry owns both outputs and names their synthetic input dependencies.
 

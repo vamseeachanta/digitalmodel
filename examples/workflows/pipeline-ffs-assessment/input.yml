@@ -14,9 +14,6 @@ interval_life_fraction: 0.5
 section_b_supplement:
   smts_psi: 66700.0
   axial_stress_psi: 10000.0
-  safety_factor: 1.39
-  usage_factor: 0.72
-  axial_design_factor: 0.72
   axial_positions_in: [0, 1, 2, 3, 4, 5]
   circumferential_width_in: 4.0
-supplement_basis: assumed, based on previous experience; values shared with Section A except unit row spacing, which follows the existing assessment default
+supplement_basis: Supplementary strength, axial stress and circumferential extent are copied from Section A; 1 in row spacing is an assessment assumption.

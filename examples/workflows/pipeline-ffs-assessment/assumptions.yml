@@ -1,5 +1,5 @@
 scope: Synthetic local metal loss; no licensed factors or equation constants are reproduced.
-report_label: assumed, based on previous experience
+report_label: assumed for this assessment
 assumptions:
 - parameter: Corrosion rate
   value: 0.005; sensitivities 0.0025 and 0.01
@@ -16,14 +16,14 @@ assumptions:
   value: SMTS 66,700 psi; axial stress 10,000 psi; arc width 4 in; row spacing 1 in
   units: psi and in
   source: examples/workflows/pipeline-ffs-assessment/input.yml
-  basis_as_written: Supplementary synthetic inputs; row spacing follows the existing default
+  basis_as_written: Strength, load and arc width copied from Section A; 1 in row spacing assumed for this assessment
 - parameter: Decision precedence
   value: escalate; take more measurements; re-rate; accept
   units: order
   source: scripts/reporting/build_pipeline_ffs_report.py
   report_label: assumed for this assessment
-- parameter: Point-minimum intervention rule
-  value: Compare minimum remaining wall with required pressure wall; zero projected life requires escalation
+- parameter: Remaining-life routes
+  value: Section A projects to design pressure on the fixed-geometry reduced local-loss rating; Section B projects to the required pressure wall
   units: basis
   source: scripts/reporting/build_pipeline_ffs_report.py
   report_label: assumed for this assessment; not an API Level 1 criterion
@@ -35,5 +35,5 @@ assumptions:
 method_sources:
 - ASME B31G, Manual for Determining the Remaining Strength of Corroded Pipelines, 2012
 - DNV-RP-F101, Corroded Pipelines, 2010-10
-- API 579-1/ASME FFS-1, Fitness-For-Service, 2021; Part 5, Assessment of Local Metal Loss
+- API 579-1/ASME FFS-1, Fitness-For-Service, 2021; Part 2, Fitness-For-Service Engineering Assessment Procedure; Part 5, Assessment of Local Metal Loss
 - ASME B31.8, Gas Transmission and Distribution Piping Systems, 2022; 841, Steel Pipe
