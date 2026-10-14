@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Subsea capping-stack emergency-containment mechanics (API 17W).
 
 Bounded deterministic core for emergency-response planning of a subsea
@@ -11,10 +14,12 @@ flowing wellhead):
   (bore, pressure class, connector hub family; API 17W / API 17D).
 * ``deployment`` — deployment lift feasibility screen: crane SWL vs
   submerged + dynamic hook load and sea-state limit (DNV-ST-N001).
+* ``containment_flow`` — constant-density IPR–VLP/choke operating point,
+  staged quasi-steady closure and explicit caller-supplied transient bounds.
 
-Deferred follow-on (see issue #490): transient flowing-well / choke-Cv
-containment-flow solver, compositional gas gradient, ROV heavy-lift and
-lower-line current dynamics, and #484 tree-module integration.
+Deferred follow-on (see issue #1997): coupled transient flowing-well solver
+and standards qualification. Other deferred work: compositional gas gradient,
+ROV heavy-lift and lower-line current dynamics, and #484 tree-module integration.
 """
 
 from .containment_capacity import (
@@ -41,6 +46,10 @@ from .deployment import (
     submerged_weight,
     feasibility,
 )
+from .containment_flow import (
+    FlowOperatingPoint, StagedContainment, linear_inflow, vogel_inflow,
+    gas_backpressure_inflow, solve_operating_point, staged_shut_in,
+)
 
 __all__ = [
     # containment
@@ -64,4 +73,11 @@ __all__ = [
     "DeploymentResult",
     "submerged_weight",
     "feasibility",
+    "FlowOperatingPoint",
+    "StagedContainment",
+    "linear_inflow",
+    "vogel_inflow",
+    "gas_backpressure_inflow",
+    "solve_operating_point",
+    "staged_shut_in",
 ]
