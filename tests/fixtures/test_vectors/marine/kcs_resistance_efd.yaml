@@ -1,0 +1,362 @@
+source_type: workshop_benchmark
+source_description: >-
+  KCS (KRISO Container Ship) calm-water resistance benchmark data, transcribed
+  field by field from the CFD workshops that published it. Two DISTINCT
+  campaigns are recorded here and MUST NOT be blended: the Gothenburg 2000 ->
+  Tokyo 2005 Case 1.1 lineage (fixed even keel, bare hull, Re = 1.4e7) and the
+  Gothenburg 2010 2.2b -> Tokyo 2015 Case 2.1 lineage (free to heave and pitch,
+  with rudder, Re = 1.26e7). Issue #1173 gates against the FIRST of these only.
+extracted_date: "2026-08-12"
+legal_scan_passed: true
+category: "marine"
+subcategory: "calm_water_resistance"
+
+# ---------------------------------------------------------------------------
+# WHY THIS FILE CARRIES PROVENANCE MARKERS ON EVERY FIELD
+#
+# Issue #1173's plan was rejected twice, both times because a resistance
+# coefficient was carried forward without the condition tuple that gives it
+# meaning. A bare Ct is worthless: the referent is the tuple
+#   (attitude, appendage, normalising area, viscosity/Reynolds).
+# Every numeric field below therefore declares whether it was STATED by the
+# publishing workshop or DERIVED here, and cites where it came from. A field
+# without a provenance marker is a defect, and a test asserts their presence.
+# ---------------------------------------------------------------------------
+
+constants:
+  g: 9.80665            # m/s^2, standard gravity
+
+citations:
+  T2005_case_1_1: >-
+    CFD Workshop Tokyo 2005, Test Case 1.1 (KCS towed), NMRI archives
+    (cfdws05). States attitude, appendage, Fr and Re. This is the case Shen,
+    Wan & Carrica (2015) cite as "Hino (2005)". It publishes no new resistance
+    test of its own: it points its reference data at the Gothenburg 2000 table.
+  G2000_efd: >-
+    Gothenburg 2000 Workshop EFD table for KCS, incl. the "Wetted Surface Area"
+    entry and the note that the value is hull only (no rudder), for static
+    orientation without waves, i.e. S_DWL.
+  T2015_case_2_1: >-
+    CFD Workshop Tokyo 2015, Case 2.1 instructions and the EFD data file
+    vary_Fr_2-1.xls. States "Resistance coefficients are based on wetted
+    surface area ( S0/Lpp^2 = 0.1803 ) with rudder for static orientation in
+    calm water", rho = 999.5, nu = 1.27e-6, and six speeds.
+  shen_2015: >-
+    Shen, Wan & Carrica (2015) - the only condition-matched published CFD set
+    (bare hull, fixed even keel, Re = 1.4e7). Used for achievability only.
+  ittc_57: >-
+    ITTC 1957 model-ship correlation line, Cf = 0.075 / (log10(Re) - 2)^2.
+
+# ---------------------------------------------------------------------------
+# ROW A - THE REFERENT. This is the row #1173 gates against.
+# ---------------------------------------------------------------------------
+reference_rows:
+  - id: kcs_t2005_case_1_1_fixed_bare
+    description: >-
+      KCS at Fr = 0.26, model scale 1/31.6, FIXED at even keel, WITHOUT rudder.
+      The gate row for issue #1173.
+    lineage: "gothenburg_2000 -> tokyo_2005_case_1.1"
+
+    # --- the condition tuple, all four fields ---
+    body_condition: fixed_even_keel
+    appendages: none
+    wetted_surface: 9.4379          # m^2
+    reynolds: 1.4e7
+
+    values:
+      ct:
+        value: 3.56e-3
+        provenance: stated
+        source: T2005_case_1_1
+        note: >-
+          The Tokyo 2005 Case 1.1 page points its reference data at the
+          Gothenburg 2000 table, which is where this number lives. Shen's
+          3.55e-3 is a transcription of the same single measurement at a
+          coarser rounding - one measurement, two roundings, not two sources.
+      wetted_surface:
+        value: 9.4379
+        units: m^2
+        provenance: stated
+        source: G2000_efd
+        note: >-
+          "Wetted Surface Area", verbatim; hull only (no rudder), static
+          orientation without waves, i.e. S_DWL. Because this is STATED rather
+          than inferred, the wetted-surface systematic U_S leaves the
+          uncertainty budget entirely.
+      wetted_surface_coefficient:
+        value: 0.1781            # S / Lpp^2
+        provenance: stated
+        source: G2000_efd
+      lpp:
+        value: 7.2786
+        units: m
+        provenance: stated
+        source: G2000_efd
+      velocity_model:
+        value: 2.1962
+        units: m/s
+        provenance: stated
+        source: G2000_efd
+        note: >-
+          Use the full 2.1962, not the rounded 2.196. The rounded value gives
+          nu = 1.1416e-6 instead of 1.1418e-6, a 0.02% difference that then
+          propagates into the Reynolds number the case is defined by.
+      reynolds:
+        value: 1.4e7
+        provenance: stated
+        source: T2005_case_1_1
+        note: >-
+          Stated by both workshops. Not a loose round number attached after the
+          fact - the workshop reduced its own EFD at exactly this Reynolds
+          number using the ITTC-57 line, so it is the case's defining condition.
+      froude:
+        value: 0.26
+        provenance: stated
+        source: T2005_case_1_1
+      cf_ittc57:
+        value: 2.83e-3
+        provenance: stated
+        source: G2000_efd
+      cr:
+        value: 0.731e-3
+        provenance: stated
+        source: G2000_efd
+        note: >-
+          The workshop's own residuary, defined as C_R = C_T - C_F0. Recorded
+          for the internal-consistency check only. The value the V2a criterion
+          is centred on is the DERIVED cr_derived below, computed at full
+          precision from this row's own Ct and Cf.
+      uncertainty_efd:
+        value: 1.0
+        units: percent
+        provenance: stated
+        source: T2005_case_1_1
+        note: >-
+          The Case 1.1 page says 1.0%; the EFD table says 0.64%. The
+          conservative figure is carried.
+
+    # --- DERIVED HERE. Not measured, not quoted. ---
+    derived:
+      nu:
+        value: 1.14180e-6
+        units: m^2/s
+        provenance: derived
+        formula: "nu = V_m * Lpp / Re"
+        note: >-
+          The viscosity is chosen to REPRODUCE the stated Reynolds number at
+          the stated speed and length. It is not a water property lookup.
+      froude_check:
+        value: 0.25995
+        provenance: derived
+        formula: "Fr = V_m / sqrt(g * Lpp)"
+        agrees_with_stated: 0.26
+        note: >-
+          Computed at standard gravity g = 9.80665 m/s^2, which is the value
+          this fixture declares. The #1173 plan quotes 0.25990 for the same
+          expression; that figure is what g = 9.81 gives. The difference is
+          immaterial - both round to the stated 0.26 - but it is recorded
+          rather than silently matched, because an unexplained digit is how
+          transcription drift starts.
+      cf_ittc57:
+        value: 2.832045e-3
+        provenance: derived
+        formula: "Cf = 0.075 / (log10(Re) - 2)^2"
+        source: ittc_57
+        agrees_with_stated: 2.83e-3
+      cr_derived:
+        value: 7.27955e-4
+        provenance: derived
+        formula: "Cr = Ct - Cf_ITTC57(Re)"
+        agrees_with_stated: 0.731e-3
+        note: >-
+          THE V2a CENTRE. Derived at full precision rather than taken from the
+          workshop's rounded 0.731e-3. Note this is a small difference of large
+          numbers: the +0.28% correction that moved Ct from 3.55e-3 to 3.56e-3
+          moved this residuary by +1.39%, five times as far. Any future
+          correction to Ct must re-derive this rather than scale it.
+      residuary_fraction:
+        value: 0.2045
+        provenance: derived
+        formula: "Cr / Ct"
+        note: >-
+          20.45%. This is the fraction of the total that the case exists to
+          compute, and it is why a solution that develops no free surface -
+          returning pure friction, Ct = Cf - lands at -20.45%.
+      wetted_surface_coefficient:
+        value: 0.178147
+        provenance: derived
+        formula: "S / Lpp^2 = 9.4379 / 52.9780"
+        agrees_with_stated: 0.1781
+
+# ---------------------------------------------------------------------------
+# ROW B - the OTHER lineage. Recorded so a future free-to-sink-and-trim
+# criterion has something correct to gate against, and so that nobody
+# re-discovers it by mistaking it for the referent. NOT a gate row for #1173.
+# ---------------------------------------------------------------------------
+  - id: kcs_t2015_case_2_1_free_with_rudder
+    description: >-
+      KCS free to heave and pitch, WITH rudder, at six Froude numbers. This is
+      a DIFFERENT campaign from the referent above: different attitude,
+      different appendage state, different normalising area, different Reynolds
+      number. Blending it with row A is precisely the error that rejected two
+      revisions of the #1173 plan.
+    lineage: "gothenburg_2010_2.2b -> tokyo_2015_case_2.1"
+
+    body_condition: free_to_heave_and_pitch
+    appendages: rudder
+    wetted_surface: 9.5531          # m^2, S0/Lpp^2 = 0.1803, WITH rudder
+    reynolds: 1.26e7
+
+    values:
+      wetted_surface:
+        value: 9.5531
+        units: m^2
+        provenance: stated
+        source: T2015_case_2_1
+        note: >-
+          "Resistance coefficients are based on wetted surface area
+          ( S0/Lpp^2 = 0.1803 ) with rudder for static orientation in calm
+          water", verbatim. Confirmed arithmetically: the measured 85.44 N at
+          Fr 0.26 divided by 0.5*999.5*9.5531*2.196^2 reproduces the published
+          3.7111e-3 exactly, whereas the bare-hull area gives 3.7564e-3.
+      rho:
+        value: 999.5
+        units: kg/m^3
+        provenance: stated
+        source: T2015_case_2_1
+      nu:
+        value: 1.27e-6
+        units: m^2/s
+        provenance: stated
+        source: T2015_case_2_1
+
+    # Fr, Ct, sinkage, trim. sigma in units of 1e-2 m; tau in degrees.
+    series:
+      provenance: stated
+      source: T2015_case_2_1
+      note: "Decoded from the workshop's own vary_Fr_2-1.xls data file."
+      points:
+        - {froude: 0.108, ct: 3.796e-3, sinkage_cm: -0.09,  trim_deg: -0.017}
+        - {froude: 0.152, ct: 3.641e-3, sinkage_cm: -0.275, trim_deg: -0.053}
+        - {froude: 0.195, ct: 3.475e-3, sinkage_cm: -0.599, trim_deg: -0.097}
+        - {froude: 0.227, ct: 3.467e-3, sinkage_cm: -0.944, trim_deg: -0.127}
+        - {froude: 0.260, ct: 3.711e-3, sinkage_cm: -1.394, trim_deg: -0.169}
+        - {froude: 0.282, ct: 4.501e-3, sinkage_cm: -1.702, trim_deg: -0.159}
+
+# ---------------------------------------------------------------------------
+# The gate thresholds, and the derivation of each. Kept beside the data so a
+# tolerance cannot be loosened without the justification being visibly stale.
+# ---------------------------------------------------------------------------
+gates:
+  v1_ct:
+    reference_row: kcs_t2005_case_1_1_fixed_bare
+    quantity: ct
+    centre: 3.56e-3
+    tolerance_fraction: 0.0300
+    kind: symmetric
+    rationale: >-
+      The uncertainty floor is 1.41%, so 3.00% is 2.13x the floor. Not tighter,
+      because U_SN within that floor is still borrowed from a published grid
+      rather than measured on ours, and tightening a gate on a borrowed
+      uncertainty buys nothing. Not looser, because 3% of Ct is already 14.7%
+      of the residuary the case exists to compute.
+  v2a_cp:
+    reference_row: kcs_t2005_case_1_1_fixed_bare
+    quantity: cr_derived
+    centre: 7.27955e-4
+    tolerance_low: -0.15
+    tolerance_high: 0.06
+    kind: asymmetric
+    rationale: >-
+      Asymmetric because the offset is definitional, not scatter. Since
+      Ct = Cp + Cv exactly while Cr = Ct - Cf, the offset between a computed
+      pressure coefficient and the reference residuary is Cp - Cr = Cf - Cv at
+      a matched total. A viscous coefficient 1.2% above the ITTC-57 line - which
+      is what the condition-matched literature reports - displaces Cp by
+      -0.012 * Cf/Cr = -4.67%, which accounts for essentially the whole
+      observed one-sidedness. Both bounds are asserted separately so the band
+      cannot degrade into a symmetric one by refactor.
+  v2b_cv:
+    reference_row: kcs_t2005_case_1_1_fixed_bare
+    quantity: cf_ittc57_derived
+    centre: 2.832045e-3
+    tolerance_fraction: 0.0500
+    kind: symmetric
+    rationale: >-
+      The condition-matched grids give Cv/Cf = 1.012, 1.010, 0.995 - all within
+      1.2%, so 5% leaves 4x margin. V2b exists specifically to catch the
+      tutorial's inherited nutkRoughWallFunction (Ks = 100e-6, a 100 micron
+      sand-grain roughness on a smooth towing-tank model), and it catches it
+      without depending on whether the pressure side happens to compensate.
+  v3_mesh_consistency:
+    quantity: ct
+    threshold: 0.015
+    escalation_band: [0.015, 0.030]
+    kind: two_level_self_consistency
+    rationale: >-
+      Sized on the grid-uncertainty scale, not the validation tolerance. The
+      closest published analogue at the same refinement ratio produces a
+      level-to-level difference of 0.807% at r_G = sqrt(2). A 3% threshold
+      would be 3.7x that, and would pass a pair implying a fine-grid error at
+      or above the 1.41% floor V1 was derived from. A result inside the
+      escalation band re-derives the V1 budget from the measured delta_RE
+      rather than silently passing or hard-failing.
+
+uncertainty_budget:
+  floor_percent: 1.41
+  note: >-
+    Two independent framings agree to 0.004 points:
+    (A) component form, keeping U_SN purely numerical and pairing it with our
+        own U_D:  RSS(U_D 1.00, U_SN 0.96, U_i 0.24) = 1.407%
+    (B) borrowed-validation form, taking the published U_V whole and adding
+        only what it lacks:  RSS(U_V 1.39, U_i 0.24) = 1.411%
+    U_S does NOT appear: the wetted surface is stated by the source, so it is
+    not an unresolved systematic. Note that a budget pairing U_V = 1.39 with a
+    separate U_D = 1.00 double-counts U_D, because U_V = sqrt(U_G^2 + U_D^2)
+    already contains it; that formulation yields 1.73% and is superseded.
+
+detection_floor:
+  ct_percent: 0.91
+  note: >-
+    A LIMIT OF THE METHOD, stated here rather than discovered afterwards.
+    Because Ct = Cp + Cv holds identically, a compensating pair sitting exactly
+    on both component boundaries lands inside V1: Cv = +5.0% with Cp = -15.0%
+    gives Ct = +0.91%, which passes everything. The decomposition gate cannot
+    detect a compensating pair whose net effect on Ct is below roughly 0.91%.
+    This is a property of the arithmetic, not of the mesh.
+
+known_negative_control:
+  ct: 2.832045e-3
+  expected_v1_error: -0.2045
+  note: >-
+    Pure friction - the result a solution that develops no free-surface
+    deformation returns. It must FAIL V1, by 6.8x. Without this control, a gate
+    whose reference silently became None reads green.
+
+independence_vectors:
+  - id: v1_passes_v2_fails
+    note: "Compensating errors - the case V2 exists for."
+    cv: 2.945e-3
+    cp: 0.615e-3
+    ct: 3.560e-3
+    expect: {v1: pass, v2a: fail, v2b: pass}
+  - id: v2_passes_v1_fails
+    note: "Both components individually tolerable, the total is not."
+    cv: 2.945e-3
+    cp: 0.764e-3
+    ct: 3.709e-3
+    expect: {v1: fail, v2a: pass, v2b: pass}
+
+condition_matched_literature:
+  source: shen_2015
+  note: >-
+    The achievability evidence for a 3% gate. Every point is like-for-like with
+    the referent: bare hull, fixed even keel, Re = 1.4e7. Errors are vs 3.56e-3.
+    All four sit inside 1.3% and are consistently low; the spread across a
+    sixfold cell-count range is 0.34 points. Error SHRINKS with refinement and
+    then flattens.
+  rows:
+    - {grid: S3_coarse,      cells: 1.68e6,  ct: 3.516e-3, error: -0.0124, cp: 0.6988e-3}
+    - {grid: S2_medium,      cells: 4.26e6,  ct: 3.528e-3, error: -0.0090, cp: 0.6684e-3}
+    - {grid: S1_fine,        cells: 10.58e6, ct: 3.526e-3, error: -0.0096, cp: 0.6611e-3}
+    - {grid: production_run, cells: 1.675e6, ct: 3.520e-3, error: -0.0112, cp: 0.699e-3}

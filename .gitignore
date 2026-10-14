@@ -458,3 +458,11 @@ docs/reports/abstracted-hulls/*
 # Compute program first results (workspace-hub#4034): generic cases only, no project data.
 !docs/reports/2026-10-09-compute-program/
 !docs/reports/2026-10-09-compute-program/**
+
+# scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
+# build output. The bare `lib/` above is packaging boilerplate and matches any
+# directory named lib at ANY depth -- it silently swallowed the files that fix
+# the "chain is not reproducible from a clean checkout" defect (#2023), so the
+# remediation was itself invisible to git. Negation must follow the pattern it
+# overrides, and the DIRECTORY must be re-included before git will descend.
+!scripts/cfd/lib/

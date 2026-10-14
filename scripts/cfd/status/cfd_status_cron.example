@@ -1,0 +1,1 @@
+*/5 * * * * DM_CFD_STATUS_CONFIG="$HOME/.config/digitalmodel/cfd-status.yml" "$HOME/digitalmodel/scripts/cfd/status/cfd_status_collect.sh" >/dev/null 2>&1
