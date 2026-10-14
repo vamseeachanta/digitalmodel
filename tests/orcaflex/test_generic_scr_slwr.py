@@ -40,7 +40,7 @@ def test_basis_has_provenance_for_every_parameter():
     """Missing sources and unexplained assumptions prevent basis qualification."""
     basis = load_basis()
     assert basis["readiness"] == "prepared; not qualified for design or outward use"
-    assert basis["host"]["redistribution_status"] == "UNCONFIRMED"
+    assert basis["host"]["redistribution_status"] == "NO_VESSEL_TYPE_DATA_COMMITTED"
     for name, record in basis["parameters"].items():
         assert record["unit"], name
         assert record["source"] in basis["sources"], name

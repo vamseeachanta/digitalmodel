@@ -16,9 +16,9 @@ host:
   selection: Solver example vessel type; public hull alternative remains unmerged.
   type_name: Vessel Type1
   motion: None; RAOs and coupled host motion are not established.
-  redistribution_status: UNCONFIRMED
-  rights: Redistribution of the retained solver example vessel type is UNCONFIRMED; maintainer
-    confirmation is required before merge or further outward use.
+  redistribution_status: NO_VESSEL_TYPE_DATA_COMMITTED
+  rights: No vessel-type data is committed; the models reference the solver's default vessel type
+    name only, with no motion.
   replacement_limit: The existing riser vessel builder emits only a VesselType reference, not a
     type definition. The schema forbids combining riser and generic definitions; replacing the
     host with a defined type would require changing the generator or converting the riser specs.
@@ -45,11 +45,11 @@ sources:
     revision: c9ae7591129b40732846b50661045f99ab249aba
     locator: src/digitalmodel/materials/grades.py
   scr_template:
-    title: Public example-derived catenary template
+    title: Repository example-derived catenary template
     revision: c9ae7591129b40732846b50661045f99ab249aba
     locator: docs/domains/orcaflex/library/templates/riser_catenary/spec.yml
   slwr_template:
-    title: Public example-derived distributed-buoyancy template
+    title: Repository example-derived distributed-buoyancy template
     revision: c9ae7591129b40732846b50661045f99ab249aba
     locator: docs/domains/orcaflex/library/templates/riser_lazy_wave/spec.yml
   soil_bracket:
@@ -385,7 +385,7 @@ parameters:
     unit: '% water depth'
     status: ASSUMED
     source: offset_grid
-    reason: Maximum prepared offset in the public generic campaign adopted as a study parameter,
+    reason: Maximum prepared offset in the repository generic drilling-riser campaign adopted as a study parameter,
       not a mooring result.
   damaged_offset_pct:
     value: 10.0
