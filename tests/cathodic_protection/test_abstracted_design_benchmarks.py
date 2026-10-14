@@ -26,6 +26,7 @@ from digitalmodel.cathodic_protection import b401_tables as tables
 from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "docs/domains/cathodic_protection/examples"
+ANALYSIS = EXAMPLES.parent / "abstracted-benchmark-analysis.html"
 PHASES = ("initial", "mean", "final")
 
 
@@ -159,3 +160,60 @@ def test_abstracted_design_end_to_end(record: str) -> None:
         counts = [r["current_output_verification"]["recommended_anode_count"] for r in results]
         assert counts == sorted(counts) and counts[-1] > counts[0]
         assert results[-1]["status"]["result"] == "FAIL"
+
+
+def ship_comparison_values() -> tuple[float, ...]:
+    """Produce Table 3 current-route quantities from the record-001 input."""
+    cfg = load_record("001")
+    cfg["citation_repo_root"] = EXAMPLES.parents[3] / "tests/citations/fixtures"
+    result = run_cathodic_protection(cfg)["results"]
+    demand = result["current_demand_A"]["totals"]
+    requirements = result["anode_requirements"]
+    return (*(demand[phase] for phase in PHASES),
+            requirements["total_mass_kg"], requirements["final_output_count"])
+
+
+def legacy_comparison_values() -> tuple[float, ...]:
+    """Read the repository comparator; retain the archived fractional count."""
+    path = next(EXAMPLES.glob("calc-001-*.md"))
+    basis = path.read_text(encoding="utf-8").split(
+        "## Calculation Results (from source document)", 1
+    )[1]
+    values = []
+    for label in ("Initial Ici", "Mean Icm", "Final Icf", "Total net anode mass"):
+        match = re.search(r"\| " + label + r" \| ([\d .]+) \|", basis)
+        assert match is not None
+        values.append(float(match[1].replace(" ", "")))
+    # Cached derived count held in the analysis at its preceding revision.
+    # The workbook digest supplies secondary provenance; no formula is rerun.
+    return (*values, 186.2)
+
+
+def test_record_001_current_route_matches_table_3() -> None:
+    """Reproduce every rounded current-route cell from the ABS ships record."""
+    assert "ship_comparison_values" in globals(), "Table 3 has no committed producer"
+    values = ship_comparison_values()
+    assert [f"{value:.1f}" for value in values] == [
+        "145.5", "218.3", "291.0", "4634.9", "300.0"
+    ]
+    html = ANALYSIS.read_text(encoding="utf-8")
+    comparison = html.split("<h2>Legacy workbook comparison</h2>", 1)[1].split("</table>", 1)[0]
+    rows = re.findall(r"<tr>(.*?)</tr>", comparison, re.S)[1:]
+    assert [re.findall(r"<td>(.*?)</td>", row)[3] for row in rows] == [
+        f"{value:.1f}" for value in values
+    ]
+    for row, previous, current in zip(rows, legacy_comparison_values(), values):
+        cells = re.findall(r"<td>(.*?)</td>", row)
+        difference = current - previous
+        assert cells[2] == f"{previous:.1f}"
+        assert cells[4:] == [f"{difference:+.1f}", f"{100 * difference / previous:+.1f}%"]
+
+
+def test_analysis_summary_revision_and_comparison_basis() -> None:
+    """Require the summary, appended revision and both comparison sources."""
+    html = ANALYSIS.read_text(encoding="utf-8")
+    assert re.findall(r"<h2>(.*?)</h2>", html)[:2] == ["Executive Summary", "Revision history"]
+    assert "<td>3</td>" in html.split("<h2>Basis and limitations</h2>", 1)[0]
+    assert "ABS Guidance Notes on Cathodic Protection of Ships, December 2017 edition" in html
+    assert "calc-001-abs-gn-ships-2017-fst-hull.md:122-132" in html
+    assert "secondary provenance for the fractional" in html
