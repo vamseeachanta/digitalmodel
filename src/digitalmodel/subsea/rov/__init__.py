@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """digitalmodel.subsea.rov — ROV intervention modeling (API 17H).
 
 Subsea production systems (API 17 family) rely on work-class ROVs (API 17H) for
@@ -14,11 +17,12 @@ This package implements that bounded, deterministic core:
                         scatter diagram (API 17H / IMCA R 004; weather-restricted
                         operation framework of DNV-ST-N001).
 
+- ``interface_checks`` — caller-supplied interface geometry and reach screening.
+- ``tool_library`` — caller-supplied capability lookup without embedded ratings.
+
 Deferred (integration / requires solver, RAO data, or proprietary catalogues):
 spectral vessel-motion / snatch-load LARS dynamics (``hydrodynamics/seakeeping``),
-the ROV tool catalogue and hot-stab / valve / capstan interface compatibility
-checks, the API 17H interface-geometry verification, and intervention task
-sequencing.
+and intervention task sequencing.
 """
 
 from digitalmodel.subsea.rov.seastate_limits import (
@@ -33,4 +37,16 @@ __all__ = [
     "SeaStateResult",
     "scatter_operability",
     "seastate_operability",
+]
+
+from digitalmodel.subsea.rov.interface_checks import (
+    InterfaceKind, InterfaceSpec, InterfaceResult, ToolInterface, check_interface,
+)
+from digitalmodel.subsea.rov.tool_library import (
+    TaskDuty, ToolKind, ToolSpec, find_tools,
+)
+
+__all__ += [
+    "InterfaceKind", "InterfaceSpec", "InterfaceResult", "ToolInterface",
+    "check_interface", "TaskDuty", "ToolKind", "ToolSpec", "find_tools",
 ]
