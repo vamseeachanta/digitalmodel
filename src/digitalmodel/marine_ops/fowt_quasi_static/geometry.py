@@ -10,13 +10,16 @@ Dimensions and elevations are supplied by the attributed public-reference basis.
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
-import capytaine as cpt
 import numpy as np
 from scipy.integrate import quad
 from shapely import affinity, constrained_delaunay_triangles, segmentize
 from shapely.geometry import MultiPoint, Point, Polygon, box
 from shapely.ops import triangulate, unary_union
+
+if TYPE_CHECKING:
+    import capytaine as cpt
 
 
 def _dimensions(basis: dict) -> tuple[float, ...]:
@@ -27,6 +30,7 @@ def _dimensions(basis: dict) -> tuple[float, ...]:
 
 
 def _sections(basis: dict, segments: int) -> tuple:
+    import capytaine as cpt
     central, outer, radius, width, _, draft = _dimensions(basis)
     centers = [(0.0, 0.0)] + [
         (radius * math.cos(math.radians(a)), radius * math.sin(math.radians(a)))
@@ -84,6 +88,7 @@ def _vertical_faces(polygon: Polygon, bottom: float, top: float, step: float) ->
 
 def hull_mesh(basis: dict, step: float) -> cpt.Mesh:
     """Generate an external surface from Capytaine column primitive boundaries."""
+    import capytaine as cpt
     if step <= 0:
         raise ValueError("Panel size must be positive")
     *_, height, draft = _dimensions(basis)

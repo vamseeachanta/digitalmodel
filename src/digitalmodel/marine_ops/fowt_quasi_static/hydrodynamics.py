@@ -4,23 +4,29 @@
 """First-order panel hydrodynamics with an internal irregular-frequency lid."""
 from __future__ import annotations
 
-import capytaine as cpt
+from typing import TYPE_CHECKING
+
 import numpy as np
 import xarray as xr
 
 from .basis import aggregate
 from .geometry import hull_mesh
 
+if TYPE_CHECKING:
+    import capytaine as cpt
+
 DOFS = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
 
 
 def low_frequency_solver() -> cpt.BEMSolver:
     """Use the supported finite-depth kernel for small depth/wavelength ratios."""
+    import capytaine as cpt
     return cpt.BEMSolver(green_function=cpt.FinGreen3D())
 
 
 def cylinder_added_mass(segments: int) -> float:
     """Compute heave added mass for a 10 m diameter, 20 m submerged cylinder."""
+    import capytaine as cpt
     mesh = cpt.mesh_vertical_cylinder(radius=5, length=20, center=(0, 0, -10),
                                       resolution=(4, segments, 8)).immersed_part()
     mesh = cpt.Mesh(mesh.vertices, [face for face, center in zip(mesh.faces, mesh.faces_centers)
@@ -37,6 +43,7 @@ def cylinder_added_mass(segments: int) -> float:
 def solve_hydrodynamics(basis: dict, step: float, omega: np.ndarray,
                         headings: np.ndarray) -> tuple:
     """Solve all six radiation modes and selected first-order wave headings."""
+    import capytaine as cpt
     mesh = hull_mesh(basis, step)
     data = aggregate(basis, basis["system"]["adopted_reading"])
     cg = data["cg"].copy()

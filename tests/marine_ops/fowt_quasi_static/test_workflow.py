@@ -105,3 +105,18 @@ def test_final_assembled_rao_symmetry_and_inertia_conclusions():
         final = case.get("solution", case)
         assert final["governing"]["utilisation"] <= 1.0
         assert len(final["lines"]) == (2 if case["state"] == "damaged" else 3)
+def test_importing_workflow_does_not_load_optional_solvers():
+    """Keep report and basis imports usable without installing solver packages."""
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+    environment = os.environ.copy()
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        environment.pop(name, None)
+    source = Path(__file__).resolve().parents[3]/"src"
+    code = ("import sys; sys.path.insert(0, sys.argv[1]); "
+            "from digitalmodel.marine_ops.fowt_quasi_static import workflow; "
+            "assert {'capytaine', 'moorpy'}.isdisjoint(sys.modules)")
+    subprocess.run([sys.executable, "-I", "-B", "-c", code, str(source)],
+                   check=True, env=environment, capture_output=True, text=True)

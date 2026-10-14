@@ -11,10 +11,13 @@ with reaction forces/moments reported rather than concealed.
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
-import moorpy as mp
 import numpy as np
 from scipy.optimize import brentq
+
+if TYPE_CHECKING:
+    import moorpy as mp
 
 
 def grounded_horizontal_tension(distance: float, rise: float, length: float,
@@ -30,6 +33,7 @@ def grounded_horizontal_tension(distance: float, rise: float, length: float,
 def mooring_system(basis: dict, removed: int | None = None,
                     length_change: float = 0.0) -> mp.System:
     """Construct the attributed three-chain system, optionally without one line."""
+    import moorpy as mp
     values = basis["mooring"]
     environment = basis["environment"]
     rho, gravity = environment["water_density"]["value"], environment["gravity"]["value"]
