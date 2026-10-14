@@ -129,7 +129,7 @@ def _folder(relative):
     return Path(relative).relative_to('src/digitalmodel/web').parts[0]
 
 def _imported_helper(tree):
-    return any(isinstance(n, ast.ImportFrom) and n.module == 'basic_auth' and n.level == 0
+    return any(isinstance(n, ast.ImportFrom) and n.module == "digitalmodel.web.digitaltwinfeed.basic_auth" and n.level == 0
                and any(a.name == 'basic_auth_password_for' and a.asname in (None, a.name)
                        for a in n.names) for n in tree.body)
 
@@ -293,7 +293,7 @@ def test_startup_call_after_signing_binding():
     signing = [n for name, value, n in named(tree) if name == 'secret_key']
     assert len(signing) == 1, 'app.py:one-signing-binding'
     assert statements[0].lineno > signing[0].lineno, 'app.py:signing-first'
-    assert any((isinstance(n, ast.ImportFrom) and n.module == 'basic_auth' and any((a.name == 'warn_if_basic_auth_closed' for a in n.names)) for n in tree.body)), 'app.py:startup-import'
+    assert any((isinstance(n, ast.ImportFrom) and n.module == "digitalmodel.web.digitaltwinfeed.basic_auth" and any((a.name == 'warn_if_basic_auth_closed' for a in n.names)) for n in tree.body)), 'app.py:startup-import'
 
 def _local_providers():
     providers = []

@@ -4,7 +4,7 @@ Provides Flask routes that generate and serve Plotly.js charts
 embedded in HTML templates.
 """
 
-from basic_auth import basic_auth_password_for
+from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_password_for
 import json
 import os
 

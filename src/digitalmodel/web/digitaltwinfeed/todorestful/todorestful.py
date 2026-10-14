@@ -4,7 +4,7 @@ Provides a Flask-RESTful API with authentication for managing
 a TODO task list including create, read, update, and delete operations.
 """
 
-from basic_auth import basic_auth_password_for
+from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_password_for
 import os
 
 from flask import Blueprint, abort, jsonify, make_response, request, url_for

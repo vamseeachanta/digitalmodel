@@ -4,7 +4,7 @@ Provides authenticated API endpoints for fitness-for-service analysis data
 within the digitaltwinfeed application.
 """
 
-from basic_auth import basic_auth_password_for
+from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_password_for
 import os
 
 from flask import (Blueprint, Response, abort, jsonify, make_response,

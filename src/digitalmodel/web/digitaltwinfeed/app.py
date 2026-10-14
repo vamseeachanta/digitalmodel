@@ -1,5 +1,5 @@
 import logging
-from basic_auth import warn_if_basic_auth_closed
+from digitalmodel.web.digitaltwinfeed.basic_auth import warn_if_basic_auth_closed
 
 from flask import Flask, redirect, render_template, request, url_for
 from flask_wtf import FlaskForm

@@ -4,7 +4,7 @@ Provides a simple RESTful-style TODO list API using Flask blueprint
 routing with HTTP basic authentication for all task endpoints.
 """
 
-from basic_auth import basic_auth_password_for
+from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_password_for
 from flask import Blueprint, abort, jsonify, make_response, request, url_for
 from flask_httpauth import HTTPBasicAuth
 

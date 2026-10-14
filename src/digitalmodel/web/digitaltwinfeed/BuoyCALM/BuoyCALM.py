@@ -4,7 +4,7 @@ Provides authenticated RESTful API endpoints for CALM buoy task management
 including CRUD operations within the digitaltwinfeed application.
 """
 
-from basic_auth import basic_auth_password_for
+from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_password_for
 import os
 
 from flask import Blueprint, abort, jsonify, make_response, request, url_for
