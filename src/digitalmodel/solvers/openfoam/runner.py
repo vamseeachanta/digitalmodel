@@ -382,15 +382,38 @@ class OpenFOAMRunner:
 
     @staticmethod
     def _detect_error(
-        name: str, return_code: int, output: Optional[str]
+        name: str,
+        return_code: int,
+        output: Optional[str],
+        *,
+        check_divergence: bool = True,
     ) -> Optional[str]:
+        """Classify a stage's outcome from its return code and its log.
+
+        ``check_divergence`` MUST be False for anything that is not the solver.
+
+        The divergence markers are solver vocabulary. In a solver log
+        "bounding" means ``bounding k``, ``bounding omega``, ``bounding
+        alpha.water`` — the solution is being clipped, which is a real signal.
+        In a MESH utility log it means ``boundingBox:``, which every successful
+        blockMesh, snappyHexMesh and checkMesh prints.
+
+        Scanning mesh logs for it therefore reported every successful mesh as a
+        divergence failure. The defect was invisible because it cannot fire
+        where it is exercised: CI has no OpenFOAM, so every run short-circuits
+        to DRY_RUN before a stage executes, and the only hosts that would have
+        caught it are the ones nothing routinely runs the attested path on.
+        Absence of a toolchain read as absence of a problem.
+        """
         if return_code != 0:
             return f"{name} returned non-zero exit code {return_code}"
         lowered = (output or "").lower()
-        # Fatal markers before divergence markers, mirroring smoke.py's order.
+        # Fatal markers apply to every stage — a FOAM FATAL is a FOAM FATAL.
         for marker in _ERROR_MARKERS:
             if marker.lower() in lowered:
                 return f"{name} log contains '{marker}'"
+        if not check_divergence:
+            return None
         for marker in _DIVERGENCE_MARKERS:
             if marker in lowered:
                 return f"{name} log contains '{marker}'"
