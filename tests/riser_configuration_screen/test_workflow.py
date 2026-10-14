@@ -106,3 +106,34 @@ def test_neutral_buoyancy_is_reported_as_a_violation():
     row = workflow().screen(data)["ranked_candidates"][0]
     assert row["constraints"]["net_buoyancy"]["status"] == "violation"
     assert row["constraints"]["net_buoyancy"]["margin"] == 0.0
+
+
+def test_static_utilisation_includes_touchdown_bending():
+    import math
+    data = settings()
+    data["axes"]["hangoff_angle_deg"] = [8.0]
+    data["offsets_m"] = [0.0]
+    row = workflow().screen(data)["ranked_candidates"][0]["offset_results"][0]
+    pipe = data["pipe"]
+    diameter, thickness = pipe["outer_diameter_m"], pipe["wall_thickness_m"]
+    area = math.pi * (diameter**2 - (diameter - 2 * thickness)**2) / 4
+    axial = row["horizontal_tension_n"] / area
+    bending = pipe["youngs_modulus_pa"] * diameter * row["touchdown_curvature_per_m"] / 2
+    expected_touchdown = (axial + bending) / pipe["yield_strength_pa"]
+    assert row["static_von_mises_utilisation"] >= expected_touchdown * (1 - 1e-7)
+
+
+def test_equal_hog_and_sag_is_reported_as_violation():
+    data = settings("SLWR")
+    data["axes"] = {"hangoff_angle_deg": [10.0], "buoyancy_factor": [2.0],
+                    "sag_fraction": [0.1], "hog_fraction": [0.1]}
+    check = workflow().screen(data)["ranked_candidates"][0]["constraints"]["hog_above_sag"]
+    assert check["status"] == "violation"
+    assert check["margin"] == 0.0
+
+
+def test_constraint_margin_units_are_explicit():
+    checks = workflow().screen(settings())["ranked_candidates"][0]["constraints"]
+    assert checks["top_tension_n"].get("unit") == "N"
+    assert checks["bend_radius_m"].get("unit") == "m"
+    assert checks["static_von_mises_utilisation"].get("unit") == "1"

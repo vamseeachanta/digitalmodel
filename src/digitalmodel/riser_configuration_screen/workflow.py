@@ -79,7 +79,8 @@ def _utilisation(pipe: dict, configuration: dict, row: dict) -> float:
         force = vertical - weight * arc + weight * factor * buoyed_arc
         tension = math.hypot(horizontal, force)
         local_weight = weight * (1 - factor) if start is not None and start < arc < start + length else weight
-        curvature = abs(local_weight) * horizontal / tension**3
+        # d(theta)/ds = |w| H / (H**2 + V**2), with units 1/m.
+        curvature = abs(local_weight) * horizontal / tension**2
         bending = float(pipe["youngs_modulus_pa"]) * outer * curvature / 2
         for sign in (-1, 1):
             axial = (tension + pressure_force) / area + sign * bending
@@ -88,9 +89,9 @@ def _utilisation(pipe: dict, configuration: dict, row: dict) -> float:
     return maximum
 
 
-def _constraint(margin: float | None, reason: str = "") -> dict:
+def _constraint(margin: float | None, reason: str = "", unit: str = "1") -> dict:
     return {"status": "unavailable" if margin is None else ("pass" if margin >= 0 else "violation"),
-            "margin": margin, "reason": reason}
+            "margin": margin, "unit": unit, "reason": reason}
 
 
 def _checks(configuration: dict, rows: list[dict], limits: dict, reason: str) -> dict:
@@ -100,19 +101,22 @@ def _checks(configuration: dict, rows: list[dict], limits: dict, reason: str) ->
         if float(configuration["buoyancy_factor"]) <= 1.0:
             checks["net_buoyancy"]["status"] = "violation"
         checks["hog_above_sag"] = _constraint(float(configuration["hog_fraction"]) - float(configuration["sag_fraction"]))
+        if float(configuration["hog_fraction"]) <= float(configuration["sag_fraction"]):
+            checks["hog_above_sag"]["status"] = "violation"
     if not rows:
-        checks["shape_closure"] = _constraint(None, reason)
+        checks["shape_closure"] = _constraint(None, reason, "m")
         for name in ("top_tension_n", "bend_radius_m", "hog_clearance_m", "static_von_mises_utilisation"):
-            checks[name] = _constraint(None, reason)
+            unit = "N" if name == "top_tension_n" else ("1" if name == "static_von_mises_utilisation" else "m")
+            checks[name] = _constraint(None, reason, unit)
         return checks
-    checks["shape_closure"] = _constraint(1e-6 - max(max(abs(r["vertical_closure_error_m"]), abs(r["horizontal_closure_error_m"])) for r in rows))
-    checks["top_tension_n"] = _constraint(float(limits["max_top_tension_n"]) - max(r["top_tension_n"] for r in rows))
+    checks["shape_closure"] = _constraint(1e-6 - max(max(abs(r["vertical_closure_error_m"]), abs(r["horizontal_closure_error_m"])) for r in rows), unit="m")
+    checks["top_tension_n"] = _constraint(float(limits["max_top_tension_n"]) - max(r["top_tension_n"] for r in rows), unit="N")
     radii = [1 / r["touchdown_curvature_per_m"] for r in rows]
     radii += [r[name] for r in rows for name in ("sag_radius_m", "hog_radius_m") if r[name] is not None]
-    checks["bend_radius_m"] = _constraint(min(radii) - float(limits["min_bend_radius_m"]))
+    checks["bend_radius_m"] = _constraint(min(radii) - float(limits["min_bend_radius_m"]), unit="m")
     clearance = [r["hog_clearance_m"] for r in rows if r["hog_clearance_m"] is not None]
-    checks["hog_clearance_m"] = (_constraint(min(clearance) - float(limits["min_hog_clearance_m"]))
-                                 if clearance else {"status": "not_applicable", "margin": None, "reason": "SCR has no hog bend"})
+    checks["hog_clearance_m"] = (_constraint(min(clearance) - float(limits["min_hog_clearance_m"]), unit="m")
+                                 if clearance else {"status": "not_applicable", "margin": None, "unit": "m", "reason": "SCR has no hog bend"})
     checks["static_von_mises_utilisation"] = _constraint(float(limits["max_static_utilisation"]) - max(r["static_von_mises_utilisation"] for r in rows))
     return checks
 
