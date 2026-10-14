@@ -1,0 +1,12 @@
+{
+  "revision": "0",
+  "history": [
+    {
+      "revision": "0",
+      "date": "2026-10-14",
+      "change": "First issue: compare the two eligible riser modules for one public nominal pipe; expose edition and combined-load gaps."
+    }
+  ],
+  "criteria_sha256": "b3c3c732e6efe48f758dcc6f52df0ad797c5e9380fc60a7dc3b6c8bf4cd90b70",
+  "criteria_recorded_at": "2026-10-14T12:53:43.666999+00:00"
+}

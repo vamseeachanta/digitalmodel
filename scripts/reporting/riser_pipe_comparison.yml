@@ -1,0 +1,37 @@
+basis_commit: f60b9ad2bc6346d919bfa3707083e04bc585bb68
+pipe:
+  outer_diameter_mm: 273
+  wall_thickness_mm: 21.44
+  grade: ASTM A106 Grade B
+  smys: 35000
+  smts: 60000
+  strength_unit: psi
+  youngs_modulus_pa: 207000000000
+  poissons_ratio: 0.3
+  corrosion_allowance_mm: 0
+  fabrication_tolerance: 0
+water_depth_m: 1000
+cases:
+  - name: operating
+    internal_pressure_pa: 20000000
+    external_pressure_pa: 10000000
+    bending_moment_nm: 250000
+    effective_tension_n: 1500000
+sources:
+  - title: Public nominal pipe dimensions, NPS 10 schedule 120
+    url: https://www.wermac.org/pipes/dim_pipes_b.html
+    retrieved_at: "2026-10-14T10:32:42Z"
+    response_sha256: ac621dbee5a2f1f2e012dff61504182de2d6b2f368678ce2e05c0fd25ae3b90a
+    fields: [outer_diameter_mm, wall_thickness_mm]
+  - title: Public ASTM A106 Grade B tensile requirements
+    url: https://www.wermac.org/pipes/astm_a106.html
+    retrieved_at: "2026-10-14T10:39:58Z"
+    response_sha256: 15b17fcf4437e8232586c7826e6b6e69540d8e77c6d319bed72c48b2d6b343d4
+    fields: [grade, smys, smts]
+assumptions:
+  - Loads, depth and elastic properties are assumed, based on previous experience.
+  - Zero corrosion allowance and fabrication deduction are assumed.
+  - Pressures are supplied as absolute values at the checked section.
+  - Water depth is context; external pressure is supplied independently.
+  - Both strategies use nominal wall and credit no internal support in collapse.
+  - Grade suitability and availability of the nominal pipe are not established.
