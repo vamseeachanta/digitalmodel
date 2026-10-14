@@ -9,7 +9,9 @@
     "--campaign",
     "docs/domains/orcaflex/library/campaigns/generic-drilling-riser",
     "--output",
-    "results/generic-drilling-riser"
+    "results/generic-drilling-riser",
+    "--criteria",
+    "<CRITERIA_FILE>"
   ],
   "cwd": "<SOLVER_REPO_DIR>",
   "env": {

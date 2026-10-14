@@ -435,7 +435,7 @@ Vessels:
   SuperimposedMotion: None
   VesselType: 8 column semisub
   InitialPosition:
-  - -30.599999999999998
+  - -30.6
   - 0.0
   - 0.0
 Lines:
@@ -1044,7 +1044,7 @@ Shapes:
   SeabedFrictionCoefficient: 0
   TotalContactArea: 0
   InitialPosition:
-  - 0.0
+  - -30.6
   - 0.0
   - 20.0
   Mass: 0.001

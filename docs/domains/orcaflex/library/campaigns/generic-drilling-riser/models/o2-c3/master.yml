@@ -1,6 +1,7 @@
 %YAML 1.1
 # Type: Model
-# vessel offset applied as a static mean position; no prescribed vessel motion; wave-frequency response is outside this sweep
+# vessel offset applied as a static mean position; no prescribed vessel motion; no wave is applied: this sweep covers vessel offset and current only
+# Tensioner ring initial position (m): [-20.4, 0.0, 20]; assumed, same horizontal shift as vessel from offset and current direction; initial elevation retained.
 # Generated from: in-memory spec
 
 ---
