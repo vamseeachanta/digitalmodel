@@ -160,3 +160,11 @@ def test_lazy_wave_sizing_is_not_an_equilibrium_kernel(case):
     sizing = lazy_design(case).size_buoyancy_section()
     assert sizing["total_riser_length_m"] != pytest.approx(reference["length"], abs=0.05)
     assert {"horizontal_force", "vertical_force", "vertical_closure_error"}.isdisjoint(sizing)
+
+
+@pytest.mark.parametrize("angle,elevation", [(0.0, 0.0), (12.0, -1500.0), (12.0, -1600.0)])
+def test_scr_rejects_singular_angle_or_nonpositive_span(angle, elevation):
+    """Reject input that cannot define a hanging catenary above the seabed."""
+    with pytest.raises(ValueError):
+        SCRDesignInput(water_depth=1500.0, hang_off_angle_from_vertical=angle,
+                       hang_off_elevation=elevation).calculate_geometry()
