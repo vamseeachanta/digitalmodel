@@ -28,8 +28,8 @@ figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption
 <body>
 <header><h1>{{ doc.title }}</h1>
 <p>Document {{ doc.number }} | Revision {{ doc.revision }}{% if doc.date %} | {{ doc.date }}{% endif %}</p>
-<div id="document-control"><p>Synthetic example</p>
-<p>Prepared: — | Checked: — | Approved: —</p></div>
+{% if doc.assessment_label or doc.prepared_by or doc.checked_by or doc.approved_by %}<div id="document-control">{% if doc.assessment_label %}<p>{{ doc.assessment_label }}</p>{% endif %}
+{% if doc.prepared_by or doc.checked_by or doc.approved_by %}<p>{% if doc.prepared_by %}Prepared: {{ doc.prepared_by }}{% endif %}{% if doc.checked_by %}{% if doc.prepared_by %} | {% endif %}Checked: {{ doc.checked_by }}{% endif %}{% if doc.approved_by %}{% if doc.prepared_by or doc.checked_by %} | {% endif %}Approved: {{ doc.approved_by }}{% endif %}</p>{% endif %}</div>{% endif %}
 </header>
 <div class="layout">
 <nav aria-label="Contents"><ol>
@@ -65,6 +65,10 @@ figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption
 <section id="{{ section.key }}"><h2>{{ loop.index }}. {{ section.title }}</h2>
 {% if section.subtitle %}<p>{{ section.subtitle }}</p>{% endif %}
 {{ blocks(section, loop.index) }}</section>
+{% if loop.first and doc.revision_history %}<div id="revision-history"><h3>Revision history</h3>
+<table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
+<tbody>{% for row in doc.revision_history %}<tr><td>{{ row.rev }}</td><td>{{ row.date }}</td><td>{{ row.description }}</td></tr>{% endfor %}</tbody>
+<caption>Revision history</caption></table></div>{% endif %}
 {% endfor %}
 {% for section in appendices %}
 <section id="{{ section.key }}"><h2>{{ section.title }}</h2>{{ blocks(section, letters[loop.index0]) }}</section>
