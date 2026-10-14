@@ -1,0 +1,1165 @@
+{
+  "component": {
+    "construction": "MoorPy generic wire",
+    "diameter_mm": 40.0,
+    "readiness": "computed example; not certified",
+    "source_id": "nrel-iea-reference-turbines"
+  },
+  "counts": {
+    "entries_not_reproduced": 60,
+    "entries_with_static_line": 60,
+    "matrix_entries": 120,
+    "qualified_environmental_cases": 0,
+    "unique_static_solves": 5
+  },
+  "criteria_revision": "R1",
+  "matrix": [
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "semi-submersible",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "spar",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "3-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-200",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-1000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-1500",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "4-line catenary",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": "depth-2000",
+      "status": "static line only; environmental response not established",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "taut polyester",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 200
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 1500
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "operating",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    },
+    {
+      "concept": "chain-polyester hybrid",
+      "platform": "ship-shaped floating unit",
+      "sea_state": "survival",
+      "static_solution": null,
+      "status": "not reproduced",
+      "water_depth_m": 2000
+    }
+  ],
+  "module_commit": "f60b9ad2bc6346d919bfa3707083e04bc585bb68",
+  "not_reproduced": [
+    {
+      "quantity": "PASS, MARGIN, FAIL distributions and pass-rate percentages",
+      "reason": "Combined tension, offset and response criteria are not computed; no environmental cases are qualified."
+    },
+    {
+      "quantity": "Restoring stiffness by concept and stiffness sensitivity",
+      "reason": "The force-based single-line solver has no vessel equilibrium or stiffness matrix."
+    },
+    {
+      "quantity": "Surge, heave and pitch periods; response classification",
+      "reason": "No mass, hydrostatic, hydrodynamic or wave-response basis is supplied or solved."
+    },
+    {
+      "quantity": "Environmental peak and damaged-line tensions",
+      "reason": "Prescribed static pretension is an assumed input; environmental demand and damaged-system redistribution are not solved."
+    },
+    {
+      "quantity": "Vessel offset and offset acceptance",
+      "reason": "No vessel equilibrium or numerical loads; line horizontal span cannot substitute for vessel offset."
+    },
+    {
+      "quantity": "Fatigue screening and life",
+      "reason": "No dynamic tension histories, cycle counts or qualified component fatigue basis."
+    },
+    {
+      "quantity": "Taut polyester and chain-polyester hybrid results",
+      "reason": "The selected module treats one homogeneous inextensible catenary; no segmented or taut system is solved."
+    },
+    {
+      "quantity": "Anchor strategy performance or capacity",
+      "reason": "No soil basis or anchor-capacity design is available."
+    },
+    {
+      "quantity": "Runtime and delivery-time claims",
+      "reason": "No performance or service-delivery campaign establishes these claims."
+    },
+    {
+      "quantity": "Standards acceptance verdict and required factors",
+      "reason": "Governing edition, analysis category and independently qualified clause criteria are not established; licensed table values are not reproduced."
+    }
+  ],
+  "python_version": "3.11.15",
+  "revision": "R1",
+  "solutions": [
+    {
+      "anchor_radius_m": 516.9814178711879,
+      "checks": {
+        "positive_horizontal_tension": true,
+        "resultant_matches_prescribed_force": true,
+        "suspended_length_within_total": true
+      },
+      "empirical_mbl_n": 1635200.0,
+      "grounded_length_m": 253.5898384862246,
+      "id": "depth-200",
+      "input": {
+        "target_force_n": 26193.936136706525,
+        "total_length_m": 600.0,
+        "weight_n_m": 65.48484034176631
+      },
+      "native": {
+        "fairlead_tension_n": 26193.936136706525,
+        "horizontal_tension_n": 13096.968068353262,
+        "suspended_horizontal_span_m": 263.39157938496334,
+        "suspended_length_m": 346.4101615137754,
+        "vertical_tension_n": 22684.614119495065
+      },
+      "provided_static_mbl_to_tension": 62.426662089495366,
+      "required_standard_factor": null,
+      "resultant_error_n": 0.0,
+      "standards_disposition": "not established",
+      "water_depth_m": 200
+    },
+    {
+      "anchor_radius_m": 1292.4535446779698,
+      "checks": {
+        "positive_horizontal_tension": true,
+        "resultant_matches_prescribed_force": true,
+        "suspended_length_within_total": true
+      },
+      "empirical_mbl_n": 1635200.0,
+      "grounded_length_m": 633.9745962155615,
+      "id": "depth-500",
+      "input": {
+        "target_force_n": 65484.840341766314,
+        "total_length_m": 1500.0,
+        "weight_n_m": 65.48484034176631
+      },
+      "native": {
+        "fairlead_tension_n": 65484.84034176631,
+        "horizontal_tension_n": 32742.420170883157,
+        "suspended_horizontal_span_m": 658.4789484624083,
+        "suspended_length_m": 866.0254037844385,
+        "vertical_tension_n": 56711.53529873766
+      },
+      "provided_static_mbl_to_tension": 24.97066483579815,
+      "required_standard_factor": null,
+      "resultant_error_n": 7.275957614183426e-12,
+      "standards_disposition": "not established",
+      "water_depth_m": 500
+    },
+    {
+      "anchor_radius_m": 2584.9070893559397,
+      "checks": {
+        "positive_horizontal_tension": true,
+        "resultant_matches_prescribed_force": true,
+        "suspended_length_within_total": true
+      },
+      "empirical_mbl_n": 1635200.0,
+      "grounded_length_m": 1267.949192431123,
+      "id": "depth-1000",
+      "input": {
+        "target_force_n": 130969.68068353263,
+        "total_length_m": 3000.0,
+        "weight_n_m": 65.48484034176631
+      },
+      "native": {
+        "fairlead_tension_n": 130969.68068353261,
+        "horizontal_tension_n": 65484.840341766314,
+        "suspended_horizontal_span_m": 1316.9578969248166,
+        "suspended_length_m": 1732.050807568877,
+        "vertical_tension_n": 113423.07059747532
+      },
+      "provided_static_mbl_to_tension": 12.485332417899075,
+      "required_standard_factor": null,
+      "resultant_error_n": 1.4551915228366852e-11,
+      "standards_disposition": "not established",
+      "water_depth_m": 1000
+    },
+    {
+      "anchor_radius_m": 3877.3606340339093,
+      "checks": {
+        "positive_horizontal_tension": true,
+        "resultant_matches_prescribed_force": true,
+        "suspended_length_within_total": true
+      },
+      "empirical_mbl_n": 1635200.0,
+      "grounded_length_m": 1901.9237886466844,
+      "id": "depth-1500",
+      "input": {
+        "target_force_n": 196454.52102529895,
+        "total_length_m": 4500.0,
+        "weight_n_m": 65.48484034176631
+      },
+      "native": {
+        "fairlead_tension_n": 196454.52102529892,
+        "horizontal_tension_n": 98227.26051264947,
+        "suspended_horizontal_span_m": 1975.4368453872248,
+        "suspended_length_m": 2598.0762113533156,
+        "vertical_tension_n": 170134.60589621298
+      },
+      "provided_static_mbl_to_tension": 8.32355494526605,
+      "required_standard_factor": null,
+      "resultant_error_n": 2.9103830456733704e-11,
+      "standards_disposition": "not established",
+      "water_depth_m": 1500
+    },
+    {
+      "anchor_radius_m": 5169.814178711879,
+      "checks": {
+        "positive_horizontal_tension": true,
+        "resultant_matches_prescribed_force": true,
+        "suspended_length_within_total": true
+      },
+      "empirical_mbl_n": 1635200.0,
+      "grounded_length_m": 2535.898384862246,
+      "id": "depth-2000",
+      "input": {
+        "target_force_n": 261939.36136706526,
+        "total_length_m": 6000.0,
+        "weight_n_m": 65.48484034176631
+      },
+      "native": {
+        "fairlead_tension_n": 261939.36136706523,
+        "horizontal_tension_n": 130969.68068353263,
+        "suspended_horizontal_span_m": 2633.9157938496332,
+        "suspended_length_m": 3464.101615137754,
+        "vertical_tension_n": 226846.14119495064
+      },
+      "provided_static_mbl_to_tension": 6.2426662089495375,
+      "required_standard_factor": null,
+      "resultant_error_n": 2.9103830456733704e-11,
+      "standards_disposition": "not established",
+      "water_depth_m": 2000
+    }
+  ]
+}
