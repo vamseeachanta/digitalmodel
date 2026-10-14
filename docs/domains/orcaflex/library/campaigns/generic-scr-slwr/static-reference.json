@@ -1,0 +1,99 @@
+{
+  "schema_version": "generic-static-reference-v1",
+  "method": "OO low-point geometry; general elastic solver on each reflected arc",
+  "limitations": "Zero mean host offset, quiescent water, inextensible OO geometry and elastic general catenary segment checks. Pipe centre at contact radius above seabed. No pressure, bending/contact soil response, wave dynamics, VIV or code acceptance.",
+  "geometry_comparison": "General arc endpoints and unstretched lengths are prescribed from OO geometry; their equality is not an independent global geometry check. Elastic arc horizontal tensions need not be continuous.",
+  "formulas": [
+    "h = water_depth - hangoff_depth - coated_OD/2",
+    "EA = young_modulus*pi/4*(steel_OD^2-steel_ID^2)",
+    "w_pipe = (steel_mass+coating_mass+contents_mass-rho_water*pi/4*coated_OD^2)*g",
+    "module_volume_per_m = pi/4*(module_OD^2-coated_OD^2)*module_length/module_pitch",
+    "w_buoyed = w_pipe - (rho_water-rho_module)*module_volume_per_m*g"
+  ],
+  "sha256": {
+    "basis.yml": "4c274ce4994d8148a10f2a284a6153282ab3ea3ffde8996e7c04d1271c0a3752",
+    "scr/modular/includes/01_general.yml": "a11655e4340e57ef6a026b5045324b95f9183c532282e2f555a60c9cb4da1f06",
+    "scr/modular/includes/03_environment.yml": "2faf45a5f298e96425bf0841e0998bde9c55d115ee533b009d09dd24655dfcec",
+    "scr/modular/includes/05_riser_line_types.yml": "e0c9e80e6aa900ffc6f4a8fa59af93c3049f39c9bef9153d071fee204e53683f",
+    "scr/modular/includes/06_riser_vessels.yml": "ee550ef907e272b2d5f2e0b41252e0e8fdab8877f0d74d2251d1c0cf5acff689",
+    "scr/modular/includes/07_riser_lines.yml": "d6d3983dc28796f90a1555eb5b907095dbe7bd395ea70c97fe918510fae0ecfd",
+    "scr/modular/includes/10_groups.yml": "6ded387e6f901a8ffbd85717583a07f0ab4299554f1a5a5c7193d17224c2d938",
+    "scr/modular/inputs/parameters.yml": "5d2b5ca051d9f72392f702cd1d84266161ceb2f5f2cf4ae16e6006a252bf0a6c",
+    "scr/modular/master.yml": "96a78cb42cfd4a70977a2c446db5532112f0f6e4193fe355017ac161af986e23",
+    "scr/spec.yml": "d9369a0af5bfc3d66d9fcdcac00233961cb2800ee67fb4e7a5cc94a1f291d3fe",
+    "slwr/modular/includes/01_general.yml": "a11655e4340e57ef6a026b5045324b95f9183c532282e2f555a60c9cb4da1f06",
+    "slwr/modular/includes/03_environment.yml": "2faf45a5f298e96425bf0841e0998bde9c55d115ee533b009d09dd24655dfcec",
+    "slwr/modular/includes/05_riser_line_types.yml": "9e6d99e6309f798e212db6423f4c93c0634d29e4cbaf11bb9bb5da85b9514a32",
+    "slwr/modular/includes/06_riser_vessels.yml": "ee550ef907e272b2d5f2e0b41252e0e8fdab8877f0d74d2251d1c0cf5acff689",
+    "slwr/modular/includes/07_riser_lines.yml": "49cccbf47c36d710fedc1e76a0d16a22149182944d31a998b45fe0750271d9fc",
+    "slwr/modular/includes/10_groups.yml": "02bbd844b9af821069ef6e159215ca51061b99d4139eb0f6f714489c9f384184",
+    "slwr/modular/inputs/parameters.yml": "5d2b5ca051d9f72392f702cd1d84266161ceb2f5f2cf4ae16e6006a252bf0a6c",
+    "slwr/modular/master.yml": "96a78cb42cfd4a70977a2c446db5532112f0f6e4193fe355017ac161af986e23",
+    "slwr/spec.yml": "fc85d28aa5dafc3e44d764090fb3b92fdd1bed916462d818f70d7a35f4875853"
+  },
+  "analytical_code_sha256": "531c1c4bd490079a6d6e4e9408ac1b400fbbae352bfaa15bab2aa4173c4e095e",
+  "models": {
+    "scr": {
+      "oo": {
+        "top_tension_kN": 2236.4575977350914,
+        "hangoff_angle_deg": 12.0,
+        "touchdown_horizontal_distance_m": 880.9743655506445,
+        "suspended_length_m": 1839.7787421442401
+      },
+      "general": {
+        "top_tension_kN": 2236.851467649239,
+        "hangoff_angle_deg": 12.008160778449026,
+        "touchdown_horizontal_distance_m": 880.9743655506445,
+        "suspended_length_m": 1839.7787421442401,
+        "converged": true,
+        "elongation_m": 0.20926308699624033
+      },
+      "top_tension_difference_pct": 0.017611329387445807,
+      "kernel_comparison": "Top tension difference is within 2 percent; native calibration remains required"
+    },
+    "slwr": {
+      "oo": {
+        "top_tension_kN": 1988.8080962592328,
+        "hangoff_angle_deg": 8.0,
+        "touchdown_horizontal_distance_m": 2074.5455410742097,
+        "suspended_length_m": 3750.9167693590875
+      },
+      "general": {
+        "top_tension_kN": 1988.9529815504172,
+        "hangoff_angle_deg": 8.003624637684743,
+        "touchdown_horizontal_distance_m": 2074.54554107421,
+        "suspended_length_m": 3750.916769359088,
+        "converged": true,
+        "segment_horizontal_tensions_kN": [
+          276.93335390180806,
+          276.96167805411613,
+          276.9616780541163,
+          276.9566623207092,
+          276.9566623207095
+        ],
+        "segment_elongations_m": [
+          0.1121092668986313,
+          0.03380626401738407,
+          0.0352290323106548,
+          0.03712522976656229,
+          0.0356258811802465
+        ]
+      },
+      "sections_m": [
+        2155.737643585302,
+        1068.8786777720882,
+        526.3004480016975
+      ],
+      "vertical_closure_error_m": 0.0,
+      "buoyancy": {
+        "volume_per_m_m2": 0.4132200874340861,
+        "effective_od_m": 0.8067265744972084,
+        "net_weight_N_per_m": -1141.0270258121398
+      },
+      "top_tension_difference_pct": 0.0072850312434313835,
+      "kernel_comparison": "Top tension difference is within 2 percent; native calibration remains required"
+    },
+    "operating_weight_N_per_m": 1189.048217188261,
+    "flooded_weight_N_per_m": 1274.687298632941
+  }
+}
