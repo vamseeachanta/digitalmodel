@@ -1,0 +1,48 @@
+{
+  "revision": "1",
+  "seed": 42,
+  "samples": 100000,
+  "processes": 1,
+  "openturns_version": "1.26",
+  "tolerances": {
+    "published_pf_absolute": 1e-06,
+    "published_beta_absolute": 1e-06,
+    "fatigue_pf_absolute": 1e-06,
+    "fatigue_beta_absolute": 1e-06,
+    "sampling_pf_absolute": 0.01,
+    "sobol_absolute": 0.03
+  },
+  "published": {
+    "pf": 0.156426,
+    "beta": 1.009255,
+    "source": "https://raw.githubusercontent.com/openturns/openturns/v1.26/python/test/t_FORM_std.expout",
+    "locator": "event probability and generalized reliability index lines",
+    "model_source": "https://raw.githubusercontent.com/openturns/openturns/v1.26/python/test/t_FORM_std.py"
+  },
+  "fatigue": {
+    "A": 1000000000000.0,
+    "m": 3.0,
+    "stress_range": 100.0,
+    "cov_stress": 0.1,
+    "cov_sn": 0.1,
+    "design_lives": [
+      500000,
+      1000000,
+      2000000
+    ],
+    "basis": "tests/structural/fatigue/test_fatigue_reliability.py: simple_sn; structural/fatigue/fatigue_reliability.py: log-space equations",
+    "units": {
+      "stress_range": "MPa",
+      "design_lives": "cycles",
+      "pf": "1",
+      "beta": "1"
+    }
+  },
+  "revision_history": [
+    {
+      "revision": "1",
+      "date": "2026-10-14",
+      "change": "Published FORM and repository fatigue references were compared to support method selection."
+    }
+  ]
+}
