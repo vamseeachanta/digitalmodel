@@ -321,17 +321,23 @@ class EnvironmentSpec(BaseModel):
     @field_validator("water_density")
     @classmethod
     def validate_water_density(cls, v: float) -> float:
-        """Reject values outside the physical range for water (500–1100 kg/m³).
+        """Screen 958.65 <= density <= 1214 kg/m^3, inclusive.
 
-        Fresh water ≈ 1000 kg/m³, seawater ≈ 1025 kg/m³, brines up to ~1100 kg/m³.
-        Values below 500 are likely unit errors (e.g. t/m³ stored as kg/m³).
-        Values above 1100 are outside any engineering water context.
+        This input envelope spans hot fresh water to observed dense brine; it
+        is not an equation of state or a bound on every possible salt solution.
+        USGS Water Science School, "Water Density", temperature table: fresh
+        water at 100 C is 0.95865 g/cm^3 (958.65 kg/m^3):
+        https://www.usgs.gov/water-science-school/science/water-density
+        USGS, density and salinity data release, DOI 10.5066/P96MNH8J,
+        description: supported upper density 1.214 g/cm^3 (1214 kg/m^3):
+        https://www.usgs.gov/data/density-and-salinity-data-validate-equation-state-hypersaline-water-great-salt-lake-utah-2021
+        Both accessed 2026-10-13. Conditions outside this screening envelope
+        require a separately qualified fluid model, not silent acceptance.
         """
-        if not (500.0 <= v <= 1100.0):
+        if not (958.65 <= v <= 1214.0):
             raise ValueError(
-                f"water_density={v} kg/m³ is outside the physical range [500, 1100]. "
-                f"Did you supply t/m³ instead of kg/m³? "
-                f"Fresh water = 1000, seawater ≈ 1025."
+                f"water_density={v} kg/m³ is outside the screening range "
+                "[958.65, 1214] kg/m^3; supply kg/m^3, not t/m^3."
             )
         return v
 
