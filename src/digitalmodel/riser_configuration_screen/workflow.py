@@ -216,10 +216,11 @@ def router(cfg: dict) -> dict:
     if json.loads(target.read_text(encoding="utf-8")) != result:
         raise ValueError("saved screening output differs from computed output")
     with (folder / "ranked_candidates.csv").open("w", newline="", encoding="utf-8") as stream:
-        fields = ["rank", "tier", "fatigue_statement", "configuration", "feasible", "curvature_range_per_m", "constraints", "offset_results", "curvature_ranges"]
+        fields = ["rank", "tier", "provisional", "data_basis", "criteria_revision", "input_sha256", "limitations", "fatigue_statement", "configuration", "feasible", "curvature_range_per_m", "constraints", "offset_results", "curvature_ranges"]
         writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
         for row in result["ranked_candidates"]:
-            writer.writerow({key: json.dumps(row[key], allow_nan=False) if key in ("configuration", "constraints", "offset_results", "curvature_ranges") else row[key] for key in fields})
+            record = {key: row[key] if key in row else result[key] for key in fields}
+            writer.writerow({key: json.dumps(value, allow_nan=False) if isinstance(value, (dict, list)) else value for key, value in record.items()})
     cfg["riser_configuration_screen_result"] = result
     return cfg

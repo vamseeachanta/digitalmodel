@@ -137,3 +137,17 @@ def test_constraint_margin_units_are_explicit():
     assert checks["top_tension_n"].get("unit") == "N"
     assert checks["bend_radius_m"].get("unit") == "m"
     assert checks["static_von_mises_utilisation"].get("unit") == "1"
+
+
+def test_csv_preserves_provisional_synthetic_basis(tmp_path):
+    import csv
+    data = settings()
+    data["data_basis"] = "synthetic assumptions for software qualification"
+    data["criteria_revision"] = "synthetic-screen-1"
+    workflow().router({"riser_configuration_screen": data,
+                       "Analysis": {"result_folder": str(tmp_path)}})
+    with (tmp_path / "ranked_candidates.csv").open() as stream:
+        row = next(csv.DictReader(stream))
+    assert row.get("provisional") == "True"
+    assert row.get("data_basis") == data["data_basis"]
+    assert row.get("criteria_revision") == data["criteria_revision"]
