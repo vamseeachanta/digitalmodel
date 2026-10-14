@@ -329,3 +329,72 @@ def test_model_discovery_uses_program_header(tmp_path, monkeypatch, header, expe
     monkeypatch.setitem(globals(), "ROOT", tmp_path)
     monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
     assert bool(list(model_files())) == expected
+
+
+def environment_mappings(text):
+    """Read native Environment blocks without parsing unrelated model objects."""
+    for start in re.finditer(r"^Environment:", text, re.MULTILINE):
+        end = re.search(r"^[^\s#]", text[start.end():], re.MULTILINE)
+        stop = start.end() + end.start() if end else len(text)
+        pending = [yaml.compose(text[start.start():stop])]
+        while pending:
+            node = pending.pop()
+            if isinstance(node, yaml.MappingNode):
+                yield node
+                pending.extend(value for _, value in node.value)
+            elif isinstance(node, yaml.SequenceNode):
+                pending.extend(node.value)
+
+
+def wave_order_findings(text):
+    """Find selector inversions within each native wave-train mapping.
+
+    The builder defines deterministic and spectral wave parameters and states
+    that WaveGamma depends on WaveJONSWAPParameters. Native exports place
+    WaveType before the other wave properties of each train.
+    """
+    findings = []
+    for node in environment_mappings(text):
+        keys = [key.value for key, _ in node.value]
+        if "WaveType" not in keys:
+            continue
+        for key in keys[:keys.index("WaveType")]:
+            if key.startswith("Wave") and key not in {
+                "WaveDirection", "WaveOrigin", "WaveTimeOrigin",
+            }:
+                findings.append(("WaveType", key))
+        if "WaveJONSWAPParameters" in keys and "WaveGamma" in keys:
+            if keys.index("WaveGamma") < keys.index("WaveJONSWAPParameters"):
+                findings.append(("WaveJONSWAPParameters", "WaveGamma"))
+    return findings
+
+
+def test_committed_models_have_selector_first_wave_keys():
+    """Every tracked executable model and include shall apply wave modes first."""
+    scanned = []
+    findings = []
+    for path, text in model_files():
+        scanned.append(path)
+        findings.extend(
+            f"{path.relative_to(ROOT)}: {dependent} precedes {selector}"
+            for selector, dependent in wave_order_findings(text)
+        )
+    assert scanned, "No executable model text was discovered"
+    assert not findings, "\n".join(findings)
+
+
+@pytest.mark.parametrize("train,expected", [
+    ("WaveTp: 12.9\n    WaveType: JONSWAP", [("WaveType", "WaveTp")]),
+    ("WaveHs: 11.2\n    WaveType: JONSWAP", [("WaveType", "WaveHs")]),
+    ("WaveGamma: 3.3\n    WaveType: JONSWAP", [("WaveType", "WaveGamma")]),
+    ("WaveType: JONSWAP\n    WaveTp: 12.9", []),
+    ("WaveType: JONSWAP\n    WaveGamma: 3.3\n    WaveJONSWAPParameters: Fully specified",
+     [("WaveJONSWAPParameters", "WaveGamma")]),
+])
+def test_wave_order_detection(train, expected):
+    """Check each train independently of preceding trains and other sections."""
+    text = (
+        "Environment:\n  WaveTrains:\n  - WaveType: Airy\n    WavePeriod: 8\n"
+        f"  - {train}\nLines:\n  WaveTp: 1\n"
+    )
+    assert wave_order_findings(text) == expected

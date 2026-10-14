@@ -13,7 +13,7 @@
   "sha256": {
     "basis.yml": "c4f4da7e36eba4e14cf293340ba8feacfea7526ba495df80bc27c82dd5027dea",
     "scr/modular/includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
-    "scr/modular/includes/03_environment.yml": "7ca071b41ae0442c607d3931d6d452a569f49a4c43d48098f80fa0d2c2cd85ac",
+    "scr/modular/includes/03_environment.yml": "4d3f0a39c56f99e0e04cbe99b2fe77e46fd8a91e53cd850830b0a05c80dad1e7",
     "scr/modular/includes/05_riser_line_types.yml": "18b3f3db0e6bff5e164aec0c3e4e1d23a97a8116791a14b17978042a87576d01",
     "scr/modular/includes/06_riser_vessels.yml": "ee550ef907e272b2d5f2e0b41252e0e8fdab8877f0d74d2251d1c0cf5acff689",
     "scr/modular/includes/07_riser_lines.yml": "029bfb7300b6823ce5fb20aff6aab82f2d8a3e54ae8324784133c8188ec44f16",
@@ -22,7 +22,7 @@
     "scr/modular/master.yml": "96a78cb42cfd4a70977a2c446db5532112f0f6e4193fe355017ac161af986e23",
     "scr/spec.yml": "f269321ced75e3562df2def06083525c73668beeece7fb05c2c226eff2b56902",
     "slwr/modular/includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
-    "slwr/modular/includes/03_environment.yml": "7ca071b41ae0442c607d3931d6d452a569f49a4c43d48098f80fa0d2c2cd85ac",
+    "slwr/modular/includes/03_environment.yml": "4d3f0a39c56f99e0e04cbe99b2fe77e46fd8a91e53cd850830b0a05c80dad1e7",
     "slwr/modular/includes/05_riser_line_types.yml": "037f1a318a7b02f26a3567042da4f7d189cd6143c77a123c14ded135811fc68f",
     "slwr/modular/includes/06_riser_vessels.yml": "ee550ef907e272b2d5f2e0b41252e0e8fdab8877f0d74d2251d1c0cf5acff689",
     "slwr/modular/includes/07_riser_lines.yml": "dbdc60232377f768f92075e5ffd72acd54a4ad3c5d7111c5a36847ecb5604b2e",
