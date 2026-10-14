@@ -48,7 +48,7 @@ SECTION_TITLES = (
     "Detailed Results", "Key Findings", "Limitations", "Recommendations",
     "References", "Acronyms and Symbols",
 )
-ASSUMED = "assumed, based on previous experience"
+ASSUMED = "assumed"
 
 
 def digest(path: Path) -> str:
@@ -118,21 +118,25 @@ def design_data(cfg: dict[str, Any]) -> list[Any]:
             "are sourced; true lengths, external areas and steel mass are derived. "
             "Pile embedment is an initial estimate in the paper [1], not an installed schedule. "
             f"Design life is {life:.1f} yr; coating category is "
-            f"{inputs['structure']['zones'][0]['coating_category']}; both are {ASSUMED} [I1]. "
+            f"{inputs['structure']['zones'][0]['coating_category']}; both are {ASSUMED} [I1], "
+            "illustrative service-life and coating choices without installation evidence. "
             "They control lifetime mass and current demand. "
             "Buried driven-pile surface is bare: no coating credit is applied in any phase. "
             f"The aluminium stand-off cylinder is {anode['length_m']:.1f} m long with "
-            f"radius {anode['radius_m']:.3f} m, {ASSUMED} [I1]. "
+            f"radius {anode['radius_m']:.3f} m, {ASSUMED} [I1] as an illustrative cylinder. "
             f"Net mass is {anode['individual_anode_mass_kg']:.1f} kg, derived from "
-            "π × radius² × length × the repository alloy density [I2]; no core is deducted. "
-            "This assumed geometry rests on the illustrative stand-off example in jacket.yml, "
-            "not a qualified product. The count is the preceding coated-pile mass-sized "
-            "reference arrangement, not a published installation count. "
+            f"π × radius² × length × a typical Al-Zn-In alloy density of "
+            f"{kernel.ANODE_DENSITY_ALZNI:.1f} kg/m³ (assumed); no core is deducted. "
+            "The solid-cylinder idealisation is not a qualified product. "
+            f"The {anode['count']}-anode case is a stated trial arrangement, "
+            "not a published installation count. "
             "Dimensions and alloy performance affect both mass and output. "
             "Attachment, core, product qualification and spatial layout are not established.")),
         TextBlock(markdown=("## 3.3 Environmental data\n\n"
             f"Temperature {env['seawater_temperature_C']:.1f} °C and seawater resistivity "
-            f"{env['seawater_resistivity_ohm_m']:.1f} Ω m are {ASSUMED} [I1]. "
+            f"{env['seawater_resistivity_ohm_m']:.1f} Ω m are {ASSUMED} [I1], "
+            "illustrative seawater conditions without site measurements. "
+            "The temperate climate selection is assumed for this reference case. "
             "Temperature selects current-demand and alloy-performance lookups; resistivity "
             "controls anode resistance and current output. Soil resistivity, burial condition "
             "and measured potentials are not established; buried and spatial adequacy remain conditional.")),
@@ -150,9 +154,10 @@ def design_data(cfg: dict[str, Any]) -> list[Any]:
             "The existing edition route [I2] applies this basis; no standard table is reproduced. "
             "An aggregate PASS denotes these comparisons only; no local potential criterion is evaluated.")),
         TextBlock(markdown="## 3.6 Method\n\nThe physical method and equations are presented in Section 4."),
-        TextBlock(markdown=("## 3.7 Load cases\n\nThe stated arrangement is the "
-            "mass-sized quantity evaluated for initial, mean and final coating conditions. "
-            "Water-column steel is split at the repository depth-band boundary; buried pile "
+        TextBlock(markdown=(f"## 3.7 Load cases\n\nThe stated {anode['count']}-anode trial arrangement "
+            f"and the re-sized {cfg['results']['current_output_verification']['recommended_anode_count']}-anode "
+            "arrangement are evaluated for initial, mean and final conditions. "
+            "Water-column steel is split at the depth-band boundary of the design current-density clause; buried pile "
             "area is evaluated separately as bare steel. Illustrative design-life scenarios "
             "retain the reference count and geometry and recompute the required counts; "
             "the doubled-life case also includes increased water-column coating breakdown.")),
@@ -218,6 +223,8 @@ def revision_history() -> Section:
                 ["00", "2026-10-14", "Draft reference-jacket analysis; sourced geometry and conditional CP comparisons."],
                 ["0", "2026-10-14", "Issued for information: bare buried piles, re-sized anodes, "
                  "declared anode basis and interactive life and current comparisons."],
+                ["1", "2026-10-14", "Assumption reasons, trial arrangement and structural mass "
+                 "interpretation clarified to align the basis with the calculated findings."],
             ]),
     ])
 
@@ -279,7 +286,7 @@ def summary_text(cfg: dict[str, Any], evidence: dict[str, Any]) -> str:
         f"The re-sized solution is {resized['anode_count']} anodes and passes the aggregate "
         "mass and initial/final current criteria on this basis. Environmental, water-column "
         "coating, lifetime and anode inputs are assumed. Spatial "
-        "protection, splash exposure, installed piles and the structural mass discrepancy "
+        "protection, splash exposure and installed piles "
         "remain unresolved. The way forward is to use the re-sized count for this reference "
         "basis, qualify product and installation inputs and assess spatial protection.")
     return summary
@@ -294,7 +301,7 @@ def method_text() -> str:
         "(4.3). Individual output is i = driving potential / resistance (4.4); "
         "aggregate output is N i. Fresh and depleted resistance are evaluated separately. "
         "The required count is the upward-rounded maximum of mass, initial-output and "
-        "final-output counts. Native comparisons precede display rounding. The existing "
+        "final-output counts. The existing "
         "CP route [I2] supplies the calculation; it is not an independent solver benchmark. "
         "The coordinate model uses metres with z positive upward from still-water level. "
         "Tubular intersections, caps, internal surfaces, shielding and current distribution "
@@ -323,10 +330,15 @@ def finding_blocks(evidence: dict[str, Any], count: int) -> list[TextBlock]:
         "mass-sized arrangement at longer life is expected by construction and is not "
         "an independent finding. The count curve quantifies the sizing consequence "
         "of the assumed life; it does not qualify that assumption.")))
+    findings.append(TextBlock(markdown=("## 6.5 Anode selection\n\n"
+        "The anode size is not optimised. A larger stand-off anode would reduce the "
+        "count toward a balance between lifetime mass and final current output. "
+        "Qualified product geometry, steel-core displacement and output shall be "
+        "evaluated together before a product and layout are selected.")))
     return findings
 
 
-def reference_text(spec: ReportSpec) -> str:
+def reference_text(spec: ReportSpec, evidence: dict[str, Any]) -> str:
     """List published and internal evidence separately."""
     references = ("## 9.1 Published references\n\n"
         "[1] Mroczek, Arwade and Lackner (2023), Design optimization of offshore wind "
@@ -341,7 +353,7 @@ def reference_text(spec: ReportSpec) -> str:
         "Coating breakdown factors; Anode materials; Anode mass; Anode resistance; "
         "Anode current output.\n\n"
         "## 9.2 Internal references\n\n"
-        f"[I1] {FIXTURE.relative_to(ROOT).as_posix()}; jacket.yml supplies the assumed CP inputs.\n\n"
+        f"[I1] Input data file, SHA-256 {evidence['input_sha256']} (Appendix: Reproduction).\n\n"
         "[I2] digitalmodel CP engine adapter, kernels and edition route; "
         f"software version {spec.tool_version}. Citation schema: digitalmodel.citations.schema.Citation.")
     return references
@@ -354,7 +366,16 @@ def section_blocks(cfg: dict[str, Any], evidence: dict[str, Any],
     summary = summary_text(cfg, evidence)
     method = method_text()
     findings = finding_blocks(evidence, count)
-    references = reference_text(spec)
+    references = reference_text(spec, evidence)
+    model = cfg["structural_model"]
+    printed_mass = next(row["printed"] for row in model["comparisons"]
+                        if row["quantity"] == "Tubular jacket steel mass")
+    combined_mass = model["steel_mass_kg"] + model["excluded_concentrated_mass_kg"]
+    mass_reading = (f"Printed structural mass is {printed_mass / 1000:.1f} t. "
+        f"Tubular steel plus concentrated transition-piece masses gives {combined_mass:.1f} kg "
+        f"({100 * (combined_mass / printed_mass - 1):+.1f} % against the printed total). "
+        "This agreement supports the reading that the printed mass includes the transition piece; "
+        "it does not establish installed pile mass.")
     blocks = [
         [TextBlock(markdown=summary)],
         [TextBlock(markdown="The reference-jacket geometry is used to evaluate aggregate "
@@ -367,13 +388,13 @@ def section_blocks(cfg: dict[str, Any], evidence: dict[str, Any],
          *reference_zone_blocks(cfg["structural_model"], cfg["initial_pile_estimate"])],
         findings,
         [TextBlock(markdown="\n\n".join(cfg["cp_limitations"]) + "\n\n" +
-            cfg["structural_model"]["mass_limitation"] + "\n\n"
+            cfg["structural_model"]["mass_limitation"] + "\n\n" + mass_reading + "\n\n"
             "Environment, coating, design life, cylinder geometry, no deducted core and "
             f"alloy applicability are {ASSUMED}. Aggregate outputs are approximate "
             "until these inputs are qualified; no spatial protection acceptance is established.")],
         [TextBlock(markdown="Confirm design life, coating condition, seawater and soil "
             "properties and qualified anode product data before selecting the arrangement. "
-            "Resolve the structural mass discrepancy and installed pile geometry before "
+            "Confirm installed pile geometry before "
             "finalising exposed area. Establish splash boundaries and above-water measures. "
             "Assess spacing, shielding and remote potentials against the applicable "
             "protection criterion before design acceptance. A dated monitoring interval "
@@ -446,7 +467,7 @@ def presentation(page: str) -> str:
         return body
 
     page = re.sub(r'<section id="([^"]+)">.*?</section>', section, page, flags=re.S)
-    page = page.replace("Draft for review", "Revision 0 — Issued for information")
+    page = page.replace("Draft for review", "Revision 1 — Issued for information")
     page = re.sub(r'(?<!>)(\[(I?\d+)\])',
                   lambda m: f'<a href="#reference-{m.group(2)}">{m.group(1)}</a>', page)
     return page

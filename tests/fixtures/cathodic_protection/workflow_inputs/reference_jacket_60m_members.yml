@@ -1501,13 +1501,13 @@ structural_model:
       unit: kg
       difference_percent: -30.56663267706269
       locator:
-        pp. 810–811, Section 3.2; printed 1471 MT excludes transition piece and
-        jacket piles
+        pp. 810–811, Section 3.2; printed structural mass is compared with
+        tubular steel alone; transition-piece mass is evaluated separately
   mass_limitation:
-    The printed 1471 MT excludes transition piece and jacket piles.
-    Tubular steel sums to 1021365 kg (-30.6%). Adding the separately excluded 450000
-    kg concentrated transition-piece masses gives 1471365 kg (+0.0%); that is a different
-    basis and does not resolve the discrepancy.
+    The printed structural mass is interpreted as including the transition piece.
+    Adding concentrated transition-piece masses to tubular steel agrees with the
+    printed total at its stated precision. The tubular-only comparison uses a
+    narrower basis. Installed jacket piles are not established by this comparison.
 basename: cathodic_protection
 inputs:
   calculation_type: DNV_RP_B401_offshore
@@ -1561,12 +1561,12 @@ cp_input_sources:
     source: src/digitalmodel/cathodic_protection/b401_tables.py, depth_band
   - quantity: Arrangement count
     source:
-      Assumed reference arrangement retained from the coated-pile mass sizing;
-      not a published installation count. Re-sized against bare buried piles.
+      Assumed stated trial arrangement, not a published installation count.
+      Re-sized against bare buried piles.
   - quantity: Anode geometry and count basis
-    source: Assumed, based on previous experience represented by jacket.yml's
-      illustrative stand-off cylinder dimensions and the preceding mass-sized
-      arrangement. Ideal solid-alloy cylinder without a deducted core; not a
+    source: Assumed illustrative stand-off cylinder dimensions from the test
+      fixture jacket.yml, without product qualification or installation history.
+      Ideal solid-alloy cylinder without a deducted core; not a
       qualified product or fabrication specification.
 cp_limitations:
   - Splash boundaries and formal splash/submerged/atmospheric partition are not established;

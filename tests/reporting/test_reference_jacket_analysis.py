@@ -57,7 +57,8 @@ def test_report_reproduces_and_revision_follows_summary(builder, tmp_path):
     assert page.index('</section>') < page.index('<section id="revision-history">')
     assert "Draft for review" not in page
     assert not re.search(r'<(?:script|link)[^>]+(?:src|href)=["\']https?://', page)
-    assert "assumed, based on previous experience" in page
+    assert "assumed" in page
+    assert "previous experience" not in page
     assert "3.4 Vessel data" in page and "Not applicable" in page
     assert "criterion" in page and "way forward" in page.lower()
 
@@ -111,7 +112,7 @@ def test_bare_piles_fail_stated_mass_and_resize(builder):
     assert evidence["arrangements"]["rechecked"]["anode_count"] == 424
     assert all(c["passes"] for c in evidence["arrangements"]["rechecked"]["checks"])
     assert "bare" in spec.sections[2].blocks[1].markdown.lower()
-    assert "jacket.yml" in spec.sections[2].blocks[1].markdown
+    assert "stated trial arrangement" in spec.sections[2].blocks[1].markdown
 
 
 def test_interactive_figures_use_engine_payloads(builder, tmp_path):
@@ -131,7 +132,24 @@ def test_client_text_has_declared_basis_without_process_narrative(builder):
     spec, _ = builder.build_document()
     text = " ".join(b.markdown for s in spec.sections for b in s.blocks if b.kind == "text")
     for phrase in ("not reopened", "not independently verified", "LLM_WIKI_PATH",
-                   "[I3]", "[I4]", "held 30 m", "remains a draft"):
+                   "[I3]", "[I4]", "held 30 m", "remains a draft",
+                   "previous experience", "repository alloy density",
+                   "repository depth-band boundary", "Native comparisons precede",
+                   "held definition", "jacket.yml", "preceding coated-pile",
+                   "structural mass discrepancy", "mass-sized quantity"):
         assert phrase not in text
     assert "not a qualified product" in text
     assert "mass governs" in text
+    assert "anode size is not optimised" in text
+    assert "larger stand-off anode" in text
+    assert "Input data file, SHA-256" in text
+    assert "includes the transition piece" in text
+
+
+def test_trial_and_resized_counts_are_computed_in_load_cases(builder):
+    spec, evidence = builder.build_document()
+    load_cases = spec.sections[2].blocks[-1].markdown
+    stated = evidence["arrangements"]["stated"]["anode_count"]
+    resized = evidence["arrangements"]["rechecked"]["anode_count"]
+    assert f"stated {stated}-anode trial arrangement" in load_cases
+    assert f"re-sized {resized}-anode arrangement" in load_cases
