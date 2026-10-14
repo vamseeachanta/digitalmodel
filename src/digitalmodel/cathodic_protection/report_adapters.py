@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Cathodic-protection consumers of the standard report engine (#2212 part 2).
 
 ABOUTME: Two ``@report_adapter`` registrations turn engine-adapter results
@@ -35,6 +38,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from dataclasses import asdict
 from pathlib import Path
@@ -46,6 +50,8 @@ from digitalmodel.cathodic_protection.anode_depletion import DepletionProfile
 from digitalmodel.cathodic_protection.b401_tables import (
     B401_WIKI_PATH,
     B401_WIKI_PATH_2017,
+    B401_WIKI_PATH_2021,
+    edition_source,
     table_label,
 )
 from digitalmodel.cathodic_protection.cp_reporting import (
@@ -71,6 +77,22 @@ from digitalmodel.cathodic_protection.engine_adapter import (
 from digitalmodel.cathodic_protection.f103_tables import (
     F103_WIKI_PATH,
     F103_WIKI_PATH_2019,
+)
+from digitalmodel.cathodic_protection.report_elevation import (
+    design_blocks,
+    geometry_caveats,
+    monitoring_conclusion,
+    percentage_text,
+)
+from digitalmodel.cathodic_protection.report_recommendations import (
+    arrangement_options,
+    conclusions_block,
+    failed_keys,
+    recommendation_block,
+    recommendation_caveats,
+)
+from digitalmodel.cathodic_protection.report_verification import (
+    aggregate_table, measured_options, published_outputs, published_recommendations, published_status, verification_summary,
 )
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting.adapters import report_adapter
@@ -114,6 +136,7 @@ _WIKI_BY_CODE: dict[str, str] = {
 }
 _WIKI_BY_REVISION: dict[tuple[str, str], str] = {
     ("dnv-rp-b401", "2017-06"): B401_WIKI_PATH_2017,
+    ("dnv-rp-b401", "2021-05"): B401_WIKI_PATH_2021,
     ("dnv-rp-f103", "2019-09"): F103_WIKI_PATH_2019,
 }
 _PUBLISHER_BY_CODE: dict[str, str] = {
@@ -226,6 +249,8 @@ def _citations_from_labels(labels: Sequence[Any], note: str) -> list[Citation]:
             if parsed is None or parsed[0] not in _WIKI_BY_CODE:
                 continue
             code, revision, section = parsed
+            if code == "dnv-rp-b401" and revision == "2021":
+                revision = edition_source(revision).revision
             candidate = Citation(
                 code_id=code,
                 publisher=_PUBLISHER_BY_CODE[code],
@@ -546,6 +571,10 @@ def _b401_sections(
                 d.get("I_final_A", ""),
             ]
         )
+    connected = results.get("connected_current_allowance_A")
+    if connected is not None:
+        demand_rows.append(["Connected allowances", "", *([""] if has_area_basis else []),
+                            *([""] * 6), connected, connected, connected])
     demand_rows.append(
         [
             "Total",
@@ -580,6 +609,8 @@ def _b401_sections(
             )
             for t in t_years
         ]
+    if connected is not None:
+        series["Connected allowances"] = [float(connected) for _ in t_years]
     current_demand = Section(
         key="current-demand",
         title="Current demand",
@@ -1529,6 +1560,289 @@ _SECTION_BUILDERS = {
 }
 
 
+def _published_checkpoint_section(
+    inputs: Mapping[str, Any], results: Mapping[str, Any]
+) -> Section | None:
+    """Compare published checkpoints using one declared calculation basis."""
+    evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
+    if not evidence:
+        return None
+    demand = _mapping(results.get("current_demand_A"))
+    verification = _mapping(results.get("current_output_verification"))
+    quantities = {
+        "initial_demand": demand["total_initial_A"],
+        "mean_demand": demand["total_mean_A"],
+        "final_demand": demand["total_final_A"],
+        "initial_output": verification["anode_current_output_initial_A"],
+        "final_output": verification["anode_current_output_final_A"],
+        "count": verification["recommended_anode_count"],
+    }
+    rows: list[Row] = []
+    for target in evidence["targets"]:
+        value = float(target["printed"])
+        if value <= 0:
+            raise ValueError("published comparison requires positive checkpoints")
+        calculated = quantities[target["quantity"]]
+        difference = 100 * (calculated - value) / value
+        rows.append(["Independent-estimate count" if target["quantity"] == "count" else target["label"], target["printed"], calculated, percentage_text(difference, suffix=""),
+                     target["unit"], target.get("locator", "not established")])
+    summary = (
+        f"Calculated initial, mean and final demands are {quantities['initial_demand']:.3f}, "
+        f"{quantities['mean_demand']:.3f} and {quantities['final_demand']:.3f} A. "
+        "The resistance estimate is independent of the aggregate verdict; "
+        f"the published installed arrangement contains {verification['anode_count']} anodes. "
+        "Aggregate mass and output checks do not establish protection at remote or shielded areas."
+    )
+    return Section(key="published-comparison", title="Published values and comparison", blocks=[
+        TextBlock(markdown=summary),
+        TextBlock(markdown=str(evidence["assumptions"])),
+        TableBlock(title="Published checkpoints and calculated differences",
+                   columns=["Checkpoint", "Published", "Calculated", "Difference", "Unit", "Locator"],
+                   units=["-", "-", "-", "%", "-", "-"], rows=rows),
+        *[TextBlock(markdown=str(finding)) for finding in evidence.get("findings", [])],
+        TextBlock(markdown="The abstract potentials (-1.006 to -1.042 V) are not attached to a level or date and are not used [1], p. 241, Abstract."),
+    ])
+
+
+def _report_options(inputs: Mapping[str, Any], results: Mapping[str, Any],
+                    *, published: bool = False) -> list[Block]:
+    """Keep incomplete recommendation data from stopping the report."""
+    try:
+        return measured_options(inputs, results) if published else arrangement_options(inputs, results)
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return [TextBlock(markdown="Options are not evaluated: complete demand, output, mass and arrangement data are required.")]
+
+
+def _b401_report_additions(
+    inputs: Mapping[str, Any], results: Mapping[str, Any], sections: list[Section]
+) -> list[Section]:
+    """Add display geometry and advice to the single-arrangement B401 layout."""
+    if (
+        _mapping(inputs.get("design_data")).get("structure_type") != "jacket"
+        or
+        results.get("mode") == "b401_components"
+        or results.get("riser_base_assessment")
+        or results.get("anode_families")
+    ):
+        return []
+    by_key = {section.key: section for section in sections}
+    comparison = _published_checkpoint_section(inputs, results)
+    if comparison:
+        sections.insert(sections.index(by_key["references"]), comparison)
+    by_key["design-basis"].blocks.extend(design_blocks(inputs))
+    adequacy = by_key["adequacy"]
+    failures = failed_keys(results)
+    evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
+    modern = bool(evidence or _mapping(inputs.get("structure")).get("report_geometry"))
+    if published_outputs(inputs):
+        verdict = published_status(inputs, results)
+        adequacy.blocks = [adequacy.blocks[0], verdict, aggregate_table(inputs, results)]
+        options = _report_options(inputs, results, published=True)
+        adequacy.blocks.extend(options)
+        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\n" + verdict.detail + "\n\n" + "\n\n".join(published_recommendations(inputs, results, options))))
+    elif modern:
+        options = _report_options(inputs, results)
+        adequacy.blocks.extend(options)
+        conclusion = "The rechecked alternatives pass the aggregate mass and current checks. " if options and any(isinstance(b, TableBlock) for b in options) else ""
+        suffix = " Monitoring and intervention triggers are stated above; local retrofit quantity requires spatial demand and allocation evidence." if conclusion else ""
+        adequacy.blocks.append(TextBlock(markdown="### Conclusions and recommendations\n\n" + conclusion + monitoring_conclusion(inputs) + suffix))
+    else:
+        if "overall_status" in failures:
+            adequacy.blocks.insert(2, recommendation_block(results, "overall_status"))
+        for key in failures:
+            if key != "overall_status":
+                adequacy.blocks.append(recommendation_block(results, key))
+        adequacy.blocks.append(conclusions_block(results))
+    caveats = geometry_caveats(inputs, results, percentage_precision=1)
+    if not modern:
+        caveats += recommendation_caveats(results)
+    else:
+        caveats.append("Equivalent-cylinder alternatives require fabrication, core, attachment, clearance and anode-interaction assessment. A recurring survey interval and numerical depletion trigger require measured remaining mass, elapsed service and future demand; only baseline and post-intervention surveys are specified here.")
+    caveats.extend(evidence.get("limitations", []))
+    if modern and not evidence:
+        life = float(results["design_life_years"])
+        temperature = float(_mapping(inputs.get("environment"))["seawater_temperature_C"])
+        by_key["design-basis"].blocks.append(TextBlock(markdown=(
+            f"Design life {life:g} years and seawater temperature {temperature:g} °C, "
+            "nominal mass interpreted as net alloy, and equivalent-cylinder alternatives "
+            f"with alloy density {kernel.ANODE_DENSITY_ALZNI:g} kg/m³ are declared illustrative inputs (source: illustrative input). "
+            "The original radius is the stated input; alternative radii follow net mass, length "
+            "and alloy density. Capacity and utilisation are illustrative inputs; governing practice is listed in References [1].")))
+    if modern:
+        sections[sections.index(by_key["references"])] = _verification_references(inputs, results)
+        sections.insert(0, Section(key="summary", title="Summary", blocks=[
+            TextBlock(markdown=verification_summary(inputs, results, options_available=any(isinstance(b, TableBlock) for b in options), options=options))]))
+        _verification_presentation(sections, published=bool(evidence))
+    if modern:
+        caveats = [_verification_wording(str(item), bool(evidence)) for item in caveats]
+    return [Section(
+        key="cp-limitations", title="Limitations and items not evaluated",
+        label="Appendix A",
+        blocks=[TextBlock(markdown="\n\n".join(f"- {item}" for item in caveats))],
+    )]
+
+
+def _verification_wording(text: str, published: bool) -> str:
+    """Translate implementation labels into engineering wording for verification."""
+    number = "2" if published else "1"
+    text = re.sub(r"\[published-jacket-paper(?:,\s*([^]]+))?\]", lambda m: "[1]" + (", " + m[1] if m[1] else ""), text)
+    text = re.sub(r"\[b401-[^]]+\]", f"[{number}]", text)
+    text = re.sub(r"Sec\.\s*\d+(?:\.\d+)*(?:-\d+(?:\.\d+)*)?", "", text)
+    replacements = {
+        "stand_off": "stand-off", "buried_mudline": "buried at mudline",
+        "Count verified": "Installed count",
+        "current-output verification": "current-output check",
+        "arrangement verification": "arrangement assessment",
+        "Table 8-8 (long_slender_standoff)": "anode utilisation factor",
+        "long_slender_standoff": "long slender stand-off",
+        "published area category": "published zone area",
+        "upper-bare-seawater": "Bare steel in seawater, 0–30 m",
+        "lower-bare-seawater": "Bare steel in seawater, 30 m to mudline",
+        "coated-seawater": "Coated steel in seawater",
+        "buried-steel": "Buried steel",
+        "published basis": "published effective density",
+        "Input echo: structure zones, environment and anode data": "Engineering inputs",
+        "Use status: approved for client use subject to an engineer-of-record check of this deliverable.": "Draft for review",
+        "the existing aluminium calculation basis": "based on previous project experience" if published else "illustrative input",
+        "Elevation drawn from the design data of the case.": "Illustrative elevation.",
+        "DNV-RP-B401 :": "DNV-RP-B401:",
+        "citation not held": "source evidence is not established",
+        "Unassigned member area": "Member area outside the stated zones",
+        "exceeds the stated criterion": "is more positive than the stated criterion",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    text = text.replace("in Bare steel in seawater", "in bare steel in seawater")
+    text = re.sub(r"Table 8-\d+", "declared input basis", text)
+    text = re.sub(r"\brouted\b", "calculated", text)
+    text = re.sub(r"\broute(?:'s|s)?\b", "calculation", text)
+    text = text.replace("regression case", "illustrative example")
+    if not published:
+        text = text.replace("alloy density is based on previous project experience.", "alloy density is stated in Design basis.")
+    text = re.sub(r"(\d+(?:\.\d+)?) kg", lambda m: f"{float(m[1]):.0f} kg", text)
+    text = re.sub(r"dnv-rp-b401\s+\d{4}(?:-\d{2})?\s+.*?\((anode mass|output adequacy|retrofit evidence|retrofit documentation)\)", r"\1", text)
+    text = re.sub(r"\s*\((?:B401)?\s*\)", "", text)
+    return text.strip()
+
+
+def _verification_references(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> Section:
+    """List each public reference once, with locators for each use."""
+    evidence = _mapping(_mapping(inputs.get("structure")).get("verification_evidence"))
+    number = 2 if evidence else 1
+    standard = f"[{number}] {results['standard']}, Cathodic protection design. Design current density; coating breakdown; design electrochemical capacity; anode utilisation factor; anode mass; anode resistance; protective potential criterion; output adequacy; retrofit evidence."
+    blocks: list[Block] = [TextBlock(markdown=standard)]
+    rows = [["Capacity and utilisation", f"[{number}], design electrochemical capacity; anode utilisation factor"],
+            ["Protection criterion", f"[{number}], protective potential criterion"],
+            ["Independent resistance estimate", f"[{number}], anode resistance; output adequacy"]]
+    if evidence:
+        source = _mapping(evidence["source"])
+        title = str(source["title"]).replace("Engineering Advances, 2023, pp.", "Engineering Advances 3(3) (2023), pp.")
+        blocks.insert(0, TextBlock(markdown=f"[1] {title}. {source['url']}. Read {source['read_on']}."))
+        rows.extend([["Zone areas", "[1], p. 242, Table 1"],
+                     ["Effective phase densities and connected allowance", "[1], p. 242, Table 2 and Section 2"],
+                     ["Installed arrangement and printed outputs", "[1], p. 242, Section 2"],
+                     ["Measured potentials", "[1], pp. 243–244, Section 3"],
+                     ["Higher bare-seawater densities", "[1], p. 244, Table 3"],
+                     ["Causes and proposed remedy", "[1], p. 244, Sections 4–5"]])
+    else:
+        rows.extend([["Zone densities", f"[{number}], design current density"],
+                     ["Coating", f"[{number}], coating breakdown"]])
+    blocks.append(TableBlock(title="Where each cited table was used", columns=["Item", "Reference and locator"], rows=rows))
+    return Section(key="references", title="References", blocks=blocks)
+
+
+def _verification_presentation(sections: list[Section], *, published: bool = False) -> None:
+    """Apply engineering labels and declared precision only to verification reports."""
+    for section in sections:
+        section.subtitle = _verification_wording(section.subtitle, published)
+        if section.key == "adequacy":
+            section.subtitle = "Current-output check"
+        for block in section.blocks:
+            if isinstance(block, FigureBlock):
+                block.caption = _verification_wording(block.caption, published)
+                if not published and block.figure_id == FIG_DEMAND_VS_TIME:
+                    block.caption = block.caption.replace(
+                        "with declared input basis breakdown constants",
+                        "with the declared coating breakdown constants",
+                    )
+                if published and block.svg and 'data-type="depth_true"' in block.svg:
+                    block.caption += " Criterion input: based on previous project experience."
+                if block.svg:
+                    block.svg = re.sub(r">([^<>]+)<", lambda m: ">" + _verification_wording(m[1], published) + "<", block.svg)
+                if block.plotly:
+                    for trace in block.plotly.get("data", []):
+                        if "name" in trace:
+                            trace["name"] = _verification_wording(str(trace["name"]), published)
+                if published and block.figure_id == FIG_DEMAND_VS_TIME:
+                    block.caption = "Published effective mean densities are held constant over the assumed design life and connected allowances are added. Initial and final effective densities determine the endpoint checks; no independent coating deterioration is inferred. [1], p. 242, Tables 1–2."
+                if published and block.figure_id == FIG_ANODE_COUNTS:
+                    block.title = "Independent estimate: anode counts"
+                    block.caption = "Independent resistance estimate; these counts do not govern the installed-arrangement verdict."
+            elif isinstance(block, TextBlock):
+                block.markdown = _verification_wording(block.markdown, published)
+            elif isinstance(block, StatusBlock):
+                block.detail = _verification_wording(block.detail, published)
+            elif isinstance(block, TableBlock):
+                _verification_table(block, published)
+
+
+def _verification_table(block: TableBlock, published: bool) -> None:
+    """Keep published locators and remove framework cells without changing quantities."""
+    block.source = None
+    if block.title == "Design data":
+        block.rows = [r for r in block.rows if r[0] not in {"Edition provenance", "Standard"}]
+        label = "based on previous project experience" if published else "illustrative input"
+        for row in block.rows:
+            if row[0] == "Utilisation factor source":
+                row[1] = label
+            source = "" if row[0] == "Utilisation factor source" else label
+            if published and row[0] in {"Seawater resistivity", "Anode net mass", "Anode length"}:
+                source = "[1], p. 242, Section 2"
+            elif row[0] == "Total surface area" or (published and row[0] == "Anode equivalent radius (fresh)"):
+                source = "calculated from declared inputs"
+            row.append(source)
+        block.columns.append("Source")
+        if block.units:
+            block.units.append("-")
+    if published:
+        if block.title.startswith("Zones and coating breakdown"):
+            block.title = "Published zone areas and effective-density treatment"
+        block.source = "Published quantities: [1], p. 242, Section 2; other inputs: based on previous project experience."
+        if block.title.startswith("Published zone areas"):
+            columns = [block.columns.index(c) for c in ("Zone", "Area")]
+            block.columns = ["Zone", "Area"]
+            block.units = ["-", "m2"]
+            block.rows = [[r[i] for i in columns] for r in block.rows]
+            block.source = "[1], p. 242, Table 1; phase densities are effective densities without a separate coating law."
+        elif block.title.startswith("Current density"):
+            block.source = "Effective densities: [1], p. 242, Table 2; unity coating multipliers: based on previous project experience; demand is calculated from declared inputs."
+        elif block.title.startswith("Measured potentials"):
+            block.source = "[1], pp. 243–244, Section 3; day 52 and day 518."
+        elif block.title == "Anode mass and count":
+            block.title = "Independent estimate: anode mass and count"
+        elif block.title.startswith("Anode resistance"):
+            block.title = "Independent estimate: anode resistance and output"
+    if not published and (block.title.startswith("Zones and coating") or block.title.startswith("Current density")):
+        block.source = "illustrative input; demands are calculated from the declared inputs."
+        block.title = re.sub(r"\s*\(Table 8-\d+\)", "", block.title)
+    for row in block.rows:
+        for i, value in enumerate(row):
+            if isinstance(value, str):
+                row[i] = _verification_wording(value, published)
+            elif isinstance(value, float) and value != 0 and (abs(value) < .001 or abs(value) >= 1e6):
+                row[i] = f"{value:.10f}".rstrip("0").rstrip(".")
+        mass_columns = [i for i, unit in enumerate(block.units or []) if unit == "kg"]
+        if len(row) >= 3 and row[2] == "kg":
+            mass_columns.append(1)
+        if row and "(kg)" in str(row[0]):
+            mass_columns.extend(range(1, len(row)))
+        for i in mass_columns:
+            try:
+                row[i] = f"{float(row[i]):.0f}"
+            except (ValueError, TypeError):
+                continue
+
+
 @report_adapter("cathodic_protection.anode_design")
 def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
     """Anode-design report from a routed ``cathodic_protection`` cfg.
@@ -1554,23 +1868,50 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
     standard = str(
         results.get("standard") or _ABS_STANDARDS.get(calc_type, ("", ""))[0]
     )
-    document, doc_note = _document(
-        cfg, f"Cathodic protection anode design - {standard}".strip(" -")
-    )
+    if calc_type == KEY_B401 and _mapping(cfg.get("report")).get("presentation") == "reference_analysis":
+        from digitalmodel.cathodic_protection.report_reference import reference_sections
+
+        depth = float(cfg["structural_model"]["water_depth_m"])
+        document, _ = _document(cfg, f"Cathodic protection analysis: jacket at {depth:g} m water depth")
+        return ReportSpec(document=document, sections=reference_sections(cfg),
+                          standards=_standards(results, calc_type),
+                          provenance=_provenance(cfg, results, "results"),
+                          verification_presentation=True)
+    display = _mapping(_mapping(inputs.get("structure")).get("report_geometry"))
+    default_title = f"Cathodic protection anode design - {standard}".strip(" -")
+    if calc_type == KEY_B401 and display and _mapping(inputs.get("design_data")).get("structure_type") == "jacket":
+        purpose = "analysis"
+        example = "illustrative example " if display.get("basis") == "illustrative_regression_case" else ""
+        try:
+            depth = abs(float(display["mudline_m"]) - float(display["waterline_m"]))
+            if not math.isfinite(depth) or depth <= 0:
+                raise ValueError("depth is not established")
+            description = f"{example}jacket at {depth:g} m water depth"
+        except (ValueError, TypeError, KeyError, OverflowError):
+            description = "jacket with incomplete display data"
+        default_title = f"Cathodic protection {purpose}: {description}"
+    document, doc_note = _document(cfg, default_title)
     note = f"{standard}: {results.get('provenance', 'legacy solver')}"
     echo: dict[str, Any] = {"inputs": dict(inputs)}
     if doc_note:
         echo["report.document"] = doc_note
+    sections = builder(inputs, results)
+    appendices = (
+        _b401_report_additions(inputs, results, sections)
+        if calc_type == KEY_B401 else []
+    )
     return ReportSpec(
+        verification_presentation=calc_type == KEY_B401 and any(section.key == "summary" for section in sections),
         document=document,
         standards=_standards(results, calc_type),
         citations=[
             asdict(c)
             for c in _citations_from_labels(results.get("citations") or [], note)
         ],
-        sections=builder(inputs, results),
+        sections=sections,
         provenance=_provenance(cfg, results, "results"),
         input_echo=echo,
+        appendices=appendices,
     )
 
 

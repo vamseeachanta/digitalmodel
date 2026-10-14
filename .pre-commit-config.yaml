@@ -55,16 +55,15 @@ repos:
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: [-r, src/]
-        pass_filenames: false
+        additional_dependencies: ["pbr>=2.0.0"]
+        files: ^src/
 
   # Secrets detection
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.21.2
     hooks:
       - id: gitleaks
-        # Note: requires workspace-hub parent checkout; ../.gitleaks.toml is hub-relative
-        args: [--config, ../.gitleaks.toml]
+        args: [--config, .gitleaks.toml]
 
   # Documentation
   - repo: https://github.com/pycqa/pydocstyle
@@ -85,7 +84,7 @@ repos:
     rev: v3.11.2
     hooks:
       - id: markdown-link-check
-        args: [--config, .markdown-link-check.json]
+        args: [--config, config/markdown-link-check.json]
 
   # YAML formatting
   - repo: https://github.com/pre-commit/mirrors-prettier

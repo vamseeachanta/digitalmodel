@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Local ship structure source research, not solver qualification",
+  "type": "object",
+  "required": ["schema_version", "observed_on", "status", "publication_allowed", "raw_sources_copied", "sources", "products", "sections", "type_coverage"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "observed_on": {"type": "string", "format": "date"},
+    "status": {"const": "internal_research_pending_source_rights"},
+    "publication_allowed": {"const": false},
+    "raw_sources_copied": {"const": false},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
+    "products": {"type": "array", "items": {"type": "object", "required": ["id", "family", "source_key", "dimension_kind"]}},
+    "sections": {"type": "array", "items": {"$ref": "#/$defs/section"}},
+    "type_coverage": {"type": "object"}
+  },
+  "$defs": {
+    "unknown": {"type": "object", "required": ["state", "reason"], "properties": {"state": {"const": "unknown"}, "reason": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+    "source": {
+      "type": "object", "required": ["key", "catalog_source_id", "issuer", "url", "edition", "source_date", "locator", "coverage"],
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "catalog_source_id": {"type": ["string", "null"]},
+        "issuer": {"type": "string", "minLength": 1},
+        "url": {"type": "string", "format": "uri"},
+        "edition": {"oneOf": [{"type": "string", "minLength": 1}, {"$ref": "#/$defs/unknown"}]},
+        "source_date": {"oneOf": [{"type": "string", "minLength": 1}, {"$ref": "#/$defs/unknown"}]},
+        "locator": {"type": "string", "minLength": 1},
+        "coverage": {"type": "string", "minLength": 1}
+      }
+    },
+    "section": {
+      "type": "object", "required": ["id", "family", "source_key", "dimension_kind", "width_mm", "thickness_mm", "area_mm2", "Ix_mm4", "Iy_mm4", "Zx_mm3", "Zy_mm3", "J_mm4", "property_basis", "axes", "material_grade", "solver_eligibility"],
+      "properties": {
+        "width_mm": {"type": "number", "exclusiveMinimum": 0},
+        "thickness_mm": {"type": "number", "exclusiveMinimum": 0},
+        "area_mm2": {"type": "number", "exclusiveMinimum": 0},
+        "Ix_mm4": {"type": "number", "exclusiveMinimum": 0},
+        "Iy_mm4": {"type": "number", "exclusiveMinimum": 0},
+        "Zx_mm3": {"type": "number", "exclusiveMinimum": 0},
+        "Zy_mm3": {"type": "number", "exclusiveMinimum": 0},
+        "J_mm4": {"type": "number", "exclusiveMinimum": 0},
+        "material_grade": {"$ref": "#/$defs/unknown"},
+        "solver_eligibility": {"enum": ["inapplicable_existing_panel_solver_has_no_bulb_geometry", "inapplicable_existing_angle_route_lacks_lateral_eccentricity_qualification"]}
+      }
+    }
+  }
+}

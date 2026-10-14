@@ -15,9 +15,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 import yaml
@@ -288,13 +290,56 @@ def _git_sha(repo_root: Path) -> str:
         return "unknown"
 
 
+def _swap_atlas(staged: Path, destination: Path, temporary: Path) -> None:
+    """Install the direct-build-equivalent tree, restoring it if rename fails."""
+    replacement = temporary / "replacement"
+    previous = temporary / "previous"
+    if destination.exists():
+        shutil.copytree(destination, replacement)
+    else:
+        replacement.mkdir()
+    shutil.copytree(staged, replacement, dirs_exist_ok=True)
+    if destination.exists():
+        destination.rename(previous)
+    try:
+        replacement.rename(destination)
+    except BaseException:
+        if previous.exists():
+            previous.rename(destination)
+        raise
+
+
+def _rebuild_atlas(workflow_id: str) -> bool:
+    """Keep the live atlas untouched until a temporary build passes validation."""
+    from digitalmodel.parametric.build import build_atlas_from_registry
+
+    DEFAULT_ATLAS_ROOT.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(dir=DEFAULT_ATLAS_ROOT, prefix=".refresh-") as name:
+        temporary = Path(name)
+        atlas = build_atlas_from_registry(workflow_id, atlas_root=temporary / "build")
+        if "passes" not in atlas.validation:
+            result = Path(atlas.basename) / atlas.atlas_id / "validation.json"
+            print(f"  WARNING: {workflow_id} {result.as_posix()} "
+                  "missing key 'passes'; failed validation gate")
+            return False
+        if not atlas.validation["passes"]:
+            print(f"  WARNING: {workflow_id} regenerated but failed validation gate")
+            return False
+        _swap_atlas(temporary / "build" / atlas.basename,
+                    DEFAULT_ATLAS_ROOT / atlas.basename, temporary)
+    return True
+
+
 def main(argv: list[str]) -> int:
     """CI drift gate (#833). Exit non-zero when a COMPUTED atlas is stale — a
     code/standard/template change that wasn't regenerated. Libraries (#801) are
     reported but do NOT fail the build (CI can't run a licensed solve) unless
-    --strict-libraries is given. --apply regenerates stale computed atlases."""
+    --strict-libraries is given. --apply regenerates stale computed atlases.
+    Exit 2 when a rebuilt computed atlas fails validation; otherwise exit 1
+    for enforced staleness or 0 for success."""
     apply = "--apply" in argv
     strict_libraries = "--strict-libraries" in argv
+    validation_failures = 0
 
     stale_ids = []
     for wid in parametric_workflow_ids():
@@ -315,19 +360,21 @@ def main(argv: list[str]) -> int:
               f"(operator); not auto-regenerated: {stale_libs}")
 
     if apply and stale_ids:
-        from digitalmodel.parametric.build import build_atlas_from_registry
         for wid in stale_ids:
             print(f"refreshing {wid} ...")
-            atlas = build_atlas_from_registry(wid)
-            if not atlas.validation["passes"]:
-                print(f"  WARNING: {wid} regenerated but failed validation gate")
-        stale_ids = []  # regenerated; commit the result
+            if not _rebuild_atlas(wid):
+                validation_failures += 1
+        stale_ids = []  # attempted; validation failures take precedence
 
-    if not stale_ids and not stale_libs:
+    if not stale_ids and not stale_libs and not validation_failures:
         print("all atlases current")
     fail = bool(stale_ids) or (strict_libraries and bool(stale_libs))
     if stale_ids and not apply:
         print(f"\n{len(stale_ids)} stale computed atlas(es); run with --apply to regenerate")
+    if validation_failures:
+        print(f"{validation_failures} rebuilt computed atlas(es) failed validation; "
+              "previous version of each kept; exit status 2")
+        return 2
     return 1 if fail else 0
 
 

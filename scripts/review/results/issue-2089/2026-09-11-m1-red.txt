@@ -11,7 +11,7 @@ ____________ ERROR collecting tests/solvers/ghs/test_comparison.py _____________
 ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-plan/tests/solvers/ghs/test_comparison.py'.
 Hint: make sure your test modules/packages have valid Python names.
 Traceback:
-/home/vamsee/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
+<home>/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 tests/solvers/ghs/test_comparison.py:7: in <module>
@@ -21,7 +21,7 @@ _____________ ERROR collecting tests/solvers/ghs/test_contracts.py _____________
 ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-plan/tests/solvers/ghs/test_contracts.py'.
 Hint: make sure your test modules/packages have valid Python names.
 Traceback:
-/home/vamsee/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
+<home>/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 tests/solvers/ghs/test_contracts.py:8: in <module>
@@ -31,7 +31,7 @@ ______________ ERROR collecting tests/solvers/ghs/test_runner.py _______________
 ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-plan/tests/solvers/ghs/test_runner.py'.
 Hint: make sure your test modules/packages have valid Python names.
 Traceback:
-/home/vamsee/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
+<home>/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 tests/solvers/ghs/test_runner.py:3: in <module>

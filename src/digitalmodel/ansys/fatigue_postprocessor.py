@@ -7,16 +7,19 @@ Fatigue Postprocessor
 
 Post-processes ANSYS APDL stress results for fatigue life assessment:
 
-    - Stress range extraction at critical locations
-    - S-N curve definition and evaluation (DNV-RP-C203, ASME VIII Div 2)
+    - APDL command generation for equivalent-stress scalar differences
+    - S-N curve definition and evaluation (DNV-RP-C203)
     - Miner's cumulative damage rule
-    - Fatigue damage contour data generation
-    - Rainflow cycle counting (simplified)
+
+Stress ranges and cycle counts supplied by the caller are consumed by this
+module. The stress concentration factor, thickness correction, S-N lookup,
+Miner summation and design fatigue factor are applied. Cycle counting is not
+performed here. Stress-range extraction is delegated to the solver through
+the generated APDL command text, subject to its scalar-difference limitation.
 
 Supported S-N curves:
 
-    - DNV-RP-C203 curves: B1, B2, C, C1, C2, D, E, F, F1, F3, G, W1, W2, W3
-    - ASME VIII Div 2 curves for welded and unwelded components
+    - DNV-RP-C203 curves: B1, B2, C, C1, D, E, F, F1, F3, W1, W3
     - Custom user-defined curves
 
 All functions return APDL command text or computed fatigue results.
@@ -37,7 +40,9 @@ import pandas as pd
 # S-N curve data
 # ---------------------------------------------------------------------------
 
-# DNV-RP-C203 S-N curves in seawater with cathodic protection
+# DNV, DNV-RP-C203, Fatigue Design of Offshore Steel Structures,
+# October 2011, clause 2.4.4, Table 2-1, page 18: S-N curves in air.
+# Stress ranges and tabulated limits are in MPa; N is a cycle count.
 # Format: (log_a1, m1, log_a2, m2, transition_cycles, threshold_mpa)
 # m1 used for N < transition, m2 for N > transition
 _DNV_SN_CURVES: dict[str, dict] = {
@@ -59,8 +64,8 @@ _DNV_SN_CURVES: dict[str, dict] = {
             "N_transition": 1e7, "threshold_mpa": 36.84},
     "F3": {"log_a1": 11.546, "m1": 3.0, "log_a2": 14.576, "m2": 5.0,
             "N_transition": 1e7, "threshold_mpa": 32.75},
-    "W1": {"log_a1": 11.398, "m1": 3.0, "log_a2": 14.330, "m2": 5.0,
-            "N_transition": 1e7, "threshold_mpa": 29.24},
+    "W1": {"log_a1": 11.261, "m1": 3.0, "log_a2": 14.101, "m2": 5.0,
+            "N_transition": 1e7, "threshold_mpa": 26.32},
     "W3": {"log_a1": 10.970, "m1": 3.0, "log_a2": 13.617, "m2": 5.0,
             "N_transition": 1e7, "threshold_mpa": 21.05},
 }
@@ -82,7 +87,7 @@ class FatigueLoadCase:
 
 @dataclass
 class SNcurve:
-    """S-N curve definition."""
+    """S-N curve definition; legacy environment strings remain metadata only."""
     name: str = "D"
     log_a1: float = 12.164  # intercept (high-cycle)
     m1: float = 3.0  # inverse slope (high-cycle)
@@ -90,7 +95,7 @@ class SNcurve:
     m2: float = 5.0  # inverse slope (low-cycle)
     N_transition: float = 1e7  # transition point
     threshold_mpa: float = 52.63  # fatigue limit (constant amplitude)
-    environment: str = "seawater_cp"  # air, seawater_cp, seawater_free
+    environment: str = "air"  # metadata only; legacy strings remain accepted
 
     @classmethod
     def from_dnv(cls, curve_name: str) -> SNcurve:
@@ -106,8 +111,15 @@ class SNcurve:
         SNcurve
             Populated S-N curve.
         """
-        data = _DNV_SN_CURVES[curve_name.upper()]
-        return cls(name=curve_name.upper(), **data)
+        name = curve_name.upper()
+        try:
+            data = _DNV_SN_CURVES[name]
+        except KeyError:
+            raise KeyError(
+                f"Unknown DNV curve {name!r}. "
+                f"Valid classes: {', '.join(_DNV_SN_CURVES)}"
+            ) from None
+        return cls(name=name, **data)
 
 
 @dataclass
@@ -160,7 +172,9 @@ class FatiguePostprocessor:
         Returns
         -------
         float
-            Allowable number of cycles (N). Returns inf if below threshold.
+            Allowable number of cycles (N). Returns inf for a non-positive
+            stress range; positive ranges use finite S-N extrapolation.
+            threshold_mpa is not used as a cut-off.
         """
         if stress_range_mpa <= 0:
             return float("inf")
@@ -273,7 +287,13 @@ class FatiguePostprocessor:
         self, component_name: str = "CRITICAL_NODES",
         load_step_pairs: list[tuple[int, int]] | None = None,
     ) -> str:
-        """Generate APDL commands to extract stress ranges between load steps.
+        """Generate APDL commands for signed equivalent-stress differences.
+
+        This is not the von Mises of the stress difference: that quantity
+        requires subtracting stress components before forming equivalent stress.
+        Scalar subtraction can underestimate that quantity or be negative.
+        At the same point in a common coordinate basis, its absolute value
+        cannot exceed the equivalent stress of the component difference.
 
         Parameters
         ----------
@@ -285,7 +305,7 @@ class FatiguePostprocessor:
         Returns
         -------
         str
-            APDL commands for stress range extraction.
+            APDL commands for scalar differences, not general stress ranges.
         """
         if load_step_pairs is None:
             load_step_pairs = [(2, 1)]  # Default: operating - installed
@@ -294,6 +314,11 @@ class FatiguePostprocessor:
             "/POST1",
             f"! --- Fatigue Stress Range Extraction ---",
             f"! Component: {component_name}",
+            "! LIMITATION: not the von Mises of the stress difference.",
+            "! Subtract stress components before forming equivalent stress.",
+            "! Scalar subtraction can underestimate the equivalent difference",
+            "! or be negative; its magnitude cannot exceed the component norm.",
+            "! Compare stresses at the same point in a common coordinate basis.",
             "",
         ]
 

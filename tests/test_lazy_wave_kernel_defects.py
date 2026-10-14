@@ -261,7 +261,7 @@ class TestDefect3HangoffBendRadiusBinding:
             results.hangoff_to_sag.bend_radius * config.weight_without_buoyancy
         )
         assert math.isclose(results.horizontal_force, expected_fh, rel_tol=1e-12)
-        expected_fv = expected_fh + config.weight_without_buoyancy * (
+        expected_fv = config.weight_without_buoyancy * (
             results.hangoff_to_sag.arc_length
         )
         assert math.isclose(results.vertical_force, expected_fv, rel_tol=1e-12)

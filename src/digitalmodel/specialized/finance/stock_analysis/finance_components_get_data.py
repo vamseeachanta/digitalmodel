@@ -11,6 +11,16 @@ from common.finance_components_get_SEC_data import SECDataForm, SECDataTicker
 sec_ticker = SECDataTicker()
 
 
+def _get_tiingo_api_key():
+    """Read the required Tiingo credential from the environment."""
+    import os
+
+    api_key = os.environ.get("TIINGO_API_KEY")
+    if not api_key:
+        raise RuntimeError("TIINGO_API_KEY must be set to fetch Tiingo market data")
+    return api_key
+
+
 class FinanceGetData():
 
     def __init__(self, cfg):
@@ -108,7 +118,7 @@ class FinanceGetData():
 
     def get_data_from_tiingo(self):
         import pandas_datareader as pdr
-        api_key = '512e3063ad18b5116a83cf7ce7d852af4181917c'
+        api_key = _get_tiingo_api_key()
         self.stock_data_array = []
         for stock_info in self.cfg.stocks:
             stock_ticker = stock_info['ticker']

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: W6 concept screening — four parameter-based axes over field_development concepts.
 # ABOUTME: Extends concept_selection; rule/parameter-based, no reservoir/flow/structural sim.
 """
@@ -42,7 +45,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import yaml
 
@@ -125,6 +128,7 @@ class AxisScores:
     # normalised 0-100, higher is better
     norm: dict[str, float] = field(default_factory=dict)
     capex_line_items_usd_bn: dict[str, float] = field(default_factory=dict)
+    capex_source: str = "derived_fraction_of_base"
 
 
 @dataclass
@@ -381,13 +385,15 @@ def screen_concepts(
     raw: dict[HostType, AxisScores] = {}
     suit: dict[HostType, float] = {}
     for host in hosts:
-        items = capex_line_items(host, spec, params, capex_override)
+        items = capex_line_items(host, spec, params, capex_override).copy()
+        source = items.pop("source", "derived_fraction_of_base")
         raw[host] = AxisScores(
             schedule_weeks=estimate_schedule_weeks(host, spec, params),
             rig_days=estimate_rig_days(host, spec, params, bsee_benchmark),
             capex_base_usd_bn=items["total"],
             intervention_index=intervention_index(host, spec, params),
             capex_line_items_usd_bn=items,
+            capex_source=cast(str, source),
         )
         suit[host] = round(_suitability(host, spec), 2)
 

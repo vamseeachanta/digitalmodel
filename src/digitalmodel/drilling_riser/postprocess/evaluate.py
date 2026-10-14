@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Criteria evaluator: one register row on one case (static, regular wave, or the seeds of an irregular sea).
 
 Statics and regular waves give a deterministic value. The seeds of an irregular sea are combined per the
@@ -15,6 +18,7 @@ W510 / R02). A missing channel is recorded in ``missing_channel``; the caller fa
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from typing import Any, Iterable
 
@@ -34,6 +38,8 @@ STATUSES = ("PASS", "FAIL", "NOT_EVALUATED", "SCREENING")
 
 @dataclass
 class CaseCheck:
+    """Result and supporting values for one criterion on one case."""
+
     row_id: str
     status: str
     reason: str
@@ -49,6 +55,7 @@ class CaseCheck:
     detail: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
+        """Return the result fields as a dictionary."""
         return asdict(self)
 
 
@@ -78,7 +85,8 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
 
     An irregular case names its seeds by ``seed_ids`` (or ``seeds_expected``, meaning seeds 1..n): the documents
     must hold exactly those seeds - a missing seed, or a seed outside the set standing in for it, leaves the case
-    NOT_EVALUATED rather than fitting the Gumbel distribution to the wrong sample."""
+    NOT_EVALUATED rather than fitting the Gumbel distribution to the wrong sample.
+    """
     rid = row["id"]
     if row.get("check_key") not in CHECKS:
         return CaseCheck(rid, "NOT_EVALUATED", f"no demand function for check_key {row.get('check_key')!r}")
@@ -199,25 +207,109 @@ def _order_key(c: CaseCheck) -> float:
     return float("-inf")
 
 
-def summarise(results: Iterable[tuple[str, CaseCheck]]) -> dict[str, dict[str, Any]]:
-    """Per row: counts by status, governing case (largest utilisation, or smallest margin for a sign criterion),
-    row status (FAIL if any case fails, PASS if every evaluated case passes, NOT_EVALUATED if none evaluated).
-    ``SCREENING`` cases are counted (the key appears only when present) but never govern and never set the row
-    status."""
-    out: dict[str, dict[str, Any]] = {}
-    for case_id, c in results:
-        s = out.setdefault(c.row_id, {"counts": {k: 0 for k in STATUSES[:3]}, "governing": None, "max_u": None,
-                                      "_key": float("-inf")})
-        s["counts"][c.status] = s["counts"].get(c.status, 0) + 1  # SCREENING appears only when present
+def _expected_groups(groups: Mapping[str, Iterable[str]]) -> dict[str, set[str]]:
+    """Materialise explicit applicability once, including one-shot iterables."""
+    if not isinstance(groups, Mapping):
+        raise ValueError("expected criterion cases must be mapped by group")
+    out = {}
+    for group, cases in groups.items():
+        if not isinstance(group, str) or isinstance(cases, (str, bytes)):
+            raise ValueError("expected a group name and an iterable of case IDs")
+        ids = list(cases)
+        if any(not isinstance(cid, str) or not cid for cid in ids):
+            raise ValueError("case IDs must be nonempty strings")
+        if len(set(ids)) != len(ids):
+            raise ValueError("duplicate expected case in group")
+        out[group] = set(ids)
+    return out
+
+
+def _observed_summary(checks: Mapping[str, CaseCheck]) -> dict[str, Any]:
+    """Preserve the observed counts and governing rule without claiming coverage."""
+    counts = {k: 0 for k in STATUSES[:3]}
+    governing = None
+    key = float("-inf")
+    for case_id, c in checks.items():
+        counts[c.status] = counts.get(c.status, 0) + 1
         if c.status in ("NOT_EVALUATED", "SCREENING"):
             continue
         k = _order_key(c)
-        if k > s["_key"]:
-            s["_key"] = k
-            s["governing"] = {"case_id": case_id, **c.as_dict()}
-            s["max_u"] = c.u
-    for s in out.values():
-        s.pop("_key")
-        n = s["counts"]
-        s["status"] = "FAIL" if n["FAIL"] else ("PASS" if n["PASS"] else "NOT_EVALUATED")
+        if k > key:
+            key, governing = k, {"case_id": case_id, **c.as_dict()}
+    status = "FAIL" if counts["FAIL"] else ("PASS" if counts["PASS"] else "NOT_EVALUATED")
+    return {"counts": counts, "governing": governing,
+            "max_u": governing["u"] if governing else None, "observed_status": status}
+
+
+def _coverage_summary(checks: Mapping[str, CaseCheck], expected: set[str] | None,
+                      outcomes: Mapping[str, str] | None) -> dict[str, Any]:
+    """Keep absent results separate from recorded but unevaluated criteria."""
+    s = _observed_summary(checks)
+    ids = set(checks) if expected is None else expected
+    final = {cid: outcomes.get(cid, "missing") if outcomes is not None else None
+             for cid in sorted(ids)}
+    missing = sorted(cid for cid in ids if cid not in checks or
+                     (outcomes is not None and final[cid] != "ok"))
+    unevaluated = sorted(cid for cid, c in checks.items() if c.status == "NOT_EVALUATED")
+    complete = (None if expected is None or outcomes is None else
+                bool(expected) and not missing and not unevaluated)
+    s.update(expected_cases=None if expected is None else sorted(expected),
+             recorded_cases=sorted(checks), final_outcomes=final,
+             missing_cases=None if expected is None else missing,
+             missing_count=None if expected is None else len(missing),
+             unevaluated_cases=unevaluated, coverage_complete=complete)
+    observed = s["observed_status"]
+    s["status"] = (observed if observed == "FAIL" or complete is True else "NOT_EVALUATED")
+    return s
+
+
+def summarise(results: Iterable[tuple[str, CaseCheck]], *,
+              expected_cases: Mapping[str, Mapping[str, Iterable[str]]] | None = None,
+              ledger_outcomes: Mapping[str, str] | None = None) -> dict[str, dict[str, Any]]:
+    """Summarise final checks with explicit criterion/group applicability.
+
+    ``expected_cases`` maps row -> sensitivity group -> logical case IDs, including
+    cases absent from results. ``ledger_outcomes`` maps logical case ID -> final
+    run outcome (``ok`` has a result; an absent entry is ``missing``). Callers must
+    reconcile attempts and seeds before supplying these inputs; no applicability
+    or engineering acceptance is inferred. Only nonempty, fully recorded and
+    evaluated coverage can yield PASS. Omit either argument and coverage is unknown
+    (None), never PASS. Observed FAIL remains FAIL, even with incomplete coverage.
+
+    Existing counts, governing and max_u describe supplied checks. SCREENING is
+    counted only when present and never governs or sets a verdict. Added coverage
+    fields and the same summary per group expose absent and unevaluated cases.
+    Returned criteria are ordered by sorted criterion ID.
+    Duplicate checks and observed cases outside declared applicability are rejected.
+    See docs/drilling-riser-summary-coverage.html for the full contract.
+    """
+    if expected_cases is not None and not isinstance(expected_cases, Mapping):
+        raise ValueError("expected_cases must be a mapping by criterion ID")
+    expected = None if expected_cases is None else {
+        rid: _expected_groups(groups) for rid, groups in expected_cases.items()}
+    if ledger_outcomes is not None and any(
+        not isinstance(cid, str) or not cid or not isinstance(status, str) or not status.strip()
+        for cid, status in ledger_outcomes.items()
+    ):
+        raise ValueError("ledger outcomes need nonempty case IDs and final status strings")
+    rows: dict[str, dict[str, CaseCheck]] = {}
+    for cid, c in results:
+        if not isinstance(cid, str) or not cid or c.status not in STATUSES:
+            raise ValueError("invalid case ID or check status")
+        row = rows.setdefault(c.row_id, {})
+        if cid in row:
+            raise ValueError("duplicate final check for criterion and case")
+        row[cid] = c
+    out = {}
+    for rid in sorted(set(rows) | (set(expected) if expected is not None else set())):
+        checks = rows.get(rid, {})
+        groups = expected.get(rid, {}) if expected is not None else {}
+        ids = set().union(*groups.values()) if expected is not None else None
+        if ids is not None and not set(checks) <= ids:
+            raise ValueError("observed case outside expected criterion applicability")
+        s = _coverage_summary(checks, ids, ledger_outcomes)
+        s["groups"] = {group: _coverage_summary({cid: c for cid, c in checks.items() if cid in cases},
+                                                cases, ledger_outcomes)
+                       for group, cases in groups.items()}
+        out[rid] = s
     return out

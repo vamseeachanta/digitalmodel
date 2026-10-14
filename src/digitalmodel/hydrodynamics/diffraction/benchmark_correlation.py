@@ -67,6 +67,7 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_dof_sections import (  # n
 def plot_pairwise_correlation_heatmap(
     report: BenchmarkReport,
     output_dir: Path,
+    page_title: Optional[str] = None,
 ) -> Path:
     """Heatmap of mean pairwise magnitude correlation across all DOFs."""
     n = len(report.solver_names)
@@ -105,9 +106,13 @@ def plot_pairwise_correlation_heatmap(
             texttemplate="%{text}",
         )
     )
-    apply_layout(fig, "Pairwise Solver Correlation")
+    apply_layout(fig, page_title or "Pairwise Solver Correlation")
     fig.update_layout(height=500)
-    return save_figure(fig, "benchmark_heatmap", output_dir)
+    if page_title is None:
+        return save_figure(fig, "benchmark_heatmap", output_dir)
+    return save_figure(
+        fig, "benchmark_heatmap", output_dir, page_title=page_title,
+    )
 
 
 # ------------------------------------------------------------------

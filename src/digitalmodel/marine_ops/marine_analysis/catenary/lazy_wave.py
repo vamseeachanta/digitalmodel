@@ -276,7 +276,8 @@ class LazyWaveResults:
         total_arc_length (float): Total arc length from hang-off to TDP [m]
         total_horizontal_distance (float): Total horizontal distance [m]
         horizontal_force (float): Horizontal force Fh [N]
-        vertical_force (float): Vertical force at hang-off Fv [N]
+        vertical_force (float): Vertical force at hang-off Fv = w*S [N]
+        total_tension (float): Total tension at hang-off T = hypot(Fh, Fv) [N]
         segments (List[LazyWaveSegment]): All segments for plotting
         summary (Dict[str, Any]): Summary data matching legacy format
         vertical_closure_error (float): Residual of the water-depth closure [m] --
@@ -294,6 +295,7 @@ class LazyWaveResults:
     total_horizontal_distance: float
     horizontal_force: float
     vertical_force: float
+    total_tension: float
     segments: List[LazyWaveSegment]
     summary: Dict[str, Any]
     vertical_closure_error: float = 0.0
@@ -334,7 +336,13 @@ class LazyWaveSolver:
         3. Compute buoyancy-to-hog section (buoyancy-dominated)
         4. Compute hog-to-buoyancy section (returning to weight)
         5. Compute buoyancy-to-touchdown section (final catenary)
-        6. Sum forces and geometry
+        6. Resolve hang-off forces and sum geometry
+
+        Vertical equilibrium of the suspended length from the catenary vertex
+        gives Fv = w*S. With a = Fh/w and drop d from that vertex, the catenary
+        identity S**2 = (a + d)**2 - a**2 gives total hang-off tension
+        T = hypot(Fh, Fv) = w*(a + d). Fh = w*a is the horizontal component;
+        adding it to w*S does not give the vertical component (issue #2044).
         """
 
         # Step 1: Hang-off to Sag Section
@@ -347,9 +355,10 @@ class LazyWaveSolver:
         sag_hog_results = self._solve_sag_hog_sections(config)
 
         # Step 3: Compute Forces
-        # Legacy: lines 164-165
+        # Vertical equilibrium and force magnitude at hang-off (issue #2044).
         Fh = config.hangoff_bend_radius * config.weight_without_buoyancy
-        Fv = Fh + config.weight_without_buoyancy * hangoff_section.arc_length
+        Fv = config.weight_without_buoyancy * hangoff_section.arc_length
+        T = math.hypot(Fh, Fv)
 
         # Step 4: Create Summary (matches legacy format)
         # Legacy: lines 167-191
@@ -413,6 +422,7 @@ class LazyWaveSolver:
             },
             'Fh': Fh,
             'Fv': Fv,
+            'T': T,
             'VerticalClosureError': closure_error
         }
 
@@ -435,6 +445,7 @@ class LazyWaveSolver:
             total_horizontal_distance=total_horizontal,
             horizontal_force=Fh,
             vertical_force=Fv,
+            total_tension=T,
             segments=segments,
             summary=summary,
             vertical_closure_error=closure_error

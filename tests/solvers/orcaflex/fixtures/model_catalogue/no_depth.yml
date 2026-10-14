@@ -1,0 +1,8 @@
+# Synthetic catalogue fixture; no measured or vendor data.
+6DBuoys:
+  synthetic_buoy:
+    Connection: Free
+    InitialX: 1
+    InitialY: 2
+    InitialZ: -3
+BaseFile: synthetic_base.yml

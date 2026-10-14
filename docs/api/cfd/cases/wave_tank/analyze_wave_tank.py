@@ -14,6 +14,8 @@ from pathlib import Path
 
 import numpy as np
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 CASE = Path(sys.argv[1])
 OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else CASE
 OUT.mkdir(parents=True, exist_ok=True)
@@ -69,7 +71,7 @@ for j, xg in enumerate(GAUGE_X):
             Hs.append(seg.max() - seg.min())
     Hm = float(np.mean(Hs)) if Hs else float("nan")
     # complex amplitude at the wave frequency
-    ph = np.trapz(e * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
+    ph = _trapezoid(e * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
     res_g.append({"x": xg, "H": Hm, "T": Tm, "amp": abs(ph), "phase": np.angle(ph)})
 
 # ---- dispersion: fit phase slope over the 8-gauge array (x=8..12.8) ----------
@@ -80,7 +82,7 @@ k_meas = float(-np.polyfit(xs, phs, 1)[0])   # eta ~ e^{i(om t - k x)}
 c_meas = om / k_meas
 
 # ---- reflection: least-squares incident/reflected split ---------------------
-A = np.array([np.trapz(eta[:, j] * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
+A = np.array([_trapezoid(eta[:, j] * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
               for j in range(len(GAUGE_X)) if 7.9 <= GAUGE_X[j] <= 12.9])
 Xg = xs
 M = np.column_stack([np.exp(-1j * K_TH * Xg), np.exp(1j * K_TH * Xg)])

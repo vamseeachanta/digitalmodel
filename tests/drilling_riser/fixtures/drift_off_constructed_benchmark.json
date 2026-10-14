@@ -1,0 +1,259 @@
+{
+  "label": "constructed benchmark, not a reproduction; constructed kinematic benchmark against published drift-off watch-circle results; calibrated on one published point; not a reproduction of the force model",
+  "source_of_values": "research note on the issue, 2026-10-12",
+  "sources": [
+    {
+      "id": "W2006",
+      "citation": "Weingarth, \"Refining the DP Watch Circle\", MTS Dynamic Positioning Conference, Operations and Procedures session, October 2006, 13 pp.",
+      "stable_url": "https://dynamic-positioning.com/wp-content/uploads/2025/12/op_procedures_weingarth.pdf",
+      "listing_url": "https://dynamic-positioning.com/past-year-proceeding/",
+      "reuse_terms": "terms not stated (none in the PDF; none seen on the listing page)"
+    },
+    {
+      "id": "B2005",
+      "citation": "Bhalla and Cao, \"Watch Circle Assessment of Drilling Risers during a Drift-Off and Drive-Off Event of a Dynamically Positioned Vessel\", MTS Dynamic Positioning Conference, Operations II session, 15-16 Nov 2005, 25 pp.",
+      "stable_url": "https://dynamic-positioning.com/wp-content/uploads/2025/12/operations_bhalla.pdf",
+      "reuse_terms": "terms not stated"
+    }
+  ],
+  "cases": [
+    {
+      "case": "W2006",
+      "source_id": "W2006",
+      "limit_radius": {"value": 113.2, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Measured from the set point, not the well centre."},
+      "start_offset": {"value": 0, "unit": "m", "locator": "Research note, section 6; Figure 5 (printed page 8)", "caveat": "Zero is defined in set-point coordinates; the well-centred distance is different."},
+      "start_velocity": {"value": 0, "unit": "m/s", "locator": "Research note, section 6", "caveat": "Zero start velocity is an assumption; the source does not print a start velocity."},
+      "disconnect_duration": {"value": 45, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "calibrated_acceleration": {"value": 0.003652, "unit": "m/s2", "locator": "Research note, section 5; Figure 5 (printed page 8)", "caveat": "Calibrated on the published disconnect point; arithmetic on printed values, not a source statement."},
+      "expected_time_to_limit": {"value": 249, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "expected_lead_time_margin": {"value": 204, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Reaction time is printed."},
+      "published_red_offset": {"value": 78.9, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "calibration_point": {
+        "offset": {"value": 113.2, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "time": {"value": 249, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."}
+      }
+    },
+    {
+      "case": "B2005 95% NX",
+      "source_id": "B2005",
+      "limit_radius": {"value": 347, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "start_offset": {"value": 0, "unit": "m", "locator": "Research note, section 6; Figure 2.3.7 (printed pages 14 to 18)", "caveat": "The curve starts at zero, read from a figure; this is not a tabulated initial-condition measurement."},
+      "start_velocity": {"value": 0, "unit": "m/s", "locator": "Research note, section 6", "caveat": "Zero start velocity is an assumption; the source does not print a start velocity."},
+      "disconnect_duration": {"value": 70, "unit": "s", "locator": "section 3 (printed page 21)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "calibrated_acceleration": {"value": 0.003305, "unit": "m/s2", "locator": "Research note, section 5; Table 3.2 (printed page 24)", "caveat": "Calibrated on the published disconnect point; arithmetic on printed values, not a source statement."},
+      "expected_time_to_limit": {"value": 253, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "expected_lead_time_margin": {"value": 183, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Red time is printed; disconnect time minus the disconnect duration also gives this value."},
+      "published_red_offset": {"value": 187, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "calibration_point": {
+        "offset": {"value": 347, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "time": {"value": 253, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."}
+      }
+    },
+    {
+      "case": "B2005 99% NX",
+      "source_id": "B2005",
+      "limit_radius": {"value": 483, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "start_offset": {"value": 0, "unit": "m", "locator": "Research note, section 6; Figure 2.3.7 (printed pages 14 to 18)", "caveat": "The curve starts at zero, read from a figure; this is not a tabulated initial-condition measurement."},
+      "start_velocity": {"value": 0, "unit": "m/s", "locator": "Research note, section 6", "caveat": "Zero start velocity is an assumption; the source does not print a start velocity."},
+      "disconnect_duration": {"value": 70, "unit": "s", "locator": "section 3 (printed page 21)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "calibrated_acceleration": {"value": 0.005518, "unit": "m/s2", "locator": "Research note, section 5; Table 3.2 (printed page 24)", "caveat": "Calibrated on the published disconnect point; arithmetic on printed values, not a source statement."},
+      "expected_time_to_limit": {"value": 231, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "expected_lead_time_margin": {"value": 161, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Red time is printed; disconnect time minus the disconnect duration also gives this value."},
+      "published_red_offset": {"value": 246, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "calibration_point": {
+        "offset": {"value": 483, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "time": {"value": 231, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."}
+      }
+    }
+  ],
+  "provenance_not_used_as_module_arguments": {
+    "W2006": {
+      "water_depth": {"value": 1800, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "water_depth_as_feet": {"value": 5906, "unit": "ft", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "set_point_north_of_well": {"value": 10.0, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Set-point geometry is provenance, not a start offset in the benchmark coordinates."},
+      "set_point_east_of_well": {"value": 5.0, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Set-point geometry is provenance, not a start offset in the benchmark coordinates."},
+      "disconnect_offset_from_well_centre": {"value": 102.6, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "The injected radius is measured from the set point instead."},
+      "seas_height": {"value": 1.0, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Two wave systems are recorded; the module accepts one."},
+      "seas_period": {"value": 6.0, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "seas_direction": {"value": 45, "unit": "deg", "locator": "Figure 5 (printed page 8)", "caveat": "Direction is from, true."},
+      "swell_height": {"value": 2.1, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Two wave systems are recorded; the module accepts one."},
+      "swell_period": {"value": 11.3, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "swell_direction": {"value": 0, "unit": "deg", "locator": "Figure 5 (printed page 8)", "caveat": "Direction is from, true."},
+      "current_speed": {"value": 0.34, "unit": "m/s", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "current_direction": {"value": 30, "unit": "deg", "locator": "Figure 5 (printed page 8)", "caveat": "Direction is from, true."},
+      "wind_speed": {"value": 7.5, "unit": "m/s", "locator": "Figure 5 (printed page 8)", "caveat": "The note records wind at 10 m height as a 1-minute mean."},
+      "wind_reference_height": {"value": 10, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "wind_direction": {"value": 15, "unit": "deg", "locator": "Figure 5 (printed page 8)", "caveat": "Direction is from, true."},
+      "tension": {"value": 1600, "unit": "kips", "locator": "Figure 5 (printed page 8)", "caveat": "Greyed entry is legible but faint; verification remains open."},
+      "lower_flex_joint_limit": {"value": 6, "unit": "deg", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "upper_flex_joint_limit": {"value": 7, "unit": "deg", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "mean_stroke_out": {"value": 15.6, "unit": "ft", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "wellhead_bending_moment_limit": {"value": 2500, "unit": "kip-ft", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "other_limits_offset_percent": {"value": 8.0, "unit": "%", "locator": "Figure 5 (printed page 8)", "caveat": "Percent of water depth; flex joints, stroke-out and wellhead moment govern later than casing bending."},
+      "other_limits_offset": {"value": 144.0, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "casing_bending_moment_limit": {"value": 3753, "unit": "kip-ft", "locator": "Figure 5 (printed page 8)", "caveat": "Structural casing bending governs before the flex-joint limits."},
+      "casing_limit_offset_percent": {"value": 5.7, "unit": "%", "locator": "Figure 5 (printed page 8)", "caveat": "Percent of water depth."},
+      "set_point_disconnect_offset_percent": {"value": 6.3, "unit": "%", "locator": "Figure 5 (printed page 8)", "caveat": "Percent of water depth."},
+      "red_offset_percent": {"value": 4.4, "unit": "%", "locator": "Figure 5 (printed page 8)", "caveat": "Percent of water depth; centred on the set point."},
+      "inactive_disconnect_duration_1": {"value": 25, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Listed duration is not the active 45 s sequence."},
+      "inactive_disconnect_duration_2": {"value": 75, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Listed duration is not the active 45 s sequence."},
+      "inactive_disconnect_duration_3": {"value": 90, "unit": "s", "locator": "Figure 5 (printed page 8)", "caveat": "Listed duration is not the active 45 s sequence."}
+    },
+    "B2005": {
+      "water_depth": {"value": null, "unit": "ft", "locator": {"reference": "Figure 3.1 title", "printed_page": null}, "caveat": "Redacted in the source; no water depth is established."},
+      "derived_water_depth": {"value": 7300, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Approximate arithmetic on 347 ft / 4.75 percent and 187 ft / 2.55 percent; not printed water depth."},
+      "derived_water_depth_metres": {"value": 2230, "unit": "m", "locator": "Table 3.2 (printed page 24)", "caveat": "Approximate derived depth only; not a module argument."},
+      "tension_minimum": {"value": 632, "unit": "kips", "locator": "Table 3.2 (printed page 24)", "caveat": "Range across mud weights; no case-specific value is inferred."},
+      "tension_maximum": {"value": 1338.8, "unit": "kips", "locator": "Table 3.2 (printed page 24)", "caveat": "Range across mud weights; no case-specific value is inferred."},
+      "flex_joint_maximum": {"value": 10, "unit": "deg", "locator": {"reference": "Figure 3.1", "printed_page": null}, "caveat": "Maximum-angle line; printed page not supplied by the note."},
+      "casing_yield_line": {"value": 65, "unit": "ksi", "locator": {"reference": "Figure 3.1", "printed_page": null}, "caveat": "Yield line for the 36-in casing, not the riser."},
+      "casing_diameter": {"value": 36, "unit": "in", "locator": {"reference": "Figure 3.1", "printed_page": null}, "caveat": "Casing diameter, not riser structural diameter."},
+      "yellow_to_red_buffer": {"value": 90, "unit": "s", "locator": "section 3 (printed page 21)", "caveat": "Not asserted; the module has no yellow output."},
+      "case_1_wave_height": {"value": 4.57, "unit": "m", "locator": "section 2.4 and Figures 2.3.2 to 2.3.7 (printed pages 14 to 18)", "caveat": "Case 1 environment is not established as either NX table environment."},
+      "case_1_wave_period": {"value": 9, "unit": "s", "locator": "section 2.4 and Figures 2.3.2 to 2.3.7 (printed pages 14 to 18)", "caveat": "Case 1 environment is not established as either NX table environment."},
+      "case_1_wave_direction": {"value": 195, "unit": "deg", "locator": "section 2.4 and Figures 2.3.2 to 2.3.7 (printed pages 14 to 18)", "caveat": "Case 1 only."},
+      "case_1_current_speed": {"value": 1.5, "unit": "m/s", "locator": "section 2.4 and Figures 2.3.2 to 2.3.7 (printed pages 14 to 18)", "caveat": "Case 1 only."},
+      "case_1_current_direction": {"value": 270, "unit": "deg", "locator": "section 2.4 and Figures 2.3.2 to 2.3.7 (printed pages 14 to 18)", "caveat": "Case 1 only."},
+      "case_1_wind_speed": {"value": 15.24, "unit": "m/s", "locator": "section 2.4 and Figures 2.3.2 to 2.3.7 (printed pages 14 to 18)", "caveat": "Case 1 only; reference height is not given."},
+      "case_1_wind_direction": {"value": 195, "unit": "deg", "locator": "section 2.4 and Figures 2.3.2 to 2.3.7 (printed pages 14 to 18)", "caveat": "Case 1 only."},
+      "drive_off_99_nx_wave_height": {"value": 12.2, "unit": "ft", "locator": {"reference": "Table 3.1 and Figure 3.1 title", "printed_page": null}, "caveat": "Drive-off environment; not silently assigned to the drift-off table."},
+      "drive_off_99_nx_wave_period": {"value": 9.3, "unit": "s", "locator": {"reference": "Table 3.1 and Figure 3.1 title", "printed_page": null}, "caveat": "Drive-off environment; not silently assigned to the drift-off table."},
+      "95_nx_disconnect_offset_percent": {"value": 4.75, "unit": "%", "locator": "Table 3.2 (printed page 24)", "caveat": "Percent of water depth."},
+      "95_nx_red_offset_percent": {"value": 2.55, "unit": "%", "locator": "Table 3.2 (printed page 24)", "caveat": "Percent of water depth."},
+      "99_nx_disconnect_offset_percent": {"value": 6.6, "unit": "%", "locator": "Table 3.2 (printed page 24)", "caveat": "Percent of water depth."},
+      "99_nx_red_offset_percent": {"value": 3.36, "unit": "%", "locator": "Table 3.2 (printed page 24)", "caveat": "Percent of water depth."},
+      "95_nx_time_to_50_ft": {"value": 93, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Earlier tabulated point; not a benchmark assertion."},
+      "99_nx_time_to_50_ft": {"value": 71, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Earlier tabulated point; not a benchmark assertion."},
+      "early_offset": {"value": 50, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Earlier tabulated point; not a benchmark assertion."}
+    }
+  },
+  "excluded_rows": [
+    {
+      "case": "B2005 1 yr WS",
+      "source_id": "B2005",
+      "reason": "First-block rows exceed a limit and tensioners stroke out. Redefined points do not lie on one smooth curve with the first block; deviations exceed those of the retained cases.",
+      "first_block": {
+        "time_to_50_ft": {"value": 52, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "early_offset": {"value": 50, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "red_time": {"value": 142, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "red_offset": {"value": 346, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "red_offset_percent": {"value": 4.73, "unit": "%", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "disconnect_time": {"value": 212, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "disconnect_offset": {"value": 698, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+        "disconnect_offset_percent": {"value": 9.55, "unit": "%", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."}
+      },
+      "redefined_points": [
+        {
+          "time": {"value": 165, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Depends on mud weight."},
+          "offset": {"value": 529, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Depends on mud weight."}
+        },
+        {
+          "time": {"value": 190, "unit": "s", "locator": "Table 3.2 (printed page 24)", "caveat": "Depends on mud weight."},
+          "offset": {"value": 580, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Depends on mud weight."}
+        }
+      ],
+      "arithmetic_in_note": {
+        "acceleration": {"value": 0.009467, "unit": "m/s2", "locator": "Research note, section 5; Table 3.2 (printed page 24)", "caveat": "Calibrated on the published disconnect point; arithmetic on printed values, not a source statement."},
+        "predicted_red_offset": {"value": 313.2, "unit": "ft", "locator": "Research note, section 5; Table 3.2 (printed page 24)", "caveat": "Calibrated on the published disconnect point; arithmetic on printed values, not a source statement."},
+        "red_deviation": {"value": -9.5, "unit": "%", "locator": "Research note, section 5; Table 3.2 (printed page 24)", "caveat": "Calibrated on the published disconnect point; arithmetic on printed values, not a source statement."},
+        "predicted_early_offset": {"value": 42.0, "unit": "ft", "locator": "Research note, section 5; Table 3.2 (printed page 24)", "caveat": "Calibrated on the published disconnect point; arithmetic on printed values, not a source statement."},
+        "early_deviation": {"value": -16.0, "unit": "%", "locator": "Research note, section 5; Table 3.2 (printed page 24)", "caveat": "Calibrated on the published disconnect point; arithmetic on printed values, not a source statement."}
+      },
+      "tolerance_caveat": "The stated 10 percent tolerance admits a 9.5 percent shortfall; exclusion rests on the exceeded limit and inconsistent redefinition, independently of that tolerance."
+    },
+    {
+      "case": "yellow radii",
+      "reason": "The module has no yellow output. Definitions differ: W2006 uses a time fraction, while B2005 uses a fixed offset or buffer.",
+      "W2006_radius": {"value": 40.0, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "W2006_offset_percent": {"value": 2.2, "unit": "%", "locator": "Figure 5 (printed page 8)", "caveat": "Percent of water depth."},
+      "W2006_time_fraction": {"value": 0.7, "unit": null, "locator": "Figure 5 (printed page 8)", "caveat": "Fraction of drift time to red; no unit is printed."},
+      "B2005_offset": {"value": 50, "unit": "ft", "locator": "Table 3.2 (printed page 24)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "B2005_buffer": {"value": 90, "unit": "s", "locator": "section 3 (printed page 21)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."}
+    }
+  ],
+  "modelling_gaps": [
+    {
+      "id": "scalar_outputs",
+      "original_gap": 1,
+      "status": "made moot",
+      "caveat": "W2006 and B2005 publish scalar drift-off outputs matching the module output types."
+    },
+    {
+      "id": "coupling_history",
+      "original_gap": 2,
+      "status": "made moot for this benchmark",
+      "caveat": "G2015 reports a small drift-time coupling effect; this does not validate coupling in the screen.",
+      "uncoupled_time": {"value": 153.5, "unit": "s", "locator": "G2015, section 11.1.3", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "coupled_time": {"value": 155, "unit": "s", "locator": "G2015, section 11.1.3", "caveat": "Approximate time recorded in the note."}
+    },
+    {
+      "id": "vessel_load_coefficients",
+      "original_gap": 3,
+      "status": "open",
+      "caveat": "Vessel wind, current and wave-drift coefficients remain open in every source read."
+    },
+    {
+      "id": "controller_and_thrust_ramp",
+      "original_gap": 4,
+      "status": "made moot",
+      "caveat": "Drift-off has no thrust."
+    },
+    {
+      "id": "sampled_histories",
+      "original_gap": 5,
+      "status": "closed in part",
+      "caveat": "Three tabulated points per case and one figure-read curve exist; no complete sampled history is established.",
+      "locator": "B2005 Table 3.2 (printed page 24); W2006 Figure 5 (printed page 8); B2005 Figure 2.3.7 (printed pages 14 to 18)"
+    },
+    {
+      "id": "casing_bending_limit",
+      "status": "open",
+      "caveat": "Structural casing bending governs ahead of flex-joint limits. The module limit search covers flex-joint angle and riser stress only; the published governing radius cannot be reproduced by that search.",
+      "moment": {"value": 3753, "unit": "kip-ft", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."},
+      "governing_offset_percent": {"value": 5.7, "unit": "%", "locator": "Figure 5 (printed page 8)", "caveat": "Percent of water depth."},
+      "governing_offset": {"value": 102.6, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Measured from well centre."},
+      "flex_joint_offset_percent": {"value": 8.0, "unit": "%", "locator": "Figure 5 (printed page 8)", "caveat": "Percent of water depth."},
+      "flex_joint_offset": {"value": 144.0, "unit": "m", "locator": "Figure 5 (printed page 8)", "caveat": "Printed value recorded by the research note; the source was not opened for this benchmark."}
+    },
+    {
+      "id": "yellow_output",
+      "status": "open",
+      "caveat": "The module has no yellow-circle output."
+    },
+    {
+      "id": "patched_force_and_radius",
+      "status": "unvalidated",
+      "caveat": "Environmental force and limit radius are replaced, not exercised; vessel particulars are required for validation."
+    }
+  ],
+  "open_parameters": [
+    "config.vessel",
+    "config.vessel.length_m",
+    "config.vessel.beam_m",
+    "config.vessel.draft_m",
+    "config.vessel.windage_area_m2",
+    "config.vessel.displacement_t",
+    "config.m_eff_low_kg",
+    "config.m_eff_high_kg",
+    "config.thrust_efficiency",
+    "dp_state.total_commanded_thrust_n",
+    "section.wall_thickness_m",
+    "section.youngs_modulus_pa",
+    "section.smys_pa",
+    "criteria.flexjoint_angle_mean_deg",
+    "criteria.von_mises_design_factor",
+    "criteria.criteria_set",
+    "criteria.category",
+    "condition.return_period",
+    "condition.name",
+    "t_now_s"
+  ],
+  "could_not_verify": [
+    "Vessel particulars, mass, added mass and load coefficients for W2006, B2005 and G2015 are not established.",
+    "B2005 water depth is redacted; approximately 7,300 ft is derived from table columns.",
+    "W2006 real-well versus demonstration-screen status and its faint tension entry are not verified.",
+    "The 2016 drift-off paper by the L2017 group was not opened.",
+    "Conference-paper reuse terms are not stated. Only numbers and citations are retained; source prose, tables and figures are not copied.",
+    "G2015 Table 5 values beyond the two quoted in running text are not verified."
+  ]
+}

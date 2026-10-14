@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floating wind worked example - unissued report skeleton</title>
+<style>
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #172b3a; background: #edf1f4; }
+body { margin: auto; max-width: 76rem; padding: 2rem; }
+header, main, footer { background: white; padding: 2rem; margin-bottom: 1rem; }
+h1, h2, h3 { color: #153c55; }
+nav a { display: inline-block; margin: .4rem 1rem .4rem 0; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0 .3rem; }
+th, td { border: 1px solid #bccbd4; padding: .65rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+th { background: #e8f0f5; }
+.caption { font-size: .9rem; margin: .3rem 0 1.5rem; }
+.placeholder { border-left: .3rem solid #a3660b; padding: 1rem; background: #fff4dd; }
+.result td { background: #fff8ea; }
+section { margin-block: 2rem; }
+@media print { body { padding: 0; background: white; } header, main, footer { padding: 1rem; } tr { break-inside: avoid; } }
+@media (max-width: 45rem) { body { padding: .5rem; } header, main, footer { padding: 1rem; } table { font-size: .85rem; } }
+</style>
+</head>
+<body>
+<header id="title-block">
+<p class="placeholder">UNISSUED SKELETON. No solver results or engineering acceptance are established.</p>
+<h1>Floating wind worked example</h1>
+<p>Standards and editions: [INPUT: select references and editions].</p>
+<table>
+<tr><th>Document control</th><th>Value</th></tr>
+<tr><td>Document number / revision / date</td><td>[INPUT: assign document control before issue]</td></tr>
+<tr><td>Project / client</td><td>[INPUT: document context]</td></tr>
+<tr><td>Prepared / checked / approved</td><td>[INPUT: responsible roles and sign-off]</td></tr>
+</table>
+<p class="caption">Document and sign-off block; no approval is implied.</p>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Description</th><th>Prepared / checked / approved</th></tr>
+<tr><td>[INPUT: revision]</td><td>[INPUT: date]</td><td>[INPUT: revision description]</td><td>[INPUT: roles]</td></tr>
+</table>
+<p class="caption">Revision history to be completed before issue.</p>
+<nav aria-label="Contents">
+<a href="#scope">Scope</a><a href="#traceability">Traceability</a><a href="#as-held">Design basis</a>
+<a href="#method">Method</a><a href="#results">Results</a><a href="#conclusions">Conclusions</a>
+<a href="#references">References cited</a><a href="#sources">Data sources</a><a href="#echo">Input echo</a>
+<a href="#appendix-a">Appendices</a>
+</nav>
+</header>
+<main>
+<section id="scope">
+<h2>Introduction and scope</h2>
+<p>Phase A supplies an inventory, a case-definition worksheet and this report skeleton.
+Phase B remains outside the present work. The analysis will cover equilibrium, free-decay periods,
+operating and parked response, mooring tensions, platform motions and tower-base loads.</p>
+<p>Selected platform and representation: [INPUT: select and freeze].</p>
+<p>The inputs are vendor example models; redistribution terms to be checked before any model file is shared outside.</p>
+</section>
+<section id="traceability">
+<h2>References and traceability</h2>
+<p>Structure follows the contract-routed <a href="../../../reporting/standard-report-pack.md">standard report pack</a>
+and <a href="../../../reporting/standard-report-engine.md">standard report engine</a>:
+document control, traceability, design basis, method, results, conclusions, references, data sources, input echo and appendices.
+This static skeleton is not an engine-generated or validated report pack.</p>
+<p>Companion records: <a href="external-files-inventory.md">external-files inventory</a>
+and <a href="load-case-table.md">load case table</a>.</p>
+<p>Case manifest / criterion version / input digests: [INPUT: record before launch].</p>
+</section>
+<section id="as-held">
+<h2>Design data and basis</h2>
+<p>As-held inputs only. Source identifiers and line numbers below refer to the raw YAML text.
+They do not establish simulation completion or numerical adequacy.</p>
+<p>L02: <a href="../../examples/raw/L02/L02%20OC4%20Semi-sub.yml">docs/domains/orcaflex/examples/raw/L02/L02 OC4 Semi-sub.yml</a>.</p>
+<p>K03: <a href="../../examples/raw/K03/K03%2015MW%20semi-sub%20FOWT.yml">docs/domains/orcaflex/examples/raw/K03/K03 15MW semi-sub FOWT.yml</a>.</p>
+<table>
+<tr><th>Input (units)</th><th>L02 as held</th><th>K03 as held</th></tr>
+<tr><td>Units system (model convention)</td><td>SI (L02 line 14: UnitsSystem)</td><td>SI (K03 line 11: UnitsSystem)</td></tr>
+<tr><td>Whole-system statics (enabled)</td><td>Yes (L02 line 22: WholeSystemStaticsEnabled)</td><td>Yes (K03 line 19: WholeSystemStaticsEnabled)</td></tr>
+<tr><td>Dynamics method (method)</td><td>Implicit time domain (L02 line 24: DynamicsSolutionMethod)</td><td>Implicit time domain (K03 line 21: DynamicsSolutionMethod)</td></tr>
+<tr><td>Constant time step (s)</td><td>0.1 (L02 line 26: ImplicitConstantTimeStep)</td><td>0.1 (K03 line 23: ImplicitConstantTimeStep)</td></tr>
+<tr><td>Log sample interval (s)</td><td>0.1 (L02 line 28: TargetLogSampleInterval)</td><td>0.1 (K03 line 25: TargetLogSampleInterval)</td></tr>
+<tr><td>Seabed depth (m)</td><td>200 (L02 line 85: SeabedOriginDepth)</td><td>200 (K03 line 102: SeabedOriginDepth)</td></tr>
+<tr><td>Wave type (spectrum)</td><td>JONSWAP (L02 line 98: WaveType)</td><td>JONSWAP (K03 line 115: WaveType)</td></tr>
+<tr><td>Wave significant height (m)</td><td>7 (L02 line 104: WaveHs)</td><td>4 (K03 line 121: WaveHs)</td></tr>
+<tr><td>Wave zero-crossing period (s)</td><td>8 (L02 line 105: WaveTz)</td><td>8.52552 (K03 line 122: WaveTz)</td></tr>
+<tr><td>Wave gamma (dimensionless)</td><td>1 (L02 line 106: WaveGamma)</td><td>1 (K03 line 123: WaveGamma)</td></tr>
+<tr><td>Wave direction (deg)</td><td>0 (L02 line 99: WaveDirection)</td><td>180 (K03 line 116: WaveDirection)</td></tr>
+<tr><td>Wave components (count)</td><td>200 (L02 line 107: WaveNumberOfComponents)</td><td>200 (K03 line 124: WaveNumberOfComponents)</td></tr>
+<tr><td>User-specified wave seeds (setting)</td><td>No (L02 line 94: UserSpecifiedRandomWaveSeeds)</td><td>No (K03 line 111: UserSpecifiedRandomWaveSeeds)</td></tr>
+<tr><td>Reference current speed (m/s)</td><td>0 (L02 line 123: RefCurrentSpeed)</td><td>0 (K03 line 140: RefCurrentSpeed)</td></tr>
+<tr><td>Reference current direction (deg)</td><td>180 (L02 line 124: RefCurrentDirection)</td><td>180 (K03 line 141: RefCurrentDirection)</td></tr>
+<tr><td>Wind type (definition)</td><td>Constant (L02 line 134: WindType)</td><td>NPD spectrum (K03 line 151: WindType)</td></tr>
+<tr><td>Wind speed (m/s)</td><td>15 (L02 line 137: WindSpeed)</td><td>17.1 (K03 line 160: WindSpeed)</td></tr>
+<tr><td>Wind direction (deg)</td><td>0 (L02 line 138: WindDirection)</td><td>180 (K03 line 161: WindDirection)</td></tr>
+<tr><td>Stage durations, listed order (s)</td><td>8; 200 (L02 lines 37-39: StageDuration)</td><td>12; 150 (K03 lines 34-36: StageDuration)</td></tr>
+</table>
+<p class="caption">As-held model inputs with raw-model line citations. The case table retains additional spectral inputs.</p>
+</section>
+<section id="method">
+<h2>Methodology and assumptions</h2>
+<p class="placeholder">[INPUT: selected public case definitions, controller treatment, decay offsets and release,
+environmental combinations, seed policy, time window and convergence checks].</p>
+<p>reference to be selected: candidates must be public</p>
+<p>Worked sample calculation: [METHOD: select a cited result-reduction method, state inputs and units,
+then reproduce one case against native-output readback]. No formula or result has been selected here.</p>
+<p>Response extraction: [METHOD: channels, frames, signs, units, statistics and comparison criterion].</p>
+</section>
+<section id="results">
+<h2>Results</h2>
+<table>
+<tr><th>Result field</th><th>Result and governing case</th><th>Criterion / comparator</th><th>Evidence / disposition</th></tr>
+<tr class="result"><td>Case coverage and native completion</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Static convergence and equilibrium</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Static mooring tensions</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Surge natural period</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Sway natural period</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Heave natural period</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Roll natural period</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Pitch natural period</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Yaw natural period</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Operating mooring tensions</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Parked mooring tensions</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Platform motions</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Tower-base forces and moments</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+<tr class="result"><td>Comparison with public reference</td><td>[RESULT: not calculated; case unselected]</td><td>[RESULT: comparator unselected]</td><td>[RESULT: evidence absent; acceptance not established]</td></tr>
+
+</table>
+<p class="caption">Result placeholders. Missing evidence is not a zero result.</p>
+<p class="placeholder">[RESULT: interactive decay traces, motion histories and load summaries with plotted arrays,
+units, selected cases and captions will be inserted after qualified native-output readback].</p>
+</section>
+<section id="conclusions">
+<h2>Conclusions and limitations</h2>
+<p class="placeholder">[RESULT: state each conclusion against its criterion, comparator and governing case].</p>
+<p>Controller files, case references and the first-platform choice remain open in the inventory.
+No natural period, tension, motion, tower-base load or comparison agreement is established.</p>
+<h3>Preconditions for phase B</h3>
+<p>[INPUT: close missing-file gaps, select the first platform, resolve public references and review the case manifest].
+Separate licensed-run authority and native-output verification will be required.</p>
+</section>
+<section id="references">
+<h2>References cited</h2>
+<p>Technical comparison and case definitions: reference to be selected: candidates must be public</p>
+<p>[INPUT: code identifier, publisher, edition, locator, source and intended use; no compliance is claimed].</p>
+</section>
+<section id="sources">
+<h2>Data sources</h2>
+<p>The design-basis table cites the repository model text. The companion inventory records file availability and comparison limits.</p>
+<p>[INPUT: stable source identifiers, digests, versions, freshness and engineering readiness of the selected execution inputs].</p>
+</section>
+<section id="echo">
+<h2>Input echo</h2>
+<p>The as-held input table is a source transcription, not the executed case input echo.</p>
+<p>[INPUT: exact selected case inputs, control states, units, solver version and retained window].</p>
+</section>
+<section id="appendix-a">
+<h2>Appendix A: Reference documents</h2>
+<p>[INPUT: selected public references and source-access records]. No licensed source document is embedded.</p>
+</section>
+<section id="appendix-b">
+<h2>Appendix B: Calculation records</h2>
+<p>[RESULT: native-output pointers, compact arrays, metrics and readback evidence].</p>
+<p>[INPUT: provenance manifest, citation sidecar and report-build record for the issued pack].</p>
+</section>
+<section id="appendix-c">
+<h2>Appendix C: Qualifications and review</h2>
+<p>[INPUT: qualification and independent-review records].</p>
+</section>
+</main>
+<footer>
+<p>Document / revision / project / client: [INPUT: document control]. Standards: [INPUT: selected editions].</p>
+<p>Generation: static unissued skeleton. Engine version / issued-pack provenance: [INPUT: populate at report build].</p>
+<p>PDF: [INPUT: derivative status if requested].</p>
+</footer>
+</body>
+</html>

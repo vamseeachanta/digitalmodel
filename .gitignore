@@ -138,16 +138,27 @@ rao_diverse_results.txt
 .venv/
 venv/
 ENV/
-env/
+/env/
+# Nested environments are ignored by specific environment paths, not by env/.
+**/env/pyvenv.cfg
+**/env/bin/python*
+**/env/bin/activate*
+**/env/bin/pip*
+**/env/Scripts/python*.exe
+**/env/Scripts/activate*
+**/env/Scripts/Activate.ps1
+**/env/Scripts/pip*.exe
+**/env/Lib/site-packages/
+**/env/lib/python*/site-packages/
+**/env/lib64/python*/site-packages/
+**/env/include/python*/
 env.bak/
 venv.bak/
 
-# `env/` above matches a directory of that name at ANY depth, which is the
-# wrong shape for this repository: OrcaFlex model trees keep their metocean
-# case definitions in a sibling directory called `env`, and the rule silently
-# excluded them. That is how the 24in_pipeline campaign came to have tracked
-# run files whose `includefile: ../env/...` targets were never committed,
-# leaving 26 solved simulations unreproducible.
+# `/env/` above is root-anchored. Nested environments are covered by the
+# specific paths above; ordinary engineering inputs under env/ stay visible.
+# Generic include/, bin/ and Scripts/ content is not excluded by these rules.
+# Existing lib/ and lib64/ rules remain in effect independently.
 #
 # Engineering input under docs/ is re-included explicitly, and ONLY the YAML
 # case files. The directory is opened so its *.yml can be seen, then everything
@@ -253,6 +264,8 @@ node_modules/
 /output/
 /results/
 /data/steel_shapes_local/
+# Build output: one-pager print sources written beside committed PDFs.
+/docs/api/capabilities/pdf/*.html
 reports/
 !docs/reports/
 docs/reports/*
@@ -446,3 +459,11 @@ docs/reports/abstracted-hulls/*
 # Compute program first results (workspace-hub#4034): generic cases only, no project data.
 !docs/reports/2026-10-09-compute-program/
 !docs/reports/2026-10-09-compute-program/**
+
+# scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
+# build output. The bare `lib/` above is packaging boilerplate and matches any
+# directory named lib at ANY depth -- it silently swallowed the files that fix
+# the "chain is not reproducible from a clean checkout" defect (#2023), so the
+# remediation was itself invisible to git. Negation must follow the pattern it
+# overrides, and the DIRECTORY must be re-included before git will descend.
+!scripts/cfd/lib/

@@ -33,6 +33,37 @@ def _matches(new: dict, base: dict, rel: float, ab: float) -> bool:
     return True
 
 
+def tolerances(new: dict, base: dict) -> tuple[float, float]:
+    """Relative and absolute tolerance for a pair of entries (the looser of each)."""
+    return (max(base.get("rel_tol", 1e-6), new.get("rel_tol", 1e-6)),
+            max(base.get("abs_tol", 0.0), new.get("abs_tol", 0.0)))
+
+
+def differing_keys(new: dict, base: dict) -> list:
+    """Fingerprint keys that are missing on one side or differ beyond tolerance."""
+    rel, ab = tolerances(new, base)
+    fn, fb = new.get("fingerprint") or {}, base.get("fingerprint") or {}
+    return [key for key in sorted(set(fn) | set(fb), key=str)
+            if key not in fn or key not in fb
+            or not _matches({key: fn[key]}, {key: fb[key]}, rel, ab)]
+
+
+def fingerprint_status(new: dict, base: dict) -> str:
+    """FAILED, INPUT_CHANGED, MATCH, VERSION_CHANGED or MISMATCH for two entries."""
+    if (not new.get("n_ok") or not new.get("fingerprint")
+            or not new.get("fingerprint_consistent", True)
+            or not new.get("complete", True)):
+        return "FAILED"
+    if new.get("input_sha256") != base.get("input_sha256"):
+        return "INPUT_CHANGED"
+    rel, ab = tolerances(new, base)
+    if _matches(new["fingerprint"], base["fingerprint"], rel, ab):
+        return "MATCH"
+    if new.get("solver_version") != base.get("solver_version"):
+        return "VERSION_CHANGED"
+    return "MISMATCH"
+
+
 def compare(new: dict, base: dict, slower_ratio: float = SLOWER_RATIO) -> dict:
     if new.get("pack_version") != base.get("pack_version"):
         raise ValueError(
@@ -50,21 +81,10 @@ def compare(new: dict, base: dict, slower_ratio: float = SLOWER_RATIO) -> dict:
         row = {"case": b["case"], "variant": b["variant"]}
         if n is None:
             row.update(fingerprint="MISSING", timing="-")
-        elif (not n.get("n_ok") or not n.get("fingerprint")
-              or not n.get("fingerprint_consistent", True)
-              or not n.get("complete", True)):
-            row.update(fingerprint="FAILED", timing="-")
-        elif n.get("input_sha256") != b.get("input_sha256"):
-            row.update(fingerprint="INPUT_CHANGED", timing="-")
+        elif (status := fingerprint_status(n, b)) in ("FAILED", "INPUT_CHANGED"):
+            row.update(fingerprint=status, timing="-")
         else:
-            rel = max(b.get("rel_tol", 1e-6), n.get("rel_tol", 1e-6))
-            ab = max(b.get("abs_tol", 0.0), n.get("abs_tol", 0.0))
-            if _matches(n["fingerprint"], b["fingerprint"], rel, ab):
-                row["fingerprint"] = "MATCH"
-            elif n.get("solver_version") != b.get("solver_version"):
-                row["fingerprint"] = "VERSION_CHANGED"
-            else:
-                row["fingerprint"] = "MISMATCH"
+            row["fingerprint"] = status
             new_t = (n.get("solve_s") or {}).get("median")
             base_t = (b.get("solve_s") or {}).get("median")
             same_basis = n.get("timing_basis", "solver") == b.get("timing_basis", "solver")

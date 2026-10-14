@@ -1,0 +1,244 @@
+schema_version: 1
+document: docs/research/mooring-industry-practice.md
+issue: 1807
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+companion_file: mooring-industry-practice.sources.yaml
+# L identifiers are assigned by this transcription, in note bullet order.
+located_not_read:
+- id: L1
+  text: 'UK HSE research reports RR444 (2006) and RR1090 to RR1098 (2017) on floating-production mooring integrity:
+    index pages returned "not found" (https://www.hse.gov.uk/research/rrhtm/rr1090.htm). Titles seen in search summaries
+    only.'
+  urls:
+  - https://www.hse.gov.uk/research/rrhtm/rr1090.htm
+  status: located_not_read
+- id: L2
+  text: 'DNV report 2022-1060 for the Norwegian regulator (PDF, 7.4 MB): https://www.havtil.no/contentassets/a55d5b8c269b4d7e9dc164b781ef2022/2022_1060-rapport-usability-and-suitability-of-high-strength-mooring-chains-rev.-1-signed.pdf'
+  urls:
+  - https://www.havtil.no/contentassets/a55d5b8c269b4d7e9dc164b781ef2022/2022_1060-rapport-usability-and-suitability-of-high-strength-mooring-chains-rev.-1-signed.pdf
+  status: located_not_read
+- id: L3
+  text: 'Carbon Trust Phase V collated summary (PDF, 55 pages) and Stage 3 Phase I summary (PDF, 82 pages): https://www.carbontrust.com/sites/default/files/2024-03/Collated-Summary-Report.pdf
+    and the link on [M5].'
+  urls:
+  - https://www.carbontrust.com/sites/default/files/2024-03/Collated-Summary-Report.pdf
+  status: located_not_read
+  as_written_in_document: 'Carbon Trust Phase V collated summary (PDF, 55 pages) and Stage 3 Phase 1 summary
+    (PDF, 82 pages): https://www.carbontrust.com/sites/default/files/2024-03/Collated-Summary-Report.pdf and
+    the link on [M5].'
+- id: L4
+  text: 'Energy Institute, Guidance for the management of mooring integrity part 1: chain systems (2021): access
+    refused.'
+  urls: []
+  status: located_not_read
+- id: L5
+  text: 'OTC-25273 (2014 industry survey of failures and pre-emptive replacements) and the consultancy summaries
+    of it: "not found" or paywalled.'
+  urls: []
+  status: located_not_read
+- id: L6
+  text: 'API stationkeeping practice (fourth edition, 2024) and mooring integrity management practice (2019, reaffirmed
+    2025): retailer listings in search summaries only.'
+  urls: []
+  status: located_not_read
+- id: L7
+  text: 'Floating wind structure standard (2021 edition): consequence classes and factors seen only on third-party
+    slides.'
+  urls: []
+  status: located_not_read
+- id: L8
+  text: 'ABS fibre-rope guidance notes (June 2021) and position-mooring requirements (2022/2023): PDFs.'
+  urls: []
+  status: located_not_read
+- id: L9
+  text: 'Industry drilling-contractor safety alert 24-3 (2024) on a moored semi-submersible losing lines in a storm;
+    US regulator accident report on a parted line (2021) and review of a tension-loss event (2023); US safety alerts
+    259 and 296: PDFs not readable; details in search summaries only.'
+  urls: []
+  status: located_not_read
+  as_written_in_document: 'Industry drilling-contractor safety alert 24-3 (2024) on a moored semi-submersible
+    losing lines in a storm; United States regulator accident report on a parted line (2021) and review of a
+    tension-loss event (2023); United States safety alerts 259 and 296: PDFs not readable; details in search
+    summaries only.'
+- id: L10
+  text: 'Australian regulator information paper on mooring integrity: timed out.'
+  urls: []
+  status: located_not_read
+- id: L11
+  text: Chain maker's product catalogue PDF; stockist's strength, weight and mechanical-property tables (PDF/images);
+    anchor manual and brochure (behind a request form); steel-wire rope mooring pages ("not found").
+  urls: []
+  status: located_not_read
+- id: L12
+  text: 'NTNU doctoral thesis (2023) and SINTEF papers on mean-load and corrosion effects in chain fatigue; TWI
+    report 1135/2020 on high-strength chain in seawater: records opened but no abstract text returned.'
+  urls: []
+  status: located_not_read
+- id: L13
+  text: 'MDPI J. Mar. Sci. Eng. 13(12) 2407 (2025), two-solver comparison including mooring peak tensions: access
+    refused.'
+  urls: []
+  status: located_not_read
+- id: L14
+  text: 'National-laboratory deep-water shared-anchor report (2025): host did not resolve.'
+  urls: []
+  status: located_not_read
+- id: L15
+  text: 'MoorDyn features/theory pages and MoorPy coefficient page: "not found".'
+  urls: []
+  status: located_not_read
+- id: L16
+  text: OTC 2025/2026 paper abstracts for [M38][M39] (titles only read).
+  urls: []
+  status: located_not_read
+open_substitute_properties:
+- item: OrcaFlex line-type wizard, chain
+  quantity: mass per length
+  variant: studless
+  value_as_given: 19.9 d^2
+  unit_as_given: te/m
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values)
+- item: OrcaFlex line-type wizard, chain
+  quantity: mass per length
+  variant: stud link
+  value_as_given: 21.9 d^2
+  unit_as_given: te/m
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values)
+- item: OrcaFlex line-type wizard, chain
+  quantity: axial stiffness
+  variant: null
+  value_as_given: 0.854e8 d^2
+  unit_as_given: kN
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values)
+- item: OrcaFlex line-type wizard, chain
+  quantity: axial stiffness
+  variant: null
+  value_as_given: 1.01e8 d^2
+  unit_as_given: kN
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values)
+- item: OrcaFlex line-type wizard, chain
+  quantity: normal drag coefficient
+  variant: null
+  value_as_given: '2.4'
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values); normal drag coefficient 2.4
+    / 2.6 on diameter d
+- item: OrcaFlex line-type wizard, chain
+  quantity: normal drag coefficient
+  variant: null
+  value_as_given: '2.6'
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values); normal drag coefficient 2.4
+    / 2.6 on diameter d
+- item: OrcaFlex line-type wizard, chain
+  quantity: axial drag
+  variant: null
+  value_as_given: '1.15'
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values); axial drag 1.15 / 1.4 on d/pi
+- item: OrcaFlex line-type wizard, chain
+  quantity: axial drag
+  variant: null
+  value_as_given: '1.4'
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values); axial drag 1.15 / 1.4 on d/pi
+- item: OrcaFlex line-type wizard, chain
+  quantity: normal added mass
+  variant: null
+  value_as_given: '1.0'
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values)
+- item: OrcaFlex line-type wizard, chain
+  quantity: axial
+  variant: null
+  value_as_given: '0.5'
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values)
+- item: OrcaFlex line-type wizard, chain
+  quantity: outer contact diameter
+  variant: null
+  value_as_given: 3.35 d
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values); The contact diameters match
+    the chain maker's published link widths [M15].
+- item: OrcaFlex line-type wizard, chain
+  quantity: outer contact diameter
+  variant: null
+  value_as_given: 3.6 d
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values); The contact diameters match
+    the chain maker's published link widths [M15].
+- item: OrcaFlex line-type wizard, chain
+  quantity: seabed friction
+  variant: null
+  value_as_given: typically 0.4 to 0.8
+  unit_as_given: null
+  source_id: M7
+  caveat: with d in metres (units are stated on the page for the stud-link values)
+- item: OrcaFlex rope/wire wizard
+  quantity: functions of nominal diameter
+  variant: null
+  value_as_given: null
+  unit_as_given: null
+  source_id: M8
+  caveat: '"based on data from a catalogue published by Marlow Ropes Ltd (1995)", with the advice to use supplier
+    data where available; The formula sub-pages were not read.'
+- item: MoorPy
+  quantity: mooring component property and cost coefficients
+  variant: null
+  value_as_given: null
+  unit_as_given: null
+  source_id: M26
+  caveat: The coefficient page itself returned "not found", so values are not quoted.
+gap_analysis:
+- area: Concept and screening (catenary statics, stiffness, offsets, array layouts)
+  verdict: Open methods adequate
+  as_written_in_document: Open methods meet concept and screening needs
+  basis_source_ids:
+  - M26
+  - M29
+  - M33
+- area: Line dynamics for extreme and fatigue tension
+  verdict: Open methods adequate with care; cross-check needed
+  basis_source_ids:
+  - M45
+- area: Component properties (break load, stiffness, fatigue curves, anchor capacity)
+  verdict: Proprietary data unavoidable for final design
+  basis_source_ids:
+  - M13
+- area: Code-compliant design reports for class approval
+  verdict: Licensed tools and paid standards largely unavoidable
+  basis_source_ids: []
+- area: 'Integrity: detection of line failure and tension estimation from motion data'
+  verdict: Differentiated offering plausible
+  basis_source_ids:
+  - M3
+  - M37
+  - M40
+  - M42
+- area: Second opinion / independent verification of mooring analyses
+  verdict: Differentiated offering plausible
+  basis_source_ids:
+  - M45
+  - M32
+- area: High-strength chain material assessment (hydrogen embrittlement)
+  verdict: Not an analysis-led niche
+  basis_source_ids:
+  - M1
+counts:
+  sources_read: 47
+  located_not_read_documents: about 27 documents
+  located_not_read_groups: 16

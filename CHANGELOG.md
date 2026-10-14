@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- cathodic_protection: title published, reference and illustrative jacket reports as analyses; state computed recommended quantities, distinguish public sources from declared inputs, use one-decimal comparison differences, and remove citation residue. Existing calculation results and released reports are unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
+
+- cathodic_protection: complete the openly licensed reference-jacket member schedule, scaled elevation, zone-area derivation and draft analysis; disclose the structural mass discrepancy and unresolved splash division. A dimension-consistent mass-only anode arrangement passes the aggregate checks; existing results and protected reports remain unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
+
+- cathodic_protection: verify aggregate capacity using cited published outputs separately from measured protection; size density-based design and lower-zone retrofit options, label survey axes, and present verification reports as cited drafts with result-led summaries. Existing calculation results and released reports remain unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
+
+- cathodic_protection: add a cited published-jacket verification, depth monitoring, re-checked anode alternatives and a reference-member input form; the reference geometry is transcribed from the attributed structural model ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
+
+- cathodic_protection: add a design-data jacket elevation and phase-specific failure recommendations, with limitations in an appendix and unchanged calculation results ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
+
 - cathodic_protection: add eleven repository-owned structure/mode review packs, offline comment sidecars, fixed component/phase coverage and exact-artifact publication checks ([#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281)); benchmark A–E packs remain explicitly blocked and the overall portfolio incomplete. Shared engines/templates and numerical results are unchanged.
 - cathodic_protection: rebuild `ABS_gn_ships_2018` on shared kernels with fractional ABS coating breakdown, depleted long-flush geometry, mass/output/layout checks, and cited December 2017 guide values; the old solver remains as deprecated `ABS_gn_ships_2018_legacy`. Owner decision 2026-10-01 accepts the arithmetic-mean coating treatment, depleted long-flush resistance reading, and explicit project dynamic bare-steel current-density input; the rebuilt route is now `client-use-with-eor-check` ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259)).
 
@@ -18,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- catenary: five shadow solver files and two broken-path test files that never ran were deleted (2,423 lines removed across `095ac032` and `cec18733`); both `marine_ops.marine_engineering` re-export sites now import from canonical `marine_ops.marine_analysis.catenary`. The divergent variants that returned different tensions for the same inputs are no longer importable from the package. `orcaflex/mooring_design.py::solve_catenary` remains a separate one-dimensional design helper per the audit decision recorded on [#1811](https://github.com/vamseeachanta/digitalmodel/issues/1811).
 - cathodic_protection: `DNV_RP_B401_offshore` now accepts a mutually exclusive `inputs.components[]` extension for hybrid and free-standing risers, with component-local zones, coatings, environment and life; explicit electrical continuity and family allocations; stand-off, flush and bracelet anodes; and component, family and overall demand/mass/count/output checks and reports ([#2261](https://github.com/vamseeachanta/digitalmodel/issues/2261)).
 - cathodic_protection: the `DNV_RP_B401_offshore` route now supports concrete-embedded reinforcement zones and named seawater/sediment anode families, with cited per-family electrochemistry, mass/count/current-output checks, and family plus overall governing cases ([#2262](https://github.com/vamseeachanta/digitalmodel/issues/2262)).
 - cathodic_protection: add B401 riser-base/foundation/mudmat/hatch-cover compositions, sequential temporary and wet-storage consumption, retrofit additional-anode sizing, and explicit fail-preserving accepted-output-shortfall records ([#2263](https://github.com/vamseeachanta/digitalmodel/issues/2263)).
@@ -42,6 +53,7 @@ Three new calculation modules shipped with full test coverage and traceability m
 ### Added
 
 #### On-Bottom Stability (DNV-RP-F109)
+
 - 5 calculation functions for pipeline stability on seabed
 - Covers absolute stability, generalized lateral stability, vertical stability
 - 20 document-verified tests against DNV-RP-F109 worked examples
@@ -49,12 +61,14 @@ Three new calculation modules shipped with full test coverage and traceability m
 - **Source:** `src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py`
 
 #### ASME B31.4 Wall Thickness
+
 - CodeStrategy pattern: burst, collapse, propagation buckling checks for liquid pipelines
 - Registered in CODE_REGISTRY alongside existing DNV-ST-F101 strategy
 - YAML manifest tracing each check to ASME B31.4 clause numbers
 - **Source:** `src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py`
 
 #### Spectral Scatter Fatigue (DNV-RP-C203)
+
 - scatter_fatigue_damage function for sea-state scatter diagram fatigue analysis
 - SeaStateEntry and ScatterFatigueResult dataclasses
 - Injectable wave spectrum function (JONSWAP default, decoupled from hydrodynamics)
@@ -62,11 +76,13 @@ Three new calculation modules shipped with full test coverage and traceability m
 - **Source:** `src/digitalmodel/structural/fatigue/scatter_fatigue.py`
 
 #### Module Manifest Schema
+
 - Pydantic-based ModuleManifest schema for per-module manifest.yaml validation
 - CI validation script (validate_manifests.py) for repo-wide manifest discovery
 - **Source:** `src/digitalmodel/specs/manifest_schema.py`
 
 #### Integration
+
 - module-registry.yaml updated with 3 new module entries
 - All 3 manifests validated against Pydantic schema
 - Cross-module test pass with 90.5% coverage (all modules above 80%)
@@ -82,6 +98,7 @@ Major milestone release establishing core analytical infrastructure for offshore
 ### Added
 
 #### Fatigue Analysis Module
+
 - **S-N Curve Database**: 221 S-N curves from 17 international standards
   - DNV (81 curves): Editions from 1984-2012
   - BS 7608 (79 curves): British Standard 1993, 2014
@@ -102,6 +119,7 @@ Major milestone release establishing core analytical infrastructure for offshore
 - **Documentation**: Comprehensive README for fatigue database (`data/fatigue/README.md`)
 
 #### Marine Analysis Module
+
 - **RAO Data Processor** (`src/digitalmodel/modules/marine_analysis/rao_processor.py`)
   - Multi-format data import (AQWA, OrcaFlex, experimental)
   - RAOData container class with metadata tracking
@@ -124,6 +142,7 @@ Major milestone release establishing core analytical infrastructure for offshore
   - Enhanced Parser (`aqwa_enhanced_parser.py`): Advanced AQWA parsing
 
 #### Mooring Analysis Module
+
 - **Mooring Base** (`src/digitalmodel/modules/mooring/mooring.py`)
   - Configuration-driven analysis framework
   - Router pattern for extensible analysis types
@@ -135,11 +154,13 @@ Major milestone release establishing core analytical infrastructure for offshore
   - Static and dynamic analysis foundation
 
 #### Examples
+
 - `examples/fatigue/plot_sn_curves_examples.py`: 8 comprehensive examples
 - `examples/fatigue/complete_fatigue_analysis.py`: Full workflow demonstration
 - `examples/fatigue/plot_sn_curves_cli.py`: Command-line interface
 
 #### Documentation
+
 - **Phase 1 Implementation Report** (`docs/phase1-implementation-report.md`)
   - Complete implementation summary
   - Module descriptions and architecture
@@ -155,6 +176,7 @@ Major milestone release establishing core analytical infrastructure for offshore
 - **Fatigue Curve Implementation Review** (`docs/fatigue_curve_implementation_review.md`)
 
 #### Tests
+
 - `tests/fatigue/test_fatigue_migration.py`: Migration validation
 - `tests/domains/fatigue_analysis/test_fatigue_analysis_sn.py`: S-N curve tests
 - `tests/test_fatigue_basic.py`: Basic functionality tests
@@ -163,6 +185,7 @@ Major milestone release establishing core analytical infrastructure for offshore
 ### Changed
 
 #### Project Structure
+
 - Reorganized files into proper directory structure
   - Source code: `src/digitalmodel/`
   - Data: `data/`
@@ -173,28 +196,33 @@ Major milestone release establishing core analytical infrastructure for offshore
 - Enhanced project organization following best practices
 
 #### Code Quality
+
 - Implemented comprehensive input validation
 - Added detailed error messages with suggestions
 - Improved logging throughout codebase
 - Enhanced docstrings with examples
 
 ### Fixed
+
 - Overall damage calculation with explicit type handling
 - Rainflow analysis enhancements
 - File organization issues (removed root directory clutter)
 
 ### Performance
+
 - S-N curve plotting: <0.5s for 20 curves, <20 MB memory
 - RAO import (AQWA .lis): <1s for 100 KB file, <50 MB memory
 - RAO interpolation: <2s for 1000 points, <100 MB memory
 
 ### Validation
+
 - S-N curve plotting accuracy: 99.9% (target: 99%)
 - RAO interpolation error: <2% (target: <5%)
 - Phase preservation: <1° (target: <2°)
 - Data validation coverage: 95% (target: 90%)
 
 ### Known Issues
+
 1. **Fatigue Module**
    - Plotting >20 curves results in cluttered legends
    - Custom S-N curve addition requires manual CSV editing
@@ -210,11 +238,13 @@ Major milestone release establishing core analytical infrastructure for offshore
 See `docs/phase1-implementation-report.md` Section 6 for detailed workarounds.
 
 ### Security
+
 - No hardcoded secrets or credentials
 - Secure file path handling
 - Input validation at all entry points
 
 ### Migration Notes
+
 - This is a major release establishing new core infrastructure
 - All new APIs are considered stable for Phase 1
 - Configuration format is backward compatible with existing projects
@@ -226,6 +256,7 @@ See `docs/phase1-implementation-report.md` Section 6 for detailed workarounds.
 ### Historical Development (Pre-Phase 1)
 
 Prior versions focused on:
+
 - Basic engineering calculations
 - OrcaFlex integration foundations
 - Stress analysis capabilities
@@ -241,17 +272,20 @@ See git history for detailed commit logs: https://github.com/vamseeachanta/digit
 ### Planned Enhancements
 
 #### Marine Analysis
+
 - WAMIT output file support
 - Force/moment RAO extraction
 - Automatic phase unwrapping
 - Multi-body RAO handling
 
 #### Mooring Module
+
 - Spread mooring systems
 - Line fatigue assessment
 - Optimization capabilities
 
 #### Cross-Module Integration
+
 - Mooring-Fatigue coupling
 - Unified reporting system
 
@@ -260,6 +294,7 @@ See git history for detailed commit logs: https://github.com/vamseeachanta/digit
 ## Version Numbering
 
 This project uses Semantic Versioning (MAJOR.MINOR.PATCH):
+
 - **MAJOR**: Incompatible API changes or major new features
 - **MINOR**: New functionality, backward compatible
 - **PATCH**: Bug fixes, backward compatible
@@ -284,6 +319,7 @@ This project uses Semantic Versioning (MAJOR.MINOR.PATCH):
 **Dedication:** Mark Cerkovnik - Chief Engineer, mentor, and inspiration
 
 **Acknowledgments:**
+
 - 200+ SURF engineers for collective insights
 - Industry standards organizations (DNV, API, ABS, BS, Norsok, Bureau Veritas)
 - Open-source community

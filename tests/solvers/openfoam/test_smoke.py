@@ -13,6 +13,8 @@ import pytest
 
 from digitalmodel.solvers.openfoam.smoke import (
     SmokeError,
+    StageEvidence,
+    _reject_stage_failure,
     execute_smoke,
     parse_points,
     plan_smoke,
@@ -457,7 +459,7 @@ def test_evidence_validator_rejects_unknown_and_missing_records(tmp_path: Path) 
 
 @pytest.mark.parametrize(
     "value",
-    ["/srv/private/case", "10.20.30.40", "gpu-claw", "user@example.com"],
+    ["/srv/private/case", "10.20.30.40", "lane-A", "user@example.com"],
 )
 def test_evidence_privacy_validator_rejects_sensitive_strings(value: str) -> None:
     from digitalmodel.solvers.openfoam.smoke_evidence import (
@@ -467,6 +469,22 @@ def test_evidence_privacy_validator_rejects_sensitive_strings(value: str) -> Non
 
     with pytest.raises(EvidenceValidationError, match="privacy"):
         validate_privacy({"value": value})
+
+
+def test_evidence_privacy_uses_configured_lane_ids(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from digitalmodel.solvers.openfoam.smoke_evidence import (
+        EvidenceValidationError,
+        validate_privacy,
+    )
+
+    lane_file = tmp_path / "lanes.yml"
+    lane_file.write_text("lanes:\n  compute-east:\n    physical_cores: 12\n")
+    monkeypatch.setenv("DM_CFD_LANES_FILE", str(lane_file))
+
+    with pytest.raises(EvidenceValidationError, match="privacy"):
+        validate_privacy({"value": "compute-east"})
 
 
 def test_evidence_cli_validates_schema_and_privacy(tmp_path: Path) -> None:
@@ -480,3 +498,90 @@ def test_evidence_cli_validates_schema_and_privacy(tmp_path: Path) -> None:
 
     assert process.returncode == 0, process.stderr
     assert "valid smoke evidence" in process.stdout
+
+
+# Exact output excerpts from the repository issue 2021.
+_MESH_BOUNDING_LINES = (
+    "boundingBox: (-26 -19 -16) (16 0 4)",
+    "Overall mesh bounding box  : (-26 -19 -16) (16 0 4)",
+    "Overall domain bounding box (-26 -19 -16) (16 0 4)",
+)
+_MESH_LINE_IDS = ("blockMesh", "snappyHexMesh", "checkMesh")
+_NON_SOLVER_STAGES = ("setFields", "decomposePar", "reconstructParMesh", "reconstructPar")
+
+
+def _execute_with_stage_output(
+    tmp_path: Path, stage_name: str, output: str, return_code: int = 0
+):
+    initial = [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
+    angle = 0.2
+    rotated = [(0.0, 0.0, 0.0), (math.cos(angle), math.sin(angle), 0.0)]
+    case = _case_with_points(tmp_path / "case", initial)
+    success = _success_runner(_points_text(rotated))
+
+    def run(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        process = success(argv, **kwargs)
+        if argv[0] == stage_name:
+            return subprocess.CompletedProcess(argv, return_code, stdout=output, stderr="")
+        return process
+
+    return execute_smoke(
+        plan_smoke(2, 4, 2), case, end_time=0.30, time_precision=2,
+        length=1.0, rotation_radians=angle, runner=run,
+    )
+
+
+@pytest.mark.parametrize("mesh_line", _MESH_BOUNDING_LINES, ids=_MESH_LINE_IDS)
+@pytest.mark.parametrize("stage_name", _NON_SOLVER_STAGES)
+def test_execute_accepts_quoted_mesh_bounding_boxes(
+    tmp_path: Path, stage_name: str, mesh_line: str
+) -> None:
+    result = _execute_with_stage_output(tmp_path, stage_name, mesh_line)
+
+    assert result.status == "completed"
+    assert len(result.stages) == 5
+    assert result.final_time == pytest.approx(0.30)
+    assert result.step_count == 1
+    assert result.max_displacement == pytest.approx(2 * math.sin(0.1))
+    assert result.max_rotation_error == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("mesh_line", _MESH_BOUNDING_LINES, ids=_MESH_LINE_IDS)
+@pytest.mark.parametrize("check_divergence", [True, False])
+def test_stage_failure_divergence_guard(mesh_line: str, check_divergence: bool) -> None:
+    stage = StageEvidence("reconstructParMesh", ("reconstructParMesh",), 0, "", "", "", "")
+
+    if check_divergence:
+        with pytest.raises(SmokeError, match="failure marker: bounding"):
+            _reject_stage_failure(stage, mesh_line, check_divergence=True)
+    else:
+        _reject_stage_failure(stage, mesh_line, check_divergence=False)
+
+
+def test_execute_rejects_quoted_solver_clipping_pin(tmp_path: Path) -> None:
+    """Pin clipping rejection; field and numbers instantiate the literal format.
+
+    Literal fragments: OpenFOAM-dev, src/finiteVolume/cfdTools/general/bound/bound.C,
+    lines 39-43, commit a035db4caea6c1d5f08556e1d43a0c191240cc5e.
+    """
+    output = "bounding k, min: -0.01 max: 1 average: 0.5\nTime = 0.30\nEnd\n"
+
+    with pytest.raises(SmokeError, match="mpirun output contains failure marker: bounding"):
+        _execute_with_stage_output(tmp_path, "mpirun", output)
+
+
+@pytest.mark.parametrize("stage_name", _NON_SOLVER_STAGES)
+@pytest.mark.parametrize("marker", ["FOAM FATAL ERROR", "FOAM FATAL IO ERROR"])
+def test_execute_rejects_non_solver_fatal_pin(
+    tmp_path: Path, stage_name: str, marker: str
+) -> None:
+    """Pin fatal-marker rejection for every non-solver stage."""
+    with pytest.raises(SmokeError, match=f"{stage_name} output contains failure marker"):
+        _execute_with_stage_output(tmp_path, stage_name, marker)
+
+
+@pytest.mark.parametrize("stage_name", [*_NON_SOLVER_STAGES, "mpirun"])
+def test_execute_rejects_nonzero_any_stage_pin(tmp_path: Path, stage_name: str) -> None:
+    """Pin non-zero exit rejection for all five commands."""
+    with pytest.raises(SmokeError, match=f"{stage_name} returned nonzero exit code 7"):
+        _execute_with_stage_output(tmp_path, stage_name, "Time = 0.30\nEnd\n", 7)

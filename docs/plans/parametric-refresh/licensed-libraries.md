@@ -74,9 +74,23 @@ expectation in `refresh.LIBRARY_EXPECTATIONS` (solver name + version + covered
 case set):
 
 - `refresh --check` **reports** each library (`[ok]` / `[STALE]`) and exits 1 if
-  any library is stale, but never auto-builds it ("licensed run required").
+  `--strict-libraries` is given and any library is stale, but never auto-builds
+  it ("licensed run required").
 - A query against a stale library **escalates** (the staleness gate in
   `query._staleness`), exactly like a stale computed atlas.
+
+Refresh exit statuses are:
+
+- 0: no computed atlas remains stale, all rebuilt computed atlases pass
+  validation, and no strict library failure exists. Stale libraries are
+  report-only unless `--strict-libraries` is given.
+- 1: a computed atlas remains stale, or a library is stale under
+  `--strict-libraries`.
+- 2: a computed atlas rebuilt by `--apply` fails validation. This status takes
+  precedence over a strict library failure. All stale computed atlases are still
+  rebuilt; a rebuilt atlas replaces the previous atlas only after its validation
+  passes. A result without the `passes` key counts as failed validation (status
+  2); the previous atlas is kept.
 
 The shipped library is a STUB; its expectation also says `version: STUB`, so it
 reads current. When the operator runs real diffraction and bumps the expected

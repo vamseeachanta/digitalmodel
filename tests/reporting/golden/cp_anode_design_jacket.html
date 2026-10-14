@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>X0000-CP-000-00 Rev 00 - Cathodic protection anode design - DNV-RP-B401 (May 2021)</title>
-<meta name="description" content="Cathodic protection anode design - DNV-RP-B401 (May 2021) (X0000-CP-000-00 Rev 00) - unassigned / unassigned">
+<title>Cathodic protection analysis: illustrative example jacket at 70 m water depth — Draft for review</title>
 <!-- plotly.js stripped -->
 <style>
   /* ============================ TOKENS ============================ */
@@ -246,17 +245,10 @@
   .chip{font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--hairline);border-radius:999px;padding:5px 11px;color:var(--ink-2)}
 
   /* data / definition tables */
-  /* Single column, always. A multi-column track promised a 260px minimum,
-     but `.kv table{min-width:0}` below defeats the 440px floor this sheet
-     sets for every other table, and `.kv{overflow:hidden}` turns that into
-     SILENT TRUNCATION -- values cut mid-word with no visual cue. The grid
-     was only ever safe for groups with short labels AND short values, and
-     no report can promise that. See the min-width follow-up issue. */
   .datagrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:4px}
-  .kv{border:1px solid var(--hairline);border-radius:12px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+  .kv{border:1px solid var(--hairline);border-radius:12px;overflow-x:auto;background:var(--surface);box-shadow:var(--shadow)}
   .kv .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);
     padding:11px 15px;background:var(--surface-2);border-bottom:1px solid var(--hairline);font-weight:600}
-  .kv table{min-width:0}
   .kv td{border-bottom:1px solid var(--hairline)}
   .kv tr:last-child td{border-bottom:none}
   /* Label sized to its own content, value takes the remaining measure, so a
@@ -412,103 +404,70 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
   a{color:inherit;text-decoration:none}
 }
 
+@media print {
+.doc .toc{display:none}
+.doc .shell{display:block}
+.doc .main{padding:0}
+.doc .tbl table{min-width:0;width:100%;table-layout:fixed}
+.doc .tbl-wrap{overflow:visible}
+.doc .tbl th,.doc .tbl td{font-size:9px;padding:4px 2px;white-space:normal;overflow-wrap:normal}
+.doc .tbl{break-inside:auto;page-break-inside:auto}
+}
 </style>
 </head>
 <body class="doc">
-<header class="masthead" id="report-header">
-  <div class="wrap">
-    <span class="brand">digitalmodel</span>
-    <span class="docno num"><b>X0000-CP-000-00</b> &middot; Rev 00</span>
-    <div class="mh-legend chips" id="header-standards">
-      <span class="chip std">DNV-RP-B401<span class="ed">May 2021</span><span class="prov">verified-2021-tables</span></span>
-    </div>
-  </div>
-</header>
-
-<div class="hero" id="title-block">
-  <div class="wrap">
-    <div class="kicker"><span class="dot"></span><span>Engineering report</span></div>
-    <h1>Cathodic protection anode design - DNV-RP-B401 (May 2021)</h1>
-    <div class="titleblock">
-      <div class="kv">
-        <div class="cap">Document</div>
-        <table>
-          <tr><td>Document number</td><td>X0000-CP-000-00</td></tr>
-          <tr><td>Revision</td><td>00</td></tr>
-          <tr><td>Project</td><td>unassigned</td></tr>
-          <tr><td>Client</td><td>unassigned</td></tr>
-        </table>
-      </div>
-      <div class="kv">
-        <div class="cap">Sign-off</div>
-        <table>
-          <tr><td>Prepared by</td><td>&mdash;</td></tr>
-          <tr><td>Checked by</td><td>&mdash;</td></tr>
-          <tr><td>Approved by</td><td>&mdash;</td></tr>
-          <tr><td>Standards</td><td>DNV-RP-B401 (May 2021)</td></tr>
-        </table>
-      </div>
-    </div>
-    <div class="kv revhist">
-      <div class="cap">Revision history</div>
-      <table>
-        <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
-        <tbody>
-          <tr><td>00</td><td></td><td>Issued</td><td></td><td></td><td></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
+<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Draft for review</span></div></header>
+<div class="hero"><div class="wrap"><h1>Cathodic protection analysis: illustrative example jacket at 70 m water depth</h1><p>Draft for review</p>
+<p>DNV-RP-B401 — May 2021</p>
+</div></div>
 <div class="wrap shell">
-  <nav class="toc" aria-label="Contents">
-    <p class="tt">Contents</p>
-    <ol>
-      <li><a href="#design-basis">Design basis</a></li>
-      <li><a href="#current-demand">Current demand</a></li>
-      <li><a href="#anode-requirements">Anode requirements</a></li>
-      <li><a href="#adequacy">Adequacy</a></li>
-      <li><a href="#references">References</a></li>
-      <li><a href="#references-cited">References cited</a></li>
-      <li><a href="#data-sources">Data sources</a></li>
-      <li><a href="#input-echo">Input echo</a></li>
-    </ol>
-  </nav>
-  <main class="main">
-    <section id="design-basis">
-      <div class="l1head"><span class="secnum"></span><h2>Design basis</h2></div>
-      <p class="l1sub">Input echo: structure zones, environment and anode data</p>
+<nav class="toc" aria-label="Contents"><p class="tt">Contents</p><ol>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#design-basis">Design basis</a></li>
+<li><a href="#current-demand">Current demand</a></li>
+<li><a href="#anode-requirements">Anode requirements</a></li>
+<li><a href="#adequacy">Adequacy</a></li>
+<li><a href="#references">References</a></li>
+<li><a href="#cp-limitations">Appendix A — Limitations and items not evaluated</a></li>
+</ol></nav>
+<main class="main">
+<section id="summary">
+<div class="l1head"><span class="secnum"></span><h2>Summary</h2></div>
+
+    <div class="prose">
+<p>The 55-anode arrangement is analysed against computed mass and initial and final current demands: FAIL; final current governs. An increase to 173 anodes is recommended on the rechecked aggregate basis. Rechecked design alternatives and monitoring requirements are in Adequacy. Measured protection is not evaluated; valid monitoring levels, potentials, survey times and a criterion are required. The elevation is illustrative; geometry and condition limitations are in Appendix A.</p>
+    </div>
+</section>
+<section id="design-basis">
+<div class="l1head"><span class="secnum"></span><h2>Design basis</h2></div>
+<p class="l1sub">Engineering inputs</p>
 
     <div class="tbl" id="table-1">
       <div class="cap">Table 1. Design data</div>
       <div class="tbl-wrap">
         <table>
           <thead>
-            <tr><th>Item</th><th>Value</th><th>Unit</th></tr>
+            <tr><th>Item</th><th>Value</th><th>Unit</th><th>Source</th></tr>
           </thead>
           <tbody>
-            <tr><td>Standard</td><td>DNV-RP-B401 (May 2021)</td><td>-</td></tr>
-            <tr><td>Edition provenance</td><td>verified-2021-tables</td><td>-</td></tr>
-            <tr><td>Design life</td><td>25</td><td>yr</td></tr>
-            <tr><td>Seawater temperature</td><td>10</td><td>degC</td></tr>
-            <tr><td>Seawater resistivity</td><td>0.3</td><td>ohm.m</td></tr>
-            <tr><td>Total surface area</td><td>5500</td><td>m2</td></tr>
-            <tr><td>Anode material</td><td>aluminium</td><td>-</td></tr>
-            <tr><td>Anode type</td><td>stand_off</td><td>-</td></tr>
-            <tr><td>Anode net mass</td><td>200</td><td>kg</td></tr>
-            <tr><td>Anode length</td><td>1</td><td>m</td></tr>
-            <tr><td>Anode equivalent radius (fresh)</td><td>0.05</td><td>m</td></tr>
-            <tr><td>Utilisation factor</td><td>0.85</td><td>-</td></tr>
-            <tr><td>Utilisation factor source</td><td>input</td><td>-</td></tr>
-            <tr><td>Electrochemical capacity</td><td>2000</td><td>Ah/kg</td></tr>
+            <tr><td>Design life</td><td>25</td><td>yr</td><td>illustrative input</td></tr>
+            <tr><td>Seawater temperature</td><td>10</td><td>degC</td><td>illustrative input</td></tr>
+            <tr><td>Seawater resistivity</td><td>0.3</td><td>ohm.m</td><td>illustrative input</td></tr>
+            <tr><td>Total surface area</td><td>5500</td><td>m2</td><td>calculated from declared inputs</td></tr>
+            <tr><td>Anode material</td><td>aluminium</td><td>-</td><td>illustrative input</td></tr>
+            <tr><td>Anode type</td><td>stand-off</td><td>-</td><td>illustrative input</td></tr>
+            <tr><td>Anode net mass</td><td>200</td><td>kg</td><td>illustrative input</td></tr>
+            <tr><td>Anode length</td><td>1</td><td>m</td><td>illustrative input</td></tr>
+            <tr><td>Anode equivalent radius (fresh)</td><td>0.05</td><td>m</td><td>illustrative input</td></tr>
+            <tr><td>Utilisation factor</td><td>0.85</td><td>-</td><td>illustrative input</td></tr>
+            <tr><td>Utilisation factor source</td><td>illustrative input</td><td>-</td><td></td></tr>
+            <tr><td>Electrochemical capacity</td><td>2000</td><td>Ah/kg</td><td>illustrative input</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="src">Source: cfg[inputs], cfg[results]</p>
     </div>
     <div class="tbl" id="table-2">
-      <div class="cap">Table 2. Zones and coating breakdown constants (Table 8-4)</div>
+      <div class="cap">Table 2. Zones and coating breakdown constants</div>
       <div class="tbl-wrap">
         <table>
           <thead>
@@ -516,18 +475,26 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
             <tr class="units"><th>-</th><th>-</th><th>m2</th><th>category</th><th>m</th><th>-</th><th>-</th><th>1/yr</th></tr>
           </thead>
           <tbody>
-            <tr><td>atmospheric</td><td>atmospheric</td><td>200</td><td>III</td><td>0-30</td><td>N/A</td><td>0.02</td><td>0.012</td></tr>
-            <tr><td>splash</td><td>splash</td><td>300</td><td>III</td><td>0-30</td><td>N/A</td><td>0.02</td><td>0.012</td></tr>
             <tr><td>submerged</td><td>submerged</td><td>5000</td><td>III</td><td>0-30</td><td>temperate</td><td>0.02</td><td>0.012</td></tr>
+            <tr><td>splash</td><td>splash</td><td>300</td><td>III</td><td>0-30</td><td>N/A</td><td>0.02</td><td>0.012</td></tr>
+            <tr><td>atmospheric</td><td>atmospheric</td><td>200</td><td>III</td><td>0-30</td><td>N/A</td><td>0.02</td><td>0.012</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="src">Source: cfg[results][coating_breakdown], cfg[results][current_densities_A_m2]</p>
+      <p class="src">Source: illustrative input; demands are calculated from the declared inputs.</p>
     </div>
-    </section>
-    <section id="current-demand">
-      <div class="l1head"><span class="secnum"></span><h2>Current demand</h2></div>
-      <p class="l1sub">DNV-RP-B401 Sec. 7.4: I = A x i x f_c per zone and design phase</p>
+    <figure class="card" id="fig-cp-jacket-elevation-figure">
+      <div class="chart-title">Figure 1. Jacket elevation</div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 510" data-scale="5" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Jacket elevation"><defs><pattern id="elevation-zone-0" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(0)"><rect width="9" height="9" fill="white"/><path d="M 0 0 L 0 9" stroke="#888" stroke-width="0.35"/></pattern><pattern id="elevation-zone-1" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="9" height="9" fill="white"/><path d="M 0 0 L 0 9" stroke="#888" stroke-width="0.35"/></pattern><pattern id="elevation-zone-2" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(70)"><rect width="9" height="9" fill="white"/><path d="M 0 0 L 0 9" stroke="#888" stroke-width="0.35"/></pattern><pattern id="elevation-zone-3" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(105)"><rect width="9" height="9" fill="white"/><path d="M 0 0 L 0 9" stroke="#888" stroke-width="0.35"/></pattern></defs><g data-zone="buried" data-lower-m="-74" data-upper-m="-70"><rect x="45" y="425" width="190" height="20" fill="url(#elevation-zone-0)" stroke="#888" stroke-width="0.5"/><text x="245" y="438" font-size="10" fill="black">buried: -74 to -70 m</text></g><g data-zone="submerged" data-lower-m="-70" data-upper-m="-3"><rect x="45" y="90" width="190" height="335" fill="url(#elevation-zone-1)" stroke="#888" stroke-width="0.5"/><text x="245" y="260.5" font-size="10" fill="black">submerged: -70 to -3 m</text></g><g data-zone="splash" data-lower-m="-3" data-upper-m="3"><rect x="45" y="60" width="190" height="30" fill="url(#elevation-zone-2)" stroke="#888" stroke-width="0.5"/><text x="245" y="78" font-size="10" fill="black">splash: -3 to 3 m</text></g><g data-zone="atmospheric" data-lower-m="3" data-upper-m="7"><rect x="45" y="40" width="190" height="20" fill="url(#elevation-zone-3)" stroke="#888" stroke-width="0.5"/><text x="245" y="53" font-size="10" fill="black">atmospheric: 3 to 7 m</text></g><line data-member="leg-1" data-kind="leg" x1="90" y1="40" x2="60" y2="445" stroke="black" stroke-width="10"/><line data-member="leg-2" data-kind="leg" x1="123.33333333499999" y1="40" x2="113.33333333500001" y2="445" stroke="black" stroke-width="10"/><line data-member="leg-3" data-kind="leg" x1="156.66666666499998" y1="40" x2="166.66666666499998" y2="445" stroke="black" stroke-width="10"/><line data-member="leg-4" data-kind="leg" x1="190" y1="40" x2="220" y2="445" stroke="black" stroke-width="10"/><line data-member="horizontal-1-1" data-kind="horizontal" x1="61.481481479999999" y1="425" x2="113.827160495" y2="425" stroke="black" stroke-width="3"/><line data-member="horizontal-1-2" data-kind="horizontal" x1="113.827160495" y1="425" x2="166.17283950499998" y2="425" stroke="black" stroke-width="3"/><line data-member="horizontal-1-3" data-kind="horizontal" x1="166.17283950499998" y1="425" x2="218.51851851999999" y2="425" stroke="black" stroke-width="3"/><line data-member="horizontal-2-1" data-kind="horizontal" x1="65.185185184999995" y1="375" x2="115.06172839499999" y2="375" stroke="black" stroke-width="3"/><line data-member="horizontal-2-2" data-kind="horizontal" x1="115.06172839499999" y1="375" x2="164.93827160500001" y2="375" stroke="black" stroke-width="3"/><line data-member="horizontal-2-3" data-kind="horizontal" x1="164.93827160500001" y1="375" x2="214.81481481500001" y2="375" stroke="black" stroke-width="3"/><line data-member="horizontal-3-1" data-kind="horizontal" x1="68.888888890000004" y1="325" x2="116.296296295" y2="325" stroke="black" stroke-width="3"/><line data-member="horizontal-3-2" data-kind="horizontal" x1="116.296296295" y1="325" x2="163.70370370500001" y2="325" stroke="black" stroke-width="3"/><line data-member="horizontal-3-3" data-kind="horizontal" x1="163.70370370500001" y1="325" x2="211.11111111" y2="325" stroke="black" stroke-width="3"/><line data-member="horizontal-4-1" data-kind="horizontal" x1="72.592592594999999" y1="275" x2="117.5308642" y2="275" stroke="black" stroke-width="3"/><line data-member="horizontal-4-2" data-kind="horizontal" x1="117.5308642" y1="275" x2="162.4691358" y2="275" stroke="black" stroke-width="3"/><line data-member="horizontal-4-3" data-kind="horizontal" x1="162.4691358" y1="275" x2="207.40740740499999" y2="275" stroke="black" stroke-width="3"/><line data-member="horizontal-5-1" data-kind="horizontal" x1="76.296296295000005" y1="225" x2="118.7654321" y2="225" stroke="black" stroke-width="3"/><line data-member="horizontal-5-2" data-kind="horizontal" x1="118.7654321" y1="225" x2="161.2345679" y2="225" stroke="black" stroke-width="3"/><line data-member="horizontal-5-3" data-kind="horizontal" x1="161.2345679" y1="225" x2="203.70370370500001" y2="225" stroke="black" stroke-width="3"/><line data-member="horizontal-6-1" data-kind="horizontal" x1="80" y1="175" x2="120" y2="175" stroke="black" stroke-width="3"/><line data-member="horizontal-6-2" data-kind="horizontal" x1="120" y1="175" x2="160" y2="175" stroke="black" stroke-width="3"/><line data-member="horizontal-6-3" data-kind="horizontal" x1="160" y1="175" x2="200" y2="175" stroke="black" stroke-width="3"/><line data-member="horizontal-7-1" data-kind="horizontal" x1="83.703703704999995" y1="125" x2="121.2345679" y2="125" stroke="black" stroke-width="3"/><line data-member="horizontal-7-2" data-kind="horizontal" x1="121.2345679" y1="125" x2="158.7654321" y2="125" stroke="black" stroke-width="3"/><line data-member="horizontal-7-3" data-kind="horizontal" x1="158.7654321" y1="125" x2="196.29629629499999" y2="125" stroke="black" stroke-width="3"/><line data-member="horizontal-8-1" data-kind="horizontal" x1="87.407407405000001" y1="75" x2="122.4691358" y2="75" stroke="black" stroke-width="3"/><line data-member="horizontal-8-2" data-kind="horizontal" x1="122.4691358" y1="75" x2="157.5308642" y2="75" stroke="black" stroke-width="3"/><line data-member="horizontal-8-3" data-kind="horizontal" x1="157.5308642" y1="75" x2="192.59259259500001" y2="75" stroke="black" stroke-width="3"/><line data-member="horizontal-9-1" data-kind="horizontal" x1="90" y1="40" x2="123.33333333499999" y2="40" stroke="black" stroke-width="3"/><line data-member="horizontal-9-2" data-kind="horizontal" x1="123.33333333499999" y1="40" x2="156.66666666499998" y2="40" stroke="black" stroke-width="3"/><line data-member="horizontal-9-3" data-kind="horizontal" x1="156.66666666499998" y1="40" x2="190" y2="40" stroke="black" stroke-width="3"/><line data-member="diagonal-1-1-1" data-kind="diagonal" x1="61.481481479999999" y1="425" x2="115.06172839499999" y2="375" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-1-1-2" data-kind="diagonal" x1="113.827160495" y1="425" x2="65.185185184999995" y2="375" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-1-2-1" data-kind="diagonal" x1="113.827160495" y1="425" x2="164.93827160500001" y2="375" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-1-2-2" data-kind="diagonal" x1="166.17283950499998" y1="425" x2="115.06172839499999" y2="375" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-1-3-1" data-kind="diagonal" x1="166.17283950499998" y1="425" x2="214.81481481500001" y2="375" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-1-3-2" data-kind="diagonal" x1="218.51851851999999" y1="425" x2="164.93827160500001" y2="375" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-2-1-1" data-kind="diagonal" x1="65.185185184999995" y1="375" x2="116.296296295" y2="325" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-2-1-2" data-kind="diagonal" x1="115.06172839499999" y1="375" x2="68.888888890000004" y2="325" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-2-2-1" data-kind="diagonal" x1="115.06172839499999" y1="375" x2="163.70370370500001" y2="325" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-2-2-2" data-kind="diagonal" x1="164.93827160500001" y1="375" x2="116.296296295" y2="325" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-2-3-1" data-kind="diagonal" x1="164.93827160500001" y1="375" x2="211.11111111" y2="325" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-2-3-2" data-kind="diagonal" x1="214.81481481500001" y1="375" x2="163.70370370500001" y2="325" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-3-1-1" data-kind="diagonal" x1="68.888888890000004" y1="325" x2="117.5308642" y2="275" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-3-1-2" data-kind="diagonal" x1="116.296296295" y1="325" x2="72.592592594999999" y2="275" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-3-2-1" data-kind="diagonal" x1="116.296296295" y1="325" x2="162.4691358" y2="275" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-3-2-2" data-kind="diagonal" x1="163.70370370500001" y1="325" x2="117.5308642" y2="275" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-3-3-1" data-kind="diagonal" x1="163.70370370500001" y1="325" x2="207.40740740499999" y2="275" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-3-3-2" data-kind="diagonal" x1="211.11111111" y1="325" x2="162.4691358" y2="275" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-4-1-1" data-kind="diagonal" x1="72.592592594999999" y1="275" x2="118.7654321" y2="225" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-4-1-2" data-kind="diagonal" x1="117.5308642" y1="275" x2="76.296296295000005" y2="225" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-4-2-1" data-kind="diagonal" x1="117.5308642" y1="275" x2="161.2345679" y2="225" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-4-2-2" data-kind="diagonal" x1="162.4691358" y1="275" x2="118.7654321" y2="225" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-4-3-1" data-kind="diagonal" x1="162.4691358" y1="275" x2="203.70370370500001" y2="225" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-4-3-2" data-kind="diagonal" x1="207.40740740499999" y1="275" x2="161.2345679" y2="225" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-5-1-1" data-kind="diagonal" x1="76.296296295000005" y1="225" x2="120" y2="175" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-5-1-2" data-kind="diagonal" x1="118.7654321" y1="225" x2="80" y2="175" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-5-2-1" data-kind="diagonal" x1="118.7654321" y1="225" x2="160" y2="175" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-5-2-2" data-kind="diagonal" x1="161.2345679" y1="225" x2="120" y2="175" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-5-3-1" data-kind="diagonal" x1="161.2345679" y1="225" x2="200" y2="175" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-5-3-2" data-kind="diagonal" x1="203.70370370500001" y1="225" x2="160" y2="175" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-6-1-1" data-kind="diagonal" x1="80" y1="175" x2="121.2345679" y2="125" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-6-1-2" data-kind="diagonal" x1="120" y1="175" x2="83.703703704999995" y2="125" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-6-2-1" data-kind="diagonal" x1="120" y1="175" x2="158.7654321" y2="125" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-6-2-2" data-kind="diagonal" x1="160" y1="175" x2="121.2345679" y2="125" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-6-3-1" data-kind="diagonal" x1="160" y1="175" x2="196.29629629499999" y2="125" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-6-3-2" data-kind="diagonal" x1="200" y1="175" x2="158.7654321" y2="125" stroke="black" stroke-width="7.9900000000000002"/><line data-member="diagonal-7-1-1" data-kind="diagonal" x1="83.703703704999995" y1="125" x2="122.4691358" y2="75" stroke="black" stroke-width="3.165"/><line data-member="diagonal-7-1-2" data-kind="diagonal" x1="121.2345679" y1="125" x2="87.407407405000001" y2="75" stroke="black" stroke-width="3.165"/><line data-member="diagonal-7-2-1" data-kind="diagonal" x1="121.2345679" y1="125" x2="157.5308642" y2="75" stroke="black" stroke-width="3.165"/><line data-member="diagonal-7-2-2" data-kind="diagonal" x1="158.7654321" y1="125" x2="122.4691358" y2="75" stroke="black" stroke-width="3.165"/><line data-member="diagonal-7-3-1" data-kind="diagonal" x1="158.7654321" y1="125" x2="192.59259259500001" y2="75" stroke="black" stroke-width="3.165"/><line data-member="diagonal-7-3-2" data-kind="diagonal" x1="196.29629629499999" y1="125" x2="157.5308642" y2="75" stroke="black" stroke-width="3.165"/><line data-member="diagonal-8-1-1" data-kind="diagonal" x1="87.407407405000001" y1="75" x2="123.33333333499999" y2="40" stroke="black" stroke-width="1.73"/><line data-member="diagonal-8-1-2" data-kind="diagonal" x1="122.4691358" y1="75" x2="90" y2="40" stroke="black" stroke-width="1.73"/><line data-member="diagonal-8-2-1" data-kind="diagonal" x1="122.4691358" y1="75" x2="156.66666666499998" y2="40" stroke="black" stroke-width="1.73"/><line data-member="diagonal-8-2-2" data-kind="diagonal" x1="157.5308642" y1="75" x2="123.33333333499999" y2="40" stroke="black" stroke-width="1.73"/><line data-member="diagonal-8-3-1" data-kind="diagonal" x1="157.5308642" y1="75" x2="190" y2="40" stroke="black" stroke-width="1.73"/><line data-member="diagonal-8-3-2" data-kind="diagonal" x1="192.59259259500001" y1="75" x2="156.66666666499998" y2="40" stroke="black" stroke-width="1.73"/><line data-member="conductor-1" data-kind="conductor" x1="130" y1="40" x2="130" y2="425" stroke="black" stroke-width="2.5"/><line data-member="conductor-2" data-kind="conductor" x1="136.66666666499998" y1="40" x2="136.66666666499998" y2="425" stroke="black" stroke-width="2.5"/><line data-member="conductor-3" data-kind="conductor" x1="143.33333333500002" y1="40" x2="143.33333333500002" y2="425" stroke="black" stroke-width="2.5"/><line data-member="conductor-4" data-kind="conductor" x1="150" y1="40" x2="150" y2="425" stroke="black" stroke-width="2.5"/><g data-kind="brace-level" data-elevation-m="-70"/><g data-kind="brace-level" data-elevation-m="-60"/><g data-kind="brace-level" data-elevation-m="-50"/><g data-kind="brace-level" data-elevation-m="-40"/><g data-kind="brace-level" data-elevation-m="-30"/><g data-kind="brace-level" data-elevation-m="-20"/><g data-kind="brace-level" data-elevation-m="-10"/><g data-kind="brace-level" data-elevation-m="0"/><g data-kind="brace-level" data-elevation-m="7"/><g data-level="waterline" data-elevation-m="0"><line x1="45" x2="235" y1="75" y2="75" stroke="black" stroke-width="1" stroke-dasharray="7 3"/><text x="245" y="71" font-size="10" fill="black">waterline: 0 m</text></g><g data-level="mudline" data-elevation-m="-70"><line x1="45" x2="235" y1="425" y2="425" stroke="black" stroke-width="1" stroke-dasharray="2 3"/><text x="245" y="421" font-size="10" fill="black">mudline: -70 m</text></g><text x="55" y="20" font-size="10" fill="black">Datum: still-water level</text><text x="55" y="34" font-size="10" fill="black">ILLUSTRATIVE</text><path d="M 55 480 h 25 m -25 -3 v 6 m 25 -6 v 6" stroke="black" fill="none"/><text x="55" y="497" font-size="10" fill="black">5 m; common horizontal and vertical scale</text></svg>
+      <figcaption class="fig-cap">Datum: still-water level. ILLUSTRATIVE. Illustrative elevation. See Appendix A for the geometry basis and surface-area comparison.</figcaption>
+    </figure>
+    <div class="prose">
+<p>Design life 25 years and seawater temperature 10 °C, nominal mass interpreted as net alloy, and equivalent-cylinder alternatives with alloy density 2750 kg/m³ are declared illustrative inputs (source: illustrative input). The original radius is the stated input; alternative radii follow net mass, length and alloy density. Capacity and utilisation are illustrative inputs; governing practice is listed in References [1].</p>
+    </div>
+</section>
+<section id="current-demand">
+<div class="l1head"><span class="secnum"></span><h2>Current demand</h2></div>
+<p class="l1sub">DNV-RP-B401: I = A x i x f_c per zone and design phase</p>
 
     <div class="tbl" id="table-3">
       <div class="cap">Table 3. Current density, coating breakdown and demand by zone</div>
@@ -538,24 +505,24 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
             <tr class="units"><th>-</th><th>m2</th><th>A/m2</th><th>A/m2</th><th>A/m2</th><th>-</th><th>-</th><th>-</th><th>A</th><th>A</th><th>A</th></tr>
           </thead>
           <tbody>
-            <tr><td>atmospheric</td><td>200</td><td>0</td><td>0</td><td>0</td><td>0.02</td><td>0.17</td><td>0.32</td><td>0</td><td>0</td><td>0</td></tr>
-            <tr><td>splash</td><td>300</td><td>0</td><td>0</td><td>0</td><td>0.02</td><td>0.17</td><td>0.32</td><td>0</td><td>0</td><td>0</td></tr>
             <tr><td>submerged</td><td>5000</td><td>0.2</td><td>0.1</td><td>0.13</td><td>0.02</td><td>0.17</td><td>0.32</td><td>20</td><td>85</td><td>208</td></tr>
+            <tr><td>splash</td><td>300</td><td>0</td><td>0</td><td>0</td><td>0.02</td><td>0.17</td><td>0.32</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>atmospheric</td><td>200</td><td>0</td><td>0</td><td>0</td><td>0.02</td><td>0.17</td><td>0.32</td><td>0</td><td>0</td><td>0</td></tr>
             <tr><td>Total</td><td>5500</td><td></td><td></td><td></td><td></td><td></td><td></td><td>20</td><td>85</td><td>208</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="src">Source: cfg[results][current_demand_A]</p>
+      <p class="src">Source: illustrative input; demands are calculated from the declared inputs.</p>
     </div>
     <figure class="card" id="fig-cp-demand-vs-time-figure">
-      <div class="chart-title">Figure 1. Maintenance current demand over the design life</div>
-      <div>                            <div id="fig-cp-demand-vs-time" class="plotly-graph-div" style="height:420px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("fig-cp-demand-vs-time")) {                    Plotly.newPlot(                        "fig-cp-demand-vs-time",                        [{"mode":"lines+markers","name":"atmospheric","type":"scatter","x":[0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0,22.5,25.0],"y":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{"mode":"lines+markers","name":"splash","type":"scatter","x":[0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0,22.5,25.0],"y":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{"mode":"lines+markers","name":"submerged","type":"scatter","x":[0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0,22.5,25.0],"y":[10.0,25.0,40.0,55.0,70.0,85.0,100.0,115.0,130.0,145.0,160.0]}],                        {"autosize":true,"hovermode":"x unified","margin":{"b":50,"l":60,"r":20,"t":50},"template":{"data":{"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"#E5ECF6","showlakes":true,"showland":true,"subunitcolor":"white"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"bgcolor":"#E5ECF6","radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"bgcolor":"#E5ECF6","caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","zerolinewidth":2}}},"title":{"text":"Current demand vs time"},"xaxis":{"title":{"text":"years in service"}},"yaxis":{"title":{"text":"current demand (A)"}}},                        {"responsive": true}                    )                };                            </script>        </div>
-      <figcaption class="fig-cap">I(t) = A x i_mean x min(1, a + b t) per zone with Table 8-4 breakdown constants; the initial and final design cases use the phase densities tabulated above (i_initial with f_ci, i_final with f_cf).</figcaption>
+      <div class="chart-title">Figure 2. Maintenance current demand over the design life</div>
+      <div>                            <div id="fig-cp-demand-vs-time" class="plotly-graph-div" style="height:420px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("fig-cp-demand-vs-time")) {                    Plotly.newPlot(                        "fig-cp-demand-vs-time",                        [{"mode":"lines+markers","name":"submerged","type":"scatter","x":[0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0,22.5,25.0],"y":[10.0,25.0,40.0,55.0,70.0,85.0,100.0,115.0,130.0,145.0,160.0]},{"mode":"lines+markers","name":"splash","type":"scatter","x":[0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0,22.5,25.0],"y":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{"mode":"lines+markers","name":"atmospheric","type":"scatter","x":[0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0,22.5,25.0],"y":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]}],                        {"autosize":true,"hovermode":"x unified","margin":{"b":50,"l":60,"r":20,"t":50},"template":{"data":{"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"#E5ECF6","showlakes":true,"showland":true,"subunitcolor":"white"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"bgcolor":"#E5ECF6","radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"bgcolor":"#E5ECF6","caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","zerolinewidth":2}}},"title":{"text":"Current demand vs time"},"xaxis":{"title":{"text":"years in service"}},"yaxis":{"title":{"text":"current demand (A)"}}},                        {"responsive": true}                    )                };                            </script>        </div>
+      <figcaption class="fig-cap">I(t) = A x i_mean x min(1, a + b t) per zone with the declared coating breakdown constants; the initial and final design cases use the phase densities tabulated above (i_initial with f_ci, i_final with f_cf).</figcaption>
     </figure>
-    </section>
-    <section id="anode-requirements">
-      <div class="l1head"><span class="secnum"></span><h2>Anode requirements</h2></div>
-      <p class="l1sub">N = max(N_mass, N_initial, N_final), DNV-RP-B401 Sec. 7.7-7.8</p>
+</section>
+<section id="anode-requirements">
+<div class="l1head"><span class="secnum"></span><h2>Anode requirements</h2></div>
+<p class="l1sub">N = max(N_mass, N_initial, N_final), DNV-RP-B401</p>
 
     <div class="tbl" id="table-4">
       <div class="cap">Table 4. Anode mass and count</div>
@@ -565,39 +532,38 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
             <tr><th>Item</th><th>Value</th><th>Unit</th></tr>
           </thead>
           <tbody>
-            <tr><td>Total net anode mass required (Sec. 7.7)</td><td>10950</td><td>kg</td></tr>
+            <tr><td>Total net anode mass required</td><td>10950</td><td>kg</td></tr>
             <tr><td>Individual anode net mass</td><td>200</td><td>kg</td></tr>
             <tr><td>Design life</td><td>219000</td><td>h</td></tr>
             <tr><td>Anodes by mass (N_mass)</td><td>55</td><td>-</td></tr>
             <tr><td>Anodes by initial current output (N_initial)</td><td>13</td><td>-</td></tr>
             <tr><td>Anodes by final current output (N_final)</td><td>173</td><td>-</td></tr>
             <tr><td>Recommended anode count</td><td>173</td><td>-</td></tr>
-            <tr><td>Count verified</td><td>55</td><td>-</td></tr>
+            <tr><td>Installed count</td><td>55</td><td>-</td></tr>
             <tr><td>Count source</td><td>mass</td><td>-</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="src">Source: cfg[results][anode_requirements], cfg[results][current_output_verification]</p>
     </div>
     <figure class="card" id="fig-cp-anode-counts-figure">
-      <div class="chart-title">Figure 2. Anode count by sizing case</div>
+      <div class="chart-title">Figure 3. Anode count by sizing case</div>
       <div>                            <div id="fig-cp-anode-counts" class="plotly-graph-div" style="height:420px; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("fig-cp-anode-counts")) {                    Plotly.newPlot(                        "fig-cp-anode-counts",                        [{"name":"Anodes","type":"bar","x":["By mass","By initial current","By final current","Recommended"],"y":[55,13,173,173]}],                        {"autosize":true,"barmode":"group","hovermode":"x unified","margin":{"b":50,"l":60,"r":20,"t":50},"template":{"data":{"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"heatmapgl":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmapgl"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"#E5ECF6","showlakes":true,"showland":true,"subunitcolor":"white"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"bgcolor":"#E5ECF6","radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","gridwidth":2,"linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"bgcolor":"#E5ECF6","caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","zerolinewidth":2}}},"title":{"text":"Anode count by sizing case"},"xaxis":{"title":{"text":"sizing case"}},"yaxis":{"title":{"text":"anodes"}}},                        {"responsive": true}                    )                };                            </script>        </div>
       <figcaption class="fig-cap">Required anode count per sizing case; the largest governs.</figcaption>
     </figure>
-    </section>
-    <section id="adequacy">
-      <div class="l1head"><span class="secnum"></span><h2>Adequacy</h2></div>
-      <p class="l1sub">DNV-RP-B401 Sec. 7.8 current-output verification (Table 8-7 resistance)</p>
+</section>
+<section id="adequacy">
+<div class="l1head"><span class="secnum"></span><h2>Adequacy</h2></div>
+<p class="l1sub">Current-output check</p>
 
     <div class="prose">
-<p>Use status: approved for client use subject to an engineer-of-record check of this deliverable.</p>
+<p>Draft for review</p>
     </div>
     <div class="status">
       <div class="st fail">
         <span class="icon">&#10007;</span>
         <div>
           <div class="lab">Anode design adequacy</div>
-          <div class="sub"><b>Governing case:</b> final &middot; 55 x 200 kg stand_off anodes (mass) fail the final current output check(s); the final case governs: N_mass=55, N_initial=13, N_final=173; install 173 anodes (B401 Sec. 7.8); Use status: approved for client use subject to an engineer-of-record check of this deliverable.</div>
+          <div class="sub"><b>Governing case:</b> final &middot; 55 x 200 kg stand-off anodes (mass) fail the final current output check(s); the final case governs: N_mass=55, N_initial=13, N_final=173; install 173 anodes; Draft for review</div>
         </div>
         <span class="pill">FAIL</span>
       </div>
@@ -616,7 +582,6 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
           </tbody>
         </table>
       </div>
-      <p class="src">Source: cfg[results][current_output_verification]</p>
     </div>
     <div class="tbl" id="table-6">
       <div class="cap">Table 6. Adequacy checks</div>
@@ -633,123 +598,110 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
         </table>
       </div>
     </div>
-    </section>
-    <section id="references">
-      <div class="l1head"><span class="secnum"></span><h2>References</h2></div>
-
     <div class="prose">
-<p>Every tabulated constant carries the standard, revision and table it was read from; the <em>References cited</em> table at the end of this report lists the resolved citation records.</p>
+<h4>Design increase and recheck</h4>
+<p>An increase to 173 anodes adds 118 units and 23600 kg net alloy. Count = max(count by mass, initial output, final output). Each option below is recalculated against the same demands [1].</p>
     </div>
     <div class="tbl" id="table-7">
-      <div class="cap">Table 7. Where each cited table was used</div>
+      <div class="cap">Table 7. Original and increased-count arrangement</div>
       <div class="tbl-wrap">
         <table>
           <thead>
-            <tr><th>Item</th><th>Citations</th></tr>
+            <tr><th>Check or quantity</th><th>Original</th><th>Rechecked</th></tr>
           </thead>
           <tbody>
-            <tr><td>atmospheric: design current density</td><td>none</td></tr>
-            <tr><td>atmospheric: coating breakdown</td><td>dnv-rp-b401 2021-05 Table 8-4</td></tr>
-            <tr><td>splash: design current density</td><td>none</td></tr>
-            <tr><td>splash: coating breakdown</td><td>dnv-rp-b401 2021-05 Table 8-4</td></tr>
-            <tr><td>submerged: design current density</td><td>dnv-rp-b401 2021-05 Table 8-1, dnv-rp-b401 2021-05 Table 8-2</td></tr>
-            <tr><td>submerged: coating breakdown</td><td>dnv-rp-b401 2021-05 Table 8-4</td></tr>
-            <tr><td>Anode capacity and utilisation</td><td>dnv-rp-b401 2021-05 Table 8-6</td></tr>
-            <tr><td>Driving voltage</td><td>dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)</td></tr>
+            <tr><td>Anode count</td><td>55</td><td>173</td></tr>
+            <tr><td>Installed net mass (kg)</td><td>11000</td><td>34600</td></tr>
+            <tr><td>Initial current output (A)</td><td>85.15</td><td>267.835</td></tr>
+            <tr><td>Final current output (A)</td><td>66.499</td><td>209.169</td></tr>
+            <tr><td>Mass check</td><td>PASS</td><td>PASS</td></tr>
+            <tr><td>Initial current check</td><td>PASS</td><td>PASS</td></tr>
+            <tr><td>Final current check</td><td>FAIL</td><td>PASS</td></tr>
+            <tr><td>Overall</td><td>FAIL</td><td>PASS</td></tr>
           </tbody>
         </table>
       </div>
     </div>
-    </section>
-    <section id="references-cited">
-      <div class="l1head"><span class="secnum"></span><h2>References cited</h2></div>
+    <div class="prose">
+<h4>Anode geometry alternative</h4>
+<p>The count can instead remain 55 with the equivalent-cylinder dimensions below. Radius = sqrt(net mass / (π × length × 2750 kg/m³)); alloy density is illustrative input. The increased-count option retains the original unit dimensions and is preferred until attachment, clearance and fabrication constraints qualify the geometry alternative [1].</p>
+    </div>
+    <div class="tbl" id="table-8">
+      <div class="cap">Table 8. Original and dimensioned equivalent-cylinder arrangement</div>
       <div class="tbl-wrap">
-        <table class="refs-table">
-          <thead><tr><th>#</th><th>Code</th><th>Revision</th><th>Section</th><th>Wiki path</th><th>Note</th></tr></thead>
+        <table>
+          <thead>
+            <tr><th>Check or quantity</th><th>Original</th><th>Rechecked</th></tr>
+          </thead>
           <tbody>
-            <tr><td>1</td><td>dnv-rp-b401</td><td>2021-05</td><td>Table 8-1</td><td class="path">wikis/engineering-standards/wiki/standards/dnv-rp-b401.md</td><td>DNV-RP-B401 (May 2021): verified-2021-tables</td></tr>
-            <tr><td>2</td><td>dnv-rp-b401</td><td>2021-05</td><td>Table 8-2</td><td class="path">wikis/engineering-standards/wiki/standards/dnv-rp-b401.md</td><td>DNV-RP-B401 (May 2021): verified-2021-tables</td></tr>
-            <tr><td>3</td><td>dnv-rp-b401</td><td>2021-05</td><td>Table 8-4</td><td class="path">wikis/engineering-standards/wiki/standards/dnv-rp-b401.md</td><td>DNV-RP-B401 (May 2021): verified-2021-tables</td></tr>
-            <tr><td>4</td><td>dnv-rp-b401</td><td>2021-05</td><td>Table 8-6</td><td class="path">wikis/engineering-standards/wiki/standards/dnv-rp-b401.md</td><td>DNV-RP-B401 (May 2021): verified-2021-tables</td></tr>
-            <tr><td>5</td><td>dnv-rp-b401</td><td>2021-05</td><td>Table 8-6 with [2.4.2] (design protective potential)</td><td class="path">wikis/engineering-standards/wiki/standards/dnv-rp-b401.md</td><td>DNV-RP-B401 (May 2021): verified-2021-tables</td></tr>
+            <tr><td>Anode count</td><td>55</td><td>55</td></tr>
+            <tr><td>Length (m)</td><td>1</td><td>3.759</td></tr>
+            <tr><td>Net mass per anode (kg)</td><td>200</td><td>200</td></tr>
+            <tr><td>Equivalent radius (m)</td><td>0.05</td><td>0.0784761</td></tr>
+            <tr><td>Initial current output (A)</td><td>85.15</td><td>254.386</td></tr>
+            <tr><td>Final current output (A)</td><td>66.499</td><td>208.017</td></tr>
+            <tr><td>Mass check</td><td>PASS</td><td>PASS</td></tr>
+            <tr><td>Initial current check</td><td>PASS</td><td>PASS</td></tr>
+            <tr><td>Final current check</td><td>FAIL</td><td>PASS</td></tr>
+            <tr><td>Overall</td><td>FAIL</td><td>PASS</td></tr>
           </tbody>
         </table>
       </div>
-    </section>
-    <section id="data-sources">
-      <div class="l1head"><span class="secnum"></span><h2>Data sources</h2></div>
-      <p class="l1sub">This report is a view over the sources below; values are read from them, not copied in.</p>
-      <div class="tbl-wrap">
-        <table class="sources">
-          <thead><tr><th>Kind</th><th>Identifier</th><th>Digest</th><th>Retrieved</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td>results</td><td>cfg[results]</td><td>sha256:cb554c3a8aa173c3b281c88e8401c802b474c066b860610210634f927b1ad527</td><td></td><td>engine-adapter results mapping this report is a view over</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-    <section id="input-echo">
-      <div class="l1head"><span class="secnum"></span><h2>Input echo</h2></div>
-      <p class="l1sub">Every input as received by the calculation, so the result can be reproduced.</p>
-      <details class="input-echo" open>
-        <summary>13 input values</summary>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Key</th><th>Value</th></tr></thead>
-            <tbody>
-              <tr><td>inputs.anode.individual_anode_mass_kg</td><td>200</td></tr>
-              <tr><td>inputs.anode.length_m</td><td>1</td></tr>
-              <tr><td>inputs.anode.material</td><td>aluminium</td></tr>
-              <tr><td>inputs.anode.radius_m</td><td>0.05</td></tr>
-              <tr><td>inputs.anode.type</td><td>stand_off</td></tr>
-              <tr><td>inputs.anode.utilization_factor</td><td>0.85</td></tr>
-              <tr><td>inputs.calculation_type</td><td>DNV_RP_B401_offshore</td></tr>
-              <tr><td>inputs.design_data.design_life</td><td>25</td></tr>
-              <tr><td>inputs.design_data.structure_type</td><td>jacket</td></tr>
-              <tr><td>inputs.environment.seawater_resistivity_ohm_m</td><td>0.3</td></tr>
-              <tr><td>inputs.environment.seawater_temperature_C</td><td>10</td></tr>
-              <tr><td>inputs.structure.zones</td><td>[{&#34;area_m2&#34;: 5000.0, &#34;coating_category&#34;: &#34;III&#34;, &#34;zone&#34;: &#34;submerged&#34;}, {&#34;area_m2&#34;: 300.0, &#34;coating_category&#34;: &#34;III&#34;, &#34;zone&#34;: &#34;splash&#34;}, {&#34;area_m2&#34;: 200.0, &#34;coating_category&#34;: &#34;III&#34;, &#34;zone&#34;: &#34;atmospheric&#34;}]</td></tr>
-              <tr><td>report.document</td><td>placeholder X0000-CP-000-00 rev 00: no report.document in the input</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </details>
-    </section>
-  </main>
-</div>
+    </div>
+    <div class="prose">
+<h4>Monitoring</h4>
+<p>Structure potentials versus Ag/AgCl/seawater should be recorded at all monitoring levels and at remote or shielded members, buried interfaces and locations distant from anodes. A potential more positive than -0.800 V triggers investigation and intervention planning; protection requires a potential more negative than -0.800 V (illustrative input). Remaining anode mass and output should be recorded with elapsed service time. A survey before intervention and a survey after connection should confirm the response at the same locations. A measured depletion rate that cannot support the remaining life triggers additional sizing [1].</p>
+    </div>
+    <div class="prose">
+<h4>Retrofit</h4>
+<p>Additional electrically connected aluminium stand-off anodes provide a provisional aggregate allowance of 118 units (23600 kg), from the maximum mass and phase-output shortfall [1]. This aggregate quantity does not determine lower-level allocation. Attachment and electrical continuity require condition and structural records [1]. Intervention planning is triggered at the time a potential is more positive than the stated criterion or measured remaining capacity cannot support the remaining life. Latest intervention year and local retrofit quantity are not evaluated: elapsed service, remaining mass, future demand and a spatial survey are required.</p>
+    </div>
+    <div class="prose">
+<p>[1] DNV-RP-B401 (May 2021), Cathodic protection design, anode mass; [1] DNV-RP-B401 (May 2021), Cathodic protection design, output adequacy; [1] DNV-RP-B401 (May 2021), Cathodic protection design, protective potential criterion; [1] DNV-RP-B401 (May 2021), Cathodic protection design, retrofit evidence.</p>
+    </div>
+    <div class="prose">
+<h4>Conclusions and recommendations</h4>
+<p>The rechecked alternatives pass the aggregate mass and current checks. Measured protection is not evaluated; valid monitoring levels, potentials, survey times and a criterion are required. Monitoring and intervention triggers are stated above; local retrofit quantity requires spatial demand and allocation evidence.</p>
+    </div>
+</section>
+<section id="references">
+<div class="l1head"><span class="secnum"></span><h2>References</h2></div>
 
-<footer id="report-footer">
-  <div class="wrap">
-    <div class="foot-grid">
-      <div>
-        <h3>Document</h3>
-        <ul>
-          <li><span class="k">Number</span> X0000-CP-000-00 &middot; Rev 00</li>
-          <li><span class="k">Project</span> unassigned</li>
-          <li><span class="k">Client</span> unassigned</li>
-        </ul>
-      </div>
-      <div>
-        <h3>Standards</h3>
-        <div class="chips" id="footer-standards">
-          <span class="chip std">DNV-RP-B401<span class="ed">May 2021</span><span class="prov">verified-2021-tables</span></span>
-        </div>
-      </div>
-      <div>
-        <h3>Generation</h3>
-        <ul>
-          <li><span class="k">Engine</span> digitalmodel.reporting.engine</li>
-          <li><span class="k">Tool version</span> 0.0-test</li>
-          <li><span class="k">Sources</span> 1 declared</li>
-          <li><span class="k">Citations</span> 5</li>
-        </ul>
+    <div class="prose">
+<p>[1] DNV-RP-B401 (May 2021), Cathodic protection design. Design current density; coating breakdown; design electrochemical capacity; anode utilisation factor; anode mass; anode resistance; protective potential criterion; output adequacy; retrofit evidence.</p>
+    </div>
+    <div class="tbl" id="table-9">
+      <div class="cap">Table 9. Where each cited table was used</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Item</th><th>Reference and locator</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Capacity and utilisation</td><td>[1], design electrochemical capacity; anode utilisation factor</td></tr>
+            <tr><td>Protection criterion</td><td>[1], protective potential criterion</td></tr>
+            <tr><td>Independent resistance estimate</td><td>[1], anode resistance; output adequacy</td></tr>
+            <tr><td>Zone densities</td><td>[1], design current density</td></tr>
+            <tr><td>Coating</td><td>[1], coating breakdown</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-    <div class="foot-bar">
-      <span>X0000-CP-000-00 Rev 00 &middot; Cathodic protection anode design - DNV-RP-B401 (May 2021)</span>
-      <span class="pdf" id="pdf-status">PDF: derivative of this HTML; render status in the manifest</span>
+</section>
+<section id="cp-limitations">
+<div class="l1head"><span class="secnum applabel">Appendix A</span><h2>Limitations and items not evaluated</h2></div>
+
+    <div class="prose">
+<ul><li>The supplied coordinates and member sizes are illustrative and do not establish surveyed geometry or structural section selection. Agreement of the illustrative member areas with the stated areas is not an independent check of the stated areas.</li></ul>
+<ul><li>External steel area is the cylinder lateral surface area π × diameter × centreline length, clipped at each zone boundary. End caps and member intersections are not included. Horizontal members at an internal boundary belong to the upper zone; those at the highest boundary belong to the highest zone. The calculation uses the stated zone areas.</li></ul>
+<ul><li>buried: area comparison not evaluated; a positive stated zone area is needed.</li></ul>
+<ul><li>submerged: drawn-member area 4999.678 m²; stated area 5000.000 m²; percentage difference less than 0.1% relative to the stated area.</li></ul>
+<ul><li>splash: drawn-member area 299.988 m²; stated area 300.000 m²; percentage difference less than 0.1% relative to the stated area.</li></ul>
+<ul><li>atmospheric: drawn-member area 199.997 m²; stated area 200.000 m²; percentage difference less than 0.1% relative to the stated area.</li></ul>
+<ul><li>Equivalent-cylinder alternatives require fabrication, core, attachment, clearance and anode-interaction assessment. A recurring survey interval and numerical depletion trigger require measured remaining mass, elapsed service and future demand; only baseline and post-intervention surveys are specified here.</li></ul>
     </div>
-  </div>
-</footer>
+</section>
+</main></div>
+<footer><div class="wrap">Draft for review</div></footer>
 </body>
 </html>

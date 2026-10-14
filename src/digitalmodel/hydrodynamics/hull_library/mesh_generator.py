@@ -5,7 +5,8 @@ grading. Mesh coarsening lives in coarsen_mesh.py.
 
 Steps: normalise waterline offsets to marine z-convention, compute (n_x, n_z)
 subdivisions, interpolate half-breadth y(x,z), build starboard quads + flat
-bottom, optionally mirror to port, orient normals outward, return PanelMesh.
+bottom and optional submerged end caps, optionally mirror to port, orient normals
+outward, return PanelMesh.
 """
 
 from __future__ import annotations
@@ -71,6 +72,11 @@ class MeshGeneratorConfig(BaseModel):
     target_panels: int = Field(default=1000, gt=0)
     waterline_refinement: float = Field(default=2.0, gt=0)
     symmetry: bool = True
+    close_ends: bool = Field(
+        default=False,
+        description="add flat panels closing non-zero submerged end sections; "
+        "off by default so existing consumers keep their panel counts",
+    )
     adaptive_density: bool = Field(
         default=False,
         description="Use curvature-adaptive panel distribution. "
@@ -126,6 +132,14 @@ class HullMeshGenerator:
             offset = len(vertices)
             vertices = np.vstack([vertices, bottom_verts])
             panels = np.vstack([panels, bottom_panels + offset])
+
+        # Close nonzero submerged end sections before mirroring to port.
+        if config.close_ends:
+            cap_verts, cap_panels = self._build_end_caps(x_values, z_values, y_grid)
+            if len(cap_panels) > 0:
+                offset = len(vertices)
+                vertices = np.vstack([vertices, cap_verts])
+                panels = np.vstack([panels, cap_panels + offset])
 
         # 6. Handle symmetry
         if not config.symmetry:
@@ -422,6 +436,39 @@ class HullMeshGenerator:
             (0, 4), dtype=np.int32
         )
         return vertices, panels_arr
+
+    @staticmethod
+    def _build_end_caps(
+        x_values: NDArray[np.float64],
+        z_values: NDArray[np.float64],
+        y_grid: NDArray[np.float64],
+    ) -> tuple[NDArray[np.float64], NDArray[np.int32]]:
+        """Close each positive-area end band from centerline to starboard.
+
+        The vertical bands reuse the side surface's z grid and keel edge;
+        their waterline edges remain open. Zero-width bands add no panels.
+        A band tapering to zero at one end becomes a collapsed triangle,
+        normalized by the existing deduplication and winding steps.
+        """
+        vertices, panels = [], []
+        for end in (0, len(x_values) - 1):
+            widths = y_grid[end]
+            if not np.any(widths > 0):
+                continue
+            offset = len(vertices)
+            for z, width in zip(z_values, widths):
+                vertices.extend(((x_values[end], 0.0, z),
+                                 (x_values[end], width, z)))
+            for j in range(len(z_values) - 1):
+                if widths[j] == widths[j + 1] == 0:
+                    continue
+                lower = offset + 2 * j
+                panel = [lower, lower + 1, lower + 3, lower + 2]
+                if end == 0:
+                    panel = panel[::-1]
+                panels.append(panel)
+        return (np.asarray(vertices, dtype=np.float64).reshape(-1, 3),
+                np.asarray(panels, dtype=np.int32).reshape(-1, 4))
 
     def _mirror_to_port(
         self,

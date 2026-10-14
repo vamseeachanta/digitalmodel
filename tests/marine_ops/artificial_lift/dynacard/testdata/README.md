@@ -1,6 +1,6 @@
 # Dynacard test fixtures
 
-## `plate_reference_cards.json` — canonical downhole card shapes
+## `plate_reference_cards.json` — canonical load-card shapes
 
 Ten reference dynamometer cards digitised from a published sucker-rod
 working-condition diagnosis plate (标准图版). They are the ground truth that
@@ -26,16 +26,16 @@ practice, not because the licence demands it.
 
 ### What was extracted
 
-Each sheet of the plate workbook holds **two** curve blocks in adjacent pairs
+Each pump-condition sheet of the plate workbook holds **two** curve blocks in adjacent pairs
 of numeric columns:
 
 * **block 0 — the dynamometer card.** This is what is reproduced here.
-* **block 1 — the motor-current diagram.** Not a card; not reproduced. Reading
-  block 1 as a card is the obvious way to get this wrong.
+* **block 1 — the normalised-power diagram.** Not a load card; not reproduced. Reading
+  block 1 as a load card is the obvious way to get this wrong.
 
-Coordinates are the plate's own arbitrary plotting units. Nothing downstream
-depends on their scale: the comparison normalises each axis to 0–1 before
-measuring anything, because the plate carries no engineering units.
+The workbook's embedded chart titles establish normalised displacement,
+normalised load and normalised power, rather than engineering units. The
+comparison normalises each axis to 0–1 before measuring anything.
 
 ### Sheets and the modes they map to
 
@@ -65,3 +65,10 @@ module.
 
 The `*.json` files named by numeric id are field card captures used by the
 vision-benchmark and data-loader tests; they are unrelated to this fixture.
+
+### Retained source workbook
+
+The full unmodified source and a labelled loader fixture are retained in
+[`mendeley_plate/`](mendeley_plate/README.md). Its embedded chart titles identify
+the second block as `Normalized power`; licence verification and the complete
+curve inventory are recorded in its manifest.

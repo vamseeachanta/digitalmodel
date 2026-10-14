@@ -237,7 +237,7 @@ def test_regular_rows_are_screening_and_excluded_from_the_verdict():
     r_irr = evaluate_case(seeds, ROW, IRR, seeds_expected=10)
     assert r_irr.status == "PASS"
     s = summarise([("CON-R1-00001", r_reg), ("CON-I1-00001", r_irr)])["CR-10"]
-    assert s["status"] == "PASS" and s["counts"]["SCREENING"] == 1
+    assert s["status"] == "NOT_EVALUATED" and s["counts"]["SCREENING"] == 1
     assert s["governing"]["case_id"] == "CON-I1-00001"
 
 

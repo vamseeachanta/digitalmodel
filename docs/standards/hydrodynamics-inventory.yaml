@@ -1,0 +1,1309 @@
+# Metadata transcription only; source: the issue research note, 2026-10-11.
+# No standards text, page ranges, clause references, factors or formulas were obtained.
+# pages_relevant and key formulas remain unavailable without the paid texts.
+# Brazil, Australia, United Kingdom: governing hydrodynamics code not established.
+# Norway anchoring guidance does not name ISO 19901-7 or DNV-OS-E301 (R3).
+# meta: provenance, legends, counts, note limitations and cross-reference graph.
+# domain: the note's subject.
+# issue_reference: the originating issue link.
+# source_statement: sole factual source and its date.
+# research_note: the source comment link.
+# date_checked: the note's check date; this transcription performs no currency check.
+# edition_basis: C/N/U mapped to currency-check/issuer-page/not-verified.
+# counts: the note's own Counts table.
+# groups: the seven sub-topic headings in note order.
+# acceptance_criteria_not_met_by_note: historical gaps verbatim, including no YAML committed.
+# cross_reference_edges: graph bullets verbatim, retaining unv. marks.
+# regulator_guidance: regime findings verbatim, including findings not established.
+# external_references: reference designations/families outside this inventory.
+# source_catalog: the note's complete source-key table, without fetching any URL.
+# standards: one entry per numbered row, in note order.
+# code_id: primary Designation; rows are never split or merged.
+# also_known_as: the second designation exactly as given in the Designation cell.
+# formerly: the designation in a was remark, exactly as given.
+# publisher: Issuer cell.
+# revision: Current edition / date cell, including every caveat.
+# title: Title cell, including placeholders and uncertainty markers.
+# scope: Scope (own words) cell.
+# key_methods: a singleton list preserving the full Methods cell and its caveats.
+# applicability: Applicability limits stated publicly cell.
+# links_to: designation links extracted from References / pairs with, expanding shorthand.
+# references_text: the original References / pairs with cell, preserving prose and markers.
+# group: the note's sub-topic heading.
+# status: Status cell verbatim; not a normalized closed vocabulary.
+# edition_verified: false for U or explicit edition not verified; true does not remove caveats.
+# unverified_statements: affected field names; original markers also remain in field text.
+# relation_to_neighbours: Relation to neighbours cell.
+# sources: source-key entries from Scope source; a dash becomes an empty list.
+# source_key: the note's source-table key; regime entries resolve in source_catalog.
+# urls: all full addresses in the key entry, as a list; no address is inferred.
+# remark: the complete source-table cell, retaining all qualifications.
+# accepted_edition_by_regime: only explicitly incorporated editions or named-code statements.
+# regime: regime named by the note.
+# edition_or_statement: edition or incorporation statement from the regulator findings/row.
+meta:
+  domain: offshore hydrodynamics
+  issue_reference: https://github.com/vamseeachanta/digitalmodel/issues/1798
+  source_statement: research note on the issue, 2026-10-11
+  research_note: https://github.com/vamseeachanta/digitalmodel/issues/1798#issuecomment-6115053563
+  date_checked: '2026-10-11'
+  edition_basis:
+    currency-check: C = taken from the standards currency check completed today (issuer page, checked
+      2026-10-11)
+    issuer-page: N = read now on the issuer's own page (key in the last column)
+    not-verified: U = edition not verified on an issuer page
+  counts:
+    total: 37
+    currency-check: 19
+    issuer-page: 11
+    not-verified: 7
+  groups:
+  - A. Environmental conditions, wave and current kinematics, environmental loads
+  - B. Floating structure global design, motions and stability
+  - 'C. Stationkeeping analysis (hydrodynamic content; full treatment in the mooring inventory, #1805)'
+  - D. Marine operations
+  - E. Model testing
+  - F. CFD guidance
+  - G. Floating wind neighbours
+  acceptance_criteria_not_met_by_note:
+  - 'No YAML file committed. `pages_relevant` and "key formulas" are not given: they need the paid texts,
+    which were not opened.'
+  - Edition not verified for DNV-OS-C301, DNV-OS-E301, IMO MODU Code consolidated status, and the ABS
+    guidance notes; "ABS Guidance Notes on Wave Loads" not found.
+  - ISO 19904-1, API RP 2T and the DNV offshore standards have no method detail on their public pages;
+    method cells are marked accordingly.
+  cross_reference_edges:
+  - DNV-RP-C205 -> DNV structural standards and RPs (stated on D1); supplements NORSOK and ISO (stated
+    on D1).
+  - ISO 19900 -> ISO 19901-1, 19901-7, 19904-1, 19905-3, 19906 (series structure, unv.).
+  - ISO 19901-7 -> ISO 19906 (ice); IEC 61400-3-2 -> ISO 19901-7 (both stated on I5).
+  - ISO 19905-3 -> ISO 19904-1 (search summary of the ISO page).
+  - API RP 2MET <- ISO 19901-1 (unv.); API RP 2MOP = ISO 19901-6:2009; API RP 2N = ISO 19906:2010 (both
+    stated on A1).
+  - API RP 2FPS -> other API RPs for stationkeeping and risers (stated on A1); API RP 2A-WSD -> RP 2SIM
+    (stated on A1).
+  - DNV-ST-N001 -> DNV-ST-N002 (stated on D5); DNV-RP-N103 -> DNV-ST-N001 (unv.).
+  - DNV-OS-C101 <- DNV-OS-C201 (retired, scope absorbed; DNV news).
+  - ABS Offshore Rules <- FPI Rules, MOU Rules, Offshore Installations Rules, Facilities Rules, Drillship
+    Guide (stated in the ABS July 2025 notices).
+  - DNV-RP-0286 -> DNV-SE-0422 (stated on D6).
+  regulator_guidance:
+  - '**R1, United States (Gulf of Mexico):** the regulator''s incorporation-by-reference section lists,
+    for platforms and floating facilities, API RP 2A-WSD (22nd), RP 2MET (2nd), RP 2FPS (2nd), RP 2T (3rd),
+    RP 2SK (**3rd ed 2005 with 2008 addendum**), RP 2SM (2nd), RP 2I (3rd), RP 2RD (1st, 1998) and the
+    2019 integrity RPs. The incorporated edition, not the newest, is the one a US submission is checked
+    against.'
+  - '**R2, Norway:** the guideline to the facilities regulations section on loads names the NORSOK N-series
+    for load-bearing structures and NORSOK N-003 for model experiments.'
+  - '**R3, Norway:** the guideline to the anchoring and positioning section names the Norwegian Maritime
+    Authority''s 2009 anchoring regulations, NORSOK N-001 chapters on stationkeeping, and IMO MSC/Circ.1580
+    for DP. It does not name ISO 19901-7 or DNV-OS-E301.'
+  - '**Brazil, Australia, United Kingdom:** no regulator page naming a governing hydrodynamics code was
+    read today. Not established.'
+  external_references:
+  - DNV structural standards and RPs
+  - NORSOK
+  - ISO standards
+  - NORSOK N-001
+  - NORSOK N-004
+  - ISO 19901-x
+  - ISO 19902
+  - ISO 19905-x
+  - API RP 2SIM
+  - API RP 2GEO
+  - 2INT-DG
+  - 2INT-EX
+  - API Std 2RD
+  - DNV-ST-F201
+  - API RPs
+  - ABS spectral fatigue guide
+  - 1989 MODU Code (A.649(16))
+  - MSC/Circ.1053
+  - API RP 2SM
+  - API RP 2I
+  - API RP 2MIM
+  - IEC 61400-3-2
+  - DNV-ST-N002
+  - Other ITTC ocean engineering procedures
+  - ITTC wave modelling procedures
+  - DNV-SE-0422
+  - DNV-RP-C212
+  - July 2020 floating-turbine guidance notes
+  source_catalog:
+  - &id001
+    source_key: D1
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/
+  - &id010
+    source_key: D2
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-f205-global-performance-analysis-of-deepwater-floating-structures/
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-f205-global-performance-analysis-of-deepwater-floating-structures/
+  - &id011
+    source_key: D3
+    urls:
+    - https://www.dnv.com/news/2025/now-available-july-2025-edition-of-dnv-class-rules-and-documents-for-ship-and-offshore/
+    - https://www.dnv.com/news/2023/dnv-rules-and-standards-for-offshore-units-july-2023-edition-245184/
+    remark: 'DNV annual rule-edition news items and the DNV letter of 2025-09-25, as listed in the currency
+      check: https://www.dnv.com/news/2025/now-available-july-2025-edition-of-dnv-class-rules-and-documents-for-ship-and-offshore/
+      and https://www.dnv.com/news/2023/dnv-rules-and-standards-for-offshore-units-july-2023-edition-245184/'
+  - &id019
+    source_key: D4
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-n103-modelling-and-analysis-of-marine-operations/
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-n103-modelling-and-analysis-of-marine-operations/
+  - &id020
+    source_key: D5
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/
+  - &id025
+    source_key: D6
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-0286-coupled-analysis-of-floating-wind-turbines/
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-0286-coupled-analysis-of-floating-wind-turbines/
+  - &id026
+    source_key: D7
+    urls:
+    - https://www.dnv.com/energy/standards-guidelines/dnv-rp-c212-offshore-soil-mechanics-and-geotechnical-engineering/
+    remark: https://www.dnv.com/energy/standards-guidelines/dnv-rp-c212-offshore-soil-mechanics-and-geotechnical-engineering/
+      (names DNV-ST-0119)
+  - &id002
+    source_key: I1
+    urls:
+    - https://www.iso.org/standard/60183.html
+    remark: https://www.iso.org/standard/60183.html (2015 edition page, status and successor)
+  - &id007
+    source_key: I2
+    urls:
+    - https://www.iso.org/standard/69761.html
+    remark: https://www.iso.org/standard/69761.html
+  - &id009
+    source_key: I3
+    urls:
+    - https://www.iso.org/standard/63801.html
+    remark: https://www.iso.org/standard/63801.html
+  - &id017
+    source_key: I4
+    urls:
+    - https://www.iso.org/standard/78910.html
+    remark: https://www.iso.org/standard/78910.html (page not opened today; status from the ICS listing
+      in the currency check)
+  - &id018
+    source_key: I5
+    urls:
+    - https://www.iso.org/standard/85482.html
+    remark: https://www.iso.org/standard/85482.html
+  - &id003
+    source_key: A1
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf
+    remark: 'API 2025 Publications Catalog, Exploration and Production: https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf'
+  - &id008
+    source_key: A2
+    urls:
+    - https://www.api.org/-/media/Files/Publications/2025-Catalog/12_Historical-Publications_2025.pdf
+    remark: 'API 2025 Publications Catalog, Historical Publications: https://www.api.org/-/media/Files/Publications/2025-Catalog/12_Historical-Publications_2025.pdf'
+  - &id012
+    source_key: B1
+    urls:
+    - https://ww2.eagle.org/content/dam/eagle/rules-and-resources/RuleManager2/notices/january-2026/3-or-nandgi-jan26.pdf
+    - https://ww2.eagle.org/content/dam/eagle/rules-and-resources/RuleManager2/notices/july-2025/3-or-nandgi-jul25.pdf
+    remark: https://ww2.eagle.org/content/dam/eagle/rules-and-resources/RuleManager2/notices/january-2026/3-or-nandgi-jan26.pdf
+      and https://ww2.eagle.org/content/dam/eagle/rules-and-resources/RuleManager2/notices/july-2025/3-or-nandgi-jul25.pdf
+  - &id013
+    source_key: B2
+    urls:
+    - https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/offshore/101_safehulldlaforfpsosystems/DLA-FPSO_Guide_e-Jan17.pdf
+    remark: https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/offshore/101_safehulldlaforfpsosystems/DLA-FPSO_Guide_e-Jan17.pdf
+  - &id014
+    source_key: B3
+    urls:
+    - https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/offshore/249-gn-airgapanalysis-semisubmersibles-2018/air-gap-analysis-gn-may20.pdf
+    remark: https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/offshore/249-gn-airgapanalysis-semisubmersibles-2018/air-gap-analysis-gn-may20.pdf
+      (address from a site search; not opened)
+  - &id027
+    source_key: B4
+    urls:
+    - https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/design_and_analysis/206-guidance-notes-on-global-performance-and-integrated-load-analysis-for-offshore-wind-turbines/206-fowt-gpa-gn-aug23.pdf
+    remark: https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/design_and_analysis/206-guidance-notes-on-global-performance-and-integrated-load-analysis-for-offshore-wind-turbines/206-fowt-gpa-gn-aug23.pdf
+      (address from a site search; not opened)
+  - &id015
+    source_key: M1
+    urls:
+    - https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/AssemblyDocuments/A.1023(26).pdf
+    remark: https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/AssemblyDocuments/A.1023(26).pdf
+      (address from a site search; not opened)
+  - &id016
+    source_key: M2
+    urls:
+    - https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.137(76).pdf
+    remark: https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/MSCResolutions/MSC.137(76).pdf
+  - &id005
+    source_key: S1
+    urls:
+    - https://standard.no/en/sectors/petroleum/norsok-standards/n-structural/
+    remark: https://standard.no/en/sectors/petroleum/norsok-standards/n-structural/
+  - &id021
+    source_key: T1
+    urls:
+    - https://www.ittc.info/media/11902/75-02-07-031.pdf
+    remark: https://www.ittc.info/media/11902/75-02-07-031.pdf
+  - &id022
+    source_key: T2
+    urls:
+    - https://www.ittc.info/media/11888/75-02-07-021.pdf
+    remark: https://www.ittc.info/media/11888/75-02-07-021.pdf
+  - &id023
+    source_key: T3
+    urls:
+    - https://www.ittc.info/media/11958/75-03-02-03.pdf
+    remark: https://www.ittc.info/media/11958/75-03-02-03.pdf
+  - &id024
+    source_key: T4
+    urls:
+    - https://www.ittc.info/media/11950/75-03-01-01.pdf
+    remark: https://www.ittc.info/media/11950/75-03-01-01.pdf
+  - &id004
+    source_key: R1
+    urls:
+    - https://www.ecfr.gov/current/title-30/section-250.198
+    remark: 'US 30 CFR 250.198: https://www.ecfr.gov/current/title-30/section-250.198'
+  - &id006
+    source_key: R2
+    urls:
+    - https://www.havtil.no/en/regulations/all-acts/the-facilities-regulations3/III/11/
+    remark: https://www.havtil.no/en/regulations/all-acts/the-facilities-regulations3/III/11/
+  - source_key: R3
+    urls:
+    - https://www.havtil.no/en/regulations/all-acts/the-facilities-regulations3/XII/63/
+    remark: https://www.havtil.no/en/regulations/all-acts/the-facilities-regulations3/XII/63/
+standards:
+- code_id: DNV-RP-C205
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: 2025-04, amended 2026-03
+  title: Environmental conditions and environmental loads
+  scope: Design criteria and guidance for assessing wind, wave, current and ice conditions and the loads
+    they put on marine structures.
+  key_methods:
+  - Page states only that it gives rational criteria built on a joint industry project and current computational
+    modelling. Wave theories, spectra, Morison and diffraction loading, VIV (unv.).
+  applicability: Marine structures generally; no depth or region limit stated.
+  links_to:
+  - DNV structural standards and RPs
+  - NORSOK
+  - ISO standards
+  references_text: Common reference for DNV structural standards and RPs; page says it can supplement
+    NORSOK and ISO standards.
+  group: A. Environmental conditions, wave and current kinematics, environmental loads
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: The working "how to compute" document next to ISO 19901-1 / API RP 2MET, which
+    say what conditions to derive.
+  sources:
+  - *id001
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 19901-1
+  also_known_as: []
+  formerly: []
+  publisher: ISO
+  revision: ISO 19901-1:2026 (Ed 3, 2026-08 per ISO page summary; the 2026 page itself was not opened
+    in the check)
+  title: 'Specific requirements for offshore structures - Part 1: Metocean design and operating considerations'
+  scope: Requirements for determining and using meteorological and oceanographic conditions for design,
+    construction and operation of offshore structures.
+  key_methods:
+  - Extreme and abnormal values, long-term distributions and normal conditions (from the ISO abstract
+    as returned by a site search; page not opened today).
+  applicability: All offshore structure types; applied with judgement where data are sparse.
+  links_to:
+  - ISO 19900
+  - ISO 19904-1
+  - ISO 19905-3
+  references_text: ISO 19900; ISO 19904-1; ISO 19905-3 points to 19904-1 for metocean actions on floating
+    units.
+  group: A. Environmental conditions, wave and current kinematics, environmental loads
+  status: Published; 2015 edition withdrawn 2026-08-11
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - revision
+  - key_methods
+  relation_to_neighbours: 'International parent of API RP 2MET. New edition is two months old: check which
+    edition a project basis names.'
+  sources:
+  - *id002
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 2MET
+  also_known_as: []
+  formerly: []
+  publisher: API
+  revision: 2nd Ed, Nov 2019 (as of the 2025 API catalogue)
+  title: Derivation of Metocean Design and Operating Considerations
+  scope: General requirements for determining and using metocean conditions for design, construction and
+    operation of all offshore structure types.
+  key_methods:
+  - Catalogue names extreme and abnormal values at stated return periods, long-term (joint, marginal,
+    conditional) distributions and normal conditions.
+  applicability: Petroleum and natural gas offshore structures; US regional annexes (unv.).
+  links_to:
+  - ISO 19901-1
+  - API RP 2A-WSD
+  - API RP 2FPS
+  - API RP 2T
+  - API RP 2SK
+  references_text: ISO 19901-1 (API adoption, unv.); API RP 2A-WSD, 2FPS, 2T, 2SK.
+  group: A. Environmental conditions, wave and current kinematics, environmental loads
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - applicability
+  - references_text
+  relation_to_neighbours: 'US offshore regulator incorporates it by reference for platforms and floating
+    facilities (R1). The regulator text read today prints "Second ed., Jan. 2021" where the API catalogue
+    prints Nov 2019: unresolved date difference.'
+  sources:
+  - *id003
+  - *id004
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: United States (Gulf of Mexico)
+    edition_or_statement: '2nd; regulator text prints "Second ed., Jan. 2021"; API catalogue prints Nov
+      2019: unresolved date difference.'
+    source_key: R1
+- code_id: NORSOK N-003
+  also_known_as: []
+  formerly: []
+  publisher: Standards Norway
+  revision: N-003:2017+AC:2018, May 2018
+  title: Actions and action effects (title unv.; not printed on the listing read)
+  scope: Loads (actions) and load effects for offshore structures on the Norwegian shelf (unv. beyond
+    the designation).
+  key_methods:
+  - Not stated on the listing.
+  applicability: Norwegian continental shelf practice.
+  links_to:
+  - NORSOK N-001
+  - NORSOK N-004
+  - DNV-RP-C205
+  references_text: NORSOK N-001, N-004; DNV-RP-C205 (unv.).
+  group: A. Environmental conditions, wave and current kinematics, environmental loads
+  status: Latest version
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - title
+  - scope
+  - references_text
+  relation_to_neighbours: Norway's regulator guideline names the NORSOK N-series for load-bearing structures
+    and N-003 for model experiments (R2).
+  sources:
+  - *id005
+  - *id006
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: Norway
+    edition_or_statement: The guideline to the facilities regulations section on loads names the NORSOK
+      N-series for load-bearing structures and NORSOK N-003 for model experiments.
+    source_key: R2
+- code_id: ISO 19900
+  also_known_as: []
+  formerly: []
+  publisher: ISO
+  revision: ISO 19900:2019, Ed 3, 2019-06
+  title: Petroleum and natural gas industries - General requirements for offshore structures
+  scope: Top-level design principles for the ISO 19900 offshore structures series.
+  key_methods:
+  - Limit states and partial factor format (unv.).
+  applicability: All offshore structure types.
+  links_to:
+  - ISO 19901-x
+  - ISO 19902
+  - ISO 19904-1
+  - ISO 19905-x
+  - ISO 19906
+  references_text: Parent of ISO 19901-x, 19902, 19904-1, 19905-x, 19906.
+  group: A. Environmental conditions, wave and current kinematics, environmental loads
+  status: Published; replacement at FDIS stage
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: Sets the exposure level and limit-state vocabulary the other parts use. Replacement
+    imminent.
+  sources:
+  - *id007
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 2A-WSD
+  also_known_as: []
+  formerly: []
+  publisher: API
+  revision: 22nd Ed, Nov 2014, reaffirmed Sept 2020
+  title: Planning, Designing, and Constructing Fixed Offshore Platforms - Working Stress Design
+  scope: Design and construction of new fixed platforms and relocation of existing ones.
+  key_methods:
+  - Working stress design (in the title). Wave force procedure for fixed platforms (unv.).
+  applicability: Fixed, bottom-founded platforms; used with RP 2SIM for existing platforms.
+  links_to:
+  - API RP 2SIM
+  - API RP 2MET
+  - API RP 2GEO
+  references_text: RP 2SIM, RP 2MET, RP 2GEO.
+  group: A. Environmental conditions, wave and current kinematics, environmental loads
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: Fixed-platform hydrodynamic loading reference in US waters; incorporated by
+    the US regulator at this edition (R1). Not a floating-structure code.
+  sources:
+  - *id003
+  - *id004
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: United States (Gulf of Mexico)
+    edition_or_statement: 22nd
+    source_key: R1
+- code_id: API Bull 2INT-MET
+  also_known_as: []
+  formerly: []
+  publisher: API
+  revision: 1st ed 2007
+  title: Interim Guidance on Hurricane Conditions in the Gulf of Mexico
+  scope: Interim post-2005 hurricane metocean criteria for the Gulf of Mexico.
+  key_methods:
+  - n/a
+  applicability: Gulf of Mexico.
+  links_to:
+  - 2INT-DG
+  - 2INT-EX
+  references_text: Was paired with 2INT-DG and 2INT-EX (both also withdrawn).
+  group: A. Environmental conditions, wave and current kinematics, environmental loads
+  status: '**Withdrawn**, no replacement named'
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - relation_to_neighbours
+  relation_to_neighbours: Do not cite as current; RP 2MET carries Gulf of Mexico criteria now (unv.).
+  sources:
+  - *id008
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 2N
+  also_known_as:
+  - ISO 19906
+  formerly: []
+  publisher: API / ISO
+  revision: API 3rd Ed, Apr 2015, reaffirmed Jan 2021 (adoption of ISO 19906:2010); ISO lists 19906:2019
+  title: Planning, Designing, and Constructing Structures and Pipelines for Arctic Conditions
+  scope: Design, construction, transport, installation and removal of offshore structures in arctic and
+    cold regions.
+  key_methods:
+  - Reliability-level objective; ice actions and ice management procedures.
+  applicability: Sea ice, iceberg and icing regions; not written for MODUs but its ice-action procedures
+    are stated as usable for them.
+  links_to:
+  - ISO 19901-7
+  - ISO 19906
+  references_text: ISO 19901-7:2026 points to ISO 19906 for moorings in ice.
+  group: A. Environmental conditions, wave and current kinematics, environmental loads
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Only relevant when ice is a design action. API edition adopts an older ISO edition
+    than the current one.
+  sources:
+  - *id003
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 19904-1
+  also_known_as: []
+  formerly: []
+  publisher: ISO
+  revision: ISO 19904-1:2019, Ed 2, 2019-05
+  title: 'Floating offshore structures - Part 1: Ship-shaped, semi-submersible, spar and shallow-draught
+    cylindrical structures'
+  scope: Design and assessment of floating production and storage hulls.
+  key_methods:
+  - Not read today.
+  applicability: Hull types named in the title; TLPs excluded (unv.).
+  links_to:
+  - ISO 19900
+  - ISO 19901-1
+  - ISO 19901-7
+  references_text: ISO 19900, 19901-1, 19901-7.
+  group: B. Floating structure global design, motions and stability
+  status: Published; revision project opened
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - applicability
+  relation_to_neighbours: International counterpart to API RP 2FPS.
+  sources:
+  - *id009
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 2FPS
+  also_known_as: []
+  formerly: []
+  publisher: API
+  revision: 2nd Ed, Oct 2011, reaffirmed Sept 2020
+  title: Planning, Designing, and Constructing Floating Production Systems
+  scope: Design, fabrication, installation, inspection and operation of floating production systems with
+    a buoyant hull.
+  key_methods:
+  - Catalogue gives no method detail.
+  applicability: Buoyant-hull systems only; stationkeeping and risers are treated as ancillary and sent
+    to other API RPs.
+  links_to:
+  - API RP 2SK
+  - API RP 2T
+  - API Std 2RD
+  - API RP 2MET
+  references_text: API RP 2SK, 2T, Std 2RD, RP 2MET.
+  group: B. Floating structure global design, motions and stability
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Incorporated by the US regulator at this edition (R1).
+  sources:
+  - *id003
+  - *id004
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: United States (Gulf of Mexico)
+    edition_or_statement: 2nd
+    source_key: R1
+- code_id: API RP 2T
+  also_known_as: []
+  formerly: []
+  publisher: API
+  revision: 3rd Ed, July 2010, reaffirmed June 2015
+  title: Planning, Designing and Constructing Tension Leg Platforms
+  scope: Design guide for tension leg platforms across all disciplines and project stages.
+  key_methods:
+  - Catalogue gives no method detail. Coupled hull/tendon response, springing and ringing (unv.).
+  applicability: TLPs only.
+  links_to:
+  - API RP 2FPS
+  - API RP 2MET
+  - ISO 19901-7
+  references_text: API RP 2FPS, 2MET; ISO 19901-7 excludes TLP tendons.
+  group: B. Floating structure global design, motions and stability
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: The only dedicated TLP document in this list; incorporated by the US regulator
+    (R1).
+  sources:
+  - *id003
+  - *id004
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: United States (Gulf of Mexico)
+    edition_or_statement: 3rd
+    source_key: R1
+- code_id: DNV-RP-F205
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: 2019-09, amended 2021-09
+  title: Global performance analysis of deepwater floating structures
+  scope: Practical guidance on coupled analysis of floater, moorings and risers and how to run it efficiently.
+  key_methods:
+  - Coupled analysis (stated). Frequency-domain versus time-domain split not stated on the page.
+  applicability: Deepwater floaters (title).
+  links_to:
+  - DNV-RP-C205
+  - DNV-OS-E301
+  - DNV-ST-F201
+  references_text: DNV-RP-C205, DNV-OS-E301, DNV-ST-F201 (unv.).
+  group: B. Floating structure global design, motions and stability
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - references_text
+  relation_to_neighbours: Method guidance, not a criteria document.
+  sources:
+  - *id010
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-OS-C301
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: '**edition not verified**'
+  title: Stability and watertight integrity (title as held; not found on an open DNV page)
+  scope: Intact and damage stability and watertight integrity of offshore units (unv.).
+  key_methods:
+  - n/v
+  applicability: n/v
+  links_to:
+  - IMO MODU Code
+  references_text: IMO MODU Code (unv.).
+  group: B. Floating structure global design, motions and stability
+  status: n/v
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - title
+  - scope
+  - key_methods
+  - applicability
+  - references_text
+  - status
+  relation_to_neighbours: Needs a signed-in read of the DNV rules explorer.
+  sources: []
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-OS-C101
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: July 2024, amended July 2025 (per DNV letter of 2025-09-25; later edition not excluded)
+  title: Structural design of offshore units
+  scope: Common structural design requirements for offshore units.
+  key_methods:
+  - Covers both LRFD and WSD since DNV-OS-C201 was retired in July 2023 (DNV news).
+  applicability: Offshore units, all types.
+  links_to:
+  - DNV-RP-C205
+  - DNV-OS-C103
+  - DNV-OS-C105
+  - DNV-OS-C106
+  references_text: DNV-RP-C205 for loads; DNV-OS-C103, C105, C106.
+  group: B. Floating structure global design, motions and stability
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Edition rests on a DNV letter, not an edition line.
+  sources:
+  - *id011
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-OS-C103
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: July 2025 (DNV letter)
+  title: Structural design of column stabilised units
+  scope: Structural design of semi-submersibles.
+  key_methods:
+  - n/v on an open page.
+  applicability: Column-stabilised units.
+  links_to:
+  - DNV-OS-C101
+  references_text: DNV-OS-C101.
+  group: B. Floating structure global design, motions and stability
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - relation_to_neighbours
+  relation_to_neighbours: Air gap and wave slamming loads sit here for semis (unv.).
+  sources:
+  - *id011
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-OS-C105
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: Updated in the July 2025 edition; edition line not read
+  title: TLP structural standard (exact title n/v)
+  scope: Structural design of tension leg platforms.
+  key_methods:
+  - n/v
+  applicability: TLPs.
+  links_to:
+  - DNV-OS-C101
+  - API RP 2T
+  references_text: DNV-OS-C101; API RP 2T is the US counterpart.
+  group: B. Floating structure global design, motions and stability
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - revision
+  - title
+  - key_methods
+  relation_to_neighbours: Edition line needs a signed-in read.
+  sources:
+  - *id011
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-OS-C106
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: Updated in the July 2025 edition; edition line not read
+  title: Deep draught floating unit structural standard (exact title n/v)
+  scope: Structural design of spars and other deep-draught floaters.
+  key_methods:
+  - n/v
+  applicability: Deep-draught floaters.
+  links_to:
+  - DNV-OS-C101
+  references_text: DNV-OS-C101.
+  group: B. Floating structure global design, motions and stability
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - revision
+  - title
+  - key_methods
+  - relation_to_neighbours
+  relation_to_neighbours: VIM of deep-draught hulls is the hydrodynamic topic (unv.).
+  sources:
+  - *id011
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ABS Rules for Building and Classing Offshore Units
+  also_known_as: []
+  formerly: []
+  publisher: ABS
+  revision: January 2026 edition
+  title: Rules for Building and Classing Offshore Units (Part 3B ship-type and Part 3C other site-specific
+    floating installations)
+  scope: Class rules for mobile units, site-specific floating installations and fixed installations in
+    one rule set.
+  key_methods:
+  - Not read today.
+  applicability: ABS-classed units.
+  links_to:
+  - ABS Dynamic Loading Approach guide
+  - API RPs
+  references_text: ABS DLA guide; API RPs (unv.).
+  group: B. Floating structure global design, motions and stability
+  status: Active; **supersedes the Floating Production Installations Rules** (withdrawn 1 January 2026)
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - references_text
+  relation_to_neighbours: 'The issue''s "ABS Guide for Building and Classing Floating Production Installations"
+    no longer exists under that name: cite the Offshore Rules.'
+  sources:
+  - *id012
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ABS Dynamic Loading Approach guide
+  also_known_as: []
+  formerly: []
+  publisher: ABS
+  revision: May 2010, updated January 2017
+  title: Guide for 'Dynamic Loading Approach' for FPSO Installations
+  scope: Direct calculation of dynamic hull loads for FPSOs for class notation.
+  key_methods:
+  - Not read today. Equivalent design wave approach (unv.).
+  applicability: FPSOs.
+  links_to:
+  - ABS Rules for Building and Classing Offshore Units
+  - ABS spectral fatigue guide
+  references_text: ABS Offshore Rules; ABS spectral fatigue guide.
+  group: B. Floating structure global design, motions and stability
+  status: Current folder
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: ABS route for first-principles wave loads on ship-shaped hulls.
+  sources:
+  - *id013
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ABS Guidance Notes on Air Gap and Wave Impact Analysis for Semi-Submersibles
+  also_known_as: []
+  formerly: []
+  publisher: ABS
+  revision: 'File in ABS "current" folder is named May 2020; title page not opened: **edition not verified**'
+  title: as named
+  scope: Air gap and wave impact assessment for semi-submersibles (from title).
+  key_methods:
+  - n/v
+  applicability: Semi-submersibles.
+  links_to:
+  - API RP 2FPS
+  references_text: API RP 2FPS (named in the search summary of the document).
+  group: B. Floating structure global design, motions and stability
+  status: n/v
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - key_methods
+  - status
+  relation_to_neighbours: Closest ABS match found for the issue's "ABS Guidance Notes on Wave Loads".
+  sources:
+  - *id014
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: '"ABS Guidance Notes on Wave Loads"'
+  also_known_as: []
+  formerly: []
+  publisher: ABS
+  revision: '**edition not verified**'
+  title: not found under this title
+  scope: '-'
+  key_methods:
+  - '-'
+  applicability: '-'
+  links_to: []
+  references_text: '-'
+  group: B. Floating structure global design, motions and stability
+  status: Not found on ABS pages searched today
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - title
+  - status
+  relation_to_neighbours: The issue target could not be matched to an ABS publication; rows 19 and 20
+    are the nearest.
+  sources: []
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: IMO MODU Code
+  also_known_as: []
+  formerly: []
+  publisher: IMO
+  revision: Resolution A.1023(26), adopted 2 Dec 2009; later MSC amendments exist; consolidated status
+    **not verified**
+  title: Code for the Construction and Equipment of Mobile Offshore Drilling Units, 2009
+  scope: Construction and equipment of MODUs, including stability.
+  key_methods:
+  - n/v
+  applicability: MODUs; flag-state instrument.
+  links_to:
+  - 1989 MODU Code (A.649(16))
+  references_text: Supersedes the 1989 MODU Code (A.649(16)).
+  group: B. Floating structure global design, motions and stability
+  status: In force (unv.)
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - key_methods
+  - status
+  relation_to_neighbours: Statutory, not a hydrodynamic analysis method; sets stability criteria that
+    motion and wind-heel calculations feed.
+  sources:
+  - *id015
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: IMO MSC.137(76)
+  also_known_as: []
+  formerly: []
+  publisher: IMO
+  revision: Adopted 4 Dec 2002
+  title: Standards for Ship Manoeuvrability
+  scope: Manoeuvring performance standards for ships.
+  key_methods:
+  - Full-scale or predicted manoeuvres (turning, initial turning, yaw checking, stopping) (categories
+    unv.; resolution cover page read only).
+  applicability: Governments invited to apply it to ships constructed on or after 1 January 2004.
+  links_to:
+  - MSC/Circ.1053
+  references_text: MSC/Circ.1053 explanatory notes.
+  group: B. Floating structure global design, motions and stability
+  status: In force; supersedes A.751(18)
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: 'Ship manoeuvring, not offshore stationkeeping: relevant only to self-propelled
+    units in transit.'
+  sources:
+  - *id016
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ISO 19905-3
+  also_known_as: []
+  formerly: []
+  publisher: ISO
+  revision: ISO 19905-3:2021
+  title: 'Site-specific assessment of mobile offshore units - Part 3: Floating units'
+  scope: Site-specific assessment of floating MOUs.
+  key_methods:
+  - n/v
+  applicability: Mobile floating units.
+  links_to:
+  - ISO 19904-1
+  references_text: Refers to ISO 19904-1 for metocean actions (per ISO site search summary).
+  group: B. Floating structure global design, motions and stability
+  status: Published
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: Bridges MODU class design and a specific location.
+  sources:
+  - *id017
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 2SK
+  also_known_as: []
+  formerly: []
+  publisher: API
+  revision: 4th Ed, Feb 2024
+  title: Design and Analysis of Stationkeeping Systems for Floating Offshore Structures
+  scope: Design and analysis of mooring systems, with or without thruster assist, from operating to survival
+    conditions.
+  key_methods:
+  - Separate requirements for mobile and permanent moorings (catalogue). Quasi-static and dynamic, frequency
+    and time domain (unv.).
+  applicability: Floating offshore structures.
+  links_to:
+  - API RP 2SM
+  - API RP 2I
+  - API RP 2MIM
+  - API RP 2MET
+  references_text: API RP 2SM, 2I, 2MIM, 2MET.
+  group: 'C. Stationkeeping analysis (hydrodynamic content; full treatment in the mooring inventory, #1805)'
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  relation_to_neighbours: US regulator still incorporates the **3rd edition (2005, addendum 2008)**, not
+    the current 4th (R1).
+  sources:
+  - *id003
+  - *id004
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime:
+  - regime: United States (Gulf of Mexico)
+    edition_or_statement: 3rd ed 2005 with 2008 addendum
+    source_key: R1
+- code_id: ISO 19901-7
+  also_known_as: []
+  formerly: []
+  publisher: ISO
+  revision: ISO 19901-7:2026, Ed 3, 2026-07
+  title: Stationkeeping systems for floating offshore structures and mobile offshore units
+  scope: Design, analysis and evaluation of stationkeeping systems, and site assessment for mobile units.
+  key_methods:
+  - Abstract lists system types, not analysis domains.
+  applicability: Spread, single point, DP and thruster-assisted systems; excludes non-redundant systems
+    (SALM), soft yoke and TLP tendons; ice needs ISO 19906.
+  links_to:
+  - ISO 19901-1
+  - ISO 19906
+  - IEC 61400-3-2
+  references_text: ISO 19901-1, 19906; IEC 61400-3-2 uses it for floating wind response.
+  group: 'C. Stationkeeping analysis (hydrodynamic content; full treatment in the mooring inventory, #1805)'
+  status: Published; 2013 edition withdrawn 2026-07-14
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Norway's regulator guideline no longer names it for anchoring (R3).
+  sources:
+  - *id018
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-OS-E301
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: '**edition not verified** (designation confirmed current; July 2021 seen only on secondary
+    sources)'
+  title: Position mooring
+  scope: Design of position mooring systems for floating units (unv.).
+  key_methods:
+  - n/v
+  applicability: n/v
+  links_to:
+  - DNV-RP-C205
+  - DNV-RP-F205
+  references_text: DNV-RP-C205, DNV-RP-F205 (unv.).
+  group: 'C. Stationkeeping analysis (hydrodynamic content; full treatment in the mooring inventory, #1805)'
+  status: Active
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - scope
+  - key_methods
+  - applicability
+  - references_text
+  relation_to_neighbours: Edition line needs a signed-in read.
+  sources: []
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-N103
+  also_known_as: []
+  formerly:
+  - DNV-RP-H103
+  publisher: DNV
+  revision: 2017-07, amended 2021-09
+  title: Modelling and analysis of marine operations
+  scope: Simplified formulations for design loads in marine operations.
+  key_methods:
+  - Simplified methods (stated). Lifting through the wave zone, towing, deepwater lowering (unv.).
+  applicability: Marine operations.
+  links_to:
+  - DNV-ST-N001
+  - DNV-RP-C205
+  references_text: DNV-ST-N001, DNV-RP-C205.
+  group: D. Marine operations
+  status: Active as N103; H103 superseded (renumbering inferred from the identical title)
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements:
+  - key_methods
+  - status
+  relation_to_neighbours: 'The issue lists it as DNV-RP-H103 and "PRIMARY": the code_id to use is DNV-RP-N103.'
+  sources:
+  - *id019
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-ST-N001
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: 2023-12
+  title: Marine operations and marine warranty
+  scope: Marine warranty survey requirements and design load cases for load-out, construction afloat,
+    voyages and installation or removal.
+  key_methods:
+  - Load cases for design and planning (stated); no method detail on the page.
+  applicability: Most offshore assets and operations likely to need warranty approval; location approval
+    of mobile units is sent to DNV-ST-N002.
+  links_to:
+  - DNV-RP-N103
+  - DNV-ST-N002
+  references_text: DNV-RP-N103, DNV-ST-N002.
+  group: D. Marine operations
+  status: Active
+  edition_basis: currency-check
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: 'Warranty-driven: governs when an insurer''s surveyor is in the loop.'
+  sources:
+  - *id020
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: API RP 2MOP
+  also_known_as:
+  - ISO 19901-6
+  formerly: []
+  publisher: API / ISO
+  revision: API 1st Ed, July 2010, reaffirmed Jan 2021 (identical adoption of ISO 19901-6:2009); ISO revision
+    project opened
+  title: Marine Operations
+  scope: Planning and engineering of marine operations, including design and analysis of the components,
+    systems and procedures.
+  key_methods:
+  - Catalogue gives no method detail.
+  applicability: Also for modifications of existing structures.
+  links_to:
+  - ISO 19901-1
+  references_text: ISO 19901-1.
+  group: D. Marine operations
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: ISO/API alternative to DNV-ST-N001; based on a 2009 text.
+  sources:
+  - *id003
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ITTC 7.5-02-07-03.1
+  also_known_as: []
+  formerly: []
+  publisher: ITTC
+  revision: 2021, Revision 03
+  title: Floating Offshore Platform Experiments
+  scope: 'Procedure for basin tests of floating platforms: run matrix, model geometry and ballasting,
+    instrumentation, calibration of waves, current and wind, mooring installation.'
+  key_methods:
+  - Physical model testing (contents page).
+  applicability: Floating offshore platforms.
+  links_to:
+  - Other ITTC ocean engineering procedures
+  references_text: Other ITTC ocean engineering procedures.
+  group: E. Model testing
+  status: Current
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Open access. NORSOK N-003 is what Norway's regulator names for model experiments
+    (R2).
+  sources:
+  - *id021
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ITTC 7.5-02-07-02.1
+  also_known_as: []
+  formerly: []
+  publisher: ITTC
+  revision: 2024, Revision 08
+  title: Seakeeping Experiments
+  scope: Procedure for seakeeping model tests, including model size, mass properties and uncertainty analysis.
+  key_methods:
+  - Physical model testing; uncertainty analysis to the ISO GUM framework (contents page).
+  applicability: Ships; self-propelled and controlled models covered.
+  links_to:
+  - ITTC wave modelling procedures
+  references_text: ITTC wave modelling procedures.
+  group: E. Model testing
+  status: Current
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Ship-oriented counterpart to row 31.
+  sources:
+  - *id022
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ITTC 7.5-03-02-03
+  also_known_as: []
+  formerly: []
+  publisher: ITTC
+  revision: 2024, Revision 02
+  title: Practical Guidelines for Ship CFD Applications
+  scope: 'General guidance for viscous-flow computations: geometry, domain, mesh, turbulence and free-surface
+    modelling, time step, post-processing.'
+  key_methods:
+  - Mainly grid-based RANS (abstract).
+  applicability: Ships; no offshore-platform-specific guideline found.
+  links_to:
+  - ITTC 7.5-03-01-01
+  references_text: ITTC 7.5-03-01-01.
+  group: F. CFD guidance
+  status: Current
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Open access. No issuer in this list publishes an open CFD guideline for offshore
+    floaters.
+  sources:
+  - *id023
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ITTC 7.5-03-01-01
+  also_known_as: []
+  formerly: []
+  publisher: ITTC
+  revision: 2024, Revision 05
+  title: Uncertainty Analysis in CFD Verification and Validation, Methodology and Procedures
+  scope: Verification and validation method and uncertainty assessment for CFD results.
+  key_methods:
+  - Grid and time-step convergence based verification; validation against experiment (contents page).
+  applicability: Any CFD application.
+  links_to:
+  - ITTC 7.5-03-02-03
+  references_text: Row 33.
+  group: F. CFD guidance
+  status: Current
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Use for the V&V section of any CFD report.
+  sources:
+  - *id024
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-RP-0286
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: 2019-05, amended 2021-10
+  title: Coupled analysis of floating wind turbines
+  scope: Principles and methods for analysing floating wind turbines.
+  key_methods:
+  - Coupled analysis, numerical models, design load case set-up, model testing and validation of numerical
+    models (stated).
+  applicability: Concept to wind-farm design stages; excludes specific advice on dynamic cable and anchor
+    analysis.
+  links_to:
+  - DNV-SE-0422
+  references_text: DNV-SE-0422 for certification.
+  group: G. Floating wind neighbours
+  status: Active
+  edition_basis: issuer-page
+  edition_verified: true
+  unverified_statements: []
+  relation_to_neighbours: Floating wind equivalent of DNV-RP-F205.
+  sources:
+  - *id025
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: DNV-ST-0119
+  also_known_as: []
+  formerly: []
+  publisher: DNV
+  revision: '**edition not verified** (document page returned "not found")'
+  title: Floating wind turbine structures (title unv.)
+  scope: Structural design of floating wind turbine structures (unv.).
+  key_methods:
+  - n/v
+  applicability: n/v
+  links_to:
+  - DNV-RP-C212
+  references_text: Named by DNV-RP-C212 for floating wind geotechnics.
+  group: G. Floating wind neighbours
+  status: n/v
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - title
+  - scope
+  - key_methods
+  - applicability
+  - status
+  relation_to_neighbours: '-'
+  sources:
+  - *id026
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []
+- code_id: ABS Guidance Notes on Global Performance and Integrated Load Analysis for Offshore Wind Turbines
+  also_known_as: []
+  formerly: []
+  publisher: ABS
+  revision: 'August 2023 (file name in ABS "current" folder; title page not opened): **edition not verified**'
+  title: as named
+  scope: Global performance and integrated load analysis methods and modelling for bottom-founded and
+    floating turbines (search summary).
+  key_methods:
+  - n/v
+  applicability: Offshore wind turbines.
+  links_to:
+  - July 2020 floating-turbine guidance notes
+  references_text: Replaces the July 2020 floating-turbine guidance notes (search summary).
+  group: G. Floating wind neighbours
+  status: n/v
+  edition_basis: not-verified
+  edition_verified: false
+  unverified_statements:
+  - revision
+  - key_methods
+  - status
+  relation_to_neighbours: Outside the oil and gas scope of the issue; listed as a boundary.
+  sources:
+  - *id027
+  date_checked: '2026-10-11'
+  accepted_edition_by_regime: []

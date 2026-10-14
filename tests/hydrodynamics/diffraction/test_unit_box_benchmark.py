@@ -1,30 +1,11 @@
-"""
-WRK-099: 3-way benchmark on Unit Box hull.
+"""Report-pipeline self-test on synthetic Unit box coefficients.
 
-Tests the full 3-way comparison (AQWA, OrcaWave, BEMRosetta) using a synthetic
-Unit Box hull with analytically-grounded hydrodynamic coefficients.
-
-Unit Box specification:
-  - Geometry: 1 m x 1 m x 1 m box (wetted surfaces: bottom + 4 sides)
-  - Mass: 500 kg
-  - COG: (0, 0, -0.25) m
-  - Water depth: 50 m
-  - Frequency range: 0.1 - 2.0 rad/s (20 steps)
-  - Headings: [0, 90, 180, 270] deg
-
-Since AQWA/OrcaWave/BEMRosetta executables are not available in CI, these tests
-use analytically-derived approximate coefficients with controlled inter-solver
-variation of < 1% to confirm the benchmark framework produces FULL or MAJORITY
-consensus for simple box geometry.
-
-Solver quirks documented:
-  - AQWA: panel mesh format (.dat) required; GDF not directly accepted
-  - OrcaWave: accepts GDF directly; internally converts
-  - BEMRosetta: accepts GDF natively; open-source panel code
+Series A, B and C share analytically derived approximate coefficients with
+small, seeded per-component perturbations. No analysis program is run; the
+comparison exercises the report pipeline, not physical solver accuracy.
 
 The artifacts under ``docs/benchmarks/unit_box/`` are a committed golden
-reference (see section 4). Tests never write there; regenerate them
-deliberately with::
+reference. Tests never write there; regenerate them deliberately with::
 
     uv run python tests/hydrodynamics/diffraction/test_unit_box_benchmark.py
 """
@@ -379,7 +360,7 @@ def _build_unit_box_results(
     """Build DiffractionResults for the Unit Box hull.
 
     Args:
-        solver_name: Solver identifier (AQWA, OrcaWave, BEMRosetta).
+        solver_name: Synthetic series identifier.
         seed: RNG seed for repeatable results.
 
     Returns:
@@ -416,7 +397,7 @@ def _build_unit_box_results(
 
 
 def _build_unit_box_solver_set() -> Dict[str, DiffractionResults]:
-    """Deterministic three-solver result set for the Unit Box.
+    """Deterministic three-series result set for the Unit Box self-test.
 
     Each solver uses a distinct deterministic seed for bounded per-sample
     multiplicative variation. No solver-specific bias is assumed.
@@ -426,9 +407,9 @@ def _build_unit_box_solver_set() -> Dict[str, DiffractionResults]:
     same inputs.
     """
     return {
-        "AQWA": _build_unit_box_results("AQWA", seed=0),
-        "OrcaWave": _build_unit_box_results("OrcaWave", seed=1),
-        "BEMRosetta": _build_unit_box_results("BEMRosetta", seed=2),
+        "Series A": _build_unit_box_results("Series A", seed=0),
+        "Series B": _build_unit_box_results("Series B", seed=1),
+        "Series C": _build_unit_box_results("Series C", seed=2),
     }
 
 
@@ -439,7 +420,7 @@ def _build_unit_box_solver_set() -> Dict[str, DiffractionResults]:
 
 @pytest.fixture
 def unit_box_solver_results() -> Dict[str, DiffractionResults]:
-    """Three-solver DiffractionResults for Unit Box."""
+    """Three synthetic series for the Unit Box self-test."""
     return _build_unit_box_solver_set()
 
 
@@ -459,7 +440,7 @@ def unit_box_output_dir(tmp_path: Path) -> Path:
 class TestUnitBoxResultsConstruction:
     """Verify the Unit Box DiffractionResults are well-formed."""
 
-    def test_unit_box_vessel_name_matches_all_solvers(
+    def test_unit_box_vessel_name_matches_all_series(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
@@ -549,14 +530,14 @@ class TestUnitBoxResultsConstruction:
 class TestUnitBoxMultiSolverComparator:
     """Verify MultiSolverComparator produces sensible output for Unit Box."""
 
-    def test_comparator_accepts_three_unit_box_solvers(
+    def test_comparator_accepts_three_unit_box_series(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         comparator = MultiSolverComparator(
             unit_box_solver_results, policy=_unit_box_policy(),
         )
-        assert sorted(comparator.solver_names) == ["AQWA", "BEMRosetta", "OrcaWave"]
+        assert sorted(comparator.solver_names) == ["Series A", "Series B", "Series C"]
 
     def test_unit_box_rao_comparison_produces_three_pairs(
         self,
@@ -624,10 +605,10 @@ class TestUnitBoxMultiSolverComparator:
 # ---------------------------------------------------------------------------
 
 
-class TestUnitBoxBenchmarkRunner:
-    """Verify BenchmarkRunner orchestrates the Unit Box 3-way comparison."""
+class TestUnitBoxReportPipeline:
+    """Verify the report pipeline on three synthetic Unit Box series."""
 
-    def test_benchmark_runner_succeeds_for_unit_box(
+    def test_report_pipeline_succeeds_for_unit_box(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -643,7 +624,7 @@ class TestUnitBoxBenchmarkRunner:
             f"BenchmarkRunner failed: {result.error_message}"
         )
 
-    def test_benchmark_runner_creates_json_report_for_unit_box(
+    def test_report_pipeline_creates_json_report_for_unit_box(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -657,7 +638,7 @@ class TestUnitBoxBenchmarkRunner:
         assert result.report_json_path is not None
         assert result.report_json_path.exists()
 
-    def test_benchmark_runner_creates_html_report_for_unit_box(
+    def test_report_pipeline_creates_html_report_for_unit_box(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -671,7 +652,7 @@ class TestUnitBoxBenchmarkRunner:
         assert result.report_html_path is not None
         assert result.report_html_path.exists()
 
-    def test_benchmark_runner_creates_overlay_plots_for_unit_box(
+    def test_report_pipeline_creates_overlay_plots_for_unit_box(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -684,7 +665,7 @@ class TestUnitBoxBenchmarkRunner:
 
         assert len(result.plot_paths) > 0, "No overlay plots generated"
 
-    def test_benchmark_runner_json_contains_vessel_name(
+    def test_report_pipeline_json_contains_vessel_name(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -699,7 +680,7 @@ class TestUnitBoxBenchmarkRunner:
             data = json.load(fh)
         assert data["vessel_name"] == UNIT_BOX_NAME
 
-    def test_benchmark_runner_json_contains_three_solver_names(
+    def test_report_pipeline_json_contains_three_series_names(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -712,9 +693,9 @@ class TestUnitBoxBenchmarkRunner:
 
         with open(result.report_json_path) as fh:
             data = json.load(fh)
-        assert sorted(data["solver_names"]) == ["AQWA", "BEMRosetta", "OrcaWave"]
+        assert sorted(data["solver_names"]) == ["Series A", "Series B", "Series C"]
 
-    def test_benchmark_runner_json_overall_consensus_populated(
+    def test_report_pipeline_json_overall_consensus_populated(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -729,7 +710,7 @@ class TestUnitBoxBenchmarkRunner:
             data = json.load(fh)
         assert data["overall_consensus"] == "FULL"
 
-    def test_benchmark_runner_dry_run_skips_plots(
+    def test_report_pipeline_dry_run_skips_plots(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -744,7 +725,7 @@ class TestUnitBoxBenchmarkRunner:
         assert result.success is True
         assert result.plot_paths == []
 
-    def test_benchmark_runner_report_includes_all_six_dofs(
+    def test_report_pipeline_report_includes_all_six_dofs(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
@@ -802,9 +783,12 @@ VOLATILE_JSON_KEYS = frozenset({"comparison_date"})
 #: Marker for the single volatile line of ``hydro_data.yml``.
 VOLATILE_YAML_MARKER = "generated:"
 
-REPORT_TITLE = "Unit Box 3-Way Benchmark"
+REPORT_TITLE = (
+    "Report-pipeline self-test on synthetic coefficients: "
+    "not a comparison of analysis programs"
+)
 REPORT_SUBTITLE = (
-    "AQWA vs OrcaWave vs BEMRosetta — 1m^3 box, 500 kg, "
+    "Series A vs Series B vs Series C — 1m^3 box, 500 kg, "
     "depth 50 m, freq 0.1-2.0 rad/s"
 )
 
@@ -824,6 +808,10 @@ def _run_unit_box_benchmark(
         **UNIT_BOX_POLICY_INPUTS,
         report_title=REPORT_TITLE,
         report_subtitle=REPORT_SUBTITLE,
+        report_page_title=REPORT_TITLE,
+        plot_title=REPORT_TITLE,
+        # Retain the earlier pair orientation and its exact stored metrics.
+        comparison_order=["Series A", "Series C", "Series B"],
     )
     return BenchmarkRunner(config).run_from_results(solver_results)
 
@@ -909,10 +897,10 @@ def unit_box_docs_run(tmp_path_factory: pytest.TempPathFactory) -> Dict[str, Any
     }
 
 
-class TestUnitBoxBenchmarkArtifacts:
-    """The Unit Box benchmark run is side-effect free and matches the golden."""
+class TestUnitBoxSelftestArtifacts:
+    """The Unit Box self-test is side-effect free and matches the golden."""
 
-    def test_unit_box_benchmark_writes_all_artifacts(
+    def test_unit_box_selftest_writes_all_artifacts(
         self,
         unit_box_docs_run: Dict[str, Any],
     ) -> None:
@@ -934,7 +922,7 @@ class TestUnitBoxBenchmarkArtifacts:
         missing = sorted(set(DOCS_ARTIFACT_NAMES) - produced)
         assert not missing, f"benchmark did not produce {missing}"
 
-    def test_unit_box_benchmark_does_not_modify_docs(
+    def test_unit_box_selftest_does_not_modify_docs(
         self,
         unit_box_docs_run: Dict[str, Any],
     ) -> None:
@@ -1049,7 +1037,7 @@ def _regenerate() -> None:
     )
     if not result.success:
         raise SystemExit(
-            f"Unit Box benchmark regeneration failed: {result.error_message}"
+            f"Unit Box self-test regeneration failed: {result.error_message}"
         )
     for name in sorted(set(DOCS_ARTIFACT_NAMES)):
         path = DOCS_BENCHMARK_DIR / name

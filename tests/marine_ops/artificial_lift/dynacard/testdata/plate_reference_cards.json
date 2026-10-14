@@ -8,7 +8,7 @@
   "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
   "source_file": "Working condition diagnosis plate.xls",
   "source_sha256": "69723091c93269761a2fa79fc774a6ae7bf0eff786af439fb94c40171018058e",
-  "extraction": "Each sheet of the plate holds two curve blocks in adjacent numeric column pairs. Block 0 is the dynamometer card; block 1 is the motor-current diagram and is not reproduced here. Coordinates are the plate's own arbitrary units; the comparison normalises each axis to 0-1."
+  "extraction": "Each pump-condition sheet of the plate holds two curve blocks in adjacent numeric column pairs. Block 0 is the dynamometer card; block 1 is the normalised-power diagram and is not reproduced here (embedded chart title: Normalized power). Coordinates are the plate's own arbitrary units; the comparison normalises each axis to 0-1."
  },
  "cards": {
   "normal": {

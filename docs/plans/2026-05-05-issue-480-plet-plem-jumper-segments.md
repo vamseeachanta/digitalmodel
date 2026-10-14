@@ -9,13 +9,13 @@
 
 `KNOWN_JUMPER_CONFIGS["gom_tieback_plet_plem"]` in `src/digitalmodel/marine_ops/installation/jumper_lift.py` (lines 139-158) carries placeholder segment lengths copied wholesale from MF-PLET. The TODO at line 144 documents this: "Verify these from the SZ_GoM tieback_Jumper_MF.xlsm workbook." Identical seg_a-g (336/160/525/1046.3/370/160/352) produce a misleading 71.64 m total — the same value MF-PLET computes — so any analysis run on the PLET-PLEM config currently re-derives MF-PLET geometry and silently ships wrong results downstream (line sections, weights, COG, OrcaFlex sections).
 
-The source workbook lives on ws014 (Windows, Claude cowork): `client_projects/engineering_workbooks/gom_tieback/jumper_manifold_to_plet/jumper_PLET to PLEM/SZ_GoM tieback_Jumper_MF.xlsm`. The GA sheet rows C5:C11 hold seg_a through seg_g in inches per the Excel-conversion convention used for the MF-PLET ingest.
+The source workbook lives on ace-win-2 (Windows, Claude cowork): `client_projects/engineering_workbooks/gom_tieback/jumper_manifold_to_plet/jumper_PLET to PLEM/SZ_GoM tieback_Jumper_MF.xlsm`. The GA sheet rows C5:C11 hold seg_a through seg_g in inches per the Excel-conversion convention used for the MF-PLET ingest.
 
 Companion file `docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml` carries the same notice ("Segment lengths need verification") and currently mirrors MF-PLET; it must move in lockstep with the Python config.
 
 ## Plan
 
-1. **Extract on ws014.** The executor will open `SZ_GoM tieback_Jumper_MF.xlsm` on ws014 with Claude cowork, read GA!C5:C11, and capture the seven segment values plus the Excel cell trace as comments. No code modifications happen on Linux until extracted values are pasted back into the issue thread for review.
+1. **Extract on ace-win-2.** The executor will open `SZ_GoM tieback_Jumper_MF.xlsm` on ace-win-2 with Claude cowork, read GA!C5:C11, and capture the seven segment values plus the Excel cell trace as comments. No code modifications happen on Linux until extracted values are pasted back into the issue thread for review.
 
 2. **Patch `KNOWN_JUMPER_CONFIGS["gom_tieback_plet_plem"]`.** Edit `src/digitalmodel/marine_ops/installation/jumper_lift.py` lines 146-152 to set seg_a_inch through seg_g_inch to the extracted values. Replace the TODO comment at lines 142-145 with a `Source: GA!Cxx -- description` cell-trace comment matching the MF-PLET convention (lines 121-128). Leave AHC-related fields (crane_sz/dz_swl_te, crane_sz/dz_radius_m) untouched — those are correct for PLET-PLEM.
 
