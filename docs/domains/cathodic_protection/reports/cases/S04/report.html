@@ -457,13 +457,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       </div>
     </div>
 
-      <table>
-        <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
-        <tbody>
-          <tr><td>00</td><td>2026-10-03</td><td>Internal review draft</td><td></td><td>Pending</td><td>Pending</td></tr>
-        </tbody>
-      </table>
-    </div>
+
   </div>
 </div>
 
@@ -505,8 +499,14 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <p>Independent engineering review is required before design use.</p>
     </div>
     </section>
-<section id="revision-history">    <div class="kv revhist">
-      <h2>Revision history</h2></section>
+<section id="revision-history"><div class="kv revhist"><h2>Revision history</h2><table>
+        <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
+        <tbody>
+          <tr><td>00</td><td>2026-10-03</td><td>Internal review draft</td><td></td><td>Pending</td><td>Pending</td></tr>
+        <tr><td>01</td><td>2026-10-14</td><td>Internal draft: clarify hull provenance and remove ignored capacity input</td><td></td><td>Pending</td><td>Pending</td></tr>
+</tbody>
+      </table>
+    </div></section>
 <section id="source-provenance"><h2>Provenance note</h2><p>The hull area is inherited from src/digitalmodel/base_configs/modules/cathodic_protection/cathodic_protection.yml at commit 19e8eae30db110d8d0fe6efa3bd3e0ccb8333097. The same commit includes an example explicitly classified as an abstracted client calculation, with the identical hull area attributed to a maximum-draft submerged surface and a source hull-area table. The demo input was moved to tests/fixtures/cathodic_protection/workflow_inputs/ships.yml at commit 0cfda2ec0dfe387aadbe3c5fe6ac27df17c228c0; the report echoes that fixture. The matching data is treated as client-derived pending qualification; a synthetic origin is not established.</p><p>The original capacity scalar is inherited from the same base configuration. The rebuilt ABS route at commit d1d112d0ec3b6ad6e6ffd75d4c9703744febd593 does not read that scalar: src/digitalmodel/cathodic_protection/abs_ships.py::_alloy selects alloy A1 when no alloy is supplied, and abs_ships_result.py::build_result records its cited table capacity. The input echo and the calculated capacity therefore describe different bases. The ignored scalar is removed and the existing A1 selection is made explicit; no replacement table value is copied into the input. Capacity remains read from the existing owned ABS table implementation. ABS Guidance Notes on Cathodic Protection of Ships, December 2017, Section 3, Table 4, Typical Properties of Aluminum Anodes in Normal Operation Conditions.</p><p>The repository does not establish the original hull geometry, a reproducible wetted-area derivation, the original source identity or publication rights. The matching client-derived example is evidence of a provenance concern, not proof of a documented transfer chain. Historical results and citation files are retained byte for byte, with their existing execution revision; they are not a new calculation. No licensed recommended-practice values are reproduced in this note.</p><p>The maintainer must establish input ownership and release rights, qualify or replace the hull-area basis, and confirm the alloy before a numerical rebuild or design use. The synthetic fixture release gate remains closed for this case. Other cases retain their existing results and release records.</p></section>
 
     <section id="review-2">
@@ -686,7 +686,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
           </thead>
           <tbody>
             <tr><td>Design life</td><td>5</td><td>yr</td></tr>
-            <tr><td>Anode current capacity</td><td>2500</td><td>Ah/kg</td></tr>
+            <tr><td>Anode current capacity</td><td>ABS Guidance Notes on Cathodic Protection of Ships, December 2017, Section 3, Table 4, Typical Properties of Aluminum Anodes in Normal Operation Conditions</td><td>-</td></tr>
             <tr><td>Coated area</td><td>13446</td><td>m2</td></tr>
             <tr><td>Uncoated area</td><td>0</td><td>m2</td></tr>
             <tr><td>Total area</td><td>13446</td><td>m2</td></tr>
@@ -1000,7 +1000,7 @@ Re-select the HTML before each Save or Copy. Files remain on your computer.</p>
 <p>Save As is used where supported; otherwise Save uses your browser's Downloads
 destination. Re-load the saved JSON to verify the durable copy.</p>
 <p id="cp-message" role="status">Not bound to a report file.</p>
-<pre id="cp-preview"></pre></section><script id="cp-review-config" type="application/json">{"report_id": "S04", "revision": "01", "sections": [{"id": "review-1", "title": "Executive Summary"}, {"id": "revision-history", "title": "Revision history"}, {"id": "source-provenance", "title": "Provenance note"}, {"id": "review-2", "title": "Introduction"}, {"id": "review-3", "title": "Design Data"}, {"id": "review-4", "title": "Analysis Methodology"}, {"id": "review-5", "title": "Detailed Results"}, {"id": "review-6", "title": "Key Findings"}, {"id": "review-7", "title": "Limitations"}, {"id": "review-8", "title": "Recommendations"}, {"id": "review-9", "title": "References"}, {"id": "review-10", "title": "Acronyms and Symbols"}, {"id": "design-basis", "title": "Design basis"}, {"id": "current-demand", "title": "Current demand"}, {"id": "anode-requirements", "title": "Anode requirements"}, {"id": "adequacy", "title": "Adequacy"}, {"id": "references", "title": "References"}, {"id": "result-adequacy-1", "title": "Result review: Assessed hull CP design scope"}], "content_sha256": "6f80c5825e76619e815a4b1978aaef61eccb74e23f0fd8fb0c4d958276dcaf52"}</script><script>/* Offline portfolio review: bind full HTML to a separately supplied receipt. */
+<pre id="cp-preview"></pre></section><script id="cp-review-config" type="application/json">{"report_id": "S04", "revision": "01", "sections": [{"id": "review-1", "title": "Executive Summary"}, {"id": "revision-history", "title": "Revision history"}, {"id": "source-provenance", "title": "Provenance note"}, {"id": "review-2", "title": "Introduction"}, {"id": "review-3", "title": "Design Data"}, {"id": "review-4", "title": "Analysis Methodology"}, {"id": "review-5", "title": "Detailed Results"}, {"id": "review-6", "title": "Key Findings"}, {"id": "review-7", "title": "Limitations"}, {"id": "review-8", "title": "Recommendations"}, {"id": "review-9", "title": "References"}, {"id": "review-10", "title": "Acronyms and Symbols"}, {"id": "design-basis", "title": "Design basis"}, {"id": "current-demand", "title": "Current demand"}, {"id": "anode-requirements", "title": "Anode requirements"}, {"id": "adequacy", "title": "Adequacy"}, {"id": "references", "title": "References"}, {"id": "result-adequacy-1", "title": "Result review: Assessed hull CP design scope"}], "content_sha256": "584a77c81183c1a43202849ce7c3af1ad73fca98ee8ac699f4993e7b6d32ebfc"}</script><script>/* Offline portfolio review: bind full HTML to a separately supplied receipt. */
 (() => {
   'use strict';
   const config = JSON.parse(document.getElementById('cp-review-config').textContent);

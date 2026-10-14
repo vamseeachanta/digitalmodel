@@ -26,6 +26,11 @@ from cp_review_document import comment_seed, validate_comments
 TITLE = "Hull cathodic protection analysis"
 REVISION = "01"
 DATE = "2026-10-14"
+CAPACITY_LOCATOR = (
+    "ABS Guidance Notes on Cathodic Protection of Ships, December 2017, "
+    "Section 3, Table 4, Typical Properties of Aluminum Anodes in Normal "
+    "Operation Conditions"
+)
 DESCRIPTION = "Internal draft: clarify hull provenance and remove ignored capacity input"
 
 
@@ -60,14 +65,12 @@ def _correct_page(page: str, provenance: dict[str, Any]) -> str:
     )
     if count != 1:
         raise ValueError("historical capacity input echo is missing or duplicated")
-    history = re.search(r'    <div class="kv revhist">.*?</div>', page, re.S)
+    history = re.search(r'    <div class="kv revhist">.*?</table>\s*</div>', page, re.S)
     if history is None:
         raise ValueError("historical revision history is missing")
-    revised = history.group().replace(
-        "</tbody>",
-        f"<tr><td>{REVISION}</td><td>{DATE}</td><td>{DESCRIPTION}</td>"
-        "<td></td><td>Pending</td><td>Pending</td></tr>\n</tbody>",
-    ).replace('<div class="cap">Revision history</div>', "<h2>Revision history</h2>")
+    revised = _append_revision(history.group()).replace(
+        '<div class="cap">Revision history</div>', "<h2>Revision history</h2>",
+    )
     revised = '<section id="revision-history">' + revised + "</section>\n"
     page = page[:history.start()] + page[history.end():]
     summary = re.search(r'<section id="review-1">.*?</section>', page, re.S)
@@ -91,21 +94,73 @@ def _correct_page(page: str, provenance: dict[str, Any]) -> str:
         '<li><a href="#source-provenance">Provenance note</a></li>\n'
         '<li><a href="#review-2">Introduction</a></li>',
     )
-    return _bind_review(page)
+    return _bind_review(_capacity_locator(page))
+
+
+def _append_revision(history: str) -> str:
+    """Append the correction row while preserving the original revision row."""
+    if history.count("<td>00</td>") != 1 or "<td>01</td>" in history:
+        raise ValueError("unexpected historical revision rows")
+    return _replace_once(
+        history, "</tbody>",
+        f"<tr><td>{REVISION}</td><td>{DATE}</td><td>{DESCRIPTION}</td>"
+        "<td></td><td>Pending</td><td>Pending</td></tr>\n</tbody>",
+    )
+
+
+def _capacity_locator(page: str) -> str:
+    """Replace the licensed design-data capacity cell with its source locator."""
+    page, count = re.subn(
+        r"<tr><td>Anode current capacity</td><td>[^<]+</td><td>[^<]+</td></tr>",
+        f"<tr><td>Anode current capacity</td><td>{CAPACITY_LOCATOR}</td><td>-</td></tr>",
+        page,
+    )
+    if count != 1:
+        raise ValueError("historical design-data capacity row is missing or duplicated")
+    return page
+
+
+def _repair_reissued_page(page: str) -> str:
+    """Repair the earlier truncated history without adding another revision."""
+    section = re.search(r'<section id="revision-history">.*?</section>', page, re.S)
+    if section is None:
+        raise ValueError("reissued revision history is missing")
+    if "</table>" not in section.group():
+        table = re.search(
+            r"<table>\s*<thead><tr><th>Rev</th>.*?</table>\s*</div>",
+            page, re.S,
+        )
+        if table is None or table.start() > section.start():
+            raise ValueError("displaced historical revision table is missing")
+        history_block = _append_revision(table.group())
+        replacement = (
+            '<section id="revision-history"><div class="kv revhist">'
+            '<h2>Revision history</h2>' + history_block + "</section>"
+        )
+        page = page[:section.start()] + replacement + page[section.end():]
+        page = page[:table.start()] + page[table.end():]
+    history = re.search(r'<section id="revision-history">(.*?)</section>', page, re.S)
+    if history is None or any(history.group(1).count(f"<td>{rev}</td>") != 1
+                              for rev in ("00", "01")):
+        raise ValueError("reissued revision history must contain both revisions")
+    return _bind_review(_capacity_locator(page))
 
 
 def _bind_review(page: str) -> str:
     """Rebind the existing review controls to the exact corrected report content."""
+    page = "".join(line.rstrip() + "\n" for line in page.splitlines())
     pattern = r'<script id="cp-review-config" type="application/json">(.*?)</script>'
     match = re.search(pattern, page, re.S)
     if match is None:
         raise ValueError("historical review configuration is missing")
     config = json.loads(match.group(1))
     config["revision"] = REVISION
-    config["sections"][1:1] = [
+    additions = [
         {"id": "revision-history", "title": "Revision history"},
         {"id": "source-provenance", "title": "Provenance note"},
     ]
+    existing = {section["id"] for section in config["sections"]}
+    config["sections"][1:1] = [row for row in additions if row["id"] not in existing]
     core = re.sub(r"<!--CP_REVIEW_START-->.*?<!--CP_REVIEW_END-->", "", page, flags=re.S)
     config["content_sha256"] = hashlib.sha256(core.encode()).hexdigest()
     encoded = json.dumps(config, ensure_ascii=True).replace("<", "\\u003c")
@@ -136,10 +191,14 @@ def correct_ship_provenance(destination: Path) -> None:
     if digest(FIXTURES / "ships.yml") != entry["sha256"]:
         raise ValueError("hull provenance fixture digest mismatch")
     release = json.loads((folder / "release.json").read_text())
+    original = (folder / "report.html").read_text("utf-8")
     if release.get("provenance_correction") == entry["provenance"]:
-        return
-    page = _correct_page((folder / "report.html").read_text("utf-8"), entry["provenance"])
-    _correct_input(folder)
+        page = _repair_reissued_page(original)
+        if page == original:
+            return
+    else:
+        page = _correct_page(original, entry["provenance"])
+        _correct_input(folder)
     (folder / "report.html").write_text(page, "utf-8")
     write_json(folder / "report.comments.json", comment_seed(page, "S04", REVISION))
     release.update(
