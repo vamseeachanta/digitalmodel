@@ -1,19 +1,28 @@
 schema_version: generic-steel-riser-basis-v1
-summary: Generic steel catenary and distributed-buoyancy lazy-wave inputs with solver-free analytical
-  references.
+summary: Generic steel catenary and distributed-buoyancy lazy-wave inputs from assumed repository
+  defaults and public buoy observations, with solver-free analytical references.
 revision_history:
 - revision: '0'
   date: '2026-10-14'
   change: Initial parameter basis and analytical calibration inputs; native equilibrium and design
     acceptance remain unverified.
+- revision: '1'
+  date: '2026-10-14'
+  change: Assumed defaults are distinguished from public buoy observations; the retained example
+    host redistribution status is made explicit. Models are regenerated in fresh processes.
 readiness: prepared; not qualified for design or outward use
 pipe_grade: X65
 host:
   selection: Solver example vessel type; public hull alternative remains unmerged.
   type_name: Vessel Type1
   motion: None; RAOs and coupled host motion are not established.
-  rights: Example-derived inputs; redistribution terms require confirmation before outward model
-    sharing.
+  redistribution_status: UNCONFIRMED
+  rights: Redistribution of the retained solver example vessel type is UNCONFIRMED; maintainer
+    confirmation is required before merge or further outward use.
+  replacement_limit: The existing riser vessel builder emits only a VesselType reference, not a
+    type definition. The schema forbids combining riser and generic definitions; replacing the
+    host with a defined type would require changing the generator or converting the riser specs.
+  definition_source: src/digitalmodel/solvers/orcaflex/modular_generator/builders/riser_vessel_builder.py
 hangoff: Ideal pinned flex-joint approximation; zero rotational stiffness.
 metocean:
   agency: NOAA National Data Buoy Center

@@ -5,13 +5,14 @@
 
 import importlib.util
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 import yaml
 
 from digitalmodel.orcaflex.riser_config import RiserPipeProperties
-from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.post_validator import (
     PostGenerationValidator,
 )
@@ -39,6 +40,7 @@ def test_basis_has_provenance_for_every_parameter():
     """Missing sources and unexplained assumptions prevent basis qualification."""
     basis = load_basis()
     assert basis["readiness"] == "prepared; not qualified for design or outward use"
+    assert basis["host"]["redistribution_status"] == "UNCONFIRMED"
     for name, record in basis["parameters"].items():
         assert record["unit"], name
         assert record["source"] in basis["sources"], name
@@ -67,6 +69,7 @@ def test_specs_match_basis_and_static_geometry(kind):
     assert spec["environment"]["waves"]["height"] == p["extreme_hs"]
     assert spec["environment"]["waves"]["period"] == p["extreme_tp"]
     host = spec["riser"]["vessel"]
+    assert host["type_name"] == basis["host"]["type_name"]
     assert host["length"] == p["host_length"]
     assert host["primary_motion"] == host["superimposed_motion"] == "None"
     line = spec["riser"]["lines"][0]
@@ -101,7 +104,7 @@ def test_specs_match_basis_and_static_geometry(kind):
 
 @pytest.mark.parametrize("kind", ["scr", "slwr"])
 def test_models_validate_and_reproduce(kind, tmp_path):
-    """The existing generator reproduces all retained modular files."""
+    """Fresh and previously loaded processes reproduce the model's YAML values."""
     model = CAMPAIGN / kind / "modular"
     result = OrcaFlexYAMLValidator().validate_file(model / "master.yml")
     assert result.valid, result.errors
@@ -111,14 +114,36 @@ def test_models_validate_and_reproduce(kind, tmp_path):
     assert train["WaveTp"] == load_basis()["parameters"]["extreme_tp"]["value"]
     assert "WaveTz" not in train
     generated = tmp_path / kind
-    ModularModelGenerator(CAMPAIGN / kind / "spec.yml").generate(generated)
+    command = (
+        "import sys; "
+        "from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator; "
+        "ModularModelGenerator(sys.argv[1]).generate(sys.argv[2])"
+    )
+    subprocess.run([sys.executable, "-c", command,
+                    str(CAMPAIGN / kind / "spec.yml"), str(generated)], check=True)
     expected = {p.relative_to(model) for p in model.rglob("*.yml")}
     assert expected == {p.relative_to(generated) for p in generated.rglob("*.yml")}
+    loaded = tmp_path / (kind + "-loaded")
+    # Reproduce a prior import that registers the repository's tilde representer.
+    prior_import = (
+        "import yaml; "
+        "from digitalmodel.solvers.orcaflex.yaml_utils import _represent_none; "
+        "yaml.add_representer(type(None), _represent_none); "
+    )
+    subprocess.run([sys.executable, "-c", prior_import + command,
+                    str(CAMPAIGN / kind / "spec.yml"), str(loaded)], check=True)
+    assert expected == {p.relative_to(loaded) for p in loaded.rglob("*.yml")}
     for path in expected:
-        raw = (generated / path).read_bytes()
-        # The repository EOF hook adds the generator's missing final newline.
-        canonical = raw if raw.endswith(b"\n") else raw + b"\n"
-        assert (model / path).read_bytes() == canonical
+        retained = (model / path).read_bytes()
+        for directory in (generated, loaded):
+            raw = (directory / path).read_bytes()
+            # Imported packages can change the unpinned YAML None representer.
+            assert yaml.safe_load(retained) == yaml.safe_load(raw), path
+            if path == Path("master.yml"):
+                # The master is written directly, without a YAML dumper.
+                # The EOF hook adds its missing final newline.
+                canonical = raw if raw.endswith(b"\n") else raw + b"\n"
+                assert retained == canonical
 
 
 def test_analytical_reference_reproduces_from_basis():

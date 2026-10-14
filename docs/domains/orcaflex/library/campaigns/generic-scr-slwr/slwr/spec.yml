@@ -1,6 +1,7 @@
 metadata:
   name: generic_slwr
-  description: Generic steel riser; illustrative environment; no native equilibrium
+  description: Generic steel riser from assumed repository defaults and public buoy observations;
+    retained solver example host redistribution UNCONFIRMED; no host motion or native equilibrium
     established
   structure: riser
   operation: production
