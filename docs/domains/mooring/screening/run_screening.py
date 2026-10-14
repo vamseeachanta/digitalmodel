@@ -9,7 +9,6 @@ import hashlib
 import itertools
 import json
 import math
-import platform as runtime_platform
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -126,7 +125,7 @@ def compute_record(basis: dict, criteria: dict) -> dict:
     static_entries = sum(row["static_solution"] is not None for row in matrix)
     return {
         "revision": basis["revision"], "criteria_revision": criteria["revision"],
-        "module_commit": basis["module_commit"], "python_version": runtime_platform.python_version(),
+        "module_commit": basis["module_commit"],
         "component": {"construction": row["construction"], "diameter_mm": float(row["diameter"]),
                       "source_id": basis["component_source_id"], "readiness": "computed example; not certified"},
         "counts": {"matrix_entries": len(matrix), "unique_static_solves": len(solutions),

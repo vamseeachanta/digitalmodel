@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import platform as runtime_platform
 import re
 from html.parser import HTMLParser
 from pathlib import Path
@@ -269,7 +270,7 @@ def build(output_dir: Path, source: Path | None = None, website_out: Path | None
     files = {name: {"sha256": digest(output_dir / name), "bytes": (output_dir / name).stat().st_size}
              for name in ["results.json", "report.html", "README.md", "comparison.md"]}
     manifest = {"revision": result["revision"], "criteria_revision": result["criteria_revision"],
-                "module_commit": basis["module_commit"], "python_version": result["python_version"],
+                "module_commit": basis["module_commit"], "python_version": runtime_platform.python_version(),
                 "source_files": basis["source_files"], "execution": receipt,
                 "counts": result["counts"], "numeric_bindings": bindings, "files": files,
                 "record_inputs": {name: digest(RECORD / name) for name in [

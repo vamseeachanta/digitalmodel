@@ -196,3 +196,28 @@ def test_website_output_has_no_trailing_whitespace(run, builder, inputs):
     source = '<html>\n<head>  \n<title>Old</title>\n</head>\n<body>old values</body></html>'
     prepared = builder.website_page(source, builder.sections(result, basis, revisions), result['revision'])
     assert all(line == line.rstrip(' \t') for line in prepared.splitlines())
+
+
+def test_interpreter_patch_version_is_metadata_only(run, builder, inputs, tmp_path, monkeypatch):
+    """Reproduce computed bytes across patch versions while retaining run metadata."""
+    import platform
+
+    basis, criteria, _ = inputs
+    recorded = json.loads((RECORD / "results.json").read_text())
+    manifests = []
+    for version in ("3.11.17", "3.11.15"):
+        monkeypatch.setattr(platform, "python_version", lambda version=version: version)
+        computed = run.compute_record(basis, criteria)
+        assert computed == recorded
+        assert "python_version" not in computed
+        destination = tmp_path / version
+        destination.mkdir()
+        run.write_json(destination / "results.json", computed)
+        assert (destination / "results.json").read_bytes() == (RECORD / "results.json").read_bytes()
+        manifest = builder.build(destination)
+        assert manifest["python_version"] == version
+        manifests.append(manifest)
+    assert manifests[0] != manifests[1]
+    computed_manifests = [{key: value for key, value in manifest.items() if key != "python_version"}
+                          for manifest in manifests]
+    assert computed_manifests[0] == computed_manifests[1]

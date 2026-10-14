@@ -28,8 +28,8 @@
       "sha256": "b2d4707cde15ab4178f9b3c161b614b27a0e5cc3adaf91ed4a155f436a833c0f"
     },
     "results.json": {
-      "bytes": 35821,
-      "sha256": "93e55338950631cab06e55dba8298e174656b1c3e73d171dec3c3856af95fc59"
+      "bytes": 35790,
+      "sha256": "a191b4f6ac28f7849adcf51f30654f5ba54af892ea9abd343a174335738e2736"
     }
   },
   "header_replacements": "none; native JSON contains no runtime paths or host headers",
@@ -39,12 +39,12 @@
   "record_inputs": {
     "README.template.md": "f584722f7ee82b6bdbeee81c0d133be0cfbc4aaf08380f99f8a68b8d7beb5f71",
     "basis.json": "4ad61bca29e0ac99d1cce47df86d03d6987db443bd4042ddd5d0c3bf5a0ca04c",
-    "build_report.py": "118e28cebee386d62ed5438c478cd7cd461f5fd4fc41eff77e2a262be9287ef1",
+    "build_report.py": "5e91834ae7f6b5a2b15bc3172e350b0d3010cf8568a3bad4bce57be0222b2157",
     "comparison.template.md": "612d73a19a672510480f7d018e33e4aa4d004ff9b400a115d65df3b82b70dece",
     "criteria.json": "2ee2eb574303125f0c0c23f611b225dc1adf8e156ee183af651fef7e2d06f5fb",
     "execution.json": "4fadfc090938bff4863f41dab1d02f323891036751c7641ccae0dc68a9bc9bb3",
     "revisions.json": "a9d55c53f30432630b13bf0e6c94e71d8d261de64fdd905fd50c04f3381a341d",
-    "run_screening.py": "352374b26b7202124646839f8e831f6f117f8863a4b03a6125e8cdb776b2bf35"
+    "run_screening.py": "1c933a38712b3f0ad9285676f1b6f65f7dd2e6ad02612a09e5b845099cc14937"
   },
   "revision": "R1",
   "source_files": {
