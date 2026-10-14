@@ -1,0 +1,40 @@
+[
+  {
+    "vessel_name": "Thialf",
+    "owner": "Heerema",
+    "crane_capacity_tonnes": 14200,
+    "crane_capacity_basis": "combined",
+    "deck_area_m2": null,
+    "dp_class": "DP-3",
+    "bollard_pull_tonnes": null,
+    "source_url": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+    "retrieved_utc": "2026-10-11T19:45:35.937998+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+      "owner": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+      "crane_capacity_tonnes": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+      "crane_capacity_basis": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf",
+      "dp_class": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf",
+      "dp_notation_source": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf"
+    },
+    "dp_notation_source": "DP-3; printed page 3"
+  },
+  {
+    "vessel_name": "Sleipnir",
+    "owner": "Heerema",
+    "crane_capacity_tonnes": 20000,
+    "crane_capacity_basis": "combined",
+    "deck_area_m2": null,
+    "dp_class": null,
+    "bollard_pull_tonnes": null,
+    "source_url": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+    "retrieved_utc": "2026-10-11T19:45:39.198394+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+      "owner": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+      "crane_capacity_tonnes": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+      "crane_capacity_basis": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir"
+    },
+    "dp_notation_source": null
+  }
+]

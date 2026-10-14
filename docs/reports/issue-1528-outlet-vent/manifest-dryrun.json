@@ -9,12 +9,12 @@
   "dry_run": true,
   "variants": {
     "baseline_full_height_outlet": {
-      "case_directory": "/home/undi/ws/cfd_work/vent2/emitted/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet",
+      "case_directory": "<home>/ws/cfd_work/vent2/emitted/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet",
       "cell_count": 12800,
       "status": "built"
     },
     "vent_top": {
-      "case_directory": "/home/undi/ws/cfd_work/vent2/emitted/vent_top/dm1528-filldrain-2a44db9cf998-vent_top",
+      "case_directory": "<home>/ws/cfd_work/vent2/emitted/vent_top/dm1528-filldrain-2a44db9cf998-vent_top",
       "cell_count": 12800,
       "status": "built"
     }

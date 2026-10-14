@@ -10,6 +10,7 @@ Private temporary directory removed: True
 
 ## Actual stdout (private host and scratch path redacted)
 
+````text
 # ADVERSARIAL PLAN REVIEW — Issue 2082 r2 (amended)
 
 **VERDICT: MAJOR** — One load-bearing gap remains; prior blockers adequately resolved.
@@ -51,7 +52,7 @@ scripts/solver_smoke_test.py --solver orcaflex  ← Python, cross-platform
 
 **Current context risk**:
 - Current working directory: `[private-review-scratch]` (Linux).
-- Memory indicates active execution hosts: gpu-claw (Linux), ace-linux-1 (Linux), ace-linux-2 (Linux).
+- Memory indicates active execution hosts: dev-gpu (Linux), ace-linux-1 (Linux), ace-linux-2 (Linux).
 - Retired: ace-win-1 (Windows, per `reference_ace_win_1_retired_use_[private-host-redacted].md`).
 - OrcaFlex licensing suggests a specific Windows host ([private-host-redacted] per memory).
 
@@ -116,6 +117,7 @@ Does this mean calling `json.dumps(report)` without `default=str` and asserting 
 - If **cross-platform support** is intended, request `.sh` harness or Python wrapper.
 - If **native acceptance is deferred**, move `.ps1` to follow-on issue and re-approve this plan as offline-only.
 
+````
 
 ## Actual stderr
 

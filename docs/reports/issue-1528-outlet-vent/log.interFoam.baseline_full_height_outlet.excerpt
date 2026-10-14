@@ -1,6 +1,6 @@
 ### EXCERPT of log.interFoam for variant: baseline_full_height_outlet
-### Full log (4463305 bytes) retained on gpu-claw at
-### /home/undi/ws/cfd_work/vent2/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet/log.interFoam
+### Full log (4463305 bytes) retained on dev-gpu at
+### <home>/ws/cfd_work/vent2/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet/log.interFoam
 ### 'Time = ' lines: 1000   'FOAM FATAL' lines: 0
 
 ===== HEAD: first 90 lines (banner, decomposition, solver start) =====
@@ -36,14 +36,14 @@ Arch   : "LSB;label=32;scalar=64"
 Exec   : interFoam -parallel
 Date   : Aug 05 2026
 Time   : 05:02:31
-Host   : gpu-claw
+Host   : dev-gpu
 PID    : 2275830
 I/O    : uncollated
-Case   : /home/undi/ws/cfd_work/vent2/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
+Case   : <home>/ws/cfd_work/vent2/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
 nProcs : 8
 Hosts  :
 (
-    (gpu-claw 8)
+    (dev-gpu 8)
 )
 Pstream initialized with:
     floatTransfer      : false

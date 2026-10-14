@@ -1,5 +1,5 @@
---- /home/undi/ws/cfd_work/vent2/sha256-emitted.txt	2026-08-05 05:02:29.082825314 -0400
-+++ /home/undi/ws/cfd_work/vent2/sha256-after.txt	2026-08-05 05:03:58.895956183 -0400
+--- <home>/ws/cfd_work/vent2/sha256-emitted.txt	2026-08-05 05:02:29.082825314 -0400
++++ <home>/ws/cfd_work/vent2/sha256-after.txt	2026-08-05 05:03:58.895956183 -0400
 @@ -1,5 +1,5 @@
  444258612c676ded96b495766679bb101711ea6bd0526d8c13ef5f903271686a  baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet/0/U
 -c284ff2850e00b808794b8186877bc60824bef5dfa0a00534a1d844815c03628  baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet/0/alpha.water

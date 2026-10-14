@@ -268,3 +268,40 @@ def test_midwrite_source_change_leaves_only_partial_outputs(tmp_path,monkeypatch
 def test_nonfinite_raw_basis_rejected():
     data=summary();data['design_basis']['mass_t']=float('nan')
     with pytest.raises(ValueError):mudmat.render_html(data)
+
+
+@pytest.mark.parametrize('claim', [
+    '1 numerical failure and 95 missing cells',
+    '0 numerical failures and 1 missing cell',
+], ids=['singular-failure', 'singular-cell'])
+def test_design_data_coverage_status_rejects_singular_stale_claims(claim):
+    """Counts are 61 verified, 0 failed, 95 missing and 156 planned; stale singular counts raise."""
+    status = '61 of 156 baseline cases verified; ' + claim
+    with pytest.raises(ValueError, match='coverage'):
+        mudmat.render_html(summary(), config={'design_data': [design_row(status=status)]})
+
+
+@pytest.mark.parametrize('separator', ['  ', '\t', '\n'], ids=['double-space', 'tab', 'newline'])
+@pytest.mark.parametrize('claim', [
+    '94 missing cells',
+    '61 of 160 baseline cases verified',
+], ids=['missing-count', 'planned-total'])
+def test_design_data_coverage_status_rejects_whitespace_stale_claims(claim, separator):
+    """Counts are 61 verified, 0 failed, 95 missing and 156 planned; 94 missing or 160 planned raises."""
+    status = claim.replace(' ', separator)
+    with pytest.raises(ValueError, match='coverage'):
+        mudmat.render_html(summary(), config={'design_data': [design_row(status=status)]})
+
+
+def test_design_data_coverage_status_matching_singular_counts_regression_pin_renders():
+    """Counts are 61 verified, 1 failed, 1 missing and 63 planned; matching singular claims render (pin)."""
+    data = summary()
+    data['counts'] = {'VERIFIED': 61, 'FAILED': 1, 'MISSING': 1}
+    status = '61 of 63 baseline cases verified; 1 numerical failure and 1 missing cell unassessed'
+    assert escape(status) in mudmat.render_html(data, config={'design_data': [design_row(status=status)]})
+
+
+def test_design_data_coverage_status_matching_whitespace_regression_pin_renders():
+    """Counts are 61 verified, 0 failed, 95 missing and 156 planned; matching whitespace claims render (pin)."""
+    status = '61 of 156 baseline cases verified; 0\tnumerical failures and 95  missing cells unassessed'
+    assert escape(status) in mudmat.render_html(summary(), config={'design_data': [design_row(status=status)]})

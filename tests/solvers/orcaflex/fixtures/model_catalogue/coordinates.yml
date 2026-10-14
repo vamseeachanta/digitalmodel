@@ -1,0 +1,22 @@
+# Synthetic catalogue fixture; no measured or vendor data.
+# Provenance: generic
+General:
+  UnitsSystem: SI
+Environment:
+  WaterDepth: 100
+  WaterSurfaceZ: 0
+  WaveHeight: 2
+Vessels:
+  - Name: synthetic_body
+    Connection: Free
+    InitialPosition: [10, 20, 0]
+Lines:
+  - Name: synthetic_line
+    EndAConnection: Free
+    EndAX: 10
+    EndAY: 20
+    EndAZ: 0
+    EndBConnection: Fixed
+    EndBX: 30
+    EndBY: 40
+    EndBZ: -80

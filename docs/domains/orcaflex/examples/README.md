@@ -6,18 +6,20 @@ This directory contains the comprehensive collection of OrcaFlex examples downlo
 
 ```
 examples/
-├── raw/              # Original .dat and .sim files from Orcina
-├── yaml/             # Converted YAML files
-├── metadata/         # Feature analysis and metadata JSON files
-├── reports/          # Analysis reports and summaries
-├── catalog/          # Searchable catalog and index
-└── README.md         # This file
+|-- raw/              # 67 YAML files in 48 immediate folders
+|-- yml/              # 62 YAML files in 47 immediate folders
+|-- modular/          # 635 YAML files in 49 immediate folders
+|-- metadata/         # Feature analysis and metadata
+|-- catalog/          # Searchable catalog and index
+|-- qa/               # QA documentation
+|-- gom_scr_design_study/  # Design study documents
+`-- README.md
 ```
 
 ## Collection Status
 
-- **Total Examples**: 55 indexed examples
-- **Categories**: 13 portal categories
+- **Converted YAML files**: 62 in `yml/` (recursive `*.yml` count)
+- **Held folders**: 47 immediate directories in `yml/`; file and folder counts are distinct
 - **Last Updated**: 2026-06-10
 
 ## Usage
@@ -26,7 +28,7 @@ examples/
 
 All examples are organized by category in their respective directories. Each example includes:
 - Original file (in `raw/`)
-- YAML conversion (in `yaml/`)
+- YAML conversion (in `yml/`)
 - Feature analysis (in `metadata/`)
 
 ### Searching Examples

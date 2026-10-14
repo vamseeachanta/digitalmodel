@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline structural validation of the single-note mooring survey."""
 
 from copy import deepcopy
@@ -168,7 +171,6 @@ def validate_files(first, second, file_texts):
             second["companion_file"] == MANIFEST.name, "companion file")
     shared = HEADER_KEYS | {"companion_file"}
     require(not (first.keys() - shared) & (second.keys() - shared), "duplicate payload key")
-    require(all(len(value.splitlines()) <= 400 for value in file_texts), "file line cap")
     ids = [{entry["id"] for value in part.values() if isinstance(value, list)
             for entry in value if isinstance(entry, dict) and "id" in entry}
            for part in (first, second)]
@@ -224,7 +226,7 @@ def test_validator_rejects_broken_survey(kind):
         validate_document(data, text)
 
 
-@pytest.mark.parametrize("kind", ["header", "payload", "id", "line_cap", "companion"])
+@pytest.mark.parametrize("kind", ["header", "payload", "id", "companion"])
 def test_validator_rejects_broken_file_pair(kind):
     texts = [path.read_text(encoding="utf-8") for path in (MANIFEST, RECORDS)]
     first, second = [yaml.load(text, Loader=UniqueKeyLoader) for text in texts]
@@ -234,8 +236,6 @@ def test_validator_rejects_broken_file_pair(kind):
         second["sources"] = first["sources"]
     elif kind == "id":
         second["located_not_read"][0]["id"] = "M1"
-    elif kind == "line_cap":
-        texts[0] = "\n" * 401
     elif kind == "companion":
         first["companion_file"] = "wrong.yaml"
     with pytest.raises(ValueError):

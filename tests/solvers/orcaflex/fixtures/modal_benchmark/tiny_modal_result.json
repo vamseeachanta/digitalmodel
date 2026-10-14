@@ -1,0 +1,9 @@
+{
+  "model": "mj01",
+  "synthetic": true,
+  "description": "Synthetic arithmetic and ordering fixture; not solver output.",
+  "modes": [
+    {"mode": 2, "frequency_hz": 2.0, "direction": "in-plane"},
+    {"mode": 1, "frequency_hz": 0.9, "direction": "out-of-plane"}
+  ]
+}

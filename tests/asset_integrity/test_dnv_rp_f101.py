@@ -1,6 +1,7 @@
 # ABOUTME: Tests for DNV-RP-F101 corroded-pipe remaining-strength module —
 # ABOUTME: hand-calc golden, monotonicity, intact limit, B31G sanity, interaction, validation.
 import math
+import warnings
 
 import pytest
 
@@ -342,6 +343,45 @@ def test_interacting_equal_depth_with_gap_dilutes():
     # 0.15*8 / 9 = 0.13333 < 0.15
     assert gapped.details["comp_depth_in"] == pytest.approx(0.15 * 8 / 9, rel=1e-12)
     assert gapped.details["comp_depth_in"] < 0.15
+
+
+def test_interacting_default_has_no_deprecation_warning():
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        result = dnv_f101_interacting(
+            D, T, [(0.0, 4.0, 0.20), (5.0, 4.0, 0.10)], SMTS
+        )
+    assert result.details["usage_factor"] == 0.72
+
+
+@pytest.mark.parametrize("usage_factor", [0.72, 0.60])
+def test_interacting_explicit_usage_factor_warns(usage_factor):
+    with pytest.warns(DeprecationWarning, match="usage_factor is a deprecated"):
+        result = dnv_f101_interacting(
+            D,
+            T,
+            [(0.0, 4.0, 0.20), (5.0, 4.0, 0.10)],
+            SMTS,
+            usage_factor=usage_factor,
+        )
+    assert result.details["usage_factor"] == usage_factor
+    assert result.allowable_pressure_psi == pytest.approx(
+        usage_factor * result.capacity_pressure_psi, rel=1e-12
+    )
+
+
+def test_interacting_default_equals_explicit_legacy_usage_factor():
+    defects = [(0.0, 4.0, 0.20), (5.0, 4.0, 0.10)]
+    default = dnv_f101_interacting(D, T, defects, SMTS, maop_psi=900.0)
+    with pytest.warns(DeprecationWarning, match="usage_factor is a deprecated"):
+        explicit = dnv_f101_interacting(
+            D, T, defects, SMTS, maop_psi=900.0, usage_factor=0.72
+        )
+    assert default == explicit
+    assert default.details["usage_factor"] == 0.72
+    assert default.allowable_pressure_psi == pytest.approx(
+        0.72 * 1356.4947867240112, rel=1e-10
+    )
 
 
 def test_interacting_applicability_flag_surfaced():

@@ -1,4 +1,8 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Regenerate committed ``docs/api/**`` HTML in isolation and detect drift.
+
 Run from the repository root, inside the project environment:
     uv run python scripts/check_generated_html.py --check
 
@@ -28,6 +32,8 @@ from dataclasses import dataclass
 from pathlib import Path
 if __package__:
     from .generated_html_ownership import (
+        build_output_pages,
+        BUILD_OUTPUT_GENERATORS,
         DISCOVERY_FALSE_POSITIVES,
         EXCLUDED_GENERATORS,
         MANUAL_PAGES,
@@ -35,6 +41,8 @@ if __package__:
     )
 else:
     from generated_html_ownership import (
+        build_output_pages,
+        BUILD_OUTPUT_GENERATORS,
         DISCOVERY_FALSE_POSITIVES,
         EXCLUDED_GENERATORS,
         MANUAL_PAGES,
@@ -47,6 +55,7 @@ REPO = Path(__file__).resolve().parents[1]
 
 @dataclass(frozen=True)
 class Generator:
+    """Describe deterministic committed outputs and their required inputs."""
     script: str
     outputs: tuple[str, ...] = ()
     arguments: tuple[str, ...] = ()
@@ -187,6 +196,7 @@ def discover_candidate_generators(repo: Path) -> set[str]:
 
 
 def docs_api_pages(repo: Path) -> set[str]:
+    """Enumerate HTML pages currently present in the documentation tree."""
     pages = set()
     for path in (repo / "docs" / "api").rglob("*"):
         if path.is_file() and path.suffix.casefold() == ".html":
@@ -195,14 +205,25 @@ def docs_api_pages(repo: Path) -> set[str]:
 
 
 def validate_page_census(repo: Path) -> list[str]:
+    """Reject pages without ownership or with conflicting classifications."""
     owned = {
         path.relative_to(repo).as_posix()
         for path in all_registered_outputs(repo)
     }
     pages = docs_api_pages(repo)
-    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES)
     errors = []
-    if unclassified := sorted(pages - classified):
+    enumeration_succeeded = True
+    try:
+        build_output = build_output_pages(repo)
+    except (ValueError, SyntaxError) as error:
+        errors.append(
+            f"{error.filename}:{error.lineno}: {error.msg}"
+            if isinstance(error, SyntaxError) else str(error)
+        )
+        enumeration_succeeded = False
+        build_output = set()
+    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES) | build_output
+    if enumeration_succeeded and (unclassified := sorted(pages - classified)):
         errors.append(f"unclassified docs/api HTML page(s): {', '.join(unclassified)}")
     if stale := sorted(set(MANUAL_PAGES) - pages):
         errors.append(f"stale manual-page classification(s): {', '.join(stale)}")
@@ -210,6 +231,7 @@ def validate_page_census(repo: Path) -> list[str]:
         (owned & set(PAGE_EXCLUSIONS))
         | (owned & set(MANUAL_PAGES))
         | (set(PAGE_EXCLUSIONS) & set(MANUAL_PAGES))
+        | (build_output & (owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES)))
     )
     if overlaps:
         errors.append(
@@ -221,11 +243,46 @@ def validate_page_census(repo: Path) -> list[str]:
     return errors
 
 
+def validate_build_output_generators(repo: Path) -> list[str]:
+    """Validate build-output scripts, required fields and enumeration patterns."""
+    errors = []
+    placeholder = "<specification-id>"
+    for script, entry in BUILD_OUTPUT_GENERATORS.items():
+        path = Path(script)
+        if (path.is_absolute() or ".." in path.parts
+                or path.suffix != ".py" or not (repo / path).is_file()):
+            errors.append(f"build-output generator missing script: {script}")
+        for field in ("command", "output_pattern", "reason"):
+            value = entry.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(
+                    f"build-output generator {field.replace('_', ' ')} is empty: {script}"
+                )
+        pattern = entry.get("output_pattern", "")
+        if not isinstance(pattern, str) or not pattern.strip():
+            continue
+        remainder = pattern.replace(placeholder, "")
+        if (not pattern.startswith("docs/api/") or not pattern.endswith(".html")
+                or ".." in Path(pattern).parts or "\\" in pattern
+                or pattern.count(placeholder) != 1
+                or any(character in remainder for character in "<>")):
+            errors.append(
+                f"build-output generator output pattern must lie under docs/api/, "
+                f"end in .html and contain exactly {placeholder}: {script}"
+            )
+    return errors
+
+
 def validate_registry(repo: Path) -> list[str]:
+    """Validate generator discovery, reasons, and page ownership."""
     registered = {entry.script for entry in GENERATORS}
     candidates = discover_candidate_generators(repo)
     explained = set(DISCOVERY_FALSE_POSITIVES) | set(EXCLUDED_GENERATORS)
+    build_output = set(BUILD_OUTPUT_GENERATORS)
     errors = []
+    if conflicts := sorted(build_output & (registered | explained)):
+        errors.append(f"generator has conflicting classifications: {', '.join(conflicts)}")
+    explained |= build_output
     if missing := sorted(candidates - registered - explained):
         errors.append(f"unregistered candidate generator(s): {', '.join(missing)}")
     if stale := sorted((registered | explained) - candidates):
@@ -241,11 +298,15 @@ def validate_registry(repo: Path) -> list[str]:
             errors.append(f"stale generated-page exclusion: {path}")
         if not reason.strip():
             errors.append(f"generated-page exclusion lacks a reason: {path}")
-    errors.extend(validate_page_census(repo))
+    build_errors = validate_build_output_generators(repo)
+    errors.extend(build_errors)
+    if not build_errors:
+        errors.extend(validate_page_census(repo))
     return errors
 
 
 def prepare_shadow(repo: Path, shadow: Path) -> None:
+    """Copy repository inputs into an isolated regeneration tree."""
     shutil.copytree(repo / "scripts", shadow / "scripts")
     shutil.copytree(repo / "docs" / "api", shadow / "docs" / "api")
     for name in ("assets", "atlases", "data", "src"):
@@ -268,17 +329,20 @@ def prepare_shadow(repo: Path, shadow: Path) -> None:
 
 
 def output_paths(root: Path, entry: Generator) -> set[Path]:
+    """Resolve the explicit or globbed outputs of a registered generator."""
     if entry.output_glob:
         return {path for path in root.glob(entry.output_glob)}
     return {root / path for path in entry.outputs}
 
 
 def clear_generated_html(shadow: Path, entry: Generator) -> None:
+    """Remove registered outputs from the isolated shadow tree."""
     for path in output_paths(shadow, entry):
         path.unlink()
 
 
 def run_script(shadow: Path, command: list[str]) -> subprocess.CompletedProcess[str]:
+    """Execute a generator with captured output in the shadow tree."""
     env = os.environ.copy()
     env["PYTHONPATH"] = str(shadow / "src")
     env["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -293,6 +357,7 @@ def run_script(shadow: Path, command: list[str]) -> subprocess.CompletedProcess[
 
 
 def run_generator(shadow: Path, entry: Generator) -> str | None:
+    """Run prerequisites and a generator, then verify its outputs."""
     for prerequisite in entry.prerequisites:
         result = run_script(shadow, [sys.executable, str(shadow / prerequisite)])
         if result.returncode:
@@ -327,6 +392,7 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
 
 
 def regenerate(shadow: Path) -> list[str]:
+    """Regenerate all committed outputs in the isolated shadow tree."""
     for entry in GENERATORS:
         clear_generated_html(shadow, entry)
     with ThreadPoolExecutor(max_workers=4) as pool:
@@ -335,6 +401,7 @@ def regenerate(shadow: Path) -> list[str]:
 
 
 def all_registered_outputs(root: Path) -> set[Path]:
+    """Collect paths owned by registered deterministic generators."""
     paths = set()
     for entry in GENERATORS:
         paths.update(output_paths(root, entry))
@@ -342,6 +409,7 @@ def all_registered_outputs(root: Path) -> set[Path]:
 
 
 def short_diff(committed: Path, generated: Path) -> list[str]:
+    """Return a bounded text diff for a generated page."""
     old = committed.read_text(encoding="utf-8").splitlines()
     new = generated.read_text(encoding="utf-8").splitlines()
     diff = difflib.unified_diff(
@@ -356,6 +424,7 @@ def short_diff(committed: Path, generated: Path) -> list[str]:
 
 
 def compare_outputs(repo: Path, shadow: Path) -> list[tuple[str, list[str]]]:
+    """Find differences between committed and regenerated pages."""
     committed = {path.relative_to(repo) for path in all_registered_outputs(repo)}
     fresh = {path.relative_to(shadow) for path in all_registered_outputs(shadow)}
     drift = []
@@ -371,6 +440,7 @@ def compare_outputs(repo: Path, shadow: Path) -> list[tuple[str, list[str]]]:
 
 
 def check(repo: Path = REPO) -> int:
+    """Check registry coverage and byte-identical regeneration."""
     if errors := validate_registry(repo):
         print("GENERATED HTML CHECK FAILED — registry coverage error")
         for error in errors:
@@ -405,6 +475,7 @@ def check(repo: Path = REPO) -> int:
 
 
 def main() -> int:
+    """Parse the read-only freshness-check command."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--check",

@@ -2,6 +2,7 @@
 
 Settles the open slice-7 checklist item *"Settle outlet/vent placement for clean
 tank-volume balance"*, which gated the full 144-case coupled matrix.
+Machine names and home-directory paths in the recorded logs were replaced with neutral placeholders after the run; nothing else in the logs was altered.
 
 Issue: https://github.com/vamseeachanta/digitalmodel/issues/1528
 
@@ -26,9 +27,9 @@ atmosphere opening to `top`.
 
 | Item | Value |
 |---|---|
-| Host | gpu-claw (Tailscale `undi@100.101.237.123`), Ubuntu 24.04.4, 8 ranks |
+| Host | dev-gpu (Tailscale `<user>@<tailnet-ip>`), Ubuntu 24.04.4, 8 ranks |
 | OpenFOAM | ESI v2312, `FOAM_API=2312` |
-| Interpreter | `/home/undi/ws/digitalmodel/.venv/bin/python`, CPython 3.12.3 |
+| Interpreter | `<home>/ws/digitalmodel/.venv/bin/python`, CPython 3.12.3 |
 | Branch SHA run | `04725bbfa58be2c64ee3ca055a6552cf7b4b6619` (detached worktree, clean) |
 | Case | `dm1528-filldrain-2a44db9cf998`, fill 0.500, tank 20 x 6 x 10 m |
 | Mesh | 40 x 8 x 40 = 12800 cells |
@@ -63,7 +64,7 @@ initial volume is 600.0000 m3 for both variants (same `setFieldsDict`,
 true t=0 is **-81.163 %**, marginally worse than the reported figure. The metric
 in `volume_drift_percent` is structurally blind to first-timestep loss; it
 understates leakage and can never overstate it, so the verdict direction is
-safe. Tracked as a follow-on.
+unchanged. Tracked as a follow-on.
 
 Two further corroborations that this is a sustained leak rather than a transient
 or a reporting artefact:
@@ -95,7 +96,7 @@ either side of the threshold, so the verdict does not depend on the exact value.
 
 ## Proof the case tree was not patched
 
-`~/ws/cfd_work/dm1528/patch_case.sh` on gpu-claw overwrites nine generated files
+`~/ws/cfd_work/dm1528/patch_case.sh` on dev-gpu overwrites nine generated files
 and deletes the RAS fields. All earlier slice-7 evidence came from a tree it had
 patched, which is why the builder itself had never been validated. This run
 proves independence three ways.
@@ -109,7 +110,7 @@ inputs under both.
 two classes of difference, both benign:
 
 - `postProcessing/liquidVolume/0/volFieldValue.dat` appears only in `run/`. It is
-  a *result* file that my path filter caught because its path contains `/0/`. It
+  a *result* file that the path filter caught because its path contains `/0/`. It
   does not exist in the dry-run root because the solver never ran there.
 - `0/alpha.water` differs, because `setFields` rewrites it in place. Everything
   else — including `system/fvSolution`, `system/fvSchemes`, `system/controlDict`
@@ -144,8 +145,8 @@ No value in this report was imported from `patch_case.sh`.
 | `log.interFoam.<variant>.excerpt` | Solver banner, first timesteps, clean `End` |
 | `driver-run.log` | Full launcher transcript |
 
-Full 4.4 MB solver logs are retained on gpu-claw under
-`/home/undi/ws/cfd_work/vent2/run/<variant>/dm1528-filldrain-2a44db9cf998-<variant>/`.
+Full 4.4 MB solver logs are retained on dev-gpu under
+`<home>/ws/cfd_work/vent2/run/<variant>/dm1528-filldrain-2a44db9cf998-<variant>/`.
 
 ## Confirmation run against the shipped default
 
@@ -212,7 +213,7 @@ full at t ~ 31.3 s while the `CaseType.SLOSHING` default `end_time` is 50.0 s.
 Past that point liquid is expelled through the vent. The previous full-height
 pressure outlet relieved this; closing it removed the relief. This is a real gap
 in the coupled configuration, not in the placement decision, and it is the
-strongest argument that the matrix is not yet safe to launch.
+strongest argument that the matrix should not yet be launched.
 
 **4. Momentum and turbulence disagree on the closed outlet.** `U` there is now
 `noSlip`, a wall condition, but `k`, `omega` and `nut` remain `zeroGradient` /

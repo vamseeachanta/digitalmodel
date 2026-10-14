@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the standard AceEngineer engineering calculation report.
 # ABOUTME: Guards the section order, provenance colouring, and print-safety fix.
 """Tests for :mod:`digitalmodel.reporting.calc_report`.
@@ -241,6 +244,31 @@ def test_print_uses_auto_table_layout_not_fixed():
     assert "table-layout: fixed" not in html_out
 
 
+def test_design_data_tables_have_no_lower_minimum_width():
+    """Design-data tables inherit the global 440px minimum-width floor."""
+    html_out = minimal_report().render_html()
+    styles = "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", html_out, re.S))
+    css = re.sub(r"/\*.*?\*/", "", styles, flags=re.S)
+    minimum_widths = [
+        width.strip()
+        for selector, declarations in re.findall(r"([^{}]+)\{([^{}]*)\}", css)
+        if re.search(r"\btable\b", selector)
+        for width in re.findall(r"\bmin-width\s*:\s*([^;}]+)", declarations)
+    ]
+    assert minimum_widths == ["440px"], f"Expected the 440px floor; found {minimum_widths}"
+
+
+def test_design_data_container_allows_horizontal_scroll() -> None:
+    """A table wider than its container remains reachable by scrolling."""
+    html_out = minimal_report().render_html()
+    styles = "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", html_out, re.S))
+    css = re.sub(r"/\*.*?\*/", "", styles, flags=re.S)
+    container = re.search(r"\.kv\{([^}]*)\}", css)
+    assert container, "the design-data container rule must exist"
+    assert re.search(r"overflow-x\s*:\s*auto(?:;|$)", container.group(1)), (
+        "tables above the 440px floor must be reachable by horizontal scrolling")
+
+
 # ---------------------------------------------------------------------------
 # The organisation marks
 #
@@ -264,7 +292,7 @@ HOUSE_FOOT_BAR = '<div class="foot-bar"><span>AceEngineer &middot; Test</span>'
 #: change is expected to move it -- regenerate it then, having first read the
 #: diff and confirmed the marks above are still intact.
 HOUSE_RENDER_SHA256 = (
-    "5f8da8c0b4bb55e634a8250ed51b74727c1922dfb28ef49a494cb17ac0d9c558")
+    "55ba8ed4a8b65a2c62613fd60dadc6ee21fb9aa47a766428a6746efab4e206c9")
 
 
 def test_default_organisation_renders_the_house_marks_unchanged():
@@ -376,7 +404,7 @@ SINGLE_TIER_REVHIST = (
 #: *before* `InternalRevision` and `incorporates` were added, not by copying
 #: the value the changed code happened to produce.
 SINGLE_TIER_RENDER_SHA256 = (
-    "8bc5345b0ea3e25af0ae3d6e52d100aabf7aa73ccf9f98fa389eba72f8edbabf")
+    "62dbfa2209b0642d878c70c1f435b5113f4f84a38b9a00131aa7603cb53607f9")
 
 
 def test_a_single_tier_report_is_unmoved_by_the_internal_tier():

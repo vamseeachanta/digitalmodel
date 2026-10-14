@@ -1,0 +1,155 @@
+# Repository-held literature targets only; no solver results or acceptance limits.
+# Source version: base revision supplied for this Phase A task.
+schema_version: 1
+source_revision: 7299eb516e5953f89b415fa24ff178ef96589a52
+frequency_unit: Hz
+intended_use: modal comparison references; not qualified solver results
+missing_value_meaning: not held in the repository
+pairing_basis: ascending frequency within recorded direction classes, otherwise ascending frequency
+mode_shapes: not held in the repository; no numerical shape arrays in the inspected sources
+scope: natural frequencies and recorded modal directions only; forced response is not a natural mode
+sources:
+  - file: docs/domains/orcaflex/library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml
+    sha256_utf8_lf: 0fbb303dbc29372b1928573a5e5bf03f55b4036bd261fa824c51755deccf53bb
+  - file: docs/domains/orcaflex/library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml
+    sha256_utf8_lf: bd18071655cfa9d449c94960f77d040c562d3aaff1f340c4dbe76861209a1bff
+  - file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml
+    sha256_utf8_lf: 428d83ebb7b0cccd257b6498908b059aebe992d6de142b55e0e87891febe8e83
+  - file: docs/domains/orcaflex/library/model_library/README.md
+    sha256_utf8_lf: c2a2f1fcd5c7a5955ce4be92673e89393311476c540af63752bf3f37a77f8cd9
+  - file: docs/domains/orcaflex/subsea/jumper/m_shaped/LITERATURE_GEOMETRY_SURVEY.md
+    sha256_utf8_lf: 95f52c82c7d8cc550d9956b317fbea0254b287121ed6b3fae18a34cb3507e9fa
+models:
+  mj01:
+    spec_file: docs/domains/orcaflex/library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml
+    reference_kind: measured towing tank
+    requested_modes_minimum: 4
+    citation: &mj01_citation |
+      Wang et al., "VIV Response of a Subsea Jumper in Uniform Current", OMAE2013 V04BT04A043
+      Zheng et al., "Numerical Analysis of Experimental Data of Subsea Jumper VIV", OMAE2015
+      Igeh, "VIV Fatigue Investigation for Subsea Planar Rigid Spools and Jumpers",
+      MSc thesis, Univ. of Stavanger 2017 (CC-BY), Tables 1-4 — dimension source:
+      https://core.ac.uk/download/249952931.pdf
+    citation_source: {file: docs/domains/orcaflex/library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml, line_start: 5, line_end: 9}
+    frequency_sources: &mj01_frequency_sources
+      - {file: docs/domains/orcaflex/library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml, line_start: 15, line_end: 16}
+    direction_availability: not held in the repository
+    shape_availability: not held in the repository
+    assumptions:
+      - text: |
+          A1: corner bend radii not published; sharp corners (source FEM did the same)
+        source: {file: docs/domains/orcaflex/library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml, line_start: 20, line_end: 20}
+      - text: |
+          A2: towing-tank water depth not published; 10 m assumed, jumper hubs at z=-9
+        source: {file: docs/domains/orcaflex/library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml, line_start: 21, line_end: 21}
+      - text: |
+          A3: spline statics starting shape control points at corner coordinates;
+          licensed statics refinement is #718/#719 scope
+        source: {file: docs/domains/orcaflex/library/model_library/mj01_exxonmobil_m_jumper_viv/spec.yml, line_start: 22, line_end: 23}
+    modes:
+      - {mode: 1, frequency_hz: 0.863, direction: null,
+         availability: held, citation: *mj01_citation, sources: *mj01_frequency_sources}
+      - {mode: 2, frequency_hz: 2.149, direction: null,
+         availability: held, citation: *mj01_citation, sources: *mj01_frequency_sources}
+      - {mode: 3, frequency_hz: 2.194, direction: null,
+         availability: held, citation: *mj01_citation, sources: *mj01_frequency_sources}
+      - {mode: 4, frequency_hz: 2.542, direction: null,
+         availability: held, citation: *mj01_citation, sources: *mj01_frequency_sources}
+  mj02:
+    spec_file: docs/domains/orcaflex/library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml
+    reference_kind: published numerical result
+    requested_modes_minimum: 1
+    citation: &mj02_citation |
+      Zhu, Hu, Tang, Ji, Zhou, "Evolution of Gas-Liquid Two-Phase Flow in an
+      M-Shaped Jumper and the Resultant Flow-Induced Vibration Response",
+      Processes 10(10):2133, 2022 (open access):
+      https://www.mdpi.com/2227-9717/10/10/2133
+    citation_source: {file: docs/domains/orcaflex/library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml, line_start: 5, line_end: 8}
+    frequency_sources: &mj02_frequency_sources
+      - {file: docs/domains/orcaflex/library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml, line_start: 18, line_end: 19}
+    direction_availability: first mode out-of-plane
+    shape_availability: not held in the repository
+    assumptions:
+      - text: |
+          A1: water depth not published; 100 m assumed, jumper flanges at z=-95
+          (mid-span dip 3 m above seabed)
+        source: {file: docs/domains/orcaflex/library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml, line_start: 23, line_end: 24}
+      - text: |
+          A2: end fixity assumed clamped (flanged connections to subsea equipment)
+        source: {file: docs/domains/orcaflex/library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml, line_start: 25, line_end: 25}
+      - text: |
+          A3: drag/added-mass coefficients not published (paper is internal-flow
+          FIV); Cd=1.2 / Ca=1.0 standard bare-pipe values assumed
+        source: {file: docs/domains/orcaflex/library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml, line_start: 26, line_end: 27}
+      - text: |
+          A4: contents density not tabulated (gas-oil multiphase at 6 MPa);
+          ContentsDensity 0 placeholder — set per analysis load case
+        source: {file: docs/domains/orcaflex/library/model_library/mj02_zhu2022_m_jumper_fullscale/spec.yml, line_start: 28, line_end: 29}
+    modes:
+      - {mode: 1, frequency_hz: 1.464, direction: out-of-plane,
+         availability: approximate published value, citation: *mj02_citation, sources: *mj02_frequency_sources}
+  mj03:
+    spec_file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml
+    reference_kind: published numerical result
+    requested_modes_minimum: 13
+    citation: &mj03_citation |
+      Li, Li, Lin, Han, Zhou (Dalian Maritime Univ.), "Dynamic Response
+      Analysis of a Subsea Rigid M-Shaped Jumper under Combined Internal and
+      External Flows", J. Mar. Sci. Eng. 12(8):1261, 2024 (open access):
+      https://www.mdpi.com/2077-1312/12/8/1261
+    citation_source: {file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml, line_start: 6, line_end: 9}
+    frequency_sources: &mj03_frequency_sources
+      - {file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml, line_start: 25, line_end: 26}
+    sparse_table_source: &mj03_sparse_source
+      - {file: docs/domains/orcaflex/subsea/jumper/m_shaped/LITERATURE_GEOMETRY_SURVEY.md, line_start: 131, line_end: 133}
+    spectrum_note: 13 modes below 100 Hz; individual modes 5-12 are not held in the repository
+    direction_availability: mode 1 out-of-plane; mode 2 in-plane; other directions not held in the repository
+    shape_availability: not held in the repository
+    assumptions:
+      - text: |
+          A1: numerical/lab case has no site; 5 m water depth assumed, flanges z=-4
+        source: {file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml, line_start: 31, line_end: 31}
+      - text: |
+          A2: line ends placed at the bend-1/bend-8 corner points; flange stub
+          offsets (72 mm) folded into the end arcs
+        source: {file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml, line_start: 32, line_end: 33}
+      - text: |
+          A3: end orientations horizontal (inlet flow enters +X per Figure 1);
+          outlet orientation mirrored — flange facing not fully legible in figure
+        source: {file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml, line_start: 34, line_end: 35}
+      - text: |
+          A4: drag/added-mass coefficients not published (paper uses CFD pressure
+          mapping); Cd=1.2 / Ca=1.0 assumed
+        source: {file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml, line_start: 36, line_end: 37}
+      - text: |
+          A5: contents density 0 placeholder (air-water mix varies per case);
+          structural damping 1.2% (published Rayleigh a=1.160, b=4.368e-5)
+          to be applied at analysis level on licensed runs
+        source: {file: docs/domains/orcaflex/library/model_library/mj03_li2024_m_jumper_lab/spec.yml, line_start: 38, line_end: 40}
+    modes:
+      - {mode: 1, frequency_hz: 8.520, direction: out-of-plane,
+         availability: held, citation: *mj03_citation, sources: *mj03_frequency_sources}
+      - {mode: 2, frequency_hz: 13.825, direction: in-plane,
+         availability: held, citation: *mj03_citation, sources: *mj03_frequency_sources}
+      - {mode: 3, frequency_hz: 17.473, direction: null,
+         availability: held, citation: *mj03_citation, sources: *mj03_frequency_sources}
+      - {mode: 4, frequency_hz: 20.628, direction: null,
+         availability: held, citation: *mj03_citation, sources: *mj03_frequency_sources}
+      - {mode: 5, frequency_hz: null, direction: null,
+         availability: not held in the repository, citation: *mj03_citation, sources: *mj03_sparse_source}
+      - {mode: 6, frequency_hz: null, direction: null,
+         availability: not held in the repository, citation: *mj03_citation, sources: *mj03_sparse_source}
+      - {mode: 7, frequency_hz: null, direction: null,
+         availability: not held in the repository, citation: *mj03_citation, sources: *mj03_sparse_source}
+      - {mode: 8, frequency_hz: null, direction: null,
+         availability: not held in the repository, citation: *mj03_citation, sources: *mj03_sparse_source}
+      - {mode: 9, frequency_hz: null, direction: null,
+         availability: not held in the repository, citation: *mj03_citation, sources: *mj03_sparse_source}
+      - {mode: 10, frequency_hz: null, direction: null,
+         availability: not held in the repository, citation: *mj03_citation, sources: *mj03_sparse_source}
+      - {mode: 11, frequency_hz: null, direction: null,
+         availability: not held in the repository, citation: *mj03_citation, sources: *mj03_sparse_source}
+      - {mode: 12, frequency_hz: null, direction: null,
+         availability: not held in the repository, citation: *mj03_citation, sources: *mj03_sparse_source}
+      - {mode: 13, frequency_hz: 78.933, direction: null,
+         availability: held, citation: *mj03_citation, sources: *mj03_sparse_source}

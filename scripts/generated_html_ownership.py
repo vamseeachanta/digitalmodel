@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Reasoned classifications used by the generated HTML freshness census.
 
 This census is scoped to ``docs/api/**`` and it is **no longer the only
@@ -23,6 +26,9 @@ deliberately not limited to ``docs/api/**``.
 Nothing here changes what this census does. It records what it does *not* do,
 so the next reader does not mistake its scope for coverage.
 """
+
+from pathlib import Path
+
 
 DISCOVERY_FALSE_POSITIVES = {
     "scripts/benchmark/compare_hydro_properties.py": (
@@ -85,9 +91,6 @@ DISCOVERY_FALSE_POSITIVES = {
     ),
     "docs/api/cfd/report_build/house.py": (
         "shared HTML rendering helpers; it does not write a page"
-    ),
-    "scripts/capabilities/build_onepagers.py": (
-        "writes one-pager PDFs under docs/api/capabilities/pdf, not HTML pages"
     ),
 }
 
@@ -229,3 +232,86 @@ MANUAL_PAGES = {
         "hand-maintained report; no scripts producer found"
     ),
 }
+
+
+# Build-output pages are generated working-tree print sources of committed PDFs;
+# they are not committed pages and are not included in byte-for-byte drift checks.
+BUILD_OUTPUT_GENERATORS = {
+    "scripts/capabilities/build_onepagers.py": {
+        "command": "python3 scripts/capabilities/build_onepagers.py",
+        "output_pattern": "docs/api/capabilities/pdf/<specification-id>.html",
+        "reason": "kept self-contained print sources beside committed one-pager PDFs",
+    },
+}
+
+
+def _specification_ids(script, label: str) -> set[str]:
+    """Read literal specification ids and explain unsupported source forms."""
+    import ast
+
+    tree = ast.parse(script.read_text(encoding="utf-8"), filename=label)
+    spec_node = next(
+        (node for node in tree.body
+         if isinstance(node, ast.AnnAssign)
+         and isinstance(node.target, ast.Name) and node.target.id == "SPECS"),
+        None,
+    )
+    if spec_node is None:
+        raise ValueError(
+            f"{label}: expected annotated assignment named SPECS; "
+            "found no annotated SPECS assignment"
+        )
+    specs = spec_node.value
+    if not isinstance(specs, ast.List):
+        raise ValueError(
+            f"{label}: expected SPECS to be a literal list; "
+            f"found {type(specs).__name__}"
+        )
+    ids: dict[str, int] = {}
+    for index, entry in enumerate(specs.elts):
+        spec_id = _literal_specification_id(entry, label, index)
+        if spec_id in ids:
+            raise ValueError(
+                f"{label}: duplicate specification id {spec_id!r} at "
+                f"SPECS[{ids[spec_id]}] and SPECS[{index}]"
+            )
+        ids[spec_id] = index
+    if not ids:
+        raise ValueError(
+            f"{label}: expected at least one specification id; found empty list"
+        )
+    return set(ids)
+
+
+def _literal_specification_id(entry, label: str, index: int) -> str:
+    """Require lowercase alphanumeric groups separated by single hyphens."""
+    import ast
+    import re
+
+    expected = f"{label}: expected dict(...) call with a literal id at SPECS[{index}]"
+    if not (isinstance(entry, ast.Call) and isinstance(entry.func, ast.Name)
+            and entry.func.id == "dict"):
+        raise ValueError(f"{expected}; found {type(entry).__name__}")
+    values = [keyword.value for keyword in entry.keywords if keyword.arg == "id"]
+    if len(values) != 1:
+        raise ValueError(f"{expected}; found missing id or multiple id keywords")
+    value = values[0]
+    if not isinstance(value, ast.Constant):
+        raise ValueError(f"{expected}; found {type(value).__name__}")
+    if not isinstance(value.value, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", value.value):
+        if not isinstance(value.value, str):
+            found = f"{type(value.value).__name__} {value.value!r}"
+        else:
+            found = "empty string ''" if value.value == "" else repr(value.value)
+        raise ValueError(f"{expected} matching [a-z0-9]+(?:-[a-z0-9]+)*; found {found}")
+    return value.value
+
+
+def build_output_pages(repo: Path) -> set[str]:
+    """Enumerate registered print-source paths within the supplied repository."""
+    pages = set()
+    for script, entry in BUILD_OUTPUT_GENERATORS.items():
+        ids = _specification_ids(repo / script, script)
+        pages.update(entry["output_pattern"].replace("<specification-id>", spec_id)
+                     for spec_id in ids)
+    return pages
