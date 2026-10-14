@@ -1535,7 +1535,7 @@ inputs:
           - -30.0
       - zone: buried
         area_m2: 1837.831702350029
-        coating_category: III
+        coating_category: bare
   environment:
     seawater_temperature_C: 10.0
     seawater_resistivity_ohm_m: 0.3
@@ -1545,6 +1545,7 @@ inputs:
     length_m: 1.0
     radius_m: 0.05
     individual_anode_mass_kg: 21.59844949342983
+    count: 252
 cp_input_sources:
   - quantity:
       Environment, coating category, design life, anode material/type and cylinder
@@ -1559,7 +1560,14 @@ cp_input_sources:
   - quantity: Current-area depth division at 30 m
     source: src/digitalmodel/cathodic_protection/b401_tables.py, depth_band
   - quantity: Arrangement count
-    source: Mass requirement alone; native anode count before current-output checks
+    source:
+      Assumed reference arrangement retained from the coated-pile mass sizing;
+      not a published installation count. Re-sized against bare buried piles.
+  - quantity: Anode geometry and count basis
+    source: Assumed, based on previous experience represented by jacket.yml's
+      illustrative stand-off cylinder dimensions and the preceding mass-sized
+      arrangement. Ideal solid-alloy cylinder without a deducted core; not a
+      qualified product or fabrication specification.
 cp_limitations:
   - Splash boundaries and formal splash/submerged/atmospheric partition are not established;
     water-level range, applicable wave data and the governing definition are needed.
@@ -1567,11 +1575,11 @@ cp_limitations:
     calculation; continuous electrolyte contact and applicable protection measures are
     not established.
   - The evaluated water-column load uses the seawater-exposed density rows, split at
-    the held 30 m table boundary; it does not establish protection in intermittent splash
+    the depth-band boundary of the design current-density clause; it does not establish protection in intermittent splash
     exposure.
-  - Buried current paths, soil resistivity, installed pile geometry and coating condition
-    are not established; estimated pile area and declared coating are used for the aggregate
-    load.
+  - Buried current paths, soil resistivity and installed pile geometry are not
+    established; estimated driven-pile area is treated as bare, with no coating
+    credit in any phase of the aggregate load calculation.
   - No measured potentials are available for this structure. Aggregate capacity does
     not establish protection at remote or shielded locations.
 

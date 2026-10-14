@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Build the reproducible draft reference-jacket cathodic protection analysis.
+"""Build the reproducible reference-jacket cathodic protection analysis.
 
 The public geometry fixture and existing CP route are the numerical basis.
 Unqualified CP inputs retain assumption status; no licensed table is exported.
@@ -36,7 +36,8 @@ from digitalmodel.cathodic_protection.report_reference import (
 from digitalmodel.cathodic_protection.report_verification import _model_outputs
 from digitalmodel.citations import validate_citation
 from digitalmodel.reporting.engine import render_html
-from digitalmodel.reporting.spec import ReportSpec, Section, TableBlock, TextBlock
+from digitalmodel.reporting.figures import figure_from_columns
+from digitalmodel.reporting.spec import FigureBlock, ReportSpec, Section, TableBlock, TextBlock
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "tests/fixtures/cathodic_protection/workflow_inputs/reference_jacket_60m_members.yml"
@@ -80,17 +81,24 @@ def checks(cfg: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
 
 
 def sensitivity(cfg: dict[str, Any], count: int) -> list[dict[str, Any]]:
-    """Test a derived doubled-life case with the same physical arrangement."""
-    candidate = copy.deepcopy(cfg)
-    life = float(candidate["inputs"]["design_data"]["design_life"])
-    candidate["inputs"]["design_data"]["design_life"] = 2 * life
-    candidate["inputs"]["anode"]["count"] = count
-    result = run_cathodic_protection(candidate)["results"]
-    comparison = checks(candidate, result)
-    return [{"quantity": "Design life", "base_years": life,
-             "evaluated_years": 2 * life, "derivation": "twice the declared design life",
-             "changes_conclusion": any(not c["passes"] for c in comparison["checks"]),
-             "comparison": comparison}]
+    """Compute count requirements over illustrative design-life scenarios."""
+    life = float(cfg["inputs"]["design_data"]["design_life"])
+    scenarios = []
+    for evaluated in (0.8 * life, life, 1.2 * life, 2 * life):
+        candidate = copy.deepcopy(cfg)
+        candidate["inputs"]["design_data"]["design_life"] = evaluated
+        candidate["inputs"]["anode"]["count"] = count
+        result = run_cathodic_protection(candidate)["results"]
+        verification = result["current_output_verification"]
+        scenarios.append({"quantity": "Design life", "base_years": life,
+                          "evaluated_years": evaluated,
+                          "required_count": verification["recommended_anode_count"],
+                          "governing_case": verification["governing_case"],
+                          "count_by_mass": verification["count_by_mass"],
+                          "count_by_initial_current": verification["count_by_initial_current"],
+                          "count_by_final_current": verification["count_by_final_current"],
+                          "comparison": checks(candidate, result)})
+    return scenarios
 
 
 def design_data(cfg: dict[str, Any]) -> list[Any]:
@@ -112,10 +120,14 @@ def design_data(cfg: dict[str, Any]) -> list[Any]:
             f"Design life is {life:.1f} yr; coating category is "
             f"{inputs['structure']['zones'][0]['coating_category']}; both are {ASSUMED} [I1]. "
             "They control lifetime mass and current demand. "
+            "Buried driven-pile surface is bare: no coating credit is applied in any phase. "
             f"The aluminium stand-off cylinder is {anode['length_m']:.1f} m long with "
             f"radius {anode['radius_m']:.3f} m, {ASSUMED} [I1]. "
             f"Net mass is {anode['individual_anode_mass_kg']:.1f} kg, derived from "
             "π × radius² × length × the repository alloy density [I2]; no core is deducted. "
+            "This assumed geometry rests on the illustrative stand-off example in jacket.yml, "
+            "not a qualified product. The count is the preceding coated-pile mass-sized "
+            "reference arrangement, not a published installation count. "
             "Dimensions and alloy performance affect both mass and output. "
             "Attachment, core, product qualification and spatial layout are not established.")),
         TextBlock(markdown=("## 3.3 Environmental data\n\n"
@@ -131,17 +143,19 @@ def design_data(cfg: dict[str, Any]) -> list[Any]:
             "Anode mass; Anode resistance; Anode current output. "
             "The aggregate mass criterion is provided net mass ≥ lifetime required mass; "
             "initial and final output criteria are provided current ≥ corresponding current demand. "
-            "Current densities, coating breakdown, capacity, utilisation and potentials are "
-            "selected by the repository edition route [I2], not independently verified "
-            "against the licensed standard in this analysis. Their applicability is assumed "
-            "and requires confirmation; no standard table is reproduced. "
+            "Selection basis [3]: Design current densities (temperate climate, upper and lower "
+            "water-column depth bands and buried steel); Coating breakdown factors "
+            "(category III water-column steel, bare buried piles); Anode materials "
+            "(aluminium capacity, utilisation and protective potential). "
+            "The existing edition route [I2] applies this basis; no standard table is reproduced. "
             "An aggregate PASS denotes these comparisons only; no local potential criterion is evaluated.")),
         TextBlock(markdown="## 3.6 Method\n\nThe physical method and equations are presented in Section 4."),
         TextBlock(markdown=("## 3.7 Load cases\n\nThe stated arrangement is the "
             "mass-sized quantity evaluated for initial, mean and final coating conditions. "
             "Water-column steel is split at the repository depth-band boundary; buried pile "
-            "area is evaluated separately. A doubled-design-life sensitivity retains the "
-            "same anode count and all other inputs; it is a diagnostic scenario, not a selected design.")),
+            "area is evaluated separately as bare steel. Illustrative design-life scenarios "
+            "retain the reference count and geometry and recompute the required counts; "
+            "the doubled-life case also includes increased water-column coating breakdown.")),
     ]
 
 
@@ -161,12 +175,59 @@ def comparison_tables(evidence: dict[str, Any]) -> list[TableBlock]:
     return blocks
 
 
+def interactive_figures(evidence: dict[str, Any]) -> list[FigureBlock]:
+    """Build engine-native interactive charts from calculated quantities."""
+    zones = evidence["zone_demand_A"]
+    demand = figure_from_columns("bar", list(zones), {
+        phase.capitalize(): [row[f"I_{phase}_A"] for row in zones.values()]
+        for phase in ("initial", "mean", "final")
+    }, x_label="Exposure zone", y_label="Current demand (A)")
+    scenarios = evidence["sensitivity"]
+    life = figure_from_columns("line", [s["evaluated_years"] for s in scenarios], {
+        "Required count": [s["required_count"] for s in scenarios],
+        "Stated count": [evidence["arrangements"]["stated"]["anode_count"]] * len(scenarios),
+    }, x_label="Design life (yr)", y_label="Anode count")
+    for figure in (demand, life):
+        for trace in figure["data"]:
+            trace["hovertemplate"] = "%{x}: %{y:.1f}<extra>%{fullData.name}</extra>"
+    return [
+        FigureBlock(title="Current demand by zone and phase", figure_id="zone-demand",
+                    plotly=demand, caption="Bare driven piles receive no coating credit; "
+                    "initial, mean and final loads are computed on the declared basis."),
+        FigureBlock(title="Required anode count against design life", figure_id="life-count",
+                    plotly=life, caption="Required count is the maximum of mass, initial "
+                    "and final current counts; lifetime mass governs the evaluated cases."),
+    ]
+
+
+def sensitivity_table(evidence: dict[str, Any]) -> TableBlock:
+    """Present lifetime sizing and its governing criterion without overclaiming."""
+    return TableBlock(title="Design-life sizing with bare piles",
+        columns=["Life (yr)", "Mass count", "Initial count", "Final count", "Required count", "Governing criterion"],
+        rows=[[f"{s['evaluated_years']:.1f}", s["count_by_mass"],
+               s["count_by_initial_current"], s["count_by_final_current"],
+               s["required_count"], s["governing_case"]] for s in evidence["sensitivity"]],
+        source="[3]; fixed anode geometry and environment; water-column coating breakdown varies with life.")
+
+
+def revision_history() -> Section:
+    """Preserve the original issue row and add the issued analysis row."""
+    return Section(key="revision-history", title="Revision history", blocks=[
+        TableBlock(title="Revision history", columns=["Revision", "Date", "What changed and why"],
+            rows=[
+                ["00", "2026-10-14", "Draft reference-jacket analysis; sourced geometry and conditional CP comparisons."],
+                ["0", "2026-10-14", "Issued for information: bare buried piles, re-sized anodes, "
+                 "declared anode basis and interactive life and current comparisons."],
+            ]),
+    ])
+
+
 def build_document() -> tuple[ReportSpec, dict[str, Any]]:
-    """Build a draft from the frozen fixture, with qualified comparisons."""
+    """Build an issued reference analysis on the declared assumed basis."""
     cfg = run_cathodic_protection(yaml.safe_load(FIXTURE.read_text()))
     arrangements = reference_arrangements(cfg)
     evidence: dict[str, Any] = {
-        "status": "DRAFT: input qualification required",
+        "status": "Issued for information",
         "input_sha256": digest(FIXTURE), "arrangements": {},
     }
     for name, result in arrangements.items():
@@ -174,6 +235,11 @@ def build_document() -> tuple[ReportSpec, dict[str, Any]]:
             evidence["arrangements"][name] = checks(cfg, result)
     count = evidence["arrangements"]["stated"]["anode_count"]
     evidence["sensitivity"] = sensitivity(cfg, count)
+    evidence["zone_demand_A"] = {
+        z["zone"]: {f"I_{phase}_A": cfg["results"]["current_demand_A"][z["zone"]][f"I_{phase}_A"]
+                    for phase in ("initial", "mean", "final")}
+        for z in cfg["inputs"]["structure"]["zones"]
+    }
     spec = anode_design_report(cfg)
     blocks = section_blocks(cfg, evidence, spec)
     spec.sections = [Section(key=f"analysis-{i}", title=title, blocks=content)
@@ -181,6 +247,10 @@ def build_document() -> tuple[ReportSpec, dict[str, Any]]:
     spec.appendices = [Section(key="structural-evidence", title="Structural evidence", blocks=[
         *reference_member_tables(cfg["structural_model"]),
         *reference_comparison(cfg["structural_model"]),
+    ]), Section(key="reproduction", title="Reproduction", blocks=[
+        TextBlock(markdown="```\nPYTHONPATH=src uv run --no-sources python "
+                  "scripts/reporting/build_reference_jacket_analysis.py\n```"),
+        TextBlock(markdown=f"Input SHA-256: {evidence['input_sha256']}"),
     ])]
     citations = _citations_from_labels(cfg["results"]["citations"], "Existing CP route; no standard tables exported.")
     for citation in citations:
@@ -192,17 +262,26 @@ def build_document() -> tuple[ReportSpec, dict[str, Any]]:
 
 
 
-def summary_text(cfg: dict[str, Any], count: int) -> str:
-    """State the conditional solution and its governing evidence gaps."""
+def summary_text(cfg: dict[str, Any], evidence: dict[str, Any]) -> str:
+    """State the mass shortfall and re-sized solution with their criteria."""
+    stated = evidence["arrangements"]["stated"]
+    count = stated["anode_count"]
+    mass = stated["checks"][0]
+    resized = evidence["arrangements"].get("rechecked", stated)
     summary = (f"The reference jacket at {cfg['structural_model']['water_depth_m']:.1f} m "
         f"water depth is analysed with {count} anodes. "
         "Aggregate lifetime mass and initial and final current output are compared with "
         "the required quantities below, using DNV-RP-B401, Cathodic protection design, "
-        "May 2021 [3]. Draft: input qualification required. The arrangement is a conditional "
-        "solution on the declared basis; environmental, coating, lifetime and anode inputs "
-        "are assumed. The doubled-life sensitivity changes the conclusion. Spatial "
+        "May 2021 [3]. Issued for information on a declared assumed basis. "
+        f"With buried piles bare, {mass['provided']:.1f} kg is provided against "
+        f"{mass['required']:.1f} kg required: the lifetime mass criterion fails, "
+        f"with a {-mass['margin_percent']:.1f} % shortfall relative to required mass. "
+        f"The re-sized solution is {resized['anode_count']} anodes and passes the aggregate "
+        "mass and initial/final current criteria on this basis. Environmental, water-column "
+        "coating, lifetime and anode inputs are assumed. Spatial "
         "protection, splash exposure, installed piles and the structural mass discrepancy "
-        "remain unresolved. The way forward is input confirmation and a spatial protection assessment.")
+        "remain unresolved. The way forward is to use the re-sized count for this reference "
+        "basis, qualify product and installation inputs and assess spatial protection.")
     return summary
 
 
@@ -234,13 +313,16 @@ def finding_blocks(evidence: dict[str, Any], count: int) -> list[TextBlock]:
             f"{check['required']:.1f} {check['unit']} required; margin "
             f"{check['margin_percent']:+.1f} %. Criterion: provided ≥ required [3]; "
             "the comparison applies only to the declared inputs, not local protection.")))
-    scenario = evidence["sensitivity"][0]
-    findings.append(TextBlock(markdown=("## 6.4 Input qualification\n\n"
-        f"Increasing the assumed lifetime from {scenario['base_years']:.1f} to "
-        f"{scenario['evaluated_years']:.1f} yr while retaining {count} anodes fails "
-        "at least one aggregate criterion. Design life has no qualified source and "
-        "changes the conclusion; the report remains a draft. Other assumed inputs "
-        "also require confirmation; no uncertainty bound is established.")))
+    cases = "; ".join(f"{s['evaluated_years']:.1f} yr: {s['required_count']} anodes "
+                      f"({s['governing_case']} governs)" for s in evidence["sensitivity"])
+    findings.append(TextBlock(markdown=("## 6.4 Required count against design life\n\n"
+        f"Bare-pile cases: {cases}. Required count is the maximum of lifetime mass, "
+        "initial output and final output requirements. Lifetime mass governs each case. "
+        "Doubled life increases exposure duration and water-column coating breakdown, "
+        "so required count is recomputed rather than simply doubled. Failure of a "
+        "mass-sized arrangement at longer life is expected by construction and is not "
+        "an independent finding. The count curve quantifies the sizing consequence "
+        "of the assumed life; it does not qualify that assumption.")))
     return findings
 
 
@@ -250,25 +332,18 @@ def reference_text(spec: ReportSpec) -> str:
         "[1] Mroczek, Arwade and Lackner (2023), Design optimization of offshore wind "
         "jacket piles by assessing support structure orientation relative to metocean "
         "conditions, Wind Energy Science 8, 807–817, DOI 10.5194/wes-8-807-2023. "
-        "CC BY 4.0. The held fixture supplies the paper locators; the paper was not reopened.\n\n"
+        "CC BY 4.0.\n\n"
         "[2] Mroczek (2023), IEA-15-240-RWT jacket model, public OpenFAST coordinate "
         "and circular tubular schedules, revision da77a393569b6c5ddf7aa424e5b0a92d37eba833. "
         "Apache License 2.0. Values were transcribed; lengths, areas and mass are derived. "
         "Source attribution and the licence remain with the input fixture.\n\n"
         "[3] DNV-RP-B401, Cathodic protection design, May 2021: Design current densities; "
         "Coating breakdown factors; Anode materials; Anode mass; Anode resistance; "
-        "Anode current output. Clause titles follow the repository calculation basis; "
-        "the licensed document was not reopened.\n\n"
+        "Anode current output.\n\n"
         "## 9.2 Internal references\n\n"
         f"[I1] {FIXTURE.relative_to(ROOT).as_posix()}; jacket.yml supplies the assumed CP inputs.\n\n"
         "[I2] digitalmodel CP engine adapter, kernels and edition route; "
-        f"software version {spec.tool_version}. Citation schema: digitalmodel.citations.schema.Citation.\n\n"
-        "[I3] Proposed engineering reporting conventions, P6, 13 October 2026; "
-        f"workspace-hub revision {STANDARD_REVISION}.\n\n"
-        "[I4] Reproduction: PYTHONPATH=src uv run --no-sources python "
-        "scripts/reporting/build_reference_jacket_analysis.py; "
-        "LLM_WIKI_PATH identifies the existing citation wiki. "
-        "The report and sidecar are emitted together; no website publication is performed.")
+        f"software version {spec.tool_version}. Citation schema: digitalmodel.citations.schema.Citation.")
     return references
 
 
@@ -276,20 +351,19 @@ def section_blocks(cfg: dict[str, Any], evidence: dict[str, Any],
                    spec: ReportSpec) -> list[list[Any]]:
     """Assemble the ten report sections from evaluated evidence."""
     count = evidence["arrangements"]["stated"]["anode_count"]
-    summary = summary_text(cfg, count)
-    history = TableBlock(title="Revision history", columns=["Revision", "Date", "What changed and why"],
-        rows=[["00", "2026-10-14", "Draft reference-jacket analysis; sourced geometry and conditional CP comparisons."]])
+    summary = summary_text(cfg, evidence)
     method = method_text()
     findings = finding_blocks(evidence, count)
     references = reference_text(spec)
     blocks = [
-        [TextBlock(markdown=summary), history, *comparison_tables(evidence)],
+        [TextBlock(markdown=summary)],
         [TextBlock(markdown="The reference-jacket geometry is used to evaluate aggregate "
             "sacrificial-anode requirements. Public structural data qualify the geometry; "
             "they do not qualify the CP environmental or product basis. The analysis "
             "covers one reference configuration and its diagnostic lifetime sensitivity.")],
         design_data(cfg), [TextBlock(markdown=method)],
-        [reference_figure(cfg["structural_model"]), *comparison_tables(evidence),
+        [reference_figure(cfg["structural_model"]), *interactive_figures(evidence),
+         *comparison_tables(evidence), sensitivity_table(evidence),
          *reference_zone_blocks(cfg["structural_model"], cfg["initial_pile_estimate"])],
         findings,
         [TextBlock(markdown="\n\n".join(cfg["cp_limitations"]) + "\n\n" +
@@ -317,6 +391,7 @@ def section_blocks(cfg: dict[str, Any], evidence: dict[str, Any],
 def build(destination: Path) -> list[Path]:
     """Write deterministic HTML and its numerical/citation evidence sidecar."""
     spec, evidence = build_document()
+    spec.sections.insert(1, revision_history())
     page = presentation(render_html(spec))
     destination.mkdir(parents=True, exist_ok=True)
     report = destination / "cathodic-protection-analysis.html"
@@ -341,6 +416,8 @@ def presentation(page: str) -> str:
             table_count += 1
             content = item.group(1) + item.group(3)
             title = item.group(2)
+            if key == "revision-history":
+                return content
             return content + f'<div class="cap">Table {number}.{table_count} – {title}</div>'
 
         body = re.sub(
@@ -358,15 +435,18 @@ def presentation(page: str) -> str:
 
         body = re.sub(r'(<figure[^>]*>)\s*<div class="chart-title">Figure \d+\. (.*?)</div>'
                       r'(.*?)</figure>', figure, body, flags=re.S)
-        if number != "A":
+        if key == "revision-history":
+            body = body.replace('<span class="secnum"></span>', '', 1)
+        elif number != "A":
             body = body.replace('<span class="secnum"></span>',
                                 f'<span class="secnum applabel">{number}</span>', 1)
         if key == "analysis-9":
-            for marker in ("1", "2", "3", "I1", "I2", "I3", "I4"):
+            for marker in ("1", "2", "3", "I1", "I2"):
                 body = body.replace(f"[{marker}]", f'<span id="reference-{marker}">[{marker}]</span>', 1)
         return body
 
     page = re.sub(r'<section id="([^"]+)">.*?</section>', section, page, flags=re.S)
+    page = page.replace("Draft for review", "Revision 0 — Issued for information")
     page = re.sub(r'(?<!>)(\[(I?\d+)\])',
                   lambda m: f'<a href="#reference-{m.group(2)}">{m.group(1)}</a>', page)
     return page

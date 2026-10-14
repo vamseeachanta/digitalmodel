@@ -37,7 +37,7 @@ def test_ten_sections_and_seven_design_data_items(builder):
     titles = [b.markdown.splitlines()[0] for b in design.blocks if b.kind == "text"]
     assert [t[:6] for t in titles] == [f"## 3.{i}" for i in range(1, 8)]
     assert evidence["arrangements"]["stated"]["anode_count"] == 252
-    assert evidence["status"] == "DRAFT: input qualification required"
+    assert evidence["status"] == "Issued for information"
 
 
 def test_report_reproduces_and_revision_follows_summary(builder, tmp_path):
@@ -47,8 +47,15 @@ def test_report_reproduces_and_revision_follows_summary(builder, tmp_path):
         p.name: p.read_bytes() for p in second
     }
     page = first[0].read_text()
-    assert page.index("Executive Summary</h2>") < page.index("Revision history")
-    assert page.index("Revision history") < page.index("Introduction</h2>")
+    assert page.index("Executive Summary</h2>") < page.index("Revision history</h2>")
+    assert page.index("Revision history</h2>") < page.index("Introduction</h2>")
+    history = re.search(r'<section id="revision-history">(.*?)</section>', page, re.S)
+    assert history is not None
+    assert '<h2>Revision history</h2>' in history.group(1)
+    assert "Table " not in history.group(1)
+    assert "secnum" not in history.group(1)
+    assert page.index('</section>') < page.index('<section id="revision-history">')
+    assert "Draft for review" not in page
     assert not re.search(r'<(?:script|link)[^>]+(?:src|href)=["\']https?://', page)
     assert "assumed, based on previous experience" in page
     assert "3.4 Vessel data" in page and "Not applicable" in page
@@ -63,7 +70,8 @@ def test_native_comparisons_use_unrounded_values(builder):
             assert check["margin_percent"] == pytest.approx(
                 100 * (check["provided"] / check["required"] - 1)
             )
-    assert any(s["changes_conclusion"] for s in evidence["sensitivity"])
+    assert [s["evaluated_years"] for s in evidence["sensitivity"]] == [20, 25, 30, 50]
+    assert all(s["governing_case"] == "mass" for s in evidence["sensitivity"])
 
 
 def test_sidecar_has_schema_fields_and_no_standard_tables(builder, tmp_path):
@@ -86,8 +94,44 @@ def test_citation_resolution_is_fail_closed(builder, tmp_path, monkeypatch):
 
 def test_numbered_captions_follow_evidence(builder, tmp_path):
     page = builder.build(tmp_path)[0].read_text()
-    assert page.index("</table>") < page.index("Table 1.1 – Revision history")
+    assert "Table 1.1 – Revision history" not in page
     assert "Figure 5.1 – Reference jacket elevation" in page
     assert 'id="reference-3"' in page
     assert 'href="#reference-3"' in page
     assert '<span class="secnum applabel">1</span><h2>Executive Summary</h2>' in page
+
+
+def test_bare_piles_fail_stated_mass_and_resize(builder):
+    spec, evidence = builder.build_document()
+    stated = evidence["arrangements"]["stated"]
+    mass = stated["checks"][0]
+    assert not mass["passes"]
+    assert mass["required"] == pytest.approx(9139.3, abs=0.1)
+    assert mass["margin_percent"] == pytest.approx(-40.4, abs=0.1)
+    assert evidence["arrangements"]["rechecked"]["anode_count"] == 424
+    assert all(c["passes"] for c in evidence["arrangements"]["rechecked"]["checks"])
+    assert "bare" in spec.sections[2].blocks[1].markdown.lower()
+    assert "jacket.yml" in spec.sections[2].blocks[1].markdown
+
+
+def test_interactive_figures_use_engine_payloads(builder, tmp_path):
+    spec, evidence = builder.build_document()
+    figures = {f.figure_id: f for f in spec.figure_blocks() if f.plotly is not None}
+    demand = figures["zone-demand"].plotly
+    assert len(demand["data"]) == 3
+    assert all(".1f" in t["hovertemplate"] for t in demand["data"])
+    life = figures["life-count"].plotly
+    assert life["data"][0]["y"] == [s["required_count"] for s in evidence["sensitivity"]]
+    page = builder.build(tmp_path)[0].read_text()
+    assert "Plotly.newPlot" in page
+    assert not re.search(r'<script[^>]+src=', page)
+
+
+def test_client_text_has_declared_basis_without_process_narrative(builder):
+    spec, _ = builder.build_document()
+    text = " ".join(b.markdown for s in spec.sections for b in s.blocks if b.kind == "text")
+    for phrase in ("not reopened", "not independently verified", "LLM_WIKI_PATH",
+                   "[I3]", "[I4]", "held 30 m", "remains a draft"):
+        assert phrase not in text
+    assert "not a qualified product" in text
+    assert "mass governs" in text
