@@ -274,6 +274,8 @@ digitalmodel = [
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
     "data_systems/data/*.yml",
+    "data_systems/data/steel_shapes*.json",
+    "data_systems/data/steel_shapes_provenance.yaml",
     "foam_system/data/*.yml",
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
