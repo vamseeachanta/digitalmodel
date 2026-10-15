@@ -1,0 +1,20 @@
+{
+  "schema": "slay-native-manifest-1",
+  "criteria_revision": "preparation-1",
+  "status": "not_run",
+  "driver": "scripts/orcaflex/prepare_slay_campaign.py",
+  "launch_enabled": false,
+  "first_timed_case": "d0-t0",
+  "timing": {"case_id": "d0-t0", "native_wall_seconds": null, "projected_campaign_seconds": null, "basis": "measure native read-back before extrapolating"},
+  "criteria": {"source_qualification": null, "geometry": null, "force_balance": null, "mesh_convergence": null, "catenary_relative_tolerance": null, "overbend_strain_limit": null},
+  "native_version": null,
+  "input_revision": null,
+  "input_digest": null,
+  "archive_digest": null,
+  "expected_cases": ["d0-t0", "d0-t1", "d0-t2", "d1-t0", "d1-t1", "d1-t2"],
+  "completed_cases": [],
+  "qualified_results": 0,
+  "required_metrics": {"effective_tension": "kN", "bending_moment": "kN.m", "curvature": "1/m", "steel_bending_strain": "1", "roller_reaction": "kN", "touchdown_position": "m", "geometry": "m", "native_wall_seconds": "s"},
+  "retained": ["input models and digests", "native outputs", "compact metrics", "arc-length arrays", "roller loads", "criteria", "archive manifest"],
+  "release_conditions": ["topology and contacts qualified", "criteria assigned", "native timed canary read back", "independent matched-endpoint comparison", "mesh convergence", "all applicable cases reconciled"]
+}

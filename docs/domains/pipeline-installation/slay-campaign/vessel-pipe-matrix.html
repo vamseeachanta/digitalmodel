@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vessel and pipe-size matrix plan</title>
+<style>body{font:1rem/1.6 system-ui;max-width:72rem;margin:3rem auto;padding:0 1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #aaa;padding:.5rem;text-align:left}caption{caption-side:bottom;text-align:left}</style>
+<main><h1>Vessel and pipe-size matrix plan</h1>
+<h2>Summary</h2>
+<p>A small anchor design will compare public-data vessel classes and pipe-size ranges before
+adding only the marginal native runs required by the next decision. The method choice will be
+a bounded, piecewise-linear response surface with held-out residual evidence and decision intervals.
+Capability results are <strong>Not Evaluated</strong>: public hull dimensions do not establish
+installation capacity, and missing support, tension or motion data will block the affected anchor.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-14</td><td>Initial anonymous anchor selection and marginal-run method; preserve missing capacity and motion evidence.</td></tr>
+<caption>Table 1. Revision history.</caption></table>
+<h2>Basis and scope</h2>
+<p>The authoritative public dataset will be worldenergydata
+<code>packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv</code>
+at <code>0cef59201f817c28d91ef25e1bfcba99bfc9d588</code>, read through the GitHub raw-content API.
+CSV line will mean physical line including the header; records in this dataset occupy one line.
+The source-byte SHA-256 is <code>7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884</code>.
+The source rows will identify anchors without reproducing vessel or company names.
+Dataset properties will be treated as planning data pending current-status and equipment-source qualification.</p>
+<p>The coverage structure will follow <code>docs/domains/pipeline-installation/coverage-2026-10.md</code>
+at <code>1fbcd89fa6c446d7baf09d4ccdc71cd30f09f498</code>; that document is unmerged at the inspected
+default-branch basis <code>c9ae7591129b40732846b50661045f99ab249aba</code>.
+The generic S-lay campaign will provide preparation evidence only. This plan will not infer J-lay,
+reel-lay or stability capability from its S-lay anchors.</p>
+<h2>Public anchor design</h2>
+<table><tr><th>Anchor class</th><th>CSV line</th><th>LOA (m)</th><th>Beam (m)</th><th>Draft (m)</th><th>Pipe-size anchors (in)</th><th>Qualification gap</th></tr>
+<tr><td>Cranebarge, S-lay</td><td>22</td><td>70.1</td><td>42.1</td><td>7.3</td><td>2.0; upper size unknown</td><td>Nominal tension and maximum diameter are missing; only the minimum diameter is reported.</td></tr>
+<tr><td>DP pipelay vessel, S-lay</td><td>68</td><td>182.6</td><td>25.9</td><td>15.5</td><td>2.0, 19.0, 36.0</td><td>Nominal tension, stinger geometry, RAOs and roller data are missing.</td></tr>
+<tr><td>Large monohull, S-lay</td><td>8</td><td>300.0</td><td>41.0</td><td>13.5</td><td>30.0, 60.0</td><td>Maximum diameter is reported; minimum diameter and qualified contact/motion data are missing.</td></tr>
+<caption>Table 2. Six proposed size anchors across three public vessel classes, all at the dataset path and commit above.</caption></table>
+<p>Row 22 will provide <code>PIPELAY_MIN_DIAMETER_IN</code> = 2.0.
+Row 68 will provide minimum 2.0 and <code>PIPELAY_CAPACITY_IN</code> = 36.0;
+the midpoint 19.0 will be computed as (2.0 + 36.0)/2.
+Row 8 will provide maximum 60.0; the interior 30.0 will be computed as 60.0/2 and will be a
+method choice, not a published minimum. Its nominal <code>PIPELAY_TENSION_T</code> will be 3000.0,
+pending confirmation that the unit means tonne-force. All three rows will report S-lay.
+These six anchors will be candidates, not six promised feasible runs.</p>
+<p>Each proposed anchor will cite this dataset path and commit plus its Table 2 CSV line and
+diameter column or stated calculation. Diameter conversion will use the repository's
+generic fixture relation 0.762 m / 30 in = 0.0254 m/in.
+Wall/diameter ratio, coating, depth, contents and environment will initially be held at the
+generic campaign basis, labelled <strong>assumed, based on previous experience</strong>, with no
+claim that such pipes are representative products. Structural validity will be checked after resizing.</p>
+<h2>Installation quantities and features</h2>
+<p>Each class will be modelled separately; vessel class will not be treated as a continuous size axis.
+Within each class, the features will be pipe outside diameter, wall/diameter ratio, submerged weight,
+water depth, effective tension/capacity, stinger radius and exit angle. Qualified motion inputs will
+be required before any environmental extension. LOA alone will not substitute for an RAO or a tensioner.</p>
+<table><tr><th>Trend quantity</th><th>Unit</th><th>Decision comparator</th></tr>
+<tr><td>Required effective tension and capacity utilization</td><td>kN; 1</td><td>Qualified tensioner capacity and declared operating condition.</td></tr>
+<tr><td>Peak overbend and sagbend steel strain</td><td>1</td><td>Versioned installation strain criterion for the pipe and governing case.</td></tr>
+<tr><td>Peak curvature and bending moment</td><td>1/m; kN.m</td><td>Qualified pipe/stinger limits and consistent sign convention.</td></tr>
+<tr><td>Roller reaction and contact loss</td><td>kN; count</td><td>Qualified roller capacities and contact requirement.</td></tr>
+<tr><td>Touchdown distance and suspended length</td><td>m</td><td>Route/seabed constraints at the governing depth.</td></tr>
+<tr><td>Native elapsed time and convergence</td><td>s; status</td><td>Read-back-complete execution, used for budgeting only.</td></tr>
+<caption>Table 3. Trends that will inform vessel and pipe-size decisions.</caption></table>
+<h2>Error bound and marginal-run method</h2>
+<p>Method choice: within each qualified vessel class and fixed parameter slice, a piecewise-linear
+response surface will interpolate between solved anchors in diameter/depth/tension space.
+Cross-class interpolation and extrapolation will be prohibited. Every input, output, source revision,
+criteria revision and model digest will be retained so that source or criterion changes invalidate
+reuse. Contact-state changes will partition the response domain rather than be smoothed across.</p>
+<p>For quantity j, the empirical error allowance E_j will equal the maximum absolute prediction
+residual on independent held-out cases in the same regime, plus the largest declared numerical
+and extraction uncertainty U_j: E_j = max |q_j − qhat_j| + U_j.
+The decision interval will be [qhat_j − E_j, qhat_j + E_j]. Leave-one-out residuals will diagnose
+anchor inadequacy but will not replace independent validation. With no held-out result or no U_j,
+the error allowance will be unknown and reuse will be refused. This will be an empirical allowance
+over the tested domain, not a certified global probabilistic bound.</p>
+<p>If a decision requires a guaranteed bound, a validated bound L_j on the response gradient
+over the same regime will also be required. At distance d from a verified anchor, the nearest-anchor
+interval will be q_anchor ± (L_j d + U_j). L_j will require independent justification; it will not
+be inferred from a few observed slopes and called a guarantee. Without that evidence, a native
+run at the proposed decision point will be required.</p>
+<p>A new decision will first check source freshness, feature-domain inclusion, regime, criteria,
+qualified input properties and the error allowance. Only ambiguous governing quantities will
+trigger new runs. The next native case will be selected at the candidate nearest the decision boundary
+with the widest uncertainty interval; unresolved contact transitions and missing equipment data
+will take priority over fitting more smooth points. The new result will be retained as an anchor
+only after native read-back, mesh convergence and held-out comparison; failure will remain visible.</p>
+<h2>Stopping rule and acceptance assessment</h2>
+<p>The stopping rule will be decision separation: stop adding marginal cases when every applicable
+upper-demand interval is below its declared limit, every required lower-demand interval is above
+its limit, input qualification is complete and the validated regime covers the next decision.
+An interval crossing a limit will require another native run or a documented unresolved decision.
+An interval wholly exceeding a criterion will reject that candidate, rather than seek favorable
+additional runs. A missing criterion or bound will yield Not Evaluated. No fixed run budget will
+override those conditions.</p>
+<h2>Way forward</h2>
+<p>Qualify missing capacities, supports and motion data before launching affected anchors; complete
+the generic topology and canary first. Run qualified anchors serially, reserve independent validation
+cases, compare the trend quantities and record the tested domain. The next pipe/vessel decision
+will then reuse only qualified evidence and will add the marginal cases dictated by the stopping rule.</p>
+</main></html>

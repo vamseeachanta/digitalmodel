@@ -1,6 +1,21 @@
 {
   "input_fixture": "ships.yml",
-  "input_sha256": "75cc52eab34642b0a205aab823dd65e299dfde46e0e81a40591221a7404b94bb",
-  "private_benchmark_data": false,
-  "source_class": "repository_regression"
+  "input_sha256": "e2d006cc8555d5f98366eac637e5b81a8ef955e37834c057a91f5f8a5e89a32a",
+  "numerical_rebuild": "blocked_pending_source_qualification",
+  "private_benchmark_data": "not_established",
+  "provenance_correction": {
+    "capacity_basis": "The original capacity scalar is inherited from the same base configuration. The rebuilt ABS route at commit d1d112d0ec3b6ad6e6ffd75d4c9703744febd593 does not read that scalar: src/digitalmodel/cathodic_protection/abs_ships.py::_alloy selects alloy A1 when no alloy is supplied, and abs_ships_result.py::build_result records its cited table capacity. The input echo and the calculated capacity therefore describe different bases. The ignored scalar is removed and the existing A1 selection is made explicit; no replacement table value is copied into the input. Capacity remains read from the existing owned ABS table implementation. ABS Guidance Notes on Cathodic Protection of Ships, December 2017, Section 3, Table 4, Typical Properties of Aluminum Anodes in Normal Operation Conditions.",
+    "fixture_transition_commit": "0cfda2ec0dfe387aadbe3c5fe6ac27df17c228c0",
+    "hull_area_basis": "The hull area is inherited from src/digitalmodel/base_configs/modules/cathodic_protection/cathodic_protection.yml at commit 19e8eae30db110d8d0fe6efa3bd3e0ccb8333097. The same commit includes an example explicitly classified as an abstracted client calculation, with the identical hull area attributed to a maximum-draft submerged surface and a source hull-area table. The demo input was moved to tests/fixtures/cathodic_protection/workflow_inputs/ships.yml at commit 0cfda2ec0dfe387aadbe3c5fe6ac27df17c228c0; the report echoes that fixture. The matching data is treated as client-derived pending qualification; a synthetic origin is not established.",
+    "inspected_revision": "2b7a4384c73d15615deaa2ffd237891846d75a80",
+    "limitations": "The repository does not establish the original hull geometry, a reproducible wetted-area derivation, the original source identity or publication rights. The matching client-derived example is evidence of a provenance concern, not proof of a documented transfer chain. Historical results and citation files are retained byte for byte, with their existing execution revision; they are not a new calculation. No licensed recommended-practice values are reproduced in this note.",
+    "route_rebuild_commit": "d1d112d0ec3b6ad6e6ffd75d4c9703744febd593",
+    "source_commit": "19e8eae30db110d8d0fe6efa3bd3e0ccb8333097",
+    "units": {
+      "capacity": "Ah/kg",
+      "hull_area": "m2"
+    },
+    "way_forward": "The maintainer must establish input ownership and release rights, qualify or replace the hull-area basis, and confirm the alloy before a numerical rebuild or design use. The synthetic fixture release gate remains closed for this case. Other cases retain their existing results and release records."
+  },
+  "source_class": "client_derived_pending_release"
 }

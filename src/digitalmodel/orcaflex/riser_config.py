@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Riser configuration utilities for OrcaFlex pre-processing.
 
 Provides SCR hang-off angle calculation, lazy-wave geometry (buoyancy section
@@ -158,7 +161,7 @@ class SCRDesignInput(BaseModel):
     """
     water_depth: float = Field(1500.0, gt=0.0, description="Water depth (m)")
     pipe: RiserPipeProperties = Field(default_factory=RiserPipeProperties)
-    hang_off_angle_from_vertical: float = Field(12.0, ge=0.0, le=30.0,
+    hang_off_angle_from_vertical: float = Field(12.0, gt=0.0, le=30.0,
                                                  description="Hang-off angle from vertical (deg)")
     vessel_draft: float = Field(12.0, ge=0.0, description="Vessel draft (m)")
     hang_off_elevation: float = Field(-10.0, description="Hang-off point elevation relative to MSL (m)")
@@ -176,6 +179,8 @@ class SCRDesignInput(BaseModel):
             Dict with geometry parameters.
         """
         h = self.water_depth + self.hang_off_elevation
+        if h <= 0:
+            raise ValueError("Hang-off point must be above the seabed")
         w = self.pipe.submerged_weight_per_m  # N/m
 
         if w <= 0:

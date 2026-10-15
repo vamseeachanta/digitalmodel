@@ -18,6 +18,10 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     validate_diffraction_results
 )
 
+from digitalmodel.hydrodynamics.diffraction.equilibrium_checks import (
+    check_cog_cob, check_mass_displacement, check_force_balance,
+)
+
 _TRANSLATION_DOFS = {DOF.SURGE, DOF.SWAY, DOF.HEAVE}
 _TRANSLATION_AMP_LIMIT = 3.0   # m/m
 _ROTATION_AMP_LIMIT = 15.0     # deg/m
@@ -27,15 +31,20 @@ _SHARP_PEAK_RATIO = 10.0       # ratio to average of neighbours
 class OutputValidator:
     """Validate diffraction analysis outputs"""
 
-    def __init__(self, results: DiffractionResults):
+    def __init__(self, results: DiffractionResults, *, equilibrium_inputs: Optional[Dict] = None):
         """
         Initialize validator
 
         Args:
             results: Diffraction results to validate
+            equilibrium_inputs: Optional mapping of cog_cob, mass_displacement
+                and force_balance to keyword arguments for the corresponding
+                equilibrium_checks functions. Units and tolerances are explicit.
+                Missing rules remain not evaluated; no evidence is inferred.
         """
         self.results = results
         self.validation_report = {}
+        self.equilibrium_inputs = equilibrium_inputs or {}
 
     def run_all_validations(self) -> Dict:
         """
@@ -68,6 +77,13 @@ class OutputValidator:
         # Resonance checks (WRK-030)
         resonance_issues = self._validate_resonance()
 
+        equilibrium_issues, not_evaluated = self._validate_equilibrium()
+        equilibrium_failed = any(equilibrium_issues.values())
+        equilibrium_status = (
+            'FAIL' if equilibrium_failed else
+            'NOT_EVALUATED' if not_evaluated else 'PASS'
+        )
+
         # Compile comprehensive report
         self.validation_report = {
             'vessel_name': self.results.vessel_name,
@@ -80,16 +96,52 @@ class OutputValidator:
             'heading_coverage': heading_issues,
             'symmetry_checks': symmetry_issues,
             'resonance_checks': resonance_issues,
+            'equilibrium_checks': equilibrium_issues,
+            'equilibrium_status': equilibrium_status,
+            'equilibrium_not_evaluated': not_evaluated,
             'overall_status': self._determine_overall_status(
                 schema_issues, physical_issues, range_issues,
                 freq_issues, heading_issues, symmetry_issues,
-                resonance_issues,
+                resonance_issues, equilibrium_issues,
             )
         }
+
+        if equilibrium_failed:
+            self.validation_report['overall_status'] = 'FAIL'
 
         self._print_validation_summary()
 
         return self.validation_report
+
+    def _validate_equilibrium(self) -> Tuple[Dict[str, List[str]], Dict[str, str]]:
+        """Return failures separately from reasons for unevaluated rules.
+
+        See equilibrium_checks for the physical assumptions, units and required
+        caller-selected tolerances. Invalid evidence is a failed check.
+        Missing evidence does not change the overall validation verdict. The
+        equilibrium status is NOT_EVALUATED unless every rule passes; any
+        failure takes precedence, including when other rules lack evidence.
+        Scalar reasons remain separate from the lists consumed as issues.
+        """
+        rules = {"cog_cob": check_cog_cob,
+                 "mass_displacement": check_mass_displacement,
+                 "force_balance": check_force_balance}
+        issues = {}
+        not_evaluated = {}
+        unknown = set(self.equilibrium_inputs) - set(rules)
+        if unknown:
+            issues["input_errors"] = [f"Unknown equilibrium rules: {sorted(unknown)}"]
+        for name, check in rules.items():
+            inputs = self.equilibrium_inputs.get(name)
+            if inputs is None:
+                issues[name] = []
+                not_evaluated[name] = "Not evaluated: explicit evidence and tolerance required"
+                continue
+            try:
+                issues[name] = check(**inputs)
+            except (TypeError, ValueError, OverflowError) as error:
+                issues[name] = [f"Invalid evidence: {error}"]
+        return issues, not_evaluated
 
     def _validate_physical_validity(self) -> Dict[str, List[str]]:
         """

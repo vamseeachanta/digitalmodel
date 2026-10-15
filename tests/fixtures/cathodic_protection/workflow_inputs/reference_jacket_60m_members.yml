@@ -1501,13 +1501,13 @@ structural_model:
       unit: kg
       difference_percent: -30.56663267706269
       locator:
-        pp. 810–811, Section 3.2; printed 1471 MT excludes transition piece and
-        jacket piles
+        pp. 810–811, Section 3.2; printed structural mass is compared with
+        tubular steel alone; transition-piece mass is evaluated separately
   mass_limitation:
-    The printed 1471 MT excludes transition piece and jacket piles.
-    Tubular steel sums to 1021365 kg (-30.6%). Adding the separately excluded 450000
-    kg concentrated transition-piece masses gives 1471365 kg (+0.0%); that is a different
-    basis and does not resolve the discrepancy.
+    The printed structural mass is interpreted as including the transition piece.
+    Adding concentrated transition-piece masses to tubular steel agrees with the
+    printed total at its stated precision. The tubular-only comparison uses a
+    narrower basis. Installed jacket piles are not established by this comparison.
 basename: cathodic_protection
 inputs:
   calculation_type: DNV_RP_B401_offshore
@@ -1535,7 +1535,7 @@ inputs:
           - -30.0
       - zone: buried
         area_m2: 1837.831702350029
-        coating_category: III
+        coating_category: bare
   environment:
     seawater_temperature_C: 10.0
     seawater_resistivity_ohm_m: 0.3
@@ -1545,6 +1545,7 @@ inputs:
     length_m: 1.0
     radius_m: 0.05
     individual_anode_mass_kg: 21.59844949342983
+    count: 252
 cp_input_sources:
   - quantity:
       Environment, coating category, design life, anode material/type and cylinder
@@ -1559,7 +1560,14 @@ cp_input_sources:
   - quantity: Current-area depth division at 30 m
     source: src/digitalmodel/cathodic_protection/b401_tables.py, depth_band
   - quantity: Arrangement count
-    source: Mass requirement alone; native anode count before current-output checks
+    source:
+      Assumed stated trial arrangement, not a published installation count.
+      Re-sized against bare buried piles.
+  - quantity: Anode geometry and count basis
+    source: Assumed illustrative stand-off cylinder dimensions from the test
+      fixture jacket.yml, without product qualification or installation history.
+      Ideal solid-alloy cylinder without a deducted core; not a
+      qualified product or fabrication specification.
 cp_limitations:
   - Splash boundaries and formal splash/submerged/atmospheric partition are not established;
     water-level range, applicable wave data and the governing definition are needed.
@@ -1567,11 +1575,11 @@ cp_limitations:
     calculation; continuous electrolyte contact and applicable protection measures are
     not established.
   - The evaluated water-column load uses the seawater-exposed density rows, split at
-    the held 30 m table boundary; it does not establish protection in intermittent splash
+    the depth-band boundary of the design current-density clause; it does not establish protection in intermittent splash
     exposure.
-  - Buried current paths, soil resistivity, installed pile geometry and coating condition
-    are not established; estimated pile area and declared coating are used for the aggregate
-    load.
+  - Buried current paths, soil resistivity and installed pile geometry are not
+    established; estimated driven-pile area is treated as bare, with no coating
+    credit in any phase of the aggregate load calculation.
   - No measured potentials are available for this structure. Aggregate capacity does
     not establish protection at remote or shielded locations.
 
