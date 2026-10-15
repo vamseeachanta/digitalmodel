@@ -174,17 +174,6 @@ def test_report_distinguishes_failed_continuation_from_complete_resistance():
     assert "Native continuation" in page
 
 
-def test_raw_history_chunks_preserve_bytes_below_size_hook_limit():
-    builder = load_builder()
-    data = b"# Force\n" + b"1 -10 0 0 -6 0 0 -4 0 0\n" * 100
-    parts = builder.history_chunks(data, limit=100)
-    assert b"".join(parts) == data
-    assert all(len(part) <= 100 for part in parts)
-    assert all(part.endswith(b"\n") for part in parts)
-    with pytest.raises(ValueError):
-        builder.history_chunks(b"x" * 101 + b"\n", limit=100)
-
-
 def test_run_log_retains_measured_cost_and_iteration_scope():
     builder = load_builder()
     timed = {"mesh": "coarse", "cells": 123, "ranks": 8, "completed_iterations": 100, "measured_wall_seconds": 1.2}

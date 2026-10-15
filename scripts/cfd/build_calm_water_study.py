@@ -1,7 +1,17 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Retain native cost measurements and render an internal resistance record."""
+"""Retain native cost measurements and render an internal resistance record.
+
+Restore large case files with scripts/data/fetch.py using an exact path or a
+quoted glob such as 'data/cfd/calm_water_study/cases/*/constant/triSurface/*'.
+The repository manifest indexes only files larger than 1 MiB. For each smaller
+entry in the study manifest's store.cases block, copy
+${ACE_DATA_ROOT}/data/digitalmodel/<store_id> to its relative path and check its
+size and SHA-256 before use. These entries also retain native logs and inputs.
+Pass the restored cases folder with --cases; --output selects the rebuilt tree.
+Full histories stay in the store; only final averaging windows are written.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +22,10 @@ import json
 import math
 import re
 import statistics
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from digitalmodel.solvers.openfoam.validation.ship_resistance import ShipResistanceConfig
 from datetime import datetime
 from pathlib import Path
 
@@ -118,20 +132,15 @@ def coefficient_history(
     return "\n".join(rows) + "\n"
 
 
-def history_chunks(data: bytes, limit: int = 1_000_000) -> list[bytes]:
-    """Partition at row boundaries while preserving concatenated source bytes."""
-    chunks = []
-    current = bytearray()
-    for line in data.splitlines(keepends=True):
-        if len(line) > limit:
-            raise ValueError("history row exceeds the file-size limit")
-        if current and len(current) + len(line) > limit:
-            chunks.append(bytes(current))
-            current.clear()
-        current.extend(line)
-    if current:
-        chunks.append(bytes(current))
-    return chunks
+def averaging_window(text: str, first: int, last: int, *, csv: bool = False) -> str:
+    """Retain the declared iteration window with the original fixed headers."""
+    lines = text.splitlines(keepends=True)
+    headers = lines[:1] if csv else [line for line in lines if line.startswith("#")]
+    rows = lines[1:] if csv else [line for line in lines if line.strip() and not line.startswith("#")]
+    selected = [line for line in rows if first <= float(line.split("," if csv else None)[0]) <= last]
+    if len(selected) != last - first + 1:
+        raise ValueError("incomplete averaging window")
+    return "".join(headers + selected)
 
 
 def collect_full_run(case: Path, record: dict, normalisation: dict, criteria: dict, output: Path, files: dict) -> dict:
@@ -157,14 +166,19 @@ def collect_full_run(case: Path, record: dict, normalisation: dict, criteria: di
         result["statistics"]["mean_resistance_n"] = statistics.mean(-2 * float(row[1]) for row in native_rows if float(row[0]) > cutoff)
     raw = output / "data/cfd/calm_water_study/raw"
     raw.mkdir(parents=True, exist_ok=True)
-    for suffix, data in (("force.dat", text.encode()), ("coefficients.csv", coefficients.encode())):
-        chunks = history_chunks(data)
-        for index, chunk in enumerate(chunks, 1):
-            part = f"-part{index:03d}" if len(chunks) > 1 else ""
-            stem, extension = suffix.rsplit(".", 1)
-            path = raw / f"{record['mesh']}-full-{stem}{part}.{extension}"
-            path.write_bytes(chunk)
-            files[path.relative_to(output).as_posix()] = {"sha256": hashlib.sha256(chunk).hexdigest(), "size_bytes": len(chunk), "history_sha256": hashlib.sha256(data).hexdigest(), "part": index, "parts": len(chunks), "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.", "header_redaction": "fixed header"}
+    last = criteria["full_iterations"]
+    first = last - criteria["averaging_iterations"] + 1
+    for suffix, history in (("force.dat", text), ("coefficients.csv", coefficients)):
+        data = averaging_window(history, first, last, csv=suffix.endswith(".csv")).encode()
+        path = raw / f"{record['mesh']}-full-window-{suffix}"
+        path.write_bytes(data)
+        files[path.relative_to(output).as_posix()] = {
+            "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data),
+            "first_iteration": first, "last_iteration": last,
+            "row_count": last - first + 1,
+            "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged.",
+            "header_redaction": "fixed header",
+        }
     return result
 
 
@@ -173,11 +187,11 @@ def plan_envelope(points: list[tuple[float, float]]) -> list[list[float]]:
     points = sorted(set(points))
     if len(points) < 3:
         raise ValueError("geometry projection has fewer than three points")
-    def cross(a, b, c):
+    def cross(a: tuple[float, float], b: tuple[float, float], c: tuple[float, float]) -> float:
         return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
-    halves = []
+    halves: list[tuple[float, float]] = []
     for sequence in (points, list(reversed(points))):
-        half = []
+        half: list[tuple[float, float]] = []
         for point in sequence:
             while len(half) >= 2 and cross(half[-2], half[-1], point) <= 0:
                 half.pop()
@@ -225,7 +239,7 @@ def read_face_check(path: Path) -> dict:
     return {"faces": faces, "maximum_face_area_m2": maximum, "target_cell_length_m": target, "area_ratio_1": ratio, "limit_1": limit, "mean_face_area_m2": mean, "source_sha256": hashlib.sha256(data).hexdigest()}
 
 
-def read_model_basis(case: Path, config, criteria: dict) -> dict:
+def read_model_basis(case: Path, config: "ShipResistanceConfig", criteria: dict) -> dict:
     """Read physical inputs and geometry without substituting requested speed."""
     vertices = []
     for line in (case / "constant/triSurface/kcs.stl").read_text().splitlines():
@@ -246,6 +260,8 @@ def read_model_basis(case: Path, config, criteria: dict) -> dict:
     if lower[1] >= 0 or upper[1] != 0:
         raise ValueError("executed domain does not match the negative-y half-domain basis")
     gravity = re.search(r"\bvalue\s*\(([^)]+)\)", (case / "constant/g").read_text())
+    if gravity is None:
+        raise ValueError("gravity vector is missing")
     g = [float(value) for value in gravity[1].split()]
     if len(g) != 3 or g[0] != 0 or g[1] != 0 or not math.isfinite(g[2]) or g[2] >= 0:
         raise ValueError("gravity does not establish an upward vertical axis")
@@ -335,7 +351,7 @@ def report_table(headers: list[str], rows: list[list[str]], caption: str, identi
     return f'<div class="table-wrap"><table aria-describedby="{identity}"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table><p class="caption" id="{identity}">{caption}</p></div>'
 
 
-def report_number(value, *, percent: bool = False) -> str:
+def report_number(value: float | None, *, percent: bool = False) -> str:
     """Apply four-significant-figure precision without inventing missing data."""
     return "not established" if value is None else format(value, ".1f" if percent else ".4g")
 
@@ -371,6 +387,7 @@ def report_design_data(manifest: dict) -> str:
         ["Geometry and model particulars", "ASSUMED - to be confirmed: assumed, based on previous experience; retained geometry and configuration. Confirm against an opened primary geometry source.", "Resistance and physical model identity; source-error sensitivity is not bounded."],
         ["Fluid properties and normalization", "ASSUMED - to be confirmed: assumed, based on previous experience; existing case configuration. Confirm the intended experimental condition and reference area.", "Absolute coefficients and any future experimental error; property sensitivity was not calculated."],
         ["Comparison and uncertainty targets", "Assumed, based on previous experience; predeclared targets in <a href='#ref-i2'>[I2]</a>, without a claimed standard clause.", "Acceptance thresholds; no empirical acceptance is inferred without a matched reference."],
+        ["Gravity convention", "The case uses g = 9.81 m/s²; the basis module and fixture use 9.80665 m/s². The executed Froude number is 0.25996.", "The reported executed speed is used for normalization; this difference is retained, not silently matched."],
         ["Inherited domain placement", "The executed extents are retained; a domain-size sensitivity investigation is required.", "Domain-truncation influence is not bounded."],
     ], "Table 3.2. Assumption ledger and affected conclusions.", "table-3-2")
     c = manifest.get("criteria", {})
@@ -411,14 +428,83 @@ def report_results(manifest: dict, history_figure: str) -> str:
     plot = history_figure or "<p>The final-window figure is not available until a completed force history is retained.</p>"
     return f'''<h2 id="results">5 Detailed Results</h2><p>The final-window force coefficients are summarized in <a href="#table-5-1">Table 5.1</a>. Native completion and descriptive averages do not establish experimental agreement.</p>{table}
 <p>{mesh_difference_text(full)}</p><figure id="figure-5-1">{plot}<figcaption>Figure 5.1. Total coefficient against iteration in the final declared window; lines show bin means and shading preserves bin minima and maxima. No acceptance band is drawn because an opened experimental target is unavailable.</figcaption></figure>
-<p>Validation is planned against publicly tabulated towing-tank resistance at nominal Froude number 0.26 for the benchmark geometry, with attitude, appendage, Reynolds-number and reference-area matching required by <a href="#table-3-3">Table 3.3</a>. The institution archive addresses <a href="#ref-e1">[E1]</a> could not be opened; experimental comparison is not available. Grid uncertainty is not established because three completed full meshes are required.</p>'''
+<p>Validation is planned against publicly tabulated towing-tank resistance at nominal Froude number 0.26 for the benchmark geometry, with attitude, appendage, Reynolds-number and reference-area matching required by <a href="#table-3-3">Table 3.3</a>. The institution archive addresses <a href="#ref-e1">[E1]</a> could not be opened; experimental comparison is not available. Grid uncertainty is not established because three completed full meshes are required.</p><p>{referent_reading()}</p>{component_reading(manifest)}'''
 
 
-def report_references() -> str:
+def referent_reading() -> str:
+    """State the fixture's condition and the unchanged source-access criterion."""
+    return ("The in-repository row <code>kcs_t2005_case_1_1_fixed_bare</code> records "
+            "fixed even keel, no appendages, wetted surface 9.4379 m², Re = 1.4e7, "
+            "Fr = 0.26 and Lpp = 7.2786 m; Ct = 3.56e-3 is marked provenance: stated. "
+            "The fixture carries EFD uncertainty 1.0 % from the workshop page and notes "
+            "0.64 % in the table. Its workshop citation has no table or page locator, "
+            "and the archive addresses did not open. The predeclared rule requires an "
+            "opened source with a table and page; the result remains not available. "
+            "The criterion is unchanged after the results. "
+            "<a href='#ref-i7'>[I7]</a> identifies the fixture, citation and tolerance source.")
+
+
+def component_reading(manifest: dict) -> str:
+    """Compute descriptive offsets without applying undeclared acceptance gates."""
+    runs = {run["mesh"]: run["statistics"] for run in manifest.get("full_runs", [])
+            if "statistics" in run}
+    if not {"coarse", "medium"} <= runs.keys():
+        return ""
+    import yaml
+    root = Path(__file__).resolve().parents[2]
+    fixture = yaml.safe_load((root / "tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml").read_text())
+    row = next(row for row in fixture["reference_rows"]
+               if row["id"] == "kcs_t2005_case_1_1_fixed_bare")
+    target = row["values"]["ct"]["value"]
+    reynolds = manifest["model_basis"]["executed_reynolds"]
+    friction = 0.075 / (math.log10(reynolds) - 2)**2
+    residuary = target - friction
+    coarse, medium = runs["coarse"], runs["medium"]
+    delta = lambda value, reference: 100 * (value / reference - 1)
+    return (
+        "<h3>Known limit: offsetting components</h3><p>As a descriptive reading only, "
+        "unqualified and not a validation, medium Ct differs from the fixture by "
+        f"{delta(medium['mean_ct'], target):+.1f} % and coarse Ct by {delta(coarse['mean_ct'], target):+.1f} %. "
+        f"At the executed Re, ITTC-57 gives Cf = {friction:.4g}; medium Cv differs by "
+        f"{delta(medium['mean_cv'], friction):+.1f} % and coarse Cv by {delta(coarse['mean_cv'], friction):+.1f} %. "
+        f"The fixture-derived residuary Ct − Cf is {residuary:.4g}; medium Cp differs by "
+        f"{delta(medium['mean_cp'], residuary):+.1f} % and coarse Cp by {delta(coarse['mean_cp'], residuary):+.1f} %. "
+        f"Coarse Ct exceeds medium Ct by {delta(coarse['mean_ct'], medium['mean_ct']):.1f} %, "
+        "using medium as denominator. The offsets are computed from unrounded inputs "
+        "and are displayed to one decimal place. "
+        "The near-match of medium Ct comes from offsetting components and must not be read as agreement. "
+        "V2a (pressure against residuary), V2b (viscous against ITTC-57) and V3 "
+        "(two-level consistency) are not applied: the criteria fixed before results adopt "
+        "only V1 and the three-mesh grid convergence index. Inputs and their locators are "
+        "listed in <a href='#ref-i8'>[I8]</a>.</p>")
+
+
+def report_references(manifest: dict | None = None) -> str:
     """Keep software versions and technical locators in the reference register."""
+    evidence = (manifest or {}).get("case_evidence", {})
+    banners = "; ".join(html.escape(" / ".join(value["solver_version_banner"]))
+                        for value in evidence.values() if value["solver_version_banner"])
+    locators = []
+    text = json.dumps(manifest or {}, indent=2, sort_keys=True).splitlines()
+    for key in ("executed_reynolds", "mean_ct", "mean_cp", "mean_cv"):
+        lines = ", ".join(str(index) for index, line in enumerate(text, 1)
+                          if line.strip().startswith('"' + key + '":'))
+        locators.append(key + " lines " + lines)
+    extra = ("<li id='ref-i7'>[I7] Referent: tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml, "
+             "lines 54–115 (condition and Ct), 129–135 (uncertainty), 30–38 (citation: CFD Workshop Tokyo 2005, "
+             "Test Case 1.1, NMRI archives cfdws05; reference data points to the Gothenburg 2000 Workshop EFD table). "
+             "The fixture citation supplies no table or page locator. REFERENT_ROW_ID is selected in "
+             "src/digitalmodel/solvers/openfoam/validation/ship_resistance.py, line 217. "
+             "The 3.0 % tolerance source is SHIP_RESISTANCE_CT_TOLERANCE = 0.0300, lines 63–64; "
+             "it is adopted as the study target, with no standard clause claimed.</li>"
+             "<li id='ref-i8'>[I8] Descriptive component inputs: data/cfd/calm_water_study/manifest.json, "
+             + "; ".join(locators) +
+             "; final-window means are independently recomputable from the window files. Fixture Ct: "
+             "tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml line 68; ITTC-57 formula: line 48. "
+             "V2a, V2b and V3: ship_resistance.py lines 66–84.</li>")
     return '''<h2 id="references">9 References</h2><p>The published comparison sources and the internal computational basis are distinguished below.</p>
 <h3>9.1 Published references</h3><p>The public comparison records are listed with the limits of the inspected evidence.</p><ul><li id="ref-e1">[E1] Institution workshop archive addresses, https://www.nmri.go.jp/cfd/cfdws05/ and https://www.nmri.go.jp/institutes/fluid_performance/cfd_rd/cfdws05/. Both returned HTTP 404 on 2026-10-15; no experimental comparison value was extracted.</li><li id="ref-e2">[E2] Rapid Free Surface Simulation for Steady-State Hull Resistance with FVM using OpenFOAM, 30th Symposium on Naval Hydrodynamics, 2014, Table 1, page 3. The inspected table contains CFD coefficients and percentage experimental differences, not an experimental coefficient entry. No experimental number is inferred from it.</li></ul>
-<h3>9.2 Internal references</h3><p>The model inputs, numerical method and retained evidence are identified below.</p><ul><li id="ref-i1">[I1] Model/data basis: src/digitalmodel/solvers/openfoam/validation/ship_resistance.py and docs/api/cfd/cases/kcs_resistance/geometry/. Primary geometry-source access is not established; the adopted basis is assumed, based on previous experience.</li><li id="ref-i2">[I2] Comparison criteria: config/cfd/calm_water_study.json.</li><li id="ref-i3">[I3] Solver/program: OpenFOAM v2312; native version banners and outputs are retained with the computational record.</li><li id="ref-i4">[I4] Model/data and execution evidence: data/cfd/calm_water_study/manifest.json, run-log.jsonl and raw/. Source and retained-byte digests, input geometry, native completion and units are recorded there. Meshes, fields and complete native logs remain in retained local case folders and are not included in the public text-history bundle.</li><li id="ref-i5">[I5] Reduction and report method: scripts/cfd/build_calm_water_study.py; grid-uncertainty method: src/digitalmodel/solvers/openfoam/grid_convergence.py. The latter is not evaluated from fewer than three completed meshes.</li><li id="ref-i6">[I6] Published-reference copy: docs/domains/openfoam/references/jasak-2014-30th-SNH-naval-hydrodynamics-openfoam.pdf, Table 1, page 3.</li></ul>'''
+<h3>9.2 Internal references</h3><p>The model inputs, numerical method and retained evidence are identified below.</p><ul><li id="ref-i1">[I1] Model/data basis: src/digitalmodel/solvers/openfoam/validation/ship_resistance.py and docs/api/cfd/cases/kcs_resistance/geometry/. Primary geometry-source access is not established; the adopted basis is assumed, based on previous experience.</li><li id="ref-i2">[I2] Comparison criteria: config/cfd/calm_water_study.json.</li><li id="ref-i3">[I3] Solver/program: read from the retained case. VERSION_BANNERS. The two-phase water/air declaration, kOmegaSST and localEuler are read from constant/transportProperties, constant/turbulenceProperties and system/fvSchemes; digests are in case_evidence. The generator revision is not recorded in the retained case.</li><li id="ref-i4">[I4] Model/data and execution evidence: data/cfd/calm_water_study/manifest.json, run-log.jsonl and raw/. Source and retained-byte digests, input geometry, native completion and units are recorded there. The store block indexes all 213 retained entries, including native logs and dictionaries. The 13 entries larger than 1 MiB are restored by scripts/data/fetch.py by path, glob or store id; 200 smaller entries are copied from ${ACE_DATA_ROOT}/data/digitalmodel/&lt;store_id&gt; and checked against their size and sha256. Only relative store identifiers are recorded. Full histories replace twelve split parts; the final 4000-iteration windows remain in Git. Meshes and field outputs are not stored: regeneration commands and configuration are in case_evidence; a complete launch sequence and generator revision are not recorded.</li><li id="ref-i5">[I5] Reduction and report method: scripts/cfd/build_calm_water_study.py; grid-uncertainty method: src/digitalmodel/solvers/openfoam/grid_convergence.py. The latter is not evaluated from fewer than three completed meshes.</li><li id="ref-i6">[I6] Published-reference copy: docs/domains/openfoam/references/jasak-2014-30th-SNH-naval-hydrodynamics-openfoam.pdf, Table 1, page 3.</li>'''.replace("VERSION_BANNERS", banners) + extra + "</ul>"
 
 
 def report_appendix(manifest: dict) -> str:
@@ -451,27 +537,88 @@ def render_report(manifest: dict, history_figure: str = "") -> str:
     revision_rows = [["0", "2026-10-14", "Native start evidence and criteria are retained to distinguish computation cost from settled resistance."]]
     if manifest.get("full_runs"):
         revision_rows.append(["1", "2026-10-15", "Native continuation outcomes are added to distinguish completion from resistance qualification."])
+    if manifest.get("store"):
+        revision_rows.append(["2", "2026-10-15", "Case inputs and native logs become retrievable; averaging windows replace split histories, and the referent and component limitations are identified."])
     revisions = report_table(["Revision", "Date", "Change and reason"], revision_rows, "Table 0.1. Revision history.", "revision-table")
     sections = [("summary", "1 Executive Summary"), ("introduction", "2 Introduction"), ("design-data", "3 Design Data"), ("methodology", "4 Analysis Methodology"), ("results", "5 Detailed Results"), ("findings", "6 Key Findings"), ("limitations", "7 Limitations"), ("recommendations", "8 Recommendations"), ("references", "9 References"), ("symbols", "10 Acronyms and Symbols"), ("appendix-a", "Appendix A – Native execution and model detail"), ("appendix-b", "Appendix B – Interpretation and missing evidence")]
     contents = "".join(f'<li><a href="#{identity}">{title}</a></li>' for identity, title in sections)
     summary = f'''<h2 id="summary">1 Executive Summary</h2><p>The results support computational workflow development only. Engineering resistance acceptance remains on hold until a matched experimental reference and a three-mesh uncertainty bound are available.</p><p>Primary geometry-source access and the required experimental table are unavailable, and numerical uncertainty is not established; the affected absolute resistance values remain unqualified.</p><ul><li>Completed full native continuations: {count}; three completed meshes are required for the declared grid-uncertainty method.</li><li>Mean coefficients are descriptive values from the final 4000 iterations, not experimental validation.</li><li>The next action is to obtain a matched published table and the additional full mesh identified in <a href="#recommendations">Section 8</a>.</li></ul><p>Qualified resistance results: {manifest['qualified_results']}</p><h2>Revision history</h2>{revisions}<nav aria-label="Contents"><h2>Contents</h2><ol>{contents}</ol></nav>'''
     introduction = '''<h2 id="introduction">2 Introduction</h2><p>The analysis concerns one laboratory-scale bare-hull calm-water condition at nominal Froude number 0.26. The hull is fixed at even keel; sinkage, trim response, appendages, incident waves and full-scale extrapolation are excluded.</p>'''
-    method = '''<h2 id="methodology">4 Analysis Methodology</h2><p>The free surface and hull forces are calculated with OpenFOAM v2312 using a two-phase volume-of-fluid model, the k–ω SST turbulence model and local pseudo-time stepping. The inlet prescribes negative-x velocity, the outlet uses a phase-mean velocity condition, the atmosphere permits pressure-driven inflow or outflow, and the fixed hull has zero wall motion.</p><p>The executed inlet speed and water properties in <a href="#table-3-1">Table 3.1</a> define the normalization. Half-domain forces are converted to full-hull resistance by <a href="#equation-1">Equation (1)</a>.</p><p class="equation" id="equation-1">R<sub>T</sub> = −2 F<sub>x,half</sub> &nbsp; (1)</p><p class="equation" id="equation-2">C<sub>T</sub> = R<sub>T</sub> / (½ ρ S U²) = C<sub>P</sub> + C<sub>V</sub> &nbsp; (2)</p><p class="equation" id="equation-3">Fr = U / √(g L<sub>pp</sub>), &nbsp; Re = U L<sub>pp</sub> / ν &nbsp; (3)</p><p class="equation" id="equation-4">Mean C<sub>T</sub> = Σ C<sub>T,i</sub> / N; &nbsp; σ<sub>Ct</sub> = √[Σ(C<sub>T,i</sub> − Mean C<sub>T</sub>)² / N] &nbsp; (4)</p><p>The force window contains iterations 21001–25000 after completion at iteration 25000. Dispersion in <a href="#equation-4">Equation (4)</a> is descriptive; a separate temporal-stationarity limit is not established. Three full meshes at nominal refinement ratio r = 2 are required before the grid-convergence-index method <a href="#ref-i5">[I5]</a> can be applied. Validation is planned against the matched towing-tank data described in <a href="#results">Section 5</a>.</p>'''
-    findings = f'''<h2 id="findings">6 Key Findings</h2><p>The governing conclusions separate completed numerical histories from engineering qualification.</p><h3>6.1 Resistance histories</h3><p>{count} full continuations reached the required final iteration where a complete record is shown in <a href="#table-a-2">Table A.2</a>. The final-window coefficients are stated in <a href="#table-5-1">Table 5.1</a>, with no experimental acceptance inferred.</p><h3>6.2 Numerical and experimental qualification</h3><p>Grid uncertainty is not established because the declared criterion requires three completed full meshes. Experimental comparison is not available because an opened, matched printed table is missing; the 3.0 percent comparison target cannot therefore be evaluated.</p>'''
+    method = '''<h2 id="methodology">4 Analysis Methodology</h2><p>The free surface and hull forces are calculated with OpenFOAM v2312 using a two-phase volume-of-fluid model, the k–ω SST turbulence model and local pseudo-time stepping; these are read from the retained case, including the native solver banner and phase, turbulence and time-discretization dictionaries <a href="#ref-i3">[I3]</a>. The following boundary description is stated, not read by this report renderer: the inlet prescribes negative-x velocity, the outlet uses a phase-mean velocity condition, the atmosphere permits pressure-driven inflow or outflow, and the fixed hull has zero wall motion.</p><p>The executed inlet speed and water properties in <a href="#table-3-1">Table 3.1</a> define the normalization. Half-domain forces are converted to full-hull resistance by <a href="#equation-1">Equation (1)</a>.</p><p class="equation" id="equation-1">R<sub>T</sub> = −2 F<sub>x,half</sub> &nbsp; (1)</p><p class="equation" id="equation-2">C<sub>T</sub> = R<sub>T</sub> / (½ ρ S U²) = C<sub>P</sub> + C<sub>V</sub> &nbsp; (2)</p><p class="equation" id="equation-3">Fr = U / √(g L<sub>pp</sub>), &nbsp; Re = U L<sub>pp</sub> / ν &nbsp; (3)</p><p class="equation" id="equation-4">Mean C<sub>T</sub> = Σ C<sub>T,i</sub> / N; &nbsp; σ<sub>Ct</sub> = √[Σ(C<sub>T,i</sub> − Mean C<sub>T</sub>)² / N] &nbsp; (4)</p><p>The force window contains iterations 21001–25000 after completion at iteration 25000. Dispersion in <a href="#equation-4">Equation (4)</a> is descriptive; a separate temporal-stationarity limit is not established. Three full meshes at nominal refinement ratio r = 2 are required before the grid-convergence-index method <a href="#ref-i5">[I5]</a> can be applied. Validation is planned against the matched towing-tank data described in <a href="#results">Section 5</a>.</p>'''
+    findings = f'''<h2 id="findings">6 Key Findings</h2><p>The governing conclusions separate completed numerical histories from engineering qualification.</p><h3>6.1 Resistance histories</h3><p>{count} full continuations reached the required final iteration where a complete record is shown in <a href="#table-a-2">Table A.2</a>. The final-window coefficients are stated in <a href="#table-5-1">Table 5.1</a>, with no experimental acceptance inferred.</p><h3>6.2 Numerical and experimental qualification</h3><p>Grid uncertainty is not established because the declared criterion requires three completed full meshes. Experimental comparison is not available because an opened, matched printed table is missing; the 3.0 percent comparison target cannot therefore be evaluated.</p><p>{referent_reading()}</p>'''
     limitations = '''<h2 id="limitations">7 Limitations</h2><p>The following evidence gaps govern use of the calculated coefficients.</p><ul><li>The missing third full mesh prevents a three-grid uncertainty estimate; the cost basis is given in <a href="#appendix-a">Appendix A</a>.</li><li>The missing matched experimental table prevents validation; source access and condition matching are explained in <a href="#appendix-b">Appendix B</a>.</li><li>Original geometry qualification, fluid-property sensitivity, domain-size influence and independent temporal stationarity are not established; their affected conclusions are described in <a href="#appendix-b">Appendix B</a>.</li></ul>'''
     recommendations = '''<h2 id="recommendations">8 Recommendations</h2><p>Engineering resistance use should remain on hold while the uncertainty and validation quantities required by <a href="#table-3-3">Table 3.3</a> remain unevaluated.</p><ol><li>Obtain a primary geometry source and a printed towing-tank coefficient at the matched physical condition before evaluating experimental error using <a href="#equation-2">Equation (2)</a>.</li><li>Provide additional duration or resources for the missing full mesh, using the measured projection in <a href="#table-a-1">Table A.1</a> as the scheduling basis; then evaluate the declared three-mesh uncertainty target.</li><li>Quantify domain-size and temporal sensitivities before qualifying absolute coefficients; the present final-window calculation <a href="#equation-4">Equation (4)</a> does not supply those bounds.</li></ol>'''
     symbols = report_table(["Symbol or acronym", "Meaning", "Unit"], [["Rₜ", "Full-hull total resistance", "N"], ["Fₓ,half", "Signed half-domain streamwise force", "N"], ["ρ", "Water density", "kg/m³"], ["S", "Reference wetted area", "m²"], ["U", "Inlet speed magnitude", "m/s"], ["Lpp", "Length between perpendiculars", "m"], ["g", "Gravity magnitude", "m/s²"], ["ν", "Water kinematic viscosity", "m²/s"], ["Ct, Cp, Cv", "Total, pressure and viscous resistance coefficients", "1"], ["Fr, Re", "Froude and Reynolds numbers", "1"], ["N", "Number of samples in the averaging window", "count"], ["r", "Nominal linear mesh-refinement ratio", "1"], ["σCt", "Population dispersion of Ct, not uncertainty", "1"], ["hₜ", "Declared hull-face target length; hₜ/Lpp is a defined geometric ratio", "m"], ["STL, SST", "Triangulated surface format; shear-stress transport", "not applicable"], ["CFD, GCI, RSS", "Computational fluid dynamics; grid convergence index; aggregate resident memory", "not applicable"]], "Table 10.1. Symbols and acronyms used in the analysis.", "table-10-1")
     style = 'body{font:16px/1.5 system-ui,sans-serif;max-width:1050px;margin:2rem auto;padding:1rem;color:#182f40}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #bbc;padding:.4rem;text-align:left;overflow-wrap:anywhere}h2{margin-top:2rem}p,li{font-weight:400}.caption,figcaption{font-size:.9em;text-align:left;margin:.4rem 0 1rem}.table-wrap{max-width:100%}figure{margin:1rem 0}svg{width:100%;height:auto}code{overflow-wrap:anywhere}.equation{text-align:center}@media print{body{font-size:10pt;margin:0;max-width:none}h2,h3{break-after:avoid}figure,.table-wrap{break-inside:avoid}}'
-    body = summary + introduction + report_design_data(manifest) + method + report_results(manifest, history_figure) + findings + limitations + recommendations + report_references() + '<h2 id="symbols">10 Acronyms and Symbols</h2><p>The symbols and units used in the governing equations are defined below.</p>' + symbols + report_appendix(manifest)
+    body = summary + introduction + report_design_data(manifest) + method + report_results(manifest, history_figure) + findings + limitations + recommendations + report_references(manifest) + '<h2 id="symbols">10 Acronyms and Symbols</h2><p>The symbols and units used in the governing equations are defined below.</p>' + symbols + report_appendix(manifest)
     return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Calm-water resistance analysis</title><style>' + style + '</style></head><body><h1>Calm-water resistance analysis</h1><p>Internal computational record</p>' + body + '\n</body></html>\n'
 
 
 def render_run_log(manifest: dict) -> str:
     """Render measured native costs and their iteration scopes as JSON lines."""
-    rows = []
+    rows: list[str] = []
     for key, kind in (("runs", "timed_start"), ("full_runs", "full_continuation")):
         rows.extend(json.dumps(dict(record, kind=kind), sort_keys=True) for record in manifest.get(key, []))
     return "\n".join(rows) + "\n"
+
+
+def read_case_evidence(case: Path) -> dict:
+    """Read solver identity, dictionary digests and regeneration evidence."""
+    dictionaries = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                    for path in sorted((case / "system").iterdir()) if path.is_file()}
+    records = [case / name for name in
+               ("study-input.json", "timed-start.json", "full-run.json", "run.log")]
+    revisions = []
+    for path in records:
+        if path.is_file():
+            revisions.extend(re.findall(
+                r'"(?:code_revision|git_revision|git_commit|revision|commit)"\s*:\s*"([^"]+)"',
+                path.read_text()))
+    native = case / "log.interFoam.full"
+    banner = []
+    if native.is_file():
+        banner = [line for line in native.read_text().splitlines()[:60]
+                  if re.match(r"^\|.*Version:", line) or line.startswith("Build  :")]
+    commands = []
+    for log in sorted(case.glob("log.*")):
+        if log.name in ("log.face-resolution",):
+            continue
+        match = re.search(r"^Exec\s*:\s*(.+)$", log.read_text(), re.M)
+        if match:
+            # Case destination is caller-selected, never an execution-host path.
+            command = re.sub(r" -case \S+", "", match[1])
+            commands.append(command)
+    schemes = (case / "system/fvSchemes").read_text()
+    turbulence = (case / "constant/turbulenceProperties").read_text()
+    transport = (case / "constant/transportProperties").read_text()
+    log_steps = re.findall(r"^BEGIN (.+)$", (case / "run.log").read_text(), re.M)
+    meshing = []
+    for step in log_steps:
+        utility = step.split(".")[0]
+        expected = utility + (" -dict system/topoSetDict." + step.split(".")[1]
+                              if utility == "topoSet" else "")
+        matched_command = next((command for command in commands if command.startswith(expected)), None)
+        meshing.append(matched_command or "not recorded")
+    return {
+        "generator_revision": revisions[0] if revisions else "not recorded in the retained case",
+        "solver_version_banner": banner,
+        "dictionary_sha256": dictionaries,
+        "method_readback": {
+            "local_time_stepping": bool(re.search(r"default\s+localEuler;", schemes)),
+            "turbulence_model": "kOmegaSST" if re.search(r"RASModel\s+kOmegaSST;", turbulence) else "not recorded",
+            "two_phase_vof": "phases (water air)" if re.search(r"phases\s*\(water air\)", transport) else "not recorded",
+        },
+        "regeneration": {
+            "working_directory": "restored case folder",
+            "configuration": json.loads((case / "study-input.json").read_text()),
+            "logged_steps": log_steps,
+            "mesh_commands_in_logged_order": meshing,
+            "native_commands": commands,
+            "command_sequence": "not recorded: run.log records utility order; native log Exec lines record individual commands, not a complete launch script",
+            "fields": "not recorded: initial-field setup and complete launch sequence are absent from run.log",
+            "mesh_and_fields_retained": False,
+        },
+    }
 
 
 def build_record(cases: Path, repo: Path, output: Path) -> dict:
@@ -480,8 +627,11 @@ def build_record(cases: Path, repo: Path, output: Path) -> dict:
     from digitalmodel.solvers.openfoam.validation.ship_resistance import ShipResistanceConfig
 
     basis = ShipResistanceConfig()
-    manifest = {"schema_version": 1, "readiness_status": "partial", "intended_use": "Native execution cost and descriptive force histories; experimental validation and grid uncertainty are not established.", "qualified_results": 0, "runs": [], "full_runs": [], "files": {}}
+    manifest: dict[str, Any] = {"schema_version": 1, "readiness_status": "partial", "intended_use": "Native execution cost and descriptive force histories; experimental validation and grid uncertainty are not established.", "qualified_results": 0, "runs": [], "full_runs": [], "files": {}}
     manifest["criteria"] = json.loads(criteria)
+    retained = json.loads((repo / "data/cfd/calm_water_study/manifest.json").read_text())
+    manifest["store"] = retained["store"]
+    manifest["case_evidence"] = {}
     raw = output / "data/cfd/calm_water_study/raw"
     raw.mkdir(parents=True, exist_ok=True)
     for name in ("coarse", "medium", "fine"):
@@ -494,6 +644,7 @@ def build_record(cases: Path, repo: Path, output: Path) -> dict:
         verify_criterion(record, criteria)
         if record["return_code"] != 0 or record["completed_iterations"] != 100:
             raise ValueError(f"{name}: incomplete timed start")
+        manifest["case_evidence"][name] = read_case_evidence(cases / name)
         model = read_model_basis(cases / name, basis, json.loads(criteria))
         record["model_basis"] = model
         if "model_basis" not in manifest:
@@ -526,6 +677,7 @@ def build_record(cases: Path, repo: Path, output: Path) -> dict:
             if full["status"] != "running":
                 if full["mesh"] != name:
                     raise ValueError("full-run mesh identity disagrees with its case")
+                full["control_dict_sha256"] = manifest["case_evidence"][name]["dictionary_sha256"]["controlDict"]
                 verify_criterion(full, criteria)
                 manifest["full_runs"].append(collect_full_run(cases / name, full, record["normalisation"], json.loads(criteria), output, manifest["files"]))
     run_log = output / "data/cfd/calm_water_study/run-log.jsonl"
@@ -539,7 +691,7 @@ def build_record(cases: Path, repo: Path, output: Path) -> dict:
     series = {}
     for run in manifest["full_runs"]:
         if run["status"] == "complete":
-            names = sorted(name for name in manifest["files"] if Path(name).name.startswith(run["mesh"] + "-full-coefficients"))
+            names = sorted(name for name in manifest["files"] if Path(name).name.startswith(run["mesh"] + "-full-window-coefficients"))
             series[run["mesh"]] = "".join((output / name).read_text() for name in names)
     report.write_text(render_report(manifest, render_history_plot(series, json.loads(criteria)["averaging_iterations"])))
     return manifest
