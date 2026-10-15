@@ -190,18 +190,25 @@ jobs:
 
       - name: Run domain gate
         id: domain-gate
-        run: ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+        run: |
+          set +e
+          ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          exit "$code"
 
       - name: Extract shard result
         if: always()
         env:
           SHARD: ${{ matrix.domain }}
           SHARD_CONCLUSION: ${{ steps.domain-gate.outcome }}
+          SHARD_EXIT_CODE: ${{ steps.domain-gate.outputs.code }}
         run: |
           python scripts/ci/ci_baseline.py extract \
             --junit "reports/junit-${SHARD}.xml" --shard "$SHARD" \
             --sha "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
             --attempt "$GITHUB_RUN_ATTEMPT" --conclusion "$SHARD_CONCLUSION" \
+            --exit-code "${SHARD_EXIT_CODE:--1}" \
             --out "reports/result-${SHARD}.json"
 
       - name: Upload domain artifacts
@@ -293,22 +300,25 @@ jobs:
           fi
 
           if [ "$HAS_DOMAINS" = "true" ] && [ "$DOMAIN_RESULT" != "success" ]; then
-            if [ "$DOMAIN_RESULT" = "failure" ]; then
+            if [ "$DOMAIN_RESULT" = "failure" ] && [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
               python - <<'PYTHON'
           import os
           from pathlib import Path
-          from scripts.ci.ci_baseline import download_baseline, gh_json, reconcile_results
+          from scripts.ci.ci_baseline import download_baseline, gh_json, instant, reconcile_results
 
           repository = os.environ["GITHUB_REPOSITORY"]
           run = os.environ["GITHUB_RUN_ID"]
           attempt = int(os.environ["GITHUB_RUN_ATTEMPT"])
           jobs = gh_json(f"repos/{repository}/actions/runs/{run}/attempts/{attempt}/jobs?per_page=100")["jobs"]
           reconcile_results(Path("baseline-results"), jobs, "tests-", os.environ["GITHUB_SHA"], run, attempt)
-          download_baseline(repository, Path("baseline.json"), require_latest=True)
+          aggregate = next(job for job in jobs if job["name"] == "Domain test aggregate")
+          Path("baseline-time.txt").write_text(aggregate["started_at"])
+          download_baseline(repository, Path("baseline.json"), require_latest=True,
+                            now=instant(aggregate["started_at"]))
           PYTHON
               if python scripts/ci/ci_baseline.py compare \
                 --baseline baseline.json --results baseline-results --max-age-hours 24 \
-                --summary baseline-summary.md --verdict baseline-verdict.json; then
+                --summary baseline-summary.md --verdict baseline-verdict.json --now "$(cat baseline-time.txt)"; then
                 comparison=0
               else
                 comparison=$?
@@ -326,3 +336,14 @@ jobs:
           fi
 
           echo "Required domain test jobs passed."
+
+      - name: Upload baseline comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-comparison
+          path: |
+            baseline-verdict.json
+            baseline-summary.md
+          if-no-files-found: ignore
+          retention-days: 14

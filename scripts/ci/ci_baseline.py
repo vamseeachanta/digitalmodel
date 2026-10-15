@@ -121,14 +121,14 @@ def parse_log(path: Path) -> tuple[list[str], list[str], int]:
             collected = int(count[1])
     if not failed and not errored:
         raise ValueError("No failure summary ids")
-    return sorted(failed), sorted(errored), max(collected, len(failed | errored))
+    return sorted(failed), sorted(errored), collected
 
 
 def extract(args: argparse.Namespace) -> None:
     """Persist extraction failure as explicit unparsed evidence."""
     row = dict(shard=args.shard, sha=args.sha, run_id=args.run, attempt=args.attempt,
                completed_at=args.completed_at, conclusion=args.conclusion,
-               parsed=False, failed=[], errored=[], collected=0)
+               parsed=False, failed=[], errored=[], collected=0, exit_code=args.exit_code)
     try:
         parser = parse_junit if args.command == "extract" else parse_log
         failed, errored, collected = parser(args.source)
@@ -154,7 +154,7 @@ def publish(results: Path, previous: str, output: Path) -> None:
         if row["conclusion"] == "cancelled":
             continue
         shard = row["shard"]
-        metadata = {key: row[key] for key in ("sha", "run_id", "completed_at", "conclusion", "parsed")}
+        metadata = {key: row.get(key) for key in ("sha", "run_id", "completed_at", "conclusion", "parsed", "exit_code", "collected")}
         baseline["shards"][shard] = metadata
         if row["parsed"] is not True:
             continue
@@ -174,9 +174,12 @@ def classify(row: dict[str, Any], baseline: dict[str, Any], max_age: float, now:
     """Require fresh, parsed, same-shard main failures for every current id."""
     shard = baseline["shards"].get(row["shard"], {})
     ids = row["failed"] + row["errored"]
-    if row["conclusion"] != "failure" or row["parsed"] is not True or not ids:
+    if (row["conclusion"] != "failure" or row["parsed"] is not True or not ids
+            or row.get("exit_code") != 1 or not row.get("collected", 0)
+            or any("::" not in node for node in ids)):
         return False, "failed shard has incomplete evidence"
-    if shard.get("conclusion") != "failure" or shard.get("parsed") is not True:
+    if (shard.get("conclusion") != "failure" or shard.get("parsed") is not True
+            or shard.get("exit_code") != 1 or not shard.get("collected", 0)):
         return False, "main shard is not a parsed failure"
     age = (now - instant(shard["completed_at"])).total_seconds() / 3600
     if not 0 <= age <= max_age:
@@ -217,7 +220,7 @@ def compare_results(baseline_path: Path, results: Path, max_age: float, summary:
                     lines.append(f"- {message}")
                     escaped = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
                     print(f"::warning::{escaped}")
-        report["passed"] = all(outcomes)
+        report["passed"] = bool(outcomes) and all(outcomes)
     except (OSError, ValueError, KeyError, TypeError) as error:
         lines.append(f"\nComparison fails closed: {type(error).__name__}.")
     summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -233,30 +236,77 @@ def gh_json(endpoint: str) -> dict[str, Any]:
     return value
 
 
-def download_baseline(repository: str, output: Path, require_latest: bool = False) -> bool:
-    """Download the newest baseline only from the main sweep workflow."""
-    artifacts = gh_json(f"repos/{repository}/actions/artifacts?name=main-baseline&per_page=100")["artifacts"]
-    candidates = [a for a in artifacts if not a["expired"] and a.get("workflow_run", {}).get("head_branch") == "main"]
-    for artifact in sorted(candidates, key=lambda a: a["id"], reverse=True):
-        run = gh_json(f"repos/{repository}/actions/runs/{artifact['workflow_run']['id']}")
-        if run["path"] != ".github/workflows/full-matrix-sweep.yml" or run["head_branch"] != "main":
+def is_main_sweep(run: dict[str, Any], repository: str) -> bool:
+    """Require a completed push or schedule from this repository's own main."""
+    return (run.get("event") in {"push", "schedule"}
+            and run.get("head_branch") == "main"
+            and run.get("head_repository", {}).get("full_name") == repository
+            and run.get("path") == ".github/workflows/full-matrix-sweep.yml"
+            and run.get("status") == "completed")
+
+
+def select_baseline_run(runs: list[dict[str, Any]], artifacts: list[dict[str, Any]],
+                        repository: str, now: datetime, max_age: float = 24) -> dict[str, Any] | None:
+    """Select the newest completed eligible sweep with an available baseline."""
+    for run in sorted(runs, key=lambda row: row["id"], reverse=True):
+        if not is_main_sweep(run, repository) or run.get("conclusion") == "cancelled":
             continue
-        if require_latest:
-            latest = gh_json(
-                f"repos/{repository}/actions/workflows/full-matrix-sweep.yml/runs"
-                "?branch=main&status=completed&per_page=1"
-            )["workflow_runs"]
-            if not latest or latest[0]["id"] != run["id"]:
-                return False
-        raw = subprocess.check_output(["gh", "api", f"repos/{repository}/actions/artifacts/{artifact['id']}/zip"])
-        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-            names = [n for n in archive.namelist() if n == "baseline.json"]
-            if len(names) != 1:
-                raise ValueError("Baseline artifact is incomplete")
-            output.write_bytes(archive.read(names[0]))
-        read_json(output)
-        return True
-    return False
+        age = (now - instant(run["updated_at"])).total_seconds() / 3600
+        if not 0 <= age <= max_age:
+            continue
+        available = [item for item in artifacts if item.get("name") == "main-baseline"
+                     and item.get("expired") is False
+                     and item.get("workflow_run", {}).get("id") == run["id"]
+                     and instant(item["created_at"]) <= now]
+        if available:
+            return run
+    return None
+
+
+def recent_metadata(repository: str, kind: str, now: datetime) -> list[dict[str, Any]]:
+    """Page recent run or artifact metadata without assuming API ordering by completion."""
+    if kind == "workflow_runs":
+        endpoint = "actions/workflows/full-matrix-sweep.yml/runs?branch=main"
+    else:
+        endpoint = "actions/artifacts?name=main-baseline"
+    rows = []
+    for page in range(1, 11):
+        batch = gh_json(f"repos/{repository}/{endpoint}&per_page=100&page={page}")[kind]
+        rows.extend(batch)
+        if len(batch) < 100:
+            break
+    return rows
+
+
+def download_baseline(repository: str, output: Path, require_latest: bool = False,
+                      now: datetime | None = None) -> bool:
+    """Download only the newest eligible published sweep; invalid evidence fails closed."""
+    now = now or datetime.now(timezone.utc)
+    artifacts = recent_metadata(repository, "artifacts", now)
+    runs = recent_metadata(repository, "workflow_runs", now)
+    selected = select_baseline_run(runs, artifacts, repository, now)
+    if selected is None:
+        return False
+    run = gh_json(f"repos/{repository}/actions/runs/{selected['id']}")
+    identity = ("id", "path", "head_branch", "event",
+                "head_sha", "status", "conclusion", "updated_at")
+    if not is_main_sweep(run, repository) or any(run.get(key) != selected.get(key) for key in identity):
+        raise ValueError("Sweep metadata changed during baseline selection")
+    candidates = [item for item in artifacts if item.get("workflow_run", {}).get("id") == run["id"]
+                  and item.get("name") == "main-baseline" and item.get("expired") is False
+                  and instant(item["created_at"]) <= now]
+    artifact = max(candidates, key=lambda row: row["id"])
+    if artifact["workflow_run"].get("head_sha") != run["head_sha"]:
+        raise ValueError("Artifact and sweep identities disagree")
+    raw = subprocess.check_output(["gh", "api", f"repos/{repository}/actions/artifacts/{artifact['id']}/zip"])
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        if archive.namelist().count("baseline.json") != 1:
+            raise ValueError("Baseline artifact is incomplete")
+        value = json.loads(archive.read("baseline.json"))
+    if not isinstance(value, dict) or not isinstance(value.get("shards"), dict) or not isinstance(value.get("tests"), dict):
+        raise ValueError("Invalid baseline structure")
+    write_json(output, value)
+    return True
 
 
 def reconcile_results(directory: Path, jobs: list[dict[str, Any]], prefix: str,
@@ -290,6 +340,7 @@ def main(argv: list[str] | None = None) -> int:
         for flag in ("shard", "sha", "run", "conclusion"):
             sub.add_argument(f"--{flag}", required=True)
         sub.add_argument("--attempt", type=int, required=True)
+        sub.add_argument("--exit-code", type=int)
         sub.add_argument("--completed-at", default=datetime.now(timezone.utc).isoformat())
         sub.add_argument("--out", type=Path, required=True)
     sub = commands.add_parser("publish")
@@ -302,13 +353,14 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_argument("--max-age-hours", type=float, default=24)
     sub.add_argument("--summary", type=Path, required=True)
     sub.add_argument("--verdict", type=Path, required=True)
+    sub.add_argument("--now", type=instant)
     args = parser.parse_args(argv)
     if args.command in {"extract", "extract-log"}:
         extract(args)
     elif args.command == "publish":
         publish(args.results, args.previous, args.out)
     else:
-        return compare_results(args.baseline, args.results, args.max_age_hours, args.summary, args.verdict)
+        return compare_results(args.baseline, args.results, args.max_age_hours, args.summary, args.verdict, args.now)
     return 0
 
 
