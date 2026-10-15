@@ -19,7 +19,7 @@ from pathlib import Path, PurePosixPath
 
 import yaml
 
-FIELDS = ("owner", "reason", "category", "reviewed_on",
+FIELDS = ("maintainer", "reason", "category", "reviewed_on",
           "follow_up_issue_or_permanent_justification")
 PLACEHOLDER = re.compile(r"\b(todo|tbd|placeholder)\b", re.I)
 

@@ -5,6 +5,7 @@
 
 import copy
 import importlib.util
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -56,7 +57,7 @@ def test_planted_violations_fail(path):
 
 def exception():
     return {
-        "pattern": "outputs/retained/**", "owner": "engineering",
+        "pattern": "outputs/retained/**", "maintainer": "engineering",
         "reason": "Retained evidence pending a per-file retention decision.",
         "category": "temporary_durable_generated_evidence",
         "follow_up_issue_or_permanent_justification": "#597",
@@ -116,3 +117,19 @@ def test_cli_clean_and_violation(tmp_path):
     bad = subprocess.run(command, capture_output=True, text=True)
     assert bad.returncode == 1
     assert "unexpected.py: root-allowlist" in bad.stdout
+
+
+def test_structure_tests_run_in_contracts_domain():
+    gates = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text())["gates"]
+    gate = gates["tests-contracts"]
+    root = "tests/repo_structure/"
+    assert (ROOT / root).is_dir()
+    assert gate["domain"] == "contracts"
+    assert gate["enabled"] is True
+    for entries in (gate["test_roots"], shlex.split(gate["command"])):
+        assert entries.count(root) == 1
+        assert entries[entries.index("tests/docs/") + 1] == root
+    registrations = [name for name, row in gates.items()
+                     if root in row.get("test_roots", [])
+                     or root in shlex.split(row.get("command", ""))]
+    assert registrations == ["tests-contracts"]

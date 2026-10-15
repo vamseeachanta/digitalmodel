@@ -6,7 +6,7 @@
 
 Historical conversion defaults write below the repository root; they do not
 establish the active retrieval corpus location. Private retrieval uses an
-explicit owner-relative corpus prefix through scripts/retrieve_orcina_help.py.
+explicit repository-relative corpus prefix through scripts/retrieve_orcina_help.py.
 Corpus placement remains an open decision under issue #2004. This ingestion
 command is not run by the retrieval tool.
 
@@ -314,6 +314,7 @@ def write_index(product: str, output_dir: str, results: list[dict]):
 
 
 def main():
+    """Convert the requested help products and write their topic indexes."""
     parser = argparse.ArgumentParser(description="Ingest Orcina help docs to markdown")
     parser.add_argument("--product", choices=["orcaflex", "orcawave", "orcfxapi"],
                         help="Which product to process")

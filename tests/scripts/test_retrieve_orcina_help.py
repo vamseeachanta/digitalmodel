@@ -99,8 +99,13 @@ def test_truncated_private_tree_fails_instead_of_silent_partial_results():
 
 @pytest.mark.parametrize("prefix", ["../help", "/help", "help/../private"])
 def test_unsafe_corpus_prefix_is_rejected(prefix):
-    with pytest.raises(ValueError, match="prefix"):
+    with pytest.raises(ValueError, match="corpus prefix must be a repository-relative directory"):
         retriever().load_github_topics("example/wiki", "main", prefix, api=lambda _: {})
+
+
+def test_invalid_repository_shape_uses_neutral_wording():
+    with pytest.raises(ValueError, match="organisation/repository shape"):
+        retriever().load_github_topics("invalid", "main", "help", api=lambda _: {})
 
 
 def test_private_corpus_tree_is_resolved_before_recursive_listing():

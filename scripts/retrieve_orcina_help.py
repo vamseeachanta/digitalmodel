@@ -5,7 +5,7 @@
 
 Only section pointers, citation URLs and attribution leave the retrieval layer.
 No licensed text is copied to its JSON output. Supply the private repository
-and the owner-confirmed corpus prefix explicitly; no public corpus fallback is
+and the maintainer-confirmed corpus prefix explicitly; no public corpus fallback is
 used. GitHub authentication is supplied by the existing gh configuration.
 """
 
@@ -34,9 +34,9 @@ def load_github_topics(repository, revision, prefix, api=github_api):
     """Read product topics at one resolved revision, rejecting incomplete trees."""
     if (not prefix or prefix.startswith("/") or ".." in prefix.split("/")
             or "\\" in prefix or "?" in prefix or "#" in prefix):
-        raise ValueError("corpus prefix must be an owner-relative directory")
+        raise ValueError("corpus prefix must be a repository-relative directory")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
-        raise ValueError("repository must have an owner/repository shape")
+        raise ValueError("repository must have an organisation/repository shape")
     pinned = api(f"repos/{repository}/commits/{quote(revision, safe='')}")["sha"]
     subtree = pinned
     for directory in prefix.rstrip("/").split("/"):

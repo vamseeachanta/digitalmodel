@@ -221,7 +221,7 @@ for PDF extraction and classification, not for web-scraped HTML documentation.
 ## Private help retrieval
 
 `scripts/retrieve_orcina_help.py` searches an explicitly configured private wiki
-through read-only `gh api` requests. Supply `--wiki-repo <owner/repository>`,
+through read-only `gh api` requests. Supply `--wiki-repo <organisation/repository>`,
 `--prefix <corpus-directory>` and a query; `--revision` defaults to `main` and
 is resolved to one commit before topic blobs are read. Product directories
 below the prefix are `orcaflex`, `orcawave` and `orcfxapi`.

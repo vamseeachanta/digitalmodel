@@ -31,7 +31,7 @@ tracking: any candidate path matching a generated or CI-artifact pattern fails
 unless a validated durable exception covers it. CI upload destinations are
 runtime destinations, not durable source.
 
-An exception contains `pattern`, `owner`, `reason`, `category`, `reviewed_on`,
+An exception contains `pattern`, `maintainer`, `reason`, `category`, `reviewed_on`,
 and `follow_up_issue_or_permanent_justification`. All fields are substantive;
 placeholder values fail even when no current file matches the exception.
 `reviewed_on` is a valid ISO calendar date.

@@ -84,7 +84,7 @@ ci_artifact_patterns:
   - dist/**
 durable_exceptions: []
 required_metadata_for_exceptions:
-  - owner
+  - maintainer
   - reason
   - category
   - follow_up_issue_or_permanent_justification
