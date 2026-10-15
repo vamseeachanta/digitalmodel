@@ -1,0 +1,10 @@
+{
+  "history": [
+    {
+      "change": "The first issue separates calculated still-water demand from unqualified strength limits so that synthetic inputs cannot support acceptance.",
+      "date": "2026-10-14",
+      "revision": "0"
+    }
+  ],
+  "revision": "0"
+}
