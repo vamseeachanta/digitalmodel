@@ -986,6 +986,14 @@ def get_max_strut_force_config():
 
 def run_server(host="127.0.0.1", debug=False):
     """Launch the development server with explicit host and debug settings."""
+    if debug and host not in ("127.0.0.1", "localhost", "::1"):
+        import warnings
+
+        warnings.warn(
+            "Debug mode exposes the interactive debugger beyond loopback.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     app.run(host=host, debug=debug, port=5000)
 
 

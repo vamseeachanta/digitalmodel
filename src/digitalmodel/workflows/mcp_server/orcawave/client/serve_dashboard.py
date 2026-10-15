@@ -217,7 +217,8 @@ class DashboardServer:
     
     async def start_server(self, host="127.0.0.1", debug=False):
         """Start on loopback; debug enables event-loop diagnostics."""
-        asyncio.get_running_loop().set_debug(debug)
+        if debug:
+            asyncio.get_running_loop().set_debug(True)
         runner = web.AppRunner(self.app)
         await runner.setup()
         site = web.TCPSite(runner, host, self.port)

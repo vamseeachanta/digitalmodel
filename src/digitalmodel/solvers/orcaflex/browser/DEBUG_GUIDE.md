@@ -43,11 +43,14 @@ setBusyState()  // Loading state management
 ## 2. Server-Side Debugging
 
 ### Enable Flask Debug Mode
-```python
-# In orcaflex_data_server.py, change:
-app.run(debug=True, port=5000)
-# This enables auto-reload and detailed error messages
+
+```bash
+python orcaflex_data_server.py --debug
 ```
+
+The development server keeps its loopback default. The option enables auto-reload
+and detailed error messages; selecting a non-loopback host also emits a warning
+because the interactive debugger becomes reachable over the network.
 
 ### Add Debug Logging
 ```python
