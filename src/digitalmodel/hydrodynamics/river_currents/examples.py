@@ -59,11 +59,18 @@ def compute(data: dict) -> dict:
                            water_density=t['density_kg_m3'])
     assessment = towing_assessment(loads, t['available_pull_N'], efficiency=t['efficiency'],
                                     reserve_factor=t['reserve_factor'], yaw_capacity_Nm=t['yaw_capacity_Nm'])
+    slot_factor = shallow_drag_factor(t['depth_m'], t['draft_m'])
+    required_without_slot = assessment['required_bollard_pull_N'] / slot_factor
+    moment_without_slot = abs(loads['Mz_yaw_Nm']) / slot_factor
+    yaw_capacity = t['yaw_capacity_Nm']
+    yaw_ok_without_slot = (moment_without_slot == 0 if yaw_capacity is None
+                           else moment_without_slot <= yaw_capacity)
+    go_without_slot = required_without_slot <= t['available_pull_N'] and yaw_ok_without_slot
     return {'bank_and_extremes': bank, 'towing': {
         'section_mean_m_s': mean, 'surface_speed_m_s': surface * factor,
-        'shallow_drag_factor': shallow_drag_factor(t['depth_m'], t['draft_m']),
-        'required_bollard_pull_without_slot_N': assessment['required_bollard_pull_N']
-        / shallow_drag_factor(t['depth_m'], t['draft_m']),
+        'shallow_drag_factor': slot_factor,
+        'required_bollard_pull_without_slot_N': required_without_slot,
+        'go_without_slot': go_without_slot,
         'loads': loads, 'uniform_surface_loads': uniform, 'assessment': assessment,
         'surge_reduction_percent': 100 * (1 - loads['Fx_surge_N'] / uniform['Fx_surge_N']),
     }}
@@ -127,6 +134,14 @@ def render(data: dict, results: dict) -> str:
                       f'<td>{r["mean"]:.1f}</td><td>{r["maximum"]:.1f}</td></tr>'
                       for s, r in b['seasons'].items())
     verdict = 'GO' if t['assessment']['go'] else 'NO-GO'
+    if t['go_without_slot'] != t['assessment']['go']:
+        slot_summary = f'''The verdict depends on the unvalidated full-width slot multiplier of {t['shallow_drag_factor']:.1f};
+without it, required nominal pull is {t['required_bollard_pull_without_slot_N']/1000:.1f} kN,
+below the available pull, so the verdict reverses under that hypothesis.'''
+    else:
+        slot_summary = (
+            'The verdict does not depend on the unvalidated full-width slot multiplier '
+            f"of {t['shallow_drag_factor']:.1f} under the stated force and yaw criteria.")
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>River current analysis</title>
 <style>body{{max-width:900px;margin:2em auto;font-family:sans-serif;line-height:1.5}}
@@ -135,9 +150,7 @@ table{{border-collapse:collapse}}th,td{{border:1px solid #aaa;padding:0.4em}}svg
 <h2>Summary</h2><p>{html.escape(data['basis'])} The towing case gives {verdict}:
 required nominal pull {t['assessment']['required_bollard_pull_N']/1000:.1f} kN against
 {inp['available_pull_N']/1000:.1f} kN available. This compares steady force and yaw capacities only.
-The verdict depends on the unvalidated full-width slot multiplier of {t['shallow_drag_factor']:.1f};
-without it, required nominal pull is {t['required_bollard_pull_without_slot_N']/1000:.1f} kN,
-below the available pull, so the verdict reverses under that hypothesis.</p>
+{slot_summary}</p>
 <h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>{history}</table>
 <h2>Bank effects and extremes</h2><p>The synthetic channel is {data['bank']['width_m']:.1f} m wide and
 {data['bank']['depth_m']:.1f} m deep, with a {data['bank']['beam_m']:.1f} m beam and

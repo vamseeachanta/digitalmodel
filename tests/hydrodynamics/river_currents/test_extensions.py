@@ -241,10 +241,54 @@ def test_towing_verdict_reverses_without_slot_multiplier():
     assert demand < data['towing']['available_pull_N']
     assert towing['assessment']['go'] is False
     assert towing['loads']['Mz_yaw_Nm'] == 0
+    assert towing['go_without_slot'] is True
     summary = render(data, results).split('<h2>Summary</h2>')[1].split('<h2>Revision history</h2>')[0]
     assert 'slot multiplier of 9.0' in summary
     assert '100.4 kN' in summary
     assert 'verdict reverses' in summary
+
+
+@pytest.mark.parametrize('available_pull_N', [50_000, 1_000_000])
+def test_towing_summary_without_verdict_reversal(tmp_path, available_pull_N):
+    from digitalmodel.hydrodynamics.river_currents.examples import build
+
+    root = Path(__file__).resolve().parents[3]
+    data = json.loads((root / 'examples/hydrodynamics/river_currents/basis.json').read_text(
+        encoding='utf-8'))
+    data['towing']['available_pull_N'] = available_pull_N
+    basis = tmp_path / 'basis.json'
+    basis.write_text(json.dumps(data), encoding='utf-8')
+    output = tmp_path / 'output'
+    build(basis, output)
+    summary = (output / 'river-current-analysis.html').read_text(encoding='utf-8')
+    summary = summary.split('<h2>Summary</h2>')[1].split('<h2>Revision history</h2>')[0]
+    assert 'verdict reverses' not in summary
+    assert 'The verdict does not depend on the unvalidated full-width slot multiplier' in summary
+    towing = json.loads((output / 'river-current-analysis.results.json').read_text(
+        encoding='utf-8'))['towing']
+    assert towing['go_without_slot'] is (available_pull_N == 1_000_000)
+    assert towing['go_without_slot'] == towing['assessment']['go']
+
+
+@pytest.mark.parametrize('pull_ratio,yaw_capacity,expected', [
+    (1, 1000, True), (0.99, 1000, False), (1, 999, False), (1, None, False),
+])
+def test_without_slot_verdict_requires_pull_and_yaw(monkeypatch, pull_ratio, yaw_capacity, expected):
+    from digitalmodel.hydrodynamics.river_currents import examples
+
+    root = Path(__file__).resolve().parents[3]
+    data = json.loads((root / 'examples/hydrodynamics/river_currents/basis.json').read_text(
+        encoding='utf-8'))
+    loads = {'Fx_surge_N': 3000, 'Fy_sway_N': 4000, 'Mz_yaw_Nm': -9000}
+    monkeypatch.setattr(examples, 'current_load', lambda *args, **kwargs: loads.copy())
+    towing = data['towing']
+    factor = examples.shallow_drag_factor(towing['depth_m'], towing['draft_m'])
+    required = math.hypot(loads['Fx_surge_N'], loads['Fy_sway_N'])
+    required = required * towing['reserve_factor'] / towing['efficiency']
+    towing['available_pull_N'] = required / factor * pull_ratio
+    towing['yaw_capacity_Nm'] = yaw_capacity
+    result = examples.compute(data)['towing']
+    assert result['go_without_slot'] is expected
 
 
 def test_revision_must_match_latest_record(tmp_path):

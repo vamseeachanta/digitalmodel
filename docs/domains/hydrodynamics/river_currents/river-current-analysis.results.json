@@ -32,6 +32,7 @@
       "required_yaw_capacity_Nm": 0.0,
       "yaw_ok": true
     },
+    "go_without_slot": true,
     "loads": {
       "Fx_surge_N": 602113.8071236592,
       "Fy_sway_N": 0.0,
