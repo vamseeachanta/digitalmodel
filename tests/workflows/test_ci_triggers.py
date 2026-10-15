@@ -333,15 +333,6 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
         assert (runner / "base").read_text().startswith("base ")
 
 
-def test_trigger_tests_run_in_harness() -> None:
-    """The harness executes trigger regressions on every pull request."""
-    workflow = load_workflow("quality-gates-by-domain.yml")
-    commands = "\n".join(
-        step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
-    )
-    assert "tests/workflows/test_ci_triggers.py" in commands
-
-
 def test_base_consumers_use_local_tip() -> None:
     """Detection and register checks use the base repository even for forks."""
     workflow = load_workflow("quality-gates-by-domain.yml")
@@ -352,3 +343,12 @@ def test_base_consumers_use_local_tip() -> None:
     register = next(step for step in quality["jobs"]["quality-gates"]["steps"]
                     if step.get("name") == "Check engineering register changes")
     assert register["env"]["REGISTER_BASE"] == "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}"
+
+
+def test_trigger_tests_run_in_harness() -> None:
+    """The harness executes trigger regressions on every pull request."""
+    workflow = load_workflow("quality-gates-by-domain.yml")
+    commands = "\n".join(
+        step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
+    )
+    assert "tests/workflows/test_ci_triggers.py" in commands
