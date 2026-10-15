@@ -103,3 +103,17 @@ def test_mutated_cache_setting_warns_before_engine_construction():
     )
     with pytest.warns(RuntimeWarning, match="matrix_cache_size.*no effect.*Capytaine 3"):
         solver._build_solver(native)
+
+
+@pytest.mark.parametrize("version", ["2.0.0", "2.3.1"])
+def test_direct_body_creation_rejects_old_solver_before_mesh(monkeypatch, version):
+    """Public body creation reports the minimum version before touching native APIs."""
+    from digitalmodel.hydrodynamics.capytaine import mesh_adapter
+
+    native = SimpleNamespace(__version__=version)
+    prepare_mesh = Mock(side_effect=AssertionError("mesh preparation was reached"))
+    monkeypatch.setattr(mesh_adapter, "_import_capytaine", lambda: native)
+    monkeypatch.setattr(mesh_adapter, "_create_predefined_mesh", prepare_mesh)
+    with pytest.raises(RuntimeError, match=rf"{version}.*Capytaine 3 or later"):
+        mesh_adapter.create_floating_body(BodyConfig(MeshConfig(predefined_shape="box")))
+    prepare_mesh.assert_not_called()

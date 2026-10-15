@@ -16,7 +16,7 @@ import numpy as np
 import xarray as xr
 
 from .models import BEMResult, BodyConfig, DOF, SolverConfig, WaveConditions
-from .mesh_adapter import create_floating_body
+from .mesh_adapter import create_floating_body, _require_capytaine3
 
 logger = logging.getLogger(__name__)
 
@@ -29,19 +29,6 @@ def _import_capytaine():
         raise ImportError(
             "Capytaine is required. Activate the capytaine-env."
         ) from e
-
-
-def _require_capytaine3(cpt):
-    """Check the matrix-engine requirement before any native preparation."""
-    version = str(getattr(cpt, "__version__", "unknown"))
-    try:
-        major = int(version.split(".", 1)[0])
-    except ValueError:
-        major = 0
-    if major < 3:
-        raise RuntimeError(
-            f"Installed Capytaine version {version}; Capytaine 3 or later is required."
-        )
 
 
 class CapytaineSolver:

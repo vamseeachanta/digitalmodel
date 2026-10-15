@@ -35,6 +35,19 @@ def _import_capytaine():
         ) from e
 
 
+def _require_capytaine3(cpt):
+    """Check the matrix-engine requirement before any native preparation."""
+    version = str(getattr(cpt, "__version__", "unknown"))
+    try:
+        major = int(version.split(".", 1)[0])
+    except ValueError:
+        major = 0
+    if major < 3:
+        raise RuntimeError(
+            f"Installed Capytaine version {version}; Capytaine 3 or later is required."
+        )
+
+
 def create_floating_body(config: BodyConfig):
     """Create a Capytaine FloatingBody from a BodyConfig.
 
@@ -45,6 +58,7 @@ def create_floating_body(config: BodyConfig):
         capytaine.FloatingBody configured with DOFs and properties.
     """
     cpt = _import_capytaine()
+    _require_capytaine3(cpt)
 
     if config.mesh.predefined_shape is not None:
         mesh = _create_predefined_mesh(cpt, config.mesh.predefined_shape, config.mesh.shape_params)
