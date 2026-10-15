@@ -74,3 +74,4 @@ def test_trigger_tests_run_in_harness() -> None:
         step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
     )
     assert "tests/workflows/test_ci_triggers.py" in commands
+# Exercise stacked pull request workflow triggers.
