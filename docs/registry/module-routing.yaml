@@ -308,6 +308,9 @@ modules:
       fatigue:
         agent_pack: src/digitalmodel/structural/fatigue/docs/agent-pack.md
         qa_family: EC
+      analysis:
+        agent_pack: src/digitalmodel/structural/analysis/docs/agent-pack.md
+        qa_family: EC
   - module: subsea
     entry_point: src/digitalmodel/subsea/
     maturity: stable
