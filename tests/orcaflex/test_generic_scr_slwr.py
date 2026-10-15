@@ -147,10 +147,52 @@ def test_models_validate_and_reproduce(kind, tmp_path):
                 assert retained == canonical
 
 
+def assert_reference_equal(actual, expected):
+    """Keep structure and non-float leaves exact; tolerate float roundoff."""
+    if isinstance(expected, float):
+        assert isinstance(actual, float)
+        assert actual == pytest.approx(expected, rel=1e-12)
+        return
+    assert type(actual) is type(expected)
+    if isinstance(expected, dict):
+        assert {(type(key), key) for key in actual} == {
+            (type(key), key) for key in expected
+        }
+        for key in expected:
+            assert_reference_equal(actual[key], expected[key])
+    elif isinstance(expected, (list, tuple)):
+        assert len(actual) == len(expected)
+        for actual_item, expected_item in zip(actual, expected):
+            assert_reference_equal(actual_item, expected_item)
+    else:
+        assert actual == expected
+
+
+def test_reference_comparison_preserves_structure_and_float_precision():
+    """Only last-bit float differences may pass the reference comparison."""
+    expected = {"result": [8.003624637684743, {"status": "converged", "count": 2}]}
+    actual = {"result": [8.00362463768474, {"status": "converged", "count": 2}]}
+    assert_reference_equal(actual, expected)
+    for changed in (
+        {"result": [expected["result"][0] * (1 + 1e-9), expected["result"][1]]},
+        {"result": [actual["result"][0], {"status": "changed", "count": 2}]},
+        {"changed": actual["result"]},
+        {"result": actual["result"][:1]},
+        {"result": [actual["result"][0], {"status": "converged", "count": 2.0}]},
+        {"result": tuple(actual["result"])},
+    ):
+        with pytest.raises(AssertionError):
+            assert_reference_equal(changed, expected)
+    with pytest.raises(AssertionError):
+        assert_reference_equal({True: "same"}, {1: "same"})
+    with pytest.raises(AssertionError):
+        assert_reference_equal(2, 2.0)
+
+
 def test_analytical_reference_reproduces_from_basis():
     """Both kernel results and model digests are checked against retained bytes."""
     expected = json.loads((CAMPAIGN / "static-reference.json").read_text())
-    assert expected == load_check().reference(CAMPAIGN)
+    assert_reference_equal(load_check().reference(CAMPAIGN), expected)
     for kind in ("scr", "slwr"):
         result = expected["models"][kind]
         assert result["oo"]["top_tension_kN"] > 0

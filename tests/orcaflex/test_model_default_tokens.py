@@ -106,7 +106,7 @@ def test_null_detection_recognizes_only_values(text, count):
     assert len(list(null_values(text))) == count
 
 
-# Canonical parsed-value fingerprints generated from the immutable BASE inputs.
+# Canonical parsed-value fingerprints include the explicit JONSWAP selectors.
 # Numeric settings remain covered when the checkout has no parent Git objects.
 BASE_MODEL_VALUES = {
     'docs/domains/orcaflex/installation/manifold/region_a/monolithic/__03c_add_dz_10k_production_manifold.yml':
@@ -164,7 +164,7 @@ BASE_MODEL_VALUES = {
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/03_environment.yml':
-        'c3f25cd66680857d159ef728f09e1daa074da25d970330838d5218fd948afb86',
+        'b7015949ad33ee193e7425968841fc9530253feef4bbede4e82c2c4ce60e0f0a',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/05_riser_line_types.yml':
         '8bc87b7014ad08f758c05fe589d8b4fc558e4dabb8050ecfc82ff781be498934',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/07_riser_lines.yml':
@@ -172,7 +172,7 @@ BASE_MODEL_VALUES = {
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/03_environment.yml':
-        'c3f25cd66680857d159ef728f09e1daa074da25d970330838d5218fd948afb86',
+        'b7015949ad33ee193e7425968841fc9530253feef4bbede4e82c2c4ce60e0f0a',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/05_riser_line_types.yml':
         '2f02775371a8b28f77c079550c7bb920240aeac4362686ffb352c241db852096',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/07_riser_lines.yml':
@@ -329,3 +329,89 @@ def test_model_discovery_uses_program_header(tmp_path, monkeypatch, header, expe
     monkeypatch.setitem(globals(), "ROOT", tmp_path)
     monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
     assert bool(list(model_files())) == expected
+
+
+def environment_mappings(text):
+    """Read native Environment blocks without parsing unrelated model objects."""
+    for start in re.finditer(r"^Environment:", text, re.MULTILINE):
+        end = re.search(r"^[^\s#]", text[start.end():], re.MULTILINE)
+        stop = start.end() + end.start() if end else len(text)
+        pending = [yaml.compose(text[start.start():stop])]
+        while pending:
+            node = pending.pop()
+            if isinstance(node, yaml.MappingNode):
+                yield node
+                pending.extend(value for _, value in node.value)
+            elif isinstance(node, yaml.SequenceNode):
+                pending.extend(node.value)
+
+
+def wave_order_findings(text):
+    """Find selector inversions within each native wave-train mapping.
+
+    The builder defines deterministic and spectral wave parameters and states
+    that WaveGamma depends on WaveJONSWAPParameters. Native exports place
+    WaveType before the other wave properties of each train. JONSWAP gamma
+    requires an explicit parameter selector and must be set before Tp.
+    """
+    findings = []
+    for node in environment_mappings(text):
+        keys = [key.value for key, _ in node.value]
+        if "WaveType" not in keys:
+            continue
+        for key in keys[:keys.index("WaveType")]:
+            if key.startswith("Wave") and key not in {
+                "WaveDirection", "WaveOrigin", "WaveTimeOrigin",
+            }:
+                findings.append(("WaveType", key))
+        if "WaveJONSWAPParameters" in keys and "WaveGamma" in keys:
+            if keys.index("WaveGamma") < keys.index("WaveJONSWAPParameters"):
+                findings.append(("WaveJONSWAPParameters", "WaveGamma"))
+        if "WaveGamma" in keys:
+            if "WaveTp" in keys and keys.index("WaveTp") < keys.index("WaveGamma"):
+                findings.append(("WaveGamma", "WaveTp"))
+            wave_type = next(value.value for key, value in node.value
+                             if key.value == "WaveType")
+            if wave_type == "JONSWAP" and "WaveJONSWAPParameters" not in keys:
+                findings.append(("WaveJONSWAPParameters", "WaveGamma"))
+    return findings
+
+
+def test_committed_models_have_selector_first_wave_keys():
+    """Every tracked executable model and include shall apply wave modes first."""
+    scanned = []
+    findings = []
+    for path, text in model_files():
+        scanned.append(path)
+        findings.extend(
+            f"{path.relative_to(ROOT)}: {dependent} precedes {selector}"
+            for selector, dependent in wave_order_findings(text)
+        )
+    assert scanned, "No executable model text was discovered"
+    assert not findings, "\n".join(findings)
+
+
+@pytest.mark.parametrize("train,expected", [
+    ("WaveTp: 12.9\n    WaveType: JONSWAP", [("WaveType", "WaveTp")]),
+    ("WaveHs: 11.2\n    WaveType: JONSWAP", [("WaveType", "WaveHs")]),
+    ("WaveGamma: 3.3\n    WaveType: JONSWAP",
+     [("WaveType", "WaveGamma"), ("WaveJONSWAPParameters", "WaveGamma")]),
+    ("WaveType: JONSWAP\n    WaveTp: 12.9", []),
+    ("WaveType: JONSWAP\n    WaveGamma: 3.3\n    WaveJONSWAPParameters: Fully specified",
+     [("WaveJONSWAPParameters", "WaveGamma")]),
+    ("WaveType: JONSWAP\n    WaveJONSWAPParameters: Partially specified\n"
+     "    WaveTp: 12.9\n    WaveGamma: 3.3", [("WaveGamma", "WaveTp")]),
+    ("WaveType: JONSWAP\n    WaveGamma: 3.3",
+     [("WaveJONSWAPParameters", "WaveGamma")]),
+    ("WaveType: JONSWAP\n    WaveJONSWAPParameters: Partially specified\n"
+     "    WaveGamma: 3.3\n    WaveTp: 12.9", []),
+    ("WaveType: JONSWAP\n    WaveJONSWAPParameters: Partially specified\n"
+     "    WaveGamma: 3.3\n    WaveTz: 12.9", []),
+])
+def test_wave_order_detection(train, expected):
+    """Check each train independently of preceding trains and other sections."""
+    text = (
+        "Environment:\n  WaveTrains:\n  - WaveType: Airy\n    WavePeriod: 8\n"
+        f"  - {train}\nLines:\n  WaveTp: 1\n"
+    )
+    assert wave_order_findings(text) == expected

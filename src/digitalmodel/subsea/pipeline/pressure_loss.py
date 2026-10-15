@@ -1,4 +1,9 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Pressure loss calculations for subsea pipeline flow analysis."""
+
+from typing import Any
 
 # Third party imports
 import sympy as sp
@@ -25,11 +30,14 @@ cbc = CommonBucklingCaculations()
 
 
 class Pressureloss:
-    def __init__(self):
+    """Calculate single-phase friction head using the retained rounded method."""
+
+    def __init__(self) -> None:
+        """Initialize the stateless pressure-loss calculator."""
         pass
 
-    def run(self, cfg):
-
+    def run(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        """Return flow parameters without writing an unrelated equation plot."""
         pipe_data = self.get_pipe_data(cfg)
         fluid_properties = self.get_fluid_properties(cfg)
         flow_parameters = self.flow_parameters(cfg, pipe_data, fluid_properties)
@@ -37,8 +45,8 @@ class Pressureloss:
         cfg["pressure_loss"] = {"flow_parameters": flow_parameters}
         return cfg
 
-    def get_pipe_data(self, cfg):
-
+    def get_pipe_data(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        """Convert pipe dimensions to the retained rounded SI representation."""
         water_depth = cfg["pipe_data"]["water_depth"]
         acceleration = cfg["pipe_data"]["acceleration"]
         inner_diameter = cfg["pipe_data"]["Nominal_Id"]
@@ -77,8 +85,8 @@ class Pressureloss:
         }
         return pipe_data
 
-    def get_fluid_properties(self, cfg):
-
+    def get_fluid_properties(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        """Convert mud weight and viscosity to SI fluid properties."""
         density = cfg["pipe_data"]["mud_weight"]
         viscosity = cfg["pipe_data"]["viscosity"]
         d = sp.Symbol("d")
@@ -92,8 +100,11 @@ class Pressureloss:
         fluid_properties = {"density": round(d, 2), "viscosity": v}
         return fluid_properties
 
-    def flow_parameters(self, cfg, pipe_data, fluid_properties):
-
+    def flow_parameters(
+        self, cfg: dict[str, Any], pipe_data: dict[str, Any],
+        fluid_properties: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Return velocity, Reynolds number and energy heads in SI units."""
         flow_rate = cfg["pipe_data"]["flow_rate"]
         internal_area = pipe_data["internal_area"]
         density = fluid_properties["density"]
@@ -149,12 +160,6 @@ class Pressureloss:
         potential_energy = dm
         total_energy = kinetic_energy + potential_energy + friction_loss
         total_energy = round(float(total_energy), 2)
-
-        import matplotlib.pyplot as plt
-
-        plt.text(0.5, 0.5, r"$\cos(y) + 4y + y^3$", fontsize=15, ha="center")
-        plt.axis("off")
-        plt.savefig("tests/domains/pipeline/results/Plot/display_equation.png")
 
         flow_parameters = {
             "flow_rate": round(fr, 3),
