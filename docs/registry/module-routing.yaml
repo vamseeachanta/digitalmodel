@@ -258,6 +258,10 @@ modules:
     owner_wiki: docs/domains/solvers/
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
+    submodules:
+      orcaflex:
+        agent_pack: src/digitalmodel/solvers/orcaflex/docs/agent-pack.md
+        qa_family: mooring-riser
   - module: specialized
     entry_point: src/digitalmodel/specialized/
     maturity: stub
