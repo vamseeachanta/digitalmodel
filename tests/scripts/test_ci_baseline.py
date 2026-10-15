@@ -259,11 +259,40 @@ def test_pytest_xunit2_collection_module_matches_log(tmp_path):
     assert extract(tmp_path, "ERROR tests/x.py - ImportError", "extract-log")["errored"] == row["errored"]
 
 
-def test_reader_falls_back_when_newest_completed_sweep_published_nothing(tmp_path, monkeypatch):
-    runs = [sweep(101), sweep()]
+def test_reader_falls_back_when_newest_sweep_was_cancelled(tmp_path, monkeypatch):
+    runs = [sweep(101, conclusion="cancelled"), sweep()]
     mock_download(monkeypatch, runs, [artifact()], verified=runs[1])
     assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW)
     assert (tmp_path / "baseline.json").exists()
+
+
+@pytest.mark.parametrize("conclusion", ["success", "failure"])
+@pytest.mark.parametrize("cancelled", [False, True])
+@pytest.mark.parametrize("expired", [False, True])
+def test_reader_stops_at_unproven_completed_sweep(tmp_path, monkeypatch, capsys,
+                                                 conclusion, cancelled, expired):
+    runs = [sweep(101, conclusion=conclusion), sweep()]
+    if cancelled:
+        runs.insert(0, sweep(102, conclusion="cancelled"))
+    items = [artifact()]
+    if expired:
+        items.append(artifact(101, expired=True))
+    mock_download(monkeypatch, runs, items)
+    output = tmp_path / "baseline.json"
+    assert ci.download_baseline("example/repository", output, True, NOW) is False
+    assert "101" in capsys.readouterr().out
+    assert not output.exists()
+    assert compare(tmp_path, output, [result()])[0] == 1
+
+
+@pytest.mark.parametrize("updates", [
+    {"event": "pull_request"},
+    {"head_repository": {"full_name": "fork/repository"}},
+])
+def test_reader_ignores_newer_unproven_run_without_provenance(tmp_path, monkeypatch, updates):
+    runs = [sweep(101, **updates), sweep()]
+    mock_download(monkeypatch, runs, [artifact()], verified=runs[1])
+    assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW)
 
 
 def test_prior_attempt_result_cannot_prove_current_failure(tmp_path):
@@ -322,11 +351,11 @@ def test_selection_requires_main_sweep_provenance(updates, accepted):
     assert (selected is not None) is accepted
 
 
-@pytest.mark.parametrize("newest", [
-    sweep(101, conclusion="cancelled"), sweep(101),
+@pytest.mark.parametrize("newest,expected", [
+    (sweep(101, conclusion="cancelled"), sweep()), (sweep(101), None),
 ])
-def test_selection_falls_back_when_newest_has_no_baseline(newest):
-    assert ci.select_baseline_run([newest, sweep()], [artifact()], "example/repository", NOW)["id"] == 100
+def test_selection_falls_back_when_newest_has_no_baseline(newest, expected):
+    assert ci.select_baseline_run([newest, sweep()], [artifact()], "example/repository", NOW) == expected
 
 
 def test_selection_does_not_fall_back_to_stale_sweep():

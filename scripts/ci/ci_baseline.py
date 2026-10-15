@@ -247,7 +247,7 @@ def is_main_sweep(run: dict[str, Any], repository: str) -> bool:
 
 def select_baseline_run(runs: list[dict[str, Any]], artifacts: list[dict[str, Any]],
                         repository: str, now: datetime, max_age: float = 24) -> dict[str, Any] | None:
-    """Select the newest completed eligible sweep with an available baseline."""
+    """Stop at the newest eligible result; missing evidence forbids fallback."""
     for run in sorted(runs, key=lambda row: row["id"], reverse=True):
         if not is_main_sweep(run, repository) or run.get("conclusion") == "cancelled":
             continue
@@ -260,6 +260,8 @@ def select_baseline_run(runs: list[dict[str, Any]], artifacts: list[dict[str, An
                      and instant(item["created_at"]) <= now]
         if available:
             return run
+        print(f"Comparison fails closed: main sweep run {run['id']} has no available baseline.")
+        return None
     return None
 
 
@@ -287,6 +289,7 @@ def download_baseline(repository: str, output: Path, require_latest: bool = Fals
     selected = select_baseline_run(runs, artifacts, repository, now)
     if selected is None:
         return False
+    print(f"Reading baseline from main sweep run {selected['id']}.")
     run = gh_json(f"repos/{repository}/actions/runs/{selected['id']}")
     identity = ("id", "path", "head_branch", "event",
                 "head_sha", "status", "conclusion", "updated_at")
