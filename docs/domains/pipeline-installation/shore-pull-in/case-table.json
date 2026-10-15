@@ -1,5 +1,5 @@
 {
-  "revision": "2",
+  "revision": "3",
   "revisions": [
     {
       "revision": "1",
@@ -10,6 +10,11 @@
       "revision": "2",
       "date": "2026-10-15",
       "change": "Record the five unmeasured wall and coating inputs with explicit labels and bases, and carry audited provenance into prepared outputs."
+    },
+    {
+      "revision": "3",
+      "date": "2026-10-15",
+      "change": "Carry case friction into prepared pipe line types, declare nine study parameters without source claims, and state the native geometry limits."
     }
   ],
   "public_dataset": {
@@ -132,8 +137,8 @@
       "basis": "Generic concrete weight coating"
     },
     "pipeline.segments.0.length": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Use a short supported length for the preparation force balance, in m."
     },
     "pipeline.segments.0.segment_length": {
       "source": "assumptions",
@@ -180,48 +185,48 @@
       "qualification": "scenario assumption"
     },
     "tail_tension_kn": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Use an unloaded trailing end for the reference force balance, in kN."
     },
     "winch_efficiency": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Use ideal transmission to isolate the pipe pull from mechanical losses, dimensionless."
     },
     "cases.0.friction": {
       "source": "friction",
       "qualification": "public numerical anchor"
     },
     "cases.0.rise_m": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Define the initial-friction reference on a level supported route, in m."
     },
     "cases.0.buoyancy_fraction": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Define the initial-friction reference without buoyancy aids, dimensionless."
     },
     "cases.1.friction": {
       "source": "friction",
       "qualification": "public numerical anchor"
     },
     "cases.1.rise_m": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Keep the drained-friction comparison on a level supported route, in m."
     },
     "cases.1.buoyancy_fraction": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Keep the drained-friction comparison without buoyancy aids, dimensionless."
     },
     "cases.2.friction": {
       "source": "friction",
       "qualification": "public numerical anchor"
     },
     "cases.2.rise_m": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Introduce an uphill rise in the analytical comparison, in m; absent from the native geometry."
     },
     "cases.2.buoyancy_fraction": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Offset half the submerged weight in the analytical comparison, dimensionless; absent from the native model."
     },
     "water_depth_m": {
       "source": "assumptions",
@@ -313,18 +318,18 @@
     }
   ],
   "known_limits": [
-    "Five wall and coating properties are assumed, based on previous experience, and not taken from a public source; their values and bases appear in the assumed-input table. Material, hull response, submerged weight, route, buoyancy and efficiency remain generic numerical scenario inputs with public repository references. No measured pipe property is claimed.",
+    "Five wall and coating properties are assumed, based on previous experience, and not taken from a public source; their values and bases appear in the assumed-input table. The dataset supplies pipe outer diameter and hull length, beam and draft; the friction paper supplies the three case friction entries. Fifteen inherited assumptions from the repository generic S-lay scenario supply gravity, steel and water density, seabed slope and stiffness, mesh length, hull GM, centre of gravity, radii of gyration and water depth. Nine declared study parameters supply supported length, tail tension, winch efficiency, and each case rise and buoyancy fraction; these are chosen for this preparation, not sourced or measured. No measured pipe property is claimed.",
     "The diameter bounds and hull geometry are public dataset anchors; no vessel identity or equipment capacity is retained.",
     "Friction anchors describe the cited soft-clay numerical model; breakout, drainage evolution, adhesion, bends, bending stress and hydrodynamic loads are not represented.",
-    "Builder defaults and end restraints are structurally checked only; they are not a qualified shore-pull topology. Buoyancy aids and route geometry enter the analytical check, not validated native contact geometry.",
+    "The prepared native models carry each case axial and lateral pipe seabed friction, a flat seabed and no buoyancy aids. Lateral friction uses the same scalar factor as axial friction; directional soil behaviour remains unqualified. The generator S-lay end arrangement connects the winch from the lay hull to pipe end A, with end B anchored; it is not a qualified shore-pull topology. Case rise and buoyancy fraction enter the analytical check only; native contact geometry does not represent them.",
     "Native execution remains refused; a qualified adapter and an approved manifest digest are required. Native criteria, timing and results are not evaluated (#1739, #133).",
     "HDD, trenching, roller/beach stress, flooding and sinking stability, and method selection remain open (#1739). Floating-tow equipment and broader campaign qualification remain open (#133).",
     "Optional standard design-factor and strain-limit settings from the shared builder are omitted; no standard-based acceptance check is performed."
   ],
   "criteria_evidence": {
-    "sha256": "39dbcb4325cc07e58b3999b8d02131b19c0adf504a3efb445660fc769961d8f7",
-    "recorded_utc": "2026-10-15T02:46:53.250146+00:00",
-    "first_generation_utc": "2026-10-15T02:46:53.250235+00:00"
+    "sha256": "497df15426b6ba851663cc2524940d7000a7e0b1d8ccf0daaedd77458456484a",
+    "recorded_utc": "2026-10-15T06:19:08.663253+00:00",
+    "first_generation_utc": "2026-10-15T06:19:08.663262+00:00"
   },
   "assumed_inputs": [
     {

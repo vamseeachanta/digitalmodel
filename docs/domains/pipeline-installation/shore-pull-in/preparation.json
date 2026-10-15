@@ -1,6 +1,6 @@
 {
   "analytical_before_models": true,
-  "case_table_sha256": "30614fe17e196486371174df72e5f91a773541abeccb5ccdd9f17437434497a3",
+  "case_table_sha256": "b2fd9f6c9c5d56b83565baf5fc7cd611cdffc37609bc67ffd5ac51d685af6f5c",
   "cases": [
     {
       "analytical_pull_kn": 64.92895884089226,
@@ -10,7 +10,7 @@
         "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
         "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
         "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
-        "includes/05_line_types.yml": "0e3020d816b626846d941e6c8e1d30567df55799a50799b8c45e402519fd149f",
+        "includes/05_line_types.yml": "73474f54106f3f3cafcf486defab6a4eea3b0530ed80b79b972a1752586968b6",
         "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
         "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
         "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
@@ -51,7 +51,7 @@
         "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
         "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
         "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
-        "includes/05_line_types.yml": "0e3020d816b626846d941e6c8e1d30567df55799a50799b8c45e402519fd149f",
+        "includes/05_line_types.yml": "4aac916e1ef9bf38d464b4734dee8ce77427bf9b52cc1013899b7e752dbe6125",
         "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
         "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
         "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
@@ -92,7 +92,7 @@
         "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
         "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
         "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
-        "includes/05_line_types.yml": "0e3020d816b626846d941e6c8e1d30567df55799a50799b8c45e402519fd149f",
+        "includes/05_line_types.yml": "73474f54106f3f3cafcf486defab6a4eea3b0530ed80b79b972a1752586968b6",
         "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
         "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
         "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
@@ -127,14 +127,14 @@
     }
   ],
   "criteria_evidence": {
-    "first_generation_utc": "2026-10-15T02:46:53.250235+00:00",
-    "recorded_utc": "2026-10-15T02:46:53.250146+00:00",
-    "sha256": "39dbcb4325cc07e58b3999b8d02131b19c0adf504a3efb445660fc769961d8f7"
+    "first_generation_utc": "2026-10-15T06:19:08.663262+00:00",
+    "recorded_utc": "2026-10-15T06:19:08.663253+00:00",
+    "sha256": "497df15426b6ba851663cc2524940d7000a7e0b1d8ccf0daaedd77458456484a"
   },
   "files": {
-    "analysis.html": "eb6f19101a9f9fe00ebce9a00d760497426c161c732ea8dc3b3c02b479e3a08a",
-    "manifest.template.json": "24437cd8699accc4441346da2473c938d6c67c383ad760b9aa93832b852bb24a",
-    "models.json": "d6e7dd9837ce3c0dc5b82706110991082e451fbd70977eb9a5ce6d0092e9b19d"
+    "analysis.html": "f9854895385e9855f21691c8984ef25639d4f6479c92b88c6905998e82cb68c7",
+    "manifest.template.json": "f85f41eaff32e18e9e4aec350af4b236392fc93b6a7a8fc05078a31e34a4b4a1",
+    "models.json": "2db94213b3d4809e3401754bc788465ae9363011ce886ef0e571a171aa8b9b07"
   },
   "native_attempted": 0,
   "native_completed": 0,
@@ -178,40 +178,40 @@
     ],
     "input_sources": {
       "cases.0.buoyancy_fraction": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Define the initial-friction reference without buoyancy aids, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.0.friction": {
         "qualification": "public numerical anchor",
         "source": "friction"
       },
       "cases.0.rise_m": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Define the initial-friction reference on a level supported route, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.1.buoyancy_fraction": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Keep the drained-friction comparison without buoyancy aids, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.1.friction": {
         "qualification": "public numerical anchor",
         "source": "friction"
       },
       "cases.1.rise_m": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Keep the drained-friction comparison on a level supported route, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.2.buoyancy_fraction": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Offset half the submerged weight in the analytical comparison, dimensionless; absent from the native model.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.2.friction": {
         "qualification": "public numerical anchor",
         "source": "friction"
       },
       "cases.2.rise_m": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Introduce an uphill rise in the analytical comparison, in m; absent from the native geometry.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "equipment.vessel.properties.beam": {
         "qualification": "public numerical anchor",
@@ -283,8 +283,8 @@
         "label": "assumed, based on previous experience"
       },
       "pipeline.segments.0.length": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Use a short supported length for the preparation force balance, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "pipeline.segments.0.segment_length": {
         "qualification": "scenario assumption",
@@ -307,8 +307,8 @@
         "source": "assumptions"
       },
       "tail_tension_kn": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Use an unloaded trailing end for the reference force balance, in kN.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "water_density_te_m3": {
         "qualification": "scenario assumption",
@@ -319,8 +319,8 @@
         "source": "assumptions"
       },
       "winch_efficiency": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Use ideal transmission to isolate the pipe pull from mechanical losses, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       }
     },
     "public_dataset": {

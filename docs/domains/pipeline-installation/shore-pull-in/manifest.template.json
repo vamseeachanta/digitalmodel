@@ -1,16 +1,16 @@
 {
   "approved_manifest_digest": null,
-  "case_table_sha256": "30614fe17e196486371174df72e5f91a773541abeccb5ccdd9f17437434497a3",
+  "case_table_sha256": "b2fd9f6c9c5d56b83565baf5fc7cd611cdffc37609bc67ffd5ac51d685af6f5c",
   "completed_cases": [],
-  "criteria_digest": "39dbcb4325cc07e58b3999b8d02131b19c0adf504a3efb445660fc769961d8f7",
-  "criteria_revision": "2",
+  "criteria_digest": "497df15426b6ba851663cc2524940d7000a7e0b1d8ccf0daaedd77458456484a",
+  "criteria_revision": "3",
   "expected_cases": [
     "level-initial",
     "level-drained",
     "incline-aided"
   ],
   "first_timed_case": "level-initial",
-  "input_digest": "d6e7dd9837ce3c0dc5b82706110991082e451fbd70977eb9a5ce6d0092e9b19d",
+  "input_digest": "2db94213b3d4809e3401754bc788465ae9363011ce886ef0e571a171aa8b9b07",
   "input_revision": null,
   "launch_enabled": false,
   "native_criteria": {
@@ -60,40 +60,40 @@
     ],
     "input_sources": {
       "cases.0.buoyancy_fraction": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Define the initial-friction reference without buoyancy aids, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.0.friction": {
         "qualification": "public numerical anchor",
         "source": "friction"
       },
       "cases.0.rise_m": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Define the initial-friction reference on a level supported route, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.1.buoyancy_fraction": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Keep the drained-friction comparison without buoyancy aids, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.1.friction": {
         "qualification": "public numerical anchor",
         "source": "friction"
       },
       "cases.1.rise_m": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Keep the drained-friction comparison on a level supported route, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.2.buoyancy_fraction": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Offset half the submerged weight in the analytical comparison, dimensionless; absent from the native model.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "cases.2.friction": {
         "qualification": "public numerical anchor",
         "source": "friction"
       },
       "cases.2.rise_m": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Introduce an uphill rise in the analytical comparison, in m; absent from the native geometry.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "equipment.vessel.properties.beam": {
         "qualification": "public numerical anchor",
@@ -165,8 +165,8 @@
         "label": "assumed, based on previous experience"
       },
       "pipeline.segments.0.length": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Use a short supported length for the preparation force balance, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "pipeline.segments.0.segment_length": {
         "qualification": "scenario assumption",
@@ -189,8 +189,8 @@
         "source": "assumptions"
       },
       "tail_tension_kn": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Use an unloaded trailing end for the reference force balance, in kN.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "water_density_te_m3": {
         "qualification": "scenario assumption",
@@ -201,8 +201,8 @@
         "source": "assumptions"
       },
       "winch_efficiency": {
-        "qualification": "scenario assumption",
-        "source": "assumptions"
+        "basis": "Use ideal transmission to isolate the pipe pull from mechanical losses, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
       }
     },
     "public_dataset": {

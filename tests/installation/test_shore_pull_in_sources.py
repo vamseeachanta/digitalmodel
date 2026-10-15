@@ -20,6 +20,18 @@ PIPE_ASSUMPTIONS = {
     "pipeline.coatings.weight.0.density": ("te/m3", "Generic concrete weight coating"),
 }
 ORIGINAL = json.loads((CAMPAIGN / "case-table.json").read_text())
+STUDY_QUALIFICATION = "study parameter chosen for this preparation; not sourced or measured"
+STUDY_INPUTS = (
+    "pipeline.segments.0.length",
+    "tail_tension_kn",
+    "winch_efficiency",
+    "cases.0.rise_m",
+    "cases.0.buoyancy_fraction",
+    "cases.1.rise_m",
+    "cases.1.buoyancy_fraction",
+    "cases.2.rise_m",
+    "cases.2.buoyancy_fraction",
+)
 
 
 @pytest.fixture
@@ -146,3 +158,65 @@ def test_preparation_refuses_missing_source_before_writing_models(traced_table, 
     with pytest.raises(ValueError, match="source|label"):
         driver().prepare(tmp_path, tmp_path / "output")
     assert not (tmp_path / "output").exists()
+
+
+@pytest.mark.parametrize("path", STUDY_INPUTS)
+def test_source_audit_accepts_each_declared_study_parameter(traced_table, path):
+    traced_table["input_sources"][path] = {
+        "qualification": STUDY_QUALIFICATION,
+        "basis": "Case definition for the preparation comparison",
+    }
+    assert driver().audit_input_sources(traced_table) == traced_table["assumed_inputs"]
+    for entry in ({}, {"source": "absent"}):
+        traced_table["input_sources"][path] = {**entry, "basis": "Case definition"}
+        with pytest.raises(ValueError, match="source|qualification"):
+            driver().audit_input_sources(traced_table)
+
+
+@pytest.mark.parametrize("path", sorted(set(ORIGINAL["input_sources"]) - set(STUDY_INPUTS)))
+def test_study_qualification_is_rejected_on_every_other_input(traced_table, path):
+    traced_table["input_sources"][path]["qualification"] = STUDY_QUALIFICATION
+    with pytest.raises(ValueError, match="Only declared study parameter paths"):
+        driver().audit_input_sources(traced_table)
+
+
+@pytest.mark.parametrize("path", STUDY_INPUTS)
+@pytest.mark.parametrize("basis", ["", "  ", None])
+def test_declared_study_parameter_requires_a_reason(traced_table, path, basis):
+    traced_table["input_sources"][path] = {"qualification": STUDY_QUALIFICATION, "basis": basis}
+    with pytest.raises(ValueError, match="basis"):
+        driver().audit_input_sources(traced_table)
+
+
+@pytest.mark.parametrize("path", STUDY_INPUTS)
+@pytest.mark.parametrize("field,value", [("source", "assumptions"), ("label", LABEL)])
+def test_study_parameter_cannot_claim_a_source_or_pipe_assumption(traced_table, path, field, value):
+    traced_table["input_sources"][path] = {
+        "qualification": STUDY_QUALIFICATION,
+        "basis": "Case definition",
+        field: value,
+    }
+    with pytest.raises(ValueError, match="study parameter must not claim"):
+        driver().audit_input_sources(traced_table)
+
+
+def test_nine_study_parameters_are_declared_and_retained_in_outputs(tmp_path):
+    table = json.loads((CAMPAIGN / "case-table.json").read_text())
+    declared = {path for path, entry in table["input_sources"].items()
+                if entry.get("qualification") == STUDY_QUALIFICATION}
+    assert declared == set(STUDY_INPUTS)
+    output = tmp_path / "output"
+    driver().prepare(CAMPAIGN, output)
+    page = (output / "analysis.html").read_text()
+    for path in STUDY_INPUTS:
+        entry = table["input_sources"][path]
+        assert entry["basis"].strip()
+        assert "source" not in entry
+        assert "label" not in entry
+        assert path in page
+        assert entry["basis"] in page
+    assert STUDY_QUALIFICATION in page
+    for name in ("models.json", "manifest.template.json", "preparation.json"):
+        provenance = json.loads((output / name).read_text())["provenance"]
+        for path in STUDY_INPUTS:
+            assert provenance["input_sources"][path] == table["input_sources"][path]

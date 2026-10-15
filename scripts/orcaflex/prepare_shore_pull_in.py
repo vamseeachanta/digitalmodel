@@ -32,6 +32,18 @@ ASSUMABLE_PIPE_INPUTS = {
     "pipeline.coatings.weight.0.thickness": "m",
     "pipeline.coatings.weight.0.density": "te/m3",
 }
+STUDY_PARAMETER_QUALIFICATION = "study parameter chosen for this preparation; not sourced or measured"
+STUDY_PARAMETER_INPUTS = (
+    "pipeline.segments.0.length",
+    "tail_tension_kn",
+    "winch_efficiency",
+    "cases.0.rise_m",
+    "cases.0.buoyancy_fraction",
+    "cases.1.rise_m",
+    "cases.1.buoyancy_fraction",
+    "cases.2.rise_m",
+    "cases.2.buoyancy_fraction",
+)
 DATASET_ANCHORS = {
     "pipeline.dimensions.outer_diameter",
     "equipment.vessel.properties.loa",
@@ -60,18 +72,28 @@ def numeric_paths(value, prefix="") -> set[str]:
 
 
 def audit_input_sources(table: dict) -> list[dict]:
-    """Require public provenance or a permitted, labelled pipe assumption.
+    """Require provenance or an explicitly permitted input qualification.
 
-    Route discretisation and numerical preparation settings retain their public
-    repository references. Diameter and measured hull dimensions retain the
-    prescribed dataset. Only the five unmeasured wall/coating properties may
-    instead use an assumption, with its basis and a matching table row.
+    Diameter and measured hull dimensions retain the prescribed dataset.
+    Five unmeasured wall/coating properties may use a labelled assumption with
+    its basis and a matching table row. Only the nine listed case-definition
+    paths may instead be declared study parameters, each with its reason.
+    Other scenario inputs retain their repository assumption references.
     """
     required = numeric_paths(table["basis"]) | numeric_paths(table["cases"], "cases")
     if not required <= set(table["input_sources"]):
         raise ValueError("Missing numeric input source")
     rows = {}
     for path, entry in table["input_sources"].items():
+        if entry.get("qualification") == STUDY_PARAMETER_QUALIFICATION:
+            if path not in STUDY_PARAMETER_INPUTS:
+                raise ValueError(f"Only declared study parameter paths may use this qualification: {path}")
+            if "source" in entry or "label" in entry:
+                raise ValueError(f"A study parameter must not claim a source or pipe assumption: {path}")
+            basis = entry.get("basis")
+            if not isinstance(basis, str) or not basis.strip():
+                raise ValueError(f"A study parameter requires a recorded basis: {path}")
+            continue
         label = entry.get("label")
         if label is not None:
             if label != ASSUMPTION_LABEL:
@@ -155,6 +177,16 @@ def report(table: dict, records: list[dict]) -> str:
     limits = "".join(f"<li>{escape(s)}</li>" for s in table["known_limits"])
     sources = "".join(f'<li>{escape(s["locator"]) if "locator" in s else "Public dataset, row 68"} — <a href="{escape(s["url"], quote=True)}">Source</a>; retrieved {escape(s["retrieval_date"])}; SHA-256 {s["sha256"]}</li>' for s in table["sources"].values())
     assumptions = "".join(f'<tr><td>{escape(r["input"])}</td><td>{r["value"]} {escape(r["unit"])}</td><td>{escape(r["label"])}</td><td>{escape(r["basis"])}</td></tr>' for r in table["assumed_inputs"])
+    study_rows = []
+    for path in STUDY_PARAMETER_INPUTS:
+        entry = table["input_sources"][path]
+        if entry.get("qualification") != STUDY_PARAMETER_QUALIFICATION:
+            continue
+        value = table if path.startswith("cases.") else table["basis"]
+        for part in path.split("."):
+            value = value[int(part)] if isinstance(value, list) else value[part]
+        study_rows.append(f'<tr><td>{escape(path)}</td><td>{value}</td><td>{escape(entry["qualification"])}</td><td>{escape(entry["basis"])}</td></tr>')
+    study_parameters = "".join(study_rows)
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Shore pull-in analysis</title>
 <style>body{{font:16px sans-serif;max-width:70rem;margin:2rem auto;padding:1rem}}table{{border-collapse:collapse}}td,th{{border:1px solid #888;padding:.4rem}}code{{overflow-wrap:anywhere}}</style></head><body>
@@ -162,6 +194,7 @@ def report(table: dict, records: list[dict]) -> str:
 <section id="summary"><h2>Summary</h2><p>Three generic surface pull-in scenarios are prepared. Pull forces are analytical, not native solver results. Installation acceptance is Not Evaluated. The next step is source and topology qualification before native execution.</p></section>
 <section id="revision-history"><h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>{revisions}</table></section>
 <section id="assumed-inputs"><h2>Assumed pipe inputs</h2><p>These five properties are not taken from a public source.</p><table><tr><th>Input</th><th>Value with unit</th><th>Label</th><th>Basis</th></tr>{assumptions}</table></section>
+<section id="study-parameters"><h2>Declared study parameters</h2><table><tr><th>Input</th><th>Value</th><th>Qualification</th><th>Reason</th></tr>{study_parameters}</table></section>
 <section id="method"><h2>Method and criterion</h2><p>For each straight supported segment: net weight w equals submerged weight minus buoyancy aid force per length; sin(theta) = rise / arc length. Normal load N = w L cos(theta), friction = mu N, gravity = w rise. Head tension is trailing tension plus the ordered force increments. Winch demand is head tension divided by mechanical efficiency. Loss of contact and compression are rejected. Equivalent axial friction follows the cited soil paper; gravity resolution is a straight-segment work balance.</p><p>The independent check uses separately computed annular areas and horizontal projection. Agreement criterion: relative difference no greater than the force-balance tolerance in criteria.json. All prepared cases meet that computational identity; this is not physical validation. Shore winch capacity is unassigned.</p></section>
 <h2>Prepared results</h2><table><tr><th>Case</th><th>Method pull (kN)</th><th>Independent pull (kN)</th><th>Winch demand (kN)</th><th>Native result</th></tr>{rows}</table>
 <h2>Native analysis skeleton</h2><p>Native model version, measured timing, effective tension, bending moment, curvature, contact reactions, final geometry, convergence and acceptance: Not Evaluated. The first timing case is level-initial. No extrapolated runtime is recorded.</p>
@@ -217,7 +250,7 @@ def prepare(campaign: Path, output: Path) -> dict:
             "pipeline": basis["pipeline"], "equipment": equipment}))
     output.mkdir(parents=True, exist_ok=True)
     bundle = {"schema": "shore-pull-in-model-bundle-1", "provenance": provenance, "cases": {}}
-    for record, spec in zip(records, specs):
+    for record, spec, case in zip(records, specs, table["cases"]):
         folder = output / "models" / record["id"]
         ModularModelGenerator.from_spec(spec).generate(folder)
         # Preparation does not assign standard design factors or strain limits.
@@ -225,7 +258,14 @@ def prepare(campaign: Path, output: Path) -> dict:
         # retain structural properties and run the unmodified validator below.
         types_path = folder / "includes/05_line_types.yml"
         types_data = yaml.safe_load(types_path.read_text(encoding="utf-8"))
+        pipe_types = {segment.type for segment in spec.pipeline.segments}
         for line_type in types_data["LineTypes"]:
+            if line_type["Name"] in pipe_types:
+                # The seabed schema coefficient is not emitted by a builder.
+                # Set both directions to the case's scalar preparation factor;
+                # directional soil behaviour remains unqualified.
+                line_type["SeabedAxialFrictionCoefficient"] = case["friction"]
+                line_type["SeabedLateralFrictionCoefficient"] = case["friction"]
             for key in list(line_type):
                 if key.startswith("DNVSTF101"):
                     del line_type[key]

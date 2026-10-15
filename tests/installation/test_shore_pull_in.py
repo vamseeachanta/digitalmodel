@@ -229,3 +229,36 @@ def test_preparation_models_do_not_assign_standard_design_factors(tmp_path):
     bundle = json.loads((out / "models.json").read_text())
     for files in bundle["cases"].values():
         assert "DNVSTF101" not in files["includes/05_line_types.yml"]
+
+
+@pytest.mark.parametrize("distinct_friction", [False, True])
+def test_each_prepared_pipe_model_carries_its_case_friction(tmp_path, distinct_friction):
+    import yaml
+    table = json.loads((CAMPAIGN / "case-table.json").read_text())
+    if distinct_friction:
+        # Two study cases share a coefficient; perturb the copied inputs to
+        # expose reuse of any one case's coefficient across all three models.
+        for index, case in enumerate(table["cases"]):
+            case["friction"] *= index + 1
+        assert len({case["friction"] for case in table["cases"]}) == 3
+    campaign = tmp_path / "campaign"
+    campaign.mkdir()
+    (campaign / "case-table.json").write_text(json.dumps(table))
+    (campaign / "criteria.json").write_bytes((CAMPAIGN / "criteria.json").read_bytes())
+    output = tmp_path / "output"
+    driver().prepare(campaign, output)
+    bundle = json.loads((output / "models.json").read_text())
+    pipe_names = {segment["type"] for segment in table["basis"]["pipeline"]["segments"]}
+    carried = []
+    for case in table["cases"]:
+        name = "includes/05_line_types.yml"
+        text = bundle["cases"][case["id"]][name]
+        assert text == (output / "models" / case["id"] / name).read_text()
+        pipe_types = [t for t in yaml.safe_load(text)["LineTypes"] if t["Name"] in pipe_names]
+        assert {t["Name"] for t in pipe_types} == pipe_names
+        for line_type in pipe_types:
+            assert line_type["SeabedAxialFrictionCoefficient"] == case["friction"]
+            assert line_type["SeabedLateralFrictionCoefficient"] == case["friction"]
+        carried.append(pipe_types[0]["SeabedAxialFrictionCoefficient"])
+    assert carried == [case["friction"] for case in table["cases"]]
+    assert len(set(carried)) == (3 if distinct_friction else 2)
