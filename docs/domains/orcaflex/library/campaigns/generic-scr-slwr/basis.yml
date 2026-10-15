@@ -20,6 +20,11 @@ revision_history:
   change: Lazy-wave bottom length is derived across the offset envelope with an assumed
     grounded reserve; regenerated inputs retain nominal suspended geometry. Native
     offset equilibrium and dynamic allowance remain unverified.
+- revision: '4'
+  date: '2026-10-15'
+  change: SCR bottom and anchor are reduced together to retain positive hand tension
+    under full adverse axial seabed friction across the complete static sweep;
+    nominal suspended geometry and lazy-wave model bytes are retained.
 readiness: prepared; not qualified for design or outward use
 pipe_grade: X65
 host:
@@ -45,8 +50,37 @@ metocean:
 analytical_scope: Zero mean host offset, quiescent water, inextensible OO geometry and elastic general
   catenary segment checks. Pipe centre at contact radius above seabed. No pressure, bending/contact
   soil response, wave dynamics, VIV or code acceptance. Both seabed reserves are additionally derived
-  across the intact and damaged offset envelope using a flat-seabed, frictionless, inextensible
-  catenary; this does not establish native offset equilibrium.
+  across the intact and damaged offset envelope using a flat-seabed, inextensible
+  catenary with frictionless suspended geometry. Full adverse axial seabed friction
+  bounds grounded tension; this does not establish native offset equilibrium.
+seabed_axial_friction:
+  model_settings: Both models specify SeabedLateralFrictionCoefficient = 0.5 and
+    SeabedAxialFrictionCoefficient = ~ on every line type. Neither model text
+    explicitly specifies a static friction application switch.
+  coefficient_status: ASSUMED
+  coefficient_basis: Assumed, based on previous experience; the inherited axial
+    default is treated as equal to the committed lateral coefficient, 0.5.
+    The program interpretation of the default requires native readback.
+  statics_application_status: ASSUMED
+  statics_application: Axial friction is assumed active in statics and fully mobilized
+    in the adverse sense at every offset. Actual program application and mobilization
+    are not established by the committed text and require a native statics check.
+  sense: Grounded tension decreases from touchdown toward anchored End B, with
+    dT/ds = -mu*w. The reverse sense increases anchor tension; partial mobilization
+    lies between these bounds. No friction acts on the suspended arc in the hand model.
+  hand_estimate: T_min = H - mu*w*L_grounded. H is touchdown horizontal tension,
+    mu is the assumed axial coefficient and w is bare-pipe submerged weight.
+    Grounded tension is linear and suspended tension is at least H, so the
+    anchored-end estimate bounds the complete line at zero pressure.
+  scr_selection: Preserve the nominal suspended arc and reduce anchor X and bottom
+    length equally. Select the largest bottom on the existing 0.1 m grid, no longer
+    than the requested reserve design, for which every static sweep step has at
+    least the assumed positive tension margin and positive grounded length.
+    This is the smallest joint reduction within that geometry-preserving family.
+  limits: The positive margin is a numerical screening assumption, not a qualified
+    dynamic or design allowance. The original requested grounded reserve may be
+    reduced by the tension constraint. Static sweep spacing and touchdown-step
+    acceptance criteria are unchanged; no native or dynamic acceptance is asserted.
 sources:
   pipe_defaults:
     title: Repository generic riser property and geometry defaults
@@ -94,6 +128,12 @@ sources:
     locator: src/digitalmodel/solvers/orcaflex/modular_generator/
     reason: Unspecified environmental, line, vessel and simulation properties are inherited unchanged
       from the existing generator; they are illustrative assumptions, not qualified engineering input.
+  static_screening_assumptions:
+    title: Assumed friction mobilization and positive static screening margin
+    locator: scripts/orcaflex/check_generic_scr_slwr.py
+    reason: Assumed, based on previous experience; full adverse friction bounds the
+      inherited model defaults. The positive margin and static sampling interval
+      are screening inputs, not measured soil data or qualified design criteria.
   criteria_titles:
     title: Repository criteria references and method outline
     revision: c9ae7591129b40732846b50661045f99ab249aba
@@ -257,9 +297,34 @@ parameters:
     status: ASSUMED
     source: seabed_reserve_assumption
     reason: Reserve set equal to the template bottom-section length, which is not
-      itself an offset reserve requirement. The SCR bottom is its maximum suspended-length
-      increase plus this assumed reserve, rounded upward to 0.1 m. Native contact,
-      bending, elasticity and dynamics remain unqualified.
+      itself an offset reserve requirement. The requested SCR bottom is its maximum
+      suspended-length increase plus this reserve, rounded upward to 0.1 m. The
+      selected bottom is capped by the full-friction tension constraint, reducing
+      the grounded reserve where necessary. Native contact, bending, elasticity
+      and dynamics remain unqualified.
+  seabed_axial_friction:
+    value: 0.5
+    unit: '1'
+    status: ASSUMED
+    source: static_screening_assumptions
+    reason: Assumed, based on previous experience; the inherited axial default is
+      treated as the committed lateral coefficient. Full adverse mobilization in
+      statics is a hand bound; actual program application requires native readback.
+  minimum_static_tension:
+    value: 1.0
+    unit: kN
+    status: ASSUMED
+    source: static_screening_assumptions
+    reason: Assumed, based on previous experience; positive numerical screening
+      margin for the complete line under full adverse axial friction. No dynamic
+      or code acceptance margin is established.
+  static_offset_step:
+    value: 25.0
+    unit: m
+    status: ASSUMED
+    source: static_screening_assumptions
+    reason: Retained static sampling interval across the full damaged-offset
+      envelope; the touchdown-step criterion is not changed by this hand check.
   slwr_seabed_margin:
     value: 20.0
     unit: m

@@ -147,40 +147,96 @@ def grounded_catenary(height: float, length: float, span: float,
     }
 
 
+def static_offsets(p: dict[str, Any]) -> list[float]:
+    """Retain the full offset sweep and include the five envelope points."""
+    extent = p["damaged_offset_pct"] * p["water_depth"] / 100
+    step = p["static_offset_step"]
+    if not math.isfinite(step) or step <= 0:
+        raise ValueError("Static offset step must be finite and positive")
+    offsets = {-extent, extent, 0.0}
+    offsets.update(-extent + i * step for i in range(math.floor(2 * extent / step) + 1))
+    offsets.update(sign * p["intact_offset_pct"] * p["water_depth"] / 100
+                   for sign in (-1, 1))
+    return sorted(offsets)
+
+
+def axial_friction_bound(state: dict[str, Any], p: dict[str, Any],
+                        weight: float) -> dict[str, Any]:
+    """Bound tension by full adverse friction from touchdown to the anchor.
+
+    Suspended tension is at least H. On the grounded bare pipe the assumed
+    fully mobilized axial friction reduces tension linearly: T(s) = H-mu*w*s.
+    Thus H-mu*w*L_grounded bounds the entire line, including lazy-wave arcs
+    whose effective tension is sqrt(H**2+V**2). Pressure is zero in these inputs.
+    This is a hand bound; native static friction mobilization is not solved.
+    """
+    friction = p["seabed_axial_friction"] * weight * state["grounded_length_m"] / 1000
+    minimum = state["horizontal_tension_kN"] - friction
+    return {**state, "axial_friction_loss_kN": friction,
+            "minimum_effective_tension_kN": minimum,
+            "minimum_tension_location": "Anchored End B"}
+
+
 def scr_seabed_design(p: dict[str, Any], height: float, weight: float,
                      nominal: dict[str, Any]) -> dict[str, Any]:
-    """Derive SCR seabed reserve from the offset envelope plus explicit margin."""
+    """Cap the requested reserve by full-friction tension, preserving the arc."""
     offsets = sorted({0.0, -p["intact_offset_pct"], p["intact_offset_pct"],
                       -p["damaged_offset_pct"], p["damaged_offset_pct"]})
     margin = p["scr_seabed_margin"]
     if not math.isfinite(margin) or margin <= 0:
         raise ValueError("SCR seabed margin must be finite and positive")
+    mu, tension_margin = p["seabed_axial_friction"], p["minimum_static_tension"]
+    if not math.isfinite(mu) or mu < 0:
+        raise ValueError("Axial friction coefficient must be finite and nonnegative")
+    if not math.isfinite(tension_margin) or tension_margin <= 0:
+        raise ValueError("Static tension margin must be finite and positive")
     suspended = nominal["suspended_length_m"]
     touchdown = nominal["touchdown_horizontal_distance_m"]
 
-    def sweep(bottom: float) -> list[dict[str, Any]]:
-        return [{"offset_pct": offset, **grounded_catenary(
+    def sweep(bottom: float, grid: list[float] | None = None) -> list[dict[str, Any]]:
+        if grid is None:
+            grid = [offset * p["water_depth"] / 100 for offset in offsets]
+        return [axial_friction_bound({"offset_pct": offset / p["water_depth"] * 100,
+                "offset_m": offset, **grounded_catenary(
             height, suspended + bottom,
-            touchdown + bottom - offset * p["water_depth"] / 100, weight,
-        )} for offset in offsets]
+            touchdown + bottom - offset, weight,
+        )}, p, weight) for offset in grid]
 
     original = sweep(p["bottom_length"])
     required = max(0.0, p["bottom_length"] - min(
         state["grounded_length_m"] for state in original
     ))
-    selected = math.ceil((required + margin) * 10) / 10
+    requested = math.ceil((required + margin) * 10) / 10
+    grid = static_offsets(p)
+    requested_states = sweep(requested, grid)
+    # Moving the anchor and adding bottom equally fixes span-length, hence H
+    # and suspended length. Each added metre loses mu*w of anchor tension.
+    limit = min(requested + (s["minimum_effective_tension_kN"] - tension_margin)
+                * 1000 / (mu * weight) for s in requested_states) if mu else requested
+    selected = min(requested, math.floor(limit * 10) / 10)
+    if selected <= required:
+        raise ValueError("No tension-only SCR with positive touchdown reserve and the requested tension margin")
+    states = sweep(selected, grid)
+    if (min(s["grounded_length_m"] for s in states) <= 0
+            or min(s["minimum_effective_tension_kN"] for s in states) < tension_margin):
+        raise ValueError("No tension-only SCR with positive touchdown reserve and the requested tension margin")
     old_length = suspended + p["bottom_length"]
     liftoff_radius = (old_length ** 2 - height ** 2) / (2 * height)
     liftoff_span = liftoff_radius * math.acosh(1 + height / liftoff_radius)
     liftoff_offset = liftoff_span - touchdown - p["bottom_length"]
     return {
-        "method": "Flat seabed; uniform submerged weight; inextensible, frictionless catenary closure",
+        "method": "Flat seabed; inextensible suspended catenary; full adverse axial-friction tension bound on grounded pipe",
         "offset_convention": "Positive host offset is toward the anchor; negative is away",
-        "limitations": "Negative reserve is a diagnostic extrapolation, not a lifted-end equilibrium. Elasticity, bending, seabed friction and dynamics require native checks.",
+        "limitations": "Full friction mobilization in statics is assumed. Negative original reserve is a diagnostic extrapolation, not a lifted-end equilibrium. Elasticity, bending, actual friction mobilization and dynamics require native checks.",
         "height_m": height,
         "weight_N_per_m": weight,
         "required_bottom_length_m": required,
         "margin_m": margin,
+        "requested_bottom_length_m": requested,
+        "friction_bottom_limit_m": limit,
+        "minimum_required_tension_kN": tension_margin,
+        "minimum_effective_tension_kN": min(s["minimum_effective_tension_kN"] for s in states),
+        "minimum_grounded_length_m": min(s["grounded_length_m"] for s in states),
         "selected_bottom_length_m": selected,
         "anchor_without_margin_m": touchdown + required,
         "selected_anchor_x_m": touchdown + selected,
@@ -188,6 +244,8 @@ def scr_seabed_design(p: dict[str, Any], height: float, weight: float,
         "original_liftoff_far_offset_pct": liftoff_offset / p["water_depth"] * 100,
         "original": original,
         "selected": sweep(selected),
+        "requested_static_sweep": requested_states,
+        "static_sweep": states,
     }
 
 
@@ -283,10 +341,20 @@ def slwr_seabed_design(p: dict[str, Any], height: float, weight: float,
         state["grounded_length_m"] for state in original
     ))
     selected = math.ceil((required + margin) * 10) / 10
+    states = []
+    for offset in static_offsets(p):
+        state = grounded_lazy_wave(
+            height, suspended + selected, touchdown + selected - offset, weight,
+            nominal["buoyancy"]["net_weight_N_per_m"], nominal["sections_m"],
+        )
+        states.append(axial_friction_bound(
+            {"offset_m": offset, "offset_pct": offset / p["water_depth"] * 100, **state},
+            p, weight,
+        ))
     return {
         "method": "Flat seabed; three force-continuous sections; inextensible, frictionless catenary closure",
         "offset_convention": "Positive host offset is toward the anchor; negative is away. touchdown_horizontal_distance_m is from the displaced host; anchor_without_margin_m and selected_anchor_x_m are absolute model X from the nominal host.",
-        "limitations": "Elasticity, bending, seabed friction and dynamics require native checks; the reserve is assumed, not a qualified dynamic allowance.",
+        "limitations": "Full adverse axial friction is a hand bound with assumed static mobilization. Elasticity, bending, actual friction mobilization and dynamics require native checks; the reserve is assumed, not a qualified dynamic allowance.",
         "height_m": height,
         "weight_N_per_m": weight,
         "buoyed_weight_N_per_m": nominal["buoyancy"]["net_weight_N_per_m"],
@@ -297,6 +365,8 @@ def slwr_seabed_design(p: dict[str, Any], height: float, weight: float,
         "selected_anchor_x_m": touchdown + selected,
         "original": original,
         "selected": sweep(selected),
+        "static_sweep": states,
+        "minimum_effective_tension_kN": min(s["minimum_effective_tension_kN"] for s in states),
     }
 
 
@@ -410,6 +480,7 @@ def reference(campaign: Path) -> dict[str, Any]:
         "method": "OO low-point geometry; general elastic solver on each reflected arc",
         "limitations": basis["analytical_scope"],
         "geometry_comparison": "General arc endpoints and unstretched lengths are prescribed from OO geometry; their equality is not an independent global geometry check. Elastic arc horizontal tensions need not be continuous.",
+        "seabed_axial_friction": basis["seabed_axial_friction"],
         "formulas": ["h = water_depth - hangoff_depth - coated_OD/2",
                      "EA = young_modulus*pi/4*(steel_OD^2-steel_ID^2)",
                      "w_pipe = (steel_mass+coating_mass+contents_mass-rho_water*pi/4*coated_OD^2)*g",
@@ -417,7 +488,9 @@ def reference(campaign: Path) -> dict[str, Any]:
                      "w_buoyed = w_pipe - (rho_water-rho_module)*module_volume_per_m*g",
                      "a = H/w; S = sqrt(h*(h+2*a)); X = a*acosh(1+h/a)",
                      "D = anchor_X - host_offset; solve X-S = D-L; grounded = L-S",
-                     "Model bottom = ceil(10*(maximum suspended-length increase + margin))/10",
+                     "Requested bottom = ceil(10*(maximum suspended-length increase + margin))/10",
+                     "T_min = H - mu*w*L_grounded; assumed full adverse axial friction in statics",
+                     "SCR bottom = min(requested bottom, floor(10*min(S-S_nominal+(H-T_margin)/(mu*w)))/10); forces in N",
                      "Piecewise arcs: dx/ds = H/sqrt(H^2+V^2); dy/ds = V/sqrt(H^2+V^2); dV/ds = w"],
         "sha256": {str(p.relative_to(campaign)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
         "size_bytes": {str(p.relative_to(campaign)): p.stat().st_size for p in files},
