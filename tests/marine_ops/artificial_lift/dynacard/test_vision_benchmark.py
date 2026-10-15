@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: TDD tests for dynacard vision model evaluation benchmark.
 # ABOUTME: Validates test set construction, vision classifier interface, and benchmark runner.
 
@@ -233,14 +235,10 @@ class TestBenchmarkRunner:
         assert isinstance(result.recommendation, str)
         assert len(result.recommendation) > 10
 
-    def test_recommendation_contains_one_of_three_options(self, runner):
-        """Recommendation must mention replace, augment, or keep."""
+    def test_recommendation_requires_minimum_class_counts(self, runner):
+        """Three cards per class cannot support an action at the default minimum."""
         result = runner.run()
-        rec_lower = result.recommendation.lower()
-        assert any(
-            keyword in rec_lower
-            for keyword in ("replace", "augment", "keep")
-        ), f"Recommendation missing action keyword: {result.recommendation}"
+        assert result.recommendation == "too thin to score"
 
     def test_benchmark_result_has_n_cards(self, runner):
         """BenchmarkResult must record how many cards were evaluated."""

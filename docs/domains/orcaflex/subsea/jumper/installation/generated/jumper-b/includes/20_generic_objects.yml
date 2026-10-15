@@ -53,11 +53,11 @@ LineTypes:
   PoissonRatio: 0.293
   Ca:
   - 1.0
-  - null
+  - ~
   - 0
   Cd:
   - 1.2
-  - null
+  - ~
   - 0.008
   RayleighDampingCoefficients: (no damping)
   OD: 1.8
@@ -65,7 +65,7 @@ LineTypes:
   MassPerUnitLength: 1.291154
   EI:
   - 100000.0
-  - null
+  - ~
   EA: 1000000.0
 Lines:
 - Name: jumper-b
@@ -86,8 +86,8 @@ Lines:
       - 0
       - 0
       - 0
-      - null
-      - null
+      - ~
+      - ~
     - - Fixed
       - 34.704
       - 0.0
@@ -95,13 +95,13 @@ Lines:
       - 0
       - 180
       - 0
-      - null
-      - null
+      - ~
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - - Infinity
-    - null
+    - ~
   - - Infinity
-    - null
+    - ~
   LineType, Length, TargetSegmentLength:
   - - OCS 200-V
     - 1.3

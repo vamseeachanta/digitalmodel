@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Builder for the Vessels section of OrcaFlex models.
 
 Generates vessel definitions for S-lay installation, including
@@ -121,11 +124,22 @@ class VesselBuilder(BaseBuilder):
                     "SupportOrientation": [0, 0, 0],
                 })
 
-        result = {
+        result: dict[str, Any] = {
             "SupportGeometrySpecification": "Explicit",
         }
 
         if supports:
+            pipeline = self.spec.pipeline
+            if pipeline is None:
+                raise ValueError("Stinger supports require a pipeline")
+            result["SupportCoordinateSystems"] = [{
+                "SupportCoordinateSystemName": "Stinger",
+                "SupportCoordinateSystemPos": [0, 0, 0],
+                "SupportCoordinateSystemOrientation": [0, 0, 0],
+            }]
+            result["SupportedLine"] = [pipeline.name]
+            for support in supports:
+                support["SupportCoordinateSystem"] = "Stinger"
             result["Supports"] = supports
 
         return result

@@ -119,7 +119,7 @@ BaseFile: __06a_app_buoyancy1_deep.yml
     SeabedFrictionCoefficient: 0
     ShadedDrawingCullingMode: No culling
     ShadedDrawingDrawSize: '~'
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
     ShadedDrawingMirrorInPlane: Not mirrored
     ShadedDrawingOrientation:
     - 0

@@ -1,0 +1,71 @@
+{
+  "base_commit": "64c14740da3acae9dffa0cea2c83edab1ef783e9",
+  "criteria_recorded_utc": "2026-10-14T16:54:38.147710+00:00",
+  "criteria_sha256": "b75863c9d56b7fdb7893e1efb3ed61b32f2661874c09b9276d3d93cb6d678229",
+  "files": [
+    {
+      "path": "acceptance.html",
+      "sha256": "9528066e1912ad9ebb1bfb0480b71404d2284ef5a8520e2472e23de44a999c5e",
+      "size": 5555
+    },
+    {
+      "path": "bridge-manifest.json",
+      "sha256": "94bd4b31403c892780b99d93a7ef15874fe0b707145b5a8dcc6844d89c9f76e2",
+      "size": 1956
+    },
+    {
+      "path": "criteria.json",
+      "sha256": "b75863c9d56b7fdb7893e1efb3ed61b32f2661874c09b9276d3d93cb6d678229",
+      "size": 1166
+    },
+    {
+      "path": "force.txt",
+      "sha256": "50c6ca889fdd1c1036277931725bf8d20f95e2b4d1d027dc864acee6e5b6d6bc",
+      "size": 12847
+    },
+    {
+      "path": "mesh-check.txt",
+      "sha256": "ec3c50d23e90ddf22b675f73a0c5e7251c3b6d7934f908c602516339df61d621",
+      "size": 4298
+    },
+    {
+      "path": "moment.txt",
+      "sha256": "21ade67ef8228c310b8b6597ff02e57b9245615b045672e7431f791c902b7afb",
+      "size": 12913
+    },
+    {
+      "path": "probe-pressure.txt",
+      "sha256": "f4dd340e9a9f8a84ae548ac95b01a1ee3a15dcb4e63aca91be6c5b03d9f71419",
+      "size": 2137
+    },
+    {
+      "path": "run-record.txt",
+      "sha256": "aae77a487774751c66ed258405f61533321d0e59b86b755a0b7a0114ff76b438",
+      "size": 960
+    },
+    {
+      "path": "solver-log.txt",
+      "sha256": "73cc4c0b8e1aaffca289744af8f52c306cbf4870ae478112b03c450e0ccb043e",
+      "size": 206257
+    }
+  ],
+  "first_run_started_utc": "2026-10-14T16:54:38.147879+00:00",
+  "header_redaction": "Private path and host header lines replaced; numerical values unchanged.",
+  "result": {
+    "cells": 3618,
+    "conversion_wall_time_s": 0.3585856594145298,
+    "failed_mesh_checks": 0,
+    "final_time_s": 0.3,
+    "linear_solver_iterations": 7696,
+    "mesh_ok": true,
+    "mesh_wall_time_s": 1.7089642249047756,
+    "ranks": 2,
+    "rebuild_wall_time_s": 1.6948227025568485,
+    "rotation_error_m": 5.0176258057191335e-08,
+    "source_mesh_rebuild_identical": true,
+    "steps": 81,
+    "wall_time_s": 3.632388163357973
+  },
+  "schema_version": 1,
+  "source_input_sha256": "2c2c33e7aa51ffffeca650d4a0747dd6d6253e5c2b025c4e26cef93738cb59c4"
+}

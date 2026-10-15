@@ -56,13 +56,20 @@ class VesselTypeBuilder(BaseBuilder):
         vessel_type = {
             "Name": vessel_type_name,
             "Length": props.loa,
-            "Draughts": [props.draft],
             "Symmetry": "xz plane",
-            "CalculationMethod": "Single draught",
-            "Displacement": [displacement],
-            "WaveReferencePoint": [0, 0, 0],
-            "CentreOfGravityRelativeToCoG": [0, 0, 0],
-            "MomentsOfInertia": [[ixx, iyy, izz]],
+            # Native saves define each draught as a named mapping, not a
+            # numeric draft. Mass and inertia belong to that draught record.
+            "Draughts": [{
+                "Name": "Draught1",
+                "Mass": displacement,
+                "MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ": [
+                    [ixx, 0, 0],
+                    [0, iyy, 0],
+                    [0, 0, izz],
+                ],
+                "CentreOfMass": [0, 0, 0],
+                "DisplacementRAOs": {"RAOOrigin": [0, 0, 0]},
+            }],
         }
 
         # Register vessel type name for downstream builders
