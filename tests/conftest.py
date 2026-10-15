@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Pytest configuration for marine engineering tests."""
 import sys
 from pathlib import Path
@@ -8,7 +10,6 @@ from unittest.mock import MagicMock
 _tests_dir = Path(__file__).parent
 collect_ignore = [
     # Missing local modules (standalone scripts, not real tests)
-    str(_tests_dir / "marine_ops/artificial_lift/dynacard/test_vision_benchmark.py"),
     str(_tests_dir / "solvers/orcaflex/examples_integration/test_converter.py"),
     str(_tests_dir / "solvers/orcaflex/examples_integration/test_single_download.py"),
     str(_tests_dir / "structural/fatigue_analysis/test_reference_seastate_scaling.py"),

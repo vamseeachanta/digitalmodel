@@ -769,6 +769,36 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["required_submerged_weight_N_m"] == pytest.approx(2075.914365)
         assert result["lateral_utilization"] == pytest.approx(0.964701)
         assert result["is_laterally_stable"] is True
+    elif workflow["id"] == "on-bottom-stability-e305":
+        result = cfg["on_bottom_stability_e305_result"]
+        # Independent annulus weights and phase-zero Morison demands from the
+        # invented input; R acts on wave only and current is counted once.
+        expected = {
+            "synthetic_a": {
+                "extreme_wave": (80.424772, 72.0, 0.895247, 6.666667, 0.5),
+                "extreme_current": (80.424772, 112.5, 1.398823, 6.666667, 2.0),
+            },
+            "synthetic_b": {
+                "extreme_wave": (158.022110, 84.0, 0.531571, 5.714286, 0.5),
+                "extreme_current": (158.022110, 131.25, 0.830580, 5.714286, 2.0),
+            },
+        }
+        assert len(result["segments"]) == len(expected)
+        assert {segment["id"] for segment in result["segments"]} == set(expected)
+        for segment in result["segments"]:
+            assert len(segment["cases"]) == 2
+            assert {case["role"] for case in segment["cases"]} == set(expected[segment["id"]])
+            for case in segment["cases"]:
+                weight, required, utilization, K, M = expected[segment["id"]][case["role"]]
+                assert segment["weight"]["submerged_weight_n_m"] == pytest.approx(weight, rel=0, abs=5e-7)
+                for key, value in zip(
+                    ("available_weight_n_m", "required_weight_n_m", "utilization", "K", "M"),
+                    (weight, required, utilization, K, M),
+                ):
+                    assert case[key] == pytest.approx(value, rel=0, abs=5e-7)
+                assert case["qualified"] is False
+                assert case["os_f101_status"] == "not_established"
+                assert case["factor_source"] == "typed_parity"
     elif workflow["id"] == "free-span-f105":
         result = cfg["free_span"]["result"]
         assert result["fn_IL_hz"] == pytest.approx(0.427094447363)

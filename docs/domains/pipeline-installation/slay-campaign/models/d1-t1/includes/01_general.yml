@@ -11,13 +11,13 @@ General:
   ImplicitConstantTimeStep: 0.1
   LogPrecision: Single
   TargetLogSampleInterval: 0.1
-  LogStartTime: null
-  StartTime: null
-  FirstStage: null
-  RampStartTime: null
-  RampFinishTime: null
-  TimeHistoryImportFrom: null
-  TimeHistoryImportTo: null
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
   StageDuration:
   - 8
   - 16

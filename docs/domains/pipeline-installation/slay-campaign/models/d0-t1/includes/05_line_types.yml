@@ -15,15 +15,15 @@ LineTypes:
   Cs: 0
   Ce: 0
   SeabedLateralFrictionCoefficient: 0.5
-  SeabedAxialFrictionCoefficient: null
+  SeabedAxialFrictionCoefficient: ~
   ClashStiffness: 0
-  AllowableStress: null
+  AllowableStress: ~
   RayleighDampingCoefficients: (no damping)
   CoatingThickness: coating+CWC
   LiningThickness: 0
   AdditionalEI: 0
-  DNVSTF101Pmin: null
-  DNVSTF101T2: null
+  DNVSTF101Pmin: ~
+  DNVSTF101T2: ~
   DNVSTF101Fy: 450000.0
   DNVSTF101Fu: 0
   DNVSTF101E: 0
@@ -37,7 +37,7 @@ LineTypes:
   DNVSTF101AlphaGW: 0
   DNVSTF101AlphaPm: 0
   DNVSTF101AlphaEpsilonC: 0
-  DNVSTF101AlphaMat: null
+  DNVSTF101AlphaMat: ~
   DNVSTF101TCRA: 0
   DNVSTF101FyCRA: 0
   DNVSTF101FuCRA: 0
@@ -53,45 +53,45 @@ LineTypes:
   CompressionIsLimited: 'Yes'
   AllowableTension: 6300
   MinRadius:
-  - null
-  - null
+  - ~
+  - ~
   EI:
   - 0
-  - null
+  - ~
   EA: 404000.0
   PoissonRatio: 0.5
   ExpansionTable: None
   GJ: 80
   TensionTorqueCoupling: 0
-  OuterContactDiameter: null
-  InnerContactDiameter: null
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
   ClashStiffness: 0
   Ca:
   - 1
-  - null
+  - ~
   - 0
   Cm:
-  - null
-  - null
-  - null
+  - ~
+  - ~
+  - ~
   Cs: 0
   Ce: 0
   Cd:
   - 1.2
-  - null
+  - ~
   - 0.008
   Cl: 0
-  NormalDragLiftDiameter: null
-  AxialDragLiftDiameter: null
-  StressOD: null
-  StressID: null
-  AllowableStress: null
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
   TensileStressLoadingFactor: 1
   BendingStressLoadingFactor: 1
   ShearStressLoadingFactor: 1
   TorsionalStressLoadingFactor: 1
   SeabedLateralFrictionCoefficient: 0.5
-  SeabedAxialFrictionCoefficient: null
+  SeabedAxialFrictionCoefficient: ~
   RayleighDampingCoefficients: (no damping)
   Pen:
   - 1

@@ -19,22 +19,22 @@ Lines:
       - 0.0
       - 172.0
       - 0
-      - null
+      - ~
     - - Anchored
-      - 2094.5455410742097
+      - 2102.44554107421
       - 0.0
       - 0.17655
       - 0.0
       - 90.0
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - - 0.0
-    - null
-    - null
+    - ~
+    - ~
   - - 0.0
-    - null
-    - null
+    - ~
+    - ~
   LineType, Length, TargetSegmentLength:
   - - SteelPipe
     - 2155.737643585302
@@ -46,7 +46,7 @@ Lines:
     - 526.3004480016975
     - 0.5
   - - SteelPipe
-    - 20.0
+    - 27.9
     - 0.5
   StaticsStep1: Catenary
   LayAzimuth: 0.0

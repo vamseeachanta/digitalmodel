@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from digitalmodel.solvers.openfoam.motion import (
@@ -24,6 +24,11 @@ _H = "FoamFile {{ version 2.0; format ascii; class {cls}; object {obj}; }}\n"
 
 @dataclass(frozen=True)
 class Sloshing3DConfig:
+    """Case frame: vessel roll is z (YAW), vessel pitch is x (ROLL).
+
+    New comparison controls are keyword-only; legacy defaults retain their
+    dictionaries. ``fill`` is a fraction of breadth, rather than height.
+    """
     cpb: int
     end_time: float
     delta_t: float
@@ -36,9 +41,20 @@ class Sloshing3DConfig:
     frame: str = FRAME
     mesh_mode: str = "blockMesh"
     decompose_ranks: int | None = None
+    rotation: str = field(default="roll", kw_only=True)
+    period: float | None = field(default=None, kw_only=True)
+    max_co: float = field(default=0.9, kw_only=True)
+    function_objects: bool | None = field(default=None, kw_only=True)
+    use_2d_settings: bool = field(default=False, kw_only=True)
 
 
 def _validate(config: Sloshing3DConfig, contract: BoundaryContract) -> None:
+    if config.rotation not in {"roll", "pitch"}:
+        raise ValueError("rotation must be 'roll' or 'pitch'")
+    if not math.isfinite(config.max_co) or config.max_co <= 0:
+        raise ValueError("max_co must be finite and positive")
+    if config.period is not None and (not math.isfinite(config.period) or config.period <= 0):
+        raise ValueError("period must be finite and positive")
     if config.length_unit != "m":
         raise ValueError("length_unit must be 'm'")
     if config.frame != FRAME:
@@ -156,7 +172,7 @@ sigma 0.07;
 """
 
 
-def _control(end_time: float, delta_t: float) -> str:
+def _control(end_time: float, delta_t: float, max_co: float = 0.9) -> str:
     return _H.format(cls="dictionary", obj="controlDict") + f"""
 application interFoam;
 startFrom startTime; startTime 0; stopAt endTime;
@@ -164,8 +180,58 @@ endTime {end_time:.6g}; deltaT {delta_t:.6g};
 writeControl adjustableRunTime; writeInterval {end_time:.6g}; purgeWrite 1;
 writeFormat ascii; writePrecision 8; writeCompression off;
 timeFormat general; timePrecision 8; runTimeModifiable no;
-adjustTimeStep yes; maxCo 0.9; maxAlphaCo 0.9; maxDeltaT 0.01;
+adjustTimeStep yes; maxCo {max_co:.6g}; maxAlphaCo {max_co:.6g}; maxDeltaT 0.01;
 """
+
+
+def wall_probe_locations(config: Sloshing3DConfig) -> dict[str, tuple[float, float, float]]:
+    """Mid-wall and corner locations, half a cell from each vertical wall.
+
+    One interfaceHeight object per location preserves the 2D parser contract.
+    The first two probes are normal to the excitation; the next two measure
+    out-of-plane response. Corners are reported separately.
+    """
+    dx = config.breadth / config.cpb
+    dz = config.length / max(1, round(config.length / dx))
+    b, z = config.breadth, config.length
+    roll = [(dx / 2, 0, z / 2), (b - dx / 2, 0, z / 2)]
+    pitch = [(b / 2, 0, dz / 2), (b / 2, 0, z - dz / 2)]
+    points = (roll + pitch if config.rotation == "roll" else pitch + roll)
+    points += [(dx / 2, 0, dz / 2), (b - dx / 2, 0, z - dz / 2)]
+    return dict(zip((f"interfaceHeight{i}" for i in range(1, 7)), points))
+
+
+def _comparison_control(config: Sloshing3DConfig, contract: BoundaryContract) -> str:
+    from . import sloshing_2d_dicts as d2
+
+    if config.use_2d_settings:
+        text = d2._CONTROLDICT.split("functions\n", 1)[0]
+        values = {
+            "ENDTIME": config.end_time, "DELTAT": config.delta_t,
+            "WRITECONTROL": "adjustableRunTime", "WRITEINTERVAL": config.end_time,
+            "ADJUST": "yes", "MAXCO": config.max_co,
+        }
+        for key, value in values.items():
+            text = text.replace(f"@{key}@", f"{value:.6g}" if isinstance(value, float) else str(value))
+        text = _H.format(cls="dictionary", obj="controlDict") + text
+    else:
+        text = _control(config.end_time, config.delta_t, config.max_co)
+    if config.function_objects:
+        probes = []
+        for name, xyz in wall_probe_locations(config).items():
+            # Reuse the held interface-height settings and sampling stride.
+            probe = d2._CONTROLDICT.split("functions\n{\n", 1)[1].split("@EXTRAFUNCTIONS@", 1)[0]
+            probe = probe.replace("interfaceHeight1", name)
+            for token, value in zip(("PROBEX", "PROBEZ"), (xyz[0], xyz[2])):
+                probe = probe.replace(f"@{token}@", f"{value:.6g}")
+            probes.append(probe.replace("@SAMPLEEVERY@", "5"))
+        forces = d2.roll_moment_function_object(
+            (config.breadth / 2, 0, config.length / 2), patches=contract.wall_patches,
+        )
+        # The forces object writes all axes; the selected component is reduced
+        # by the comparison driver. Keep the shared type and settings.
+        text += "functions\n{\n" + "".join(probes) + forces + "\n}\n"
+    return text
 
 
 def _setfields(config: Sloshing3DConfig) -> str:
@@ -197,9 +263,12 @@ def _write_dictionaries(case: Path, config: Sloshing3DConfig, contract: Boundary
     nz = max(1, round(config.length / config.breadth * config.cpb))
     if config.mesh_mode == "blockMesh":
         (case / "system" / "blockMeshDict").write_text(_blockmesh(config, nx, ny, nz, contract))
-    (case / "system" / "controlDict").write_text(_control(config.end_time, config.delta_t))
-    (case / "system" / "fvSchemes").write_text(_H.format(cls="dictionary", obj="fvSchemes") + _FVSCHEMES)
-    (case / "system" / "fvSolution").write_text(_H.format(cls="dictionary", obj="fvSolution") + _FVSOLUTION)
+    (case / "system" / "controlDict").write_text(_comparison_control(config, contract))
+    from . import sloshing_2d_dicts as d2
+    schemes = d2._FVSCHEMES if config.use_2d_settings else _FVSCHEMES
+    solution = d2._FVSOLUTION if config.use_2d_settings else _FVSOLUTION
+    (case / "system" / "fvSchemes").write_text(_H.format(cls="dictionary", obj="fvSchemes") + schemes)
+    (case / "system" / "fvSolution").write_text(_H.format(cls="dictionary", obj="fvSolution") + solution)
     (case / "system" / "setFieldsDict").write_text(_setfields(config))
     if config.decompose_ranks is not None:
         (case / "system" / "decomposeParDict").write_text(
@@ -208,7 +277,8 @@ def _write_dictionaries(case: Path, config: Sloshing3DConfig, contract: Boundary
     (case / "constant" / "transportProperties").write_text(_H.format(cls="dictionary", obj="transportProperties") + _TRANSPORT)
     (case / "constant" / "g").write_text(_H.format(cls="uniformDimensionedVectorField", obj="g") + "dimensions [0 1 -2 0 0 0 0];\nvalue (0 -9.81 0);\n")
     (case / "constant" / "turbulenceProperties").write_text(_H.format(cls="dictionary", obj="turbulenceProperties") + "simulationType laminar;\n")
-    roll = PrescribedMotion(MotionType.YAW, amplitude=config.roll_deg, period=_first_mode_period(config), origin=(0.5 * config.breadth, 0.0, 0.5 * config.length))
+    axis = MotionType.YAW if config.rotation == "roll" else MotionType.ROLL
+    roll = PrescribedMotion(axis, amplitude=config.roll_deg, period=config.period or _first_mode_period(config), origin=(0.5 * config.breadth, 0.0, 0.5 * config.length))
     (case / "constant" / "dynamicMeshDict").write_text(_H.format(cls="dictionary", obj="dynamicMeshDict") + "\n" + render_dynamic_mesh_dict_body(roll) + "\n")
     (case / "0" / "U").write_text(_field("U", contract))
     (case / "0" / "p_rgh").write_text(_field("p_rgh", contract))

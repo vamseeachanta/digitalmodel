@@ -99,13 +99,14 @@ gates:
         "tests/compat/",
         "tests/cross_repo/",
         "tests/docs/",
+        "tests/repo_structure/",
         "tests/test_apistd2rd_migration.py",
         "tests/test_module_reorganization.py",
         "tests/test_restructure_compat.py",
         "tests/test_units.py",
         "tests/test_validation_utils.py",
       ]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/contracts/ tests/compat/ tests/cross_repo/ tests/docs/ tests/test_apistd2rd_migration.py tests/test_module_reorganization.py tests/test_restructure_compat.py tests/test_units.py tests/test_validation_utils.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/contracts/ tests/compat/ tests/cross_repo/ tests/docs/ tests/repo_structure/ tests/test_apistd2rd_migration.py tests/test_module_reorganization.py tests/test_restructure_compat.py tests/test_units.py tests/test_validation_utils.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -158,6 +159,7 @@ gates:
     domain: "hydrodynamics-other"
     test_roots:
       [
+        "tests/hydrodynamics/river_currents/",
         "tests/hydrodynamics/hull_library/",
         "tests/hydrodynamics/parametric_hull_analysis/",
         "tests/hydrodynamics/rao_analysis/",
@@ -413,8 +415,9 @@ gates:
         "tests/test_lazy_wave_catenary.py",
         "tests/test_lazy_wave_legacy_comparison.py",
         "tests/test_on_bottom_stability.py",
+        "tests/riser_configuration_screen/",
       ]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/subsea/ tests/drilling_riser/ tests/check_catenary_geometry.py tests/solve_catenary_correct.py tests/solve_general_catenary.py tests/test_catenary_module.py tests/test_catenary_riser_summary.py tests/test_lazy_wave_catenary.py tests/test_lazy_wave_legacy_comparison.py tests/test_on_bottom_stability.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/riser_configuration_screen/ tests/subsea/ tests/drilling_riser/ tests/check_catenary_geometry.py tests/solve_catenary_correct.py tests/solve_general_catenary.py tests/test_catenary_module.py tests/test_catenary_riser_summary.py tests/test_lazy_wave_catenary.py tests/test_lazy_wave_legacy_comparison.py tests/test_on_bottom_stability.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 

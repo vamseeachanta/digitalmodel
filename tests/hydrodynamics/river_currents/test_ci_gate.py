@@ -30,5 +30,6 @@ if __name__ == '__main__':
     new = 'python -m pytest tests/hydrodynamics/river_currents/ tests/hydrodynamics/hull_library/'
     assert gate['command'].count(old) == 1
     gate['command'] = gate['command'].replace(old, new)
+    gate['test_roots'].insert(0, 'tests/hydrodynamics/river_currents/')
     assert before == after
     print('Parsed gate configuration: only the river-current test path was added.')

@@ -3,13 +3,13 @@ Environment:
   KinematicViscosity: 1.35e-06
   SeaTemperature: 10
   ReynoldsNumberCalculation: Flow direction
-  HorizontalWaterDensityFactor: null
+  HorizontalWaterDensityFactor: ~
   VerticalDensityVariation: Constant
   SeabedType: Flat
   SeabedOrigin:
   - 0
   - 0
-  NominalDepth: null
+  NominalDepth: ~
   SeabedSlopeDirection: 0
   SeabedModel: Elastic
   WaveKinematicsCutoffDepth: Infinity
@@ -20,7 +20,7 @@ Environment:
   CurrentModel: Variation scheme
   CurrentRamped: 'No'
   CurrentApplyVerticalStretching: 'No'
-  HorizontalCurrentFactor: null
+  HorizontalCurrentFactor: ~
   VerticalCurrentVariationMethod: Interpolated
   IncludeVesselWindLoads: 'Yes'
   IncludeLineWindLoads: 'Yes'
@@ -37,11 +37,11 @@ Environment:
   SeabedShearStiffness: 100.0
   WaveTrains:
   - Name: Wave 1
+    WaveType: Airy
     WaveOrigin:
     - 0
     - 0
     WaveTimeOrigin: 0
-    WaveType: Airy
     WaveDirection: 0
     WaveHeight: 0
     WavePeriod: 8

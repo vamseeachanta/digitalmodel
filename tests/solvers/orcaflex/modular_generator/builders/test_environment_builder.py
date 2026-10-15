@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for EnvironmentBuilder property mapping and edge cases."""
 from __future__ import annotations
 
@@ -661,3 +664,65 @@ sys.stdout.buffer.write(text.encode('utf-8'))
         outputs[seed] = result.stdout
     differing = [seed for seed, data in outputs.items() if data != outputs[0]]
     assert not differing, f"Serialized bytes differ from seed 0 for seeds {differing}"
+
+
+@pytest.mark.parametrize("wave_type,raw_train", [
+    ("jonswap", {"WaveTp": 12.9, "WaveGamma": 3.3,
+                 "WaveJONSWAPParameters": "Partially specified", "WaveType": "JONSWAP",
+                 "WaveHs": 11.2}),
+    ("jonswap", {"WaveTp": 12.9, "WaveGamma": 3.3, "WaveType": "JONSWAP"}),
+    ("jonswap", {"WaveTz": 12.9, "WaveGamma": 3.3, "WaveType": "JONSWAP"}),
+    ("jonswap", {"WaveTz": 12.9, "WaveGamma": 3.3,
+                 "WaveJONSWAPParameters": "Partially specified", "WaveType": "JONSWAP"}),
+    ("airy", {"WavePeriod": 12.9, "WaveHeight": 11.2, "WaveType": "Airy"}),
+    ("dean_stream", {"WaveStreamFunctionOrder": 5, "WavePeriod": 12.9,
+                     "WaveHeight": 11.2, "WaveType": "Dean stream"}),
+])
+def test_wave_selectors_precede_raw_parameters_in_fresh_process(tmp_path, wave_type, raw_train):
+    """Typed and extra raw trains shall place wave selectors before parameters.
+
+    Replace Fully specified with Hs by Partially specified with gamma and Tp
+    in inverted raw order to exercise the gamma-before-Tp dependency.
+    """
+    import os
+    import subprocess
+    import sys
+
+    import yaml
+
+    spec = _make_env_spec(
+        waves={"type": wave_type, "height": 11.2, "period": 12.9},
+        raw_properties={"WaveTrains": [raw_train, raw_train]},
+    )
+    child = """
+import sys
+from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
+from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+spec = ProjectInputSpec.model_validate_json(sys.stdin.buffer.read())
+ModularModelGenerator.from_spec(spec).generate(sys.argv[1])
+"""
+    environment = os.environ.copy()
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        environment.pop(key, None)
+    subprocess.run(
+        [sys.executable, "-c", child, str(tmp_path)], env=environment,
+        input=spec.model_dump_json().encode(), capture_output=True, check=True,
+    )
+    data = yaml.safe_load((tmp_path / "includes/03_environment.yml").read_text())
+    trains = data["Environment"]["WaveTrains"]
+    assert len(trains) == 2
+    for train in trains:
+        keys = list(train)
+        assert keys.index("WaveType") < min(
+            keys.index(key) for key in keys if key.startswith("Wave") and key != "WaveType"
+        )
+        if "WaveJONSWAPParameters" in keys:
+            assert keys.index("WaveJONSWAPParameters") < keys.index("WaveGamma")
+        if train["WaveType"] == "JONSWAP" and "WaveGamma" in keys:
+            assert train["WaveJONSWAPParameters"] == "Partially specified"
+            assert train["WaveGamma"] == raw_train["WaveGamma"]
+            period = "WaveTp" if "WaveTp" in raw_train else "WaveTz"
+            assert train[period] == raw_train[period]
+            assert keys.index("WaveGamma") < keys.index(period)
+        if "WaveTp" in keys and "WaveGamma" in keys:
+            assert keys.index("WaveGamma") < keys.index("WaveTp")
