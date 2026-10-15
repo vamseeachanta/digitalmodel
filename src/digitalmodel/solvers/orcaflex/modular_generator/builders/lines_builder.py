@@ -232,15 +232,17 @@ class LinesBuilder(BaseBuilder):
 
         The horizontal seed is pipe length minus endpoint height. It leaves
         slack for bending and contact; it is not a solved touchdown position.
-        Only planar, level-hull geometry is supported by this seed.
+        Only planar, level-hull geometry is supported by this seed. With a
+        sloping seabed the horizontal span estimate is approximate; anchored
+        endpoint z remains relative to the local seabed.
         """
         vessel = self.spec.equipment.vessel
         stinger = self.spec.equipment.stinger
         pipeline = self.spec.pipeline
         if vessel is None or pipeline is None:
             raise ValueError("S-lay endpoints require vessel and pipeline")
-        if any(vessel.orientation[:2]) or self.spec.environment.seabed.slope:
-            raise ValueError("S-lay endpoint seed requires level hull and seabed")
+        if any(vessel.orientation[:2]):
+            raise ValueError("S-lay endpoint seed requires level hull")
         origin = stinger.origin_position if stinger else [0, 0, 0]
         heading = math.radians(vessel.orientation[2])
         c, s = math.cos(heading), math.sin(heading)
@@ -252,7 +254,8 @@ class LinesBuilder(BaseBuilder):
         if height <= 0 or span <= 0:
             raise ValueError("S-lay endpoint height must be positive and below pipe length")
         return [["Free", x, y, z, 180, 90, 0, None],
-                ["Anchored", x - span * c, y - span * s, 0, 180, 90, 0, None]]
+                ["Anchored", x - span * c, y - span * s, 0, 180,
+                 90 + self.spec.environment.seabed.slope, 0, None]]
 
     def _build_attachments(self, bm_buoy_name: str) -> list[dict[str, Any]]:
         """Build attachment list for buoyancy modules.
