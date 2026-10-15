@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Unified metocean data procurement client across multiple FREE APIs
 # ABOUTME: Automatic provider selection, fallbacks, and streaming date-based queries
 
@@ -335,21 +338,38 @@ class MetoceanClient:
 
     def calculate_extremes(self, stream: Iterator[Dict[str, Any]],
                           parameter: str,
-                          return_periods: List[int] = [1, 10, 50, 100]) -> Dict[int, float]:
+                          return_periods: Optional[List[int]] = None) -> Dict[int, float]:
         """
-        Calculate extreme values from streaming data (in-memory).
+        Calculate Gumbel return values from independent block maxima (in-memory).
 
         Args:
-            stream: Metocean data stream
+            stream: Independent block maxima, supplied by the caller
             parameter: Parameter for extreme analysis (e.g., "wave_height")
-            return_periods: Return periods in years
+            return_periods: Finite periods greater than one, in units of the
+                input block duration. Defaults to [10, 50, 100].
 
         Returns:
             Extreme values for each return period
 
-        Note: Accumulates data in-memory for statistical analysis
-              (avoids storing full dataset to disk)
+        Raises:
+            ValueError: Invalid sample, periods, fitted parameters or return values.
+            Exception: A fitting exception propagates without a numeric fallback.
+
+        Note:
+            No block aggregation or event-rate conversion is performed. Years are
+            valid only for annual maxima. Accumulates data in memory; no intervals
+            are estimated by this wrapper.
         """
+        import numpy as np
+        from scipy import stats
+
+        if return_periods is None:
+            return_periods = [10, 50, 100]
+        periods = np.asarray(return_periods, dtype=float)
+        if (periods.ndim != 1 or periods.size == 0
+                or not np.isfinite(periods).all() or np.any(periods <= 1)):
+            raise ValueError("return periods must be finite and greater than one")
+
         # Collect values (in-memory)
         values = []
 
@@ -359,13 +379,15 @@ class MetoceanClient:
                 values.append(value)
 
         # Fit extreme value distribution (Gumbel)
-        import numpy as np
-        from scipy import stats
+        values_array = np.asarray(values, dtype=float)
+        if (values_array.ndim != 1 or values_array.size < 2
+                or not np.isfinite(values_array).all() or np.ptp(values_array) <= 0):
+            raise ValueError("a finite nonconstant sample with at least two values is required")
 
-        values_array = np.array(values)
-
-        # Fit Gumbel distribution
+        # Fitting errors propagate; invalid fitted parameters are explicit failures.
         params = stats.gumbel_r.fit(values_array)
+        if not np.isfinite(params).all() or params[1] <= 0:
+            raise ValueError("invalid Gumbel fit parameters")
 
         # Calculate return values
         results = {}
@@ -376,6 +398,8 @@ class MetoceanClient:
 
             # Return value
             return_value = stats.gumbel_r.ppf(p, *params)
+            if not np.isfinite(return_value):
+                raise ValueError("nonfinite Gumbel return value")
             results[return_period] = float(return_value)
 
         logger.info(f"Calculated {len(return_periods)} extreme values from {len(values)} records")
