@@ -62,6 +62,8 @@ def compute(data: dict) -> dict:
     return {'bank_and_extremes': bank, 'towing': {
         'section_mean_m_s': mean, 'surface_speed_m_s': surface * factor,
         'shallow_drag_factor': shallow_drag_factor(t['depth_m'], t['draft_m']),
+        'required_bollard_pull_without_slot_N': assessment['required_bollard_pull_N']
+        / shallow_drag_factor(t['depth_m'], t['draft_m']),
         'loads': loads, 'uniform_surface_loads': uniform, 'assessment': assessment,
         'surge_reduction_percent': 100 * (1 - loads['Fx_surge_N'] / uniform['Fx_surge_N']),
     }}
@@ -132,7 +134,10 @@ table{{border-collapse:collapse}}th,td{{border:1px solid #aaa;padding:0.4em}}svg
 </head><body><h1>River current analysis</h1><p>Revision {html.escape(revision)}</p>
 <h2>Summary</h2><p>{html.escape(data['basis'])} The towing case gives {verdict}:
 required nominal pull {t['assessment']['required_bollard_pull_N']/1000:.1f} kN against
-{inp['available_pull_N']/1000:.1f} kN available. This compares steady force and yaw capacities only.</p>
+{inp['available_pull_N']/1000:.1f} kN available. This compares steady force and yaw capacities only.
+The verdict depends on the unvalidated full-width slot multiplier of {t['shallow_drag_factor']:.1f};
+without it, required nominal pull is {t['required_bollard_pull_without_slot_N']/1000:.1f} kN,
+below the available pull, so the verdict reverses under that hypothesis.</p>
 <h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>{history}</table>
 <h2>Bank effects and extremes</h2><p>The synthetic channel is {data['bank']['width_m']:.1f} m wide and
 {data['bank']['depth_m']:.1f} m deep, with a {data['bank']['beam_m']:.1f} m beam and

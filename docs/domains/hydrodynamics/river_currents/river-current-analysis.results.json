@@ -37,6 +37,7 @@
       "Fy_sway_N": 0.0,
       "Mz_yaw_Nm": 0.0
     },
+    "required_bollard_pull_without_slot_N": 100352.30118727652,
     "section_mean_m_s": 2.0,
     "shallow_drag_factor": 9.0,
     "surface_speed_m_s": 3.7500000000000004,

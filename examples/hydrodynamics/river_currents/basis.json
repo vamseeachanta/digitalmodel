@@ -1,10 +1,15 @@
 {
-  "revision": "1",
+  "revision": "2",
   "revisions": [
     {
       "revision": "1",
       "date": "2026-10-14",
       "change": "Initial synthetic river current analysis; expose flow and towing screening assumptions."
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-15",
+      "change": "Expose the towing verdict reversal without the slot multiplier in the summary and results."
     }
   ],
   "basis": "Synthetic inputs; assumed, based on previous experience. No measured river record or hull calibration is claimed.",

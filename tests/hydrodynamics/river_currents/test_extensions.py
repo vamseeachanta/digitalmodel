@@ -215,6 +215,8 @@ def test_worked_examples_and_deterministic_report(tmp_path):
     build(basis_path, second)
     for p in first.iterdir():
         assert p.read_bytes() == (second / p.name).read_bytes()
+        committed = Path('docs/domains/hydrodynamics/river_currents') / p.name
+        assert p.read_bytes() == committed.read_bytes()
     manifest = json.loads((first / 'river-current-analysis.manifest.json').read_text())
     assert manifest['basis_sha256'] == hashlib.sha256(basis_path.read_bytes()).hexdigest()
     for name, digest in manifest['outputs'].items():
@@ -224,6 +226,25 @@ def test_worked_examples_and_deterministic_report(tmp_path):
     assert str(data['revision']) in page
     assert '<svg' in page and 'height above bed' in page
     assert 'src=' not in page and '<script' not in page
+
+
+def test_towing_verdict_reverses_without_slot_multiplier():
+    from digitalmodel.hydrodynamics.river_currents.examples import compute, render
+
+    data = json.loads(Path('examples/hydrodynamics/river_currents/basis.json').read_text())
+    results = compute(data)
+    towing = results['towing']
+    demand = towing['required_bollard_pull_without_slot_N']
+    assert towing['shallow_drag_factor'] == 9
+    assert demand == pytest.approx(towing['assessment']['required_bollard_pull_N'] / 9)
+    assert demand / 1000 == pytest.approx(100.4, abs=0.05)
+    assert demand < data['towing']['available_pull_N']
+    assert towing['assessment']['go'] is False
+    assert towing['loads']['Mz_yaw_Nm'] == 0
+    summary = render(data, results).split('<h2>Summary</h2>')[1].split('<h2>Revision history</h2>')[0]
+    assert 'slot multiplier of 9.0' in summary
+    assert '100.4 kN' in summary
+    assert 'verdict reverses' in summary
 
 
 def test_revision_must_match_latest_record(tmp_path):
