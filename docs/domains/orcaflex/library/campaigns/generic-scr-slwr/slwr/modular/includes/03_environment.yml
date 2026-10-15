@@ -36,11 +36,12 @@ Environment:
   SeabedNormalStiffness: 100.0
   SeabedShearStiffness: 100.0
   WaveTrains:
-  - WaveTp: 12.9
-    WaveType: JONSWAP
+  - WaveType: JONSWAP
+    WaveJONSWAPParameters: Partially specified
+    WaveGamma: 3.3
+    WaveTp: 12.9
     WaveDirection: 180.0
     WaveHs: 11.2
-    WaveGamma: 3.3
   RefCurrentSpeed: 0.0
   RefCurrentDirection: 180.0
   CurrentDepth, CurrentFactor, CurrentRotation:

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Builder for the Environment section of OrcaFlex models."""
 
 from typing import Any
@@ -349,17 +352,43 @@ class EnvironmentBuilder(BaseBuilder):
                     "WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel", None
                 )
 
-            result.append(wave_train)
+            result.append(self._order_wave_train(wave_train))
 
-        # Pass through any raw trains beyond the spec's train count verbatim
-        # so extra trains (e.g. a swell train the typed spec did not capture)
+        # Retain values of raw trains beyond the spec's train count, ordering
+        # their selectors too. Extra trains the typed spec did not capture
         # are never silently dropped from the regenerated model.
         for j in range(len(waves.trains), len(raw_trains)):
             extra = raw_trains[j]
             if isinstance(extra, dict):
-                result.append(dict(extra))
+                result.append(self._order_wave_train(extra))
 
         return result
+
+    @staticmethod
+    def _order_wave_train(train: dict[str, Any]) -> dict[str, Any]:
+        """Place wave selectors before properties they enable.
+
+        Raw mappings can retain a parameter before its selector even after
+        overlaying WaveType. Assignment updates values without moving keys.
+        WaveJONSWAPParameters also controls whether WaveGamma is settable.
+        JONSWAP trains carrying gamma explicitly select partially specified
+        parameters when no selector was supplied. Set gamma before Tp because
+        changing gamma holds Tz constant and updates Tp.
+
+        Args:
+            train: Wave properties after spec overlays, or an extra raw train.
+
+        Returns:
+            Existing values with selectors and gamma first, an explicit JONSWAP
+            selector when needed, and the remaining order retained.
+        """
+        if (train.get("WaveType") in ("JONSWAP", "jonswap")
+                and "WaveGamma" in train and "WaveJONSWAPParameters" not in train):
+            train = dict(train, WaveJONSWAPParameters="Partially specified")
+        selectors = ("Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma")
+        ordered = {key: train[key] for key in selectors if key in train}
+        ordered.update((key, value) for key, value in train.items() if key not in ordered)
+        return ordered
 
     def _build_current_profile(
         self,
