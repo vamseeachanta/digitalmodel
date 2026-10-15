@@ -375,6 +375,7 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
         assert (runner / "base").read_text().startswith("base ")
 
 
+# Updated heads retain the same current-base merge checks.
 def test_base_consumers_use_local_tip() -> None:
     """Detection and register checks use the base repository even for forks."""
     workflow = load_workflow("quality-gates-by-domain.yml")
