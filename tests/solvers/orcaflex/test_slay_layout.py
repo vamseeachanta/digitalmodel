@@ -106,3 +106,98 @@ def test_support_types_are_defined_before_vessel_references(tmp_path, case_index
                 assert support["SupportType"] in defined
                 references += 1
     assert references == len(spec.equipment.stinger.rollers) > 1
+
+
+@pytest.mark.parametrize("case_id", [f"d{d}-t{t}" for d in range(2) for t in range(3)])
+def test_hand_closure_screens_leave_the_other_suspect_open(case_id):
+    """A span correction alone and a tangent correction alone are insufficient."""
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import screen_case
+
+    screen = screen_case(CAMPAIGN, case_id)
+    current = screen["current"]
+    assert current["excess_m"] > screen["lead_m"]
+    assert current["departure_deg"] - current["tip_angle_deg"] > screen["angle_tolerance_deg"]
+    length_only = screen["length_only"]
+    assert abs(length_only["excess_m"]) <= screen["length_tolerance_m"]
+    assert length_only["angle_mismatch_deg"] > screen["angle_tolerance_deg"]
+    angle_only = screen["angle_only"]
+    assert abs(angle_only["departure_deg"] - angle_only["tip_angle_deg"]) <= screen["angle_tolerance_deg"]
+    assert angle_only["excess_m"] > screen["lead_m"] + screen["length_tolerance_m"]
+    table = yaml.safe_load((CAMPAIGN / "case-table.yml").read_text())
+    declared = next(row for row in table["static_equilibrium_screen"]["all_cases"] if row["id"] == case_id)
+    for key in ("excess_m", "departure_deg"):
+        assert declared[key] == round(current[key], 1)
+    for declared_key, computed_key in (("angle_only_arc_m", "supported_arc_m"),
+                                       ("angle_only_tip_deg", "tip_angle_deg"),
+                                       ("angle_only_excess_m", "excess_m")):
+        assert declared[declared_key] == round(angle_only[computed_key], 1)
+    assert current["suspended_length_m"] > current["suspended_span_m"] > 0
+    assert current["horizontal_tension_kn"] == pytest.approx(
+        screen["top_tension_kn"] - screen["weight_kn_m"] * screen["depth_m"])
+    assert current["taut_length_m"] + current["excess_m"] == pytest.approx(screen["pipe_length_m"])
+
+
+def test_anchor_span_probe_changes_only_anchor_x_and_binds_base_bytes(tmp_path):
+    """The extra variation holds all loads, supports and production inputs fixed."""
+    import hashlib
+    import json
+    from copy import deepcopy
+
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import prepare_anchor_span_probe
+
+    preparation = json.loads((CAMPAIGN / "preparation.json").read_text())
+    assert preparation["case_table_sha256"] == hashlib.sha256((CAMPAIGN / "case-table.yml").read_bytes()).hexdigest()
+    before = {p: p.read_bytes() for p in CAMPAIGN.rglob("*") if p.is_file()}
+    manifest = prepare_anchor_span_probe(CAMPAIGN, tmp_path)
+    probe = tmp_path / manifest["probe_file"]
+    document = yaml.safe_load(probe.read_text(encoding="utf-8"))
+    assert document["BaseFile"] == "../models/d0-t0/master.yml"
+    assert set(document) == {"BaseFile", "Lines"}
+    original = yaml.safe_load((CAMPAIGN / "models/d0-t0/includes/07_lines.yml").read_text())
+    expected = deepcopy(original["Lines"])
+    key = next(key for key in expected[0] if key.startswith("Connection, "))
+    end_a_x = expected[0][key][0][1]
+    expected[0][key][1][1] = end_a_x - manifest["target_span_m"]
+    assert document["Lines"] == expected
+    assert manifest["target_span_m"] > manifest["initial_span_m"]
+    assert manifest["target_span_m"] - manifest["initial_span_m"] == pytest.approx(
+        manifest["screen"]["current"]["excess_m"])
+    assert manifest["probe_sha256"] == hashlib.sha256(probe.read_bytes()).hexdigest()
+    base_files = {p.relative_to(CAMPAIGN).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                  for p in (CAMPAIGN / "models/d0-t0").rglob("*.yml")}
+    assert manifest["base_files"] == base_files
+    assert manifest["case_table_sha256"] == hashlib.sha256((CAMPAIGN / "case-table.yml").read_bytes()).hexdigest()
+    assert manifest["native_status"] == "not_run"
+    assert set(manifest["required_readings"]) == {
+        "end_a_displacement", "wire_direction_and_length", "active_roller_contacts",
+        "departure_slope", "force_residuals", "tip_contact_force_and_curvature",
+        "maximum_overbend_strain", "grounded_effective_tension"}
+    saved = json.loads((tmp_path / "probes/d0-t0-anchor-span.json").read_text())
+    assert saved == manifest
+    assert all(p.read_bytes() == content for p, content in before.items())
+    assert set(p for p in CAMPAIGN.rglob("*") if p.is_file()) == set(before)
+    second = tmp_path / "repeat"
+    prepare_anchor_span_probe(CAMPAIGN, second)
+    assert {p.relative_to(tmp_path / "probes"): p.read_bytes() for p in (tmp_path / "probes").iterdir()} == {
+        p.relative_to(second / "probes"): p.read_bytes() for p in (second / "probes").iterdir()}
+
+
+def test_probe_preparation_never_imports_native_interface(tmp_path):
+    """Text preparation must remain independent of the licensed interface."""
+    import subprocess
+    import sys
+
+    code = '''
+import importlib.abc, sys
+from pathlib import Path
+class DenyNative(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname.startswith(("OrcFxAPI", "digitalmodel.solvers.orcaflex.orcaflex_api")):
+            raise AssertionError("Native interface access during probe preparation")
+sys.meta_path.insert(0, DenyNative())
+from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import prepare_anchor_span_probe
+prepare_anchor_span_probe(Path(sys.argv[1]), Path(sys.argv[2]))
+'''
+    result = subprocess.run([sys.executable, "-c", code, str(CAMPAIGN), str(tmp_path)],
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
