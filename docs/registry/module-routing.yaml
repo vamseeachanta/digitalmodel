@@ -13,6 +13,10 @@ modules:
     key_tests: [tests/ansys/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#ansys
   - module: asset_integrity
+    submodules:
+      asset_integrity:
+        agent_pack: src/digitalmodel/asset_integrity/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/asset_integrity/
     maturity: stable
     owner_wiki: docs/domains/README.md
