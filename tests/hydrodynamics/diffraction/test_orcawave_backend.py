@@ -812,3 +812,14 @@ class TestUnsupportedSolverOptions:
         spec = _ship_spec()
         path = OrcaWaveBackend().generate_single(spec, tmp_path)
         assert "SolverPrecision" not in path.read_text()
+
+
+@pytest.mark.parametrize("symmetry", ["none", "xz", "yz", "xz+yz"])
+def test_full_body_symmetry_does_not_request_mesh_expansion(symmetry):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_body_dict
+
+    spec = _ship_spec()
+    spec.vessel.geometry.symmetry = type(spec.vessel.geometry.symmetry)(symmetry)
+    body = _build_body_dict(spec.get_bodies()[0], spec)
+    assert body["BodyMeshSymmetry"] == "None"
+    assert body["BodyMeshFileName"] == Path(spec.vessel.geometry.mesh_file).name

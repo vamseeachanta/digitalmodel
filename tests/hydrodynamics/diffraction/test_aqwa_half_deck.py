@@ -354,3 +354,21 @@ def test_offset_box_specs_use_full_body_decks(spec_path):
     backend._spec_dir = path.parent
     assert all(body.vessel.geometry.symmetry == "none" for body in spec.get_bodies())
     assert "SYMX" not in "\n".join(backend.build_deck2(spec))
+
+
+def test_orcawave_keeps_verified_symmetric_box_full(tmp_path):
+    import yaml
+
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
+
+    spec = _spec(tmp_path, lid=False)
+    mesh = Path(spec.vessel.geometry.mesh_file)
+    original = mesh.read_bytes()
+    # AQWA verifies the full mirrored box and writes only its six-panel half.
+    assert len(_elements(AQWABackend().build_deck2(spec))) == 6
+    output = OrcaWaveBackend().generate_single(spec, tmp_path / "orcawave")
+    body = yaml.safe_load(output.read_text(encoding="utf-8"))["Bodies"][0]
+    assert body["BodyMeshSymmetry"] == "None"
+    assert body["BodyMeshFileName"] == mesh.name
+    assert mesh.read_bytes() == original
+    assert int(original.decode("utf-8").splitlines()[3]) == len(_box_panels())

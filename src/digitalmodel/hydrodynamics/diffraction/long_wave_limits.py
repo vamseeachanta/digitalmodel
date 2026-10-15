@@ -78,23 +78,27 @@ def expected_rao(mode: str, omega: float, heading_deg: float, depth: float,
     oscillator approximation described above. Otherwise the pure slope limit is returned.
     """
     beta = math.radians(heading_deg)
+    sine, cosine = math.sin(beta), math.cos(beta)
+    # Cardinal-heading zeros must not depend on trigonometric roundoff.
+    sine = 0.0 if abs(sine) < 1e-12 else sine
+    cosine = 0.0 if abs(cosine) < 1e-12 else cosine
     k = wavenumber(omega, depth, gravity)
     coth = 1.0 if math.isinf(depth) else 1.0 / math.tanh(k * depth)
     if mode == "heave":
         return 1.0
     if mode == "surge":
-        return coth * abs(math.cos(beta))
+        return coth * abs(cosine)
     if mode == "sway":
-        return coth * abs(math.sin(beta))
+        return coth * abs(sine)
     if mode in _ROTATIONS:
-        factor = abs(math.sin(beta)) if mode == "roll" else abs(math.cos(beta))
+        factor = abs(sine) if mode == "roll" else abs(cosine)
         amplification = (
             1.0 if natural_frequency is None
             else dynamic_amplification(omega, natural_frequency)
         )
         return k * factor * amplification
     if mode == "yaw":
-        return k * coth * abs(math.sin(beta) * math.cos(beta))
+        return k * coth * abs(sine * cosine)
     raise ValueError(f"unknown mode {mode!r}")
 
 
@@ -108,20 +112,29 @@ class LongWaveCheck:
     relative_difference: float | None
     verdict: str  # "not_applicable", "not_implausible" or "implausible"
     absolute_tolerance: float | None = None
+    reference_amplitude: float | None = None
 
 
 def judge(observed: float, expected: float, tolerance: float, *,
           body_length: float, omega: float, depth: float,
           minimum_wavelength_ratio: float = 10.0,
-          absolute_tolerance: float | None = None) -> LongWaveCheck:
+          absolute_tolerance: float | None = None,
+          reference_amplitude: float | None = None) -> LongWaveCheck:
     """Compare only when wavelength exceeds the stated multiple of body length.
 
     The default screening criterion is wavelength > 10 body lengths (kL < 2*pi/10).
     This is an explicit applicability screen, not an error bound; callers may fix a
     stricter ratio in advance. ``body_length`` and ``depth`` are metres, ``omega``
-    is rad/s. A zero comparator requires ``absolute_tolerance`` in the RAO's units.
-    Comparators with magnitude at or below that tolerance also use the absolute
-    path; their relative difference is undefined and is returned as None.
+    is rad/s. With ``reference_amplitude``, the allowed absolute difference is
+    ``tolerance * max(abs(expected), reference_amplitude)``. Fix that positive
+    reference before observing results, e.g. the largest comparator magnitude
+    for the same quantity across the compared headings at this period. It has
+    the same units as the RAO; never derive it from observed values or errors.
+
+    Without a reference, nonzero comparators use relative error. An exact zero
+    requires ``absolute_tolerance`` in RAO units instead. The two tolerance bases
+    are mutually exclusive. ``relative_difference`` remains the signed difference
+    divided by expected (None for zero), even when the reference sets the verdict.
     """
     inputs = (observed, expected, tolerance, body_length, minimum_wavelength_ratio)
     if not all(math.isfinite(value) for value in inputs):
@@ -132,12 +145,24 @@ def judge(observed: float, expected: float, tolerance: float, *,
         not math.isfinite(absolute_tolerance) or absolute_tolerance < 0
     ):
         raise ValueError("absolute tolerance must be finite and nonnegative")
+    if reference_amplitude is not None:
+        if not math.isfinite(reference_amplitude) or reference_amplitude <= 0:
+            raise ValueError("reference amplitude must be finite and positive")
+        if absolute_tolerance is not None:
+            raise ValueError("provide either reference amplitude or absolute tolerance")
     wavelength = 2 * math.pi / wavenumber(omega, depth)
     if wavelength <= minimum_wavelength_ratio * body_length:
-        return LongWaveCheck(observed, expected, tolerance, None, "not_applicable", absolute_tolerance)
-    if expected == 0.0 or (
-        absolute_tolerance is not None and abs(expected) <= absolute_tolerance
-    ):
+        return LongWaveCheck(observed, expected, tolerance, None, "not_applicable",
+                             absolute_tolerance, reference_amplitude)
+    if reference_amplitude is not None:
+        scale = max(abs(expected), reference_amplitude)
+        difference = observed - expected
+        verdict = ("not_implausible" if abs(difference) / scale <= tolerance + 1e-12
+                   else "implausible")
+        rel = difference / expected if expected != 0.0 else None
+        return LongWaveCheck(observed, expected, tolerance, rel, verdict,
+                             reference_amplitude=reference_amplitude)
+    if expected == 0.0:
         if absolute_tolerance is None:
             raise ValueError("a zero comparator requires an absolute tolerance")
         verdict = "not_implausible" if abs(observed) <= absolute_tolerance else "implausible"

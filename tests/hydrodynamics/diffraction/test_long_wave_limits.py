@@ -153,11 +153,11 @@ class TestJudge:
         assert check.absolute_tolerance == 0.01
 
     @pytest.mark.parametrize("expected", [-0.01, 0.01])
-    def test_absolute_comparator_boundary_is_inclusive(self, expected):
+    def test_nonzero_comparator_retains_relative_check(self, expected):
         check = judge(0.001, expected, 0.02, body_length=10, omega=0.05,
                       depth=500, absolute_tolerance=0.01)
-        assert check.verdict == "not_implausible"
-        assert check.relative_difference is None
+        assert check.verdict == "implausible"
+        assert check.relative_difference == pytest.approx((0.001 - expected) / expected)
 
     def test_short_wave_is_not_applicable(self):
         check = judge(1, 1, 0.02, body_length=180, omega=1, depth=500)
@@ -171,3 +171,53 @@ class TestJudge:
         omega = math.sqrt(G * 2 * math.pi / (multiple * length))
         assert judge(1, 1, 0.02, body_length=length, omega=omega,
                      depth=math.inf).verdict == verdict
+
+
+@pytest.mark.parametrize("expected, delta, verdict", [
+    (0.0, 0.01, "not_implausible"), (0.0, 0.03, "implausible"),
+    (0.01, -0.015, "not_implausible"), (0.01, -0.03, "implausible"),
+    (10.0, 0.19, "not_implausible"), (10.0, 0.21, "implausible"),
+])
+def test_fixed_reference_floor(expected, delta, verdict):
+    check = judge(expected + delta, expected, 0.02, body_length=10,
+                  omega=0.05, depth=500, reference_amplitude=1.0)
+    assert check.verdict == verdict
+    assert check.reference_amplitude == 1.0
+
+
+@pytest.mark.parametrize("mode, heading", [
+    ("surge", 90), ("sway", 180), ("roll", 180),
+    ("pitch", 90), ("yaw", 90),
+])
+def test_cardinal_zero_requires_explicit_tolerance_basis(mode, heading):
+    expected = expected_rao(mode, 0.05, heading, 500)
+    assert expected == 0.0
+    with pytest.raises(ValueError, match="zero comparator"):
+        judge(0.001, expected, 0.02, body_length=10, omega=0.05, depth=500)
+
+
+@pytest.mark.parametrize("mode, heading", [("roll", 90), ("pitch", 180), ("yaw", 45)])
+def test_rotation_reference_is_fixed_from_comparators(mode, heading):
+    reference = max(expected_rao(mode, 0.05, beta, 500)
+                    for beta in (0, 45, 90, 135, 180))
+    expected = expected_rao(mode, 0.05, heading, 500)
+    for observed, verdict in [(expected, "not_implausible"),
+                              (10 * expected, "implausible")]:
+        check = judge(observed, expected, 0.02, body_length=10, omega=0.05,
+                      depth=500, reference_amplitude=reference)
+        assert check.verdict == verdict
+    assert judge(10 * expected, expected, 0.02, body_length=10, omega=0.05,
+                 depth=500, absolute_tolerance=0.01).verdict == "implausible"
+
+
+@pytest.mark.parametrize("reference", [0, -1, math.inf, math.nan])
+def test_invalid_reference_is_rejected(reference):
+    with pytest.raises(ValueError, match="reference amplitude"):
+        judge(1, 1, 0.02, body_length=10, omega=0.05, depth=500,
+              reference_amplitude=reference)
+
+
+def test_reference_and_absolute_tolerance_are_mutually_exclusive():
+    with pytest.raises(ValueError, match="either"):
+        judge(0, 0, 0.02, body_length=10, omega=0.05, depth=500,
+              reference_amplitude=1, absolute_tolerance=0.01)

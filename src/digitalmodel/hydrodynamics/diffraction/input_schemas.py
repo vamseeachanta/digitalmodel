@@ -131,8 +131,9 @@ class VesselGeometry(BaseModel):
     """Vessel geometry specified by a full-body mesh, never a half mesh.
 
     Symmetry declares a property of that full body. The source mesh remains
-    full for the OrcaWave backend. AQWA verifies xz mirror panels and extracts
-    the nonnegative-y half for SYMX; panels must be split at y = 0, with no
+    full for the OrcaWave backend, which emits BodyMeshSymmetry: None for every
+    declaration to prevent half/quarter-mesh expansion. AQWA verifies xz mirror
+    panels and extracts the nonnegative-y half for SYMX; panels must be split at y = 0, with no
     panels lying wholly in that plane. Other symmetry flags retain full meshes.
     """
 

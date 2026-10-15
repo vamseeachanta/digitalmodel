@@ -67,13 +67,6 @@ _CONTROL_SURFACE_FORMAT_MAP: dict[str, str] = {
     "stl": "STL",
 }
 
-_SYMMETRY_MAP: dict[str, str] = {
-    "none": "None",
-    "xz": "xz plane",
-    "yz": "yz plane",
-    "xz+yz": "xz and yz planes",
-}
-
 _DOF_MAP: dict[str, str] = {
     "surge": "BodyFixedDOFx",
     "sway": "BodyFixedDOFy",
@@ -252,7 +245,9 @@ def _build_body_dict(
 
     mesh_file = Path(geom.mesh_file).name
     mesh_fmt = _MESH_FORMAT_MAP.get(geom.mesh_format.value, "Auto")
-    mesh_sym = _SYMMETRY_MAP.get(geom.symmetry.value, "None")
+    # Canonical geometry always supplies a full-body mesh. OrcaWave's mesh
+    # symmetry expands a half/quarter mesh, so enabling it would duplicate panels.
+    mesh_sym = "None"
 
     body: dict[str, Any] = {}
     body["BodyName"] = vessel.name
