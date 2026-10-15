@@ -207,6 +207,10 @@ def real_accuracy(dataset: LabelledSet | None, ml_classifier, heuristic_classifi
     methods = {name: score_predictions(labels, [classifier(c.card) for c in dataset.cards], **scoring)
                for name, classifier in (("ml", ml_classifier), ("heuristic", heuristic_classifier))}
     return {"path": path, "status": "Evaluated" if dataset.cards else "Not Evaluated",
+            "acquisition_counts": {
+                acquisition: sum(c.provenance.acquisition == acquisition for c in dataset.cards)
+                for acquisition in ("recorded", "digitised_graphic")
+            },
             "methods": methods, "crosswalk": dataset.crosswalk,
             "unmapped_labels": dataset.unmapped_labels,
             "provenance": [asdict(c.provenance) for c in dataset.cards]}

@@ -24,6 +24,7 @@ def provenance(kind="real"):
     return api().LabellingProvenance(
         source="in-memory fixture", labeller="fixture author",
         date="2026-10-14", licence="CC0-1.0", kind=kind,
+        acquisition="generated" if kind == "synthetic" else "recorded",
     )
 
 
@@ -33,7 +34,7 @@ def test_required_provenance_and_validation():
         a.LabelledCard(card=card(), label="NORMAL")
     with pytest.raises(ValueError):
         a.LabellingProvenance(source="", labeller="fixture author",
-                             date="2026-10-14", licence="CC0-1.0", kind="real")
+                             date="2026-10-14", licence="CC0-1.0", kind="real", acquisition="recorded")
     with pytest.raises(ValueError):
         a.LabelledCard(card=card(), label="unknown", provenance=provenance())
 
@@ -88,7 +89,8 @@ def fixture_document():
         "crosswalk": [{"external_label": "healthy", "mode": "NORMAL", "reason": "fixture equivalence"}],
         "cards": [{"position": [0, 1, 1, 0], "load": [0, 0, 1, 1], "label": label,
                    "provenance": {"source": "in-memory fixture", "labeller": "fixture author",
-                                  "date": "2026-10-14", "licence": "CC0-1.0", "kind": "real"}}
+                                  "date": "2026-10-14", "licence": "CC0-1.0", "kind": "real",
+                                  "acquisition": "recorded"}}
                   for label in ["healthy", "ambiguous valve"]],
     }
 
@@ -236,3 +238,147 @@ def test_legacy_serialization_suppresses_thin_class_percentages():
 def test_convenience_function_accepts_section_inputs():
     result = api().run_benchmark(cv_folds=None).to_dict()
     assert result["sections"]["real_card_accuracy"]["status"] == "Not Evaluated"
+
+
+def acquisition_document(acquisition="recorded"):
+    d = fixture_document()
+    for record in d["cards"]:
+        record["provenance"]["acquisition"] = acquisition
+        if acquisition == "digitised_graphic":
+            record["provenance"].update(
+                publication="In-memory publication fixture",
+                figure_or_page="Figure 1",
+                digitising_method="Manual point tracing fixture",
+            )
+    return d
+
+
+@pytest.mark.parametrize("acquisition", ["recorded", "digitised_graphic"])
+def test_loader_accepts_explicit_acquisition_and_retains_citation(acquisition):
+    loaded = api().load_labelled_set(acquisition_document(acquisition))
+    p = loaded.cards[0].provenance
+    assert p.acquisition == acquisition
+    if acquisition == "digitised_graphic":
+        assert p.publication == "In-memory publication fixture"
+        assert p.figure_or_page == "Figure 1"
+        assert p.digitising_method == "Manual point tracing fixture"
+
+
+@pytest.mark.parametrize("field", ["publication", "figure_or_page", "digitising_method"])
+@pytest.mark.parametrize("value", [None, "", "   ", 1])
+def test_loader_rejects_incomplete_digitised_citations(field, value):
+    d = acquisition_document("digitised_graphic")
+    # Include the unmapped card: dropping a label must not bypass provenance.
+    d["cards"][1]["provenance"][field] = value
+    with pytest.raises(ValueError):
+        api().load_labelled_set(d)
+
+
+@pytest.mark.parametrize("acquisition", [None, "", "unknown"])
+def test_loader_rejects_invalid_acquisition(acquisition):
+    with pytest.raises(ValueError):
+        api().load_labelled_set(acquisition_document(acquisition))
+
+
+def test_loader_requires_acquisition_and_digitised_citation_fields():
+    d = acquisition_document()
+    for record in d["cards"]:
+        del record["provenance"]["acquisition"]
+    with pytest.raises((TypeError, ValueError)):
+        api().load_labelled_set(d)
+    for field in ("acquisition", "publication", "figure_or_page", "digitising_method"):
+        d = acquisition_document("digitised_graphic")
+        del d["cards"][0]["provenance"][field]
+        with pytest.raises((TypeError, ValueError)):
+            api().load_labelled_set(d)
+
+
+def test_real_accuracy_counts_recorded_and_digitised_cards_separately():
+    d = acquisition_document()
+    digitised = acquisition_document("digitised_graphic")["cards"][0]
+    d["cards"].extend([digitised, digitised.copy()])
+    section = api().BenchmarkRunner(
+        real_set=api().load_labelled_set(d), minimum_count=3,
+        ml_classifier=lambda c: "NORMAL", heuristic_classifier=lambda c: "GAS_LOCK",
+    ).run().to_dict()["sections"]["real_card_accuracy"]
+    assert section["acquisition_counts"] == {"recorded": 1, "digitised_graphic": 2}
+    assert [p["acquisition"] for p in section["provenance"]] == [
+        "recorded", "digitised_graphic", "digitised_graphic",
+    ]
+    assert section["provenance"][1]["figure_or_page"] == "Figure 1"
+    assert json.loads(json.dumps(section, allow_nan=False)) == section
+
+
+@pytest.mark.parametrize("name", ["vision_not_evaluated", "heuristic_legacy_threshold"])
+def test_empty_method_is_not_evaluated_in_json(name):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.runner import MethodResult
+    method = MethodResult(name, 0, 0)
+    result = json.loads(json.dumps(method.to_dict(), allow_nan=False))
+    assert result["status"] == "Not Evaluated"
+    assert "accuracy" not in result
+    assert method.accuracy is None
+
+
+@pytest.mark.parametrize("empty,vision", [(True, False), (True, True), (False, False)])
+def test_runner_serializes_unrun_methods_without_accuracy(empty, vision):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.vision_classifier import StubVisionClassifier
+    a = api()
+    result = a.BenchmarkRunner(
+        test_set=[] if empty else a.build_hold_out_test_set(samples_per_mode=1)[:1],
+        vision_classifier=StubVisionClassifier() if vision else None,
+        heuristic_classifier=lambda c: "NORMAL",
+    ).run().to_dict()
+    for name in (["heuristic", "vision"] if empty else ["vision"]):
+        assert result[name]["status"] == "Not Evaluated"
+        assert "accuracy" not in result[name]
+
+
+@pytest.mark.parametrize("cards,vision", [(False, False), (False, True), (True, False)])
+def test_recommendation_without_comparison_is_not_evaluated(cards, vision):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.vision_classifier import StubVisionClassifier
+    a = api()
+    result = a.BenchmarkRunner(
+        test_set=a.build_hold_out_test_set(samples_per_mode=1)[:1] if cards else [],
+        vision_classifier=StubVisionClassifier() if vision else None,
+        heuristic_classifier=lambda c: "NORMAL",
+    ).run()
+    assert result.recommendation == "Not Evaluated"
+
+
+def comparison_runner(labels, minimum_count=2, heuristic="GAS_LOCK", vision="NORMAL"):
+    from types import SimpleNamespace
+    from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.vision_classifier import ClassifierBackend
+    a = api()
+    cards = [a.LabelledCard(card(), label, provenance("synthetic")) for label in labels]
+    classifier = SimpleNamespace(
+        backend=ClassifierBackend.STUB,
+        classify=lambda c, label: SimpleNamespace(prediction=vision),
+    )
+    return a.BenchmarkRunner(
+        test_set=cards, vision_classifier=classifier, minimum_count=minimum_count,
+        heuristic_classifier=lambda c: heuristic,
+    )
+
+
+@pytest.mark.parametrize("labels", [["NORMAL"], ["NORMAL", "NORMAL", "GAS_LOCK"]])
+def test_recommendation_requires_every_scored_class_at_minimum(labels):
+    result = comparison_runner(labels).run()
+    assert result.recommendation == "too thin to score"
+
+
+@pytest.mark.parametrize("heuristic,vision,action", [
+    ("GAS_LOCK", "NORMAL", "REPLACE"),
+    ("NORMAL", "NORMAL", "AUGMENT"),
+    ("NORMAL", "GAS_LOCK", "KEEP"),
+])
+def test_recommendation_at_threshold_names_synthetic_stub_comparison(heuristic, vision, action):
+    result = comparison_runner(["NORMAL", "NORMAL"], heuristic=heuristic, vision=vision).run()
+    assert result.recommendation.startswith(f"[{action}]")
+    assert "stub comparison on synthetic cards" in result.recommendation.lower()
+    assert "legacy threshold" in result.recommendation.lower()
+
+
+def test_recommendation_does_not_describe_real_cards_as_synthetic():
+    runner = comparison_runner(["NORMAL", "NORMAL"])
+    runner.test_set[0].provenance = provenance("real")
+    assert runner.run().recommendation == "Not Evaluated"

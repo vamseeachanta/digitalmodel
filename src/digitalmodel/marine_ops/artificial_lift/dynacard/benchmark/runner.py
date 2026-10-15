@@ -29,26 +29,31 @@ class MethodResult:
     per_mode_statistics: Dict[str, Any] = field(default_factory=dict)
 
     @property
-    def accuracy(self) -> float:
-        """Overall accuracy in [0, 1]."""
+    def accuracy(self) -> float | None:
+        """Overall accuracy in [0, 1], or None when no cards were evaluated."""
         total = self.correct + self.wrong
         if total == 0:
-            return 0.0
+            return None
         return self.correct / total
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialise to a JSON-compatible dictionary."""
-        return {
+        result = {
             "method_name": self.method_name,
             "correct": self.correct,
             "wrong": self.wrong,
-            "accuracy": round(self.accuracy, 4),
             "per_mode_statistics": self.per_mode_statistics,
             "per_mode_accuracy": {
                 k: round(v, 4) for k, v in self.per_mode_accuracy.items()
                 if self.per_mode_statistics.get(k, {}).get("status") == "Evaluated"
             },
         }
+        accuracy = self.accuracy
+        if accuracy is None:
+            result["status"] = "Not Evaluated"
+        else:
+            result.update(status="Evaluated", accuracy=round(accuracy, 4))
+        return result
 
 
 @dataclass
@@ -140,9 +145,12 @@ class BenchmarkRunner:
         heuristic_result = self._evaluate_heuristic()
         vision_result = self._evaluate_vision()
         recommendation = (
-            _derive_recommendation(heuristic_result, vision_result)
-            if self.test_set and self.vision_classifier is not None
-            else "[KEEP] No vision comparison evaluated."
+            _derive_recommendation(
+                heuristic_result, vision_result,
+                minimum_count=self.scoring["minimum_count"],
+            )
+            if all(card.provenance.kind == "synthetic" for card in self.test_set)
+            else "Not Evaluated"
         )
         sections = {
             "synthetic_cross_validation": measurements.cross_validation(self.cv_folds, **self.scoring),
@@ -272,45 +280,44 @@ def run_benchmark(
 def _derive_recommendation(
     heuristic: MethodResult,
     vision: MethodResult,
+    *,
+    minimum_count: int = measurements.DEFAULT_MINIMUM_COUNT,
 ) -> str:
-    """Derive a textual recommendation from benchmark results.
+    """Qualify a stub comparison on synthetic cards against legacy thresholds.
 
-    Decision rules (mirroring WRK-251 acceptance criterion):
-    - vision_accuracy >= heuristic_accuracy + 0.05  →  replace
-    - vision_accuracy >= heuristic_accuracy - 0.02  →  augment
-    - otherwise                                      →  keep heuristics
+    No comparison returns Not Evaluated. Both methods must reach minimum_count
+    in every scored class before any replace, augment or keep action is issued.
+    Below that threshold the result is too thin to score. Eligible comparisons
+    retain the compatibility delta rules: replace at +0.05, augment at -0.02
+    or above, otherwise keep. These actions describe the synthetic stub only.
 
     Args:
-        heuristic: MethodResult for the ML/heuristic baseline.
-        vision: MethodResult for the vision model.
+        heuristic: Result for the legacy threshold rules.
+        vision: Result for the numerical ML vision stub on the same cards.
+        minimum_count: Required count in every scored class for both methods.
 
     Returns:
-        Recommendation string with accuracy figures cited.
+        Evaluation status or a qualified synthetic stub comparison action.
     """
     h_acc = heuristic.accuracy
     v_acc = vision.accuracy
+    if h_acc is None or v_acc is None:
+        return "Not Evaluated"
+    modes = set(heuristic.per_mode_statistics) | set(vision.per_mode_statistics)
+    if not modes or any(
+        method.per_mode_statistics.get(mode, {}).get("count", 0) < minimum_count
+        for method in (heuristic, vision) for mode in modes
+    ):
+        return "too thin to score"
     delta = v_acc - h_acc
-
     if delta >= 0.05:
         action = "replace"
-        rationale = (
-            f"Vision model outperforms heuristic by {delta:.1%} "
-            f"({v_acc:.1%} vs {h_acc:.1%}). Recommend replacing heuristics."
-        )
     elif delta >= -0.02:
         action = "augment"
-        rationale = (
-            f"Vision model is within 2% of heuristic accuracy "
-            f"({v_acc:.1%} vs {h_acc:.1%}, delta={delta:+.1%}). "
-            "Recommend augmenting: use vision model as second opinion on "
-            "uncertain cases (confidence < 0.75)."
-        )
     else:
         action = "keep"
-        rationale = (
-            f"Vision model underperforms heuristic by {-delta:.1%} "
-            f"({v_acc:.1%} vs {h_acc:.1%}). Recommend keeping heuristics; "
-            "re-evaluate in 2-3 months when vision model quality improves."
-        )
-
-    return f"[{action.upper()}] {rationale}"
+    return (
+        f"[{action.upper()}] Stub comparison on synthetic cards: numerical ML stub "
+        f"versus legacy threshold rules ({v_acc:.1%} vs {h_acc:.1%}, delta={delta:+.1%}). "
+        f"Compatibility action: {action}."
+    )

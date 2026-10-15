@@ -31,6 +31,10 @@ class LabellingProvenance:
     date: str
     licence: str
     kind: str
+    acquisition: str
+    publication: str | None = None
+    figure_or_page: str | None = None
+    digitising_method: str | None = None
 
     def __post_init__(self) -> None:
         """Reject incomplete provenance rather than inventing it."""
@@ -40,6 +44,17 @@ class LabellingProvenance:
         calendar_date.fromisoformat(self.date)
         if self.kind not in {"real", "synthetic", "plate"}:
             raise ValueError("Provenance kind must be real, synthetic or plate")
+        if self.acquisition not in {"recorded", "digitised_graphic", "generated"}:
+            raise ValueError("Acquisition must be recorded, digitised_graphic or generated")
+        if self.kind == "real" and self.acquisition == "generated":
+            raise ValueError("Real-card acquisition cannot be generated")
+        if self.acquisition == "digitised_graphic":
+            for value in (self.publication, self.figure_or_page, self.digitising_method):
+                if not isinstance(value, str) or not value.strip():
+                    raise ValueError(
+                        "Digitised graphics require a publication or URL, figure or page, "
+                        "and digitising method"
+                    )
 
 
 def validate_card(card: CardData) -> None:
@@ -86,7 +101,9 @@ def load_labelled_set(document: dict | str | Path) -> LabelledSet:
     Required keys are card_space, units, crosswalk and cards. Each crosswalk
     row supplies external_label, mode (or null) and reason. Each card supplies
     position, load, label and provenance (source, labeller, date, licence,
-    kind). All records are validated, including those with unmapped labels.
+    kind, acquisition). Digitised graphics additionally require publication
+    (citation or URL), figure_or_page and digitising_method. All records are
+    validated, including those with unmapped labels.
     """
     if isinstance(document, (str, Path)):
         document = json.loads(Path(document).read_text(encoding="utf-8"))
@@ -145,7 +162,7 @@ def build_hold_out_test_set(
         raise ValueError("base_seed must be an integer >= 1000")
     provenance = LabellingProvenance(
         source="repository card_generators", labeller="generator mode key",
-        date="2026-10-14", licence="MIT", kind="synthetic",
+        date="2026-10-14", licence="MIT", kind="synthetic", acquisition="generated",
     )
     return [
         LabelledCard(generator(seed=seed), mode, provenance, seed=seed)
