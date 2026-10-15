@@ -101,6 +101,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+metocean = ["metocean-stats==1.2.0"]
 drawings = ["ezdxf>=1.3,<2"]
 cad = [
     # Optional CAD readers for client geometry ingestion (#2023).
