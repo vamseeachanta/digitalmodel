@@ -4,11 +4,10 @@
 """Regression checks for gate triggers on stacked pull requests."""
 
 from pathlib import Path
-import json
 import os
 import re
 import subprocess
-import sys
+import shutil
 from typing import Any
 
 import pytest
@@ -153,121 +152,185 @@ def test_meshing_path_filters_are_preserved() -> None:
 
 
 def repository_checkouts(filename: str) -> list[tuple[dict, int]]:
-    """Locate every checkout of this repository, excluding pinned dependencies."""
+    """Locate repository checkouts, including heads held in forks."""
     return [
         (job, index)
         for job in load_workflow(filename)["jobs"].values()
         for index, step in enumerate(job.get("steps", []))
         if step.get("uses", "").startswith("actions/checkout@")
-        and "repository" not in step.get("with", {})
+        and ("repository" not in step.get("with", {})
+             or "head.repo" in step["with"]["repository"])
     ]
 
 
 @pytest.mark.parametrize("filename", GATES)
 def test_repository_checkouts_verify_current_merge(filename: str) -> None:
-    """Every tested tree must bind the current base tip to the event head."""
-    resolver_scripts = []
+    """Every checkout builds and guards a merge of the live tip and head."""
+    scripts = []
     for job, index in repository_checkouts(filename):
-        steps = job["steps"]
-        assert index > 0
-        resolve, checkout, guard = steps[index - 1:index + 2]
-        assert resolve["id"] == "resolve_merge"
-        for step in (resolve, guard):
-            assert step["if"] == "github.event_name == 'pull_request'"
+        checkout, merge = job["steps"][index:index + 2]
         assert "if" not in checkout
-        assert checkout["with"]["ref"] == "${{ steps.resolve_merge.outputs.sha || github.sha }}"
-        assert resolve["env"]["BASE_REF"] == "${{ github.event.pull_request.base.ref }}"
-        assert resolve["env"]["PR_HEAD_SHA"] == "${{ github.event.pull_request.head.sha }}"
-        script = resolve["run"]
-        resolver_scripts.append(script)
-        assert 'git/ref/heads/${BASE_REF}' in script
-        assert "base.sha" not in script
-        assert "MERGE_RESOLVE_ATTEMPTS:-10" in script
-        assert "MERGE_RESOLVE_DELAY:-6" in script
-        assert '"${parents[0]}" = "$tip"' in script
-        assert '"${parents[1]}" = "$PR_HEAD_SHA"' in script
-        assert '${#parents[@]}' in script
-        assert "git cat-file -p HEAD" in guard["run"]
-        assert "git rev-parse 'HEAD^{tree}'" in guard["run"]
-        assert "event_base=" in guard["run"]
-        for key, output in (("MERGE_SHA", "sha"), ("BASE_TIP", "tip"), ("PR_HEAD_SHA", "head")):
-            assert guard["env"][key] == f"${{{{ steps.resolve_merge.outputs.{output} }}}}"
-        if "defaults" in job:
-            assert resolve["working-directory"] == "${{ github.workspace }}"
-    assert resolver_scripts
-    assert all(script == resolver_scripts[0] for script in resolver_scripts)
+        assert checkout["with"]["ref"] == "${{ github.event.pull_request.head.sha || github.sha }}"
+        assert checkout["with"]["repository"] == "${{ github.event.pull_request.head.repo.full_name || github.repository }}"
+        assert merge["id"] == "build_merge"
+        assert merge["if"] == "github.event_name == 'pull_request'"
+        assert merge["env"] == {
+            "BASE_REF": "${{ github.event.pull_request.base.ref }}",
+            "BASE_REPOSITORY_URL": "${{ github.event.pull_request.base.repo.clone_url }}",
+            "HEAD_REPOSITORY_URL": "${{ github.event.pull_request.head.repo.clone_url }}",
+            "PR_HEAD_SHA": "${{ github.event.pull_request.head.sha }}",
+            "EVENT_BASE_SHA": "${{ github.event.pull_request.base.sha }}",
+        }
+        script = merge["run"]
+        scripts.append(script)
+        assert "${{" not in script
+        assert "git merge --no-ff --no-edit" in script
+        assert "git cat-file -p HEAD" in script
+        assert "git rev-parse 'HEAD^{tree}'" in script
+        assert "event_base=" in script
+        assert '"${#parents[@]}" -ne 2' in script
+        assert '"${parents[0]:-missing}" != "$tip"' in script
+        assert '"${parents[1]:-missing}" != "$PR_HEAD_SHA"' in script
+    assert scripts
+    assert len(set(scripts)) == 1
+    workflow = (WORKFLOWS / filename).read_text()
+    assert "merge_commit_sha" not in workflow
+    assert "resolve_merge" not in workflow
+    assert not re.search(r"gh\s+api", "\n".join(scripts))
+    for script in scripts:
+        assert all("EVENT_BASE_SHA" not in line for line in script.splitlines()
+                   if re.search(r"^\s*(?:if\b|elif\b|test\b|\[)", line))
 
 
-def write_gh_fixture(directory: Path, tip: str, parent: str, head: str, mergeable: bool) -> None:
-    """Provide the three API responses independently of the resolver script."""
-    fixture = {
-        "tip": {"object": {"sha": tip}},
-        "pull": {"mergeable": mergeable, "merge_commit_sha": "c" * 40},
-        "commit": {"parents": [{"sha": parent}, {"sha": head}]},
-    }
-    (directory / "fixture.json").write_text(json.dumps(fixture), encoding="utf-8")
-    stub = directory / "gh"
-    stub.write_text(
-        f"#!{sys.executable}\n"
-        "import json, os, pathlib, sys\n"
-        "root = pathlib.Path(os.environ['GH_FIXTURES'])\n"
-        "data = json.loads((root / 'fixture.json').read_text())\n"
-        "endpoint = sys.argv[2]\n"
-        "with (root / 'calls').open('a') as log: log.write(endpoint + '\\n')\n"
-        "if '/git/ref/heads/' in endpoint:\n"
-        "    print(data['tip']['object']['sha'])\n"
-        "elif '/pulls/' in endpoint:\n"
-        "    print(json.dumps(data['pull']))\n"
-        "elif '/commits/' in endpoint:\n"
-        "    print(' '.join(p['sha'] for p in data['commit']['parents']))\n"
-        "else: sys.exit(2)\n",
-        encoding="utf-8",
-    )
-    stub.chmod(0o755)
+def git(directory: Path, *args: str) -> str:
+    """Run fixture Git without inheriting bindings to the caller checkout."""
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith("GIT_")}
+    result = subprocess.run(["git", "-C", str(directory), *args], env=env,
+                            capture_output=True, text=True, check=True)
+    return result.stdout.strip()
+
+
+def fixture_commit(directory: Path, filename: str, content: str) -> str:
+    """Commit a text change in the disposable fixture only."""
+    (directory / filename).write_text(content, encoding="utf-8")
+    git(directory, "add", filename)
+    git(directory, "commit", "-m", "Update fixture content")
+    return git(directory, "rev-parse", "HEAD")
+
+
+def advance_base(origin: Path, count: int) -> str:
+    """Add base-only history in one Git import, in the disposable bare repository."""
+    records = []
+    parent = git(origin, "rev-parse", "main")
+    for index in range(count):
+        content = f"base {index}\n"
+        records.append(
+            "commit refs/heads/main\n"
+            f"committer Test <test@example.invalid> {1700000000 + index} +0000\n"
+            "data 12\nAdvance base\n"
+            + (f"from {parent}\n" if index == 0 else "")
+            +
+            f"M 100644 inline base\ndata {len(content)}\n{content}\n"
+        )
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith("GIT_")}
+    subprocess.run(["git", "-C", str(origin), "fast-import", "--quiet"],
+                   input="".join(records), text=True, env=env, capture_output=True,
+                   check=True)
+    return git(origin, "rev-parse", "main")
+
+
+def merge_fixture(root: Path, case: str) -> tuple[Path, Path, Path, str, str, str]:
+    """Create independent base and head histories for a shallow runner clone."""
+    source = root / "source"
+    source.mkdir()
+    git(source, "init", "-b", "main")
+    # These identities belong only to disposable test repositories.
+    git(source, "config", "user.name", "Test")
+    git(source, "config", "user.email", "test@example.invalid")
+    event_base = fixture_commit(source, "shared", "initial\n")
+    git(source, "checkout", "-b", "head")
+    fixture_commit(source, "shared" if case == "conflict" else "head", "head\n")
+    origin = root / "origin.git"
+    git(root, "clone", "--bare", "--single-branch", "--branch=main", str(source), str(origin))
+    count = {"shallow": 180, "fork-shallow": 180, "full-history": 1600}.get(case, 1)
+    tip = advance_base(origin, count)
+    if case == "conflict":
+        git(source, "checkout", "main")
+        git(source, "fetch", str(origin), "main")
+        git(source, "merge", "--ff-only", "FETCH_HEAD")
+        tip = fixture_commit(source, "shared", "base conflict\n")
+        git(source, "push", str(origin), "main")
+        git(source, "checkout", "head")
+    if case == "descendant":
+        git(source, "fetch", str(origin), "main")
+        git(source, "merge", "--no-ff", "--no-edit", "FETCH_HEAD")
+    head = git(source, "rev-parse", "HEAD")
+    head_origin = origin
+    if case in ("fork-shallow", "full-history"):
+        head_origin = root / "fork.git"
+        git(root, "clone", "--bare", "--single-branch", "--branch=head", str(source), str(head_origin))
+    else:
+        git(source, "push", str(origin), "head")
+    runner = root / "runner"
+    git(root, "clone", "--depth=1", "--branch=head", head_origin.as_uri(), str(runner))
+    git(runner, "checkout", "--detach", head)
+    assert git(runner, "rev-parse", "--is-shallow-repository") == "true"
+    probe = subprocess.run(["git", "-C", str(runner), "merge-base", tip, head],
+                           capture_output=True, text=True,
+                           env={key: value for key, value in os.environ.items()
+                                if not key.startswith("GIT_")})
+    assert probe.returncode != 0
+    return runner, origin, head_origin, event_base, tip, head
 
 
 @pytest.mark.parametrize("filename", GATES)
-@pytest.mark.parametrize(
-    "case,parent,head,mergeable,success,attempts",
-    (
-        ("event-base-is-stale", "a" * 40, "b" * 40, True, True, 1),
-        ("old-parent-merge", "d" * 40, "b" * 40, True, False, 2),
-        ("wrong-head-parent", "a" * 40, "e" * 40, True, False, 2),
-        ("conflicting-pull", "a" * 40, "b" * 40, False, False, 1),
-    ),
-)
-def test_merge_resolver_behavior(
-    filename: str, case: str, parent: str, head: str, mergeable: bool,
-    success: bool, attempts: int, tmp_path: Path,
-) -> None:
-    """Execute the shipped resolver against current and stale merge objects."""
-    write_gh_fixture(tmp_path, "a" * 40, parent, head, mergeable)
+@pytest.mark.parametrize("case", ("stale-event", "conflict", "shallow", "fork-shallow", "full-history", "descendant", "no-api"))
+def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
+    """Run the shipped script against real shallow repositories and conflicts."""
+    runner, origin, head_origin, event_base, tip, head = merge_fixture(tmp_path, case)
     job, index = repository_checkouts(filename)[0]
-    assert index > 0, "checkout has no merge resolver"
-    assert job["steps"][index - 1].get("id") == "resolve_merge"
-    script = tmp_path / "resolve.sh"
-    script.write_text(job["steps"][index - 1].get("run", ""), encoding="utf-8")
+    merge = job["steps"][index + 1]
+    assert merge.get("id") == "build_merge"
+    script = tmp_path / "merge.sh"
+    script.write_text(merge["run"], encoding="utf-8")
+    # Only Git and the text tools used by the script are available, never API clients.
+    tools = tmp_path / "bin"
+    tools.mkdir()
+    for command in ("git", "sed", "tr"):
+        executable = shutil.which(command)
+        assert executable is not None
+        (tools / command).symlink_to(executable)
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith("GIT_")}
     output = tmp_path / "output"
-    env = dict(os.environ, PATH=f"{tmp_path}{os.pathsep}{os.environ['PATH']}",
-               GH_FIXTURES=str(tmp_path), GITHUB_OUTPUT=str(output),
-               REPOSITORY="example/repository", BASE_REF="main", PR_NUMBER="1",
-               PR_HEAD_SHA="b" * 40, EVENT_BASE_SHA="d" * 40,
-               MERGE_RESOLVE_ATTEMPTS="2", MERGE_RESOLVE_DELAY="0")
-    result = subprocess.run(["bash", "-e", str(script)], env=env, cwd=tmp_path,
-                            capture_output=True, text=True, timeout=15)
-    assert (result.returncode == 0) is success, (case, result.stdout, result.stderr)
-    if success:
-        assert output.read_text().splitlines() == [
-            f"sha={'c' * 40}", f"tip={'a' * 40}", f"head={'b' * 40}",
-        ]
-    else:
-        assert not output.exists()
+    env.update(PATH=str(tools), BASE_REF="main", PR_HEAD_SHA=head,
+               BASE_REPOSITORY_URL=origin.as_uri(), HEAD_REPOSITORY_URL=head_origin.as_uri(),
+               EVENT_BASE_SHA=event_base, GITHUB_OUTPUT=str(output))
+    bash = shutil.which("bash")
+    assert bash is not None
+    result = subprocess.run([bash, "-x", str(script)], cwd=runner, env=env,
+                            capture_output=True, text=True, timeout=60)
+    if case == "full-history":
+        assert "--unshallow" in result.stderr
+    if case in ("shallow", "fork-shallow"):
+        assert "--deepen=" in result.stderr
+    if case == "conflict":
+        assert result.returncode != 0
         assert "::error::" in result.stdout
-    calls = (tmp_path / "calls").read_text().splitlines()
-    assert calls.count("repos/example/repository/git/ref/heads/main") == attempts
-    if not mergeable:
-        assert "not mergeable" in result.stdout
-        assert not any("/commits/" in call for call in calls)
+        assert not output.exists()
+        assert git(runner, "status", "--porcelain") == ""
+        assert git(runner, "rev-parse", "HEAD") == tip
+    else:
+        assert result.returncode == 0, (result.stdout, result.stderr)
+        assert git(runner, "show", "-s", "--format=%P", "HEAD").split() == [tip, head]
+        tested = git(runner, "rev-parse", "HEAD")
+        tree = git(runner, "rev-parse", "HEAD^{tree}")
+        assert f"tested={tested} first_parent={tip} second_parent={head} tip={tip} event_base={event_base} tree={tree}" in result.stdout
+        assert output.read_text().splitlines() == [f"tip={tip}"]
+        assert (runner / "head").read_text() == "head\n"
+        assert (runner / "base").read_text().startswith("base ")
 
 
 def test_trigger_tests_run_in_harness() -> None:
@@ -277,3 +340,15 @@ def test_trigger_tests_run_in_harness() -> None:
         step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
     )
     assert "tests/workflows/test_ci_triggers.py" in commands
+
+
+def test_base_consumers_use_local_tip() -> None:
+    """Detection and register checks use the base repository even for forks."""
+    workflow = load_workflow("quality-gates-by-domain.yml")
+    detect = next(step for step in workflow["jobs"]["detect-domains"]["steps"]
+                  if step.get("id") == "detect")
+    assert detect["env"]["PR_BASE_SHA"] == "${{ steps.build_merge.outputs.tip }}"
+    quality = load_workflow("quality-gates.yml")
+    register = next(step for step in quality["jobs"]["quality-gates"]["steps"]
+                    if step.get("name") == "Check engineering register changes")
+    assert register["env"]["REGISTER_BASE"] == "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}"
