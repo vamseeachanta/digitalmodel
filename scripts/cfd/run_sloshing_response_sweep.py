@@ -66,20 +66,21 @@ N_CYCLES = 6.0
 _g = "{:.6g}".format
 
 
-def _t1(hl: float) -> float:
+def _t1(hl: float, breadth: float = BREADTH, tank_height: float = TANK_HEIGHT) -> float:
     """Analytical first-mode period (s) at fill h/L for the L=0.9 tank."""
     return SloshingForcedRollConfig(
-        breadth=BREADTH, tank_height=TANK_HEIGHT, fill_depth=hl * BREADTH,
+        breadth=breadth, tank_height=tank_height, fill_depth=hl * breadth,
     ).first_mode_period
 
 
-def _specs() -> List[Dict[str, Any]]:
+def _specs(*, breadth: float = BREADTH, tank_height: float = TANK_HEIGHT,
+           fill_depth: float | None = None) -> List[Dict[str, Any]]:
     """The 18 case specs: one free-decay + five forced per fill."""
     out: List[Dict[str, Any]] = []
-    for hl in FILLS:
+    for hl in (FILLS if fill_depth is None else (fill_depth / breadth,)):
         out.append({"kind": "free-decay", "hl": hl,
                     "name": f"resp_fd_hl{round(hl * 100):02d}"})
-        t1 = _t1(hl)
+        t1 = _t1(hl, breadth, tank_height)
         for r in PERIOD_RATIOS:
             out.append({"kind": "forced", "hl": hl, "ratio": r,
                         "drive_period": round(r * t1, 5), "t1_analytical": round(t1, 5),
@@ -87,13 +88,14 @@ def _specs() -> List[Dict[str, Any]]:
     return out
 
 
-def _patch_wall_probe(case_dir: Path) -> None:
+def _patch_wall_probe(case_dir: Path, breadth: float = BREADTH,
+                      cells_per_breadth: int = FORCED_CPB) -> None:
     """Re-point interfaceHeight from tank centre (first-mode node) to a near-wall
     antinode. Non-invasive: edits only the generated system/controlDict."""
     cd = case_dir / "system" / "controlDict"
     txt = cd.read_text()
-    center = f"({_g(0.5 * BREADTH)} 0 {_g(0.5 * _CASE_DEPTH)})"
-    wall = f"({_g(0.5 * BREADTH / FORCED_CPB)} 0 {_g(0.5 * _CASE_DEPTH)})"
+    center = f"({_g(0.5 * breadth)} 0 {_g(0.5 * _CASE_DEPTH)})"
+    wall = f"({_g(0.5 * breadth / cells_per_breadth)} 0 {_g(0.5 * _CASE_DEPTH)})"
     if center in txt:
         cd.write_text(txt.replace(center, wall))
 
@@ -102,22 +104,32 @@ def _build(
     work_dir: Path,
     spec: Dict[str, Any],
     roll_amplitude_deg: float = ROLL_DEG,
+    *,
+    breadth: float = BREADTH,
+    tank_height: float = TANK_HEIGHT,
+    fill_depth: float | None = None,
 ) -> Path:
+    depth = spec["hl"] * breadth if fill_depth is None else fill_depth
+    if breadth <= 0 or tank_height <= 0 or not 0 < depth < tank_height:
+        raise ValueError("positive dimensions and a fill depth inside the tank are required")
     spec = {**spec, "roll_amplitude_deg": roll_amplitude_deg}
+    if breadth != BREADTH or tank_height != TANK_HEIGHT or fill_depth is not None:
+        spec.update(breadth=breadth, tank_height=tank_height, fill_depth=depth)
     if spec["kind"] == "free-decay":
         cfg = SloshingFreeDecayConfig(
-            breadth=BREADTH, tank_height=TANK_HEIGHT, fill_level=spec["hl"],
+            breadth=breadth, tank_height=tank_height,
+            fill_level=spec["hl"] if fill_depth is None and breadth == BREADTH and tank_height == TANK_HEIGHT else depth / tank_height,
             cells_per_breadth=FREEDECAY_CPB, end_time=FREEDECAY_ENDTIME, name=spec["name"],
         )
         case = build_free_decay_case(cfg, work_dir)
     else:
         cfg = SloshingForcedRollConfig(
-            breadth=BREADTH, tank_height=TANK_HEIGHT, fill_depth=spec["hl"] * BREADTH,
+            breadth=breadth, tank_height=tank_height, fill_depth=depth,
             roll_amplitude_deg=roll_amplitude_deg, roll_period=spec["drive_period"],
             cells_per_breadth=FORCED_CPB, n_cycles=N_CYCLES, name=spec["name"],
         )
         case = build_forced_roll_case(cfg, work_dir, with_moment=True)
-        _patch_wall_probe(case)
+        _patch_wall_probe(case, breadth)
     (case / "_spec.json").write_text(json.dumps(spec, indent=2) + "\n")
     return case
 
@@ -131,6 +143,9 @@ def _runup_amplitude(elev: List[float]) -> float:
 
 def _run_one(case_dir: Path) -> Dict[str, Any]:
     spec = json.loads((case_dir / "_spec.json").read_text())
+    breadth = spec.get("breadth", BREADTH)
+    tank_height = spec.get("tank_height", TANK_HEIGHT)
+    fill_depth = spec.get("fill_depth", spec["hl"] * breadth)
     roll_amplitude_deg = spec.get("roll_amplitude_deg", ROLL_DEG)
     # Idempotent: skip a case already solved (so a parallel fan-out is re-runnable).
     done = case_dir / "_result.json"
@@ -149,7 +164,7 @@ def _run_one(case_dir: Path) -> Dict[str, Any]:
     if res.status.value == "completed":
         if spec["kind"] == "free-decay":
             cfg = SloshingFreeDecayConfig(
-                breadth=BREADTH, tank_height=TANK_HEIGHT, fill_level=spec["hl"],
+                breadth=breadth, tank_height=tank_height, fill_level=fill_depth / tank_height,
                 cells_per_breadth=FREEDECAY_CPB, end_time=FREEDECAY_ENDTIME, name=spec["name"])
             a = analyze_free_decay(case_dir, cfg)
             row.update(
@@ -158,7 +173,6 @@ def _run_one(case_dir: Path) -> Dict[str, Any]:
                 natural_period_analytical_s=round(1.0 / a["analytical_frequency"], 5),
                 rel_error=round(a["relative_error"], 5))
         else:
-            fill_depth = spec["hl"] * BREADTH
             try:
                 _, elev = parse_interface_height(case_dir, expected_height=fill_depth)
                 row["runup_amp_m"] = round(_runup_amplitude(elev), 6)
@@ -167,7 +181,7 @@ def _run_one(case_dir: Path) -> Dict[str, Any]:
             try:
                 mt, mz = parse_roll_moment(case_dir)
                 red = reduce_roll_moment(mt, mz, spec["drive_period"],
-                                         fill_level=fill_depth / TANK_HEIGHT,
+                                         fill_level=fill_depth / tank_height,
                                          roll_amplitude_deg=roll_amplitude_deg)
                 row.update(quad_coeff=round(red["quad_coeff"], 5),
                            moment_amplitude_nm=round(red["moment_amplitude"], 5))
@@ -182,9 +196,11 @@ def _run_one(case_dir: Path) -> Dict[str, Any]:
 def _collect(
     work_dir: Path,
     roll_amplitude_deg: float = ROLL_DEG,
+    *, breadth: float = BREADTH, tank_height: float = TANK_HEIGHT,
+    fill_depth: float | None = None,
 ) -> Dict[str, Any]:
     results: List[Dict[str, Any]] = []
-    for spec in _specs():
+    for spec in _specs(breadth=breadth, tank_height=tank_height, fill_depth=fill_depth):
         rp = work_dir / spec["name"] / "_result.json"
         if rp.exists():
             result = json.loads(rp.read_text())
@@ -197,7 +213,7 @@ def _collect(
                     )
             results.append(result)
     fills: List[Dict[str, Any]] = []
-    for hl in FILLS:
+    for hl in (FILLS if fill_depth is None else (fill_depth / breadth,)):
         fd = next((r for r in results if r["kind"] == "free-decay" and r["hl"] == hl), {})
         forced = [r for r in results if r["kind"] == "forced" and r["hl"] == hl]
         forced.sort(key=lambda r: r.get("ratio", 0))
@@ -206,7 +222,7 @@ def _collect(
                     if done else None)
         fills.append({
             "h_over_L": hl,
-            "T1_analytical_s": round(_t1(hl), 5),
+            "T1_analytical_s": round(_t1(hl, breadth, tank_height), 5),
             "natural_period_cfd_s": fd.get("natural_period_cfd_s"),
             "natural_period_analytical_s": fd.get("natural_period_analytical_s"),
             "freedecay_rel_error": fd.get("rel_error"),
@@ -227,7 +243,7 @@ def _collect(
                  "solver": "interFoam (VOF), OpenFOAM ESI v2312",
                  "epic": "#1429", "issue": "#1433", "g": G,
                  "roll_amplitude_deg": roll_amplitude_deg},
-        "tank": {"shape": "rectangular", "breadth_m": BREADTH, "tank_height_m": TANK_HEIGHT,
+        "tank": {"shape": "rectangular", "breadth_m": breadth, "tank_height_m": tank_height,
                  "freedecay_cells_per_breadth": FREEDECAY_CPB,
                  "forced_cells_per_breadth": FORCED_CPB, "n_cycles": N_CYCLES},
         "fills": fills,
@@ -242,6 +258,9 @@ def main(argv: List[str] | None = None) -> int:
     ap.add_argument("command", choices=("generate", "run-one", "collect", "all"))
     ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
     ap.add_argument("--case-dir", type=Path, help="case directory for run-one")
+    ap.add_argument("--breadth", type=float, default=BREADTH)
+    ap.add_argument("--tank-height", type=float, default=TANK_HEIGHT)
+    ap.add_argument("--fill-depth", type=float)
     ap.add_argument(
         "--roll-amplitude-deg",
         type=float,
@@ -249,6 +268,9 @@ def main(argv: List[str] | None = None) -> int:
         help=f"forced-roll amplitude in degrees (default: {ROLL_DEG})",
     )
     args = ap.parse_args(argv)
+    dimensions = {}
+    if args.breadth != BREADTH or args.tank_height != TANK_HEIGHT or args.fill_depth is not None:
+        dimensions = dict(breadth=args.breadth, tank_height=args.tank_height, fill_depth=args.fill_depth)
 
     if args.command == "run-one":
         if not args.case_dir:
@@ -259,9 +281,9 @@ def main(argv: List[str] | None = None) -> int:
 
     args.work_dir.mkdir(parents=True, exist_ok=True)
     if args.command == "generate":
-        specs = _specs()
+        specs = _specs(**dimensions)
         dirs = [
-            _build(args.work_dir, s, args.roll_amplitude_deg)
+            _build(args.work_dir, s, args.roll_amplitude_deg, **dimensions)
             for s in specs
         ]
         (args.work_dir / "response_plan.json").write_text(
@@ -270,15 +292,15 @@ def main(argv: List[str] | None = None) -> int:
         print(f"generated {len(dirs)} cases under {args.work_dir}")
         return 0
     if args.command == "collect":
-        m = _collect(args.work_dir, args.roll_amplitude_deg)
+        m = _collect(args.work_dir, args.roll_amplitude_deg, **dimensions)
         print(f"wrote {_MANIFEST.relative_to(_REPO)} ({len(m['fills'])} fills)")
         return 0
     # all (serial)
-    for s in _specs():
-        case = _build(args.work_dir, s, args.roll_amplitude_deg)
+    for s in _specs(**dimensions):
+        case = _build(args.work_dir, s, args.roll_amplitude_deg, **dimensions)
         r = _run_one(case)
         print(f"[{s['name']}] {r['status']}")
-    m = _collect(args.work_dir, args.roll_amplitude_deg)
+    m = _collect(args.work_dir, args.roll_amplitude_deg, **dimensions)
     print(f"wrote {_MANIFEST.relative_to(_REPO)}")
     return 0
 

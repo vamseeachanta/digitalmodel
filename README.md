@@ -86,6 +86,31 @@ pip install digitalmodel
 
 Requires Python 3.10+. See [pyproject.toml](pyproject.toml) for full dependency list.
 
+### Post-clone skill pointers
+
+With a `workspace-hub` sibling containing the internal skills, inspect the
+relative pointer recipe from the repository root:
+
+```bash
+bash scripts/setup-claude-skills.sh
+```
+
+For a different checkout layout, pass `--workspace-hub <checkout>`.
+The command checks all three skill directories, then prints an idempotent JSON
+recipe for the three symlinks and the dated propagation marker. A missing
+sibling fails with a clone instruction before any file is written.
+
+The default command plans files only. After inspecting the recipe, run
+`bash scripts/setup-claude-skills.sh --apply` as the one-time installation step.
+Existing matching symlinks are retained; conflicting entries fail before any
+pointer is written. Worktree installation remains unverified under #2009;
+the regression tests exercise creation in isolated fixtures.
+The existing tracked `.codex/skills` and `.gemini/skills` symlinks address the
+shared skill root, whereas the ignored Claude pointers address three internal
+subdirectories. The asymmetry is retained deliberately because rebuilding ignored local
+pointers does not require changing the existing tracked links. Regeneration
+does not change their tracking policy or establish cross-platform link behaviour.
+
 ## Quick Start
 
 ```python

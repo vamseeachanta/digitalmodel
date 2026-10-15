@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Vision model classifier interface for dynacard pump card evaluation (WRK-251).
 # ABOUTME: Provides abstract base, stub (deterministic), and live API hooks for GPT-4V/Claude.
 
@@ -143,7 +145,7 @@ class StubVisionClassifier(VisionModelClassifier):
                 raw_response="[stub:legacy_fallback]",
             )
 
-        features = FeatureExtractor.extract_bezerra_projections(card)
+        features = FeatureExtractor.extract_classifier_vector(card)
         features_norm = FeatureExtractor.normalize(features, model["scaling"])
 
         from ..diagnostics import _predict_from_trees

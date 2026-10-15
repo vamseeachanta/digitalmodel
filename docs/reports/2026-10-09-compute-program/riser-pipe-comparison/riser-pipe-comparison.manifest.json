@@ -1,0 +1,62 @@
+{
+  "artifacts": {
+    "riser-pipe-comparison.citations.json": {
+      "sha256": "bb7ab5e501cd88e099e9a1cee48fd9a5aec3004674bfee23ed3eac6296b78909",
+      "size_bytes": 8057
+    },
+    "riser-pipe-comparison.html": {
+      "sha256": "867104d3308200595301f757c35fd1192c50983ec95f954997d213144250ca74",
+      "size_bytes": 10341
+    }
+  },
+  "basis_commit": "cc36804fbdfe803b9bc272269dec3056aa48b009",
+  "criteria_recorded_at": "2026-10-14T16:57:05.340387+00:00",
+  "criteria_revision": "1",
+  "inputs": {
+    "scripts/reporting/build_riser_pipe_comparison.py": "a0afa95d8b50592dfbc25debafc82328b79dd5b6fd76e272524d43f00478eca7",
+    "scripts/reporting/riser_pipe_comparison.criteria.json": "7c36f14e1ebba010e70222bbac85bf638707838365bc48bb759aa54379ca6ada",
+    "scripts/reporting/riser_pipe_comparison.revisions.json": "520d6c42e6f211d7705d924dbd70570ffb0bea3779aa45aa4fcd1286f2fa6061",
+    "scripts/reporting/riser_pipe_comparison.yml": "99984efca047d08d73a9c032936e363b8ae0e32a84253cba0c9e2f8ea26b533a",
+    "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+    "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f"
+  },
+  "precision": "0.1 percent; dispositions use unrounded module results",
+  "qualification": "partial; standard conformity not established",
+  "results": {
+    "API RP 2RD": {
+      "burst": {
+        "case": "operating",
+        "utilisation_percent": 29.8,
+        "within_module_limit": true
+      },
+      "collapse": {
+        "case": "operating",
+        "utilisation_percent": 40.4,
+        "within_module_limit": true
+      },
+      "hoop": {
+        "case": "operating",
+        "utilisation_percent": 37.4,
+        "within_module_limit": true
+      }
+    },
+    "API STD 2RD": {
+      "burst": {
+        "case": "operating",
+        "utilisation_percent": 24.9,
+        "within_module_limit": true
+      },
+      "collapse": {
+        "case": "operating",
+        "utilisation_percent": 44.9,
+        "within_module_limit": true
+      },
+      "combined": {
+        "case": "operating",
+        "utilisation_percent": 174.0,
+        "within_module_limit": false
+      }
+    }
+  },
+  "revision": "1"
+}
