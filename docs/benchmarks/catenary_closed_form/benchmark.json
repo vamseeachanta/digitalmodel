@@ -27,6 +27,11 @@
         "top_tension_kN": 224.788,
         "top_angle_deg_from_vertical": 19.433,
         "touchdown_horizontal_distance_from_top_m": 131.982
+      },
+      "elastic_form_reference": {
+        "top_tension_kN": 224.592,
+        "top_angle_deg_from_vertical": 19.404,
+        "touchdown_horizontal_distance_from_top_m": 131.807
       }
     },
     {
@@ -75,7 +80,7 @@
   },
   "results_to_export": [
     "Effective tension at End B (kN)",
-    "Angle of the line at End B from the vertical (degrees)",
+    "Declination at End B (degrees, 0 to 180 from global +Z, tangent A to B); angle from vertical = min(Declination, 180 - Declination)",
     "Horizontal distance from End B to touchdown (m): X minus the touchdown x coordinate"
   ],
   "sources": [

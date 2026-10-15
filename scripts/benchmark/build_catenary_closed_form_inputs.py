@@ -50,7 +50,7 @@ def specification(case):
         },
         environment={
             "water": {"depth": 150, "density": 1.025},
-            "seabed": {"slope": 0, "stiffness": {}, "friction_coefficient": 0},
+            "seabed": {"slope": 0, "stiffness": {"normal": 10000}, "friction_coefficient": 0},
             "waves": {"trains": [{"type": "No waves", "height": 0}]},
             "current": {"speed": 0}, "wind": {"speed": 0},
         },

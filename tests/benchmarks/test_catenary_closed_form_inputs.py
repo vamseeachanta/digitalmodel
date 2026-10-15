@@ -11,6 +11,7 @@ import re
 import subprocess
 import sys
 
+import pytest
 import yaml
 
 from digitalmodel.solvers.orcaflex.modular_generator.post_validator import (
@@ -55,7 +56,7 @@ def test_benchmark_schema_and_band():
     }
     for c in data["cases"]:
         extra = {"plain_form_top_tension_kN", "plain_form_excess_percent"}
-        assert set(c) == (common | extra if c["case"] == "C2" else common)
+        assert set(c) == (common | extra if c["case"] == "C2" else common | {"elastic_form_reference"})
         assert set(c["inputs"]) == {
             "w_N_per_m", "EA_N", "L_m", "h_m", "X_m", "outer_diameter_m",
             "mass_te_per_m", "EA_kN", "EI_kN_m2",
@@ -173,7 +174,7 @@ def test_model_settings():
         assert env["Density"] == 1.025
         assert env["SeabedType"] == "Flat"
         assert env["SeabedSlope"] == 0
-        assert env["SeabedNormalStiffness"] == 0
+        assert env["SeabedNormalStiffness"] == 10000
         assert env["RefCurrentSpeed"] == env["WindSpeed"] == 0
         assert all(w["WaveType"] == "No waves" for w in env["WaveTrains"])
         assert line["EndAConnection"] == line["EndBConnection"] == "Fixed"
@@ -190,6 +191,46 @@ def test_model_settings():
         assert lt["MassPerUnitLength"] == inputs["mass_te_per_m"]
         assert lt["SeabedLateralFrictionCoefficient"] == 0
         assert lt["SeabedAxialFrictionCoefficient"] == 0
+
+
+@pytest.mark.parametrize("case_name", ["C1", "C2"])
+def test_seabed_penetration(case_name):
+    """Bound nominal and mass-derived contact penetration below 0.01 m."""
+    case, _, data = next(item for item in models() if item[0]["case"] == case_name)
+    env, lt = data["Environment"], data["LineTypes"][0]
+    stiffness = env["SeabedNormalStiffness"]  # kN/m/m2
+    assert stiffness > 0
+    weight = (lt["MassPerUnitLength"] - env["Density"] * math.pi * lt["OD"] ** 2 / 4) * data["General"]["g"]
+    nominal = case["inputs"]["w_N_per_m"] / 1000  # kN/m
+    penetration = max(weight, nominal) / (stiffness * lt["OD"])
+    assert 0 < penetration < 0.01
+
+
+def test_elastic_reference_for_plain_case():
+    """Keep the finite-EA offset visible without changing the governing form."""
+    case = benchmark()["cases"][0]
+    reference = case["elastic_form_reference"]
+    assert reference == {
+        "top_tension_kN": 224.592,
+        "top_angle_deg_from_vertical": 19.404,
+        "touchdown_horizontal_distance_from_top_m": 131.807,
+    }
+    assert case["governing_form"] == "plain"
+    for key in QUANTITIES:
+        assert reference[key] < case["expected"][key]
+        difference = abs(reference[key] - case["expected"][key])
+        if key == "top_angle_deg_from_vertical":
+            assert difference < 1.0
+        else:
+            assert 100 * difference / case["expected"][key] < 5.0
+
+
+def test_angle_export_convention():
+    """Specify an unambiguous result variable and acute-angle conversion."""
+    export = benchmark()["results_to_export"][1]
+    assert "Declination" in export
+    assert "0 to 180" in export
+    assert "min(Declination, 180 - Declination)" in export
 
 
 def test_submerged_weight():

@@ -10,6 +10,13 @@ The acceptance band is 5.0% relative difference in top tension, 1.0 degree
 absolute difference in top angle, and 5.0% relative difference in horizontal
 distance from the top to touchdown. Each quantity must satisfy its own band.
 
+## Revision history
+
+| Revision | Date | What changed and why |
+| --- | --- | --- |
+| 1 | 2026-10-15 | Initial closed-form references and generated statics inputs. |
+| 2 | 2026-10-15 | Added seabed support and penetration bounds; clarified angle exports and the finite-EA offset. |
+
 ## Inputs and units
 
 The model uses SI units: m, kN, te and s; gravity is 9.80665 m/s2 and water
@@ -43,6 +50,14 @@ The plain form governs when top tension divided by EA is at most 0.5%.
 C1 is below this threshold and C2 is above it; `benchmark.json` records the
 computed top strain percentages. C2's plain-form top tension is 187.737 kN,
 24.4% above its elastic value, computed before rounding the tensions.
+
+C1's model retains finite EA, so its elastic closed-form reference is
+224.592 kN, 19.404 degrees and 131.807 m. These values are recorded separately
+as `elastic_form_reference` in `benchmark.json`; the plain `expected` values
+still govern. Computed before rounding, the elastic offsets from the plain
+form are -0.1% in tension, -29.3 millidegrees in angle and -0.1% in distance.
+These offsets are within the 5.0% / 1.0 degree / 5.0% band and arise from the
+plain-form selection rule, rather than a program error.
 
 ## Files and rebuilding
 
@@ -130,8 +145,15 @@ files retain the generator's default dynamics control fields, but the build
 script requests no analysis. In the static results for the single line, export:
 
 1. Effective tension at End B in kN.
-2. Line angle at End B from the vertical in degrees. Use the actual line
-   tangent, rather than the fixed connection orientation.
+2. `Declination` at End B in degrees, the actual line tangent's angle from
+   global +Z in the range 0 to 180 degrees, directed from End A towards End B.
+   Export the acute angle from vertical as
+   `min(Declination, 180 - Declination)`. End A is below End B here, so the
+   upward tangent's declination already equals the expected angle. A downward
+   tangent uses the supplement. Do not export `No moment declination` or the
+   fixed connection orientation. See the manufacturer's
+   [line angle results](https://www.orcina.com/webhelp/OrcaFlex/Content/html/Lineresults,Angles.htm)
+   and [direction conventions](https://www.orcina.com/webhelp/OrcaFlex/Content/html/Directionconventions.htm#DirectionConventionsAzmDec).
 3. Horizontal distance from End B to touchdown in m: subtract the touchdown
    point's global x coordinate from X. Use the suspended/grounded transition
    in the static line geometry.
@@ -147,13 +169,19 @@ The hand values assume a rigid horizontal seabed and a homogeneous line with
 zero bending stiffness, no friction and a positive grounded length. They do
 not cover lifted anchors, fully suspended lines or dynamic response.
 
-The generator's `SeabedStiffness.normal` default is **0 kN/m/m2**
-(`schema/environment.py`, line 38), and `EnvironmentBuilder` writes it as
-`SeabedNormalStiffness` with `SeabedModel: Elastic`. This value is retained in
-both files. It supplies no normal restoring stiffness, so rigid-seabed contact
-is not established by these inputs. With finite positive stiffness, statics
-may show a small penetration; zero stiffness cannot be assumed to produce
-only a small penetration. A subsequent licensed-program load and statics
-check must resolve this contact limitation before these inputs can establish
-the intended rigid-seabed benchmark. No licensed program or programming
-interface is imported or executed by the builder or offline tests.
+Both inputs explicitly set `SeabedNormalStiffness` to **10000 kN/m/m2** with
+`SeabedModel: Elastic`. Taking contact width as OD, the nominal penetration
+estimate `delta = w/(K*OD)` is 1.0 mm for C1 and 0.4 mm for C2. The offline
+tests require penetration below 10.0 mm for each case, using both nominal and
+mass-derived submerged weights. These are contact estimates, not program
+results.
+
+As a height-sensitivity check, increasing the hand calculation's 150 m height
+by each estimated penetration changes tension and touchdown distance by less
+than 0.1% and angle by less than 0.1 degree in both governing forms. These
+bounds are rounded upward from the unrounded differences and are negligible
+against the 5.0% / 1.0 degree / 5.0% band. They do not cover discretisation or
+contact convergence. A licensed-program load and statics check is still
+needed to confirm contact and extract the three comparison results. No
+licensed program or programming interface is imported or executed by the
+builder or offline tests.

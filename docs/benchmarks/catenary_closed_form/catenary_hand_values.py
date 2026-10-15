@@ -168,6 +168,10 @@ def calculate():
             "model_file": f"{FOLDER}/inputs/catenary_{name.lower()}_{suffix}.yml",
             "expected": expected,
         }
+        if name == "C1":
+            case["elastic_form_reference"] = {
+                key: round(e[key], 3) for key in expected
+            }
         if name == "C2":
             case["plain_form_top_tension_kN"] = round(p["top_tension_kN"], 3)
             case["plain_form_excess_percent"] = round((p["top_tension_kN"] / e["top_tension_kN"] - 1) * 100, 1)
@@ -201,7 +205,8 @@ def calculate():
         },
         "results_to_export": [
             "Effective tension at End B (kN)",
-            "Angle of the line at End B from the vertical (degrees)",
+            "Declination at End B (degrees, 0 to 180 from global +Z, tangent A to B); "
+            "angle from vertical = min(Declination, 180 - Declination)",
             "Horizontal distance from End B to touchdown (m): X minus the touchdown x coordinate",
         ],
         "sources": [

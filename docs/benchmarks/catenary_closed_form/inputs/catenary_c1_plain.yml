@@ -64,7 +64,7 @@ Environment:
   Density: 1.025
   SeabedOriginDepth: 150.0
   SeabedSlope: 0.0
-  SeabedNormalStiffness: 0
+  SeabedNormalStiffness: 10000.0
   SeabedShearStiffness: 0
   WaveTrains:
   - Name: Wave 1
