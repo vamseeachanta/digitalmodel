@@ -60,11 +60,16 @@ def test_vessel_supports_attach_pipeline_at_declared_roller_stations():
             - spec.equipment.stinger.radius * math.sin(theta), abs=0.001)
 
 
-def test_winch_applies_tension_in_statics_and_every_stage_with_nonzero_lead():
+@pytest.mark.parametrize("durations", [[8, 16], [8], [8, 16, 16, 16, 16]])
+def test_winch_applies_tension_in_statics_and_every_stage_with_nonzero_lead(tmp_path, durations):
     spec = scenario()
-    winch = WinchBuilder(spec, BuilderContext()).build()["Winches"][0]
+    spec.simulation.stages = durations
+    ModularModelGenerator.from_spec(spec).generate(tmp_path)
+    general = yaml.safe_load((tmp_path / "includes/01_general.yml").read_text())["General"]
+    winch = yaml.safe_load((tmp_path / "includes/11_winches.yml").read_text())["Winches"][0]
     stages = winch["StageMode, StageValue"]
-    assert stages == [["Specified tension", spec.equipment.tensioner.tension_value]] * 2
+    assert stages == [["Specified tension", spec.equipment.tensioner.tension_value]] * (
+        len(general["StageDuration"]) + 1)
     assert winch["WinchControlType"] == "By stage"
     connections = winch["Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"]
     assert connections[0][1:4] != connections[1][1:4]

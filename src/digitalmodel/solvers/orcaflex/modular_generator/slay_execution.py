@@ -10,6 +10,7 @@ import json
 import math
 from pathlib import Path
 import re
+import sys
 from typing import Any
 
 
@@ -129,7 +130,7 @@ def write_queue(campaign: Path, output: Path, repo: Path, revision: str,
     _save(batch_path, batch)
     queue = {"id": f"slay-{case_id}", "title": "Generic S-lay timed canary",
              "repo_dir": str(repo), "ref": revision,
-             "driver": ["python", "-m", "digitalmodel", str(batch_path)],
+             "driver": [sys.executable, "-m", "digitalmodel", str(batch_path)],
              "cwd": str(repo), "env": {"PYTHONPATH": str(repo / "src")},
              "expected_hours": contract["expected_hours"], "max_hours": contract["max_hours"],
              "progress": {"glob": str(output / "native/readback/*.qualified.json"), "total": 1},
@@ -137,7 +138,7 @@ def write_queue(campaign: Path, output: Path, repo: Path, revision: str,
              "priority": 40, "after": []}
     queue_path = queue_dir / f"{queue['id']}.json"
     _save(queue_path, queue)
-    inputs = {str(path.relative_to(output)): _digest(path)
+    inputs = {path.relative_to(output).as_posix(): _digest(path)
               for path in sorted((output / "models").rglob("*.yml"))}
     inputs[batch_path.name] = _digest(batch_path)
     record = {"schema": "slay-run-manifest-1", "launch_enabled": False,

@@ -10,6 +10,7 @@ for S-lay installation operations with stage-controlled tension.
 from typing import Any
 
 from .base import BaseBuilder
+from .general_builder import GeneralBuilder
 from .registry import BuilderRegistry
 
 
@@ -57,6 +58,8 @@ class WinchBuilder(BaseBuilder):
         if position == origin:
             raise ValueError("Tensioner lead must be separated from the pipe upper end")
 
+        general = GeneralBuilder(self.spec, self.context).build()["General"]
+        stage_rows = len(general["StageDuration"]) + 1
         winch_def: dict[str, Any] = {
             "Name": winch_name,
             "WinchType": "Simple",
@@ -66,8 +69,7 @@ class WinchBuilder(BaseBuilder):
             ],
             "WinchControlType": "By stage",
             "StageMode, StageValue": [
-                ["Specified tension", tensioner.tension_value],
-                ["Specified tension", tensioner.tension_value],
+                ["Specified tension", tensioner.tension_value] for _ in range(stage_rows)
             ],
         }
 

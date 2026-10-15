@@ -156,14 +156,19 @@ def main() -> int:
         if args.expected_hours is None or args.max_hours is None:
             parser.error("Queue scheduling budgets must be explicitly supplied")
         contract = read_contract(args.campaign, args.expected_hours, args.max_hours)
-    prepare(args.campaign, args.output)
     if contract is not None:
         repo = Path(__file__).resolve().parents[2]
         env = dict(os.environ)
         for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
             env.pop(name, None)
+        status = subprocess.run(["git", "-C", str(repo), "status", "--porcelain"],
+                                capture_output=True, text=True, check=True, env=env).stdout
+        if status:
+            parser.error("Queue preparation requires a clean working tree; commit-pinned inputs cannot record uncommitted changes")
         revision = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
                                   capture_output=True, text=True, check=True, env=env).stdout.strip()
+    prepare(args.campaign, args.output)
+    if contract is not None:
         write_queue(args.campaign, args.output, repo, revision, contract)
     return 0
 
