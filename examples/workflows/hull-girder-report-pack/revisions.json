@@ -4,7 +4,12 @@
       "change": "The first issue separates calculated still-water demand from unqualified strength limits so that synthetic inputs cannot support acceptance.",
       "date": "2026-10-14",
       "revision": "0"
+    },
+    {
+      "revision": "1",
+      "date": "2026-10-15",
+      "change": "Evidence labels and synthetic fixture provenance are corrected; report integrity now checks the committed outputs and only relevant inputs. Source access occurred on this date, after revision 0."
     }
   ],
-  "revision": "0"
+  "revision": "1"
 }

@@ -2,7 +2,8 @@
   "allowables": [
     {
       "key": "allowables.shear_force",
-      "label": "Still-water shear force, both signs",
+      "label": "not established",
+      "name": "Still-water shear force, both signs",
       "negative_inherits_positive": true,
       "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
       "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
@@ -10,12 +11,12 @@
         "positive",
         "negative"
       ],
-      "status": "not sourced: approved loading manual unavailable",
       "units": "t"
     },
     {
       "key": "allowables.bending_moment",
-      "label": "Still-water bending moment, hogging and sagging",
+      "label": "not established",
+      "name": "Still-water bending moment, hogging and sagging",
       "negative_inherits_positive": true,
       "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
       "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
@@ -23,12 +24,12 @@
         "positive",
         "negative"
       ],
-      "status": "not sourced: approved loading manual unavailable",
-      "units": "t.m"
+      "units": "t\u00b7m"
     },
     {
       "key": "allowables.total_shear_force",
-      "label": "Total shear force, both signs",
+      "label": "not established",
+      "name": "Total shear force, both signs",
       "negative_inherits_positive": true,
       "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
       "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
@@ -36,12 +37,12 @@
         "positive",
         "negative"
       ],
-      "status": "not sourced: approved loading manual unavailable",
       "units": "t"
     },
     {
       "key": "allowables.total_bending_moment",
-      "label": "Total bending moment, hogging and sagging",
+      "label": "not established",
+      "name": "Total bending moment, hogging and sagging",
       "negative_inherits_positive": true,
       "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
       "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
@@ -49,31 +50,30 @@
         "positive",
         "negative"
       ],
-      "status": "not sourced: approved loading manual unavailable",
-      "units": "t.m"
+      "units": "t\u00b7m"
     },
     {
       "key": "section_modulus.approved_sm.deck_m3",
-      "label": "Deck section modulus",
+      "label": "not established",
+      "name": "Deck section modulus",
       "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
       "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
-      "status": "not sourced: approved loading manual unavailable",
-      "units": "m3"
+      "units": "m\u00b3"
     },
     {
       "key": "section_modulus.approved_sm.keel_m3",
-      "label": "Keel section modulus",
+      "label": "not established",
+      "name": "Keel section modulus",
       "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
       "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
-      "status": "not sourced: approved loading manual unavailable",
-      "units": "m3"
+      "units": "m\u00b3"
     },
     {
       "key": "section_modulus.yield_mpa",
-      "label": "Material yield strength",
+      "label": "not established",
+      "name": "Material yield strength",
       "reason": "The existing synthetic material input has no material certificate or qualified public specification.",
       "required_evidence": "Material grade, thickness applicability and a qualified certificate or publicly reproducible specification.",
-      "status": "not sourced: material certificate unavailable",
       "units": "MPa"
     },
     {
@@ -86,11 +86,11 @@
         "title": "Longitudinal Strength Standard"
       },
       "key": "permissible_stress",
-      "label": "Permissible hull-girder bending stress",
+      "label": "not established",
+      "name": "Permissible hull-girder bending stress",
       "reason": "Numerical reproduction is not authorized by the opened publication terms. The catalogue edition differs from the implementation basis.",
       "required_evidence": "Applicable edition and clause title, reproduction permission and material-factor applicability.",
       "source": "iacs_catalogue",
-      "status": "not sourced: licensed source",
       "units": "MPa"
     }
   ],
@@ -562,7 +562,7 @@
   "max_shear_t": -2487.5,
   "n_stations": 401,
   "qualified_allowables": 0,
-  "report_revision": "0",
+  "report_revision": "1",
   "strength_disposition": "not evaluated",
   "weight_t": 10000.0,
   "x_m": [

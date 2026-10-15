@@ -5,8 +5,8 @@ strength inputs. Eight strength entries remain unsourced: four signed allowable
 curve groups, deck and keel section moduli, material yield strength and permissible
 bending stress. No strength utilisation or permitted loading condition is issued.
 
-The load geometry and weight are **assumed, based on previous experience**;
-the existing synthetic fixture is their recorded basis. The published IACS
+The load geometry and weight form the synthetic textbook box-barge analytical
+fixture recorded in `screening_input.yml`. The published IACS
 catalogue establishes publication metadata. Its reproduction terms do not
 qualify numerical rule extraction, loading-manual curves or material properties.
 No licensed numerical value is copied into the new report or evidence register.
@@ -46,3 +46,5 @@ remain legacy synthetic regression fixtures. Their illustrative strength ratios
 and document metadata are not the current report issued by the new
 builder. Replacement of the eight strength entries remains incomplete pending
 the qualified evidence listed in the report.
+
+Report tests are currently run locally only; hosted inclusion is not established.

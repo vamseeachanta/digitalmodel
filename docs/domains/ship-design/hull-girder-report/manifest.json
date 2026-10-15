@@ -1,24 +1,20 @@
 {
   "inputs": {
     "examples/workflows/hull-girder-report-pack/allowable-basis.json": {
-      "bytes": 5518,
-      "sha256": "1efcf033ea60d5545fc8a919773cd3e734f14bc12dd0fc3d9ce45eb8cde87fda"
+      "bytes": 5202,
+      "sha256": "263aef6bf5a3bc937411691e899a74c15db2981f42dd6a1b339e51b144f3fb15"
     },
     "examples/workflows/hull-girder-report-pack/build_report.py": {
-      "bytes": 26788,
-      "sha256": "46919b243768d91d255d1d7c8b44575ec65ccbc293a4d4f39ed385eedb481df8"
+      "bytes": 27043,
+      "sha256": "c700a9091f71129fcd3902b2948b5d2cb35466c012f38bd513480857580436ee"
     },
     "examples/workflows/hull-girder-report-pack/revisions.json": {
-      "bytes": 264,
-      "sha256": "441bf2d5aa96547c48589d5f63aa87527ce58d040e90249b135b115130482d57"
+      "bytes": 541,
+      "sha256": "ef0ff7b67e18b1272c6c86fa3372070bc7e92611ad20a0e6f3a8e4202b7dc296"
     },
     "examples/workflows/hull-girder-report-pack/screening_input.yml": {
       "bytes": 2187,
       "sha256": "d97d7f5a618ef55216e43829af10b3f0298ddd5257d8b00f441990b159774b50"
-    },
-    "pyproject.toml": {
-      "bytes": 16508,
-      "sha256": "b5bc528ffa243c0b29d6069c417aec28b4bbc0ee059725adf7c8535d7b1b893b"
     },
     "src/digitalmodel/naval_architecture/hull_girder_screening.py": {
       "bytes": 38111,
@@ -31,23 +27,20 @@
     "tests/naval_architecture/test_hull_girder_screening.py": {
       "bytes": 18481,
       "sha256": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448"
-    },
-    "tests/report_pack/test_hull_allowable_report.py": {
-      "bytes": 7875,
-      "sha256": "651975826cfed99f46e850ae838bfb5d8474833a89a3f74b101c697cd1a1d7e1"
     }
   },
   "outputs": {
     "report.html": {
-      "bytes": 20094,
-      "sha256": "835a8ecd1f8e322e39dfb3c1783f60a03e6ba5b19aeee60806c3799b99498216"
+      "bytes": 21215,
+      "sha256": "a58274ab8f4cafc1e60310df2efc9bf902849a7c5f4e69c6bb71c5ed341bda51"
     },
     "results.json": {
-      "bytes": 16040,
-      "sha256": "77a708f8996690ec58b8a3dcc886620a1de9941cd889463a29da92b056bf87e8"
+      "bytes": 15803,
+      "sha256": "ee1083210653f35e243d17e463969387ffcc8deb9dfe6ce5c0c825f3f4947fad"
     }
   },
-  "report_revision": "0",
+  "project_version": "2.1.0",
+  "report_revision": "1",
   "reporting_conventions": {
     "revision": "P6",
     "source_commit": "3f829f2c5df735b7f2a7a65f542eac83da99c9db",

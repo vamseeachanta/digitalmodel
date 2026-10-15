@@ -7,6 +7,7 @@ import copy
 import hashlib
 import importlib.util
 import json
+import shutil
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -32,7 +33,7 @@ def test_every_strength_input_has_explicit_qualification_and_sign_coverage():
     basis = json.loads((DEMO / "allowable-basis.json").read_text())
     rows = module.allowable_inventory(config["hull_girder_screening"], basis)
     assert len(rows) == 8
-    assert all(row["status"].startswith("not sourced:") for row in rows)
+    assert all(row["label"] == "not established" for row in rows)
     curves = [row for row in rows if row["key"].startswith("allowables.")]
     assert len(curves) == 4
     assert all(row["signs"] == ["positive", "negative"] for row in curves)
@@ -40,7 +41,7 @@ def test_every_strength_input_has_explicit_qualification_and_sign_coverage():
     assert all(row["reason"] and row["required_evidence"] for row in rows)
     assert basis["sources"]["iacs_catalogue"]["http_status"] == 200
     assert basis["sources"]["iacs_terms"]["http_status"] == 200
-    assert "not sourced: licensed source" in {r["status"] for r in rows}
+    assert {r["label"] for r in rows} <= {"cited", "derived", "assumed", "not established"}
 
 
 def test_missing_extra_or_falsely_sourced_strength_inputs_are_rejected():
@@ -58,7 +59,7 @@ def test_missing_extra_or_falsely_sourced_strength_inputs_are_rejected():
     with pytest.raises(ValueError, match="inventory"):
         module.allowable_inventory(extra, basis)
     forged = copy.deepcopy(basis)
-    forged["allowables"][0]["status"] = "sourced"
+    forged["allowables"][0]["label"] = "sourced"
     with pytest.raises(ValueError, match="qualification"):
         module.allowable_inventory(settings, forged)
 
@@ -96,6 +97,12 @@ def test_report_is_reproducible_and_all_manifest_digests_match(tmp_path):
     for name, record in manifest["inputs"].items():
         assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == record["sha256"]
     module.verify_manifest(first)
+    committed = ROOT / "docs/domains/ship-design/hull-girder-report"
+    module.verify_manifest(committed)
+    for file in first.iterdir():
+        assert file.read_bytes() == (committed / file.name).read_bytes()
+    assert "pyproject.toml" not in manifest["inputs"]
+    assert "tests/report_pack/test_hull_allowable_report.py" not in manifest["inputs"]
     (first / "report.html").write_text("changed\n")
     with pytest.raises(ValueError, match="digest"):
         module.verify_manifest(first)
@@ -110,7 +117,7 @@ def test_revision_record_is_rendered_directly_after_summary(tmp_path):
     assert f'<meta name="report-revision" content="{record["revision"]}">' in text
     assert text.index("1 Executive Summary") < text.index("Revision history")
     assert text.index("Revision history") < text.index("2 Introduction")
-    assert text.count('data-revision="') == len(record["history"]) == 1
+    assert text.count('data-revision="') == len(record["history"])
     for row in record["history"]:
         assert f'data-revision="{row["revision"]}"' in text
         assert row["date"] in text and row["change"] in text
@@ -144,7 +151,8 @@ def test_report_contains_no_external_resources_or_unqualified_strength_verdict(t
     assert page.headings[:3] == ["summary", "revision-history", "introduction"]
     assert len([h for h in page.headings if h != "revision-history"]) == 11
     assert "not evaluated" in text
-    assert "assumed, based on previous experience" in text
+    assert "based on previous experience" not in text
+    assert "synthetic textbook" in text
     for word in ["permissible_mpa", "Prepared by", "Checked by", "Approved by"]:
         assert word not in text
     assert '<svg ' in text and '<caption>' in text
@@ -182,3 +190,35 @@ def test_output_symlink_cannot_overwrite_a_caller_file(tmp_path):
     with pytest.raises(ValueError, match="output"):
         module.build(output)
     assert hashlib.sha256(caller.read_bytes()).hexdigest() == before
+
+
+def test_manifest_ignores_unrelated_metadata_but_checks_version(tmp_path, monkeypatch):
+    module = builder()
+    output = tmp_path / "output"
+    module.build(output)
+    isolated = tmp_path / "repository"
+    for name in module.INPUTS:
+        target = isolated / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / name, target)
+    metadata = isolated / "pyproject.toml"
+    original = (ROOT / "pyproject.toml").read_text()
+    metadata.write_text(original + "\n# Unrelated metadata change.\n")
+    monkeypatch.setattr(module, "ROOT", isolated)
+    module.verify_manifest(output)
+    version = json.loads((output / "manifest.json").read_text())["project_version"]
+    metadata.write_text('[project]\nversion = "' + version + '.changed"\n')
+    with pytest.raises(ValueError, match="version"):
+        module.verify_manifest(output)
+
+
+@pytest.mark.parametrize("label", ["cited", "derived", "assumed", "invalid"])
+def test_missing_evidence_cannot_be_relabelled(label):
+    module = builder()
+    settings = yaml.safe_load((DEMO / "screening_input.yml").read_text())[
+        "hull_girder_screening"
+    ]
+    basis = json.loads((DEMO / "allowable-basis.json").read_text())
+    basis["allowables"][0]["label"] = label
+    with pytest.raises(ValueError, match="qualification"):
+        module.allowable_inventory(settings, basis)

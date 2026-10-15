@@ -47,8 +47,6 @@ INPUTS = (
     "src/digitalmodel/naval_architecture/hull_girder_screening.py",
     "src/digitalmodel/naval_architecture/hull_girder_strength.py",
     "tests/naval_architecture/test_hull_girder_screening.py",
-    "tests/report_pack/test_hull_allowable_report.py",
-    "pyproject.toml",
 )
 
 
@@ -83,13 +81,10 @@ def allowable_inventory(settings: dict, basis: dict) -> list[dict]:
         raise ValueError("unregistered strength input in allowable inventory")
     for row in rows:
         key = row["key"]
-        reason = "approved loading manual unavailable"
-        if key == "section_modulus.yield_mpa":
-            reason = "material certificate unavailable"
-        if key == "permissible_stress":
-            reason = "licensed source"
-        if row["status"] != f"not sourced: {reason}":
-            raise ValueError("unsupported source qualification")
+        if row["label"] not in {"cited", "derived", "assumed", "not established"}:
+            raise ValueError("unsupported source qualification label")
+        if row["label"] != "not established":
+            raise ValueError("unsupported source qualification for missing evidence")
         if not row.get("reason") or not row.get("required_evidence"):
             raise ValueError("missing qualification evidence requirement")
         if key.startswith("allowables."):
@@ -223,7 +218,7 @@ def _bending_svg(results: dict) -> str:
 
 
 def _design(results: dict, inventory: list) -> str:
-    rows = [[r["label"], r["units"], r["status"]] for r in inventory]
+    rows = [[r["name"], r["units"], r["label"], r["reason"]] for r in inventory]
     return (
         '<p>The assumed load distribution and missing strength basis define the scope below.</p>'
         '<h3>3.1 Site data</h3><p>Not applicable: the example has no site-specific loading.</p>'
@@ -234,12 +229,12 @@ def _design(results: dict, inventory: list) -> str:
         '<h3>3.4 Vessel data</h3><p>The generic box hull has length '
         f'{results["length_m"]:.4g} m and a central distributed load of '
         f'{results["weight_t"]:.4g} t over its middle half. Geometry and loading are '
-        'assumed, based on previous experience; they are synthetic inputs, not measurements.</p>'
+        'a synthetic textbook box-barge analytical fixture <a href="#i3">[I3]</a>, not measurements.</p>'
         '<h3>3.5 Criteria</h3><p>Strength acceptance is not evaluated. The strength-input '
         'evidence is summarized in <a href="#table-3-1">Table 3.1</a>; its required evidence is detailed in '
         '<a href="#appendix-a">Appendix A</a>. Calculation comparisons use the existing '
         'analytical fixture criteria <a href="#i2">[I2]</a>.</p>'
-        + _table(["Strength input", "Units", "Evidence"], rows, 'Table 3.1. Strength-input evidence.')
+        + _table(["Strength input", "Units", "Label", "Reason"], rows, 'Table 3.1. Strength-input evidence.')
         + '<h3>3.6 Method</h3><p>See <a href="#methodology">Section 4</a>.</p>'
         '<h3>3.7 Load cases</h3><p>One still-water loading condition is evaluated at '
         f'{results["n_stations"]} integration stations and {len(results["frames"])} reporting '
@@ -276,7 +271,7 @@ def _detailed_results(results: dict) -> str:
 
 
 def _references(basis: dict, version: str) -> str:
-    source = basis["sources"]["iacs_catalogue"]
+    source = basis["sources"]["iacs_index"]
     terms = basis["sources"]["iacs_terms"]
     return (
         '<p>The published metadata and internal calculation basis are distinguished below.</p>'
@@ -343,7 +338,7 @@ def _render(results: dict, inventory: list, basis: dict, revisions: dict) -> str
               'V(x) = ∫q(x)dx (4.1), and M(x) = ∫V(x)dx (4.2). '
               'Positive moment denotes hogging and negative moment sagging. Trapezoidal '
               'integration uses cell-averaged weights. The continuous central-block '
-              'comparator is |V|max = W/4 (4.3), |M|min = WL/16 (4.4) '
+              'comparator is |V|max = W/4 (4.3), |M|max = WL/16 (4.4) '
               '<a href="#i2">[I2]</a>. No wave or strength calculation is performed.</p>')
     sections = [
         _section('summary', '1 Executive Summary', _summary(results)), revision_html,
@@ -356,7 +351,7 @@ def _render(results: dict, inventory: list, basis: dict, revisions: dict) -> str
         _section('recommendations', '8 Recommendations', '<p>Obtain the six loading-manual curve/property entries, qualified material evidence and the applicable rule clause before assigning a permitted loading condition. Confirm the actual weight, buoyancy and section model and obtain an independent comparison before extending this assumed example to an engineering configuration.</p>'),
         _section('references', '9 References', _references(basis, version)),
         _section('symbols', '10 Acronyms and Symbols', '<p>SF denotes shear force; BM denotes bending moment. In the marine convention used here, t is a mass-equivalent load ordinate and t·m is its moment; no force conversion is applied. W is total distributed weight (t), L hull length (m), x longitudinal position (m), q net load (t/m), V shear (t), M bending moment (t·m), and Z section modulus (m³). Strength utilisation means demand divided by a qualified limit and is not calculated.</p>'),
-        _section('appendix-a', 'Appendix A — Missing strength evidence', '<p>The synthetic curves and section properties in the original example are assumed, based on previous experience; no numerical placeholder is promoted to an approved limit. Restricted standard values remain marked not sourced: licensed source <a href="#p1">[P1]</a>, <a href="#p2">[P2]</a>. The general rule cannot authenticate configuration-specific loading-manual curves. Missing evidence affects both signs of every curve.</p>' + _table(['Strength input', 'Missing evidence', 'Required evidence'], [[r['label'], r['reason'], r['required_evidence']] for r in inventory], 'Table A.1. Evidence required before a strength conclusion.')),
+        _section('appendix-a', 'Appendix A — Missing strength evidence', '<p>The synthetic curves and section properties in the original example have no qualified strength basis; all eight strength inputs are labelled not established. No numerical placeholder is promoted to an approved limit. Restricted standard values are not established because reproduction permission is unavailable <a href="#p1">[P1]</a>, <a href="#p2">[P2]</a>. The general rule cannot authenticate configuration-specific loading-manual curves. Missing evidence affects both signs of every curve.</p>' + _table(['Strength input', 'Label', 'Missing evidence', 'Required evidence'], [[r['name'], r['label'], r['reason'], r['required_evidence']] for r in inventory], 'Table A.1. Evidence required before a strength conclusion.')),
     ]
     sections.insert(2, _contents())
     css = ('body{font:16px/1.5 system-ui,sans-serif;color:#172033;margin:auto;max-width:1000px;padding:24px}'
@@ -369,7 +364,7 @@ def _render(results: dict, inventory: list, basis: dict, revisions: dict) -> str
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<meta name="report-revision" content="{escape(revisions["revision"], quote=True)}">'
             f'<title>Hull-girder analysis</title><style>{css}</style></head><body>'
-            '<header><h1>Hull-girder analysis</h1><p>Internal — still-water demand and strength-input evidence</p></header>'
+            '<header><h1>Hull-girder analysis</h1><p>Still-water demand and strength-input evidence — not for design use</p></header>'
             + ''.join(sections) + '</body></html>\n')
 
 
@@ -410,6 +405,7 @@ def build(output_dir: Path, *, basis_path: Path = DEMO / "allowable-basis.json",
         "schema": "hull-girder-report/1", "report_revision": revisions["revision"],
         "strength_disposition": results["strength_disposition"],
         "inputs": {path: _digest(ROOT / path) for path in INPUTS},
+        "project_version": tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"],
         "outputs": {name: _digest(output_dir / name) for name in ("report.html", "results.json")},
         "source_records": basis["sources"],
         "rights": basis["rights"], "reporting_conventions": basis["reporting_conventions"],
@@ -428,6 +424,8 @@ def verify_manifest(output_dir: Path) -> None:
     if (set(manifest["inputs"]) != set(INPUTS)
             or set(manifest["outputs"]) != {"report.html", "results.json"}):
         raise ValueError("manifest inventory mismatch")
+    if manifest["project_version"] != tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]:
+        raise ValueError("manifest project version mismatch")
     for directory, records in ((ROOT, manifest["inputs"]), (output_dir, manifest["outputs"])):
         for name, record in records.items():
             path = directory / name
