@@ -27,11 +27,8 @@ Because the installation tools are ROV operated, there’s no umbilical to worry
  An alignment funnel guides the initial landing of the tool and connector assembly. Latch dogs in the funnel lock onto the receiver structure as the soft -landing system is engaged to hydraulically force the hub and collet connector faces together.
  
  
- ![alt text](image-5.png)
+ alt text (content store: `blobs/sha256/bf/bfb748ccef8ef099bf65e5bb057cb12d44db5046a43fa174b9b9ff509284d604.png`; retrieve with `python scripts/data/fetch.py blobs/sha256/bf/bfb748ccef8ef099bf65e5bb057cb12d44db5046a43fa174b9b9ff509284d604.png`)
 
- ![alt text](image-6.png)
+ alt text (content store: `blobs/sha256/6b/6b31f9b17e87416c29ebf0b8e58e7ae17b88890dab9f8669778b063afe1a667e.png`; retrieve with `python scripts/data/fetch.py blobs/sha256/6b/6b31f9b17e87416c29ebf0b8e58e7ae17b88890dab9f8669778b063afe1a667e.png`)
 
- ![
-    
-    
- ](image-7.png)
+ Image (content store: `blobs/sha256/70/70503ee2802d9c20d593c8ec122aad91384b25afe03c35500ca477de26c5517d.png`; retrieve with `python scripts/data/fetch.py blobs/sha256/70/70503ee2802d9c20d593c8ec122aad91384b25afe03c35500ca477de26c5517d.png`)

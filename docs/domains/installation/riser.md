@@ -11,12 +11,12 @@ To approach this with sound engineering considerations, please have a thought ab
 #4) If the pressure collapse design requires a heavy wall, what will be the main challenge regarding accidental ?????????????? ?????? ???????????????
 #5) Does the?????????????????? ?????? ???????????????????????? have sufficient capacity to handle the 20-inch pipe?
 
-![alt text](image.png)
+alt text (content store: `blobs/sha256/de/de3b1ff6e1c96700cf25aa8fcb290b52e07b0cb5b41320a53affb15f7d73b795.png`; retrieve with `python scripts/data/fetch.py blobs/sha256/de/de3b1ff6e1c96700cf25aa8fcb290b52e07b0cb5b41320a53affb15f7d73b795.png`)
 
 ![alt text](image-1.png)
 
-![alt text](image-2.png)
+alt text (content store: `blobs/sha256/07/0757b3f4890a9d219240e58c167ea50d5bcf4b310dd4d677d0e854833c0026aa.png`; retrieve with `python scripts/data/fetch.py blobs/sha256/07/0757b3f4890a9d219240e58c167ea50d5bcf4b310dd4d677d0e854833c0026aa.png`)
 
 ![alt text](image-3.png)
 
-![alt text](image-4.png)
+alt text (content store: `blobs/sha256/f2/f25efecacb078c247548fd85a7075afed343530dc8c245dddf0e40166cdda428.png`; retrieve with `python scripts/data/fetch.py blobs/sha256/f2/f25efecacb078c247548fd85a7075afed343530dc8c245dddf0e40166cdda428.png`)
