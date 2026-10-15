@@ -85,6 +85,20 @@ def inspect_model(path: Path, relative: str, rules: dict) -> dict:
     }
 
 
+def rule_provenance(rules: dict) -> dict:
+    """Bind inspection to public source bytes and the loaded rule authority.
+
+    Authenticated denotes loaded private names or patterns; an empty private
+    file provides no additional authority beyond the public rules.
+    """
+    return {
+        "identifier_gate_sha256": sha256(GATE_PATH.read_bytes()).hexdigest(),
+        "public_rules_sha256": sha256(Path(gate.RULES).read_bytes()).hexdigest(),
+        "rule_authority": ("authenticated" if rules.get("_private_names") or
+                           rules.get("_private_patterns") else "public-rules-only"),
+    }
+
+
 def audit(root: Path = ROOT) -> dict:
     """Produce deterministic per-file evidence and a fail-closed summary."""
     rules = gate.load_rules()
@@ -101,8 +115,7 @@ def audit(root: Path = ROOT) -> dict:
         "schema": "legacy-library-sanitisation-1",
         "criterion": "Every model input is inspected with no identifier findings.",
         "identifier_gate": "scripts/legal/check_identifiers.py",
-        "identifier_gate_sha256": sha256(GATE_PATH.read_bytes()).hexdigest(),
-        "public_rules_sha256": sha256(Path(gate.RULES).read_bytes()).hexdigest(),
+        **rule_provenance(rules),
         "binary_baseline_accepted": False,
         "native_solver_used": False,
         "publication_ready": bool(models) and failed == 0,
@@ -191,6 +204,8 @@ def publication_records(report: dict, root: Path = ROOT) -> dict:
                        "missing_dependency_count": len(inputs - items.keys())})
     return {
         "schema": "legacy-library-publication-1",
+        **{key: report[key] for key in (
+            "identifier_gate_sha256", "public_rules_sha256", "rule_authority")},
         "native_solver_used": False,
         "counts": {
             "library_inputs": len(items), "published_inputs": len(retained),

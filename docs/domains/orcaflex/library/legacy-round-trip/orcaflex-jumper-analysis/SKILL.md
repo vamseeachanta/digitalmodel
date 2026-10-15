@@ -24,7 +24,7 @@ Installation rig with 11 line objects and 10 line types; the source includes cra
 
 Source: `docs/domains/orcaflex/jumper/manifold_to_plet/spec.yml`; digest in `jumper-groups.json`.
 
-Water depth 1996.0 m; wave height 2.0 m, period 8.0 s, direction 180.0 degrees. Current 0.0 m/s; wind 0.0 m/s. Simulation stages 10.0, 10.0, 1.0 s; time step not recorded s.
+Water depth 1996 m; wave height 2 m, period 8 s, direction 180 degrees. Current 0 m/s; wind 0 m/s. Simulation stages 10, 10, 1 s; time step not recorded s.
 
 ### plet_to_plem
 
@@ -32,7 +32,7 @@ Installation rig with 11 line objects and 10 line types; the source includes cra
 
 Source: `docs/domains/orcaflex/jumper/plet_to_plem/spec.yml`; digest in `jumper-groups.json`.
 
-Water depth 1996.0 m; wave height 2.0 m, period 8.0 s, direction 180.0 degrees. Current 0.0 m/s; wind 0.0 m/s. Simulation stages 10.0, 10.0, 1.0 s; time step not recorded s.
+Water depth 1996 m; wave height 2 m, period 8 s, direction 180 degrees. Current 0 m/s; wind 0 m/s. Simulation stages 10, 10, 1 s; time step not recorded s.
 
 ### sut_mm
 
@@ -40,7 +40,7 @@ Parameter override with no object geometry; a standalone jumper configuration is
 
 Source: `docs/domains/orcaflex/jumper/sut_mm/spec.yml`; digest in `jumper-groups.json`.
 
-Water depth 100.0 m; wave Hs 2.2 m, period 9.0 s, direction 165.0 degrees. Current not recorded m/s; wind not recorded m/s. Simulation stages not recorded s; time step not recorded s.
+Water depth 100.0 m; wave Hs 2.25 m, period 9 s, direction 165 degrees. Current not recorded m/s; wind not recorded m/s. Simulation stages not recorded s; time step not recorded s.
 
 ### sut_mm/resonance
 
@@ -48,7 +48,7 @@ Vessel and buoy specification with 2 line types and no line objects; jumper geom
 
 Source: `docs/domains/orcaflex/jumper/sut_mm/resonance/spec.yml`; digest in `jumper-groups.json`.
 
-Water depth 100.0 m; wave height 7.0 m, period 8.0 s, direction 180.0 degrees. Current 0.0 m/s; wind 0.0 m/s. Simulation stages 8.0, 16.0 s; time step 0.1 s.
+Water depth 100 m; wave height 7 m, period 8 s, direction 180 degrees. Current 0 m/s; wind 0 m/s. Simulation stages 8, 16 s; time step 0.1 s.
 
 ## Worked preparation
 

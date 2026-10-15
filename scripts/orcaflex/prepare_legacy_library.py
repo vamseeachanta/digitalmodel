@@ -55,13 +55,16 @@ def verify_reused_inventory(inventory: dict, root: Path) -> None:
     """Reinspect retained bytes and rebuild dependencies before reusing records."""
     verify_inputs(inventory, root)
     rules = inspection.gate.load_rules()
+    provenance = inspection.rule_provenance(rules)
+    if any(inventory.get(key) != value for key, value in provenance.items()):
+        raise ValueError("recorded rule provenance mismatch")
     records = []
     for item in inventory["inputs"]:
         result = inspection.inspect_model(root / item["path"], item["path"], rules)
         if result["status"] != "pass":
             raise ValueError("recorded input failed content inspection")
         records.append({**item, **result})
-    rebuilt = inspection.publication_records({"models": records, "summary": {"fail": 0}}, root)
+    rebuilt = inspection.publication_records({**provenance, "models": records, "summary": {"fail": 0}}, root)
     if rebuilt["models"] != inventory["models"] or len(rebuilt["inputs"]) != len(records):
         raise ValueError("recorded model dependency mismatch")
 
@@ -270,7 +273,7 @@ def build_jumper_skill(inventory: dict, root: Path) -> dict[str, bytes]:
             return "not recorded"
         if isinstance(value, list):
             return ", ".join(shown(item) for item in value)
-        return f"{value:.1f}"
+        return str(value)
 
     for row in groups:
         text.extend([f"### {row['group']}", "", row["configuration"], "",

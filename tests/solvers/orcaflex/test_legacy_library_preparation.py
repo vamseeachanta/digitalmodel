@@ -158,7 +158,13 @@ def test_committed_records_cover_models_and_match_manifest_digests():
     assert sha256((output / "models.json").read_bytes()).hexdigest() == inventory["models_sha256"]
     for name, digest in manifest["files"].items():
         assert sha256((output / name).read_bytes()).hexdigest() == digest
-    rules = module.inspection.gate.load_rules()
+    import yaml
+    rules = yaml.safe_load(Path(module.inspection.gate.RULES).read_bytes())
+    assert inventory["rule_authority"] == "public-rules-only"
+    assert inventory["identifier_gate_sha256"] == sha256(module.inspection.GATE_PATH.read_bytes()).hexdigest()
+    assert inventory["public_rules_sha256"] == sha256(Path(module.inspection.gate.RULES).read_bytes()).hexdigest()
+    criterion = json.loads((output / "criterion.json").read_bytes())
+    assert inventory["rule_authority"] in criterion["publication"]
     for item in inventory["inputs"]:
         assert sha256((ROOT / item["path"]).read_bytes()).hexdigest() == item["sha256"]
         assert module.inspection.inspect_model(ROOT / item["path"], item["path"], rules)["status"] == "pass"
@@ -169,7 +175,7 @@ def test_skill_document_is_built_from_all_four_inspected_specifications(tmp_path
     for group in ("manifold_to_plet", "plet_to_plem", "sut_mm", "sut_mm/resonance"):
         path = tmp_path / "docs/domains/orcaflex/jumper" / group / "spec.yml"
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("environment:\n  water:\n    depth: 100\ngeneric: {}\n")
+        path.write_text("environment:\n  water:\n    depth: 100\n  raw_properties:\n    WaveHs: 2.25\nsimulation:\n  time_step: 0.05\ngeneric: {}\n")
     inventory = module.build_inventory(tmp_path, "a" * 40, "2026-10-15", 123)
     files = module.build_jumper_skill(inventory, tmp_path)
     assert files == module.build_jumper_skill(inventory, tmp_path)
@@ -178,6 +184,8 @@ def test_skill_document_is_built_from_all_four_inspected_specifications(tmp_path
     assert all(row["source_sha256"] == sha256((tmp_path / row["source"]).read_bytes()).hexdigest()
                for row in source["groups"])
     skill = files["orcaflex-jumper-analysis/SKILL.md"].decode()
+    assert "wave Hs 2.25 m" in skill
+    assert "time step 0.05 s" in skill
     assert "name: orcaflex-jumper-analysis" in skill
     latest = source["revisions"][-1]
     assert f"Declared revision: {latest['revision']}." in skill
@@ -197,6 +205,7 @@ def test_reused_inventory_cannot_relabel_a_failed_inspection(tmp_path):
     inventory = {"inputs": [{**item, "status": "pass"} for item in module.inspection.inventory(tmp_path)],
                  "models": []}
     import pytest
+    inventory.update(module.inspection.rule_provenance(module.inspection.gate.load_rules()))
     with pytest.raises(ValueError, match="content inspection"):
         module.verify_reused_inventory(inventory, tmp_path)
 
@@ -210,6 +219,7 @@ def test_reused_inventory_cannot_omit_a_model_dependency(tmp_path):
     inventory = {"inputs": inputs, "models": [{"path": inputs[0]["path"], "inputs": [inputs[0]["path"]],
                  "model_type": "yaml_model", "missing_dependency_count": 0}]}
     import pytest
+    inventory.update(module.inspection.rule_provenance(module.inspection.gate.load_rules()))
     with pytest.raises(ValueError, match="model dependency"):
         module.verify_reused_inventory(inventory, tmp_path)
 
@@ -226,3 +236,31 @@ def test_resume_rejects_reclassified_input_even_with_matching_bytes(tmp_path):
     import pytest
     with pytest.raises(ValueError, match="file role"):
         module.validate_models(inventory, root, cache_dir=tmp_path / "cache")
+
+
+def test_inventory_records_rule_provenance_and_rejects_stale_reuse(tmp_path):
+    import pytest
+
+    module = implementation()
+    library = tmp_path / "docs/domains/orcaflex/training"
+    library.mkdir(parents=True)
+    (library / "model.yml").write_text("General: {}\n")
+    inventory = module.build_inventory(tmp_path, "a" * 40, "2026-10-15", 123)
+    report = module.inspection.audit(tmp_path)
+    for key in ("identifier_gate_sha256", "public_rules_sha256", "rule_authority"):
+        assert inventory[key] == report[key]
+    module.verify_reused_inventory(inventory, tmp_path)
+    for key in ("identifier_gate_sha256", "public_rules_sha256", "rule_authority"):
+        changed = {**inventory, key: "stale"}
+        with pytest.raises(ValueError, match="rule provenance mismatch"):
+            module.verify_reused_inventory(changed, tmp_path)
+        changed.pop(key)
+        with pytest.raises(ValueError, match="rule provenance mismatch"):
+            module.verify_reused_inventory(changed, tmp_path)
+
+
+def test_rule_authority_distinguishes_private_rules():
+    module = implementation()
+    assert module.inspection.rule_provenance({})["rule_authority"] == "public-rules-only"
+    for rules in ({"_private_names": ["synthetic token"]}, {"_private_patterns": ["synthetic"]}):
+        assert module.inspection.rule_provenance(rules)["rule_authority"] == "authenticated"
