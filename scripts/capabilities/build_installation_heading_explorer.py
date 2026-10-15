@@ -49,7 +49,7 @@ def validate_data(data: dict) -> None:
             raise ValueError(message)
 
     require(data.get("headings_deg") == list(range(0, 181, 15)), "Expected 15-degree headings")
-    require(data.get("head_seas_band_deg") == [-15, 15], "Expected plus or minus 15-degree band")
+    require(data.get("head_seas_band_deg") == [-15, 15], "Expected head-seas sector plus or minus 15 degrees")
     require(type(data.get("illustrative")) is bool, "Expected illustrative flag")
     for key in ("source", "revision"):
         require(isinstance(data.get(key), str) and bool(data[key].strip()), f"Missing {key}")

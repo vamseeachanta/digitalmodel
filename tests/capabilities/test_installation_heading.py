@@ -101,10 +101,10 @@ def test_two_builds_manifest_revision_and_self_containment(builder, tmp_path):
         target = page if relative == builder.PAGE_REL else ROOT / relative
         assert hashlib.sha256(target.read_bytes()).hexdigest() == digest
     assert 'min="0" max="180" step="15"' in text
-    assert 'prefers-reduced-motion: reduce' in text
-    assert 'id="play"' in text and 'id="pause"' in text
+    assert 'id="play"' not in text and 'id="pause"' not in text
     assert 'id="theme"' in text
-    assert 'station-keeping tolerance' in text
+    assert 'head-seas sector ±15°' in text
+    assert 'station-keeping tolerance' not in text
     assert 'ILLUSTRATIVE' in text and 'invented' in text
     assert 'aria-live="polite"' in text
 
@@ -143,20 +143,64 @@ assert.equal(outsideBand(15), false);
 assert.equal(outsideBand(30), true);
 assert.equal(outsideBand(-15), false);
 assert.equal(outsideBand(-30), true);
-assert.deepEqual(nextHeading(180, 1), [165, -1]);
-assert.deepEqual(nextHeading(0, -1), [15, 1]);
-assert.deepEqual(nextHeading(75, 1), [90, 1]);
 assert.equal(readout(2, 4), 'allowable Hs 2.0 m, 50.0 % of the head-seas limit');
-let h = 0, d = 1, seen = [];
-for (let n = 0; n < 24; n++) { [h, d] = nextHeading(h, d); seen.push(h); }
-assert.equal(seen[11], 180); assert.equal(seen[23], 0);
-assert.ok(seen.every(x => x >= 0 && x <= 180 && x % 15 === 0));
 '''
     subprocess.run(["node", "-e", pure + checks], check=True, env=os.environ.copy())
-    assert 'setInterval' in script and 'clearInterval' in script
+    assert 'setInterval' not in script and 'clearInterval' not in script
+    assert 'nextHeading' not in script
+    assert 'visibilitychange' not in script and 'reducedMotion' not in script
     assert 'autoplay' not in script
     assert 'addEventListener("input"' in script
     assert 'addEventListener("change"' in script
+
+
+def test_head_seas_sector_preserves_supplied_sample_without_warning(builder, data, tmp_path):
+    """A heading outside the fixed head-seas sector retains its point limit."""
+    builder.build(output_dir=tmp_path)
+    text = (tmp_path / builder.PAGE_NAME).read_text()
+    script = re.search(r'<script id="chart-script">(.*?)</script>', text, re.S)[1]
+    stage = next(item for item in data["stages"] if item["name"] == "In air")
+    assert stage["limits_m"]["small"][1:4] == [3.6, 3.4, 3.1]
+    # Only the DOM surface used by the shipped script; no browser is started.
+    setup = r'''
+const assert = require('node:assert/strict');
+class Node {
+  constructor(value = '') {
+    this.value = value; this.textContent = ''; this.attributes = {};
+    this.style = {}; this.className = ''; this.children = [];
+    this.classList = {toggle: (name, enabled) => {
+      this.className = enabled ? name : '';
+    }};
+  }
+  append(...children) { this.children.push(...children); }
+  replaceChildren(...children) { this.children = children; }
+  setAttribute(name, value) { this.attributes[name] = String(value); }
+  addEventListener() {}
+}
+const nodes = new Map();
+const getNode = id => {
+  if (!nodes.has(id)) nodes.set(id, new Node());
+  return nodes.get(id);
+};
+getNode('limits-data').textContent = JSON.stringify(DATA);
+getNode('stage').value = String(DATA.stages.findIndex(stage => stage.name === 'In air'));
+getNode('size').value = 'small'; getNode('heading').value = '30';
+const document = {
+  getElementById: getNode, createElementNS: () => new Node(),
+  createElement: () => new Node(), createTextNode: text => text,
+  documentElement: {dataset: {}}, addEventListener() {}
+};
+const window = {matchMedia: () => ({matches: false, addEventListener() {}})};
+'''
+    checks = r'''
+assert.equal(getNode('readout').textContent,
+  'allowable Hs 3.4 m, 94.4 % of the head-seas limit');
+assert.equal(getNode('readout').className, '');
+assert.equal(getNode('band-status').textContent, 'Outside the head-seas sector ±15°.');
+'''
+    subprocess.run(["node", "-e", "const DATA = " + json.dumps(data) + ";\n" +
+                    setup + script + checks], check=True, env=os.environ.copy())
+    assert '.readout.outside' not in text
 
 
 def test_generator_registered(builder):
