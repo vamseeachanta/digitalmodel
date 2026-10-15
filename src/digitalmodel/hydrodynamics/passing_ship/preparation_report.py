@@ -16,7 +16,7 @@ from .preparation import execute_cases, prepare_campaign
 
 
 INPUT_NAMES = ("model.json", "matrix.json", "benchmark_candidates.json", "criteria.json",
-               "sources.json", "revisions.json", "execution.json")
+               "sources.json", "revisions.json", "execution.json", "benchmark_status.json")
 
 
 def _read(path: Path) -> dict:
@@ -53,6 +53,7 @@ def build(data: Path, output: Path) -> dict:
     matrix = prepare_campaign(model, _read(data / "matrix.json"))
     candidates = _read(data / "benchmark_candidates.json")
     criteria = _read(data / "criteria.json")
+    benchmark_status = _read(data / "benchmark_status.json")
     revisions = _read(data / "revisions.json")
     receipt = _read(data / "execution.json")
     if receipt["criteria_sha256"] != _digest(data / "criteria.json"):
@@ -80,7 +81,7 @@ def build(data: Path, output: Path) -> dict:
                          f'<td>{row["sway_n"][1]:.1f}</td><td>{row["yaw_nm"][1]:.1f}</td></tr>'
                          for row in samples)
     sections = [
-        ("Summary", f"<p>Preparation only: {len(matrix)} force cases; {len(candidates['cases'])} published input candidates; zero qualified published benchmarks. No vessel response has been computed.</p>"),
+        ("Summary", f"<p>Preparation only: {len(matrix)} force cases; {len(candidates['cases'])} published input candidates; zero qualified published benchmarks. No vessel response has been computed.</p><p>{escape(benchmark_status['statement'])}</p>"),
         ("Scope", "<p>Parallel passing-ship forces are sampled with the existing native calculator. Tension, motion and fender response remain open under #2016. Published benchmark qualification remains open under #2017.</p>"),
         ("Input basis", "<p>Hull dimensions and coefficients: Park, Nam and Kim (2021), Table 3. Separation and depth ratios: Table 2. Mooring geometry, line length, pretension, speed and density are assumed inputs; these do not define a measured mooring system. Mooring inputs are assumed, based on previous experience.</p>"),
         ("Method", "<p>Existing surge, sway and yaw integrals and finite-depth correction are used unchanged. Samples are taken at half a hull length astern, abeam and half a hull length ahead. The sectional-area approximation and finite-depth correction have not been validated against the opened papers. There is no time-domain response integration. Wind is excluded unless an explicit force and moment vector is supplied.</p>"),
@@ -111,6 +112,7 @@ def build(data: Path, output: Path) -> dict:
     manifest = {"revision": revisions["revision"], "base_commit": receipt["base_commit"],
                 "execution": receipt, "launch_allowed": False, "approved_manifest_sha256": None,
                 "adapter": None, "qualified_benchmarks": 0, "matrix_entries": len(matrix),
+                "benchmark_check": benchmark_status,
                 "response_cases": 0, "header_replacements": "none", "inputs": inputs,
                 "outputs": {name: _digest(output / name) for name in ("report.html", "force_samples.json", "campaign.json")}}
     counts = {"model.json": 1, "matrix.json": len(matrix),
