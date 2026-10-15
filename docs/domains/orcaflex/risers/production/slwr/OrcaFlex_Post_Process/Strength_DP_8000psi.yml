@@ -6,12 +6,12 @@ default:
     AddMaximumToSummary: True
     AddMeanToSummary: True
 
-Files: 
-  - 
+Files:
+  -
     Name: ..\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi_No Load, No Offset.sim
     Label: No Load No Offset,8000psi
     ObjectName: SLWR
-  - 
+  -
     Name: ..\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi.sim
     Label: Design Pressure 8000psi
     ObjectName: SLWR
@@ -24,7 +24,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -34,13 +34,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: Effective Tension (kN)
   Title: Maximum Effective Tension at Top of Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Max_Top_Effective_Tension
   axhline: NULL
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Min
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -50,13 +50,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: Effective Tension (kN)
   Title: Minimum Effective Tension at Top of Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Min_Top_Effective_Tension
   axhline: NULL
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -66,13 +66,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: Bend Moment (kN.m)
   Title: Bend Moment at Top of Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Top_Bending_Moment
   axhline: NULL
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -82,13 +82,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: Max von Mises Stress
   Title: Max von Mises Stress at Top of Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Top_Max von Mises Stress
   axhline: 449537.4
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -98,13 +98,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: API STD 2RD Method 1
   Title: API STD 2RD Method 1 at Top of Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Top_API STD 2RD Method 1
   axhline: 1.0
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -114,13 +114,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: Effective Tension (kN)
   Title: Maximum Effective Tension Along the Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Max_Effective_Tension
   axhline: NULL
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Min
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -130,13 +130,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: Effective Tension (kN)
   Title: Minimum Effective Tension Along the Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Min_Effective_Tension
   axhline: NULL
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -146,13 +146,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: Bend Moment (kN.m)
   Title: Bend Moment Along the Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Bending_Moment
   axhline: NULL
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -162,13 +162,13 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: Max von Mises Stress
   Title: Max von Mises Stress Along the Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: Max_VM_Stress
   axhline: 449537.4
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -178,7 +178,7 @@ RangeGraph:
   xlabel: Arc Length (m)
   ylabel: API STD 2RD Method 1
   Title: API STD 2RD Method 1 Along the Riser
-  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure 
+  Subtitle: 100 yr Wave, 10 yr Current, Design Pressure
   FileName: API_STD_2RD_Method1
   axhline: 1.0
 
@@ -189,7 +189,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -200,7 +200,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -211,7 +211,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -222,7 +222,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -233,7 +233,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -248,7 +248,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -259,7 +259,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -270,7 +270,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -281,7 +281,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -292,7 +292,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -306,7 +306,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -317,7 +317,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -328,7 +328,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -339,7 +339,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -350,7 +350,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -364,7 +364,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -375,7 +375,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -386,7 +386,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -397,7 +397,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -408,7 +408,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -422,7 +422,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -433,7 +433,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -444,7 +444,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -455,7 +455,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -466,7 +466,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -480,7 +480,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -491,7 +491,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -502,7 +502,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -513,7 +513,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -524,7 +524,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -539,7 +539,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -550,7 +550,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -561,7 +561,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -572,7 +572,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -583,7 +583,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -594,7 +594,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
