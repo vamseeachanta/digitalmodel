@@ -290,6 +290,10 @@ modules:
     owner_wiki: docs/domains/subsea/
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
+    submodules:
+      mooring_analysis:
+        agent_pack: src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md
+        qa_family: MR
   - module: visualization
     entry_point: src/digitalmodel/visualization/
     maturity: beta
