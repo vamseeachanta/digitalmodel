@@ -1,17 +1,17 @@
 {
-  "basis_sha256": "fa8f1827e79403edb8be1a69062e0449c88f953f7f38983695e48bd4b49eeaf2",
+  "basis_sha256": "7c131073911ccc3b496e89bfbd8ea5c5d3a5981265bb3e0dd214a8d7912521b0",
   "criteria_receipt": {
     "criteria_sha256": "283f494cc5a0d8c645463c7a422863c287f22ee36b59b0834e785ec5b9c06d28",
-    "recorded_at": "2026-10-15T07:49:11.332046+00:00"
+    "recorded_at": "2026-10-15T20:23:50.865550+00:00"
   },
   "criteria_sha256": "283f494cc5a0d8c645463c7a422863c287f22ee36b59b0834e785ec5b9c06d28",
-  "first_run_started_at": "2026-10-15T07:54:02.072705+00:00",
+  "first_run_started_at": "2026-10-15T20:24:57.991463+00:00",
   "input_url_base": "examples/hydrodynamics/parametric_rao/ in the same repository revision",
   "inputs": {
     "basis.json": {
       "record_count": 16,
       "retrieved_on": "2026-10-15",
-      "sha256": "fa8f1827e79403edb8be1a69062e0449c88f953f7f38983695e48bd4b49eeaf2",
+      "sha256": "7c131073911ccc3b496e89bfbd8ea5c5d3a5981265bb3e0dd214a8d7912521b0",
       "source_url": "basis.json"
     },
     "criteria.json": {
@@ -21,34 +21,34 @@
       "source_url": "criteria.json"
     },
     "revisions.json": {
-      "record_count": 2,
+      "record_count": 3,
       "retrieved_on": "2026-10-15",
-      "sha256": "1f6a4d34b3e7494ad444a70f3d738d071ca9e21546d8676d8b1f056eba403690",
+      "sha256": "6c00c3ab0d87d89c4f977eaf5a653b1e164893de6bb57085e79434005e978cc5",
       "source_url": "revisions.json"
     }
   },
   "native_evidence": "results.json retains hydrodynamic coefficients, complex excitation, inertia, stiffness and complex RAOs read from solver arrays; meshes remain execution scratch",
   "outputs": {
     "convergence-native.json": {
-      "bytes": 48505,
-      "sha256": "9efdfa97ca02532f75ab5e2a232c6380750d0e597e18945c404cdac8b8de40f1"
+      "bytes": 48673,
+      "sha256": "33b6cd8d788f0ba37620b51386604caed52af4fac39a9638a32af68baaf7c672"
     },
     "lookup.html": {
-      "bytes": 90328,
-      "sha256": "b6954ed8a1f7cb27af722df4e4911b2bf976cf4963af94d61ea6c425e936cd44"
+      "bytes": 90531,
+      "sha256": "56aa136dcf3e022a6636e5a5c95281718f0bbd69e1c2be3e32c5cc6d923a23e7"
     },
     "pilot.parquet": {
-      "bytes": 43502,
-      "sha256": "019d02754c83cadc228f6ebff6e9fdf775c16ffb7ea93035bb51e05c810025b6"
+      "bytes": 43701,
+      "sha256": "b161cc35d18d7e0c2e9c0bdc4f0822550dbd5b2990fc071cb480a027c94ea1c6"
     },
     "results.json": {
-      "bytes": 502133,
-      "sha256": "ace1292bd01b4e8373ea1ad90c5ed492045571e6f65d856dac6849fe1e2a4cdf"
+      "bytes": 503197,
+      "sha256": "8093406f6e5d00a8f780e9df383447175001f6b8ccc88252a8b8e4e0340eca3f"
     }
   },
   "qualification": "Open-source reproduction and head-sea heave panel sensitivity only",
   "record_count": 16,
-  "revisions_sha256": "1f6a4d34b3e7494ad444a70f3d738d071ca9e21546d8676d8b1f056eba403690",
+  "revisions_sha256": "6c00c3ab0d87d89c4f977eaf5a653b1e164893de6bb57085e79434005e978cc5",
   "schema_version": 1,
   "solver_version": "3.0.0",
   "sources": [

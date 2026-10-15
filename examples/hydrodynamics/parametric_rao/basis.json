@@ -47,8 +47,9 @@
     0,
     90
   ],
-  "irregular_frequency_band_reason": "Declared study parameter: the 2 percent band contains the two confirmed coincidences, whose computed frequency offsets round to 0.1 percent and 0.2 percent, and does not reach the neighbouring sampled frequencies.",
-  "irregular_frequency_relative_band": 0.02,
+  "irregular_frequency_band_reason": "Assumed screening range from 1 percent below to 3 percent above the estimated interior mode, with inclusive edges. The affected range reaches at least +2.2 percent above the estimate; the retained box_00 and box_04 samples bound the lower side. The band edges have not been measured.",
+  "irregular_frequency_lower_fraction": -0.01,
+  "irregular_frequency_upper_fraction": 0.03,
   "omega_rad_s": [
     0.2,
     0.34,

@@ -350,6 +350,9 @@ def test_response_uses_force_rows_for_asymmetric_added_mass_and_damping(monkeypa
     # det Z=81-(2+3i)(1+i)=82-5i; adj(Z) F=[13+6i,19+i].
     expected = np.array([13+6j, 19+1j]) / (82-5j)
     np.testing.assert_allclose(response[0, 0, :2], expected, rtol=1e-13)
+    assert record["hydrodynamic_matrix_axes"] == ["omega", "radiating_dof", "influenced_dof"]
+    assert record["added_mass"][0][1][0] == 2
+    assert record["radiation_damping"][0][1][0] == 3
 
 
 def test_ship_inertia_matches_closed_form_uniform_density_wigley():
@@ -431,7 +434,7 @@ def test_box_mask_uses_mode_band_and_coefficient_signs():
         if case["case_id"] == "box_03":
             record["radiation_damping"][-1][4][4] = -1
             flagged = pilot.mask_irregular_points(record, basis)
-            assert flagged["masked_points"][0]["reasons"] == ["negative diagonal radiation damping: Pitch"]
+            assert "negative diagonal radiation damping: Pitch" in flagged["masked_points"][0]["reasons"]
             with pytest.raises(ValueError, match="Unmasked negative"):
                 pilot.validate_physical_points(record, basis)
             pilot.validate_physical_points(flagged, basis)
@@ -439,4 +442,80 @@ def test_box_mask_uses_mode_band_and_coefficient_signs():
             record["added_mass"][-1][2][2] = -1
             flagged = pilot.mask_irregular_points(record, basis)
             assert "negative heave added mass" in flagged["masked_points"][0]["reasons"]
-    assert masked == {"box_01", "box_02", "box_05", "box_06"}
+    assert masked == {"box_01", "box_02", "box_03", "box_05", "box_06", "box_07"}
+
+
+
+def test_box_mask_has_inclusive_asymmetric_band_edges():
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+    basis = json.loads(BASIS.read_text())
+    record = fixture_record()
+    _, mode = pilot.point_reasons(record, basis)
+    for fraction, expected in ((-0.0100001, False), (-0.01, True),
+                               (-0.0099999, True), (0.0299999, True),
+                               (0.03, True), (0.0300001, False)):
+        record["omega_rad_s"] = [mode * (1 + fraction), 0.2]
+        flagged = pilot.mask_irregular_points(record, basis)
+        assert (0 in pilot.masked_indices(flagged)) == expected, fraction
+
+
+def test_build_gate_rejects_unmasked_box_07_interior_mode(tmp_path):
+    import importlib.util
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+    spec = importlib.util.spec_from_file_location("pilot_run", BASIS.with_name("run.py"))
+    run = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(run)
+    basis = json.loads(BASIS.read_text())
+    record = fixture_record(pilot.case_table(basis)[7])
+    record["omega_rad_s"] = [1.32, 0.2]
+    record["started_at"] = "2026-10-15T00:00:01+00:00"
+    reference = {"omega_rad_s": record["omega_rad_s"], "heave_rao": [np.sqrt(2)]*2}
+    criteria = json.loads(CRITERIA.read_text())
+    receipt = {"criteria_sha256": pilot.digest(CRITERIA), "recorded_at": "2026-10-15T00:00:00+00:00"}
+    convergence = pilot.convergence_record(
+        [{"panel_count": n, "heave_rao": [1.0, 1.0]} for n in (1, 2, 3)], criteria)
+    with pytest.raises(ValueError, match="Unmasked within declared interior-mode band at 1.32"):
+        run.build([record], basis, criteria, receipt, reference, convergence, tmp_path)
+
+
+
+def test_mass_integration_accepts_closed_box_and_waterline_open_meshes():
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+    cases = pilot.case_table(json.loads(BASIS.read_text()))
+    for case in (cases[0], cases[8]):
+        vertices, panels = pilot.geometry(case)
+        mass, _, _ = pilot.homogeneous_mass_properties(vertices, panels, 1025)
+        assert mass > 0
+    case = cases[0]
+    vertices, panels = pilot.geometry(case)
+    quads = vertices[panels]
+    lid = quads[np.all(quads[:, :, 2] == -case["draft_m"], axis=1)][:, ::-1].copy()
+    lid[:, :, 2] = 0
+    closed = np.concatenate((quads, lid))
+    vertices, inverse = np.unique(closed.reshape(-1, 3), axis=0, return_inverse=True)
+    mass, _, _ = pilot.homogeneous_mass_properties(vertices, inverse.reshape(-1, 4), 1025)
+    assert mass == pytest.approx(1025*case["length_m"]*case["beam_m"]*case["draft_m"])
+
+
+@pytest.mark.parametrize("duplicate_vertices", [False, True])
+def test_mass_integration_rejects_open_boundary_off_waterline(duplicate_vertices):
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+    case = pilot.case_table(json.loads(BASIS.read_text()))[0]
+    vertices, panels = pilot.geometry(case)
+    if duplicate_vertices:
+        vertices = vertices[panels].reshape(-1, 3)
+        panels = np.arange(len(vertices)).reshape(-1, 4)
+    vertices = vertices.copy()
+    vertices[:, 2] -= 0.125
+    with pytest.raises(ValueError, match=r"120 boundary edges.*largest \|z\|=0.125"):
+        pilot.homogeneous_mass_properties(vertices, panels, 1025)
+    # Lift a corner shared by two open edges; both endpoint positions matter.
+    vertices, panels = pilot.geometry(case)
+    if duplicate_vertices:
+        vertices = vertices[panels].reshape(-1, 3)
+        panels = np.arange(len(vertices)).reshape(-1, 4)
+    vertices = vertices.copy()
+    corner = np.unique(vertices[vertices[:, 2] == 0], axis=0)[-1]
+    vertices[np.all(vertices == corner, axis=1), 2] = 2e-9
+    with pytest.raises(ValueError, match=r"2 boundary edges.*largest \|z\|=2e-09"):
+        pilot.homogeneous_mass_properties(vertices, panels, 1025)

@@ -114,7 +114,7 @@ def validate_receipt(path, receipt, first_start):
 
 
 def point_reasons(record, basis=None):
-    """Identify coefficient-sign defects and the declared box interior-mode band."""
+    """Identify coefficient-sign defects and the inclusive box interior-mode band."""
     omega = record["omega_rad_s"]
     reasons = [[] for _ in omega]
     for field in ("added_mass", "radiation_damping"):
@@ -134,8 +134,10 @@ def point_reasons(record, basis=None):
         case = record["case"]
         k = np.pi * np.sqrt(1/case["length_m"]**2 + 1/case["beam_m"]**2)
         mode = float(np.sqrt(basis["gravity_m_s2"] * k / np.tanh(k*case["draft_m"])))
+        lower = mode * (1 + basis["irregular_frequency_lower_fraction"])
+        upper = mode * (1 + basis["irregular_frequency_upper_fraction"])
         for index, frequency in enumerate(omega):
-            if abs(frequency-mode) <= basis["irregular_frequency_relative_band"] * mode:
+            if lower <= frequency <= upper:
                 reasons[index].append("within declared interior-mode band")
     return reasons, mode
 
@@ -160,7 +162,10 @@ def mask_irregular_points(record, basis):
         "masked_points": [{"index": i, "omega_rad_s": record["omega_rad_s"][i], "reasons": why}
                           for i, why in enumerate(reasons) if why],
         "interior_mode_omega_rad_s": mode,
-        "mask_relative_band": basis["irregular_frequency_relative_band"],
+        "mask_relative_band": {
+            "lower_fraction": basis["irregular_frequency_lower_fraction"],
+            "upper_fraction": basis["irregular_frequency_upper_fraction"],
+        },
         "masked_response_policy": "Diagnostic native responses retained here; removed from database and graphs",
     }
 
@@ -296,6 +301,23 @@ def homogeneous_mass_properties(vertices, panels, rho):
     The omitted waterplane has zero tetrahedron volume. Its first and second
     moments also vanish, so these integrals are those of the closed solid.
     """
+    unique_vertices, inverse = np.unique(np.asarray(vertices, float), axis=0,
+                                         return_inverse=True)
+    faces = inverse[np.asarray(panels)]
+    edges = np.sort(np.stack((faces, np.roll(faces, -1, axis=1)), axis=2)
+                    .reshape(-1, 2), axis=1)
+    face_ids = np.repeat(np.arange(len(faces)), faces.shape[1])
+    nonzero = edges[:, 0] != edges[:, 1]
+    face_edges = np.unique(np.column_stack((face_ids[nonzero], edges[nonzero])),
+                           axis=0)
+    edges, counts = np.unique(face_edges[:, 1:], axis=0, return_counts=True)
+    boundary = edges[counts == 1]
+    heights = np.abs(unique_vertices[boundary, 2]).max(axis=1)
+    offending = heights > 1e-9
+    if np.any(offending):
+        raise ValueError(
+            f"{np.count_nonzero(offending)} boundary edges lie off z=0; "
+            f"largest |z|={heights.max():.9g} m")
     quads = np.asarray(vertices, float)[np.asarray(panels)]
     triangles = np.concatenate((quads[:, [0, 1, 2]], quads[:, [0, 2, 3]]))
     volumes = np.einsum("ij,ij->i", triangles[:, 0],

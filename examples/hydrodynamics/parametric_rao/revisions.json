@@ -8,5 +8,10 @@
     "change": "Corrects hydrodynamic matrix orientation and homogeneous ship inertia; removes identified irregular-frequency responses from the database and graphs.",
     "date": "2026-10-15",
     "revision": 1
+  },
+  {
+    "change": "Extends the assumed interior-mode screening band to include box_07 at 1.32 rad/s and validates waterline boundary edges before integrating inertia.",
+    "date": "2026-10-15",
+    "revision": 2
   }
 ]
