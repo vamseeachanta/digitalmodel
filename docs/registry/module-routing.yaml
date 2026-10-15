@@ -106,6 +106,9 @@ modules:
       global_model:
         agent_pack: src/digitalmodel/drilling_riser/global_model/docs/agent-pack.md
         qa_family: MR
+      postprocess:
+        agent_pack: src/digitalmodel/drilling_riser/postprocess/docs/agent-pack.md
+        qa_family: MR
   - module: fatigue
     entry_point: src/digitalmodel/fatigue/
     maturity: production
