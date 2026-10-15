@@ -16,8 +16,6 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-import yaml
-
 ROOT_RE = re.compile(r"`(tests/[^`]+)`")
 PYPROJECT_PATH = "pyproject.toml"
 FULL_MATRIX_PREFIXES = ("src/digitalmodel/",)
@@ -36,7 +34,7 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("docs/registry/", ("contracts", "workflows", "subsea")),
+    ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
     ("docs/maps/", ("contracts",)),
     ("config/repo_structure.yml", ("contracts",)),
     ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),
@@ -266,6 +264,10 @@ def package_document_domains(path: str, domains: list[Domain]) -> set[str] | Non
             or "docs" not in parts[2:-1] or Path(normalized).suffix == ".py"):
         return None
     all_names = {domain.name for domain in domains}
+    try:
+        import yaml
+    except ImportError:
+        return all_names
     registry = Path(__file__).resolve().parents[2] / "docs/registry/module-routing.yaml"
     try:
         entries = yaml.safe_load(registry.read_text(encoding="utf-8"))["modules"]
