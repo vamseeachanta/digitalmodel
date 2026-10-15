@@ -146,14 +146,29 @@ def test_full_sweep_keeps_nightly_schedule() -> None:
     assert "workflow_dispatch" in triggers
 
 
-def test_full_sweep_separates_nightly_from_pushes() -> None:
-    """Pushes supersede pushes while leaving the nightly group independent."""
+@pytest.mark.parametrize("event", ("push", "schedule", "workflow_dispatch"))
+def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
+    """Every sweep keeps its own group and cannot cancel another sweep."""
     concurrency = load_workflow("full-matrix-sweep.yml")["concurrency"]
-    assert concurrency["group"] == (
-        "full-matrix-sweep-${{ github.ref }}-"
-        "${{ github.event_name == 'schedule' && 'nightly' || 'push' }}"
-    )
-    assert concurrency["cancel-in-progress"] is True
+    groups = []
+    for run_id in (101, 102):
+        context = {
+            "github.ref": "refs/heads/main",
+            "github.event_name": event,
+            "github.run_id": run_id,
+        }
+        groups.append(
+            re.sub(
+                r"\$\{\{(.*?)\}\}",
+                lambda match: str(evaluate_expression(match[1], context)),
+                concurrency["group"],
+            )
+        )
+    assert groups == [
+        "full-matrix-sweep-refs/heads/main-101",
+        "full-matrix-sweep-refs/heads/main-102",
+    ]
+    assert concurrency["cancel-in-progress"] is False
 
 
 def test_full_sweep_bounds_each_shard() -> None:
