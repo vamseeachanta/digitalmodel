@@ -16,10 +16,13 @@ name: Quality Gates by Domain
 
 "on":
   pull_request:
-    branches: [main, develop]
   push:
     branches: [main, develop]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   actions: read
@@ -137,6 +140,7 @@ jobs:
             tests/scripts/test_ci_baseline.py \
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
+            tests/workflows/test_ci_triggers.py \
             -q --tb=line
 
   domain-tests:
