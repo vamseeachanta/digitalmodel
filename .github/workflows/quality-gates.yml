@@ -1,4 +1,5 @@
 # Quality Gates CI/CD Workflow
+# Trigger selection is measured against the pull request base.
 name: Quality Gates
 
 on:
