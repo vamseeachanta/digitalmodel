@@ -315,6 +315,9 @@ modules:
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
     submodules:
+      pipeline:
+        agent_pack: src/digitalmodel/subsea/pipeline/docs/agent-pack.md
+        qa_family: EC
       mooring_analysis:
         agent_pack: src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md
         qa_family: MR
