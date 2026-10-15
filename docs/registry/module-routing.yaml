@@ -4,6 +4,10 @@ canonical_operator_map: docs/maps/digitalmodel-operator-map.md
 modules:
   - module: ansys
     entry_point: src/digitalmodel/ansys/
+    submodules:
+      ansys:
+        agent_pack: src/digitalmodel/ansys/docs/agent-pack.md
+        qa_family: FE
     maturity: beta
     owner_wiki: docs/domains/ansys/
     key_tests: [tests/ansys/]
