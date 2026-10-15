@@ -193,6 +193,8 @@ modules:
     key_tests: [tests/motion_forecast/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#motion_forecast
   - module: naval_architecture
+    agent_pack: src/digitalmodel/naval_architecture/docs/agent-pack.md
+    qa_family: EC
     entry_point: src/digitalmodel/naval_architecture/
     maturity: beta
     owner_wiki: docs/domains/README.md
