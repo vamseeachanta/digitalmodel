@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
 from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder import LinesBuilder
 from digitalmodel.solvers.orcaflex.modular_generator.builders.vessel_builder import VesselBuilder
@@ -78,3 +79,25 @@ def test_winch_keys_match_native_export():
     assert set(winch) <= set(native)
     assert {"WinchControlType", "StageMode, StageValue",
             "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"} <= set(winch)
+
+
+@pytest.mark.parametrize("case_index", range(6))
+def test_support_types_are_defined_before_vessel_references(tmp_path, case_index):
+    """Resolve every roller support type before its referencing vessel."""
+    spec = scenario()
+    table = yaml.safe_load((CAMPAIGN / "case-table.yml").read_text(encoding="utf-8"))
+    case = table["cases"][case_index]
+    spec.environment.water.depth = case["depth_m"]
+    spec.equipment.tensioner.tension_value = case["top_tension_kn"]
+    ModularModelGenerator.from_spec(spec).generate(tmp_path)
+    includes = yaml.safe_load((tmp_path / "master.yml").read_text(encoding="utf-8"))
+    defined = set()
+    references = 0
+    for include in includes:
+        data = yaml.safe_load((tmp_path / include["includefile"]).read_text(encoding="utf-8"))
+        defined.update(item["Name"] for item in data.get("SupportTypes", []))
+        for vessel in data.get("Vessels", []):
+            for support in vessel.get("Supports", []):
+                assert support["SupportType"] in defined
+                references += 1
+    assert references == len(spec.equipment.stinger.rollers) > 1
