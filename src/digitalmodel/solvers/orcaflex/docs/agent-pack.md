@@ -15,7 +15,7 @@
 
 This pack covers the text preparation, validation, execution and post-processing
 routes implemented directly in the module; optional execution exports are resolved
-lazily by the package initializer. [src/digitalmodel/solvers/orcaflex/**init**.py:L24-L65]
+lazily by the package initializer. `[src/digitalmodel/solvers/orcaflex/__init__.py:L24-L65]`
 
 The run-to-simulation route produces a static-state simulation, whereas the native
 parallel route optionally runs dynamics, reopens the saved simulation and extracts
@@ -173,6 +173,31 @@ The strength workflow is NOT_RUN: native simulation loading and extraction
 require a licensed interface; its declared test is
 `tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-strength-post]`.
 It is not a validated case. [docs/registry/workflows.yaml:L380-L387]
+
+### Offline execution record
+
+At the pinned revision, the complete offline command collected 227 cases:
+227 PASS, 0 FAIL and 0 SKIP, including 16 reporting environment cases and
+211 module cases; the five regression nodes above each passed.
+[tests/reporting/test_engine_golden.py:L130-L153]
+[tests/solvers/orcaflex/test_model_catalogue.py:L37-L61]
+[tests/solvers/orcaflex/test_values_equal_bool_normalization.py:L34-L45]
+[tests/solvers/orcaflex/test_yaml_validator_timestep.py:L40-L53]
+[tests/solvers/orcaflex/test_model_header_guard.py:L61-L64]
+
+Execution used the project environment through `uv run --no-sources`,
+`PYTHONPATH=src`, `python -m pytest`, `-q -rA -p no:cacheprovider`, and
+scratch-directed base-temp/JUnit paths; `--with pytest-timeout==2.4.0`
+supplied the lock-file version required by the existing timeout markers.
+The initial collection without that plugin stopped with one collection error;
+that attempt produced no passing-test claim.
+[uv.lock:L5571-L5581]
+[tests/solvers/orcaflex/test_yaml_validator_timestep.py:L125-L128]
+[tests/solvers/orcaflex/test_yaml_validator_timestep.py:L206-L213]
+
+Native simulation operations were NOT_RUN because the licensed interface is
+excluded; unexecuted helper tests retain the file-level dispositions in section 6.
+[docs/registry/workflows.yaml:L380-L387]
 
 ## 5. QA gates
 
@@ -407,6 +432,50 @@ Static enumeration at the pinned revision found 133 conditional skip/xfail/impor
 | `TestIntegration::test_full_workflow_calm_buoy`; `TestIntegration::test_full_workflow_calm_buoy`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `'calm_buoy_hybrid template not found'`                                                                              | `pytest.skip` [tests/solvers/orcaflex/test_template_generator.py:L479-L479]                                        |
 | `TestIntegration::test_full_workflow_calm_buoy`; `TestIntegration::test_full_workflow_calm_buoy`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `'Template missing base or variations'`                                                                              | `pytest.skip` [tests/solvers/orcaflex/test_template_generator.py:L483-L483]                                        |
 
+### Offline test-file dispositions
+
+Top-level test-file disposition; parameterized runtime cases and static definitions are not interchangeable counts.
+
+| Test file                                  | Result / boundary                                                                                 | Source                                                                      |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `test_c13_removed_dat_references.py`       | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_c13_removed_dat_references.py:L36-L36]         |
+| `test_dynamics_progress.py`                | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_dynamics_progress.py:L9-L9]                    |
+| `test_environment_defaults_vs_orcfxapi.py` | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_environment_defaults_vs_orcfxapi.py:L140-L140] |
+| `test_examples_downloader.py`              | NOT_RUN: external-network test path not executed                                                  | [tests/solvers/orcaflex/test_examples_downloader.py:L37-L37]                |
+| `test_hybrid_templates.py`                 | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_hybrid_templates.py:L56-L56]                   |
+| `test_include_library.py`                  | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_include_library.py:L72-L72]                    |
+| `test_inverse_resolver.py`                 | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_inverse_resolver.py:L28-L28]                   |
+| `test_library_generator.py`                | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_library_generator.py:L24-L24]                  |
+| `test_load_orcaflex_files.py`              | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_load_orcaflex_files.py:L87-L87]                |
+| `test_mock_is_explicit.py`                 | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_mock_is_explicit.py:L33-L33]                   |
+| `test_modal_benchmark.py`                  | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_modal_benchmark.py:L47-L47]                    |
+| `test_model_catalogue.py`                  | 29 collected; 29 passed, 0 failed, 0 skipped                                                      | [tests/solvers/orcaflex/test_model_catalogue.py:L40-L40]                    |
+| `test_model_catalogue_references.py`       | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_model_catalogue_references.py:L24-L24]         |
+| `test_model_generator.py`                  | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_model_generator.py:L32-L32]                    |
+| `test_model_header_guard.py`               | 8 collected; 8 passed, 0 failed, 0 skipped                                                        | [tests/solvers/orcaflex/test_model_header_guard.py:L49-L49]                 |
+| `test_modular_input_validation_fixes.py`   | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_modular_input_validation_fixes.py:L58-L58]     |
+| `test_opp_config_expansion.py`             | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_opp_config_expansion.py:L68-L68]               |
+| `test_opp_summary_fix.py`                  | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_opp_summary_fix.py:L12-L12]                    |
+| `test_oq1_oq2_classifications.py`          | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_oq1_oq2_classifications.py:L39-L39]            |
+| `test_orcaflex_cli.py`                     | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_orcaflex_cli.py:L16-L16]                       |
+| `test_orcaflex_converter_enhanced.py`      | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_orcaflex_converter_enhanced.py:L80-L80]        |
+| `test_orcaflex_unit.py`                    | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_orcaflex_unit.py:L27-L27]                      |
+| `test_orcaflex_yml_converter_import.py`    | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_orcaflex_yml_converter_import.py:L20-L20]      |
+| `test_pipeline_schematic.py`               | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_pipeline_schematic.py:L44-L44]                 |
+| `test_production_optimization.py`          | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_production_optimization.py:L27-L27]            |
+| `test_run_state_gating.py`                 | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_run_state_gating.py:L64-L64]                   |
+| `test_sim_retention.py`                    | NOT_RUN: destructive retention operations excluded                                                | [tests/solvers/orcaflex/test_sim_retention.py:L45-L45]                      |
+| `test_skip_list_reconciliation.py`         | NOT_RUN: remaining helper coverage deferred to U4; offline import/side-effect audit not completed | [tests/solvers/orcaflex/test_skip_list_reconciliation.py:L59-L59]           |
+| `test_slay_campaign_plans.py`              | 5 collected; 5 passed, 0 failed, 0 skipped                                                        | [tests/solvers/orcaflex/test_slay_campaign_plans.py:L38-L38]                |
+| `test_slay_campaign_preparation.py`        | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_slay_campaign_preparation.py:L28-L28]          |
+| `test_solver_version_record.py`            | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_solver_version_record.py:L65-L65]              |
+| `test_spec_author.py`                      | 23 collected; 23 passed, 0 failed, 0 skipped                                                      | [tests/solvers/orcaflex/test_spec_author.py:L65-L65]                        |
+| `test_spec_upgrader.py`                    | 19 collected; 19 passed, 0 failed, 0 skipped                                                      | [tests/solvers/orcaflex/test_spec_upgrader.py:L53-L53]                      |
+| `test_template_generator.py`               | NOT_RUN: interface/import boundary not executed; solver interfaces and capability probes excluded | [tests/solvers/orcaflex/test_template_generator.py:L126-L126]               |
+| `test_values_equal_bool_normalization.py`  | 24 collected; 24 passed, 0 failed, 0 skipped                                                      | [tests/solvers/orcaflex/test_values_equal_bool_normalization.py:L34-L34]    |
+| `test_yaml_validator.py`                   | 38 collected; 38 passed, 0 failed, 0 skipped                                                      | [tests/solvers/orcaflex/test_yaml_validator.py:L44-L44]                     |
+| `test_yaml_validator_timestep.py`          | 65 collected; 65 passed, 0 failed, 0 skipped                                                      | [tests/solvers/orcaflex/test_yaml_validator_timestep.py:L41-L41]            |
+
 ## 7. Lessons log
 
 | Date       | Lesson                                                                                                                  | Evidence and pack change                                                                                                                                                                               | Shared-log entry                                 |
@@ -426,7 +495,7 @@ These are pack responsibilities, not an assertion of technical clearance.
 
 The top-level package delegates optional exports to universal, core and template
 components; authoring delegates YAML generation to the modular generator.
-[src/digitalmodel/solvers/orcaflex/**init**.py:L29-L40]
+`[src/digitalmodel/solvers/orcaflex/__init__.py:L29-L40]`
 [src/digitalmodel/solvers/orcaflex/spec_author.py:L465-L472]
 
 Subpackages are dependencies, not expanded scope: their own implementation and
@@ -434,22 +503,22 @@ validation need separate packs. The modular-generator schema and routing,
 format conversion, modular input validation, result analysis, reporting and
 universal execution are listed here only as boundaries.
 
-- `analysis/` boundary. [src/digitalmodel/solvers/orcaflex/analysis/**init**.py:L1-L4]
-- `browser/` boundary. [src/digitalmodel/solvers/orcaflex/browser/**init**.py:L1-L1]
-- `core/` boundary. [src/digitalmodel/solvers/orcaflex/core/**init**.py:L1-L4]
-- `examples_integration/` boundary. [src/digitalmodel/solvers/orcaflex/examples_integration/**init**.py:L1-L4]
-- `format_converter/` boundary. [src/digitalmodel/solvers/orcaflex/format_converter/**init**.py:L1-L4]
-- `model_generator/` boundary. [src/digitalmodel/solvers/orcaflex/model_generator/**init**.py:L1-L4]
-- `modular_generator/` boundary. [src/digitalmodel/solvers/orcaflex/modular_generator/**init**.py:L4-L4]
-- `modular_input_validation/` boundary. [src/digitalmodel/solvers/orcaflex/modular_input_validation/**init**.py:L1-L4]
-- `mooring_analysis/` boundary. [src/digitalmodel/solvers/orcaflex/mooring_analysis/**init**.py:L1-L4]
-- `mooring_tension_iteration/` boundary. [src/digitalmodel/solvers/orcaflex/mooring_tension_iteration/**init**.py:L1-L4]
-- `post_process/` boundary. [src/digitalmodel/solvers/orcaflex/post_process/**init**.py:L1-L1]
-- `post_results/` boundary. [src/digitalmodel/solvers/orcaflex/post_results/**init**.py:L1-L1]
-- `reporting/` boundary. [src/digitalmodel/solvers/orcaflex/reporting/**init**.py:L1-L1]
-- `results_analysis/` boundary. [src/digitalmodel/solvers/orcaflex/results_analysis/**init**.py:L3-L6]
-- `universal/` boundary. [src/digitalmodel/solvers/orcaflex/universal/**init**.py:L1-L4]
-- `utils/` boundary. [src/digitalmodel/solvers/orcaflex/utils/**init**.py:L1-L4]
+- `analysis/` boundary. `[src/digitalmodel/solvers/orcaflex/analysis/__init__.py:L1-L4]`
+- `browser/` boundary. `[src/digitalmodel/solvers/orcaflex/browser/__init__.py:L1-L1]`
+- `core/` boundary. `[src/digitalmodel/solvers/orcaflex/core/__init__.py:L1-L4]`
+- `examples_integration/` boundary. `[src/digitalmodel/solvers/orcaflex/examples_integration/__init__.py:L1-L4]`
+- `format_converter/` boundary. `[src/digitalmodel/solvers/orcaflex/format_converter/__init__.py:L1-L4]`
+- `model_generator/` boundary. `[src/digitalmodel/solvers/orcaflex/model_generator/__init__.py:L1-L4]`
+- `modular_generator/` boundary. `[src/digitalmodel/solvers/orcaflex/modular_generator/__init__.py:L4-L4]`
+- `modular_input_validation/` boundary. `[src/digitalmodel/solvers/orcaflex/modular_input_validation/__init__.py:L1-L4]`
+- `mooring_analysis/` boundary. `[src/digitalmodel/solvers/orcaflex/mooring_analysis/__init__.py:L1-L4]`
+- `mooring_tension_iteration/` boundary. `[src/digitalmodel/solvers/orcaflex/mooring_tension_iteration/__init__.py:L1-L4]`
+- `post_process/` boundary. `[src/digitalmodel/solvers/orcaflex/post_process/__init__.py:L1-L1]`
+- `post_results/` boundary. `[src/digitalmodel/solvers/orcaflex/post_results/__init__.py:L1-L1]`
+- `reporting/` boundary. `[src/digitalmodel/solvers/orcaflex/reporting/__init__.py:L1-L1]`
+- `results_analysis/` boundary. `[src/digitalmodel/solvers/orcaflex/results_analysis/__init__.py:L3-L6]`
+- `universal/` boundary. `[src/digitalmodel/solvers/orcaflex/universal/__init__.py:L1-L4]`
+- `utils/` boundary. `[src/digitalmodel/solvers/orcaflex/utils/__init__.py:L1-L4]`
 
 UNVERIFIED: inventory-row revisions and supported solver-version matrix for all
 dependencies are not qualified by this pack; U4.
