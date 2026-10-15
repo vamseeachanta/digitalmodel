@@ -138,6 +138,8 @@ jobs:
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
             tests/scripts/test_ci_baseline.py \
+            tests/scripts/test_run_shard.py \
+            tests/contracts/test_flaky_register_schema.py \
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
@@ -196,7 +198,7 @@ jobs:
         id: domain-gate
         run: |
           set +e
-          ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+          python scripts/ci/run_shard.py --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
