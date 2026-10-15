@@ -4,6 +4,8 @@
 """Regression checks for gate triggers on stacked pull requests."""
 
 from pathlib import Path
+import re
+from typing import Any
 
 import pytest
 import yaml
@@ -35,15 +37,73 @@ def test_pull_request_accepts_any_base(filename: str) -> None:
     assert triggers["push"]["branches"] == ["main", "develop"]
 
 
-@pytest.mark.parametrize("filename", GATES)
-def test_gate_concurrency_is_per_pull_request(filename: str) -> None:
-    """New pushes supersede previous runs of the same pull request."""
-    concurrency = load_workflow(filename)["concurrency"]
-    assert concurrency["cancel-in-progress"] is True
-    assert concurrency["group"] == (
-        "${{ github.workflow }}-pr-"
-        "${{ github.event.pull_request.number || github.ref }}"
+def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
+    """Evaluate the small Actions expression subset used by concurrency."""
+    expression = expression.strip()
+    for operator in (" || ", " && ", " == "):
+        if operator in expression:
+            left, right = expression.split(operator, 1)
+            value = evaluate_expression(left, context)
+            if operator == " || ":
+                return value or evaluate_expression(right, context)
+            if operator == " && ":
+                return value and evaluate_expression(right, context)
+            return value == evaluate_expression(right, context)
+    formatted = re.fullmatch(r"format\('([^']+)', (github\.[\w.]+)\)", expression)
+    if formatted:
+        template, variable = formatted.groups()
+        return template.format(context[variable])
+    if expression.startswith("'") and expression.endswith("'"):
+        return expression[1:-1]
+    return context[expression]
+
+
+def concurrency_result(
+    filename: str, event: str, run_id: int, number: int = 1
+) -> tuple[str, bool]:
+    """Render the actual workflow group and cancellation expression."""
+    workflow = load_workflow(filename)
+    concurrency = workflow["concurrency"]
+    context = {
+        "github.workflow": workflow["name"],
+        "github.event_name": event,
+        "github.event.pull_request.number": number,
+        "github.ref": "refs/heads/main",
+        "github.run_id": run_id,
+    }
+    group = re.sub(
+        r"\$\{\{(.*?)\}\}",
+        lambda match: str(evaluate_expression(match[1], context)),
+        concurrency["group"],
     )
+    cancel = concurrency["cancel-in-progress"]
+    assert isinstance(cancel, str)
+    assert cancel.startswith("${{") and cancel.endswith("}}")
+    result = evaluate_expression(cancel[3:-2], context)
+    assert isinstance(result, bool)
+    return group, result
+
+
+@pytest.mark.parametrize("filename", GATES)
+def test_pull_request_concurrency(filename: str) -> None:
+    """Only updates of the same pull request supersede earlier runs."""
+    first = concurrency_result(filename, "pull_request", 101, number=1)
+    update = concurrency_result(filename, "pull_request", 102, number=1)
+    other = concurrency_result(filename, "pull_request", 103, number=2)
+    assert first == update
+    assert first[0] != other[0]
+    assert first[1] is True
+    assert other[1] is True
+
+
+@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("event", ("push", "workflow_dispatch"))
+def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
+    """Push and manual runs keep separate groups identified by run ID."""
+    first = concurrency_result(filename, event, 101)
+    second = concurrency_result(filename, event, 102)
+    assert first == (f"{load_workflow(filename)['name']}-run-101", False)
+    assert second == (f"{load_workflow(filename)['name']}-run-102", False)
 
 
 @pytest.mark.parametrize(
