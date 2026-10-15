@@ -12,6 +12,7 @@ name: Parametric atlas drift
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main, develop]
 

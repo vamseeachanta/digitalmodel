@@ -16,6 +16,8 @@ name: Quality Gates by Domain
 
 "on":
   pull_request:
+    # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main, develop]
   workflow_dispatch:

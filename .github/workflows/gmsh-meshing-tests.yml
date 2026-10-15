@@ -21,6 +21,7 @@ on:
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
   pull_request:
+    types: [opened, synchronize, reopened, edited]
     paths:
       - "src/digitalmodel/solvers/gmsh_meshing/**"
       - "src/digitalmodel/solvers/openfoam/**"

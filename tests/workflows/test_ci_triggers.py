@@ -37,6 +37,27 @@ def test_pull_request_accepts_any_base(filename: str) -> None:
     assert triggers["push"]["branches"] == ["main", "develop"]
 
 
+@pytest.mark.parametrize("filename", GATES)
+def test_pull_request_activity_types(filename: str) -> None:
+    """Retargets and ordinary edits start the same gates as code updates."""
+    workflow = load_workflow(filename)
+    triggers = workflow["on"] if "on" in workflow else workflow[True]
+    assert triggers["pull_request"]["types"] == [
+        "opened", "synchronize", "reopened", "edited"
+    ]
+    expected_keys = {"types", "paths"} if filename == "gmsh-meshing-tests.yml" else {"types"}
+    assert set(triggers["pull_request"]) == expected_keys
+
+
+@pytest.mark.parametrize("filename", GATES)
+def test_edits_cannot_skip_jobs_or_steps(filename: str) -> None:
+    """Edit-specific conditions cannot replace failing checks with skips."""
+    for job in load_workflow(filename)["jobs"].values():
+        for entry in [job, *job.get("steps", [])]:
+            condition = str(entry.get("if", ""))
+            assert not re.search(r"github\s*\.\s*event\s*\.\s*(action|changes)\b", condition)
+
+
 def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
     """Evaluate the small Actions expression subset used by concurrency."""
     expression = expression.strip()
