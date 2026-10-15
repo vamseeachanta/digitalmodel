@@ -128,6 +128,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#gis
   - module: hydrodynamics
     entry_point: src/digitalmodel/hydrodynamics/
+    submodules:
+      hull_library:
+        agent_pack: src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md
+        qa_family: DF
     maturity: production
     owner_wiki: docs/domains/hydrodynamics/
     key_tests: [tests/hydrodynamics/]
