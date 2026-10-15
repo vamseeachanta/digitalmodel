@@ -5,6 +5,7 @@
 
 import importlib.util
 import json
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -17,6 +18,97 @@ ci = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ci)
 SCR = "tests/orcaflex/test_generic_scr_slwr.py::test_analytical_reference_reproduces_from_basis"
 NOW = datetime(2026, 10, 15, 12, tzinfo=timezone.utc)
+
+
+def run_health_writer(body, *, active=True, existing=True):
+    """Execute the shipped health script with isolated GitHub and file doubles."""
+    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
+    step = next(s for s in workflow['jobs']['sweep-result']['steps']
+                if s.get('name') == 'Update main health')
+    harness = r'''
+    const input = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+    const calls = [], notices = [];
+    const baseline = {tests: input.active ? {'tests/example.py::test_case':
+      {shard: 'example', first_seen_run: 1, run_id: 10}} : {},
+      shards: {example: {parsed: true, conclusion: 'success'}}};
+    const fakeFs = {existsSync: () => false, readFileSync: () => JSON.stringify(baseline)};
+    const issue = {number: 1, title: 'main-health: example', body: input.body};
+    const github = {paginate: async (method) => method === 'issues' && input.existing ? [issue] : [],
+      rest: {issues: {listForRepo: 'issues', listLabelsForRepo: 'labels',
+        update: async value => calls.push({kind: 'update', ...value}),
+        create: async value => calls.push({kind: 'create', ...value}),
+        createLabel: async value => calls.push({kind: 'label', ...value})}}};
+    const context = {repo: {owner: 'example', repo: 'example'},
+      runNumber: 10, runId: 100, sha: 'abc123'};
+    const core = {notice: value => notices.push(value)};
+    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+    new AsyncFunction('require', 'github', 'context', 'core', input.script)(
+      name => {if (name !== 'fs') throw Error(name); return fakeFs;}, github, context, core
+    ).then(() => console.log(JSON.stringify({calls, notices})));
+    '''
+    completed = subprocess.run(
+        ['node', '-e', harness], input=json.dumps(dict(
+            script=step['with']['script'], body=body, active=active, existing=existing)),
+        text=True, capture_output=True, check=True, timeout=30)
+    return json.loads(completed.stdout)
+
+
+@pytest.mark.parametrize('active', [True, False])
+def test_health_older_sweep_never_updates_or_closes(active):
+    body = '<!-- main-health-order: run_number=11 run_id=101 sha=abc123 -->'
+    output = run_health_writer(body, active=active)
+    assert output['calls'] == []
+    assert len(output['notices']) == 1
+    assert '11' in output['notices'][0] and '10' in output['notices'][0]
+
+
+@pytest.mark.parametrize('body', [
+    '<!-- main-health-order: run_number=10 run_id=100 sha=abc123 -->',
+    '<!-- main-health-order: run_number=9 run_id=99 sha=abc123 -->',
+    'Legacy issue body',
+    '<!-- main-health-order: run_number=invalid run_id=101 sha=abc123 -->',
+    '<!-- main-health-order: run_number=11 run_id=invalid sha=abc123 -->',
+    None,
+])
+def test_health_equal_older_or_unparsed_marker_writes(body):
+    output = run_health_writer(body)
+    assert output['notices'] == []
+    assert len(output['calls']) == 1
+    update = output['calls'][0]
+    assert update['kind'] == 'update' and update['state'] == 'open'
+    assert '<!-- main-health-order: run_number=10 run_id=100 sha=abc123 -->' in update['body']
+    assert run_health_writer(update['body'])['calls'][0]['body'] == update['body']
+
+
+@pytest.mark.parametrize('active,existing,kinds', [
+    (False, True, ['update']), (True, False, ['label', 'create']), (False, False, []),
+])
+def test_health_preserves_close_and_create_rules(active, existing, kinds):
+    output = run_health_writer('', active=active, existing=existing)
+    assert [call['kind'] for call in output['calls']] == kinds
+    if existing:
+        assert output['calls'][0]['state'] == 'closed'
+    elif active:
+        assert output['calls'][-1]['labels'] == ['main-health']
+        assert 'main-health-order: run_number=10' in output['calls'][-1]['body']
+
+
+def test_health_workflow_names_and_soft_failure_are_preserved():
+    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
+    assert {key: job['name'] for key, job in workflow['jobs'].items()} == {
+        'full-matrix': 'Build full shard matrix',
+        'sweep-tests': 'sweep-tests-${{ matrix.domain }}',
+        'sweep-result': 'Full matrix sweep result',
+    }
+    steps = workflow['jobs']['sweep-result']['steps']
+    assert [step['name'] for step in steps] == [
+        'Summarize shard results', 'Checkout baseline tools', 'Download sweep results',
+        'Publish main baseline', 'Upload main baseline', 'Update main health',
+        'Enforce full sweep result',
+    ]
+    step = next(s for s in steps if s['name'] == 'Update main health')
+    assert step['continue-on-error'] is True
+    assert step['if'] == "github.ref == 'refs/heads/main'"
 
 
 def result(shard="example", ids=(SCR,), conclusion="failure", **updates):
