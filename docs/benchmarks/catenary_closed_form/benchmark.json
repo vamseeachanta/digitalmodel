@@ -1,0 +1,97 @@
+{
+  "benchmark": "catenary_closed_form",
+  "units": {
+    "force": "kN",
+    "length": "m",
+    "angle": "degrees"
+  },
+  "cases": [
+    {
+      "case": "C1",
+      "description": "Chain-like line in the plain-catenary regime",
+      "inputs": {
+        "w_N_per_m": 1000.0,
+        "EA_N": 1000000000.0,
+        "L_m": 600,
+        "h_m": 150,
+        "X_m": 520.0,
+        "outer_diameter_m": 0.1,
+        "mass_te_per_m": 0.1100219,
+        "EA_kN": 1000000.0,
+        "EI_kN_m2": 0
+      },
+      "governing_form": "plain",
+      "top_strain_percent": 0.022478797578991957,
+      "model_file": "docs/benchmarks/catenary_closed_form/inputs/catenary_c1_plain.yml",
+      "expected": {
+        "top_tension_kN": 224.788,
+        "top_angle_deg_from_vertical": 19.433,
+        "touchdown_horizontal_distance_from_top_m": 131.982
+      }
+    },
+    {
+      "case": "C2",
+      "description": "Light compliant line in the elastic-catenary regime",
+      "inputs": {
+        "w_N_per_m": 200.0,
+        "EA_N": 20000000.0,
+        "L_m": 600,
+        "h_m": 150,
+        "X_m": 570.0,
+        "outer_diameter_m": 0.05,
+        "mass_te_per_m": 0.0224069,
+        "EA_kN": 20000.0,
+        "EI_kN_m2": 0
+      },
+      "governing_form": "elastic",
+      "top_strain_percent": 0.7544298348422861,
+      "model_file": "docs/benchmarks/catenary_closed_form/inputs/catenary_c2_elastic.yml",
+      "expected": {
+        "top_tension_kN": 150.886,
+        "top_angle_deg_from_vertical": 53.371,
+        "touchdown_horizontal_distance_from_top_m": 419.207
+      },
+      "plain_form_top_tension_kN": 187.737,
+      "plain_form_excess_percent": 24.4
+    }
+  ],
+  "calibrates": {
+    "description": "static hand-calculation check of a single line against the closed-form catenary",
+    "band": {
+      "top_tension": {
+        "kind": "relative",
+        "percent": 5.0
+      },
+      "top_angle": {
+        "kind": "absolute",
+        "degrees": 1.0
+      },
+      "touchdown_horizontal_distance": {
+        "kind": "relative",
+        "percent": 5.0
+      }
+    },
+    "applies_to": "each case, program result against the expected value"
+  },
+  "results_to_export": [
+    "Effective tension at End B (kN)",
+    "Angle of the line at End B from the vertical (degrees)",
+    "Horizontal distance from End B to touchdown (m): X minus the touchdown x coordinate"
+  ],
+  "sources": [
+    {
+      "citation": "Faltinsen, Sea Loads on Ships and Offshore Structures, 1990",
+      "equation_number": "equation number not checked"
+    },
+    {
+      "citation": "Irvine, Cable Structures, 1981",
+      "equation_number": "equation number not checked",
+      "public_equations": "https://github.com/xabi80/HSP/blob/03143504bb05ed7ad4a71a3288b3826b8a521046/tests/validation/test_m4_catenary_irvine.py#L7-L17",
+      "commit": "03143504bb05ed7ad4a71a3288b3826b8a521046",
+      "lines": [
+        7,
+        17
+      ]
+    }
+  ]
+}

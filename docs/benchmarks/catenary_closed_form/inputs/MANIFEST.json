@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "path": "docs/benchmarks/catenary_closed_form/inputs/catenary_c1_plain.yml",
+      "bytes": 2839,
+      "sha256": "b4c52bea2d4ab89e07cb9b8d2ac306fa8ab3c4489a94ae5798578bcd61dcb5c1",
+      "command": "PYTHONPATH=src uv run --no-sources python scripts/benchmark/build_catenary_closed_form_inputs.py"
+    },
+    {
+      "path": "docs/benchmarks/catenary_closed_form/inputs/catenary_c2_elastic.yml",
+      "bytes": 2838,
+      "sha256": "0ed85fd569df26350ef2732fae63a09c81d118fc6cb7b35d60d74ed789e57d3e",
+      "command": "PYTHONPATH=src uv run --no-sources python scripts/benchmark/build_catenary_closed_form_inputs.py"
+    }
+  ]
+}
