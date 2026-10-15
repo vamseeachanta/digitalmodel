@@ -66,9 +66,9 @@ figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption
 {% if section.subtitle %}<p>{{ section.subtitle }}</p>{% endif %}
 {{ blocks(section, loop.index) }}</section>
 {% if loop.first and doc.revision_history %}<div id="revision-history"><h3>Revision history</h3>
-<table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
+<table><caption>Revision history</caption><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
 <tbody>{% for row in doc.revision_history %}<tr><td>{{ row.rev }}</td><td>{{ row.date }}</td><td>{{ row.description }}</td></tr>{% endfor %}</tbody>
-<caption>Revision history</caption></table></div>{% endif %}
+</table></div>{% endif %}
 {% endfor %}
 {% for section in appendices %}
 <section id="{{ section.key }}"><h2>{{ section.title }}</h2>{{ blocks(section, letters[loop.index0]) }}</section>

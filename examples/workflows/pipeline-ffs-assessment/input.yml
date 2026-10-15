@@ -20,10 +20,10 @@ supplement_basis: Supplementary strength, axial stress and circumferential exten
 revision_history:
   - rev: '00'
     date: '2026-10-13'
-    description: Issued
+    description: First draft for review
     prepared: '—'
     checked: '—'
     approved: '—'
   - rev: '01'
     date: '2026-10-14'
-    description: Clarified sampling before the strength-factor referral and Section B's deferred formal local-loss evaluation to match the assessment order.
+    description: Changed Section A remaining life from 0 to 11.5 yr and interval from 0 to 5.8 yr by projecting to design pressure on the reduced local-loss route; retired the point-minimum intervention rule because it is diagnostic only; added Part 2 for the reduced-rating basis; clarified sampling before strength-factor referral and Section B's deferred formal evaluation.

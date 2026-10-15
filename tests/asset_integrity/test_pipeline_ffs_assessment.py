@@ -202,9 +202,10 @@ def test_report_contract_and_determinism(tmp_path, result):
     references = page.split('<section id="section-9">')[1].split("</section>")[0]
     assert references.count("<ol>") == 1
     assert references.count("<li>") == 4
-    for word in ("screen", "pass", "fail", "verdict", "review", "script", "repository",
+    for word in ("screen", "pass", "fail", "verdict", "script", "repository",
                  "PIPE-SYNTHETIC-RIVER-BOTTOM", "LINE-001", "digitalmodel"):
         assert not re.search(r"\b" + re.escape(word) + r"\b", visible, re.I), word
+    assert not re.search(r"\breview\b", visible.replace("First draft for review", ""), re.I)
     assert not re.search(r"(?:src|docs|examples)/", visible)
     for match in re.findall(r"(?<![A-Za-z])\d+\.\d+(?:e[+-]?\d+)?", visible):
         mantissa = match.split("e")[0].replace(".", "").lstrip("0")
@@ -342,7 +343,7 @@ def test_section_a_life_uses_reduced_rating(result):
 def test_sampling_criterion_and_interim_position(tmp_path, result):
     page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
     assert "minimum of 5 degraded cells" in page
-    assert "Add 3 readings" in page
+    assert "Add readings to resolve at least 3 more degraded cells" in page
     assert "Interim operation is a decision for the maintainer" in page
     assert "Field data is adequate" in page
     assert "add readings around axial position 4" not in page.lower()
@@ -493,8 +494,8 @@ def test_revision_history_follows_summary(tmp_path, result):
     rows = TableRows()
     rows.feed(history)
     assert rows.rows == [
-        ["00", "2026-10-13", "Issued"],
-        ["01", "2026-10-14", "Clarified sampling before the strength-factor referral and Section B's deferred formal local-loss evaluation to match the assessment order."],
+        ["00", "2026-10-13", "First draft for review"],
+        ["01", "2026-10-14", "Changed Section A remaining life from 0 to 11.5 yr and interval from 0 to 5.8 yr by projecting to design pressure on the reduced local-loss route; retired the point-minimum intervention rule because it is diagnostic only; added Part 2 for the reduced-rating basis; clarified sampling before strength-factor referral and Section B's deferred formal evaluation."],
     ]
     config = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")
     spec = builder.report_spec(ROOT, result)
@@ -533,3 +534,16 @@ def test_cover_matches_latest_revision_history(tmp_path, monkeypatch, additional
     cover = VisibleText()
     cover.feed(page.split('<header>')[1].split('</header>')[0])
     assert f"Document B0000-RPT-001-{revision} | Revision {revision} | {revision_date}" in " ".join(cover.text)
+
+
+def test_summary_and_findings_follow_governing_criteria(tmp_path):
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    summary = page.split('<section id="section-1">')[1].split('</section>')[0]
+    findings = page.split('<section id="section-6">')[1].split('</section>')[0]
+    assert summary.count("governs the separate six-method comparison") == 1
+    assert findings.count("strength alone does not resolve measurement adequacy") == 1
+    adequate, undersampled = findings.split("Section B", 1)
+    assert "strength alone does not resolve measurement adequacy" not in adequate
+    assert "strength alone does not resolve measurement adequacy" in undersampled
+    history = page.split('<div id="revision-history">')[1].split('</div>')[0]
+    assert history.index('<caption>') < history.index('<thead>')

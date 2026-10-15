@@ -23,12 +23,15 @@ the Section B factors from named numerical-method defaults at calculation time.
 Both grids are bounded local patches; general-loss averaging is not applied.
 Section A requires formal local-loss evaluation because its remaining strength
 factor is below the allowable factor; its field data is adequate. The current
-reduced rating exceeds demand. Section B requires three additional readings:
+reduced rating exceeds demand. Section B requires added readings to resolve at least three more degraded cells:
 two degraded cells resolve its flaw against an assessment default of five.
 Interim operation is a decision for the maintainer of the pipeline record.
 
-Decision precedence is escalation, additional measurements, re-rating, then
-acceptance. Applicability flags and zero projected life require escalation.
+Applicability flags and severe loss below the replacement floor require
+escalation regardless of sampling. Otherwise sampling adequacy is checked first;
+the strength-factor referral is evaluated only after sampling meets the
+Section 3.5 criterion.
+Acceptance or monitoring gives accept only with positive remaining life.
 Pressure reduction uses pressure ratios only; the axial limit remains
 a separate restriction. Section A life is projected to design pressure on the
 reduced local-loss route, holding the flaw extent, background wall and loads
@@ -51,7 +54,8 @@ are UTF-8 with LF. The fixed document date is not read from the clock; repeat
 builds are intended to be byte-identical. The document-control block is marked
 synthetic example through document metadata and names no person or unperformed
 check or approval. Other assessments receive no implicit synthetic label or
-signature placeholders.
+signature placeholders. Assessment presentation does receive a default one-row
+revision history labelled "Issued" when no explicit history is supplied.
 Provenance remains mandatory and is retained in the manifest. The generated-page
 registry owns both outputs and names their synthetic input dependencies.
 

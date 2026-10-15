@@ -333,7 +333,7 @@ def action_text(section):
     location = f"around axial position {number(axial)} in, column {col + 1}"
     if status == "take more measurements":
         count = sum(action["count"] or 0 for action in section["sufficiency"]["actions"])
-        return (f"Add {count} readings {location}, across and immediately around the flaw. "
+        return (f"Add readings to resolve at least {count} more degraded cells {location}, across and immediately around the flaw. "
                 "Repeat the strength and thickness assessments. "
                 "Interim operation is a decision for the maintainer of the pipeline record; "
                 "this assessment does not assign an interim pressure while the local profile remains under-sampled.")
@@ -537,17 +537,25 @@ def section_material(result):
         governing_rating = min(s["local_loss_rating_psi"], row["allowable_pressure_psi"])
         governing_name = ("Reduced local-loss rating" if governing_rating == s["local_loss_rating_psi"]
                           else method_name(row["method"]))
+        comparison = (
+            f"{method_name(row['method'])} governs the separate six-method comparison at "
+            f"{number(row['allowable_pressure_psi'])} psi. "
+            if governing_name == "Reduced local-loss rating" else ""
+        )
         summary.append(text(f"**{s['name']}: {s['decision']}.** {action_text(s)} {deferred_referral(s)}"
                             "A changed minimum, defect extent or loss pattern will require reassessment; "
                             "a repeat-inspection corrosion rate will change the life projection. "
                             f"{governing_name} governs at {number(governing_rating)} psi against "
                             f"{number(pressure)} psi, a ratio of {ratio(governing_rating / pressure)}. "
-                            f"{method_name(row['method'])} governs the separate six-method comparison at "
-                            f"{number(row['allowable_pressure_psi'])} psi. "
+                            + comparison +
                             f"Minimum wall is {number(s['coordinator']['t_measured_min_in'], thickness=True)} in."))
         suff = s["sufficiency"]["metrics"]
         sampling_basis = (f"The local profile contains {suff['profile_cells']} degraded cells. " +
                           ("Field data is adequate; the strength-factor comparison requires formal evaluation. " if s["sufficiency"]["status"] == "ESCALATE" else f"At least {MeasurementSufficiency().min_lml_profile_cells} degraded cells are required by the assessment sampling criterion. "))
+        adequacy_note = (
+            "; strength alone does not resolve measurement adequacy"
+            if s["sufficiency"]["status"] == "TAKE_MORE" else ""
+        )
         findings.append(text(f"{s['name']}: {method_name(row['method'])} governs the six-method comparison at "
                              f"{number(row['allowable_pressure_psi'])} psi versus {number(row['demand_psi'])} psi, "
                              f"a ratio of {ratio(row['margin'])} against 100.0%. "
@@ -555,7 +563,7 @@ def section_material(result):
                              f"{number(s['inputs']['design_pressure_psi'])} psi, a ratio of "
                              f"{ratio(s['local_loss_rating_psi'] / s['inputs']['design_pressure_psi'])}. "
                              "The lower pressure rating participates in the decision. "
-                             + sampling_basis + f"The final decision is {s['decision']}; strength alone does not resolve measurement adequacy. "
+                             + sampling_basis + f"The final decision is {s['decision']}{adequacy_note}. "
                              + deferred_referral(s)))
         recommendations.append(text(s["name"] + ": **" + s["decision"] + "**. " + action_text(s) + " " + deferred_referral(s) +
                                     "Source: the measurement-sufficiency criteria in Section 3.5 and the assessed thickness/strength results in Section 5."))
