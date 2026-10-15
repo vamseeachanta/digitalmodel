@@ -21,7 +21,6 @@ on:
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
   pull_request:
-    branches: [main, develop]
     paths:
       - "src/digitalmodel/solvers/gmsh_meshing/**"
       - "src/digitalmodel/solvers/openfoam/**"
@@ -40,6 +39,10 @@ on:
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
