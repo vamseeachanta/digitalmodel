@@ -213,7 +213,7 @@ class LinesBuilder(BaseBuilder):
             ["Infinity", None, "Infinity"],  # End B: rigid
         ]
         if is_s_lay:
-            stiffness = [[0, 0, 0], [0, 0, 0]]
+            stiffness = [[], [0, 0, 0, 0]]
 
         # Arclength settings (End A, End B)
         arclength = [

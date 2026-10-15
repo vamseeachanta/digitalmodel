@@ -11,7 +11,6 @@ Vessels:
   PrimaryMotion: Calculated (6 DOF)
   SuperimposedMotion: None
   IncludedInStatics: None
-  WaveCalculationMethod: Specified by environment
   SupportGeometrySpecification: Explicit
   SupportCoordinateSystems:
   - SupportCoordinateSystemName: Stinger

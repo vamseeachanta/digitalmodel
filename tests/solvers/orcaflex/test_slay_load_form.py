@@ -52,21 +52,64 @@ def _resolve_case(folder):
     return sections
 
 
-def _assert_native_form(actual, native):
-    """Reject container-type changes and keys absent from the saved example."""
+def _assert_native_form(actual, native, *, ordered=True, columns=None):
+    """Check native keys, vector dimensions, positional rows and scalar forms.
+
+    Native tables may omit trailing default columns. End-specific tables use
+    the corresponding end row; other tables repeat the saved row forms.
+    Object mappings need not follow a save's property order, but draught
+    selectors retain the ordered check used by the original contract.
+    """
     if isinstance(native, dict):
         assert isinstance(actual, dict)
         assert actual.keys() <= native.keys()
-        assert list(actual) == [key for key in native if key in actual]
+        if ordered:
+            assert list(actual) == [key for key in native if key in actual]
         for key, value in actual.items():
-            _assert_native_form(value, native[key])
+            _assert_native_form(value, native[key], ordered=ordered,
+                                columns=key.split(", ") if ", " in key else None)
     elif isinstance(native, list):
         assert isinstance(actual, list)
-        assert native
-        for value in actual:
-            _assert_native_form(value, native[0])
+        if not native:
+            assert actual == []
+        elif isinstance(native[0], dict):
+            for value in actual:
+                _assert_native_form(value, native[0], ordered=ordered)
+        elif isinstance(native[0], list):
+            end_table = columns and columns[0].startswith("Connection")
+            if end_table:
+                assert len(actual) == len(native)
+            for index, row in enumerate(actual):
+                assert isinstance(row, list)
+                reference = native[index] if end_table else next(
+                    (saved for saved in native if len(saved) == len(row)), None)
+                assert reference is not None
+                if not reference:
+                    assert row == []
+                    continue
+                width = len(columns) if columns else len(reference)
+                assert len(reference) <= len(row) <= width
+                for cell_index, value in enumerate(row):
+                    saved = reference[cell_index] if cell_index < len(reference) else None
+                    _assert_native_form(value, saved, ordered=ordered)
+        else:
+            assert len(actual) == len(native)
+            for value, saved in zip(actual, native):
+                _assert_native_form(value, saved, ordered=ordered)
     else:
         assert not isinstance(actual, (dict, list))
+        if isinstance(native, bool):
+            assert isinstance(actual, bool) or actual in ("Yes", "No")
+            return  # Native saves use unquoted Yes/No; PyYAML resolves booleans.
+        if native is None:
+            return  # A saved default does not establish a property's scalar type.
+        if isinstance(native, str):
+            try:
+                float(native)  # YAML saves also use numeric strings and Infinity.
+            except ValueError:
+                assert isinstance(actual, str)
+                return
+        assert isinstance(actual, (int, float)) and not isinstance(actual, bool)
 
 
 @pytest.mark.parametrize("case_id", CASES)
@@ -87,6 +130,79 @@ def test_every_case_has_native_named_draught_mappings(tmp_path, case_id):
                 assert list(draught) == list(native_draught)[:5]
                 _assert_native_form(draught, native_draught)
             _assert_native_form(vessel_type, native)
+
+
+@pytest.mark.parametrize("case_id", CASES)
+def test_wave_calculation_method_belongs_to_lines_only(tmp_path, case_id):
+    """The native vessel form has no wave calculation selector."""
+    ModularModelGenerator.from_spec(_case_spec(case_id)).generate(tmp_path)
+    for folder in (CAMPAIGN / "models" / case_id, tmp_path):
+        sections = _resolve_case(folder)
+        assert all("WaveCalculationMethod" not in item for item in sections["Vessels"])
+        assert all(item["WaveCalculationMethod"] == "Specified by environment"
+                   for item in sections["Lines"])
+
+
+@pytest.mark.parametrize("case_id", CASES)
+def test_free_end_stiffness_uses_empty_native_row(tmp_path, case_id):
+    """A free end refuses values; the anchored end explicitly releases rotation."""
+    key = ("ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
+           "ConnectionTwistingStiffness, ConnectionDamping")
+    reference = ROOT / "docs/domains/orcaflex/examples/raw/D03/D03 Lay on tower.yml"
+    native_lines = yaml.safe_load(reference.read_text(encoding="utf-8"))["Lines"]
+    native_free = next(item for item in native_lines if key in item and item[key][0] == [])
+    ModularModelGenerator.from_spec(_case_spec(case_id)).generate(tmp_path)
+    for folder in (CAMPAIGN / "models" / case_id, tmp_path):
+        line = _resolve_case(folder)["Lines"][0]
+        assert line[key][0] == native_free[key][0]
+        assert line[key] == [[], [0, 0, 0, 0]]
+        text = (folder / "includes/07_lines.yml").read_text(encoding="utf-8")
+        assert f"  {key}:\n  - []\n  - [0, 0, 0, 0]\n" in text
+
+
+@pytest.mark.parametrize("actual,native", [
+    ([1, 2], [1, 2, 3]),
+    (["wrong", 0, 0], [0, 0, 0]),
+    ([["name", "wrong", 5]], [["type", 10, 1]]),
+    ([["name", 0]], [["type", 10, 1]]),
+])
+def test_native_form_rejects_wrong_vector_and_table_values(actual, native):
+    """A scalar-only comparison must not accept malformed native rows."""
+    with pytest.raises(AssertionError):
+        _assert_native_form(actual, native)
+
+
+def _native_object_sections():
+    """Use the pipelay save, with explicit supplements for absent native forms."""
+    native = yaml.safe_load((ROOT / "docs/domains/orcaflex/examples/raw/E08/basecase.yml")
+                            .read_text(encoding="utf-8"))
+    tower = yaml.safe_load((ROOT / "docs/domains/orcaflex/examples/raw/D03/D03 Lay on tower.yml")
+                           .read_text(encoding="utf-8"))
+    # The older save uses Orientation; InitialHeading is the accepted scalar
+    # spelling for heading in the generated models. Compare its numeric form.
+    native["Vessels"][0]["InitialHeading"] = native["Vessels"][0]["Orientation"][2]
+    native["SupportTypes"] = [dict(item for support in native["SupportTypes"]
+                                   for item in support.items())]
+    # The pipelay save has neither torsional end columns nor winches. The
+    # tower save supplies both, including the empty row for its free upper end.
+    key = ("ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
+           "ConnectionTwistingStiffness, ConnectionDamping")
+    free_line = next(line for line in tower["Lines"] if key in line and line[key][0] == [])
+    native["Lines"][0][key] = free_line[key]
+    native["Winches"] = tower["Winches"]
+    return native
+
+
+@pytest.mark.parametrize("case_id", CASES)
+def test_every_case_has_native_object_section_forms(tmp_path, case_id):
+    """Compare every emitted object property, including nested and table forms."""
+    native = _native_object_sections()
+    ModularModelGenerator.from_spec(_case_spec(case_id)).generate(tmp_path)
+    for folder in (CAMPAIGN / "models" / case_id, tmp_path):
+        sections = _resolve_case(folder)
+        for section in ("Vessels", "Lines", "SupportTypes", "Winches"):
+            assert sections[section]
+            _assert_native_form(sections[section], native[section], ordered=False)
 
 
 def _local_point(point, origin, orientation):
@@ -151,9 +267,10 @@ def test_pipe_seed_positions_clear_unrequested_fixed_solids(tmp_path, case_id):
 @pytest.mark.solver
 @requires_orcfxapi
 @pytest.mark.parametrize("case_id", CASES)
-def test_native_load_of_every_generated_case(case_id):
-    """Load each retained master when the native interface is available."""
+def test_native_load_and_statics_of_every_generated_case(case_id):
+    """Load each retained master and require converged whole-system statics."""
     import OrcFxAPI
 
     model = OrcFxAPI.Model(str(CAMPAIGN / "models" / case_id / "master.yml"))
-    assert model is not None
+    model.CalculateStatics()
+    assert model.state == OrcFxAPI.ModelState.InStaticState

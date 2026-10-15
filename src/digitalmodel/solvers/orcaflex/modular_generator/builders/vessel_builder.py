@@ -58,7 +58,6 @@ class VesselBuilder(BaseBuilder):
             "PrimaryMotion": "Calculated (6 DOF)",
             "SuperimposedMotion": "None",
             "IncludedInStatics": "None",
-            "WaveCalculationMethod": "Specified by environment",
         }
 
         # Add stinger support path if stinger is defined

@@ -41,7 +41,7 @@ def test_pipe_ends_are_separated_and_upper_end_can_take_winch_load():
     length = sum(segment.length for segment in spec.pipeline.segments)
     assert math.hypot(top[1] - bottom[1], spec.environment.water.depth + top[3]) < length
     stiffness = next(value for key, value in line.items() if key.startswith("ConnectionxBending"))
-    assert stiffness == [[0, 0, 0], [0, 0, 0]]
+    assert stiffness == [[], [0, 0, 0, 0]]
 
 
 def test_vessel_supports_attach_pipeline_at_declared_roller_stations():

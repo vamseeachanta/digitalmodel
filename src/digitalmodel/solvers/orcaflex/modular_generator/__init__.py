@@ -57,6 +57,19 @@ class _NoAliasDumper(yaml.Dumper):
     def ignore_aliases(self, data):
         return True
 
+    def represent_mapping(self, tag, mapping, flow_style=None):
+        """Keep free-end stiffness rows in the native save's compact form."""
+        node = super().represent_mapping(tag, mapping, flow_style)
+        stiffness_key = (
+            "ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
+            "ConnectionTwistingStiffness, ConnectionDamping"
+        )
+        for key, value in node.value:
+            if key.value == stiffness_key and mapping[key.value][0] == []:
+                for row in value.value:
+                    row.flow_style = True
+        return node
+
 
 # Pin defaults locally; prior imports shall not select PyYAML's null spelling.
 _NoAliasDumper.add_representer(type(None), _represent_none)
