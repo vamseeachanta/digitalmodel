@@ -91,9 +91,9 @@ modules:
     key_tests: [tests/drilling_riser/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#drilling_riser
     submodules:
-      - module: global_model
+      global_model:
         agent_pack: src/digitalmodel/drilling_riser/global_model/docs/agent-pack.md
-        qa_family: mooring-riser
+        qa_family: MR
   - module: fatigue
     entry_point: src/digitalmodel/fatigue/
     maturity: production
