@@ -8,6 +8,7 @@ name: Content store tests
       - "scripts/data/fetch.py"
       - "data/MANIFEST.tsv"
       - "tests/data/**"
+      - "docs/domains/orcaflex/risers/production/slwr/**"
       - "tests/conftest.py"
       - "pytest.ini"
       - "pyproject.toml"

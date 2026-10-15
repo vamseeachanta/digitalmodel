@@ -1,3 +1,5 @@
+# Prerequisite: the SLWR input models whose results this configuration reads are held in the content store;
+# restore them first with the command in ../README.md (python scripts/data/fetch.py).
 default:
   Analysis:
     AddMinimumToSummary: True
