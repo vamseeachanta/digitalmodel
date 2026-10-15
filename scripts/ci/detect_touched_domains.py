@@ -16,7 +16,6 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-
 ROOT_RE = re.compile(r"`(tests/[^`]+)`")
 PYPROJECT_PATH = "pyproject.toml"
 FULL_MATRIX_PREFIXES = ("src/digitalmodel/",)
@@ -35,6 +34,8 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
+    ("docs/maps/", ("contracts",)),
     ("config/repo_structure.yml", ("contracts",)),
     ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),
     ("src/digitalmodel/cathodic_protection/", ("cathodic-protection",)),
@@ -79,17 +80,21 @@ NO_DOMAIN_PATHS = (
 
 @dataclass(frozen=True)
 class Domain:
+    """Represent one test shard and its owned paths."""
+
     name: str
     roots: tuple[str, ...]
     runner: str = "ubuntu-latest"
 
 
 def normalize_root(root: str) -> str:
+    """Normalize a repository-relative root."""
     root = root.strip()
     return root[2:] if root.startswith("./") else root
 
 
 def parse_domains(domains_file: Path) -> list[Domain]:
+    """Read shard roots from the ownership table."""
     domains: list[Domain] = []
     for raw_line in domains_file.read_text().splitlines():
         line = raw_line.strip()
@@ -114,6 +119,7 @@ def parse_domains(domains_file: Path) -> list[Domain]:
 
 
 def git_changed_files(base: str, head: str) -> list[str]:
+    """List changed paths between two revisions."""
     result = subprocess.run(
         ["git", "diff", "--name-only", base, head],
         check=True,
@@ -124,6 +130,7 @@ def git_changed_files(base: str, head: str) -> list[str]:
 
 
 def git_file_text(ref: str, path: str) -> str:
+    """Read a tracked text file at a revision."""
     result = subprocess.run(
         ["git", "show", f"{ref}:{path}"],
         check=True,
@@ -134,6 +141,7 @@ def git_file_text(ref: str, path: str) -> str:
 
 
 def is_full_matrix_trigger(path: str) -> bool:
+    """Identify changes that require every shard."""
     normalized = path[2:] if path.startswith("./") else path
     return normalized in FULL_MATRIX_PATHS or any(
         normalized.startswith(prefix) for prefix in FULL_MATRIX_PREFIXES
@@ -141,6 +149,7 @@ def is_full_matrix_trigger(path: str) -> bool:
 
 
 def package_data_domains_for_item(item: str) -> set[str]:
+    """Find owners of a package-data entry."""
     names: set[str] = set()
     normalized = item[2:] if item.startswith("./") else item
     for package_path, domain_names in PACKAGE_DATA_DOMAIN_PATHS:
@@ -150,6 +159,7 @@ def package_data_domains_for_item(item: str) -> set[str]:
 
 
 def without_setuptools_package_data(payload: dict) -> dict:
+    """Copy project configuration without package-data entries."""
     comparable = copy.deepcopy(payload)
     tool_config = comparable.get("tool")
     if not isinstance(tool_config, dict):
@@ -162,6 +172,7 @@ def without_setuptools_package_data(payload: dict) -> dict:
 
 
 def digitalmodel_package_data(payload: dict) -> set[str]:
+    """Extract package-data patterns from project configuration."""
     tool_config = payload.get("tool")
     if not isinstance(tool_config, dict):
         return set()
@@ -181,6 +192,7 @@ def digitalmodel_package_data(payload: dict) -> set[str]:
 
 
 def scoped_pyproject_domains(base: str, head: str) -> set[str] | None:
+    """Resolve package-data-only changes or request the full matrix."""
     base_payload = tomllib.loads(git_file_text(base, PYPROJECT_PATH))
     head_payload = tomllib.loads(git_file_text(head, PYPROJECT_PATH))
 
@@ -204,6 +216,7 @@ def scoped_pyproject_domains(base: str, head: str) -> set[str] | None:
 def mapped_config_domain_names(
     path: str, base: str | None, head: str | None
 ) -> set[str] | None:
+    """Resolve configuration changes with revision-aware routing."""
     normalized = path[2:] if path.startswith("./") else path
     if normalized != PYPROJECT_PATH or not base or not head:
         return None
@@ -211,6 +224,7 @@ def mapped_config_domain_names(
 
 
 def mapped_domain_names(path: str) -> set[str]:
+    """Union the explicit routes matching a path."""
     names: set[str] = set()
     for domain_path, domain_names in DOMAIN_PATHS:
         if path_matches_root(path, domain_path):
@@ -219,17 +233,69 @@ def mapped_domain_names(path: str) -> set[str]:
 
 
 def is_no_domain_path(path: str) -> bool:
+    """Identify paths covered outside the domain matrix."""
     return any(
         path_matches_root(path, ignored_path) for ignored_path in NO_DOMAIN_PATHS
     )
 
 
 def path_matches_root(path: str, root: str) -> bool:
+    """Match an exact file or a directory prefix."""
     normalized_path = path[2:] if path.startswith("./") else path
     normalized_root = root.rstrip("/")
     if root.endswith("/"):
         return normalized_path.startswith(root)
     return normalized_path == normalized_root
+
+
+def package_document_domains(path: str, domains: list[Domain]) -> set[str] | None:
+    """Resolve package documentation owners; use every shard if unresolved.
+
+    Args:
+        path: Repository-relative changed path.
+        domains: Domains parsed from the test ownership table.
+
+    Returns:
+        Selected names, or None for paths outside package documentation.
+    """
+    normalized = normalize_root(path)
+    parts = Path(normalized).parts
+    if (not normalized.startswith("src/digitalmodel/")
+            or "docs" not in parts[2:-1] or Path(normalized).suffix == ".py"):
+        return None
+    all_names = {domain.name for domain in domains}
+    try:
+        import yaml
+    except ImportError:
+        return all_names
+    registry = Path(__file__).resolve().parents[2] / "docs/registry/module-routing.yaml"
+    try:
+        entries = yaml.safe_load(registry.read_text(encoding="utf-8"))["modules"]
+        matches = [entry for entry in entries
+                   if path_matches_root(normalized, entry["entry_point"])]
+        entry = max(matches, key=lambda item: len(item["entry_point"]))
+        key_tests = entry["key_tests"]
+        if not isinstance(key_tests, list) or not key_tests:
+            return all_names
+        names = {"contracts"}
+        for test_root in key_tests:
+            if not isinstance(test_root, str) or test_root == "tests/":
+                return all_names
+            relative = normalized[len(entry["entry_point"]):].split("/docs/", 1)[0]
+            candidate = test_root + relative + "/" if test_root.endswith("/") else test_root
+            owners = mapped_domain_names(test_root) or {
+                domain.name for domain in domains for root in domain.roots
+                if path_matches_root(candidate, root)
+            } or {
+                domain.name for domain in domains for root in domain.roots
+                if path_matches_root(test_root, root) or path_matches_root(root, test_root)
+            }
+            if not owners or not owners <= all_names:
+                return all_names
+            names.update(owners)
+        return names if names <= all_names else all_names
+    except (OSError, ValueError, KeyError, TypeError, yaml.YAMLError):
+        return all_names
 
 
 def touched_domains(
@@ -238,9 +304,15 @@ def touched_domains(
     base: str | None = None,
     head: str | None = None,
 ) -> list[Domain]:
+    """Select the union of shards affected by changed paths."""
     selected_names: set[str] = set()
     for path in changed_files:
         if is_no_domain_path(path):
+            continue
+
+        documentation_names = package_document_domains(path, domains)
+        if documentation_names is not None:
+            selected_names.update(documentation_names)
             continue
 
         config_domain_names = mapped_config_domain_names(path, base, head)
@@ -263,6 +335,7 @@ def touched_domains(
 
 
 def matrix_for(domains: list[Domain]) -> dict[str, list[dict[str, str]]]:
+    """Build the hosted matrix payload."""
     return {
         "include": [
             {"domain": domain.name, "runner": domain.runner} for domain in domains
@@ -271,6 +344,7 @@ def matrix_for(domains: list[Domain]) -> dict[str, list[dict[str, str]]]:
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
+    """Parse detector command-line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--domains-file", type=Path, default=Path("tests/DOMAINS.md"))
     parser.add_argument("--mode", choices=("full", "touched"), required=True)
@@ -296,6 +370,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Print selected shards in matrix or list form."""
     args = parse_args(argv or sys.argv[1:])
     try:
         domains = parse_domains(args.domains_file)
