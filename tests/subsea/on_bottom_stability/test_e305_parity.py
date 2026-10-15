@@ -11,6 +11,7 @@ import pytest
 def case(**changes):
     from digitalmodel.subsea.on_bottom_stability.e305_simplified import Case
 
+    # Both safety factors are invented placeholders, unrelated to any standard factor.
     data = dict(role='extreme_wave', wave_velocity_m_s=0.0, current_m_s=2.0,
                 period_s=4.0, R=0.5, Fw=3.0, cd=3.0, cm=0.0, cl=2.0,
                 mu=0.5, target_safety_factor=1.25, gamma_st=1.4,

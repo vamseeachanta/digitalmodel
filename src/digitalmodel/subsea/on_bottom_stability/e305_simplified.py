@@ -8,6 +8,9 @@ and Morison algebra follow the existing on-bottom stability implementation.
 No licensed tables or coefficient defaults are distributed. Edition-specific
 E305 equivalence and the OS-F101 comparator are not established; see the
 workflow README. A demand ratio alone is not overall qualification.
+The gamma_st input is recorded only and does not enter the demand.
+The added_mass_kg_m input is extra structural mass multiplied by g and added
+to the weight; it is not hydrodynamic added mass.
 """
 
 from __future__ import annotations
@@ -209,7 +212,7 @@ def evaluate_case(case: Case, *, diameter_m: float, rho_water_kg_m3: float,
 
     FD+FI is signed before taking its absolute lateral magnitude. Lift belongs
     to the same phase. No independent component maxima are combined. The
-    requested gamma_st is retained without inventing an OS-F101 comparison.
+    requested gamma_st is recorded only and does not enter the demand.
     """
     _finite('diameter_m', diameter_m, positive=True)
     _finite('rho_water_kg_m3', rho_water_kg_m3, positive=True)

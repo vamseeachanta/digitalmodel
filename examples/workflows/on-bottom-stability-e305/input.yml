@@ -38,6 +38,7 @@ on_bottom_stability_e305:
           cm: 0.0
           cl: 2.0
           mu: 0.5
+          # Both factors are invented placeholders, unrelated to any standard factor.
           target_safety_factor: 1.25
           gamma_st: 1.4
           reduction_application: wave_velocity

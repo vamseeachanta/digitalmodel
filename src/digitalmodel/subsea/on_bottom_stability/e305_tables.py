@@ -5,7 +5,7 @@
 
 No data location or licensed table value is included. Linear interpolation is
 an explicit interface convention, whose suitability for a private dataset
-requires its owner's verification. Extrapolation is never performed.
+requires the provider's verification. Extrapolation is never performed.
 """
 
 from __future__ import annotations

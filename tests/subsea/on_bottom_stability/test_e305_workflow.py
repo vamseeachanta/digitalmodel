@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+import pytest
 
 from tests.subsea.on_bottom_stability.synthetic_e305_tables import make_synthetic_tables
 
@@ -105,3 +106,122 @@ def test_e305_table_batch_retains_four_lookup_sidecars(tmp_path):
         assert set(case['table_lookups']) == {'roughness', 'R', 'Fw', 'clay_friction'}
         assert case['factor_source'] == 'licensed_tables'
         assert case['qualified'] is False
+
+
+def table_configuration(tmp_path):
+    path, payload, _ = make_synthetic_tables(tmp_path)
+    for name, table in payload['tables'].items():
+        table['citation']['section'] = f'Synthetic {name} lookup'
+    path.write_text(json.dumps(payload))
+    cfg = configuration(tmp_path)
+    params = cfg['on_bottom_stability_e305']
+    params.update(mode='tables', tables_file=str(path), wiki_root=str(tmp_path))
+    params['segments'] = params['segments'][:1]
+    for case in params['segments'][0]['cases']:
+        for key in ('R', 'Fw', 'mu', 'current_m_s'):
+            case.pop(key)
+        case.update(wave_velocity_m_s=0.1, period_s=1.0,
+                    reference_current=dict(velocity_m_s=0.01, height_m=1.0, grain_size_m=1.0),
+                    R_coordinates={'synthetic_coordinate': 1.0},
+                    clay_coordinates={'synthetic_coordinate': 1.0})
+    return cfg
+
+
+def test_e305_sea_state_workflow_uses_spectral_kinematics(tmp_path):
+    from digitalmodel.subsea.on_bottom_stability.e305_workflow import router
+    from digitalmodel.subsea.pipeline.free_span.wave_velocity import compute_wave_velocity, _G
+
+    cfg = configuration(tmp_path)
+    cfg['on_bottom_stability_e305']['g'] = _G
+    sea_state = dict(Hs_m=2.0, Tp_s=4.0, depth_m=8.0, elevation_m=0.5)
+    for segment in cfg['on_bottom_stability_e305']['segments']:
+        for case in segment['cases']:
+            case.pop('wave_velocity_m_s', None)
+            case.pop('period_s', None)
+            case['sea_state'] = sea_state
+    expected = compute_wave_velocity(2.0, 4.0, 8.0, 0.5)
+    result = router(cfg)['on_bottom_stability_e305_result']
+    for segment in result['segments']:
+        for case in segment['cases']:
+            assert case['inputs']['wave_velocity_m_s'] == pytest.approx(expected.Uw_ms)
+            assert case['period_s'] == pytest.approx(expected.Tu_s)
+
+
+def test_e305_zero_wave_tables_require_defined_M(tmp_path):
+    from digitalmodel.subsea.on_bottom_stability.e305_workflow import router
+
+    cfg = table_configuration(tmp_path)
+    cfg['on_bottom_stability_e305']['segments'][0]['cases'][0]['wave_velocity_m_s'] = 0.0
+    with pytest.raises(ValueError, match='undefined M'):
+        router(cfg)
+
+
+def test_e305_tables_accept_typed_current_and_cite_only_used_tables(tmp_path):
+    from digitalmodel.subsea.on_bottom_stability.e305_workflow import router
+
+    cfg = table_configuration(tmp_path)
+    for case in cfg['on_bottom_stability_e305']['segments'][0]['cases']:
+        case.pop('reference_current')
+        case['current_m_s'] = 0.01
+    result = router(cfg)['on_bottom_stability_e305_result']
+    for case in result['segments'][0]['cases']:
+        assert case['inputs']['current_m_s'] == 0.01
+        assert case['M'] == pytest.approx(0.1)
+        assert set(case['table_lookups']) == {'R', 'Fw', 'clay_friction'}
+        assert case['citations'] == tuple(row['citation'] for row in case['table_lookups'].values())
+
+
+def test_e305_tables_accept_typed_mu_and_cite_only_used_tables(tmp_path):
+    from digitalmodel.subsea.on_bottom_stability.e305_workflow import router
+
+    cfg = table_configuration(tmp_path)
+    for case in cfg['on_bottom_stability_e305']['segments'][0]['cases']:
+        case.pop('clay_coordinates')
+        case['mu'] = 0.5
+    result = router(cfg)['on_bottom_stability_e305_result']
+    for case in result['segments'][0]['cases']:
+        assert case['inputs']['mu'] == 0.5
+        assert set(case['table_lookups']) == {'roughness', 'R', 'Fw'}
+        assert case['citations'] == tuple(row['citation'] for row in case['table_lookups'].values())
+
+
+def test_e305_tables_name_missing_R_coordinates(tmp_path):
+    from digitalmodel.subsea.on_bottom_stability.e305_workflow import router
+
+    cfg = table_configuration(tmp_path)
+    cfg['on_bottom_stability_e305']['segments'][0]['cases'][0].pop('R_coordinates')
+    with pytest.raises(ValueError, match='R_coordinates'):
+        router(cfg)
+
+
+def test_e305_relative_output_requires_config_directory(tmp_path):
+    from digitalmodel.subsea.on_bottom_stability.e305_workflow import router
+
+    cfg = configuration(tmp_path)
+    cfg['on_bottom_stability_e305']['outputs']['directory'] = 'results'
+    with pytest.raises(ValueError, match='absolute.*_config_dir_path'):
+        router(copy.deepcopy(cfg))
+    assert not (tmp_path / 'results').exists()
+    cfg['_config_dir_path'] = str(tmp_path)
+    result = router(cfg)['on_bottom_stability_e305_result']
+    assert (tmp_path / 'results/e305.json').is_file()
+    assert 'e305.json' in result['output_sha256']
+
+
+def test_e305_outputs_state_gamma_is_recorded_only(tmp_path):
+    from digitalmodel.subsea.on_bottom_stability.e305_workflow import router
+
+    cfg = configuration(tmp_path)
+    first = router(copy.deepcopy(cfg))['on_bottom_stability_e305_result']
+    note = 'gamma_st is recorded only and does not enter the demand'
+    assert note in first['limitations']
+    assert note in json.loads((tmp_path / 'results/e305.json').read_text())['limitations']
+    assert note in (tmp_path / 'results/e305.csv').read_text()
+    for segment in cfg['on_bottom_stability_e305']['segments']:
+        for case in segment['cases']:
+            case['gamma_st'] = 3.0  # Invented alternate input, not a standard factor.
+    second = router(cfg)['on_bottom_stability_e305_result']
+    for before, after in zip(first['segments'], second['segments']):
+        for old, new in zip(before['cases'], after['cases']):
+            assert new['gamma_st_requested'] == 3.0
+            assert new['required_weight_n_m'] == old['required_weight_n_m']

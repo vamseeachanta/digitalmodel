@@ -98,12 +98,12 @@ def test_present_malformed_private_fixture_is_not_a_skip(tmp_path):
         load_fixture(path)
 
 
-def test_private_goby_both_cases_with_g_9_81_within_0_1_percent():
+def test_private_reference_fixture_both_cases_g_9_81_within_0_1_percent():
     from digitalmodel.subsea.on_bottom_stability.e305_fixture import load_fixture, compare_fixture
 
-    configured = os.environ.get('E305_GOBY_FIXTURE')
+    configured = os.environ.get('E305_REFERENCE_FIXTURE')
     if not configured:
-        pytest.skip('private fixture absent: E305_GOBY_FIXTURE is not configured; reproduction not observed')
+        pytest.skip('private fixture absent: E305_REFERENCE_FIXTURE is not configured; reproduction not observed')
     path = Path(configured)
     if not path.exists():
         pytest.skip('configured private fixture is absent; reproduction not observed')

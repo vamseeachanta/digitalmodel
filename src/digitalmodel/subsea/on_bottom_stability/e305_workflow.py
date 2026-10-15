@@ -13,6 +13,8 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from digitalmodel.citations.schema import Citation
+
 from digitalmodel.subsea.on_bottom_stability.e305_simplified import (
     Case, Pipe, WeightResult, diameter_averaged_current, dimensionless_ratios, evaluate_case,
     wave_from_sea_state, weight_build_up,
@@ -55,6 +57,8 @@ def _make_case(raw: dict[str, Any], *, weight: WeightResult, tables: TableSet | 
         values['current_m_s'] = diameter_averaged_current(
             current['velocity_m_s'], reference_height_m=current['height_m'],
             diameter_m=weight.hydrodynamic_diameter_m, roughness_m=roughness.value)
+    if 'R_coordinates' not in values:
+        raise ValueError('table mode requires R_coordinates')
     reduction = tables.lookup('R', **values.pop('R_coordinates'))
     lookups['R'] = asdict(reduction)
     K, M = dimensionless_ratios(values['wave_velocity_m_s'], values['period_s'],
@@ -81,7 +85,7 @@ def _segment(raw: dict[str, Any], *, mode: str, g: float, tables: TableSet | Non
     results = []
     for raw_case in _cases(raw['cases']):
         case, lookups = _make_case(raw_case, weight=weight, tables=tables, g=g)
-        citations = tuple(table.citation for table in tables.tables) if tables else ()
+        citations = tuple(Citation(**lookup['citation']) for lookup in lookups.values())
         result = evaluate_case(case, diameter_m=weight.hydrodynamic_diameter_m,
                                rho_water_kg_m3=pipe.water_density_kg_m3,
                                available_weight_n_m=weight.submerged_weight_n_m,
@@ -99,12 +103,13 @@ def _csv_bytes(payload: dict[str, Any]) -> bytes:
     stream = io.StringIO(newline='')
     columns = ('segment_id', 'role', 'required_weight_n_m', 'available_weight_n_m',
                'utilization', 'safety_factor', 'phase_rad', 'R', 'Fw', 'K', 'M',
-               'os_f101_status', 'qualified')
+               'os_f101_status', 'qualified', 'gamma_st_requested', 'notes')
     writer = csv.DictWriter(stream, fieldnames=columns, lineterminator='\n')
     writer.writeheader()
     for segment in payload['segments']:
         for case in segment['cases']:
-            writer.writerow({'segment_id': segment['id']} | {key: case[key] for key in columns[1:]})
+            writer.writerow({'segment_id': segment['id']} | {key: case[key] for key in columns[1:] if key != 'notes'}
+                            | {'notes': 'gamma_st is recorded only and does not enter the demand'})
     return stream.getvalue().encode('utf-8')
 
 
@@ -140,6 +145,7 @@ def router(cfg: dict[str, Any]) -> dict[str, Any]:
                'os_f101_status': 'not_established',
                'limitations': ['edition-specific E305 equivalence is not established',
                                'OS-F101 comparator is not implemented',
+                               'gamma_st is recorded only and does not enter the demand',
                                'private workbook reproduction is not established'],
                'table_source_sha256': tables.source_sha256 if tables else None,
                'citations': [asdict(table.citation) for table in tables.tables] if tables else [],
@@ -149,7 +155,9 @@ def router(cfg: dict[str, Any]) -> dict[str, Any]:
     if output is not None:
         directory = Path(output['directory'])
         if not directory.is_absolute():
-            directory = Path(cfg.get('_config_dir_path', Path.cwd())) / directory
+            if '_config_dir_path' not in cfg:
+                raise ValueError('an absolute output directory is required without _config_dir_path')
+            directory = Path(cfg['_config_dir_path']) / directory
         result['output_sha256'] = _write_outputs(payload, directory)
     params['result'] = result
     cfg[BASENAME + '_result'] = result

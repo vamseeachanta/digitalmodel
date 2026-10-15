@@ -1,11 +1,13 @@
 # Simplified on-bottom stability calculation interface
 
-Qualification is incomplete. The OS-F101 equation 5.31 comparator is not
-implemented because a verified equation transcription is unavailable. The
-private workbook comparison has not been observed. A calculated demand ratio
+Qualification is incomplete. The OS-F101 comparator is not implemented
+(edition not recorded in this repository for the requested comparator)
+because a verified equation transcription is unavailable. The private workbook
+comparison has not been observed. A calculated demand ratio
 alone does not establish standard compliance or overall qualification.
 
-The basis is DNV RP E305 (1988), clause "Simplified Static Stability Analysis".
+The basis is DNV RP E305, "On-Bottom Stability Design of Submarine Pipelines",
+1988, clause "Simplified Static Stability Analysis".
 No licensed table values are distributed. The F109 interfaces are unchanged.
 The implementation uses the requested weight-demand equation and the existing
 repository's annular geometry and Morison force equations. Agreement of the
@@ -19,8 +21,9 @@ coating covers the full length. Concrete and field-joint material occupy
 complementary length fractions, with independently specified thicknesses.
 Water absorption is added mass divided by dry concrete mass. Marine growth
 covers each local outside diameter. Displaced volume is length-weighted; the
-largest local outside diameter is used for hydrodynamic loading. Added mass
-is converted to weight with the supplied gravity.
+largest local outside diameter is used for hydrodynamic loading.
+`added_mass_kg_m` is extra structural mass, multiplied by g and added to the
+weight; it is not hydrodynamic added mass.
 
 ## The five comparison options
 
@@ -36,6 +39,11 @@ is converted to weight with the supplied gravity.
 - Gravity is supplied explicitly. The private parity comparison uses 9.81.
   The existing spectral-wave helper has fixed gravity; an inconsistent gravity
   is rejected rather than silently replaced.
+
+The example's `target_safety_factor: 1.25` and `gamma_st: 1.4` are invented
+placeholder values with no relation to any standard's factor. Only
+`target_safety_factor` scales the demand. `gamma_st` is recorded only and does
+not enter the demand; JSON limitations and CSV notes record this distinction.
 
 `reduction_application` is required: `wave_velocity` scales wave velocity and
 acceleration; `wave_and_current` additionally scales current. Neither choice
@@ -58,7 +66,7 @@ has `axes` (one or two named axes, each with `units` and ordered `values`),
 output `units`, a rectangular `values` array, and a `citation` object matching
 `digitalmodel.citations.schema.Citation`. Roughness output is in m; the other
 outputs are dimensionless (`1`). Lookup uses declared coordinates, linear
-interpolation and no extrapolation. The private data owner supplies the R
+interpolation and no extrapolation. The data provider supplies the R
 and clay axes; no standard-specific axes are inferred here.
 
 Every citation identifies the edition, clause title and wiki page. Citation
@@ -92,8 +100,8 @@ Each segment has an `id`, a `pipe` object matching the `Pipe` dataclass and two
 to both case roles; each role supplies `required_weight_n_m`,
 `available_weight_n_m` and `utilization`. The source records the workbook and
 cell-map SHA-256 digests without their names or paths. The external fixture is
-selected with `E305_GOBY_FIXTURE`; absent configuration or an absent file causes
-an explicit skip. Present malformed data fails. The comparison tolerance is
+selected with `E305_REFERENCE_FIXTURE`; absent configuration or an absent file
+causes an explicit skip. Present malformed data fails. The comparison tolerance is
 0.1 % with g = 9.81. Without the private workbook, that reproduction is not
 established.
 
@@ -103,8 +111,10 @@ established.
 runs the segment table without the shared engine's eager licensed-interface
 imports. JSON, CSV and a digest manifest are written to the configured output
 directory. The supplied two-row example is synthetic and uses g = 10.0.
-No engineering report is generated. The global registry and engine dispatch
-are registered, but shared-engine execution has not been exercised here.
+No engineering report is generated. Shared-engine execution is covered by
+`test_workflow_registry[on-bottom-stability-e305]` on hosted runners. Local
+execution requires the engine dependencies to be installed; it was exercised
+successfully in this environment by that registry test.
 
 `PYTHONPATH=src uv run --no-sources python scripts/subsea/convert_e305_workbook.py <workbook.xlsx> --map <cell-map.json> --output <fixture.json>`
 converts cached workbook cells. All three paths are external to the public
