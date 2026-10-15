@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Regression checks for gate triggers on stacked pull requests."""
+"""Regression checks for merge identity and stacked pull request triggers."""
 
 from pathlib import Path
 import json
