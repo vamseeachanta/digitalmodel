@@ -43,6 +43,7 @@ def test_emitted_citation_resolves(tmp_path: Path, layout: str) -> None:
     assert citation.revision == "2016"
     assert citation.section == "Dynamic cable minimum bend radius (MBR)"
     assert citation.source_sibling == "generic"
+    assert citation.note == "MBR limit is a cable-specific design input supplied by caller"
     validate_citation(citation, repo_root=tmp_path)
 
 

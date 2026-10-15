@@ -94,7 +94,8 @@ from digitalmodel.citations import Citation, validate_citation
 
 
 # DNV-RP-0360 wiki page backing the MBR citation (depends on #574). Emitted only
-# when a live wiki tree is available; configured trees fail closed.
+# when a live wiki tree is available; an existing page with missing or
+# mismatched metadata fails closed.
 _DNV_RP_0360_WIKI_PATH = "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
 _CITATION_EMITTED_CACHE: dict[str, bool] = {}
 
@@ -205,7 +206,7 @@ class WatchCircleConstraint(BaseModel):
             repo_root: Optional override to locate the wiki tree for citation
                 emission. In standalone mode (no wiki) the result still computes;
                 citation list is empty and a one-shot RuntimeWarning is issued.
-                Configured trees must contain matching citation metadata.
+                An existing page with missing or mismatched metadata fails closed.
 
         Returns:
             WatchCircleResult with pass/fail, governing bend radius, MBR limit,
@@ -290,6 +291,7 @@ class WatchCircleConstraint(BaseModel):
             section="Dynamic cable minimum bend radius (MBR)",
             wiki_path=_DNV_RP_0360_WIKI_PATH,
             source_sibling="generic",
+            note="MBR limit is a cable-specific design input supplied by caller",
         )
         validate_citation(citation, repo_root=wiki_base)
         return [citation]

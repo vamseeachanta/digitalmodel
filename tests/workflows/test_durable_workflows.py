@@ -63,9 +63,10 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         (tmp_path / "wikis").mkdir()
         monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
         monkeypatch.setattr(mooring_design_fowt, "_CITATION_EMITTED_CACHE", {})
-        # Close file streams before the engine replaces its logging handlers.
-        for handler in logging.root.handlers:
+        # Detach and close file streams before the engine replaces its handlers.
+        for handler in list(logging.root.handlers):
             if isinstance(handler, logging.FileHandler):
+                logging.root.removeHandler(handler)
                 handler.close()
         with pytest.warns(RuntimeWarning, match="wiki page missing"):
             cfg = engine(inputfile=str(input_path))
