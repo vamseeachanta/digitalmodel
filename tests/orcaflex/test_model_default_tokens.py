@@ -168,7 +168,7 @@ BASE_MODEL_VALUES = {
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/05_riser_line_types.yml':
         '8bc87b7014ad08f758c05fe589d8b4fc558e4dabb8050ecfc82ff781be498934',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/07_riser_lines.yml':
-        '34283a9928bf8ed545da24f5f082fab1e24dac86a1e67c42ed127cc988873b5e',
+        '1a5eea8dbc7478f214546b736e39a2abedcf5c4cc0141ff36cf65bdb3faf4a9d',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/03_environment.yml':

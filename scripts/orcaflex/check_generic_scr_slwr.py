@@ -100,6 +100,96 @@ def scr_reference(p: dict[str, Any], height: float, weight: float,
     return {"oo": scr_oo, "general": scr_general}
 
 
+def grounded_catenary(height: float, length: float, span: float,
+                     weight: float) -> dict[str, Any]:
+    """Solve frictionless, inextensible touchdown closure at a fixed span.
+
+    With a = H/w, suspended length S = sqrt(h*(h+2*a)) and horizontal
+    distance X = a*acosh(1+h/a), closure is X-S = span-length. Negative
+    grounded reserve flags that this assumed touchdown solution is impossible;
+    its extrapolated forces are not a physical lifted-end equilibrium.
+    """
+    if (not all(math.isfinite(v) for v in (height, length, span, weight))
+            or height <= 0 or length <= height or span <= 0 or weight <= 0):
+        raise ValueError("Finite positive geometry and weight are required")
+    target = span - length
+    if not -height < target < 0:
+        raise ValueError("Span is outside the single-touchdown catenary range")
+
+    def arc(radius: float) -> tuple[float, float]:
+        return (math.sqrt(height * (height + 2 * radius)),
+                radius * math.acosh(1 + height / radius))
+
+    lower, upper = 0.0, height
+    suspended, horizontal = arc(upper)
+    while horizontal - suspended < target:
+        upper *= 2
+        suspended, horizontal = arc(upper)
+    for _ in range(100):
+        radius = (lower + upper) / 2
+        suspended, horizontal = arc(radius)
+        if horizontal - suspended < target:
+            lower = radius
+        else:
+            upper = radius
+    radius = (lower + upper) / 2
+    suspended, horizontal = arc(radius)
+    grounded = length - suspended
+    return {
+        "grounded_length_m": grounded,
+        "touchdown_exists": grounded > 0,
+        "touchdown_horizontal_distance_m": horizontal,
+        "suspended_length_m": suspended,
+        "horizontal_tension_kN": weight * radius / 1000,
+        "top_tension_kN": weight * (radius + height) / 1000,
+        "hangoff_angle_deg": math.degrees(math.atan2(radius, suspended)),
+    }
+
+
+def scr_seabed_design(p: dict[str, Any], height: float, weight: float,
+                     nominal: dict[str, Any]) -> dict[str, Any]:
+    """Derive SCR seabed reserve from the offset envelope plus explicit margin."""
+    offsets = sorted({0.0, -p["intact_offset_pct"], p["intact_offset_pct"],
+                      -p["damaged_offset_pct"], p["damaged_offset_pct"]})
+    margin = p["scr_seabed_margin"]
+    if not math.isfinite(margin) or margin <= 0:
+        raise ValueError("SCR seabed margin must be finite and positive")
+    suspended = nominal["suspended_length_m"]
+    touchdown = nominal["touchdown_horizontal_distance_m"]
+
+    def sweep(bottom: float) -> list[dict[str, Any]]:
+        return [{"offset_pct": offset, **grounded_catenary(
+            height, suspended + bottom,
+            touchdown + bottom - offset * p["water_depth"] / 100, weight,
+        )} for offset in offsets]
+
+    original = sweep(p["bottom_length"])
+    required = max(0.0, p["bottom_length"] - min(
+        state["grounded_length_m"] for state in original
+    ))
+    selected = math.ceil((required + margin) * 10) / 10
+    old_length = suspended + p["bottom_length"]
+    liftoff_radius = (old_length ** 2 - height ** 2) / (2 * height)
+    liftoff_span = liftoff_radius * math.acosh(1 + height / liftoff_radius)
+    liftoff_offset = liftoff_span - touchdown - p["bottom_length"]
+    return {
+        "method": "Flat seabed; uniform submerged weight; inextensible, frictionless catenary closure",
+        "offset_convention": "Positive host offset is toward the anchor; negative is away",
+        "limitations": "Negative reserve is a diagnostic extrapolation, not a lifted-end equilibrium. Elasticity, bending, seabed friction and dynamics require native checks.",
+        "height_m": height,
+        "weight_N_per_m": weight,
+        "required_bottom_length_m": required,
+        "margin_m": margin,
+        "selected_bottom_length_m": selected,
+        "anchor_without_margin_m": touchdown + required,
+        "selected_anchor_x_m": touchdown + selected,
+        "original_liftoff_far_offset_m": liftoff_offset,
+        "original_liftoff_far_offset_pct": liftoff_offset / p["water_depth"] * 100,
+        "original": original,
+        "selected": sweep(selected),
+    }
+
+
 def slwr_reference(p: dict[str, Any], pipe: RiserPipeProperties, height: float,
                    weight: float, ea: float) -> dict[str, Any]:
     """Compare the lazy-wave geometry against reflected elastic arcs.
@@ -183,6 +273,9 @@ def calculate(basis: dict[str, Any]) -> dict[str, Any]:
         dry_mass + p["flooded_density"] * pipe.internal_area
         - p["seawater_density"] * pipe.displaced_volume_per_m
     ) * p["gravity"]
+    results["scr"]["seabed_offset_sweep"] = scr_seabed_design(
+        p, height, weight, results["scr"]["oo"],
+    )
     return results
 
 
@@ -208,11 +301,41 @@ def reference(campaign: Path) -> dict[str, Any]:
                      "EA = young_modulus*pi/4*(steel_OD^2-steel_ID^2)",
                      "w_pipe = (steel_mass+coating_mass+contents_mass-rho_water*pi/4*coated_OD^2)*g",
                      "module_volume_per_m = pi/4*(module_OD^2-coated_OD^2)*module_length/module_pitch",
-                     "w_buoyed = w_pipe - (rho_water-rho_module)*module_volume_per_m*g"],
+                     "w_buoyed = w_pipe - (rho_water-rho_module)*module_volume_per_m*g",
+                     "a = H/w; S = sqrt(h*(h+2*a)); X = a*acosh(1+h/a)",
+                     "D = anchor_X - host_offset; solve X-S = D-L; grounded = L-S",
+                     "SCR bottom = ceil(10*(maximum suspended-length increase + margin))/10"],
         "sha256": {str(p.relative_to(campaign)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
         "analytical_code_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "models": calculate(basis),
     }
+
+
+def regenerate_scr(campaign: Path) -> None:
+    """Update SCR geometry from its basis and use the existing model generator.
+
+    The nominal suspended arc stays unchanged. The lazy-wave specifications
+    and model bytes are never written by this preparation step.
+    """
+    from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
+
+    basis = yaml.safe_load((campaign / "basis.yml").read_text())
+    result = calculate(basis)["scr"]
+    spec_path = campaign / "scr/spec.yml"
+    spec = yaml.safe_load(spec_path.read_text())
+    line = spec["riser"]["lines"][0]
+    bottom = result["seabed_offset_sweep"]["selected_bottom_length_m"]
+    line["sections"][0]["length"] = result["oo"]["suspended_length_m"]
+    line["sections"][-1]["length"] = bottom
+    line["end_b"]["position"][0] = result["oo"]["touchdown_horizontal_distance_m"] + bottom
+    spec_path.write_text(yaml.safe_dump(spec, sort_keys=False, width=90))
+    model = campaign / "scr/modular"
+    ModularModelGenerator(spec_path).generate(model)
+    # Match the existing end-of-file hook on the directly written master.
+    master = model / "master.yml"
+    raw = master.read_bytes()
+    if not raw.endswith(b"\n"):
+        master.write_bytes(raw + b"\n")
 
 
 def main() -> None:
@@ -220,7 +343,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--campaign", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--regenerate-scr", action="store_true")
     args = parser.parse_args()
+    if args.regenerate_scr:
+        regenerate_scr(args.campaign)
     args.output.write_text(json.dumps(reference(args.campaign), indent=2, allow_nan=False) + "\n")
 
 

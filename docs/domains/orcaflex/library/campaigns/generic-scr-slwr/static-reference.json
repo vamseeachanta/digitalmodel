@@ -1,26 +1,29 @@
 {
   "schema_version": "generic-static-reference-v1",
   "method": "OO low-point geometry; general elastic solver on each reflected arc",
-  "limitations": "Zero mean host offset, quiescent water, inextensible OO geometry and elastic general catenary segment checks. Pipe centre at contact radius above seabed. No pressure, bending/contact soil response, wave dynamics, VIV or code acceptance.",
+  "limitations": "Zero mean host offset, quiescent water, inextensible OO geometry and elastic general catenary segment checks. Pipe centre at contact radius above seabed. No pressure, bending/contact soil response, wave dynamics, VIV or code acceptance. SCR seabed reserve is additionally derived across the intact and damaged offset envelope using a flat-seabed, frictionless, inextensible catenary; this does not establish native offset equilibrium.",
   "geometry_comparison": "General arc endpoints and unstretched lengths are prescribed from OO geometry; their equality is not an independent global geometry check. Elastic arc horizontal tensions need not be continuous.",
   "formulas": [
     "h = water_depth - hangoff_depth - coated_OD/2",
     "EA = young_modulus*pi/4*(steel_OD^2-steel_ID^2)",
     "w_pipe = (steel_mass+coating_mass+contents_mass-rho_water*pi/4*coated_OD^2)*g",
     "module_volume_per_m = pi/4*(module_OD^2-coated_OD^2)*module_length/module_pitch",
-    "w_buoyed = w_pipe - (rho_water-rho_module)*module_volume_per_m*g"
+    "w_buoyed = w_pipe - (rho_water-rho_module)*module_volume_per_m*g",
+    "a = H/w; S = sqrt(h*(h+2*a)); X = a*acosh(1+h/a)",
+    "D = anchor_X - host_offset; solve X-S = D-L; grounded = L-S",
+    "SCR bottom = ceil(10*(maximum suspended-length increase + margin))/10"
   ],
   "sha256": {
-    "basis.yml": "c4f4da7e36eba4e14cf293340ba8feacfea7526ba495df80bc27c82dd5027dea",
+    "basis.yml": "8b4dcf0a9b0a80f5b517e04ef1badc4911e13d4ec1e4d5345dfb82589439e304",
     "scr/modular/includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
     "scr/modular/includes/03_environment.yml": "e7f4319a6495a4205fb9fc690332c7db01fb5d3fc028bd7cb8bc2ca2bc10a469",
     "scr/modular/includes/05_riser_line_types.yml": "18b3f3db0e6bff5e164aec0c3e4e1d23a97a8116791a14b17978042a87576d01",
     "scr/modular/includes/06_riser_vessels.yml": "ee550ef907e272b2d5f2e0b41252e0e8fdab8877f0d74d2251d1c0cf5acff689",
-    "scr/modular/includes/07_riser_lines.yml": "029bfb7300b6823ce5fb20aff6aab82f2d8a3e54ae8324784133c8188ec44f16",
+    "scr/modular/includes/07_riser_lines.yml": "2c2d2dd478b4ea99ce48f6ec935f1b5e8312de1bd90d7dd731c3a33391eda1ed",
     "scr/modular/includes/10_groups.yml": "6ded387e6f901a8ffbd85717583a07f0ab4299554f1a5a5c7193d17224c2d938",
     "scr/modular/inputs/parameters.yml": "5d2b5ca051d9f72392f702cd1d84266161ceb2f5f2cf4ae16e6006a252bf0a6c",
     "scr/modular/master.yml": "96a78cb42cfd4a70977a2c446db5532112f0f6e4193fe355017ac161af986e23",
-    "scr/spec.yml": "f269321ced75e3562df2def06083525c73668beeece7fb05c2c226eff2b56902",
+    "scr/spec.yml": "877ab2e17bbebdcfac12399ce3b26e3185ccd5c2b658eb2cb1cc40ecff97293a",
     "slwr/modular/includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
     "slwr/modular/includes/03_environment.yml": "e7f4319a6495a4205fb9fc690332c7db01fb5d3fc028bd7cb8bc2ca2bc10a469",
     "slwr/modular/includes/05_riser_line_types.yml": "037f1a318a7b02f26a3567042da4f7d189cd6143c77a123c14ded135811fc68f",
@@ -31,7 +34,7 @@
     "slwr/modular/master.yml": "96a78cb42cfd4a70977a2c446db5532112f0f6e4193fe355017ac161af986e23",
     "slwr/spec.yml": "07a89c80b93395af508c8c71f52083370bf3ecacf5a4248c58cad63c8c957f99"
   },
-  "analytical_code_sha256": "531c1c4bd490079a6d6e4e9408ac1b400fbbae352bfaa15bab2aa4173c4e095e",
+  "analytical_code_sha256": "552221b35138252fcc35c0bba6fe60f55c4945be0bb8bd0444d9bf3c468e0454",
   "models": {
     "scr": {
       "oo": {
@@ -49,7 +52,125 @@
         "elongation_m": 0.20926308699624033
       },
       "top_tension_difference_pct": 0.017611329387445807,
-      "kernel_comparison": "Top tension difference is within 2 percent; native calibration remains required"
+      "kernel_comparison": "Top tension difference is within 2 percent; native calibration remains required",
+      "seabed_offset_sweep": {
+        "method": "Flat seabed; uniform submerged weight; inextensible, frictionless catenary closure",
+        "offset_convention": "Positive host offset is toward the anchor; negative is away",
+        "limitations": "Negative reserve is a diagnostic extrapolation, not a lifted-end equilibrium. Elasticity, bending, seabed friction and dynamics require native checks.",
+        "height_m": 1489.82345,
+        "weight_N_per_m": 1189.048217188261,
+        "required_bottom_length_m": 237.44173219682966,
+        "margin_m": 20.0,
+        "selected_bottom_length_m": 257.5,
+        "anchor_without_margin_m": 1118.4160977474742,
+        "selected_anchor_x_m": 1138.4743655506445,
+        "original_liftoff_far_offset_m": 15.318902704818242,
+        "original_liftoff_far_offset_pct": 1.0212601803212162,
+        "original": [
+          {
+            "offset_pct": -10.0,
+            "grounded_length_m": -217.44173219682966,
+            "touchdown_exists": false,
+            "touchdown_horizontal_distance_m": 1268.416097747474,
+            "suspended_length_m": 2077.22047434107,
+            "horizontal_tension_kN": 836.1320368002205,
+            "top_tension_kN": 2607.6039539479852,
+            "hangoff_angle_deg": 18.70232749867824
+          },
+          {
+            "offset_pct": -5.0,
+            "grounded_length_m": -86.37784380865446,
+            "touchdown_exists": false,
+            "touchdown_horizontal_distance_m": 1062.3522093592987,
+            "suspended_length_m": 1946.1565859528946,
+            "horizontal_tension_kN": 625.7016524591133,
+            "top_tension_kN": 2397.1735696068777,
+            "hangoff_angle_deg": 15.130381184224774
+          },
+          {
+            "offset_pct": 0.0,
+            "grounded_length_m": 19.999999999999318,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 880.9743655506451,
+            "suspended_length_m": 1839.7787421442408,
+            "horizontal_tension_kN": 464.98568058732775,
+            "top_tension_kN": 2236.457597735092,
+            "hangoff_angle_deg": 12.000000000000012
+          },
+          {
+            "offset_pct": 5.0,
+            "grounded_length_m": 106.90037232444274,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 719.0739932262018,
+            "suspended_length_m": 1752.8783698197974,
+            "horizontal_tension_kN": 340.3988690723085,
+            "top_tension_kN": 2111.8707862200727,
+            "hangoff_angle_deg": 9.275601423959765
+          },
+          {
+            "offset_pct": 10.0,
+            "grounded_length_m": 178.07898413615112,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 572.8953814144933,
+            "suspended_length_m": 1681.699758008089,
+            "horizontal_tension_kN": 242.84206192017652,
+            "top_tension_kN": 2014.313979067941,
+            "hangoff_angle_deg": 6.924318809825593
+          }
+        ],
+        "selected": [
+          {
+            "offset_pct": -10.0,
+            "grounded_length_m": 20.05826780317011,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 1268.4160977474744,
+            "suspended_length_m": 2077.22047434107,
+            "horizontal_tension_kN": 836.1320368002209,
+            "top_tension_kN": 2607.6039539479857,
+            "hangoff_angle_deg": 18.702327498678255
+          },
+          {
+            "offset_pct": -5.0,
+            "grounded_length_m": 151.12215619134486,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 1062.3522093592994,
+            "suspended_length_m": 1946.156585952895,
+            "horizontal_tension_kN": 625.701652459114,
+            "top_tension_kN": 2397.173569606878,
+            "hangoff_angle_deg": 15.130381184224785
+          },
+          {
+            "offset_pct": 0.0,
+            "grounded_length_m": 257.49999999999864,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 880.9743655506459,
+            "suspended_length_m": 1839.7787421442413,
+            "horizontal_tension_kN": 464.9856805873283,
+            "top_tension_kN": 2236.457597735093,
+            "hangoff_angle_deg": 12.000000000000023
+          },
+          {
+            "offset_pct": 5.0,
+            "grounded_length_m": 344.40037232444206,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 719.0739932262022,
+            "suspended_length_m": 1752.8783698197979,
+            "horizontal_tension_kN": 340.3988690723089,
+            "top_tension_kN": 2111.8707862200736,
+            "hangoff_angle_deg": 9.275601423959776
+          },
+          {
+            "offset_pct": 10.0,
+            "grounded_length_m": 415.5789841361509,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 572.8953814144934,
+            "suspended_length_m": 1681.699758008089,
+            "horizontal_tension_kN": 242.84206192017658,
+            "top_tension_kN": 2014.313979067941,
+            "hangoff_angle_deg": 6.924318809825594
+          }
+        ]
+      }
     },
     "slwr": {
       "oo": {
