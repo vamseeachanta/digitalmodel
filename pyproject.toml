@@ -328,6 +328,7 @@ addopts = [
     "--strict-config",
 ]
 markers = [
+    "store_data: marks tests requiring manifest-listed content-store data",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
