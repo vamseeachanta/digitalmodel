@@ -304,6 +304,10 @@ modules:
     owner_wiki: docs/domains/structural/
     key_tests: [tests/structural/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
+    submodules:
+      fatigue:
+        agent_pack: src/digitalmodel/structural/fatigue/docs/agent-pack.md
+        qa_family: EC
   - module: subsea
     entry_point: src/digitalmodel/subsea/
     maturity: stable
