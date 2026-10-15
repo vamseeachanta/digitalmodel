@@ -31,6 +31,9 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/cfd/build_calm_water_study.py": (
+        "writes native records and docs/domains HTML, not docs/api pages"
+    ),
     "scripts/reporting/build_reference_jacket_analysis.py": (
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
