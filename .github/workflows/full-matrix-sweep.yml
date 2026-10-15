@@ -239,6 +239,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            function healthWriteOrder(body, runNumber) {
+              const marker = (body || '').match(/^<!-- main-health-order: run_number=(\d+) run_id=\d+ sha=[0-9a-f]+ -->$/m);
+              const storedRunNumber = marker ? Number(marker[1]) : null;
+              return {storedRunNumber, skip: storedRunNumber !== null && storedRunNumber > runNumber};
+            }
             const fs = require('fs');
             const baseline = JSON.parse(fs.readFileSync('baseline.json', 'utf8'));
             const previous = fs.existsSync('previous-baseline.json')
@@ -249,12 +254,18 @@ jobs:
             const issues = await github.paginate(github.rest.issues.listForRepo,
               {owner, repo, state: 'all', labels: 'main-health', per_page: 100});
             const issue = issues.find(item => item.title === title && !item.pull_request);
+            const order = healthWriteOrder(issue?.body, context.runNumber);
+            if (order.skip) {
+              core.notice(`Skipping main-health update for run ${context.runNumber}; stored run ${order.storedRunNumber} is newer.`);
+              return;
+            }
             const active = Object.entries(baseline.tests);
             const resolved = Object.entries(previous.tests).filter(([id, row]) =>
               !baseline.tests[id] && baseline.shards[row.shard]?.parsed === true &&
               ['success', 'failure'].includes(baseline.shards[row.shard]?.conclusion));
             const cell = value => String(value).replaceAll('|', '&#124;').replaceAll('\n', ' ');
-            const lines = ['Main test failures by exact test id.', '',
+            const lines = [`<!-- main-health-order: run_number=${context.runNumber} run_id=${context.runId} sha=${context.sha} -->`,
+              'Main test failures by exact test id.', '',
               '| Test id | Shard | First seen run | Last seen run | Status |',
               '| --- | --- | --- | --- | --- |'];
             for (const [id, row] of active.slice(0, 200)) {
