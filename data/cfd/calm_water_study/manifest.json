@@ -1,0 +1,1583 @@
+{
+  "criteria": {
+    "appendages": "none",
+    "averaging_iterations": 4000,
+    "basis": "src/digitalmodel/solvers/openfoam/validation/ship_resistance.py",
+    "body_condition": "fixed_even_keel",
+    "comparison": {
+      "missing_source_result": "not available",
+      "plot_digitisation": false,
+      "quantity": "total_resistance_coefficient",
+      "relative_tolerance_percent": 3.0,
+      "require_opened_source": true,
+      "require_table_and_page": true,
+      "tolerance_basis": "assumed, based on previous experience; existing resistance validation module"
+    },
+    "froude_number": 0.26,
+    "full_iterations": 25000,
+    "grid_uncertainty": {
+      "constant_refinement_ratio": 2.0,
+      "implementation": "src/digitalmodel/solvers/openfoam/grid_convergence.py",
+      "incomplete_result": "not established",
+      "medium_mesh_target_percent": 1.0,
+      "method": "three-mesh grid convergence index",
+      "required_completed_meshes": 3,
+      "target_basis": "assumed, based on previous experience; existing grid convergence module"
+    },
+    "mesh_scales": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "ranks": 8,
+    "resource_limits": {
+      "memory_reserve_gb": 6,
+      "minimum_disk_free_gb": 15,
+      "total_projected_solver_hours": 80
+    },
+    "retention": {
+      "committed": [
+        "force histories",
+        "coefficient histories",
+        "run log",
+        "digest manifest",
+        "report"
+      ],
+      "raw_header_redaction": "Only identifying header lines may be replaced; numerical results remain unchanged.",
+      "scratch": [
+        "case inputs",
+        "meshes",
+        "field data",
+        "native logs"
+      ]
+    },
+    "schema_version": 1,
+    "timed_start_iterations": 100
+  },
+  "files": {
+    "data/cfd/calm_water_study/raw/coarse-coefficients.csv": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "d9ca188b590723d82d76b16413cc58d57c33437b85a9e0b665594058eec4155b",
+      "size_bytes": 5328,
+      "source_force_sha256": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c"
+    },
+    "data/cfd/calm_water_study/raw/coarse-face-resolution.txt": {
+      "kind": "native hull-face inspection",
+      "sha256": "2dc747def20096998070c0d31a7aac353df48f0f4403bf96a55810a07220fca5",
+      "size_bytes": 150
+    },
+    "data/cfd/calm_water_study/raw/coarse-force.dat": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "1040ae6cbf473bfd6ad041abf800dfbf397b072b7d23a012eab77770cbeea711",
+      "size_bytes": 13860,
+      "source_force_sha256": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c"
+    },
+    "data/cfd/calm_water_study/raw/coarse-full-coefficients-part001.csv": {
+      "header_redaction": "fixed header",
+      "history_sha256": "b00d9cc4b32cce2fa2526ab2f1b195a46cb224865637ab11306ad0de4b7b97e1",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 1,
+      "parts": 2,
+      "sha256": "edece28023f6dbe655d1600d7b52c0199238c03be89fe4ca5fa255b22726adc5",
+      "size_bytes": 999967
+    },
+    "data/cfd/calm_water_study/raw/coarse-full-coefficients-part002.csv": {
+      "header_redaction": "fixed header",
+      "history_sha256": "b00d9cc4b32cce2fa2526ab2f1b195a46cb224865637ab11306ad0de4b7b97e1",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 2,
+      "parts": 2,
+      "sha256": "57c3a3cfd583c82748c26200848166fe94428578caac08a055e071ca4e317554",
+      "size_bytes": 403014
+    },
+    "data/cfd/calm_water_study/raw/coarse-full-force-part001.dat": {
+      "header_redaction": "fixed header",
+      "history_sha256": "3e9a7bed018f8e88ba70381fe14ca0e3085a5a318ff5813c32012a2875135449",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 1,
+      "parts": 4,
+      "sha256": "32b36d12b4eb6bf862d87e0eeda5031cf4bc54705312edad2b1c592693f9f0fb",
+      "size_bytes": 999865
+    },
+    "data/cfd/calm_water_study/raw/coarse-full-force-part002.dat": {
+      "header_redaction": "fixed header",
+      "history_sha256": "3e9a7bed018f8e88ba70381fe14ca0e3085a5a318ff5813c32012a2875135449",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 2,
+      "parts": 4,
+      "sha256": "c5c28a81032ae9ff68f6d00baf669e1918e09ed328c7d504a19725155b57f2e3",
+      "size_bytes": 999953
+    },
+    "data/cfd/calm_water_study/raw/coarse-full-force-part003.dat": {
+      "header_redaction": "fixed header",
+      "history_sha256": "3e9a7bed018f8e88ba70381fe14ca0e3085a5a318ff5813c32012a2875135449",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 3,
+      "parts": 4,
+      "sha256": "2dcf391e3e3451c486697b33dbb2d88dfdb1e2cdf085dc8300811ef49f21ea49",
+      "size_bytes": 999963
+    },
+    "data/cfd/calm_water_study/raw/coarse-full-force-part004.dat": {
+      "header_redaction": "fixed header",
+      "history_sha256": "3e9a7bed018f8e88ba70381fe14ca0e3085a5a318ff5813c32012a2875135449",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 4,
+      "parts": 4,
+      "sha256": "baae85d7753d273f09455b39a20f40d24833cdcd3b8167d51deeb60b60c281c5",
+      "size_bytes": 419220
+    },
+    "data/cfd/calm_water_study/raw/fine-coefficients.csv": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "58e26a535a4d2210f8d5f20b3566ddd89be8037ec9ea9a4bb5bad4da3b5395a2",
+      "size_bytes": 5374,
+      "source_force_sha256": "21fe85937ded4094111720b6cec0f418575c8f12d9896ebe33fe73bd8f85d290"
+    },
+    "data/cfd/calm_water_study/raw/fine-face-resolution.txt": {
+      "kind": "native hull-face inspection",
+      "sha256": "c65fd3200f71eb9cd85b855e8b4ed0060ee9ac141284d5262cbc6b6c88a7471a",
+      "size_bytes": 155
+    },
+    "data/cfd/calm_water_study/raw/fine-force.dat": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "1ced54aae94bf36034dae43e0db24650d6d1e4c36f2f2591b5963c41c2e9ebb7",
+      "size_bytes": 13767,
+      "source_force_sha256": "21fe85937ded4094111720b6cec0f418575c8f12d9896ebe33fe73bd8f85d290"
+    },
+    "data/cfd/calm_water_study/raw/medium-coefficients.csv": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "2a46c029ac9c368e937b18eb3fe4be7a74047b5601ecf4fa852f19471c1e3815",
+      "size_bytes": 5368,
+      "source_force_sha256": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f"
+    },
+    "data/cfd/calm_water_study/raw/medium-face-resolution.txt": {
+      "kind": "native hull-face inspection",
+      "sha256": "c0b14f6b959835a1721dd5c6daf2cf56e7521171f83045b050eb5353b792f4ef",
+      "size_bytes": 152
+    },
+    "data/cfd/calm_water_study/raw/medium-force.dat": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "f8228e65181ecaf91e5928c2efbb7abf6c2254bb4971b2b9e500735e7ef49625",
+      "size_bytes": 13791,
+      "source_force_sha256": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f"
+    },
+    "data/cfd/calm_water_study/raw/medium-full-coefficients-part001.csv": {
+      "header_redaction": "fixed header",
+      "history_sha256": "7d4bfc84a9e4d3b45078bfaa36d53c6600e483d95be164e7b9da7d79f005e161",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 1,
+      "parts": 2,
+      "sha256": "9e3800dd40faa0ba0c6e772193b1f4d5b1f42dc494b52da32621d3c66abc00e0",
+      "size_bytes": 999965
+    },
+    "data/cfd/calm_water_study/raw/medium-full-coefficients-part002.csv": {
+      "header_redaction": "fixed header",
+      "history_sha256": "7d4bfc84a9e4d3b45078bfaa36d53c6600e483d95be164e7b9da7d79f005e161",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 2,
+      "parts": 2,
+      "sha256": "384cbbe836593cfc4629c32a4f78cea8868c58e7da1936b2cccef3f9fc0c4082",
+      "size_bytes": 429164
+    },
+    "data/cfd/calm_water_study/raw/medium-full-force-part001.dat": {
+      "header_redaction": "fixed header",
+      "history_sha256": "efd28d7a460f3586d965129845224752e19b21ed68b62dd52aa2dd1d2deb25a6",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 1,
+      "parts": 4,
+      "sha256": "cc434d531315e0bc95b461c4cd86bb68123149395f18c07933a57ec325f414d5",
+      "size_bytes": 999940
+    },
+    "data/cfd/calm_water_study/raw/medium-full-force-part002.dat": {
+      "header_redaction": "fixed header",
+      "history_sha256": "efd28d7a460f3586d965129845224752e19b21ed68b62dd52aa2dd1d2deb25a6",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 2,
+      "parts": 4,
+      "sha256": "0c614690783cebf477f0d781d05f7bda4bccd018fefee40a3b874156558cdb64",
+      "size_bytes": 999963
+    },
+    "data/cfd/calm_water_study/raw/medium-full-force-part003.dat": {
+      "header_redaction": "fixed header",
+      "history_sha256": "efd28d7a460f3586d965129845224752e19b21ed68b62dd52aa2dd1d2deb25a6",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 3,
+      "parts": 4,
+      "sha256": "db767d21acfe660c7aaa4c4dfeb04718a512059ec4bd5a88326b64ce03deb807",
+      "size_bytes": 999963
+    },
+    "data/cfd/calm_water_study/raw/medium-full-force-part004.dat": {
+      "header_redaction": "fixed header",
+      "history_sha256": "efd28d7a460f3586d965129845224752e19b21ed68b62dd52aa2dd1d2deb25a6",
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged. Parts concatenate in numbered order without repeated headers.",
+      "part": 4,
+      "parts": 4,
+      "sha256": "94debd7e548d076e7ae40642c7f992dc21c8b5ea948481ed9c47aaf7ff746086",
+      "size_bytes": 425248
+    },
+    "data/cfd/calm_water_study/run-log.jsonl": {
+      "kind": "native run log",
+      "sha256": "c5ed07765caa897dd45e1e6818d96029ccd7831a486034db3a93618fbb8a4812",
+      "size_bytes": 15919
+    }
+  },
+  "full_runs": [
+    {
+      "cells": 118364,
+      "checkpoint_interval": 1000,
+      "completed_continuation_iterations": 24900,
+      "criterion_recorded_at": "2026-10-14T11:20:20.599360+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 24900,
+      "last_iteration": 25000,
+      "measured_wall_seconds": 4660.87,
+      "mesh": "coarse",
+      "native_log": "cases/coarse/log.interFoam.full",
+      "native_log_sha256": "6df3113a9987b1f746177003b09e039111b762a73a31ee2971e0393c79c756a8",
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "ranks": 8,
+      "readback_at": "2026-10-15T02:36:20.280203+00:00",
+      "requested_end_iteration": 25000,
+      "return_code": 0,
+      "source_force_digests": {
+        "0": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c",
+        "100": "b0c2c3cbc66b1849aadcdaba9d5e42fcdda1a82d1e9e93bd8f1326edc4083418"
+      },
+      "start_iteration": 100,
+      "start_time_basis": "Native banner and log creation time; the short-start criterion record is unchanged.",
+      "started_at": "2026-10-15T01:18:39+00:00",
+      "statistics": {
+        "first_iteration": 21001.0,
+        "last_iteration": 25000.0,
+        "mean_cp": 0.0015499971875521977,
+        "mean_ct": 0.003911737579727195,
+        "mean_cv": 0.00236174039723159,
+        "mean_resistance_n": 88.962595065,
+        "samples": 4000,
+        "standard_deviation_cp": 8.880557372619284e-05,
+        "standard_deviation_ct": 8.462334550985382e-05,
+        "standard_deviation_cv": 1.1325954498087862e-05
+      },
+      "status": "complete",
+      "wall_time_basis": "Elapsed real time measured around the parallel launcher; native completion is checked separately."
+    },
+    {
+      "available_memory_bytes_before_full": 59935952896,
+      "cells": 915357,
+      "checkpoint_interval": 1000,
+      "completed_continuation_iterations": 24900,
+      "control_dict_sha256": "e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809",
+      "criterion_recorded_at": "2026-10-14T11:27:06.812293+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "disk_free_bytes_before_full": 45823160320,
+      "full_launch_recorded_at": "2026-10-15T02:37:04.900952+00:00",
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 24900,
+      "last_iteration": 25000,
+      "measured_wall_seconds": 54492.49,
+      "mesh": "medium",
+      "native_log": "cases/medium/log.interFoam.full",
+      "native_log_sha256": "3aa5d5b4dfce5a60491162656b2db665a5a08fc6957c13ab943991c3c8cf30c0",
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "ranks": 8,
+      "readback_at": "2026-10-15T17:45:17.981900+00:00",
+      "requested_end_iteration": 25000,
+      "return_code": 0,
+      "source_force_digests": {
+        "0": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f",
+        "100": "c40f4e4c864a0ffdb21f6bb8da74e19c8bfabd9ffd6663cc081fde8b6dccdff9"
+      },
+      "start_iteration": 100,
+      "started_at": "2026-10-15T02:37:05+00:00",
+      "statistics": {
+        "first_iteration": 21001.0,
+        "last_iteration": 25000.0,
+        "mean_cp": 0.0008994584046465938,
+        "mean_ct": 0.00352475658663521,
+        "mean_cv": 0.0026252981833077126,
+        "mean_resistance_n": 80.16168941,
+        "samples": 4000,
+        "standard_deviation_cp": 1.4377124357335387e-06,
+        "standard_deviation_ct": 6.580072858662562e-06,
+        "standard_deviation_cv": 6.419621007590226e-06
+      },
+      "status": "complete",
+      "wall_time_basis": "Elapsed real time measured around the parallel launcher; native completion is checked separately."
+    }
+  ],
+  "intended_use": "Native execution cost and descriptive force histories; experimental validation and grid uncertainty are not established.",
+  "model_basis": {
+    "air_density_kg_per_m3": 1.0,
+    "air_kinematic_viscosity_m2_per_s": 1.48e-05,
+    "area_m2": 9.4379,
+    "beam_m": 1.019,
+    "case_gravity_m_per_s2": 9.81,
+    "density_kg_per_m3": 998.8,
+    "domain_bounds_m": {
+      "x": [
+        -31.8599,
+        19.6061
+      ],
+      "y": [
+        -23.2822,
+        0.0
+      ],
+      "z": [
+        -19.6061,
+        4.90152
+      ]
+    },
+    "draft_m": 0.3418,
+    "executed_froude": 0.25995518270129314,
+    "executed_reynolds": 13999974.709946323,
+    "geometry_bounds_m": {
+      "x": [
+        -0.1232909531748,
+        7.566695518825
+      ],
+      "y": [
+        -0.5095092786,
+        0.5095092786
+      ],
+      "z": [
+        -0.04279581393734,
+        0.4319071994627
+      ]
+    },
+    "input_basis": "assumed, based on previous experience; retained model geometry and case configuration",
+    "kinematic_viscosity_m2_per_s": 1.14203e-06,
+    "lpp_m": 7.2786,
+    "nominal_froude": 0.26,
+    "plan_envelope_xy_m": [
+      [
+        -0.1232909531748,
+        -0.491887788
+      ],
+      [
+        -0.1122274811748,
+        -0.4928776776
+      ],
+      [
+        -0.1008000791748,
+        -0.4938748458
+      ],
+      [
+        -0.0888631751748,
+        -0.4948647354
+      ],
+      [
+        -0.0764895551748,
+        -0.4958473464
+      ],
+      [
+        -0.0636064331748,
+        -0.4968226788
+      ],
+      [
+        -0.0501410231748,
+        -0.4978125684
+      ],
+      [
+        -0.0361661111748,
+        -0.4987951794
+      ],
+      [
+        -0.0216816971748,
+        -0.4997777904
+      ],
+      [
+        -0.0066149951748,
+        -0.5007385656
+      ],
+      [
+        0.009106780825199,
+        -0.5016556692
+      ],
+      [
+        0.0254836308252,
+        -0.5025582156
+      ],
+      [
+        0.0424427688252,
+        -0.5034534834
+      ],
+      [
+        0.0601297668252,
+        -0.5042905224
+      ],
+      [
+        0.0785446248252,
+        -0.5050911684
+      ],
+      [
+        0.0976873428252,
+        -0.5058481428
+      ],
+      [
+        0.1168300608252,
+        -0.5065032168
+      ],
+      [
+        0.1352449188252,
+        -0.5070563904
+      ],
+      [
+        0.1529319168252,
+        -0.507536778
+      ],
+      [
+        0.1699638408252,
+        -0.507937101
+      ],
+      [
+        0.1862679048252,
+        -0.5082791952
+      ],
+      [
+        0.2020624668252,
+        -0.5085703392
+      ],
+      [
+        0.2171291688252,
+        -0.5087886972
+      ],
+      [
+        0.2457340668252,
+        -0.5091453486
+      ],
+      [
+        0.2591266908252,
+        -0.5092545276
+      ],
+      [
+        0.2720825988252,
+        -0.5093491494
+      ],
+      [
+        0.2845290048252,
+        -0.509429214
+      ],
+      [
+        0.2964659088252,
+        -0.5094728856
+      ],
+      [
+        0.3079660968252,
+        -0.5095092786
+      ],
+      [
+        5.088550576825,
+        -0.509502
+      ],
+      [
+        5.190305404825,
+        -0.5094947214
+      ],
+      [
+        5.286018994825,
+        -0.5090143338
+      ],
+      [
+        5.378020498825,
+        -0.5073766488
+      ],
+      [
+        5.466528274825,
+        -0.5040576072
+      ],
+      [
+        5.551469536825,
+        -0.4988097366
+      ],
+      [
+        5.632989856825,
+        -0.4917858876
+      ],
+      [
+        5.711234806825,
+        -0.4833427116
+      ],
+      [
+        5.786277172825,
+        -0.4737422382
+      ],
+      [
+        5.858262526825,
+        -0.4632610542
+      ],
+      [
+        5.927336440825,
+        -0.452146632
+      ],
+      [
+        5.993571700825,
+        -0.440464479
+      ],
+      [
+        6.057041092825,
+        -0.4282437096
+      ],
+      [
+        6.117890188825,
+        -0.4154406522
+      ],
+      [
+        6.176191774825,
+        -0.4020771426
+      ],
+      [
+        6.232018636825,
+        -0.388204131
+      ],
+      [
+        7.497767176825,
+        -0.06840646638
+      ],
+      [
+        7.507811644825,
+        -0.06510998844
+      ],
+      [
+        7.517564968825,
+        -0.06110457486
+      ],
+      [
+        7.526372074825,
+        -0.05675051634
+      ],
+      [
+        7.534305748825,
+        -0.05185129068
+      ],
+      [
+        7.541729920825,
+        -0.04638069492
+      ],
+      [
+        7.548062302825,
+        -0.04054762488
+      ],
+      [
+        7.553594038825,
+        -0.03430258608
+      ],
+      [
+        7.558106770825,
+        -0.02769070584
+      ],
+      [
+        7.561673284825,
+        -0.0207840423
+      ],
+      [
+        7.564002436825,
+        -0.01375582614
+      ],
+      [
+        7.565530942825,
+        -0.006778705752
+      ],
+      [
+        7.566695518825,
+        0.0
+      ],
+      [
+        -0.1232909531748,
+        0.0
+      ]
+    ],
+    "speed_m_per_s": 2.19663,
+    "surface_tension_n_per_m": 0.0
+  },
+  "qualified_results": 0,
+  "readiness_status": "partial",
+  "runs": [
+    {
+      "available_memory_bytes_before": 59855802368,
+      "cells": 118364,
+      "completed_iterations": 100,
+      "criterion_recorded_at": "2026-10-14T11:20:20.599360+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "face_resolution": {
+        "area_ratio_1": 2.9,
+        "faces": 6100,
+        "limit_1": 8.0,
+        "maximum_face_area_m2": 0.004258,
+        "mean_face_area_m2": 0.001542,
+        "source_sha256": "2dc747def20096998070c0d31a7aac353df48f0f4403bf96a55810a07220fca5",
+        "target_cell_length_m": 0.03829
+      },
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 100,
+      "lateral_reference_divisions": 20,
+      "measured_wall_seconds": 20.841206282377243,
+      "memory_fits": true,
+      "mesh": "coarse",
+      "mesh_scale": 0.5,
+      "model_basis": {
+        "air_density_kg_per_m3": 1.0,
+        "air_kinematic_viscosity_m2_per_s": 1.48e-05,
+        "area_m2": 9.4379,
+        "beam_m": 1.019,
+        "case_gravity_m_per_s2": 9.81,
+        "density_kg_per_m3": 998.8,
+        "domain_bounds_m": {
+          "x": [
+            -31.8599,
+            19.6061
+          ],
+          "y": [
+            -23.2822,
+            0.0
+          ],
+          "z": [
+            -19.6061,
+            4.90152
+          ]
+        },
+        "draft_m": 0.3418,
+        "executed_froude": 0.25995518270129314,
+        "executed_reynolds": 13999974.709946323,
+        "geometry_bounds_m": {
+          "x": [
+            -0.1232909531748,
+            7.566695518825
+          ],
+          "y": [
+            -0.5095092786,
+            0.5095092786
+          ],
+          "z": [
+            -0.04279581393734,
+            0.4319071994627
+          ]
+        },
+        "input_basis": "assumed, based on previous experience; retained model geometry and case configuration",
+        "kinematic_viscosity_m2_per_s": 1.14203e-06,
+        "lpp_m": 7.2786,
+        "nominal_froude": 0.26,
+        "plan_envelope_xy_m": [
+          [
+            -0.1232909531748,
+            -0.491887788
+          ],
+          [
+            -0.1122274811748,
+            -0.4928776776
+          ],
+          [
+            -0.1008000791748,
+            -0.4938748458
+          ],
+          [
+            -0.0888631751748,
+            -0.4948647354
+          ],
+          [
+            -0.0764895551748,
+            -0.4958473464
+          ],
+          [
+            -0.0636064331748,
+            -0.4968226788
+          ],
+          [
+            -0.0501410231748,
+            -0.4978125684
+          ],
+          [
+            -0.0361661111748,
+            -0.4987951794
+          ],
+          [
+            -0.0216816971748,
+            -0.4997777904
+          ],
+          [
+            -0.0066149951748,
+            -0.5007385656
+          ],
+          [
+            0.009106780825199,
+            -0.5016556692
+          ],
+          [
+            0.0254836308252,
+            -0.5025582156
+          ],
+          [
+            0.0424427688252,
+            -0.5034534834
+          ],
+          [
+            0.0601297668252,
+            -0.5042905224
+          ],
+          [
+            0.0785446248252,
+            -0.5050911684
+          ],
+          [
+            0.0976873428252,
+            -0.5058481428
+          ],
+          [
+            0.1168300608252,
+            -0.5065032168
+          ],
+          [
+            0.1352449188252,
+            -0.5070563904
+          ],
+          [
+            0.1529319168252,
+            -0.507536778
+          ],
+          [
+            0.1699638408252,
+            -0.507937101
+          ],
+          [
+            0.1862679048252,
+            -0.5082791952
+          ],
+          [
+            0.2020624668252,
+            -0.5085703392
+          ],
+          [
+            0.2171291688252,
+            -0.5087886972
+          ],
+          [
+            0.2457340668252,
+            -0.5091453486
+          ],
+          [
+            0.2591266908252,
+            -0.5092545276
+          ],
+          [
+            0.2720825988252,
+            -0.5093491494
+          ],
+          [
+            0.2845290048252,
+            -0.509429214
+          ],
+          [
+            0.2964659088252,
+            -0.5094728856
+          ],
+          [
+            0.3079660968252,
+            -0.5095092786
+          ],
+          [
+            5.088550576825,
+            -0.509502
+          ],
+          [
+            5.190305404825,
+            -0.5094947214
+          ],
+          [
+            5.286018994825,
+            -0.5090143338
+          ],
+          [
+            5.378020498825,
+            -0.5073766488
+          ],
+          [
+            5.466528274825,
+            -0.5040576072
+          ],
+          [
+            5.551469536825,
+            -0.4988097366
+          ],
+          [
+            5.632989856825,
+            -0.4917858876
+          ],
+          [
+            5.711234806825,
+            -0.4833427116
+          ],
+          [
+            5.786277172825,
+            -0.4737422382
+          ],
+          [
+            5.858262526825,
+            -0.4632610542
+          ],
+          [
+            5.927336440825,
+            -0.452146632
+          ],
+          [
+            5.993571700825,
+            -0.440464479
+          ],
+          [
+            6.057041092825,
+            -0.4282437096
+          ],
+          [
+            6.117890188825,
+            -0.4154406522
+          ],
+          [
+            6.176191774825,
+            -0.4020771426
+          ],
+          [
+            6.232018636825,
+            -0.388204131
+          ],
+          [
+            7.497767176825,
+            -0.06840646638
+          ],
+          [
+            7.507811644825,
+            -0.06510998844
+          ],
+          [
+            7.517564968825,
+            -0.06110457486
+          ],
+          [
+            7.526372074825,
+            -0.05675051634
+          ],
+          [
+            7.534305748825,
+            -0.05185129068
+          ],
+          [
+            7.541729920825,
+            -0.04638069492
+          ],
+          [
+            7.548062302825,
+            -0.04054762488
+          ],
+          [
+            7.553594038825,
+            -0.03430258608
+          ],
+          [
+            7.558106770825,
+            -0.02769070584
+          ],
+          [
+            7.561673284825,
+            -0.0207840423
+          ],
+          [
+            7.564002436825,
+            -0.01375582614
+          ],
+          [
+            7.565530942825,
+            -0.006778705752
+          ],
+          [
+            7.566695518825,
+            0.0
+          ],
+          [
+            -0.1232909531748,
+            0.0
+          ]
+        ],
+        "speed_m_per_s": 2.19663,
+        "surface_tension_n_per_m": 0.0
+      },
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "peak_aggregate_rss_bytes": 893050880,
+      "projected_full_seconds": 5210.301570594311,
+      "ranks": 8,
+      "requested_velocity_m_per_s": 2.1966335492849054,
+      "return_code": 0,
+      "seconds_per_iteration": 0.20841206282377242,
+      "timed_start_started_at": "2026-10-14T11:20:20.599418+00:00",
+      "velocity_m_per_s": 2.19663
+    },
+    {
+      "available_memory_bytes_before": 59121741824,
+      "cells": 915357,
+      "completed_iterations": 100,
+      "criterion_recorded_at": "2026-10-14T11:27:06.812293+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "face_resolution": {
+        "area_ratio_1": 2.88,
+        "faces": 24211,
+        "limit_1": 8.0,
+        "maximum_face_area_m2": 0.001057,
+        "mean_face_area_m2": 0.000393,
+        "source_sha256": "c0b14f6b959835a1721dd5c6daf2cf56e7521171f83045b050eb5353b792f4ef",
+        "target_cell_length_m": 0.01915
+      },
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 100,
+      "lateral_reference_divisions": 20,
+      "measured_wall_seconds": 232.68769888207316,
+      "memory_fits": true,
+      "mesh": "medium",
+      "mesh_scale": 1.0,
+      "model_basis": {
+        "air_density_kg_per_m3": 1.0,
+        "air_kinematic_viscosity_m2_per_s": 1.48e-05,
+        "area_m2": 9.4379,
+        "beam_m": 1.019,
+        "case_gravity_m_per_s2": 9.81,
+        "density_kg_per_m3": 998.8,
+        "domain_bounds_m": {
+          "x": [
+            -31.8599,
+            19.6061
+          ],
+          "y": [
+            -23.2822,
+            0.0
+          ],
+          "z": [
+            -19.6061,
+            4.90152
+          ]
+        },
+        "draft_m": 0.3418,
+        "executed_froude": 0.25995518270129314,
+        "executed_reynolds": 13999974.709946323,
+        "geometry_bounds_m": {
+          "x": [
+            -0.1232909531748,
+            7.566695518825
+          ],
+          "y": [
+            -0.5095092786,
+            0.5095092786
+          ],
+          "z": [
+            -0.04279581393734,
+            0.4319071994627
+          ]
+        },
+        "input_basis": "assumed, based on previous experience; retained model geometry and case configuration",
+        "kinematic_viscosity_m2_per_s": 1.14203e-06,
+        "lpp_m": 7.2786,
+        "nominal_froude": 0.26,
+        "plan_envelope_xy_m": [
+          [
+            -0.1232909531748,
+            -0.491887788
+          ],
+          [
+            -0.1122274811748,
+            -0.4928776776
+          ],
+          [
+            -0.1008000791748,
+            -0.4938748458
+          ],
+          [
+            -0.0888631751748,
+            -0.4948647354
+          ],
+          [
+            -0.0764895551748,
+            -0.4958473464
+          ],
+          [
+            -0.0636064331748,
+            -0.4968226788
+          ],
+          [
+            -0.0501410231748,
+            -0.4978125684
+          ],
+          [
+            -0.0361661111748,
+            -0.4987951794
+          ],
+          [
+            -0.0216816971748,
+            -0.4997777904
+          ],
+          [
+            -0.0066149951748,
+            -0.5007385656
+          ],
+          [
+            0.009106780825199,
+            -0.5016556692
+          ],
+          [
+            0.0254836308252,
+            -0.5025582156
+          ],
+          [
+            0.0424427688252,
+            -0.5034534834
+          ],
+          [
+            0.0601297668252,
+            -0.5042905224
+          ],
+          [
+            0.0785446248252,
+            -0.5050911684
+          ],
+          [
+            0.0976873428252,
+            -0.5058481428
+          ],
+          [
+            0.1168300608252,
+            -0.5065032168
+          ],
+          [
+            0.1352449188252,
+            -0.5070563904
+          ],
+          [
+            0.1529319168252,
+            -0.507536778
+          ],
+          [
+            0.1699638408252,
+            -0.507937101
+          ],
+          [
+            0.1862679048252,
+            -0.5082791952
+          ],
+          [
+            0.2020624668252,
+            -0.5085703392
+          ],
+          [
+            0.2171291688252,
+            -0.5087886972
+          ],
+          [
+            0.2457340668252,
+            -0.5091453486
+          ],
+          [
+            0.2591266908252,
+            -0.5092545276
+          ],
+          [
+            0.2720825988252,
+            -0.5093491494
+          ],
+          [
+            0.2845290048252,
+            -0.509429214
+          ],
+          [
+            0.2964659088252,
+            -0.5094728856
+          ],
+          [
+            0.3079660968252,
+            -0.5095092786
+          ],
+          [
+            5.088550576825,
+            -0.509502
+          ],
+          [
+            5.190305404825,
+            -0.5094947214
+          ],
+          [
+            5.286018994825,
+            -0.5090143338
+          ],
+          [
+            5.378020498825,
+            -0.5073766488
+          ],
+          [
+            5.466528274825,
+            -0.5040576072
+          ],
+          [
+            5.551469536825,
+            -0.4988097366
+          ],
+          [
+            5.632989856825,
+            -0.4917858876
+          ],
+          [
+            5.711234806825,
+            -0.4833427116
+          ],
+          [
+            5.786277172825,
+            -0.4737422382
+          ],
+          [
+            5.858262526825,
+            -0.4632610542
+          ],
+          [
+            5.927336440825,
+            -0.452146632
+          ],
+          [
+            5.993571700825,
+            -0.440464479
+          ],
+          [
+            6.057041092825,
+            -0.4282437096
+          ],
+          [
+            6.117890188825,
+            -0.4154406522
+          ],
+          [
+            6.176191774825,
+            -0.4020771426
+          ],
+          [
+            6.232018636825,
+            -0.388204131
+          ],
+          [
+            7.497767176825,
+            -0.06840646638
+          ],
+          [
+            7.507811644825,
+            -0.06510998844
+          ],
+          [
+            7.517564968825,
+            -0.06110457486
+          ],
+          [
+            7.526372074825,
+            -0.05675051634
+          ],
+          [
+            7.534305748825,
+            -0.05185129068
+          ],
+          [
+            7.541729920825,
+            -0.04638069492
+          ],
+          [
+            7.548062302825,
+            -0.04054762488
+          ],
+          [
+            7.553594038825,
+            -0.03430258608
+          ],
+          [
+            7.558106770825,
+            -0.02769070584
+          ],
+          [
+            7.561673284825,
+            -0.0207840423
+          ],
+          [
+            7.564002436825,
+            -0.01375582614
+          ],
+          [
+            7.565530942825,
+            -0.006778705752
+          ],
+          [
+            7.566695518825,
+            0.0
+          ],
+          [
+            -0.1232909531748,
+            0.0
+          ]
+        ],
+        "speed_m_per_s": 2.19663,
+        "surface_tension_n_per_m": 0.0
+      },
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "peak_aggregate_rss_bytes": 2691928064,
+      "projected_full_seconds": 58171.924720518284,
+      "ranks": 8,
+      "requested_velocity_m_per_s": 2.1966335492849054,
+      "return_code": 0,
+      "seconds_per_iteration": 2.3268769888207315,
+      "timed_start_started_at": "2026-10-14T11:27:06.812350+00:00",
+      "velocity_m_per_s": 2.19663
+    },
+    {
+      "available_memory_bytes_before": 58707357696,
+      "cells": 7194074,
+      "completed_iterations": 100,
+      "criterion_recorded_at": "2026-10-14T12:49:35.048389+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "face_resolution": {
+        "area_ratio_1": 4.69,
+        "faces": 95717,
+        "limit_1": 8.0,
+        "maximum_face_area_m2": 0.0004296,
+        "mean_face_area_m2": 9.845e-05,
+        "source_sha256": "c65fd3200f71eb9cd85b855e8b4ed0060ee9ac141284d5262cbc6b6c88a7471a",
+        "target_cell_length_m": 0.009573
+      },
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 100,
+      "lateral_reference_divisions": 20,
+      "measured_wall_seconds": 2716.0701515860856,
+      "memory_fits": true,
+      "mesh": "fine",
+      "mesh_scale": 2.0,
+      "model_basis": {
+        "air_density_kg_per_m3": 1.0,
+        "air_kinematic_viscosity_m2_per_s": 1.48e-05,
+        "area_m2": 9.4379,
+        "beam_m": 1.019,
+        "case_gravity_m_per_s2": 9.81,
+        "density_kg_per_m3": 998.8,
+        "domain_bounds_m": {
+          "x": [
+            -31.8599,
+            19.6061
+          ],
+          "y": [
+            -23.2822,
+            0.0
+          ],
+          "z": [
+            -19.6061,
+            4.90152
+          ]
+        },
+        "draft_m": 0.3418,
+        "executed_froude": 0.25995518270129314,
+        "executed_reynolds": 13999974.709946323,
+        "geometry_bounds_m": {
+          "x": [
+            -0.1232909531748,
+            7.566695518825
+          ],
+          "y": [
+            -0.5095092786,
+            0.5095092786
+          ],
+          "z": [
+            -0.04279581393734,
+            0.4319071994627
+          ]
+        },
+        "input_basis": "assumed, based on previous experience; retained model geometry and case configuration",
+        "kinematic_viscosity_m2_per_s": 1.14203e-06,
+        "lpp_m": 7.2786,
+        "nominal_froude": 0.26,
+        "plan_envelope_xy_m": [
+          [
+            -0.1232909531748,
+            -0.491887788
+          ],
+          [
+            -0.1122274811748,
+            -0.4928776776
+          ],
+          [
+            -0.1008000791748,
+            -0.4938748458
+          ],
+          [
+            -0.0888631751748,
+            -0.4948647354
+          ],
+          [
+            -0.0764895551748,
+            -0.4958473464
+          ],
+          [
+            -0.0636064331748,
+            -0.4968226788
+          ],
+          [
+            -0.0501410231748,
+            -0.4978125684
+          ],
+          [
+            -0.0361661111748,
+            -0.4987951794
+          ],
+          [
+            -0.0216816971748,
+            -0.4997777904
+          ],
+          [
+            -0.0066149951748,
+            -0.5007385656
+          ],
+          [
+            0.009106780825199,
+            -0.5016556692
+          ],
+          [
+            0.0254836308252,
+            -0.5025582156
+          ],
+          [
+            0.0424427688252,
+            -0.5034534834
+          ],
+          [
+            0.0601297668252,
+            -0.5042905224
+          ],
+          [
+            0.0785446248252,
+            -0.5050911684
+          ],
+          [
+            0.0976873428252,
+            -0.5058481428
+          ],
+          [
+            0.1168300608252,
+            -0.5065032168
+          ],
+          [
+            0.1352449188252,
+            -0.5070563904
+          ],
+          [
+            0.1529319168252,
+            -0.507536778
+          ],
+          [
+            0.1699638408252,
+            -0.507937101
+          ],
+          [
+            0.1862679048252,
+            -0.5082791952
+          ],
+          [
+            0.2020624668252,
+            -0.5085703392
+          ],
+          [
+            0.2171291688252,
+            -0.5087886972
+          ],
+          [
+            0.2457340668252,
+            -0.5091453486
+          ],
+          [
+            0.2591266908252,
+            -0.5092545276
+          ],
+          [
+            0.2720825988252,
+            -0.5093491494
+          ],
+          [
+            0.2845290048252,
+            -0.509429214
+          ],
+          [
+            0.2964659088252,
+            -0.5094728856
+          ],
+          [
+            0.3079660968252,
+            -0.5095092786
+          ],
+          [
+            5.088550576825,
+            -0.509502
+          ],
+          [
+            5.190305404825,
+            -0.5094947214
+          ],
+          [
+            5.286018994825,
+            -0.5090143338
+          ],
+          [
+            5.378020498825,
+            -0.5073766488
+          ],
+          [
+            5.466528274825,
+            -0.5040576072
+          ],
+          [
+            5.551469536825,
+            -0.4988097366
+          ],
+          [
+            5.632989856825,
+            -0.4917858876
+          ],
+          [
+            5.711234806825,
+            -0.4833427116
+          ],
+          [
+            5.786277172825,
+            -0.4737422382
+          ],
+          [
+            5.858262526825,
+            -0.4632610542
+          ],
+          [
+            5.927336440825,
+            -0.452146632
+          ],
+          [
+            5.993571700825,
+            -0.440464479
+          ],
+          [
+            6.057041092825,
+            -0.4282437096
+          ],
+          [
+            6.117890188825,
+            -0.4154406522
+          ],
+          [
+            6.176191774825,
+            -0.4020771426
+          ],
+          [
+            6.232018636825,
+            -0.388204131
+          ],
+          [
+            7.497767176825,
+            -0.06840646638
+          ],
+          [
+            7.507811644825,
+            -0.06510998844
+          ],
+          [
+            7.517564968825,
+            -0.06110457486
+          ],
+          [
+            7.526372074825,
+            -0.05675051634
+          ],
+          [
+            7.534305748825,
+            -0.05185129068
+          ],
+          [
+            7.541729920825,
+            -0.04638069492
+          ],
+          [
+            7.548062302825,
+            -0.04054762488
+          ],
+          [
+            7.553594038825,
+            -0.03430258608
+          ],
+          [
+            7.558106770825,
+            -0.02769070584
+          ],
+          [
+            7.561673284825,
+            -0.0207840423
+          ],
+          [
+            7.564002436825,
+            -0.01375582614
+          ],
+          [
+            7.565530942825,
+            -0.006778705752
+          ],
+          [
+            7.566695518825,
+            0.0
+          ],
+          [
+            -0.1232909531748,
+            0.0
+          ]
+        ],
+        "speed_m_per_s": 2.19663,
+        "surface_tension_n_per_m": 0.0
+      },
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "peak_aggregate_rss_bytes": 16009441280,
+      "projected_full_seconds": 679017.5378965214,
+      "ranks": 8,
+      "requested_velocity_m_per_s": 2.1966335492849054,
+      "return_code": 0,
+      "seconds_per_iteration": 27.160701515860854,
+      "timed_start_started_at": "2026-10-14T12:49:35.048458+00:00",
+      "velocity_m_per_s": 2.19663
+    }
+  ],
+  "schema_version": 1
+}
