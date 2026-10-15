@@ -262,6 +262,10 @@ modules:
     owner_wiki: docs/domains/solvers/
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
+    submodules:
+      orcaflex/modular_generator:
+        agent_pack: src/digitalmodel/solvers/orcaflex/modular_generator/docs/agent-pack.md
+        qa_family: MR
   - module: specialized
     entry_point: src/digitalmodel/specialized/
     maturity: stub
