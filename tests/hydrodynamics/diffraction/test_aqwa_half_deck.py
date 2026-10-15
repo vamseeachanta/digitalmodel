@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Solver-free text checks for an xz-symmetric AQWA half-deck."""
 
 import hashlib
@@ -132,17 +135,112 @@ def test_half_deck_reports_straddling_panels(tmp_path, deck):
         getattr(AQWABackend(), f"build_deck{deck}")(spec)
 
 
-def test_plane_panels_and_triangles_keep_connectivity(tmp_path):
+def test_plane_panels_are_rejected(tmp_path):
     panels = _box_panels()
-    panels[6, 3] = panels[6, 2]
     plane = np.array([[(0, 0, -1), (1, 0, -1), (1, 0, 0), (0, 0, 0)]])
     spec = _spec(tmp_path, panels=np.concatenate([panels, plane]))
+    with pytest.raises(ValueError, match=r"plane.*13"):
+        AQWABackend().build_deck2(spec)
+
+
+def test_mirrored_triangles_allow_different_repeated_corners(tmp_path):
+    panels = np.array([
+        [(0, 0, -1), (1, 0, -1), (0, 1, -1), (0, 1, -1)],
+        [(0, 0, -1), (0, -1, -1), (1, 0, -1), (0, 0, -1)],
+    ], dtype=float)
+    spec = _spec(tmp_path, panels=panels)
     backend = AQWABackend()
-    deck2 = backend.build_deck2(spec)
-    assert len(_elements(deck2)) == 7
-    assert sum("TPPL DIFF" in line for line in deck2) == 1
+    cards = backend.build_deck2(spec)
+    assert sum("TPPL DIFF" in line for line in cards) == 1
     nodes = _nodes(backend.build_deck1(spec))
-    assert all(node in nodes for panel in _elements(deck2) for node in panel)
+    assert all(node in nodes for panel in _elements(cards) for node in panel)
+
+
+@pytest.mark.parametrize("half_only", [False, True])
+def test_unmatched_mirror_panels_are_rejected(tmp_path, half_only):
+    panels = _box_panels()
+    if half_only:
+        panels = panels[np.all(panels[:, :, 1] >= 0, axis=1)]
+    else:
+        panels[0, 0, 0] -= 0.1
+    with pytest.raises(ValueError, match=r"unmatched.*[1-9]"):
+        AQWABackend().build_deck2(_spec(tmp_path, panels=panels))
+
+
+@pytest.mark.parametrize("offset, accepted", [(-0.00032717, True), (-0.01, False)])
+def test_body_relative_plane_tolerance(tmp_path, offset, accepted):
+    panels = _box_panels()
+    panels[:, :, 0] *= 45  # 4 m * 45 = 180 m body length.
+    # Move one shared centreline node, consistently in every incident panel.
+    moved = np.all(panels == [-90, 0, -1], axis=2)
+    panels[:, :, 1][moved] = offset
+    spec = _spec(tmp_path, panels=panels)
+    if accepted:
+        nodes = _nodes(AQWABackend().build_deck1(spec))
+        assert (-90.0, 0.0, -1.0) in nodes.values()
+    else:
+        with pytest.raises(ValueError, match="straddling"):
+            AQWABackend().build_deck1(spec)
+
+
+def _hydrostatic_sums(vertices, panels):
+    """Volume = sum(z n_z A); waterplane = abs(sum(n_z A))."""
+    points = vertices[panels]
+    area_vectors = (
+        np.cross(points[:, 1] - points[:, 0], points[:, 2] - points[:, 0])
+        + np.cross(points[:, 2] - points[:, 0], points[:, 3] - points[:, 0])
+    ) / 2
+    return np.array([
+        np.sum(points[:, :, 2].mean(axis=1) * area_vectors[:, 2]),
+        abs(np.sum(area_vectors[:, 2])),
+    ])
+
+
+def test_half_volume_and_waterplane_recover_full_body(tmp_path):
+    spec = _spec(tmp_path)
+    backend = AQWABackend()
+    full = backend._load_mesh(spec.vessel.geometry.mesh_file)
+    half = backend._load_body_mesh(spec.vessel.geometry)
+    full_sums = _hydrostatic_sums(full.vertices, full.panels)
+    assert full_sums == pytest.approx([8, 8])
+    assert 2 * _hydrostatic_sums(half.vertices, half.panels) == pytest.approx(full_sums)
+
+
+def test_committed_offset_box_requires_full_deck(tmp_path):
+    root = Path(__file__).resolve().parents[3]
+    spec = DiffractionSpec.from_yaml(
+        root / "examples/workflows/aqwa-diffraction-deck-prep/spec.yml"
+    )
+    backend = AQWABackend()
+    backend._spec_dir = root / "examples/workflows/aqwa-diffraction-deck-prep"
+    mesh = backend._load_mesh(spec.vessel.geometry.mesh_file)
+    assert _hydrostatic_sums(mesh.vertices, mesh.panels) == pytest.approx([1, 1])
+    cards = backend.build_deck2(spec)
+    assert not any("SYMX" in line for line in cards)
+    assert len(_elements(cards)) == 5
+    spec.vessel.geometry.symmetry = "xz"
+    with pytest.raises(ValueError):
+        backend.build_deck2(spec)
+
+
+@pytest.mark.parametrize("headings, expected", [
+    ([10.1, -10.1], [0, 10.1, 180]),
+    ([-30.3, 30.3], [0, 30.3, 180]),
+    ([180.00000001], [0, 180]),
+])
+def test_folded_dirn_values_are_unique(tmp_path, headings, expected):
+    spec = _spec(tmp_path)
+    spec.wave_headings.values = headings
+    cards = AQWABackend().build_deck6(spec)
+    values = [float(line.split()[-1]) for line in cards if "DIRN" in line]
+    assert values == expected
+
+
+def test_dirn_precision_collision_is_rejected(tmp_path):
+    spec = _spec(tmp_path)
+    spec.wave_headings.values = [10.123451, 10.123452]
+    with pytest.raises(ValueError, match="unique after DIRN formatting"):
+        AQWABackend().build_deck6(spec)
 
 
 @pytest.mark.parametrize("heading_symmetry", [False, True])

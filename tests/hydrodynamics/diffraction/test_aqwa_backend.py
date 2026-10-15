@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for the AQWA backend that generates .dat files from DiffractionSpec.
 
 WRK-058: TDD tests define the expected behavior of the AQWABackend class.
@@ -612,6 +615,8 @@ class TestGDFPanelValidation:
         )
 
         spec = _load_ship_spec()
+        # A single synthetic panel tests card connectivity, not body symmetry.
+        spec.vessel.geometry.symmetry = "none"
         mesh_file = spec.get_bodies()[0].vessel.geometry.mesh_file
         backend = AQWABackend()
         backend._mesh_cache[mesh_file] = ParsedMesh(
@@ -635,6 +640,8 @@ class TestGDFPanelValidation:
         )
 
         spec = _load_ship_spec()
+        # This synthetic panel is a full, asymmetric mesh.
+        spec.vessel.geometry.symmetry = "none"
         mesh_file = spec.get_bodies()[0].vessel.geometry.mesh_file
         backend = AQWABackend()
         backend._mesh_cache[mesh_file] = ParsedMesh(

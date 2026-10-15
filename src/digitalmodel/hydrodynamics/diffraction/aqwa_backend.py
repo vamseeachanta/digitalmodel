@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """AQWA input backend: convert DiffractionSpec to AQWA .dat files (WRK-058).
 
 Supports two output modes:
@@ -20,6 +23,7 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
+from scipy.spatial import cKDTree
 
 from digitalmodel.hydrodynamics.diffraction.diffraction_units import rad_per_s_to_hz
 from digitalmodel.hydrodynamics.diffraction.input_schemas import (
@@ -44,10 +48,12 @@ class ParsedMesh:
 
     @property
     def n_vertices(self) -> int:
+        """Return the mesh node count."""
         return len(self.vertices)
 
     @property
     def n_panels(self) -> int:
+        """Return the mesh panel count."""
         return len(self.panels)
 
 
@@ -58,8 +64,12 @@ class ParsedMesh:
 # AQWA uses a large depth to represent "infinite" / deep water
 _DEEP_WATER_DEPTH = 10000.0
 
-# Mesh coordinates are in metres; snap symmetry-plane roundoff within 10 nm.
-_XZ_PLANE_TOLERANCE = 1e-8
+# Two parts per million of the longitudinal mesh extent allow submillimetre
+# centreline roundoff on long hulls: 180 m * 2e-6 = 0.00036 m. The floor retains
+# the previous 10 nm resolution for degenerate longitudinal extents. This is
+# a mesh-preparation tolerance, not a solver accuracy claim.
+_XZ_RELATIVE_TOLERANCE = 2e-6
+_XZ_MIN_TOLERANCE = 1e-8
 
 # Column-formatting helpers (mirrors aqwa_dat_files.py white_space convention)
 _WS = " "
@@ -110,7 +120,7 @@ def _fmt_coord(value: float) -> str:
         if "." not in m:
             m += "."
         candidates.append(f"{m}e{int(ex)}")
-    fitting = [s for s in candidates if len(s) <= 10]
+    fitting = [s for s in candidates if len(s) <= 9]
     best = min(fitting, key=lambda s: (abs(float(s) - value), len(s)))
     return f"{best:>10s}"
 
@@ -156,6 +166,7 @@ class AQWABackend:
     """
 
     def __init__(self) -> None:
+        """Initialize the mesh cache and relative-path context."""
         self._spec_dir: Optional[Path] = None
         self._mesh_cache: dict[str, ParsedMesh] = {}
 
@@ -327,17 +338,28 @@ class AQWABackend:
         return mesh
 
     def _load_body_mesh(self, geometry: VesselGeometry) -> Optional[ParsedMesh]:
-        """Use the same compact half-mesh in the coordinate and element decks."""
+        """Verify a full xz body before emitting its compact nonnegative half.
+
+        Classification, mirror matching and centreline snapping use the same
+        tolerance: max(1e-8 m, 2e-6 times the longitudinal mesh extent).
+        The cached source coordinates remain unchanged.
+        """
         mesh = self._load_mesh(geometry.mesh_file)
         if mesh is None or geometry.symmetry != "xz":
             return mesh
 
+        tolerance = max(
+            _XZ_MIN_TOLERANCE,
+            _XZ_RELATIVE_TOLERANCE * float(np.ptp(mesh.vertices[:, 0])),
+        )
         panel_y = mesh.vertices[mesh.panels, 1]
-        below = np.any(panel_y < -_XZ_PLANE_TOLERANCE, axis=1)
-        above = np.any(panel_y > _XZ_PLANE_TOLERANCE, axis=1)
-        # Keep panels wholly on y >= 0, including panels on the plane. A panel
-        # straddling both sides beyond tolerance is rejected, never clipped or
-        # selected by its centroid: the mesh must first be split at y = 0.
+        below = np.any(panel_y < -tolerance, axis=1)
+        above = np.any(panel_y > tolerance, axis=1)
+        plane = np.flatnonzero(~below & ~above)
+        if len(plane):
+            numbers = ", ".join(str(int(index) + 1) for index in plane)
+            raise ValueError(f"xz symmetry forbids panels in the y = 0 plane: {numbers}")
+        # A full body must be split at y = 0 before halving; no clipping.
         straddling = np.flatnonzero(below & above)
         if len(straddling):
             panel_numbers = ", ".join(str(int(index) + 1) for index in straddling)
@@ -345,19 +367,52 @@ class AQWABackend:
                 "xz symmetry requires panels split at y = 0; "
                 f"straddling panels: {panel_numbers}"
             )
+        self._verify_xz_mirrors(mesh, tolerance)
         panels = mesh.panels[~below]
         if not len(panels):
             raise ValueError("xz symmetry mesh has no nonnegative-y panels")
 
         used_nodes, remapped = np.unique(panels, return_inverse=True)
         vertices = mesh.vertices[used_nodes].copy()
-        on_plane = np.abs(vertices[:, 1]) <= _XZ_PLANE_TOLERANCE
+        on_plane = np.abs(vertices[:, 1]) <= tolerance
         vertices[on_plane, 1] = 0.0
         return ParsedMesh(
             vertices=vertices,
             panels=remapped.reshape(panels.shape),
             name=mesh.name,
         )
+
+    @staticmethod
+    def _verify_xz_mirrors(mesh: ParsedMesh, tolerance: float) -> None:
+        """Reject full-body panels without a reflected vertex-set counterpart."""
+        vertices = mesh.vertices.copy()
+        # Snap only the comparison copy, using the classification tolerance.
+        vertices[np.abs(vertices[:, 1]) <= tolerance, 1] = 0.0
+        # GDF triangles repeat a corner; that corner may differ on the mirror.
+        points = [np.unique(vertices[panel], axis=0) for panel in mesh.panels]
+        centres = np.array([panel.mean(axis=0) for panel in points])
+        tree = cKDTree(centres)
+        unmatched = []
+        for index, panel in enumerate(points):
+            mirror = panel * [1, -1, 1]
+            candidates = tree.query_ball_point(mirror.mean(axis=0), tolerance * math.sqrt(3))
+            if not any(
+                candidate != index and AQWABackend._same_vertex_set(
+                    mirror, points[candidate], tolerance
+                ) for candidate in candidates
+            ):
+                unmatched.append(index + 1)
+        if unmatched:
+            numbers = ", ".join(map(str, unmatched))
+            raise ValueError(f"xz symmetry requires a full mirrored body; unmatched panels: {numbers}")
+
+    @staticmethod
+    def _same_vertex_set(first: np.ndarray, second: np.ndarray, tolerance: float) -> bool:
+        """Match each distinct vertex to a counterpart within the coordinate tolerance."""
+        if len(first) != len(second):
+            return False
+        close = np.all(np.abs(first[:, None, :] - second[None, :, :]) <= tolerance, axis=2)
+        return bool(np.all(np.any(close, axis=0)) and np.all(np.any(close, axis=1)))
 
     def _parse_gdf(self, file_path: Path) -> ParsedMesh:
         """Parse a WAMIT GDF mesh file.
@@ -881,7 +936,7 @@ class AQWABackend:
         existing full-range endpoint convention.
         """
         if symmetry:
-            folded = {min(h % 360, 360 - h % 360) for h in headings}
+            folded = {round(min(h % 360, 360 - h % 360), 6) for h in headings}
             return sorted(folded | {0, 180})
 
         h_set = set(headings)
@@ -930,8 +985,11 @@ class AQWABackend:
             body.vessel.geometry.symmetry == "xz" for body in spec.get_bodies()
         )
         aqwa_headings = self._expand_headings_for_aqwa(headings, symmetry=symmetry)
-        for i, heading_deg in enumerate(aqwa_headings, start=1):
-            heading_str = f"{heading_deg:>10g}"
+        heading_strings = [f"{heading:g}" for heading in aqwa_headings]
+        if len(heading_strings) != len(set(heading_strings)):
+            raise ValueError("AQWA headings must be unique after DIRN formatting")
+        for i, heading in enumerate(heading_strings, start=1):
+            heading_str = f"{heading:>10s}"
             cards.append(f"{_WS:>5s}1DIRN{i:>5d}{i:>5d}{heading_str}")
 
         cards.append(" END")

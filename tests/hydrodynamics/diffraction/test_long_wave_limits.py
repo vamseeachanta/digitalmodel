@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Long-wave (low-frequency) closed-form limits of free-floating body RAOs.
 
 The comparators are textbook results; each test states the expected value from
@@ -86,9 +89,8 @@ class TestExpectedRao:
         assert expected_rao("roll", self.omega, 90.0, self.h, G, natural_frequency=0.18) == pytest.approx(
             k / (1.0 - (self.omega / 0.18) ** 2))
 
-    def test_rotation_needs_natural_frequency(self):
-        with pytest.raises(ValueError):
-            expected_rao("roll", self.omega, 90.0, self.h, G)
+    def test_rotation_without_amplification_is_pure_wave_slope(self):
+        assert expected_rao("roll", self.omega, 90.0, self.h, G) == pytest.approx(self.k())
 
     def test_yaw_approximation(self):
         k = self.k()
@@ -102,18 +104,45 @@ class TestExpectedRao:
 
 class TestJudge:
     def test_within_tolerance_is_not_implausible(self):
-        c = judge(observed=1.01, expected=1.0, tolerance=0.02)
+        c = judge(observed=1.01, expected=1.0, tolerance=0.02,
+                  body_length=10, omega=0.05, depth=500)
         assert isinstance(c, LongWaveCheck)
         assert c.verdict == "not_implausible"
         assert c.relative_difference == pytest.approx(0.01)
 
     def test_outside_tolerance_is_implausible(self):
-        assert judge(observed=1.05, expected=1.0, tolerance=0.02).verdict == "implausible"
+        assert judge(observed=1.05, expected=1.0, tolerance=0.02,
+                     body_length=10, omega=0.05, depth=500).verdict == "implausible"
 
     def test_boundary_and_sign(self):
-        assert judge(observed=0.98, expected=1.0, tolerance=0.02).verdict == "not_implausible"
-        assert judge(observed=0.97, expected=1.0, tolerance=0.02).relative_difference == pytest.approx(-0.03)
+        assert judge(observed=0.98, expected=1.0, tolerance=0.02,
+                     body_length=10, omega=0.05, depth=500).verdict == "not_implausible"
+        assert judge(observed=0.97, expected=1.0, tolerance=0.02,
+                     body_length=10, omega=0.05, depth=500).relative_difference == pytest.approx(-0.03)
 
-    def test_expected_zero_rejected(self):
+    def test_expected_zero_needs_absolute_tolerance(self):
         with pytest.raises(ValueError):
-            judge(observed=0.0, expected=0.0, tolerance=0.02)
+            judge(observed=0.0, expected=0.0, tolerance=0.02,
+                  body_length=10, omega=0.05, depth=500)
+
+    @pytest.mark.parametrize("observed, verdict", [(0, "not_implausible"),
+                                                   (0.01, "not_implausible"),
+                                                   (0.02, "implausible")])
+    def test_zero_comparator_absolute_path(self, observed, verdict):
+        check = judge(observed, 0, 0.02, body_length=10, omega=0.05,
+                      depth=500, absolute_tolerance=0.01)
+        assert check.verdict == verdict
+        assert check.relative_difference is None
+
+    def test_short_wave_is_not_applicable(self):
+        check = judge(1, 1, 0.02, body_length=180, omega=1, depth=500)
+        assert check.verdict == "not_applicable"
+        assert check.relative_difference is None
+
+    @pytest.mark.parametrize("multiple, verdict", [(9, "not_applicable"),
+                                                   (11, "not_implausible")])
+    def test_wavelength_must_exceed_ten_body_lengths(self, multiple, verdict):
+        length = 180
+        omega = math.sqrt(G * 2 * math.pi / (multiple * length))
+        assert judge(1, 1, 0.02, body_length=length, omega=omega,
+                     depth=math.inf).verdict == verdict

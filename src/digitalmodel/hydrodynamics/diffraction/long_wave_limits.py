@@ -1,15 +1,22 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Closed-form long-wave limits of free-floating body motion RAOs.
 
 As the wave frequency tends to zero, a free-floating body follows the water surface:
 
 - heave tends to the vertical particle excursion at the surface, 1 per unit wave amplitude;
 - surge and sway tend to the horizontal particle excursion at the surface, coth(kh) per unit
-  amplitude in water of depth h, resolved on the heading (cos and sin);
-- pitch and roll tend to the wave slope k, resolved on the heading, amplified quasi-statically
-  by 1/|1 - (w/wn)^2| as the frequency approaches the mode's natural frequency wn;
-- yaw is approximated by a rigid body following the horizontal particle-excursion field,
-  k coth(kh) |sin(beta) cos(beta)|. This neglects the difference between the hull's yaw inertia
-  and that of the displaced water, so it is an approximate comparator only.
+  amplitude in water of depth h, resolved on the heading (cos and sin), for a small body
+  whose draft is small relative to the depth or with kh much smaller than one;
+- pitch and roll tend to the wave slope k, resolved on the heading. Optional amplification
+  by 1/|1 - (w/wn)^2| assumes an undamped oscillator driven only by the hydrostatic
+  wave-slope moment. It omits inertial excitation, effective-slope reduction and sway-roll /
+  surge-pitch coupling, all of the same order as that correction. Heave uses the pure limit;
+- yaw uses the slender-body assumption: sections along x follow the local sway excursion,
+  giving k coth(kh) |sin(beta) cos(beta)|, tending to |sin(beta) cos(beta)|/h at finite depth.
+  A body symmetric in plan following an irrotational excursion field has zero long-wave
+  yaw instead. The slender-body value is an approximate comparator only.
 
 These are plausibility comparators of the ``closed-form`` class for low-frequency results of a
 diffraction program. A result inside the tolerance is ``not_implausible``; it is not validated.
@@ -66,8 +73,9 @@ def expected_rao(mode: str, omega: float, heading_deg: float, depth: float,
                  gravity: float = 9.80665, natural_frequency: float | None = None) -> float:
     """Long-wave limit of the RAO magnitude for ``mode`` (per metre of wave amplitude).
 
-    Translations are dimensionless (m/m); rotations are in rad/m. ``natural_frequency`` (rad/s)
-    is required for roll and pitch.
+    Translations are dimensionless (m/m); rotations are in rad/m. Providing
+    ``natural_frequency`` (rad/s) opts roll/pitch into the hydrostatic-moment-only
+    oscillator approximation described above. Otherwise the pure slope limit is returned.
     """
     beta = math.radians(heading_deg)
     k = wavenumber(omega, depth, gravity)
@@ -79,10 +87,12 @@ def expected_rao(mode: str, omega: float, heading_deg: float, depth: float,
     if mode == "sway":
         return coth * abs(math.sin(beta))
     if mode in _ROTATIONS:
-        if natural_frequency is None:
-            raise ValueError(f"{mode} needs the mode's natural frequency for the amplification")
         factor = abs(math.sin(beta)) if mode == "roll" else abs(math.cos(beta))
-        return k * factor * dynamic_amplification(omega, natural_frequency)
+        amplification = (
+            1.0 if natural_frequency is None
+            else dynamic_amplification(omega, natural_frequency)
+        )
+        return k * factor * amplification
     if mode == "yaw":
         return k * coth * abs(math.sin(beta) * math.cos(beta))
     raise ValueError(f"unknown mode {mode!r}")
@@ -90,17 +100,45 @@ def expected_rao(mode: str, omega: float, heading_deg: float, depth: float,
 
 @dataclass(frozen=True)
 class LongWaveCheck:
+    """Comparator result; an inapplicable or zero comparison has no relative difference."""
+
     observed: float
     expected: float
     tolerance: float
-    relative_difference: float
-    verdict: str  # "not_implausible" or "implausible"
+    relative_difference: float | None
+    verdict: str  # "not_applicable", "not_implausible" or "implausible"
+    absolute_tolerance: float | None = None
 
 
-def judge(observed: float, expected: float, tolerance: float) -> LongWaveCheck:
-    """Compare an observed RAO with its long-wave limit at a relative tolerance fixed in advance."""
-    if expected == 0.0 or not math.isfinite(expected):
-        raise ValueError("the expected value must be finite and non-zero for a relative check")
+def judge(observed: float, expected: float, tolerance: float, *,
+          body_length: float, omega: float, depth: float,
+          minimum_wavelength_ratio: float = 10.0,
+          absolute_tolerance: float | None = None) -> LongWaveCheck:
+    """Compare only when wavelength exceeds the stated multiple of body length.
+
+    The default screening criterion is wavelength > 10 body lengths (kL < 2*pi/10).
+    This is an explicit applicability screen, not an error bound; callers may fix a
+    stricter ratio in advance. ``body_length`` and ``depth`` are metres, ``omega``
+    is rad/s. A zero comparator requires ``absolute_tolerance`` in the RAO's units;
+    its relative difference is undefined and is returned as None.
+    """
+    inputs = (observed, expected, tolerance, body_length, minimum_wavelength_ratio)
+    if not all(math.isfinite(value) for value in inputs):
+        raise ValueError("comparison inputs must be finite")
+    if tolerance < 0 or body_length <= 0 or minimum_wavelength_ratio <= 1:
+        raise ValueError("tolerance must be nonnegative, length positive and wavelength ratio > 1")
+    if absolute_tolerance is not None and (
+        not math.isfinite(absolute_tolerance) or absolute_tolerance < 0
+    ):
+        raise ValueError("absolute tolerance must be finite and nonnegative")
+    wavelength = 2 * math.pi / wavenumber(omega, depth)
+    if wavelength <= minimum_wavelength_ratio * body_length:
+        return LongWaveCheck(observed, expected, tolerance, None, "not_applicable", absolute_tolerance)
+    if expected == 0.0:
+        if absolute_tolerance is None:
+            raise ValueError("a zero comparator requires an absolute tolerance")
+        verdict = "not_implausible" if abs(observed) <= absolute_tolerance else "implausible"
+        return LongWaveCheck(observed, expected, tolerance, None, verdict, absolute_tolerance)
     rel = (observed - expected) / expected
     verdict = "not_implausible" if abs(rel) <= tolerance + 1e-12 else "implausible"
     return LongWaveCheck(observed, expected, tolerance, rel, verdict)
