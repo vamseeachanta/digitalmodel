@@ -113,7 +113,7 @@ class LongWaveCheck:
     verdict: str  # "not_applicable", "not_implausible" or "implausible"
     absolute_tolerance: float | None = None
     reference_amplitude: float | None = None
-    basis: str | None = None  # relative or floor; None when not applicable
+    basis: str | None = None  # relative, floor or absolute; None when not applicable
 
 
 def judge(observed: float, expected: float, tolerance: float, *,
@@ -133,7 +133,8 @@ def judge(observed: float, expected: float, tolerance: float, *,
     for the same quantity across the compared headings at this period. It has
     the same units as the RAO; never derive it from observed values or errors.
 
-    Without a reference, nonzero comparators use relative error. An exact zero
+    Without a reference, nonzero comparators use the same larger-magnitude
+    relative allowance. An exact zero
     requires ``absolute_tolerance`` in RAO units instead. The two tolerance bases
     are mutually exclusive. ``relative_difference`` remains the signed difference
     divided by expected (None for zero), even when the reference sets the verdict.
@@ -172,7 +173,11 @@ def judge(observed: float, expected: float, tolerance: float, *,
         if absolute_tolerance is None:
             raise ValueError("a zero comparator requires an absolute tolerance")
         verdict = "not_implausible" if abs(observed) <= absolute_tolerance else "implausible"
-        return LongWaveCheck(observed, expected, tolerance, None, verdict, absolute_tolerance, basis="floor")
+        return LongWaveCheck(observed, expected, tolerance, None, verdict, absolute_tolerance, basis="absolute")
     rel = (observed - expected) / expected
-    verdict = "not_implausible" if abs(rel) <= tolerance + 1e-12 else "implausible"
+    difference = abs(observed - expected)
+    allowed = tolerance * max(abs(observed), abs(expected))
+    verdict = ("not_implausible" if difference <= allowed or math.isclose(
+                   difference, allowed, rel_tol=1e-12, abs_tol=0.0)
+               else "implausible")
     return LongWaveCheck(observed, expected, tolerance, rel, verdict, basis="relative")

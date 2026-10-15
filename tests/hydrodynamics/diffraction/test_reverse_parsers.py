@@ -1016,34 +1016,11 @@ class TestParseExistingOrcaWaveFile:
             OrcaWaveInputParser,
         )
 
-        example_path = Path(
-            "/mnt/github/workspace-hub/digitalmodel/docs/domains/orcawave"
-            "/examples/L01_default_vessel/L01 Default vessel.yml"
+        example_path = Path(__file__).resolve().parents[3] / (
+            "docs/domains/orcawave/examples/L01_default_vessel/L01 Default vessel.yml"
         )
-        if not example_path.exists():
-            pytest.skip("L01 Default vessel example not available")
-
-        parser = OrcaWaveInputParser()
-        result = parser.parse(example_path)
-
-        assert isinstance(result, DiffractionSpec)
-        assert result.vessel is not None
-        assert result.vessel.name == "Body1"
-        assert result.environment.water_depth == pytest.approx(400.0, rel=1e-3)
-        # OrcaWave density 1.025 t/m3 -> 1025 kg/m3
-        assert result.environment.water_density == pytest.approx(
-            1025.0, rel=1e-3
-        )
-        # 24 periods in the example
-        freqs = result.frequencies.to_frequencies_rad_s()
-        assert len(freqs) == 24
-        # 9 headings
-        headings = result.wave_headings.to_heading_list()
-        assert len(headings) == 9
-        # Body mass: 9017.95 tonnes -> 9017950 kg
-        assert result.vessel.inertia.mass == pytest.approx(
-            9017950.0, rel=1e-3
-        )
+        with pytest.raises(ValueError, match="symmetry"):
+            OrcaWaveInputParser().parse(example_path)
 
 
 @pytest.mark.parametrize("symmetry", ["xz plane", "yz plane", "xz and yz planes", "unknown"])
