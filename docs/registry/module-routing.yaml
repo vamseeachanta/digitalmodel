@@ -108,6 +108,10 @@ modules:
         qa_family: MR
   - module: fatigue
     entry_point: src/digitalmodel/fatigue/
+    submodules:
+      fatigue:
+        agent_pack: src/digitalmodel/fatigue/docs/agent-pack.md
+        qa_family: EC
     maturity: production
     owner_wiki: docs/domains/fatigue/
     key_tests: [tests/fatigue/]
