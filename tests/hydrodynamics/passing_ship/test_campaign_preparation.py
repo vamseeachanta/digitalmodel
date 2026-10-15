@@ -7,6 +7,7 @@ import copy
 from datetime import datetime
 import hashlib
 import json
+import math
 from pathlib import Path
 import subprocess
 import sys
@@ -29,10 +30,24 @@ def spec():
 
 def test_model_and_all_matrix_entries_validate():
     model = spec()
-    prepared = api().prepare_campaign(model, json.loads((DATA / "matrix.json").read_text()))
+    prepared = api().prepare_campaign(model, json.loads((DATA / "matrix.json").read_text()),
+                                      mooring_layout=json.loads((DATA / "model.json").read_text())["mooring_layout"])
     assert len(prepared) == 18
     assert len({p.name for p in prepared}) == 18
     assert len(model.moored_vessel.mooring_lines) == 4
+    record = json.loads((DATA / "model.json").read_text())
+    from digitalmodel.marine_ops.marine_analysis.catenary.simplified import SimplifiedCatenarySolver
+    solver = SimplifiedCatenarySolver()
+    for case in prepared:
+        for line in case.moored_vessel.mooring_lines:
+            sized = solver.solve_from_force(600000, record["mooring_layout"]["submerged_weight_n_m"],
+                                            case.environment.water_depth)
+            assert line.pretension == 600
+            assert line.length == pytest.approx(sized.arc_length)
+            reach = math.hypot(line.anchor_x - line.fairlead_x, line.anchor_y - line.fairlead_y)
+            assert reach == pytest.approx(sized.horizontal_distance)
+            assert line.length - reach < case.environment.water_depth
+            assert abs(line.anchor_y) < 30 - case.passing_ship.dimensions.beam / 2
 
 
 @pytest.mark.parametrize("field,value", [("water_depth", 1), ("angle_deg", 90), ("current_speed", 1)])
@@ -150,3 +165,78 @@ def test_builder_reproducible_manifest_and_revision(tmp_path):
     assert 'src=' not in page
     assert '<link' not in page
     assert manifest["qualified_benchmarks"] == 0
+
+
+def test_candidate_tolerances_cannot_override_frozen_criteria():
+    record = {"reference": [1, 0, 1], "relative_tolerance": 1,
+              "absolute_tolerance": [100, 100, 100]}
+    assert not api().compare_benchmark(record, [1.06, 0, 1])["passed"]
+    criteria = json.loads((DATA / "criteria.json").read_text())
+    assert criteria["quantities"] == ["Cx", "Cy", "Cm"]
+    assert criteria["definition"]["reference_series"] == "model tests"
+    assert all(value.startswith("positive maximum") for value in criteria["definition"]["peak_sign"].values())
+    assert criteria["definition"]["stagger_window"]["x_over_L_min"] == "not established"
+    basis = criteria["absolute_floor_basis"]
+    force_scale = 0.5 * basis["rho_kg_m3"] * basis["draft_m"] * basis["length_m"] * basis["speed_ms"] ** 2
+    assert criteria["absolute_tolerance"] == pytest.approx([
+        basis["force_floor_n"] / force_scale, basis["force_floor_n"] / force_scale,
+        basis["moment_floor_nm"] / (force_scale * basis["length_m"])])
+    assert api().compare_benchmark(record, [1.04, 0, 1])["passed"]
+    assert api().compare_benchmark(record, [1, criteria["absolute_tolerance"][1], 1])["passed"]
+    assert not api().compare_benchmark(record, [1, 2 * criteria["absolute_tolerance"][1], 1])["passed"]
+    candidates = json.loads((DATA / "benchmark_candidates.json").read_text())
+    assert all("relative_tolerance" not in row and "absolute_tolerance" not in row
+               for row in candidates["cases"])
+    receipt = json.loads((DATA / "execution.json").read_text())
+    assert receipt["criteria_revision"] == "3"
+    assert receipt["first_benchmark_comparison_started_at_utc"] is None
+    assert receipt["benchmark_comparison_status"] == "not_run"
+    assert receipt["previous_receipts"][0]["criteria_sha256"] != receipt["criteria_sha256"]
+
+
+@pytest.mark.parametrize("extra_depths", [1, 2])
+def test_excess_line_length_at_or_above_depth_refused(extra_depths):
+    model = spec()
+    line = model.moored_vessel.mooring_lines[0]
+    reach = math.hypot(line.anchor_x - line.fairlead_x, line.anchor_y - line.fairlead_y)
+    line.length = reach + extra_depths * model.environment.water_depth
+    with pytest.raises(ValueError, match="excess line length"):
+        api().validate_model(model)
+
+
+@pytest.mark.parametrize("case_override", [False, True])
+def test_track_over_line_footprint_refused(case_override):
+    model = spec()
+    separation = 30 if case_override else model.passing_ship.track.separation_m
+    if case_override:
+        model.passing_ship.track.separation_m = 60
+        model.analysis_cases[0].separation_m = separation
+    line = model.moored_vessel.mooring_lines[0]
+    line.anchor_y = separation + model.passing_ship.dimensions.beam
+    reach = math.hypot(line.anchor_x - line.fairlead_x, line.anchor_y - line.fairlead_y)
+    line.length = math.hypot(reach, model.environment.water_depth)
+    with pytest.raises(ValueError, match="track over a line footprint"):
+        api().validate_model(model)
+
+
+def test_track_over_anchor_refused():
+    model = spec()
+    line = model.moored_vessel.mooring_lines[0]
+    line.anchor_y = model.passing_ship.track.separation_m - model.passing_ship.dimensions.beam / 2
+    reach = math.hypot(line.anchor_x - line.fairlead_x, line.anchor_y - line.fairlead_y)
+    line.length = math.hypot(reach, model.environment.water_depth)
+    with pytest.raises(ValueError, match="track over an anchor"):
+        api().validate_model(model)
+
+
+def assert_committed_outputs(fresh, committed):
+    """Compare every delivered byte, including the manifest and its digest."""
+    for name in ("report.html", "force_samples.json", "campaign.json",
+                 "manifest.template.json", "manifest.sha256"):
+        assert (fresh / name).read_bytes() == (committed / name).read_bytes(), name
+
+
+def test_fresh_build_matches_committed_outputs(tmp_path):
+    from digitalmodel.hydrodynamics.passing_ship.preparation_report import build
+    build(DATA, tmp_path)
+    assert_committed_outputs(tmp_path, DATA)

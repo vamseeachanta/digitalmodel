@@ -12,42 +12,42 @@
       {
         "line_id": "line-1",
         "line_type": "wire",
-        "length": 180,
-        "pretension": 600,
-        "fairlead_x": 50,
+        "length": 312.98917893747654,
+        "pretension": 600.0,
+        "fairlead_x": 50.0,
         "fairlead_y": 7.415,
-        "anchor_x": 100,
-        "anchor_y": 50
+        "anchor_x": 362.5937835275295,
+        "anchor_y": 20.0
       },
       {
         "line_id": "line-2",
         "line_type": "wire",
-        "length": 180,
-        "pretension": 600,
-        "fairlead_x": 50,
+        "length": 312.98917893747654,
+        "pretension": 600.0,
+        "fairlead_x": 50.0,
         "fairlead_y": -7.415,
-        "anchor_x": 100,
-        "anchor_y": -50
+        "anchor_x": 362.5937835275295,
+        "anchor_y": -20.0
       },
       {
         "line_id": "line-3",
         "line_type": "wire",
-        "length": 180,
-        "pretension": 600,
-        "fairlead_x": -50,
+        "length": 312.98917893747654,
+        "pretension": 600.0,
+        "fairlead_x": -50.0,
         "fairlead_y": 7.415,
-        "anchor_x": -100,
-        "anchor_y": 50
+        "anchor_x": -362.5937835275295,
+        "anchor_y": 20.0
       },
       {
         "line_id": "line-4",
         "line_type": "wire",
-        "length": 180,
-        "pretension": 600,
-        "fairlead_x": -50,
+        "length": 312.98917893747654,
+        "pretension": 600.0,
+        "fairlead_x": -50.0,
         "fairlead_y": -7.415,
-        "anchor_x": -100,
-        "anchor_y": -50
+        "anchor_x": -362.5937835275295,
+        "anchor_y": -20.0
       }
     ]
   },
@@ -77,5 +77,162 @@
     "vessel_motions": true,
     "fender_loads": false,
     "force_time_histories": true
+  },
+  "mooring_layout": {
+    "submerged_weight_n_m": 100,
+    "anchor_abs_y_m": 20,
+    "assumptions": [
+      "Submerged wire weight 100 N/m is assumed, based on previous experience; no line property was measured. It permits positive horizontal tension at the retained 600 kN fairlead force in every study depth.",
+      "Fairleads at water level, seabed anchors and inextensible lines are assumed, based on previous experience; the vertical span equals water depth and elastic extension is excluded.",
+      "Anchor lateral offsets of plus or minus 20 m are assumed, based on previous experience; both are clear of the positive-side closest passing hull footprint, whose inner edge is 30 - 15.33/2 = 22.335 m.",
+      "The four fairlead positions and four 600 kN pretensions are retained. Anchor longitudinal positions and lengths are computed with the repository simplified touchdown catenary, not selected independently.",
+      "Each depth is an independent assumed layout, not a tide variation of one fixed installation. Anchors move longitudinally and lengths are resized for the same pretension at each depth.",
+      "The sized geometry and isolated static lines do not establish hull equilibrium, restoring stiffness, seabed suitability or structural capacity; these remain open before #2016."
+    ],
+    "sizing_module": "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py",
+    "sizing_method": "SimplifiedCatenarySolver.solve_from_force; total fairlead force is pretension in kN multiplied by 1000. Suspended arc length is used as the assumed inextensible line length. Longitudinal anchor reach is obtained from the returned horizontal span and the fixed lateral reach.",
+    "depth_layouts": [
+      {
+        "depth_to_draft": 1.108,
+        "water_depth_m": 6.836360000000001,
+        "basis": "assumed, based on previous experience; static sizing for retained pretension and track clearance",
+        "lines": [
+          {
+            "line_id": "line-1",
+            "line_type": "wire",
+            "length": 286.3382338807559,
+            "pretension": 600.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "anchor_x": 335.9526049364175,
+            "anchor_y": 20.0
+          },
+          {
+            "line_id": "line-2",
+            "line_type": "wire",
+            "length": 286.3382338807559,
+            "pretension": 600.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "anchor_x": 335.9526049364175,
+            "anchor_y": -20.0
+          },
+          {
+            "line_id": "line-3",
+            "line_type": "wire",
+            "length": 286.3382338807559,
+            "pretension": 600.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "anchor_x": -335.9526049364175,
+            "anchor_y": 20.0
+          },
+          {
+            "line_id": "line-4",
+            "line_type": "wire",
+            "length": 286.3382338807559,
+            "pretension": 600.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "anchor_x": -335.9526049364175,
+            "anchor_y": -20.0
+          }
+        ]
+      },
+      {
+        "depth_to_draft": 1.324,
+        "water_depth_m": 8.169080000000001,
+        "basis": "assumed, based on previous experience; static sizing for retained pretension and track clearance",
+        "lines": [
+          {
+            "line_id": "line-1",
+            "line_type": "wire",
+            "length": 312.98917893747654,
+            "pretension": 600.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "anchor_x": 362.5937835275295,
+            "anchor_y": 20.0
+          },
+          {
+            "line_id": "line-2",
+            "line_type": "wire",
+            "length": 312.98917893747654,
+            "pretension": 600.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "anchor_x": 362.5937835275295,
+            "anchor_y": -20.0
+          },
+          {
+            "line_id": "line-3",
+            "line_type": "wire",
+            "length": 312.98917893747654,
+            "pretension": 600.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "anchor_x": -362.5937835275295,
+            "anchor_y": 20.0
+          },
+          {
+            "line_id": "line-4",
+            "line_type": "wire",
+            "length": 312.98917893747654,
+            "pretension": 600.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "anchor_x": -362.5937835275295,
+            "anchor_y": -20.0
+          }
+        ]
+      },
+      {
+        "depth_to_draft": 3.919,
+        "water_depth_m": 24.18023,
+        "basis": "assumed, based on previous experience; static sizing for retained pretension and track clearance",
+        "lines": [
+          {
+            "line_id": "line-1",
+            "line_type": "wire",
+            "length": 538.1245919646806,
+            "pretension": 600.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "anchor_x": 587.2525721154692,
+            "anchor_y": 20.0
+          },
+          {
+            "line_id": "line-2",
+            "line_type": "wire",
+            "length": 538.1245919646806,
+            "pretension": 600.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "anchor_x": 587.2525721154692,
+            "anchor_y": -20.0
+          },
+          {
+            "line_id": "line-3",
+            "line_type": "wire",
+            "length": 538.1245919646806,
+            "pretension": 600.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "anchor_x": -587.2525721154692,
+            "anchor_y": 20.0
+          },
+          {
+            "line_id": "line-4",
+            "line_type": "wire",
+            "length": 538.1245919646806,
+            "pretension": 600.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "anchor_x": -587.2525721154692,
+            "anchor_y": -20.0
+          }
+        ]
+      }
+    ]
   }
 }

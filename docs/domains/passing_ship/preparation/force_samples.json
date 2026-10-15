@@ -1,5 +1,5 @@
 {
-  "base_commit": "096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+  "base_commit": "c76e2a2301952a4343cacf736f40ab764b14349c",
   "cases": [
     {
       "depth_to_draft": 1.108,
@@ -614,5 +614,5 @@
       ]
     }
   ],
-  "status": "unqualified force examples; no coupled response"
+  "status": "unqualified force examples; depth trend entirely placeholder-driven; no coupled response"
 }

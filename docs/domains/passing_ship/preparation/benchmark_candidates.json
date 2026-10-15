@@ -7,12 +7,6 @@
       "separation_to_length": 0.4,
       "depth_to_draft": 1.324,
       "reference": null,
-      "relative_tolerance": 0.05,
-      "absolute_tolerance": [
-        1,
-        1,
-        1
-      ],
       "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
     },
     {
@@ -22,12 +16,6 @@
       "separation_to_length": 0.3,
       "depth_to_draft": 1.324,
       "reference": null,
-      "relative_tolerance": 0.05,
-      "absolute_tolerance": [
-        1,
-        1,
-        1
-      ],
       "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
     },
     {
@@ -37,12 +25,6 @@
       "separation_to_length": 1.0,
       "depth_to_draft": 1.324,
       "reference": null,
-      "relative_tolerance": 0.05,
-      "absolute_tolerance": [
-        1,
-        1,
-        1
-      ],
       "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
     },
     {
@@ -52,12 +34,6 @@
       "separation_to_length": 0.4,
       "depth_to_draft": 1.108,
       "reference": null,
-      "relative_tolerance": 0.05,
-      "absolute_tolerance": [
-        1,
-        1,
-        1
-      ],
       "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
     },
     {
@@ -67,12 +43,6 @@
       "separation_to_length": 0.4,
       "depth_to_draft": 3.919,
       "reference": null,
-      "relative_tolerance": 0.05,
-      "absolute_tolerance": [
-        1,
-        1,
-        1
-      ],
       "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
     },
     {
@@ -82,12 +52,6 @@
       "separation_to_length": 0.4,
       "depth_to_draft": 1.324,
       "reference": null,
-      "relative_tolerance": 0.05,
-      "absolute_tolerance": [
-        1,
-        1,
-        1
-      ],
       "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
     }
   ],
