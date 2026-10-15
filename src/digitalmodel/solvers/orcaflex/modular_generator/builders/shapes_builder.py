@@ -191,6 +191,12 @@ class ShapesBuilder(BaseBuilder):
         Returns:
             List of default shape definitions.
         """
+        # S-lay contact is supplied by the declared vessel rollers. The legacy
+        # fixed ramps intersect the pipe seed at the stern; only explicitly
+        # configured ramps may add fixed solids to a vessel installation.
+        if self.spec.equipment.vessel is not None:
+            return []
+
         seabed_slope = self.spec.environment.seabed.slope
 
         # Calculate ramp orientation based on seabed slope
