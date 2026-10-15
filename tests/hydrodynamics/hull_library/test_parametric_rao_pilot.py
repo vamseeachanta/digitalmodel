@@ -152,8 +152,8 @@ def test_lookup_builds_twice_identically_from_database_and_revisions(tmp_path):
     path = tmp_path / "database.parquet"
     db.save_to_disk(path)
     revisions = json.loads(REVISIONS.read_text())
-    first = build_lookup(path, revisions, {"revision": 0, "summary": "Fixture only."})
-    second = build_lookup(path, revisions, {"revision": 0, "summary": "Fixture only."})
+    first = build_lookup(path, revisions, {"revision": revisions[-1]["revision"], "summary": "Fixture only."})
+    second = build_lookup(path, revisions, {"revision": revisions[-1]["revision"], "summary": "Fixture only."})
     assert first == second
     assert first.index("Summary") < first.index("Revision history") < first.index("Lookup")
     assert "deg/m" in first and "m/m" in first
@@ -192,7 +192,7 @@ def test_native_pilot_artifacts_criteria_and_database_readback(tmp_path):
         response = np.array(record["rao_real"]) + 1j*np.array(record["rao_imag"])
         excitation = np.array(record["excitation_real"]) + 1j*np.array(record["excitation_imag"])
         for index, omega in enumerate(record["omega_rad_s"]):
-            operator = -omega**2*(np.array(record["inertia"]) + np.array(record["added_mass"])[index]) - 1j*omega*np.array(record["radiation_damping"])[index] + np.array(record["hydrostatic_stiffness"])
+            operator = -omega**2*(np.array(record["inertia"]) + np.array(record["added_mass"])[index].T) - 1j*omega*np.array(record["radiation_damping"])[index].T + np.array(record["hydrostatic_stiffness"])
             for heading in range(len(record["heading_deg"])):
                 residual = operator @ response[index, heading] - excitation[index, heading]
                 assert np.linalg.norm(residual) <= 1e-8 * max(np.linalg.norm(excitation[index, heading]), 1)
@@ -309,3 +309,134 @@ def test_source_links_resolve_to_the_pinned_repository_paths():
                 expected = prefix + "blob/" + revision + "/" + source["repository_path"]
                 assert urljoin(document_url, source["source_url"]) == expected
                 assert hashlib.sha256((ROOT / source["repository_path"]).read_bytes()).hexdigest() == source["sha256"]
+
+
+def test_response_uses_force_rows_for_asymmetric_added_mass_and_damping(monkeypatch, tmp_path):
+    import sys
+    from types import SimpleNamespace
+    import xarray as xr
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+
+    basis = json.loads(BASIS.read_text()) | {"omega_rad_s": [1.0, 2.0]}
+    case = pilot.case_table(basis)[0]
+    n = len(pilot.geometry(case)[1])
+    added = np.zeros((2, 6, 6))
+    damping = np.zeros_like(added)
+    added[:, 0, 1], added[:, 1, 0] = 2, 1
+    damping[:, 0, 1], damping[:, 1, 0] = 3, 1
+    force = np.zeros((2, 2, 6), complex)
+    force[:, :, :2] = [1, 2]
+    coords = {"omega": basis["omega_rad_s"], "radiating_dof": pilot.DOFS,
+              "influenced_dof": pilot.DOFS, "wave_direction": [0, np.pi / 2]}
+    ds = xr.Dataset({
+        "added_mass": (("omega", "radiating_dof", "influenced_dof"), added.transpose(0, 2, 1)),
+        "radiation_damping": (("omega", "radiating_dof", "influenced_dof"), damping.transpose(0, 2, 1)),
+        "excitation_force": (("omega", "wave_direction", "influenced_dof"), force),
+    }, coords=coords)
+    matrix_coords = {"influenced_dof": pilot.DOFS, "radiating_dof": pilot.DOFS}
+    body = SimpleNamespace(mesh=SimpleNamespace(nb_faces=n), center_of_mass=(0, 0, -2),
+        inertia_matrix=xr.DataArray(np.eye(6), dims=matrix_coords, coords=matrix_coords),
+        hydrostatic_stiffness=xr.DataArray(10*np.eye(6), dims=matrix_coords, coords=matrix_coords))
+    class Solver:
+        def __init__(self, *args):
+            self.body, self.dataset = body, ds
+        def solve(self):
+            pass
+    monkeypatch.setitem(sys.modules, "capytaine", SimpleNamespace(__version__="fixture-only"))
+    monkeypatch.setattr(pilot, "_solver_type", lambda *args: Solver)
+    record = pilot.solve_case(case, basis, tmp_path, {"criteria_sha256": pilot.digest(CRITERIA)})
+    response = np.array(record["rao_real"]) + 1j*np.array(record["rao_imag"])
+    # At omega=1: Z=[[9,-2-3i],[-1-i,9]], F=[1,2].
+    # det Z=81-(2+3i)(1+i)=82-5i; adj(Z) F=[13+6i,19+i].
+    expected = np.array([13+6j, 19+1j]) / (82-5j)
+    np.testing.assert_allclose(response[0, 0, :2], expected, rtol=1e-13)
+
+
+def test_ship_inertia_matches_closed_form_uniform_density_wigley():
+    results = json.loads((ROOT / "docs/domains/hydrodynamics/parametric-rao/results.json").read_text())
+    for record in results["records"]:
+        if record["case"]["form"] != "analytic_ship":
+            continue
+        case = record["case"]
+        length, beam, draft = (case[k] for k in ("length_m", "beam_m", "draft_m"))
+        # Half breadth h=(B/2)(1-4x^2/L^2)(1-z^2/T^2), -T<=z<=0.
+        # Integrating 2h gives V=4LBT/9, E[x^2]=L^2/20,
+        # E[z]=-3T/8, E[z^2]=T^2/5. For E[y^2], integrate 2h^3/3:
+        # each ratio integral(f^3)/integral(f)=24/35, hence E[y^2]=48B^2/1225.
+        # About (0,0,c), E[(z-c)^2]=T^2/5+3cT/4+c^2.
+        cog = record.get("center_of_mass_m", [0, 0, results["basis"]["cog_draft_fraction"]*draft])
+        vertical = draft**2/5 + 3*cog[2]*draft/4 + cog[2]**2
+        expected = np.array([48*beam**2/1225 + vertical,
+                             length**2/20 + vertical, length**2/20 + 48*beam**2/1225])
+        inertia = np.array(record["inertia"])
+        actual = np.diag(inertia)[3:] / inertia[0, 0]
+        # Six percent allows the retained coarse faceted mesh, not an open-surface deficit.
+        np.testing.assert_allclose(actual, expected, rtol=0.06)
+        np.testing.assert_allclose(cog, [0, 0, -3*draft/8], atol=0.03*draft)
+
+
+def test_build_gate_rejects_unmasked_negative_heave_damping(tmp_path):
+    import importlib.util
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+    spec = importlib.util.spec_from_file_location("pilot_run", BASIS.with_name("run.py"))
+    run = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(run)
+    record = fixture_record()
+    record["added_mass"] = np.zeros((2, 6, 6)).tolist()
+    damping = np.zeros((2, 6, 6))
+    damping[0, 2, 2] = -1
+    record["radiation_damping"] = damping.tolist()
+    record["started_at"] = "2026-10-15T00:00:01+00:00"
+    reference = {"omega_rad_s": record["omega_rad_s"], "heave_rao": [np.sqrt(2)]*2}
+    criteria = json.loads(CRITERIA.read_text())
+    receipt = {"criteria_sha256": pilot.digest(CRITERIA), "recorded_at": "2026-10-15T00:00:00+00:00"}
+    with pytest.raises(ValueError, match="Unmasked negative"):
+        run.build([record], json.loads(BASIS.read_text()), criteria, receipt,
+                  reference, pilot.convergence_record([{"panel_count": n, "heave_rao": [1.0, 1.0]} for n in (1, 2, 3)], criteria), tmp_path / "invalid")
+    record["masked_points"] = [{"omega_rad_s": 2.0, "reasons": ["negative diagonal radiation damping: Heave"]}]
+    # The same native coefficient is allowed only when its response point is removed.
+    record["masked_points"][0]["index"] = 0
+    assert run.build([record], json.loads(BASIS.read_text()), criteria, receipt,
+                     reference, pilot.convergence_record([{"panel_count": n, "heave_rao": [1.0, 1.0]} for n in (1, 2, 3)], criteria), tmp_path / "masked")
+    entry = pilot.database_entry(record)
+    assert list(entry.rao_data.frequencies) == [1.0]
+    assert entry.metadata["masked_points"] == record["masked_points"]
+
+
+def test_waterplane_origin_integrals_match_closed_box_centroid():
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+    case = pilot.case_table(json.loads(BASIS.read_text()))[0]
+    mass, centroid, inertia = pilot.homogeneous_mass_properties(*pilot.geometry(case), 1025)
+    length, beam, draft = (case[k] for k in ("length_m", "beam_m", "draft_m"))
+    assert mass == pytest.approx(1025*length*beam*draft)
+    np.testing.assert_allclose(centroid, [0, 0, -draft/2], atol=1e-12)
+    np.testing.assert_allclose(np.diag(inertia), mass*np.array(
+        [beam**2+draft**2, length**2+draft**2, length**2+beam**2])/12, rtol=1e-12)
+
+
+def test_box_mask_uses_mode_band_and_coefficient_signs():
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+    basis = json.loads(BASIS.read_text())
+    masked = set()
+    for case in pilot.case_table(basis)[:8]:
+        record = fixture_record(case)
+        record["omega_rad_s"] = basis["omega_rad_s"]
+        record["added_mass"] = np.zeros((6, 6, 6)).tolist()
+        record["radiation_damping"] = np.zeros((6, 6, 6)).tolist()
+        result = pilot.mask_irregular_points(record, basis)
+        if result["masked_points"]:
+            masked.add(case["case_id"])
+            assert [p["omega_rad_s"] for p in result["masked_points"]] == [1.32]
+        assert result["interior_mode_omega_rad_s"] > 0
+        if case["case_id"] == "box_03":
+            record["radiation_damping"][-1][4][4] = -1
+            flagged = pilot.mask_irregular_points(record, basis)
+            assert flagged["masked_points"][0]["reasons"] == ["negative diagonal radiation damping: Pitch"]
+            with pytest.raises(ValueError, match="Unmasked negative"):
+                pilot.validate_physical_points(record, basis)
+            pilot.validate_physical_points(flagged, basis)
+        if case["case_id"] == "box_02":
+            record["added_mass"][-1][2][2] = -1
+            flagged = pilot.mask_irregular_points(record, basis)
+            assert "negative heave added mass" in flagged["masked_points"][0]["reasons"]
+    assert masked == {"box_01", "box_02", "box_05", "box_06"}

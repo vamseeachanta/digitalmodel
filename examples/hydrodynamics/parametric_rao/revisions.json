@@ -3,5 +3,10 @@
     "change": "First issue adds a discrete analytic hull family, computed six-mode response lookup, and beforehand numerical criteria.",
     "date": "2026-10-15",
     "revision": 0
+  },
+  {
+    "change": "Corrects hydrodynamic matrix orientation and homogeneous ship inertia; removes identified irregular-frequency responses from the database and graphs.",
+    "date": "2026-10-15",
+    "revision": 1
   }
 ]

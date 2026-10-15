@@ -112,6 +112,68 @@ def validate_receipt(path, receipt, first_start):
         raise ValueError("Criteria digest/time does not precede the first run")
 
 
+
+def point_reasons(record, basis=None):
+    """Identify coefficient-sign defects and the declared box interior-mode band."""
+    omega = record["omega_rad_s"]
+    reasons = [[] for _ in omega]
+    for field in ("added_mass", "radiation_damping"):
+        if field not in record:
+            continue  # Synthetic response-only database fixtures have no coefficients.
+        values = np.asarray(record[field], float)
+        if values.shape != (len(omega), 6, 6) or not np.isfinite(values).all():
+            raise ValueError("Six finite coefficient rows and columns are required")
+        for index, matrix in enumerate(values):
+            if field == "added_mass" and matrix[2, 2] < 0:
+                reasons[index].append("negative heave added mass")
+            if field == "radiation_damping":
+                for dof in np.flatnonzero(np.diag(matrix) < 0):
+                    reasons[index].append("negative diagonal radiation damping: " + DOFS[dof])
+    mode = None
+    if basis is not None and record["case"]["form"] == "box":
+        case = record["case"]
+        k = np.pi * np.sqrt(1/case["length_m"]**2 + 1/case["beam_m"]**2)
+        mode = float(np.sqrt(basis["gravity_m_s2"] * k / np.tanh(k*case["draft_m"])))
+        for index, frequency in enumerate(omega):
+            if abs(frequency-mode) <= basis["irregular_frequency_relative_band"] * mode:
+                reasons[index].append("within declared interior-mode band")
+    return reasons, mode
+
+
+def masked_indices(record):
+    """Validate that every mask identifies one native frequency and its reason."""
+    indices = set()
+    for point in record.get("masked_points", []):
+        index = point["index"]
+        if (not isinstance(index, int) or not 0 <= index < len(record["omega_rad_s"])
+                or index in indices or point["omega_rad_s"] != record["omega_rad_s"][index]
+                or not point["reasons"]):
+            raise ValueError("Invalid masked response point")
+        indices.add(index)
+    return indices
+
+
+def mask_irregular_points(record, basis):
+    """Flag native diagnostic responses; remove them when exporting the database."""
+    reasons, mode = point_reasons(record, basis)
+    return record | {
+        "masked_points": [{"index": i, "omega_rad_s": record["omega_rad_s"][i], "reasons": why}
+                          for i, why in enumerate(reasons) if why],
+        "interior_mode_omega_rad_s": mode,
+        "mask_relative_band": basis["irregular_frequency_relative_band"],
+        "masked_response_policy": "Diagnostic native responses retained here; removed from database and graphs",
+    }
+
+
+def validate_physical_points(record, basis=None):
+    """Fail the build if a sign defect or interior-mode point remains unmasked."""
+    masked = masked_indices(record)
+    reasons, _ = point_reasons(record, basis)
+    for index, why in enumerate(reasons):
+        if why and index not in masked:
+            raise ValueError(f"Unmasked {', '.join(why)} at {record['omega_rad_s'][index]:g} rad/s")
+
+
 def database_entry(record):
     """Convert ordered SI complex responses to the established six-mode schema."""
     from digitalmodel.hydrodynamics.models import RAOData
@@ -124,7 +186,11 @@ def database_entry(record):
         raise ValueError("Six finite responses are required at every axis point")
     if not np.isfinite(omega).all() or not np.isfinite(heading).all() or (omega <= 0).any() or len(set(omega)) != len(omega) or len(set(heading)) != len(heading):
         raise ValueError("Response axes must be unique and finite")
-    oi, hi = np.argsort(omega), np.argsort(heading)
+    masked = masked_indices(record)
+    oi = np.asarray([i for i in np.argsort(omega) if i not in masked], dtype=int)
+    if not len(oi):
+        raise ValueError("No unmasked response frequencies remain")
+    hi = np.argsort(heading)
     response = response[oi][:, hi]
     amplitude = np.abs(response)
     amplitude[:, :, 3:] = np.rad2deg(amplitude[:, :, 3:])
@@ -132,6 +198,9 @@ def database_entry(record):
     return RAODatabaseEntry(case["case_id"], {k: case[k] for k in ("length_m", "beam_m", "draft_m")},
                             RAOData(omega[oi], heading[hi], amplitude, np.rad2deg(np.angle(response)), case["case_id"]),
                             {"form": case["form"], "geometry_sha256": record["geometry_sha256"],
+                             "masked_points": record.get("masked_points", []),
+                             "interior_mode_omega_rad_s": record.get("interior_mode_omega_rad_s"),
+                             "mask_relative_band": record.get("mask_relative_band"),
                              "solver": "capytaine", "solver_version": record["solver_version"],
                              "panel_count": record["panel_count"], "input_sha256": record["input_sha256"],
                              "geometry_input_sha256": record.get("geometry_input_sha256", record["geometry_sha256"]),
@@ -219,6 +288,33 @@ def bem_solver(library, config):
     return library.BEMSolver(engine=engine, method=config.method)
 
 
+
+def homogeneous_mass_properties(vertices, panels, rho):
+    """Integrate a wetted surface closed at z=0, then transfer to its centroid.
+
+    Each oriented triangle and the waterplane origin define a signed tetrahedron.
+    The omitted waterplane has zero tetrahedron volume. Its first and second
+    moments also vanish, so these integrals are those of the closed solid.
+    """
+    quads = np.asarray(vertices, float)[np.asarray(panels)]
+    triangles = np.concatenate((quads[:, [0, 1, 2]], quads[:, [0, 2, 3]]))
+    volumes = np.einsum("ij,ij->i", triangles[:, 0],
+                        np.cross(triangles[:, 1], triangles[:, 2])) / 6
+    volume = volumes.sum()
+    if not np.isfinite(volume) or volume <= 0:
+        raise ValueError("A positive outward closed volume is required")
+    sums = triangles.sum(axis=1)
+    centroid = np.einsum("i,ij->j", volumes, sums) / (4 * volume)
+    # Tetrahedron E[xx^T] = (sum(v v^T) + sum(v) sum(v)^T) / 20.
+    second = np.einsum("i,ijk->jk", volumes,
+                       np.einsum("nvi,nvj->nij", triangles, triangles)
+                       + np.einsum("ni,nj->nij", sums, sums)) / 20
+    # Parallel-axis transfer of the raw second moment to the volume centroid.
+    central = second - volume * np.outer(centroid, centroid)
+    rotational = rho * (np.trace(central) * np.eye(3) - central)
+    return float(rho * volume), centroid, rotational
+
+
 def _solver_type(base_solver, case, basis):
     """Specialize the existing wrapper for explicit pilot loading and gravity."""
     import xarray as xr
@@ -240,6 +336,12 @@ def _solver_type(base_solver, case, basis):
             return self._extract_results()
 
         def _compute_and_attach_hydrostatics(self, library):
+            if case["form"] == "analytic_ship":
+                mass, centroid, rotational = homogeneous_mass_properties(
+                    self._body.mesh.vertices, self._body.mesh.faces, basis["rho_kg_m3"])
+                self._body.center_of_mass = centroid
+                self._body.mass = mass
+                self._body.dofs = library.rigid_body_dofs(rotation_center=centroid)
             self._body.hydrostatic_stiffness = self._body.compute_hydrostatic_stiffness(rho=basis["rho_kg_m3"], g=basis["gravity_m_s2"])
             if case["form"] == "box":
                 mass = case["length_m"] * case["beam_m"] * case["draft_m"] * basis["rho_kg_m3"]
@@ -247,7 +349,10 @@ def _solver_type(base_solver, case, basis):
                 inertia = np.diag([mass]*3 + (mass*radii**2).tolist())
                 self._body.inertia_matrix = xr.DataArray(inertia, dims=["influenced_dof", "radiating_dof"], coords={"influenced_dof": DOFS, "radiating_dof": DOFS})
             else:
-                self._body.inertia_matrix = self._body.compute_rigid_body_inertia(rho=basis["rho_kg_m3"])
+                inertia = np.zeros((6, 6))
+                inertia[:3, :3] = mass * np.eye(3)
+                inertia[3:, 3:] = rotational
+                self._body.inertia_matrix = xr.DataArray(inertia, dims=["influenced_dof", "radiating_dof"], coords={"influenced_dof": DOFS, "radiating_dof": DOFS})
 
         def _run_fill_dataset(self, library, hydrostatics):
             matrix = xr.Dataset(coords={"omega": basis["omega_rad_s"], "wave_direction": np.deg2rad(basis["heading_deg"]), "radiating_dof": DOFS,
@@ -285,8 +390,8 @@ def solve_case(case, basis, scratch, receipt):
     ds = solver.dataset
     def coefficients(name, dims):
         return ds[name].squeeze(drop=True).transpose(*dims).sel({d: DOFS for d in dims if "dof" in d}).values
-    added = coefficients("added_mass", ("omega", "radiating_dof", "influenced_dof"))
-    damping = coefficients("radiation_damping", ("omega", "radiating_dof", "influenced_dof"))
+    added = coefficients("added_mass", ("omega", "influenced_dof", "radiating_dof"))
+    damping = coefficients("radiation_damping", ("omega", "influenced_dof", "radiating_dof"))
     excitation = coefficients("excitation_force", ("omega", "wave_direction", "influenced_dof"))
     inertia = solver.body.inertia_matrix.sel(influenced_dof=DOFS, radiating_dof=DOFS).values
     stiffness = solver.body.hydrostatic_stiffness.sel(influenced_dof=DOFS, radiating_dof=DOFS).values
@@ -297,8 +402,14 @@ def solve_case(case, basis, scratch, receipt):
               "native_load_units": ["N", "N", "N", "N m", "N m", "N m"], "excitation_normalization": "per metre wave amplitude",
               "matrix_unit_rule": "inertia and added mass: load*s^2/coordinate; damping: load*s/coordinate; stiffness: load/coordinate",
               "geometry_input_sha256": digest(mesh_path), "criteria_sha256": receipt["criteria_sha256"], "started_at": started, "omega_rad_s": basis["omega_rad_s"], "heading_deg": basis["heading_deg"],
-              "rao_real": response.real.tolist(), "rao_imag": response.imag.tolist(), "added_mass": added.tolist(), "radiation_damping": damping.tolist(),
+              "rao_real": response.real.tolist(), "rao_imag": response.imag.tolist(),
+              # Retain native coefficient axes for compatibility with diagnostic records.
+              "hydrodynamic_matrix_axes": ["omega", "radiating_dof", "influenced_dof"],
+              "center_of_mass_m": np.asarray(solver.body.center_of_mass).tolist(),
+              "added_mass": added.transpose(0, 2, 1).tolist(), "radiation_damping": damping.transpose(0, 2, 1).tolist(),
               "excitation_real": excitation.real.tolist(), "excitation_imag": excitation.imag.tolist(), "inertia": inertia.tolist(), "hydrostatic_stiffness": stiffness.tolist()}
+    record = mask_irregular_points(record, basis)
+    validate_physical_points(record, basis)
     database_entry(record)
     saved = record | {"record_sha256": hashlib.sha256(json.dumps(record, sort_keys=True, allow_nan=False).encode()).hexdigest()}
     write_json(path, saved)

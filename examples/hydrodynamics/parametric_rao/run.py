@@ -22,6 +22,7 @@ def build(records, basis, criteria, receipt, reference, convergence, output):
     output.mkdir(parents=True, exist_ok=True)
     db = RAODatabase()
     for record in records:
+        pilot.validate_physical_points(record, basis)
         entry = pilot.database_entry(record)
         entry.metadata.update({
             "readiness_status": "partial",
@@ -38,10 +39,10 @@ def build(records, basis, criteria, receipt, reference, convergence, output):
     sample_indices = [baseline["omega_rad_s"].index(w) for w in reference["omega_rad_s"]]
     response = np.abs(np.array(baseline["rao_real"]) + 1j*np.array(baseline["rao_imag"]))
     benchmark = pilot.compare_heave(response[sample_indices, heading, 2], reference, criteria)
-    results = {"revision": 0, "basis": {key: value for key, value in basis.items() if key != "sources"}, "criteria": criteria, "solver_version": records[0]["solver_version"], "summary": f'{len(records)} discrete hull variants are solved with Capytaine. Six motion amplitudes and phases are stored for each frequency and heading; the lookup is read from the database. Data readiness is partial; design use remains unverified.',
+    revisions = json.loads((INPUT / "revisions.json").read_text())
+    results = {"revision": revisions[-1]["revision"], "basis": {key: value for key, value in basis.items() if key != "sources"}, "criteria": criteria, "solver_version": records[0]["solver_version"], "summary": f'{len(records)} discrete hull variants are solved with Capytaine. Six motion amplitudes and phases are stored for each unmasked frequency and heading; the lookup is read from the database. Data readiness is partial; design use remains unverified.',
                "benchmark": benchmark, "convergence": convergence, "records": records}
     pilot.write_json(output / "results.json", results)
-    revisions = json.loads((INPUT / "revisions.json").read_text())
     (output / "lookup.html").write_text(build_lookup(database_path, revisions, results), encoding="utf-8")
     manifest = {"schema_version": 1, "criteria_receipt": receipt,
                 "first_run_started_at": min(r["started_at"] for r in records),
