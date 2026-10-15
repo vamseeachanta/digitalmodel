@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 import importlib.util
 import json
 import subprocess
@@ -748,3 +751,28 @@ def test_rig_transcription_selects_existing_contracts_shard() -> None:
     assert [domain.name for domain in selected] == ["contracts"]
     assert any(detector.path_matches_root(module_path.as_posix(), root)
                for root in selected[0].roots)
+
+
+def test_structure_tests_select_contracts_shard() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains(
+        ["tests/repo_structure/test_repo_structure_contract.py"], domains
+    )
+    assert [domain.name for domain in selected] == ["contracts"]
+
+
+def test_structure_config_selects_contracts_shard() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains(["config/repo_structure.yml"], domains)
+    assert [domain.name for domain in selected] == ["contracts"]
+
+
+def test_structure_validator_selects_contracts_shard() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains(
+        ["scripts/maintenance/verify_repo_structure.py"], domains
+    )
+    assert [domain.name for domain in selected] == ["contracts"]
