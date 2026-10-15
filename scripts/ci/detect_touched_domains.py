@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Detect digitalmodel test domains touched by a change set."""
 
 from __future__ import annotations
@@ -32,6 +35,8 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("config/repo_structure.yml", ("contracts",)),
+    ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),
     ("src/digitalmodel/cathodic_protection/", ("cathodic-protection",)),
     ("src/digitalmodel/citations/", ("citations",)),
     (
