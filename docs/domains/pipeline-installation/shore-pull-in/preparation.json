@@ -1,0 +1,143 @@
+{
+  "analytical_before_models": true,
+  "case_table_sha256": "b7f4290e102959c13ae2149f097cb9f837e1e5e82eea677bf2b1d502782b237c",
+  "cases": [
+    {
+      "analytical_pull_kn": 64.92895884089226,
+      "analytical_relative_error": 2.188677435907382e-15,
+      "files": {
+        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
+        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
+        "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
+        "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
+        "includes/05_line_types.yml": "0e3020d816b626846d941e6c8e1d30567df55799a50799b8c45e402519fd149f",
+        "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
+        "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
+        "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
+        "includes/10_groups.yml": "0f8edd3177337cbf59cc2dfdd8c1829da374d14bcf71f687775c0d6def38b705",
+        "includes/11_winches.yml": "d5db7d1e217844a25179c7bc6f2ffe564254ff8cebea44f711316b14a5cfc6c9",
+        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
+        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "inputs/parameters.yml": "fbd9c4f8237da7891ec1ec5b8040e0d8903525a81d1d7a60ed887f24974ad8fd",
+        "master.yml": "ce29ca46bc90438881af05eabda446a3e7dd53d261344bacff99ce258b11330a"
+      },
+      "id": "level-initial",
+      "method": {
+        "capacity_status": "not_evaluated",
+        "capacity_utilisation": null,
+        "friction_kn": 64.9289588408924,
+        "gravity_kn": 0.0,
+        "peak_pipe_tension_kn": 64.9289588408924,
+        "pipe_head_tension_kn": 64.9289588408924,
+        "segment_end_tensions_kn": [
+          64.9289588408924
+        ],
+        "segment_normal_loads_kn": [
+          202.90299637778878
+        ],
+        "winch_demand_kn": 64.9289588408924
+      },
+      "native_status": "not_run",
+      "native_wall_seconds": null,
+      "submerged_weight_kn_m": 5.07257490944472,
+      "validator_errors": 0,
+      "validator_warnings": []
+    },
+    {
+      "analytical_pull_kn": 88.22473374171585,
+      "analytical_relative_error": 2.2550588431955373e-15,
+      "files": {
+        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
+        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
+        "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
+        "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
+        "includes/05_line_types.yml": "0e3020d816b626846d941e6c8e1d30567df55799a50799b8c45e402519fd149f",
+        "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
+        "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
+        "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
+        "includes/10_groups.yml": "0f8edd3177337cbf59cc2dfdd8c1829da374d14bcf71f687775c0d6def38b705",
+        "includes/11_winches.yml": "6942439ff644736b13c88f30fd698026593181fd8ae8a4fbfd4b002b0850a429",
+        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
+        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "inputs/parameters.yml": "fbd9c4f8237da7891ec1ec5b8040e0d8903525a81d1d7a60ed887f24974ad8fd",
+        "master.yml": "ce29ca46bc90438881af05eabda446a3e7dd53d261344bacff99ce258b11330a"
+      },
+      "id": "level-drained",
+      "method": {
+        "capacity_status": "not_evaluated",
+        "capacity_utilisation": null,
+        "friction_kn": 88.22473374171605,
+        "gravity_kn": 0.0,
+        "peak_pipe_tension_kn": 88.22473374171605,
+        "pipe_head_tension_kn": 88.22473374171605,
+        "segment_end_tensions_kn": [
+          88.22473374171605
+        ],
+        "segment_normal_loads_kn": [
+          202.90299637778878
+        ],
+        "winch_demand_kn": 88.22473374171605
+      },
+      "native_status": "not_run",
+      "native_wall_seconds": null,
+      "submerged_weight_kn_m": 5.07257490944472,
+      "validator_errors": 0,
+      "validator_warnings": []
+    },
+    {
+      "analytical_pull_kn": 44.891289394739815,
+      "analytical_relative_error": 2.215930625910474e-15,
+      "files": {
+        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
+        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
+        "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
+        "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
+        "includes/05_line_types.yml": "0e3020d816b626846d941e6c8e1d30567df55799a50799b8c45e402519fd149f",
+        "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
+        "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
+        "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
+        "includes/10_groups.yml": "0f8edd3177337cbf59cc2dfdd8c1829da374d14bcf71f687775c0d6def38b705",
+        "includes/11_winches.yml": "69427b1cdc3d5ce8ec9dd2a77543b7c1880154e9950aec55dab273d3c5424c18",
+        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
+        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "inputs/parameters.yml": "fbd9c4f8237da7891ec1ec5b8040e0d8903525a81d1d7a60ed887f24974ad8fd",
+        "master.yml": "ce29ca46bc90438881af05eabda446a3e7dd53d261344bacff99ce258b11330a"
+      },
+      "id": "incline-aided",
+      "method": {
+        "capacity_status": "not_evaluated",
+        "capacity_utilisation": null,
+        "friction_kn": 32.209852121128115,
+        "gravity_kn": 12.681437273611799,
+        "peak_pipe_tension_kn": 44.891289394739914,
+        "pipe_head_tension_kn": 44.891289394739914,
+        "segment_end_tensions_kn": [
+          44.891289394739914
+        ],
+        "segment_normal_loads_kn": [
+          100.65578787852536
+        ],
+        "winch_demand_kn": 44.891289394739914
+      },
+      "native_status": "not_run",
+      "native_wall_seconds": null,
+      "submerged_weight_kn_m": 5.07257490944472,
+      "validator_errors": 0,
+      "validator_warnings": []
+    }
+  ],
+  "criteria_evidence": {
+    "first_generation_utc": "2026-10-15T01:26:00.166080+00:00",
+    "recorded_utc": "2026-10-15T01:24:22.279069+00:00",
+    "sha256": "2992d84e6b11a465cf6540071703ca416615ca30b99178a35dd5b9e5aee8d111"
+  },
+  "files": {
+    "analysis.html": "cc5900daa2645ce9f101286165e700d342acf03f14ea6b4b46989ea4c24e26bf",
+    "manifest.template.json": "56153652d54f63cd31d06ad4330b044d9fea56d53050749538828a49ef860f85",
+    "models.json": "7ad18f92c7c7552a08504cf1f250d69bc3e9db50bbf7b16663132554c1f6385e"
+  },
+  "native_attempted": 0,
+  "native_completed": 0,
+  "qualified_results": 0,
+  "schema": "shore-pull-in-preparation-1"
+}

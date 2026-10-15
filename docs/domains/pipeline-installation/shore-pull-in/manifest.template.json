@@ -1,0 +1,46 @@
+{
+  "approved_manifest_digest": null,
+  "completed_cases": [],
+  "criteria_digest": "2992d84e6b11a465cf6540071703ca416615ca30b99178a35dd5b9e5aee8d111",
+  "criteria_revision": "1",
+  "expected_cases": [
+    "level-initial",
+    "level-drained",
+    "incline-aided"
+  ],
+  "first_timed_case": "level-initial",
+  "input_digest": "7ad18f92c7c7552a08504cf1f250d69bc3e9db50bbf7b16663132554c1f6385e",
+  "input_revision": null,
+  "launch_enabled": false,
+  "native_criteria": {
+    "force_balance": null,
+    "geometry": null,
+    "mesh_convergence": null,
+    "stress_limit": null
+  },
+  "native_version": null,
+  "qualified_results": 0,
+  "release_conditions": [
+    "qualified execution adapter",
+    "approved manifest digest",
+    "qualified topology and sources",
+    "assigned native criteria",
+    "timed canary read back",
+    "independent comparison and convergence"
+  ],
+  "required_metrics": {
+    "bending_moment": "kN.m",
+    "contact_reactions": "kN",
+    "curvature": "1/m",
+    "effective_tension": "kN",
+    "geometry": "m",
+    "native_wall_seconds": "s"
+  },
+  "schema": "shore-pull-in-native-manifest-1",
+  "status": "not_run",
+  "timing": {
+    "case_id": "level-initial",
+    "native_wall_seconds": null,
+    "projected_campaign_seconds": null
+  }
+}
