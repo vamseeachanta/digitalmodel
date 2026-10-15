@@ -184,14 +184,14 @@ def test_unproven_baseline_fails(tmp_path, kind):
     assert compare(tmp_path, base, [result()])[0] == 1
 
 
-def extract(tmp_path, text, kind="extract", conclusion="failure"):
+def extract(tmp_path, text, kind="extract", conclusion="failure", exit_code=1):
     """Extract a synthetic JUnit file or hosted log."""
     source, output = tmp_path / "input", tmp_path / "output.json"
     source.write_text(text)
     flag = "--junit" if kind == "extract" else "--log"
     assert ci.main([kind, flag, str(source), "--shard", "example", "--sha", "abc123",
                     "--run", "123", "--attempt", "1", "--conclusion", conclusion,
-                    "--exit-code", "1",
+                    "--exit-code", str(exit_code),
                     "--completed-at", NOW.isoformat(), "--out", str(output)]) == 0
     return json.loads(output.read_text())
 
@@ -539,3 +539,114 @@ def test_reader_stale_only_fallback_fails_closed(tmp_path, monkeypatch):
             sweep(updated_at=(NOW - timedelta(hours=25)).isoformat())]
     mock_download(monkeypatch, runs, [artifact()])
     assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW) is False
+
+
+def test_n2_successful_recovery_is_compared_as_new(tmp_path):
+    base = baseline(tmp_path)
+    node = "tests/test_new.py::test_racy"
+    row = result(ids=(node,), conclusion="success", exit_code=0,
+                 first_attempt_exit_code=1, recovered=[node],
+                 first_attempt_failed={node: "first assertion"})
+    status, summary, verdict = compare(tmp_path, base, [row])
+    assert status == 1
+    assert verdict["shards"][0]["ids"][node] == "NEW"
+    assert node in summary
+
+
+def test_n11_partial_execution_is_never_preexisting(tmp_path):
+    base = baseline(tmp_path)
+    status, _, verdict = compare(tmp_path, base, [result(exit_code=2)])
+    assert status == 1
+    assert verdict["pre_existing"] == []
+
+
+def test_publish_recovered_main_failure_is_not_open(tmp_path):
+    row = result(conclusion="success", exit_code=0, recovered=[SCR],
+                 first_attempt_exit_code=1, first_attempt_failed={SCR: "assertion"})
+    base = baseline(tmp_path, row)
+    assert json.loads(base.read_text())["tests"] == {}
+
+
+def test_workflows_pilot_only_orcaflex_in_report_mode():
+    for name, job in (("quality-gates-by-domain.yml", "domain-tests"),
+                      ("full-matrix-sweep.yml", "sweep-tests")):
+        workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
+        gate = next(step for step in workflow["jobs"][job]["steps"]
+                    if step["name"] == "Run domain gate")
+        run = gate["run"]
+        assert run.count("scripts/ci/run_shard.py") == 1
+        assert 'if [ "${{ matrix.domain }}" = "orcaflex" ]; then' in run
+        assert "--mode report" in run and "--with pyyaml" in run
+        assert "--mode enforce" not in run
+        assert "${{ matrix.domain }}" in workflow["jobs"][job]["name"]
+        import runpy
+        assert "contracts" in runpy.run_path(str(ROOT / "scripts/ci/run_shard.py"))["NO_RETRY_SHARDS"]
+        direct = '${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2'
+        assert run.split("else\n")[1].split("\n")[0].strip() == direct
+
+
+def test_aggregate_compares_successful_shards_too():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    steps = workflow["jobs"]["domain-tests-required"]["steps"]
+    for name in ("Checkout baseline tools", "Download domain results"):
+        step = next(step for step in steps if step["name"] == name)
+        assert "domain-tests.result" not in step["if"]
+    enforce = next(step for step in steps if step["name"] == "Enforce required domain result")
+    assert 'if [ "$HAS_DOMAINS" = "true" ]; then' in enforce["run"]
+
+
+@pytest.mark.parametrize("recovered", [False, True])
+@pytest.mark.parametrize("evidence", [[], ["observed run"]])
+def test_comparison_requires_recovery_and_register_evidence(tmp_path, recovered, evidence):
+    node = "tests/test_new.py::test_racy"
+    base = baseline(tmp_path)
+    row = result(ids=(node,), first_attempt_failed={node: "assertion"},
+                 recovered=[node] if recovered else [])
+    path = tmp_path / "register.yml"
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=evidence)]))
+    verdict = tmp_path / "verdict.json"
+    status = ci.compare_results(base, write_results(tmp_path, row), 24,
+                                tmp_path / "summary.md", verdict, NOW, path)
+    assert status == (0 if recovered and evidence else 1)
+    assert json.loads(verdict.read_text())["shards"][0]["ids"][node] == (
+        "FLAKY" if recovered and evidence else "NEW")
+
+
+def test_successful_recovery_can_be_preexisting_on_same_shard(tmp_path):
+    base = baseline(tmp_path)
+    row = result(ids=(), conclusion="success", exit_code=0, collected=1, first_attempt_exit_code=1,
+                 first_attempt_failed={SCR: "assertion"}, recovered=[SCR])
+    status, _, verdict = compare(tmp_path, base, [row])
+    assert status == 0 and verdict["pre_existing"] == [SCR]
+
+
+def test_missing_baseline_still_reports_recovered_new_id(tmp_path):
+    node = "tests/test_new.py::test_racy"
+    row = result(ids=(), conclusion="success", exit_code=0, collected=1, first_attempt_exit_code=1,
+                 first_attempt_failed={node: "assertion"}, recovered=[node])
+    status, summary, verdict = compare(tmp_path, tmp_path / "missing.json", [row])
+    assert status == 1 and "baseline unavailable" in summary
+    assert verdict["shards"][0]["ids"][node] == "NEW"
+
+
+@pytest.mark.parametrize("conclusion", ["success", "failure"])
+def test_extract_retry_evidence_keeps_original_messages(tmp_path, conclusion):
+    node = "tests/test_new.py::test_racy"
+    code = 0 if conclusion == "success" else 1
+    retry = dict(sha="abc123", run_id="123", exit_code=code,
+                 first_attempt_exit_code=1, first_attempt_failed={node: "first message"}, recovered=[node])
+    (tmp_path / "flaky-example.json").write_text(json.dumps(retry))
+    xml = ('<testsuite tests="1" failures="1" errors="0">'
+           '<testcase classname="tests.test_new" name="test_racy">'
+           '<failure message="first message"/></testcase></testsuite>')
+    row = extract(tmp_path, xml, conclusion=conclusion, exit_code=code)
+    assert row["parsed"] is True
+    assert row["first_attempt_failed"] == {node: "first message"}
+    assert row["failed"] == [] and row["recovered"] == [node]
+
+
+def test_extract_mismatched_retry_record_fails_closed(tmp_path):
+    (tmp_path / "flaky-example.json").write_text(json.dumps(dict(sha="wrong")))
+    xml = ('<testsuite tests="1" failures="1" errors="0">'
+           '<testcase classname="tests.test_new" name="test_racy"><failure/></testcase></testsuite>')
+    assert extract(tmp_path, xml)["parsed"] is False
