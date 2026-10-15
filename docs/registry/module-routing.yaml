@@ -199,10 +199,9 @@ modules:
     key_tests: [tests/orcaflex/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#orcaflex
     submodules:
-      - module: solvers/orcaflex/modular_generator
-        entry_point: src/digitalmodel/solvers/orcaflex/modular_generator/
+      modular_generator:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_generator/docs/agent-pack.md
-        qa_family: orcaflex-riser-mooring
+        qa_family: MR
   - module: orcawave
     entry_point: src/digitalmodel/orcawave/
     maturity: beta
