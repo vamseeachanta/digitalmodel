@@ -259,8 +259,8 @@ def test_scr_seabed_design_matches_independent_closure():
     selected = design["selected_bottom_length_m"]
     required = design["required_bottom_length_m"]
     assert required > p["bottom_length"]
-    assert required + p["scr_seabed_margin"] <= selected
-    assert selected < required + p["scr_seabed_margin"] + 0.1
+    assert required < selected <= design["requested_bottom_length_m"]
+    assert selected <= design["friction_bottom_limit_m"]
     for key, bottom in (("original", p["bottom_length"]), ("selected", selected)):
         length = nominal["suspended_length_m"] + bottom
         anchor = nominal["touchdown_horizontal_distance_m"] + bottom
@@ -270,7 +270,7 @@ def test_scr_seabed_design_matches_independent_closure():
             assert state["grounded_length_m"] == pytest.approx(expected, abs=1e-7)
             assert state["touchdown_exists"] == (expected > 0)
             if key == "selected":
-                assert expected >= p["scr_seabed_margin"] - 1e-7
+                assert expected >= design["minimum_grounded_length_m"] - 1e-7
     old_length = nominal["suspended_length_m"] + p["bottom_length"]
     old_anchor = nominal["touchdown_horizontal_distance_m"] + p["bottom_length"]
     limit = design["original_liftoff_far_offset_m"]
@@ -411,3 +411,126 @@ def test_slwr_regeneration_is_deterministic_and_preserves_scr(tmp_path):
     design = check.calculate(basis)["slwr"]["seabed_offset_sweep"]
     assert line["sections"][-1]["length"] == design["selected_bottom_length_m"]
     assert line["end_b"]["position"][0] == pytest.approx(design["selected_anchor_x_m"])
+
+
+def hand_scr_state(basis, offset_m):
+    """Close the committed SCR independently and apply full adverse friction."""
+    p = {name: record["value"] for name, record in basis["parameters"].items()}
+    riser = yaml.safe_load((CAMPAIGN / "scr/spec.yml").read_text())["riser"]
+    line, bare = riser["lines"][0], riser["line_types"][0]
+    height = p["water_depth"] - p["hangoff_depth"] - bare["outer_diameter"] / 2
+    length = sum(section["length"] for section in line["sections"])
+    grounded = hand_grounded_length(height, length, line["end_b"]["position"][0] - offset_m)
+    suspended = length - grounded
+    radius = (suspended ** 2 - height ** 2) / (2 * height)
+    weight = (bare["mass_per_length"] * 1000
+              + line["contents"]["density"] * 1000 * math.pi * bare["inner_diameter"] ** 2 / 4
+              - p["seawater_density"] * math.pi * bare["outer_diameter"] ** 2 / 4) * p["gravity"]
+    return {
+        "grounded_length_m": grounded,
+        "horizontal_tension_kN": weight * radius / 1000,
+        "top_tension_kN": weight * (radius + height) / 1000,
+        "minimum_effective_tension_kN": weight * (radius - 0.5 * grounded) / 1000,
+    }
+
+
+@pytest.mark.parametrize("offset_m", range(-150, 151, 25))
+def test_scr_full_friction_tension_at_every_sweep_step(offset_m):
+    """Full adverse axial friction shall leave positive tension at every point."""
+    basis = load_basis()
+    state = hand_scr_state(basis, offset_m)
+    assert state["minimum_effective_tension_kN"] > 0
+    margin = basis["parameters"]["minimum_static_tension"]["value"]
+    assert margin > 0
+    assert state["minimum_effective_tension_kN"] >= margin
+    assert state["grounded_length_m"] > 0
+
+
+def test_friction_basis_and_smallest_scr_change():
+    """The largest feasible bottom on the existing grid changes the least pipe."""
+    basis = load_basis()
+    p = {name: record["value"] for name, record in basis["parameters"].items()}
+    check = load_check()
+    result = check.calculate(basis)
+    design = result["scr"]["seabed_offset_sweep"]
+    assert basis["seabed_axial_friction"]["statics_application_status"] == "ASSUMED"
+    assert p["seabed_axial_friction"] == 0.5
+    for kind in ("scr", "slwr"):
+        types = yaml.safe_load((CAMPAIGN / kind / "modular/includes/05_riser_line_types.yml").read_text())
+        for line_type in types["LineTypes"]:
+            assert line_type["SeabedLateralFrictionCoefficient"] == p["seabed_axial_friction"]
+            assert line_type["SeabedAxialFrictionCoefficient"] is None
+    states = design["static_sweep"]
+    assert [s["offset_m"] for s in states] == list(range(-150, 151, 25))
+    assert [s["offset_pct"] for s in design["selected"]] == [-10, -5, 0, 5, 10]
+    for state in states:
+        independent = hand_scr_state(basis, state["offset_m"])
+        for key, value in independent.items():
+            assert state[key] == pytest.approx(value, abs=1e-7)
+    selected = design["selected_bottom_length_m"]
+    assert selected <= design["requested_bottom_length_m"]
+    assert design["minimum_grounded_length_m"] > 0
+    assert design["minimum_effective_tension_kN"] >= p["minimum_static_tension"]
+    # Extending bottom and anchor together leaves the suspended solution fixed.
+    next_tension = min(s["minimum_effective_tension_kN"] for s in states)
+    next_tension -= p["seabed_axial_friction"] * result["operating_weight_N_per_m"] * 0.1 / 1000
+    assert selected + 0.1 > design["requested_bottom_length_m"] or next_tension < p["minimum_static_tension"]
+    nominal = hand_scr_state(basis, 0)
+    assert nominal["top_tension_kN"] == pytest.approx(result["scr"]["oo"]["top_tension_kN"])
+    for key in ("top_tension_kN", "horizontal_tension_kN", "minimum_effective_tension_kN"):
+        assert all(a[key] > b[key] for a, b in zip(states, states[1:]))
+    assert all(a["grounded_length_m"] < b["grounded_length_m"] for a, b in zip(states, states[1:]))
+    invalid = load_basis()
+    invalid["parameters"]["minimum_static_tension"]["value"] = 1000
+    with pytest.raises(ValueError, match="No tension-only SCR"):
+        check.calculate(invalid)
+
+
+def test_slwr_full_friction_tension_and_reference():
+    """The retained lazy-wave bottom shall also pass the adverse-friction sweep."""
+    basis = load_basis()
+    p = {name: record["value"] for name, record in basis["parameters"].items()}
+    result = load_check().calculate(basis)
+    states = result["slwr"]["seabed_offset_sweep"]["static_sweep"]
+    assert [s["offset_m"] for s in states] == list(range(-150, 151, 25))
+    riser = yaml.safe_load((CAMPAIGN / "slwr/spec.yml").read_text())["riser"]
+    for state in states:
+        independent = hand_lazy_state(basis, riser["lines"][0], riser["line_types"], state["offset_pct"])
+        tension = (independent["horizontal_tension_kN"] - p["seabed_axial_friction"]
+                   * result["operating_weight_N_per_m"] * independent["grounded_length_m"] / 1000)
+        assert state["minimum_effective_tension_kN"] == pytest.approx(tension, abs=1e-7)
+        assert tension >= p["minimum_static_tension"]
+        assert independent["grounded_length_m"] > 0
+
+
+def test_scr_friction_regeneration_preserves_other_bytes(tmp_path):
+    """Two tension-margin builds shall preserve every unaffected model byte."""
+    campaign = tmp_path / "campaign"
+    shutil.copytree(CAMPAIGN, campaign)
+    before = {p.relative_to(campaign): p.read_bytes() for p in campaign.rglob("*") if p.is_file()}
+    basis = load_basis()
+    basis["parameters"]["minimum_static_tension"]["value"] += 1
+    (campaign / "basis.yml").write_text(yaml.safe_dump(basis, sort_keys=False))
+    check = load_check()
+    builds = []
+    for _ in range(2):
+        check.regenerate_scr(campaign)
+        (campaign / "static-reference.json").write_text(json.dumps(check.reference(campaign), indent=2) + "\n")
+        builds.append({p.relative_to(campaign): p.read_bytes() for p in campaign.rglob("*") if p.is_file()})
+    assert builds[0] == builds[1]
+    affected = {Path(name) for name in ("basis.yml", "static-reference.json", "scr/spec.yml",
+                                      "scr/modular/includes/07_riser_lines.yml")}
+    assert all(builds[1][path] == raw for path, raw in before.items() if path not in affected)
+    for name in ("scr/spec.yml", "scr/modular/includes/07_riser_lines.yml"):
+        old = yaml.safe_load(before[Path(name)])
+        new = yaml.safe_load(builds[1][Path(name)])
+        if name.endswith("spec.yml"):
+            a, b = old["riser"]["lines"][0], new["riser"]["lines"][0]
+            a["end_b"]["position"][0] = b["end_b"]["position"][0]
+            a["sections"][-1]["length"] = b["sections"][-1]["length"]
+        else:
+            a, b = old["Lines"][0], new["Lines"][0]
+            connection = next(key for key in a if key.startswith("Connection, ConnectionX"))
+            a[connection][1][1] = b[connection][1][1]
+            a["LineType, Length, TargetSegmentLength"][-1][1] = b["LineType, Length, TargetSegmentLength"][-1][1]
+        assert old == new
