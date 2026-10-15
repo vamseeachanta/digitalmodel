@@ -5,8 +5,9 @@
 
 The OO solutions prescribe low-point geometry. The general solver independently
 checks each positive-weight catenary arc with finite EA; upward buoyed arcs are
-reflected before evaluation. This is a segment calibration, not a coupled
-piecewise boundary-value solve or a native finite-element equilibrium.
+reflected before evaluation. These are segment calibrations. Separate offset
+sweeps close the inextensible line globally; neither calculation establishes
+native finite-element equilibrium.
 """
 
 from __future__ import annotations
@@ -190,6 +191,115 @@ def scr_seabed_design(p: dict[str, Any], height: float, weight: float,
     }
 
 
+def grounded_lazy_wave(height: float, length: float, span: float, weight: float,
+                       buoyed_weight: float, sections: list[float]) -> dict[str, Any]:
+    """Close three inextensible suspended sections from zero-force touchdown.
+
+    The two upper section lengths are fixed; the lower bare section exchanges
+    length with the grounded section. Integrate dx/ds = H/T, dy/ds = V/T and
+    dV/ds = w upward from touchdown, with continuous horizontal/vertical force.
+    The buoyed section has negative submerged weight. Bisection first closes
+    height on lower-section length, then closes span on horizontal force.
+    """
+    def arc(horizontal: float, vertical: float, arc_length: float,
+            density: float) -> tuple[float, float, float]:
+        end = vertical + density * arc_length
+        return (horizontal / density * (math.asinh(end / horizontal)
+                                        - math.asinh(vertical / horizontal)),
+                (math.hypot(horizontal, end) - math.hypot(horizontal, vertical)) / density,
+                end)
+
+    def shape(horizontal: float, lower_length: float) -> tuple[float, float, float, float]:
+        x = y = vertical = 0.0
+        sag = 0.0
+        for index, (arc_length, density) in enumerate([
+            (lower_length, weight), (sections[1], buoyed_weight), (sections[0], weight),
+        ]):
+            if index == 2:
+                sag = y + arc(horizontal, vertical, -vertical / density, density)[1]
+            dx, dy, vertical = arc(horizontal, vertical, arc_length, density)
+            x += dx
+            y += dy
+        return x, y, vertical, sag
+
+    def at_force(horizontal: float) -> tuple[float, float, float, float]:
+        lower, upper = 0.0, height + sum(sections)
+        while shape(horizontal, upper)[1] < height:
+            upper *= 2
+        for _ in range(80):
+            lower_length = (lower + upper) / 2
+            if shape(horizontal, lower_length)[1] < height:
+                lower = lower_length
+            else:
+                upper = lower_length
+        lower_length = (lower + upper) / 2
+        x, _, vertical, sag = shape(horizontal, lower_length)
+        return lower_length, x, vertical, sag
+
+    target = span - length
+    lower, upper = 1.0, weight * height
+    for _ in range(100):
+        horizontal = (lower + upper) / 2
+        lower_length, x, _, _ = at_force(horizontal)
+        if x - sections[0] - sections[1] - lower_length < target:
+            lower = horizontal
+        else:
+            upper = horizontal
+    horizontal = (lower + upper) / 2
+    lower_length, x, vertical, sag = at_force(horizontal)
+    suspended = sections[0] + sections[1] + lower_length
+    grounded = length - suspended
+    return {
+        "grounded_length_m": grounded,
+        "touchdown_exists": grounded > 0,
+        "touchdown_horizontal_distance_m": x,
+        "suspended_length_m": suspended,
+        "horizontal_tension_kN": horizontal / 1000,
+        "top_tension_kN": math.hypot(horizontal, vertical) / 1000,
+        "sag_above_seabed_m": sag,
+    }
+
+
+def slwr_seabed_design(p: dict[str, Any], height: float, weight: float,
+                      nominal: dict[str, Any]) -> dict[str, Any]:
+    """Apply the suspended-length increase plus reserve rule to the lazy wave."""
+    offsets = sorted({0.0, -p["intact_offset_pct"], p["intact_offset_pct"],
+                      -p["damaged_offset_pct"], p["damaged_offset_pct"]})
+    margin = p["slwr_seabed_margin"]
+    if not math.isfinite(margin) or margin <= 0:
+        raise ValueError("Lazy-wave seabed margin must be finite and positive")
+    suspended = nominal["oo"]["suspended_length_m"]
+    touchdown = nominal["oo"]["touchdown_horizontal_distance_m"]
+
+    def sweep(bottom: float) -> list[dict[str, Any]]:
+        return [{"offset_pct": offset, **grounded_lazy_wave(
+            height, suspended + bottom,
+            touchdown + bottom - offset * p["water_depth"] / 100, weight,
+            nominal["buoyancy"]["net_weight_N_per_m"], nominal["sections_m"],
+        )} for offset in offsets]
+
+    original = sweep(p["bottom_length"])
+    required = max(0.0, p["bottom_length"] - min(
+        state["grounded_length_m"] for state in original
+    ))
+    selected = math.ceil((required + margin) * 10) / 10
+    return {
+        "method": "Flat seabed; three force-continuous sections; inextensible, frictionless catenary closure",
+        "offset_convention": "Positive host offset is toward the anchor; negative is away. touchdown_horizontal_distance_m is from the displaced host; anchor_without_margin_m and selected_anchor_x_m are absolute model X from the nominal host.",
+        "limitations": "Elasticity, bending, seabed friction and dynamics require native checks; the reserve is assumed, not a qualified dynamic allowance.",
+        "height_m": height,
+        "weight_N_per_m": weight,
+        "buoyed_weight_N_per_m": nominal["buoyancy"]["net_weight_N_per_m"],
+        "required_bottom_length_m": required,
+        "margin_m": margin,
+        "selected_bottom_length_m": selected,
+        "anchor_without_margin_m": touchdown + required,
+        "selected_anchor_x_m": touchdown + selected,
+        "original": original,
+        "selected": sweep(selected),
+    }
+
+
 def slwr_reference(p: dict[str, Any], pipe: RiserPipeProperties, height: float,
                    weight: float, ea: float) -> dict[str, Any]:
     """Compare the lazy-wave geometry against reflected elastic arcs.
@@ -276,6 +386,9 @@ def calculate(basis: dict[str, Any]) -> dict[str, Any]:
     results["scr"]["seabed_offset_sweep"] = scr_seabed_design(
         p, height, weight, results["scr"]["oo"],
     )
+    results["slwr"]["seabed_offset_sweep"] = slwr_seabed_design(
+        p, height, weight, results["slwr"],
+    )
     return results
 
 
@@ -304,8 +417,10 @@ def reference(campaign: Path) -> dict[str, Any]:
                      "w_buoyed = w_pipe - (rho_water-rho_module)*module_volume_per_m*g",
                      "a = H/w; S = sqrt(h*(h+2*a)); X = a*acosh(1+h/a)",
                      "D = anchor_X - host_offset; solve X-S = D-L; grounded = L-S",
-                     "SCR bottom = ceil(10*(maximum suspended-length increase + margin))/10"],
+                     "Model bottom = ceil(10*(maximum suspended-length increase + margin))/10",
+                     "Piecewise arcs: dx/ds = H/sqrt(H^2+V^2); dy/ds = V/sqrt(H^2+V^2); dV/ds = w"],
         "sha256": {str(p.relative_to(campaign)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
+        "size_bytes": {str(p.relative_to(campaign)): p.stat().st_size for p in files},
         "analytical_code_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "models": calculate(basis),
     }
@@ -338,15 +453,40 @@ def regenerate_scr(campaign: Path) -> None:
         master.write_bytes(raw + b"\n")
 
 
+def regenerate_slwr(campaign: Path) -> None:
+    """Regenerate the derived lazy-wave bottom and anchor, preserving SCR bytes."""
+    from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
+
+    basis = yaml.safe_load((campaign / "basis.yml").read_text())
+    result = calculate(basis)["slwr"]
+    spec_path = campaign / "slwr/spec.yml"
+    spec = yaml.safe_load(spec_path.read_text())
+    line = spec["riser"]["lines"][0]
+    design = result["seabed_offset_sweep"]
+    line["sections"][-1]["length"] = design["selected_bottom_length_m"]
+    line["end_b"]["position"][0] = design["selected_anchor_x_m"]
+    spec_path.write_text(yaml.safe_dump(spec, sort_keys=False, width=90))
+    model = campaign / "slwr/modular"
+    ModularModelGenerator(spec_path).generate(model)
+    # Match the existing end-of-file hook on the directly written master.
+    master = model / "master.yml"
+    raw = master.read_bytes()
+    if not raw.endswith(b"\n"):
+        master.write_bytes(raw + b"\n")
+
+
 def main() -> None:
     """Write the calibration record to an explicitly selected output file."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--campaign", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--regenerate-scr", action="store_true")
+    parser.add_argument("--regenerate-slwr", action="store_true")
     args = parser.parse_args()
     if args.regenerate_scr:
         regenerate_scr(args.campaign)
+    if args.regenerate_slwr:
+        regenerate_slwr(args.campaign)
     args.output.write_text(json.dumps(reference(args.campaign), indent=2, allow_nan=False) + "\n")
 
 

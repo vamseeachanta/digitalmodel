@@ -1,7 +1,7 @@
 {
   "schema_version": "generic-static-reference-v1",
   "method": "OO low-point geometry; general elastic solver on each reflected arc",
-  "limitations": "Zero mean host offset, quiescent water, inextensible OO geometry and elastic general catenary segment checks. Pipe centre at contact radius above seabed. No pressure, bending/contact soil response, wave dynamics, VIV or code acceptance. SCR seabed reserve is additionally derived across the intact and damaged offset envelope using a flat-seabed, frictionless, inextensible catenary; this does not establish native offset equilibrium.",
+  "limitations": "Zero mean host offset, quiescent water, inextensible OO geometry and elastic general catenary segment checks. Pipe centre at contact radius above seabed. No pressure, bending/contact soil response, wave dynamics, VIV or code acceptance. Both seabed reserves are additionally derived across the intact and damaged offset envelope using a flat-seabed, frictionless, inextensible catenary; this does not establish native offset equilibrium.",
   "geometry_comparison": "General arc endpoints and unstretched lengths are prescribed from OO geometry; their equality is not an independent global geometry check. Elastic arc horizontal tensions need not be continuous.",
   "formulas": [
     "h = water_depth - hangoff_depth - coated_OD/2",
@@ -11,10 +11,11 @@
     "w_buoyed = w_pipe - (rho_water-rho_module)*module_volume_per_m*g",
     "a = H/w; S = sqrt(h*(h+2*a)); X = a*acosh(1+h/a)",
     "D = anchor_X - host_offset; solve X-S = D-L; grounded = L-S",
-    "SCR bottom = ceil(10*(maximum suspended-length increase + margin))/10"
+    "Model bottom = ceil(10*(maximum suspended-length increase + margin))/10",
+    "Piecewise arcs: dx/ds = H/sqrt(H^2+V^2); dy/ds = V/sqrt(H^2+V^2); dV/ds = w"
   ],
   "sha256": {
-    "basis.yml": "8b4dcf0a9b0a80f5b517e04ef1badc4911e13d4ec1e4d5345dfb82589439e304",
+    "basis.yml": "8e61f2b4d7992a66cc8e0b3e77544949cb45bc7d268ef263abee4c5fa4a7d474",
     "scr/modular/includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
     "scr/modular/includes/03_environment.yml": "e7f4319a6495a4205fb9fc690332c7db01fb5d3fc028bd7cb8bc2ca2bc10a469",
     "scr/modular/includes/05_riser_line_types.yml": "18b3f3db0e6bff5e164aec0c3e4e1d23a97a8116791a14b17978042a87576d01",
@@ -28,13 +29,34 @@
     "slwr/modular/includes/03_environment.yml": "e7f4319a6495a4205fb9fc690332c7db01fb5d3fc028bd7cb8bc2ca2bc10a469",
     "slwr/modular/includes/05_riser_line_types.yml": "037f1a318a7b02f26a3567042da4f7d189cd6143c77a123c14ded135811fc68f",
     "slwr/modular/includes/06_riser_vessels.yml": "ee550ef907e272b2d5f2e0b41252e0e8fdab8877f0d74d2251d1c0cf5acff689",
-    "slwr/modular/includes/07_riser_lines.yml": "dbdc60232377f768f92075e5ffd72acd54a4ad3c5d7111c5a36847ecb5604b2e",
+    "slwr/modular/includes/07_riser_lines.yml": "ee1657ade4eb63d9643a0a8c8e2bf8132891c594f59b3ccefec7151d10fd8edb",
     "slwr/modular/includes/10_groups.yml": "02bbd844b9af821069ef6e159215ca51061b99d4139eb0f6f714489c9f384184",
     "slwr/modular/inputs/parameters.yml": "5d2b5ca051d9f72392f702cd1d84266161ceb2f5f2cf4ae16e6006a252bf0a6c",
     "slwr/modular/master.yml": "96a78cb42cfd4a70977a2c446db5532112f0f6e4193fe355017ac161af986e23",
-    "slwr/spec.yml": "07a89c80b93395af508c8c71f52083370bf3ecacf5a4248c58cad63c8c957f99"
+    "slwr/spec.yml": "5f31e02fe7f15a061e1073d6ead37f24d394c1795cbec92ed0abdfe432f38790"
   },
-  "analytical_code_sha256": "552221b35138252fcc35c0bba6fe60f55c4945be0bb8bd0444d9bf3c468e0454",
+  "size_bytes": {
+    "basis.yml": 20455,
+    "scr/modular/includes/01_general.yml": 676,
+    "scr/modular/includes/03_environment.yml": 1415,
+    "scr/modular/includes/05_riser_line_types.yml": 911,
+    "scr/modular/includes/06_riser_vessels.yml": 231,
+    "scr/modular/includes/07_riser_lines.yml": 1063,
+    "scr/modular/includes/10_groups.yml": 86,
+    "scr/modular/inputs/parameters.yml": 182,
+    "scr/modular/master.yml": 312,
+    "scr/spec.yml": 2233,
+    "slwr/modular/includes/01_general.yml": 676,
+    "slwr/modular/includes/03_environment.yml": 1415,
+    "slwr/modular/includes/05_riser_line_types.yml": 1832,
+    "slwr/modular/includes/06_riser_vessels.yml": 231,
+    "slwr/modular/includes/07_riser_lines.yml": 1195,
+    "slwr/modular/includes/10_groups.yml": 87,
+    "slwr/modular/inputs/parameters.yml": 182,
+    "slwr/modular/master.yml": 312,
+    "slwr/spec.yml": 2953
+  },
+  "analytical_code_sha256": "f12fc5d2f85c98d330bd6224d4bd45db1ff65d9c16327287ed59ea2f7a8a7f94",
   "models": {
     "scr": {
       "oo": {
@@ -182,8 +204,8 @@
       "general": {
         "top_tension_kN": 1988.9529815504172,
         "hangoff_angle_deg": 8.003624637684743,
-        "touchdown_horizontal_distance_m": 2074.54554107421,
-        "suspended_length_m": 3750.916769359088,
+        "touchdown_horizontal_distance_m": 2074.5455410742097,
+        "suspended_length_m": 3750.9167693590875,
         "converged": true,
         "segment_horizontal_tensions_kN": [
           276.93335390180806,
@@ -212,7 +234,124 @@
         "net_weight_N_per_m": -1141.0270258121398
       },
       "top_tension_difference_pct": 0.0072850312434313835,
-      "kernel_comparison": "Top tension difference is within 2 percent; native calibration remains required"
+      "kernel_comparison": "Top tension difference is within 2 percent; native calibration remains required",
+      "seabed_offset_sweep": {
+        "method": "Flat seabed; three force-continuous sections; inextensible, frictionless catenary closure",
+        "offset_convention": "Positive host offset is toward the anchor; negative is away. touchdown_horizontal_distance_m is from the displaced host; anchor_without_margin_m and selected_anchor_x_m are absolute model X from the nominal host.",
+        "limitations": "Elasticity, bending, seabed friction and dynamics require native checks; the reserve is assumed, not a qualified dynamic allowance.",
+        "height_m": 1489.82345,
+        "weight_N_per_m": 1189.048217188261,
+        "buoyed_weight_N_per_m": -1141.0270258121398,
+        "required_bottom_length_m": 7.822883027091393,
+        "margin_m": 20.0,
+        "selected_bottom_length_m": 27.9,
+        "anchor_without_margin_m": 2082.368424101301,
+        "selected_anchor_x_m": 2102.44554107421,
+        "original": [
+          {
+            "offset_pct": -10.0,
+            "grounded_length_m": 12.177116972908607,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 2232.3684241013016,
+            "suspended_length_m": 3758.739652386179,
+            "horizontal_tension_kN": 324.9203679070807,
+            "top_tension_kN": 2005.254185618521,
+            "sag_above_seabed_m": 76.6479425467187
+          },
+          {
+            "offset_pct": -5.0,
+            "grounded_length_m": 16.281978243112007,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 2153.2635628310973,
+            "suspended_length_m": 3754.6347911159755,
+            "horizontal_tension_kN": 299.835053333839,
+            "top_tension_kN": 1996.5169327731803,
+            "sag_above_seabed_m": 62.89907896693899
+          },
+          {
+            "offset_pct": 0.0,
+            "grounded_length_m": 20.0,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 2074.54554107421,
+            "suspended_length_m": 3750.9167693590875,
+            "horizontal_tension_kN": 276.78858997088196,
+            "top_tension_kN": 1988.808096259233,
+            "sag_above_seabed_m": 50.000000000000284
+          },
+          {
+            "offset_pct": 5.0,
+            "grounded_length_m": 23.390409357989938,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 1996.1551317162202,
+            "suspended_length_m": 3747.5263600010976,
+            "horizontal_tension_kN": 255.52409958773507,
+            "top_tension_kN": 1981.9625090860818,
+            "sag_above_seabed_m": 37.87357568720677
+          },
+          {
+            "offset_pct": 10.0,
+            "grounded_length_m": 26.50065843498942,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 1918.0448826392203,
+            "suspended_length_m": 3744.416110924098,
+            "horizontal_tension_kN": 235.82965970256848,
+            "top_tension_kN": 1975.8479039569875,
+            "sag_above_seabed_m": 26.452815317888223
+          }
+        ],
+        "selected": [
+          {
+            "offset_pct": -10.0,
+            "grounded_length_m": 20.077116972908698,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 2232.3684241013016,
+            "suspended_length_m": 3758.739652386179,
+            "horizontal_tension_kN": 324.9203679070807,
+            "top_tension_kN": 2005.254185618521,
+            "sag_above_seabed_m": 76.6479425467187
+          },
+          {
+            "offset_pct": -5.0,
+            "grounded_length_m": 24.1819782431121,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 2153.2635628310973,
+            "suspended_length_m": 3754.6347911159755,
+            "horizontal_tension_kN": 299.835053333839,
+            "top_tension_kN": 1996.5169327731803,
+            "sag_above_seabed_m": 62.89907896693899
+          },
+          {
+            "offset_pct": 0.0,
+            "grounded_length_m": 27.90000000000009,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 2074.54554107421,
+            "suspended_length_m": 3750.9167693590875,
+            "horizontal_tension_kN": 276.78858997088196,
+            "top_tension_kN": 1988.808096259233,
+            "sag_above_seabed_m": 50.000000000000284
+          },
+          {
+            "offset_pct": 5.0,
+            "grounded_length_m": 31.29040935799003,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 1996.1551317162202,
+            "suspended_length_m": 3747.5263600010976,
+            "horizontal_tension_kN": 255.52409958773507,
+            "top_tension_kN": 1981.9625090860818,
+            "sag_above_seabed_m": 37.87357568720677
+          },
+          {
+            "offset_pct": 10.0,
+            "grounded_length_m": 34.40065843498951,
+            "touchdown_exists": true,
+            "touchdown_horizontal_distance_m": 1918.0448826392203,
+            "suspended_length_m": 3744.416110924098,
+            "horizontal_tension_kN": 235.82965970256848,
+            "top_tension_kN": 1975.8479039569875,
+            "sag_above_seabed_m": 26.452815317888223
+          }
+        ]
+      }
     },
     "operating_weight_N_per_m": 1189.048217188261,
     "flooded_weight_N_per_m": 1274.687298632941
