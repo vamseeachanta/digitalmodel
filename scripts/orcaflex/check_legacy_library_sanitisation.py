@@ -111,6 +111,100 @@ def audit(root: Path = ROOT) -> dict:
     }
 
 
+def publication_records(report: dict, root: Path = ROOT) -> dict:
+    """Publish complete inspected models; disclose exclusions only as counts.
+
+    A model is a standalone input or modular master. Includes and parameter
+    files belong to their referring model. BaseFile and include dependencies
+    are followed transitively; an opaque dependency excludes the whole model.
+    The original audit remains unchanged and still fails on opaque inputs.
+    """
+    import yaml
+
+    items = {item["path"]: item for item in report["models"]}
+    dependencies = {}
+    for relative, item in items.items():
+        path = root / relative
+        if sha256(path.read_bytes()).hexdigest() != item["sha256"]:
+            raise ValueError("source digest mismatch")
+        references = set()
+
+        def visit(value):
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    if str(key).lower() in ("basefile", "includefile", "includefiles"):
+                        for name in child if isinstance(child, list) else [child]:
+                            if isinstance(name, str):
+                                resolved = (path.parent / name.replace("\\", "/")).resolve()
+                                if resolved.is_relative_to(root.resolve()):
+                                    references.add(resolved.relative_to(root.resolve()).as_posix())
+                                else:
+                                    references.add("[outside-library]")
+                    else:
+                        visit(child)
+            elif isinstance(value, list):
+                for child in value:
+                    visit(child)
+
+        if item["status"] == "pass":
+            try:
+                visit(yaml.load(path.read_text(encoding="utf-8-sig"),
+                                Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader)))
+            except (yaml.YAMLError, UnicodeError, RecursionError):
+                # Parse failures receive validator records, never a parse pass.
+                pass
+        if item["model_type"] == "modular_master":
+            references.update(
+                name for name in items
+                if any(name.startswith((path.parent / folder).relative_to(root).as_posix() + "/")
+                       for folder in ("includes", "inputs"))
+            )
+        dependencies[relative] = references
+
+    def closure(relative):
+        found, pending = set(), [relative]
+        while pending:
+            name = pending.pop()
+            if name in found:
+                continue
+            found.add(name)
+            pending.extend(dependencies.get(name, set()) - found)
+        return found
+
+    models, retained, excluded = [], set(), 0
+    failed_models, missing_models = 0, 0
+    for relative, item in items.items():
+        if item["model_type"] in ("include_fragment", "parameters"):
+            continue
+        inputs = closure(relative)
+        failed = any(name in items and items[name]["status"] != "pass" for name in inputs)
+        missing = bool(inputs - items.keys())
+        failed_models += int(failed)
+        missing_models += int(missing)
+        if failed or missing:
+            excluded += 1
+            continue
+        recorded = sorted(inputs & items.keys())
+        retained.update(recorded)
+        models.append({"path": relative, "model_type": item["model_type"],
+                       "inputs": recorded,
+                       "missing_dependency_count": len(inputs - items.keys())})
+    return {
+        "schema": "legacy-library-publication-1",
+        "native_solver_used": False,
+        "counts": {
+            "library_inputs": len(items), "published_inputs": len(retained),
+            "excluded_inputs": len(items) - len(retained),
+            "failed_inspections": report["summary"]["fail"],
+            "excluded_models": excluded, "published_models": len(models),
+            "models_with_failed_inputs": failed_models,
+            "models_with_missing_inputs": missing_models,
+        },
+        "inputs": [items[name] for name in sorted(retained)],
+        "models": models,
+    }
+
+
 def write_report(output: Path, report: dict, root: Path = ROOT) -> None:
     """Keep failure evidence out of the public source tree."""
     if output.resolve().is_relative_to(root.resolve()):

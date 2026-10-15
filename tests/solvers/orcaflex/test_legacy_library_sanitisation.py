@@ -121,3 +121,94 @@ def test_diagnostics_never_import_the_native_solver():
     ]
     assert all("OrcFxAPI" not in (name or "") for name in imports)
     assert module.LIBRARY_GROUPS == ("jumper", "mooring", "installation", "training")
+
+
+def fixture_publication(tmp_path):
+    module = implementation()
+    library = tmp_path / "docs/domains/orcaflex/jumper"
+    library.mkdir(parents=True)
+    (library / "hidden.dat").write_bytes(b"\x00private-fixture\x01")
+    (library / "dependent.yml").write_text("BaseFile: hidden.dat\n")
+    (library / "indirect.yml").write_text("BaseFile: dependent.yml\n")
+    (library / "clean.yml").write_text("General: {}\n")
+    return module, module.audit(tmp_path)
+
+
+def test_publication_omits_failed_input_and_all_dependent_models(tmp_path):
+    module, report = fixture_publication(tmp_path)
+    published = module.publication_records(report, tmp_path)
+    encoded = json.dumps(published)
+    failed = next(item for item in report["models"] if item["status"] == "fail")
+    for withheld in (failed["path"], "hidden.dat", failed["sha256"], "private-fixture"):
+        assert withheld not in encoded
+    assert [item["path"] for item in published["models"]] == [
+        "docs/domains/orcaflex/jumper/clean.yml"
+    ]
+    # Passing overrides of an excluded model must not leak dependency names.
+    assert "dependent.yml" not in encoded
+    assert "indirect.yml" not in encoded
+
+
+def test_publication_counts_account_for_entire_library(tmp_path):
+    module, report = fixture_publication(tmp_path)
+    counts = module.publication_records(report, tmp_path)["counts"]
+    assert counts == {
+        "library_inputs": 4, "published_inputs": 1, "excluded_inputs": 3,
+        "failed_inspections": 1, "excluded_models": 3, "published_models": 1,
+        "models_with_failed_inputs": 3, "models_with_missing_inputs": 0,
+    }
+    assert counts["published_inputs"] + counts["excluded_inputs"] == len(report["models"])
+
+
+def test_every_recorded_input_passes_a_fresh_inspection(tmp_path):
+    module, report = fixture_publication(tmp_path)
+    published = module.publication_records(report, tmp_path)
+    for item in published["inputs"]:
+        assert module.inspect_model(
+            tmp_path / item["path"], item["path"], module.gate.load_rules()
+        )["status"] == "pass"
+    assert published == module.publication_records(report, tmp_path)
+
+
+def test_publication_refuses_source_digest_mismatch(tmp_path):
+    module, report = fixture_publication(tmp_path)
+    (tmp_path / "docs/domains/orcaflex/jumper/clean.yml").write_text("General: null\n")
+    with pytest.raises(ValueError, match="digest mismatch"):
+        module.publication_records(report, tmp_path)
+
+
+def test_publication_checks_sibling_inputs_of_modular_model(tmp_path):
+    module = implementation()
+    library = tmp_path / "docs/domains/orcaflex/jumper/case"
+    (library / "includes").mkdir(parents=True)
+    (library / "master.yml").write_text("- includefile: includes/section.yml\n")
+    (library / "includes/section.yml").write_bytes(b"\x00\x01")
+    published = module.publication_records(module.audit(tmp_path), tmp_path)
+    assert published["models"] == []
+    assert published["inputs"] == []
+    assert published["counts"]["excluded_models"] == 1
+
+
+def test_publication_omits_models_with_absent_inputs(tmp_path):
+    module = implementation()
+    library = tmp_path / "docs/domains/orcaflex/training"
+    library.mkdir(parents=True)
+    (library / "override.yml").write_text("BaseFile: absent.dat\n")
+    published = module.publication_records(module.audit(tmp_path), tmp_path)
+    assert published["models"] == []
+    assert published["inputs"] == []
+    assert published["counts"]["models_with_missing_inputs"] == 1
+    assert "absent.dat" not in json.dumps(published)
+
+
+def test_reference_outside_library_is_not_silently_accepted(tmp_path):
+    module = implementation()
+    root = tmp_path / "source"
+    library = root / "docs/domains/orcaflex/training"
+    library.mkdir(parents=True)
+    (library / "model.yml").write_text("BaseFile: ../../../../../external.dat\n")
+    report = module.audit(root)
+    assert report["summary"]["pass"] == 1
+    result = module.publication_records(report, root)
+    assert result["models"] == []
+    assert result["counts"]["models_with_missing_inputs"] == 1
