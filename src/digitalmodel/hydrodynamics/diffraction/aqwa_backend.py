@@ -24,6 +24,7 @@ import numpy as np
 from digitalmodel.hydrodynamics.diffraction.diffraction_units import rad_per_s_to_hz
 from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
+    VesselGeometry,
     VesselInertia,
 )
 
@@ -56,6 +57,9 @@ class ParsedMesh:
 
 # AQWA uses a large depth to represent "infinite" / deep water
 _DEEP_WATER_DEPTH = 10000.0
+
+# Mesh coordinates are in metres; snap symmetry-plane roundoff within 10 nm.
+_XZ_PLANE_TOLERANCE = 1e-8
 
 # Column-formatting helpers (mirrors aqwa_dat_files.py white_space convention)
 _WS = " "
@@ -322,6 +326,39 @@ class AQWABackend:
         self._mesh_cache[mesh_file] = mesh
         return mesh
 
+    def _load_body_mesh(self, geometry: VesselGeometry) -> Optional[ParsedMesh]:
+        """Use the same compact half-mesh in the coordinate and element decks."""
+        mesh = self._load_mesh(geometry.mesh_file)
+        if mesh is None or geometry.symmetry != "xz":
+            return mesh
+
+        panel_y = mesh.vertices[mesh.panels, 1]
+        below = np.any(panel_y < -_XZ_PLANE_TOLERANCE, axis=1)
+        above = np.any(panel_y > _XZ_PLANE_TOLERANCE, axis=1)
+        # Keep panels wholly on y >= 0, including panels on the plane. A panel
+        # straddling both sides beyond tolerance is rejected, never clipped or
+        # selected by its centroid: the mesh must first be split at y = 0.
+        straddling = np.flatnonzero(below & above)
+        if len(straddling):
+            panel_numbers = ", ".join(str(int(index) + 1) for index in straddling)
+            raise ValueError(
+                "xz symmetry requires panels split at y = 0; "
+                f"straddling panels: {panel_numbers}"
+            )
+        panels = mesh.panels[~below]
+        if not len(panels):
+            raise ValueError("xz symmetry mesh has no nonnegative-y panels")
+
+        used_nodes, remapped = np.unique(panels, return_inverse=True)
+        vertices = mesh.vertices[used_nodes].copy()
+        on_plane = np.abs(vertices[:, 1]) <= _XZ_PLANE_TOLERANCE
+        vertices[on_plane, 1] = 0.0
+        return ParsedMesh(
+            vertices=vertices,
+            panels=remapped.reshape(panels.shape),
+            name=mesh.name,
+        )
+
     def _parse_gdf(self, file_path: Path) -> ParsedMesh:
         """Parse a WAMIT GDF mesh file.
 
@@ -507,7 +544,7 @@ class AQWABackend:
         bodies = spec.get_bodies()
         for struct_idx, body in enumerate(bodies, start=1):
             mesh_file = body.vessel.geometry.mesh_file
-            mesh = self._load_mesh(mesh_file)
+            mesh = self._load_body_mesh(body.vessel.geometry)
 
             cards.append(f"{_WS:>6s}STRC{_WS:>4s}{struct_idx:>5d}")
 
@@ -555,8 +592,12 @@ class AQWABackend:
         bodies = spec.get_bodies()
         for struct_idx, body in enumerate(bodies, start=1):
             mesh_file = body.vessel.geometry.mesh_file
-            mesh = self._load_mesh(mesh_file)
+            mesh = self._load_body_mesh(body.vessel.geometry)
             vessel_name = body.vessel.name or "body"
+
+            if body.vessel.geometry.symmetry == "xz":
+                # Structure-prefixed option in ELM1, matching the ILID layout.
+                cards.append(f"     {struct_idx}SYMX")
 
             # Compute bounding box from mesh vertices
             if mesh is not None and len(mesh.vertices) > 0:
@@ -830,13 +871,19 @@ class AQWABackend:
         return float(depth)
 
     @staticmethod
-    def _expand_headings_for_aqwa(headings: list[float]) -> list[float]:
-        """Expand heading range to -180..+180 for AQWA (no-symmetry bodies).
+    def _expand_headings_for_aqwa(
+        headings: list[float], symmetry: bool = False
+    ) -> list[float]:
+        """Use 0..180 for xz symmetry, otherwise expand to -180..+180.
 
-        AQWA requires the first heading to be -180 and the last to be +180.
-        If the spec only covers 0..180, mirror the intermediate headings to
-        the negative side to build a full -180..+180 range.
+        Symmetric headings are folded into the solved half-plane. For bodies
+        without symmetry, mirror intermediate positive headings and retain the
+        existing full-range endpoint convention.
         """
+        if symmetry:
+            folded = {min(h % 360, 360 - h % 360) for h in headings}
+            return sorted(folded | {0, 180})
+
         h_set = set(headings)
         # Mirror positive headings to negative side
         for h in headings:
@@ -875,9 +922,14 @@ class AQWABackend:
             freq_str = f"{freq_value:>10s}"
             cards.append(f"{_WS:>5s}1HRTZ{i:>5d}{i:>5d}{freq_str}")
 
-        # Headings — AQWA requires -180 to +180 range for no-symmetry bodies
+        # Geometry controls the solved half-plane. A heading flag alone must
+        # not shorten the range for a full body; mixed bodies need the full
+        # range unless every body uses the xz half-mesh.
         headings = spec.wave_headings.to_heading_list()
-        aqwa_headings = self._expand_headings_for_aqwa(headings)
+        symmetry = all(
+            body.vessel.geometry.symmetry == "xz" for body in spec.get_bodies()
+        )
+        aqwa_headings = self._expand_headings_for_aqwa(headings, symmetry=symmetry)
         for i, heading_deg in enumerate(aqwa_headings, start=1):
             heading_str = f"{heading_deg:>10g}"
             cards.append(f"{_WS:>5s}1DIRN{i:>5d}{i:>5d}{heading_str}")

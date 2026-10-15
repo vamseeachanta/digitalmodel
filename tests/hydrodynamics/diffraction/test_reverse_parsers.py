@@ -390,6 +390,8 @@ class TestAQWAInputParserInjectedHeadings:
         spec = _load_ship_spec()
         spec_data = spec.model_dump(mode="json", exclude_none=True)
         spec_data["wave_headings"]["values"] = [45.0, 90.0]
+        # Full bodies still expand headings and retain the parser warning.
+        spec_data["vessel"]["geometry"]["symmetry"] = "none"
         subset_spec = DiffractionSpec.model_validate(spec_data)
 
         dat_path = _generate_aqwa_dat(subset_spec, tmp_path)
