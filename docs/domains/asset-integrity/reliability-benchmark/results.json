@@ -1,0 +1,77 @@
+{
+  "completed_at": "2026-10-14T17:09:57.755438+00:00",
+  "criteria_recorded_at": "2026-10-14T17:09:55.396453+00:00",
+  "criteria_sha256": "b9fbf416fb2411b50cf7e82733a8b5afac6817e8c6cdf9ad9097bc3c565a53ea",
+  "fatigue": [
+    {
+      "design_life": 500000,
+      "native_beta": 2.2289319012149997,
+      "native_form_seconds": 9.508058428764343e-05,
+      "native_mc_pf": 0.01319,
+      "native_mc_seconds": 0.009622033685445786,
+      "native_pf": 0.012909218075390297,
+      "openturns_beta": 2.2289319008979747,
+      "openturns_form_seconds": 0.0009826384484767914,
+      "openturns_mc_pf": 0.01292,
+      "openturns_mc_seconds": 0.4058646932244301,
+      "openturns_pf": 0.012909218085938697,
+      "reference_beta": 2.2289319012149997,
+      "reference_pf": 0.012909218075390297
+    },
+    {
+      "design_life": 1000000,
+      "native_beta": 0.03154414502434555,
+      "native_form_seconds": 8.917972445487976e-05,
+      "native_mc_pf": 0.48366,
+      "native_mc_seconds": 0.008773844689130783,
+      "native_pf": 0.4874177935038943,
+      "openturns_beta": 0.03154414470731731,
+      "openturns_form_seconds": 0.0007626973092556,
+      "openturns_mc_pf": 0.48614,
+      "openturns_mc_seconds": 0.40442658588290215,
+      "openturns_pf": 0.48741779363030735,
+      "reference_beta": 0.031544145024345556,
+      "reference_pf": 0.4874177935038943
+    },
+    {
+      "design_life": 2000000,
+      "native_beta": -2.1658436111663084,
+      "native_form_seconds": 8.780136704444885e-05,
+      "native_mc_pf": 0.98461,
+      "native_mc_seconds": 0.009063031524419785,
+      "native_pf": 0.9848384302508891,
+      "openturns_beta": -2.1658436108492696,
+      "openturns_form_seconds": 0.0010838918387889862,
+      "openturns_mc_pf": 0.9844,
+      "openturns_mc_seconds": 0.40480005368590355,
+      "openturns_pf": 0.9848384302387717,
+      "reference_beta": -2.165843611166309,
+      "reference_pf": 0.9848384302508892
+    }
+  ],
+  "openturns_version": "1.26",
+  "published": {
+    "beta": 1.0092549405785702,
+    "pf": 0.15642619197777585,
+    "wall_seconds": 0.5674222037196159
+  },
+  "sobol": {
+    "evaluations_per_method": 400000,
+    "native": {
+      "sn": 0.09893380381558992,
+      "stress": 0.8984690893800792
+    },
+    "native_seconds": 0.009689345955848694,
+    "openturns": {
+      "sn": 0.10144262277328367,
+      "stress": 0.9003378433294197
+    },
+    "openturns_seconds": 0.047630809247493744,
+    "reference": {
+      "sn": 0.1,
+      "stress": 0.9
+    }
+  },
+  "started_at": "2026-10-14T17:09:55.396544+00:00",
+  "total_wall_seconds": 2.358885020017624
+}
