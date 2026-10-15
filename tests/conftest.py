@@ -37,6 +37,11 @@ def store_data_marker(request):
     marker = request.node.get_closest_marker("store_data")
     if marker and marker.args:
         request.getfixturevalue("store_file")(marker.args[0])
+    elif marker:
+        pytest.skip(
+            "store_data: <id> not available (store not reachable); "
+            "run scripts/data/fetch.py <id>"
+        )
 
 # Tests that fail at collection due to missing modules, deleted files, or
 # platform-specific imports. Excluded so the rest of the suite can run.

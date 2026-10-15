@@ -3,6 +3,7 @@ name: Content store tests
 "on":
   pull_request:
     paths:
+      - ".gitignore"
       - ".github/workflows/store-data-tests.yml"
       - "scripts/data/fetch.py"
       - "data/MANIFEST.tsv"

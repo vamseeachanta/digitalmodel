@@ -113,7 +113,6 @@
 ["docs/domains/orcaflex/jumper/sut_mm/monolithic/SZ_VA.yml", "Case2_zone28mby25m.yml"]
 ["docs/domains/orcaflex/jumper/sut_mm/resonance/monolithic/SUT_MM_DZ_00deg_properties.yml", "iv01_type-Rev2.dat"]
 ["docs/domains/orcaflex/jumper/sut_mm/resonance/monolithic/SUT_MM_DZ_30deg_properties.yml", "iv01_type-Rev2.dat"]
-["docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/_ss/vessel_end_fixed_converged.yml", "basefile/D24inL4900mBuoy7kNSpacing1500mm.yml"]
 ["docs/domains/orcaflex/structures/mudmat/SUT_MM_DZ_30deg.yml", "iv01_type-Rev2.dat"]
 ["src/digitalmodel/base_configs/modules/code_dnvrph103/6d_buoy_negligible_properties_template.yml", "base_file.yml"]
 ["src/digitalmodel/base_configs/modules/code_dnvrph103/6d_buoy_template.yml", "__03_draft_wd925m_bgc.yml"]

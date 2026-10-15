@@ -12,10 +12,10 @@ Because the installation tools are ROV operated, there’s no umbilical to worry
  An alignment funnel guides the initial landing of the tool and connector assembly. Latch dogs in the funnel lock onto the receiver structure as the soft-landing system is engaged to hydraulically force the hub and collet connector faces together.
 
 
- hanks for sharing such valuable and fruitful information which i always follow and get benifit from. However, I noticed that the installation method and details mentioned above and illustrated in the video are a bit outdated. Nowadays, the installation and landing techniques have evolved to keep up pace with the upgrades occurrd on the connectors and tie-in , for example ; baker hughes connector now fabricated with torque tool bucket class 5 to close the connector clamp on the hub without need of running tools or even ROV pannel for back seal test, even the deployment of the jumper rarely happened using two cranes , mostly using one crane and in a few cases using A/R winch to support the crane.
+ The shared information provides valuable and useful guidance. However, the installation method and details mentioned above and illustrated in the video are a bit outdated. Nowadays, the installation and landing techniques have evolved to keep up pace with the upgrades occurrd on the connectors and tie-in , for example ; baker hughes connector now fabricated with torque tool bucket class 5 to close the connector clamp on the hub without need of running tools or even ROV pannel for back seal test, even the deployment of the jumper rarely happened using two cranes , mostly using one crane and in a few cases using A/R winch to support the crane.
 Also, it’s very difficult to retrieve the spreader bar with the installation tools attached because the CoG will be variy from that while the installation, therefore, the spreader bar recovered firstly to deck or supply vessel, then the retrieval of the running tools come after. 
 
-Finally, Thank you because i have learnt from you a lot in the subsea field.
+Finally, the shared information has provided substantial learning in the subsea field.
 
 
 Subsea rigid jumpers with vertically oriented hubs can be installed without using guidelines by running the jumpers on spreader beams from a construction vessel or drilling rig. Installation tools are attached to downward-facing collet connectors at both ends of the jumper, and the rigid spreader beam is attached to the installation tools and the center of the jumper. The jumper is then lowered by crane to its subsea location.

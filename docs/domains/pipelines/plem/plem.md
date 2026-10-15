@@ -1,6 +1,6 @@
 Subsea PLEM (Pipeline End Manifold)
 
-The purpose of the subsea PLEM is to provide an installation structure to attach these piping components and then lower them to the seafloor in the desired orientation. The structure must not only withstand the installation loads while being lowered to the seafloor, but also retrieval to the surface should a failure occur. Figure below shows a typical configuration for a PLEM.
+The purpose of the subsea PLEM is to provide an installation structure to attach these piping components and then lower them to the seafloor in the desired orientation. The structure shall not only withstand the installation loads while being lowered to the seafloor, but also retrieval to the surface if a failure occurs. Figure below shows a typical configuration for a PLEM.
  Subsea PLEM can be any configuration, but generally is made up of the following
 assemblies:
 • Piping system and components;

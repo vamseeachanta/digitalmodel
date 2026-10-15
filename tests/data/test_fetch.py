@@ -209,3 +209,29 @@ def test_store_marker_skip_reason(tmp_path, monkeypatch):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "store_data: missing-id not available (store not reachable); run scripts/data/fetch.py missing-id" in result.stdout
+
+
+def test_bare_store_marker_skip_reason(tmp_path, monkeypatch):
+    monkeypatch.delenv("ACE_DATA_ROOT", raising=False)
+    monkeypatch.delenv("ACE_DATA_REMOTE", raising=False)
+    probe = tmp_path / "probe.py"
+    probe.write_text(
+        "import pytest\n"
+        "from importlib.util import spec_from_file_location, module_from_spec\n"
+        f"s = spec_from_file_location('store_fixtures', {str(SCRIPT.parents[2] / 'tests/conftest.py')!r})\n"
+        "m = module_from_spec(s)\ns.loader.exec_module(m)\n"
+        "store_file = m.store_file\n"
+        "store_data_marker = m.store_data_marker\n"
+        "@pytest.mark.store_data\n"
+        "def test_missing():\n    raise AssertionError('must skip')\n"
+    )
+    env = os.environ.copy()
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
+        env.pop(key, None)
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-c", str(SCRIPT.parents[2] / "pytest.ini"), str(probe), "-rs", "-o",
+         f"cache_dir={tmp_path / 'pytest-cache'}"],
+        cwd=SCRIPT.parents[2], capture_output=True, text=True, env=env,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "store_data: <id> not available (store not reachable); run scripts/data/fetch.py <id>" in result.stdout
