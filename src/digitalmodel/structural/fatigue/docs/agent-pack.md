@@ -5,7 +5,7 @@
 | Module | structural/fatigue |
 | Repository | digitalmodel |
 | Path | src/digitalmodel/structural/fatigue/docs/agent-pack.md |
-| Pack revision | 0, 2026-10-15 |
+| Pack revision | 1, 2026-10-15 |
 | Code revision | `f9c058d6ef4e69d01630d90ea90033b47ce9d30f` |
 | Analysis family | EC — Python engineering calculations |
 | Quality manager role | Engineering calculations quality manager |
@@ -85,152 +85,82 @@ A credited stress-cycle test is recorded as a node below; a field-only or smoke 
 
 | Curve ID | Standard · edition · table locator in code | Environment | Slopes (dimensionless fields) | Knee (cycle field) | Thickness exponent (field / application) | Point evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-
 | `DNV:B1:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[B1]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L60-L60] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:B2:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[B2]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L61-L61] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[C]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L62-L62] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C1:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[C1]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L63-L63] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C2:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[C2]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L64-L64] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:D:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[D]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L65-L65] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:E:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[E]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L66-L66] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[F]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L67-L67] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F1:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[F1]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L68-L68] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F3:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[F3]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L69-L69] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:G:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[G]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L70-L70] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W1:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[W1]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L71-L71] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W2:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[W2]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L72-L72] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W3:air` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-1 | air | `B.m1, B.m2` | `N_KNEE_AIR` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_consumers.py::test_structural_agrees_with_the_verified_library_above_the_limit[W3]` (PASS; regression parity) [tests/fatigue/test_c203_consumers.py:L84-L95]; [src/digitalmodel/fatigue/c203_sn_tables.py:L73-L73] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:B1:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L60-L60] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:B2:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L61-L61] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L62-L62] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C1:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L63-L63] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C2:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L64-L64] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:D:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | `tests/fatigue/test_c203_variable_amplitude.py::test_structural_cp_curve_from_table_2_2` (PASS) [tests/fatigue/test_c203_variable_amplitude.py:L121-L134]; [src/digitalmodel/fatigue/c203_sn_tables.py:L65-L65] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:E:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L66-L66] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L67-L67] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F1:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L68-L68] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F3:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L69-L69] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:G:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L70-L70] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W1:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L71-L71] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W2:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L72-L72] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W3:seawater_cp` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-2 | seawater_cp | `B.m1, B.m2` | `N_KNEE_SEAWATER_CP` | `B.k`; air convenience correction only | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L73-L73] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:B1:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L86-L86] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:B2:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L87-L87] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L88-L88] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C1:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L89-L89] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:C2:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L90-L90] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:D:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L91-L91] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:E:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L92-L92] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L93-L93] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F1:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | `tests/fatigue/test_c203_variable_amplitude.py::test_structural_free_corrosion_curve_from_table_2_3` (PASS) [tests/fatigue/test_c203_variable_amplitude.py:L137-L147]; [src/digitalmodel/fatigue/c203_sn_tables.py:L94-L94] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:F3:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L95-L95] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:G:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L96-L96] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W1:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L97-L97] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W2:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L98-L98] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `DNV:W3:free_corrosion` | DNV-RP-C203 · 2011 basis / 2021 label differs · Table 2-3 | free_corrosion | `M_FREE_CORROSION` | None | `FC.k`; caller applies | Open: section 10, issue pending (2); [src/digitalmodel/fatigue/c203_sn_tables.py:L99-L99] [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-
 | `API:X` | API RP 2A-WSD · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] |
-
 | `API:X_prime` | API RP 2A-WSD · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] |
-
 | `API:Y` | API RP 2A-WSD · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] |
-
 | `API:S-N1` | API RP 2A-WSD · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] |
-
 | `API:S-N2` | API RP 2A-WSD · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] |
-
 | `BS:B` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] |
-
 | `BS:C` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] |
-
 | `BS:D` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] |
-
 | `BS:E` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] |
-
 | `BS:F` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] |
-
 | `BS:F2` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] |
-
 | `BS:G` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] |
-
 | `BS:W` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] |
-
 | `AWS:A` | AWS D1.1 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] |
-
 | `AWS:B` | AWS D1.1 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] |
-
 | `AWS:B1` | AWS D1.1 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] |
-
 | `AWS:C` | AWS D1.1 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] |
-
 | `AWS:C1` | AWS D1.1 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] |
-
 | `AWS:D` | AWS D1.1 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] |
-
 | `AWS:E` | AWS D1.1 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] |
-
 | `AWS:E1` | AWS D1.1 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] |
-
 | `BS_7608_REVISED:D` | BS 7608 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | `tests/structural/fatigue/test_sn_curves.py::TestBS7608RevisedCurveParameters::test_bs7608_revised_d_known_n_at_100mpa` (PASS) [tests/structural/fatigue/test_sn_curves.py:L880-L884]; [src/digitalmodel/structural/fatigue/sn_curves.py:L388-L394] |
-
 | `ISO_19902:F_AIR` | ISO 19902 · Not recorded; source qualification open (1) | air | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | `tests/structural/fatigue/test_sn_curves.py::TestISO19902CurveParameters::test_iso19902_f_air_known_n_at_100mpa` (PASS) [tests/structural/fatigue/test_sn_curves.py:L964-L970]; [src/digitalmodel/structural/fatigue/sn_curves.py:L396-L407] |
-
 | `ISO_19902:F_SW_NOCP` | ISO 19902 · Not recorded; source qualification open (1) | free_corrosion | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L396-L407] |
-
 | `ISO_19902:F2_SW_CP` | ISO 19902 · Not recorded; source qualification open (1) | seawater_cp | `P.m` | None; `cutoff_cycles` is separate | Material default / caller; not selected by this factory | `tests/structural/fatigue/test_sn_curves.py::TestISO19902CurveParameters::test_iso19902_f2_sw_cp_known_n_at_50mpa` (PASS) [tests/structural/fatigue/test_sn_curves.py:L994-L1000]; [src/digitalmodel/structural/fatigue/sn_curves.py:L396-L407] |
-
 | `DNVGL_RP_C203:T_AIR` | DNV-RP-C203 · 2011 basis; later edition not established; Table 2-1 / 2-2 | air | `P.m, P.m2` | `P.knee_cycles` | SCF-dependent exponent named in comments; not applied | `tests/structural/fatigue/test_sn_curves.py::TestDNVGLRPC203CurveParameters::test_dnvgl_t_air_known_n_at_100mpa` (PASS) [tests/structural/fatigue/test_sn_curves.py:L1056-L1062]; [src/digitalmodel/structural/fatigue/sn_curves.py:L409-L437] |
-
 | `DNVGL_RP_C203:T_SW_CP` | DNV-RP-C203 · 2011 basis; later edition not established; Table 2-1 / 2-2 | seawater_cp | `P.m, P.m2` | `P.knee_cycles` | SCF-dependent exponent named in comments; not applied | `tests/structural/fatigue/test_sn_curves.py::TestDNVGLRPC203CurveParameters::test_dnvgl_t_sw_cp_known_n_at_100mpa` (PASS) [tests/structural/fatigue/test_sn_curves.py:L1096-L1102]; [src/digitalmodel/structural/fatigue/sn_curves.py:L409-L437] |
-
-| `DNV_MULTISLOPE:D_MULTISLOPE` | DNV-RP-C203 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.slopes` | `P.transition_cycles` | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L339-L353] |
-
-| `DNV_MULTISLOPE:F_MULTISLOPE` | DNV-RP-C203 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.slopes` | `P.transition_cycles` | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L339-L353] |
-
+| `DNV_MULTISLOPE:D_MULTISLOPE` | DNV-RP-C203 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.slopes` | `P.transition_cycles` | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L339-L353] Evaluator: `MultislopeSNCurve.get_allowable_cycles` [src/digitalmodel/structural/fatigue/analysis.py:L171-L208] |
+| `DNV_MULTISLOPE:F_MULTISLOPE` | DNV-RP-C203 · Not recorded; source qualification open (1) | Not recorded; open (1) | `P.slopes` | `P.transition_cycles` | Material default / caller; not selected by this factory | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/sn_curves.py:L339-L353] Evaluator: `MultislopeSNCurve.get_allowable_cycles` [src/digitalmodel/structural/fatigue/analysis.py:L171-L208] |
 | `worked_examples:Chain-R3-Studless-SwCP` | DNVGL-OS-E301 · 2021 · Table 6-2 as named by helper | seawater_cp | `m` | None | Material default; no correction in helper | Open: section 10, issue pending (2); [src/digitalmodel/structural/fatigue/worked_examples.py:L100-L119] |
 
 The structural factory returns curve attributes rather than a calculation-output `Citation` sidecar, and the damage result contains numeric contributions without such a sidecar; provenance must be supplied by the calling workflow, with integration qualification tracked by issue pending (5). [src/digitalmodel/structural/fatigue/sn_curves.py:L133-L143] [src/digitalmodel/structural/fatigue/damage_accumulation.py:L201-L217]
+
+`SNCurvePlotter.calculate_sn_points` is a presentation helper: it derives plot stresses from CSV curve segments, applies SCF and optionally clips stresses at a fatigue limit; it is not an additional allowable-cycle damage route. [src/digitalmodel/structural/fatigue/sn_curve_plotter.py:L76-L172]
 
 ### Spectral and probabilistic methods
 
@@ -273,7 +203,7 @@ Criteria below define checks; a criterion is not a claim of standards clearance.
 | G2 | Applicable | counting-refusal: every damage entry point bound to a recorded failing counter raises `NonConservativeCountingError`; 0 such routes allowed to return damage (count) | `test_13_failing_path_refuses_damage_calculation` parameter cases; diagnostic counter agreement is not asserted; [tests/fatigue/test_rainflow_invariants.py:L496-L515] [src/digitalmodel/structural/fatigue/analysis.py:L335-L348] |
 | G3 | NOT_APPLICABLE | No dynamic solve or time integration is performed by the scalar damage and scatter calculation paths | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L160-L217] [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L221-L227] |
 | G4 | NOT_APPLICABLE | No diffraction mesh or hydrostatic model is produced by these calculation outputs | [src/digitalmodel/structural/fatigue/frequency_domain.py:L75-L84] [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L57-L83] |
-| G5 | Applicable | report-evidence: report payload preserves the explicitly supplied curve and histogram; 0 missing provenance fields (count), 0 result rows without a corresponding calculation record (count); the curve's edition/environment and every gate result must be attached before clearance | Proposed review check on `DesignCodeReport._build_curve` caller and contributions; built-in complete AQG appendix coverage is open (3); [src/digitalmodel/structural/fatigue/design_code_report.py:L101-L143] |
+| G5 | Applicable | report-evidence: report payload preserves the explicitly supplied curve and histogram; 0 missing provenance fields (count), 0 result rows without a corresponding calculation record (count); the curve's edition/environment and every gate result must be attached before clearance; require `abs(sum(damage_increment) - headline_damage) <= 1e-6 * abs(headline_damage)` (relative, dimensionless), with an exact 0 dimensionless sum when headline damage is 0 | Proposed review check on `DesignCodeReport._build_curve` caller and contributions; built-in complete AQG appendix coverage is open (3); [src/digitalmodel/structural/fatigue/design_code_report.py:L101-L143] [src/digitalmodel/structural/fatigue/design_code_report.py:L222-L233] |
 
 The gate set defines seven checks: G0 two, G1 one, G2 three, G3 zero, G4 zero and G5 one; report-evidence and full environment expansion require the open work in section 10 before engineering clearance. [AQG r0, sections 9–11]
 
@@ -287,10 +217,13 @@ UNVERIFIED: configured-wiki citation failure is not detected by the named fatigu
 | Free-corrosion records formerly reused CP parameters; structural factories now select the free-corrosion record and omit the second segment | env-curve; all-class structural point coverage still open (2) | #2165, read 2026-10-15; [src/digitalmodel/structural/fatigue/sn_curves.py:L587-L616] [tests/fatigue/test_c203_variable_amplitude.py:L137-L147] |
 | Wrong environment table identifier or an edition label mistaken for the verified value basis | env-curve; retain both implemented/verified edition fields instead of silently reconciling | #2161, read 2026-10-15; [src/digitalmodel/fatigue/c203_editions.py:L19-L56] |
 | Structural rainflow loses the span on broadband/residual-dominated signals; damage routes explicitly refuse the affected path | rainflow-reference on conforming path and counting-refusal; structural diagnostic counter is not a reference | workspace-hub#3839; [tests/fatigue/test_rainflow_invariants.py:L172-L177] [docs/domains/fatigue/rainflow-path-exposure-2026-09-11.md:L48-L55] [src/digitalmodel/structural/fatigue/analysis.py:L335-L348] |
-| Reliability formulas read only `A,m`; a bilinear curve's second segment is not evaluated | Restrict reliability interpretation to the first-segment model until piecewise qualification; no independent piecewise detection check credited | #2165 follow-up; [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L118-L145] [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L318-L343] |
+| Reliability formulas read only `A,m`; a bilinear curve's second segment is not evaluated | Restrict reliability interpretation to the first-segment model until piecewise qualification; no independent piecewise detection check credited | issue pending (1); [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L118-L145] [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L318-L343] |
 | Report standard/class label can accompany a generic default curve instead of a standard-selected curve | report-evidence; supply the actual curve object, compare identities and curve points before report use | issue pending (3); [src/digitalmodel/structural/fatigue/design_code_report.py:L101-L114] |
 | YAML parse failure or absent data file falls back to hardcoded dictionaries; comparison report skips invalid requested curves | offline-import alone does not establish which source loaded; inspect warnings and count requested/returned curves | issue pending (5); [src/digitalmodel/structural/fatigue/sn_curves.py:L455-L505] [src/digitalmodel/structural/fatigue/sn_comparison_report.py:L94-L115] |
 | Historical curve review discusses a standalone single-segment calculation, while later findings claim full database qualification | These historical documents are leads, not independent standards clearance of this package | issue pending (1); [docs/domains/fatigue/fatigue_curve_implementation_review.md:L43-L71] [docs/domains/fatigue/PHASE4_FATIGUE_FINDINGS.md:L114-L127] |
+| Cross-class S-N conventions differ: `BilinearSNCurve` uses a strict upper-branch boundary and a fatigue-limit cut-off, and only warns about discontinuity; `PowerLawSNCurve` uses an inclusive upper boundary and no two-segment cut-off | No cross-class S-N check exists in the inspected fatigue suites; individual-class continuity tests do not compare these conventions | issue pending (5); [src/digitalmodel/structural/fatigue/sn_curves.py:L163-L170] [src/digitalmodel/structural/fatigue/sn_curves.py:L265-L288] [tests/structural/fatigue/test_sn_curves.py:L256-L297] |
+| Report headline damage comes from the payload and is never compared with the recomputed sum of its increments; a contribution table can disagree with the headline | report-evidence: compare the sum with the headline using the section-5 relative tolerance; no built-in reconciliation detection check exists | issue pending (3); [src/digitalmodel/structural/fatigue/design_code_report.py:L117-L143] [src/digitalmodel/structural/fatigue/design_code_report.py:L222-L233] [tests/structural/fatigue/test_design_code_report.py:L61-L65] |
+| Open seawater-CP basis and fail-closed citation qualification concerns the general-catalog `fatigue.sn_curves.get_sn_curve` route; selection of a CP knee in code does not establish exact-edition qualification | env-curve covers the structural factory; no dedicated #1588 fail-closed citation detection check exists in the named fatigue suites; do not credit the general-catalog route as an independently qualified hand reference | #1588, read 2026-10-15; [src/digitalmodel/fatigue/sn_curves.py:L104-L134] |
 
 ## 7. Lessons log
 
@@ -320,465 +253,564 @@ UNVERIFIED: inventory-row identities for every upstream/downstream consumer and 
 
 A fresh repository-wide text search for counting, stress-life and damage implementations included scripts and retained 154 matching Python/YAML paths as inspection leads; the complete mapped entries are preserved below. [src/digitalmodel/fatigue/counting_contract.py:L525-L575] [src/digitalmodel/structural/fatigue/sn_curves.py:L1047-L1102]
 
-Index provenance: `docs/registry/implementation-map.yaml` on `origin/codex/implmap-work`, ref revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, declared source revision `947fa50ff9a9e210de7e8f90e01b37add85c5954`; source citations below resolve against this pack's code revision.
+Index provenance: `docs/registry/implementation-map.yaml`, map revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, declared source revision `947fa50ff9a9e210de7e8f90e01b37add85c5954`; source citations below resolve against this pack's code revision.
 
 The index preserves every mapped entry for the stress-life/damage family and wave-spectrum family, including scripts, examples, delegates and test helpers; it does not treat every mapped candidate as an independent numerical method or claim those candidates were executed.
 
-Each symbol is indexed individually below with its defining source span; `module body` denotes a script/table entry rather than a named callable.
+Each symbol is indexed individually below with its defining source span; `module body` denotes a script/table entry rather than a named callable. Relations retain the map classification, with examples and test helpers shown as callers; agreement is not checked unless stated, and covering-pack cells identify coverage credited by this pack, not a search for every other pack.
 
 #### wave-spectra
 
-| Path | Mapped symbols and source spans |
-| --- | --- |
-
-| `docs/domains/orcaflex/examples/raw/K01/PythonController.py` | `Actuator.output` [docs/domains/orcaflex/examples/raw/K01/PythonController.py:L56-L78] |
-
-| `docs/domains/orcaflex/examples/raw/K02/BladedControllerWrapper.py` | `Actuator.output` [docs/domains/orcaflex/examples/raw/K02/BladedControllerWrapper.py:L61-L83] |
-
-| `examples/domains/fpso/fpso_mooring_analysis.py` | `define_environmental_conditions` [examples/domains/fpso/fpso_mooring_analysis.py:L137-L191]; `generate_visualizations` [examples/domains/fpso/fpso_mooring_analysis.py:L347-L494]; `main` [examples/domains/fpso/fpso_mooring_analysis.py:L497-L562] |
-
-| `examples/prototypes/orcaflex-agent/generate_test.py` | `main` [examples/prototypes/orcaflex-agent/generate_test.py:L35-L73] |
-
-| `scripts/_seed_eq_mock.py` | `mock_time_series` [scripts/_seed_eq_mock.py:L33-L83] |
-
-| `scripts/benchmark/extract_pdf_plots.py` | `module body` [scripts/benchmark/extract_pdf_plots.py:L38-L50] |
-
-| `scripts/benchmark/validate_owd_vs_spec.py` | `module body` [scripts/benchmark/validate_owd_vs_spec.py:L61-L73] |
-
-| `scripts/extract_property_inventory.py` | `build_dormancy_rules` [scripts/extract_property_inventory.py:L179-L205] |
-
-| `scripts/generate_env_files.py` | `create_wave_file` [scripts/generate_env_files.py:L38-L77]; `main` [scripts/generate_env_files.py:L142-L194] |
-
-| `scripts/ingest_orcina_help.py` | `module body` [scripts/ingest_orcina_help.py:L21-L33] |
-
-| `scripts/python/digitalmodel/legacy/19_-_DistanceBetweenTwoVessels.py` | `module body` [scripts/python/digitalmodel/legacy/19_-_DistanceBetweenTwoVessels.py:L4-L16] |
-
-| `scripts/python/digitalmodel/legacy/26_-_LinkedStatistics.py` | `module body` [scripts/python/digitalmodel/legacy/26_-_LinkedStatistics.py:L3-L15] |
-
-| `scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py` | `module body` [scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py:L3-L12] |
-
-| `scripts/python/digitalmodel/legacy/29_-_ExtremeStatisticsRayleigh.py` | `module body` [scripts/python/digitalmodel/legacy/29_-_ExtremeStatisticsRayleigh.py:L3-L15] |
-
-| `scripts/python/digitalmodel/legacy/30_-_ExtremeStatisticsLikelihood.py` | `module body` [scripts/python/digitalmodel/legacy/30_-_ExtremeStatisticsLikelihood.py:L3-L15] |
-
-| `scripts/python/digitalmodel/legacy/31_-_ExtremeStatisticsAggregation.py` | `module body` [scripts/python/digitalmodel/legacy/31_-_ExtremeStatisticsAggregation.py:L5-L17] |
-
-| `scripts/python/digitalmodel/legacy/32_-_FrequencyDomainResults.py` | `module body` [scripts/python/digitalmodel/legacy/32_-_FrequencyDomainResults.py:L3-L15] |
-
-| `scripts/python/digitalmodel/legacy/33_-_FrequencyDomainMPM.py` | `module body` [scripts/python/digitalmodel/legacy/33_-_FrequencyDomainMPM.py:L3-L10] |
-
-| `scripts/python/digitalmodel/legacy/34_-_FrequencyDomainRangeGraph.py` | `module body` [scripts/python/digitalmodel/legacy/34_-_FrequencyDomainRangeGraph.py:L3-L15] |
-
-| `scripts/python/digitalmodel/legacy/35_-_FrequencyDomainSpectralDensitySpectralResponse.py` | `module body` [scripts/python/digitalmodel/legacy/35_-_FrequencyDomainSpectralDensitySpectralResponse.py:L4-L16] |
-
-| `scripts/python/digitalmodel/legacy/36_-_FrequencyDomainTimeHistorySynthesis.py` | `module body` [scripts/python/digitalmodel/legacy/36_-_FrequencyDomainTimeHistorySynthesis.py:L4-L15] |
-
-| `scripts/python/digitalmodel/legacy/analyze_marine_excel.py` | `analyze_excel_file` [scripts/python/digitalmodel/legacy/analyze_marine_excel.py:L13-L345] |
-
-| `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler.profile_wave_spectrum` [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L121-L194]; `PerformanceProfiler.profile_wave_spectrum.run_spectrum` [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L146-L150] |
-
-| `scripts/python/digitalmodel/orcawave/mcp_orcawave.py` | `freq_analyze` [scripts/python/digitalmodel/orcawave/mcp_orcawave.py:L36-L57] |
-
-| `src/digitalmodel/drilling_riser/global_model/build.py` | `_environment_and_simulation` [src/digitalmodel/drilling_riser/global_model/build.py:L430-L471] |
-
-| `src/digitalmodel/fatigue/scf_library.py` | `short_chord_factor_f1` [src/digitalmodel/fatigue/scf_library.py:L108-L136] |
-
-| `src/digitalmodel/hydrodynamics/cli.py` | `spectrum_cmd` [src/digitalmodel/hydrodynamics/cli.py:L46-L102] |
-
-| `src/digitalmodel/hydrodynamics/seakeeping.py` | `operability_analysis` [src/digitalmodel/hydrodynamics/seakeeping.py:L129-L231] |
-
-| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra._normalize_to_significant_height` [src/digitalmodel/hydrodynamics/wave_spectra.py:L29-L44]; `WaveSpectra.jonswap` [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L96]; `WaveSpectra.pierson_moskowitz` [src/digitalmodel/hydrodynamics/wave_spectra.py:L98-L137]; `WaveSpectra.bretschneider` [src/digitalmodel/hydrodynamics/wave_spectra.py:L139-L174]; `WaveSpectra.issc` [src/digitalmodel/hydrodynamics/wave_spectra.py:L176-L213]; `WaveSpectra.generate_spectrum` [src/digitalmodel/hydrodynamics/wave_spectra.py:L215-L262]; `WaveSpectra.significant_height_from_spectrum` [src/digitalmodel/hydrodynamics/wave_spectra.py:L288-L306]; `WaveSpectra.zero_crossing_period_from_spectrum` [src/digitalmodel/hydrodynamics/wave_spectra.py:L308-L328]; `WaveSpectra.spectrum_statistics` [src/digitalmodel/hydrodynamics/wave_spectra.py:L348-L386] |
-
-| `src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py` | `router` [src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py:L16-L69]; `_spectrum_name` [src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py:L78-L96] |
-
-| `src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py` | `OrcaflexModelComponents.wave` [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L207-L232]; `OrcaflexModelComponents.RayleighDampingCoefficients` [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L307-L377] |
-
-| `src/digitalmodel/marine_ops/installation/crane_tip_motion.py` | `_complex_rao` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L28-L30]; `crane_tip_raos` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L45-L107]; `crane_tip_significant_motion` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L110-L150]; `crane_tip_significant_velocity` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L153-L168]; `_jonswap_spectrum` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L171-L201] |
-
-| `src/digitalmodel/marine_ops/marine_analysis/analysis/excel_analyzer.py` | `analyze_excel_file` [src/digitalmodel/marine_ops/marine_analysis/analysis/excel_analyzer.py:L13-L345] |
-
-| `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler.profile_wave_spectrum` [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L119-L186]; `PerformanceProfiler.profile_wave_spectrum.run_spectrum` [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L139-L143] |
-
-| `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._wave_spectrum` [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L54-L75] |
-
-| `src/digitalmodel/marine_ops/operation_envelope.py` | `operation_envelope` [src/digitalmodel/marine_ops/operation_envelope.py:L168-L217]; `_significant_response` [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288] |
-
-| `src/digitalmodel/motion_forecast/wave_forecast.py` | `synthesize_directional_forecast` [src/digitalmodel/motion_forecast/wave_forecast.py:L111-L156] |
-
-| `src/digitalmodel/motion_forecast/wave_source.py` | `jonswap_spectrum` [src/digitalmodel/motion_forecast/wave_source.py:L21-L46]; `synthesize_forecast` [src/digitalmodel/motion_forecast/wave_source.py:L49-L102] |
-
-| `src/digitalmodel/orcaflex/environment.py` | `WaveSpectrumParams.tz` [src/digitalmodel/orcaflex/environment.py:L139-L144]; `WaveSpectrumParams.spectral_density` [src/digitalmodel/orcaflex/environment.py:L146-L174]; `WaveSpectrumParams.to_orcaflex_dict` [src/digitalmodel/orcaflex/environment.py:L176-L184] |
-
-| `src/digitalmodel/orcawave/motion_statistics.py` | `compute_response_spectrum` [src/digitalmodel/orcawave/motion_statistics.py:L97-L124] |
-
-| `src/digitalmodel/orcawave/wave_spectrum.py` | `pierson_moskowitz` [src/digitalmodel/orcawave/wave_spectrum.py:L109-L137]; `jonswap` [src/digitalmodel/orcawave/wave_spectrum.py:L140-L184]; `bretschneider` [src/digitalmodel/orcawave/wave_spectrum.py:L187-L204]; `issc_spectrum` [src/digitalmodel/orcawave/wave_spectrum.py:L207-L230]; `ochi_hubble._component` [src/digitalmodel/orcawave/wave_spectrum.py:L266-L277]; `torsethaugen` [src/digitalmodel/orcawave/wave_spectrum.py:L282-L328]; `generate_spectrum` [src/digitalmodel/orcawave/wave_spectrum.py:L335-L390] |
-
-| `src/digitalmodel/parametric/generate.py` | `_spectral_fatigue_annual_damage` [src/digitalmodel/parametric/generate.py:L208-L238]; `_esp_pump_utilisation` [src/digitalmodel/parametric/generate.py:L405-L426] |
-
-| `src/digitalmodel/rao_spectral_fatigue/workflow.py` | `_stress_psd_from_rao` [src/digitalmodel/rao_spectral_fatigue/workflow.py:L84-L121] |
-
-| `src/digitalmodel/solvers/benchmark/solvers.py` | `run_orcaflex` [src/digitalmodel/solvers/benchmark/solvers.py:L49-L112] |
-
-| `src/digitalmodel/solvers/fea_model/environment_components.py` | `Environment.get_wave_waveTrains` [src/digitalmodel/solvers/fea_model/environment_components.py:L89-L98]; `Environment.getJONSWAPGamma` [src/digitalmodel/solvers/fea_model/environment_components.py:L100-L110]; `Environment.RayleighDampingCoefficients` [src/digitalmodel/solvers/fea_model/environment_components.py:L193-L298] |
-
-| `src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py` | `EnvironmentBuilder._build_wave_trains` [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L251-L365]; `EnvironmentBuilder._order_wave_train` [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L368-L391] |
-
-| `src/digitalmodel/solvers/orcaflex/modular_generator/schema/campaign.py` | `CampaignSpec.from_legacy_config` [src/digitalmodel/solvers/orcaflex/modular_generator/schema/campaign.py:L234-L343] |
-
-| `src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py` | `OrcaflexModelComponents.wave` [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L248-L297]; `OrcaflexModelComponents.RayleighDampingCoefficients` [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L394-L499] |
-
-| `src/digitalmodel/spectral_fatigue/workflow.py` | `_evaluate_location` [src/digitalmodel/spectral_fatigue/workflow.py:L79-L127] |
-
-| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_psd` [src/digitalmodel/structural/fatigue/analysis.py:L421-L526]; `FatigueAnalysisEngine._perform_frequency_validation` [src/digitalmodel/structural/fatigue/analysis.py:L786-L809] |
-
-| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `NarrowBandMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L191-L226]; `DirlikMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L240-L369]; `TovoBenasciuttiMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L382-L468]; `SingleMomentMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L481-L530] |
-
-| `src/digitalmodel/structural/fatigue/scatter_fatigue.py` | `_resolve_wave_spectrum_func` [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L281-L321]; `_resolve_wave_spectrum_func._jonswap_wrapper` [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L305-L319] |
-
-| `src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py` | `orcaflexModel` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L13-L357]; `wave` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L410-L452] |
-
-| `src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py` | `jonswap_gamma` [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L69-L90]; `jonswap_spectrum` [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L93-L140]; `compute_wave_velocity` [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L269-L359] |
-
-| `src/digitalmodel/vessel_seakeeping/workflow.py` | `_spectrum_type` [src/digitalmodel/vessel_seakeeping/workflow.py:L106-L112] |
-
-| `src/digitalmodel/workflows/installation_full_report.py` | `_design` [src/digitalmodel/workflows/installation_full_report.py:L116-L136] |
-
-| `src/digitalmodel/workflows/installation_report_sections.py` | `design_data` [src/digitalmodel/workflows/installation_report_sections.py:L19-L37] |
-
-| `src/digitalmodel/workflows/installation_seastates.py` | `_configure` [src/digitalmodel/workflows/installation_seastates.py:L82-L106]; `_verify` [src/digitalmodel/workflows/installation_seastates.py:L109-L138]; `_change_payload` [src/digitalmodel/workflows/installation_seastates.py:L244-L258] |
-
-| `src/digitalmodel/workflows/workflow_automation/workflows.py` | `VesselResponseWorkflow.create` [src/digitalmodel/workflows/workflow_automation/workflows.py:L385-L445] |
-
-| `tests/hydrodynamics/rao_analysis/conftest.py` | `wave_spectrum` [tests/hydrodynamics/rao_analysis/conftest.py:L31-L39] |
-
-| `tests/hydrodynamics/test_seakeeping.py` | `jonswap_spectrum` [tests/hydrodynamics/test_seakeeping.py:L44-L47] |
-
-| `tests/marine_ops/marine_engineering/integration/integration_example.py` | `main` [tests/marine_ops/marine_engineering/integration/integration_example.py:L32-L399] |
-
-| `tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py` | `TestWaveDynamicsIntegration.test_jonswap_generates_valid_spectrum` [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L50-L65]; `TestWaveDynamicsIntegration.test_zero_crossing_period_relationship` [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L95-L103]; `TestWaveDynamicsIntegration.test_wave_elevation_time_series_generation` [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L134-L164]; `TestWaveDynamicsIntegration.test_wave_energy_distribution` [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L240-L278] |
-
-| `tests/marine_ops/marine_engineering/legacy/test_validation.py` | `test_jonswap_hs_recovery` [tests/marine_ops/marine_engineering/legacy/test_validation.py:L28-L38]; `test_pierson_moskowitz_hs_recovery` [tests/marine_ops/marine_engineering/legacy/test_validation.py:L67-L77] |
-
-| `tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py` | `TestJONSWAPSpectrum.test_spectral_moments_accuracy` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L105-L119]; `TestJONSWAPSpectrum.test_hs_from_m0_relationship` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L121-L132]; `TestIrregularWaveSynthesis.test_wave_synthesis_statistics` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L309-L329]; `TestIrregularWaveSynthesis.test_wave_synthesis_gaussian_distribution` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L349-L371]; `TestPublishedBenchmarks.test_jonswap_vs_published_curves` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L438-L461] |
-
-| `tests/marine_ops/marine_engineering/test_wave_spectra.py` | `TestJONSWAPSpectrum.test_spectral_moments_accuracy` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L105-L119]; `TestJONSWAPSpectrum.test_hs_from_m0_relationship` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L121-L132]; `TestIrregularWaveSynthesis.test_wave_synthesis_statistics` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L309-L329]; `TestIrregularWaveSynthesis.test_wave_synthesis_gaussian_distribution` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L349-L371]; `TestPublishedBenchmarks.test_jonswap_vs_published_curves` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L438-L461] |
-
-| `tests/orcaflex/test_model_default_tokens.py` | `wave_order_findings` [tests/orcaflex/test_model_default_tokens.py:L385-L413] |
-
-| `tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py` | `_write_floating_campaign` [tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py:L30-L120] |
-
-| `tests/solvers/orcaflex/modular_generator/test_campaign_generator.py` | `_make_campaign_data` [tests/solvers/orcaflex/modular_generator/test_campaign_generator.py:L13-L95] |
-
-| `tests/structural/fatigue/test_frequency_domain.py` | `TestSpectralMomentsCalculation.test_white_noise_m0_equals_level_times_bandwidth` [tests/structural/fatigue/test_frequency_domain.py:L215-L224] |
-
-| `tests/structural/fatigue/test_scatter_fatigue.py` | `_jonswap_hz` [tests/structural/fatigue/test_scatter_fatigue.py:L42-L54] |
-
-| `tests/unit/hydrodynamics/test_rao_analysis.py` | `simple_wave_params` [tests/unit/hydrodynamics/test_rao_analysis.py:L38-L44]; `TestWaveSpectra.test_jonswap_peak_near_tp` [tests/unit/hydrodynamics/test_rao_analysis.py:L191-L199] |
-
-| `tests/unit/hydrodynamics/test_wave_spectra_extended.py` | `TestPiersonMoskowitzExtended.test_pm_peak_near_tp` [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L155-L162]; `TestBretschneiderExtended.test_bretschneider_peak_near_tp` [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L202-L210]; `TestZeroCrossingPeriodFromSpectrum.test_tz_pm_approximately_0711_tp` [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L393-L400]; `TestPeakFrequencyFromSpectrum.test_peak_frequency_near_2pi_over_tp` [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L421-L427] |
-
-| `tests/workflows/hydrodynamics_assertions.py` | `_assert_wave_spectra` [tests/workflows/hydrodynamics_assertions.py:L51-L64] |
-
-| `tests/workflows/test_durable_workflows.py` | `test_workflow_registry` [tests/workflows/test_durable_workflows.py:L52-L1710]; `test_spectral_fatigue_workflow_matches_narrow_band_closed_form` [tests/workflows/test_durable_workflows.py:L1855-L1911]; `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening` [tests/workflows/test_durable_workflows.py:L1914-L1981]; `test_vessel_seakeeping_significant_amplitude_matches_library` [tests/workflows/test_durable_workflows.py:L1984-L2058]; `test_esp_pump_hydraulics_tdh_and_sizing_closed_form` [tests/workflows/test_durable_workflows.py:L2314-L2352] |
+| Path | Function or class / pinned lines | Implements | Relation | Agreement with key controls | Covering pack |
+| --- | --- | --- | --- | --- | --- |
+| `docs/domains/orcaflex/examples/raw/K01/PythonController.py` | `Actuator.output` [docs/domains/orcaflex/examples/raw/K01/PythonController.py:L56-L78] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `docs/domains/orcaflex/examples/raw/K02/BladedControllerWrapper.py` | `Actuator.output` [docs/domains/orcaflex/examples/raw/K02/BladedControllerWrapper.py:L61-L83] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `examples/domains/fpso/fpso_mooring_analysis.py` | `define_environmental_conditions` [examples/domains/fpso/fpso_mooring_analysis.py:L137-L191] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fpso/fpso_mooring_analysis.py` | `generate_visualizations` [examples/domains/fpso/fpso_mooring_analysis.py:L347-L494] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fpso/fpso_mooring_analysis.py` | `main` [examples/domains/fpso/fpso_mooring_analysis.py:L497-L562] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/prototypes/orcaflex-agent/generate_test.py` | `main` [examples/prototypes/orcaflex-agent/generate_test.py:L35-L73] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `scripts/_seed_eq_mock.py` | `mock_time_series` [scripts/_seed_eq_mock.py:L33-L83] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/benchmark/extract_pdf_plots.py` | `module body` [scripts/benchmark/extract_pdf_plots.py:L38-L50] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/benchmark/validate_owd_vs_spec.py` | `module body` [scripts/benchmark/validate_owd_vs_spec.py:L61-L73] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/extract_property_inventory.py` | `build_dormancy_rules` [scripts/extract_property_inventory.py:L179-L205] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/generate_env_files.py` | `create_wave_file` [scripts/generate_env_files.py:L38-L77] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/generate_env_files.py` | `main` [scripts/generate_env_files.py:L142-L194] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/ingest_orcina_help.py` | `module body` [scripts/ingest_orcina_help.py:L21-L33] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/19_-_DistanceBetweenTwoVessels.py` | `module body` [scripts/python/digitalmodel/legacy/19_-_DistanceBetweenTwoVessels.py:L4-L16] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/26_-_LinkedStatistics.py` | `module body` [scripts/python/digitalmodel/legacy/26_-_LinkedStatistics.py:L3-L15] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py` | `module body` [scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py:L3-L12] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/29_-_ExtremeStatisticsRayleigh.py` | `module body` [scripts/python/digitalmodel/legacy/29_-_ExtremeStatisticsRayleigh.py:L3-L15] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/30_-_ExtremeStatisticsLikelihood.py` | `module body` [scripts/python/digitalmodel/legacy/30_-_ExtremeStatisticsLikelihood.py:L3-L15] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/31_-_ExtremeStatisticsAggregation.py` | `module body` [scripts/python/digitalmodel/legacy/31_-_ExtremeStatisticsAggregation.py:L5-L17] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/32_-_FrequencyDomainResults.py` | `module body` [scripts/python/digitalmodel/legacy/32_-_FrequencyDomainResults.py:L3-L15] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/33_-_FrequencyDomainMPM.py` | `module body` [scripts/python/digitalmodel/legacy/33_-_FrequencyDomainMPM.py:L3-L10] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/34_-_FrequencyDomainRangeGraph.py` | `module body` [scripts/python/digitalmodel/legacy/34_-_FrequencyDomainRangeGraph.py:L3-L15] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/35_-_FrequencyDomainSpectralDensitySpectralResponse.py` | `module body` [scripts/python/digitalmodel/legacy/35_-_FrequencyDomainSpectralDensitySpectralResponse.py:L4-L16] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/36_-_FrequencyDomainTimeHistorySynthesis.py` | `module body` [scripts/python/digitalmodel/legacy/36_-_FrequencyDomainTimeHistorySynthesis.py:L4-L15] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/analyze_marine_excel.py` | `analyze_excel_file` [scripts/python/digitalmodel/legacy/analyze_marine_excel.py:L13-L345] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler.profile_wave_spectrum` [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L121-L194] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler.profile_wave_spectrum.run_spectrum` [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L146-L150] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `scripts/python/digitalmodel/orcawave/mcp_orcawave.py` | `freq_analyze` [scripts/python/digitalmodel/orcawave/mcp_orcawave.py:L36-L57] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/drilling_riser/global_model/build.py` | `_environment_and_simulation` [src/digitalmodel/drilling_riser/global_model/build.py:L430-L471] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/scf_library.py` | `short_chord_factor_f1` [src/digitalmodel/fatigue/scf_library.py:L108-L136] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/cli.py` | `spectrum_cmd` [src/digitalmodel/hydrodynamics/cli.py:L46-L102] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/seakeeping.py` | `operability_analysis` [src/digitalmodel/hydrodynamics/seakeeping.py:L129-L231] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra._normalize_to_significant_height` [src/digitalmodel/hydrodynamics/wave_spectra.py:L29-L44] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra.jonswap` [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L96] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra.pierson_moskowitz` [src/digitalmodel/hydrodynamics/wave_spectra.py:L98-L137] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra.bretschneider` [src/digitalmodel/hydrodynamics/wave_spectra.py:L139-L174] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra.issc` [src/digitalmodel/hydrodynamics/wave_spectra.py:L176-L213] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra.generate_spectrum` [src/digitalmodel/hydrodynamics/wave_spectra.py:L215-L262] | Evaluates a wave spectrum or its normalization. | wrapper | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra.significant_height_from_spectrum` [src/digitalmodel/hydrodynamics/wave_spectra.py:L288-L306] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra.zero_crossing_period_from_spectrum` [src/digitalmodel/hydrodynamics/wave_spectra.py:L308-L328] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectra.py` | `WaveSpectra.spectrum_statistics` [src/digitalmodel/hydrodynamics/wave_spectra.py:L348-L386] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py` | `router` [src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py:L16-L69] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py` | `_spectrum_name` [src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py:L78-L96] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py` | `OrcaflexModelComponents.wave` [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L207-L232] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py` | `OrcaflexModelComponents.RayleighDampingCoefficients` [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L307-L377] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/installation/crane_tip_motion.py` | `_complex_rao` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L28-L30] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/installation/crane_tip_motion.py` | `crane_tip_raos` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L45-L107] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/installation/crane_tip_motion.py` | `crane_tip_significant_motion` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L110-L150] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/installation/crane_tip_motion.py` | `crane_tip_significant_velocity` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L153-L168] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/installation/crane_tip_motion.py` | `_jonswap_spectrum` [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L171-L201] | Evaluates a wave spectrum or its normalization. | independent | No: #2543 spectrum normalisation defect | none |
+| `src/digitalmodel/marine_ops/marine_analysis/analysis/excel_analyzer.py` | `analyze_excel_file` [src/digitalmodel/marine_ops/marine_analysis/analysis/excel_analyzer.py:L13-L345] | Evaluates a wave spectrum or its normalization; mapped copy | copy | Not checked | none |
+| `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler.profile_wave_spectrum` [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L119-L186] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler.profile_wave_spectrum.run_spectrum` [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L139-L143] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._wave_spectrum` [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L54-L75] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/operation_envelope.py` | `operation_envelope` [src/digitalmodel/marine_ops/operation_envelope.py:L168-L217] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/operation_envelope.py` | `_significant_response` [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/motion_forecast/wave_forecast.py` | `synthesize_directional_forecast` [src/digitalmodel/motion_forecast/wave_forecast.py:L111-L156] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/motion_forecast/wave_source.py` | `jonswap_spectrum` [src/digitalmodel/motion_forecast/wave_source.py:L21-L46] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/motion_forecast/wave_source.py` | `synthesize_forecast` [src/digitalmodel/motion_forecast/wave_source.py:L49-L102] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcaflex/environment.py` | `WaveSpectrumParams.tz` [src/digitalmodel/orcaflex/environment.py:L139-L144] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcaflex/environment.py` | `WaveSpectrumParams.spectral_density` [src/digitalmodel/orcaflex/environment.py:L146-L174] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcaflex/environment.py` | `WaveSpectrumParams.to_orcaflex_dict` [src/digitalmodel/orcaflex/environment.py:L176-L184] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcawave/motion_statistics.py` | `compute_response_spectrum` [src/digitalmodel/orcawave/motion_statistics.py:L97-L124] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcawave/wave_spectrum.py` | `pierson_moskowitz` [src/digitalmodel/orcawave/wave_spectrum.py:L109-L137] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcawave/wave_spectrum.py` | `jonswap` [src/digitalmodel/orcawave/wave_spectrum.py:L140-L184] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcawave/wave_spectrum.py` | `bretschneider` [src/digitalmodel/orcawave/wave_spectrum.py:L187-L204] | Evaluates a wave spectrum or its normalization. | wrapper | Not checked | none |
+| `src/digitalmodel/orcawave/wave_spectrum.py` | `issc_spectrum` [src/digitalmodel/orcawave/wave_spectrum.py:L207-L230] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcawave/wave_spectrum.py` | `ochi_hubble._component` [src/digitalmodel/orcawave/wave_spectrum.py:L266-L277] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcawave/wave_spectrum.py` | `torsethaugen` [src/digitalmodel/orcawave/wave_spectrum.py:L282-L328] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/orcawave/wave_spectrum.py` | `generate_spectrum` [src/digitalmodel/orcawave/wave_spectrum.py:L335-L390] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/parametric/generate.py` | `_spectral_fatigue_annual_damage` [src/digitalmodel/parametric/generate.py:L208-L238] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/parametric/generate.py` | `_esp_pump_utilisation` [src/digitalmodel/parametric/generate.py:L405-L426] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/rao_spectral_fatigue/workflow.py` | `_stress_psd_from_rao` [src/digitalmodel/rao_spectral_fatigue/workflow.py:L84-L121] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/solvers/benchmark/solvers.py` | `run_orcaflex` [src/digitalmodel/solvers/benchmark/solvers.py:L49-L112] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/solvers/fea_model/environment_components.py` | `Environment.get_wave_waveTrains` [src/digitalmodel/solvers/fea_model/environment_components.py:L89-L98] | Evaluates a wave spectrum or its normalization. | wrapper | Not checked | none |
+| `src/digitalmodel/solvers/fea_model/environment_components.py` | `Environment.getJONSWAPGamma` [src/digitalmodel/solvers/fea_model/environment_components.py:L100-L110] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/solvers/fea_model/environment_components.py` | `Environment.RayleighDampingCoefficients` [src/digitalmodel/solvers/fea_model/environment_components.py:L193-L298] | Evaluates a wave spectrum or its normalization; mapped copy | copy | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py` | `EnvironmentBuilder._build_wave_trains` [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L251-L365] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py` | `EnvironmentBuilder._order_wave_train` [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L368-L391] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/modular_generator/schema/campaign.py` | `CampaignSpec.from_legacy_config` [src/digitalmodel/solvers/orcaflex/modular_generator/schema/campaign.py:L234-L343] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py` | `OrcaflexModelComponents.wave` [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L248-L297] | Evaluates a wave spectrum or its normalization; mapped copy | copy | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py` | `OrcaflexModelComponents.RayleighDampingCoefficients` [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L394-L499] | Evaluates a wave spectrum or its normalization; mapped copy | copy | Not checked | none |
+| `src/digitalmodel/spectral_fatigue/workflow.py` | `_evaluate_location` [src/digitalmodel/spectral_fatigue/workflow.py:L79-L127] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_psd` [src/digitalmodel/structural/fatigue/analysis.py:L421-L526] | Evaluates a wave spectrum or its normalization. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._perform_frequency_validation` [src/digitalmodel/structural/fatigue/analysis.py:L786-L809] | Evaluates a wave spectrum or its normalization. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `NarrowBandMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L191-L226] | Evaluates a wave spectrum or its normalization. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `DirlikMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L240-L369] | Evaluates a wave spectrum or its normalization. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `TovoBenasciuttiMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L382-L468] | Evaluates a wave spectrum or its normalization. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `SingleMomentMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L481-L530] | Evaluates a wave spectrum or its normalization. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/scatter_fatigue.py` | `_resolve_wave_spectrum_func` [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L281-L321] | Evaluates a wave spectrum or its normalization. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/scatter_fatigue.py` | `_resolve_wave_spectrum_func._jonswap_wrapper` [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L305-L319] | Evaluates a wave spectrum or its normalization. | independent | Not checked | this pack |
+| `src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py` | `orcaflexModel` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L13-L357] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py` | `wave` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L410-L452] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py` | `jonswap_gamma` [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L69-L90] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py` | `jonswap_spectrum` [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L93-L140] | Evaluates a wave spectrum or its normalization. | independent | No: #2543 spectrum normalisation defect | none |
+| `src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py` | `compute_wave_velocity` [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L269-L359] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/vessel_seakeeping/workflow.py` | `_spectrum_type` [src/digitalmodel/vessel_seakeeping/workflow.py:L106-L112] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/workflows/installation_full_report.py` | `_design` [src/digitalmodel/workflows/installation_full_report.py:L116-L136] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/workflows/installation_report_sections.py` | `design_data` [src/digitalmodel/workflows/installation_report_sections.py:L19-L37] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/workflows/installation_seastates.py` | `_configure` [src/digitalmodel/workflows/installation_seastates.py:L82-L106] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/workflows/installation_seastates.py` | `_verify` [src/digitalmodel/workflows/installation_seastates.py:L109-L138] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/workflows/installation_seastates.py` | `_change_payload` [src/digitalmodel/workflows/installation_seastates.py:L244-L258] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `src/digitalmodel/workflows/workflow_automation/workflows.py` | `VesselResponseWorkflow.create` [src/digitalmodel/workflows/workflow_automation/workflows.py:L385-L445] | Evaluates a wave spectrum or its normalization. | independent | Not checked | none |
+| `tests/hydrodynamics/rao_analysis/conftest.py` | `wave_spectrum` [tests/hydrodynamics/rao_analysis/conftest.py:L31-L39] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/hydrodynamics/test_seakeeping.py` | `jonswap_spectrum` [tests/hydrodynamics/test_seakeeping.py:L44-L47] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/integration/integration_example.py` | `main` [tests/marine_ops/marine_engineering/integration/integration_example.py:L32-L399] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py` | `TestWaveDynamicsIntegration.test_jonswap_generates_valid_spectrum` [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L50-L65] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py` | `TestWaveDynamicsIntegration.test_zero_crossing_period_relationship` [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L95-L103] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py` | `TestWaveDynamicsIntegration.test_wave_elevation_time_series_generation` [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L134-L164] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py` | `TestWaveDynamicsIntegration.test_wave_energy_distribution` [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L240-L278] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/legacy/test_validation.py` | `test_jonswap_hs_recovery` [tests/marine_ops/marine_engineering/legacy/test_validation.py:L28-L38] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/legacy/test_validation.py` | `test_pierson_moskowitz_hs_recovery` [tests/marine_ops/marine_engineering/legacy/test_validation.py:L67-L77] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py` | `TestJONSWAPSpectrum.test_spectral_moments_accuracy` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L105-L119] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py` | `TestJONSWAPSpectrum.test_hs_from_m0_relationship` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L121-L132] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py` | `TestIrregularWaveSynthesis.test_wave_synthesis_statistics` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L309-L329] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py` | `TestIrregularWaveSynthesis.test_wave_synthesis_gaussian_distribution` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L349-L371] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py` | `TestPublishedBenchmarks.test_jonswap_vs_published_curves` [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L438-L461] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_wave_spectra.py` | `TestJONSWAPSpectrum.test_spectral_moments_accuracy` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L105-L119] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_wave_spectra.py` | `TestJONSWAPSpectrum.test_hs_from_m0_relationship` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L121-L132] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_wave_spectra.py` | `TestIrregularWaveSynthesis.test_wave_synthesis_statistics` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L309-L329] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_wave_spectra.py` | `TestIrregularWaveSynthesis.test_wave_synthesis_gaussian_distribution` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L349-L371] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_wave_spectra.py` | `TestPublishedBenchmarks.test_jonswap_vs_published_curves` [tests/marine_ops/marine_engineering/test_wave_spectra.py:L438-L461] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/orcaflex/test_model_default_tokens.py` | `wave_order_findings` [tests/orcaflex/test_model_default_tokens.py:L385-L413] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py` | `_write_floating_campaign` [tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py:L30-L120] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/solvers/orcaflex/modular_generator/test_campaign_generator.py` | `_make_campaign_data` [tests/solvers/orcaflex/modular_generator/test_campaign_generator.py:L13-L95] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_frequency_domain.py` | `TestSpectralMomentsCalculation.test_white_noise_m0_equals_level_times_bandwidth` [tests/structural/fatigue/test_frequency_domain.py:L215-L224] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_scatter_fatigue.py` | `_jonswap_hz` [tests/structural/fatigue/test_scatter_fatigue.py:L42-L54] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/unit/hydrodynamics/test_rao_analysis.py` | `simple_wave_params` [tests/unit/hydrodynamics/test_rao_analysis.py:L38-L44] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/unit/hydrodynamics/test_rao_analysis.py` | `TestWaveSpectra.test_jonswap_peak_near_tp` [tests/unit/hydrodynamics/test_rao_analysis.py:L191-L199] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/unit/hydrodynamics/test_wave_spectra_extended.py` | `TestPiersonMoskowitzExtended.test_pm_peak_near_tp` [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L155-L162] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/unit/hydrodynamics/test_wave_spectra_extended.py` | `TestBretschneiderExtended.test_bretschneider_peak_near_tp` [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L202-L210] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/unit/hydrodynamics/test_wave_spectra_extended.py` | `TestZeroCrossingPeriodFromSpectrum.test_tz_pm_approximately_0711_tp` [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L393-L400] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/unit/hydrodynamics/test_wave_spectra_extended.py` | `TestPeakFrequencyFromSpectrum.test_peak_frequency_near_2pi_over_tp` [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L421-L427] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/hydrodynamics_assertions.py` | `_assert_wave_spectra` [tests/workflows/hydrodynamics_assertions.py:L51-L64] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/test_durable_workflows.py` | `test_workflow_registry` [tests/workflows/test_durable_workflows.py:L52-L1710] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/test_durable_workflows.py` | `test_spectral_fatigue_workflow_matches_narrow_band_closed_form` [tests/workflows/test_durable_workflows.py:L1855-L1911] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/test_durable_workflows.py` | `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening` [tests/workflows/test_durable_workflows.py:L1914-L1981] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/test_durable_workflows.py` | `test_vessel_seakeeping_significant_amplitude_matches_library` [tests/workflows/test_durable_workflows.py:L1984-L2058] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/test_durable_workflows.py` | `test_esp_pump_hydraulics_tdh_and_sizing_closed_form` [tests/workflows/test_durable_workflows.py:L2314-L2352] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
 
 #### sn-curves-and-miner-damage
 
-| Path | Mapped symbols and source spans |
-| --- | --- |
-
-| `docs/domains/examples/orcaflex_signal_analysis_example.py` | `example_6_custom_workflow` [docs/domains/examples/orcaflex_signal_analysis_example.py:L295-L363] |
-
-| `docs/domains/examples/signal_analysis_usage_example.py` | `example_1_basic_rainflow_counting` [docs/domains/examples/signal_analysis_usage_example.py:L29-L65]; `example_4_fatigue_analysis` [docs/domains/examples/signal_analysis_usage_example.py:L175-L253]; `example_6_backward_compatibility` [docs/domains/examples/signal_analysis_usage_example.py:L315-L377]; `main` [docs/domains/examples/signal_analysis_usage_example.py:L380-L410] |
-
-| `examples/demos/demo_sn_library.py` | `main` [examples/demos/demo_sn_library.py:L43-L207] |
-
-| `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_sn_curves` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L120-L160]; `demonstrate_rainflow_counting` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L163-L243]; `demonstrate_damage_accumulation` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L246-L326]; `demonstrate_frequency_domain_analysis` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L329-L408]; `demonstrate_quick_analysis` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L411-L458]; `main` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L461-L502] |
-
-| `examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py` | `list_curves` [examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py:L24-L37]; `compare_curves` [examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py:L66-L88] |
-
-| `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_2_linear_log` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L46-L64]; `example_3_with_scf` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L67-L85]; `example_4_without_fatigue_limit` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L88-L106]; `example_5_dnv_comparison` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L109-L133]; `example_6_abs_comparison` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L136-L174]; `example_7_reference_comparison` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L177-L197]; `example_8_joint_type_comparison` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L200-L228] |
-
-| `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_1_basic_sn_curves` [examples/domains/fatigue/fatigue_analysis_examples.py:L55-L95]; `example_2_multislope_curves` [examples/domains/fatigue/fatigue_analysis_examples.py:L98-L139]; `example_3_time_domain_analysis` [examples/domains/fatigue/fatigue_analysis_examples.py:L142-L212]; `example_4_frequency_domain_analysis` [examples/domains/fatigue/fatigue_analysis_examples.py:L215-L279]; `example_5_high_stress_range_analysis` [examples/domains/fatigue/fatigue_analysis_examples.py:L282-L324]; `example_6_shear_data_analysis` [examples/domains/fatigue/fatigue_analysis_examples.py:L327-L383]; `run_all_examples` [examples/domains/fatigue/fatigue_analysis_examples.py:L454-L477] |
-
-| `examples/domains/reservoir/reservoir_analysis_examples.py` | `example_well_log_analysis` [examples/domains/reservoir/reservoir_analysis_examples.py:L138-L219]; `example_stratigraphic_correlation` [examples/domains/reservoir/reservoir_analysis_examples.py:L376-L457]; `main` [examples/domains/reservoir/reservoir_analysis_examples.py:L578-L603] |
-
-| `scripts/capabilities/build_onepagers.py` | `module body` [scripts/capabilities/build_onepagers.py:L36-L48] |
-
-| `scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py` | `module body` [scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py:L3-L12] |
-
-| `scripts/python/digitalmodel/tools/check_process_fatigue_single.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/check_process_fatigue_single.py:L25-L225] |
-
-| `scripts/python/digitalmodel/tools/migrate_yaml_configs.py` | `YAMLConfigMigrator._migrate_analysis` [scripts/python/digitalmodel/tools/migrate_yaml_configs.py:L134-L168]; `YAMLConfigMigrator._migrate_time_series_components` [scripts/python/digitalmodel/tools/migrate_yaml_configs.py:L225-L242] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_data.py` | `process_fatigue_files` [scripts/python/digitalmodel/tools/process_fatigue_data.py:L24-L116] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_final.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_final.py:L25-L439] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `process_fatigue_file` [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L23-L273]; `process_sample_file` [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L275-L300]; `batch_process_all_files` [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L302-L343] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `rainflow_counting` [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L19-L59]; `process_fatigue_file` [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L61-L238]; `batch_process` [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L275-L316] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v2.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v2.py:L25-L309] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v3.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v3.py:L26-L337] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v4.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v4.py:L25-L352] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v5.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v5.py:L25-L382] |
-
-| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v6.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v6.py:L25-L405] |
-
-| `scripts/riser_database/build_tables.py` | `module body` [scripts/riser_database/build_tables.py:L24-L36] |
-
-| `src/digitalmodel/ansys/fatigue_postprocessor.py` | `SNcurve.from_dnv` [src/digitalmodel/ansys/fatigue_postprocessor.py:L101-L122]; `FatiguePostprocessor.calculate_cycles_to_failure` [src/digitalmodel/ansys/fatigue_postprocessor.py:L158-L192]; `FatiguePostprocessor.calculate_fatigue_damage` [src/digitalmodel/ansys/fatigue_postprocessor.py:L222-L284]; `FatiguePostprocessor.generate_sn_curve_apdl` [src/digitalmodel/ansys/fatigue_postprocessor.py:L347-L369]; `FatiguePostprocessor.create_damage_summary_df` [src/digitalmodel/ansys/fatigue_postprocessor.py:L371-L398] |
-
-| `src/digitalmodel/benchmarks/inventory.py` | `build_model_inventory` [src/digitalmodel/benchmarks/inventory.py:L77-L327] |
-
-| `src/digitalmodel/drilling_riser/global_model/fatigue_channels.py` | `half_cycles` [src/digitalmodel/drilling_riser/global_model/fatigue_channels.py:L51-L64]; `extract` [src/digitalmodel/drilling_riser/global_model/fatigue_channels.py:L104-L137] |
-
-| `src/digitalmodel/engine.py` | `engine` [src/digitalmodel/engine.py:L90-L892] |
-
-| `src/digitalmodel/fatg_spectral_fatigue/workflow.py` | `router` [src/digitalmodel/fatg_spectral_fatigue/workflow.py:L52-L117]; `_sn_curve` [src/digitalmodel/fatg_spectral_fatigue/workflow.py:L120-L134] |
-
-| `src/digitalmodel/fatigue/assessment.py` | `_case_histogram` [src/digitalmodel/fatigue/assessment.py:L116-L121]; `assess_fatigue` [src/digitalmodel/fatigue/assessment.py:L136-L160] |
-
-| `src/digitalmodel/fatigue/counting_contract.py` | `module body` [src/digitalmodel/fatigue/counting_contract.py:L47-L59]; `_adapt_pylife_4pt` [src/digitalmodel/fatigue/counting_contract.py:L432-L440]; `_adapt_pypi_rainflow` [src/digitalmodel/fatigue/counting_contract.py:L443-L454]; `_adapt_sigproc_astm` [src/digitalmodel/fatigue/counting_contract.py:L457-L469]; `_adapt_calm_buoy` [src/digitalmodel/fatigue/counting_contract.py:L472-L478]; `_adapt_fapps_counting` [src/digitalmodel/fatigue/counting_contract.py:L481-L487]; `_adapt_fapps_counter` [src/digitalmodel/fatigue/counting_contract.py:L490-L494]; `_adapt_struct_fatigue` [src/digitalmodel/fatigue/counting_contract.py:L497-L501]; `_is_counting_name` [src/digitalmodel/fatigue/counting_contract.py:L866-L869] |
-
-| `src/digitalmodel/fatigue/damage.py` | `miner_damage` [src/digitalmodel/fatigue/damage.py:L13-L39]; `design_life_check` [src/digitalmodel/fatigue/damage.py:L42-L88] |
-
-| `src/digitalmodel/fatigue/environmental_correction.py` | `environment_correction` [src/digitalmodel/fatigue/environmental_correction.py:L165-L244]; `apply_environment_to_sn` [src/digitalmodel/fatigue/environmental_correction.py:L251-L292] |
-
-| `src/digitalmodel/fatigue/fatg.py` | `fatg_sea_state_damage` [src/digitalmodel/fatigue/fatg.py:L211-L238]; `fatg_annual_damage` [src/digitalmodel/fatigue/fatg.py:L241-L311] |
-
-| `src/digitalmodel/fatigue/fatigue_reporting.py` | `_sec_fatigue_locations` [src/digitalmodel/fatigue/fatigue_reporting.py:L376-L399] |
-
-| `src/digitalmodel/fatigue/rainflow.py` | `fatigue_life` [src/digitalmodel/fatigue/rainflow.py:L130-L201] |
-
-| `src/digitalmodel/fatigue/sn_curves.py` | `_compute_sd` [src/digitalmodel/fatigue/sn_curves.py:L56-L58]; `_build_curve_dict` [src/digitalmodel/fatigue/sn_curves.py:L61-L74]; `get_sn_curve` [src/digitalmodel/fatigue/sn_curves.py:L80-L134] |
-
-| `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.knee_stress` [src/digitalmodel/fatigue/sn_library.py:L141-L146]; `SNCurveRecord.switch_stress` [src/digitalmodel/fatigue/sn_library.py:L149-L160]; `SNCurveRecord.cycles` [src/digitalmodel/fatigue/sn_library.py:L162-L177]; `_knee_stress` [src/digitalmodel/fatigue/sn_library.py:L180-L190]; `_switch_stress` [src/digitalmodel/fatigue/sn_library.py:L200-L222]; `_bilinear_cycles` [src/digitalmodel/fatigue/sn_library.py:L225-L250]; `_sd` [src/digitalmodel/fatigue/sn_library.py:L288-L290]; `_build_dnv_curves` [src/digitalmodel/fatigue/sn_library.py:L293-L381]; `_build_api_curves` [src/digitalmodel/fatigue/sn_library.py:L384-L413]; `_build_bs7608_curves` [src/digitalmodel/fatigue/sn_library.py:L416-L463]; `_build_iiw_curves` [src/digitalmodel/fatigue/sn_library.py:L466-L497]; `_build_eurocode3_curves` [src/digitalmodel/fatigue/sn_library.py:L500-L526]; `_build_norsok_curves` [src/digitalmodel/fatigue/sn_library.py:L529-L566]; `_build_aws_curves` [src/digitalmodel/fatigue/sn_library.py:L569-L597]; `_build_asme_curves` [src/digitalmodel/fatigue/sn_library.py:L600-L627]; `_build_en13445_curves` [src/digitalmodel/fatigue/sn_library.py:L630-L654]; `_build_pd5500_curves` [src/digitalmodel/fatigue/sn_library.py:L657-L687]; `_build_abs_curves` [src/digitalmodel/fatigue/sn_library.py:L690-L730]; `_build_iso19902_curves` [src/digitalmodel/fatigue/sn_library.py:L733-L802]; `_build_csa_curves` [src/digitalmodel/fatigue/sn_library.py:L805-L832]; `_build_hse_curves` [src/digitalmodel/fatigue/sn_library.py:L835-L877]; `_build_doe_curves` [src/digitalmodel/fatigue/sn_library.py:L880-L911]; `_build_gl_curves` [src/digitalmodel/fatigue/sn_library.py:L914-L941]; `_build_jis_curves` [src/digitalmodel/fatigue/sn_library.py:L944-L970]; `_ensure_loaded` [src/digitalmodel/fatigue/sn_library.py:L1002-L1011]; `summary_table` [src/digitalmodel/fatigue/sn_library.py:L1129-L1148] |
-
-| `src/digitalmodel/fatigue/sn_library_api.py` | `_record_to_curve_info` [src/digitalmodel/fatigue/sn_library_api.py:L146-L155]; `_record_to_sncurve` [src/digitalmodel/fatigue/sn_library_api.py:L158-L174]; `get_curve` [src/digitalmodel/fatigue/sn_library_api.py:L210-L235]; `calculate_endurance` [src/digitalmodel/fatigue/sn_library_api.py:L238-L281] |
-
-| `src/digitalmodel/fatigue/spectral_fatigue.py` | `wirsching_light_damage` [src/digitalmodel/fatigue/spectral_fatigue.py:L207-L254]; `benasciutti_tovo_damage` [src/digitalmodel/fatigue/spectral_fatigue.py:L339-L395] |
-
-| `src/digitalmodel/fatigue/weld_fatigue_quickcheck.py` | `weld_fatigue_quickcheck` [src/digitalmodel/fatigue/weld_fatigue_quickcheck.py:L105-L240]; `main` [src/digitalmodel/fatigue/weld_fatigue_quickcheck.py:L340-L373] |
-
-| `src/digitalmodel/fatigue/woehler_fitting.py` | `generate_test_data` [src/digitalmodel/fatigue/woehler_fitting.py:L18-L89]; `_fallback_log_regression` [src/digitalmodel/fatigue/woehler_fitting.py:L137-L181] |
-
-| `src/digitalmodel/fatigue/workflow.py` | `router` [src/digitalmodel/fatigue/workflow.py:L16-L40]; `_curve_ids` [src/digitalmodel/fatigue/workflow.py:L43-L55]; `_stress_ranges` [src/digitalmodel/fatigue/workflow.py:L58-L85]; `_curve_summary` [src/digitalmodel/fatigue/workflow.py:L99-L111]; `_curve_csv_path` [src/digitalmodel/fatigue/workflow.py:L114-L120]; `_input_stem` [src/digitalmodel/fatigue/workflow.py:L131-L134] |
-
-| `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.router` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L23-L50]; `FatigueAnalysis.damage_from_sn_data` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L52-L72]; `FatigueAnalysis.damage_from_rainflow_cycles` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L74-L93]; `FatigueAnalysis.damage_from_timetrace` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L95-L139]; `FatigueAnalysis.get_rainflow_from_timetrace` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L249-L261] |
-
-| `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py` | `FatigueAnalysisComponents.orcaflex_wave_fatigue_analysis` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L586-L701] |
-
-| `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.router` [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L22-L36]; `ShipFatigueAnalysis.get_lcf_timetrace_rainflow_and_fatigue_damage` [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L113-L166]; `ShipFatigueAnalysis.get_fatigue_damage_output_df_for_timetrace` [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L298-L391]; `ShipFatigueAnalysis.get_fatigue_df_definition_for_timetrace` [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L476-L489] |
-
-| `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.orcaflex_wave_fatigue_analysis` [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L982-L1164] |
-
-| `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `SNcurve.cycles_to_failure` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L53-L66]; `RainflowFatigue.count_cycles` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L203-L225]; `MinersRuleDamage.compute` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L323-L344]; `ScatterDiagramFatigue.compute` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L373-L433]; `compute_fatigue_life` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L522-L600] |
-
-| `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.add_well_analysis` [src/digitalmodel/marine_ops/reservoir/analysis.py:L414-L423]; `StratigraphicAnalysis.set_well_order` [src/digitalmodel/marine_ops/reservoir/analysis.py:L425-L436]; `StratigraphicAnalysis.create_flattened_section` [src/digitalmodel/marine_ops/reservoir/analysis.py:L451-L525]; `WellCorrelation.add_well_data` [src/digitalmodel/marine_ops/reservoir/analysis.py:L803-L811]; `CoreAnalysis.correlate_core_to_logs` [src/digitalmodel/marine_ops/reservoir/analysis.py:L1046-L1091]; `ReservoirAnalysis.add_well_analysis` [src/digitalmodel/marine_ops/reservoir/analysis.py:L1119-L1142]; `ReservoirAnalysis.run_comprehensive_analysis` [src/digitalmodel/marine_ops/reservoir/analysis.py:L1144-L1175] |
-
-| `src/digitalmodel/mooring_fatigue/workflow.py` | `router` [src/digitalmodel/mooring_fatigue/workflow.py:L23-L58]; `_evaluate_line` [src/digitalmodel/mooring_fatigue/workflow.py:L61-L85]; `_history_bins` [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149]; `_curve_settings` [src/digitalmodel/mooring_fatigue/workflow.py:L184-L186] |
-
-| `src/digitalmodel/parametric/generate.py` | `_mooring_fatigue_damage` [src/digitalmodel/parametric/generate.py:L28-L45]; `_free_span_utilisation` [src/digitalmodel/parametric/generate.py:L141-L175]; `_span_rectification_utilisation` [src/digitalmodel/parametric/generate.py:L327-L365] |
-
-| `src/digitalmodel/parametric/refresh.py` | `module body` [src/digitalmodel/parametric/refresh.py:L27-L39] |
-
-| `src/digitalmodel/rao_spectral_fatigue/workflow.py` | `router` [src/digitalmodel/rao_spectral_fatigue/workflow.py:L34-L81] |
-
-| `src/digitalmodel/riser_fatigue/touchdown.py` | `assess_touchdown_fatigue` [src/digitalmodel/riser_fatigue/touchdown.py:L157-L247] |
-
-| `src/digitalmodel/riser_fatigue/workflow.py` | `router` [src/digitalmodel/riser_fatigue/workflow.py:L65-L103]; `_viv_damage` [src/digitalmodel/riser_fatigue/workflow.py:L205-L245]; `_curve_settings` [src/digitalmodel/riser_fatigue/workflow.py:L255-L266] |
-
-| `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `TimeSeriesComponentsAdapter.get_rainflow_count_from_time_series` [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L50-L72]; `FatigueAnalysisAdapter.get_rainflow_from_timetrace` [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L293-L315]; `FatigueAnalysisAdapter.damage_from_rainflow_cycles` [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L317-L355]; `OrcaFlexAdapter.RainflowHalfCycles` [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L376-L405] |
-
-| `src/digitalmodel/signal_processing/signal_analysis/cli.py` | `rainflow_cmd` [src/digitalmodel/signal_processing/signal_analysis/cli.py:L30-L86] |
-
-| `src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py` | `RainflowCounter.count_cycles` [src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py:L39-L83] |
-
-| `src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py` | `SNCurve._bilinear` [src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py:L189-L234]; `SNCurve.from_test_data` [src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py:L376-L417] |
-
-| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator.calculate_damage` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L34-L84]; `FatigueDamageCalculator._miners_rule` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L86-L116]; `FatigueDamageCalculator._modified_miners_rule` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L118-L158]; `FatigueDamageCalculator._nonlinear_damage` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L160-L199]; `FatigueDamageCalculator._calculate_allowable_cycles` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L201-L255]; `FatigueDamageCalculator._apply_mean_stress_correction` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L257-L314]; `FatigueDamageCalculator._estimate_cycles_to_failure` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L316-L351]; `FatigueDamageCalculator.calculate_equivalent_stress` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L353-L388] |
-
-| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `create_parser` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L55-L248]; `build_config_from_args` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L251-L324]; `main` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L327-L479] |
-
-| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._analyze_column` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L147-L222]; `TimeSeriesAnalyzer._generate_outputs` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L327-L360]; `TimeSeriesAnalyzer._generate_summary` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L438-L474] |
-
-| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/error_handling.py` | `SafeAnalyzer.safe_rainflow_analysis` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/error_handling.py:L162-L222] |
-
-| `src/digitalmodel/signal_processing/time_series/time_series_analysis.py` | `TimeSeriesAnalysis.router` [src/digitalmodel/signal_processing/time_series/time_series_analysis.py:L20-L41] |
-
-| `src/digitalmodel/signal_processing/time_series/time_series_components.py` | `TimeSeriesComponents.count_cycles` [src/digitalmodel/signal_processing/time_series/time_series_components.py:L644-L657] |
-
-| `src/digitalmodel/solvers/orcaflex/opp_time_series.py` | `OPPTimeSeries.get_histogram_object_from_orcaflex_run` [src/digitalmodel/solvers/orcaflex/opp_time_series.py:L441-L471]; `OPPTimeSeries.get_detailed_histogram_df_columns` [src/digitalmodel/solvers/orcaflex/opp_time_series.py:L473-L494] |
-
-| `src/digitalmodel/solvers/orcaflex/opp_time_series_v2.py` | `OPPTimeSeriesV2.process_histograms` [src/digitalmodel/solvers/orcaflex/opp_time_series_v2.py:L241-L282] |
-
-| `src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py` | `OrcaFlexAnalysis.get_histogram_object_from_orcaflex_run` [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L470-L492]; `OrcaFlexAnalysis.get_detailed_histogram_df_columns` [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L755-L767] |
-
-| `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._perform_fatigue_analysis` [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L248-L338]; `OrcaFlexTimeTraceProcessor._parallel_fatigue_analysis` [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L420-L448]; `OrcaFlexTimeTraceProcessor._analyze_single_trace` [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L451-L496] |
-
-| `src/digitalmodel/spectral_fatigue/workflow.py` | `router` [src/digitalmodel/spectral_fatigue/workflow.py:L37-L76]; `_sn_curve` [src/digitalmodel/spectral_fatigue/workflow.py:L139-L143] |
-
-| `src/digitalmodel/structural/fatigue/__init__.py` | `quick_fatigue_analysis` [src/digitalmodel/structural/fatigue/__init__.py:L226-L305]; `get_module_info` [src/digitalmodel/structural/fatigue/__init__.py:L431-L447] |
-
-| `src/digitalmodel/structural/fatigue/analysis.py` | `module body` [src/digitalmodel/structural/fatigue/analysis.py:L39-L51]; `FatigueAnalysisEngine._setup_sn_curve` [src/digitalmodel/structural/fatigue/analysis.py:L266-L285]; `FatigueAnalysisEngine._setup_damage_calculator` [src/digitalmodel/structural/fatigue/analysis.py:L287-L300]; `FatigueAnalysisEngine._setup_rainflow_counter` [src/digitalmodel/structural/fatigue/analysis.py:L302-L310]; `FatigueAnalysisEngine.analyze_time_series` [src/digitalmodel/structural/fatigue/analysis.py:L312-L419]; `FatigueAnalysisEngine.analyze_psd` [src/digitalmodel/structural/fatigue/analysis.py:L421-L526]; `FatigueAnalysisEngine.calculate_high_stress_range_life` [src/digitalmodel/structural/fatigue/analysis.py:L528-L569]; `FatigueAnalysisEngine.analyze_shear_data` [src/digitalmodel/structural/fatigue/analysis.py:L571-L620]; `FatigueAnalysisEngine._perform_engineering_validation` [src/digitalmodel/structural/fatigue/analysis.py:L733-L784]; `quick_time_domain_analysis` [src/digitalmodel/structural/fatigue/analysis.py:L979-L1022]; `quick_frequency_domain_analysis` [src/digitalmodel/structural/fatigue/analysis.py:L1025-L1062] |
-
-| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `module body` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L32-L44]; `LinearDamageAccumulation.calculate_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L109-L217]; `LinearDamageAccumulation._apply_mean_stress_correction` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L219-L256]; `ModifiedMinersRule.calculate_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L292-L355]; `NonlinearDamageAccumulation.calculate_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L383-L400]; `NonlinearDamageAccumulation._marco_starkey_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L402-L449]; `NonlinearDamageAccumulation._corten_dolan_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L451-L495]; `NonlinearDamageAccumulation._double_linear_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L497-L544]; `compare_damage_methods` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L652-L699] |
-
-| `src/digitalmodel/structural/fatigue/design_code_report.py` | `_build_curve` [src/digitalmodel/structural/fatigue/design_code_report.py:L101-L114] |
-
-| `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `failure_probability` [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L84-L168]; `sensitivity_analysis` [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L171-L273]; `monte_carlo_fatigue` [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L276-L366] |
-
-| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `module body` [src/digitalmodel/structural/fatigue/frequency_domain.py:L30-L42]; `NarrowBandMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L191-L226]; `DirlikMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L240-L369]; `TovoBenasciuttiMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L382-L468]; `SingleMomentMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L481-L530]; `compare_frequency_methods` [src/digitalmodel/structural/fatigue/frequency_domain.py:L683-L725] |
-
-| `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `run_sweep` [src/digitalmodel/structural/fatigue/parametric_sweep.py:L74-L163]; `compute_sensitivity._single_damage` [src/digitalmodel/structural/fatigue/parametric_sweep.py:L206-L221]; `_build_scatter_json` [src/digitalmodel/structural/fatigue/parametric_sweep.py:L448-L512] |
-
-| `src/digitalmodel/structural/fatigue/rainflow.py` | `module body` [src/digitalmodel/structural/fatigue/rainflow.py:L32-L44]; `RainflowCounter.count_cycles` [src/digitalmodel/structural/fatigue/rainflow.py:L230-L310]; `RainflowCounter._rainflow_count` [src/digitalmodel/structural/fatigue/rainflow.py:L316-L318]; `RainflowCounter.extract_cycles_with_means` [src/digitalmodel/structural/fatigue/rainflow.py:L502-L536]; `rainflow_count` [src/digitalmodel/structural/fatigue/rainflow.py:L729-L752]; `rainflow_with_means` [src/digitalmodel/structural/fatigue/rainflow.py:L755-L770] |
-
-| `src/digitalmodel/structural/fatigue/scatter_fatigue.py` | `scatter_fatigue_damage` [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L102-L255] |
-
-| `src/digitalmodel/structural/fatigue/skill.py` | `fatigue_assessment` [src/digitalmodel/structural/fatigue/skill.py:L188-L273] |
-
-| `src/digitalmodel/structural/fatigue/sn_curve_plotter.py` | `main` [src/digitalmodel/structural/fatigue/sn_curve_plotter.py:L397-L415] |
-
-| `src/digitalmodel/structural/fatigue/sn_curves.py` | `module body` [src/digitalmodel/structural/fatigue/sn_curves.py:L32-L44]; `StandardSNCurves._find_sn_data_file` [src/digitalmodel/structural/fatigue/sn_curves.py:L442-L453]; `StandardSNCurves._ensure_loaded` [src/digitalmodel/structural/fatigue/sn_curves.py:L456-L505]; `StandardSNCurves.register_custom_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L522-L563]; `StandardSNCurves.get_dnv_c203_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616]; `StandardSNCurves.get_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L619-L668]; `StandardSNCurves.get_multislope_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L671-L713]; `ThicknessCorrection.apply_thickness_effect` [src/digitalmodel/structural/fatigue/sn_curves.py:L863-L916]; `SNDataFitting.fit_power_law` [src/digitalmodel/structural/fatigue/sn_curves.py:L927-L1005]; `get_dnv_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L1047-L1066]; `get_api_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L1069-L1071]; `get_bs_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L1074-L1076]; `_dnv_curves_from_c203` [src/digitalmodel/structural/fatigue/sn_curves.py:L1085-L1099] |
-
-| `src/digitalmodel/structural/fatigue/worked_examples.py` | `_dnv_seawater_cp` [src/digitalmodel/structural/fatigue/worked_examples.py:L58-L77]; `_dnv_seawater_free` [src/digitalmodel/structural/fatigue/worked_examples.py:L80-L97]; `_chain_seawater_cp` [src/digitalmodel/structural/fatigue/worked_examples.py:L100-L119]; `pipeline_girth_weld` [src/digitalmodel/structural/fatigue/worked_examples.py:L199-L260]; `scr_touchdown` [src/digitalmodel/structural/fatigue/worked_examples.py:L263-L323]; `mooring_chain` [src/digitalmodel/structural/fatigue/worked_examples.py:L326-L388]; `_compute_example` [src/digitalmodel/structural/fatigue/worked_examples.py:L395-L431] |
-
-| `src/digitalmodel/structural/fatigue_apps/__main__.py` | `run_analysis` [src/digitalmodel/structural/fatigue_apps/__main__.py:L244-L501] |
-
-| `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `SNCurve._load_sn_parameters` [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L55-L118]; `SNCurve.calculate_cycles_to_failure` [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L120-L149]; `FatigueDamageCalculator.calculate_damage` [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L182-L209]; `main` [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L489-L549] |
-
-| `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `module body` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L21-L33]; `SNCurveParameters.a1` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L36-L38]; `SNCurveParameters.a2` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L41-L43]; `FatigueDamageCalculator.cycles_to_failure` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L106-L132]; `FatigueDamageCalculator.calculate_damage` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L134-L184]; `FatigueDamageCalculator.export_results` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L297-L320] |
-
-| `src/digitalmodel/structural/fatigue_apps/file_namer.py` | `FatigueFileNamer.get_rainflow_filename` [src/digitalmodel/structural/fatigue_apps/file_namer.py:L87-L105]; `module body` [src/digitalmodel/structural/fatigue_apps/file_namer.py:L201-L213] |
-
-| `src/digitalmodel/structural/fatigue_apps/integrated_processor.py` | `IntegratedFatigueProcessor.process_fatigue_condition` [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L290-L364]; `main` [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L366-L484] |
-
-| `src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py` | `IntegratedFatigueProcessorWithNaming._process_condition_base` [src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py:L81-L173] |
-
-| `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `module body` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L20-L32]; `RainflowCounter.count_cycles` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L48-L79]; `RainflowCounter._rainflow_algorithm` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L164-L220]; `RainflowCounter.export_results` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L292-L322]; `rainflow_count` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L325-L338] |
-
-| `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.process_time_series` [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L198-L254]; `RainflowCounter.process_batch` [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L332-L403]; `RainflowCounter.save_cycle_data` [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L405-L432]; `main` [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L463-L502] |
-
-| `src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py` | `ReferenceSeaStateProcessor.process_fatigue_condition` [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L355-L429] |
-
-| `src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py` | `TensionStressConverter.process_batch` [src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py:L271-L334]; `main` [src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py:L428-L474] |
-
-| `src/digitalmodel/structural/fatigue_apps/visualizer.py` | `generate_all_visualizations` [src/digitalmodel/structural/fatigue_apps/visualizer.py:L507-L570] |
-
-| `src/digitalmodel/structural/spectral_fatigue.py` | `narrow_band_damage` [src/digitalmodel/structural/spectral_fatigue.py:L122-L178] |
-
-| `src/digitalmodel/subsea/connectors/fatigue.py` | `assess_jumper_fatigue` [src/digitalmodel/subsea/connectors/fatigue.py:L62-L106] |
-
-| `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `_dnv_params` [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150]; `get_sn_curve` [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L170-L237] |
-
-| `src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py` | `SpanFatigueDamage._load_sn_curve` [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L79-L91] |
-
-| `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.calculate_damage` [src/digitalmodel/subsea/viv_analysis/fatigue.py:L108-L165]; `VIVFatigueCalculator.calculate_fatigue_life` [src/digitalmodel/subsea/viv_analysis/fatigue.py:L167-L207]; `VIVFatigueCalculator.analyze_viv_fatigue` [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L268]; `VIVFatigueCalculator.cumulative_damage` [src/digitalmodel/subsea/viv_analysis/fatigue.py:L270-L300] |
-
-| `src/digitalmodel/viv_screening/inputs.py` | `parse_inputs` [src/digitalmodel/viv_screening/inputs.py:L88-L125] |
-
-| `src/digitalmodel/viv_screening/workflow.py` | `router` [src/digitalmodel/viv_screening/workflow.py:L25-L57]; `_damage_rate` [src/digitalmodel/viv_screening/workflow.py:L128-L147]; `_provenance` [src/digitalmodel/viv_screening/workflow.py:L173-L191] |
-
-| `src/digitalmodel/web/digitaltwinfeed/app.py` | `page` [src/digitalmodel/web/digitaltwinfeed/app.py:L71-L86] |
-
-| `tests/ansys/padeye_pressure_bundle.py` | `_check_receipt` [tests/ansys/padeye_pressure_bundle.py:L23-L38]; `verify_pressure_bundle` [tests/ansys/padeye_pressure_bundle.py:L41-L65] |
-
-| `tests/ansys/test_fatigue_postprocessor.py` | `TestThicknessCorrection.test_known_correction` [tests/ansys/test_fatigue_postprocessor.py:L92-L96] |
-
-| `tests/ansys/test_padeye_pressure_bundle.py` | `bundle` [tests/ansys/test_padeye_pressure_bundle.py:L20-L29] |
-
-| `tests/fatigue/test_assessment.py` | `histogram_input` [tests/fatigue/test_assessment.py:L22-L34] |
-
-| `tests/fatigue/test_c203_consumers.py` | `_span_input` [tests/fatigue/test_c203_consumers.py:L303-L331] |
-
-| `tests/fatigue/test_c203_sn_values.py` | `_non_dnv_bilinear` [tests/fatigue/test_c203_sn_values.py:L298-L303]; `test_non_dnv_bilinear_switch_stays_at_endurance_limit` [tests/fatigue/test_c203_sn_values.py:L326-L343] |
-
-| `tests/fatigue/test_c203_variable_amplitude.py` | `_signal_e` [tests/fatigue/test_c203_variable_amplitude.py:L179-L182]; `_user_curve` [tests/fatigue/test_c203_variable_amplitude.py:L230-L233]; `_span_input` [tests/fatigue/test_c203_variable_amplitude.py:L304-L332]; `_fresh_standard_curves` [tests/fatigue/test_c203_variable_amplitude.py:L378-L391]; `_data_dir` [tests/fatigue/test_c203_variable_amplitude.py:L394-L398] |
-
-| `tests/fatigue/test_damage.py` | `f_curve` [tests/fatigue/test_damage.py:L16-L17]; `TestThicknessCorrection.test_correction_above_ref` [tests/fatigue/test_damage.py:L90-L95]; `TestThicknessCorrection.test_correction_formula` [tests/fatigue/test_damage.py:L97-L103] |
-
-| `tests/fatigue/test_fatg.py` | `TestAgainstTransliterationSweep.test_all_presets_and_curves` [tests/fatigue/test_fatg.py:L267-L284] |
-
-| `tests/fatigue/test_fatg_workflow.py` | `_cfg` [tests/fatigue/test_fatg_workflow.py:L23-L49]; `_library_reference` [tests/fatigue/test_fatg_workflow.py:L52-L64] |
-
-| `tests/fatigue/test_fatigue_reporting.py` | `_sample_locations` [tests/fatigue/test_fatigue_reporting.py:L15-L55] |
-
-| `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls` [tests/fatigue/test_rainflow_invariants.py:L408-L488]; `_damage_calls.calm_scatter` [tests/fatigue/test_rainflow_invariants.py:L443-L449]; `_damage_calls.fapps_batch` [tests/fatigue/test_rainflow_invariants.py:L456-L461] |
-
-| `tests/fatigue/test_sn_curves.py` | `TestGetSNCurve.test_f_curve_at_100mpa` [tests/fatigue/test_sn_curves.py:L40-L45]; `TestGetSNCurve.test_d_curve_at_100mpa` [tests/fatigue/test_sn_curves.py:L52-L57] |
-
-| `tests/fatigue/test_weld_fatigue_quickcheck.py` | `_hand_N` [tests/fatigue/test_weld_fatigue_quickcheck.py:L29-L31] |
-
-| `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_cycles_to_failure_chain_known_value` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L117-L123]; `TestSNcurve.test_cycles_to_failure_wire_rope_known_value` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L125-L131]; `TestSNcurve.test_custom_sn_curve` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L138-L143]; `TestMinersRuleDamage.test_single_range_known_damage` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L294-L307]; `TestMinersRuleDamage.test_damage_additivity` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L319-L329] |
-
-| `tests/parametric/test_atlas.py` | `_small_atlas` [tests/parametric/test_atlas.py:L19-L34] |
-
-| `tests/signal_processing/signal_analysis/fatigue_analysis_reference/process_fatigue_final.py` | `process_single_test_file` [tests/signal_processing/signal_analysis/fatigue_analysis_reference/process_fatigue_final.py:L25-L439] |
-
-| `tests/signal_processing/signal_analysis/reference_fatigue_processor.py` | `process_single_test_file` [tests/signal_processing/signal_analysis/reference_fatigue_processor.py:L25-L439] |
-
-| `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `module body` [tests/signal_processing/signal_analysis/test_generate_outputs.py:L20-L32]; `analyze_signal` [tests/signal_processing/signal_analysis/test_generate_outputs.py:L97-L374]; `main` [tests/signal_processing/signal_analysis/test_generate_outputs.py:L377-L455] |
-
-| `tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py` | `OrcaFlexTensionAnalyzer.analyze_tension` [tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py:L108-L177]; `OrcaFlexTensionAnalyzer.export_results` [tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py:L301-L352] |
-
-| `tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py` | `run_rainflow_for_timeseries` [tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py:L19-L71]; `test_rainflow_for_timeseries` [tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py:L74-L271] |
-
-| `tests/signal_processing/signal_analysis/validate_module.py` | `main` [tests/signal_processing/signal_analysis/validate_module.py:L183-L219] |
-
-| `tests/solvers/test_integration_solvers.py` | `mock_solver_factory.MockSolverFactory.create_fatigue_solver` [tests/solvers/test_integration_solvers.py:L154-L165] |
-
-| `tests/structural/fatigue/conftest.py` | `simple_sn_curve` [tests/structural/fatigue/conftest.py:L14-L16] |
-
-| `tests/structural/fatigue/test_damage_accumulation.py` | `dnv_d_curve` [tests/structural/fatigue/test_damage_accumulation.py:L40-L47]; `simple_curve` [tests/structural/fatigue/test_damage_accumulation.py:L51-L58]; `curve_with_material` [tests/structural/fatigue/test_damage_accumulation.py:L62-L76] |
-
-| `tests/structural/fatigue/test_fatigue_migration.py` | `TestSNCurveMigration.test_multislope_curve_implementation` [tests/structural/fatigue/test_fatigue_migration.py:L90-L128]; `TestSNCurveMigration.test_curve_continuity` [tests/structural/fatigue/test_fatigue_migration.py:L130-L161]; `TestFrequencyDomainMigration.test_basic_frequency_analysis` [tests/structural/fatigue/test_fatigue_migration.py:L231-L252] |
-
-| `tests/structural/fatigue/test_fatigue_reliability.py` | `simple_sn` [tests/structural/fatigue/test_fatigue_reliability.py:L32-L34]; `mild_sn` [tests/structural/fatigue/test_fatigue_reliability.py:L38-L40] |
-
-| `tests/structural/fatigue/test_fatigue_skill.py` | `_simple_input` [tests/structural/fatigue/test_fatigue_skill.py:L39-L49]; `TestOffshoreScenario.test_high_cycle_low_stress_result` [tests/structural/fatigue/test_fatigue_skill.py:L494-L512] |
-
-| `tests/structural/fatigue/test_frequency_domain.py` | `simple_sn_curve` [tests/structural/fatigue/test_frequency_domain.py:L84-L86] |
-
-| `tests/structural/fatigue/test_rainflow.py` | `default_counter` [tests/structural/fatigue/test_rainflow.py:L41-L43] |
-
-| `tests/structural/fatigue/test_scatter_fatigue.py` | `simple_sn` [tests/structural/fatigue/test_scatter_fatigue.py:L25-L27]; `TestFatigueLife.test_fatigue_life_inverse_of_damage` [tests/structural/fatigue/test_scatter_fatigue.py:L233-L251] |
-
-| `tests/structural/fatigue/test_sn_curves.py` | `simple_power_law` [tests/structural/fatigue/test_sn_curves.py:L57-L59]; `power_law_with_limit` [tests/structural/fatigue/test_sn_curves.py:L63-L67]; `bilinear_curve` [tests/structural/fatigue/test_sn_curves.py:L71-L86]; `dnv_d_curve` [tests/structural/fatigue/test_sn_curves.py:L90-L91]; `TestBS7608RevisedCurveParameters.test_bs7608_revised_d_known_n_at_50mpa` [tests/structural/fatigue/test_sn_curves.py:L886-L892]; `TestISO19902CurveParameters.test_iso19902_f_air_known_n_at_100mpa` [tests/structural/fatigue/test_sn_curves.py:L964-L970]; `TestISO19902CurveParameters.test_iso19902_f2_sw_cp_known_n_at_50mpa` [tests/structural/fatigue/test_sn_curves.py:L994-L1000] |
-
-| `tests/structural/fatigue/test_sn_curves_yaml.py` | `_all_single_slope_cases` [tests/structural/fatigue/test_sn_curves_yaml.py:L55-L60]; `_all_multislope_cases` [tests/structural/fatigue/test_sn_curves_yaml.py:L63-L66] |
-
-| `tests/structural/fatigue_analysis/conftest.py` | `sn_curve_data` [tests/structural/fatigue_analysis/conftest.py:L6-L13] |
-
-| `tests/structural/fatigue_analysis/test_fatigue_analysis_sn.py` | `run_fatigue_analysis` [tests/structural/fatigue_analysis/test_fatigue_analysis_sn.py:L13-L20] |
-
-| `tests/structural/fatigue_analysis/test_fatigue_analysis_timetrace.py` | `run_fatigue_analysis` [tests/structural/fatigue_analysis/test_fatigue_analysis_timetrace.py:L15-L40] |
-
-| `tests/subsea/pipeline/test_free_span_f105.py` | `ref_input` [tests/subsea/pipeline/test_free_span_f105.py:L43-L65] |
-
-| `tests/subsea/viv_analysis/test_viv_analysis_unit.py` | `TestVIVFatigueCalculator.test_cumulative_damage` [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519] |
-
-| `tests/test_automation/fixtures/engineering_fixtures.py` | `get_orcaflex_post_process_mock` [tests/test_automation/fixtures/engineering_fixtures.py:L72-L94] |
-
-| `tests/test_automation/scripts/comprehensive_fix_campaign.py` | `ComprehensiveTestFixCampaign.generate_mock_data` [tests/test_automation/scripts/comprehensive_fix_campaign.py:L103-L153] |
-
-| `tests/test_complete_fatigue_pipeline.py` | `process_configuration` [tests/test_complete_fatigue_pipeline.py:L65-L175]; `main` [tests/test_complete_fatigue_pipeline.py:L178-L270] |
-
-| `tests/test_fatigue_basic.py` | `run_all_tests` [tests/test_fatigue_basic.py:L223-L269] |
-
-| `tests/test_rainflow_with_effective_tension.py` | `process_effective_tension_file` [tests/test_rainflow_with_effective_tension.py:L25-L114]; `main` [tests/test_rainflow_with_effective_tension.py:L117-L184] |
-
-| `tests/test_reservoir_framework.py` | `run_performance_tests` [tests/test_reservoir_framework.py:L800-L846] |
-
-| `tests/test_spectral_fatigue_validation.py` | `TestSNCurveDNVReference.test_dnv_d_curve_parameters` [tests/test_spectral_fatigue_validation.py:L50-L58] |
-
-| `tests/workflows/test_durable_workflows.py` | `test_workflow_registry` [tests/workflows/test_durable_workflows.py:L52-L1710]; `test_spectral_fatigue_workflow_matches_narrow_band_closed_form` [tests/workflows/test_durable_workflows.py:L1855-L1911]; `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening` [tests/workflows/test_durable_workflows.py:L1914-L1981] |
-
-The mapped scope contains 526 entries (387 stress-life/damage and 139 wave-spectrum); body-level qualification of alternate paths beyond the main path is open, issue pending (5).
+| Path | Function or class / pinned lines | Implements | Relation | Agreement with key controls | Covering pack |
+| --- | --- | --- | --- | --- | --- |
+| `docs/domains/examples/orcaflex_signal_analysis_example.py` | `example_6_custom_workflow` [docs/domains/examples/orcaflex_signal_analysis_example.py:L295-L363] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `docs/domains/examples/signal_analysis_usage_example.py` | `example_1_basic_rainflow_counting` [docs/domains/examples/signal_analysis_usage_example.py:L29-L65] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `docs/domains/examples/signal_analysis_usage_example.py` | `example_4_fatigue_analysis` [docs/domains/examples/signal_analysis_usage_example.py:L175-L253] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `docs/domains/examples/signal_analysis_usage_example.py` | `example_6_backward_compatibility` [docs/domains/examples/signal_analysis_usage_example.py:L315-L377] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `docs/domains/examples/signal_analysis_usage_example.py` | `main` [docs/domains/examples/signal_analysis_usage_example.py:L380-L410] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `examples/demos/demo_sn_library.py` | `main` [examples/demos/demo_sn_library.py:L43-L207] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_sn_curves` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L120-L160] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_rainflow_counting` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L163-L243] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_damage_accumulation` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L246-L326] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_frequency_domain_analysis` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L329-L408] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_quick_analysis` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L411-L458] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `main` [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L461-L502] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py` | `list_curves` [examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py:L24-L37] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py` | `compare_curves` [examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py:L66-L88] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_2_linear_log` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L46-L64] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_3_with_scf` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L67-L85] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_4_without_fatigue_limit` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L88-L106] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_5_dnv_comparison` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L109-L133] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_6_abs_comparison` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L136-L174] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_7_reference_comparison` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L177-L197] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_8_joint_type_comparison` [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L200-L228] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_1_basic_sn_curves` [examples/domains/fatigue/fatigue_analysis_examples.py:L55-L95] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_2_multislope_curves` [examples/domains/fatigue/fatigue_analysis_examples.py:L98-L139] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_3_time_domain_analysis` [examples/domains/fatigue/fatigue_analysis_examples.py:L142-L212] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_4_frequency_domain_analysis` [examples/domains/fatigue/fatigue_analysis_examples.py:L215-L279] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_5_high_stress_range_analysis` [examples/domains/fatigue/fatigue_analysis_examples.py:L282-L324] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_6_shear_data_analysis` [examples/domains/fatigue/fatigue_analysis_examples.py:L327-L383] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/fatigue/fatigue_analysis_examples.py` | `run_all_examples` [examples/domains/fatigue/fatigue_analysis_examples.py:L454-L477] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/reservoir/reservoir_analysis_examples.py` | `example_well_log_analysis` [examples/domains/reservoir/reservoir_analysis_examples.py:L138-L219] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/reservoir/reservoir_analysis_examples.py` | `example_stratigraphic_correlation` [examples/domains/reservoir/reservoir_analysis_examples.py:L376-L457] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `examples/domains/reservoir/reservoir_analysis_examples.py` | `main` [examples/domains/reservoir/reservoir_analysis_examples.py:L578-L603] | Demonstrates the family method. | caller (example) | Not checked | none |
+| `scripts/capabilities/build_onepagers.py` | `module body` [scripts/capabilities/build_onepagers.py:L36-L48] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py` | `module body` [scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py:L3-L12] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/check_process_fatigue_single.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/check_process_fatigue_single.py:L25-L225] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/migrate_yaml_configs.py` | `YAMLConfigMigrator._migrate_analysis` [scripts/python/digitalmodel/tools/migrate_yaml_configs.py:L134-L168] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/migrate_yaml_configs.py` | `YAMLConfigMigrator._migrate_time_series_components` [scripts/python/digitalmodel/tools/migrate_yaml_configs.py:L225-L242] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_data.py` | `process_fatigue_files` [scripts/python/digitalmodel/tools/process_fatigue_data.py:L24-L116] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_final.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_final.py:L25-L439] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `process_fatigue_file` [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L23-L273] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `process_sample_file` [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L275-L300] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `batch_process_all_files` [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L302-L343] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `rainflow_counting` [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L19-L59] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `process_fatigue_file` [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L61-L238] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `batch_process` [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L275-L316] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v2.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v2.py:L25-L309] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v3.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v3.py:L26-L337] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v4.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v4.py:L25-L352] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v5.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v5.py:L25-L382] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/python/digitalmodel/tools/process_fatigue_single_test_v6.py` | `process_single_test_file` [scripts/python/digitalmodel/tools/process_fatigue_single_test_v6.py:L25-L405] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `scripts/riser_database/build_tables.py` | `module body` [scripts/riser_database/build_tables.py:L24-L36] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/ansys/fatigue_postprocessor.py` | `SNcurve.from_dnv` [src/digitalmodel/ansys/fatigue_postprocessor.py:L101-L122] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.calculate_cycles_to_failure` [src/digitalmodel/ansys/fatigue_postprocessor.py:L158-L192] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.calculate_fatigue_damage` [src/digitalmodel/ansys/fatigue_postprocessor.py:L222-L284] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.generate_sn_curve_apdl` [src/digitalmodel/ansys/fatigue_postprocessor.py:L347-L369] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.create_damage_summary_df` [src/digitalmodel/ansys/fatigue_postprocessor.py:L371-L398] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/benchmarks/inventory.py` | `build_model_inventory` [src/digitalmodel/benchmarks/inventory.py:L77-L327] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/drilling_riser/global_model/fatigue_channels.py` | `half_cycles` [src/digitalmodel/drilling_riser/global_model/fatigue_channels.py:L51-L64] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/drilling_riser/global_model/fatigue_channels.py` | `extract` [src/digitalmodel/drilling_riser/global_model/fatigue_channels.py:L104-L137] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/engine.py` | `engine` [src/digitalmodel/engine.py:L90-L892] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatg_spectral_fatigue/workflow.py` | `router` [src/digitalmodel/fatg_spectral_fatigue/workflow.py:L52-L117] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatg_spectral_fatigue/workflow.py` | `_sn_curve` [src/digitalmodel/fatg_spectral_fatigue/workflow.py:L120-L134] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/assessment.py` | `_case_histogram` [src/digitalmodel/fatigue/assessment.py:L116-L121] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/assessment.py` | `assess_fatigue` [src/digitalmodel/fatigue/assessment.py:L136-L160] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `module body` [src/digitalmodel/fatigue/counting_contract.py:L47-L59] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_pylife_4pt` [src/digitalmodel/fatigue/counting_contract.py:L432-L440] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_pypi_rainflow` [src/digitalmodel/fatigue/counting_contract.py:L443-L454] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_sigproc_astm` [src/digitalmodel/fatigue/counting_contract.py:L457-L469] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_calm_buoy` [src/digitalmodel/fatigue/counting_contract.py:L472-L478] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_fapps_counting` [src/digitalmodel/fatigue/counting_contract.py:L481-L487] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_fapps_counter` [src/digitalmodel/fatigue/counting_contract.py:L490-L494] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_struct_fatigue` [src/digitalmodel/fatigue/counting_contract.py:L497-L501] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/counting_contract.py` | `_is_counting_name` [src/digitalmodel/fatigue/counting_contract.py:L866-L869] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/damage.py` | `miner_damage` [src/digitalmodel/fatigue/damage.py:L13-L39] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/damage.py` | `design_life_check` [src/digitalmodel/fatigue/damage.py:L42-L88] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/environmental_correction.py` | `environment_correction` [src/digitalmodel/fatigue/environmental_correction.py:L165-L244] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/environmental_correction.py` | `apply_environment_to_sn` [src/digitalmodel/fatigue/environmental_correction.py:L251-L292] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/fatg.py` | `fatg_sea_state_damage` [src/digitalmodel/fatigue/fatg.py:L211-L238] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/fatg.py` | `fatg_annual_damage` [src/digitalmodel/fatigue/fatg.py:L241-L311] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/fatigue_reporting.py` | `_sec_fatigue_locations` [src/digitalmodel/fatigue/fatigue_reporting.py:L376-L399] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/rainflow.py` | `fatigue_life` [src/digitalmodel/fatigue/rainflow.py:L130-L201] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_curves.py` | `_compute_sd` [src/digitalmodel/fatigue/sn_curves.py:L56-L58] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_curves.py` | `_build_curve_dict` [src/digitalmodel/fatigue/sn_curves.py:L61-L74] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatigue/sn_curves.py` | `get_sn_curve` [src/digitalmodel/fatigue/sn_curves.py:L80-L134] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.knee_stress` [src/digitalmodel/fatigue/sn_library.py:L141-L146] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.switch_stress` [src/digitalmodel/fatigue/sn_library.py:L149-L160] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.cycles` [src/digitalmodel/fatigue/sn_library.py:L162-L177] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_knee_stress` [src/digitalmodel/fatigue/sn_library.py:L180-L190] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_switch_stress` [src/digitalmodel/fatigue/sn_library.py:L200-L222] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_bilinear_cycles` [src/digitalmodel/fatigue/sn_library.py:L225-L250] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_sd` [src/digitalmodel/fatigue/sn_library.py:L288-L290] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_dnv_curves` [src/digitalmodel/fatigue/sn_library.py:L293-L381] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_api_curves` [src/digitalmodel/fatigue/sn_library.py:L384-L413] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_bs7608_curves` [src/digitalmodel/fatigue/sn_library.py:L416-L463] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_iiw_curves` [src/digitalmodel/fatigue/sn_library.py:L466-L497] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_eurocode3_curves` [src/digitalmodel/fatigue/sn_library.py:L500-L526] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_norsok_curves` [src/digitalmodel/fatigue/sn_library.py:L529-L566] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_aws_curves` [src/digitalmodel/fatigue/sn_library.py:L569-L597] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_asme_curves` [src/digitalmodel/fatigue/sn_library.py:L600-L627] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_en13445_curves` [src/digitalmodel/fatigue/sn_library.py:L630-L654] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_pd5500_curves` [src/digitalmodel/fatigue/sn_library.py:L657-L687] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_abs_curves` [src/digitalmodel/fatigue/sn_library.py:L690-L730] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_iso19902_curves` [src/digitalmodel/fatigue/sn_library.py:L733-L802] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_csa_curves` [src/digitalmodel/fatigue/sn_library.py:L805-L832] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_hse_curves` [src/digitalmodel/fatigue/sn_library.py:L835-L877] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_doe_curves` [src/digitalmodel/fatigue/sn_library.py:L880-L911] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_gl_curves` [src/digitalmodel/fatigue/sn_library.py:L914-L941] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_build_jis_curves` [src/digitalmodel/fatigue/sn_library.py:L944-L970] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `_ensure_loaded` [src/digitalmodel/fatigue/sn_library.py:L1002-L1011] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library.py` | `summary_table` [src/digitalmodel/fatigue/sn_library.py:L1129-L1148] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library_api.py` | `_record_to_curve_info` [src/digitalmodel/fatigue/sn_library_api.py:L146-L155] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library_api.py` | `_record_to_sncurve` [src/digitalmodel/fatigue/sn_library_api.py:L158-L174] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library_api.py` | `get_curve` [src/digitalmodel/fatigue/sn_library_api.py:L210-L235] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | none |
+| `src/digitalmodel/fatigue/sn_library_api.py` | `calculate_endurance` [src/digitalmodel/fatigue/sn_library_api.py:L238-L281] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | none |
+| `src/digitalmodel/fatigue/spectral_fatigue.py` | `wirsching_light_damage` [src/digitalmodel/fatigue/spectral_fatigue.py:L207-L254] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/spectral_fatigue.py` | `benasciutti_tovo_damage` [src/digitalmodel/fatigue/spectral_fatigue.py:L339-L395] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/weld_fatigue_quickcheck.py` | `weld_fatigue_quickcheck` [src/digitalmodel/fatigue/weld_fatigue_quickcheck.py:L105-L240] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/weld_fatigue_quickcheck.py` | `main` [src/digitalmodel/fatigue/weld_fatigue_quickcheck.py:L340-L373] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/woehler_fitting.py` | `generate_test_data` [src/digitalmodel/fatigue/woehler_fitting.py:L18-L89] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/woehler_fitting.py` | `_fallback_log_regression` [src/digitalmodel/fatigue/woehler_fitting.py:L137-L181] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/workflow.py` | `router` [src/digitalmodel/fatigue/workflow.py:L16-L40] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/fatigue/workflow.py` | `_curve_ids` [src/digitalmodel/fatigue/workflow.py:L43-L55] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/workflow.py` | `_stress_ranges` [src/digitalmodel/fatigue/workflow.py:L58-L85] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/workflow.py` | `_curve_summary` [src/digitalmodel/fatigue/workflow.py:L99-L111] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/workflow.py` | `_curve_csv_path` [src/digitalmodel/fatigue/workflow.py:L114-L120] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/fatigue/workflow.py` | `_input_stem` [src/digitalmodel/fatigue/workflow.py:L131-L134] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.router` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L23-L50] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_sn_data` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L52-L72] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_rainflow_cycles` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L74-L93] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_timetrace` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L95-L139] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.get_rainflow_from_timetrace` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L249-L261] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py` | `FatigueAnalysisComponents.orcaflex_wave_fatigue_analysis` [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L586-L701] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.router` [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L22-L36] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_lcf_timetrace_rainflow_and_fatigue_damage` [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L113-L166] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_fatigue_damage_output_df_for_timetrace` [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L298-L391] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_fatigue_df_definition_for_timetrace` [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L476-L489] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.orcaflex_wave_fatigue_analysis` [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L982-L1164] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `SNcurve.cycles_to_failure` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L53-L66] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `RainflowFatigue.count_cycles` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L203-L225] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `MinersRuleDamage.compute` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L323-L344] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `ScatterDiagramFatigue.compute` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L373-L433] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `compute_fatigue_life` [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L522-L600] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.add_well_analysis` [src/digitalmodel/marine_ops/reservoir/analysis.py:L414-L423] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.set_well_order` [src/digitalmodel/marine_ops/reservoir/analysis.py:L425-L436] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.create_flattened_section` [src/digitalmodel/marine_ops/reservoir/analysis.py:L451-L525] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/reservoir/analysis.py` | `WellCorrelation.add_well_data` [src/digitalmodel/marine_ops/reservoir/analysis.py:L803-L811] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/reservoir/analysis.py` | `CoreAnalysis.correlate_core_to_logs` [src/digitalmodel/marine_ops/reservoir/analysis.py:L1046-L1091] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/reservoir/analysis.py` | `ReservoirAnalysis.add_well_analysis` [src/digitalmodel/marine_ops/reservoir/analysis.py:L1119-L1142] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/marine_ops/reservoir/analysis.py` | `ReservoirAnalysis.run_comprehensive_analysis` [src/digitalmodel/marine_ops/reservoir/analysis.py:L1144-L1175] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/mooring_fatigue/workflow.py` | `router` [src/digitalmodel/mooring_fatigue/workflow.py:L23-L58] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/mooring_fatigue/workflow.py` | `_evaluate_line` [src/digitalmodel/mooring_fatigue/workflow.py:L61-L85] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/mooring_fatigue/workflow.py` | `_history_bins` [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/mooring_fatigue/workflow.py` | `_curve_settings` [src/digitalmodel/mooring_fatigue/workflow.py:L184-L186] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/parametric/generate.py` | `_mooring_fatigue_damage` [src/digitalmodel/parametric/generate.py:L28-L45] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/parametric/generate.py` | `_free_span_utilisation` [src/digitalmodel/parametric/generate.py:L141-L175] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/parametric/generate.py` | `_span_rectification_utilisation` [src/digitalmodel/parametric/generate.py:L327-L365] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/parametric/refresh.py` | `module body` [src/digitalmodel/parametric/refresh.py:L27-L39] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/rao_spectral_fatigue/workflow.py` | `router` [src/digitalmodel/rao_spectral_fatigue/workflow.py:L34-L81] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/riser_fatigue/touchdown.py` | `assess_touchdown_fatigue` [src/digitalmodel/riser_fatigue/touchdown.py:L157-L247] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/riser_fatigue/workflow.py` | `router` [src/digitalmodel/riser_fatigue/workflow.py:L65-L103] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/riser_fatigue/workflow.py` | `_viv_damage` [src/digitalmodel/riser_fatigue/workflow.py:L205-L245] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/riser_fatigue/workflow.py` | `_curve_settings` [src/digitalmodel/riser_fatigue/workflow.py:L255-L266] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `TimeSeriesComponentsAdapter.get_rainflow_count_from_time_series` [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L50-L72] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `FatigueAnalysisAdapter.get_rainflow_from_timetrace` [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L293-L315] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `FatigueAnalysisAdapter.damage_from_rainflow_cycles` [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L317-L355] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `OrcaFlexAdapter.RainflowHalfCycles` [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L376-L405] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/cli.py` | `rainflow_cmd` [src/digitalmodel/signal_processing/signal_analysis/cli.py:L30-L86] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py` | `RainflowCounter.count_cycles` [src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py:L39-L83] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py` | `SNCurve._bilinear` [src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py:L189-L234] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py` | `SNCurve.from_test_data` [src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py:L376-L417] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator.calculate_damage` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L34-L84] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._miners_rule` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L86-L116] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._modified_miners_rule` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L118-L158] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._nonlinear_damage` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L160-L199] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._calculate_allowable_cycles` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L201-L255] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._apply_mean_stress_correction` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L257-L314] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._estimate_cycles_to_failure` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L316-L351] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator.calculate_equivalent_stress` [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L353-L388] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `create_parser` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L55-L248] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `build_config_from_args` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L251-L324] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `main` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L327-L479] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._analyze_column` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L147-L222] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._generate_outputs` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L327-L360] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._generate_summary` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L438-L474] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/signal_analysis/orcaflex/error_handling.py` | `SafeAnalyzer.safe_rainflow_analysis` [src/digitalmodel/signal_processing/signal_analysis/orcaflex/error_handling.py:L162-L222] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/time_series/time_series_analysis.py` | `TimeSeriesAnalysis.router` [src/digitalmodel/signal_processing/time_series/time_series_analysis.py:L20-L41] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/signal_processing/time_series/time_series_components.py` | `TimeSeriesComponents.count_cycles` [src/digitalmodel/signal_processing/time_series/time_series_components.py:L644-L657] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/opp_time_series.py` | `OPPTimeSeries.get_histogram_object_from_orcaflex_run` [src/digitalmodel/solvers/orcaflex/opp_time_series.py:L441-L471] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/opp_time_series.py` | `OPPTimeSeries.get_detailed_histogram_df_columns` [src/digitalmodel/solvers/orcaflex/opp_time_series.py:L473-L494] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/opp_time_series_v2.py` | `OPPTimeSeriesV2.process_histograms` [src/digitalmodel/solvers/orcaflex/opp_time_series_v2.py:L241-L282] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py` | `OrcaFlexAnalysis.get_histogram_object_from_orcaflex_run` [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L470-L492] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py` | `OrcaFlexAnalysis.get_detailed_histogram_df_columns` [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L755-L767] | Evaluates stress-life curves, cycle counts or cumulative damage; mapped copy | copy | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._perform_fatigue_analysis` [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L248-L338] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._parallel_fatigue_analysis` [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L420-L448] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._analyze_single_trace` [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L451-L496] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/spectral_fatigue/workflow.py` | `router` [src/digitalmodel/spectral_fatigue/workflow.py:L37-L76] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/spectral_fatigue/workflow.py` | `_sn_curve` [src/digitalmodel/spectral_fatigue/workflow.py:L139-L143] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue/__init__.py` | `quick_fatigue_analysis` [src/digitalmodel/structural/fatigue/__init__.py:L226-L305] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/__init__.py` | `get_module_info` [src/digitalmodel/structural/fatigue/__init__.py:L431-L447] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `module body` [src/digitalmodel/structural/fatigue/analysis.py:L39-L51] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_sn_curve` [src/digitalmodel/structural/fatigue/analysis.py:L266-L285] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_damage_calculator` [src/digitalmodel/structural/fatigue/analysis.py:L287-L300] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_rainflow_counter` [src/digitalmodel/structural/fatigue/analysis.py:L302-L310] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_time_series` [src/digitalmodel/structural/fatigue/analysis.py:L312-L419] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_psd` [src/digitalmodel/structural/fatigue/analysis.py:L421-L526] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.calculate_high_stress_range_life` [src/digitalmodel/structural/fatigue/analysis.py:L528-L569] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_shear_data` [src/digitalmodel/structural/fatigue/analysis.py:L571-L620] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._perform_engineering_validation` [src/digitalmodel/structural/fatigue/analysis.py:L733-L784] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `quick_time_domain_analysis` [src/digitalmodel/structural/fatigue/analysis.py:L979-L1022] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `quick_frequency_domain_analysis` [src/digitalmodel/structural/fatigue/analysis.py:L1025-L1062] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `module body` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L32-L44] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `LinearDamageAccumulation.calculate_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L109-L217] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `LinearDamageAccumulation._apply_mean_stress_correction` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L219-L256] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `ModifiedMinersRule.calculate_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L292-L355] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation.calculate_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L383-L400] | Evaluates stress-life curves, cycle counts or cumulative damage. | wrapper | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._marco_starkey_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L402-L449] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._corten_dolan_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L451-L495] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._double_linear_damage` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L497-L544] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `compare_damage_methods` [src/digitalmodel/structural/fatigue/damage_accumulation.py:L652-L699] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/design_code_report.py` | `_build_curve` [src/digitalmodel/structural/fatigue/design_code_report.py:L101-L114] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `failure_probability` [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L84-L168] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `sensitivity_analysis` [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L171-L273] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `monte_carlo_fatigue` [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L276-L366] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `module body` [src/digitalmodel/structural/fatigue/frequency_domain.py:L30-L42] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `NarrowBandMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L191-L226] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `DirlikMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L240-L369] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `TovoBenasciuttiMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L382-L468] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `SingleMomentMethod.calculate_damage_rate` [src/digitalmodel/structural/fatigue/frequency_domain.py:L481-L530] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/frequency_domain.py` | `compare_frequency_methods` [src/digitalmodel/structural/fatigue/frequency_domain.py:L683-L725] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `run_sweep` [src/digitalmodel/structural/fatigue/parametric_sweep.py:L74-L163] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `compute_sensitivity._single_damage` [src/digitalmodel/structural/fatigue/parametric_sweep.py:L206-L221] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `_build_scatter_json` [src/digitalmodel/structural/fatigue/parametric_sweep.py:L448-L512] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/rainflow.py` | `module body` [src/digitalmodel/structural/fatigue/rainflow.py:L32-L44] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter.count_cycles` [src/digitalmodel/structural/fatigue/rainflow.py:L230-L310] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter._rainflow_count` [src/digitalmodel/structural/fatigue/rainflow.py:L316-L318] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter.extract_cycles_with_means` [src/digitalmodel/structural/fatigue/rainflow.py:L502-L536] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/rainflow.py` | `rainflow_count` [src/digitalmodel/structural/fatigue/rainflow.py:L729-L752] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/rainflow.py` | `rainflow_with_means` [src/digitalmodel/structural/fatigue/rainflow.py:L755-L770] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/scatter_fatigue.py` | `scatter_fatigue_damage` [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L102-L255] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/skill.py` | `fatigue_assessment` [src/digitalmodel/structural/fatigue/skill.py:L188-L273] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curve_plotter.py` | `main` [src/digitalmodel/structural/fatigue/sn_curve_plotter.py:L397-L415] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `module body` [src/digitalmodel/structural/fatigue/sn_curves.py:L32-L44] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves._find_sn_data_file` [src/digitalmodel/structural/fatigue/sn_curves.py:L442-L453] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves._ensure_loaded` [src/digitalmodel/structural/fatigue/sn_curves.py:L456-L505] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.register_custom_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L522-L563] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_dnv_c203_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L619-L668] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_multislope_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L671-L713] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `ThicknessCorrection.apply_thickness_effect` [src/digitalmodel/structural/fatigue/sn_curves.py:L863-L916] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `SNDataFitting.fit_power_law` [src/digitalmodel/structural/fatigue/sn_curves.py:L927-L1005] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_dnv_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L1047-L1066] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_api_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L1069-L1071] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_bs_curve` [src/digitalmodel/structural/fatigue/sn_curves.py:L1074-L1076] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `_dnv_curves_from_c203` [src/digitalmodel/structural/fatigue/sn_curves.py:L1085-L1099] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/worked_examples.py` | `_dnv_seawater_cp` [src/digitalmodel/structural/fatigue/worked_examples.py:L58-L77] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/worked_examples.py` | `_dnv_seawater_free` [src/digitalmodel/structural/fatigue/worked_examples.py:L80-L97] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/worked_examples.py` | `_chain_seawater_cp` [src/digitalmodel/structural/fatigue/worked_examples.py:L100-L119] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/worked_examples.py` | `pipeline_girth_weld` [src/digitalmodel/structural/fatigue/worked_examples.py:L199-L260] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/worked_examples.py` | `scr_touchdown` [src/digitalmodel/structural/fatigue/worked_examples.py:L263-L323] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/worked_examples.py` | `mooring_chain` [src/digitalmodel/structural/fatigue/worked_examples.py:L326-L388] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue/worked_examples.py` | `_compute_example` [src/digitalmodel/structural/fatigue/worked_examples.py:L395-L431] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | this pack |
+| `src/digitalmodel/structural/fatigue_apps/__main__.py` | `run_analysis` [src/digitalmodel/structural/fatigue_apps/__main__.py:L244-L501] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `SNCurve._load_sn_parameters` [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L55-L118] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `SNCurve.calculate_cycles_to_failure` [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L120-L149] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `FatigueDamageCalculator.calculate_damage` [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L182-L209] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `main` [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L489-L549] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `module body` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L21-L33] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `SNCurveParameters.a1` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L36-L38] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `SNCurveParameters.a2` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L41-L43] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.cycles_to_failure` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L106-L132] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.calculate_damage` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L134-L184] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.export_results` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L297-L320] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/file_namer.py` | `FatigueFileNamer.get_rainflow_filename` [src/digitalmodel/structural/fatigue_apps/file_namer.py:L87-L105] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/file_namer.py` | `module body` [src/digitalmodel/structural/fatigue_apps/file_namer.py:L201-L213] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/integrated_processor.py` | `IntegratedFatigueProcessor.process_fatigue_condition` [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L290-L364] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/integrated_processor.py` | `main` [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L366-L484] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py` | `IntegratedFatigueProcessorWithNaming._process_condition_base` [src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py:L81-L173] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `module body` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L20-L32] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter.count_cycles` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L48-L79] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter._rainflow_algorithm` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L164-L220] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter.export_results` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L292-L322] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `rainflow_count` [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L325-L338] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.process_time_series` [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L198-L254] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.process_batch` [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L332-L403] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.save_cycle_data` [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L405-L432] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `main` [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L463-L502] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py` | `ReferenceSeaStateProcessor.process_fatigue_condition` [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L355-L429] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py` | `TensionStressConverter.process_batch` [src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py:L271-L334] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py` | `main` [src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py:L428-L474] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/fatigue_apps/visualizer.py` | `generate_all_visualizations` [src/digitalmodel/structural/fatigue_apps/visualizer.py:L507-L570] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/structural/spectral_fatigue.py` | `narrow_band_damage` [src/digitalmodel/structural/spectral_fatigue.py:L122-L178] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/subsea/connectors/fatigue.py` | `assess_jumper_fatigue` [src/digitalmodel/subsea/connectors/fatigue.py:L62-L106] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `_dnv_params` [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `get_sn_curve` [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L170-L237] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py` | `SpanFatigueDamage._load_sn_curve` [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L79-L91] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.calculate_damage` [src/digitalmodel/subsea/viv_analysis/fatigue.py:L108-L165] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.calculate_fatigue_life` [src/digitalmodel/subsea/viv_analysis/fatigue.py:L167-L207] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.analyze_viv_fatigue` [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L268] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.cumulative_damage` [src/digitalmodel/subsea/viv_analysis/fatigue.py:L270-L300] | Evaluates stress-life curves, cycle counts or cumulative damage. | caller | Not checked | none |
+| `src/digitalmodel/viv_screening/inputs.py` | `parse_inputs` [src/digitalmodel/viv_screening/inputs.py:L88-L125] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/viv_screening/workflow.py` | `router` [src/digitalmodel/viv_screening/workflow.py:L25-L57] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/viv_screening/workflow.py` | `_damage_rate` [src/digitalmodel/viv_screening/workflow.py:L128-L147] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/viv_screening/workflow.py` | `_provenance` [src/digitalmodel/viv_screening/workflow.py:L173-L191] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `src/digitalmodel/web/digitaltwinfeed/app.py` | `page` [src/digitalmodel/web/digitaltwinfeed/app.py:L71-L86] | Evaluates stress-life curves, cycle counts or cumulative damage. | independent | Not checked | none |
+| `tests/ansys/padeye_pressure_bundle.py` | `_check_receipt` [tests/ansys/padeye_pressure_bundle.py:L23-L38] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/ansys/padeye_pressure_bundle.py` | `verify_pressure_bundle` [tests/ansys/padeye_pressure_bundle.py:L41-L65] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/ansys/test_fatigue_postprocessor.py` | `TestThicknessCorrection.test_known_correction` [tests/ansys/test_fatigue_postprocessor.py:L92-L96] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/ansys/test_padeye_pressure_bundle.py` | `bundle` [tests/ansys/test_padeye_pressure_bundle.py:L20-L29] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_assessment.py` | `histogram_input` [tests/fatigue/test_assessment.py:L22-L34] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_c203_consumers.py` | `_span_input` [tests/fatigue/test_c203_consumers.py:L303-L331] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_c203_sn_values.py` | `_non_dnv_bilinear` [tests/fatigue/test_c203_sn_values.py:L298-L303] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_c203_sn_values.py` | `test_non_dnv_bilinear_switch_stays_at_endurance_limit` [tests/fatigue/test_c203_sn_values.py:L326-L343] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_c203_variable_amplitude.py` | `_signal_e` [tests/fatigue/test_c203_variable_amplitude.py:L179-L182] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_c203_variable_amplitude.py` | `_user_curve` [tests/fatigue/test_c203_variable_amplitude.py:L230-L233] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_c203_variable_amplitude.py` | `_span_input` [tests/fatigue/test_c203_variable_amplitude.py:L304-L332] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_c203_variable_amplitude.py` | `_fresh_standard_curves` [tests/fatigue/test_c203_variable_amplitude.py:L378-L391] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_c203_variable_amplitude.py` | `_data_dir` [tests/fatigue/test_c203_variable_amplitude.py:L394-L398] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_damage.py` | `f_curve` [tests/fatigue/test_damage.py:L16-L17] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_damage.py` | `TestThicknessCorrection.test_correction_above_ref` [tests/fatigue/test_damage.py:L90-L95] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_damage.py` | `TestThicknessCorrection.test_correction_formula` [tests/fatigue/test_damage.py:L97-L103] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_fatg.py` | `TestAgainstTransliterationSweep.test_all_presets_and_curves` [tests/fatigue/test_fatg.py:L267-L284] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_fatg_workflow.py` | `_cfg` [tests/fatigue/test_fatg_workflow.py:L23-L49] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_fatg_workflow.py` | `_library_reference` [tests/fatigue/test_fatg_workflow.py:L52-L64] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_fatigue_reporting.py` | `_sample_locations` [tests/fatigue/test_fatigue_reporting.py:L15-L55] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls` [tests/fatigue/test_rainflow_invariants.py:L408-L488] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls.calm_scatter` [tests/fatigue/test_rainflow_invariants.py:L443-L449] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls.fapps_batch` [tests/fatigue/test_rainflow_invariants.py:L456-L461] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_sn_curves.py` | `TestGetSNCurve.test_f_curve_at_100mpa` [tests/fatigue/test_sn_curves.py:L40-L45] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_sn_curves.py` | `TestGetSNCurve.test_d_curve_at_100mpa` [tests/fatigue/test_sn_curves.py:L52-L57] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/fatigue/test_weld_fatigue_quickcheck.py` | `_hand_N` [tests/fatigue/test_weld_fatigue_quickcheck.py:L29-L31] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_cycles_to_failure_chain_known_value` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L117-L123] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_cycles_to_failure_wire_rope_known_value` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L125-L131] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_custom_sn_curve` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L138-L143] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestMinersRuleDamage.test_single_range_known_damage` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L294-L307] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestMinersRuleDamage.test_damage_additivity` [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L319-L329] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/parametric/test_atlas.py` | `_small_atlas` [tests/parametric/test_atlas.py:L19-L34] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/fatigue_analysis_reference/process_fatigue_final.py` | `process_single_test_file` [tests/signal_processing/signal_analysis/fatigue_analysis_reference/process_fatigue_final.py:L25-L439] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/reference_fatigue_processor.py` | `process_single_test_file` [tests/signal_processing/signal_analysis/reference_fatigue_processor.py:L25-L439] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `module body` [tests/signal_processing/signal_analysis/test_generate_outputs.py:L20-L32] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `analyze_signal` [tests/signal_processing/signal_analysis/test_generate_outputs.py:L97-L374] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `main` [tests/signal_processing/signal_analysis/test_generate_outputs.py:L377-L455] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py` | `OrcaFlexTensionAnalyzer.analyze_tension` [tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py:L108-L177] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py` | `OrcaFlexTensionAnalyzer.export_results` [tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py:L301-L352] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py` | `run_rainflow_for_timeseries` [tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py:L19-L71] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py` | `test_rainflow_for_timeseries` [tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py:L74-L271] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/signal_processing/signal_analysis/validate_module.py` | `main` [tests/signal_processing/signal_analysis/validate_module.py:L183-L219] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/solvers/test_integration_solvers.py` | `mock_solver_factory.MockSolverFactory.create_fatigue_solver` [tests/solvers/test_integration_solvers.py:L154-L165] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/conftest.py` | `simple_sn_curve` [tests/structural/fatigue/conftest.py:L14-L16] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_damage_accumulation.py` | `dnv_d_curve` [tests/structural/fatigue/test_damage_accumulation.py:L40-L47] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_damage_accumulation.py` | `simple_curve` [tests/structural/fatigue/test_damage_accumulation.py:L51-L58] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_damage_accumulation.py` | `curve_with_material` [tests/structural/fatigue/test_damage_accumulation.py:L62-L76] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_fatigue_migration.py` | `TestSNCurveMigration.test_multislope_curve_implementation` [tests/structural/fatigue/test_fatigue_migration.py:L90-L128] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_fatigue_migration.py` | `TestSNCurveMigration.test_curve_continuity` [tests/structural/fatigue/test_fatigue_migration.py:L130-L161] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_fatigue_migration.py` | `TestFrequencyDomainMigration.test_basic_frequency_analysis` [tests/structural/fatigue/test_fatigue_migration.py:L231-L252] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_fatigue_reliability.py` | `simple_sn` [tests/structural/fatigue/test_fatigue_reliability.py:L32-L34] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_fatigue_reliability.py` | `mild_sn` [tests/structural/fatigue/test_fatigue_reliability.py:L38-L40] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_fatigue_skill.py` | `_simple_input` [tests/structural/fatigue/test_fatigue_skill.py:L39-L49] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_fatigue_skill.py` | `TestOffshoreScenario.test_high_cycle_low_stress_result` [tests/structural/fatigue/test_fatigue_skill.py:L494-L512] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_frequency_domain.py` | `simple_sn_curve` [tests/structural/fatigue/test_frequency_domain.py:L84-L86] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_rainflow.py` | `default_counter` [tests/structural/fatigue/test_rainflow.py:L41-L43] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_scatter_fatigue.py` | `simple_sn` [tests/structural/fatigue/test_scatter_fatigue.py:L25-L27] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_scatter_fatigue.py` | `TestFatigueLife.test_fatigue_life_inverse_of_damage` [tests/structural/fatigue/test_scatter_fatigue.py:L233-L251] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves.py` | `simple_power_law` [tests/structural/fatigue/test_sn_curves.py:L57-L59] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves.py` | `power_law_with_limit` [tests/structural/fatigue/test_sn_curves.py:L63-L67] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves.py` | `bilinear_curve` [tests/structural/fatigue/test_sn_curves.py:L71-L86] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves.py` | `dnv_d_curve` [tests/structural/fatigue/test_sn_curves.py:L90-L91] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves.py` | `TestBS7608RevisedCurveParameters.test_bs7608_revised_d_known_n_at_50mpa` [tests/structural/fatigue/test_sn_curves.py:L886-L892] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves.py` | `TestISO19902CurveParameters.test_iso19902_f_air_known_n_at_100mpa` [tests/structural/fatigue/test_sn_curves.py:L964-L970] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves.py` | `TestISO19902CurveParameters.test_iso19902_f2_sw_cp_known_n_at_50mpa` [tests/structural/fatigue/test_sn_curves.py:L994-L1000] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves_yaml.py` | `_all_single_slope_cases` [tests/structural/fatigue/test_sn_curves_yaml.py:L55-L60] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue/test_sn_curves_yaml.py` | `_all_multislope_cases` [tests/structural/fatigue/test_sn_curves_yaml.py:L63-L66] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue_analysis/conftest.py` | `sn_curve_data` [tests/structural/fatigue_analysis/conftest.py:L6-L13] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue_analysis/test_fatigue_analysis_sn.py` | `run_fatigue_analysis` [tests/structural/fatigue_analysis/test_fatigue_analysis_sn.py:L13-L20] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/structural/fatigue_analysis/test_fatigue_analysis_timetrace.py` | `run_fatigue_analysis` [tests/structural/fatigue_analysis/test_fatigue_analysis_timetrace.py:L15-L40] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/subsea/pipeline/test_free_span_f105.py` | `ref_input` [tests/subsea/pipeline/test_free_span_f105.py:L43-L65] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/subsea/viv_analysis/test_viv_analysis_unit.py` | `TestVIVFatigueCalculator.test_cumulative_damage` [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_automation/fixtures/engineering_fixtures.py` | `get_orcaflex_post_process_mock` [tests/test_automation/fixtures/engineering_fixtures.py:L72-L94] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_automation/scripts/comprehensive_fix_campaign.py` | `ComprehensiveTestFixCampaign.generate_mock_data` [tests/test_automation/scripts/comprehensive_fix_campaign.py:L103-L153] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_complete_fatigue_pipeline.py` | `process_configuration` [tests/test_complete_fatigue_pipeline.py:L65-L175] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_complete_fatigue_pipeline.py` | `main` [tests/test_complete_fatigue_pipeline.py:L178-L270] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_fatigue_basic.py` | `run_all_tests` [tests/test_fatigue_basic.py:L223-L269] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_rainflow_with_effective_tension.py` | `process_effective_tension_file` [tests/test_rainflow_with_effective_tension.py:L25-L114] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_rainflow_with_effective_tension.py` | `main` [tests/test_rainflow_with_effective_tension.py:L117-L184] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_reservoir_framework.py` | `run_performance_tests` [tests/test_reservoir_framework.py:L800-L846] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/test_spectral_fatigue_validation.py` | `TestSNCurveDNVReference.test_dnv_d_curve_parameters` [tests/test_spectral_fatigue_validation.py:L50-L58] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/test_durable_workflows.py` | `test_workflow_registry` [tests/workflows/test_durable_workflows.py:L52-L1710] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/test_durable_workflows.py` | `test_spectral_fatigue_workflow_matches_narrow_band_closed_form` [tests/workflows/test_durable_workflows.py:L1855-L1911] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+| `tests/workflows/test_durable_workflows.py` | `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening` [tests/workflows/test_durable_workflows.py:L1914-L1981] | Checks or supplies inputs to the family method. | caller (test helper) | Not checked | none |
+
+#### Additional calculation routes verified at the code revision
+
+| Path | Function or class / pinned lines | Implements | Relation | Agreement with key controls | Covering pack |
+| --- | --- | --- | --- | --- | --- |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `PowerLawSNCurve.get_allowable_cycles` [src/digitalmodel/structural/fatigue/sn_curves.py:L152-L184] | Primary power-law and optional two-segment allowable-cycle route | independent | Yes: primary route; cross-class equivalence is not asserted | this pack |
+| `src/digitalmodel/structural/fatigue/sn_curves.py` | `BilinearSNCurve.get_allowable_cycles` [src/digitalmodel/structural/fatigue/sn_curves.py:L272-L288] | Separate two-slope allowable-cycle evaluation | independent | No: boundary, cut-off and continuity conventions differ | this pack |
+| `src/digitalmodel/structural/fatigue/analysis.py` | `MultislopeSNCurve.get_allowable_cycles` [src/digitalmodel/structural/fatigue/analysis.py:L171-L208] | Allowable cycles for both DNV_MULTISLOPE identities; transitions use each segment constant and a fatigue-limit cut-off | independent | No: continuity is unchecked and cut-off conventions differ | this pack |
+| `src/digitalmodel/structural/fatigue/design_code_report.py` | `_compute_contributions` [src/digitalmodel/structural/fatigue/design_code_report.py:L117-L143] | SCF-adjusted per-bin damage increments and cumulative sum for missing report contributions | independent | No: headline damage is not reconciled with the recomputed sum | this pack |
+
+The multislope factory returns the evaluator indexed above; it derives transition stresses from each segment constant without a continuity check and applies a fatigue-limit cut-off. [src/digitalmodel/structural/fatigue/sn_curves.py:L693-L710] [src/digitalmodel/structural/fatigue/analysis.py:L156-L208]
+
+Known defect #2543 affects the indexed crane-tip `_jonswap_spectrum` and free-span `jonswap_spectrum` routes; neither is a qualified spectrum normalisation reference. [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L194-L201] [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L129-L140]
+
+Follow-up, issue pending (5): extend the implementation map for `PowerLawSNCurve.get_allowable_cycles`, `BilinearSNCurve.get_allowable_cycles`, `MultislopeSNCurve.get_allowable_cycles` and `design_code_report._compute_contributions`, all absent from its accepted and rejected entries; keep `SNCurvePlotter.calculate_sn_points` classified as a presentation helper (section 3). [src/digitalmodel/structural/fatigue/sn_curves.py:L152-L184] [src/digitalmodel/structural/fatigue/sn_curves.py:L272-L288] [src/digitalmodel/structural/fatigue/analysis.py:L171-L208] [src/digitalmodel/structural/fatigue/design_code_report.py:L117-L143] [src/digitalmodel/structural/fatigue/sn_curve_plotter.py:L76-L172]
+
+The mapped scope contains 526 entries (387 stress-life/damage and 139 wave-spectrum), with four additional calculation rows above, including the three second implementations; body-level qualification of alternate paths beyond the main path remains open, issue pending (5).
 
 ## 10. Coverage and open items
 
@@ -793,11 +825,13 @@ The main-path reading covers `manifest.yaml`, `sn_curves.py`, `rainflow.py`, `da
 | UNVERIFIED stale-wiki failure detection in this module | No detection check exists in the named fatigue suites; wrapper catches a resolution failure | #2166 | Engineering calculations quality manager |
 | UNVERIFIED deputy assignment | Named deputy and shared lesson index require maintainer assignment | issue pending (4) | Maintainer |
 | UNVERIFIED consumer inventory rows and program-version contract | All mapped implementations are indexed, but per-consumer qualification remains open | issue pending (5) | Engineering calculations quality manager |
-| Implemented/verified edition mismatch and environment identifiers | Keep 2011 value basis separate from 2021 labels; no claim of later-edition equivalence | #2161, #2165 | Engineering calculations quality manager |
-| Piecewise reliability and spectral formula qualification; tubular/reference-thickness and low-cycle limits | First-segment formulas and unsupported table cases remain outside clearance | #2165 | Engineering calculations quality manager |
+| Implemented/verified edition mismatch and environment identifiers | Keep 2011 value basis separate from 2021 labels; no claim of later-edition equivalence | #1588; issue pending (1) | Engineering calculations quality manager |
+| Piecewise reliability and spectral formula qualification; tubular/reference-thickness and low-cycle limits | First-segment formulas and unsupported table cases remain outside clearance | issue pending (1) | Engineering calculations quality manager |
 | Counter divergence and refused damage paths | No promotion of structural diagnostics to a reference calculation | workspace-hub#3839 | Engineering calculations quality manager |
-| Report default-curve provenance and complete G5 evidence appendix | Generic fallback cannot establish the standard named in the report | issue pending (3) | Engineering calculations quality manager |
+| Report default-curve provenance, headline/contribution reconciliation and complete G5 evidence appendix | Generic fallback cannot establish the standard named in the report; payload damage is not reconciled with recomputed increments | issue pending (3) | Engineering calculations quality manager |
 | README/test-count correspondence and historical database claims | Catalog count matches another package; 801 structural cases collected, not 808 | issue pending (1) | Engineering calculations quality manager |
+| Open general-catalog seawater-CP basis and fail-closed citation qualification | CP selection is implemented; exact-edition and fail-closed evidence remain unqualified; no dedicated detection check exists (section 6) [src/digitalmodel/fatigue/sn_curves.py:L104-L134] | #1588 | Engineering calculations quality manager |
+| Cross-class S-N boundary, cut-off and continuity qualification | No cross-class check exists; section 6 distinguishes individual-class tests [tests/structural/fatigue/test_sn_curves.py:L256-L297] | issue pending (5) | Engineering calculations quality manager |
 | Remaining factory stress-cycle point coverage | 51 identities listed individually below; no claim that smoke/field-only tests qualify them | issue pending (2) | Engineering calculations quality manager |
 
 ### Curve identities without credited point evidence
@@ -806,117 +840,75 @@ Each following identity remains open under issue pending (2); a future test must
 
 | Curve ID | Evidence defining the identity | Tracking |
 | --- | --- | --- |
-
 | `DNV:B1:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L60-L60] | issue pending (2) |
-
 | `DNV:B2:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L61-L61] | issue pending (2) |
-
 | `DNV:C:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L62-L62] | issue pending (2) |
-
 | `DNV:C1:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L63-L63] | issue pending (2) |
-
 | `DNV:C2:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L64-L64] | issue pending (2) |
-
 | `DNV:E:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L66-L66] | issue pending (2) |
-
 | `DNV:F:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L67-L67] | issue pending (2) |
-
 | `DNV:F1:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L68-L68] | issue pending (2) |
-
 | `DNV:F3:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L69-L69] | issue pending (2) |
-
 | `DNV:G:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L70-L70] | issue pending (2) |
-
 | `DNV:W1:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L71-L71] | issue pending (2) |
-
 | `DNV:W2:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L72-L72] | issue pending (2) |
-
 | `DNV:W3:seawater_cp` | [src/digitalmodel/fatigue/c203_sn_tables.py:L73-L73] | issue pending (2) |
-
 | `DNV:B1:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L86-L86] | issue pending (2) |
-
 | `DNV:B2:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L87-L87] | issue pending (2) |
-
 | `DNV:C:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L88-L88] | issue pending (2) |
-
 | `DNV:C1:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L89-L89] | issue pending (2) |
-
 | `DNV:C2:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L90-L90] | issue pending (2) |
-
 | `DNV:D:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L91-L91] | issue pending (2) |
-
 | `DNV:E:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L92-L92] | issue pending (2) |
-
 | `DNV:F:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L93-L93] | issue pending (2) |
-
 | `DNV:F3:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L95-L95] | issue pending (2) |
-
 | `DNV:G:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L96-L96] | issue pending (2) |
-
 | `DNV:W1:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L97-L97] | issue pending (2) |
-
 | `DNV:W2:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L98-L98] | issue pending (2) |
-
 | `DNV:W3:free_corrosion` | [src/digitalmodel/fatigue/c203_sn_tables.py:L99-L99] | issue pending (2) |
-
 | `API:X` | [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] | issue pending (2) |
-
 | `API:X_prime` | [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] | issue pending (2) |
-
 | `API:Y` | [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] | issue pending (2) |
-
 | `API:S-N1` | [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] | issue pending (2) |
-
 | `API:S-N2` | [src/digitalmodel/structural/fatigue/sn_curves.py:L356-L362] | issue pending (2) |
-
 | `BS:B` | [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] | issue pending (2) |
-
 | `BS:C` | [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] | issue pending (2) |
-
 | `BS:D` | [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] | issue pending (2) |
-
 | `BS:E` | [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] | issue pending (2) |
-
 | `BS:F` | [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] | issue pending (2) |
-
 | `BS:F2` | [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] | issue pending (2) |
-
 | `BS:G` | [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] | issue pending (2) |
-
 | `BS:W` | [src/digitalmodel/structural/fatigue/sn_curves.py:L365-L374] | issue pending (2) |
-
 | `AWS:A` | [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] | issue pending (2) |
-
 | `AWS:B` | [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] | issue pending (2) |
-
 | `AWS:B1` | [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] | issue pending (2) |
-
 | `AWS:C` | [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] | issue pending (2) |
-
 | `AWS:C1` | [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] | issue pending (2) |
-
 | `AWS:D` | [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] | issue pending (2) |
-
 | `AWS:E` | [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] | issue pending (2) |
-
 | `AWS:E1` | [src/digitalmodel/structural/fatigue/sn_curves.py:L377-L386] | issue pending (2) |
-
 | `ISO_19902:F_SW_NOCP` | [src/digitalmodel/structural/fatigue/sn_curves.py:L396-L407] | issue pending (2) |
-
-| `DNV_MULTISLOPE:D_MULTISLOPE` | [src/digitalmodel/structural/fatigue/sn_curves.py:L339-L353] | issue pending (2) |
-
-| `DNV_MULTISLOPE:F_MULTISLOPE` | [src/digitalmodel/structural/fatigue/sn_curves.py:L339-L353] | issue pending (2) |
-
+| `DNV_MULTISLOPE:D_MULTISLOPE` | [src/digitalmodel/structural/fatigue/sn_curves.py:L339-L353] Evaluator: `MultislopeSNCurve.get_allowable_cycles` [src/digitalmodel/structural/fatigue/analysis.py:L171-L208] | issue pending (2) |
+| `DNV_MULTISLOPE:F_MULTISLOPE` | [src/digitalmodel/structural/fatigue/sn_curves.py:L339-L353] Evaluator: `MultislopeSNCurve.get_allowable_cycles` [src/digitalmodel/structural/fatigue/analysis.py:L171-L208] | issue pending (2) |
 | `worked_examples:Chain-R3-Studless-SwCP` | [src/digitalmodel/structural/fatigue/worked_examples.py:L100-L119] | issue pending (2) |
 
 ### Offline evidence record
 
-Both required fatigue test directories were run at `f9c058d6ef4e69d01630d90ea90033b47ce9d30f` before and after this documentation change using `PYTHONPATH=src uv run --no-sources python -m pytest tests/structural/fatigue/ tests/fatigue/ -q -rA -p no:cacheprovider --basetemp=<scratch>`; no addopts override or test selection filter was applied.
+Both required fatigue test directories were rerun at BASE `673484f75192743ed07d2afc6827837586b2d51e` and on its uncommitted documentation changes using `PYTHONPATH=src uv run --no-sources python -m pytest tests/structural/fatigue/ tests/fatigue/ -q -rA -p no:cacheprovider --basetemp=<scratch>`; no addopts override or test selection filter was applied. The code revision remains `f9c058d6ef4e69d01630d90ea90033b47ce9d30f`; the fatigue source and test trees differ from BASE only in this pack.
 
-| Run | Collected / run | Passed | Failed | Skipped | Expected failures | NOT_RUN |
+| Fatigue run | Collected / run | Passed | Failed | Skipped | Expected failures | NOT_RUN |
 | --- | --- | --- | --- | --- | --- | --- |
 | BASE | 1545 | 1536 | 0 | 0 | 9 | 0 |
-| AFTER | 1545 | 1536 | 0 | 0 | 9 | 0 |
+| AFTER, uncommitted tree | 1545 | 1536 | 0 | 0 | 9 | 0 |
+
+The complete `tests-contracts` domain from the repository gate configuration was also run at the same BASE and uncommitted tree using the same test form: `PYTHONPATH=src uv run --no-sources python -m pytest tests/contracts/ tests/compat/ tests/cross_repo/ tests/docs/ tests/repo_structure/ tests/test_apistd2rd_migration.py tests/test_module_reorganization.py tests/test_restructure_compat.py tests/test_units.py tests/test_validation_utils.py -q -rA -p no:cacheprovider --basetemp=<scratch>`. No test or plugin was disabled.
+
+| Contracts run | Collected nodes | Passed | Failed | Skipped, including collection | NOT_RUN | Routing subset passed |
+| --- | --- | --- | --- | --- | --- | --- |
+| BASE | 909 | 848 | 1 | 61 | 0 | 10 / 10 |
+| AFTER, uncommitted tree | 909 | 848 | 1 | 61 | 0 | 10 / 10 |
+
+The 61 skipped results include one module skipped during collection, in addition to the 909 collected test nodes. Both runs fail only `tests/contracts/test_string_addressed_dependencies.py::test_the_three_known_defects_are_still_derived`: the strict warning policy on Python 3.12 turns the invalid escape at `src/digitalmodel/asset_integrity/common/data.py:215` into a parse error, and `_iter_modules` skips it, hiding the expected `xlsxwriter` call. The same test, warning policy and legacy source were read on main and are unchanged; this is baseline, outside the edited pack. [tests/contracts/test_string_addressed_dependencies.py:L519-L525] [tests/contracts/test_string_addressed_dependencies.py:L620-L635] [src/digitalmodel/asset_integrity/common/data.py:L211-L217] [pytest.ini:L67-L70]
 
 The existing expected failures are retained as baseline evidence, not hidden or converted to passing examples. [tests/structural/fatigue/test_fatigue_migration.py:L49-L53] [tests/fatigue/test_rainflow_invariants.py:L138-L177] [tests/fatigue/test_rainflow_invariants.py:L383-L394]
 
