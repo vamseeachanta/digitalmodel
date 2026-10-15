@@ -59,23 +59,16 @@ class WinchBuilder(BaseBuilder):
 
         winch_def: dict[str, Any] = {
             "Name": winch_name,
-            "Connection": [vessel.name, pipeline_name],
-            "ConnectionPoint": [position, [0, 0, 0]],
-            "ConnectionzRelativeTo": [None, "End A"],
-            "StageMode": [
-                "Specified tension",  # Stage 0: build-up
-                "Specified tension",  # Stage 1: operational
+            "WinchType": "Simple",
+            "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo": [
+                [vessel.name, *position],
+                [pipeline_name, 0, 0, 0, "End A"],
             ],
-            "StageTension": [
-                tensioner.tension_value,
-                tensioner.tension_value,  # Stage 1: operational tension
+            "WinchControlType": "By stage",
+            "StageMode, StageValue": [
+                ["Specified tension", tensioner.tension_value],
+                ["Specified tension", tensioner.tension_value],
             ],
-            "StageValue": [
-                None,
-                None,  # Stage 1: tension-controlled
-            ],
-            "WireType": "Winch wire_LT",
-            "StaticsStep1": "Specified tension",
         }
 
         # Stiffness and damping if provided

@@ -1,26 +1,19 @@
 Winches:
 - Name: Tensioner
-  Connection:
-  - Generic lay hull
-  - Generic pipe
-  ConnectionPoint:
-  - - -81.1
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Generic lay hull
+    - -81.1
     - 0.0
     - 0.0
-  - - 0
+  - - Generic pipe
     - 0
     - 0
-  ConnectionzRelativeTo:
-  - ~
-  - End A
-  StageMode:
-  - Specified tension
-  - Specified tension
-  StageTension:
-  - 627.2949990507396
-  - 627.2949990507396
-  StageValue:
-  - ~
-  - ~
-  WireType: Winch wire_LT
-  StaticsStep1: Specified tension
+    - 0
+    - End A
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 627.2949990507396
+  - - Specified tension
+    - 627.2949990507396

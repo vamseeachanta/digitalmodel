@@ -177,7 +177,7 @@ class TestWinchBuilder:
         builder = WinchBuilder(slay_spec, ctx)
         result = builder.build()
         winch = result["Winches"][0]
-        assert winch["StageTension"][1] == 585.4
+        assert winch["StageMode, StageValue"][1][1] == 585.4
 
     def test_winch_connects_vessel_to_pipeline(self, slay_spec):
         ctx = BuilderContext()
@@ -185,7 +185,8 @@ class TestWinchBuilder:
         builder = WinchBuilder(slay_spec, ctx)
         result = builder.build()
         winch = result["Winches"][0]
-        assert winch["Connection"] == ["Eclipse", "SB-SA Pipeline"]
+        connections = winch["Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"]
+        assert [row[0] for row in connections] == [slay_spec.equipment.vessel.name, ctx.main_pipeline_name]
 
     def test_registers_winch_name(self, slay_spec):
         ctx = BuilderContext()

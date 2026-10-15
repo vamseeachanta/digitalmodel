@@ -62,7 +62,19 @@ def test_vessel_supports_attach_pipeline_at_declared_roller_stations():
 def test_winch_applies_tension_in_statics_and_every_stage_with_nonzero_lead():
     spec = scenario()
     winch = WinchBuilder(spec, BuilderContext()).build()["Winches"][0]
-    assert winch["StageMode"] == ["Specified tension", "Specified tension"]
-    assert winch["StageTension"] == [spec.equipment.tensioner.tension_value] * 2
-    assert winch["StaticsStep1"] == "Specified tension"
-    assert winch["ConnectionPoint"][0] != winch["ConnectionPoint"][1]
+    stages = winch["StageMode, StageValue"]
+    assert stages == [["Specified tension", spec.equipment.tensioner.tension_value]] * 2
+    assert winch["WinchControlType"] == "By stage"
+    connections = winch["Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"]
+    assert connections[0][1:4] != connections[1][1:4]
+
+
+def test_winch_keys_match_native_export():
+    """Reject private winch keys absent from the native reference."""
+    spec = scenario()
+    winch = WinchBuilder(spec, BuilderContext()).build()["Winches"][0]
+    reference = ROOT / "docs/domains/orcaflex/examples/modular/D03/D03 Lay on tower/includes/12_winches.yml"
+    native = yaml.safe_load(reference.read_text(encoding="utf-8"))["Winches"][0]
+    assert set(winch) <= set(native)
+    assert {"WinchControlType", "StageMode, StageValue",
+            "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"} <= set(winch)
