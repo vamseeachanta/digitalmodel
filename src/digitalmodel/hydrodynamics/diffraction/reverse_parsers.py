@@ -833,14 +833,13 @@ class OrcaWaveInputParser:
 
     @staticmethod
     def _reverse_symmetry(orcawave_sym: str) -> str:
-        """Map OrcaWave symmetry string back to spec enum value."""
-        sym_map = {
-            "none": "none",
-            "xz plane": "xz",
-            "yz plane": "yz",
-            "xz and yz planes": "xz+yz",
-        }
-        return sym_map.get(orcawave_sym.lower(), "none")
+        """Refuse partial-mesh expansion that cannot round-trip as a full mesh."""
+        if str(orcawave_sym).lower() != "none":
+            raise ValueError(
+                f"Unsupported OrcaWave mesh symmetry {orcawave_sym!r}; "
+                "provide a full mesh with BodyMeshSymmetry None"
+            )
+        return "none"
 
 
 # ---------------------------------------------------------------------------

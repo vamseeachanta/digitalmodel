@@ -30,6 +30,7 @@ import numpy as np
 from pydantic import (
     BaseModel,
     Field,
+    PrivateAttr,
     field_validator,
     model_serializer,
     model_validator,
@@ -128,13 +129,14 @@ class OutputComponent(str, Enum):
 
 
 class VesselGeometry(BaseModel):
-    """Vessel geometry specified by a full-body mesh, never a half mesh.
+    """Geometry and declared body symmetry.
 
-    Symmetry declares a property of that full body. The source mesh remains
-    full for the OrcaWave backend, which emits BodyMeshSymmetry: None for every
-    declaration to prevent half/quarter-mesh expansion. AQWA verifies xz mirror
-    panels and extracts the nonnegative-y half for SYMX; panels must be split at y = 0, with no
-    panels lying wholly in that plane. Other symmetry flags retain full meshes.
+    Full-body meshes are required by the current forward backends. Legacy
+    validation specs also describe partial meshes; OrcaWave refuses GDF
+    symmetry flags rather than silently emitting an incomplete body.
+    Full meshes emit BodyMeshSymmetry: None. AQWA verifies xz mirror panels
+    and extracts the nonnegative-y half for SYMX; panels must be split at
+    y = 0, with no panels lying wholly in that plane.
     """
 
     mesh_file: str = Field(
@@ -1046,6 +1048,8 @@ class DiffractionSpec(BaseModel):
             return self.bodies
         return [BodySpec(vessel=self.vessel)]
 
+    _source_dir: Path | None = PrivateAttr(default=None)
+
     @classmethod
     def from_yaml(cls, path: str | Path) -> DiffractionSpec:
         """Load spec from a YAML file."""
@@ -1053,7 +1057,9 @@ class DiffractionSpec(BaseModel):
 
         with open(path) as f:
             data = yaml.safe_load(f)
-        return cls.model_validate(data)
+        spec = cls.model_validate(data)
+        spec._source_dir = Path(path).resolve().parent
+        return spec
 
     def to_yaml(self, path: str | Path) -> Path:
         """Save spec to a YAML file."""

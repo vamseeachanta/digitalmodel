@@ -1044,3 +1044,23 @@ class TestParseExistingOrcaWaveFile:
         assert result.vessel.inertia.mass == pytest.approx(
             9017950.0, rel=1e-3
         )
+
+
+@pytest.mark.parametrize("symmetry", ["xz plane", "yz plane", "xz and yz planes", "unknown"])
+def test_reverse_partial_mesh_symmetry_is_refused(symmetry):
+    from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
+
+    with pytest.raises(ValueError, match="symmetry"):
+        OrcaWaveInputParser._reverse_symmetry(symmetry)
+    assert OrcaWaveInputParser._reverse_symmetry("None") == "none"
+
+
+def test_half_mesh_round_trip_is_refused(tmp_path):
+    from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
+
+    data = _minimal_orcawave_data()
+    data["Bodies"][0]["BodyMeshSymmetry"] = "xz plane"
+    path = tmp_path / "half.yml"
+    path.write_text(yaml.safe_dump(data), encoding="utf-8")
+    with pytest.raises(ValueError, match="symmetry"):
+        OrcaWaveInputParser().parse(path)
