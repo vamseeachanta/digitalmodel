@@ -168,7 +168,7 @@ BASE_MODEL_VALUES = {
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/05_riser_line_types.yml':
         '8bc87b7014ad08f758c05fe589d8b4fc558e4dabb8050ecfc82ff781be498934',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/07_riser_lines.yml':
-        '34283a9928bf8ed545da24f5f082fab1e24dac86a1e67c42ed127cc988873b5e',
+        '1a5eea8dbc7478f214546b736e39a2abedcf5c4cc0141ff36cf65bdb3faf4a9d',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/03_environment.yml':
@@ -176,7 +176,7 @@ BASE_MODEL_VALUES = {
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/05_riser_line_types.yml':
         '2f02775371a8b28f77c079550c7bb920240aeac4362686ffb352c241db852096',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/07_riser_lines.yml':
-        '4c6d648f97ecf79dfcdc039c570bf89c0a763782d7d6c3029c69b89ce7170264',
+        'e84265106d695cf2117546fd586f60c03e592eb2b2c53ecb1c15a7b20fa6437e',
     'docs/domains/orcaflex/subsea/jumper/installation/generated/jumper-a/includes/01_general.yml':
         'c978c65da7cb5feb872ae8b668b26b7c348bfe00261d5d522b5fa16677e33c5c',
     'docs/domains/orcaflex/subsea/jumper/installation/generated/jumper-a/includes/03_environment.yml':

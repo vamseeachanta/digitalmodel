@@ -85,7 +85,7 @@ riser:
     end_b:
       type: anchor
       position:
-      - 900.9743655506445
+      - 1138.4743655506445
       - 0
       - 0.17655
       declination: 90
@@ -96,7 +96,7 @@ riser:
       length: 1839.7787421442401
       segment_length: 0.5
     - line_type: SteelPipe
-      length: 20.0
+      length: 257.5
       segment_length: 0.5
     contents:
       density: 0.8

@@ -10,6 +10,16 @@ revision_history:
   date: '2026-10-14'
   change: Assumed defaults are distinguished from public buoy observations; the retained example
     host redistribution status is made explicit. Models are regenerated in fresh processes.
+- revision: '2'
+  date: '2026-10-15'
+  change: SCR grounded length is derived for the full offset envelope with an assumed reserve;
+    nominal suspended geometry and lazy-wave inputs are retained. Native offset response remains
+    unverified.
+- revision: '3'
+  date: '2026-10-15'
+  change: Lazy-wave bottom length is derived across the offset envelope with an assumed
+    grounded reserve; regenerated inputs retain nominal suspended geometry. Native
+    offset equilibrium and dynamic allowance remain unverified.
 readiness: prepared; not qualified for design or outward use
 pipe_grade: X65
 host:
@@ -34,7 +44,9 @@ metocean:
   wind: Omitted from static reference.
 analytical_scope: Zero mean host offset, quiescent water, inextensible OO geometry and elastic general
   catenary segment checks. Pipe centre at contact radius above seabed. No pressure, bending/contact
-  soil response, wave dynamics, VIV or code acceptance.
+  soil response, wave dynamics, VIV or code acceptance. Both seabed reserves are additionally derived
+  across the intact and damaged offset envelope using a flat-seabed, frictionless, inextensible
+  catenary; this does not establish native offset equilibrium.
 sources:
   pipe_defaults:
     title: Repository generic riser property and geometry defaults
@@ -52,6 +64,11 @@ sources:
     title: Repository example-derived distributed-buoyancy template
     revision: c9ae7591129b40732846b50661045f99ab249aba
     locator: docs/domains/orcaflex/library/templates/riser_lazy_wave/spec.yml
+  seabed_reserve_assumption:
+    title: Assumed grounded reserve equal to the example bottom-section length
+    locator: docs/domains/orcaflex/library/templates/riser_catenary/spec.yml
+    reason: The template supplies a bottom length, not an offset reserve requirement.
+      That length is adopted as an assumed reserve for both models.
   soil_bracket:
     title: Generic contact-stiffness upper bracket
     revision: c9ae7591129b40732846b50661045f99ab249aba
@@ -231,8 +248,27 @@ parameters:
     unit: m
     status: ASSUMED
     source: scr_template
-    reason: Example setting retained for a generic prepared input, without hydrodynamic or component
-      qualification.
+    reason: Template bottom-section length retained only for the original-bottom
+      diagnostics of both models. Neither generated model uses this value directly;
+      each bottom is its suspended-length increase plus its named seabed reserve.
+  scr_seabed_margin:
+    value: 20.0
+    unit: m
+    status: ASSUMED
+    source: seabed_reserve_assumption
+    reason: Reserve set equal to the template bottom-section length, which is not
+      itself an offset reserve requirement. The SCR bottom is its maximum suspended-length
+      increase plus this assumed reserve, rounded upward to 0.1 m. Native contact,
+      bending, elasticity and dynamics remain unqualified.
+  slwr_seabed_margin:
+    value: 20.0
+    unit: m
+    status: ASSUMED
+    source: seabed_reserve_assumption
+    reason: Reserve set equal to the template bottom-section length, as for the SCR.
+      The lazy-wave bottom is its maximum suspended-length increase across the same
+      envelope plus this assumed reserve, rounded upward to 0.1 m. Native contact,
+      bending, elasticity and dynamics remain unqualified.
   mesh_coarse:
     value: 3.0
     unit: m

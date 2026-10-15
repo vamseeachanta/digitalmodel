@@ -5,13 +5,16 @@
 
 import importlib.util
 import json
+import math
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 import yaml
+from scipy.optimize import brentq
 
 from digitalmodel.orcaflex.riser_config import RiserPipeProperties
 from digitalmodel.solvers.orcaflex.modular_generator.post_validator import (
@@ -59,6 +62,7 @@ def test_specs_match_basis_and_static_geometry(kind):
     p = {name: r["value"] for name, r in basis["parameters"].items()}
     spec = yaml.safe_load((CAMPAIGN / kind / "spec.yml").read_text())
     reference = load_check().calculate(basis)[kind]
+    bottom = reference["seabed_offset_sweep"]["selected_bottom_length_m"]
     pipe = RiserPipeProperties(**{k: p[k] for k in (
         "outer_diameter", "wall_thickness", "coating_thickness",
         "coating_density", "contents_density", "corrosion_allowance",
@@ -79,11 +83,11 @@ def test_specs_match_basis_and_static_geometry(kind):
     assert line["end_a"]["declination"] == 180 - p[kind + "_angle"]
     assert line["end_a"]["bending_stiffness"] == p["joint_stiffness"]
     assert line["end_b"]["position"][0] == pytest.approx(
-        reference["oo"]["touchdown_horizontal_distance_m"] + p["bottom_length"]
+        reference["oo"]["touchdown_horizontal_distance_m"] + bottom
     )
     assert line["end_b"]["position"][2] == pipe.total_od / 2
     assert sum(s["length"] for s in line["sections"]) == pytest.approx(
-        reference["oo"]["suspended_length_m"] + p["bottom_length"]
+        reference["oo"]["suspended_length_m"] + bottom
     )
     bare = spec["riser"]["line_types"][0]
     assert bare["outer_diameter"] == pipe.total_od
@@ -206,3 +210,204 @@ def test_flooded_weight_and_module_net_uplift():
     result = load_check().calculate(load_basis())
     assert result["slwr"]["buoyancy"]["net_weight_N_per_m"] < 0
     assert result["flooded_weight_N_per_m"] > result["operating_weight_N_per_m"]
+
+
+def hand_grounded_length(height, length, span):
+    """Solve flat-seabed closure independently of the preparation helper.
+
+    Negative reserve describes loss of the assumed touchdown solution, rather
+    than a physical negative length of pipe on the seabed.
+    """
+    def closure(radius):
+        suspended = math.sqrt(height * (height + 2 * radius))
+        horizontal = radius * math.acosh(1 + height / radius)
+        return horizontal - suspended - (span - length)
+
+    radius = brentq(closure, height * 1e-9, height * 1e6)
+    return length - math.sqrt(height * (height + 2 * radius))
+
+
+@pytest.mark.parametrize("offset_pct", [-10, -5, 0, 5, 10])
+def test_scr_retains_grounded_line_across_offsets(offset_pct):
+    """Committed geometry shall retain touchdown throughout the offset sweep."""
+    basis = load_basis()
+    p = {name: record["value"] for name, record in basis["parameters"].items()}
+    nominal = load_check().calculate(basis)["scr"]["oo"]
+    line = yaml.safe_load((CAMPAIGN / "scr/spec.yml").read_text())["riser"]["lines"][0]
+    height = (p["water_depth"] - p["hangoff_depth"]
+              - (p["outer_diameter"] + 2 * p["coating_thickness"]) / 2)
+    offset = offset_pct * p["water_depth"] / 100
+    length = sum(section["length"] for section in line["sections"])
+    reserve = hand_grounded_length(height, length, line["end_b"]["position"][0] - offset)
+    assert reserve > 0, f"No grounded reserve at {offset_pct}%: {reserve:.1f} m"
+    old_reserve = hand_grounded_length(
+        height, nominal["suspended_length_m"] + p["bottom_length"],
+        nominal["touchdown_horizontal_distance_m"] + p["bottom_length"] - offset,
+    )
+    assert (old_reserve > 0) == (offset_pct >= 0)
+
+
+def test_scr_seabed_design_matches_independent_closure():
+    """The selected length shall cover the derived requirement and margin."""
+    basis = load_basis()
+    p = {name: record["value"] for name, record in basis["parameters"].items()}
+    result = load_check().calculate(basis)
+    nominal = result["scr"]["oo"]
+    design = result["scr"]["seabed_offset_sweep"]
+    height = (p["water_depth"] - p["hangoff_depth"]
+              - (p["outer_diameter"] + 2 * p["coating_thickness"]) / 2)
+    selected = design["selected_bottom_length_m"]
+    required = design["required_bottom_length_m"]
+    assert required > p["bottom_length"]
+    assert required + p["scr_seabed_margin"] <= selected
+    assert selected < required + p["scr_seabed_margin"] + 0.1
+    for key, bottom in (("original", p["bottom_length"]), ("selected", selected)):
+        length = nominal["suspended_length_m"] + bottom
+        anchor = nominal["touchdown_horizontal_distance_m"] + bottom
+        for state in design[key]:
+            offset = state["offset_pct"] * p["water_depth"] / 100
+            expected = hand_grounded_length(height, length, anchor - offset)
+            assert state["grounded_length_m"] == pytest.approx(expected, abs=1e-7)
+            assert state["touchdown_exists"] == (expected > 0)
+            if key == "selected":
+                assert expected >= p["scr_seabed_margin"] - 1e-7
+    old_length = nominal["suspended_length_m"] + p["bottom_length"]
+    old_anchor = nominal["touchdown_horizontal_distance_m"] + p["bottom_length"]
+    limit = design["original_liftoff_far_offset_m"]
+    assert hand_grounded_length(height, old_length, old_anchor + limit) == pytest.approx(0, abs=1e-7)
+    assert design["original_liftoff_far_offset_pct"] == pytest.approx(limit / p["water_depth"] * 100)
+
+
+def test_scr_regeneration_is_deterministic_and_preserves_lazy_wave(tmp_path):
+    """A changed SCR margin shall regenerate only SCR geometry, reproducibly."""
+    campaign = tmp_path / "campaign"
+    shutil.copytree(CAMPAIGN, campaign)
+    lazy = {p.relative_to(campaign): p.read_bytes() for p in (campaign / "slwr").rglob("*") if p.is_file()}
+    basis = load_basis()
+    basis["parameters"]["scr_seabed_margin"]["value"] += basis["parameters"]["mesh_coarse"]["value"]
+    (campaign / "basis.yml").write_text(yaml.safe_dump(basis, sort_keys=False))
+    check = load_check()
+    check.regenerate_scr(campaign)
+    first = {p.relative_to(campaign): p.read_bytes() for p in campaign.rglob("*") if p.is_file()}
+    check.regenerate_scr(campaign)
+    second = {p.relative_to(campaign): p.read_bytes() for p in campaign.rglob("*") if p.is_file()}
+    assert first == second
+    assert all(second[path] == raw for path, raw in lazy.items())
+    line = yaml.safe_load((campaign / "scr/spec.yml").read_text())["riser"]["lines"][0]
+    result = check.calculate(basis)["scr"]
+    assert line["sections"][-1]["length"] == result["seabed_offset_sweep"]["selected_bottom_length_m"]
+    assert line["end_b"]["position"][0] == pytest.approx(
+        result["oo"]["touchdown_horizontal_distance_m"] + line["sections"][-1]["length"]
+    )
+
+
+def hand_lazy_state(basis, line, types, offset_pct):
+    """Integrate force directions independently and solve both endpoint closures."""
+    from scipy.integrate import quad
+    from scipy.optimize import root
+
+    p = {name: record["value"] for name, record in basis["parameters"].items()}
+    weights = [(t["mass_per_length"] * 1000
+                + p["contents_density"] * math.pi * t["inner_diameter"] ** 2 / 4
+                - p["seawater_density"] * math.pi * t["outer_diameter"] ** 2 / 4)
+               * p["gravity"] for t in types]
+    lengths = [section["length"] for section in line["sections"]]
+    height = p["water_depth"] - p["hangoff_depth"] - types[0]["outer_diameter"] / 2
+    span = line["end_b"]["position"][0] - offset_pct * p["water_depth"] / 100
+
+    def integrate(log_h, third):
+        horizontal = math.exp(log_h)
+        x = y = vertical = 0.0
+        sag = None
+        for index, (length, weight) in enumerate([
+            (third, weights[0]), (lengths[1], weights[1]), (lengths[0], weights[0]),
+        ]):
+            def dy(arc):
+                return (vertical + weight * arc) / math.hypot(horizontal, vertical + weight * arc)
+
+            if index == 2:
+                sag = y + quad(dy, 0, -vertical / weight)[0]
+            x += quad(lambda arc: horizontal / math.hypot(horizontal, vertical + weight * arc), 0, length)[0]
+            y += quad(dy, 0, length)[0]
+            vertical += weight * length
+        return x, y, horizontal, vertical, sag
+
+    def closure(unknowns):
+        x, y, *_ = integrate(*unknowns)
+        grounded = sum(lengths) - lengths[0] - lengths[1] - unknowns[1]
+        return x + grounded - span, y - height
+
+    vertical = weights[0] * (lengths[0] + lengths[2]) + weights[1] * lengths[1]
+    guess = vertical * math.tan(math.radians(180 - line["end_a"]["declination"]))
+    solved = root(closure, [math.log(guess), lengths[2]], tol=1e-10)
+    assert solved.success, solved.message
+    assert max(abs(v) for v in closure(solved.x)) < 1e-7
+    x, y, horizontal, vertical, sag = integrate(*solved.x)
+    return {
+        "grounded_length_m": sum(lengths) - lengths[0] - lengths[1] - solved.x[1],
+        "horizontal_tension_kN": horizontal / 1000,
+        "top_tension_kN": math.hypot(horizontal, vertical) / 1000,
+        "sag_above_seabed_m": sag,
+    }
+
+
+def lazy_offsets():
+    """Select the complete envelope from the retained basis."""
+    p = load_basis()["parameters"]
+    return sorted({0, *[sign * p[name]["value"] for sign in (-1, 1)
+                        for name in ("intact_offset_pct", "damaged_offset_pct")]})
+
+
+@pytest.mark.parametrize("offset_pct", lazy_offsets())
+def test_slwr_retains_grounded_reserve_across_offsets(offset_pct):
+    """Committed lazy-wave geometry shall retain the assumed reserve."""
+    basis = load_basis()
+    riser = yaml.safe_load((CAMPAIGN / "slwr/spec.yml").read_text())["riser"]
+    state = hand_lazy_state(basis, riser["lines"][0], riser["line_types"], offset_pct)
+    margin = basis["parameters"]["slwr_seabed_margin"]["value"]
+    assert state["grounded_length_m"] >= margin - 1e-7
+
+
+def test_slwr_seabed_design_matches_independent_closure():
+    """The three-section sweep shall close and round the selected bottom upward."""
+    basis = load_basis()
+    result = load_check().calculate(basis)["slwr"]
+    design = result["seabed_offset_sweep"]
+    riser = yaml.safe_load((CAMPAIGN / "slwr/spec.yml").read_text())["riser"]
+    line = riser["lines"][0]
+    selected = design["selected_bottom_length_m"]
+    margin = basis["parameters"]["slwr_seabed_margin"]["value"]
+    assert design["required_bottom_length_m"] + margin <= selected
+    assert selected < design["required_bottom_length_m"] + margin + 0.1
+    assert [s["offset_pct"] for s in design["selected"]] == lazy_offsets()
+    assert line["sections"][-1]["length"] == selected
+    for state in design["selected"]:
+        independent = hand_lazy_state(basis, line, riser["line_types"], state["offset_pct"])
+        for name, value in independent.items():
+            assert state[name] == pytest.approx(value, abs=1e-7)
+    old_reserves = [12.2, 16.3, 20.0, 23.4, 26.5]
+    for state, expected in zip(design["original"], old_reserves):
+        assert state["grounded_length_m"] == pytest.approx(expected, abs=0.05)
+
+
+def test_slwr_regeneration_is_deterministic_and_preserves_scr(tmp_path):
+    """A changed lazy-wave reserve shall reproduce references and preserve SCR bytes."""
+    campaign = tmp_path / "campaign"
+    shutil.copytree(CAMPAIGN, campaign)
+    scr = {p.relative_to(campaign): p.read_bytes() for p in (campaign / "scr").rglob("*") if p.is_file()}
+    basis = load_basis()
+    reserve_increment_m = 3.0
+    basis["parameters"]["slwr_seabed_margin"]["value"] += reserve_increment_m
+    (campaign / "basis.yml").write_text(yaml.safe_dump(basis, sort_keys=False))
+    check = load_check()
+    builds = []
+    for _ in range(2):
+        check.regenerate_slwr(campaign)
+        (campaign / "static-reference.json").write_text(json.dumps(check.reference(campaign), indent=2) + "\n")
+        builds.append({p.relative_to(campaign): p.read_bytes() for p in campaign.rglob("*") if p.is_file()})
+    assert builds[0] == builds[1]
+    assert all(builds[1][path] == raw for path, raw in scr.items())
+    line = yaml.safe_load((campaign / "slwr/spec.yml").read_text())["riser"]["lines"][0]
+    design = check.calculate(basis)["slwr"]["seabed_offset_sweep"]
+    assert line["sections"][-1]["length"] == design["selected_bottom_length_m"]
+    assert line["end_b"]["position"][0] == pytest.approx(design["selected_anchor_x_m"])
