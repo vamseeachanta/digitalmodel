@@ -1,8 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""
-River / shallow-water current profile modeling.
+"""River / shallow-water current profile modeling.
 
 This sub-package provides vertical current-velocity-vs-depth profile models
 for rivers and shallow waterways, used in subsea/riser and barge-towing

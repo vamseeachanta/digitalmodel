@@ -67,7 +67,8 @@ class WeibullFit:
     def return_level(self, period: float, samples_per_year: float = 1) -> float:
         """Return a level exceeded by an annual maximum with probability 1/T."""
         log_p = _annual_log_probability(period, samples_per_year)
-        return self.scale * (-math.log(-math.expm1(log_p))) ** (1 / self.shape)
+        level: float = self.scale * (-math.log(-math.expm1(log_p))) ** (1 / self.shape)
+        return level
 
 
 @dataclass(frozen=True)
