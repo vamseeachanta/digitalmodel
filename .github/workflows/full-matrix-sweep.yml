@@ -28,9 +28,9 @@ permissions:
 
 concurrency:
   # Rapid merges to main supersede each other: the newest commit on main is the
-  # one whose sweep must complete. Nightly and dispatch share the group so a
-  # push does not race a cron run over the same tree.
-  group: full-matrix-sweep-${{ github.ref }}
+  # one whose sweep must complete. Nightly runs use a separate group so pushes
+  # cannot cancel the scheduled full sweep.
+  group: full-matrix-sweep-${{ github.ref }}-${{ github.event_name == 'schedule' && 'nightly' || 'push' }}
   cancel-in-progress: true
 
 jobs:
@@ -84,6 +84,7 @@ jobs:
     name: sweep-tests-${{ matrix.domain }}
     needs: full-matrix
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.full-matrix.outputs.matrix) }}
