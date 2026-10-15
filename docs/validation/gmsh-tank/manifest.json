@@ -5,8 +5,8 @@
   "files": [
     {
       "path": "acceptance.html",
-      "sha256": "f5e10730d811a6dee0cf00178853c4f9a0e81bcd06d15c46f6431da3010a7793",
-      "size": 5408
+      "sha256": "9528066e1912ad9ebb1bfb0480b71404d2284ef5a8520e2472e23de44a999c5e",
+      "size": 5555
     },
     {
       "path": "bridge-manifest.json",
