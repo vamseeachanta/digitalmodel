@@ -132,10 +132,10 @@ modules:
     owner_wiki: docs/domains/marine_ops/
     key_tests: [tests/marine_ops/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#marine_ops
-  - module: marine_analysis
-    entry_point: src/digitalmodel/marine_ops/marine_analysis/
-    agent_pack: src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md
-    qa_family: mooring-riser
+    submodules:
+      marine_analysis:
+        agent_pack: src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md
+        qa_family: MR
   - module: floating_wind
     entry_point: src/digitalmodel/floating_wind/
     maturity: beta
