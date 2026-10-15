@@ -1,10 +1,15 @@
 {
-  "revision": "1",
+  "revision": "2",
   "revisions": [
     {
       "revision": "1",
       "date": "2026-10-15",
       "change": "Initial surface pull-in preparation with traced scenario assumptions and independent force balance."
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-15",
+      "change": "Record the five unmeasured wall and coating inputs with explicit labels and bases, and carry audited provenance into prepared outputs."
     }
   ],
   "public_dataset": {
@@ -29,7 +34,7 @@
       "retrieval_date": "2026-10-15",
       "record_count": 1,
       "sha256": "0b5a1e30ed1c89ac9eef83226e68565b064204d3dae4ef3303f05a246d0f2ab0",
-      "locator": "Generic numerical inputs; assumed, based on previous experience. No measured pipe properties are supplied by the public dataset."
+      "locator": "Public repository numerical scenario inputs; not measured pipe or hull response data."
     },
     "defaults": {
       "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/solvers/orcaflex/modular_generator/schema/root.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa",
@@ -107,24 +112,24 @@
       "derivation": "PIPELAY_CAPACITY_IN times metre-per-inch conversion from the unit-conversion source."
     },
     "pipeline.dimensions.wall_thickness": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "label": "assumed, based on previous experience",
+      "basis": "Diameter-to-wall class of the generic pipe"
     },
     "pipeline.coatings.corrosion.thickness": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "label": "assumed, based on previous experience",
+      "basis": "Generic polymer corrosion coating"
     },
     "pipeline.coatings.corrosion.density": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "label": "assumed, based on previous experience",
+      "basis": "Generic polymer corrosion coating"
     },
     "pipeline.coatings.weight.0.thickness": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "label": "assumed, based on previous experience",
+      "basis": "Generic concrete weight coating"
     },
     "pipeline.coatings.weight.0.density": {
-      "source": "assumptions",
-      "qualification": "scenario assumption"
+      "label": "assumed, based on previous experience",
+      "basis": "Generic concrete weight coating"
     },
     "pipeline.segments.0.length": {
       "source": "assumptions",
@@ -308,7 +313,7 @@
     }
   ],
   "known_limits": [
-    "Wall thickness, material, coatings, hull response, submerged weight, route, buoyancy and efficiency are scenario assumptions, based on previous experience; public data do not supply them. No measured pipe property is claimed.",
+    "Five wall and coating properties are assumed, based on previous experience, and not taken from a public source; their values and bases appear in the assumed-input table. Material, hull response, submerged weight, route, buoyancy and efficiency remain generic numerical scenario inputs with public repository references. No measured pipe property is claimed.",
     "The diameter bounds and hull geometry are public dataset anchors; no vessel identity or equipment capacity is retained.",
     "Friction anchors describe the cited soft-clay numerical model; breakout, drainage evolution, adhesion, bends, bending stress and hydrodynamic loads are not represented.",
     "Builder defaults and end restraints are structurally checked only; they are not a qualified shore-pull topology. Buoyancy aids and route geometry enter the analytical check, not validated native contact geometry.",
@@ -317,8 +322,45 @@
     "Optional standard design-factor and strain-limit settings from the shared builder are omitted; no standard-based acceptance check is performed."
   ],
   "criteria_evidence": {
-    "sha256": "2992d84e6b11a465cf6540071703ca416615ca30b99178a35dd5b9e5aee8d111",
-    "recorded_utc": "2026-10-15T01:24:22.279069+00:00",
-    "first_generation_utc": "2026-10-15T01:26:00.166080+00:00"
-  }
+    "sha256": "39dbcb4325cc07e58b3999b8d02131b19c0adf504a3efb445660fc769961d8f7",
+    "recorded_utc": "2026-10-15T02:46:53.250146+00:00",
+    "first_generation_utc": "2026-10-15T02:46:53.250235+00:00"
+  },
+  "assumed_inputs": [
+    {
+      "input": "pipeline.dimensions.wall_thickness",
+      "value": 0.0254,
+      "unit": "m",
+      "label": "assumed, based on previous experience",
+      "basis": "Diameter-to-wall class of the generic pipe"
+    },
+    {
+      "input": "pipeline.coatings.corrosion.thickness",
+      "value": 0.004,
+      "unit": "m",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic polymer corrosion coating"
+    },
+    {
+      "input": "pipeline.coatings.corrosion.density",
+      "value": 0.95,
+      "unit": "te/m3",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic polymer corrosion coating"
+    },
+    {
+      "input": "pipeline.coatings.weight.0.thickness",
+      "value": 0.1,
+      "unit": "m",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic concrete weight coating"
+    },
+    {
+      "input": "pipeline.coatings.weight.0.density",
+      "value": 3.0,
+      "unit": "te/m3",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic concrete weight coating"
+    }
+  ]
 }

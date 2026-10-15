@@ -7,12 +7,14 @@ from __future__ import annotations
 
 import argparse
 import copy
+from datetime import date
 import hashlib
 import html
 import json
 import math
 from pathlib import Path
 import re
+from urllib.parse import urlsplit
 
 from digitalmodel.marine_ops.installation.shore_approach import RouteSegment, pull_in
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
@@ -22,6 +24,20 @@ from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputS
 import yaml
 
 DELIVERABLES = ("models.json", "analysis.html", "manifest.template.json", "preparation.json")
+ASSUMPTION_LABEL = "assumed, based on previous experience"
+ASSUMABLE_PIPE_INPUTS = {
+    "pipeline.dimensions.wall_thickness": "m",
+    "pipeline.coatings.corrosion.thickness": "m",
+    "pipeline.coatings.corrosion.density": "te/m3",
+    "pipeline.coatings.weight.0.thickness": "m",
+    "pipeline.coatings.weight.0.density": "te/m3",
+}
+DATASET_ANCHORS = {
+    "pipeline.dimensions.outer_diameter",
+    "equipment.vessel.properties.loa",
+    "equipment.vessel.properties.beam",
+    "equipment.vessel.properties.draft",
+}
 
 
 def digest(path: Path) -> str:
@@ -41,6 +57,59 @@ def numeric_paths(value, prefix="") -> set[str]:
     if isinstance(value, list):
         return set().union(*(numeric_paths(v, f"{prefix}.{i}") for i, v in enumerate(value)))
     return {prefix} if isinstance(value, (int, float)) else set()
+
+
+def audit_input_sources(table: dict) -> list[dict]:
+    """Require public provenance or a permitted, labelled pipe assumption.
+
+    Route discretisation and numerical preparation settings retain their public
+    repository references. Diameter and measured hull dimensions retain the
+    prescribed dataset. Only the five unmeasured wall/coating properties may
+    instead use an assumption, with its basis and a matching table row.
+    """
+    required = numeric_paths(table["basis"]) | numeric_paths(table["cases"], "cases")
+    if not required <= set(table["input_sources"]):
+        raise ValueError("Missing numeric input source")
+    rows = {}
+    for path, entry in table["input_sources"].items():
+        label = entry.get("label")
+        if label is not None:
+            if label != ASSUMPTION_LABEL:
+                raise ValueError(f"Invalid assumption label: {path}")
+            if path not in ASSUMABLE_PIPE_INPUTS:
+                raise ValueError(f"Only pipe wall thickness or coating properties may be assumed: {path}")
+            basis = entry.get("basis")
+            if not isinstance(basis, str) or not basis.strip():
+                raise ValueError(f"An assumed input requires a recorded basis: {path}")
+            if "source" in entry:
+                raise ValueError(f"An assumed input must not claim a public source: {path}")
+            value = table["basis"]
+            for part in path.split("."):
+                value = value[int(part)] if isinstance(value, list) else value[part]
+            rows[path] = {"input": path, "value": value, "unit": ASSUMABLE_PIPE_INPUTS[path],
+                          "label": label, "basis": basis}
+            continue
+        source = table["sources"].get(entry.get("source"))
+        if not isinstance(source, dict):
+            raise ValueError(f"A public source or permitted assumption label is required: {path}")
+        try:
+            url = urlsplit(source["url"])
+            date.fromisoformat(source["retrieval_date"])
+            complete = (url.scheme in {"http", "https"} and bool(url.netloc)
+                        and isinstance(source["record_count"], int) and source["record_count"] > 0
+                        and re.fullmatch(r"[0-9a-f]{64}", source["sha256"]))
+        except (KeyError, TypeError, ValueError):
+            complete = False
+        if not complete:
+            raise ValueError(f"Incomplete public input provenance: {path}")
+        if path in DATASET_ANCHORS | ASSUMABLE_PIPE_INPUTS.keys() and (entry["source"] != "dataset" or source != table["public_dataset"]):
+            raise ValueError(f"The prescribed public dataset is required: {path}")
+        if path in ASSUMABLE_PIPE_INPUTS:
+            raise ValueError(f"The public dataset contains no wall or coating measurement: {path}")
+    expected = [rows[path] for path in ASSUMABLE_PIPE_INPUTS if path in rows]
+    if table.get("assumed_inputs", []) != expected:
+        raise ValueError("The assumption basis table must match input values, units, labels and bases")
+    return expected
 
 
 def weight(basis: dict) -> float:
@@ -85,12 +154,14 @@ def report(table: dict, records: list[dict]) -> str:
     rows = "".join(f'<tr><td>{r["id"]}</td><td>{r["method"]["pipe_head_tension_kn"]:.1f}</td><td>{r["analytical_pull_kn"]:.1f}</td><td>{r["method"]["winch_demand_kn"]:.1f}</td><td>Not Evaluated</td></tr>' for r in records)
     limits = "".join(f"<li>{escape(s)}</li>" for s in table["known_limits"])
     sources = "".join(f'<li>{escape(s["locator"]) if "locator" in s else "Public dataset, row 68"} — <a href="{escape(s["url"], quote=True)}">Source</a>; retrieved {escape(s["retrieval_date"])}; SHA-256 {s["sha256"]}</li>' for s in table["sources"].values())
+    assumptions = "".join(f'<tr><td>{escape(r["input"])}</td><td>{r["value"]} {escape(r["unit"])}</td><td>{escape(r["label"])}</td><td>{escape(r["basis"])}</td></tr>' for r in table["assumed_inputs"])
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Shore pull-in analysis</title>
 <style>body{{font:16px sans-serif;max-width:70rem;margin:2rem auto;padding:1rem}}table{{border-collapse:collapse}}td,th{{border:1px solid #888;padding:.4rem}}code{{overflow-wrap:anywhere}}</style></head><body>
 <h1>Shore pull-in analysis</h1><p>Revision {escape(table["revision"])}</p>
 <section id="summary"><h2>Summary</h2><p>Three generic surface pull-in scenarios are prepared. Pull forces are analytical, not native solver results. Installation acceptance is Not Evaluated. The next step is source and topology qualification before native execution.</p></section>
 <section id="revision-history"><h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>{revisions}</table></section>
+<section id="assumed-inputs"><h2>Assumed pipe inputs</h2><p>These five properties are not taken from a public source.</p><table><tr><th>Input</th><th>Value with unit</th><th>Label</th><th>Basis</th></tr>{assumptions}</table></section>
 <section id="method"><h2>Method and criterion</h2><p>For each straight supported segment: net weight w equals submerged weight minus buoyancy aid force per length; sin(theta) = rise / arc length. Normal load N = w L cos(theta), friction = mu N, gravity = w rise. Head tension is trailing tension plus the ordered force increments. Winch demand is head tension divided by mechanical efficiency. Loss of contact and compression are rejected. Equivalent axial friction follows the cited soil paper; gravity resolution is a straight-segment work balance.</p><p>The independent check uses separately computed annular areas and horizontal projection. Agreement criterion: relative difference no greater than the force-balance tolerance in criteria.json. All prepared cases meet that computational identity; this is not physical validation. Shore winch capacity is unassigned.</p></section>
 <h2>Prepared results</h2><table><tr><th>Case</th><th>Method pull (kN)</th><th>Independent pull (kN)</th><th>Winch demand (kN)</th><th>Native result</th></tr>{rows}</table>
 <h2>Native analysis skeleton</h2><p>Native model version, measured timing, effective tension, bending moment, curvature, contact reactions, final geometry, convergence and acceptance: Not Evaluated. The first timing case is level-initial. No extrapolated runtime is recorded.</p>
@@ -116,13 +187,9 @@ def prepare(campaign: Path, output: Path) -> dict:
         raise ValueError("Criteria must be recorded before first generation")
     if table["revisions"][-1]["revision"] != table["revision"] or criteria["revision"] != table["revision"]:
         raise ValueError("Revision records must match the declared revision")
-    required = numeric_paths(table["basis"]) | numeric_paths(table["cases"], "cases")
-    if not required <= set(table["input_sources"]):
-        raise ValueError("Missing numeric input source")
-    for entry in table["input_sources"].values():
-        source = table["sources"][entry["source"]]
-        if not all(k in source for k in ("url", "retrieval_date", "record_count", "sha256")):
-            raise ValueError("Incomplete input provenance")
+    assumed_inputs = audit_input_sources(table)
+    provenance = {"public_dataset": table["public_dataset"], "input_sources": table["input_sources"],
+                  "sources": table["sources"], "assumed_inputs": assumed_inputs}
     identities = [c["id"] for c in table["cases"]]
     if not identities or len(set(identities)) != len(identities) or any(not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", c) for c in identities):
         raise ValueError("Invalid case identity")
@@ -149,7 +216,7 @@ def prepare(campaign: Path, output: Path) -> dict:
             "environment": {"water": {"depth": basis["water_depth_m"], "density": basis["water_density_te_m3"]}, "seabed": {**basis["seabed"], "friction_coefficient": case["friction"]}},
             "pipeline": basis["pipeline"], "equipment": equipment}))
     output.mkdir(parents=True, exist_ok=True)
-    bundle = {"schema": "shore-pull-in-model-bundle-1", "cases": {}}
+    bundle = {"schema": "shore-pull-in-model-bundle-1", "provenance": provenance, "cases": {}}
     for record, spec in zip(records, specs):
         folder = output / "models" / record["id"]
         ModularModelGenerator.from_spec(spec).generate(folder)
@@ -179,6 +246,7 @@ def prepare(campaign: Path, output: Path) -> dict:
     write_json(output / "models.json", bundle)
     (output / "analysis.html").write_text(report(table, records), encoding="utf-8")
     native = {"schema": "shore-pull-in-native-manifest-1", "status": "not_run", "launch_enabled": False,
+              "provenance": provenance, "case_table_sha256": digest(campaign / "case-table.json"),
               "first_timed_case": identities[0], "expected_cases": identities, "completed_cases": [],
               "qualified_results": 0, "native_version": None, "input_revision": None,
               "input_digest": digest(output / "models.json"), "approved_manifest_digest": None,
@@ -189,6 +257,7 @@ def prepare(campaign: Path, output: Path) -> dict:
               "release_conditions": ["qualified execution adapter", "approved manifest digest", "qualified topology and sources", "assigned native criteria", "timed canary read back", "independent comparison and convergence"]}
     write_json(output / "manifest.template.json", native)
     manifest = {"schema": "shore-pull-in-preparation-1", "case_table_sha256": digest(campaign / "case-table.json"),
+                "provenance": provenance,
                 "criteria_evidence": evidence, "analytical_before_models": True, "cases": records,
                 "native_attempted": 0, "native_completed": 0, "qualified_results": 0,
                 "files": {name: digest(output / name) for name in DELIVERABLES if name != "preparation.json"}}

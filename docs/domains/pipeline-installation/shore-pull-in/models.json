@@ -49,5 +49,260 @@
       "master.yml": "%YAML 1.1\n# Type: Model\n# Generated from: in-memory spec\n\n---\n- includefile: includes/01_general.yml\n- includefile: includes/02_var_data.yml\n- includefile: includes/03_environment.yml\n- includefile: includes/04_vessel_types.yml\n- includefile: includes/05_line_types.yml\n- includefile: includes/06_vessels.yml\n- includefile: includes/13_supports.yml\n- includefile: includes/14_morison.yml\n- includefile: includes/09_shapes.yml\n- includefile: includes/07_lines.yml\n- includefile: includes/11_winches.yml\n- includefile: includes/10_groups.yml\n"
     }
   },
+  "provenance": {
+    "assumed_inputs": [
+      {
+        "basis": "Diameter-to-wall class of the generic pipe",
+        "input": "pipeline.dimensions.wall_thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.0254
+      },
+      {
+        "basis": "Generic polymer corrosion coating",
+        "input": "pipeline.coatings.corrosion.thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.004
+      },
+      {
+        "basis": "Generic polymer corrosion coating",
+        "input": "pipeline.coatings.corrosion.density",
+        "label": "assumed, based on previous experience",
+        "unit": "te/m3",
+        "value": 0.95
+      },
+      {
+        "basis": "Generic concrete weight coating",
+        "input": "pipeline.coatings.weight.0.thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.1
+      },
+      {
+        "basis": "Generic concrete weight coating",
+        "input": "pipeline.coatings.weight.0.density",
+        "label": "assumed, based on previous experience",
+        "unit": "te/m3",
+        "value": 3.0
+      }
+    ],
+    "input_sources": {
+      "cases.0.buoyancy_fraction": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "cases.0.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.0.rise_m": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "cases.1.buoyancy_fraction": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "cases.1.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.1.rise_m": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "cases.2.buoyancy_fraction": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "cases.2.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.2.rise_m": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.beam": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "equipment.vessel.properties.cog.0": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.cog.1": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.cog.2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.draft": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "equipment.vessel.properties.gmt": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.0": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.1": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.loa": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "gravity_m_s2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "pipeline.coatings.corrosion.density": {
+        "basis": "Generic polymer corrosion coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.corrosion.thickness": {
+        "basis": "Generic polymer corrosion coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.weight.0.density": {
+        "basis": "Generic concrete weight coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.weight.0.thickness": {
+        "basis": "Generic concrete weight coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.dimensions.outer_diameter": {
+        "derivation": "PIPELAY_CAPACITY_IN times metre-per-inch conversion from the unit-conversion source.",
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "pipeline.dimensions.wall_thickness": {
+        "basis": "Diameter-to-wall class of the generic pipe",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.segments.0.length": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "pipeline.segments.0.segment_length": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.slope": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.stiffness.normal": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.stiffness.shear": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "steel_density_te_m3": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "tail_tension_kn": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "water_density_te_m3": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "water_depth_m": {
+        "qualification": "scenario assumption; depth equals supported length",
+        "source": "assumptions"
+      },
+      "winch_efficiency": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      }
+    },
+    "public_dataset": {
+      "columns": {
+        "BEAM_M": "25.9",
+        "DRAFT_M": "15.5",
+        "LOA_M": "182.6",
+        "PIPELAY_CAPACITY_IN": "36.0",
+        "PIPELAY_MIN_DIAMETER_IN": "2.0"
+      },
+      "commit": "0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+      "csv_line": 68,
+      "path": "packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv",
+      "record_count": 161,
+      "retrieval_date": "2026-10-15",
+      "sha256": "7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884",
+      "url": "https://api.github.com/repositories/574746314/contents/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv?ref=0cef59201f817c28d91ef25e1bfcba99bfc9d588"
+    },
+    "sources": {
+      "assumptions": {
+        "locator": "Public repository numerical scenario inputs; not measured pipe or hull response data.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "0b5a1e30ed1c89ac9eef83226e68565b064204d3dae4ef3303f05a246d0f2ab0",
+        "url": "https://api.github.com/repositories/590299785/contents/docs/domains/pipeline-installation/slay-campaign/case-table.yml?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      },
+      "dataset": {
+        "columns": {
+          "BEAM_M": "25.9",
+          "DRAFT_M": "15.5",
+          "LOA_M": "182.6",
+          "PIPELAY_CAPACITY_IN": "36.0",
+          "PIPELAY_MIN_DIAMETER_IN": "2.0"
+        },
+        "commit": "0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+        "csv_line": 68,
+        "path": "packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv",
+        "record_count": 161,
+        "retrieval_date": "2026-10-15",
+        "sha256": "7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884",
+        "url": "https://api.github.com/repositories/574746314/contents/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv?ref=0cef59201f817c28d91ef25e1bfcba99bfc9d588"
+      },
+      "defaults": {
+        "locator": "ProjectInputSpec and builders; numerical preparation defaults, not qualified design data.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "d3be7c7c3a08cdeb2b09ca33c7fc9bca0aeb58443df5e86014299eb4a2eee6b4",
+        "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/solvers/orcaflex/modular_generator/schema/root.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      },
+      "friction": {
+        "locator": "Yan, White and Randolph (2014), Cyclic consolidation and axial friction for seabed pipelines; Results, p. 166: initial factor 0.32; drained limit tan(phi), Table 1 angle 23.5 degrees. Fully rough modified Cam clay; not a site-wide soil bound.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "75c5212a12cf67a51e4bb90907670b587c30cc8914014ff903e001c4b818a489",
+        "url": "https://api.research-repository.uwa.edu.au/ws/files/7389516/geolett.14.pdf"
+      },
+      "pull-paper": {
+        "locator": "Krioni, Semenova and Kireev (2018), The algorithm for determining the pulling force while dragging a pipeline, pp. 38-39, equations (5)-(6) and force summation. Channel/HDD context; not transferred as a surface pull-in validation.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "71cfc93ae47792948688514fbdd30ef24fbe6ff82bcf1d373d004d04bc28d7a4",
+        "url": "https://multiphasesystems.online/2018/pdf/mfs2018.3.005.pdf"
+      },
+      "unit-conversion": {
+        "locator": "Pipe OD conversion from inch to m, line 195; metre-per-inch factor also used at line 199.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "2d81029862cdcfbb480238ab4a5ad07e22d4fc3f1558a176df77d6a0c72634bc",
+        "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      }
+    }
+  },
   "schema": "shore-pull-in-model-bundle-1"
 }
