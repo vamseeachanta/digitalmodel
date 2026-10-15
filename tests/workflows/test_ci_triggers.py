@@ -134,3 +134,30 @@ def test_trigger_tests_run_in_harness() -> None:
         step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
     )
     assert "tests/workflows/test_ci_triggers.py" in commands
+
+
+def test_full_sweep_keeps_nightly_schedule() -> None:
+    """The full sweep runs nightly without changing pull request selection."""
+    workflow = load_workflow("full-matrix-sweep.yml")
+    triggers = workflow["on"] if "on" in workflow else workflow[True]
+    assert triggers["schedule"] == [{"cron": "17 7 * * *"}]
+    assert triggers["push"]["branches"] == ["main"]
+    assert "pull_request" not in triggers
+    assert "workflow_dispatch" in triggers
+
+
+def test_full_sweep_separates_nightly_from_pushes() -> None:
+    """Pushes supersede pushes while leaving the nightly group independent."""
+    concurrency = load_workflow("full-matrix-sweep.yml")["concurrency"]
+    assert concurrency["group"] == (
+        "full-matrix-sweep-${{ github.ref }}-"
+        "${{ github.event_name == 'schedule' && 'nightly' || 'push' }}"
+    )
+    assert concurrency["cancel-in-progress"] is True
+
+
+def test_full_sweep_bounds_each_shard() -> None:
+    """A hung shard releases its runner within forty minutes."""
+    shard = load_workflow("full-matrix-sweep.yml")["jobs"]["sweep-tests"]
+    assert shard["timeout-minutes"] == 40
+    assert shard["strategy"]["fail-fast"] is False
