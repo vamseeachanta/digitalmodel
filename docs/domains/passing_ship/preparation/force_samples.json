@@ -1,0 +1,618 @@
+{
+  "base_commit": "096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+  "cases": [
+    {
+      "depth_to_draft": 1.108,
+      "name": "matrix-001",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 30.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -6646.222212128591,
+        0.0,
+        6646.222212128591
+      ],
+      "sway_n": [
+        -2653.1545715954217,
+        13994.931980822152,
+        -2653.1545715954217
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        166022.1974718142,
+        0.0,
+        -166022.1974718142
+      ]
+    },
+    {
+      "depth_to_draft": 1.3240000000000003,
+      "name": "matrix-002",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 30.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -6223.002085043501,
+        0.0,
+        6223.002085043501
+      ],
+      "sway_n": [
+        -2484.2062007568043,
+        13103.758513783869,
+        -2484.2062007568043
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        155450.18629453564,
+        0.0,
+        -155450.18629453564
+      ]
+    },
+    {
+      "depth_to_draft": 3.9190000000000005,
+      "name": "matrix-003",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 30.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -5932.282874643065,
+        0.0,
+        5932.282874643065
+      ],
+      "sway_n": [
+        -2368.102858307002,
+        12491.333441484363,
+        -2368.102858307002
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        148183.44498767974,
+        0.0,
+        -148183.44498767974
+      ]
+    },
+    {
+      "depth_to_draft": 1.108,
+      "name": "matrix-004",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 40.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -4234.037928336867,
+        0.0,
+        4234.037928336867
+      ],
+      "sway_n": [
+        -971.9261328637107,
+        7908.406293362724,
+        -971.9261328637107
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        108978.9118883301,
+        0.0,
+        -108978.9118883301
+      ]
+    },
+    {
+      "depth_to_draft": 1.3240000000000003,
+      "name": "matrix-005",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 40.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -3964.4176783188227,
+        0.0,
+        3964.4176783188227
+      ],
+      "sway_n": [
+        -910.0346308561415,
+        7404.805116861621,
+        -910.0346308561415
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        102039.21933777997,
+        0.0,
+        -102039.21933777997
+      ]
+    },
+    {
+      "depth_to_draft": 3.9190000000000005,
+      "name": "matrix-006",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 40.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -3754.102594963139,
+        0.0,
+        3754.102594963139
+      ],
+      "sway_n": [
+        -861.7553408852638,
+        7011.964315761036,
+        -861.7553408852638
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        96625.74544013092,
+        0.0,
+        -96625.74544013092
+      ]
+    },
+    {
+      "depth_to_draft": 1.108,
+      "name": "matrix-007",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 60.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -1880.8862806922568,
+        0.0,
+        1880.8862806922568
+      ],
+      "sway_n": [
+        67.00070487157788,
+        3083.5836260203982,
+        67.00070487157788
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        54751.570798978246,
+        0.0,
+        -54751.570798978246
+      ]
+    },
+    {
+      "depth_to_draft": 1.3240000000000003,
+      "name": "matrix-008",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 60.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -1761.112861893388,
+        0.0,
+        1761.112861893388
+      ],
+      "sway_n": [
+        62.73415055259515,
+        2887.2233479791635,
+        62.73415055259515
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        51265.03209298675,
+        0.0,
+        -51265.03209298675
+      ]
+    },
+    {
+      "depth_to_draft": 3.9190000000000005,
+      "name": "matrix-009",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 60.0,
+      "speed_knots": 3.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -1663.829168263508,
+        0.0,
+        1663.829168263508
+      ],
+      "sway_n": [
+        59.26872201347499,
+        2727.7334034948963,
+        59.26872201347499
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        48433.15636568196,
+        0.0,
+        -48433.15636568196
+      ]
+    },
+    {
+      "depth_to_draft": 1.108,
+      "name": "matrix-010",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 30.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -18461.728367023872,
+        0.0,
+        18461.728367023872
+      ],
+      "sway_n": [
+        -7369.8738099872835,
+        38874.811057839324,
+        -7369.8738099872835
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        461172.77075503947,
+        0.0,
+        -461172.77075503947
+      ]
+    },
+    {
+      "depth_to_draft": 1.3240000000000003,
+      "name": "matrix-011",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 30.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -17286.11690289862,
+        0.0,
+        17286.11690289862
+      ],
+      "sway_n": [
+        -6900.5727798800135,
+        36399.3292049552,
+        -6900.5727798800135
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        431806.0730403768,
+        0.0,
+        -431806.0730403768
+      ]
+    },
+    {
+      "depth_to_draft": 3.9190000000000005,
+      "name": "matrix-012",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 30.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -16478.563540675186,
+        0.0,
+        16478.563540675186
+      ],
+      "sway_n": [
+        -6578.063495297229,
+        34698.148448567685,
+        -6578.063495297229
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        411620.68052133266,
+        0.0,
+        -411620.68052133266
+      ]
+    },
+    {
+      "depth_to_draft": 1.108,
+      "name": "matrix-013",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 40.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -11761.21646760241,
+        0.0,
+        11761.21646760241
+      ],
+      "sway_n": [
+        -2699.794813510308,
+        21967.795259340903,
+        -2699.794813510308
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        302719.1996898059,
+        0.0,
+        -302719.1996898059
+      ]
+    },
+    {
+      "depth_to_draft": 1.3240000000000003,
+      "name": "matrix-014",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 40.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -11012.271328663397,
+        0.0,
+        11012.271328663397
+      ],
+      "sway_n": [
+        -2527.8739746003935,
+        20568.903102393397,
+        -2527.8739746003935
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        283442.2759382778,
+        0.0,
+        -283442.2759382778
+      ]
+    },
+    {
+      "depth_to_draft": 3.9190000000000005,
+      "name": "matrix-015",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 40.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -10428.062763786498,
+        0.0,
+        10428.062763786498
+      ],
+      "sway_n": [
+        -2393.7648357923995,
+        19477.67865489177,
+        -2393.7648357923995
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        268404.8484448082,
+        0.0,
+        -268404.8484448082
+      ]
+    },
+    {
+      "depth_to_draft": 1.108,
+      "name": "matrix-016",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 60.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -5224.684113034048,
+        0.0,
+        5224.684113034048
+      ],
+      "sway_n": [
+        186.11306908771635,
+        8565.510072278885,
+        186.11306908771635
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        152087.6966638285,
+        0.0,
+        -152087.6966638285
+      ]
+    },
+    {
+      "depth_to_draft": 1.3240000000000003,
+      "name": "matrix-017",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 60.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -4891.980171926079,
+        0.0,
+        4891.980171926079
+      ],
+      "sway_n": [
+        174.26152931276434,
+        8020.064855497678,
+        174.26152931276434
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        142402.86692496325,
+        0.0,
+        -142402.86692496325
+      ]
+    },
+    {
+      "depth_to_draft": 3.9190000000000005,
+      "name": "matrix-018",
+      "requested_outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "response_status": "not computed; response adapter required",
+      "separation_m": 60.0,
+      "speed_knots": 5.0,
+      "stagger_m": [
+        -50.0,
+        0,
+        50.0
+      ],
+      "surge_n": [
+        -4621.747689620857,
+        0.0,
+        4621.747689620857
+      ],
+      "sway_n": [
+        164.63533892631943,
+        7577.037231930269,
+        164.63533892631943
+      ],
+      "wind_basis": "excluded",
+      "yaw_nm": [
+        134536.54546022773,
+        0.0,
+        -134536.54546022773
+      ]
+    }
+  ],
+  "status": "unqualified force examples; no coupled response"
+}

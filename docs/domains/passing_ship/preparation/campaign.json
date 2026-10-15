@@ -1,0 +1,1750 @@
+{
+  "cases": [
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-001",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 6.836360000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-001",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 30.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-002",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 8.169080000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-002",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 30.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-003",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 24.18023,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-003",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 30.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-004",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 6.836360000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-004",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 40.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-005",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 8.169080000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-005",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 40.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-006",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 24.18023,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-006",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 40.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-007",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 6.836360000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-007",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 60.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-008",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 8.169080000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-008",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 60.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-009",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 24.18023,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-009",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 60.0,
+          "speed_knots": 3.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-010",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 6.836360000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-010",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 30.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-011",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 8.169080000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-011",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 30.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-012",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 24.18023,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-012",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 30.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-013",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 6.836360000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-013",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 40.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-014",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 8.169080000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-014",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 40.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-015",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 24.18023,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-015",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 40.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-016",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 6.836360000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-016",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 60.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-017",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 8.169080000000001,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-017",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 60.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    },
+    {
+      "analysis_cases": [
+        {
+          "include_passing_ship": true,
+          "include_wind": false,
+          "name": "matrix-018",
+          "passing_speed_knots": null,
+          "separation_m": null
+        }
+      ],
+      "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+      "environment": {
+        "current_direction_deg": null,
+        "current_speed": null,
+        "water_density": 1025.0,
+        "water_depth": 24.18023,
+        "wind_direction_deg": null,
+        "wind_speed": null
+      },
+      "moored_vessel": {
+        "draft": null,
+        "hull": {
+          "beam": 14.83,
+          "block_coefficient": 0.75,
+          "displacement_tonnes": 7034.1470625,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "loading_condition": "full_load",
+        "mooring_lines": [
+          {
+            "anchor_x": 100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-1",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": 100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": 50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-2",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": 50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": 7.415,
+            "length": 180.0,
+            "line_id": "line-3",
+            "line_type": "wire",
+            "pretension": 600.0
+          },
+          {
+            "anchor_x": -100.0,
+            "anchor_y": -50.0,
+            "fairlead_x": -50.0,
+            "fairlead_y": -7.415,
+            "length": 180.0,
+            "line_id": "line-4",
+            "line_type": "wire",
+            "pretension": 600.0
+          }
+        ],
+        "rao_source": null
+      },
+      "name": "matrix-018",
+      "outputs": {
+        "fender_loads": false,
+        "force_time_histories": true,
+        "line_tensions": true,
+        "vessel_motions": true
+      },
+      "passing_ship": {
+        "dimensions": {
+          "beam": 15.33,
+          "block_coefficient": 0.8,
+          "displacement_tonnes": 7756.0602,
+          "draft": 6.17,
+          "loa": 100.0
+        },
+        "track": {
+          "angle_deg": 0.0,
+          "closest_approach_offset_m": 0.0,
+          "separation_m": 60.0,
+          "speed_knots": 5.0
+        },
+        "vessel_type": "tanker"
+      }
+    }
+  ]
+}

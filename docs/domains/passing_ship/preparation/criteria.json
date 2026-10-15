@@ -1,0 +1,15 @@
+{
+  "revision": "initial",
+  "relative_tolerance": 0.05,
+  "absolute_tolerance": [
+    1,
+    1,
+    1
+  ],
+  "quantities": [
+    "surge_n",
+    "sway_n",
+    "yaw_nm"
+  ],
+  "basis": "Proposed comparison limits, copied from the existing 5% analytical test convention; not experimental uncertainty. Missing tabulated reference values prevent qualification."
+}

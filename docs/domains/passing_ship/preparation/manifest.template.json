@@ -1,0 +1,130 @@
+{
+  "adapter": null,
+  "approved_manifest_sha256": null,
+  "base_commit": "096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+  "execution": {
+    "base_commit": "096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+    "criteria_sha256": "07bb361db5d6a0baece55868643bb44309d6de09f08eb8a0b13cf31c0ec84bb5",
+    "first_run_started_at_utc": "2026-10-15T01:31:01.403588+00:00",
+    "recorded_at_utc": "2026-10-15T01:29:04.524406+00:00"
+  },
+  "header_replacements": "none",
+  "input_provenance": {
+    "docs/domains/passing_ship/preparation/benchmark_candidates.json": {
+      "basis": "Public input facts plus explicit study assumptions; not measured response data.",
+      "record_count": 6,
+      "retrieval_date": "2026-10-14",
+      "sha256": "a3add00c201d24b0d5ee6367244cc592d889dad4129c07f3058971a5770e0751",
+      "source_url": "https://mdpi-res.com/d_attachment/processes/processes-09-00558/article_deploy/processes-09-00558.pdf"
+    },
+    "docs/domains/passing_ship/preparation/criteria.json": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "07bb361db5d6a0baece55868643bb44309d6de09f08eb8a0b13cf31c0ec84bb5",
+      "source_url": "repository-relative:docs/domains/passing_ship/preparation/criteria.json"
+    },
+    "docs/domains/passing_ship/preparation/execution.json": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "57bb223c575176b036f194b9eb7e535e4cc5889222b9502fd9b43453da865f25",
+      "source_url": "repository-relative:docs/domains/passing_ship/preparation/execution.json"
+    },
+    "docs/domains/passing_ship/preparation/matrix.json": {
+      "basis": "Public input facts plus explicit study assumptions; not measured response data.",
+      "record_count": 18,
+      "retrieval_date": "2026-10-14",
+      "sha256": "0baa0440a7c277b0aa86bbb8e0f939c71cd3c79b43cc2d1d70a0baba46c95c9d",
+      "source_url": "https://mdpi-res.com/d_attachment/processes/processes-09-00558/article_deploy/processes-09-00558.pdf"
+    },
+    "docs/domains/passing_ship/preparation/model.json": {
+      "basis": "Public input facts plus explicit study assumptions; not measured response data.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "6a55b2ccc6a96897d6725cc191aa4802deacbf777a5a58fe58e31e70bad6516b",
+      "source_url": "https://mdpi-res.com/d_attachment/processes/processes-09-00558/article_deploy/processes-09-00558.pdf"
+    },
+    "docs/domains/passing_ship/preparation/revisions.json": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "459fcd948fb26f455391bccdc828e88bd382f7ddeab328c60c07569de2923816",
+      "source_url": "repository-relative:docs/domains/passing_ship/preparation/revisions.json"
+    },
+    "docs/domains/passing_ship/preparation/sources.json": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 2,
+      "retrieval_date": "2026-10-14",
+      "sha256": "5c39677c8949af9fa505ae914fb3b1064e1caa31a08d94c4a91dc91e4b93b764",
+      "source_url": "repository-relative:docs/domains/passing_ship/preparation/sources.json"
+    },
+    "src/digitalmodel/hydrodynamics/passing_ship/calculator.py": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "898abaad32fe52845cd8894b3f1bb659c066c256de7df9201a9c04031cb5edfb",
+      "source_url": "repository-relative:src/digitalmodel/hydrodynamics/passing_ship/calculator.py"
+    },
+    "src/digitalmodel/hydrodynamics/passing_ship/configuration.py": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "63190f191ce4e578bb61390aa78b090bb041978b8a8832f09a11ee48e343c1cd",
+      "source_url": "repository-relative:src/digitalmodel/hydrodynamics/passing_ship/configuration.py"
+    },
+    "src/digitalmodel/hydrodynamics/passing_ship/formulations.py": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "0f251cdd95df37a28b38255c56f8b133a3424f898403a88c0ce17ccfca1e8c71",
+      "source_url": "repository-relative:src/digitalmodel/hydrodynamics/passing_ship/formulations.py"
+    },
+    "src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "657715c97dca3584c90867af18d7340e1b0ee7cf98955751e2ee8999e1b10232",
+      "source_url": "repository-relative:src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py"
+    },
+    "src/digitalmodel/hydrodynamics/passing_ship/preparation.py": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "9f9ce7367c517975fa60a8f1e5c94bc8f990f4e1e53918d1c1193717632091dd",
+      "source_url": "repository-relative:src/digitalmodel/hydrodynamics/passing_ship/preparation.py"
+    },
+    "src/digitalmodel/hydrodynamics/passing_ship/preparation_report.py": {
+      "basis": "Preparation record or implementation; first issue created with this change.",
+      "record_count": 1,
+      "retrieval_date": "2026-10-14",
+      "sha256": "6ed0b3a85de9a58c6683506b81d829a4a54850d56af515c3c75c5bce0abe476b",
+      "source_url": "repository-relative:src/digitalmodel/hydrodynamics/passing_ship/preparation_report.py"
+    }
+  },
+  "inputs": {
+    "docs/domains/passing_ship/preparation/benchmark_candidates.json": "a3add00c201d24b0d5ee6367244cc592d889dad4129c07f3058971a5770e0751",
+    "docs/domains/passing_ship/preparation/criteria.json": "07bb361db5d6a0baece55868643bb44309d6de09f08eb8a0b13cf31c0ec84bb5",
+    "docs/domains/passing_ship/preparation/execution.json": "57bb223c575176b036f194b9eb7e535e4cc5889222b9502fd9b43453da865f25",
+    "docs/domains/passing_ship/preparation/matrix.json": "0baa0440a7c277b0aa86bbb8e0f939c71cd3c79b43cc2d1d70a0baba46c95c9d",
+    "docs/domains/passing_ship/preparation/model.json": "6a55b2ccc6a96897d6725cc191aa4802deacbf777a5a58fe58e31e70bad6516b",
+    "docs/domains/passing_ship/preparation/revisions.json": "459fcd948fb26f455391bccdc828e88bd382f7ddeab328c60c07569de2923816",
+    "docs/domains/passing_ship/preparation/sources.json": "5c39677c8949af9fa505ae914fb3b1064e1caa31a08d94c4a91dc91e4b93b764",
+    "src/digitalmodel/hydrodynamics/passing_ship/calculator.py": "898abaad32fe52845cd8894b3f1bb659c066c256de7df9201a9c04031cb5edfb",
+    "src/digitalmodel/hydrodynamics/passing_ship/configuration.py": "63190f191ce4e578bb61390aa78b090bb041978b8a8832f09a11ee48e343c1cd",
+    "src/digitalmodel/hydrodynamics/passing_ship/formulations.py": "0f251cdd95df37a28b38255c56f8b133a3424f898403a88c0ce17ccfca1e8c71",
+    "src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py": "657715c97dca3584c90867af18d7340e1b0ee7cf98955751e2ee8999e1b10232",
+    "src/digitalmodel/hydrodynamics/passing_ship/preparation.py": "9f9ce7367c517975fa60a8f1e5c94bc8f990f4e1e53918d1c1193717632091dd",
+    "src/digitalmodel/hydrodynamics/passing_ship/preparation_report.py": "6ed0b3a85de9a58c6683506b81d829a4a54850d56af515c3c75c5bce0abe476b"
+  },
+  "launch_allowed": false,
+  "matrix_entries": 18,
+  "outputs": {
+    "campaign.json": "14dd58b8442240d8dc8ce41824238db25365f1bf9026ea4c27127eb45088225c",
+    "force_samples.json": "5a282b44112eb17efc6d62841d4914aac72528b9533b80e15556410e70882dde",
+    "report.html": "7efaab4d0fd2fce867f571cad92e59a768a03463777643506706b7fbe82bb0e0"
+  },
+  "qualified_benchmarks": 0,
+  "response_cases": 0,
+  "revision": "initial"
+}

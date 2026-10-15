@@ -1,0 +1,81 @@
+{
+  "name": "generic_parallel_passage",
+  "description": "Public hull dimensions from Park, Nam and Kim (2021), Table 3. Mooring geometry and pretension assumed, based on previous experience; not a reproduced mooring experiment.",
+  "moored_vessel": {
+    "hull": {
+      "loa": 100,
+      "beam": 14.83,
+      "draft": 6.17,
+      "block_coefficient": 0.75
+    },
+    "mooring_lines": [
+      {
+        "line_id": "line-1",
+        "line_type": "wire",
+        "length": 180,
+        "pretension": 600,
+        "fairlead_x": 50,
+        "fairlead_y": 7.415,
+        "anchor_x": 100,
+        "anchor_y": 50
+      },
+      {
+        "line_id": "line-2",
+        "line_type": "wire",
+        "length": 180,
+        "pretension": 600,
+        "fairlead_x": 50,
+        "fairlead_y": -7.415,
+        "anchor_x": 100,
+        "anchor_y": -50
+      },
+      {
+        "line_id": "line-3",
+        "line_type": "wire",
+        "length": 180,
+        "pretension": 600,
+        "fairlead_x": -50,
+        "fairlead_y": 7.415,
+        "anchor_x": -100,
+        "anchor_y": 50
+      },
+      {
+        "line_id": "line-4",
+        "line_type": "wire",
+        "length": 180,
+        "pretension": 600,
+        "fairlead_x": -50,
+        "fairlead_y": -7.415,
+        "anchor_x": -100,
+        "anchor_y": -50
+      }
+    ]
+  },
+  "passing_ship": {
+    "dimensions": {
+      "loa": 100,
+      "beam": 15.33,
+      "draft": 6.17,
+      "block_coefficient": 0.8
+    },
+    "track": {
+      "speed_knots": 5,
+      "separation_m": 40
+    }
+  },
+  "environment": {
+    "water_depth": 8.169080000000001,
+    "water_density": 1025
+  },
+  "analysis_cases": [
+    {
+      "name": "base"
+    }
+  ],
+  "outputs": {
+    "line_tensions": true,
+    "vessel_motions": true,
+    "fender_loads": false,
+    "force_time_histories": true
+  }
+}
