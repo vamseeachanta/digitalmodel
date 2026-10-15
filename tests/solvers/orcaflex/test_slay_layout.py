@@ -41,7 +41,7 @@ def test_pipe_ends_are_separated_and_upper_end_can_take_winch_load():
     length = sum(segment.length for segment in spec.pipeline.segments)
     assert math.hypot(top[1] - bottom[1], spec.environment.water.depth + top[3]) < length
     stiffness = next(value for key, value in line.items() if key.startswith("ConnectionxBending"))
-    assert stiffness == [[], [0, 0, 0, 0]]
+    assert stiffness == [[], [0, None]]
 
 
 def test_vessel_supports_attach_pipeline_at_declared_roller_stations():
@@ -115,14 +115,15 @@ def test_hand_closure_screens_leave_the_other_suspect_open(case_id):
 
     screen = screen_case(CAMPAIGN, case_id)
     current = screen["current"]
-    assert current["excess_m"] > screen["lead_m"]
+    assert 0 <= current["excess_m"] <= screen["lead_m"]
     assert current["departure_deg"] - current["tip_angle_deg"] > screen["angle_tolerance_deg"]
     length_only = screen["length_only"]
     assert abs(length_only["excess_m"]) <= screen["length_tolerance_m"]
     assert length_only["angle_mismatch_deg"] > screen["angle_tolerance_deg"]
     angle_only = screen["angle_only"]
     assert abs(angle_only["departure_deg"] - angle_only["tip_angle_deg"]) <= screen["angle_tolerance_deg"]
-    assert angle_only["excess_m"] > screen["lead_m"] + screen["length_tolerance_m"]
+    assert 0 <= current["excess_m"] <= screen["lead_m"]
+    assert abs(screen["combined"]["excess_m"]) <= screen["length_tolerance_m"]
     table = yaml.safe_load((CAMPAIGN / "case-table.yml").read_text())
     declared = next(row for row in table["static_equilibrium_screen"]["all_cases"] if row["id"] == case_id)
     for key in ("excess_m", "departure_deg"):
@@ -131,6 +132,8 @@ def test_hand_closure_screens_leave_the_other_suspect_open(case_id):
                                        ("angle_only_tip_deg", "tip_angle_deg"),
                                        ("angle_only_excess_m", "excess_m")):
         assert declared[declared_key] == round(angle_only[computed_key], 1)
+    assert declared["combined_arc_m"] == round(screen["combined"]["supported_arc_m"], 1)
+    assert declared["combined_span_m"] == round(screen["combined"]["anchor_span_m"], 1)
     assert current["suspended_length_m"] > current["suspended_span_m"] > 0
     assert current["horizontal_tension_kn"] == pytest.approx(
         screen["top_tension_kn"] - screen["weight_kn_m"] * screen["depth_m"])
@@ -159,7 +162,7 @@ def test_anchor_span_probe_changes_only_anchor_x_and_binds_base_bytes(tmp_path):
     end_a_x = expected[0][key][0][1]
     expected[0][key][1][1] = end_a_x - manifest["target_span_m"]
     assert document["Lines"] == expected
-    assert manifest["target_span_m"] > manifest["initial_span_m"]
+    assert manifest["target_span_m"] == pytest.approx(manifest["initial_span_m"])
     assert manifest["target_span_m"] - manifest["initial_span_m"] == pytest.approx(
         manifest["screen"]["current"]["excess_m"])
     assert manifest["probe_sha256"] == hashlib.sha256(probe.read_bytes()).hexdigest()
@@ -167,7 +170,8 @@ def test_anchor_span_probe_changes_only_anchor_x_and_binds_base_bytes(tmp_path):
                   for p in (CAMPAIGN / "models/d0-t0").rglob("*.yml")}
     assert manifest["base_files"] == base_files
     assert manifest["case_table_sha256"] == hashlib.sha256((CAMPAIGN / "case-table.yml").read_bytes()).hexdigest()
-    assert manifest["native_status"] == "not_run"
+    assert manifest["current_inputs_native_status"] == "not_run"
+    assert "statics not converged" in manifest["native_status"]
     assert set(manifest["required_readings"]) == {
         "end_a_displacement", "wire_direction_and_length", "active_roller_contacts",
         "departure_slope", "force_residuals", "tip_contact_force_and_curvature",

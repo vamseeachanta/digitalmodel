@@ -1,6 +1,6 @@
 Lines:
 - Name: Generic pipe
-  IncludeTorsion: 'Yes'
+  IncludeTorsion: 'No'
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -21,16 +21,16 @@ Lines:
       - 0
       - ~
     - - Anchored
-      - -2011.1
+      - -2071.8301896902103
       - 0.0
       - 0
       - 180
       - 90.0
       - 0
       - ~
-  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - []
-  - [0, 0, 0, 0]
+  - [0, ~]
   ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
     ConnectionApplyRamp, ConnectionUseSmoothGrowth
   : - - ~

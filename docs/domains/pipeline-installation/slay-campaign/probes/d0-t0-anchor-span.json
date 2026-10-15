@@ -2,8 +2,16 @@
   "schema": "slay-anchor-span-probe-1",
   "production_case": false,
   "base_case": "d0-t0",
-  "native_status": "not_run",
-  "case_table_sha256": "a8f929d06eb8383964ba437d8d5ed3830bdbe5bb7dc17260f414d1af21386af7",
+  "native_status": "statics not converged in OrcaFlex 11.6c, error 27, master and probe",
+  "current_inputs_native_status": "not_run",
+  "qa_pass_criteria": {
+    "converged_statics": true,
+    "positive_wire_length": true,
+    "end_a_within_lead": true,
+    "nonnegative_grounded_tension": true,
+    "maximum_overbend_strain": 0.00254
+  },
+  "case_table_sha256": "c94098f51b8c070ae447da338ba857c60275694027c2a7ef8f7aa5e4989fe087",
   "base_files": {
     "models/d0-t0/includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
     "models/d0-t0/includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
@@ -11,7 +19,7 @@
     "models/d0-t0/includes/04_vessel_types.yml": "1c7aa0edb2fd2d7c587a76fe06887236045a396e26e827d57b2eec1a46f57278",
     "models/d0-t0/includes/05_line_types.yml": "454211c2ce2345272504a6246b8efa2d2faa786e11391af4530dccd41989ca61",
     "models/d0-t0/includes/06_vessels.yml": "591ed6112c15dd01a6e2d3e917f69ebb32256b6bf4dd5b51055f0d922fc946e1",
-    "models/d0-t0/includes/07_lines.yml": "3734b48100b1e643c47d98d5bccdd5261c2f0c376d01e0857e0333fdc65bfdbd",
+    "models/d0-t0/includes/07_lines.yml": "ba3048e47437db0bedf13ad92788e9019d0a81b2606b051d4e2744d4f4ca6c1e",
     "models/d0-t0/includes/09_shapes.yml": "db692531c46bf8a7d4543221103dc533b1c798fe30b2328e3c8f4e313c544436",
     "models/d0-t0/includes/10_groups.yml": "f53754046eecf61ce543c9149c86140cafa5066a05de5c6b4c40c58c3fe61f99",
     "models/d0-t0/includes/11_winches.yml": "297c8764c5f441a3281c1fae3c074ee34c1f6b4792d35c5762908faff88f2f88",
@@ -21,8 +29,8 @@
     "models/d0-t0/master.yml": "c72d099bf9a2880c737ebae1f5099e9813912a11533106213e5486df62262581"
   },
   "probe_file": "probes/d0-t0-anchor-span.yml",
-  "probe_sha256": "359fbfdea5fe1f92e82150ceb53add6c0793feecf4fcffed9280e16fb1f8fc39",
-  "initial_span_m": 1960.0,
+  "probe_sha256": "16fd6a17d24517bedef32a4d36d118ec24a4fddeac58046fbfe074b3ae50c3b1",
+  "initial_span_m": 1985.9141055034147,
   "target_span_m": 1985.914105503415,
   "screen": {
     "case_id": "d0-t0",
@@ -33,6 +41,8 @@
     "lead_m": 10.0,
     "length_tolerance_m": 0.1,
     "angle_tolerance_deg": 0.1,
+    "tolerance_meaning": "arithmetic reproduction only; not physical model accuracy",
+    "touchdown_assumption": "Seabed surface; omitting coated radius understates excess by 0.2-0.4 m.",
     "current": {
       "height_m": 34.69819678458458,
       "tip_tension_kn": 390.4817106756496,
@@ -41,8 +51,8 @@
       "suspended_span_m": 49.472316180360295,
       "supported_arc_m": 40,
       "projected_arc_m": 39.52760867153026,
-      "taut_length_m": 1974.0858944965853,
-      "excess_m": 25.914105503414703,
+      "taut_length_m": 2000.0,
+      "excess_m": 0.0,
       "tip_angle_deg": 15.278874536821952,
       "departure_deg": 57.62297667677083,
       "taut_anchor_span_m": 1985.914105503415
@@ -57,14 +67,21 @@
       "tip_tension_kn": 261.37291627114143,
       "horizontal_tension_kn": 209.0983330169132,
       "suspended_length_m": 29.99999999999998,
-      "suspended_span_m": 27.725887222397798,
+      "suspended_span_m": 27.725887222397795,
       "supported_arc_m": 96.52516631899267,
       "projected_arc_m": 90.00000000000001,
-      "taut_length_m": 1968.799279096595,
-      "excess_m": 31.200720903405,
+      "taut_length_m": 1994.7133846000092,
+      "excess_m": 5.286615399990751,
       "tip_angle_deg": 36.86989764584403,
       "departure_deg": 36.869897645844006,
       "taut_anchor_span_m": 1991.2007209034052
+    },
+    "combined": {
+      "supported_arc_m": 96.52516631899267,
+      "anchor_span_m": 1991.2007209034052,
+      "excess_m": 2.2737367544323206e-13,
+      "angle_mismatch_deg": -2.1316282072803006e-14,
+      "qualification": "Counterfactual only; stinger length requires a maintainer case-design decision."
     }
   },
   "required_readings": [
@@ -77,5 +94,17 @@
     "maximum_overbend_strain",
     "grounded_effective_tension"
   ],
-  "interpretation": "Continue anchor span from initial to target with loads and supports fixed. Convergence with a positive wire and the intended force/contact state would show length closure is sufficient for this configuration. Failure alone cannot identify the tip angle: torsional restraint, anchor embedment and bending/contact residuals remain unresolved."
+  "interpretation": "Continue anchor span from initial to target with loads and supports fixed. Convergence with a positive wire and the intended force/contact state would show length closure is sufficient for this configuration. Failure alone cannot identify the tip angle: anchor embedment and bending/contact residuals remain unresolved. The combined length/angle counterfactual is not an approved stinger design.",
+  "previous_qa": {
+    "source": "Dispatched solver-manager QA report; source record not accessible in this lane.",
+    "revision": "beba96c933c3518af1dbeea21bc55a69b042a87c",
+    "solver_version": "OrcaFlex 11.6c",
+    "native_status": "statics not converged in OrcaFlex 11.6c, error 27, master and probe",
+    "error_code": 27,
+    "load_warnings": 0,
+    "load_scope": "Six prior masters and the prior d0-t0 anchor-span probe",
+    "static_scope": "Prior d0-t0 master without environmental loads, as delivered, with current only, and prior anchor-span probe",
+    "required_readings_available": false,
+    "qualification": "Reported historical outcome only; regenerated inputs have not run."
+  }
 }

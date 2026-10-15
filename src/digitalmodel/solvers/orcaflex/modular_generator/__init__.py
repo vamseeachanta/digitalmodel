@@ -65,7 +65,8 @@ class _NoAliasDumper(yaml.Dumper):
             "ConnectionTwistingStiffness, ConnectionDamping"
         )
         for key, value in node.value:
-            if key.value == stiffness_key and mapping[key.value][0] == []:
+            if key.value in (stiffness_key,
+                             "ConnectionxBendingStiffness, ConnectionyBendingStiffness") and mapping[key.value][0] == []:
                 for row in value.value:
                     row.flow_style = True
         return node

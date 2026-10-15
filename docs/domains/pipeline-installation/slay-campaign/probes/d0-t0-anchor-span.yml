@@ -1,7 +1,7 @@
 BaseFile: ../models/d0-t0/master.yml
 Lines:
 - Name: Generic pipe
-  IncludeTorsion: 'Yes'
+  IncludeTorsion: 'No'
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -29,9 +29,9 @@ Lines:
       - 90.0
       - 0
       - ~
-  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - []
-  - [0, 0, 0, 0]
+  - [0, ~]
   ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
     ConnectionApplyRamp, ConnectionUseSmoothGrowth
   : - - ~

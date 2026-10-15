@@ -2,7 +2,7 @@
   "schema": "slay-preparation-1",
   "model_digest_serialization": "parsed-yaml-json-sort-keys-compact-ascii-v1",
   "criteria_revision": "execution-1",
-  "case_table_sha256": "a8f929d06eb8383964ba437d8d5ed3830bdbe5bb7dc17260f414d1af21386af7",
+  "case_table_sha256": "c94098f51b8c070ae447da338ba857c60275694027c2a7ef8f7aa5e4989fe087",
   "native_attempted": 0,
   "native_completed": 0,
   "qualified_results": 0,
@@ -16,7 +16,7 @@
         "models/d0-t0/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
         "models/d0-t0/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
         "models/d0-t0/includes/06_vessels.yml": "b3669ce31eed61f8e6869923da547e095a9fb3a14d1201d432aff74110bee194",
-        "models/d0-t0/includes/07_lines.yml": "bdeb865ec92e16c815abd01daf8ea4ee23c77fe69c300133a0bba013223f56b9",
+        "models/d0-t0/includes/07_lines.yml": "2d723c1b3994c555ce091eaeac9cdc97d8cec0916d9a3b9aaa68d8776691879a",
         "models/d0-t0/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
         "models/d0-t0/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
         "models/d0-t0/includes/11_winches.yml": "f003ecf7dc7f1cf4295e7620fa15a7c7485db7552e3b685dcf673f9f8b722f5e",
@@ -36,7 +36,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": null,
+      "preparation_wall_seconds": 0.16177629958838224,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -49,7 +49,7 @@
         "models/d0-t1/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
         "models/d0-t1/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
         "models/d0-t1/includes/06_vessels.yml": "b3669ce31eed61f8e6869923da547e095a9fb3a14d1201d432aff74110bee194",
-        "models/d0-t1/includes/07_lines.yml": "bdeb865ec92e16c815abd01daf8ea4ee23c77fe69c300133a0bba013223f56b9",
+        "models/d0-t1/includes/07_lines.yml": "73c91138ab41b6bed1e60fa515f78bcb0c2671bf9a1c2c19de7795cba8a4fe0a",
         "models/d0-t1/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
         "models/d0-t1/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
         "models/d0-t1/includes/11_winches.yml": "05e9b90cbc2cda19ee11aed60ec7260c1aef08c6042e08542bdcc41085a4f130",
@@ -69,7 +69,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": null,
+      "preparation_wall_seconds": 0.15473300032317638,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -82,7 +82,7 @@
         "models/d0-t2/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
         "models/d0-t2/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
         "models/d0-t2/includes/06_vessels.yml": "b3669ce31eed61f8e6869923da547e095a9fb3a14d1201d432aff74110bee194",
-        "models/d0-t2/includes/07_lines.yml": "bdeb865ec92e16c815abd01daf8ea4ee23c77fe69c300133a0bba013223f56b9",
+        "models/d0-t2/includes/07_lines.yml": "765f49843f263aaa9362682fffc767d5966ea92718bd97d6f7b1cd8c72be7da4",
         "models/d0-t2/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
         "models/d0-t2/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
         "models/d0-t2/includes/11_winches.yml": "093426260737efa4a970a9cf099597a76475b20664d9226de20823dcc5cacac8",
@@ -96,13 +96,13 @@
       "screen": {
         "horizontal_tension_kn": 627.2949990507396,
         "suspended_length_m": 105.83005244258362,
-        "span_m": 95.44385534686867,
+        "span_m": 95.44385534686866,
         "top_tension_kn": 836.3933320676529,
         "touchdown_curvature_per_m": 0.008333333333333333,
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": null,
+      "preparation_wall_seconds": 0.15669950004667044,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -115,7 +115,7 @@
         "models/d1-t0/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
         "models/d1-t0/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
         "models/d1-t0/includes/06_vessels.yml": "b3669ce31eed61f8e6869923da547e095a9fb3a14d1201d432aff74110bee194",
-        "models/d1-t0/includes/07_lines.yml": "9b9864ecd8be67ba106a5a0ed08fc964424037c2be69d8b53fa54b71e4a68470",
+        "models/d1-t0/includes/07_lines.yml": "3e5814a189c081aa28bb754c015b1bfdfc7d40cf5dfa3a3a21616972fecbde11",
         "models/d1-t0/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
         "models/d1-t0/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
         "models/d1-t0/includes/11_winches.yml": "093426260737efa4a970a9cf099597a76475b20664d9226de20823dcc5cacac8",
@@ -135,7 +135,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": null,
+      "preparation_wall_seconds": 0.18092439975589514,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -148,7 +148,7 @@
         "models/d1-t1/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
         "models/d1-t1/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
         "models/d1-t1/includes/06_vessels.yml": "b3669ce31eed61f8e6869923da547e095a9fb3a14d1201d432aff74110bee194",
-        "models/d1-t1/includes/07_lines.yml": "9b9864ecd8be67ba106a5a0ed08fc964424037c2be69d8b53fa54b71e4a68470",
+        "models/d1-t1/includes/07_lines.yml": "cd4a2e9b97cb0716f68333ab3d86c3dd1c113798a82c6216dfc09321e7d560b7",
         "models/d1-t1/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
         "models/d1-t1/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
         "models/d1-t1/includes/11_winches.yml": "0c748f5eec64cdc5cfd08ab829d1f8bf8231bfdfd3f77b6de19da7f09ab64fef",
@@ -168,7 +168,7 @@
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": null,
+      "preparation_wall_seconds": 0.1707939002662897,
       "native_wall_seconds": null,
       "native_status": "not_run"
     },
@@ -181,7 +181,7 @@
         "models/d1-t2/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
         "models/d1-t2/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
         "models/d1-t2/includes/06_vessels.yml": "b3669ce31eed61f8e6869923da547e095a9fb3a14d1201d432aff74110bee194",
-        "models/d1-t2/includes/07_lines.yml": "9b9864ecd8be67ba106a5a0ed08fc964424037c2be69d8b53fa54b71e4a68470",
+        "models/d1-t2/includes/07_lines.yml": "3ed7edfaa16c41f2905b34c6cb200e816a6c5d30d7f4401d7c0c6c97e2ddea39",
         "models/d1-t2/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
         "models/d1-t2/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
         "models/d1-t2/includes/11_winches.yml": "64ae0cdc724bf8d3896ebbf78db457dbad2a79582adf88ab94c8887689c6e98a",
@@ -195,13 +195,13 @@
       "screen": {
         "horizontal_tension_kn": 1254.5899981014793,
         "suspended_length_m": 211.66010488516724,
-        "span_m": 190.88771069373735,
+        "span_m": 190.88771069373732,
         "top_tension_kn": 1672.7866641353057,
         "touchdown_curvature_per_m": 0.004166666666666667,
         "overbend_strain": 0.00254,
         "submerged_weight_kn_m": 5.22745832542283
       },
-      "preparation_wall_seconds": null,
+      "preparation_wall_seconds": 0.14949529990553856,
       "native_wall_seconds": null,
       "native_status": "not_run"
     }

@@ -11,6 +11,8 @@ import pytest
 import yaml
 
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
+from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
+from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder import LinesBuilder
 
 ROOT = Path(__file__).resolve().parents[3]
 CAMPAIGN = ROOT / "docs/domains/pipeline-installation/slay-campaign"
@@ -146,8 +148,7 @@ def test_wave_calculation_method_belongs_to_lines_only(tmp_path, case_id):
 @pytest.mark.parametrize("case_id", CASES)
 def test_free_end_stiffness_uses_empty_native_row(tmp_path, case_id):
     """A free end refuses values; the anchored end explicitly releases rotation."""
-    key = ("ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
-           "ConnectionTwistingStiffness, ConnectionDamping")
+    key = "ConnectionxBendingStiffness, ConnectionyBendingStiffness"
     reference = ROOT / "docs/domains/orcaflex/examples/raw/D03/D03 Lay on tower.yml"
     native_lines = yaml.safe_load(reference.read_text(encoding="utf-8"))["Lines"]
     native_free = next(item for item in native_lines if key in item and item[key][0] == [])
@@ -155,9 +156,10 @@ def test_free_end_stiffness_uses_empty_native_row(tmp_path, case_id):
     for folder in (CAMPAIGN / "models" / case_id, tmp_path):
         line = _resolve_case(folder)["Lines"][0]
         assert line[key][0] == native_free[key][0]
-        assert line[key] == [[], [0, 0, 0, 0]]
+        assert line[key] == native_free[key] == [[], [0, None]]
+        assert line["IncludeTorsion"] == "No"
         text = (folder / "includes/07_lines.yml").read_text(encoding="utf-8")
-        assert f"  {key}:\n  - []\n  - [0, 0, 0, 0]\n" in text
+        assert f"  {key}:\n  - []\n  - [0, ~]\n" in text
 
 
 @pytest.mark.parametrize("actual,native", [
@@ -183,10 +185,8 @@ def _native_object_sections():
     native["Vessels"][0]["InitialHeading"] = native["Vessels"][0]["Orientation"][2]
     native["SupportTypes"] = [dict(item for support in native["SupportTypes"]
                                    for item in support.items())]
-    # The pipelay save has neither torsional end columns nor winches. The
-    # tower save supplies both, including the empty row for its free upper end.
-    key = ("ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
-           "ConnectionTwistingStiffness, ConnectionDamping")
+    # The tower save supplies the two-column free-end form and winches.
+    key = "ConnectionxBendingStiffness, ConnectionyBendingStiffness"
     free_line = next(line for line in tower["Lines"] if key in line and line[key][0] == [])
     native["Lines"][0][key] = free_line[key]
     native["Winches"] = tower["Winches"]
@@ -274,3 +274,25 @@ def test_native_load_and_statics_of_every_generated_case(case_id):
     model = OrcFxAPI.Model(str(CAMPAIGN / "models" / case_id / "master.yml"))
     model.CalculateStatics()
     assert model.state == OrcFxAPI.ModelState.InStaticState
+
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import assert_static_acceptance
+    spec = _case_spec(case_id)
+    line = model[spec.pipeline.name]
+    initial = LinesBuilder(spec, BuilderContext()).build()["Lines"][0]
+    top = next(value for key, value in initial.items() if key.startswith("Connection, "))[0][1:4]
+    end = [line.StaticResult(axis, OrcFxAPI.oeEndA) for axis in ("X", "Y", "Z")]
+    winch = _resolve_case(CAMPAIGN / "models" / case_id)["Winches"][0]
+    fixed = winch["Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"][0][1:4]
+    tensions = list(line.RangeGraph("Effective Tension").Mean)
+    moments = list(line.RangeGraph("Bend Moment").Mean)
+    # Checking every pipe station also includes every grounded station.
+    od = spec.pipeline.dimensions.outer_diameter
+    wall = spec.pipeline.dimensions.wall_thickness
+    section = _resolve_case(CAMPAIGN / "models" / case_id)["LineTypes"][0]
+    ei = section["E"] * math.pi / 64 * (od**4 - (od - 2 * wall)**4)
+    # Whole-pipe maximum also bounds tip strain just beyond the last support.
+    overbend = [abs(moment) / ei * od / 2 for moment in moments]
+    assert overbend, "Supported-arc bending readback is required"
+    assert_static_acceptance(wire_length=math.dist(end, fixed),
+                             displacement=math.dist(end, top), lead=math.dist(fixed, top),
+                             grounded_tension=tensions, overbend_strain=max(overbend))

@@ -1,0 +1,98 @@
+{
+  "schema": "slay-anchor-span-probe-1",
+  "production_case": false,
+  "base_case": "d1-t0",
+  "native_status": "not_run",
+  "current_inputs_native_status": "not_run",
+  "qa_pass_criteria": {
+    "converged_statics": true,
+    "positive_wire_length": true,
+    "end_a_within_lead": true,
+    "nonnegative_grounded_tension": true,
+    "maximum_overbend_strain": 0.00254
+  },
+  "case_table_sha256": "c94098f51b8c070ae447da338ba857c60275694027c2a7ef8f7aa5e4989fe087",
+  "base_files": {
+    "models/d1-t0/includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
+    "models/d1-t0/includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
+    "models/d1-t0/includes/03_environment.yml": "ebb4fb19fc2d8471fffb127eb3c2f85e7e3ec2512b2e8571eadc9faab91a3bd2",
+    "models/d1-t0/includes/04_vessel_types.yml": "1c7aa0edb2fd2d7c587a76fe06887236045a396e26e827d57b2eec1a46f57278",
+    "models/d1-t0/includes/05_line_types.yml": "454211c2ce2345272504a6246b8efa2d2faa786e11391af4530dccd41989ca61",
+    "models/d1-t0/includes/06_vessels.yml": "591ed6112c15dd01a6e2d3e917f69ebb32256b6bf4dd5b51055f0d922fc946e1",
+    "models/d1-t0/includes/07_lines.yml": "8bbaf6ad5034a199b4c4913528c06512eb5d1319ea4f30a14429b6dbf806040f",
+    "models/d1-t0/includes/09_shapes.yml": "db692531c46bf8a7d4543221103dc533b1c798fe30b2328e3c8f4e313c544436",
+    "models/d1-t0/includes/10_groups.yml": "f53754046eecf61ce543c9149c86140cafa5066a05de5c6b4c40c58c3fe61f99",
+    "models/d1-t0/includes/11_winches.yml": "b6ef7545a74e030abccb53d92c877896c3c8ed4f16665f7c84998052523fbb83",
+    "models/d1-t0/includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
+    "models/d1-t0/includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+    "models/d1-t0/inputs/parameters.yml": "0ac46d2aff483e4b8198a0781a755102650f57f34e44d22fd1abeaa5d0e1865a",
+    "models/d1-t0/master.yml": "c72d099bf9a2880c737ebae1f5099e9813912a11533106213e5486df62262581"
+  },
+  "probe_file": "probes/d1-t0-anchor-span.yml",
+  "probe_sha256": "60f61fa460986231b79e44cbc306ba87f911ee5a8a2415e206a4b0858c4adf36",
+  "initial_span_m": 1969.34659510344,
+  "target_span_m": 1969.3465951034402,
+  "screen": {
+    "case_id": "d1-t0",
+    "weight_kn_m": 5.22745832542283,
+    "depth_m": 80,
+    "top_tension_kn": 836.3933320676529,
+    "pipe_length_m": 2000,
+    "lead_m": 10.0,
+    "length_tolerance_m": 0.1,
+    "angle_tolerance_deg": 0.1,
+    "tolerance_meaning": "arithmetic reproduction only; not physical model accuracy",
+    "touchdown_assumption": "Seabed surface; omitting coated radius understates excess by 0.2-0.4 m.",
+    "current": {
+      "height_m": 74.69819678458458,
+      "tip_tension_kn": 808.678376709476,
+      "horizontal_tension_kn": 418.1966660338264,
+      "suspended_length_m": 132.40669200762497,
+      "suspended_span_m": 102.22567843953519,
+      "supported_arc_m": 40,
+      "projected_arc_m": 39.52760867153026,
+      "taut_length_m": 1999.9999999999993,
+      "excess_m": 6.821210263296962e-13,
+      "tip_angle_deg": 15.278874536821952,
+      "departure_deg": 58.85966752694946,
+      "taut_anchor_span_m": 1969.3465951034402
+    },
+    "length_only": {
+      "anchor_span_m": 1969.3465951034402,
+      "excess_m": 4.547473508864641e-13,
+      "angle_mismatch_deg": 43.580792990127506
+    },
+    "angle_only": {
+      "height_m": 34.65856099730656,
+      "tip_tension_kn": 599.3728492663715,
+      "horizontal_tension_kn": 418.1966660338264,
+      "suspended_length_m": 82.13760168140453,
+      "suspended_span_m": 72.0113480936309,
+      "supported_arc_m": 119.78719101653154,
+      "projected_arc_m": 107.45503994682177,
+      "taut_length_m": 1991.8049997609235,
+      "excess_m": 8.195000239076535,
+      "tip_angle_deg": 45.755336566497775,
+      "departure_deg": 45.75533656649779,
+      "taut_anchor_span_m": 1977.541595342517
+    },
+    "combined": {
+      "supported_arc_m": 119.78719101653154,
+      "anchor_span_m": 1977.541595342517,
+      "excess_m": -4.547473508864641e-13,
+      "angle_mismatch_deg": 1.4210854715202004e-14,
+      "qualification": "Counterfactual only; stinger length requires a maintainer case-design decision."
+    }
+  },
+  "required_readings": [
+    "end_a_displacement",
+    "wire_direction_and_length",
+    "active_roller_contacts",
+    "departure_slope",
+    "force_residuals",
+    "tip_contact_force_and_curvature",
+    "maximum_overbend_strain",
+    "grounded_effective_tension"
+  ],
+  "interpretation": "Continue anchor span from initial to target with loads and supports fixed. Convergence with a positive wire and the intended force/contact state would show length closure is sufficient for this configuration. Failure alone cannot identify the tip angle: anchor embedment and bending/contact residuals remain unresolved. The combined length/angle counterfactual is not an approved stinger design."
+}

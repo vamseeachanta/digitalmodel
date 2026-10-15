@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Prepare one anchor-span diagnostic variation without native execution."""
+"""Prepare anchor-span diagnostic variations without native execution."""
 
 from copy import deepcopy
 import hashlib
@@ -87,24 +87,33 @@ def screen_case(campaign: Path, case_id: str) -> dict:
             lo = theta
         else:
             hi = theta
+    angle_only = geometry(radius * (lo + hi) / 2)
     return {"case_id": case_id, "weight_kn_m": weight, "depth_m": depth,
             "top_tension_kn": tension, "pipe_length_m": length, "lead_m": lead,
             "length_tolerance_m": 0.1, "angle_tolerance_deg": 0.1,
+            "tolerance_meaning": "arithmetic reproduction only; not physical model accuracy",
+            "touchdown_assumption": "Seabed surface; omitting coated radius understates excess by 0.2-0.4 m.",
             "current": current,
             "length_only": {"anchor_span_m": current["taut_anchor_span_m"],
                             "excess_m": current["excess_m"] - (current["taut_anchor_span_m"] - span),
                             "angle_mismatch_deg": current["departure_deg"] - current["tip_angle_deg"]},
-            "angle_only": geometry(radius * (lo + hi) / 2)}
+            "angle_only": angle_only,
+            "combined": {"supported_arc_m": angle_only["supported_arc_m"],
+                         "anchor_span_m": angle_only["taut_anchor_span_m"],
+                         "excess_m": angle_only["excess_m"] - (angle_only["taut_anchor_span_m"] - span),
+                         "angle_mismatch_deg": angle_only["departure_deg"] - angle_only["tip_angle_deg"],
+                         "qualification": "Counterfactual only; stinger length requires a maintainer case-design decision."}}
 
 
-def prepare_anchor_span_probe(campaign: Path, output: Path) -> dict:
+def prepare_anchor_span_probe(campaign: Path, output: Path, case_id: str = "d0-t0") -> dict:
     """Write one text-only variation; preserve every base input and load form.
 
     Only End B x changes. The manifest binds base bytes and names the native
     readings needed to distinguish length closure from bending/contact effects.
     Neither a queue entry nor a native execution is produced.
     """
-    case_id = "d0-t0"
+    if case_id not in {"d0-t0", "d1-t0"}:
+        raise ValueError("Probe case must cover one of the two declared depths")
     screen = screen_case(campaign, case_id)
     model = campaign / "models" / case_id
     lines = yaml.safe_load((model / "includes/07_lines.yml").read_text(encoding="utf-8"))
@@ -115,7 +124,7 @@ def prepare_anchor_span_probe(campaign: Path, output: Path) -> dict:
     initial_span = top[1] - bottom[1]
     target_span = screen["current"]["taut_anchor_span_m"]
     bottom[1] = top[1] - target_span
-    relative = "probes/d0-t0-anchor-span.yml"
+    relative = f"probes/{case_id}-anchor-span.yml"
     document = build_variation_document(model / "master.yml", overrides, campaign / relative)
     path = output / relative
     manifest_path = path.with_suffix(".json")
@@ -123,9 +132,13 @@ def prepare_anchor_span_probe(campaign: Path, output: Path) -> dict:
         raise ValueError("Use a new output directory; existing probe files are preserved")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.dump(document, Dumper=_NoAliasDumper, sort_keys=False,
-                              allow_unicode=True), encoding="utf-8")
+                              allow_unicode=True), encoding="utf-8", newline="\n")
     manifest = {"schema": "slay-anchor-span-probe-1", "production_case": False,
                 "base_case": case_id, "native_status": "not_run",
+                "current_inputs_native_status": "not_run",
+                "qa_pass_criteria": {"converged_statics": True, "positive_wire_length": True,
+                                     "end_a_within_lead": True, "nonnegative_grounded_tension": True,
+                                     "maximum_overbend_strain": 0.00254},
                 "case_table_sha256": hashlib.sha256((campaign / "case-table.yml").read_bytes()).hexdigest(),
                 "base_files": {p.relative_to(campaign).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                                for p in sorted(model.rglob("*.yml"))},
@@ -139,7 +152,35 @@ def prepare_anchor_span_probe(campaign: Path, output: Path) -> dict:
                 "interpretation": "Continue anchor span from initial to target with loads and supports fixed. "
                                   "Convergence with a positive wire and the intended force/contact state "
                                   "would show length closure is sufficient for this configuration. "
-                                  "Failure alone cannot identify the tip angle: torsional restraint, "
-                                  "anchor embedment and bending/contact residuals remain unresolved."}
-    manifest_path.write_text(json.dumps(manifest, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+                                  "Failure alone cannot identify the tip angle: anchor embedment and "
+                                  "bending/contact residuals remain unresolved. The combined length/angle "
+                                  "counterfactual is not an approved stinger design."}
+    table = yaml.safe_load((campaign / "case-table.yml").read_text(encoding="utf-8"))
+    previous = table.get("static_equilibrium_screen", {}).get("previous_native_qa", {}).get(case_id)
+    if previous:
+        manifest["previous_qa"] = previous
+        manifest["native_status"] = previous["native_status"]
+    manifest_path.write_text(json.dumps(manifest, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return manifest
+
+
+def assert_static_acceptance(*, wire_length, displacement, lead,
+                             grounded_tension, overbend_strain):
+    """Require the review QA screen in addition to a converged native state.
+
+    The 0.00254 threshold is the campaign QA criterion recorded in
+    case-table.yml; passing this screen does not establish design acceptance.
+    """
+    if not grounded_tension:
+        raise ValueError("Grounded tension readback is required")
+    values = [wire_length, displacement, lead, overbend_strain, *grounded_tension]
+    if not all(math.isfinite(value) for value in values):
+        raise ValueError("Finite native readings required")
+    if wire_length <= 0:
+        raise ValueError("Tensioner wire must remain positive")
+    if not 0 <= displacement <= lead:
+        raise ValueError("End A must remain within its initial lead")
+    if min(grounded_tension) < 0:
+        raise ValueError("Grounded effective tension must be nonnegative")
+    if not 0 <= overbend_strain <= 0.00254:
+        raise ValueError("Overbend strain exceeds the QA criterion")
