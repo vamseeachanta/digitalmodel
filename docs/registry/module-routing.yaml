@@ -103,6 +103,9 @@ modules:
     key_tests: [tests/drilling_riser/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#drilling_riser
     submodules:
+      drilling_riser:
+        agent_pack: src/digitalmodel/drilling_riser/docs/agent-pack.md
+        qa_family: MR
       global_model:
         agent_pack: src/digitalmodel/drilling_riser/global_model/docs/agent-pack.md
         qa_family: MR
