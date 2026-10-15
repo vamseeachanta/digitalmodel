@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for OrcaWave input backend (WRK-059).
 
 TDD: These tests define the expected behavior of the OrcaWaveBackend
@@ -268,8 +271,8 @@ class TestBodyPropertyMapping:
         data = _load_orcawave_yml(result)
 
         body = data["Bodies"][0]
-        # Ship spec has symmetry: xz
-        assert body["BodyMeshSymmetry"] == "xz plane"
+        # The offset-box fixture declares no body symmetry.
+        assert body["BodyMeshSymmetry"] == "None"
 
     def test_body_inertia_from_radii_of_gyration(self, tmp_path: Path):
         """Inertia tensor built from mass and radii of gyration."""

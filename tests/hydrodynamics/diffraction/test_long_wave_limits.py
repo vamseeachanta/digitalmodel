@@ -134,6 +134,31 @@ class TestJudge:
         assert check.verdict == verdict
         assert check.relative_difference is None
 
+    @pytest.mark.parametrize("mode, heading", [
+        ("surge", 90), ("sway", 180), ("roll", 180),
+        ("pitch", 90), ("yaw", 90), ("yaw", 180),
+    ])
+    @pytest.mark.parametrize("observed, verdict", [
+        (0.001, "not_implausible"), (0.02, "implausible"),
+    ])
+    def test_cardinal_heading_comparators_use_absolute_path(
+        self, mode, heading, observed, verdict
+    ):
+        expected = expected_rao(mode, 0.05, heading, 500)
+        assert abs(expected) < 1e-12
+        check = judge(observed, expected, 0.02, body_length=10, omega=0.05,
+                      depth=500, absolute_tolerance=0.01)
+        assert check.verdict == verdict
+        assert check.relative_difference is None
+        assert check.absolute_tolerance == 0.01
+
+    @pytest.mark.parametrize("expected", [-0.01, 0.01])
+    def test_absolute_comparator_boundary_is_inclusive(self, expected):
+        check = judge(0.001, expected, 0.02, body_length=10, omega=0.05,
+                      depth=500, absolute_tolerance=0.01)
+        assert check.verdict == "not_implausible"
+        assert check.relative_difference is None
+
     def test_short_wave_is_not_applicable(self):
         check = judge(1, 1, 0.02, body_length=180, omega=1, depth=500)
         assert check.verdict == "not_applicable"

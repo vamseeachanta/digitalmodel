@@ -345,8 +345,10 @@ class AQWABackend:
         The cached source coordinates remain unchanged.
         """
         mesh = self._load_mesh(geometry.mesh_file)
-        if mesh is None or geometry.symmetry != "xz":
+        if geometry.symmetry != "xz":
             return mesh
+        if mesh is None:
+            raise ValueError("xz symmetry requires a loaded and verified full-body GDF mesh")
 
         tolerance = max(
             _XZ_MIN_TOLERANCE,
@@ -981,8 +983,12 @@ class AQWABackend:
         # not shorten the range for a full body; mixed bodies need the full
         # range unless every body uses the xz half-mesh.
         headings = spec.wave_headings.to_heading_list()
+        bodies = spec.get_bodies()
+        for body in bodies:
+            if body.vessel.geometry.symmetry == "xz":
+                self._load_body_mesh(body.vessel.geometry)
         symmetry = all(
-            body.vessel.geometry.symmetry == "xz" for body in spec.get_bodies()
+            body.vessel.geometry.symmetry == "xz" for body in bodies
         )
         aqwa_headings = self._expand_headings_for_aqwa(headings, symmetry=symmetry)
         heading_strings = [f"{heading:g}" for heading in aqwa_headings]

@@ -300,3 +300,57 @@ def test_none_decks_match_base_bytes_and_half_builds_repeat(tmp_path, fixture):
     second = backend.generate_single(half, tmp_path / "second").read_bytes()
     assert first == second
     assert first.count(b"SYMX") == 1
+
+
+@pytest.mark.parametrize("deck", [1, 2, 6])
+@pytest.mark.parametrize("mesh_case", ["missing", "relative", "non_gdf"])
+def test_xz_requires_a_loadable_verified_mesh(tmp_path, deck, mesh_case):
+    spec = _spec(tmp_path)
+    if mesh_case == "missing":
+        spec.vessel.geometry.mesh_file = str(tmp_path / "missing.gdf")
+    elif mesh_case == "relative":
+        # The file exists beside the spec, but no spec directory is supplied.
+        spec.vessel.geometry.mesh_file = Path(spec.vessel.geometry.mesh_file).name
+    else:
+        mesh_file = tmp_path / "synthetic.dat"
+        mesh_file.write_text("unsupported mesh format\n")
+        spec.vessel.geometry.mesh_file = str(mesh_file)
+        spec.vessel.geometry.mesh_format = "dat"
+    with pytest.raises(ValueError, match="xz.*verified"):
+        getattr(AQWABackend(), f"build_deck{deck}")(spec)
+
+
+def test_mixed_bodies_do_not_hide_an_unverified_xz_mesh(tmp_path):
+    spec = _spec(tmp_path)
+    data = spec.model_dump(mode="json", exclude_none=True)
+    vessel = data.pop("vessel")
+    data["bodies"] = [{"vessel": vessel}, {"vessel": vessel}]
+    mixed = DiffractionSpec.model_validate(data)
+    mixed.bodies[0].vessel.geometry.symmetry = "none"
+    mixed.bodies[1].vessel.geometry.mesh_file = str(tmp_path / "missing.gdf")
+    with pytest.raises(ValueError, match="xz.*verified"):
+        AQWABackend().build_deck6(mixed)
+
+
+_OFFSET_SPEC_PATHS = [
+    "tests/hydrodynamics/diffraction/fixtures/spec_ship_raos.yml",
+    "tests/hydrodynamics/diffraction/fixtures/spec_fpso_turret.yml",
+    "tests/hydrodynamics/diffraction/fixtures/benchmarks/multibody_fpso_turret_v1/spec.yml",
+    "tests/hydrodynamics/diffraction/fixtures/acceptance_610/spec.yml",
+    "examples/hydrodynamics/diffraction/unit_box_rao/spec.yml",
+    "examples/workflows/orcawave-input-prep/spec.yml",
+    "examples/workflows/orcawave-diffraction-solve/spec.yml",
+    "examples/workflows/orcawave-field-points/spec.yml",
+    "examples/workflows/orcawave-mean-drift/spec.yml",
+    "examples/workflows/orcawave-control-surface/spec.yml",
+]
+
+
+@pytest.mark.parametrize("spec_path", _OFFSET_SPEC_PATHS)
+def test_offset_box_specs_use_full_body_decks(spec_path):
+    path = Path(__file__).resolve().parents[3] / spec_path
+    spec = DiffractionSpec.from_yaml(path)
+    backend = AQWABackend()
+    backend._spec_dir = path.parent
+    assert all(body.vessel.geometry.symmetry == "none" for body in spec.get_bodies())
+    assert "SYMX" not in "\n".join(backend.build_deck2(spec))

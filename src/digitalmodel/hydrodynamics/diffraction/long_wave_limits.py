@@ -119,8 +119,9 @@ def judge(observed: float, expected: float, tolerance: float, *,
     The default screening criterion is wavelength > 10 body lengths (kL < 2*pi/10).
     This is an explicit applicability screen, not an error bound; callers may fix a
     stricter ratio in advance. ``body_length`` and ``depth`` are metres, ``omega``
-    is rad/s. A zero comparator requires ``absolute_tolerance`` in the RAO's units;
-    its relative difference is undefined and is returned as None.
+    is rad/s. A zero comparator requires ``absolute_tolerance`` in the RAO's units.
+    Comparators with magnitude at or below that tolerance also use the absolute
+    path; their relative difference is undefined and is returned as None.
     """
     inputs = (observed, expected, tolerance, body_length, minimum_wavelength_ratio)
     if not all(math.isfinite(value) for value in inputs):
@@ -134,7 +135,9 @@ def judge(observed: float, expected: float, tolerance: float, *,
     wavelength = 2 * math.pi / wavenumber(omega, depth)
     if wavelength <= minimum_wavelength_ratio * body_length:
         return LongWaveCheck(observed, expected, tolerance, None, "not_applicable", absolute_tolerance)
-    if expected == 0.0:
+    if expected == 0.0 or (
+        absolute_tolerance is not None and abs(expected) <= absolute_tolerance
+    ):
         if absolute_tolerance is None:
             raise ValueError("a zero comparator requires an absolute tolerance")
         verdict = "not_implausible" if abs(observed) <= absolute_tolerance else "implausible"
