@@ -668,14 +668,22 @@ sys.stdout.buffer.write(text.encode('utf-8'))
 
 @pytest.mark.parametrize("wave_type,raw_train", [
     ("jonswap", {"WaveTp": 12.9, "WaveGamma": 3.3,
-                 "WaveJONSWAPParameters": "Fully specified", "WaveType": "JONSWAP",
+                 "WaveJONSWAPParameters": "Partially specified", "WaveType": "JONSWAP",
                  "WaveHs": 11.2}),
+    ("jonswap", {"WaveTp": 12.9, "WaveGamma": 3.3, "WaveType": "JONSWAP"}),
+    ("jonswap", {"WaveTz": 12.9, "WaveGamma": 3.3, "WaveType": "JONSWAP"}),
+    ("jonswap", {"WaveTz": 12.9, "WaveGamma": 3.3,
+                 "WaveJONSWAPParameters": "Partially specified", "WaveType": "JONSWAP"}),
     ("airy", {"WavePeriod": 12.9, "WaveHeight": 11.2, "WaveType": "Airy"}),
     ("dean_stream", {"WaveStreamFunctionOrder": 5, "WavePeriod": 12.9,
                      "WaveHeight": 11.2, "WaveType": "Dean stream"}),
 ])
 def test_wave_selectors_precede_raw_parameters_in_fresh_process(tmp_path, wave_type, raw_train):
-    """Typed and extra raw trains shall place wave selectors before parameters."""
+    """Typed and extra raw trains shall place wave selectors before parameters.
+
+    Replace Fully specified with Hs by Partially specified with gamma and Tp
+    in inverted raw order to exercise the gamma-before-Tp dependency.
+    """
     import os
     import subprocess
     import sys
@@ -710,3 +718,11 @@ ModularModelGenerator.from_spec(spec).generate(sys.argv[1])
         )
         if "WaveJONSWAPParameters" in keys:
             assert keys.index("WaveJONSWAPParameters") < keys.index("WaveGamma")
+        if train["WaveType"] == "JONSWAP" and "WaveGamma" in keys:
+            assert train["WaveJONSWAPParameters"] == "Partially specified"
+            assert train["WaveGamma"] == raw_train["WaveGamma"]
+            period = "WaveTp" if "WaveTp" in raw_train else "WaveTz"
+            assert train[period] == raw_train[period]
+            assert keys.index("WaveGamma") < keys.index(period)
+        if "WaveTp" in keys and "WaveGamma" in keys:
+            assert keys.index("WaveGamma") < keys.index("WaveTp")

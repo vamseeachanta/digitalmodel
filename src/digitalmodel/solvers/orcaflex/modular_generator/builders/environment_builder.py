@@ -371,14 +371,21 @@ class EnvironmentBuilder(BaseBuilder):
         Raw mappings can retain a parameter before its selector even after
         overlaying WaveType. Assignment updates values without moving keys.
         WaveJONSWAPParameters also controls whether WaveGamma is settable.
+        JONSWAP trains carrying gamma explicitly select partially specified
+        parameters when no selector was supplied. Set gamma before Tp because
+        changing gamma holds Tz constant and updates Tp.
 
         Args:
             train: Wave properties after spec overlays, or an extra raw train.
 
         Returns:
-            The same values with selectors first and remaining order retained.
+            Existing values with selectors and gamma first, an explicit JONSWAP
+            selector when needed, and the remaining order retained.
         """
-        selectors = ("Name", "WaveType", "WaveJONSWAPParameters")
+        if (train.get("WaveType") in ("JONSWAP", "jonswap")
+                and "WaveGamma" in train and "WaveJONSWAPParameters" not in train):
+            train = dict(train, WaveJONSWAPParameters="Partially specified")
+        selectors = ("Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma")
         ordered = {key: train[key] for key in selectors if key in train}
         ordered.update((key, value) for key, value in train.items() if key not in ordered)
         return ordered
