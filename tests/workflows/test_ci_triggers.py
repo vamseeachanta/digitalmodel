@@ -152,15 +152,6 @@ def test_meshing_path_filters_are_preserved() -> None:
     assert ".github/workflows/gmsh-meshing-tests.yml" in triggers["pull_request"]["paths"]
 
 
-def test_trigger_tests_run_in_harness() -> None:
-    """The harness executes trigger regressions on every pull request."""
-    workflow = load_workflow("quality-gates-by-domain.yml")
-    commands = "\n".join(
-        step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
-    )
-    assert "tests/workflows/test_ci_triggers.py" in commands
-
-
 def repository_checkouts(filename: str) -> list[tuple[dict, int]]:
     """Locate every checkout of this repository, excluding pinned dependencies."""
     return [
@@ -277,3 +268,12 @@ def test_merge_resolver_behavior(
     if not mergeable:
         assert "not mergeable" in result.stdout
         assert not any("/commits/" in call for call in calls)
+
+
+def test_trigger_tests_run_in_harness() -> None:
+    """The harness executes trigger regressions on every pull request."""
+    workflow = load_workflow("quality-gates-by-domain.yml")
+    commands = "\n".join(
+        step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
+    )
+    assert "tests/workflows/test_ci_triggers.py" in commands
