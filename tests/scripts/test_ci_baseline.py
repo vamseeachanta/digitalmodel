@@ -23,7 +23,7 @@ def result(shard="example", ids=(SCR,), conclusion="failure", **updates):
     """Build a synthetic completed shard result."""
     row = dict(shard=shard, sha="abc123", run_id="123", attempt=1,
                completed_at=NOW.isoformat(), conclusion=conclusion, parsed=True,
-               failed=list(ids), errored=[], collected=len(ids))
+               failed=list(ids), errored=[], collected=len(ids), exit_code=1)
     return dict(row, **updates)
 
 
@@ -99,6 +99,7 @@ def extract(tmp_path, text, kind="extract", conclusion="failure"):
     flag = "--junit" if kind == "extract" else "--log"
     assert ci.main([kind, flag, str(source), "--shard", "example", "--sha", "abc123",
                     "--run", "123", "--attempt", "1", "--conclusion", conclusion,
+                    "--exit-code", "1",
                     "--completed-at", NOW.isoformat(), "--out", str(output)]) == 0
     return json.loads(output.read_text())
 
@@ -132,7 +133,7 @@ def test_collection_error_and_parameter_spaces_roundtrip(tmp_path):
     row = extract(tmp_path, text, "extract-log")
     assert row["errored"] == ["tests/x.py"] and row["failed"] == [node]
     base = baseline(tmp_path, row)
-    assert compare(tmp_path, base, [row])[0] == 0
+    assert compare(tmp_path, base, [row])[0] == 1
     xml = ('<testsuites><testsuite tests="2" errors="1" failures="1">'
            '<testcase classname="" name="tests/x.py"><error/></testcase>'
            '<testcase classname="tests.x.TestThing" file="tests/x.py" '
@@ -258,17 +259,11 @@ def test_pytest_xunit2_collection_module_matches_log(tmp_path):
     assert extract(tmp_path, "ERROR tests/x.py - ImportError", "extract-log")["errored"] == row["errored"]
 
 
-def test_reader_rejects_artifact_older_than_newest_completed_main_run(tmp_path, monkeypatch):
-    artifact = dict(id=10, expired=False, workflow_run=dict(head_branch="main", id=100))
-    def metadata(endpoint):
-        if "actions/artifacts?" in endpoint:
-            return {"artifacts": [artifact]}
-        if "workflows/" in endpoint:
-            return {"workflow_runs": [{"id": 101}]}
-        return dict(id=100, path=".github/workflows/full-matrix-sweep.yml", head_branch="main")
-    monkeypatch.setattr(ci, "gh_json", metadata)
-    assert ci.download_baseline("example/repository", tmp_path / "baseline.json", require_latest=True) is False
-    assert not (tmp_path / "baseline.json").exists()
+def test_reader_falls_back_when_newest_completed_sweep_published_nothing(tmp_path, monkeypatch):
+    runs = [sweep(101), sweep()]
+    mock_download(monkeypatch, runs, [artifact()], verified=runs[1])
+    assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW)
+    assert (tmp_path / "baseline.json").exists()
 
 
 def test_prior_attempt_result_cannot_prove_current_failure(tmp_path):
@@ -276,3 +271,150 @@ def test_prior_attempt_result_cannot_prove_current_failure(tmp_path):
     jobs = [dict(name="tests-example", completed_at=NOW.isoformat(), conclusion="failure")]
     ci.reconcile_results(directory, jobs, "tests-", "abc123", "123", 2)
     assert ci.load_results(directory)[0]["parsed"] is False
+
+
+@pytest.mark.parametrize("updates", [
+    {"exit_code": 2}, {"exit_code": None}, {"exit_code": 5},
+    {"collected": 0}, {"failed": ["tests/x.py"]},
+])
+def test_incomplete_execution_fails_closed(tmp_path, updates):
+    base = baseline(tmp_path)
+    assert compare(tmp_path, base, [result(**updates)])[0] == 1
+
+
+def test_missing_exit_code_fails_closed(tmp_path):
+    base = baseline(tmp_path)
+    row = result()
+    del row["exit_code"]
+    assert compare(tmp_path, base, [row])[0] == 1
+
+
+def test_only_success_rows_fail_closed(tmp_path):
+    base = baseline(tmp_path)
+    assert compare(tmp_path, base, [result(conclusion="success", ids=())])[0] == 1
+
+
+def sweep(run_id=100, **updates):
+    """Build a same-repository completed main sweep."""
+    row = dict(id=run_id, path=".github/workflows/full-matrix-sweep.yml",
+               head_branch="main", event="push", head_repository={"full_name": "example/repository"},
+               status="completed", conclusion="success", head_sha="abc123",
+               updated_at=(NOW - timedelta(hours=1)).isoformat())
+    return dict(row, **updates)
+
+
+def artifact(run_id=100, **updates):
+    """Build a baseline artifact bound to its producing run."""
+    row = dict(id=run_id, name="main-baseline", expired=False,
+               created_at=(NOW - timedelta(minutes=30)).isoformat(),
+               workflow_run={"id": run_id, "head_sha": "abc123"})
+    return dict(row, **updates)
+
+
+@pytest.mark.parametrize("updates,accepted", [
+    ({"event": "pull_request", "head_repository": {"full_name": "fork/repository"}}, False),
+    ({"event": "pull_request"}, False), ({"event": "workflow_dispatch"}, False),
+    ({"event": "push"}, True), ({"event": "schedule"}, True),
+    ({"head_branch": "develop"}, False), ({"path": "other.yml"}, False),
+])
+def test_selection_requires_main_sweep_provenance(updates, accepted):
+    selected = ci.select_baseline_run([sweep(**updates)], [artifact()], "example/repository", NOW)
+    assert (selected is not None) is accepted
+
+
+@pytest.mark.parametrize("newest", [
+    sweep(101, conclusion="cancelled"), sweep(101),
+])
+def test_selection_falls_back_when_newest_has_no_baseline(newest):
+    assert ci.select_baseline_run([newest, sweep()], [artifact()], "example/repository", NOW)["id"] == 100
+
+
+def test_selection_does_not_fall_back_to_stale_sweep():
+    old = sweep(updated_at=(NOW - timedelta(hours=25)).isoformat())
+    assert ci.select_baseline_run([sweep(101, conclusion="cancelled"), old],
+                                  [artifact()], "example/repository", NOW) is None
+
+
+def test_newest_published_sweep_wins_over_older_red():
+    runs = [sweep(conclusion="failure"), sweep(101)]
+    assert ci.select_baseline_run(runs, [artifact(), artifact(101)], "example/repository", NOW)["id"] == 101
+
+
+@pytest.mark.parametrize("change", [
+    {"expired": True}, {"created_at": (NOW + timedelta(seconds=1)).isoformat()},
+])
+def test_unavailable_artifact_is_not_selected(change):
+    assert ci.select_baseline_run([sweep()], [artifact(**change)], "example/repository", NOW) is None
+
+
+def test_extraction_does_not_invent_execution_count(tmp_path):
+    assert extract(tmp_path, f"FAILED {SCR} - AssertionError", "extract-log")["collected"] == 0
+
+
+def test_workflows_capture_exit_and_preserve_gate_conclusion():
+    for path, job_id in (("full-matrix-sweep.yml", "sweep-tests"),
+                         ("quality-gates-by-domain.yml", "domain-tests")):
+        workflow = yaml.safe_load((ROOT / ".github/workflows" / path).read_text())
+        steps = workflow["jobs"][job_id]["steps"]
+        gate = next(s for s in steps if s["name"] == "Run domain gate")
+        assert "set +e" in gate["run"] and 'exit "$code"' in gate["run"]
+        assert 'echo "code=$code" >> "$GITHUB_OUTPUT"' in gate["run"]
+        extraction = next(s for s in steps if s["name"] == "Extract shard result")
+        assert "--exit-code" in extraction["run"]
+    aggregate = workflow["jobs"]["domain-tests-required"]["steps"]
+    enforce = next(s for s in aggregate if s["name"] == "Enforce required domain result")
+    assert "GITHUB_EVENT_NAME" in enforce["run"] and '"pull_request"' in enforce["run"]
+    upload = next(s for s in aggregate if s.get("with", {}).get("name") == "baseline-comparison")
+    assert upload["if"] == "always()"
+    assert set(upload["with"]["path"].split()) == {"baseline-verdict.json", "baseline-summary.md"}
+
+
+def mock_download(monkeypatch, runs, artifacts, verified=None):
+    """Serve metadata and a minimal archive through the existing CLI boundary."""
+    import io
+    import zipfile
+    payload = io.BytesIO()
+    with zipfile.ZipFile(payload, "w") as archive:
+        archive.writestr("baseline.json", json.dumps({"tests": {}, "shards": {}}))
+    def metadata(endpoint):
+        if "artifacts?" in endpoint:
+            return {"artifacts": artifacts}
+        if "workflows/" in endpoint:
+            return {"workflow_runs": runs}
+        return verified or runs[0]
+    monkeypatch.setattr(ci, "gh_json", metadata)
+    monkeypatch.setattr(ci.subprocess, "check_output", lambda *args, **kwargs: payload.getvalue())
+
+
+@pytest.mark.parametrize("event", ["push", "schedule"])
+def test_reader_downloads_verified_own_main(tmp_path, monkeypatch, event):
+    run = sweep(event=event)
+    mock_download(monkeypatch, [run], [artifact()], verified=dict(run, extra="detail"))
+    assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW)
+    assert json.loads((tmp_path / "baseline.json").read_text()) == {"tests": {}, "shards": {}}
+
+
+def test_reader_rejects_changed_provenance(tmp_path, monkeypatch):
+    mock_download(monkeypatch, [sweep()], [artifact()], verified=sweep(event="pull_request"))
+    with pytest.raises(ValueError):
+        ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW)
+
+
+def test_reader_does_not_fall_back_from_mismatched_artifact(tmp_path, monkeypatch):
+    items = [artifact(101, workflow_run={"id": 101, "head_sha": "different"}), artifact()]
+    mock_download(monkeypatch, [sweep(101), sweep(conclusion="failure")], items)
+    with pytest.raises(ValueError):
+        ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW)
+
+
+@pytest.mark.parametrize("change", [{"exit_code": None}, {"exit_code": 2}, {"collected": 0}])
+def test_main_execution_must_also_be_proven(tmp_path, change):
+    base = baseline(tmp_path, result(**change))
+    assert compare(tmp_path, base, [result()])[0] == 1
+
+
+def test_reader_stale_only_fallback_fails_closed(tmp_path, monkeypatch):
+    runs = [sweep(101, conclusion="cancelled"),
+            sweep(updated_at=(NOW - timedelta(hours=25)).isoformat())]
+    mock_download(monkeypatch, runs, [artifact()])
+    assert ci.download_baseline("example/repository", tmp_path / "baseline.json", True, NOW) is False
