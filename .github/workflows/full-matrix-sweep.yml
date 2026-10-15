@@ -129,7 +129,20 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Run domain gate
-        run: ${{ steps.gate.outputs.command }}
+        id: domain-gate
+        run: ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+
+      - name: Extract shard result
+        if: always()
+        env:
+          SHARD: ${{ matrix.domain }}
+          SHARD_CONCLUSION: ${{ steps.domain-gate.outcome }}
+        run: |
+          python scripts/ci/ci_baseline.py extract \
+            --junit "reports/junit-${SHARD}.xml" --shard "$SHARD" \
+            --sha "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" --conclusion "$SHARD_CONCLUSION" \
+            --out "reports/result-${SHARD}.json"
 
       - name: Upload domain artifacts
         if: always()
@@ -145,6 +158,10 @@ jobs:
   sweep-result:
     name: Full matrix sweep result
     needs: [full-matrix, sweep-tests]
+    permissions:
+      contents: read
+      actions: read
+      issues: write
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -168,6 +185,92 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=100" \
             --jq '.jobs[] | select(.name | startswith("sweep-tests-")) | "| \(.name) | \(.conclusion // .status) |"' \
             | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Checkout baseline tools
+        if: github.ref == 'refs/heads/main'
+        uses: actions/checkout@v4
+
+      - name: Download sweep results
+        if: github.ref == 'refs/heads/main'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: full-sweep-*
+          path: baseline-results
+
+      - name: Publish main baseline
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PYTHON'
+          import os
+          from pathlib import Path
+          from scripts.ci.ci_baseline import download_baseline, gh_json, publish, reconcile_results
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          run = os.environ["GITHUB_RUN_ID"]
+          attempt = int(os.environ["GITHUB_RUN_ATTEMPT"])
+          jobs = gh_json(f"repos/{repository}/actions/runs/{run}/attempts/{attempt}/jobs?per_page=100")["jobs"]
+          results = Path("baseline-results")
+          reconcile_results(results, jobs, "sweep-tests-", os.environ["GITHUB_SHA"], run, attempt)
+          previous = Path("previous-baseline.json")
+          found = download_baseline(repository, previous)
+          publish(results, str(previous) if found else "none", Path("baseline.json"))
+          PYTHON
+
+      - name: Upload main baseline
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-baseline
+          path: baseline.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Update main health
+        if: github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const baseline = JSON.parse(fs.readFileSync('baseline.json', 'utf8'));
+            const previous = fs.existsSync('previous-baseline.json')
+              ? JSON.parse(fs.readFileSync('previous-baseline.json', 'utf8'))
+              : {tests: {}};
+            const {owner, repo} = context.repo;
+            const title = `main-health: ${repo}`;
+            const issues = await github.paginate(github.rest.issues.listForRepo,
+              {owner, repo, state: 'all', labels: 'main-health', per_page: 100});
+            const issue = issues.find(item => item.title === title && !item.pull_request);
+            const active = Object.entries(baseline.tests);
+            const resolved = Object.entries(previous.tests).filter(([id, row]) =>
+              !baseline.tests[id] && baseline.shards[row.shard]?.parsed === true &&
+              ['success', 'failure'].includes(baseline.shards[row.shard]?.conclusion));
+            const cell = value => String(value).replaceAll('|', '&#124;').replaceAll('\n', ' ');
+            const lines = ['Main test failures by exact test id.', '',
+              '| Test id | Shard | First seen run | Last seen run | Status |',
+              '| --- | --- | --- | --- | --- |'];
+            for (const [id, row] of active) {
+              lines.push(`| ${cell(id)} | ${cell(row.shard)} | ${row.first_seen_run} | ${row.run_id} | Open |`);
+            }
+            for (const [id, row] of resolved) {
+              lines.push(`| ${cell(id)} | ${cell(row.shard)} | ${row.first_seen_run} | ${row.run_id} | Resolved |`);
+            }
+            const uncertain = Object.entries(baseline.shards).filter(([id, row]) =>
+              row.parsed !== true || !['success', 'failure'].includes(row.conclusion) ||
+              (row.conclusion === 'failure' && !active.some(([node, record]) => record.shard === id)));
+            if (uncertain.length) lines.push('', 'Incomplete shard evidence: ' + uncertain.map(([id]) => cell(id)).join(', '));
+            const state = active.length || uncertain.length ? 'open' : 'closed';
+            const body = lines.join('\n');
+            if (issue) {
+              await github.rest.issues.update({owner, repo, issue_number: issue.number, body, state});
+            } else if (state === 'open') {
+              const labels = await github.paginate(github.rest.issues.listLabelsForRepo, {owner, repo, per_page: 100});
+              if (!labels.some(label => label.name === 'main-health')) {
+                await github.rest.issues.createLabel({owner, repo, name: 'main-health', color: 'b60205'});
+              }
+              await github.rest.issues.create({owner, repo, title, body, labels: ['main-health']});
+            }
 
       - name: Enforce full sweep result
         env:
