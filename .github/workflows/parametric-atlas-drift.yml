@@ -12,9 +12,12 @@ name: Parametric atlas drift
 
 on:
   pull_request:
-    branches: [main, develop]
   push:
     branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -45,4 +48,12 @@ jobs:
           uv pip install pyyaml
 
       - name: Atlas drift check (computed atlases must be up to date)
-        run: python -m digitalmodel.parametric.refresh
+        run: python scripts/ci/run_shard.py --shard parametric.refresh --junit reports/junit-atlas.xml --signal-retry -- python -m digitalmodel.parametric.refresh
+
+      - name: Upload retry evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-retry-evidence
+          path: reports/flaky-*.json
+          if-no-files-found: ignore

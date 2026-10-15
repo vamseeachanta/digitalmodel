@@ -1,0 +1,23 @@
+- id: tests/orcaflex/test_generic_scr_slwr.py::test_analytical_reference_reproduces_from_basis
+  kind: same-tree-mismatch
+  first_seen: '2026-10-14'
+  last_seen: '2026-10-14'
+  evidence:
+    - https://github.com/vamseeachanta/digitalmodel/actions/runs/38622905305
+    - https://github.com/vamseeachanta/digitalmodel/actions/runs/38623211346
+    - https://github.com/vamseeachanta/digitalmodel/actions/runs/38632044347
+    - https://github.com/vamseeachanta/digitalmodel/actions/runs/38632440745
+    - https://github.com/vamseeachanta/digitalmodel/actions/runs/38634816938
+    - https://github.com/vamseeachanta/digitalmodel/actions/runs/38635174949
+  cause: Last-bit floating-point differences; runner dependence is inferred, not measured.
+  fix_issue: 2576
+  status: open
+- id: parametric.refresh
+  kind: signal-exit
+  first_seen: '2026-10-14'
+  last_seen: '2026-10-14'
+  evidence:
+    - https://github.com/vamseeachanta/digitalmodel/actions/runs/38629812676/job/116078247251
+  cause: Interpreter exit 134 after all atlases were reported current; cause is not established.
+  fix_issue: pending
+  status: open

@@ -16,10 +16,17 @@ name: Quality Gates by Domain
 
 "on":
   pull_request:
-    branches: [main, develop]
   push:
     branches: [main, develop]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   detect-domains:
@@ -130,8 +137,12 @@ jobs:
         run: |
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
+            tests/scripts/test_ci_baseline.py \
+            tests/scripts/test_run_shard.py \
+            tests/contracts/test_flaky_register_schema.py \
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
+            tests/workflows/test_ci_triggers.py \
             -q --tb=line
 
   domain-tests:
@@ -184,7 +195,27 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Run domain gate
-        run: ${{ steps.gate.outputs.command }}
+        id: domain-gate
+        run: |
+          set +e
+          python scripts/ci/run_shard.py --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          exit "$code"
+
+      - name: Extract shard result
+        if: always()
+        env:
+          SHARD: ${{ matrix.domain }}
+          SHARD_CONCLUSION: ${{ steps.domain-gate.outcome }}
+          SHARD_EXIT_CODE: ${{ steps.domain-gate.outputs.code }}
+        run: |
+          python scripts/ci/ci_baseline.py extract \
+            --junit "reports/junit-${SHARD}.xml" --shard "$SHARD" \
+            --sha "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
+            --attempt "$GITHUB_RUN_ATTEMPT" --conclusion "$SHARD_CONCLUSION" \
+            --exit-code "${SHARD_EXIT_CODE:--1}" \
+            --out "reports/result-${SHARD}.json"
 
       - name: Upload domain artifacts
         if: always()
@@ -243,8 +274,22 @@ jobs:
               >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      - name: Checkout baseline tools
+        if: needs.detect-domains.outputs.has-domains == 'true' && needs.domain-tests.result == 'failure'
+        uses: actions/checkout@v4
+
+      - name: Download domain results
+        if: needs.detect-domains.outputs.has-domains == 'true' && needs.domain-tests.result == 'failure'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: quality-gate-*
+          path: baseline-results
+
       - name: Enforce required domain result
+        if: always()
         env:
+          CI_BASELINE_MODE: report
+          GH_TOKEN: ${{ github.token }}
           HAS_DOMAINS: ${{ needs.detect-domains.outputs.has-domains }}
           DETECT_RESULT: ${{ needs.detect-domains.result }}
           HARNESS_RESULT: ${{ needs.ci-harness-tests.result }}
@@ -261,8 +306,50 @@ jobs:
           fi
 
           if [ "$HAS_DOMAINS" = "true" ] && [ "$DOMAIN_RESULT" != "success" ]; then
+            if [ "$DOMAIN_RESULT" = "failure" ] && [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+              python - <<'PYTHON'
+          import os
+          from pathlib import Path
+          from scripts.ci.ci_baseline import download_baseline, gh_json, instant, reconcile_results
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          run = os.environ["GITHUB_RUN_ID"]
+          attempt = int(os.environ["GITHUB_RUN_ATTEMPT"])
+          jobs = gh_json(f"repos/{repository}/actions/runs/{run}/attempts/{attempt}/jobs?per_page=100")["jobs"]
+          reconcile_results(Path("baseline-results"), jobs, "tests-", os.environ["GITHUB_SHA"], run, attempt)
+          aggregate = next(job for job in jobs if job["name"] == "Domain test aggregate")
+          Path("baseline-time.txt").write_text(aggregate["started_at"])
+          download_baseline(repository, Path("baseline.json"), require_latest=True,
+                            now=instant(aggregate["started_at"]))
+          PYTHON
+              if python scripts/ci/ci_baseline.py compare \
+                --baseline baseline.json --results baseline-results --max-age-hours 24 \
+                --summary baseline-summary.md --verdict baseline-verdict.json --now "$(cat baseline-time.txt)"; then
+                comparison=0
+              else
+                comparison=$?
+              fi
+              cat baseline-summary.md >> "$GITHUB_STEP_SUMMARY"
+              if [ "$CI_BASELINE_MODE" = "report" ]; then
+                echo "Report mode: comparison=$comparison; failed shards still fail the gate."
+                exit 1
+              elif [ "$CI_BASELINE_MODE" = "enforce" ]; then
+                exit "$comparison"
+              fi
+            fi
             echo "At least one required domain test job failed: $DOMAIN_RESULT"
             exit 1
           fi
 
           echo "Required domain test jobs passed."
+
+      - name: Upload baseline comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-comparison
+          path: |
+            baseline-verdict.json
+            baseline-summary.md
+          if-no-files-found: ignore
+          retention-days: 14
