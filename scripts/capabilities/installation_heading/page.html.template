@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Installation heading · allowable wave height</title>
+<style>
+:root{color-scheme:light;--paper:#f5f7fa;--panel:#fff;--text:#172b42;--muted:#536478;--grid:#cbd5df;--focus:#075cba;--warning:#825100;--warning-bg:#fff0c9;--band:#b89c5a}
+[data-theme="dark"]{color-scheme:dark;--paper:#111b28;--panel:#1b2a3c;--text:#edf3fa;--muted:#b3c3d5;--grid:#52657a;--focus:#86c2ff;--warning:#ffd178;--warning-bg:#49391d;--band:#dfbd70}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--text);font:16px/1.55 system-ui,sans-serif}main{max-width:1240px;margin:auto;padding:24px}h1{font-size:clamp(1.6rem,4vw,2.6rem);line-height:1.15;margin:.4em 0}h2{font-size:1.1rem;margin:0 0 12px}p{margin:.6em 0}.muted,small{color:var(--muted)}.eyebrow{letter-spacing:.12em;font-size:.75rem;font-weight:750}.badge{display:inline-block;padding:4px 10px;background:var(--warning-bg);color:var(--warning);border-radius:6px;font-weight:750}.top{display:flex;justify-content:space-between;gap:16px;align-items:start}.card{background:var(--panel);border:1px solid var(--grid);border-radius:12px;padding:18px;margin:18px 0}.layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(230px,1fr);gap:20px}.layout .card{margin:0}.controls{display:flex;flex-wrap:wrap;gap:18px;align-items:end}.field{display:grid;gap:6px;flex:1;min-width:160px}button,select{font:inherit;border:1px solid var(--grid);background:var(--panel);color:var(--text);border-radius:7px;padding:9px 12px;min-height:44px}button{cursor:pointer}button:disabled{opacity:.55;cursor:default}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}input[type="range"]{width:100%;min-height:44px;accent-color:var(--focus)}.buttons{display:flex;gap:10px}.readout{font-size:1.15rem;font-weight:700;padding:14px;border:1px solid var(--grid);border-radius:8px}.readout.outside{color:var(--warning);background:var(--warning-bg);border-color:var(--warning)}svg{width:100%;height:auto;display:block;overflow:visible}svg text{fill:var(--muted);font:13px system-ui,sans-serif}.grid{fill:none;stroke:var(--grid);stroke-width:1}.axis{stroke-dasharray:3 5}.envelope{fill-opacity:.09;stroke-width:1.5;stroke-linejoin:round}.envelope.selected{fill-opacity:.22;stroke-width:3}.band{fill:var(--band);fill-opacity:.19}.legend{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.legend span{display:flex;align-items:center;gap:6px}.swatch{width:14px;height:14px;border-radius:3px;border:1px solid var(--text)}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;border-bottom:1px solid var(--grid);padding:8px;vertical-align:top}.scroll{overflow:auto}caption{text-align:left;color:var(--muted);padding-top:8px;caption-side:bottom}.sample{font-variant-numeric:tabular-nums}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}footer{margin-top:24px;font-size:.9rem}@media(max-width:700px){main{padding:14px}.layout{grid-template-columns:1fr}.top{flex-wrap:wrap}.card{padding:14px}th,td{padding:6px}.controls .field{min-width:130px}}@media(prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main data-status="@@STATUS@@">
+<header>
+<div class="top"><div><div class="eyebrow">INSTALLATION · DISCRETE LIMITS</div><h1>Heading and allowable wave height</h1></div><button id="theme" type="button" aria-pressed="false">Dark theme</button></div>
+<p>Explore the allowable significant wave height (Hs) against heading relative to the waves, for each installation stage and structure size.</p>
+<p><span class="badge">@@BADGE@@</span> Revision @@REVISION@@</p>
+<p>@@NOTICE@@</p>
+</header>
+<section class="card" id="revision-history" aria-labelledby="revision-title">
+<h2 id="revision-title">Revision history</h2>
+<div class="scroll"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
+@@REVISION_ROWS@@
+</tbody></table></div>
+</section>
+<section class="card controls" id="controls" aria-label="Chart controls">
+<div class="field"><label for="stage">Installation stage</label><select id="stage"></select></div>
+<div class="field"><label for="size">Structure size</label><select id="size"></select></div>
+<div class="field"><label for="heading">Heading: <output id="heading-value" for="heading">0°</output></label><input id="heading" type="range" min="0" max="180" step="15" value="0" aria-describedby="keyboard-help"><small id="keyboard-help">Arrow keys: 15° steps. Home: 0°. End: 180°.</small></div>
+<div class="buttons"><button id="play" type="button">Play</button><button id="pause" type="button" disabled>Pause</button></div>
+</section>
+<div class="layout">
+<section class="card" aria-labelledby="polar-title">
+<h2 id="polar-title">Allowable Hs envelope <span class="muted">· metres</span></h2>
+<svg id="polar" viewBox="-280 -285 560 590" role="img" aria-labelledby="plot-title plot-desc"><title id="plot-title">Installation heading limits</title><desc id="plot-desc">Head seas at the top. Radius is allowable significant wave height in metres. Filled envelopes show each stage. The shaded sector spans minus 15 to plus 15 degrees. The dot selects a supplied sample.</desc><g id="grid"></g><path id="tolerance" class="band"></path><g id="envelopes"></g><line id="heading-ray" class="grid axis" x1="0" y1="0"></line><circle id="dot" r="6" fill="var(--text)" stroke="var(--panel)" stroke-width="2"></circle></svg>
+<div class="legend" id="legend" aria-label="Stage colours"></div>
+<p class="muted">Shaded sector: <strong>station-keeping tolerance ±15°</strong>. Head seas = 0°, beam seas = 90°, following seas = 180°. The left half mirrors the absolute heading samples; port/starboard symmetry is assumed.</p>
+<p class="muted">Edges join discrete samples for display. Selection uses only supplied 15° headings; no intermediate limit is calculated.</p>
+</section>
+<section class="card" aria-labelledby="selection-title">
+<h2 id="selection-title">Selected heading</h2>
+<p id="selection" class="sample"></p>
+<p id="readout" class="readout" aria-live="polite" aria-atomic="true"></p>
+<p id="band-status"></p>
+<p id="motion-note" class="muted">Playback starts only with Play. Pause stops at the current heading.</p>
+<h2>Supplied samples</h2>
+<div class="scroll"><table class="sample"><thead><tr><th>Heading (°)</th><th>Allowable Hs (m)</th></tr></thead><tbody id="samples"></tbody><caption>Selected stage and size. Hs is shown to one decimal place.</caption></table></div>
+</section>
+</div>
+<footer><p><strong>Data source:</strong> @@SOURCE@@</p><p>Replace the limits JSON and rebuild to use heading-resolved results. The source and illustrative status are carried in the data.</p></footer>
+<noscript><p>JavaScript is required for selection and playback. The embedded data remain available in the page source.</p></noscript>
+</main>
+<script id="limits-data" type="application/json">@@DATA@@</script>
+<script id="chart-script">
+"use strict";
+function selectedLimit(values, heading) { return values[heading / 15]; }
+function polarPoint(heading, hs, scale) {
+  const angle = heading * Math.PI / 180;
+  return [Math.sin(angle) * hs * scale, -Math.cos(angle) * hs * scale];
+}
+function outsideBand(heading) { return Math.abs(heading) > 15; }
+function nextHeading(heading, direction) {
+  if (heading === 180) direction = -1;
+  if (heading === 0) direction = 1;
+  return [heading + direction * 15, direction];
+}
+function readout(hs, headLimit) {
+  return `allowable Hs ${hs.toFixed(1)} m, ${(100 * hs / headLimit).toFixed(1)} % of the head-seas limit`;
+}
+// DOM wiring
+const data = JSON.parse(document.getElementById("limits-data").textContent);
+const byId = id => document.getElementById(id);
+const ns = "http://www.w3.org/2000/svg";
+const colours = ["#1975bd", "#c16b26", "#288868", "#a354b4"];
+let direction = 1, timer = null;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+function element(tag, attrs, text) {
+  const node = document.createElementNS(ns, tag);
+  for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, value);
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+function option(text, value) {
+  const node = document.createElement("option"); node.textContent = text; node.value = value; return node;
+}
+data.stages.forEach((stage, i) => byId("stage").append(option(stage.name, i)));
+data.sizes.forEach(size => byId("size").append(option(size, size)));
+const maxHs = Math.ceil(Math.max(...data.stages.flatMap(stage => Object.values(stage.limits_m).flat())));
+const scale = 210 / maxHs;
+for (let hs = 1; hs <= maxHs; hs++) {
+  byId("grid").append(element("circle", {cx:0, cy:0, r:hs * scale, class:"grid"}));
+  byId("grid").append(element("text", {x:5, y:-hs * scale + 15}, `${hs.toFixed(1)} m`));
+}
+for (const angle of [0, 45, 90, 135, 180, -45, -90, -135]) {
+  const [x,y] = polarPoint(angle, maxHs, scale);
+  const [tx,ty] = polarPoint(angle, maxHs, scale * 1.12);
+  byId("grid").append(element("line", {x1:0,y1:0,x2:x,y2:y,class:"grid axis"}));
+  byId("grid").append(element("text", {x:tx,y:ty,"text-anchor":"middle","dominant-baseline":"middle"}, `${Math.abs(angle)}°`));
+}
+const [bx,by] = polarPoint(15, maxHs, scale);
+byId("tolerance").setAttribute("d", `M 0,0 L${-bx},${by} A 210,210 0 0 1 ${bx},${by} Z`);
+function render() {
+  const stageIndex = Number(byId("stage").value), size = byId("size").value;
+  const heading = Number(byId("heading").value), stage = data.stages[stageIndex];
+  const values = stage.limits_m[size], hs = selectedLimit(values, heading);
+  byId("heading-value").textContent = `${heading}°`;
+  byId("heading").setAttribute("aria-valuetext", `${heading} degrees`);
+  byId("selection").textContent = `${stage.name} · ${size} · ${heading}°`;
+  byId("readout").textContent = readout(hs, values[0]);
+  byId("readout").classList.toggle("outside", outsideBand(heading));
+  byId("band-status").textContent = outsideBand(heading) ? "Outside the ±15° station-keeping tolerance." : "Within the ±15° station-keeping tolerance.";
+  byId("envelopes").replaceChildren(); byId("legend").replaceChildren();
+  data.stages.forEach((item, index) => {
+    const curve = item.limits_m[size];
+    const angles = [...data.headings_deg, ...data.headings_deg.slice(1,-1).reverse().map(angle => -angle)];
+    const points = angles.map(angle => polarPoint(angle, selectedLimit(curve, Math.abs(angle)), scale).join(","));
+    const path = element("path", {d:`M${points.join(" L")} Z`, fill:colours[index % colours.length], stroke:colours[index % colours.length], class:`envelope${index === stageIndex ? " selected" : ""}`});
+    path.append(element("title", {}, item.name)); byId("envelopes").append(path);
+    const label = document.createElement("span"), swatch = document.createElement("i");
+    swatch.className = "swatch"; swatch.style.background = colours[index % colours.length];
+    label.append(swatch, document.createTextNode(item.name + (index === stageIndex ? " (selected)" : ""))); byId("legend").append(label);
+  });
+  const [x,y] = polarPoint(heading, hs, scale);
+  byId("dot").setAttribute("cx", x); byId("dot").setAttribute("cy", y);
+  byId("heading-ray").setAttribute("x2", x); byId("heading-ray").setAttribute("y2", y);
+  byId("samples").replaceChildren();
+  data.headings_deg.forEach((angle, index) => {
+    const row = document.createElement("tr");
+    if (angle === heading) { row.style.fontWeight = "bold"; row.setAttribute("aria-current", "true"); }
+    for (const text of [angle, values[index].toFixed(1)]) { const cell = document.createElement("td"); cell.textContent = text; row.append(cell); }
+    byId("samples").append(row);
+  });
+}
+function pause() {
+  if (timer !== null) window.clearInterval(timer);
+  timer = null; byId("play").disabled = false; byId("pause").disabled = true;
+}
+byId("play").addEventListener("click", () => {
+  if (timer !== null) return;
+  byId("play").disabled = true; byId("pause").disabled = false;
+  timer = window.setInterval(() => {
+    const [heading, nextDirection] = nextHeading(Number(byId("heading").value), direction);
+    direction = nextDirection; byId("heading").value = heading; render();
+  }, 600);
+});
+byId("pause").addEventListener("click", pause);
+byId("heading").addEventListener("input", () => { pause(); render(); });
+for (const id of ["stage", "size"]) byId(id).addEventListener("change", render);
+const darkPreference = window.matchMedia("(prefers-color-scheme: dark)");
+function setTheme(dark) {
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  byId("theme").setAttribute("aria-pressed", String(dark));
+  byId("theme").textContent = dark ? "Light theme" : "Dark theme";
+}
+setTheme(darkPreference.matches);
+byId("theme").addEventListener("click", () => setTheme(document.documentElement.dataset.theme !== "dark"));
+function motionPreference() {
+  pause(); byId("motion-note").textContent = reducedMotion.matches ? "Reduced motion is enabled. Playback remains paused until Play is selected." : "Playback starts only with Play. Pause stops at the current heading.";
+}
+reducedMotion.addEventListener("change", motionPreference);
+document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+motionPreference(); render();
+</script>
+</body>
+</html>
