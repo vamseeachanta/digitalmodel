@@ -13,6 +13,10 @@ modules:
     key_tests: [tests/ansys/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#ansys
   - module: asset_integrity
+    submodules:
+      asset_integrity:
+        agent_pack: src/digitalmodel/asset_integrity/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/asset_integrity/
     maturity: stable
     owner_wiki: docs/domains/README.md
@@ -132,6 +136,10 @@ modules:
     owner_wiki: docs/domains/hydrodynamics/
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
+    submodules:
+      diffraction:
+        agent_pack: src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md
+        qa_family: DF
   - module: infrastructure
     entry_point: src/digitalmodel/infrastructure/
     maturity: beta
@@ -144,6 +152,10 @@ modules:
     owner_wiki: docs/domains/marine_ops/
     key_tests: [tests/marine_ops/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#marine_ops
+    submodules:
+      marine_analysis:
+        agent_pack: src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md
+        qa_family: MR
   - module: floating_wind
     entry_point: src/digitalmodel/floating_wind/
     maturity: beta
@@ -292,14 +304,23 @@ modules:
     owner_wiki: docs/domains/structural/
     key_tests: [tests/structural/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
+    submodules:
+      fatigue:
+        agent_pack: src/digitalmodel/structural/fatigue/docs/agent-pack.md
+        qa_family: EC
   - module: subsea
     entry_point: src/digitalmodel/subsea/
-    agent_pack: src/digitalmodel/subsea/pipeline/docs/agent-pack.md
-    qa_family: EC
     maturity: stable
     owner_wiki: docs/domains/subsea/
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
+    submodules:
+      pipeline:
+        agent_pack: src/digitalmodel/subsea/pipeline/docs/agent-pack.md
+        qa_family: EC
+      mooring_analysis:
+        agent_pack: src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md
+        qa_family: MR
   - module: visualization
     entry_point: src/digitalmodel/visualization/
     maturity: beta

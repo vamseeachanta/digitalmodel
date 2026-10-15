@@ -1,15 +1,15 @@
 # Pipeline module knowledge pack
 
-| Header | Value |
-| --- | --- |
-| Module | `subsea/pipeline` |
-| Repository | `digitalmodel` |
-| Path | `src/digitalmodel/subsea/pipeline/docs/agent-pack.md` |
-| Pack revision | 0, 2026-10-15 |
-| Code revision | `5721ea1b4e72a7774dd18cb188361956973e152d` |
+| Header          | Value                                                      |
+| --------------- | ---------------------------------------------------------- |
+| Module          | `subsea/pipeline`                                          |
+| Repository      | `digitalmodel`                                             |
+| Path            | `src/digitalmodel/subsea/pipeline/docs/agent-pack.md`      |
+| Pack revision   | 0, 2026-10-15                                              |
+| Code revision   | `5721ea1b4e72a7774dd18cb188361956973e152d`                 |
 | Analysis family | EC — engineering calculations; AQG r0, Python calculations |
-| Quality role | Engineering calculations quality manager |
-| Status | DRAFT |
+| Quality role    | Engineering calculations quality manager                   |
+| Status          | DRAFT                                                      |
 
 ## 1. Purpose and scope
 
@@ -17,7 +17,7 @@
 
 The routing registry marks the enclosing `subsea` domain stable; this is domain metadata, not evidence that every pipeline method has independent validation. [docs/registry/module-routing.yaml:L295-L300] [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L4-L15]
 
-The free-span facade combines frequency, onset, amplitude, fatigue and allowable-length calculations; its stress calculation is a beam screening approximation. [src/digitalmodel/subsea/pipeline/free_span/__init__.py:L81-L145] [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L138-L172]
+The free-span facade combines frequency, onset, amplitude, fatigue and allowable-length calculations; its stress calculation is a beam screening approximation. `[src/digitalmodel/subsea/pipeline/free_span/__init__.py:L81-L145]` [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L138-L172]
 
 The separate Hobbs implementation describes small-slope elastic equilibrium with fully mobilised friction and an initially straight line; it explicitly excludes initiation prediction, coating stiffness, cyclic soil memory and code acceptance. [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L31-L46]
 
@@ -27,30 +27,30 @@ Upheaval analysis contains an unfinished eigenvalue solution, and `ThermalBuckli
 
 ### Inputs
 
-| Surface and fields | Units and accepted domain | Defaults / origin | Evidence |
-| --- | --- | --- | --- |
-| `PipeGeometry(OD, WT)`; `PipeMaterial(SMYS, SMTS)` | m; MPa; geometry checks positive diameter/thickness and thickness below radius; strength checks positive yield and tensile at least yield | Required arguments | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L79-L125] |
-| `dnv_wall_thickness(p_d, p_e, D, mat, safety_class, t_corr, fab_tol_pct)` | MPa, MPa, m, material, enum, m, percent; only safety-class membership is checked in this function | `normal`; corrosion and fabrication defaults in signature; callers must qualify the physical domain | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L160-L202] |
-| `WallThicknessSizingWorkflow` configuration | `outer_diameter_m`, `design_pressure_MPa`, `depth_m`, material required; allowances use m and percent | Reads `config['pipeline']`; optional setpoint is only a pressure screen | [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L270-L309] |
-| `PipeSpanInput` geometry and material | diameter, thickness, span, sag and gap in m; modulus Pa; densities kg/m³; current/wave speed m/s; damping dimensionless | Geometry required; other defaults are dataclass fields; no input validation method in this dataclass | [src/digitalmodel/subsea/pipeline/free_span/models.py:L25-L106] |
-| `PipeSpanInput` force, boundary and fatigue settings | Effective force N, positive tension; pinned-pinned, fixed-fixed or fixed-pinned; air or seawater with protection | Zero effective force; enum and fatigue defaults in fields; partial factors retained in code, not reproduced here | [src/digitalmodel/subsea/pipeline/free_span/models.py:L12-L22] [src/digitalmodel/subsea/pipeline/free_span/models.py:L85-L106] |
-| Hobbs `PipeSection`, `SoilResistance`, length and temperature rise | Pa, m², m⁴, m, N/m, 1/K; dimensionless axial/lateral friction; m; K; finite positive properties and friction, nonnegative thermal rise | Geometric constructor derives annulus; thermal-expansion default in signature | [src/digitalmodel/subsea/pipeline/global_buckling/models.py:L73-L179] |
-| `run_on_bottom_stability` | Pipe dimensions m; densities kg/m³; velocity m/s; acceleration m/s²; drag/inertia/lift and friction coefficients dimensionless | Explicit pipe, metocean, hydrodynamic and soil mappings; safety factor defaults in function | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L16-L53] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L9-L37] |
-| `design_rectification(actual_span_m, allowable_span_m)` | m, both positive | Required; router can default actual length to the span input | [src/digitalmodel/subsea/pipeline/span_rectification.py:L30-L59] [src/digitalmodel/subsea/pipeline/span_rectification.py:L72-L84] |
-| Legacy buckling configuration | Mixed conventions: pipeline length converted from m to inches, depth-column values multiplied by 12, pressure multiplied by bore area; conversion must be checked per field | `pipeline.crossection`, soil, route and tension mappings | [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L70-L85] [src/digitalmodel/subsea/pipeline/buckling_common.py:L57-L84] [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L107-L129] |
-| `Pressureloss` `pipe_data` | Water depth ft, bore inch, roughness multiplied by 0.001, mud weight multiplied by density conversion, viscosity multiplied by 0.001, flow converted to m³/s | Required mapping; intermediate rounding is part of the retained method | [src/digitalmodel/subsea/pipeline/pressure_loss.py:L48-L100] [src/digitalmodel/subsea/pipeline/pressure_loss.py:L108-L129] |
+| Surface and fields                                                        | Units and accepted domain                                                                                                                                                   | Defaults / origin                                                                                                | Evidence                                                                                                                                                                                      |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PipeGeometry(OD, WT)`; `PipeMaterial(SMYS, SMTS)`                        | m; MPa; geometry checks positive diameter/thickness and thickness below radius; strength checks positive yield and tensile at least yield                                   | Required arguments                                                                                               | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L79-L125]                                                                                                                              |
+| `dnv_wall_thickness(p_d, p_e, D, mat, safety_class, t_corr, fab_tol_pct)` | MPa, MPa, m, material, enum, m, percent; only safety-class membership is checked in this function                                                                           | `normal`; corrosion and fabrication defaults in signature; callers must qualify the physical domain              | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L160-L202]                                                                                                                             |
+| `WallThicknessSizingWorkflow` configuration                               | `outer_diameter_m`, `design_pressure_MPa`, `depth_m`, material required; allowances use m and percent                                                                       | Reads `config['pipeline']`; optional setpoint is only a pressure screen                                          | [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L270-L309]                                                                                                                    |
+| `PipeSpanInput` geometry and material                                     | diameter, thickness, span, sag and gap in m; modulus Pa; densities kg/m³; current/wave speed m/s; damping dimensionless                                                     | Geometry required; other defaults are dataclass fields; no input validation method in this dataclass             | [src/digitalmodel/subsea/pipeline/free_span/models.py:L25-L106]                                                                                                                               |
+| `PipeSpanInput` force, boundary and fatigue settings                      | Effective force N, positive tension; pinned-pinned, fixed-fixed or fixed-pinned; air or seawater with protection                                                            | Zero effective force; enum and fatigue defaults in fields; partial factors retained in code, not reproduced here | [src/digitalmodel/subsea/pipeline/free_span/models.py:L12-L22] [src/digitalmodel/subsea/pipeline/free_span/models.py:L85-L106]                                                                |
+| Hobbs `PipeSection`, `SoilResistance`, length and temperature rise        | Pa, m², m⁴, m, N/m, 1/K; dimensionless axial/lateral friction; m; K; finite positive properties and friction, nonnegative thermal rise                                      | Geometric constructor derives annulus; thermal-expansion default in signature                                    | [src/digitalmodel/subsea/pipeline/global_buckling/models.py:L73-L179]                                                                                                                         |
+| `run_on_bottom_stability`                                                 | Pipe dimensions m; densities kg/m³; velocity m/s; acceleration m/s²; drag/inertia/lift and friction coefficients dimensionless                                              | Explicit pipe, metocean, hydrodynamic and soil mappings; safety factor defaults in function                      | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L16-L53] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L9-L37]                                                          |
+| `design_rectification(actual_span_m, allowable_span_m)`                   | m, both positive                                                                                                                                                            | Required; router can default actual length to the span input                                                     | [src/digitalmodel/subsea/pipeline/span_rectification.py:L30-L59] [src/digitalmodel/subsea/pipeline/span_rectification.py:L72-L84]                                                             |
+| Legacy buckling configuration                                             | Mixed conventions: pipeline length converted from m to inches, depth-column values multiplied by 12, pressure multiplied by bore area; conversion must be checked per field | `pipeline.crossection`, soil, route and tension mappings                                                         | [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L70-L85] [src/digitalmodel/subsea/pipeline/buckling_common.py:L57-L84] [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L107-L129] |
+| `Pressureloss` `pipe_data`                                                | Water depth ft, bore inch, roughness multiplied by 0.001, mud weight multiplied by density conversion, viscosity multiplied by 0.001, flow converted to m³/s                | Required mapping; intermediate rounding is part of the retained method                                           | [src/digitalmodel/subsea/pipeline/pressure_loss.py:L48-L100] [src/digitalmodel/subsea/pipeline/pressure_loss.py:L108-L129]                                                                    |
 
 ### Outputs and conventions
 
-| Surface | Outputs / units / persistence | Evidence |
-| --- | --- | --- |
-| Pressure sizing and checks | Minimum thickness m, pressure resistance/allowable MPa, dimensionless utilization, pass boolean and governing mode; YAML loader returns a dictionary | [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L343-L381] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L123-L140] |
-| Free-span facade | IL/CF frequency Hz, effective mass kg/m, stiffness N·m²; dimensionless onset/amplitude/utilization, stress range MPa, annual damage 1/year, life years and allowable length m | [src/digitalmodel/subsea/pipeline/free_span/models.py:L109-L155] [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L25-L29] |
-| Hobbs equilibrium | Compressive buckle/far-field force N, thermal equivalent K, displacement m, moment N·m and stress Pa; characteristic lobe length is not total affected pipeline length | [src/digitalmodel/subsea/pipeline/global_buckling/models.py:L10-L17] [src/digitalmodel/subsea/pipeline/global_buckling/models.py:L182-L195] |
-| Stability workflow | Forces and weights N/m, diameter m, dimensionless utilization and stability booleans; vertical wrapper receives kN/m after explicit division | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L49-L71] |
-| Rectification | Integer support/sub-span counts, length/spacing m, dimensionless utilization and original-span screening status; writes a JSON summary relative to configuration directory unless absolute | [src/digitalmodel/subsea/pipeline/span_rectification.py:L84-L114] |
-| Legacy buckling | Mutated configuration plus CSV, with optional plots; lateral compression is represented by negative effective/critical force | [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L35-L42] [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L119-L145] [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L156-L189] |
-| Pressure loss | Flow m³/s, velocity m/s, Reynolds number and friction factors dimensionless, friction/kinetic/potential/total heads m; computed MPa pressure drop is not returned | [src/digitalmodel/subsea/pipeline/pressure_loss.py:L125-L174] |
+| Surface                    | Outputs / units / persistence                                                                                                                                                              | Evidence                                                                                                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Pressure sizing and checks | Minimum thickness m, pressure resistance/allowable MPa, dimensionless utilization, pass boolean and governing mode; YAML loader returns a dictionary                                       | [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L343-L381] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L123-L140]                                                 |
+| Free-span facade           | IL/CF frequency Hz, effective mass kg/m, stiffness N·m²; dimensionless onset/amplitude/utilization, stress range MPa, annual damage 1/year, life years and allowable length m              | [src/digitalmodel/subsea/pipeline/free_span/models.py:L109-L155] [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L25-L29]                                                     |
+| Hobbs equilibrium          | Compressive buckle/far-field force N, thermal equivalent K, displacement m, moment N·m and stress Pa; characteristic lobe length is not total affected pipeline length                     | [src/digitalmodel/subsea/pipeline/global_buckling/models.py:L10-L17] [src/digitalmodel/subsea/pipeline/global_buckling/models.py:L182-L195]                                                      |
+| Stability workflow         | Forces and weights N/m, diameter m, dimensionless utilization and stability booleans; vertical wrapper receives kN/m after explicit division                                               | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L49-L71]                                                                                                                                |
+| Rectification              | Integer support/sub-span counts, length/spacing m, dimensionless utilization and original-span screening status; writes a JSON summary relative to configuration directory unless absolute | [src/digitalmodel/subsea/pipeline/span_rectification.py:L84-L114]                                                                                                                                |
+| Legacy buckling            | Mutated configuration plus CSV, with optional plots; lateral compression is represented by negative effective/critical force                                                               | [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L35-L42] [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L119-L145] [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L156-L189] |
+| Pressure loss              | Flow m³/s, velocity m/s, Reynolds number and friction factors dimensionless, friction/kinetic/potential/total heads m; computed MPa pressure drop is not returned                          | [src/digitalmodel/subsea/pipeline/pressure_loss.py:L125-L174]                                                                                                                                    |
 
 Wave velocity uses elevation measured upward from seabed, not from still water; the scalar integrity workflows have no global heading/phase transformation. [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L198-L205] [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L16-L53]
 
@@ -58,20 +58,20 @@ Wave velocity uses elevation measured upward from seabed, not from still water; 
 
 The following are references **as coded**, not a declaration of standard conformance; for every licensed standard below, clause text not checked against the licensed copy. [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L24-L51] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L1-L8] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L38]
 
-| Check / implementing function | Reference, edition and clause as recorded | Behaviour and limits | Evidence |
-| --- | --- | --- | --- |
-| Pressure sizing, burst, containment, pressure test and MAOP | DNV-ST-F101, *Submarine pipeline systems*, 2021; pressure containment, system pressure test; code cites Section 5 and its subclauses | `dnv_wall_thickness` includes allowances; `dnv_burst_resistance`, `dnv_pressure_containment_check`, `dnv_system_pressure_test`, `dnv_maop` are separate calculations | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L160-L202] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L209-L289] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L296-L348] |
-| External collapse, propagation and combined loading | DNV-ST-F101, *Submarine pipeline systems*, 2021 basis in parent; code cites external collapse, propagating buckle and combined loading | `dnv_collapse_pressure` numerically solves its stated interaction equation; combined loading uses moment N·m and effective tension N with pressure MPa | [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L35-L87] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L147-L164] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L216-L279] |
-| Burst/internal pressure, external collapse, propagation and combined loading | API RP 1111, *Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)*, fourth edition; internal pressure, propagation, external pressure and combined loading | Separate `api_*` functions; workflow sizes for DNV pressure containment and API external collapse, then reports further checks | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L355-L521] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L54-L119] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L126-L185] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L314-L355] |
-| Installation bending | API RP 1111, same title, fourth edition (2009); Installation Loads / sagbend and overbend bending | `slay_sagbend_bending_strain`, `slay_overbend_bending_strain` evaluate diameter over twice radius; `slay_bending_check` compares each strain with the coded allowable | [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L1-L8] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L19-L54] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L69-L106] |
-| Frequency / effective mass | DNV-RP-F105, *Free spanning pipelines*; edition unresolved; Natural frequency / seabed proximity | `SpanNaturalFrequency` derives annulus stiffness and effective mass, adds sag and signed axial-force corrections; seabed added mass is explicitly an approximation | [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L48-L60] [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L83-L127] |
-| Onset / response / stress | DNV-RP-F105, same title; edition unresolved; IL onset, CF onset, amplitude response and screening stress | `SpanOnsetScreening` compares reduced velocity with IL/CF thresholds; `SpanVIVAmplitude` duplicates onset logic and converts peak displacement to fully reversed stress range | [src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:L55-L134] [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L72-L120] [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L138-L172] |
-| Fatigue | DNV-RP-F105, same title; fatigue damage accumulation; DNV-RP-C203, *Fatigue design of offshore steel structures*, October 2011; S-N curves / thickness correction | `_bilinear_sn` reads shared curve tables; `SpanFatigueDamage` selects air/protected seawater; facade sums IL and CF annual damage | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L219-L237] [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L79-L91] [src/digitalmodel/subsea/pipeline/free_span/__init__.py:L105-L124] |
-| Allowable span / rectification | DNV-RP-F105, same title; edition unresolved; Level-1 allowable span | `SpanAllowableLength.max_span_m` takes smaller static/frequency length; `design_rectification` uses ceiling of actual/allowable length; support design does not establish soil-bearing capacity | [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L124] [src/digitalmodel/subsea/pipeline/span_rectification.py:L30-L59] |
-| Hobbs lateral post-buckling | Hobbs, *In-Service Buckling of Heated Pipelines*, 1984; finite-mode and periodic-mode equilibrium | `lateral_equilibrium`, `critical_state`, `equilibria_at_temperature`, `screen_modes`; DNV-RP-F110 cited only as a route for imperfection/design assessment, edition and clause unspecified | [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L1-L46] [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L95-L156] [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L172-L191] |
-| Legacy lateral, upheaval and thermal paths | No governing standard edition/clause stated in these implementations | `calculateLateralBuckling` uses restraint/route criteria; upheaval reports download margin but retains unfinished eigenvalue work; thermal runner is incomplete | [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L94-L194] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L88-L149] [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21] |
-| On-bottom stability | DNV-RP-F109, *On-bottom stability design of submarine pipelines*, 2021 in manifest; Hydrodynamic forces, submerged weight, absolute/generalized lateral stability | `run_on_bottom_stability` delegates weight and loads to canonical package, then lateral and vertical checks with explicit N/m-to-kN/m conversion | [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L38] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L70-L89] [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L23-L70] |
-| Supporting calculations | API STD 2RD; title, edition and clause not established by the calculation class; pressure loss has no named source in implementation | `APISTD2RDCalculations` supplies burst/collapse/interaction routines; `Pressureloss` retains laminar/turbulent selection and rounded head loss | [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L22-L74] [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L108-L160] [src/digitalmodel/subsea/pipeline/pressure_loss.py:L125-L174] |
+| Check / implementing function                                                | Reference, edition and clause as recorded                                                                                                                                                                      | Behaviour and limits                                                                                                                                                                                                                                                                                                                              | Evidence                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pressure sizing, burst, containment, pressure test and MAOP                  | DNV-ST-F101, _Submarine pipeline systems_, 2021; pressure containment, system pressure test; code cites Section 5 and its subclauses                                                                           | `dnv_wall_thickness` includes allowances; `dnv_burst_resistance`, `dnv_pressure_containment_check`, `dnv_system_pressure_test`, `dnv_maop` are separate calculations                                                                                                                                                                              | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L160-L202] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L209-L289] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L296-L348]                                                                                                                                                                |
+| External collapse, propagation and combined loading                          | DNV-ST-F101, _Submarine pipeline systems_, 2021 basis in parent; code cites external collapse, propagating buckle and combined loading                                                                         | `dnv_collapse_pressure` numerically solves its stated interaction equation; combined loading uses moment N·m and effective tension N with pressure MPa                                                                                                                                                                                            | [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L35-L87] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L147-L164] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L216-L279]                                                                                                                                                      |
+| Burst/internal pressure, external collapse, propagation and combined loading | API RP 1111, _Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)_, fourth edition; internal pressure, propagation, external pressure and combined loading | Separate `api_*` functions; workflow sizes for DNV pressure containment and API external collapse, then reports further checks                                                                                                                                                                                                                    | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L355-L521] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L54-L119] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L126-L185] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L314-L355]                                                                    |
+| Installation bending                                                         | API RP 1111, same title, fourth edition (2009); Installation Loads / sagbend and overbend bending                                                                                                              | `slay_sagbend_bending_strain`, `slay_overbend_bending_strain` evaluate diameter over twice radius; `slay_bending_check` compares each strain with the coded allowable                                                                                                                                                                             | [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L1-L8] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L19-L54] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L69-L106]                                                                                                                                                  |
+| Frequency / effective mass                                                   | DNV-RP-F105, _Free spanning pipelines_; edition unresolved; Natural frequency / seabed proximity                                                                                                               | `SpanNaturalFrequency` derives annulus stiffness and effective mass, adds sag and signed axial-force corrections; seabed added mass is explicitly an approximation                                                                                                                                                                                | [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L48-L60] [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L83-L127]                                                                                                                                                                                                       |
+| Onset / response / stress                                                    | DNV-RP-F105, same title; edition unresolved; IL onset, CF onset, amplitude response and screening stress                                                                                                       | `SpanOnsetScreening` compares reduced velocity with IL/CF thresholds; `SpanVIVAmplitude` duplicates onset logic and converts peak displacement to fully reversed stress range                                                                                                                                                                     | [src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:L55-L134] [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L72-L120] [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L138-L172]                                                                                                                                 |
+| Fatigue                                                                      | DNV-RP-F105, same title; fatigue damage accumulation; DNV-RP-C203, _Fatigue design of offshore steel structures_, October 2011; S-N curves / thickness correction                                              | `_bilinear_sn` reads shared curve tables; `BilinearSNCurve` independently evaluates the two slopes and inverse, returning infinite allowable cycles at or below the in-air constant-amplitude fatigue limit; protected seawater uses no positive cut-off; `SpanFatigueDamage` selects the environment and the facade sums IL and CF annual damage | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L72-L125] [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L219-L237] [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L79-L91] `[src/digitalmodel/subsea/pipeline/free_span/__init__.py:L105-L124]` |
+| Allowable span / rectification                                               | DNV-RP-F105, same title; edition unresolved; Level-1 allowable span                                                                                                                                            | `SpanAllowableLength.max_span_m` takes smaller static/frequency length; `design_rectification` uses ceiling of actual/allowable length; support design does not establish soil-bearing capacity                                                                                                                                                   | [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L124] [src/digitalmodel/subsea/pipeline/span_rectification.py:L30-L59]                                                                                                                                                                                                                      |
+| Hobbs lateral post-buckling                                                  | Hobbs, _In-Service Buckling of Heated Pipelines_, 1984; finite-mode and periodic-mode equilibrium                                                                                                              | `lateral_equilibrium`, `critical_state`, `equilibria_at_temperature`, `screen_modes`; DNV-RP-F110 cited only as a route for imperfection/design assessment, edition and clause unspecified                                                                                                                                                        | [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L1-L46] [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L95-L156] [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L172-L191]                                                                                                                                |
+| Legacy lateral, upheaval and thermal paths                                   | No governing standard edition/clause stated in these implementations                                                                                                                                           | `calculateLateralBuckling` uses restraint/route criteria; upheaval reports download margin but retains unfinished eigenvalue work; thermal runner is incomplete                                                                                                                                                                                   | [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L94-L194] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L88-L149] [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21]                                                                                                                                                                      |
+| On-bottom stability                                                          | DNV-RP-F109, _On-bottom stability design of submarine pipelines_, 2021 in manifest; Hydrodynamic forces, submerged weight, absolute/generalized lateral stability                                              | `run_on_bottom_stability` delegates weight and loads to canonical package, then lateral and vertical checks with explicit N/m-to-kN/m conversion                                                                                                                                                                                                  | [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L38] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L70-L89] [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L23-L70]                                                                                                                                                             |
+| Supporting calculations                                                      | API STD 2RD; title, edition and clause not established by the calculation class; pressure loss has no named source in implementation                                                                           | `APISTD2RDCalculations` supplies burst/collapse/interaction routines; `Pressureloss` retains laminar/turbulent selection and rounded head loss                                                                                                                                                                                                    | [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L22-L74] [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L108-L160] [src/digitalmodel/subsea/pipeline/pressure_loss.py:L125-L174]                                                                                                                                        |
 
 Function-to-clause locators below preserve the code's attribution; clause text not checked against the licensed copy.
 
@@ -81,7 +81,7 @@ Function-to-clause locators below preserve the code's attribution; clause text n
 - API RP 1111 (fourth edition), internal pressure / combined loading / installation loads: burst and internal check cite 4.3.1, combined check 4.3.4; installation helpers cite 6.2.1 and their module specifies fourth edition, 2009. [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L54-L119] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L126-L161] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L1-L8] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L19-L54]
 - DNV-RP-F105 (edition unresolved), natural frequency / onset / response: frequency cites 6.8 and seabed added mass 6.8.2; IL onset 4.3.5, CF onset 4.4.6, IL/CF amplitude 4.3.4/4.4.4, stress screening 6.5, allowable span 4.2 and fatigue 7.3. [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L48-L60] [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L108-L127] [src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:L28-L36] [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L1-L18] [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L138-L154] [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L40-L49] [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L42-L50]
 - DNV-RP-F109 (2021 in manifest), hydrodynamic forces / submerged weight / lateral and vertical stability: manifest locators S3.2.1, S2.2, S4.3.1, S4.3.2 and S3.4 respectively; pipeline workflow uses the generalized simplified surface rather than the absolute criterion. [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L38] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L70-L89] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L40-L49]
-- Hobbs, *In-Service Buckling of Heated Pipelines* (1984): finite modes use the coded reference to Table 1 / Eqs. 26–29, periodic mode Eqs. 20–25; the F110 reference has no edition or clause locator. [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L1-L46]
+- Hobbs, _In-Service Buckling of Heated Pipelines_ (1984): finite modes use the coded reference to Table 1 / Eqs. 26–29, periodic mode Eqs. 20–25; the F110 reference has no edition or clause locator. [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L1-L46]
 
 UNVERIFIED: Complete edition/claim-to-clause qualification and calculation-output Citation sidecars remain open under #1835 and #1817; source docstrings are not a licensed-copy check.
 
@@ -91,13 +91,13 @@ The record distinguishes closed-form geometry/arithmetic checks from numerical r
 
 Result metadata: code pin `5721ea1b4e72a7774dd18cb188361956973e152d`, offline Python, 2026-10-15; the supplementary rectification test ran on the uncommitted documentation tree with unchanged calculation/test code.
 
-| ID / classification | Independent basis, input and expected quantity | Tolerance / basis | Existing test node ID and offline result | Evidence |
-| --- | --- | --- | --- | --- |
-| V1 — validated geometry only | Closed-form annulus: `A=π(D²−d²)/4`, `I=π(D⁴−d⁴)/64`, `r=D/2`; input constants and fixture in test; expected units m², m⁴ and m | `pytest.approx` default relative 1e-6, absolute 1e-12 in each output unit; mathematical identity | `tests/subsea/pipeline/test_hobbs_lateral_buckling.py::test_from_dimensions_matches_annulus_formulae` — PASS at baseline | [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L34-L67] |
-| V2 — validated support arithmetic only | Exact-multiple case: actual 24 m, allowable 12 m gives 1 support, 2 sub-spans, 12 m per sub-span; no validation of the upstream allowable-span model | Counts exact, length default relative 1e-6 / absolute 1e-12 m; overlong-case inequality includes 1e-9 m | `tests/workflows/test_durable_workflows.py::test_span_rectification_support_count_closed_form` — PASS | [tests/workflows/test_durable_workflows.py:L2191-L2217] |
-| R1 — Hobbs equation regression | Hobbs (1984), finite-mode equations; synthetic fixture, mode 3, length 60 m; expected force `k1 EI/L²` and far-field force from the coded coefficient set, displacement m and moment N·m | Relative 1e-12 for force/amplitude/moment, 1e-9 for far-field force; checks algebra, not independent coefficients | `tests/subsea/pipeline/test_hobbs_lateral_buckling.py::test_finite_mode_equations[HobbsMode.MODE_3]` — PASS at baseline | [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L118-L138] |
-| R2 — frequency screening regression | Test fixture diameter/thickness/span and zero sag; expected frequency interval 0.36–0.48 Hz has no independently cited published example | Interval 0.36–0.48 Hz; test's screening band | `tests/subsea/pipeline/test_free_span_f105.py::TestSpanNaturalFrequency::test_fn_IL_pinned_pinned_range` — PASS at baseline | [tests/subsea/pipeline/test_free_span_f105.py:L42-L65] [tests/subsea/pipeline/test_free_span_f105.py:L105-L110] |
-| R3 — pressure-sizing formula regression | DNV-labelled `dnv_wall_thickness` against rearranged equation in test; expected thickness in m; factors are imported from the module | Relative 1e-6; agreement with implemented equation does not qualify the licensed-standard basis | `tests/subsea/pipeline/test_pipeline_pressure.py::TestDnvWallThickness::test_formula_no_allowances` — PASS at baseline | [tests/subsea/pipeline/test_pipeline_pressure.py:L209-L238] |
+| ID / classification                     | Independent basis, input and expected quantity                                                                                                                                           | Tolerance / basis                                                                                                 | Existing test node ID and offline result                                                                                    | Evidence                                                                                                        |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| V1 — validated geometry only            | Closed-form annulus: `A=π(D²−d²)/4`, `I=π(D⁴−d⁴)/64`, `r=D/2`; input constants and fixture in test; expected units m², m⁴ and m                                                          | `pytest.approx` default relative 1e-6, absolute 1e-12 in each output unit; mathematical identity                  | `tests/subsea/pipeline/test_hobbs_lateral_buckling.py::test_from_dimensions_matches_annulus_formulae` — PASS at baseline    | [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L34-L67]                                                  |
+| V2 — validated support arithmetic only  | Exact-multiple case: actual 24 m, allowable 12 m gives 1 support, 2 sub-spans, 12 m per sub-span; no validation of the upstream allowable-span model                                     | Counts exact, length default relative 1e-6 / absolute 1e-12 m; overlong-case inequality includes 1e-9 m           | `tests/workflows/test_durable_workflows.py::test_span_rectification_support_count_closed_form` — PASS                       | [tests/workflows/test_durable_workflows.py:L2191-L2217]                                                         |
+| R1 — Hobbs equation regression          | Hobbs (1984), finite-mode equations; synthetic fixture, mode 3, length 60 m; expected force `k1 EI/L²` and far-field force from the coded coefficient set, displacement m and moment N·m | Relative 1e-12 for force/amplitude/moment, 1e-9 for far-field force; checks algebra, not independent coefficients | `tests/subsea/pipeline/test_hobbs_lateral_buckling.py::test_finite_mode_equations[HobbsMode.MODE_3]` — PASS at baseline     | [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L118-L138]                                                |
+| R2 — frequency screening regression     | Test fixture diameter/thickness/span and zero sag; expected frequency interval 0.36–0.48 Hz has no independently cited published example                                                 | Interval 0.36–0.48 Hz; test's screening band                                                                      | `tests/subsea/pipeline/test_free_span_f105.py::TestSpanNaturalFrequency::test_fn_IL_pinned_pinned_range` — PASS at baseline | [tests/subsea/pipeline/test_free_span_f105.py:L42-L65] [tests/subsea/pipeline/test_free_span_f105.py:L105-L110] |
+| R3 — pressure-sizing formula regression | DNV-labelled `dnv_wall_thickness` against rearranged equation in test; expected thickness in m; factors are imported from the module                                                     | Relative 1e-6; agreement with implemented equation does not qualify the licensed-standard basis                   | `tests/subsea/pipeline/test_pipeline_pressure.py::TestDnvWallThickness::test_formula_no_allowances` — PASS at baseline      | [tests/subsea/pipeline/test_pipeline_pressure.py:L209-L238]                                                     |
 
 No standard-annex case or independently checked published Hobbs worked example is claimed; qualification remains open under #1817 and #1835. [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L13-L15] [tests/subsea/pipeline/test_free_span_f105.py:L4-L7]
 
@@ -105,50 +105,50 @@ The pressure-loss benchmark identifies its retained values as “assumed, based 
 
 ## 5. QA gates
 
-AQG r0, *Analysis QA gates*, revision 0, family “Python calculations”, defines applicable gates G0 (inputs/units/citations), G1 (imports/tests), G2 (hand or published check) and G5 (evidence appendix); G3 and G4 are not applicable for this family (AQG r0, family mapping and QA appendix).
+AQG r0, _Analysis QA gates_, revision 0, family “Python calculations”, defines applicable gates G0 (inputs/units/citations), G1 (imports/tests), G2 (hand or published check) and G5 (evidence appendix); G3 and G4 are not applicable for this family (AQG r0, family mapping and QA appendix).
 
 Criteria below are proposed module checks; PASS denotes observed agreement for the stated inputs, FAIL denotes an existing gap, and neither constitutes family clearance.
 
-| Gate / check | Executable module-specific comparison | Numeric pass criterion and unit | Evidence / observed state |
-| --- | --- | --- | --- |
-| G0 / G0-C1 | Compare pressure API MPa and geometry m with explicit `Q_` conversions to Pa and mm and a dimensioned thickness calculation against `dnv_wall_thickness`; enforce `0 < t < D/2` through `PipeGeometry` | Relative conversion error ≤1e-12 (1); thickness difference ≤1e-12 m; rejected invalid geometries: 3 of 3 cases | PASS conversions; baseline geometry tests PASS; dimensional labels are not automatic conversion of bare floats. [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L79-L102] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L180-L202] [tests/subsea/pipeline/test_pipeline_pressure.py:L158-L179] |
-| G0 / G0-C2 | Compare static `test_` definitions with pipeline collection, inspect `collect_ignore` and `norecursedirs`, explicitly name excluded file | Excluded pipeline files = 0 files; unexpected missing test results = 0 tests | FAIL: 1 excluded file; explicit invocation fails collection, #1923. [tests/conftest.py:L8-L21] [pytest.ini:L3-L18] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34] |
-| G0 / G0-C3 | Compare F109 edition in implementation/manifest with pipeline design documents; compare free-span helper edition declarations | Conflicting or unresolved edition declarations = 0 declarations | FAIL: F109 documents specify October 2010, code/manifest 2021; F105 helpers give 2006/2017 without choosing, #1813. [docs/domains/pipelines/_design.md:L7-L14] [docs/domains/pipelines/_subsea_pipelines.md:L39-L45] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L7] [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L17-L23] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L16-L18] |
-| G1 / G1-C1 | Run existing offline pipeline tests and the rectification closed-form node from section 4; use the Python interfaces rather than an external target program | Failed test assertions = 0 tests; section-4 nodes without results = 0 nodes | PASS for collected suite and supplementary node; excluded test is separately NOT_RUN. No solver model writer/load route is exercised by these calculation entry points. [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L55-L112] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L343-L381] [src/digitalmodel/subsea/pipeline/span_rectification.py:L89-L114] |
-| G1 / G1-C2 | Parse `ThermalBuckling.run` and compare `self` calls with class methods before selecting the thermal route | Undefined called methods = 0 methods | FAIL: 2 missing methods; issue pending (3). [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21] |
-| G2 / G2-C1 | For free-span workflow input, independently derive annulus stiffness/effective mass, pinned-beam frequency and damping parameter; compare `SpanOnsetScreening.screening_flags` with reduced velocity computed by hand | Frequency relative error ≤1e-4 (1); Ks/reduced-velocity absolute error ≤1e-12 (1); onset flag mismatches = 0 flags | PASS; calculated frequency 0.4271 Hz, independent beam frequency 0.4271 Hz after rounding; reduced velocity 6.9 (1), IL onset true. This checks the coded screen, not licensed threshold provenance. [examples/workflows/free-span-f105/input.yml:L1-L30] [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L83-L127] [src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:L55-L134] |
-| G2 / G2-C2 | Compare `run_on_bottom_stability` with direct canonical `submerged_weight`, `hydrodynamic_loads`, `lateral_stability_check`, and `check_vertical_stability`; pass identical inputs and convert vertical loads from N/m to kN/m once | Force/weight absolute difference ≤1e-9 N/m; utilization difference ≤1e-12 (1); boolean differences = 0 flags | PASS: maximum differences 0.0 N/m and 0.0 (1); this is interface parity against a shared implementation, not an independent design benchmark. [examples/workflows/on-bottom-stability-f109/input.yml:L1-L27] [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L23-L70] |
-| G2 / G2-C3 | Run V1 annulus comparison on `PipeSection.from_dimensions` | Relative error ≤1e-6 (1), absolute tolerance 1e-12 m² / m⁴ / m | PASS; validates geometry only. [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L61-L67] |
-| G2 / G2-C4 | Run V2 on `design_rectification`: count supports and verify every resulting sub-span within supplied allowable | Support-count error = 0 supports; excess sub-span length ≤1e-9 m | PASS; upstream allowable-span qualification excluded. [tests/workflows/test_durable_workflows.py:L2191-L2217] |
-| G2 / G2-C5 | Substitute `dnv_collapse_pressure` output into the cubic stated by its own docstring; normalize absolute residual by the cube of the larger component pressure | Normalized residual ≤1e-5 (1) | FAIL: 18.7 (1) for the synthetic case of issue pending (1); do not use this path as a reference. [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L43-L87] |
-| G2 / G2-C6 | Independently integrate `EI d⁴y/dx⁴=w` with zero displacement/end moment at both simply supported ends; compare midspan deflection at `_L_max_static` with the coded displacement allowance | Relative deflection error ≤1e-10 (1) | FAIL: independent/coded deflection ratio 5.0; issue pending (2); rectification arithmetic does not qualify this upstream model. [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L95] |
-| G3 | NOT_APPLICABLE — Python calculation interfaces have no time-marching simulation in this scope (AQG r0, family mapping). | Not applicable | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L74-L112] |
-| G4 | NOT_APPLICABLE — no diffraction body or mesh is produced by these interfaces (AQG r0, family mapping). | Not applicable | [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L343-L381] [src/digitalmodel/subsea/pipeline/span_rectification.py:L89-L114] |
-| G5 / G5-C1 | Assemble per-case inputs/digests, test nodes/results, standard basis and exceptions; require a recorded disposition for every unresolved design claim | Unlisted exceptions = 0 items; missing input digests for the two interface hand checks = 0 files | Input digests recorded; independent standard qualification remains open (#1835/#1817). No signed analysis appendix or gate clearance is claimed. [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L4-L15] |
-| G5 / G5-C2 | Compare section-9 inventory identifiers with every entry of the supplemental implementation-map families; separately classify genuine alternative calculations and delegating helpers | Omitted map records = 0 records | Inventory reconciled in section 9; method qualification remains #1817. [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L14] [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] |
+| Gate / check | Executable module-specific comparison                                                                                                                                                                                               | Numeric pass criterion and unit                                                                                    | Evidence / observed state                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| G0 / G0-C1   | Compare pressure API MPa and geometry m with explicit `Q_` conversions to Pa and mm and a dimensioned thickness calculation against `dnv_wall_thickness`; enforce `0 < t < D/2` through `PipeGeometry`                              | Relative conversion error ≤1e-12 (1); thickness difference ≤1e-12 m; rejected invalid geometries: 3 of 3 cases     | PASS conversions; baseline geometry tests PASS; dimensional labels are not automatic conversion of bare floats. [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L79-L102] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L180-L202] [tests/subsea/pipeline/test_pipeline_pressure.py:L158-L179]                                                                                                                                                                               |
+| G0 / G0-C2   | Compare static `test_` definitions with pipeline collection, inspect `collect_ignore` and `norecursedirs`, explicitly name excluded file                                                                                            | Excluded pipeline files = 0 files; unexpected missing test results = 0 tests                                       | FAIL: 1 excluded file; explicit invocation fails collection, #1923. [tests/conftest.py:L8-L21] [pytest.ini:L3-L18] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34]                                                                                                                                                                                                                                                                                                               |
+| G0 / G0-C3   | Compare F109 edition in implementation/manifest with pipeline design documents; compare free-span helper edition declarations                                                                                                       | Conflicting or unresolved edition declarations = 0 declarations                                                    | FAIL: F109 documents specify October 2010, code/manifest 2021; F105 helpers give 2006/2017 without choosing, #1813. [docs/domains/pipelines/_design.md:L7-L14] [docs/domains/pipelines/_subsea_pipelines.md:L39-L45] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L7] [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L17-L23] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L16-L18]                                                         |
+| G1 / G1-C1   | Run existing offline pipeline tests and the rectification closed-form node from section 4; use the Python interfaces rather than an external target program                                                                         | Failed test assertions = 0 tests; section-4 nodes without results = 0 nodes                                        | PASS for collected suite and supplementary node; excluded test is separately ERROR (collection, ModuleNotFoundError). No solver model writer/load route is exercised by these calculation entry points. [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L55-L112] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L343-L381] [src/digitalmodel/subsea/pipeline/span_rectification.py:L89-L114]                                                                      |
+| G1 / G1-C2   | Parse `ThermalBuckling.run` and compare `self` calls with class methods before selecting the thermal route                                                                                                                          | Undefined called methods = 0 methods                                                                               | FAIL: 2 missing methods; issue pending (3). [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21]                                                                                                                                                                                                                                                                                                                                                                                   |
+| G2 / G2-C1   | For free-span workflow input, independently derive annulus stiffness/effective mass, pinned-beam frequency and damping parameter; compare `SpanOnsetScreening.screening_flags` with reduced velocity computed by hand               | Frequency relative error ≤1e-4 (1); Ks/reduced-velocity absolute error ≤1e-12 (1); onset flag mismatches = 0 flags | PASS; calculated frequency 0.4271 Hz, independent beam frequency 0.4271 Hz after rounding; reduced velocity 6.9 (1), IL onset true. This checks the coded screen, not licensed threshold provenance. [examples/workflows/free-span-f105/input.yml:L1-L30] [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L83-L127] [src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:L55-L134]                                                                      |
+| G2 / G2-C2   | Compare `run_on_bottom_stability` with direct canonical `submerged_weight`, `hydrodynamic_loads`, `lateral_stability_check`, and `check_vertical_stability`; pass identical inputs and convert vertical loads from N/m to kN/m once | Force/weight absolute difference ≤1e-9 N/m; utilization difference ≤1e-12 (1); boolean differences = 0 flags       | PASS: maximum differences 0.0 N/m and 0.0 (1); this is interface parity against a shared implementation, not an independent design benchmark. [examples/workflows/on-bottom-stability-f109/input.yml:L1-L27] [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L23-L70]                                                                                                                                                                                                               |
+| G2 / G2-C3   | Run V1 annulus comparison on `PipeSection.from_dimensions`                                                                                                                                                                          | Relative error ≤1e-6 (1), absolute tolerance 1e-12 m² / m⁴ / m                                                     | PASS; validates geometry only. [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L61-L67]                                                                                                                                                                                                                                                                                                                                                                                                |
+| G2 / G2-C4   | Run V2 on `design_rectification`: count supports and verify every resulting sub-span within supplied allowable                                                                                                                      | Support-count error = 0 supports; excess sub-span length ≤1e-9 m                                                   | PASS; upstream allowable-span qualification excluded. [tests/workflows/test_durable_workflows.py:L2191-L2217]                                                                                                                                                                                                                                                                                                                                                                                |
+| G2 / G2-C5   | Substitute `dnv_collapse_pressure` output into the cubic stated by its own docstring; normalize absolute residual by the cube of the larger component pressure                                                                      | Normalized residual ≤1e-5 (1)                                                                                      | FAIL: synthetic inputs D = 0.3239 m, t = 0.0159 m, SMYS = 450 MPa, f_0 = 0.005 (default), E = 207000 MPa, nu = 0.3 return 161.45 MPa; normalized residual 16.4 (1), computed from the unrounded return and component pressures. This is a code-equation residual check, not a licensed-standard reference; issue pending (1). [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L43-L87]                                                                                            |
+| G2 / G2-C6   | Independently integrate `EI d⁴y/dx⁴=w` with zero displacement/end moment at both simply supported ends; compare midspan deflection at `_L_max_static` with the coded displacement allowance                                         | Relative deflection error ≤1e-10 (1)                                                                               | FAIL: independent/coded deflection ratio 5.0; issue pending (2); rectification arithmetic does not qualify this upstream model. [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L95]                                                                                                                                                                                                                                                                                |
+| G3           | NOT_APPLICABLE — Python calculation interfaces have no time-marching simulation in this scope (AQG r0, family mapping).                                                                                                             | Not applicable                                                                                                     | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L74-L112]                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| G4           | NOT_APPLICABLE — no diffraction body or mesh is produced by these interfaces (AQG r0, family mapping).                                                                                                                              | Not applicable                                                                                                     | [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L343-L381] [src/digitalmodel/subsea/pipeline/span_rectification.py:L89-L114]                                                                                                                                                                                                                                                                                                                                                 |
+| G5 / G5-C1   | Assemble per-case inputs/digests, test nodes/results, standard basis and exceptions; require a recorded disposition for every unresolved design claim                                                                               | Unlisted exceptions = 0 items; missing input digests for the two interface hand checks = 0 files                   | SHA-256 at the code pin: `examples/workflows/free-span-f105/input.yml` = `66eff5cf59b0cbe6b3c624056bc6c09a015c7a79530911c912fa1d7dccdaf1fa`; `examples/workflows/on-bottom-stability-f109/input.yml` = `062deb89a902c61ed8410f6f67a0472b19d251395a19f009e3b5f67ec4dddd95`; missing digests = 0 files. Independent standard qualification remains open (#1835/#1817). No signed analysis appendix or gate clearance is claimed. [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L4-L15] |
+| G5 / G5-C2   | Compare section-9 inventory identifiers with every entry of the supplemental implementation-map families; separately classify genuine alternative calculations and delegating helpers                                               | Omitted map records = 0 records                                                                                    | Inventory reconciled in section 9; method qualification remains #1817. [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L14] [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150]                                                                                                                                                                                                                                                                               |
 
 ## 6. Known failure modes and pitfalls
 
-| Symptom / cause | Detection and disposition | Incident / evidence |
-| --- | --- | --- |
-| Stability tests disappear from directory collection because an absolute `collect_ignore` entry remains after an API move | G0-C2; explicit file invocation returns `ModuleNotFoundError: No module named 'digitalmodel.subsea.pipeline.on_bottom_stability'`; no tests in that file executed | #1923; 2026-10-15 observation. [tests/conftest.py:L8-L21] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34] |
-| Green legacy wrapper tests do not establish numerical workflow behaviour: the engine is mocked and expected payload is returned directly | G1-C1 reports wrapper passes separately from independent examples; no independent detection check exists for complete legacy numerical correctness | #1817. [tests/subsea/pipeline/test_pipeline.py:L13-L21] [tests/subsea/pipeline/test_pipeline_lateral_buckling.py:L16-L34] [tests/subsea/pipeline/test_pipeline_upheaval_buckling.py:L16-L34] |
-| F109 edition differs between design documents and canonical interface; F105 helper references retain two possible editions | G0-C3; retain discrepancy until standard-basis review; do not silently select an edition | #1813 / #1835. [docs/domains/pipelines/_design.md:L7-L14] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L7] [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L17-L23] |
-| A method name or docstring is mistaken for complete design-code coverage | G5-C1 evidence ledger; no detection check exists for full licensed-standard compliance; clause/function/test reconciliation remains necessary | #1835; standards implementation/coverage epic; #1817, coverage audit. [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L127-L149] [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L13-L15] |
-| Nonzero-ovality collapse returns a value failing its own equation | G2-C5; synthetic normalized residual exceeds criterion; isolate from hand-check references | Issue pending (1); 2026-10-15. [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L64-L87] |
-| Simply supported static-span description uses a deflection coefficient inconsistent with independently integrated beam boundary conditions | G2-C6; independent/coded deflection ratio 5.0; existing positivity tests do not qualify the allowable | Issue pending (2); 2026-10-15. [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L95] |
-| Thermal selection calls missing methods; upheaval uses unfinished eigenvalue work and defaults required download to zero | G1-C2 detects thermal calls; a production upheaval assessment needs an explicit nonzero required download and independently justified eigenvalue/units; no independent end-to-end detection check exists | Issue pending (3); 2026-10-15. [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L88-L103] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L127-L149] |
-| Simplified stability is mistaken for the absolute F109 method | G2-C2 checks delegation; choose canonical absolute check explicitly when required, since simplified retains lift relief and uses generalized method without passive resistance | #1817. [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L40-L49] |
-| Wave spectrum divides by the normalizing factor | Detection prescribed by #2543: integrate `jonswap_spectrum` and require variance relative error ≤1.0 % for the three issue-defined enhancement factors; NOT_RUN here, wave-helper qualification remains outside the selected main path | #2543. [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L129-L140] |
-| S-N output or unqualified material tables are treated as independently certified data | G5-C1; inspect shared curve source and the material-library migration note; no numeric table values are reproduced here | #1817 / #1835. [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L132-L140] |
+| Symptom / cause                                                                                                                                                                                                                               | Detection and disposition                                                                                                                                                                                                              | Incident / evidence                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stability tests disappear from directory collection because an absolute `collect_ignore` entry remains after an API move                                                                                                                      | G0-C2; explicit file invocation returns `ModuleNotFoundError: No module named 'digitalmodel.subsea.pipeline.on_bottom_stability'`; no tests in that file executed                                                                      | #1923; 2026-10-15 observation. [tests/conftest.py:L8-L21] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34]                                                                                                                                                                                                                                                                                |
+| Green legacy wrapper tests do not establish numerical workflow behaviour: the engine is mocked and expected payload is returned directly                                                                                                      | G1-C1 reports wrapper passes separately from independent examples; no independent detection check exists for complete legacy numerical correctness                                                                                     | #1817. [tests/subsea/pipeline/test_pipeline.py:L13-L21] [tests/subsea/pipeline/test_pipeline_lateral_buckling.py:L16-L34] [tests/subsea/pipeline/test_pipeline_upheaval_buckling.py:L16-L34]                                                                                                                                                                                                         |
+| F109 edition differs between design documents and canonical interface; F105 helper references retain two possible editions                                                                                                                    | G0-C3; retain discrepancy until standard-basis review; do not silently select an edition                                                                                                                                               | #1813 / #1835. [docs/domains/pipelines/_design.md:L7-L14] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L7] [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L17-L23]                                                                                                                                                                                                    |
+| A method name or docstring is mistaken for complete design-code coverage                                                                                                                                                                      | G5-C1 evidence ledger; no detection check exists for full licensed-standard compliance; clause/function/test reconciliation remains necessary                                                                                          | #1835; standards implementation/coverage epic; #1817, coverage audit. [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L127-L149] [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L13-L15]                                                                                                                                                                                               |
+| Default-ovality collapse returns a value failing its own equation and overstates capacity; `dnv_external_collapse_check`, `dnv_combined_loading_check` and the `dnv_external_collapse` output of `WallThicknessSizingWorkflow.run` consume it | G2-C5; do not use DNV collapse or combined-loading outputs from this package until fixed                                                                                                                                               | Issue pending (1); 2026-10-15. [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L35-L87] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L123-L140] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L256-L270] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L336-L338] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L343-L355] |
+| Simply supported static-span description uses a deflection coefficient inconsistent with independently integrated beam boundary conditions                                                                                                    | G2-C6; independent/coded deflection ratio 5.0; existing positivity tests do not qualify the allowable                                                                                                                                  | Issue pending (2); 2026-10-15. [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L95]                                                                                                                                                                                                                                                                                         |
+| Thermal selection calls missing methods; upheaval uses unfinished eigenvalue work and defaults required download to zero                                                                                                                      | G1-C2 detects thermal calls; a production upheaval assessment needs an explicit nonzero required download and independently justified eigenvalue/units; no independent end-to-end detection check exists                               | Issue pending (3); 2026-10-15. [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L88-L103] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L127-L149]                                                                                                                                                                     |
+| Simplified stability is mistaken for the absolute F109 method                                                                                                                                                                                 | G2-C2 checks delegation; choose canonical absolute check explicitly when required, since simplified retains lift relief and uses generalized method without passive resistance                                                         | #1817. [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L40-L49]                                                                                                                                                                                                                                                                                                                           |
+| Wave spectrum divides by the normalizing factor                                                                                                                                                                                               | Detection prescribed by #2543: integrate `jonswap_spectrum` and require variance relative error ≤1.0 % for the three issue-defined enhancement factors; NOT_RUN here, wave-helper qualification remains outside the selected main path | #2543. [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L129-L140]                                                                                                                                                                                                                                                                                                                       |
+| S-N output or unqualified material tables are treated as independently certified data                                                                                                                                                         | G5-C1; inspect shared curve source and the material-library migration note; no numeric table values are reproduced here                                                                                                                | #1817 / #1835. [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L132-L140]                                                                                                                                                                                                                                              |
 
 ## 7. Lessons log
 
-| Date | Change reference | Lesson | Evidence | Pack change / shared record |
-| --- | --- | --- | --- | --- |
-| 2026-10-15 | Initial pack | Directory-level success does not establish visibility of the stability tests | [tests/conftest.py:L8-L21] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34] | Sections 5, 6 and 10 separate collection errors from numerical passes; #1923 is the shared reference |
-| 2026-10-15 | Initial pack | Support-count validation does not validate the allowable-span calculation | [tests/workflows/test_durable_workflows.py:L2191-L2217] [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L95] | Sections 4–6 distinguish geometry/arithmetic from design qualification; issue pending (2) |
-| 2026-10-15 | Initial pack | Equation checks that reuse a coefficient table do not independently establish those coefficients | [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L121-L137] | Section 4 classifies Hobbs identities as regressions; #1817 is the shared reference |
+| Date       | Change reference | Lesson                                                                                           | Evidence                                                                                                                              | Pack change / shared record                                                                          |
+| ---------- | ---------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 2026-10-15 | Initial pack     | Directory-level success does not establish visibility of the stability tests                     | [tests/conftest.py:L8-L21] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34]                                                | Sections 5, 6 and 10 separate collection errors from numerical passes; #1923 is the shared reference |
+| 2026-10-15 | Initial pack     | Support-count validation does not validate the allowable-span calculation                        | [tests/workflows/test_durable_workflows.py:L2191-L2217] [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L95] | Sections 4–6 distinguish geometry/arithmetic from design qualification; issue pending (2)            |
+| 2026-10-15 | Initial pack     | Equation checks that reuse a coefficient table do not independently establish those coefficients | [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L121-L137]                                                                      | Section 4 classifies Hobbs identities as regressions; #1817 is the shared reference                  |
 
 ## 8. Ownership
 
@@ -160,1129 +160,1130 @@ Status remains DRAFT pending that independent review; no personnel appointment o
 
 ### Operating dependencies and alternative calculations
 
-| Dependency / alternative | Relationship and engineering boundary | Evidence |
-| --- | --- | --- |
-| Canonical on-bottom stability | Pipeline runner calls the canonical simplified interface; the simplified lateral wrapper delegates to generalized stability without passive-soil resistance. This is helper/delegation coverage, not a second independent stability calculation | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L70] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L40-L49] |
-| Pipe properties and units | Legacy `Pipeline.get_pipe_properties` uses infrastructure pipe properties; pressure material grades use the shared legacy material library; `PipeSizing` and `calculations/pipe_properties.py` retain separate annulus calculations | [src/digitalmodel/subsea/pipeline/pipeline.py:L38-L42] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L132-L140] [src/digitalmodel/subsea/pipeline/pipe_sizing.py:L42-L69] [src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:L18-L63] |
-| Shared fatigue data | Free-span S-N adapter reads shared `fatigue.c203_sn_tables`; it does not maintain a separate source table; allowable-length helpers reuse added mass while retaining separate stiffness/mass assembly | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L67-L84] |
-| Free-span metocean helpers | Wave spectrum/dispersion/transfer and Weibull current interpolation are supporting calculations; `assess_multi_current` weights separate current-bin damage results | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L269-L359] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L130-L159] [src/digitalmodel/subsea/pipeline/free_span/__init__.py:L151-L198] |
-| Structural pressure strategy | `DnvStF101Strategy` separately computes containment, collapse, propagation and combined loading; no equivalence with the pipeline functions is assumed | [src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py:L117-L161] [src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py:L208-L235] [src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py:L237-L291] |
-| Standalone code-check surface | `code_checks/dnv_os_f101.py` separately implements containment, collapse and propagation; its existence does not qualify the pipeline collapse routine | [src/digitalmodel/code_checks/dnv_os_f101.py:L50-L80] [src/digitalmodel/code_checks/dnv_os_f101.py:L182-L238] [src/digitalmodel/code_checks/dnv_os_f101.py:L288-L310] |
-| Legacy script implementation | Repository-wide search, including `scripts/`, finds pressure containment and collapse in `scripts/python/digitalmodel/analysis/RigidPipe.py` in addition to structural `RigidPipe.py` | [scripts/python/digitalmodel/analysis/RigidPipe.py:L106-L164] [src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:L153-L247] |
-| Pressure / force assembly inside this package | Legacy lateral buckling, `buckling_common`, Hobbs driving force and `APISTD2RDCalculations` have distinct equations/unit conventions; they are not interchangeable references | [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L119-L145] [src/digitalmodel/subsea/pipeline/buckling_common.py:L127-L163] [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L294-L337] [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L108-L160] |
-| Durable consumers | Registered free-span, stability, lateral/upheaval and rectification workflows connect inputs to the existing engine test registry | [docs/registry/workflows.yaml:L476-L490] [docs/registry/workflows.yaml:L534-L559] |
+| Dependency / alternative                      | Relationship and engineering boundary                                                                                                                                                                                                                                                                                                                                                                                      | Evidence                                                                                                                                                                                                                                                                                        |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Canonical on-bottom stability                 | Pipeline runner calls the canonical simplified interface; the simplified lateral wrapper delegates to generalized stability without passive-soil resistance. This is helper/delegation coverage, not a second independent stability calculation                                                                                                                                                                            | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L70] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L40-L49]                                                                                                                                                            |
+| Pipe properties and units                     | Legacy `Pipeline.get_pipe_properties` uses infrastructure pipe properties; pressure material grades use the shared legacy material library; `PipeSizing` and `calculations/pipe_properties.py` retain separate annulus calculations                                                                                                                                                                                        | [src/digitalmodel/subsea/pipeline/pipeline.py:L38-L42] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L132-L140] [src/digitalmodel/subsea/pipeline/pipe_sizing.py:L42-L69] [src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:L18-L63]                                   |
+| Shared fatigue data                           | Free-span S-N adapter reads shared `fatigue.c203_sn_tables`; it does not maintain a separate source table; allowable-length helpers reuse added mass while retaining separate stiffness/mass assembly                                                                                                                                                                                                                      | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L67-L84]                                                                                                                                            |
+| In-package S-N evaluation                     | `BilinearSNCurve.get_allowable_cycles` evaluates its own two-slope power law and returns infinite life at or below the in-air cut-off; `get_stress_range` evaluates the inverse with a fatigue-limit floor. Shared parameter tables do not make these evaluations delegating helpers. Independent evaluator; control agreement not checked; covered by this pack; map gap in `sn-curves-and-miner-damage`, follow-up #1817 | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L72-L125] [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150]                                                                                                                                                    |
+| Free-span metocean helpers                    | Wave spectrum/dispersion/transfer and Weibull current interpolation are supporting calculations; `assess_multi_current` weights separate current-bin damage results                                                                                                                                                                                                                                                        | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L269-L359] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L130-L159] `[src/digitalmodel/subsea/pipeline/free_span/__init__.py:L151-L198]`                                                                          |
+| Structural pressure strategy                  | `DnvStF101Strategy` separately computes containment, collapse, propagation and combined loading; no equivalence with the pipeline functions is assumed                                                                                                                                                                                                                                                                     | [src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py:L117-L161] [src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py:L208-L235] [src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py:L237-L291]                                  |
+| Standalone code-check surface                 | `code_checks/dnv_os_f101.py` separately implements containment, collapse and propagation; its existence does not qualify the pipeline collapse routine                                                                                                                                                                                                                                                                     | [src/digitalmodel/code_checks/dnv_os_f101.py:L50-L80] [src/digitalmodel/code_checks/dnv_os_f101.py:L182-L238] [src/digitalmodel/code_checks/dnv_os_f101.py:L288-L310]                                                                                                                           |
+| Legacy script implementation                  | Repository-wide search, including `scripts/`, finds pressure containment and collapse in `scripts/python/digitalmodel/analysis/RigidPipe.py` in addition to structural `RigidPipe.py`                                                                                                                                                                                                                                      | [scripts/python/digitalmodel/analysis/RigidPipe.py:L106-L164] [src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:L153-L247]                                                                                                                                             |
+| Pressure / force assembly inside this package | Legacy lateral buckling, `buckling_common`, Hobbs driving force and `APISTD2RDCalculations` have distinct equations/unit conventions; they are not interchangeable references                                                                                                                                                                                                                                              | [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L119-L145] [src/digitalmodel/subsea/pipeline/buckling_common.py:L127-L163] [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L294-L337] [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L108-L160] |
+| Durable consumers                             | Registered free-span, stability, lateral/upheaval and rectification workflows connect inputs to the existing engine test registry                                                                                                                                                                                                                                                                                          | [docs/registry/workflows.yaml:L476-L490] [docs/registry/workflows.yaml:L534-L559]                                                                                                                                                                                                               |
 
 UNVERIFIED: A complete dependency inventory row and supported-version matrix for every upstream/downstream implementation is not established by the repository search; cross-module numerical equivalence remains open under #1817.
 
 ### Supplemental implementation inventory
 
-Inventory source: digitalmodel, *Implementation map*, `docs/registry/implementation-map.yaml`, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, read from `origin/codex/implmap-work`; the map's declared searched-code revision is `947fa50ff9a9e210de7e8f90e01b37add85c5954` (source document, header and family records).
+Inventory source: digitalmodel, _Implementation map_, `docs/registry/implementation-map.yaml`, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`; the map's declared searched-code revision is `947fa50ff9a9e210de7e8f90e01b37add85c5954` (source document, header and family records).
 
-The inventory below includes every record in each family containing a `subsea/pipeline` entry: 999 records across 7 families, including broad-family matches, tests, scripts, tables and delegating helpers (digitalmodel, *Implementation map*, cited revision, family records).
+The inventory below includes every record in each family containing a `subsea/pipeline` entry: 999 records across 7 families, including broad-family matches, tests, scripts, tables and delegating helpers (digitalmodel, _Implementation map_, cited revision, family records).
 
-`F1`–`F7` and the entry ordinal identify source records in their original order; relation values reproduce inventory classifications and are not independent technical conclusions (digitalmodel, *Implementation map*, cited revision, family records).
+`F1`–`F7` and the entry ordinal identify source records in their original order; relation values reproduce inventory classifications and are not independent technical conclusions (digitalmodel, _Implementation map_, cited revision, family records).
 
 Repository citations in the location cells resolve at this pack's code pin; the source inventory has its own explicitly identified revision. Definition locations were matched by syntax tree where a symbol exists; table/script records cite their file as a whole. No solver script in the inventory was imported or run.
 
 #### F1 — `effective-tension-riser-stack-up`
 
-Source: digitalmodel, *Implementation map*, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `effective-tension-riser-stack-up`, 264 records.
+Source: digitalmodel, _Implementation map_, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `effective-tension-riser-stack-up`, 264 records.
 
-| Source entry | Symbol / inventory relation | Location at code pin |
-| --- | --- | --- |
-| F1:1 | `main`; `independent` | [docs/domains/orcaflex/examples/modular/A01/A01 Catenary riser/run_orcaflex.py:L45-L94] |
-| F1:2 | `main`; `independent` | [docs/domains/orcaflex/examples/modular/A01/A01 Lazy wave riser/run_orcaflex.py:L44-L92] |
-| F1:3 | `main`; `independent` | [docs/domains/orcaflex/examples/modular/C10/C10 Multiple statics/run_orcaflex.py:L47-L113] |
-| F1:4 | `main`; `independent` | [docs/domains/orcaflex/examples/modular/E08/PipelayConfig/run_orcaflex.py:L48-L116] |
-| F1:5 | `check_r01_catenary`; `independent` | [docs/domains/orcaflex/examples/qa/orcaflex_example_qa.py:L140-L180] |
-| F1:6 | `check_r02_lazy_wave`; `independent` | [docs/domains/orcaflex/examples/qa/orcaflex_example_qa.py:L187-L223] |
-| F1:7 | `check_r05_lay_table`; `independent` | [docs/domains/orcaflex/examples/qa/orcaflex_example_qa.py:L317-L346] |
-| F1:8 | `check_r06_multi_static`; `independent` | [docs/domains/orcaflex/examples/qa/orcaflex_example_qa.py:L353-L388] |
-| F1:9 | `extract_vessel_params`; `example` | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L273-L290] |
-| F1:10 | `vessel_band_specs`; `example` | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L293-L310] |
-| F1:11 | `find_required_tension`; `example` | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L563-L774] |
-| F1:12 | `_build_infeasible_result`; `example` | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L777-L819] |
-| F1:13 | `run_single_case`; `example` | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L826-L891] |
-| F1:14 | `(file-level record)`; `example` | [examples/demos/gtm/results_store_demo04.py:L1-L706] |
-| F1:15 | `_good_case`; `example` | [examples/demos/gtm/tests/test_demo_04_results_store.py:L79-L124] |
-| F1:16 | `_infeasible_case`; `example` | [examples/demos/gtm/tests/test_demo_04_results_store.py:L127-L173] |
-| F1:17 | `test_999_sentinel_and_none_null_round_trip`; `example` | [examples/demos/gtm/tests/test_demo_04_results_store.py:L342-L403] |
-| F1:18 | `analyze_installation_catenary`; `example` | [examples/domains/workflows/04_pipeline_installation.py:L51-L123] |
-| F1:19 | `_schedule_row`; `example` | [examples/workflows/riser-stackup-registry-batch/run.py:L115-L154] |
-| F1:20 | `_assemble_row`; `example` | [examples/workflows/riser-stackup-registry-batch/run.py:L219-L256] |
-| F1:21 | `(file-level record)`; `independent` | [scripts/capabilities/build_wall_thickness_3d.py:L1-L265] |
-| F1:22 | `_analyze_point`; `independent` | [scripts/capabilities/build_wall_thickness_3d.py:L171-L219] |
-| F1:23 | `build_study`; `wrapper` | [scripts/capabilities/build_wall_thickness_3d.py:L222-L244] |
-| F1:24 | `_axes`; `independent` | [scripts/capabilities/build_wall_thickness_3d_page.py:L34-L45] |
-| F1:25 | `_pack_rows`; `independent` | [scripts/capabilities/build_wall_thickness_3d_page.py:L75-L114] |
-| F1:26 | `_run`; `independent` | [scripts/capabilities/build_wall_thickness_explorer.py:L48-L70] |
-| F1:27 | `metrics`; `independent` | [scripts/orcaflex/check_generic_scr_slwr.py:L38-L55] |
-| F1:28 | `calculate`; `independent` | [scripts/orcaflex/check_generic_scr_slwr.py:L418-L462] |
-| F1:29 | `catenary`; `independent` | [scripts/orcaflex/prepare_slay_campaign.py:L27-L51] |
-| F1:30 | `case_spec`; `independent` | [scripts/orcaflex/prepare_slay_campaign.py:L69-L79] |
-| F1:31 | `prepare_case`; `independent` | [scripts/orcaflex/prepare_slay_campaign.py:L90-L113] |
-| F1:32 | `prepare`; `independent` | [scripts/orcaflex/prepare_slay_campaign.py:L116-L137] |
-| F1:33 | `main`; `independent` | [scripts/parametric/build_orcaflex_library.py:L39-L72] |
-| F1:34 | `APISTD2RDCalculation`; `independent` | [scripts/python/digitalmodel/analysis/APIST2RD_Methods.py:L6-L149] |
-| F1:35 | `DNVOSF101Pipe.localBucklingCombinedLoadingLoadControlled`; `independent` | [scripts/python/digitalmodel/analysis/RigidPipe.py:L205-L274] |
-| F1:36 | `StackUpDiagram`; `independent` | [scripts/python/digitalmodel/analysis/RiserStackup.py:L26-L180] |
-| F1:37 | `main`; `independent` | [scripts/python/digitalmodel/analysis/StackUp_3000Ft.py:L10-L151] |
-| F1:38 | `main`; `independent` | [scripts/python/digitalmodel/analysis/StackUp_9500Ft.py:L10-L181] |
-| F1:39 | `evaluate`; `caller` | [scripts/reporting/build_riser_pipe_comparison.py:L50-L81] |
-| F1:40 | `_validate`; `independent` | [scripts/reporting/build_riser_pipe_comparison.py:L84-L110] |
-| F1:41 | `numeric_values`; `independent` | [scripts/reporting/build_riser_pipe_comparison.py:L151-L178] |
-| F1:42 | `_input_table`; `independent` | [scripts/reporting/build_riser_pipe_comparison.py:L210-L237] |
-| F1:43 | `(file-level record)`; `independent` | [scripts/riser_database/build_tables.py:L1-L212] |
-| F1:44 | `VonMises_Pipe.init_calculate_required_properties`; `independent` | [src/digitalmodel/asset_integrity/custom/PipeCapacity.py:L696-L721] |
-| F1:45 | `local_buckling_lcc`; `independent` | [src/digitalmodel/code_checks/dnv_os_f101.py:L91-L147] |
-| F1:46 | `_run_api_rp_2rd`; `independent` | [src/digitalmodel/code_checks/workflow.py:L58-L79] |
-| F1:47 | `_run_dnv_os_f201`; `independent` | [src/digitalmodel/code_checks/workflow.py:L82-L110] |
-| F1:48 | `minimum_top_tension_16q`; `independent` | [src/digitalmodel/drilling_riser/assembly.py:L208-L236] |
-| F1:49 | `_unit_count`; `independent` | [src/digitalmodel/drilling_riser/assembly.py:L254-L263] |
-| F1:50 | `check_rig_capability`; `independent` | [src/digitalmodel/drilling_riser/assembly.py:L266-L306] |
-| F1:51 | `case_spec`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L134-L239] |
-| F1:52 | `_ring_tensioners`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L358-L359] |
-| F1:53 | `set_line_tension`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L362-L368] |
-| F1:54 | `calibrate_line_tension`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L371-L393] |
-| F1:55 | `_statics_path`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L400-L565] |
-| F1:56 | `robust_statics`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L568-L634] |
-| F1:57 | `_tensioner_vertical_n`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L734-L737] |
-| F1:58 | `tensioner_vertical_target_n`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L752-L755] |
-| F1:59 | `physical_state_checks`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L758-L810] |
-| F1:60 | `RiserCampaignAdapter.prepare`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L855-L886] |
-| F1:61 | `RiserCampaignAdapter.extract`; `independent` | [src/digitalmodel/drilling_riser/campaign.py:L912-L952] |
-| F1:62 | `compute_operating_envelope`; `independent` | [src/digitalmodel/drilling_riser/envelope.py:L278-L446] |
-| F1:63 | `equivalent_string_top_tension_n`; `independent` | [src/digitalmodel/drilling_riser/global_model/build.py:L35-L41] |
-| F1:64 | `_tensioner_geometry`; `independent` | [src/digitalmodel/drilling_riser/global_model/build.py:L51-L55] |
-| F1:65 | `winch_tension_n`; `independent` | [src/digitalmodel/drilling_riser/global_model/build.py:L58-L61] |
-| F1:66 | `build_generic_spec`; `independent` | [src/digitalmodel/drilling_riser/global_model/build.py:L180-L369] |
-| F1:67 | `effective_tension_chain`; `independent` | [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L45-L55] |
-| F1:68 | `tension_references`; `independent` | [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L64-L83] |
-| F1:69 | `tensioner_lateral_stiffness_n_m`; `independent` | [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L164-L176] |
-| F1:70 | `reference_periods`; `caller` | [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L216-L232] |
-| F1:71 | `hung_weight_n`; `independent` | [src/digitalmodel/drilling_riser/global_model/hang_off.py:L48-L53] |
-| F1:72 | `OpenWaterRiserSpec._closes`; `independent` | [src/digitalmodel/drilling_riser/global_model/open_water.py:L114-L139] |
-| F1:73 | `build_open_water_generic_spec`; `independent` | [src/digitalmodel/drilling_riser/global_model/open_water.py:L143-L210] |
-| F1:74 | `tension_references`; `independent` | [src/digitalmodel/drilling_riser/global_model/open_water.py:L218-L240] |
-| F1:75 | `reference_periods`; `independent` | [src/digitalmodel/drilling_riser/global_model/open_water.py:L272-L281] |
-| F1:76 | `release_reference`; `independent` | [src/digitalmodel/drilling_riser/global_model/open_water.py:L293-L317] |
-| F1:77 | `ring_vertical_residual_n`; `independent` | [src/digitalmodel/drilling_riser/global_model/orcaflex_run.py:L181-L190] |
-| F1:78 | `open_water_physical_checks`; `independent` | [src/digitalmodel/drilling_riser/global_model/orcaflex_run.py:L309-L327] |
-| F1:79 | `Tensioners._failed`; `independent` | [src/digitalmodel/drilling_riser/global_model/spec.py:L146-L149] |
-| F1:80 | `RiserGlobalModelSpec._geometry_closes`; `independent` | [src/digitalmodel/drilling_riser/global_model/spec.py:L405-L436] |
-| F1:81 | `_missing_open_water`; `independent` | [src/digitalmodel/drilling_riser/global_model/w5_channels.py:L140-L159] |
-| F1:82 | `missing_channels`; `independent` | [src/digitalmodel/drilling_riser/global_model/w5_channels.py:L188-L218] |
-| F1:83 | `extract`; `independent` | [src/digitalmodel/drilling_riser/global_model/w5_channels.py:L317-L366] |
-| F1:84 | `extract_open_water`; `independent` | [src/digitalmodel/drilling_riser/global_model/w5_channels.py:L409-L455] |
-| F1:85 | `t_min`; `independent` | [src/digitalmodel/drilling_riser/postprocess/checks.py:L172-L174] |
-| F1:86 | `tension_setting_max`; `independent` | [src/digitalmodel/drilling_riser/postprocess/checks.py:L177-L178] |
-| F1:87 | `tensioner_stroke`; `independent` | [src/digitalmodel/drilling_riser/postprocess/checks.py:L198-L202] |
-| F1:88 | `ScheduleAssembly.minimum_top_tension_16q_kn`; `independent` | [src/digitalmodel/drilling_riser/schedule_assembly.py:L196-L212] |
-| F1:89 | `_load_oc_assembly`; `independent` | [src/digitalmodel/drilling_riser/schedule_assembly.py:L532-L724] |
-| F1:90 | `effective_tension`; `independent` | [src/digitalmodel/drilling_riser/stackup.py:L85-L108] |
-| F1:91 | `parse_snapshots`; `independent` | [src/digitalmodel/drilling_riser/telemetry_inputs.py:L135-L158] |
-| F1:92 | `snapshot_to_tension_n`; `independent` | [src/digitalmodel/drilling_riser/telemetry_inputs.py:L178-L184] |
-| F1:93 | `router`; `independent` | [src/digitalmodel/drilling_riser/tsj_workflow.py:L19-L71] |
-| F1:94 | `_section_result`; `independent` | [src/digitalmodel/drilling_riser/tsj_workflow.py:L74-L111] |
-| F1:95 | `_effective_tension_n`; `independent` | [src/digitalmodel/drilling_riser/tsj_workflow.py:L146-L160] |
-| F1:96 | `router`; `caller` | [src/digitalmodel/drilling_riser/workflow.py:L32-L76] |
-| F1:97 | `_write_profile_csv`; `independent` | [src/digitalmodel/drilling_riser/workflow.py:L154-L159] |
-| F1:98 | `FatigueAnalysisComponents.add_riser_length_to_shear7_result`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L251-L268] |
-| F1:99 | `FatigueAnalysisComponents.add_riser_length_axis_to_orcaflex_result`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L308-L314] |
-| F1:100 | `FatigueAnalysisComponents.get_yearly_histogram_object_from_viv_run`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L374-L410] |
-| F1:101 | `FatigueAnalysisComponents.save_fatigue_summary_result`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L493-L519] |
-| F1:102 | `FatigueAnalysisComponents.add_fatigue_damage_results_to_df`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L521-L552] |
-| F1:103 | `FatigueAnalysisComponents.get_shear7_x_by_L_from_elevation_above_mudline`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L554-L562] |
-| F1:104 | `FatigueAnalysisComponents.get_elevation_from_end_A_from_elevation_above_mudline`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L564-L572] |
-| F1:105 | `OrcaflexModelComponents.orcaflex_model`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L11-L59] |
-| F1:106 | `OrcaflexModelComponents.customize_fj_types`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L494-L508] |
-| F1:107 | `OrcaflexModelComponents.links`; `wrapper` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L530-L533] |
-| F1:108 | `OrcaflexModelComponents.add_support_spring`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L535-L555] |
-| F1:109 | `OrcaflexModelComponents.add_tensioners`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L557-L585] |
-| F1:110 | `OrcaflexModelComponents.tensioner_vessel_locations`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L587-L617] |
-| F1:111 | `OrcaflexModelComponents.spring_properties`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L619-L675] |
-| F1:112 | `OrcaflexModelComponents.get_connection_definitions`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L677-L683] |
-| F1:113 | `OrcaflexModelComponents.get_fj_line_definitions`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L691-L702] |
-| F1:114 | `OrcaflexModelComponents.get_line_items_vertical`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L704-L717] |
-| F1:115 | `TypicalRiserStackUpCalculations.prepare_stack_up_properties_df`; `caller` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L8-L54] |
-| F1:116 | `TypicalRiserStackUpCalculations.populate_elevation_from_endA_in_df`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L56-L93] |
-| F1:117 | `TypicalRiserStackUpCalculations.populate_shear7_x_by_L_in_df`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L95-L105] |
-| F1:118 | `TypicalRiserStackUpCalculations.populate_elevation_relative_to_mudline_in_df`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L107-L162] |
-| F1:119 | `TypicalRiserStackUpCalculations.populate_elevation_relative_to_MSL_in_df`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L164-L171] |
-| F1:120 | `TypicalRiserStackUpCalculations.evaluate_inservice_weights_and_tensions`; `caller` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L173-L177] |
-| F1:121 | `TypicalRiserStackUpCalculations.assign_key_properties_to_df`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L179-L342] |
-| F1:122 | `TypicalRiserStackUpCalculations.evaluate_stack_in_service_weights`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L344-L413] |
-| F1:123 | `TypicalRiserStackUpCalculations.evaluate_effective_tension`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L415-L527] |
-| F1:124 | `TypicalRiserStackUpCalculations.evaluate_stretch_in_riser`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L529-L552] |
-| F1:125 | `Shear7ModelComponents.title`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/shear7_model_components.py:L21-L52] |
-| F1:126 | `Shear7ModelComponents.riser_joints_to_shear7_zones`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/shear7_model_components.py:L58-L132] |
-| F1:127 | `Shear7ModelComponents.add_block_3`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/shear7_model_components.py:L152-L165] |
-| F1:128 | `VIVFatigueAnalysisComponents.add_riser_length_to_shear7_result`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L454-L474] |
-| F1:129 | `VIVFatigueAnalysisComponents.add_riser_length_axis_to_orcaflex_result`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L533-L542] |
-| F1:130 | `VIVFatigueAnalysisComponents.get_yearly_histogram_object_from_viv_run`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L631-L690] |
-| F1:131 | `VIVFatigueAnalysisComponents.save_fatigue_summary_result`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L799-L864] |
-| F1:132 | `VIVFatigueAnalysisComponents.add_fatigue_damage_results_to_df`; `copy` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L866-L940] |
-| F1:133 | `VIVFatigueAnalysisComponents.get_shear7_x_by_L_from_elevation_above_mudline`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L942-L951] |
-| F1:134 | `VIVFatigueAnalysisComponents.get_elevation_from_end_A_from_elevation_above_mudline`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L953-L964] |
-| F1:135 | `_write_tensions_csv`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_output.py:L90-L103] |
-| F1:136 | `FPSOMooringFullWorkflow._line_state`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L291-L321] |
-| F1:137 | `FPSOMooringFullWorkflow._solve_line`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L323-L349] |
-| F1:138 | `FPSOMooringFullWorkflow._result`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L369-L400] |
-| F1:139 | `solve_catenary`; `independent` | [src/digitalmodel/orcaflex/mooring_design.py:L251-L335] |
-| F1:140 | `JLayConfig.calculate_sagbend`; `independent` | [src/digitalmodel/orcaflex/pipelay_analysis.py:L222-L260] |
-| F1:141 | `SCRDesignInput.calculate_geometry`; `independent` | [src/digitalmodel/orcaflex/riser_config.py:L170-L229] |
-| F1:142 | `TTRDesignInput.calculate_stroke`; `independent` | [src/digitalmodel/orcaflex/riser_config.py:L339-L375] |
-| F1:143 | `TTRDesignInput.calculate_top_tension`; `independent` | [src/digitalmodel/orcaflex/riser_config.py:L377-L395] |
-| F1:144 | `_TopTensionedInput.to_legacy`; `independent` | [src/digitalmodel/orcaflex/riser_input_schema.py:L244-L253] |
-| F1:145 | `BeamProperties.natural_frequency`; `independent` | [src/digitalmodel/orcaflex/viv_screening.py:L185-L218] |
-| F1:146 | `_code_check_utilisation`; `independent` | [src/digitalmodel/parametric/generate.py:L65-L97] |
-| F1:147 | `run_jlay`; `independent` | [src/digitalmodel/pipelay/workflow.py:L62-L93] |
-| F1:148 | `_lazy_row`; `independent` | [src/digitalmodel/riser_configuration_screen/static.py:L92-L125] |
-| F1:149 | `scr_offsets`; `independent` | [src/digitalmodel/riser_configuration_screen/static.py:L166-L220] |
-| F1:150 | `_validate`; `independent` | [src/digitalmodel/riser_configuration_screen/workflow.py:L28-L60] |
-| F1:151 | `_utilisation`; `independent` | [src/digitalmodel/riser_configuration_screen/workflow.py:L63-L89] |
-| F1:152 | `_checks`; `independent` | [src/digitalmodel/riser_configuration_screen/workflow.py:L97-L121] |
-| F1:153 | `GroupsBuilder._build_from_spec`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/groups_builder.py:L93-L144] |
-| F1:154 | `LineTypeBuilder.build`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py:L85-L158] |
-| F1:155 | `WinchBuilder.should_generate`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/winch_builder.py:L33-L38] |
-| F1:156 | `WinchBuilder.build`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/winch_builder.py:L40-L85] |
-| F1:157 | `_apply_overrides`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/schema/campaign.py:L411-L478] |
-| F1:158 | `Mooring.mooring_pre_tension_analysis`; `independent` | [src/digitalmodel/solvers/orcaflex/mooring.py:L127-L287] |
-| F1:159 | `Mooring.evaluate_line_length_next_iteration`; `independent` | [src/digitalmodel/solvers/orcaflex/mooring.py:L289-L348] |
-| F1:160 | `OPPRangeGraph.postProcessRange`; `independent` | [src/digitalmodel/solvers/orcaflex/opp_range_graph.py:L34-L102] |
-| F1:161 | `OrcaFlexAnalysis.postProcessRange`; `independent` | [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L401-L456] |
-| F1:162 | `OrcaflexModelComponents.orcaflex_model`; `independent` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L14-L81] |
-| F1:163 | `OrcaflexModelComponents.customize_fj_types`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L673-L708] |
-| F1:164 | `OrcaflexModelComponents.links`; `wrapper` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L743-L746] |
-| F1:165 | `OrcaflexModelComponents.add_support_spring`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L748-L775] |
-| F1:166 | `OrcaflexModelComponents.add_tensioners`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L777-L835] |
-| F1:167 | `OrcaflexModelComponents.tensioner_vessel_locations`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L837-L915] |
-| F1:168 | `OrcaflexModelComponents.spring_properties`; `independent` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L917-L1046] |
-| F1:169 | `OrcaflexModelComponents.get_connection_definitions`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L1048-L1063] |
-| F1:170 | `OrcaflexModelComponents.get_fj_line_definitions`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L1071-L1108] |
-| F1:171 | `OrcaflexModelComponents.get_line_items_vertical`; `independent` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L1110-L1148] |
-| F1:172 | `check`; `independent` | [src/digitalmodel/structural/analysis/cli.py:L83-L161] |
-| F1:173 | `WallThicknessAnalyzer.check_combined_loading`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness.py:L435-L497] |
-| F1:174 | `ApiStd2rdStrategy._check_combined`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py:L161-L226] |
-| F1:175 | `DnvStF101Strategy._check_combined_loading`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py:L268-L315] |
-| F1:176 | `run_wall_thickness_compare`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_compare_workflow.py:L41-L109] |
-| F1:177 | `MTLookupGenerator.generate`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_lookup.py:L60-L130] |
-| F1:178 | `ParametricSweep.run`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_parametric.py:L66-L147] |
-| F1:179 | `PipelinePhase.to_design_loads`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_phases.py:L141-L148] |
-| F1:180 | `create_standard_phases`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_phases.py:L156-L220] |
-| F1:181 | `LoadScalingProcessor.process_all_conditions`; `independent` | [src/digitalmodel/structural/fatigue_apps/examples/load_scaling_runner.py:L186-L252] |
-| F1:182 | `IntegratedFatigueProcessor.process_fatigue_condition`; `independent` | [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L290-L364] |
-| F1:183 | `IntegratedFatigueProcessorWithNaming._process_condition_base`; `independent` | [src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py:L81-L173] |
-| F1:184 | `LoadScalingProcessor.load_reference_data`; `independent` | [src/digitalmodel/structural/fatigue_apps/load_scaling.py:L101-L154] |
-| F1:185 | `ReferenceSeaStateProcessor.process_fatigue_condition`; `independent` | [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L355-L429] |
-| F1:186 | `LoadScaler.process_fatigue_condition`; `independent` | [src/digitalmodel/structural/fatigue_apps/strut_foundation_processor.py:L458-L504] |
-| F1:187 | `LoadScaler.process_sea_state`; `independent` | [src/digitalmodel/structural/fatigue_apps/strut_foundation_processor.py:L506-L564] |
-| F1:188 | `main`; `independent` | [src/digitalmodel/structural/fatigue_apps/strut_foundation_processor.py:L566-L660] |
-| F1:189 | `ProductionDataHandlerWithProgress.process_single_analysis`; `independent` | [src/digitalmodel/structural/fatigue_apps/strut_foundation_processor_with_progress.py:L83-L120] |
-| F1:190 | `ParametricCoordinator._run_wall_thickness`; `independent` | [src/digitalmodel/structural/parametric_coordinator.py:L255-L275] |
-| F1:191 | `VonMises_Pipe.init_calculate_required_properties`; `copy` | [src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py:L985-L1008] |
-| F1:192 | `DNVOSF101Pipe.localBucklingCombinedLoadingLoadControlled`; `copy` | [src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:L342-L493] |
-| F1:193 | `VonMises_Pipe.init_calculate_required_properties`; `copy` | [src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:L1272-L1295] |
-| F1:194 | `simple_catenary`; `independent` | [src/digitalmodel/subsea/catenary_riser/cli.py:L43-L110] |
-| F1:195 | `lazy_wave_analysis`; `independent` | [src/digitalmodel/subsea/catenary_riser/cli.py:L182-L253] |
-| F1:196 | `LazyWaveAnalyzer.analyze`; `independent` | [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L34-L171] |
-| F1:197 | `SimpleCatenaryAnalyzer.analyze_riser`; `caller` | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L42-L101] |
-| F1:198 | `SimpleCatenaryAnalyzer._solve_catenary_from_H`; `independent` | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L103-L172] |
-| F1:199 | `SimpleCatenaryAnalyzer._solve_H_from_top_tension`; `independent` | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L174-L277] |
-| F1:200 | `SimpleCatenaryAnalyzer.check_design_limits`; `independent` | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L396-L428] |
-| F1:201 | `developed_min_radius`; `independent` | [src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py:L64-L88] |
-| F1:202 | `required_effective_ei`; `independent` | [src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py:L91-L106] |
-| F1:203 | `screen_bend_stiffener`; `independent` | [src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py:L109-L131] |
-| F1:204 | `armour_tension_stress`; `independent` | [src/digitalmodel/subsea/flexible_pipes/design_checks_17J.py:L160-L165] |
-| F1:205 | `verify_flexible_pipe`; `independent` | [src/digitalmodel/subsea/flexible_pipes/design_checks_17J.py:L178-L243] |
-| F1:206 | `effective_driving_force`; `independent` | [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L294-L316] |
-| F1:207 | `RiserLoadCase.to_loads`; `independent` | [src/digitalmodel/subsea/riser/riser_case_screening.py:L44-L50] |
-| F1:208 | `run_riser_screening`; `independent` | [src/digitalmodel/subsea/riser/riser_case_screening.py:L125-L201] |
-| F1:209 | `StackUpDiagram`; `independent` | [src/digitalmodel/subsea/vertical_riser/legacy/orcaRiserStackup.py:L27-L187] |
-| F1:210 | `VerticalRiser.prepare_riser_model`; `caller` | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L28-L39] |
-| F1:211 | `VerticalRiser.read_riser_input_data`; `independent` | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L41-L48] |
-| F1:212 | `VerticalRiser.assign_key_properties_to_self`; `independent` | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L50-L105] |
-| F1:213 | `VerticalRiser.get_fea_properties`; `independent` | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L120-L261] |
-| F1:214 | `VerticalRiser.prepare_tensioner_data`; `independent` | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L297-L304] |
-| F1:215 | `VerticalRiser.evaluate_stack_up_properties`; `independent` | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L325-L328] |
-| F1:216 | `VerticalRiser.save_data`; `independent` | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L374-L382] |
-| F1:217 | `VerticalRiser.alter_properties_for_Shear7_software`; `independent` | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L403-L407] |
-| F1:218 | `FrequencyCalculator.calculate_natural_frequency`; `caller` | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L59-L92] |
-| F1:219 | `FrequencyCalculator._frequency_tension_controlled`; `independent` | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L164-L218] |
-| F1:220 | `FrequencyCalculator.calculate_effective_tension`; `independent` | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L248-L286] |
-| F1:221 | `FrequencyCalculator.check_stability`; `caller` | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L288-L316] |
-| F1:222 | `_beam`; `independent` | [src/digitalmodel/viv_screening/inputs.py:L63-L85] |
-| F1:223 | `riser_analysis_cmd`; `independent` | [src/digitalmodel/workflows/workflow_automation/cli.py:L84-L141] |
-| F1:224 | `create_riser_analysis_template`; `independent` | [src/digitalmodel/workflows/workflow_automation/templates.py:L257-L303] |
-| F1:225 | `CompleteRiserAnalysisWorkflow.create`; `independent` | [src/digitalmodel/workflows/workflow_automation/workflows.py:L35-L145] |
-| F1:226 | `_make_pipe_cfg`; `test_helper` | [tests/asset_integrity/test_calculations.py:L29-L126] |
-| F1:227 | `_study`; `test_helper` | [tests/capabilities/test_wall_thickness_3d_page.py:L32-L84] |
-| F1:228 | `(file-level record)`; `test_helper` | [tests/contracts/test_force_units_boundary_contract.py:L1-L660] |
-| F1:229 | `test_envelope_von_mises_n_to_kn_seam`; `test_helper` | [tests/contracts/test_force_units_boundary_contract.py:L454-L504] |
-| F1:230 | `synthetic_spec`; `test_helper` | [tests/drilling_riser/global_model/conftest.py:L42-L77] |
-| F1:231 | `test_physical_checks_use_the_remaining_tensioners`; `test_helper` | [tests/drilling_riser/global_model/test_batch_params.py:L78-L92] |
-| F1:232 | `_fake`; `test_helper` | [tests/drilling_riser/global_model/test_campaign.py:L65-L76] |
-| F1:233 | `open_water_dict`; `test_helper` | [tests/drilling_riser/global_model/test_open_water.py:L43-L68] |
-| F1:234 | `_doc`; `test_helper` | [tests/drilling_riser/global_model/test_open_water_campaign.py:L17-L25] |
-| F1:235 | `test_statics_tension_and_modes_agree_with_hand_checks`; `test_helper` | [tests/drilling_riser/global_model/test_orcaflex_solver.py:L17-L44] |
-| F1:236 | `test_branch_tolerance_and_ring_buoyancy`; `test_helper` | [tests/drilling_riser/global_model/test_statics_path.py:L287-L303] |
-| F1:237 | `_vertical`; `test_helper` | [tests/drilling_riser/global_model/test_tensioner_representation.py:L24-L28] |
-| F1:238 | `_mc`; `test_helper` | [tests/drilling_riser/postprocess/test_aggregate.py:L20-L25] |
-| F1:239 | `_case`; `test_helper` | [tests/drilling_riser/postprocess/test_aggregate.py:L44-L46] |
-| F1:240 | `_recorded_arguments`; `test_helper` | [tests/drilling_riser/test_drive_off_worked_example.py:L48-L56] |
-| F1:241 | `_deltas`; `test_helper` | [tests/drilling_riser/test_schedule_assembly.py:L57-L66] |
-| F1:242 | `_base_cfg`; `test_helper` | [tests/infrastructure/unit/test_pipe_capacity_codes.py:L6-L41] |
-| F1:243 | `test_analytical_reference_reproduces_from_basis`; `test_helper` | [tests/orcaflex/test_generic_scr_slwr.py:L196-L205] |
-| F1:244 | `_code_check_atlas`; `test_helper` | [tests/parametric/test_atlas.py:L84-L99] |
-| F1:245 | `reference_input`; `test_helper` | [tests/reporting/test_riser_pipe_comparison.py:L24-L35] |
-| F1:246 | `settings`; `test_helper` | [tests/riser_configuration_screen/test_workflow.py:L17-L29] |
-| F1:247 | `verify_configuration`; `test_helper` | [tests/solvers/orcaflex/analysis/scripts/verify_configs.py:L13-L112] |
-| F1:248 | `_make_slay_spec`; `test_helper` | [tests/solvers/orcaflex/modular_generator/builders/test_buoys_builder.py:L39-L65] |
-| F1:249 | `_make_pipeline_spec`; `test_helper` | [tests/solvers/orcaflex/modular_generator/builders/test_lines_builder.py:L22-L67] |
-| F1:250 | `_make_pipeline_spec`; `test_helper` | [tests/solvers/orcaflex/modular_generator/builders/test_linetype_builder.py:L21-L69] |
-| F1:251 | `_write_slay_campaign`; `test_helper` | [tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py:L126-L219] |
-| F1:252 | `_make_base_spec_data`; `test_helper` | [tests/solvers/orcaflex/modular_generator/schema/test_campaign.py:L8-L66] |
-| F1:253 | `extract_static_range_results`; `test_helper` | [tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py:L165-L190] |
-| F1:254 | `_make_valid_model`; `test_helper` | [tests/solvers/orcaflex/modular_generator/test_post_validator.py:L26-L70] |
-| F1:255 | `test_support_types_are_defined_before_vessel_references`; `test_helper` | [tests/solvers/orcaflex/test_slay_layout.py:L90-L108] |
-| F1:256 | `installation_parameters`; `test_helper` | [tests/specialized/umbilical_analysis/conftest.py:L24-L32] |
-| F1:257 | `run_catenary_riser`; `test_helper` | [tests/subsea/catenary_riser/test_catenary.py:L13-L38] |
-| F1:258 | `get_catenary_analysis_mock`; `test_helper` | [tests/test_automation/fixtures/engineering_fixtures.py:L97-L117] |
-| F1:259 | `(file-level record)`; `test_helper` | [tests/test_automation/scripts/batch_fix_tests.py:L1-L200] |
-| F1:260 | `process_effective_tension_file`; `test_helper` | [tests/test_rainflow_with_effective_tension.py:L25-L114] |
-| F1:261 | `main`; `test_helper` | [tests/test_rainflow_with_effective_tension.py:L117-L184] |
-| F1:262 | `_cfg`; `test_helper` | [tests/test_wall_thickness_compare_workflow.py:L22-L42] |
-| F1:263 | `test_workflow_registry`; `test_helper` | [tests/workflows/test_durable_workflows.py:L52-L1710] |
-| F1:264 | `screening_input`; `test_helper` | [tests/workflows/test_viv_screening_workflow.py:L18-L46] |
+| Source entry | Symbol / inventory relation                                                                         | Location at code pin                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| F1:1         | `main`; `independent`                                                                               | [docs/domains/orcaflex/examples/modular/A01/A01 Catenary riser/run_orcaflex.py:L45-L94]                |
+| F1:2         | `main`; `independent`                                                                               | [docs/domains/orcaflex/examples/modular/A01/A01 Lazy wave riser/run_orcaflex.py:L44-L92]               |
+| F1:3         | `main`; `independent`                                                                               | [docs/domains/orcaflex/examples/modular/C10/C10 Multiple statics/run_orcaflex.py:L47-L113]             |
+| F1:4         | `main`; `independent`                                                                               | [docs/domains/orcaflex/examples/modular/E08/PipelayConfig/run_orcaflex.py:L48-L116]                    |
+| F1:5         | `check_r01_catenary`; `independent`                                                                 | [docs/domains/orcaflex/examples/qa/orcaflex_example_qa.py:L140-L180]                                   |
+| F1:6         | `check_r02_lazy_wave`; `independent`                                                                | [docs/domains/orcaflex/examples/qa/orcaflex_example_qa.py:L187-L223]                                   |
+| F1:7         | `check_r05_lay_table`; `independent`                                                                | [docs/domains/orcaflex/examples/qa/orcaflex_example_qa.py:L317-L346]                                   |
+| F1:8         | `check_r06_multi_static`; `independent`                                                             | [docs/domains/orcaflex/examples/qa/orcaflex_example_qa.py:L353-L388]                                   |
+| F1:9         | `extract_vessel_params`; `example`                                                                  | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L273-L290]                                        |
+| F1:10        | `vessel_band_specs`; `example`                                                                      | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L293-L310]                                        |
+| F1:11        | `find_required_tension`; `example`                                                                  | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L563-L774]                                        |
+| F1:12        | `_build_infeasible_result`; `example`                                                               | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L777-L819]                                        |
+| F1:13        | `run_single_case`; `example`                                                                        | [examples/demos/gtm/demo_04_shallow_water_pipelay.py:L826-L891]                                        |
+| F1:14        | `(file-level record)`; `example`                                                                    | [examples/demos/gtm/results_store_demo04.py:L1-L706]                                                   |
+| F1:15        | `_good_case`; `example`                                                                             | [examples/demos/gtm/tests/test_demo_04_results_store.py:L79-L124]                                      |
+| F1:16        | `_infeasible_case`; `example`                                                                       | [examples/demos/gtm/tests/test_demo_04_results_store.py:L127-L173]                                     |
+| F1:17        | `test_999_sentinel_and_none_null_round_trip`; `example`                                             | [examples/demos/gtm/tests/test_demo_04_results_store.py:L342-L403]                                     |
+| F1:18        | `analyze_installation_catenary`; `example`                                                          | [examples/domains/workflows/04_pipeline_installation.py:L51-L123]                                      |
+| F1:19        | `_schedule_row`; `example`                                                                          | [examples/workflows/riser-stackup-registry-batch/run.py:L115-L154]                                     |
+| F1:20        | `_assemble_row`; `example`                                                                          | [examples/workflows/riser-stackup-registry-batch/run.py:L219-L256]                                     |
+| F1:21        | `(file-level record)`; `independent`                                                                | [scripts/capabilities/build_wall_thickness_3d.py:L1-L265]                                              |
+| F1:22        | `_analyze_point`; `independent`                                                                     | [scripts/capabilities/build_wall_thickness_3d.py:L171-L219]                                            |
+| F1:23        | `build_study`; `wrapper`                                                                            | [scripts/capabilities/build_wall_thickness_3d.py:L222-L244]                                            |
+| F1:24        | `_axes`; `independent`                                                                              | [scripts/capabilities/build_wall_thickness_3d_page.py:L34-L45]                                         |
+| F1:25        | `_pack_rows`; `independent`                                                                         | [scripts/capabilities/build_wall_thickness_3d_page.py:L75-L114]                                        |
+| F1:26        | `_run`; `independent`                                                                               | [scripts/capabilities/build_wall_thickness_explorer.py:L48-L70]                                        |
+| F1:27        | `metrics`; `independent`                                                                            | [scripts/orcaflex/check_generic_scr_slwr.py:L38-L55]                                                   |
+| F1:28        | `calculate`; `independent`                                                                          | [scripts/orcaflex/check_generic_scr_slwr.py:L418-L462]                                                 |
+| F1:29        | `catenary`; `independent`                                                                           | [scripts/orcaflex/prepare_slay_campaign.py:L27-L51]                                                    |
+| F1:30        | `case_spec`; `independent`                                                                          | [scripts/orcaflex/prepare_slay_campaign.py:L69-L79]                                                    |
+| F1:31        | `prepare_case`; `independent`                                                                       | [scripts/orcaflex/prepare_slay_campaign.py:L90-L113]                                                   |
+| F1:32        | `prepare`; `independent`                                                                            | [scripts/orcaflex/prepare_slay_campaign.py:L116-L137]                                                  |
+| F1:33        | `main`; `independent`                                                                               | [scripts/parametric/build_orcaflex_library.py:L39-L72]                                                 |
+| F1:34        | `APISTD2RDCalculation`; `independent`                                                               | [scripts/python/digitalmodel/analysis/APIST2RD_Methods.py:L6-L149]                                     |
+| F1:35        | `DNVOSF101Pipe.localBucklingCombinedLoadingLoadControlled`; `independent`                           | [scripts/python/digitalmodel/analysis/RigidPipe.py:L205-L274]                                          |
+| F1:36        | `StackUpDiagram`; `independent`                                                                     | [scripts/python/digitalmodel/analysis/RiserStackup.py:L26-L180]                                        |
+| F1:37        | `main`; `independent`                                                                               | [scripts/python/digitalmodel/analysis/StackUp_3000Ft.py:L10-L151]                                      |
+| F1:38        | `main`; `independent`                                                                               | [scripts/python/digitalmodel/analysis/StackUp_9500Ft.py:L10-L181]                                      |
+| F1:39        | `evaluate`; `caller`                                                                                | [scripts/reporting/build_riser_pipe_comparison.py:L50-L81]                                             |
+| F1:40        | `_validate`; `independent`                                                                          | [scripts/reporting/build_riser_pipe_comparison.py:L84-L110]                                            |
+| F1:41        | `numeric_values`; `independent`                                                                     | [scripts/reporting/build_riser_pipe_comparison.py:L151-L178]                                           |
+| F1:42        | `_input_table`; `independent`                                                                       | [scripts/reporting/build_riser_pipe_comparison.py:L210-L237]                                           |
+| F1:43        | `(file-level record)`; `independent`                                                                | [scripts/riser_database/build_tables.py:L1-L212]                                                       |
+| F1:44        | `VonMises_Pipe.init_calculate_required_properties`; `independent`                                   | [src/digitalmodel/asset_integrity/custom/PipeCapacity.py:L696-L721]                                    |
+| F1:45        | `local_buckling_lcc`; `independent`                                                                 | [src/digitalmodel/code_checks/dnv_os_f101.py:L91-L147]                                                 |
+| F1:46        | `_run_api_rp_2rd`; `independent`                                                                    | [src/digitalmodel/code_checks/workflow.py:L58-L79]                                                     |
+| F1:47        | `_run_dnv_os_f201`; `independent`                                                                   | [src/digitalmodel/code_checks/workflow.py:L82-L110]                                                    |
+| F1:48        | `minimum_top_tension_16q`; `independent`                                                            | [src/digitalmodel/drilling_riser/assembly.py:L208-L236]                                                |
+| F1:49        | `_unit_count`; `independent`                                                                        | [src/digitalmodel/drilling_riser/assembly.py:L254-L263]                                                |
+| F1:50        | `check_rig_capability`; `independent`                                                               | [src/digitalmodel/drilling_riser/assembly.py:L266-L306]                                                |
+| F1:51        | `case_spec`; `independent`                                                                          | [src/digitalmodel/drilling_riser/campaign.py:L134-L239]                                                |
+| F1:52        | `_ring_tensioners`; `independent`                                                                   | [src/digitalmodel/drilling_riser/campaign.py:L358-L359]                                                |
+| F1:53        | `set_line_tension`; `independent`                                                                   | [src/digitalmodel/drilling_riser/campaign.py:L362-L368]                                                |
+| F1:54        | `calibrate_line_tension`; `independent`                                                             | [src/digitalmodel/drilling_riser/campaign.py:L371-L393]                                                |
+| F1:55        | `_statics_path`; `independent`                                                                      | [src/digitalmodel/drilling_riser/campaign.py:L400-L565]                                                |
+| F1:56        | `robust_statics`; `independent`                                                                     | [src/digitalmodel/drilling_riser/campaign.py:L568-L634]                                                |
+| F1:57        | `_tensioner_vertical_n`; `independent`                                                              | [src/digitalmodel/drilling_riser/campaign.py:L734-L737]                                                |
+| F1:58        | `tensioner_vertical_target_n`; `independent`                                                        | [src/digitalmodel/drilling_riser/campaign.py:L752-L755]                                                |
+| F1:59        | `physical_state_checks`; `independent`                                                              | [src/digitalmodel/drilling_riser/campaign.py:L758-L810]                                                |
+| F1:60        | `RiserCampaignAdapter.prepare`; `independent`                                                       | [src/digitalmodel/drilling_riser/campaign.py:L855-L886]                                                |
+| F1:61        | `RiserCampaignAdapter.extract`; `independent`                                                       | [src/digitalmodel/drilling_riser/campaign.py:L912-L952]                                                |
+| F1:62        | `compute_operating_envelope`; `independent`                                                         | [src/digitalmodel/drilling_riser/envelope.py:L278-L446]                                                |
+| F1:63        | `equivalent_string_top_tension_n`; `independent`                                                    | [src/digitalmodel/drilling_riser/global_model/build.py:L35-L41]                                        |
+| F1:64        | `_tensioner_geometry`; `independent`                                                                | [src/digitalmodel/drilling_riser/global_model/build.py:L51-L55]                                        |
+| F1:65        | `winch_tension_n`; `independent`                                                                    | [src/digitalmodel/drilling_riser/global_model/build.py:L58-L61]                                        |
+| F1:66        | `build_generic_spec`; `independent`                                                                 | [src/digitalmodel/drilling_riser/global_model/build.py:L180-L369]                                      |
+| F1:67        | `effective_tension_chain`; `independent`                                                            | [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L45-L55]                                  |
+| F1:68        | `tension_references`; `independent`                                                                 | [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L64-L83]                                  |
+| F1:69        | `tensioner_lateral_stiffness_n_m`; `independent`                                                    | [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L164-L176]                                |
+| F1:70        | `reference_periods`; `caller`                                                                       | [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L216-L232]                                |
+| F1:71        | `hung_weight_n`; `independent`                                                                      | [src/digitalmodel/drilling_riser/global_model/hang_off.py:L48-L53]                                     |
+| F1:72        | `OpenWaterRiserSpec._closes`; `independent`                                                         | [src/digitalmodel/drilling_riser/global_model/open_water.py:L114-L139]                                 |
+| F1:73        | `build_open_water_generic_spec`; `independent`                                                      | [src/digitalmodel/drilling_riser/global_model/open_water.py:L143-L210]                                 |
+| F1:74        | `tension_references`; `independent`                                                                 | [src/digitalmodel/drilling_riser/global_model/open_water.py:L218-L240]                                 |
+| F1:75        | `reference_periods`; `independent`                                                                  | [src/digitalmodel/drilling_riser/global_model/open_water.py:L272-L281]                                 |
+| F1:76        | `release_reference`; `independent`                                                                  | [src/digitalmodel/drilling_riser/global_model/open_water.py:L293-L317]                                 |
+| F1:77        | `ring_vertical_residual_n`; `independent`                                                           | [src/digitalmodel/drilling_riser/global_model/orcaflex_run.py:L181-L190]                               |
+| F1:78        | `open_water_physical_checks`; `independent`                                                         | [src/digitalmodel/drilling_riser/global_model/orcaflex_run.py:L309-L327]                               |
+| F1:79        | `Tensioners._failed`; `independent`                                                                 | [src/digitalmodel/drilling_riser/global_model/spec.py:L146-L149]                                       |
+| F1:80        | `RiserGlobalModelSpec._geometry_closes`; `independent`                                              | [src/digitalmodel/drilling_riser/global_model/spec.py:L405-L436]                                       |
+| F1:81        | `_missing_open_water`; `independent`                                                                | [src/digitalmodel/drilling_riser/global_model/w5_channels.py:L140-L159]                                |
+| F1:82        | `missing_channels`; `independent`                                                                   | [src/digitalmodel/drilling_riser/global_model/w5_channels.py:L188-L218]                                |
+| F1:83        | `extract`; `independent`                                                                            | [src/digitalmodel/drilling_riser/global_model/w5_channels.py:L317-L366]                                |
+| F1:84        | `extract_open_water`; `independent`                                                                 | [src/digitalmodel/drilling_riser/global_model/w5_channels.py:L409-L455]                                |
+| F1:85        | `t_min`; `independent`                                                                              | [src/digitalmodel/drilling_riser/postprocess/checks.py:L172-L174]                                      |
+| F1:86        | `tension_setting_max`; `independent`                                                                | [src/digitalmodel/drilling_riser/postprocess/checks.py:L177-L178]                                      |
+| F1:87        | `tensioner_stroke`; `independent`                                                                   | [src/digitalmodel/drilling_riser/postprocess/checks.py:L198-L202]                                      |
+| F1:88        | `ScheduleAssembly.minimum_top_tension_16q_kn`; `independent`                                        | [src/digitalmodel/drilling_riser/schedule_assembly.py:L196-L212]                                       |
+| F1:89        | `_load_oc_assembly`; `independent`                                                                  | [src/digitalmodel/drilling_riser/schedule_assembly.py:L532-L724]                                       |
+| F1:90        | `effective_tension`; `independent`                                                                  | [src/digitalmodel/drilling_riser/stackup.py:L85-L108]                                                  |
+| F1:91        | `parse_snapshots`; `independent`                                                                    | [src/digitalmodel/drilling_riser/telemetry_inputs.py:L135-L158]                                        |
+| F1:92        | `snapshot_to_tension_n`; `independent`                                                              | [src/digitalmodel/drilling_riser/telemetry_inputs.py:L178-L184]                                        |
+| F1:93        | `router`; `independent`                                                                             | [src/digitalmodel/drilling_riser/tsj_workflow.py:L19-L71]                                              |
+| F1:94        | `_section_result`; `independent`                                                                    | [src/digitalmodel/drilling_riser/tsj_workflow.py:L74-L111]                                             |
+| F1:95        | `_effective_tension_n`; `independent`                                                               | [src/digitalmodel/drilling_riser/tsj_workflow.py:L146-L160]                                            |
+| F1:96        | `router`; `caller`                                                                                  | [src/digitalmodel/drilling_riser/workflow.py:L32-L76]                                                  |
+| F1:97        | `_write_profile_csv`; `independent`                                                                 | [src/digitalmodel/drilling_riser/workflow.py:L154-L159]                                                |
+| F1:98        | `FatigueAnalysisComponents.add_riser_length_to_shear7_result`; `independent`                        | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L251-L268]        |
+| F1:99        | `FatigueAnalysisComponents.add_riser_length_axis_to_orcaflex_result`; `independent`                 | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L308-L314]        |
+| F1:100       | `FatigueAnalysisComponents.get_yearly_histogram_object_from_viv_run`; `independent`                 | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L374-L410]        |
+| F1:101       | `FatigueAnalysisComponents.save_fatigue_summary_result`; `independent`                              | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L493-L519]        |
+| F1:102       | `FatigueAnalysisComponents.add_fatigue_damage_results_to_df`; `independent`                         | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L521-L552]        |
+| F1:103       | `FatigueAnalysisComponents.get_shear7_x_by_L_from_elevation_above_mudline`; `independent`           | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L554-L562]        |
+| F1:104       | `FatigueAnalysisComponents.get_elevation_from_end_A_from_elevation_above_mudline`; `independent`    | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L564-L572]        |
+| F1:105       | `OrcaflexModelComponents.orcaflex_model`; `independent`                                             | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L11-L59]             |
+| F1:106       | `OrcaflexModelComponents.customize_fj_types`; `independent`                                         | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L494-L508]           |
+| F1:107       | `OrcaflexModelComponents.links`; `wrapper`                                                          | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L530-L533]           |
+| F1:108       | `OrcaflexModelComponents.add_support_spring`; `independent`                                         | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L535-L555]           |
+| F1:109       | `OrcaflexModelComponents.add_tensioners`; `independent`                                             | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L557-L585]           |
+| F1:110       | `OrcaflexModelComponents.tensioner_vessel_locations`; `independent`                                 | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L587-L617]           |
+| F1:111       | `OrcaflexModelComponents.spring_properties`; `independent`                                          | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L619-L675]           |
+| F1:112       | `OrcaflexModelComponents.get_connection_definitions`; `independent`                                 | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L677-L683]           |
+| F1:113       | `OrcaflexModelComponents.get_fj_line_definitions`; `independent`                                    | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L691-L702]           |
+| F1:114       | `OrcaflexModelComponents.get_line_items_vertical`; `independent`                                    | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L704-L717]           |
+| F1:115       | `TypicalRiserStackUpCalculations.prepare_stack_up_properties_df`; `caller`                          | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L8-L54]    |
+| F1:116       | `TypicalRiserStackUpCalculations.populate_elevation_from_endA_in_df`; `independent`                 | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L56-L93]   |
+| F1:117       | `TypicalRiserStackUpCalculations.populate_shear7_x_by_L_in_df`; `independent`                       | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L95-L105]  |
+| F1:118       | `TypicalRiserStackUpCalculations.populate_elevation_relative_to_mudline_in_df`; `independent`       | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L107-L162] |
+| F1:119       | `TypicalRiserStackUpCalculations.populate_elevation_relative_to_MSL_in_df`; `independent`           | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L164-L171] |
+| F1:120       | `TypicalRiserStackUpCalculations.evaluate_inservice_weights_and_tensions`; `caller`                 | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L173-L177] |
+| F1:121       | `TypicalRiserStackUpCalculations.assign_key_properties_to_df`; `independent`                        | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L179-L342] |
+| F1:122       | `TypicalRiserStackUpCalculations.evaluate_stack_in_service_weights`; `independent`                  | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L344-L413] |
+| F1:123       | `TypicalRiserStackUpCalculations.evaluate_effective_tension`; `independent`                         | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L415-L527] |
+| F1:124       | `TypicalRiserStackUpCalculations.evaluate_stretch_in_riser`; `independent`                          | [src/digitalmodel/infrastructure/base_solvers/marine/typical_riser_stack_up_calculations.py:L529-L552] |
+| F1:125       | `Shear7ModelComponents.title`; `independent`                                                        | [src/digitalmodel/infrastructure/base_solvers/viv/shear7_model_components.py:L21-L52]                  |
+| F1:126       | `Shear7ModelComponents.riser_joints_to_shear7_zones`; `independent`                                 | [src/digitalmodel/infrastructure/base_solvers/viv/shear7_model_components.py:L58-L132]                 |
+| F1:127       | `Shear7ModelComponents.add_block_3`; `independent`                                                  | [src/digitalmodel/infrastructure/base_solvers/viv/shear7_model_components.py:L152-L165]                |
+| F1:128       | `VIVFatigueAnalysisComponents.add_riser_length_to_shear7_result`; `independent`                     | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L454-L474]        |
+| F1:129       | `VIVFatigueAnalysisComponents.add_riser_length_axis_to_orcaflex_result`; `independent`              | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L533-L542]        |
+| F1:130       | `VIVFatigueAnalysisComponents.get_yearly_histogram_object_from_viv_run`; `independent`              | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L631-L690]        |
+| F1:131       | `VIVFatigueAnalysisComponents.save_fatigue_summary_result`; `independent`                           | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L799-L864]        |
+| F1:132       | `VIVFatigueAnalysisComponents.add_fatigue_damage_results_to_df`; `copy`                             | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L866-L940]        |
+| F1:133       | `VIVFatigueAnalysisComponents.get_shear7_x_by_L_from_elevation_above_mudline`; `independent`        | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L942-L951]        |
+| F1:134       | `VIVFatigueAnalysisComponents.get_elevation_from_end_A_from_elevation_above_mudline`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L953-L964]        |
+| F1:135       | `_write_tensions_csv`; `independent`                                                                | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_output.py:L90-L103]         |
+| F1:136       | `FPSOMooringFullWorkflow._line_state`; `independent`                                                | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L291-L321]      |
+| F1:137       | `FPSOMooringFullWorkflow._solve_line`; `independent`                                                | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L323-L349]      |
+| F1:138       | `FPSOMooringFullWorkflow._result`; `independent`                                                    | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L369-L400]      |
+| F1:139       | `solve_catenary`; `independent`                                                                     | [src/digitalmodel/orcaflex/mooring_design.py:L251-L335]                                                |
+| F1:140       | `JLayConfig.calculate_sagbend`; `independent`                                                       | [src/digitalmodel/orcaflex/pipelay_analysis.py:L222-L260]                                              |
+| F1:141       | `SCRDesignInput.calculate_geometry`; `independent`                                                  | [src/digitalmodel/orcaflex/riser_config.py:L170-L229]                                                  |
+| F1:142       | `TTRDesignInput.calculate_stroke`; `independent`                                                    | [src/digitalmodel/orcaflex/riser_config.py:L339-L375]                                                  |
+| F1:143       | `TTRDesignInput.calculate_top_tension`; `independent`                                               | [src/digitalmodel/orcaflex/riser_config.py:L377-L395]                                                  |
+| F1:144       | `_TopTensionedInput.to_legacy`; `independent`                                                       | [src/digitalmodel/orcaflex/riser_input_schema.py:L244-L253]                                            |
+| F1:145       | `BeamProperties.natural_frequency`; `independent`                                                   | [src/digitalmodel/orcaflex/viv_screening.py:L185-L218]                                                 |
+| F1:146       | `_code_check_utilisation`; `independent`                                                            | [src/digitalmodel/parametric/generate.py:L65-L97]                                                      |
+| F1:147       | `run_jlay`; `independent`                                                                           | [src/digitalmodel/pipelay/workflow.py:L62-L93]                                                         |
+| F1:148       | `_lazy_row`; `independent`                                                                          | [src/digitalmodel/riser_configuration_screen/static.py:L92-L125]                                       |
+| F1:149       | `scr_offsets`; `independent`                                                                        | [src/digitalmodel/riser_configuration_screen/static.py:L166-L220]                                      |
+| F1:150       | `_validate`; `independent`                                                                          | [src/digitalmodel/riser_configuration_screen/workflow.py:L28-L60]                                      |
+| F1:151       | `_utilisation`; `independent`                                                                       | [src/digitalmodel/riser_configuration_screen/workflow.py:L63-L89]                                      |
+| F1:152       | `_checks`; `independent`                                                                            | [src/digitalmodel/riser_configuration_screen/workflow.py:L97-L121]                                     |
+| F1:153       | `GroupsBuilder._build_from_spec`; `independent`                                                     | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/groups_builder.py:L93-L144]              |
+| F1:154       | `LineTypeBuilder.build`; `independent`                                                              | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py:L85-L158]            |
+| F1:155       | `WinchBuilder.should_generate`; `independent`                                                       | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/winch_builder.py:L33-L38]                |
+| F1:156       | `WinchBuilder.build`; `independent`                                                                 | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/winch_builder.py:L40-L85]                |
+| F1:157       | `_apply_overrides`; `independent`                                                                   | [src/digitalmodel/solvers/orcaflex/modular_generator/schema/campaign.py:L411-L478]                     |
+| F1:158       | `Mooring.mooring_pre_tension_analysis`; `independent`                                               | [src/digitalmodel/solvers/orcaflex/mooring.py:L127-L287]                                               |
+| F1:159       | `Mooring.evaluate_line_length_next_iteration`; `independent`                                        | [src/digitalmodel/solvers/orcaflex/mooring.py:L289-L348]                                               |
+| F1:160       | `OPPRangeGraph.postProcessRange`; `independent`                                                     | [src/digitalmodel/solvers/orcaflex/opp_range_graph.py:L34-L102]                                        |
+| F1:161       | `OrcaFlexAnalysis.postProcessRange`; `independent`                                                  | [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L401-L456]                          |
+| F1:162       | `OrcaflexModelComponents.orcaflex_model`; `independent`                                             | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L14-L81]                               |
+| F1:163       | `OrcaflexModelComponents.customize_fj_types`; `copy`                                                | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L673-L708]                             |
+| F1:164       | `OrcaflexModelComponents.links`; `wrapper`                                                          | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L743-L746]                             |
+| F1:165       | `OrcaflexModelComponents.add_support_spring`; `copy`                                                | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L748-L775]                             |
+| F1:166       | `OrcaflexModelComponents.add_tensioners`; `copy`                                                    | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L777-L835]                             |
+| F1:167       | `OrcaflexModelComponents.tensioner_vessel_locations`; `copy`                                        | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L837-L915]                             |
+| F1:168       | `OrcaflexModelComponents.spring_properties`; `independent`                                          | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L917-L1046]                            |
+| F1:169       | `OrcaflexModelComponents.get_connection_definitions`; `copy`                                        | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L1048-L1063]                           |
+| F1:170       | `OrcaflexModelComponents.get_fj_line_definitions`; `copy`                                           | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L1071-L1108]                           |
+| F1:171       | `OrcaflexModelComponents.get_line_items_vertical`; `independent`                                    | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L1110-L1148]                           |
+| F1:172       | `check`; `independent`                                                                              | [src/digitalmodel/structural/analysis/cli.py:L83-L161]                                                 |
+| F1:173       | `WallThicknessAnalyzer.check_combined_loading`; `independent`                                       | [src/digitalmodel/structural/analysis/wall_thickness.py:L435-L497]                                     |
+| F1:174       | `ApiStd2rdStrategy._check_combined`; `independent`                                                  | [src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py:L161-L226]                   |
+| F1:175       | `DnvStF101Strategy._check_combined_loading`; `independent`                                          | [src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py:L268-L315]                   |
+| F1:176       | `run_wall_thickness_compare`; `independent`                                                         | [src/digitalmodel/structural/analysis/wall_thickness_compare_workflow.py:L41-L109]                     |
+| F1:177       | `MTLookupGenerator.generate`; `independent`                                                         | [src/digitalmodel/structural/analysis/wall_thickness_lookup.py:L60-L130]                               |
+| F1:178       | `ParametricSweep.run`; `independent`                                                                | [src/digitalmodel/structural/analysis/wall_thickness_parametric.py:L66-L147]                           |
+| F1:179       | `PipelinePhase.to_design_loads`; `independent`                                                      | [src/digitalmodel/structural/analysis/wall_thickness_phases.py:L141-L148]                              |
+| F1:180       | `create_standard_phases`; `independent`                                                             | [src/digitalmodel/structural/analysis/wall_thickness_phases.py:L156-L220]                              |
+| F1:181       | `LoadScalingProcessor.process_all_conditions`; `independent`                                        | [src/digitalmodel/structural/fatigue_apps/examples/load_scaling_runner.py:L186-L252]                   |
+| F1:182       | `IntegratedFatigueProcessor.process_fatigue_condition`; `independent`                               | [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L290-L364]                           |
+| F1:183       | `IntegratedFatigueProcessorWithNaming._process_condition_base`; `independent`                       | [src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py:L81-L173]                |
+| F1:184       | `LoadScalingProcessor.load_reference_data`; `independent`                                           | [src/digitalmodel/structural/fatigue_apps/load_scaling.py:L101-L154]                                   |
+| F1:185       | `ReferenceSeaStateProcessor.process_fatigue_condition`; `independent`                               | [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L355-L429]                   |
+| F1:186       | `LoadScaler.process_fatigue_condition`; `independent`                                               | [src/digitalmodel/structural/fatigue_apps/strut_foundation_processor.py:L458-L504]                     |
+| F1:187       | `LoadScaler.process_sea_state`; `independent`                                                       | [src/digitalmodel/structural/fatigue_apps/strut_foundation_processor.py:L506-L564]                     |
+| F1:188       | `main`; `independent`                                                                               | [src/digitalmodel/structural/fatigue_apps/strut_foundation_processor.py:L566-L660]                     |
+| F1:189       | `ProductionDataHandlerWithProgress.process_single_analysis`; `independent`                          | [src/digitalmodel/structural/fatigue_apps/strut_foundation_processor_with_progress.py:L83-L120]        |
+| F1:190       | `ParametricCoordinator._run_wall_thickness`; `independent`                                          | [src/digitalmodel/structural/parametric_coordinator.py:L255-L275]                                      |
+| F1:191       | `VonMises_Pipe.init_calculate_required_properties`; `copy`                                          | [src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py:L985-L1008]                          |
+| F1:192       | `DNVOSF101Pipe.localBucklingCombinedLoadingLoadControlled`; `copy`                                  | [src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:L342-L493]                  |
+| F1:193       | `VonMises_Pipe.init_calculate_required_properties`; `copy`                                          | [src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:L1272-L1295]                         |
+| F1:194       | `simple_catenary`; `independent`                                                                    | [src/digitalmodel/subsea/catenary_riser/cli.py:L43-L110]                                               |
+| F1:195       | `lazy_wave_analysis`; `independent`                                                                 | [src/digitalmodel/subsea/catenary_riser/cli.py:L182-L253]                                              |
+| F1:196       | `LazyWaveAnalyzer.analyze`; `independent`                                                           | [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L34-L171]                                         |
+| F1:197       | `SimpleCatenaryAnalyzer.analyze_riser`; `caller`                                                    | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L42-L101]                                   |
+| F1:198       | `SimpleCatenaryAnalyzer._solve_catenary_from_H`; `independent`                                      | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L103-L172]                                  |
+| F1:199       | `SimpleCatenaryAnalyzer._solve_H_from_top_tension`; `independent`                                   | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L174-L277]                                  |
+| F1:200       | `SimpleCatenaryAnalyzer.check_design_limits`; `independent`                                         | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L396-L428]                                  |
+| F1:201       | `developed_min_radius`; `independent`                                                               | [src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py:L64-L88]                                     |
+| F1:202       | `required_effective_ei`; `independent`                                                              | [src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py:L91-L106]                                    |
+| F1:203       | `screen_bend_stiffener`; `independent`                                                              | [src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py:L109-L131]                                   |
+| F1:204       | `armour_tension_stress`; `independent`                                                              | [src/digitalmodel/subsea/flexible_pipes/design_checks_17J.py:L160-L165]                                |
+| F1:205       | `verify_flexible_pipe`; `independent`                                                               | [src/digitalmodel/subsea/flexible_pipes/design_checks_17J.py:L178-L243]                                |
+| F1:206       | `effective_driving_force`; `independent`                                                            | [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L294-L316]                          |
+| F1:207       | `RiserLoadCase.to_loads`; `independent`                                                             | [src/digitalmodel/subsea/riser/riser_case_screening.py:L44-L50]                                        |
+| F1:208       | `run_riser_screening`; `independent`                                                                | [src/digitalmodel/subsea/riser/riser_case_screening.py:L125-L201]                                      |
+| F1:209       | `StackUpDiagram`; `independent`                                                                     | [src/digitalmodel/subsea/vertical_riser/legacy/orcaRiserStackup.py:L27-L187]                           |
+| F1:210       | `VerticalRiser.prepare_riser_model`; `caller`                                                       | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L28-L39]                          |
+| F1:211       | `VerticalRiser.read_riser_input_data`; `independent`                                                | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L41-L48]                          |
+| F1:212       | `VerticalRiser.assign_key_properties_to_self`; `independent`                                        | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L50-L105]                         |
+| F1:213       | `VerticalRiser.get_fea_properties`; `independent`                                                   | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L120-L261]                        |
+| F1:214       | `VerticalRiser.prepare_tensioner_data`; `independent`                                               | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L297-L304]                        |
+| F1:215       | `VerticalRiser.evaluate_stack_up_properties`; `independent`                                         | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L325-L328]                        |
+| F1:216       | `VerticalRiser.save_data`; `independent`                                                            | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L374-L382]                        |
+| F1:217       | `VerticalRiser.alter_properties_for_Shear7_software`; `independent`                                 | [src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py:L403-L407]                        |
+| F1:218       | `FrequencyCalculator.calculate_natural_frequency`; `caller`                                         | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L59-L92]                                 |
+| F1:219       | `FrequencyCalculator._frequency_tension_controlled`; `independent`                                  | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L164-L218]                               |
+| F1:220       | `FrequencyCalculator.calculate_effective_tension`; `independent`                                    | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L248-L286]                               |
+| F1:221       | `FrequencyCalculator.check_stability`; `caller`                                                     | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L288-L316]                               |
+| F1:222       | `_beam`; `independent`                                                                              | [src/digitalmodel/viv_screening/inputs.py:L63-L85]                                                     |
+| F1:223       | `riser_analysis_cmd`; `independent`                                                                 | [src/digitalmodel/workflows/workflow_automation/cli.py:L84-L141]                                       |
+| F1:224       | `create_riser_analysis_template`; `independent`                                                     | [src/digitalmodel/workflows/workflow_automation/templates.py:L257-L303]                                |
+| F1:225       | `CompleteRiserAnalysisWorkflow.create`; `independent`                                               | [src/digitalmodel/workflows/workflow_automation/workflows.py:L35-L145]                                 |
+| F1:226       | `_make_pipe_cfg`; `test_helper`                                                                     | [tests/asset_integrity/test_calculations.py:L29-L126]                                                  |
+| F1:227       | `_study`; `test_helper`                                                                             | [tests/capabilities/test_wall_thickness_3d_page.py:L32-L84]                                            |
+| F1:228       | `(file-level record)`; `test_helper`                                                                | [tests/contracts/test_force_units_boundary_contract.py:L1-L660]                                        |
+| F1:229       | `test_envelope_von_mises_n_to_kn_seam`; `test_helper`                                               | [tests/contracts/test_force_units_boundary_contract.py:L454-L504]                                      |
+| F1:230       | `synthetic_spec`; `test_helper`                                                                     | [tests/drilling_riser/global_model/conftest.py:L42-L77]                                                |
+| F1:231       | `test_physical_checks_use_the_remaining_tensioners`; `test_helper`                                  | [tests/drilling_riser/global_model/test_batch_params.py:L78-L92]                                       |
+| F1:232       | `_fake`; `test_helper`                                                                              | [tests/drilling_riser/global_model/test_campaign.py:L65-L76]                                           |
+| F1:233       | `open_water_dict`; `test_helper`                                                                    | [tests/drilling_riser/global_model/test_open_water.py:L43-L68]                                         |
+| F1:234       | `_doc`; `test_helper`                                                                               | [tests/drilling_riser/global_model/test_open_water_campaign.py:L17-L25]                                |
+| F1:235       | `test_statics_tension_and_modes_agree_with_hand_checks`; `test_helper`                              | [tests/drilling_riser/global_model/test_orcaflex_solver.py:L17-L44]                                    |
+| F1:236       | `test_branch_tolerance_and_ring_buoyancy`; `test_helper`                                            | [tests/drilling_riser/global_model/test_statics_path.py:L287-L303]                                     |
+| F1:237       | `_vertical`; `test_helper`                                                                          | [tests/drilling_riser/global_model/test_tensioner_representation.py:L24-L28]                           |
+| F1:238       | `_mc`; `test_helper`                                                                                | [tests/drilling_riser/postprocess/test_aggregate.py:L20-L25]                                           |
+| F1:239       | `_case`; `test_helper`                                                                              | [tests/drilling_riser/postprocess/test_aggregate.py:L44-L46]                                           |
+| F1:240       | `_recorded_arguments`; `test_helper`                                                                | [tests/drilling_riser/test_drive_off_worked_example.py:L48-L56]                                        |
+| F1:241       | `_deltas`; `test_helper`                                                                            | [tests/drilling_riser/test_schedule_assembly.py:L57-L66]                                               |
+| F1:242       | `_base_cfg`; `test_helper`                                                                          | [tests/infrastructure/unit/test_pipe_capacity_codes.py:L6-L41]                                         |
+| F1:243       | `test_analytical_reference_reproduces_from_basis`; `test_helper`                                    | [tests/orcaflex/test_generic_scr_slwr.py:L196-L205]                                                    |
+| F1:244       | `_code_check_atlas`; `test_helper`                                                                  | [tests/parametric/test_atlas.py:L84-L99]                                                               |
+| F1:245       | `reference_input`; `test_helper`                                                                    | [tests/reporting/test_riser_pipe_comparison.py:L24-L35]                                                |
+| F1:246       | `settings`; `test_helper`                                                                           | [tests/riser_configuration_screen/test_workflow.py:L17-L29]                                            |
+| F1:247       | `verify_configuration`; `test_helper`                                                               | [tests/solvers/orcaflex/analysis/scripts/verify_configs.py:L13-L112]                                   |
+| F1:248       | `_make_slay_spec`; `test_helper`                                                                    | [tests/solvers/orcaflex/modular_generator/builders/test_buoys_builder.py:L39-L65]                      |
+| F1:249       | `_make_pipeline_spec`; `test_helper`                                                                | [tests/solvers/orcaflex/modular_generator/builders/test_lines_builder.py:L22-L67]                      |
+| F1:250       | `_make_pipeline_spec`; `test_helper`                                                                | [tests/solvers/orcaflex/modular_generator/builders/test_linetype_builder.py:L21-L69]                   |
+| F1:251       | `_write_slay_campaign`; `test_helper`                                                               | [tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py:L126-L219]          |
+| F1:252       | `_make_base_spec_data`; `test_helper`                                                               | [tests/solvers/orcaflex/modular_generator/schema/test_campaign.py:L8-L66]                              |
+| F1:253       | `extract_static_range_results`; `test_helper`                                                       | [tests/solvers/orcaflex/modular_generator/test_modular_vs_monolithic.py:L165-L190]                     |
+| F1:254       | `_make_valid_model`; `test_helper`                                                                  | [tests/solvers/orcaflex/modular_generator/test_post_validator.py:L26-L70]                              |
+| F1:255       | `test_support_types_are_defined_before_vessel_references`; `test_helper`                            | [tests/solvers/orcaflex/test_slay_layout.py:L90-L108]                                                  |
+| F1:256       | `installation_parameters`; `test_helper`                                                            | [tests/specialized/umbilical_analysis/conftest.py:L24-L32]                                             |
+| F1:257       | `run_catenary_riser`; `test_helper`                                                                 | [tests/subsea/catenary_riser/test_catenary.py:L13-L38]                                                 |
+| F1:258       | `get_catenary_analysis_mock`; `test_helper`                                                         | [tests/test_automation/fixtures/engineering_fixtures.py:L97-L117]                                      |
+| F1:259       | `(file-level record)`; `test_helper`                                                                | [tests/test_automation/scripts/batch_fix_tests.py:L1-L200]                                             |
+| F1:260       | `process_effective_tension_file`; `test_helper`                                                     | [tests/test_rainflow_with_effective_tension.py:L25-L114]                                               |
+| F1:261       | `main`; `test_helper`                                                                               | [tests/test_rainflow_with_effective_tension.py:L117-L184]                                              |
+| F1:262       | `_cfg`; `test_helper`                                                                               | [tests/test_wall_thickness_compare_workflow.py:L22-L42]                                                |
+| F1:263       | `test_workflow_registry`; `test_helper`                                                             | [tests/workflows/test_durable_workflows.py:L52-L1710]                                                  |
+| F1:264       | `screening_input`; `test_helper`                                                                    | [tests/workflows/test_viv_screening_workflow.py:L18-L46]                                               |
 
 #### F2 — `wave-spectra`
 
-Source: digitalmodel, *Implementation map*, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `wave-spectra`, 139 records.
+Source: digitalmodel, _Implementation map_, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `wave-spectra`, 139 records.
 
-| Source entry | Symbol / inventory relation | Location at code pin |
-| --- | --- | --- |
-| F2:1 | `Actuator.output`; `independent` | [docs/domains/orcaflex/examples/raw/K01/PythonController.py:L56-L78] |
-| F2:2 | `Actuator.output`; `independent` | [docs/domains/orcaflex/examples/raw/K02/BladedControllerWrapper.py:L61-L83] |
-| F2:3 | `define_environmental_conditions`; `example` | [examples/domains/fpso/fpso_mooring_analysis.py:L137-L191] |
-| F2:4 | `generate_visualizations`; `example` | [examples/domains/fpso/fpso_mooring_analysis.py:L347-L494] |
-| F2:5 | `main`; `example` | [examples/domains/fpso/fpso_mooring_analysis.py:L497-L562] |
-| F2:6 | `main`; `example` | [examples/prototypes/orcaflex-agent/generate_test.py:L35-L73] |
-| F2:7 | `mock_time_series`; `independent` | [scripts/_seed_eq_mock.py:L33-L83] |
-| F2:8 | `(file-level record)`; `independent` | [scripts/benchmark/extract_pdf_plots.py:L1-L421] |
-| F2:9 | `(file-level record)`; `independent` | [scripts/benchmark/validate_owd_vs_spec.py:L1-L2613] |
-| F2:10 | `build_dormancy_rules`; `independent` | [scripts/extract_property_inventory.py:L179-L205] |
-| F2:11 | `create_wave_file`; `independent` | [scripts/generate_env_files.py:L38-L77] |
-| F2:12 | `main`; `independent` | [scripts/generate_env_files.py:L142-L194] |
-| F2:13 | `(file-level record)`; `independent` | [scripts/ingest_orcina_help.py:L1-L359] |
-| F2:14 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/19_-_DistanceBetweenTwoVessels.py:L1-L20] |
-| F2:15 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/26_-_LinkedStatistics.py:L1-L43] |
-| F2:16 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py:L1-L12] |
-| F2:17 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/29_-_ExtremeStatisticsRayleigh.py:L1-L36] |
-| F2:18 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/30_-_ExtremeStatisticsLikelihood.py:L1-L32] |
-| F2:19 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/31_-_ExtremeStatisticsAggregation.py:L1-L42] |
-| F2:20 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/32_-_FrequencyDomainResults.py:L1-L19] |
-| F2:21 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/33_-_FrequencyDomainMPM.py:L1-L10] |
-| F2:22 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/34_-_FrequencyDomainRangeGraph.py:L1-L18] |
-| F2:23 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/35_-_FrequencyDomainSpectralDensitySpectralResponse.py:L1-L28] |
-| F2:24 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/36_-_FrequencyDomainTimeHistorySynthesis.py:L1-L15] |
-| F2:25 | `analyze_excel_file`; `independent` | [scripts/python/digitalmodel/legacy/analyze_marine_excel.py:L13-L345] |
-| F2:26 | `PerformanceProfiler.profile_wave_spectrum`; `independent` | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L121-L194] |
-| F2:27 | `PerformanceProfiler.profile_wave_spectrum.run_spectrum`; `independent` | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L146-L150] |
-| F2:28 | `freq_analyze`; `independent` | [scripts/python/digitalmodel/orcawave/mcp_orcawave.py:L36-L57] |
-| F2:29 | `_environment_and_simulation`; `independent` | [src/digitalmodel/drilling_riser/global_model/build.py:L430-L471] |
-| F2:30 | `short_chord_factor_f1`; `independent` | [src/digitalmodel/fatigue/scf_library.py:L108-L136] |
-| F2:31 | `spectrum_cmd`; `independent` | [src/digitalmodel/hydrodynamics/cli.py:L46-L102] |
-| F2:32 | `operability_analysis`; `independent` | [src/digitalmodel/hydrodynamics/seakeeping.py:L129-L231] |
-| F2:33 | `WaveSpectra._normalize_to_significant_height`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L29-L44] |
-| F2:34 | `WaveSpectra.jonswap`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L96] |
-| F2:35 | `WaveSpectra.pierson_moskowitz`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L98-L137] |
-| F2:36 | `WaveSpectra.bretschneider`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L139-L174] |
-| F2:37 | `WaveSpectra.issc`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L176-L213] |
-| F2:38 | `WaveSpectra.generate_spectrum`; `wrapper` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L215-L262] |
-| F2:39 | `WaveSpectra.significant_height_from_spectrum`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L288-L306] |
-| F2:40 | `WaveSpectra.zero_crossing_period_from_spectrum`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L308-L328] |
-| F2:41 | `WaveSpectra.spectrum_statistics`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectra.py:L348-L386] |
-| F2:42 | `router`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py:L16-L69] |
-| F2:43 | `_spectrum_name`; `independent` | [src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py:L78-L96] |
-| F2:44 | `OrcaflexModelComponents.wave`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L207-L232] |
-| F2:45 | `OrcaflexModelComponents.RayleighDampingCoefficients`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L307-L377] |
-| F2:46 | `_complex_rao`; `independent` | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L28-L30] |
-| F2:47 | `crane_tip_raos`; `independent` | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L45-L107] |
-| F2:48 | `crane_tip_significant_motion`; `independent` | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L110-L150] |
-| F2:49 | `crane_tip_significant_velocity`; `independent` | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L153-L168] |
-| F2:50 | `_jonswap_spectrum`; `independent` | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L171-L201] |
-| F2:51 | `analyze_excel_file`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/analysis/excel_analyzer.py:L13-L345] |
-| F2:52 | `PerformanceProfiler.profile_wave_spectrum`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L119-L186] |
-| F2:53 | `PerformanceProfiler.profile_wave_spectrum.run_spectrum`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L139-L143] |
-| F2:54 | `FPSOMooringFullWorkflow._wave_spectrum`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L54-L75] |
-| F2:55 | `operation_envelope`; `independent` | [src/digitalmodel/marine_ops/operation_envelope.py:L168-L217] |
-| F2:56 | `_significant_response`; `independent` | [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288] |
-| F2:57 | `synthesize_directional_forecast`; `independent` | [src/digitalmodel/motion_forecast/wave_forecast.py:L111-L156] |
-| F2:58 | `jonswap_spectrum`; `independent` | [src/digitalmodel/motion_forecast/wave_source.py:L21-L46] |
-| F2:59 | `synthesize_forecast`; `independent` | [src/digitalmodel/motion_forecast/wave_source.py:L49-L102] |
-| F2:60 | `WaveSpectrumParams.tz`; `independent` | [src/digitalmodel/orcaflex/environment.py:L139-L144] |
-| F2:61 | `WaveSpectrumParams.spectral_density`; `independent` | [src/digitalmodel/orcaflex/environment.py:L146-L174] |
-| F2:62 | `WaveSpectrumParams.to_orcaflex_dict`; `independent` | [src/digitalmodel/orcaflex/environment.py:L176-L184] |
-| F2:63 | `compute_response_spectrum`; `independent` | [src/digitalmodel/orcawave/motion_statistics.py:L97-L124] |
-| F2:64 | `pierson_moskowitz`; `independent` | [src/digitalmodel/orcawave/wave_spectrum.py:L109-L137] |
-| F2:65 | `jonswap`; `independent` | [src/digitalmodel/orcawave/wave_spectrum.py:L140-L184] |
-| F2:66 | `bretschneider`; `wrapper` | [src/digitalmodel/orcawave/wave_spectrum.py:L187-L204] |
-| F2:67 | `issc_spectrum`; `independent` | [src/digitalmodel/orcawave/wave_spectrum.py:L207-L230] |
-| F2:68 | `ochi_hubble._component`; `independent` | [src/digitalmodel/orcawave/wave_spectrum.py:L266-L277] |
-| F2:69 | `torsethaugen`; `independent` | [src/digitalmodel/orcawave/wave_spectrum.py:L282-L328] |
-| F2:70 | `generate_spectrum`; `independent` | [src/digitalmodel/orcawave/wave_spectrum.py:L335-L390] |
-| F2:71 | `_spectral_fatigue_annual_damage`; `independent` | [src/digitalmodel/parametric/generate.py:L208-L238] |
-| F2:72 | `_esp_pump_utilisation`; `independent` | [src/digitalmodel/parametric/generate.py:L405-L426] |
-| F2:73 | `_stress_psd_from_rao`; `independent` | [src/digitalmodel/rao_spectral_fatigue/workflow.py:L84-L121] |
-| F2:74 | `run_orcaflex`; `independent` | [src/digitalmodel/solvers/benchmark/solvers.py:L49-L112] |
-| F2:75 | `Environment.get_wave_waveTrains`; `wrapper` | [src/digitalmodel/solvers/fea_model/environment_components.py:L89-L98] |
-| F2:76 | `Environment.getJONSWAPGamma`; `independent` | [src/digitalmodel/solvers/fea_model/environment_components.py:L100-L110] |
-| F2:77 | `Environment.RayleighDampingCoefficients`; `copy` | [src/digitalmodel/solvers/fea_model/environment_components.py:L193-L298] |
-| F2:78 | `EnvironmentBuilder._build_wave_trains`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L251-L365] |
-| F2:79 | `EnvironmentBuilder._order_wave_train`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L368-L391] |
-| F2:80 | `CampaignSpec.from_legacy_config`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/schema/campaign.py:L234-L343] |
-| F2:81 | `OrcaflexModelComponents.wave`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L248-L297] |
-| F2:82 | `OrcaflexModelComponents.RayleighDampingCoefficients`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L394-L499] |
-| F2:83 | `_evaluate_location`; `independent` | [src/digitalmodel/spectral_fatigue/workflow.py:L79-L127] |
-| F2:84 | `FatigueAnalysisEngine.analyze_psd`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L421-L526] |
-| F2:85 | `FatigueAnalysisEngine._perform_frequency_validation`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L786-L809] |
-| F2:86 | `NarrowBandMethod.calculate_damage_rate`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L191-L226] |
-| F2:87 | `DirlikMethod.calculate_damage_rate`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L240-L369] |
-| F2:88 | `TovoBenasciuttiMethod.calculate_damage_rate`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L382-L468] |
-| F2:89 | `SingleMomentMethod.calculate_damage_rate`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L481-L530] |
-| F2:90 | `_resolve_wave_spectrum_func`; `independent` | [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L281-L321] |
-| F2:91 | `_resolve_wave_spectrum_func._jonswap_wrapper`; `independent` | [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L305-L319] |
-| F2:92 | `orcaflexModel`; `independent` | [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L13-L357] |
-| F2:93 | `wave`; `independent` | [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L410-L452] |
-| F2:94 | `jonswap_gamma`; `independent` | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L69-L90] |
-| F2:95 | `jonswap_spectrum`; `independent` | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L93-L140] |
-| F2:96 | `compute_wave_velocity`; `independent` | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L269-L359] |
-| F2:97 | `_spectrum_type`; `independent` | [src/digitalmodel/vessel_seakeeping/workflow.py:L106-L112] |
-| F2:98 | `_design`; `independent` | [src/digitalmodel/workflows/installation_full_report.py:L116-L136] |
-| F2:99 | `design_data`; `independent` | [src/digitalmodel/workflows/installation_report_sections.py:L19-L37] |
-| F2:100 | `_configure`; `independent` | [src/digitalmodel/workflows/installation_seastates.py:L82-L106] |
-| F2:101 | `_verify`; `independent` | [src/digitalmodel/workflows/installation_seastates.py:L109-L138] |
-| F2:102 | `_change_payload`; `independent` | [src/digitalmodel/workflows/installation_seastates.py:L244-L258] |
-| F2:103 | `VesselResponseWorkflow.create`; `independent` | [src/digitalmodel/workflows/workflow_automation/workflows.py:L385-L445] |
-| F2:104 | `wave_spectrum`; `test_helper` | [tests/hydrodynamics/rao_analysis/conftest.py:L31-L39] |
-| F2:105 | `jonswap_spectrum`; `test_helper` | [tests/hydrodynamics/test_seakeeping.py:L44-L47] |
-| F2:106 | `main`; `test_helper` | [tests/marine_ops/marine_engineering/integration/integration_example.py:L32-L399] |
-| F2:107 | `TestWaveDynamicsIntegration.test_jonswap_generates_valid_spectrum`; `test_helper` | [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L50-L65] |
-| F2:108 | `TestWaveDynamicsIntegration.test_zero_crossing_period_relationship`; `test_helper` | [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L95-L103] |
-| F2:109 | `TestWaveDynamicsIntegration.test_wave_elevation_time_series_generation`; `test_helper` | [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L134-L164] |
-| F2:110 | `TestWaveDynamicsIntegration.test_wave_energy_distribution`; `test_helper` | [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L240-L278] |
-| F2:111 | `test_jonswap_hs_recovery`; `test_helper` | [tests/marine_ops/marine_engineering/legacy/test_validation.py:L28-L38] |
-| F2:112 | `test_pierson_moskowitz_hs_recovery`; `test_helper` | [tests/marine_ops/marine_engineering/legacy/test_validation.py:L67-L77] |
-| F2:113 | `TestJONSWAPSpectrum.test_spectral_moments_accuracy`; `test_helper` | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L105-L119] |
-| F2:114 | `TestJONSWAPSpectrum.test_hs_from_m0_relationship`; `test_helper` | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L121-L132] |
-| F2:115 | `TestIrregularWaveSynthesis.test_wave_synthesis_statistics`; `test_helper` | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L309-L329] |
-| F2:116 | `TestIrregularWaveSynthesis.test_wave_synthesis_gaussian_distribution`; `test_helper` | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L349-L371] |
-| F2:117 | `TestPublishedBenchmarks.test_jonswap_vs_published_curves`; `test_helper` | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L438-L461] |
-| F2:118 | `TestJONSWAPSpectrum.test_spectral_moments_accuracy`; `test_helper` | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L105-L119] |
-| F2:119 | `TestJONSWAPSpectrum.test_hs_from_m0_relationship`; `test_helper` | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L121-L132] |
-| F2:120 | `TestIrregularWaveSynthesis.test_wave_synthesis_statistics`; `test_helper` | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L309-L329] |
-| F2:121 | `TestIrregularWaveSynthesis.test_wave_synthesis_gaussian_distribution`; `test_helper` | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L349-L371] |
-| F2:122 | `TestPublishedBenchmarks.test_jonswap_vs_published_curves`; `test_helper` | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L438-L461] |
-| F2:123 | `wave_order_findings`; `test_helper` | [tests/orcaflex/test_model_default_tokens.py:L385-L413] |
-| F2:124 | `_write_floating_campaign`; `test_helper` | [tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py:L30-L120] |
-| F2:125 | `_make_campaign_data`; `test_helper` | [tests/solvers/orcaflex/modular_generator/test_campaign_generator.py:L13-L95] |
-| F2:126 | `TestSpectralMomentsCalculation.test_white_noise_m0_equals_level_times_bandwidth`; `test_helper` | [tests/structural/fatigue/test_frequency_domain.py:L215-L224] |
-| F2:127 | `_jonswap_hz`; `test_helper` | [tests/structural/fatigue/test_scatter_fatigue.py:L42-L54] |
-| F2:128 | `simple_wave_params`; `test_helper` | [tests/unit/hydrodynamics/test_rao_analysis.py:L38-L44] |
-| F2:129 | `TestWaveSpectra.test_jonswap_peak_near_tp`; `test_helper` | [tests/unit/hydrodynamics/test_rao_analysis.py:L191-L199] |
-| F2:130 | `TestPiersonMoskowitzExtended.test_pm_peak_near_tp`; `test_helper` | [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L155-L162] |
-| F2:131 | `TestBretschneiderExtended.test_bretschneider_peak_near_tp`; `test_helper` | [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L202-L210] |
-| F2:132 | `TestZeroCrossingPeriodFromSpectrum.test_tz_pm_approximately_0711_tp`; `test_helper` | [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L393-L400] |
-| F2:133 | `TestPeakFrequencyFromSpectrum.test_peak_frequency_near_2pi_over_tp`; `test_helper` | [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L421-L427] |
-| F2:134 | `_assert_wave_spectra`; `test_helper` | [tests/workflows/hydrodynamics_assertions.py:L51-L64] |
-| F2:135 | `test_workflow_registry`; `test_helper` | [tests/workflows/test_durable_workflows.py:L52-L1710] |
-| F2:136 | `test_spectral_fatigue_workflow_matches_narrow_band_closed_form`; `test_helper` | [tests/workflows/test_durable_workflows.py:L1855-L1911] |
-| F2:137 | `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening`; `test_helper` | [tests/workflows/test_durable_workflows.py:L1914-L1981] |
-| F2:138 | `test_vessel_seakeeping_significant_amplitude_matches_library`; `test_helper` | [tests/workflows/test_durable_workflows.py:L1984-L2058] |
-| F2:139 | `test_esp_pump_hydraulics_tdh_and_sizing_closed_form`; `test_helper` | [tests/workflows/test_durable_workflows.py:L2314-L2352] |
+| Source entry | Symbol / inventory relation                                                                      | Location at code pin                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| F2:1         | `Actuator.output`; `independent`                                                                 | [docs/domains/orcaflex/examples/raw/K01/PythonController.py:L56-L78]                               |
+| F2:2         | `Actuator.output`; `independent`                                                                 | [docs/domains/orcaflex/examples/raw/K02/BladedControllerWrapper.py:L61-L83]                        |
+| F2:3         | `define_environmental_conditions`; `example`                                                     | [examples/domains/fpso/fpso_mooring_analysis.py:L137-L191]                                         |
+| F2:4         | `generate_visualizations`; `example`                                                             | [examples/domains/fpso/fpso_mooring_analysis.py:L347-L494]                                         |
+| F2:5         | `main`; `example`                                                                                | [examples/domains/fpso/fpso_mooring_analysis.py:L497-L562]                                         |
+| F2:6         | `main`; `example`                                                                                | [examples/prototypes/orcaflex-agent/generate_test.py:L35-L73]                                      |
+| F2:7         | `mock_time_series`; `independent`                                                                | [scripts/_seed_eq_mock.py:L33-L83]                                                                 |
+| F2:8         | `(file-level record)`; `independent`                                                             | [scripts/benchmark/extract_pdf_plots.py:L1-L421]                                                   |
+| F2:9         | `(file-level record)`; `independent`                                                             | [scripts/benchmark/validate_owd_vs_spec.py:L1-L2613]                                               |
+| F2:10        | `build_dormancy_rules`; `independent`                                                            | [scripts/extract_property_inventory.py:L179-L205]                                                  |
+| F2:11        | `create_wave_file`; `independent`                                                                | [scripts/generate_env_files.py:L38-L77]                                                            |
+| F2:12        | `main`; `independent`                                                                            | [scripts/generate_env_files.py:L142-L194]                                                          |
+| F2:13        | `(file-level record)`; `independent`                                                             | [scripts/ingest_orcina_help.py:L1-L359]                                                            |
+| F2:14        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/19_-_DistanceBetweenTwoVessels.py:L1-L20]                      |
+| F2:15        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/26_-_LinkedStatistics.py:L1-L43]                               |
+| F2:16        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py:L1-L12]                             |
+| F2:17        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/29_-_ExtremeStatisticsRayleigh.py:L1-L36]                      |
+| F2:18        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/30_-_ExtremeStatisticsLikelihood.py:L1-L32]                    |
+| F2:19        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/31_-_ExtremeStatisticsAggregation.py:L1-L42]                   |
+| F2:20        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/32_-_FrequencyDomainResults.py:L1-L19]                         |
+| F2:21        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/33_-_FrequencyDomainMPM.py:L1-L10]                             |
+| F2:22        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/34_-_FrequencyDomainRangeGraph.py:L1-L18]                      |
+| F2:23        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/35_-_FrequencyDomainSpectralDensitySpectralResponse.py:L1-L28] |
+| F2:24        | `(file-level record)`; `independent`                                                             | [scripts/python/digitalmodel/legacy/36_-_FrequencyDomainTimeHistorySynthesis.py:L1-L15]            |
+| F2:25        | `analyze_excel_file`; `independent`                                                              | [scripts/python/digitalmodel/legacy/analyze_marine_excel.py:L13-L345]                              |
+| F2:26        | `PerformanceProfiler.profile_wave_spectrum`; `independent`                                       | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L121-L194]                           |
+| F2:27        | `PerformanceProfiler.profile_wave_spectrum.run_spectrum`; `independent`                          | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L146-L150]                           |
+| F2:28        | `freq_analyze`; `independent`                                                                    | [scripts/python/digitalmodel/orcawave/mcp_orcawave.py:L36-L57]                                     |
+| F2:29        | `_environment_and_simulation`; `independent`                                                     | [src/digitalmodel/drilling_riser/global_model/build.py:L430-L471]                                  |
+| F2:30        | `short_chord_factor_f1`; `independent`                                                           | [src/digitalmodel/fatigue/scf_library.py:L108-L136]                                                |
+| F2:31        | `spectrum_cmd`; `independent`                                                                    | [src/digitalmodel/hydrodynamics/cli.py:L46-L102]                                                   |
+| F2:32        | `operability_analysis`; `independent`                                                            | [src/digitalmodel/hydrodynamics/seakeeping.py:L129-L231]                                           |
+| F2:33        | `WaveSpectra._normalize_to_significant_height`; `independent`                                    | [src/digitalmodel/hydrodynamics/wave_spectra.py:L29-L44]                                           |
+| F2:34        | `WaveSpectra.jonswap`; `independent`                                                             | [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L96]                                           |
+| F2:35        | `WaveSpectra.pierson_moskowitz`; `independent`                                                   | [src/digitalmodel/hydrodynamics/wave_spectra.py:L98-L137]                                          |
+| F2:36        | `WaveSpectra.bretschneider`; `independent`                                                       | [src/digitalmodel/hydrodynamics/wave_spectra.py:L139-L174]                                         |
+| F2:37        | `WaveSpectra.issc`; `independent`                                                                | [src/digitalmodel/hydrodynamics/wave_spectra.py:L176-L213]                                         |
+| F2:38        | `WaveSpectra.generate_spectrum`; `wrapper`                                                       | [src/digitalmodel/hydrodynamics/wave_spectra.py:L215-L262]                                         |
+| F2:39        | `WaveSpectra.significant_height_from_spectrum`; `independent`                                    | [src/digitalmodel/hydrodynamics/wave_spectra.py:L288-L306]                                         |
+| F2:40        | `WaveSpectra.zero_crossing_period_from_spectrum`; `independent`                                  | [src/digitalmodel/hydrodynamics/wave_spectra.py:L308-L328]                                         |
+| F2:41        | `WaveSpectra.spectrum_statistics`; `independent`                                                 | [src/digitalmodel/hydrodynamics/wave_spectra.py:L348-L386]                                         |
+| F2:42        | `router`; `independent`                                                                          | [src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py:L16-L69]                                 |
+| F2:43        | `_spectrum_name`; `independent`                                                                  | [src/digitalmodel/hydrodynamics/wave_spectrum/workflow.py:L78-L96]                                 |
+| F2:44        | `OrcaflexModelComponents.wave`; `independent`                                                    | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L207-L232]       |
+| F2:45        | `OrcaflexModelComponents.RayleighDampingCoefficients`; `independent`                             | [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L307-L377]       |
+| F2:46        | `_complex_rao`; `independent`                                                                    | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L28-L30]                             |
+| F2:47        | `crane_tip_raos`; `independent`                                                                  | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L45-L107]                            |
+| F2:48        | `crane_tip_significant_motion`; `independent`                                                    | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L110-L150]                           |
+| F2:49        | `crane_tip_significant_velocity`; `independent`                                                  | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L153-L168]                           |
+| F2:50        | `_jonswap_spectrum`; `independent`                                                               | [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L171-L201]                           |
+| F2:51        | `analyze_excel_file`; `copy`                                                                     | [src/digitalmodel/marine_ops/marine_analysis/analysis/excel_analyzer.py:L13-L345]                  |
+| F2:52        | `PerformanceProfiler.profile_wave_spectrum`; `independent`                                       | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L119-L186]               |
+| F2:53        | `PerformanceProfiler.profile_wave_spectrum.run_spectrum`; `independent`                          | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L139-L143]               |
+| F2:54        | `FPSOMooringFullWorkflow._wave_spectrum`; `independent`                                          | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L54-L75]    |
+| F2:55        | `operation_envelope`; `independent`                                                              | [src/digitalmodel/marine_ops/operation_envelope.py:L168-L217]                                      |
+| F2:56        | `_significant_response`; `independent`                                                           | [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288]                                      |
+| F2:57        | `synthesize_directional_forecast`; `independent`                                                 | [src/digitalmodel/motion_forecast/wave_forecast.py:L111-L156]                                      |
+| F2:58        | `jonswap_spectrum`; `independent`                                                                | [src/digitalmodel/motion_forecast/wave_source.py:L21-L46]                                          |
+| F2:59        | `synthesize_forecast`; `independent`                                                             | [src/digitalmodel/motion_forecast/wave_source.py:L49-L102]                                         |
+| F2:60        | `WaveSpectrumParams.tz`; `independent`                                                           | [src/digitalmodel/orcaflex/environment.py:L139-L144]                                               |
+| F2:61        | `WaveSpectrumParams.spectral_density`; `independent`                                             | [src/digitalmodel/orcaflex/environment.py:L146-L174]                                               |
+| F2:62        | `WaveSpectrumParams.to_orcaflex_dict`; `independent`                                             | [src/digitalmodel/orcaflex/environment.py:L176-L184]                                               |
+| F2:63        | `compute_response_spectrum`; `independent`                                                       | [src/digitalmodel/orcawave/motion_statistics.py:L97-L124]                                          |
+| F2:64        | `pierson_moskowitz`; `independent`                                                               | [src/digitalmodel/orcawave/wave_spectrum.py:L109-L137]                                             |
+| F2:65        | `jonswap`; `independent`                                                                         | [src/digitalmodel/orcawave/wave_spectrum.py:L140-L184]                                             |
+| F2:66        | `bretschneider`; `wrapper`                                                                       | [src/digitalmodel/orcawave/wave_spectrum.py:L187-L204]                                             |
+| F2:67        | `issc_spectrum`; `independent`                                                                   | [src/digitalmodel/orcawave/wave_spectrum.py:L207-L230]                                             |
+| F2:68        | `ochi_hubble._component`; `independent`                                                          | [src/digitalmodel/orcawave/wave_spectrum.py:L266-L277]                                             |
+| F2:69        | `torsethaugen`; `independent`                                                                    | [src/digitalmodel/orcawave/wave_spectrum.py:L282-L328]                                             |
+| F2:70        | `generate_spectrum`; `independent`                                                               | [src/digitalmodel/orcawave/wave_spectrum.py:L335-L390]                                             |
+| F2:71        | `_spectral_fatigue_annual_damage`; `independent`                                                 | [src/digitalmodel/parametric/generate.py:L208-L238]                                                |
+| F2:72        | `_esp_pump_utilisation`; `independent`                                                           | [src/digitalmodel/parametric/generate.py:L405-L426]                                                |
+| F2:73        | `_stress_psd_from_rao`; `independent`                                                            | [src/digitalmodel/rao_spectral_fatigue/workflow.py:L84-L121]                                       |
+| F2:74        | `run_orcaflex`; `independent`                                                                    | [src/digitalmodel/solvers/benchmark/solvers.py:L49-L112]                                           |
+| F2:75        | `Environment.get_wave_waveTrains`; `wrapper`                                                     | [src/digitalmodel/solvers/fea_model/environment_components.py:L89-L98]                             |
+| F2:76        | `Environment.getJONSWAPGamma`; `independent`                                                     | [src/digitalmodel/solvers/fea_model/environment_components.py:L100-L110]                           |
+| F2:77        | `Environment.RayleighDampingCoefficients`; `copy`                                                | [src/digitalmodel/solvers/fea_model/environment_components.py:L193-L298]                           |
+| F2:78        | `EnvironmentBuilder._build_wave_trains`; `independent`                                           | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L251-L365]    |
+| F2:79        | `EnvironmentBuilder._order_wave_train`; `independent`                                            | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L368-L391]    |
+| F2:80        | `CampaignSpec.from_legacy_config`; `independent`                                                 | [src/digitalmodel/solvers/orcaflex/modular_generator/schema/campaign.py:L234-L343]                 |
+| F2:81        | `OrcaflexModelComponents.wave`; `copy`                                                           | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L248-L297]                         |
+| F2:82        | `OrcaflexModelComponents.RayleighDampingCoefficients`; `copy`                                    | [src/digitalmodel/solvers/orcaflex/orcaflex_model_components.py:L394-L499]                         |
+| F2:83        | `_evaluate_location`; `independent`                                                              | [src/digitalmodel/spectral_fatigue/workflow.py:L79-L127]                                           |
+| F2:84        | `FatigueAnalysisEngine.analyze_psd`; `independent`                                               | [src/digitalmodel/structural/fatigue/analysis.py:L421-L526]                                        |
+| F2:85        | `FatigueAnalysisEngine._perform_frequency_validation`; `independent`                             | [src/digitalmodel/structural/fatigue/analysis.py:L786-L809]                                        |
+| F2:86        | `NarrowBandMethod.calculate_damage_rate`; `independent`                                          | [src/digitalmodel/structural/fatigue/frequency_domain.py:L191-L226]                                |
+| F2:87        | `DirlikMethod.calculate_damage_rate`; `independent`                                              | [src/digitalmodel/structural/fatigue/frequency_domain.py:L240-L369]                                |
+| F2:88        | `TovoBenasciuttiMethod.calculate_damage_rate`; `independent`                                     | [src/digitalmodel/structural/fatigue/frequency_domain.py:L382-L468]                                |
+| F2:89        | `SingleMomentMethod.calculate_damage_rate`; `independent`                                        | [src/digitalmodel/structural/fatigue/frequency_domain.py:L481-L530]                                |
+| F2:90        | `_resolve_wave_spectrum_func`; `independent`                                                     | [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L281-L321]                                 |
+| F2:91        | `_resolve_wave_spectrum_func._jonswap_wrapper`; `independent`                                    | [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L305-L319]                                 |
+| F2:92        | `orcaflexModel`; `independent`                                                                   | [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L13-L357]                          |
+| F2:93        | `wave`; `independent`                                                                            | [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L410-L452]                         |
+| F2:94        | `jonswap_gamma`; `independent`                                                                   | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L69-L90]                              |
+| F2:95        | `jonswap_spectrum`; `independent`                                                                | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L93-L140]                             |
+| F2:96        | `compute_wave_velocity`; `independent`                                                           | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L269-L359]                            |
+| F2:97        | `_spectrum_type`; `independent`                                                                  | [src/digitalmodel/vessel_seakeeping/workflow.py:L106-L112]                                         |
+| F2:98        | `_design`; `independent`                                                                         | [src/digitalmodel/workflows/installation_full_report.py:L116-L136]                                 |
+| F2:99        | `design_data`; `independent`                                                                     | [src/digitalmodel/workflows/installation_report_sections.py:L19-L37]                               |
+| F2:100       | `_configure`; `independent`                                                                      | [src/digitalmodel/workflows/installation_seastates.py:L82-L106]                                    |
+| F2:101       | `_verify`; `independent`                                                                         | [src/digitalmodel/workflows/installation_seastates.py:L109-L138]                                   |
+| F2:102       | `_change_payload`; `independent`                                                                 | [src/digitalmodel/workflows/installation_seastates.py:L244-L258]                                   |
+| F2:103       | `VesselResponseWorkflow.create`; `independent`                                                   | [src/digitalmodel/workflows/workflow_automation/workflows.py:L385-L445]                            |
+| F2:104       | `wave_spectrum`; `test_helper`                                                                   | [tests/hydrodynamics/rao_analysis/conftest.py:L31-L39]                                             |
+| F2:105       | `jonswap_spectrum`; `test_helper`                                                                | [tests/hydrodynamics/test_seakeeping.py:L44-L47]                                                   |
+| F2:106       | `main`; `test_helper`                                                                            | [tests/marine_ops/marine_engineering/integration/integration_example.py:L32-L399]                  |
+| F2:107       | `TestWaveDynamicsIntegration.test_jonswap_generates_valid_spectrum`; `test_helper`               | [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L50-L65]        |
+| F2:108       | `TestWaveDynamicsIntegration.test_zero_crossing_period_relationship`; `test_helper`              | [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L95-L103]       |
+| F2:109       | `TestWaveDynamicsIntegration.test_wave_elevation_time_series_generation`; `test_helper`          | [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L134-L164]      |
+| F2:110       | `TestWaveDynamicsIntegration.test_wave_energy_distribution`; `test_helper`                       | [tests/marine_ops/marine_engineering/integration/test_wave_dynamics_integration.py:L240-L278]      |
+| F2:111       | `test_jonswap_hs_recovery`; `test_helper`                                                        | [tests/marine_ops/marine_engineering/legacy/test_validation.py:L28-L38]                            |
+| F2:112       | `test_pierson_moskowitz_hs_recovery`; `test_helper`                                              | [tests/marine_ops/marine_engineering/legacy/test_validation.py:L67-L77]                            |
+| F2:113       | `TestJONSWAPSpectrum.test_spectral_moments_accuracy`; `test_helper`                              | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L105-L119]                        |
+| F2:114       | `TestJONSWAPSpectrum.test_hs_from_m0_relationship`; `test_helper`                                | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L121-L132]                        |
+| F2:115       | `TestIrregularWaveSynthesis.test_wave_synthesis_statistics`; `test_helper`                       | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L309-L329]                        |
+| F2:116       | `TestIrregularWaveSynthesis.test_wave_synthesis_gaussian_distribution`; `test_helper`            | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L349-L371]                        |
+| F2:117       | `TestPublishedBenchmarks.test_jonswap_vs_published_curves`; `test_helper`                        | [tests/marine_ops/marine_engineering/legacy/test_wave_spectra.py:L438-L461]                        |
+| F2:118       | `TestJONSWAPSpectrum.test_spectral_moments_accuracy`; `test_helper`                              | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L105-L119]                               |
+| F2:119       | `TestJONSWAPSpectrum.test_hs_from_m0_relationship`; `test_helper`                                | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L121-L132]                               |
+| F2:120       | `TestIrregularWaveSynthesis.test_wave_synthesis_statistics`; `test_helper`                       | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L309-L329]                               |
+| F2:121       | `TestIrregularWaveSynthesis.test_wave_synthesis_gaussian_distribution`; `test_helper`            | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L349-L371]                               |
+| F2:122       | `TestPublishedBenchmarks.test_jonswap_vs_published_curves`; `test_helper`                        | [tests/marine_ops/marine_engineering/test_wave_spectra.py:L438-L461]                               |
+| F2:123       | `wave_order_findings`; `test_helper`                                                             | [tests/orcaflex/test_model_default_tokens.py:L385-L413]                                            |
+| F2:124       | `_write_floating_campaign`; `test_helper`                                                        | [tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py:L30-L120]       |
+| F2:125       | `_make_campaign_data`; `test_helper`                                                             | [tests/solvers/orcaflex/modular_generator/test_campaign_generator.py:L13-L95]                      |
+| F2:126       | `TestSpectralMomentsCalculation.test_white_noise_m0_equals_level_times_bandwidth`; `test_helper` | [tests/structural/fatigue/test_frequency_domain.py:L215-L224]                                      |
+| F2:127       | `_jonswap_hz`; `test_helper`                                                                     | [tests/structural/fatigue/test_scatter_fatigue.py:L42-L54]                                         |
+| F2:128       | `simple_wave_params`; `test_helper`                                                              | [tests/unit/hydrodynamics/test_rao_analysis.py:L38-L44]                                            |
+| F2:129       | `TestWaveSpectra.test_jonswap_peak_near_tp`; `test_helper`                                       | [tests/unit/hydrodynamics/test_rao_analysis.py:L191-L199]                                          |
+| F2:130       | `TestPiersonMoskowitzExtended.test_pm_peak_near_tp`; `test_helper`                               | [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L155-L162]                                 |
+| F2:131       | `TestBretschneiderExtended.test_bretschneider_peak_near_tp`; `test_helper`                       | [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L202-L210]                                 |
+| F2:132       | `TestZeroCrossingPeriodFromSpectrum.test_tz_pm_approximately_0711_tp`; `test_helper`             | [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L393-L400]                                 |
+| F2:133       | `TestPeakFrequencyFromSpectrum.test_peak_frequency_near_2pi_over_tp`; `test_helper`              | [tests/unit/hydrodynamics/test_wave_spectra_extended.py:L421-L427]                                 |
+| F2:134       | `_assert_wave_spectra`; `test_helper`                                                            | [tests/workflows/hydrodynamics_assertions.py:L51-L64]                                              |
+| F2:135       | `test_workflow_registry`; `test_helper`                                                          | [tests/workflows/test_durable_workflows.py:L52-L1710]                                              |
+| F2:136       | `test_spectral_fatigue_workflow_matches_narrow_band_closed_form`; `test_helper`                  | [tests/workflows/test_durable_workflows.py:L1855-L1911]                                            |
+| F2:137       | `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening`; `test_helper`             | [tests/workflows/test_durable_workflows.py:L1914-L1981]                                            |
+| F2:138       | `test_vessel_seakeeping_significant_amplitude_matches_library`; `test_helper`                    | [tests/workflows/test_durable_workflows.py:L1984-L2058]                                            |
+| F2:139       | `test_esp_pump_hydraulics_tdh_and_sizing_closed_form`; `test_helper`                             | [tests/workflows/test_durable_workflows.py:L2314-L2352]                                            |
 
 #### F3 — `wind-and-current-force-routes`
 
-Source: digitalmodel, *Implementation map*, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `wind-and-current-force-routes`, 131 records.
+Source: digitalmodel, _Implementation map_, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `wind-and-current-force-routes`, 131 records.
 
-| Source entry | Symbol / inventory relation | Location at code pin |
-| --- | --- | --- |
-| F3:1 | `calc_splash_zone`; `example` | [examples/demos/gtm/demo_03_deepwater_mudmat_installation.py:L312-L384] |
-| F3:2 | `calc_phase_3_splash`; `example` | [examples/demos/gtm/demo_05_deepwater_rigid_jumper_installation.py:L375-L441] |
-| F3:3 | `(file-level record)`; `example` | [examples/demos/gtm/results_store_demo05.py:L1-L707] |
-| F3:4 | `_good_case`; `example` | [examples/demos/gtm/tests/test_demo_05_results_store.py:L80-L126] |
-| F3:5 | `calculate_environmental_forces`; `example` | [examples/domains/fpso/fpso_mooring_analysis.py:L194-L236] |
-| F3:6 | `main`; `example` | [examples/domains/fpso/fpso_mooring_analysis.py:L497-L562] |
-| F3:7 | `main`; `example` | [examples/domains/ocimf/ocimf_demo.py:L24-L341] |
-| F3:8 | `calculate_environmental_forces`; `example` | [examples/domains/workflows/01_spread_mooring_8point.py:L123-L173] |
-| F3:9 | `analyze_calm_buoy`; `example` | [examples/domains/workflows/03_calm_buoy.py:L53-L113] |
-| F3:10 | `analyze_jackup_mooring`; `example` | [examples/domains/workflows/05_jackup_installation.py:L37-L63] |
-| F3:11 | `analyze_floating_wind_mooring`; `example` | [examples/domains/workflows/06_floating_wind_turbine.py:L37-L72] |
-| F3:12 | `analyze_wec_mooring`; `example` | [examples/domains/workflows/07_wave_energy_converter.py:L36-L66] |
-| F3:13 | `analyze_aquaculture_mooring`; `example` | [examples/domains/workflows/08_aquaculture_mooring.py:L35-L62] |
-| F3:14 | `analyze_spm_terminal`; `example` | [examples/domains/workflows/09_spm_terminal.py:L34-L67] |
-| F3:15 | `analyze_dp_backup_mooring`; `example` | [examples/domains/workflows/10_dp_backup_mooring.py:L36-L81] |
-| F3:16 | `(file-level record)`; `independent` | [scripts/capabilities/build_onepagers.py:L1-L915] |
-| F3:17 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/extract_ocimf_database.py:L1-L292] |
-| F3:18 | `extract_ocimf_database`; `independent` | [scripts/python/digitalmodel/legacy/extract_ocimf_database.py:L220-L283] |
-| F3:19 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/generate_integration_charts.py:L1-L1439] |
-| F3:20 | `main`; `independent` | [scripts/python/digitalmodel/legacy/generate_ocimf_report.py:L16-L52] |
-| F3:21 | `PerformanceProfiler._setup_test_data`; `independent` | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L112-L119] |
-| F3:22 | `PerformanceProfiler.profile_ocimf_lookup`; `independent` | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L196-L261] |
-| F3:23 | `PerformanceProfiler.run_all`; `independent` | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L499-L515] |
-| F3:24 | `main`; `independent` | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L518-L544] |
-| F3:25 | `Phase2Validator.generate_excel_reference_data`; `independent` | [scripts/python/digitalmodel/legacy/validate_phase2.py:L104-L226] |
-| F3:26 | `Phase2Validator.export_statistics_to_csv`; `independent` | [scripts/python/digitalmodel/legacy/validate_phase2.py:L853-L882] |
-| F3:27 | `Phase2Validator.export_json_summary`; `independent` | [scripts/python/digitalmodel/legacy/validate_phase2.py:L1191-L1214] |
-| F3:28 | `Phase2Validator.run_complete_validation`; `independent` | [scripts/python/digitalmodel/legacy/validate_phase2.py:L1216-L1256] |
-| F3:29 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/visualize_ocimf_data.py:L1-L417] |
-| F3:30 | `main`; `independent` | [scripts/python/digitalmodel/legacy/visualize_ocimf_data.py:L371-L413] |
-| F3:31 | `make_polar_overlay`; `independent` | [scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py:L406-L476] |
-| F3:32 | `parse_args`; `independent` | [scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py:L802-L826] |
-| F3:33 | `PressureVesselGenerator.generate_wind_load`; `independent` | [src/digitalmodel/ansys/pressure_vessel.py:L704-L729] |
-| F3:34 | `SyntheticRopeDatabaseClient._generate_rope_spec`; `independent` | [src/digitalmodel/data_systems/data_procurement/mooring/database_clients/synthetic_rope_db_client.py:L171-L246] |
-| F3:35 | `main`; `independent` | [src/digitalmodel/data_systems/data_scraping/validators/validate_ocimf_data.py:L367-L415] |
-| F3:36 | `environmental_force_n`; `independent` | [src/digitalmodel/drilling_riser/drift_off.py:L97-L131] |
-| F3:37 | `CurrentProfile.drag_load_n_per_m`; `independent` | [src/digitalmodel/drilling_riser/envelope.py:L108-L119] |
-| F3:38 | `as_analysed_sections`; `independent` | [src/digitalmodel/drilling_riser/global_model/orcaflex_run.py:L248-L289] |
-| F3:39 | `router`; `independent` | [src/digitalmodel/dynmoor_mooring/workflow.py:L101-L272] |
-| F3:40 | `engine`; `caller` | [src/digitalmodel/engine.py:L90-L892] |
-| F3:41 | `ocimf_wind_cmd`; `independent` | [src/digitalmodel/hydrodynamics/cli.py:L115-L160] |
-| F3:42 | `ocimf_current_cmd`; `independent` | [src/digitalmodel/hydrodynamics/cli.py:L173-L218] |
-| F3:43 | `combined_env_cmd`; `independent` | [src/digitalmodel/hydrodynamics/cli.py:L229-L287] |
-| F3:44 | `FatigueAnalysisComponents.get_total_viv_fatigue`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L99-L112] |
-| F3:45 | `FatigueAnalysisComponents.tabulate_viv_results`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L114-L167] |
-| F3:46 | `VIVFatigueAnalysisComponents.get_total_viv_fatigue`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L176-L198] |
-| F3:47 | `VIVFatigueAnalysisComponents.tabulate_viv_results`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L200-L317] |
-| F3:48 | `ETL_components.transform_viv_current_reformat_1`; `independent` | [src/digitalmodel/infrastructure/utils/ETL_components.py:L746-L822] |
-| F3:49 | `compute_splashzone_envelope`; `independent` | [src/digitalmodel/installation/installation_pamphlet/calculations.py:L456-L556] |
-| F3:50 | `calc_phase_3_splash`; `independent` | [src/digitalmodel/installation/jumper_installation/calculations.py:L163-L205] |
-| F3:51 | `main`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/__main__.py:L27-L144] |
-| F3:52 | `OCIMFDatabase.get_coefficients`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py:L306-L357] |
-| F3:53 | `EnvironmentalForces.calculate_total_forces`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py:L628-L677] |
-| F3:54 | `create_sample_database`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py:L861-L932] |
-| F3:55 | `OCIMFWorkflow.router`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/environmental_loading/workflow.py:L48-L64] |
-| F3:56 | `(file-level record)`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/extraction/extract_ocimf.py:L1-L292] |
-| F3:57 | `extract_ocimf_database`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/extraction/extract_ocimf.py:L220-L283] |
-| F3:58 | `PerformanceProfiler._setup_test_data`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L110-L117] |
-| F3:59 | `PerformanceProfiler.profile_ocimf_lookup`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L188-L254] |
-| F3:60 | `PerformanceProfiler.run_all`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L494-L510] |
-| F3:61 | `main`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L513-L539] |
-| F3:62 | `main`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/reporting/ocimf_interactive_report.py:L644-L656] |
-| F3:63 | `Phase2Validator.generate_excel_reference_data`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py:L104-L226] |
-| F3:64 | `Phase2Validator.export_statistics_to_csv`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py:L853-L882] |
-| F3:65 | `Phase2Validator.export_json_summary`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py:L1191-L1214] |
-| F3:66 | `Phase2Validator.run_complete_validation`; `copy` | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py:L1216-L1256] |
-| F3:67 | `(file-level record)`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/visualization/integration_charts.py:L1-L1439] |
-| F3:68 | `_output_dir`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L25-L31] |
-| F3:69 | `_cli_output_dir`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L34-L36] |
-| F3:70 | `load_data`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L55-L64] |
-| F3:71 | `main`; `independent` | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L448-L493] |
-| F3:72 | `OCIMFDatabase.get_coefficients`; `copy` | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L320-L371] |
-| F3:73 | `EnvironmentalForces.calculate_total_forces`; `copy` | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L642-L691] |
-| F3:74 | `create_sample_database`; `copy` | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L875-L946] |
-| F3:75 | `FPSOMooringFullWorkflow._environmental_forces`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L77-L101] |
-| F3:76 | `FPSOMooringFullWorkflow._ocimf_database_path`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L103-L113] |
-| F3:77 | `_resolve_arrow_direction_in_body_frame`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py:L39-L60] |
-| F3:78 | `polar_force_overlay`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py:L273-L357] |
-| F3:79 | `threshold_speed_for_steerage`; `independent` | [src/digitalmodel/naval_architecture/maneuvering_envelope.py:L211-L246] |
-| F3:80 | `run_maneuvering_envelope_sweep`; `independent` | [src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py:L233-L345] |
-| F3:81 | `SplashZoneInput.calculate_splash_zone_loads`; `independent` | [src/digitalmodel/orcaflex/installation_analysis.py:L245-L298] |
-| F3:82 | `compute_wind_current_drift`; `independent` | [src/digitalmodel/orcawave/drift_forces.py:L224-L298] |
-| F3:83 | `KnowledgeIntegrator._extract_configurations`; `independent` | [src/digitalmodel/solvers/orcaflex/examples_integration/integrator.py:L104-L121] |
-| F3:84 | `EnvironmentBuilder.build`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L171-L249] |
-| F3:85 | `extract_loads`; `independent` | [src/digitalmodel/solvers/orcaflex/reporting/extractors/loads_extractor.py:L12-L60] |
-| F3:86 | `calculate_dual_chute_drag`; `independent` | [src/digitalmodel/structural/parachute/chute_assessment.py:L81-L100] |
-| F3:87 | `assess_all_load_cases`; `caller` | [src/digitalmodel/structural/parachute/chute_assessment.py:L131-L186] |
-| F3:88 | `simulate_deployment_transient`; `independent` | [src/digitalmodel/structural/parachute/chute_assessment.py:L189-L293] |
-| F3:89 | `export_results_yaml`; `independent` | [src/digitalmodel/structural/parachute/chute_assessment.py:L296-L321] |
-| F3:90 | `calculate_drag_force`; `independent` | [src/digitalmodel/structural/parachute/parachute_drag.py:L37-L74] |
-| F3:91 | `design_verification`; `independent` | [src/digitalmodel/subsea/mooring_analysis/cli.py:L159-L324] |
-| F3:92 | `MooringDesigner.calculate_environmental_loads`; `independent` | [src/digitalmodel/subsea/mooring_analysis/designer.py:L60-L124] |
-| F3:93 | `build_wind_model.force`; `independent` | [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L1094-L1096] |
-| F3:94 | `_phase_demand`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L194-L205] |
-| F3:95 | `hydrodynamic_loads`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L171-L211] |
-| F3:96 | `drag_force_per_meter`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L214-L234] |
-| F3:97 | `lateral_stability_check`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L291-L360] |
-| F3:98 | `check_lateral_stability`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L363-L395] |
-| F3:99 | `run_on_bottom_stability`; `independent` | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L71] |
-| F3:100 | `VIVScreening.screen_with_current_profile`; `independent` | [src/digitalmodel/subsea/viv_analysis/screening.py:L278-L308] |
-| F3:101 | `viv_analysis`; `independent` | [src/digitalmodel/subsea/viv_analysis/viv_analysis_legacy.py:L52-L97] |
-| F3:102 | `VortexSheddingAnalyzer.analyze_with_profile`; `independent` | [src/digitalmodel/subsea/viv_analysis/vortex_shedding.py:L160-L194] |
-| F3:103 | `create_mooring_design_template`; `independent` | [src/digitalmodel/workflows/workflow_automation/templates.py:L306-L349] |
-| F3:104 | `MooringSystemDesignWorkflow.create`; `independent` | [src/digitalmodel/workflows/workflow_automation/workflows.py:L169-L256] |
-| F3:105 | `(file-level record)`; `test_helper` | [tests/contracts/test_force_units_boundary_contract.py:L1-L660] |
-| F3:106 | `_load_producer`; `test_helper` | [tests/legal/test_published_pages_have_no_internal_paths.py:L148-L156] |
-| F3:107 | `sample_database_path`; `test_helper` | [tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py:L31-L47] |
-| F3:108 | `ocimf_db`; `test_helper` | [tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py:L51-L53] |
-| F3:109 | `env_forces`; `test_helper` | [tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py:L57-L59] |
-| F3:110 | `main`; `test_helper` | [tests/marine_ops/marine_engineering/integration/integration_example.py:L32-L399] |
-| F3:111 | `TestOCIMFMooringIntegration.test_combined_environmental_forces`; `test_helper` | [tests/marine_ops/marine_engineering/integration/test_ocimf_mooring_integration.py:L105-L152] |
-| F3:112 | `ocimf_database`; `test_helper` | [tests/marine_ops/marine_engineering/test_marine_eng_perf.py:L33-L39] |
-| F3:113 | `pytest_benchmark_update_json`; `test_helper` | [tests/marine_ops/marine_engineering/test_marine_eng_perf.py:L364-L373] |
-| F3:114 | `test_refactored_polar_signatures_match_fixture`; `test_helper` | [tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py:L72-L129] |
-| F3:115 | `_build_loads`; `test_helper` | [tests/solvers/orcaflex/reporting/fixture_helpers.py:L161-L186] |
-| F3:116 | `TestAssessAllLoadCases.test_governing_force_within_1_percent_of_hand_calc`; `test_helper` | [tests/structural/parachute/test_chute_assessment.py:L136-L148] |
-| F3:117 | `TestDragForce.test_drag_200_mph`; `test_helper` | [tests/structural/parachute/test_parachute_drag.py:L70-L80] |
-| F3:118 | `TestDragForce.test_drag_250_mph`; `test_helper` | [tests/structural/parachute/test_parachute_drag.py:L82-L91] |
-| F3:119 | `TestDragForce.test_force_scales_with_v_squared`; `test_helper` | [tests/structural/parachute/test_parachute_drag.py:L98-L103] |
-| F3:120 | `TestDragForce.test_result_has_newtons`; `test_helper` | [tests/structural/parachute/test_parachute_drag.py:L105-L108] |
-| F3:121 | `TestChatGPTCrossValidation.test_steady_state_250mph_matches_chatgpt_newtons`; `test_helper` | [tests/structural/parachute/test_parachute_drag.py:L173-L186] |
-| F3:122 | `TestChatGPTCrossValidation.test_steady_state_250mph_matches_chatgpt_lbs`; `test_helper` | [tests/structural/parachute/test_parachute_drag.py:L188-L201] |
-| F3:123 | `catenary_environment`; `test_helper` | [tests/subsea/catenary_riser/conftest.py:L19-L30] |
-| F3:124 | `TestLiftForce.test_known_lift_force`; `test_helper` | [tests/subsea/on_bottom_stability/test_dnv_rp_f109.py:L103-L110] |
-| F3:125 | `TestDragForce.test_scenario_1`; `test_helper` | [tests/subsea/pipeline/test_on_bottom_stability.py:L72-L78] |
-| F3:126 | `TestLiftForce.test_scenario_1`; `test_helper` | [tests/subsea/pipeline/test_on_bottom_stability.py:L82-L88] |
-| F3:127 | `get_dnv_circular_mock`; `test_helper` | [tests/test_automation/fixtures/engineering_fixtures.py:L145-L167] |
-| F3:128 | `get_dnv_rectangular_mock`; `test_helper` | [tests/test_automation/fixtures/engineering_fixtures.py:L170-L193] |
-| F3:129 | `TestHydrodynamicLoads.test_drag_force_per_meter`; `test_helper` | [tests/test_on_bottom_stability.py:L54-L66] |
-| F3:130 | `TestHydrodynamicLoads.test_lift_force_per_meter`; `test_helper` | [tests/test_on_bottom_stability.py:L68-L80] |
-| F3:131 | `test_workflow_registry`; `test_helper` | [tests/workflows/test_durable_workflows.py:L52-L1710] |
+| Source entry | Symbol / inventory relation                                                                  | Location at code pin                                                                                            |
+| ------------ | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| F3:1         | `calc_splash_zone`; `example`                                                                | [examples/demos/gtm/demo_03_deepwater_mudmat_installation.py:L312-L384]                                         |
+| F3:2         | `calc_phase_3_splash`; `example`                                                             | [examples/demos/gtm/demo_05_deepwater_rigid_jumper_installation.py:L375-L441]                                   |
+| F3:3         | `(file-level record)`; `example`                                                             | [examples/demos/gtm/results_store_demo05.py:L1-L707]                                                            |
+| F3:4         | `_good_case`; `example`                                                                      | [examples/demos/gtm/tests/test_demo_05_results_store.py:L80-L126]                                               |
+| F3:5         | `calculate_environmental_forces`; `example`                                                  | [examples/domains/fpso/fpso_mooring_analysis.py:L194-L236]                                                      |
+| F3:6         | `main`; `example`                                                                            | [examples/domains/fpso/fpso_mooring_analysis.py:L497-L562]                                                      |
+| F3:7         | `main`; `example`                                                                            | [examples/domains/ocimf/ocimf_demo.py:L24-L341]                                                                 |
+| F3:8         | `calculate_environmental_forces`; `example`                                                  | [examples/domains/workflows/01_spread_mooring_8point.py:L123-L173]                                              |
+| F3:9         | `analyze_calm_buoy`; `example`                                                               | [examples/domains/workflows/03_calm_buoy.py:L53-L113]                                                           |
+| F3:10        | `analyze_jackup_mooring`; `example`                                                          | [examples/domains/workflows/05_jackup_installation.py:L37-L63]                                                  |
+| F3:11        | `analyze_floating_wind_mooring`; `example`                                                   | [examples/domains/workflows/06_floating_wind_turbine.py:L37-L72]                                                |
+| F3:12        | `analyze_wec_mooring`; `example`                                                             | [examples/domains/workflows/07_wave_energy_converter.py:L36-L66]                                                |
+| F3:13        | `analyze_aquaculture_mooring`; `example`                                                     | [examples/domains/workflows/08_aquaculture_mooring.py:L35-L62]                                                  |
+| F3:14        | `analyze_spm_terminal`; `example`                                                            | [examples/domains/workflows/09_spm_terminal.py:L34-L67]                                                         |
+| F3:15        | `analyze_dp_backup_mooring`; `example`                                                       | [examples/domains/workflows/10_dp_backup_mooring.py:L36-L81]                                                    |
+| F3:16        | `(file-level record)`; `independent`                                                         | [scripts/capabilities/build_onepagers.py:L1-L915]                                                               |
+| F3:17        | `(file-level record)`; `independent`                                                         | [scripts/python/digitalmodel/legacy/extract_ocimf_database.py:L1-L292]                                          |
+| F3:18        | `extract_ocimf_database`; `independent`                                                      | [scripts/python/digitalmodel/legacy/extract_ocimf_database.py:L220-L283]                                        |
+| F3:19        | `(file-level record)`; `independent`                                                         | [scripts/python/digitalmodel/legacy/generate_integration_charts.py:L1-L1439]                                    |
+| F3:20        | `main`; `independent`                                                                        | [scripts/python/digitalmodel/legacy/generate_ocimf_report.py:L16-L52]                                           |
+| F3:21        | `PerformanceProfiler._setup_test_data`; `independent`                                        | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L112-L119]                                        |
+| F3:22        | `PerformanceProfiler.profile_ocimf_lookup`; `independent`                                    | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L196-L261]                                        |
+| F3:23        | `PerformanceProfiler.run_all`; `independent`                                                 | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L499-L515]                                        |
+| F3:24        | `main`; `independent`                                                                        | [scripts/python/digitalmodel/legacy/profile_marine_modules.py:L518-L544]                                        |
+| F3:25        | `Phase2Validator.generate_excel_reference_data`; `independent`                               | [scripts/python/digitalmodel/legacy/validate_phase2.py:L104-L226]                                               |
+| F3:26        | `Phase2Validator.export_statistics_to_csv`; `independent`                                    | [scripts/python/digitalmodel/legacy/validate_phase2.py:L853-L882]                                               |
+| F3:27        | `Phase2Validator.export_json_summary`; `independent`                                         | [scripts/python/digitalmodel/legacy/validate_phase2.py:L1191-L1214]                                             |
+| F3:28        | `Phase2Validator.run_complete_validation`; `independent`                                     | [scripts/python/digitalmodel/legacy/validate_phase2.py:L1216-L1256]                                             |
+| F3:29        | `(file-level record)`; `independent`                                                         | [scripts/python/digitalmodel/legacy/visualize_ocimf_data.py:L1-L417]                                            |
+| F3:30        | `main`; `independent`                                                                        | [scripts/python/digitalmodel/legacy/visualize_ocimf_data.py:L371-L413]                                          |
+| F3:31        | `make_polar_overlay`; `independent`                                                          | [scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py:L406-L476]                                     |
+| F3:32        | `parse_args`; `independent`                                                                  | [scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py:L802-L826]                                     |
+| F3:33        | `PressureVesselGenerator.generate_wind_load`; `independent`                                  | [src/digitalmodel/ansys/pressure_vessel.py:L704-L729]                                                           |
+| F3:34        | `SyntheticRopeDatabaseClient._generate_rope_spec`; `independent`                             | [src/digitalmodel/data_systems/data_procurement/mooring/database_clients/synthetic_rope_db_client.py:L171-L246] |
+| F3:35        | `main`; `independent`                                                                        | [src/digitalmodel/data_systems/data_scraping/validators/validate_ocimf_data.py:L367-L415]                       |
+| F3:36        | `environmental_force_n`; `independent`                                                       | [src/digitalmodel/drilling_riser/drift_off.py:L97-L131]                                                         |
+| F3:37        | `CurrentProfile.drag_load_n_per_m`; `independent`                                            | [src/digitalmodel/drilling_riser/envelope.py:L108-L119]                                                         |
+| F3:38        | `as_analysed_sections`; `independent`                                                        | [src/digitalmodel/drilling_riser/global_model/orcaflex_run.py:L248-L289]                                        |
+| F3:39        | `router`; `independent`                                                                      | [src/digitalmodel/dynmoor_mooring/workflow.py:L101-L272]                                                        |
+| F3:40        | `engine`; `caller`                                                                           | [src/digitalmodel/engine.py:L90-L892]                                                                           |
+| F3:41        | `ocimf_wind_cmd`; `independent`                                                              | [src/digitalmodel/hydrodynamics/cli.py:L115-L160]                                                               |
+| F3:42        | `ocimf_current_cmd`; `independent`                                                           | [src/digitalmodel/hydrodynamics/cli.py:L173-L218]                                                               |
+| F3:43        | `combined_env_cmd`; `independent`                                                            | [src/digitalmodel/hydrodynamics/cli.py:L229-L287]                                                               |
+| F3:44        | `FatigueAnalysisComponents.get_total_viv_fatigue`; `independent`                             | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L99-L112]                  |
+| F3:45        | `FatigueAnalysisComponents.tabulate_viv_results`; `independent`                              | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L114-L167]                 |
+| F3:46        | `VIVFatigueAnalysisComponents.get_total_viv_fatigue`; `independent`                          | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L176-L198]                 |
+| F3:47        | `VIVFatigueAnalysisComponents.tabulate_viv_results`; `independent`                           | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L200-L317]                 |
+| F3:48        | `ETL_components.transform_viv_current_reformat_1`; `independent`                             | [src/digitalmodel/infrastructure/utils/ETL_components.py:L746-L822]                                             |
+| F3:49        | `compute_splashzone_envelope`; `independent`                                                 | [src/digitalmodel/installation/installation_pamphlet/calculations.py:L456-L556]                                 |
+| F3:50        | `calc_phase_3_splash`; `independent`                                                         | [src/digitalmodel/installation/jumper_installation/calculations.py:L163-L205]                                   |
+| F3:51        | `main`; `independent`                                                                        | `[src/digitalmodel/marine_ops/marine_analysis/__main__.py:L27-L144]`                                            |
+| F3:52        | `OCIMFDatabase.get_coefficients`; `independent`                                              | [src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py:L306-L357]                          |
+| F3:53        | `EnvironmentalForces.calculate_total_forces`; `independent`                                  | [src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py:L628-L677]                          |
+| F3:54        | `create_sample_database`; `independent`                                                      | [src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py:L861-L932]                          |
+| F3:55        | `OCIMFWorkflow.router`; `independent`                                                        | [src/digitalmodel/marine_ops/marine_analysis/environmental_loading/workflow.py:L48-L64]                         |
+| F3:56        | `(file-level record)`; `independent`                                                         | [src/digitalmodel/marine_ops/marine_analysis/extraction/extract_ocimf.py:L1-L292]                               |
+| F3:57        | `extract_ocimf_database`; `copy`                                                             | [src/digitalmodel/marine_ops/marine_analysis/extraction/extract_ocimf.py:L220-L283]                             |
+| F3:58        | `PerformanceProfiler._setup_test_data`; `copy`                                               | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L110-L117]                            |
+| F3:59        | `PerformanceProfiler.profile_ocimf_lookup`; `copy`                                           | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L188-L254]                            |
+| F3:60        | `PerformanceProfiler.run_all`; `copy`                                                        | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L494-L510]                            |
+| F3:61        | `main`; `copy`                                                                               | [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L513-L539]                            |
+| F3:62        | `main`; `independent`                                                                        | [src/digitalmodel/marine_ops/marine_analysis/reporting/ocimf_interactive_report.py:L644-L656]                   |
+| F3:63        | `Phase2Validator.generate_excel_reference_data`; `copy`                                      | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py:L104-L226]                           |
+| F3:64        | `Phase2Validator.export_statistics_to_csv`; `copy`                                           | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py:L853-L882]                           |
+| F3:65        | `Phase2Validator.export_json_summary`; `copy`                                                | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py:L1191-L1214]                         |
+| F3:66        | `Phase2Validator.run_complete_validation`; `copy`                                            | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py:L1216-L1256]                         |
+| F3:67        | `(file-level record)`; `independent`                                                         | [src/digitalmodel/marine_ops/marine_analysis/visualization/integration_charts.py:L1-L1439]                      |
+| F3:68        | `_output_dir`; `independent`                                                                 | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L25-L31]                             |
+| F3:69        | `_cli_output_dir`; `independent`                                                             | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L34-L36]                             |
+| F3:70        | `load_data`; `independent`                                                                   | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L55-L64]                             |
+| F3:71        | `main`; `independent`                                                                        | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L448-L493]                           |
+| F3:72        | `OCIMFDatabase.get_coefficients`; `copy`                                                     | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L320-L371]                       |
+| F3:73        | `EnvironmentalForces.calculate_total_forces`; `copy`                                         | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L642-L691]                       |
+| F3:74        | `create_sample_database`; `copy`                                                             | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L875-L946]                       |
+| F3:75        | `FPSOMooringFullWorkflow._environmental_forces`; `independent`                               | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L77-L101]                |
+| F3:76        | `FPSOMooringFullWorkflow._ocimf_database_path`; `independent`                                | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L103-L113]               |
+| F3:77        | `_resolve_arrow_direction_in_body_frame`; `independent`                                      | [src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py:L39-L60]                   |
+| F3:78        | `polar_force_overlay`; `independent`                                                         | [src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py:L273-L357]                 |
+| F3:79        | `threshold_speed_for_steerage`; `independent`                                                | [src/digitalmodel/naval_architecture/maneuvering_envelope.py:L211-L246]                                         |
+| F3:80        | `run_maneuvering_envelope_sweep`; `independent`                                              | [src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py:L233-L345]                                |
+| F3:81        | `SplashZoneInput.calculate_splash_zone_loads`; `independent`                                 | [src/digitalmodel/orcaflex/installation_analysis.py:L245-L298]                                                  |
+| F3:82        | `compute_wind_current_drift`; `independent`                                                  | [src/digitalmodel/orcawave/drift_forces.py:L224-L298]                                                           |
+| F3:83        | `KnowledgeIntegrator._extract_configurations`; `independent`                                 | [src/digitalmodel/solvers/orcaflex/examples_integration/integrator.py:L104-L121]                                |
+| F3:84        | `EnvironmentBuilder.build`; `independent`                                                    | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py:L171-L249]                 |
+| F3:85        | `extract_loads`; `independent`                                                               | [src/digitalmodel/solvers/orcaflex/reporting/extractors/loads_extractor.py:L12-L60]                             |
+| F3:86        | `calculate_dual_chute_drag`; `independent`                                                   | [src/digitalmodel/structural/parachute/chute_assessment.py:L81-L100]                                            |
+| F3:87        | `assess_all_load_cases`; `caller`                                                            | [src/digitalmodel/structural/parachute/chute_assessment.py:L131-L186]                                           |
+| F3:88        | `simulate_deployment_transient`; `independent`                                               | [src/digitalmodel/structural/parachute/chute_assessment.py:L189-L293]                                           |
+| F3:89        | `export_results_yaml`; `independent`                                                         | [src/digitalmodel/structural/parachute/chute_assessment.py:L296-L321]                                           |
+| F3:90        | `calculate_drag_force`; `independent`                                                        | [src/digitalmodel/structural/parachute/parachute_drag.py:L37-L74]                                               |
+| F3:91        | `design_verification`; `independent`                                                         | [src/digitalmodel/subsea/mooring_analysis/cli.py:L159-L324]                                                     |
+| F3:92        | `MooringDesigner.calculate_environmental_loads`; `independent`                               | [src/digitalmodel/subsea/mooring_analysis/designer.py:L60-L124]                                                 |
+| F3:93        | `build_wind_model.force`; `independent`                                                      | [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L1094-L1096]                                               |
+| F3:94        | `_phase_demand`; `independent`                                                               | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L194-L205]                                      |
+| F3:95        | `hydrodynamic_loads`; `independent`                                                          | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L171-L211]                                           |
+| F3:96        | `drag_force_per_meter`; `independent`                                                        | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L214-L234]                                           |
+| F3:97        | `lateral_stability_check`; `independent`                                                     | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L291-L360]                                           |
+| F3:98        | `check_lateral_stability`; `independent`                                                     | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L363-L395]                                           |
+| F3:99        | `run_on_bottom_stability`; `independent`                                                     | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L71]                                                |
+| F3:100       | `VIVScreening.screen_with_current_profile`; `independent`                                    | [src/digitalmodel/subsea/viv_analysis/screening.py:L278-L308]                                                   |
+| F3:101       | `viv_analysis`; `independent`                                                                | [src/digitalmodel/subsea/viv_analysis/viv_analysis_legacy.py:L52-L97]                                           |
+| F3:102       | `VortexSheddingAnalyzer.analyze_with_profile`; `independent`                                 | [src/digitalmodel/subsea/viv_analysis/vortex_shedding.py:L160-L194]                                             |
+| F3:103       | `create_mooring_design_template`; `independent`                                              | [src/digitalmodel/workflows/workflow_automation/templates.py:L306-L349]                                         |
+| F3:104       | `MooringSystemDesignWorkflow.create`; `independent`                                          | [src/digitalmodel/workflows/workflow_automation/workflows.py:L169-L256]                                         |
+| F3:105       | `(file-level record)`; `test_helper`                                                         | [tests/contracts/test_force_units_boundary_contract.py:L1-L660]                                                 |
+| F3:106       | `_load_producer`; `test_helper`                                                              | [tests/legal/test_published_pages_have_no_internal_paths.py:L148-L156]                                          |
+| F3:107       | `sample_database_path`; `test_helper`                                                        | [tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py:L31-L47]                               |
+| F3:108       | `ocimf_db`; `test_helper`                                                                    | [tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py:L51-L53]                               |
+| F3:109       | `env_forces`; `test_helper`                                                                  | [tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py:L57-L59]                               |
+| F3:110       | `main`; `test_helper`                                                                        | [tests/marine_ops/marine_engineering/integration/integration_example.py:L32-L399]                               |
+| F3:111       | `TestOCIMFMooringIntegration.test_combined_environmental_forces`; `test_helper`              | [tests/marine_ops/marine_engineering/integration/test_ocimf_mooring_integration.py:L105-L152]                   |
+| F3:112       | `ocimf_database`; `test_helper`                                                              | [tests/marine_ops/marine_engineering/test_marine_eng_perf.py:L33-L39]                                           |
+| F3:113       | `pytest_benchmark_update_json`; `test_helper`                                                | [tests/marine_ops/marine_engineering/test_marine_eng_perf.py:L364-L373]                                         |
+| F3:114       | `test_refactored_polar_signatures_match_fixture`; `test_helper`                              | [tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py:L72-L129]                       |
+| F3:115       | `_build_loads`; `test_helper`                                                                | [tests/solvers/orcaflex/reporting/fixture_helpers.py:L161-L186]                                                 |
+| F3:116       | `TestAssessAllLoadCases.test_governing_force_within_1_percent_of_hand_calc`; `test_helper`   | [tests/structural/parachute/test_chute_assessment.py:L136-L148]                                                 |
+| F3:117       | `TestDragForce.test_drag_200_mph`; `test_helper`                                             | [tests/structural/parachute/test_parachute_drag.py:L70-L80]                                                     |
+| F3:118       | `TestDragForce.test_drag_250_mph`; `test_helper`                                             | [tests/structural/parachute/test_parachute_drag.py:L82-L91]                                                     |
+| F3:119       | `TestDragForce.test_force_scales_with_v_squared`; `test_helper`                              | [tests/structural/parachute/test_parachute_drag.py:L98-L103]                                                    |
+| F3:120       | `TestDragForce.test_result_has_newtons`; `test_helper`                                       | [tests/structural/parachute/test_parachute_drag.py:L105-L108]                                                   |
+| F3:121       | `TestChatGPTCrossValidation.test_steady_state_250mph_matches_chatgpt_newtons`; `test_helper` | [tests/structural/parachute/test_parachute_drag.py:L173-L186]                                                   |
+| F3:122       | `TestChatGPTCrossValidation.test_steady_state_250mph_matches_chatgpt_lbs`; `test_helper`     | [tests/structural/parachute/test_parachute_drag.py:L188-L201]                                                   |
+| F3:123       | `catenary_environment`; `test_helper`                                                        | [tests/subsea/catenary_riser/conftest.py:L19-L30]                                                               |
+| F3:124       | `TestLiftForce.test_known_lift_force`; `test_helper`                                         | [tests/subsea/on_bottom_stability/test_dnv_rp_f109.py:L103-L110]                                                |
+| F3:125       | `TestDragForce.test_scenario_1`; `test_helper`                                               | [tests/subsea/pipeline/test_on_bottom_stability.py:L72-L78]                                                     |
+| F3:126       | `TestLiftForce.test_scenario_1`; `test_helper`                                               | [tests/subsea/pipeline/test_on_bottom_stability.py:L82-L88]                                                     |
+| F3:127       | `get_dnv_circular_mock`; `test_helper`                                                       | [tests/test_automation/fixtures/engineering_fixtures.py:L145-L167]                                              |
+| F3:128       | `get_dnv_rectangular_mock`; `test_helper`                                                    | [tests/test_automation/fixtures/engineering_fixtures.py:L170-L193]                                              |
+| F3:129       | `TestHydrodynamicLoads.test_drag_force_per_meter`; `test_helper`                             | [tests/test_on_bottom_stability.py:L54-L66]                                                                     |
+| F3:130       | `TestHydrodynamicLoads.test_lift_force_per_meter`; `test_helper`                             | [tests/test_on_bottom_stability.py:L68-L80]                                                                     |
+| F3:131       | `test_workflow_registry`; `test_helper`                                                      | [tests/workflows/test_durable_workflows.py:L52-L1710]                                                           |
 
 #### F4 — `sn-curves-and-miner-damage`
 
-Source: digitalmodel, *Implementation map*, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `sn-curves-and-miner-damage`, 387 records.
+Source: digitalmodel, _Implementation map_, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `sn-curves-and-miner-damage`, 387 records.
 
-| Source entry | Symbol / inventory relation | Location at code pin |
-| --- | --- | --- |
-| F4:1 | `example_6_custom_workflow`; `independent` | [docs/domains/examples/orcaflex_signal_analysis_example.py:L295-L363] |
-| F4:2 | `example_1_basic_rainflow_counting`; `independent` | [docs/domains/examples/signal_analysis_usage_example.py:L29-L65] |
-| F4:3 | `example_4_fatigue_analysis`; `independent` | [docs/domains/examples/signal_analysis_usage_example.py:L175-L253] |
-| F4:4 | `example_6_backward_compatibility`; `independent` | [docs/domains/examples/signal_analysis_usage_example.py:L315-L377] |
-| F4:5 | `main`; `independent` | [docs/domains/examples/signal_analysis_usage_example.py:L380-L410] |
-| F4:6 | `main`; `example` | [examples/demos/demo_sn_library.py:L43-L207] |
-| F4:7 | `demonstrate_sn_curves`; `example` | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L120-L160] |
-| F4:8 | `demonstrate_rainflow_counting`; `example` | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L163-L243] |
-| F4:9 | `demonstrate_damage_accumulation`; `example` | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L246-L326] |
-| F4:10 | `demonstrate_frequency_domain_analysis`; `example` | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L329-L408] |
-| F4:11 | `demonstrate_quick_analysis`; `example` | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L411-L458] |
-| F4:12 | `main`; `example` | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L461-L502] |
-| F4:13 | `list_curves`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py:L24-L37] |
-| F4:14 | `compare_curves`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py:L66-L88] |
-| F4:15 | `example_2_linear_log`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L46-L64] |
-| F4:16 | `example_3_with_scf`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L67-L85] |
-| F4:17 | `example_4_without_fatigue_limit`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L88-L106] |
-| F4:18 | `example_5_dnv_comparison`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L109-L133] |
-| F4:19 | `example_6_abs_comparison`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L136-L174] |
-| F4:20 | `example_7_reference_comparison`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L177-L197] |
-| F4:21 | `example_8_joint_type_comparison`; `example` | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L200-L228] |
-| F4:22 | `example_1_basic_sn_curves`; `example` | [examples/domains/fatigue/fatigue_analysis_examples.py:L55-L95] |
-| F4:23 | `example_2_multislope_curves`; `example` | [examples/domains/fatigue/fatigue_analysis_examples.py:L98-L139] |
-| F4:24 | `example_3_time_domain_analysis`; `example` | [examples/domains/fatigue/fatigue_analysis_examples.py:L142-L212] |
-| F4:25 | `example_4_frequency_domain_analysis`; `example` | [examples/domains/fatigue/fatigue_analysis_examples.py:L215-L279] |
-| F4:26 | `example_5_high_stress_range_analysis`; `example` | [examples/domains/fatigue/fatigue_analysis_examples.py:L282-L324] |
-| F4:27 | `example_6_shear_data_analysis`; `example` | [examples/domains/fatigue/fatigue_analysis_examples.py:L327-L383] |
-| F4:28 | `run_all_examples`; `example` | [examples/domains/fatigue/fatigue_analysis_examples.py:L454-L477] |
-| F4:29 | `example_well_log_analysis`; `example` | [examples/domains/reservoir/reservoir_analysis_examples.py:L138-L219] |
-| F4:30 | `example_stratigraphic_correlation`; `example` | [examples/domains/reservoir/reservoir_analysis_examples.py:L376-L457] |
-| F4:31 | `main`; `example` | [examples/domains/reservoir/reservoir_analysis_examples.py:L578-L603] |
-| F4:32 | `(file-level record)`; `independent` | [scripts/capabilities/build_onepagers.py:L1-L915] |
-| F4:33 | `(file-level record)`; `independent` | [scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py:L1-L12] |
-| F4:34 | `process_single_test_file`; `independent` | [scripts/python/digitalmodel/tools/check_process_fatigue_single.py:L25-L225] |
-| F4:35 | `YAMLConfigMigrator._migrate_analysis`; `independent` | [scripts/python/digitalmodel/tools/migrate_yaml_configs.py:L134-L168] |
-| F4:36 | `YAMLConfigMigrator._migrate_time_series_components`; `independent` | [scripts/python/digitalmodel/tools/migrate_yaml_configs.py:L225-L242] |
-| F4:37 | `process_fatigue_files`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_data.py:L24-L116] |
-| F4:38 | `process_single_test_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_final.py:L25-L439] |
-| F4:39 | `process_fatigue_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L23-L273] |
-| F4:40 | `process_sample_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L275-L300] |
-| F4:41 | `batch_process_all_files`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L302-L343] |
-| F4:42 | `rainflow_counting`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L19-L59] |
-| F4:43 | `process_fatigue_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L61-L238] |
-| F4:44 | `batch_process`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L275-L316] |
-| F4:45 | `process_single_test_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v2.py:L25-L309] |
-| F4:46 | `process_single_test_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v3.py:L26-L337] |
-| F4:47 | `process_single_test_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v4.py:L25-L352] |
-| F4:48 | `process_single_test_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v5.py:L25-L382] |
-| F4:49 | `process_single_test_file`; `independent` | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v6.py:L25-L405] |
-| F4:50 | `(file-level record)`; `independent` | [scripts/riser_database/build_tables.py:L1-L212] |
-| F4:51 | `SNcurve.from_dnv`; `independent` | [src/digitalmodel/ansys/fatigue_postprocessor.py:L101-L122] |
-| F4:52 | `FatiguePostprocessor.calculate_cycles_to_failure`; `independent` | [src/digitalmodel/ansys/fatigue_postprocessor.py:L158-L192] |
-| F4:53 | `FatiguePostprocessor.calculate_fatigue_damage`; `independent` | [src/digitalmodel/ansys/fatigue_postprocessor.py:L222-L284] |
-| F4:54 | `FatiguePostprocessor.generate_sn_curve_apdl`; `independent` | [src/digitalmodel/ansys/fatigue_postprocessor.py:L347-L369] |
-| F4:55 | `FatiguePostprocessor.create_damage_summary_df`; `independent` | [src/digitalmodel/ansys/fatigue_postprocessor.py:L371-L398] |
-| F4:56 | `build_model_inventory`; `independent` | [src/digitalmodel/benchmarks/inventory.py:L77-L327] |
-| F4:57 | `half_cycles`; `independent` | [src/digitalmodel/drilling_riser/global_model/fatigue_channels.py:L51-L64] |
-| F4:58 | `extract`; `independent` | [src/digitalmodel/drilling_riser/global_model/fatigue_channels.py:L104-L137] |
-| F4:59 | `engine`; `caller` | [src/digitalmodel/engine.py:L90-L892] |
-| F4:60 | `router`; `independent` | [src/digitalmodel/fatg_spectral_fatigue/workflow.py:L52-L117] |
-| F4:61 | `_sn_curve`; `independent` | [src/digitalmodel/fatg_spectral_fatigue/workflow.py:L120-L134] |
-| F4:62 | `_case_histogram`; `independent` | [src/digitalmodel/fatigue/assessment.py:L116-L121] |
-| F4:63 | `assess_fatigue`; `independent` | [src/digitalmodel/fatigue/assessment.py:L136-L160] |
-| F4:64 | `(file-level record)`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L1-L929] |
-| F4:65 | `_adapt_pylife_4pt`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L432-L440] |
-| F4:66 | `_adapt_pypi_rainflow`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L443-L454] |
-| F4:67 | `_adapt_sigproc_astm`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L457-L469] |
-| F4:68 | `_adapt_calm_buoy`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L472-L478] |
-| F4:69 | `_adapt_fapps_counting`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L481-L487] |
-| F4:70 | `_adapt_fapps_counter`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L490-L494] |
-| F4:71 | `_adapt_struct_fatigue`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L497-L501] |
-| F4:72 | `_is_counting_name`; `independent` | [src/digitalmodel/fatigue/counting_contract.py:L866-L869] |
-| F4:73 | `miner_damage`; `independent` | [src/digitalmodel/fatigue/damage.py:L13-L39] |
-| F4:74 | `design_life_check`; `independent` | [src/digitalmodel/fatigue/damage.py:L42-L88] |
-| F4:75 | `environment_correction`; `independent` | [src/digitalmodel/fatigue/environmental_correction.py:L165-L244] |
-| F4:76 | `apply_environment_to_sn`; `independent` | [src/digitalmodel/fatigue/environmental_correction.py:L251-L292] |
-| F4:77 | `fatg_sea_state_damage`; `independent` | [src/digitalmodel/fatigue/fatg.py:L211-L238] |
-| F4:78 | `fatg_annual_damage`; `independent` | [src/digitalmodel/fatigue/fatg.py:L241-L311] |
-| F4:79 | `_sec_fatigue_locations`; `independent` | [src/digitalmodel/fatigue/fatigue_reporting.py:L376-L399] |
-| F4:80 | `fatigue_life`; `independent` | [src/digitalmodel/fatigue/rainflow.py:L130-L201] |
-| F4:81 | `_compute_sd`; `independent` | [src/digitalmodel/fatigue/sn_curves.py:L56-L58] |
-| F4:82 | `_build_curve_dict`; `caller` | [src/digitalmodel/fatigue/sn_curves.py:L61-L74] |
-| F4:83 | `get_sn_curve`; `caller` | [src/digitalmodel/fatigue/sn_curves.py:L80-L134] |
-| F4:84 | `SNCurveRecord.knee_stress`; `wrapper` | [src/digitalmodel/fatigue/sn_library.py:L141-L146] |
-| F4:85 | `SNCurveRecord.switch_stress`; `wrapper` | [src/digitalmodel/fatigue/sn_library.py:L149-L160] |
-| F4:86 | `SNCurveRecord.cycles`; `wrapper` | [src/digitalmodel/fatigue/sn_library.py:L162-L177] |
-| F4:87 | `_knee_stress`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L180-L190] |
-| F4:88 | `_switch_stress`; `caller` | [src/digitalmodel/fatigue/sn_library.py:L200-L222] |
-| F4:89 | `_bilinear_cycles`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L225-L250] |
-| F4:90 | `_sd`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L288-L290] |
-| F4:91 | `_build_dnv_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L293-L381] |
-| F4:92 | `_build_api_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L384-L413] |
-| F4:93 | `_build_bs7608_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L416-L463] |
-| F4:94 | `_build_iiw_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L466-L497] |
-| F4:95 | `_build_eurocode3_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L500-L526] |
-| F4:96 | `_build_norsok_curves`; `caller` | [src/digitalmodel/fatigue/sn_library.py:L529-L566] |
-| F4:97 | `_build_aws_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L569-L597] |
-| F4:98 | `_build_asme_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L600-L627] |
-| F4:99 | `_build_en13445_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L630-L654] |
-| F4:100 | `_build_pd5500_curves`; `caller` | [src/digitalmodel/fatigue/sn_library.py:L657-L687] |
-| F4:101 | `_build_abs_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L690-L730] |
-| F4:102 | `_build_iso19902_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L733-L802] |
-| F4:103 | `_build_csa_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L805-L832] |
-| F4:104 | `_build_hse_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L835-L877] |
-| F4:105 | `_build_doe_curves`; `caller` | [src/digitalmodel/fatigue/sn_library.py:L880-L911] |
-| F4:106 | `_build_gl_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L914-L941] |
-| F4:107 | `_build_jis_curves`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L944-L970] |
-| F4:108 | `_ensure_loaded`; `independent` | [src/digitalmodel/fatigue/sn_library.py:L1002-L1011] |
-| F4:109 | `summary_table`; `caller` | [src/digitalmodel/fatigue/sn_library.py:L1129-L1148] |
-| F4:110 | `_record_to_curve_info`; `independent` | [src/digitalmodel/fatigue/sn_library_api.py:L146-L155] |
-| F4:111 | `_record_to_sncurve`; `independent` | [src/digitalmodel/fatigue/sn_library_api.py:L158-L174] |
-| F4:112 | `get_curve`; `wrapper` | [src/digitalmodel/fatigue/sn_library_api.py:L210-L235] |
-| F4:113 | `calculate_endurance`; `wrapper` | [src/digitalmodel/fatigue/sn_library_api.py:L238-L281] |
-| F4:114 | `wirsching_light_damage`; `independent` | [src/digitalmodel/fatigue/spectral_fatigue.py:L207-L254] |
-| F4:115 | `benasciutti_tovo_damage`; `independent` | [src/digitalmodel/fatigue/spectral_fatigue.py:L339-L395] |
-| F4:116 | `weld_fatigue_quickcheck`; `independent` | [src/digitalmodel/fatigue/weld_fatigue_quickcheck.py:L105-L240] |
-| F4:117 | `main`; `independent` | [src/digitalmodel/fatigue/weld_fatigue_quickcheck.py:L340-L373] |
-| F4:118 | `generate_test_data`; `independent` | [src/digitalmodel/fatigue/woehler_fitting.py:L18-L89] |
-| F4:119 | `_fallback_log_regression`; `independent` | [src/digitalmodel/fatigue/woehler_fitting.py:L137-L181] |
-| F4:120 | `router`; `caller` | [src/digitalmodel/fatigue/workflow.py:L16-L40] |
-| F4:121 | `_curve_ids`; `independent` | [src/digitalmodel/fatigue/workflow.py:L43-L55] |
-| F4:122 | `_stress_ranges`; `independent` | [src/digitalmodel/fatigue/workflow.py:L58-L85] |
-| F4:123 | `_curve_summary`; `independent` | [src/digitalmodel/fatigue/workflow.py:L99-L111] |
-| F4:124 | `_curve_csv_path`; `independent` | [src/digitalmodel/fatigue/workflow.py:L114-L120] |
-| F4:125 | `_input_stem`; `independent` | [src/digitalmodel/fatigue/workflow.py:L131-L134] |
-| F4:126 | `FatigueAnalysis.router`; `caller` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L23-L50] |
-| F4:127 | `FatigueAnalysis.damage_from_sn_data`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L52-L72] |
-| F4:128 | `FatigueAnalysis.damage_from_rainflow_cycles`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L74-L93] |
-| F4:129 | `FatigueAnalysis.damage_from_timetrace`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L95-L139] |
-| F4:130 | `FatigueAnalysis.get_rainflow_from_timetrace`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L249-L261] |
-| F4:131 | `FatigueAnalysisComponents.orcaflex_wave_fatigue_analysis`; `independent` | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L586-L701] |
-| F4:132 | `ShipFatigueAnalysis.router`; `wrapper` | [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L22-L36] |
-| F4:133 | `ShipFatigueAnalysis.get_lcf_timetrace_rainflow_and_fatigue_damage`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L113-L166] |
-| F4:134 | `ShipFatigueAnalysis.get_fatigue_damage_output_df_for_timetrace`; `wrapper` | [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L298-L391] |
-| F4:135 | `ShipFatigueAnalysis.get_fatigue_df_definition_for_timetrace`; `independent` | [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L476-L489] |
-| F4:136 | `VIVFatigueAnalysisComponents.orcaflex_wave_fatigue_analysis`; `independent` | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L982-L1164] |
-| F4:137 | `SNcurve.cycles_to_failure`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L53-L66] |
-| F4:138 | `RainflowFatigue.count_cycles`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L203-L225] |
-| F4:139 | `MinersRuleDamage.compute`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L323-L344] |
-| F4:140 | `ScatterDiagramFatigue.compute`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L373-L433] |
-| F4:141 | `compute_fatigue_life`; `independent` | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L522-L600] |
-| F4:142 | `StratigraphicAnalysis.add_well_analysis`; `independent` | [src/digitalmodel/marine_ops/reservoir/analysis.py:L414-L423] |
-| F4:143 | `StratigraphicAnalysis.set_well_order`; `independent` | [src/digitalmodel/marine_ops/reservoir/analysis.py:L425-L436] |
-| F4:144 | `StratigraphicAnalysis.create_flattened_section`; `independent` | [src/digitalmodel/marine_ops/reservoir/analysis.py:L451-L525] |
-| F4:145 | `WellCorrelation.add_well_data`; `independent` | [src/digitalmodel/marine_ops/reservoir/analysis.py:L803-L811] |
-| F4:146 | `CoreAnalysis.correlate_core_to_logs`; `independent` | [src/digitalmodel/marine_ops/reservoir/analysis.py:L1046-L1091] |
-| F4:147 | `ReservoirAnalysis.add_well_analysis`; `independent` | [src/digitalmodel/marine_ops/reservoir/analysis.py:L1119-L1142] |
-| F4:148 | `ReservoirAnalysis.run_comprehensive_analysis`; `independent` | [src/digitalmodel/marine_ops/reservoir/analysis.py:L1144-L1175] |
-| F4:149 | `router`; `caller` | [src/digitalmodel/mooring_fatigue/workflow.py:L23-L58] |
-| F4:150 | `_evaluate_line`; `independent` | [src/digitalmodel/mooring_fatigue/workflow.py:L61-L85] |
-| F4:151 | `_history_bins`; `independent` | [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149] |
-| F4:152 | `_curve_settings`; `independent` | [src/digitalmodel/mooring_fatigue/workflow.py:L184-L186] |
-| F4:153 | `_mooring_fatigue_damage`; `independent` | [src/digitalmodel/parametric/generate.py:L28-L45] |
-| F4:154 | `_free_span_utilisation`; `independent` | [src/digitalmodel/parametric/generate.py:L141-L175] |
-| F4:155 | `_span_rectification_utilisation`; `independent` | [src/digitalmodel/parametric/generate.py:L327-L365] |
-| F4:156 | `(file-level record)`; `independent` | [src/digitalmodel/parametric/refresh.py:L1-L382] |
-| F4:157 | `router`; `caller` | [src/digitalmodel/rao_spectral_fatigue/workflow.py:L34-L81] |
-| F4:158 | `assess_touchdown_fatigue`; `independent` | [src/digitalmodel/riser_fatigue/touchdown.py:L157-L247] |
-| F4:159 | `router`; `caller` | [src/digitalmodel/riser_fatigue/workflow.py:L65-L103] |
-| F4:160 | `_viv_damage`; `independent` | [src/digitalmodel/riser_fatigue/workflow.py:L205-L245] |
-| F4:161 | `_curve_settings`; `independent` | [src/digitalmodel/riser_fatigue/workflow.py:L255-L266] |
-| F4:162 | `TimeSeriesComponentsAdapter.get_rainflow_count_from_time_series`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L50-L72] |
-| F4:163 | `FatigueAnalysisAdapter.get_rainflow_from_timetrace`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L293-L315] |
-| F4:164 | `FatigueAnalysisAdapter.damage_from_rainflow_cycles`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L317-L355] |
-| F4:165 | `OrcaFlexAdapter.RainflowHalfCycles`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L376-L405] |
-| F4:166 | `rainflow_cmd`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/cli.py:L30-L86] |
-| F4:167 | `RainflowCounter.count_cycles`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py:L39-L83] |
-| F4:168 | `SNCurve._bilinear`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py:L189-L234] |
-| F4:169 | `SNCurve.from_test_data`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py:L376-L417] |
-| F4:170 | `FatigueDamageCalculator.calculate_damage`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L34-L84] |
-| F4:171 | `FatigueDamageCalculator._miners_rule`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L86-L116] |
-| F4:172 | `FatigueDamageCalculator._modified_miners_rule`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L118-L158] |
-| F4:173 | `FatigueDamageCalculator._nonlinear_damage`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L160-L199] |
-| F4:174 | `FatigueDamageCalculator._calculate_allowable_cycles`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L201-L255] |
-| F4:175 | `FatigueDamageCalculator._apply_mean_stress_correction`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L257-L314] |
-| F4:176 | `FatigueDamageCalculator._estimate_cycles_to_failure`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L316-L351] |
-| F4:177 | `FatigueDamageCalculator.calculate_equivalent_stress`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L353-L388] |
-| F4:178 | `create_parser`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L55-L248] |
-| F4:179 | `build_config_from_args`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L251-L324] |
-| F4:180 | `main`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L327-L479] |
-| F4:181 | `TimeSeriesAnalyzer._analyze_column`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L147-L222] |
-| F4:182 | `TimeSeriesAnalyzer._generate_outputs`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L327-L360] |
-| F4:183 | `TimeSeriesAnalyzer._generate_summary`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L438-L474] |
-| F4:184 | `SafeAnalyzer.safe_rainflow_analysis`; `independent` | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/error_handling.py:L162-L222] |
-| F4:185 | `TimeSeriesAnalysis.router`; `independent` | [src/digitalmodel/signal_processing/time_series/time_series_analysis.py:L20-L41] |
-| F4:186 | `TimeSeriesComponents.count_cycles`; `independent` | [src/digitalmodel/signal_processing/time_series/time_series_components.py:L644-L657] |
-| F4:187 | `OPPTimeSeries.get_histogram_object_from_orcaflex_run`; `independent` | [src/digitalmodel/solvers/orcaflex/opp_time_series.py:L441-L471] |
-| F4:188 | `OPPTimeSeries.get_detailed_histogram_df_columns`; `independent` | [src/digitalmodel/solvers/orcaflex/opp_time_series.py:L473-L494] |
-| F4:189 | `OPPTimeSeriesV2.process_histograms`; `independent` | [src/digitalmodel/solvers/orcaflex/opp_time_series_v2.py:L241-L282] |
-| F4:190 | `OrcaFlexAnalysis.get_histogram_object_from_orcaflex_run`; `independent` | [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L470-L492] |
-| F4:191 | `OrcaFlexAnalysis.get_detailed_histogram_df_columns`; `copy` | [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L755-L767] |
-| F4:192 | `OrcaFlexTimeTraceProcessor._perform_fatigue_analysis`; `independent` | [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L248-L338] |
-| F4:193 | `OrcaFlexTimeTraceProcessor._parallel_fatigue_analysis`; `independent` | [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L420-L448] |
-| F4:194 | `OrcaFlexTimeTraceProcessor._analyze_single_trace`; `independent` | [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L451-L496] |
-| F4:195 | `router`; `caller` | [src/digitalmodel/spectral_fatigue/workflow.py:L37-L76] |
-| F4:196 | `_sn_curve`; `independent` | [src/digitalmodel/spectral_fatigue/workflow.py:L139-L143] |
-| F4:197 | `quick_fatigue_analysis`; `caller` | [src/digitalmodel/structural/fatigue/__init__.py:L226-L305] |
-| F4:198 | `get_module_info`; `independent` | [src/digitalmodel/structural/fatigue/__init__.py:L431-L447] |
-| F4:199 | `(file-level record)`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L1-L1094] |
-| F4:200 | `FatigueAnalysisEngine._setup_sn_curve`; `wrapper` | [src/digitalmodel/structural/fatigue/analysis.py:L266-L285] |
-| F4:201 | `FatigueAnalysisEngine._setup_damage_calculator`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L287-L300] |
-| F4:202 | `FatigueAnalysisEngine._setup_rainflow_counter`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L302-L310] |
-| F4:203 | `FatigueAnalysisEngine.analyze_time_series`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L312-L419] |
-| F4:204 | `FatigueAnalysisEngine.analyze_psd`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L421-L526] |
-| F4:205 | `FatigueAnalysisEngine.calculate_high_stress_range_life`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L528-L569] |
-| F4:206 | `FatigueAnalysisEngine.analyze_shear_data`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L571-L620] |
-| F4:207 | `FatigueAnalysisEngine._perform_engineering_validation`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L733-L784] |
-| F4:208 | `quick_time_domain_analysis`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L979-L1022] |
-| F4:209 | `quick_frequency_domain_analysis`; `independent` | [src/digitalmodel/structural/fatigue/analysis.py:L1025-L1062] |
-| F4:210 | `(file-level record)`; `independent` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L1-L735] |
-| F4:211 | `LinearDamageAccumulation.calculate_damage`; `independent` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L109-L217] |
-| F4:212 | `LinearDamageAccumulation._apply_mean_stress_correction`; `independent` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L219-L256] |
-| F4:213 | `ModifiedMinersRule.calculate_damage`; `independent` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L292-L355] |
-| F4:214 | `NonlinearDamageAccumulation.calculate_damage`; `wrapper` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L383-L400] |
-| F4:215 | `NonlinearDamageAccumulation._marco_starkey_damage`; `independent` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L402-L449] |
-| F4:216 | `NonlinearDamageAccumulation._corten_dolan_damage`; `independent` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L451-L495] |
-| F4:217 | `NonlinearDamageAccumulation._double_linear_damage`; `independent` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L497-L544] |
-| F4:218 | `compare_damage_methods`; `independent` | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L652-L699] |
-| F4:219 | `_build_curve`; `independent` | [src/digitalmodel/structural/fatigue/design_code_report.py:L101-L114] |
-| F4:220 | `failure_probability`; `independent` | [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L84-L168] |
-| F4:221 | `sensitivity_analysis`; `independent` | [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L171-L273] |
-| F4:222 | `monte_carlo_fatigue`; `independent` | [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L276-L366] |
-| F4:223 | `(file-level record)`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L1-L783] |
-| F4:224 | `NarrowBandMethod.calculate_damage_rate`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L191-L226] |
-| F4:225 | `DirlikMethod.calculate_damage_rate`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L240-L369] |
-| F4:226 | `TovoBenasciuttiMethod.calculate_damage_rate`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L382-L468] |
-| F4:227 | `SingleMomentMethod.calculate_damage_rate`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L481-L530] |
-| F4:228 | `compare_frequency_methods`; `independent` | [src/digitalmodel/structural/fatigue/frequency_domain.py:L683-L725] |
-| F4:229 | `run_sweep`; `independent` | [src/digitalmodel/structural/fatigue/parametric_sweep.py:L74-L163] |
-| F4:230 | `compute_sensitivity._single_damage`; `independent` | [src/digitalmodel/structural/fatigue/parametric_sweep.py:L206-L221] |
-| F4:231 | `_build_scatter_json`; `independent` | [src/digitalmodel/structural/fatigue/parametric_sweep.py:L448-L512] |
-| F4:232 | `(file-level record)`; `independent` | [src/digitalmodel/structural/fatigue/rainflow.py:L1-L824] |
-| F4:233 | `RainflowCounter.count_cycles`; `caller` | [src/digitalmodel/structural/fatigue/rainflow.py:L230-L310] |
-| F4:234 | `RainflowCounter._rainflow_count`; `independent` | [src/digitalmodel/structural/fatigue/rainflow.py:L316-L318] |
-| F4:235 | `RainflowCounter.extract_cycles_with_means`; `caller` | [src/digitalmodel/structural/fatigue/rainflow.py:L502-L536] |
-| F4:236 | `rainflow_count`; `independent` | [src/digitalmodel/structural/fatigue/rainflow.py:L729-L752] |
-| F4:237 | `rainflow_with_means`; `independent` | [src/digitalmodel/structural/fatigue/rainflow.py:L755-L770] |
-| F4:238 | `scatter_fatigue_damage`; `independent` | [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L102-L255] |
-| F4:239 | `fatigue_assessment`; `independent` | [src/digitalmodel/structural/fatigue/skill.py:L188-L273] |
-| F4:240 | `main`; `independent` | [src/digitalmodel/structural/fatigue/sn_curve_plotter.py:L397-L415] |
-| F4:241 | `(file-level record)`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L1-L1132] |
-| F4:242 | `StandardSNCurves._find_sn_data_file`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L442-L453] |
-| F4:243 | `StandardSNCurves._ensure_loaded`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L456-L505] |
-| F4:244 | `StandardSNCurves.register_custom_curve`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L522-L563] |
-| F4:245 | `StandardSNCurves.get_dnv_c203_curve`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616] |
-| F4:246 | `StandardSNCurves.get_curve`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L619-L668] |
-| F4:247 | `StandardSNCurves.get_multislope_curve`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L671-L713] |
-| F4:248 | `ThicknessCorrection.apply_thickness_effect`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L863-L916] |
-| F4:249 | `SNDataFitting.fit_power_law`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L927-L1005] |
-| F4:250 | `get_dnv_curve`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L1047-L1066] |
-| F4:251 | `get_api_curve`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L1069-L1071] |
-| F4:252 | `get_bs_curve`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L1074-L1076] |
-| F4:253 | `_dnv_curves_from_c203`; `independent` | [src/digitalmodel/structural/fatigue/sn_curves.py:L1085-L1099] |
-| F4:254 | `_dnv_seawater_cp`; `independent` | [src/digitalmodel/structural/fatigue/worked_examples.py:L58-L77] |
-| F4:255 | `_dnv_seawater_free`; `independent` | [src/digitalmodel/structural/fatigue/worked_examples.py:L80-L97] |
-| F4:256 | `_chain_seawater_cp`; `independent` | [src/digitalmodel/structural/fatigue/worked_examples.py:L100-L119] |
-| F4:257 | `pipeline_girth_weld`; `caller` | [src/digitalmodel/structural/fatigue/worked_examples.py:L199-L260] |
-| F4:258 | `scr_touchdown`; `caller` | [src/digitalmodel/structural/fatigue/worked_examples.py:L263-L323] |
-| F4:259 | `mooring_chain`; `caller` | [src/digitalmodel/structural/fatigue/worked_examples.py:L326-L388] |
-| F4:260 | `_compute_example`; `independent` | [src/digitalmodel/structural/fatigue/worked_examples.py:L395-L431] |
-| F4:261 | `run_analysis`; `independent` | [src/digitalmodel/structural/fatigue_apps/__main__.py:L244-L501] |
-| F4:262 | `SNCurve._load_sn_parameters`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L55-L118] |
-| F4:263 | `SNCurve.calculate_cycles_to_failure`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L120-L149] |
-| F4:264 | `FatigueDamageCalculator.calculate_damage`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L182-L209] |
-| F4:265 | `main`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L489-L549] |
-| F4:266 | `(file-level record)`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L1-L389] |
-| F4:267 | `SNCurveParameters.a1`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L36-L38] |
-| F4:268 | `SNCurveParameters.a2`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L41-L43] |
-| F4:269 | `FatigueDamageCalculator.cycles_to_failure`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L106-L132] |
-| F4:270 | `FatigueDamageCalculator.calculate_damage`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L134-L184] |
-| F4:271 | `FatigueDamageCalculator.export_results`; `independent` | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L297-L320] |
-| F4:272 | `FatigueFileNamer.get_rainflow_filename`; `independent` | [src/digitalmodel/structural/fatigue_apps/file_namer.py:L87-L105] |
-| F4:273 | `(file-level record)`; `independent` | [src/digitalmodel/structural/fatigue_apps/file_namer.py:L1-L230] |
-| F4:274 | `IntegratedFatigueProcessor.process_fatigue_condition`; `independent` | [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L290-L364] |
-| F4:275 | `main`; `independent` | [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L366-L484] |
-| F4:276 | `IntegratedFatigueProcessorWithNaming._process_condition_base`; `independent` | [src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py:L81-L173] |
-| F4:277 | `(file-level record)`; `independent` | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L1-L359] |
-| F4:278 | `RainflowCounter.count_cycles`; `caller` | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L48-L79] |
-| F4:279 | `RainflowCounter._rainflow_algorithm`; `independent` | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L164-L220] |
-| F4:280 | `RainflowCounter.export_results`; `independent` | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L292-L322] |
-| F4:281 | `rainflow_count`; `independent` | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L325-L338] |
-| F4:282 | `RainflowCounter.process_time_series`; `independent` | [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L198-L254] |
-| F4:283 | `RainflowCounter.process_batch`; `independent` | [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L332-L403] |
-| F4:284 | `RainflowCounter.save_cycle_data`; `independent` | [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L405-L432] |
-| F4:285 | `main`; `independent` | [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L463-L502] |
-| F4:286 | `ReferenceSeaStateProcessor.process_fatigue_condition`; `independent` | [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L355-L429] |
-| F4:287 | `TensionStressConverter.process_batch`; `independent` | [src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py:L271-L334] |
-| F4:288 | `main`; `independent` | [src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py:L428-L474] |
-| F4:289 | `generate_all_visualizations`; `independent` | [src/digitalmodel/structural/fatigue_apps/visualizer.py:L507-L570] |
-| F4:290 | `narrow_band_damage`; `independent` | [src/digitalmodel/structural/spectral_fatigue.py:L122-L178] |
-| F4:291 | `assess_jumper_fatigue`; `caller` | [src/digitalmodel/subsea/connectors/fatigue.py:L62-L106] |
-| F4:292 | `_dnv_params`; `independent` | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150] |
-| F4:293 | `get_sn_curve`; `independent` | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L170-L237] |
-| F4:294 | `SpanFatigueDamage._load_sn_curve`; `caller` | [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L79-L91] |
-| F4:295 | `VIVFatigueCalculator.calculate_damage`; `independent` | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L108-L165] |
-| F4:296 | `VIVFatigueCalculator.calculate_fatigue_life`; `independent` | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L167-L207] |
-| F4:297 | `VIVFatigueCalculator.analyze_viv_fatigue`; `independent` | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L268] |
-| F4:298 | `VIVFatigueCalculator.cumulative_damage`; `caller` | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L270-L300] |
-| F4:299 | `parse_inputs`; `independent` | [src/digitalmodel/viv_screening/inputs.py:L88-L125] |
-| F4:300 | `router`; `independent` | [src/digitalmodel/viv_screening/workflow.py:L25-L57] |
-| F4:301 | `_damage_rate`; `independent` | [src/digitalmodel/viv_screening/workflow.py:L128-L147] |
-| F4:302 | `_provenance`; `independent` | [src/digitalmodel/viv_screening/workflow.py:L173-L191] |
-| F4:303 | `page`; `independent` | [src/digitalmodel/web/digitaltwinfeed/app.py:L71-L86] |
-| F4:304 | `_check_receipt`; `test_helper` | [tests/ansys/padeye_pressure_bundle.py:L23-L38] |
-| F4:305 | `verify_pressure_bundle`; `test_helper` | [tests/ansys/padeye_pressure_bundle.py:L41-L65] |
-| F4:306 | `TestThicknessCorrection.test_known_correction`; `test_helper` | [tests/ansys/test_fatigue_postprocessor.py:L92-L96] |
-| F4:307 | `bundle`; `test_helper` | [tests/ansys/test_padeye_pressure_bundle.py:L20-L29] |
-| F4:308 | `histogram_input`; `test_helper` | [tests/fatigue/test_assessment.py:L22-L34] |
-| F4:309 | `_span_input`; `test_helper` | [tests/fatigue/test_c203_consumers.py:L303-L331] |
-| F4:310 | `_non_dnv_bilinear`; `test_helper` | [tests/fatigue/test_c203_sn_values.py:L298-L303] |
-| F4:311 | `test_non_dnv_bilinear_switch_stays_at_endurance_limit`; `test_helper` | [tests/fatigue/test_c203_sn_values.py:L326-L343] |
-| F4:312 | `_signal_e`; `test_helper` | [tests/fatigue/test_c203_variable_amplitude.py:L179-L182] |
-| F4:313 | `_user_curve`; `test_helper` | [tests/fatigue/test_c203_variable_amplitude.py:L230-L233] |
-| F4:314 | `_span_input`; `test_helper` | [tests/fatigue/test_c203_variable_amplitude.py:L304-L332] |
-| F4:315 | `_fresh_standard_curves`; `test_helper` | [tests/fatigue/test_c203_variable_amplitude.py:L378-L391] |
-| F4:316 | `_data_dir`; `test_helper` | [tests/fatigue/test_c203_variable_amplitude.py:L394-L398] |
-| F4:317 | `f_curve`; `test_helper` | [tests/fatigue/test_damage.py:L16-L17] |
-| F4:318 | `TestThicknessCorrection.test_correction_above_ref`; `test_helper` | [tests/fatigue/test_damage.py:L90-L95] |
-| F4:319 | `TestThicknessCorrection.test_correction_formula`; `test_helper` | [tests/fatigue/test_damage.py:L97-L103] |
-| F4:320 | `TestAgainstTransliterationSweep.test_all_presets_and_curves`; `test_helper` | [tests/fatigue/test_fatg.py:L267-L284] |
-| F4:321 | `_cfg`; `test_helper` | [tests/fatigue/test_fatg_workflow.py:L23-L49] |
-| F4:322 | `_library_reference`; `test_helper` | [tests/fatigue/test_fatg_workflow.py:L52-L64] |
-| F4:323 | `_sample_locations`; `test_helper` | [tests/fatigue/test_fatigue_reporting.py:L15-L55] |
-| F4:324 | `_damage_calls`; `test_helper` | [tests/fatigue/test_rainflow_invariants.py:L408-L488] |
-| F4:325 | `_damage_calls.calm_scatter`; `test_helper` | [tests/fatigue/test_rainflow_invariants.py:L443-L449] |
-| F4:326 | `_damage_calls.fapps_batch`; `test_helper` | [tests/fatigue/test_rainflow_invariants.py:L456-L461] |
-| F4:327 | `TestGetSNCurve.test_f_curve_at_100mpa`; `test_helper` | [tests/fatigue/test_sn_curves.py:L40-L45] |
-| F4:328 | `TestGetSNCurve.test_d_curve_at_100mpa`; `test_helper` | [tests/fatigue/test_sn_curves.py:L52-L57] |
-| F4:329 | `_hand_N`; `test_helper` | [tests/fatigue/test_weld_fatigue_quickcheck.py:L29-L31] |
-| F4:330 | `TestSNcurve.test_cycles_to_failure_chain_known_value`; `test_helper` | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L117-L123] |
-| F4:331 | `TestSNcurve.test_cycles_to_failure_wire_rope_known_value`; `test_helper` | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L125-L131] |
-| F4:332 | `TestSNcurve.test_custom_sn_curve`; `test_helper` | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L138-L143] |
-| F4:333 | `TestMinersRuleDamage.test_single_range_known_damage`; `test_helper` | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L294-L307] |
-| F4:334 | `TestMinersRuleDamage.test_damage_additivity`; `test_helper` | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L319-L329] |
-| F4:335 | `_small_atlas`; `test_helper` | [tests/parametric/test_atlas.py:L19-L34] |
-| F4:336 | `process_single_test_file`; `test_helper` | [tests/signal_processing/signal_analysis/fatigue_analysis_reference/process_fatigue_final.py:L25-L439] |
-| F4:337 | `process_single_test_file`; `test_helper` | [tests/signal_processing/signal_analysis/reference_fatigue_processor.py:L25-L439] |
-| F4:338 | `(file-level record)`; `test_helper` | [tests/signal_processing/signal_analysis/test_generate_outputs.py:L1-L459] |
-| F4:339 | `analyze_signal`; `test_helper` | [tests/signal_processing/signal_analysis/test_generate_outputs.py:L97-L374] |
-| F4:340 | `main`; `test_helper` | [tests/signal_processing/signal_analysis/test_generate_outputs.py:L377-L455] |
-| F4:341 | `OrcaFlexTensionAnalyzer.analyze_tension`; `test_helper` | [tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py:L108-L177] |
-| F4:342 | `OrcaFlexTensionAnalyzer.export_results`; `test_helper` | [tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py:L301-L352] |
-| F4:343 | `run_rainflow_for_timeseries`; `test_helper` | [tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py:L19-L71] |
-| F4:344 | `test_rainflow_for_timeseries`; `test_helper` | [tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py:L74-L271] |
-| F4:345 | `main`; `test_helper` | [tests/signal_processing/signal_analysis/validate_module.py:L183-L219] |
-| F4:346 | `mock_solver_factory.MockSolverFactory.create_fatigue_solver`; `test_helper` | [tests/solvers/test_integration_solvers.py:L154-L165] |
-| F4:347 | `simple_sn_curve`; `test_helper` | [tests/structural/fatigue/conftest.py:L14-L16] |
-| F4:348 | `dnv_d_curve`; `test_helper` | [tests/structural/fatigue/test_damage_accumulation.py:L40-L47] |
-| F4:349 | `simple_curve`; `test_helper` | [tests/structural/fatigue/test_damage_accumulation.py:L51-L58] |
-| F4:350 | `curve_with_material`; `test_helper` | [tests/structural/fatigue/test_damage_accumulation.py:L62-L76] |
-| F4:351 | `TestSNCurveMigration.test_multislope_curve_implementation`; `test_helper` | [tests/structural/fatigue/test_fatigue_migration.py:L90-L128] |
-| F4:352 | `TestSNCurveMigration.test_curve_continuity`; `test_helper` | [tests/structural/fatigue/test_fatigue_migration.py:L130-L161] |
-| F4:353 | `TestFrequencyDomainMigration.test_basic_frequency_analysis`; `test_helper` | [tests/structural/fatigue/test_fatigue_migration.py:L231-L252] |
-| F4:354 | `simple_sn`; `test_helper` | [tests/structural/fatigue/test_fatigue_reliability.py:L32-L34] |
-| F4:355 | `mild_sn`; `test_helper` | [tests/structural/fatigue/test_fatigue_reliability.py:L38-L40] |
-| F4:356 | `_simple_input`; `test_helper` | [tests/structural/fatigue/test_fatigue_skill.py:L39-L49] |
-| F4:357 | `TestOffshoreScenario.test_high_cycle_low_stress_result`; `test_helper` | [tests/structural/fatigue/test_fatigue_skill.py:L494-L512] |
-| F4:358 | `simple_sn_curve`; `test_helper` | [tests/structural/fatigue/test_frequency_domain.py:L84-L86] |
-| F4:359 | `default_counter`; `test_helper` | [tests/structural/fatigue/test_rainflow.py:L41-L43] |
-| F4:360 | `simple_sn`; `test_helper` | [tests/structural/fatigue/test_scatter_fatigue.py:L25-L27] |
-| F4:361 | `TestFatigueLife.test_fatigue_life_inverse_of_damage`; `test_helper` | [tests/structural/fatigue/test_scatter_fatigue.py:L233-L251] |
-| F4:362 | `simple_power_law`; `test_helper` | [tests/structural/fatigue/test_sn_curves.py:L57-L59] |
-| F4:363 | `power_law_with_limit`; `test_helper` | [tests/structural/fatigue/test_sn_curves.py:L63-L67] |
-| F4:364 | `bilinear_curve`; `test_helper` | [tests/structural/fatigue/test_sn_curves.py:L71-L86] |
-| F4:365 | `dnv_d_curve`; `test_helper` | [tests/structural/fatigue/test_sn_curves.py:L90-L91] |
-| F4:366 | `TestBS7608RevisedCurveParameters.test_bs7608_revised_d_known_n_at_50mpa`; `test_helper` | [tests/structural/fatigue/test_sn_curves.py:L886-L892] |
-| F4:367 | `TestISO19902CurveParameters.test_iso19902_f_air_known_n_at_100mpa`; `test_helper` | [tests/structural/fatigue/test_sn_curves.py:L964-L970] |
-| F4:368 | `TestISO19902CurveParameters.test_iso19902_f2_sw_cp_known_n_at_50mpa`; `test_helper` | [tests/structural/fatigue/test_sn_curves.py:L994-L1000] |
-| F4:369 | `_all_single_slope_cases`; `test_helper` | [tests/structural/fatigue/test_sn_curves_yaml.py:L55-L60] |
-| F4:370 | `_all_multislope_cases`; `test_helper` | [tests/structural/fatigue/test_sn_curves_yaml.py:L63-L66] |
-| F4:371 | `sn_curve_data`; `test_helper` | [tests/structural/fatigue_analysis/conftest.py:L6-L13] |
-| F4:372 | `run_fatigue_analysis`; `test_helper` | [tests/structural/fatigue_analysis/test_fatigue_analysis_sn.py:L13-L20] |
-| F4:373 | `run_fatigue_analysis`; `test_helper` | [tests/structural/fatigue_analysis/test_fatigue_analysis_timetrace.py:L15-L40] |
-| F4:374 | `ref_input`; `test_helper` | [tests/subsea/pipeline/test_free_span_f105.py:L43-L65] |
-| F4:375 | `TestVIVFatigueCalculator.test_cumulative_damage`; `test_helper` | [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519] |
-| F4:376 | `get_orcaflex_post_process_mock`; `test_helper` | [tests/test_automation/fixtures/engineering_fixtures.py:L72-L94] |
-| F4:377 | `ComprehensiveTestFixCampaign.generate_mock_data`; `test_helper` | [tests/test_automation/scripts/comprehensive_fix_campaign.py:L103-L153] |
-| F4:378 | `process_configuration`; `test_helper` | [tests/test_complete_fatigue_pipeline.py:L65-L175] |
-| F4:379 | `main`; `test_helper` | [tests/test_complete_fatigue_pipeline.py:L178-L270] |
-| F4:380 | `run_all_tests`; `test_helper` | [tests/test_fatigue_basic.py:L223-L269] |
-| F4:381 | `process_effective_tension_file`; `test_helper` | [tests/test_rainflow_with_effective_tension.py:L25-L114] |
-| F4:382 | `main`; `test_helper` | [tests/test_rainflow_with_effective_tension.py:L117-L184] |
-| F4:383 | `run_performance_tests`; `test_helper` | [tests/test_reservoir_framework.py:L800-L846] |
-| F4:384 | `TestSNCurveDNVReference.test_dnv_d_curve_parameters`; `test_helper` | [tests/test_spectral_fatigue_validation.py:L50-L58] |
-| F4:385 | `test_workflow_registry`; `test_helper` | [tests/workflows/test_durable_workflows.py:L52-L1710] |
-| F4:386 | `test_spectral_fatigue_workflow_matches_narrow_band_closed_form`; `test_helper` | [tests/workflows/test_durable_workflows.py:L1855-L1911] |
-| F4:387 | `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening`; `test_helper` | [tests/workflows/test_durable_workflows.py:L1914-L1981] |
+| Source entry | Symbol / inventory relation                                                              | Location at code pin                                                                                   |
+| ------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| F4:1         | `example_6_custom_workflow`; `independent`                                               | [docs/domains/examples/orcaflex_signal_analysis_example.py:L295-L363]                                  |
+| F4:2         | `example_1_basic_rainflow_counting`; `independent`                                       | [docs/domains/examples/signal_analysis_usage_example.py:L29-L65]                                       |
+| F4:3         | `example_4_fatigue_analysis`; `independent`                                              | [docs/domains/examples/signal_analysis_usage_example.py:L175-L253]                                     |
+| F4:4         | `example_6_backward_compatibility`; `independent`                                        | [docs/domains/examples/signal_analysis_usage_example.py:L315-L377]                                     |
+| F4:5         | `main`; `independent`                                                                    | [docs/domains/examples/signal_analysis_usage_example.py:L380-L410]                                     |
+| F4:6         | `main`; `example`                                                                        | [examples/demos/demo_sn_library.py:L43-L207]                                                           |
+| F4:7         | `demonstrate_sn_curves`; `example`                                                       | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L120-L160]                    |
+| F4:8         | `demonstrate_rainflow_counting`; `example`                                               | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L163-L243]                    |
+| F4:9         | `demonstrate_damage_accumulation`; `example`                                             | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L246-L326]                    |
+| F4:10        | `demonstrate_frequency_domain_analysis`; `example`                                       | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L329-L408]                    |
+| F4:11        | `demonstrate_quick_analysis`; `example`                                                  | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L411-L458]                    |
+| F4:12        | `main`; `example`                                                                        | [examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py:L461-L502]                    |
+| F4:13        | `list_curves`; `example`                                                                 | [examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py:L24-L37]                             |
+| F4:14        | `compare_curves`; `example`                                                              | [examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py:L66-L88]                             |
+| F4:15        | `example_2_linear_log`; `example`                                                        | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L46-L64]                        |
+| F4:16        | `example_3_with_scf`; `example`                                                          | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L67-L85]                        |
+| F4:17        | `example_4_without_fatigue_limit`; `example`                                             | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L88-L106]                       |
+| F4:18        | `example_5_dnv_comparison`; `example`                                                    | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L109-L133]                      |
+| F4:19        | `example_6_abs_comparison`; `example`                                                    | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L136-L174]                      |
+| F4:20        | `example_7_reference_comparison`; `example`                                              | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L177-L197]                      |
+| F4:21        | `example_8_joint_type_comparison`; `example`                                             | [examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py:L200-L228]                      |
+| F4:22        | `example_1_basic_sn_curves`; `example`                                                   | [examples/domains/fatigue/fatigue_analysis_examples.py:L55-L95]                                        |
+| F4:23        | `example_2_multislope_curves`; `example`                                                 | [examples/domains/fatigue/fatigue_analysis_examples.py:L98-L139]                                       |
+| F4:24        | `example_3_time_domain_analysis`; `example`                                              | [examples/domains/fatigue/fatigue_analysis_examples.py:L142-L212]                                      |
+| F4:25        | `example_4_frequency_domain_analysis`; `example`                                         | [examples/domains/fatigue/fatigue_analysis_examples.py:L215-L279]                                      |
+| F4:26        | `example_5_high_stress_range_analysis`; `example`                                        | [examples/domains/fatigue/fatigue_analysis_examples.py:L282-L324]                                      |
+| F4:27        | `example_6_shear_data_analysis`; `example`                                               | [examples/domains/fatigue/fatigue_analysis_examples.py:L327-L383]                                      |
+| F4:28        | `run_all_examples`; `example`                                                            | [examples/domains/fatigue/fatigue_analysis_examples.py:L454-L477]                                      |
+| F4:29        | `example_well_log_analysis`; `example`                                                   | [examples/domains/reservoir/reservoir_analysis_examples.py:L138-L219]                                  |
+| F4:30        | `example_stratigraphic_correlation`; `example`                                           | [examples/domains/reservoir/reservoir_analysis_examples.py:L376-L457]                                  |
+| F4:31        | `main`; `example`                                                                        | [examples/domains/reservoir/reservoir_analysis_examples.py:L578-L603]                                  |
+| F4:32        | `(file-level record)`; `independent`                                                     | [scripts/capabilities/build_onepagers.py:L1-L915]                                                      |
+| F4:33        | `(file-level record)`; `independent`                                                     | [scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py:L1-L12]                                 |
+| F4:34        | `process_single_test_file`; `independent`                                                | [scripts/python/digitalmodel/tools/check_process_fatigue_single.py:L25-L225]                           |
+| F4:35        | `YAMLConfigMigrator._migrate_analysis`; `independent`                                    | [scripts/python/digitalmodel/tools/migrate_yaml_configs.py:L134-L168]                                  |
+| F4:36        | `YAMLConfigMigrator._migrate_time_series_components`; `independent`                      | [scripts/python/digitalmodel/tools/migrate_yaml_configs.py:L225-L242]                                  |
+| F4:37        | `process_fatigue_files`; `independent`                                                   | [scripts/python/digitalmodel/tools/process_fatigue_data.py:L24-L116]                                   |
+| F4:38        | `process_single_test_file`; `independent`                                                | [scripts/python/digitalmodel/tools/process_fatigue_final.py:L25-L439]                                  |
+| F4:39        | `process_fatigue_file`; `independent`                                                    | [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L23-L273]                    |
+| F4:40        | `process_sample_file`; `independent`                                                     | [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L275-L300]                   |
+| F4:41        | `batch_process_all_files`; `independent`                                                 | [scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py:L302-L343]                   |
+| F4:42        | `rainflow_counting`; `independent`                                                       | [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L19-L59]                   |
+| F4:43        | `process_fatigue_file`; `independent`                                                    | [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L61-L238]                  |
+| F4:44        | `batch_process`; `independent`                                                           | [scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py:L275-L316]                 |
+| F4:45        | `process_single_test_file`; `independent`                                                | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v2.py:L25-L309]                         |
+| F4:46        | `process_single_test_file`; `independent`                                                | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v3.py:L26-L337]                         |
+| F4:47        | `process_single_test_file`; `independent`                                                | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v4.py:L25-L352]                         |
+| F4:48        | `process_single_test_file`; `independent`                                                | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v5.py:L25-L382]                         |
+| F4:49        | `process_single_test_file`; `independent`                                                | [scripts/python/digitalmodel/tools/process_fatigue_single_test_v6.py:L25-L405]                         |
+| F4:50        | `(file-level record)`; `independent`                                                     | [scripts/riser_database/build_tables.py:L1-L212]                                                       |
+| F4:51        | `SNcurve.from_dnv`; `independent`                                                        | [src/digitalmodel/ansys/fatigue_postprocessor.py:L101-L122]                                            |
+| F4:52        | `FatiguePostprocessor.calculate_cycles_to_failure`; `independent`                        | [src/digitalmodel/ansys/fatigue_postprocessor.py:L158-L192]                                            |
+| F4:53        | `FatiguePostprocessor.calculate_fatigue_damage`; `independent`                           | [src/digitalmodel/ansys/fatigue_postprocessor.py:L222-L284]                                            |
+| F4:54        | `FatiguePostprocessor.generate_sn_curve_apdl`; `independent`                             | [src/digitalmodel/ansys/fatigue_postprocessor.py:L347-L369]                                            |
+| F4:55        | `FatiguePostprocessor.create_damage_summary_df`; `independent`                           | [src/digitalmodel/ansys/fatigue_postprocessor.py:L371-L398]                                            |
+| F4:56        | `build_model_inventory`; `independent`                                                   | [src/digitalmodel/benchmarks/inventory.py:L77-L327]                                                    |
+| F4:57        | `half_cycles`; `independent`                                                             | [src/digitalmodel/drilling_riser/global_model/fatigue_channels.py:L51-L64]                             |
+| F4:58        | `extract`; `independent`                                                                 | [src/digitalmodel/drilling_riser/global_model/fatigue_channels.py:L104-L137]                           |
+| F4:59        | `engine`; `caller`                                                                       | [src/digitalmodel/engine.py:L90-L892]                                                                  |
+| F4:60        | `router`; `independent`                                                                  | [src/digitalmodel/fatg_spectral_fatigue/workflow.py:L52-L117]                                          |
+| F4:61        | `_sn_curve`; `independent`                                                               | [src/digitalmodel/fatg_spectral_fatigue/workflow.py:L120-L134]                                         |
+| F4:62        | `_case_histogram`; `independent`                                                         | [src/digitalmodel/fatigue/assessment.py:L116-L121]                                                     |
+| F4:63        | `assess_fatigue`; `independent`                                                          | [src/digitalmodel/fatigue/assessment.py:L136-L160]                                                     |
+| F4:64        | `(file-level record)`; `independent`                                                     | [src/digitalmodel/fatigue/counting_contract.py:L1-L929]                                                |
+| F4:65        | `_adapt_pylife_4pt`; `independent`                                                       | [src/digitalmodel/fatigue/counting_contract.py:L432-L440]                                              |
+| F4:66        | `_adapt_pypi_rainflow`; `independent`                                                    | [src/digitalmodel/fatigue/counting_contract.py:L443-L454]                                              |
+| F4:67        | `_adapt_sigproc_astm`; `independent`                                                     | [src/digitalmodel/fatigue/counting_contract.py:L457-L469]                                              |
+| F4:68        | `_adapt_calm_buoy`; `independent`                                                        | [src/digitalmodel/fatigue/counting_contract.py:L472-L478]                                              |
+| F4:69        | `_adapt_fapps_counting`; `independent`                                                   | [src/digitalmodel/fatigue/counting_contract.py:L481-L487]                                              |
+| F4:70        | `_adapt_fapps_counter`; `independent`                                                    | [src/digitalmodel/fatigue/counting_contract.py:L490-L494]                                              |
+| F4:71        | `_adapt_struct_fatigue`; `independent`                                                   | [src/digitalmodel/fatigue/counting_contract.py:L497-L501]                                              |
+| F4:72        | `_is_counting_name`; `independent`                                                       | [src/digitalmodel/fatigue/counting_contract.py:L866-L869]                                              |
+| F4:73        | `miner_damage`; `independent`                                                            | [src/digitalmodel/fatigue/damage.py:L13-L39]                                                           |
+| F4:74        | `design_life_check`; `independent`                                                       | [src/digitalmodel/fatigue/damage.py:L42-L88]                                                           |
+| F4:75        | `environment_correction`; `independent`                                                  | [src/digitalmodel/fatigue/environmental_correction.py:L165-L244]                                       |
+| F4:76        | `apply_environment_to_sn`; `independent`                                                 | [src/digitalmodel/fatigue/environmental_correction.py:L251-L292]                                       |
+| F4:77        | `fatg_sea_state_damage`; `independent`                                                   | [src/digitalmodel/fatigue/fatg.py:L211-L238]                                                           |
+| F4:78        | `fatg_annual_damage`; `independent`                                                      | [src/digitalmodel/fatigue/fatg.py:L241-L311]                                                           |
+| F4:79        | `_sec_fatigue_locations`; `independent`                                                  | [src/digitalmodel/fatigue/fatigue_reporting.py:L376-L399]                                              |
+| F4:80        | `fatigue_life`; `independent`                                                            | [src/digitalmodel/fatigue/rainflow.py:L130-L201]                                                       |
+| F4:81        | `_compute_sd`; `independent`                                                             | [src/digitalmodel/fatigue/sn_curves.py:L56-L58]                                                        |
+| F4:82        | `_build_curve_dict`; `caller`                                                            | [src/digitalmodel/fatigue/sn_curves.py:L61-L74]                                                        |
+| F4:83        | `get_sn_curve`; `caller`                                                                 | [src/digitalmodel/fatigue/sn_curves.py:L80-L134]                                                       |
+| F4:84        | `SNCurveRecord.knee_stress`; `wrapper`                                                   | [src/digitalmodel/fatigue/sn_library.py:L141-L146]                                                     |
+| F4:85        | `SNCurveRecord.switch_stress`; `wrapper`                                                 | [src/digitalmodel/fatigue/sn_library.py:L149-L160]                                                     |
+| F4:86        | `SNCurveRecord.cycles`; `wrapper`                                                        | [src/digitalmodel/fatigue/sn_library.py:L162-L177]                                                     |
+| F4:87        | `_knee_stress`; `independent`                                                            | [src/digitalmodel/fatigue/sn_library.py:L180-L190]                                                     |
+| F4:88        | `_switch_stress`; `caller`                                                               | [src/digitalmodel/fatigue/sn_library.py:L200-L222]                                                     |
+| F4:89        | `_bilinear_cycles`; `independent`                                                        | [src/digitalmodel/fatigue/sn_library.py:L225-L250]                                                     |
+| F4:90        | `_sd`; `independent`                                                                     | [src/digitalmodel/fatigue/sn_library.py:L288-L290]                                                     |
+| F4:91        | `_build_dnv_curves`; `independent`                                                       | [src/digitalmodel/fatigue/sn_library.py:L293-L381]                                                     |
+| F4:92        | `_build_api_curves`; `independent`                                                       | [src/digitalmodel/fatigue/sn_library.py:L384-L413]                                                     |
+| F4:93        | `_build_bs7608_curves`; `independent`                                                    | [src/digitalmodel/fatigue/sn_library.py:L416-L463]                                                     |
+| F4:94        | `_build_iiw_curves`; `independent`                                                       | [src/digitalmodel/fatigue/sn_library.py:L466-L497]                                                     |
+| F4:95        | `_build_eurocode3_curves`; `independent`                                                 | [src/digitalmodel/fatigue/sn_library.py:L500-L526]                                                     |
+| F4:96        | `_build_norsok_curves`; `caller`                                                         | [src/digitalmodel/fatigue/sn_library.py:L529-L566]                                                     |
+| F4:97        | `_build_aws_curves`; `independent`                                                       | [src/digitalmodel/fatigue/sn_library.py:L569-L597]                                                     |
+| F4:98        | `_build_asme_curves`; `independent`                                                      | [src/digitalmodel/fatigue/sn_library.py:L600-L627]                                                     |
+| F4:99        | `_build_en13445_curves`; `independent`                                                   | [src/digitalmodel/fatigue/sn_library.py:L630-L654]                                                     |
+| F4:100       | `_build_pd5500_curves`; `caller`                                                         | [src/digitalmodel/fatigue/sn_library.py:L657-L687]                                                     |
+| F4:101       | `_build_abs_curves`; `independent`                                                       | [src/digitalmodel/fatigue/sn_library.py:L690-L730]                                                     |
+| F4:102       | `_build_iso19902_curves`; `independent`                                                  | [src/digitalmodel/fatigue/sn_library.py:L733-L802]                                                     |
+| F4:103       | `_build_csa_curves`; `independent`                                                       | [src/digitalmodel/fatigue/sn_library.py:L805-L832]                                                     |
+| F4:104       | `_build_hse_curves`; `independent`                                                       | [src/digitalmodel/fatigue/sn_library.py:L835-L877]                                                     |
+| F4:105       | `_build_doe_curves`; `caller`                                                            | [src/digitalmodel/fatigue/sn_library.py:L880-L911]                                                     |
+| F4:106       | `_build_gl_curves`; `independent`                                                        | [src/digitalmodel/fatigue/sn_library.py:L914-L941]                                                     |
+| F4:107       | `_build_jis_curves`; `independent`                                                       | [src/digitalmodel/fatigue/sn_library.py:L944-L970]                                                     |
+| F4:108       | `_ensure_loaded`; `independent`                                                          | [src/digitalmodel/fatigue/sn_library.py:L1002-L1011]                                                   |
+| F4:109       | `summary_table`; `caller`                                                                | [src/digitalmodel/fatigue/sn_library.py:L1129-L1148]                                                   |
+| F4:110       | `_record_to_curve_info`; `independent`                                                   | [src/digitalmodel/fatigue/sn_library_api.py:L146-L155]                                                 |
+| F4:111       | `_record_to_sncurve`; `independent`                                                      | [src/digitalmodel/fatigue/sn_library_api.py:L158-L174]                                                 |
+| F4:112       | `get_curve`; `wrapper`                                                                   | [src/digitalmodel/fatigue/sn_library_api.py:L210-L235]                                                 |
+| F4:113       | `calculate_endurance`; `wrapper`                                                         | [src/digitalmodel/fatigue/sn_library_api.py:L238-L281]                                                 |
+| F4:114       | `wirsching_light_damage`; `independent`                                                  | [src/digitalmodel/fatigue/spectral_fatigue.py:L207-L254]                                               |
+| F4:115       | `benasciutti_tovo_damage`; `independent`                                                 | [src/digitalmodel/fatigue/spectral_fatigue.py:L339-L395]                                               |
+| F4:116       | `weld_fatigue_quickcheck`; `independent`                                                 | [src/digitalmodel/fatigue/weld_fatigue_quickcheck.py:L105-L240]                                        |
+| F4:117       | `main`; `independent`                                                                    | [src/digitalmodel/fatigue/weld_fatigue_quickcheck.py:L340-L373]                                        |
+| F4:118       | `generate_test_data`; `independent`                                                      | [src/digitalmodel/fatigue/woehler_fitting.py:L18-L89]                                                  |
+| F4:119       | `_fallback_log_regression`; `independent`                                                | [src/digitalmodel/fatigue/woehler_fitting.py:L137-L181]                                                |
+| F4:120       | `router`; `caller`                                                                       | [src/digitalmodel/fatigue/workflow.py:L16-L40]                                                         |
+| F4:121       | `_curve_ids`; `independent`                                                              | [src/digitalmodel/fatigue/workflow.py:L43-L55]                                                         |
+| F4:122       | `_stress_ranges`; `independent`                                                          | [src/digitalmodel/fatigue/workflow.py:L58-L85]                                                         |
+| F4:123       | `_curve_summary`; `independent`                                                          | [src/digitalmodel/fatigue/workflow.py:L99-L111]                                                        |
+| F4:124       | `_curve_csv_path`; `independent`                                                         | [src/digitalmodel/fatigue/workflow.py:L114-L120]                                                       |
+| F4:125       | `_input_stem`; `independent`                                                             | [src/digitalmodel/fatigue/workflow.py:L131-L134]                                                       |
+| F4:126       | `FatigueAnalysis.router`; `caller`                                                       | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L23-L50]                     |
+| F4:127       | `FatigueAnalysis.damage_from_sn_data`; `independent`                                     | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L52-L72]                     |
+| F4:128       | `FatigueAnalysis.damage_from_rainflow_cycles`; `independent`                             | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L74-L93]                     |
+| F4:129       | `FatigueAnalysis.damage_from_timetrace`; `independent`                                   | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L95-L139]                    |
+| F4:130       | `FatigueAnalysis.get_rainflow_from_timetrace`; `independent`                             | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L249-L261]                   |
+| F4:131       | `FatigueAnalysisComponents.orcaflex_wave_fatigue_analysis`; `independent`                | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py:L586-L701]        |
+| F4:132       | `ShipFatigueAnalysis.router`; `wrapper`                                                  | [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L22-L36]            |
+| F4:133       | `ShipFatigueAnalysis.get_lcf_timetrace_rainflow_and_fatigue_damage`; `independent`       | [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L113-L166]          |
+| F4:134       | `ShipFatigueAnalysis.get_fatigue_damage_output_df_for_timetrace`; `wrapper`              | [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L298-L391]          |
+| F4:135       | `ShipFatigueAnalysis.get_fatigue_df_definition_for_timetrace`; `independent`             | [src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py:L476-L489]          |
+| F4:136       | `VIVFatigueAnalysisComponents.orcaflex_wave_fatigue_analysis`; `independent`             | [src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py:L982-L1164]       |
+| F4:137       | `SNcurve.cycles_to_failure`; `independent`                                               | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L53-L66]                          |
+| F4:138       | `RainflowFatigue.count_cycles`; `independent`                                            | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L203-L225]                        |
+| F4:139       | `MinersRuleDamage.compute`; `independent`                                                | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L323-L344]                        |
+| F4:140       | `ScatterDiagramFatigue.compute`; `independent`                                           | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L373-L433]                        |
+| F4:141       | `compute_fatigue_life`; `independent`                                                    | [src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:L522-L600]                        |
+| F4:142       | `StratigraphicAnalysis.add_well_analysis`; `independent`                                 | [src/digitalmodel/marine_ops/reservoir/analysis.py:L414-L423]                                          |
+| F4:143       | `StratigraphicAnalysis.set_well_order`; `independent`                                    | [src/digitalmodel/marine_ops/reservoir/analysis.py:L425-L436]                                          |
+| F4:144       | `StratigraphicAnalysis.create_flattened_section`; `independent`                          | [src/digitalmodel/marine_ops/reservoir/analysis.py:L451-L525]                                          |
+| F4:145       | `WellCorrelation.add_well_data`; `independent`                                           | [src/digitalmodel/marine_ops/reservoir/analysis.py:L803-L811]                                          |
+| F4:146       | `CoreAnalysis.correlate_core_to_logs`; `independent`                                     | [src/digitalmodel/marine_ops/reservoir/analysis.py:L1046-L1091]                                        |
+| F4:147       | `ReservoirAnalysis.add_well_analysis`; `independent`                                     | [src/digitalmodel/marine_ops/reservoir/analysis.py:L1119-L1142]                                        |
+| F4:148       | `ReservoirAnalysis.run_comprehensive_analysis`; `independent`                            | [src/digitalmodel/marine_ops/reservoir/analysis.py:L1144-L1175]                                        |
+| F4:149       | `router`; `caller`                                                                       | [src/digitalmodel/mooring_fatigue/workflow.py:L23-L58]                                                 |
+| F4:150       | `_evaluate_line`; `independent`                                                          | [src/digitalmodel/mooring_fatigue/workflow.py:L61-L85]                                                 |
+| F4:151       | `_history_bins`; `independent`                                                           | [src/digitalmodel/mooring_fatigue/workflow.py:L137-L149]                                               |
+| F4:152       | `_curve_settings`; `independent`                                                         | [src/digitalmodel/mooring_fatigue/workflow.py:L184-L186]                                               |
+| F4:153       | `_mooring_fatigue_damage`; `independent`                                                 | [src/digitalmodel/parametric/generate.py:L28-L45]                                                      |
+| F4:154       | `_free_span_utilisation`; `independent`                                                  | [src/digitalmodel/parametric/generate.py:L141-L175]                                                    |
+| F4:155       | `_span_rectification_utilisation`; `independent`                                         | [src/digitalmodel/parametric/generate.py:L327-L365]                                                    |
+| F4:156       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/parametric/refresh.py:L1-L382]                                                       |
+| F4:157       | `router`; `caller`                                                                       | [src/digitalmodel/rao_spectral_fatigue/workflow.py:L34-L81]                                            |
+| F4:158       | `assess_touchdown_fatigue`; `independent`                                                | [src/digitalmodel/riser_fatigue/touchdown.py:L157-L247]                                                |
+| F4:159       | `router`; `caller`                                                                       | [src/digitalmodel/riser_fatigue/workflow.py:L65-L103]                                                  |
+| F4:160       | `_viv_damage`; `independent`                                                             | [src/digitalmodel/riser_fatigue/workflow.py:L205-L245]                                                 |
+| F4:161       | `_curve_settings`; `independent`                                                         | [src/digitalmodel/riser_fatigue/workflow.py:L255-L266]                                                 |
+| F4:162       | `TimeSeriesComponentsAdapter.get_rainflow_count_from_time_series`; `independent`         | [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L50-L72]                               |
+| F4:163       | `FatigueAnalysisAdapter.get_rainflow_from_timetrace`; `independent`                      | [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L293-L315]                             |
+| F4:164       | `FatigueAnalysisAdapter.damage_from_rainflow_cycles`; `independent`                      | [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L317-L355]                             |
+| F4:165       | `OrcaFlexAdapter.RainflowHalfCycles`; `independent`                                      | [src/digitalmodel/signal_processing/signal_analysis/adapters.py:L376-L405]                             |
+| F4:166       | `rainflow_cmd`; `independent`                                                            | [src/digitalmodel/signal_processing/signal_analysis/cli.py:L30-L86]                                    |
+| F4:167       | `RainflowCounter.count_cycles`; `independent`                                            | [src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py:L39-L83]                          |
+| F4:168       | `SNCurve._bilinear`; `independent`                                                       | [src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py:L189-L234]                       |
+| F4:169       | `SNCurve.from_test_data`; `independent`                                                  | [src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py:L376-L417]                       |
+| F4:170       | `FatigueDamageCalculator.calculate_damage`; `independent`                                | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L34-L84]                         |
+| F4:171       | `FatigueDamageCalculator._miners_rule`; `independent`                                    | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L86-L116]                        |
+| F4:172       | `FatigueDamageCalculator._modified_miners_rule`; `independent`                           | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L118-L158]                       |
+| F4:173       | `FatigueDamageCalculator._nonlinear_damage`; `independent`                               | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L160-L199]                       |
+| F4:174       | `FatigueDamageCalculator._calculate_allowable_cycles`; `independent`                     | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L201-L255]                       |
+| F4:175       | `FatigueDamageCalculator._apply_mean_stress_correction`; `independent`                   | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L257-L314]                       |
+| F4:176       | `FatigueDamageCalculator._estimate_cycles_to_failure`; `independent`                     | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L316-L351]                       |
+| F4:177       | `FatigueDamageCalculator.calculate_equivalent_stress`; `independent`                     | [src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py:L353-L388]                       |
+| F4:178       | `create_parser`; `independent`                                                           | `[src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L55-L248]`                   |
+| F4:179       | `build_config_from_args`; `independent`                                                  | `[src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L251-L324]`                  |
+| F4:180       | `main`; `independent`                                                                    | `[src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py:L327-L479]`                  |
+| F4:181       | `TimeSeriesAnalyzer._analyze_column`; `independent`                                      | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L147-L222]                    |
+| F4:182       | `TimeSeriesAnalyzer._generate_outputs`; `independent`                                    | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L327-L360]                    |
+| F4:183       | `TimeSeriesAnalyzer._generate_summary`; `independent`                                    | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py:L438-L474]                    |
+| F4:184       | `SafeAnalyzer.safe_rainflow_analysis`; `independent`                                     | [src/digitalmodel/signal_processing/signal_analysis/orcaflex/error_handling.py:L162-L222]              |
+| F4:185       | `TimeSeriesAnalysis.router`; `independent`                                               | [src/digitalmodel/signal_processing/time_series/time_series_analysis.py:L20-L41]                       |
+| F4:186       | `TimeSeriesComponents.count_cycles`; `independent`                                       | [src/digitalmodel/signal_processing/time_series/time_series_components.py:L644-L657]                   |
+| F4:187       | `OPPTimeSeries.get_histogram_object_from_orcaflex_run`; `independent`                    | [src/digitalmodel/solvers/orcaflex/opp_time_series.py:L441-L471]                                       |
+| F4:188       | `OPPTimeSeries.get_detailed_histogram_df_columns`; `independent`                         | [src/digitalmodel/solvers/orcaflex/opp_time_series.py:L473-L494]                                       |
+| F4:189       | `OPPTimeSeriesV2.process_histograms`; `independent`                                      | [src/digitalmodel/solvers/orcaflex/opp_time_series_v2.py:L241-L282]                                    |
+| F4:190       | `OrcaFlexAnalysis.get_histogram_object_from_orcaflex_run`; `independent`                 | [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L470-L492]                          |
+| F4:191       | `OrcaFlexAnalysis.get_detailed_histogram_df_columns`; `copy`                             | [src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py:L755-L767]                          |
+| F4:192       | `OrcaFlexTimeTraceProcessor._perform_fatigue_analysis`; `independent`                    | [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L248-L338]                                  |
+| F4:193       | `OrcaFlexTimeTraceProcessor._parallel_fatigue_analysis`; `independent`                   | [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L420-L448]                                  |
+| F4:194       | `OrcaFlexTimeTraceProcessor._analyze_single_trace`; `independent`                        | [src/digitalmodel/solvers/orcaflex/time_trace_processor.py:L451-L496]                                  |
+| F4:195       | `router`; `caller`                                                                       | [src/digitalmodel/spectral_fatigue/workflow.py:L37-L76]                                                |
+| F4:196       | `_sn_curve`; `independent`                                                               | [src/digitalmodel/spectral_fatigue/workflow.py:L139-L143]                                              |
+| F4:197       | `quick_fatigue_analysis`; `caller`                                                       | `[src/digitalmodel/structural/fatigue/__init__.py:L226-L305]`                                          |
+| F4:198       | `get_module_info`; `independent`                                                         | `[src/digitalmodel/structural/fatigue/__init__.py:L431-L447]`                                          |
+| F4:199       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/structural/fatigue/analysis.py:L1-L1094]                                             |
+| F4:200       | `FatigueAnalysisEngine._setup_sn_curve`; `wrapper`                                       | [src/digitalmodel/structural/fatigue/analysis.py:L266-L285]                                            |
+| F4:201       | `FatigueAnalysisEngine._setup_damage_calculator`; `independent`                          | [src/digitalmodel/structural/fatigue/analysis.py:L287-L300]                                            |
+| F4:202       | `FatigueAnalysisEngine._setup_rainflow_counter`; `independent`                           | [src/digitalmodel/structural/fatigue/analysis.py:L302-L310]                                            |
+| F4:203       | `FatigueAnalysisEngine.analyze_time_series`; `independent`                               | [src/digitalmodel/structural/fatigue/analysis.py:L312-L419]                                            |
+| F4:204       | `FatigueAnalysisEngine.analyze_psd`; `independent`                                       | [src/digitalmodel/structural/fatigue/analysis.py:L421-L526]                                            |
+| F4:205       | `FatigueAnalysisEngine.calculate_high_stress_range_life`; `independent`                  | [src/digitalmodel/structural/fatigue/analysis.py:L528-L569]                                            |
+| F4:206       | `FatigueAnalysisEngine.analyze_shear_data`; `independent`                                | [src/digitalmodel/structural/fatigue/analysis.py:L571-L620]                                            |
+| F4:207       | `FatigueAnalysisEngine._perform_engineering_validation`; `independent`                   | [src/digitalmodel/structural/fatigue/analysis.py:L733-L784]                                            |
+| F4:208       | `quick_time_domain_analysis`; `independent`                                              | [src/digitalmodel/structural/fatigue/analysis.py:L979-L1022]                                           |
+| F4:209       | `quick_frequency_domain_analysis`; `independent`                                         | [src/digitalmodel/structural/fatigue/analysis.py:L1025-L1062]                                          |
+| F4:210       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L1-L735]                                   |
+| F4:211       | `LinearDamageAccumulation.calculate_damage`; `independent`                               | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L109-L217]                                 |
+| F4:212       | `LinearDamageAccumulation._apply_mean_stress_correction`; `independent`                  | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L219-L256]                                 |
+| F4:213       | `ModifiedMinersRule.calculate_damage`; `independent`                                     | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L292-L355]                                 |
+| F4:214       | `NonlinearDamageAccumulation.calculate_damage`; `wrapper`                                | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L383-L400]                                 |
+| F4:215       | `NonlinearDamageAccumulation._marco_starkey_damage`; `independent`                       | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L402-L449]                                 |
+| F4:216       | `NonlinearDamageAccumulation._corten_dolan_damage`; `independent`                        | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L451-L495]                                 |
+| F4:217       | `NonlinearDamageAccumulation._double_linear_damage`; `independent`                       | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L497-L544]                                 |
+| F4:218       | `compare_damage_methods`; `independent`                                                  | [src/digitalmodel/structural/fatigue/damage_accumulation.py:L652-L699]                                 |
+| F4:219       | `_build_curve`; `independent`                                                            | [src/digitalmodel/structural/fatigue/design_code_report.py:L101-L114]                                  |
+| F4:220       | `failure_probability`; `independent`                                                     | [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L84-L168]                                  |
+| F4:221       | `sensitivity_analysis`; `independent`                                                    | [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L171-L273]                                 |
+| F4:222       | `monte_carlo_fatigue`; `independent`                                                     | [src/digitalmodel/structural/fatigue/fatigue_reliability.py:L276-L366]                                 |
+| F4:223       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/structural/fatigue/frequency_domain.py:L1-L783]                                      |
+| F4:224       | `NarrowBandMethod.calculate_damage_rate`; `independent`                                  | [src/digitalmodel/structural/fatigue/frequency_domain.py:L191-L226]                                    |
+| F4:225       | `DirlikMethod.calculate_damage_rate`; `independent`                                      | [src/digitalmodel/structural/fatigue/frequency_domain.py:L240-L369]                                    |
+| F4:226       | `TovoBenasciuttiMethod.calculate_damage_rate`; `independent`                             | [src/digitalmodel/structural/fatigue/frequency_domain.py:L382-L468]                                    |
+| F4:227       | `SingleMomentMethod.calculate_damage_rate`; `independent`                                | [src/digitalmodel/structural/fatigue/frequency_domain.py:L481-L530]                                    |
+| F4:228       | `compare_frequency_methods`; `independent`                                               | [src/digitalmodel/structural/fatigue/frequency_domain.py:L683-L725]                                    |
+| F4:229       | `run_sweep`; `independent`                                                               | [src/digitalmodel/structural/fatigue/parametric_sweep.py:L74-L163]                                     |
+| F4:230       | `compute_sensitivity._single_damage`; `independent`                                      | [src/digitalmodel/structural/fatigue/parametric_sweep.py:L206-L221]                                    |
+| F4:231       | `_build_scatter_json`; `independent`                                                     | [src/digitalmodel/structural/fatigue/parametric_sweep.py:L448-L512]                                    |
+| F4:232       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/structural/fatigue/rainflow.py:L1-L824]                                              |
+| F4:233       | `RainflowCounter.count_cycles`; `caller`                                                 | [src/digitalmodel/structural/fatigue/rainflow.py:L230-L310]                                            |
+| F4:234       | `RainflowCounter._rainflow_count`; `independent`                                         | [src/digitalmodel/structural/fatigue/rainflow.py:L316-L318]                                            |
+| F4:235       | `RainflowCounter.extract_cycles_with_means`; `caller`                                    | [src/digitalmodel/structural/fatigue/rainflow.py:L502-L536]                                            |
+| F4:236       | `rainflow_count`; `independent`                                                          | [src/digitalmodel/structural/fatigue/rainflow.py:L729-L752]                                            |
+| F4:237       | `rainflow_with_means`; `independent`                                                     | [src/digitalmodel/structural/fatigue/rainflow.py:L755-L770]                                            |
+| F4:238       | `scatter_fatigue_damage`; `independent`                                                  | [src/digitalmodel/structural/fatigue/scatter_fatigue.py:L102-L255]                                     |
+| F4:239       | `fatigue_assessment`; `independent`                                                      | [src/digitalmodel/structural/fatigue/skill.py:L188-L273]                                               |
+| F4:240       | `main`; `independent`                                                                    | [src/digitalmodel/structural/fatigue/sn_curve_plotter.py:L397-L415]                                    |
+| F4:241       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/structural/fatigue/sn_curves.py:L1-L1132]                                            |
+| F4:242       | `StandardSNCurves._find_sn_data_file`; `independent`                                     | [src/digitalmodel/structural/fatigue/sn_curves.py:L442-L453]                                           |
+| F4:243       | `StandardSNCurves._ensure_loaded`; `independent`                                         | [src/digitalmodel/structural/fatigue/sn_curves.py:L456-L505]                                           |
+| F4:244       | `StandardSNCurves.register_custom_curve`; `independent`                                  | [src/digitalmodel/structural/fatigue/sn_curves.py:L522-L563]                                           |
+| F4:245       | `StandardSNCurves.get_dnv_c203_curve`; `independent`                                     | [src/digitalmodel/structural/fatigue/sn_curves.py:L566-L616]                                           |
+| F4:246       | `StandardSNCurves.get_curve`; `independent`                                              | [src/digitalmodel/structural/fatigue/sn_curves.py:L619-L668]                                           |
+| F4:247       | `StandardSNCurves.get_multislope_curve`; `independent`                                   | [src/digitalmodel/structural/fatigue/sn_curves.py:L671-L713]                                           |
+| F4:248       | `ThicknessCorrection.apply_thickness_effect`; `independent`                              | [src/digitalmodel/structural/fatigue/sn_curves.py:L863-L916]                                           |
+| F4:249       | `SNDataFitting.fit_power_law`; `independent`                                             | [src/digitalmodel/structural/fatigue/sn_curves.py:L927-L1005]                                          |
+| F4:250       | `get_dnv_curve`; `independent`                                                           | [src/digitalmodel/structural/fatigue/sn_curves.py:L1047-L1066]                                         |
+| F4:251       | `get_api_curve`; `independent`                                                           | [src/digitalmodel/structural/fatigue/sn_curves.py:L1069-L1071]                                         |
+| F4:252       | `get_bs_curve`; `independent`                                                            | [src/digitalmodel/structural/fatigue/sn_curves.py:L1074-L1076]                                         |
+| F4:253       | `_dnv_curves_from_c203`; `independent`                                                   | [src/digitalmodel/structural/fatigue/sn_curves.py:L1085-L1099]                                         |
+| F4:254       | `_dnv_seawater_cp`; `independent`                                                        | [src/digitalmodel/structural/fatigue/worked_examples.py:L58-L77]                                       |
+| F4:255       | `_dnv_seawater_free`; `independent`                                                      | [src/digitalmodel/structural/fatigue/worked_examples.py:L80-L97]                                       |
+| F4:256       | `_chain_seawater_cp`; `independent`                                                      | [src/digitalmodel/structural/fatigue/worked_examples.py:L100-L119]                                     |
+| F4:257       | `pipeline_girth_weld`; `caller`                                                          | [src/digitalmodel/structural/fatigue/worked_examples.py:L199-L260]                                     |
+| F4:258       | `scr_touchdown`; `caller`                                                                | [src/digitalmodel/structural/fatigue/worked_examples.py:L263-L323]                                     |
+| F4:259       | `mooring_chain`; `caller`                                                                | [src/digitalmodel/structural/fatigue/worked_examples.py:L326-L388]                                     |
+| F4:260       | `_compute_example`; `independent`                                                        | [src/digitalmodel/structural/fatigue/worked_examples.py:L395-L431]                                     |
+| F4:261       | `run_analysis`; `independent`                                                            | `[src/digitalmodel/structural/fatigue_apps/__main__.py:L244-L501]`                                     |
+| F4:262       | `SNCurve._load_sn_parameters`; `independent`                                             | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L55-L118]                                  |
+| F4:263       | `SNCurve.calculate_cycles_to_failure`; `independent`                                     | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L120-L149]                                 |
+| F4:264       | `FatigueDamageCalculator.calculate_damage`; `independent`                                | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L182-L209]                                 |
+| F4:265       | `main`; `independent`                                                                    | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L489-L549]                                 |
+| F4:266       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L1-L389]                        |
+| F4:267       | `SNCurveParameters.a1`; `independent`                                                    | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L36-L38]                        |
+| F4:268       | `SNCurveParameters.a2`; `independent`                                                    | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L41-L43]                        |
+| F4:269       | `FatigueDamageCalculator.cycles_to_failure`; `independent`                               | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L106-L132]                      |
+| F4:270       | `FatigueDamageCalculator.calculate_damage`; `independent`                                | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L134-L184]                      |
+| F4:271       | `FatigueDamageCalculator.export_results`; `independent`                                  | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L297-L320]                      |
+| F4:272       | `FatigueFileNamer.get_rainflow_filename`; `independent`                                  | [src/digitalmodel/structural/fatigue_apps/file_namer.py:L87-L105]                                      |
+| F4:273       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/structural/fatigue_apps/file_namer.py:L1-L230]                                       |
+| F4:274       | `IntegratedFatigueProcessor.process_fatigue_condition`; `independent`                    | [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L290-L364]                           |
+| F4:275       | `main`; `independent`                                                                    | [src/digitalmodel/structural/fatigue_apps/integrated_processor.py:L366-L484]                           |
+| F4:276       | `IntegratedFatigueProcessorWithNaming._process_condition_base`; `independent`            | [src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py:L81-L173]                |
+| F4:277       | `(file-level record)`; `independent`                                                     | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L1-L359]                                 |
+| F4:278       | `RainflowCounter.count_cycles`; `caller`                                                 | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L48-L79]                                 |
+| F4:279       | `RainflowCounter._rainflow_algorithm`; `independent`                                     | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L164-L220]                               |
+| F4:280       | `RainflowCounter.export_results`; `independent`                                          | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L292-L322]                               |
+| F4:281       | `rainflow_count`; `independent`                                                          | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L325-L338]                               |
+| F4:282       | `RainflowCounter.process_time_series`; `independent`                                     | [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L198-L254]                              |
+| F4:283       | `RainflowCounter.process_batch`; `independent`                                           | [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L332-L403]                              |
+| F4:284       | `RainflowCounter.save_cycle_data`; `independent`                                         | [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L405-L432]                              |
+| F4:285       | `main`; `independent`                                                                    | [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L463-L502]                              |
+| F4:286       | `ReferenceSeaStateProcessor.process_fatigue_condition`; `independent`                    | [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L355-L429]                   |
+| F4:287       | `TensionStressConverter.process_batch`; `independent`                                    | [src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py:L271-L334]                      |
+| F4:288       | `main`; `independent`                                                                    | [src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py:L428-L474]                      |
+| F4:289       | `generate_all_visualizations`; `independent`                                             | [src/digitalmodel/structural/fatigue_apps/visualizer.py:L507-L570]                                     |
+| F4:290       | `narrow_band_damage`; `independent`                                                      | [src/digitalmodel/structural/spectral_fatigue.py:L122-L178]                                            |
+| F4:291       | `assess_jumper_fatigue`; `caller`                                                        | [src/digitalmodel/subsea/connectors/fatigue.py:L62-L106]                                               |
+| F4:292       | `_dnv_params`; `independent`                                                             | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L133-L150]                                 |
+| F4:293       | `get_sn_curve`; `independent`                                                            | [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L170-L237]                                 |
+| F4:294       | `SpanFatigueDamage._load_sn_curve`; `caller`                                             | [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L79-L91]                            |
+| F4:295       | `VIVFatigueCalculator.calculate_damage`; `independent`                                   | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L108-L165]                                            |
+| F4:296       | `VIVFatigueCalculator.calculate_fatigue_life`; `independent`                             | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L167-L207]                                            |
+| F4:297       | `VIVFatigueCalculator.analyze_viv_fatigue`; `independent`                                | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L268]                                            |
+| F4:298       | `VIVFatigueCalculator.cumulative_damage`; `caller`                                       | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L270-L300]                                            |
+| F4:299       | `parse_inputs`; `independent`                                                            | [src/digitalmodel/viv_screening/inputs.py:L88-L125]                                                    |
+| F4:300       | `router`; `independent`                                                                  | [src/digitalmodel/viv_screening/workflow.py:L25-L57]                                                   |
+| F4:301       | `_damage_rate`; `independent`                                                            | [src/digitalmodel/viv_screening/workflow.py:L128-L147]                                                 |
+| F4:302       | `_provenance`; `independent`                                                             | [src/digitalmodel/viv_screening/workflow.py:L173-L191]                                                 |
+| F4:303       | `page`; `independent`                                                                    | [src/digitalmodel/web/digitaltwinfeed/app.py:L71-L86]                                                  |
+| F4:304       | `_check_receipt`; `test_helper`                                                          | [tests/ansys/padeye_pressure_bundle.py:L23-L38]                                                        |
+| F4:305       | `verify_pressure_bundle`; `test_helper`                                                  | [tests/ansys/padeye_pressure_bundle.py:L41-L65]                                                        |
+| F4:306       | `TestThicknessCorrection.test_known_correction`; `test_helper`                           | [tests/ansys/test_fatigue_postprocessor.py:L92-L96]                                                    |
+| F4:307       | `bundle`; `test_helper`                                                                  | [tests/ansys/test_padeye_pressure_bundle.py:L20-L29]                                                   |
+| F4:308       | `histogram_input`; `test_helper`                                                         | [tests/fatigue/test_assessment.py:L22-L34]                                                             |
+| F4:309       | `_span_input`; `test_helper`                                                             | [tests/fatigue/test_c203_consumers.py:L303-L331]                                                       |
+| F4:310       | `_non_dnv_bilinear`; `test_helper`                                                       | [tests/fatigue/test_c203_sn_values.py:L298-L303]                                                       |
+| F4:311       | `test_non_dnv_bilinear_switch_stays_at_endurance_limit`; `test_helper`                   | [tests/fatigue/test_c203_sn_values.py:L326-L343]                                                       |
+| F4:312       | `_signal_e`; `test_helper`                                                               | [tests/fatigue/test_c203_variable_amplitude.py:L179-L182]                                              |
+| F4:313       | `_user_curve`; `test_helper`                                                             | [tests/fatigue/test_c203_variable_amplitude.py:L230-L233]                                              |
+| F4:314       | `_span_input`; `test_helper`                                                             | [tests/fatigue/test_c203_variable_amplitude.py:L304-L332]                                              |
+| F4:315       | `_fresh_standard_curves`; `test_helper`                                                  | [tests/fatigue/test_c203_variable_amplitude.py:L378-L391]                                              |
+| F4:316       | `_data_dir`; `test_helper`                                                               | [tests/fatigue/test_c203_variable_amplitude.py:L394-L398]                                              |
+| F4:317       | `f_curve`; `test_helper`                                                                 | [tests/fatigue/test_damage.py:L16-L17]                                                                 |
+| F4:318       | `TestThicknessCorrection.test_correction_above_ref`; `test_helper`                       | [tests/fatigue/test_damage.py:L90-L95]                                                                 |
+| F4:319       | `TestThicknessCorrection.test_correction_formula`; `test_helper`                         | [tests/fatigue/test_damage.py:L97-L103]                                                                |
+| F4:320       | `TestAgainstTransliterationSweep.test_all_presets_and_curves`; `test_helper`             | [tests/fatigue/test_fatg.py:L267-L284]                                                                 |
+| F4:321       | `_cfg`; `test_helper`                                                                    | [tests/fatigue/test_fatg_workflow.py:L23-L49]                                                          |
+| F4:322       | `_library_reference`; `test_helper`                                                      | [tests/fatigue/test_fatg_workflow.py:L52-L64]                                                          |
+| F4:323       | `_sample_locations`; `test_helper`                                                       | [tests/fatigue/test_fatigue_reporting.py:L15-L55]                                                      |
+| F4:324       | `_damage_calls`; `test_helper`                                                           | [tests/fatigue/test_rainflow_invariants.py:L408-L488]                                                  |
+| F4:325       | `_damage_calls.calm_scatter`; `test_helper`                                              | [tests/fatigue/test_rainflow_invariants.py:L443-L449]                                                  |
+| F4:326       | `_damage_calls.fapps_batch`; `test_helper`                                               | [tests/fatigue/test_rainflow_invariants.py:L456-L461]                                                  |
+| F4:327       | `TestGetSNCurve.test_f_curve_at_100mpa`; `test_helper`                                   | [tests/fatigue/test_sn_curves.py:L40-L45]                                                              |
+| F4:328       | `TestGetSNCurve.test_d_curve_at_100mpa`; `test_helper`                                   | [tests/fatigue/test_sn_curves.py:L52-L57]                                                              |
+| F4:329       | `_hand_N`; `test_helper`                                                                 | [tests/fatigue/test_weld_fatigue_quickcheck.py:L29-L31]                                                |
+| F4:330       | `TestSNcurve.test_cycles_to_failure_chain_known_value`; `test_helper`                    | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L117-L123]                              |
+| F4:331       | `TestSNcurve.test_cycles_to_failure_wire_rope_known_value`; `test_helper`                | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L125-L131]                              |
+| F4:332       | `TestSNcurve.test_custom_sn_curve`; `test_helper`                                        | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L138-L143]                              |
+| F4:333       | `TestMinersRuleDamage.test_single_range_known_damage`; `test_helper`                     | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L294-L307]                              |
+| F4:334       | `TestMinersRuleDamage.test_damage_additivity`; `test_helper`                             | [tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py:L319-L329]                              |
+| F4:335       | `_small_atlas`; `test_helper`                                                            | [tests/parametric/test_atlas.py:L19-L34]                                                               |
+| F4:336       | `process_single_test_file`; `test_helper`                                                | [tests/signal_processing/signal_analysis/fatigue_analysis_reference/process_fatigue_final.py:L25-L439] |
+| F4:337       | `process_single_test_file`; `test_helper`                                                | [tests/signal_processing/signal_analysis/reference_fatigue_processor.py:L25-L439]                      |
+| F4:338       | `(file-level record)`; `test_helper`                                                     | [tests/signal_processing/signal_analysis/test_generate_outputs.py:L1-L459]                             |
+| F4:339       | `analyze_signal`; `test_helper`                                                          | [tests/signal_processing/signal_analysis/test_generate_outputs.py:L97-L374]                            |
+| F4:340       | `main`; `test_helper`                                                                    | [tests/signal_processing/signal_analysis/test_generate_outputs.py:L377-L455]                           |
+| F4:341       | `OrcaFlexTensionAnalyzer.analyze_tension`; `test_helper`                                 | [tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py:L108-L177]                  |
+| F4:342       | `OrcaFlexTensionAnalyzer.export_results`; `test_helper`                                  | [tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py:L301-L352]                  |
+| F4:343       | `run_rainflow_for_timeseries`; `test_helper`                                             | [tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py:L19-L71]                         |
+| F4:344       | `test_rainflow_for_timeseries`; `test_helper`                                            | [tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py:L74-L271]                        |
+| F4:345       | `main`; `test_helper`                                                                    | [tests/signal_processing/signal_analysis/validate_module.py:L183-L219]                                 |
+| F4:346       | `mock_solver_factory.MockSolverFactory.create_fatigue_solver`; `test_helper`             | [tests/solvers/test_integration_solvers.py:L154-L165]                                                  |
+| F4:347       | `simple_sn_curve`; `test_helper`                                                         | [tests/structural/fatigue/conftest.py:L14-L16]                                                         |
+| F4:348       | `dnv_d_curve`; `test_helper`                                                             | [tests/structural/fatigue/test_damage_accumulation.py:L40-L47]                                         |
+| F4:349       | `simple_curve`; `test_helper`                                                            | [tests/structural/fatigue/test_damage_accumulation.py:L51-L58]                                         |
+| F4:350       | `curve_with_material`; `test_helper`                                                     | [tests/structural/fatigue/test_damage_accumulation.py:L62-L76]                                         |
+| F4:351       | `TestSNCurveMigration.test_multislope_curve_implementation`; `test_helper`               | [tests/structural/fatigue/test_fatigue_migration.py:L90-L128]                                          |
+| F4:352       | `TestSNCurveMigration.test_curve_continuity`; `test_helper`                              | [tests/structural/fatigue/test_fatigue_migration.py:L130-L161]                                         |
+| F4:353       | `TestFrequencyDomainMigration.test_basic_frequency_analysis`; `test_helper`              | [tests/structural/fatigue/test_fatigue_migration.py:L231-L252]                                         |
+| F4:354       | `simple_sn`; `test_helper`                                                               | [tests/structural/fatigue/test_fatigue_reliability.py:L32-L34]                                         |
+| F4:355       | `mild_sn`; `test_helper`                                                                 | [tests/structural/fatigue/test_fatigue_reliability.py:L38-L40]                                         |
+| F4:356       | `_simple_input`; `test_helper`                                                           | [tests/structural/fatigue/test_fatigue_skill.py:L39-L49]                                               |
+| F4:357       | `TestOffshoreScenario.test_high_cycle_low_stress_result`; `test_helper`                  | [tests/structural/fatigue/test_fatigue_skill.py:L494-L512]                                             |
+| F4:358       | `simple_sn_curve`; `test_helper`                                                         | [tests/structural/fatigue/test_frequency_domain.py:L84-L86]                                            |
+| F4:359       | `default_counter`; `test_helper`                                                         | [tests/structural/fatigue/test_rainflow.py:L41-L43]                                                    |
+| F4:360       | `simple_sn`; `test_helper`                                                               | [tests/structural/fatigue/test_scatter_fatigue.py:L25-L27]                                             |
+| F4:361       | `TestFatigueLife.test_fatigue_life_inverse_of_damage`; `test_helper`                     | [tests/structural/fatigue/test_scatter_fatigue.py:L233-L251]                                           |
+| F4:362       | `simple_power_law`; `test_helper`                                                        | [tests/structural/fatigue/test_sn_curves.py:L57-L59]                                                   |
+| F4:363       | `power_law_with_limit`; `test_helper`                                                    | [tests/structural/fatigue/test_sn_curves.py:L63-L67]                                                   |
+| F4:364       | `bilinear_curve`; `test_helper`                                                          | [tests/structural/fatigue/test_sn_curves.py:L71-L86]                                                   |
+| F4:365       | `dnv_d_curve`; `test_helper`                                                             | [tests/structural/fatigue/test_sn_curves.py:L90-L91]                                                   |
+| F4:366       | `TestBS7608RevisedCurveParameters.test_bs7608_revised_d_known_n_at_50mpa`; `test_helper` | [tests/structural/fatigue/test_sn_curves.py:L886-L892]                                                 |
+| F4:367       | `TestISO19902CurveParameters.test_iso19902_f_air_known_n_at_100mpa`; `test_helper`       | [tests/structural/fatigue/test_sn_curves.py:L964-L970]                                                 |
+| F4:368       | `TestISO19902CurveParameters.test_iso19902_f2_sw_cp_known_n_at_50mpa`; `test_helper`     | [tests/structural/fatigue/test_sn_curves.py:L994-L1000]                                                |
+| F4:369       | `_all_single_slope_cases`; `test_helper`                                                 | [tests/structural/fatigue/test_sn_curves_yaml.py:L55-L60]                                              |
+| F4:370       | `_all_multislope_cases`; `test_helper`                                                   | [tests/structural/fatigue/test_sn_curves_yaml.py:L63-L66]                                              |
+| F4:371       | `sn_curve_data`; `test_helper`                                                           | [tests/structural/fatigue_analysis/conftest.py:L6-L13]                                                 |
+| F4:372       | `run_fatigue_analysis`; `test_helper`                                                    | [tests/structural/fatigue_analysis/test_fatigue_analysis_sn.py:L13-L20]                                |
+| F4:373       | `run_fatigue_analysis`; `test_helper`                                                    | [tests/structural/fatigue_analysis/test_fatigue_analysis_timetrace.py:L15-L40]                         |
+| F4:374       | `ref_input`; `test_helper`                                                               | [tests/subsea/pipeline/test_free_span_f105.py:L43-L65]                                                 |
+| F4:375       | `TestVIVFatigueCalculator.test_cumulative_damage`; `test_helper`                         | [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519]                                        |
+| F4:376       | `get_orcaflex_post_process_mock`; `test_helper`                                          | [tests/test_automation/fixtures/engineering_fixtures.py:L72-L94]                                       |
+| F4:377       | `ComprehensiveTestFixCampaign.generate_mock_data`; `test_helper`                         | [tests/test_automation/scripts/comprehensive_fix_campaign.py:L103-L153]                                |
+| F4:378       | `process_configuration`; `test_helper`                                                   | [tests/test_complete_fatigue_pipeline.py:L65-L175]                                                     |
+| F4:379       | `main`; `test_helper`                                                                    | [tests/test_complete_fatigue_pipeline.py:L178-L270]                                                    |
+| F4:380       | `run_all_tests`; `test_helper`                                                           | [tests/test_fatigue_basic.py:L223-L269]                                                                |
+| F4:381       | `process_effective_tension_file`; `test_helper`                                          | [tests/test_rainflow_with_effective_tension.py:L25-L114]                                               |
+| F4:382       | `main`; `test_helper`                                                                    | [tests/test_rainflow_with_effective_tension.py:L117-L184]                                              |
+| F4:383       | `run_performance_tests`; `test_helper`                                                   | [tests/test_reservoir_framework.py:L800-L846]                                                          |
+| F4:384       | `TestSNCurveDNVReference.test_dnv_d_curve_parameters`; `test_helper`                     | [tests/test_spectral_fatigue_validation.py:L50-L58]                                                    |
+| F4:385       | `test_workflow_registry`; `test_helper`                                                  | [tests/workflows/test_durable_workflows.py:L52-L1710]                                                  |
+| F4:386       | `test_spectral_fatigue_workflow_matches_narrow_band_closed_form`; `test_helper`          | [tests/workflows/test_durable_workflows.py:L1855-L1911]                                                |
+| F4:387       | `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening`; `test_helper`     | [tests/workflows/test_durable_workflows.py:L1914-L1981]                                                |
 
 #### F5 — `api-5ct-5l-grade-tables`
 
-Source: digitalmodel, *Implementation map*, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `api-5ct-5l-grade-tables`, 39 records.
+Source: digitalmodel, _Implementation map_, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `api-5ct-5l-grade-tables`, 39 records.
 
-| Source entry | Symbol / inventory relation | Location at code pin |
-| --- | --- | --- |
-| F5:1 | `(file-level record)`; `independent` | [docs/domains/orcaflex/templates/components/materials/steel.csv:L1-L7] |
-| F5:2 | `(file-level record)`; `example` | [examples/demos/asset_integrity/ffs_lookup_build.py:L1-L76] |
-| F5:3 | `build_records`; `example` | [examples/demos/asset_integrity/ffs_lookup_build.py:L40-L57] |
-| F5:4 | `(file-level record)`; `example` | [examples/demos/gtm/calc_values.py:L1-L203] |
-| F5:5 | `_load_engineering_modules`; `example` | [examples/demos/gtm/demo_02_wall_thickness_multicode.py:L58-L108] |
-| F5:6 | `run_single_design_check`; `example` | [examples/domains/structural/wall_thickness_example.py:L44-L96] |
-| F5:7 | `run_phase_analysis`; `example` | [examples/domains/structural/wall_thickness_example.py:L133-L175] |
-| F5:8 | `(file-level record)`; `independent` | [scripts/capabilities/build_casing_design_explorer.py:L1-L651] |
-| F5:9 | `(file-level record)`; `independent` | [src/digitalmodel/base_configs/modules/pipe_capacity/pipe_capacity.yml:L1-L214] |
-| F5:10 | `(file-level record)`; `independent` | [src/digitalmodel/base_configs/modules/vertical_riser/vertical_riser.yml:L1-L637] |
-| F5:11 | `(file-level record)`; `independent` | [src/digitalmodel/data_systems/data/steel_material.yml:L1-L52] |
-| F5:12 | `PipeSpecificationClient`; `independent` | [src/digitalmodel/data_systems/data_procurement/riser/database_clients/pipe_db_client.py:L45-L500] |
-| F5:13 | `PipeSpecificationClient._initialize_pipe_database`; `caller` | [src/digitalmodel/data_systems/data_procurement/riser/database_clients/pipe_db_client.py:L134-L157] |
-| F5:14 | `PipeSpecificationClient._generate_pipe_spec`; `independent` | [src/digitalmodel/data_systems/data_procurement/riser/database_clients/pipe_db_client.py:L159-L258] |
-| F5:15 | `(file-level record)`; `independent` | [src/digitalmodel/infrastructure/templates/api_std_2rd_template.yml:L1-L361] |
-| F5:16 | `(file-level record)`; `independent` | [src/digitalmodel/materials/grades.py:L1-L448] |
-| F5:17 | `(file-level record)`; `independent` | [src/digitalmodel/orcaflex/mooring_design.py:L1-L717] |
-| F5:18 | `MooringLineSegment`; `independent` | [src/digitalmodel/orcaflex/mooring_design.py:L343-L347] |
-| F5:19 | `MooringLineDesign.estimate_catenary`; `independent` | [src/digitalmodel/orcaflex/mooring_design.py:L385-L403] |
-| F5:20 | `MooringLineDesign.check_mbl`; `independent` | [src/digitalmodel/orcaflex/mooring_design.py:L405-L419] |
-| F5:21 | `MooringLineDesign.check_mbl_with_safety_factor`; `independent` | [src/digitalmodel/orcaflex/mooring_design.py:L522-L564] |
-| F5:22 | `(file-level record)`; `independent` | [src/digitalmodel/orcaflex/riser_config.py:L1-L462] |
-| F5:23 | `RiserPipeProperties.steel_mass_per_m`; `independent` | [src/digitalmodel/orcaflex/riser_config.py:L111-L113] |
-| F5:24 | `RiserPipeProperties.bending_stiffness`; `independent` | [src/digitalmodel/orcaflex/riser_config.py:L140-L144] |
-| F5:25 | `RiserPipeProperties.axial_stiffness`; `independent` | [src/digitalmodel/orcaflex/riser_config.py:L147-L150] |
-| F5:26 | `(file-level record)`; `independent` | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py:L1-L314] |
-| F5:27 | `(file-level record)`; `independent` | [src/digitalmodel/structural/analysis/__init__.py:L1-L80] |
-| F5:28 | `check`; `independent` | [src/digitalmodel/structural/analysis/cli.py:L83-L161] |
-| F5:29 | `sweep`; `independent` | [src/digitalmodel/structural/analysis/cli.py:L199-L249] |
-| F5:30 | `phases`; `independent` | [src/digitalmodel/structural/analysis/cli.py:L273-L325] |
-| F5:31 | `list_grades`; `independent` | [src/digitalmodel/structural/analysis/cli.py:L329-L342] |
-| F5:32 | `lookup`; `independent` | [src/digitalmodel/structural/analysis/cli.py:L366-L411] |
-| F5:33 | `(file-level record)`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_parametric.py:L1-L575] |
-| F5:34 | `ParametricSweep.run`; `independent` | [src/digitalmodel/structural/analysis/wall_thickness_parametric.py:L66-L147] |
-| F5:35 | `(file-level record)`; `independent` | [src/digitalmodel/subsea/catenary_riser/models.py:L1-L460] |
-| F5:36 | `(file-level record)`; `independent` | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L1-L781] |
-| F5:37 | `WallThicknessSizingWorkflow.run`; `independent` | [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L279-L355] |
-| F5:38 | `(file-level record)`; `independent` | [src/digitalmodel/well/tubulars/casing_design.py:L1-L715] |
-| F5:39 | `(file-level record)`; `test_helper` | [tests/fixtures/test_vectors/mooring_risers/riser_material_properties.yaml:L1-L70] |
+| Source entry | Symbol / inventory relation                                     | Location at code pin                                                                                |
+| ------------ | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| F5:1         | `(file-level record)`; `independent`                            | [docs/domains/orcaflex/templates/components/materials/steel.csv:L1-L7]                              |
+| F5:2         | `(file-level record)`; `example`                                | [examples/demos/asset_integrity/ffs_lookup_build.py:L1-L76]                                         |
+| F5:3         | `build_records`; `example`                                      | [examples/demos/asset_integrity/ffs_lookup_build.py:L40-L57]                                        |
+| F5:4         | `(file-level record)`; `example`                                | [examples/demos/gtm/calc_values.py:L1-L203]                                                         |
+| F5:5         | `_load_engineering_modules`; `example`                          | [examples/demos/gtm/demo_02_wall_thickness_multicode.py:L58-L108]                                   |
+| F5:6         | `run_single_design_check`; `example`                            | [examples/domains/structural/wall_thickness_example.py:L44-L96]                                     |
+| F5:7         | `run_phase_analysis`; `example`                                 | [examples/domains/structural/wall_thickness_example.py:L133-L175]                                   |
+| F5:8         | `(file-level record)`; `independent`                            | [scripts/capabilities/build_casing_design_explorer.py:L1-L651]                                      |
+| F5:9         | `(file-level record)`; `independent`                            | [src/digitalmodel/base_configs/modules/pipe_capacity/pipe_capacity.yml:L1-L214]                     |
+| F5:10        | `(file-level record)`; `independent`                            | [src/digitalmodel/base_configs/modules/vertical_riser/vertical_riser.yml:L1-L637]                   |
+| F5:11        | `(file-level record)`; `independent`                            | [src/digitalmodel/data_systems/data/steel_material.yml:L1-L52]                                      |
+| F5:12        | `PipeSpecificationClient`; `independent`                        | [src/digitalmodel/data_systems/data_procurement/riser/database_clients/pipe_db_client.py:L45-L500]  |
+| F5:13        | `PipeSpecificationClient._initialize_pipe_database`; `caller`   | [src/digitalmodel/data_systems/data_procurement/riser/database_clients/pipe_db_client.py:L134-L157] |
+| F5:14        | `PipeSpecificationClient._generate_pipe_spec`; `independent`    | [src/digitalmodel/data_systems/data_procurement/riser/database_clients/pipe_db_client.py:L159-L258] |
+| F5:15        | `(file-level record)`; `independent`                            | [src/digitalmodel/infrastructure/templates/api_std_2rd_template.yml:L1-L361]                        |
+| F5:16        | `(file-level record)`; `independent`                            | [src/digitalmodel/materials/grades.py:L1-L448]                                                      |
+| F5:17        | `(file-level record)`; `independent`                            | [src/digitalmodel/orcaflex/mooring_design.py:L1-L717]                                               |
+| F5:18        | `MooringLineSegment`; `independent`                             | [src/digitalmodel/orcaflex/mooring_design.py:L343-L347]                                             |
+| F5:19        | `MooringLineDesign.estimate_catenary`; `independent`            | [src/digitalmodel/orcaflex/mooring_design.py:L385-L403]                                             |
+| F5:20        | `MooringLineDesign.check_mbl`; `independent`                    | [src/digitalmodel/orcaflex/mooring_design.py:L405-L419]                                             |
+| F5:21        | `MooringLineDesign.check_mbl_with_safety_factor`; `independent` | [src/digitalmodel/orcaflex/mooring_design.py:L522-L564]                                             |
+| F5:22        | `(file-level record)`; `independent`                            | [src/digitalmodel/orcaflex/riser_config.py:L1-L462]                                                 |
+| F5:23        | `RiserPipeProperties.steel_mass_per_m`; `independent`           | [src/digitalmodel/orcaflex/riser_config.py:L111-L113]                                               |
+| F5:24        | `RiserPipeProperties.bending_stiffness`; `independent`          | [src/digitalmodel/orcaflex/riser_config.py:L140-L144]                                               |
+| F5:25        | `RiserPipeProperties.axial_stiffness`; `independent`            | [src/digitalmodel/orcaflex/riser_config.py:L147-L150]                                               |
+| F5:26        | `(file-level record)`; `independent`                            | [src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py:L1-L314]          |
+| F5:27        | `(file-level record)`; `independent`                            | `[src/digitalmodel/structural/analysis/__init__.py:L1-L80]`                                         |
+| F5:28        | `check`; `independent`                                          | [src/digitalmodel/structural/analysis/cli.py:L83-L161]                                              |
+| F5:29        | `sweep`; `independent`                                          | [src/digitalmodel/structural/analysis/cli.py:L199-L249]                                             |
+| F5:30        | `phases`; `independent`                                         | [src/digitalmodel/structural/analysis/cli.py:L273-L325]                                             |
+| F5:31        | `list_grades`; `independent`                                    | [src/digitalmodel/structural/analysis/cli.py:L329-L342]                                             |
+| F5:32        | `lookup`; `independent`                                         | [src/digitalmodel/structural/analysis/cli.py:L366-L411]                                             |
+| F5:33        | `(file-level record)`; `independent`                            | [src/digitalmodel/structural/analysis/wall_thickness_parametric.py:L1-L575]                         |
+| F5:34        | `ParametricSweep.run`; `independent`                            | [src/digitalmodel/structural/analysis/wall_thickness_parametric.py:L66-L147]                        |
+| F5:35        | `(file-level record)`; `independent`                            | [src/digitalmodel/subsea/catenary_riser/models.py:L1-L460]                                          |
+| F5:36        | `(file-level record)`; `independent`                            | [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L1-L781]                                     |
+| F5:37        | `WallThicknessSizingWorkflow.run`; `independent`                | [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L279-L355]                          |
+| F5:38        | `(file-level record)`; `independent`                            | [src/digitalmodel/well/tubulars/casing_design.py:L1-L715]                                           |
+| F5:39        | `(file-level record)`; `test_helper`                            | [tests/fixtures/test_vectors/mooring_risers/riser_material_properties.yaml:L1-L70]                  |
 
 #### F6 — `dnv-rp-e305-on-bottom-stability`
 
-Source: digitalmodel, *Implementation map*, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `dnv-rp-e305-on-bottom-stability`, 22 records.
+Source: digitalmodel, _Implementation map_, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `dnv-rp-e305-on-bottom-stability`, 22 records.
 
-| Source entry | Symbol / inventory relation | Location at code pin |
-| --- | --- | --- |
-| F6:1 | `_annulus`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L81-L82] |
-| F6:2 | `weight_build_up`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L85-L108] |
-| F6:3 | `dimensionless_ratios`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L183-L191] |
-| F6:4 | `_phase_demand`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L194-L205] |
-| F6:5 | `evaluate_case`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L208-L241] |
-| F6:6 | `diameter_averaged_current`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L244-L257] |
-| F6:7 | `_forward_margin`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L293-L306] |
-| F6:8 | `_table`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_tables.py:L88-L110] |
-| F6:9 | `load_tables`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_tables.py:L152-L175] |
-| F6:10 | `_segment`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L80-L95] |
-| F6:11 | `_write_outputs`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L116-L127] |
-| F6:12 | `router`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L130-L164] |
-| F6:13 | `lateral_stability_check`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L291-L360] |
-| F6:14 | `check_lateral_stability`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L363-L395] |
-| F6:15 | `check_vertical_stability`; `independent` | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L398-L429] |
-| F6:16 | `run_on_bottom_stability`; `independent` | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L71] |
-| F6:17 | `make_synthetic_tables`; `test_helper` | [tests/subsea/on_bottom_stability/synthetic_e305_tables.py:L9-L27] |
-| F6:18 | `synthetic_workbook_and_map`; `test_helper` | [tests/subsea/on_bottom_stability/test_e305_fixture.py:L21-L49] |
-| F6:19 | `test_synthetic_workbook_conversion_is_external_cached_and_reproducible`; `test_helper` | [tests/subsea/on_bottom_stability/test_e305_fixture.py:L52-L89] |
-| F6:20 | `configuration`; `test_helper` | [tests/subsea/on_bottom_stability/test_e305_workflow.py:L24-L28] |
-| F6:21 | `table_configuration`; `test_helper` | [tests/subsea/on_bottom_stability/test_e305_workflow.py:L111-L127] |
-| F6:22 | `TestSubmergedWeight.test_bare_pipe`; `test_helper` | [tests/subsea/pipeline/test_on_bottom_stability.py:L104-L114] |
+| Source entry | Symbol / inventory relation                                                             | Location at code pin                                                       |
+| ------------ | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| F6:1         | `_annulus`; `independent`                                                               | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L81-L82]   |
+| F6:2         | `weight_build_up`; `independent`                                                        | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L85-L108]  |
+| F6:3         | `dimensionless_ratios`; `independent`                                                   | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L183-L191] |
+| F6:4         | `_phase_demand`; `independent`                                                          | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L194-L205] |
+| F6:5         | `evaluate_case`; `independent`                                                          | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L208-L241] |
+| F6:6         | `diameter_averaged_current`; `independent`                                              | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L244-L257] |
+| F6:7         | `_forward_margin`; `independent`                                                        | [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L293-L306] |
+| F6:8         | `_table`; `independent`                                                                 | [src/digitalmodel/subsea/on_bottom_stability/e305_tables.py:L88-L110]      |
+| F6:9         | `load_tables`; `independent`                                                            | [src/digitalmodel/subsea/on_bottom_stability/e305_tables.py:L152-L175]     |
+| F6:10        | `_segment`; `independent`                                                               | [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L80-L95]     |
+| F6:11        | `_write_outputs`; `independent`                                                         | [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L116-L127]   |
+| F6:12        | `router`; `independent`                                                                 | [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L130-L164]   |
+| F6:13        | `lateral_stability_check`; `independent`                                                | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L291-L360]      |
+| F6:14        | `check_lateral_stability`; `independent`                                                | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L363-L395]      |
+| F6:15        | `check_vertical_stability`; `independent`                                               | [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L398-L429]      |
+| F6:16        | `run_on_bottom_stability`; `independent`                                                | [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L71]           |
+| F6:17        | `make_synthetic_tables`; `test_helper`                                                  | [tests/subsea/on_bottom_stability/synthetic_e305_tables.py:L9-L27]         |
+| F6:18        | `synthetic_workbook_and_map`; `test_helper`                                             | [tests/subsea/on_bottom_stability/test_e305_fixture.py:L21-L49]            |
+| F6:19        | `test_synthetic_workbook_conversion_is_external_cached_and_reproducible`; `test_helper` | [tests/subsea/on_bottom_stability/test_e305_fixture.py:L52-L89]            |
+| F6:20        | `configuration`; `test_helper`                                                          | [tests/subsea/on_bottom_stability/test_e305_workflow.py:L24-L28]           |
+| F6:21        | `table_configuration`; `test_helper`                                                    | [tests/subsea/on_bottom_stability/test_e305_workflow.py:L111-L127]         |
+| F6:22        | `TestSubmergedWeight.test_bare_pipe`; `test_helper`                                     | [tests/subsea/pipeline/test_on_bottom_stability.py:L104-L114]              |
 
 #### F7 — `linear-wave-kinematics`
 
-Source: digitalmodel, *Implementation map*, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `linear-wave-kinematics`, 17 records.
+Source: digitalmodel, _Implementation map_, revision `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`, family `linear-wave-kinematics`, 17 records.
 
-| Source entry | Symbol / inventory relation | Location at code pin |
-| --- | --- | --- |
-| F7:1 | `wavenumbers`; `independent` | [src/digitalmodel/hydrodynamics/diffraction/analytical_cylinder.py:L117-L154] |
-| F7:2 | `wavenumbers.propagating`; `independent` | [src/digitalmodel/hydrodynamics/diffraction/analytical_cylinder.py:L133-L134] |
-| F7:3 | `wave_number`; `independent` | [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L30-L90] |
-| F7:4 | `wavenumber`; `independent` | [src/digitalmodel/motion_forecast/reconstruct.py:L25-L65] |
-| F7:5 | `wavenumber.f`; `independent` | [src/digitalmodel/motion_forecast/reconstruct.py:L42-L43] |
-| F7:6 | `dispersion_wavenumber`; `independent` | [src/digitalmodel/solvers/openfoam/validation/wave_tank.py:L61-L94] |
-| F7:7 | `_solve_dispersion`; `independent` | [src/digitalmodel/solvers/openfoam/wave_models.py:L240-L284] |
-| F7:8 | `solve_dispersion`; `independent` | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L147-L191] |
-| F7:9 | `velocity_transfer`; `independent` | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L198-L235] |
-| F7:10 | `test_propagating_root_satisfies_dispersion_relation`; `test_helper` | [tests/hydrodynamics/diffraction/test_analytical_cylinder.py:L48-L55] |
-| F7:11 | `TestWaveNumber.test_deep_water_limit`; `test_helper` | [tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py:L34-L39] |
-| F7:12 | `TestWaveNumber.test_dispersion_relation_satisfied`; `test_helper` | [tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py:L64-L71] |
-| F7:13 | `TestWaveNumber.test_scalar_input`; `test_helper` | [tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py:L73-L77] |
-| F7:14 | `test_finite_depth_wavenumber_reduces_to_deep`; `test_helper` | [tests/motion_forecast/test_reconstruct.py:L66-L70] |
-| F7:15 | `test_finite_depth_dispersion_holds_in_shallow_water`; `test_helper` | [tests/motion_forecast/test_reconstruct.py:L75-L82] |
-| F7:16 | `test_dispersion_satisfies_relation`; `test_helper` | [tests/solvers/openfoam/validation/test_wave_tank.py:L48-L57] |
-| F7:17 | `test_dispersion_deep_water_limit`; `test_helper` | [tests/solvers/openfoam/validation/test_wave_tank.py:L60-L66] |
+| Source entry | Symbol / inventory relation                                          | Location at code pin                                                               |
+| ------------ | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| F7:1         | `wavenumbers`; `independent`                                         | [src/digitalmodel/hydrodynamics/diffraction/analytical_cylinder.py:L117-L154]      |
+| F7:2         | `wavenumbers.propagating`; `independent`                             | [src/digitalmodel/hydrodynamics/diffraction/analytical_cylinder.py:L133-L134]      |
+| F7:3         | `wave_number`; `independent`                                         | [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L30-L90] |
+| F7:4         | `wavenumber`; `independent`                                          | [src/digitalmodel/motion_forecast/reconstruct.py:L25-L65]                          |
+| F7:5         | `wavenumber.f`; `independent`                                        | [src/digitalmodel/motion_forecast/reconstruct.py:L42-L43]                          |
+| F7:6         | `dispersion_wavenumber`; `independent`                               | [src/digitalmodel/solvers/openfoam/validation/wave_tank.py:L61-L94]                |
+| F7:7         | `_solve_dispersion`; `independent`                                   | [src/digitalmodel/solvers/openfoam/wave_models.py:L240-L284]                       |
+| F7:8         | `solve_dispersion`; `independent`                                    | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L147-L191]            |
+| F7:9         | `velocity_transfer`; `independent`                                   | [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L198-L235]            |
+| F7:10        | `test_propagating_root_satisfies_dispersion_relation`; `test_helper` | [tests/hydrodynamics/diffraction/test_analytical_cylinder.py:L48-L55]              |
+| F7:11        | `TestWaveNumber.test_deep_water_limit`; `test_helper`                | [tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py:L34-L39]       |
+| F7:12        | `TestWaveNumber.test_dispersion_relation_satisfied`; `test_helper`   | [tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py:L64-L71]       |
+| F7:13        | `TestWaveNumber.test_scalar_input`; `test_helper`                    | [tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py:L73-L77]       |
+| F7:14        | `test_finite_depth_wavenumber_reduces_to_deep`; `test_helper`        | [tests/motion_forecast/test_reconstruct.py:L66-L70]                                |
+| F7:15        | `test_finite_depth_dispersion_holds_in_shallow_water`; `test_helper` | [tests/motion_forecast/test_reconstruct.py:L75-L82]                                |
+| F7:16        | `test_dispersion_satisfies_relation`; `test_helper`                  | [tests/solvers/openfoam/validation/test_wave_tank.py:L48-L57]                      |
+| F7:17        | `test_dispersion_deep_water_limit`; `test_helper`                    | [tests/solvers/openfoam/validation/test_wave_tank.py:L60-L66]                      |
 
 ## 10. Coverage and open items
 
 ### Reading and test coverage
 
-Main-path reading covered the router, pressure functions/workflow, free-span facade and helpers, Hobbs models/equilibrium, legacy buckling/thermal/common helpers, installation bending, rectification, pressure loss, sizing and calculation utilities; the citations below identify the read surfaces without claiming full design qualification. [src/digitalmodel/subsea/pipeline/pipeline.py:L19-L42] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L160-L202] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L35-L87] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L279-L355] [src/digitalmodel/subsea/pipeline/free_span/__init__.py:L81-L145] [src/digitalmodel/subsea/pipeline/global_buckling/models.py:L73-L179] [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L95-L156] [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L94-L194] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L107-L149] [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21] [src/digitalmodel/subsea/pipeline/buckling_common.py:L43-L109] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L19-L106] [src/digitalmodel/subsea/pipeline/span_rectification.py:L30-L102] [src/digitalmodel/subsea/pipeline/pressure_loss.py:L39-L174] [src/digitalmodel/subsea/pipeline/pipe_sizing.py:L20-L69] [src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:L122-L193] [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L28-L74]
+Main-path reading covered the router, pressure functions/workflow, free-span facade and helpers, Hobbs models/equilibrium, legacy buckling/thermal/common helpers, installation bending, rectification, pressure loss, sizing and calculation utilities; the citations below identify the read surfaces without claiming full design qualification. [src/digitalmodel/subsea/pipeline/pipeline.py:L19-L42] [src/digitalmodel/subsea/pipeline/pipeline_pressure.py:L160-L202] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L35-L87] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L279-L355] `[src/digitalmodel/subsea/pipeline/free_span/__init__.py:L81-L145]` [src/digitalmodel/subsea/pipeline/global_buckling/models.py:L73-L179] [src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:L95-L156] [src/digitalmodel/subsea/pipeline/lateral_buckling.py:L94-L194] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L107-L149] [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21] [src/digitalmodel/subsea/pipeline/buckling_common.py:L43-L109] [src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:L19-L106] [src/digitalmodel/subsea/pipeline/span_rectification.py:L30-L102] [src/digitalmodel/subsea/pipeline/pressure_loss.py:L39-L174] [src/digitalmodel/subsea/pipeline/pipe_sizing.py:L20-L69] [src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:L122-L193] [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L28-L74]
 
 Additional helper reading: `span_natural_frequency`, `span_onset_screening`, `span_viv_response`, `span_fatigue_damage`, `span_allowable_length`, `_bilinear_sn`, `wave_velocity`, `weibull_current` and `integrity_workflows`; these are operational coverage, not claims of independent validation. [src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:L83-L151] [src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:L55-L134] [src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:L138-L172] [src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:L79-L136] [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L67-L124] [src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:L170-L237] [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L269-L359] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L130-L253] [src/digitalmodel/subsea/pipeline/integrity_workflows.py:L7-L112]
 
-Offline result metadata at the code pin: the directory command collected/executed 225 tests and passed all 225, with zero failed/skipped; explicitly naming the excluded file collected zero items and produced one collection error, leaving its 16 statically identified nodes NOT_RUN. The supplemental rectification node passed before and after the final documentation edits; calculation and test files were unchanged.
+Offline result metadata at the code pin: the directory command collected/executed 225 tests and passed all 225, with zero failed/skipped; explicitly naming the excluded file collected zero items and produced one collection error, leaving its 16 statically identified nodes ERROR (collection, ModuleNotFoundError). The supplemental rectification node passed before and after the final documentation edits; calculation and test files were unchanged.
 
 Generic form used: `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`; no addopts override. Baseline and after results are recorded separately below; the explicit excluded-file attempt has the identical missing-module error in both runs.
 
-| Package test file | Baseline passed | After passed | Other result |
-| --- | --- | --- | --- |
-| `test_api_rp_1111.py` | 9 | 9 | [tests/subsea/pipeline/test_api_rp_1111.py:L1-L139] |
-| `test_api_rp_1111_installation.py` | 7 | 7 | [tests/subsea/pipeline/test_api_rp_1111_installation.py:L1-L64] |
-| `test_free_span_f105.py` | 41 | 41 | [tests/subsea/pipeline/test_free_span_f105.py:L1-L468] |
-| `test_hobbs_lateral_buckling.py` | 46 | 46 | [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L1-L362] |
-| `test_pipeline.py` | 1 | 1 | [tests/subsea/pipeline/test_pipeline.py:L1-L35] |
-| `test_pipeline_lateral_buckling.py` | 1 | 1 | [tests/subsea/pipeline/test_pipeline_lateral_buckling.py:L1-L53] |
-| `test_pipeline_pressure.py` | 116 | 116 | [tests/subsea/pipeline/test_pipeline_pressure.py:L1-L1036] |
-| `test_pipeline_pressure_loss.py` | 1 | 1 | [tests/subsea/pipeline/test_pipeline_pressure_loss.py:L1-L53] |
-| `test_pipeline_upheaval_buckling.py` | 1 | 1 | [tests/subsea/pipeline/test_pipeline_upheaval_buckling.py:L1-L53] |
-| `test_pressure_loss_benchmark.py` | 2 | 2 | [tests/subsea/pipeline/test_pressure_loss_benchmark.py:L1-L34] |
+| Package test file                    | Baseline passed | After passed | Other result                                                      |
+| ------------------------------------ | --------------- | ------------ | ----------------------------------------------------------------- |
+| `test_api_rp_1111.py`                | 9               | 9            | [tests/subsea/pipeline/test_api_rp_1111.py:L1-L139]               |
+| `test_api_rp_1111_installation.py`   | 7               | 7            | [tests/subsea/pipeline/test_api_rp_1111_installation.py:L1-L64]   |
+| `test_free_span_f105.py`             | 41              | 41           | [tests/subsea/pipeline/test_free_span_f105.py:L1-L468]            |
+| `test_hobbs_lateral_buckling.py`     | 46              | 46           | [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L1-L362]    |
+| `test_pipeline.py`                   | 1               | 1            | [tests/subsea/pipeline/test_pipeline.py:L1-L35]                   |
+| `test_pipeline_lateral_buckling.py`  | 1               | 1            | [tests/subsea/pipeline/test_pipeline_lateral_buckling.py:L1-L53]  |
+| `test_pipeline_pressure.py`          | 116             | 116          | [tests/subsea/pipeline/test_pipeline_pressure.py:L1-L1036]        |
+| `test_pipeline_pressure_loss.py`     | 1               | 1            | [tests/subsea/pipeline/test_pipeline_pressure_loss.py:L1-L53]     |
+| `test_pipeline_upheaval_buckling.py` | 1               | 1            | [tests/subsea/pipeline/test_pipeline_upheaval_buckling.py:L1-L53] |
+| `test_pressure_loss_benchmark.py`    | 2               | 2            | [tests/subsea/pipeline/test_pressure_loss_benchmark.py:L1-L34]    |
 
 All test-file counts are execution metadata rather than a coverage percentage; the 16 excluded definitions do not become executed tests by static counting. [tests/conftest.py:L8-L21] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34]
 
 ### Excluded pipeline tests
 
-Exclusion: `tests/conftest.py` explicitly ignores `subsea/pipeline/test_on_bottom_stability.py`; `pytest.ini` has no pipeline-package `norecursedirs` entry. Every node below is NOT_RUN because the explicit-file attempt raises the missing-module error before executing a test; issue #1923 covers migration to the canonical interface. [tests/conftest.py:L8-L21] [pytest.ini:L3-L18] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34]
+Exclusion: `tests/conftest.py` explicitly ignores `subsea/pipeline/test_on_bottom_stability.py`; `pytest.ini` has no pipeline-package `norecursedirs` entry. Every node below is ERROR (collection, ModuleNotFoundError) because the explicit-file attempt raises the missing-module error before executing a test; issue #1923 covers migration to the canonical interface. [tests/conftest.py:L8-L21] [pytest.ini:L3-L18] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34]
 
-| Excluded node | Definition | Exclusion |
-| --- | --- | --- |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestPeakCombinedVelocity::test_basic` | [tests/subsea/pipeline/test_on_bottom_stability.py:L61-L62] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestPeakCombinedVelocity::test_zero_current` | [tests/subsea/pipeline/test_on_bottom_stability.py:L64-L65] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestPeakCombinedVelocity::test_zero_wave` | [tests/subsea/pipeline/test_on_bottom_stability.py:L67-L68] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestDragForce::test_scenario_1` | [tests/subsea/pipeline/test_on_bottom_stability.py:L72-L78] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestLiftForce::test_scenario_1` | [tests/subsea/pipeline/test_on_bottom_stability.py:L82-L88] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestInertiaForce::test_scenario_1` | [tests/subsea/pipeline/test_on_bottom_stability.py:L92-L100] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestSubmergedWeight::test_bare_pipe` | [tests/subsea/pipeline/test_on_bottom_stability.py:L104-L114] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestSubmergedWeight::test_with_concrete_coating` | [tests/subsea/pipeline/test_on_bottom_stability.py:L116-L122] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestKeuleganCarpenter::test_scenario_1` | [tests/subsea/pipeline/test_on_bottom_stability.py:L126-L129] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestCurrentVelocityRatio::test_scenario_1` | [tests/subsea/pipeline/test_on_bottom_stability.py:L133-L135] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestGeneralizedStabilityNumber::test_bare_pipe` | [tests/subsea/pipeline/test_on_bottom_stability.py:L139-L145] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestRequiredStabilityNumber::test_kc_37_m_05` | [tests/subsea/pipeline/test_on_bottom_stability.py:L149-L154] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestStabilityCheck::test_fail_scenario_1` | [tests/subsea/pipeline/test_on_bottom_stability.py:L158-L167] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestStabilityCheck::test_pass_scenario_2` | [tests/subsea/pipeline/test_on_bottom_stability.py:L169-L178] | [tests/conftest.py:L20-L20] |
+| Excluded node                                                                                             | Definition                                                    | Exclusion                   |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | --------------------------- |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestPeakCombinedVelocity::test_basic`                 | [tests/subsea/pipeline/test_on_bottom_stability.py:L61-L62]   | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestPeakCombinedVelocity::test_zero_current`          | [tests/subsea/pipeline/test_on_bottom_stability.py:L64-L65]   | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestPeakCombinedVelocity::test_zero_wave`             | [tests/subsea/pipeline/test_on_bottom_stability.py:L67-L68]   | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestDragForce::test_scenario_1`                       | [tests/subsea/pipeline/test_on_bottom_stability.py:L72-L78]   | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestLiftForce::test_scenario_1`                       | [tests/subsea/pipeline/test_on_bottom_stability.py:L82-L88]   | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestInertiaForce::test_scenario_1`                    | [tests/subsea/pipeline/test_on_bottom_stability.py:L92-L100]  | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestSubmergedWeight::test_bare_pipe`                  | [tests/subsea/pipeline/test_on_bottom_stability.py:L104-L114] | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestSubmergedWeight::test_with_concrete_coating`      | [tests/subsea/pipeline/test_on_bottom_stability.py:L116-L122] | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestKeuleganCarpenter::test_scenario_1`               | [tests/subsea/pipeline/test_on_bottom_stability.py:L126-L129] | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestCurrentVelocityRatio::test_scenario_1`            | [tests/subsea/pipeline/test_on_bottom_stability.py:L133-L135] | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestGeneralizedStabilityNumber::test_bare_pipe`       | [tests/subsea/pipeline/test_on_bottom_stability.py:L139-L145] | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestRequiredStabilityNumber::test_kc_37_m_05`         | [tests/subsea/pipeline/test_on_bottom_stability.py:L149-L154] | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestStabilityCheck::test_fail_scenario_1`             | [tests/subsea/pipeline/test_on_bottom_stability.py:L158-L167] | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestStabilityCheck::test_pass_scenario_2`             | [tests/subsea/pipeline/test_on_bottom_stability.py:L169-L178] | [tests/conftest.py:L20-L20] |
 | `tests/subsea/pipeline/test_on_bottom_stability.py::TestFullStabilityAssessment::test_pass_with_concrete` | [tests/subsea/pipeline/test_on_bottom_stability.py:L182-L198] | [tests/conftest.py:L20-L20] |
-| `tests/subsea/pipeline/test_on_bottom_stability.py::TestFullStabilityAssessment::test_fail_bare_pipe` | [tests/subsea/pipeline/test_on_bottom_stability.py:L200-L215] | [tests/conftest.py:L20-L20] |
+| `tests/subsea/pipeline/test_on_bottom_stability.py::TestFullStabilityAssessment::test_fail_bare_pipe`     | [tests/subsea/pipeline/test_on_bottom_stability.py:L200-L215] | [tests/conftest.py:L20-L20] |
 
-The broader workflow integration directory is also excluded by `norecursedirs`; the following files contain physical pipeline analysis fixtures or calls and remain outside the selected package run (#1923/#1817). This is a discovery gap, not an assertion that these tests fail. [pytest.ini:L12-L15] [tests/workflows/integration/test_full_pipeline_workflow.py:L26-L55] [tests/workflows/integration/test_multi_module_interaction.py:L41-L87]
+The broader workflow integration directory is also excluded by `norecursedirs`; the following files contain mocked workflow tests that do not exercise this package and remain outside the selected package run (#1923/#1817). This is a discovery gap, not an assertion that these tests fail. [pytest.ini:L12-L15] [tests/workflows/integration/test_full_pipeline_workflow.py:L26-L55] [tests/workflows/integration/test_multi_module_interaction.py:L41-L87]
 
 Excluded file `tests/workflows/integration/test_full_pipeline_workflow.py`; 9 test definitions, not executed in the selected package run; exclusion [pytest.ini:L15-L15].
 
@@ -1347,16 +1348,16 @@ Excluded file `tests/workflows/integration/test_template_validation.py`; 9 test 
 
 ### Open-item register
 
-| Item | Evidence / remaining work | Responsible role and issue |
-| --- | --- | --- |
-| O1 — UNVERIFIED standard qualification | The section-3 claim covers unresolved editions/clauses and Citation sidecars; F109 edition drift is concrete, and F105 helper editions remain ambiguous; no licensed copies were read. [docs/domains/pipelines/_design.md:L7-L14] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L7] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L16-L18] | Calculation maintainer; #1813, #1835, #1817 |
-| O2 — Independent engineering examples | V1/V2 qualify geometry/arithmetic only; published Hobbs and standard-annex benchmarks remain absent; pressure-loss retained outputs are assumed, based on previous experience. [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L13-L15] [tests/subsea/pipeline/test_pressure_loss_benchmark.py:L4-L8] | Calculation maintainer; #1817, #1835 |
-| O3 — Excluded tests | All 16 package nodes listed above fail collection at the stale import; broader excluded integration definitions are listed separately. [tests/conftest.py:L20-L20] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34] [pytest.ini:L15-L15] | Test maintainer; #1923 |
-| O4 — Collapse equation residual | G2-C5 fails; pipeline collapse must not be a hand-check reference. [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L64-L87] | Calculation maintainer; issue pending (1) |
-| O5 — Static-span boundary conditions | G2-C6 fails; allowable span requires boundary-condition correction/qualification before design use. [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L95] | Calculation maintainer; issue pending (2) |
-| O6 — Incomplete thermal/upheaval route | Missing methods, unfinished eigenvalue work and zero-default download can conceal incomplete assessment. [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L88-L149] | Calculation maintainer; issue pending (3) |
-| O7 — UNVERIFIED dependency qualification | Section 9 lists all supplemental map records and observed alternative paths; complete inventory rows, supported versions, equivalence across pressure/stress implementations and full legacy-unit qualification remain open. [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L163-L229] [src/digitalmodel/subsea/pipeline/pipe_sizing.py:L71-L111] | Calculation maintainer; #1817 |
-| O8 — Metocean helper qualification | JONSWAP normalization defect is recorded; wave/current helper tests beyond the selected package run and detailed parameter-domain validation remain open. [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L129-L140] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L84-L106] | Calculation maintainer; #2543, #1817 |
-| O9 — Clearance and durable evidence | Input digests and local execution records support this draft; signed family gates, complete report appendices and production-design approval are not established by wrapper/regression passes. [tests/subsea/pipeline/test_pipeline_lateral_buckling.py:L16-L34] [tests/subsea/pipeline/test_pipeline_upheaval_buckling.py:L16-L34] | Calculation maintainer; #1817 |
+| Item                                     | Evidence / remaining work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Responsible role and issue                  |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| O1 — UNVERIFIED standard qualification   | The section-3 claim covers unresolved editions/clauses and Citation sidecars; F109 edition drift is concrete, and F105 helper editions remain ambiguous; no licensed copies were read. [docs/domains/pipelines/_design.md:L7-L14] [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L4-L7] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L16-L18]                                                                                                                                                                                           | Calculation maintainer; #1813, #1835, #1817 |
+| O2 — Independent engineering examples    | V1/V2 qualify geometry/arithmetic only; published Hobbs and standard-annex benchmarks remain absent; pressure-loss retained outputs are assumed, based on previous experience. [tests/subsea/pipeline/test_hobbs_lateral_buckling.py:L13-L15] [tests/subsea/pipeline/test_pressure_loss_benchmark.py:L4-L8]                                                                                                                                                                                                                                                           | Calculation maintainer; #1817, #1835        |
+| O3 — Excluded tests                      | All 16 package nodes listed above fail collection at the stale import; broader excluded integration definitions are listed separately. [tests/conftest.py:L20-L20] [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L34] [pytest.ini:L15-L15]                                                                                                                                                                                                                                                                                                                   | Test maintainer; #1923                      |
+| O4 — Collapse equation residual          | G2-C5 fails on default ovality and overstates capacity; `dnv_external_collapse_check`, `dnv_combined_loading_check` and the workflow `dnv_external_collapse` output consume the result; do not use DNV collapse or combined-loading outputs from this package until fixed. [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L35-L87] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L123-L140] [src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:L256-L270] [src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:L336-L355] | Calculation maintainer; issue pending (1)   |
+| O5 — Static-span boundary conditions     | G2-C6 fails; allowable span requires boundary-condition correction/qualification before design use. [src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:L90-L95]                                                                                                                                                                                                                                                                                                                                                                                     | Calculation maintainer; issue pending (2)   |
+| O6 — Incomplete thermal/upheaval route   | Missing methods, unfinished eigenvalue work and zero-default download can conceal incomplete assessment. [src/digitalmodel/subsea/pipeline/thermal_buckling.py:L13-L21] [src/digitalmodel/subsea/pipeline/upheaval_buckling.py:L88-L149]                                                                                                                                                                                                                                                                                                                              | Calculation maintainer; issue pending (3)   |
+| O7 — UNVERIFIED dependency qualification | Section 9 lists all supplemental map records and observed alternative paths; complete inventory rows, supported versions, equivalence across pressure/stress implementations and full legacy-unit qualification remain open. [src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:L163-L229] [src/digitalmodel/subsea/pipeline/pipe_sizing.py:L71-L111]                                                                                                                                                                                              | Calculation maintainer; #1817               |
+| O8 — Metocean helper qualification       | JONSWAP normalization defect is recorded; wave/current helper tests beyond the selected package run and detailed parameter-domain validation remain open. [src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:L129-L140] [src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:L84-L106]                                                                                                                                                                                                                                                            | Calculation maintainer; #2543, #1817        |
+| O9 — Clearance and durable evidence      | Input digests and local execution records support this draft; signed family gates, complete report appendices and production-design approval are not established by wrapper/regression passes. [tests/subsea/pipeline/test_pipeline_lateral_buckling.py:L16-L34] [tests/subsea/pipeline/test_pipeline_upheaval_buckling.py:L16-L34]                                                                                                                                                                                                                                   | Calculation maintainer; #1817               |
 
 The calculation-citation contract was readable; no private repository was read and no client-derived values or sidecar entries are included. The public pack is limited to repository code, synthetic tests and calculation evidence.
