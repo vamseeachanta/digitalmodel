@@ -120,6 +120,10 @@ modules:
     owner_wiki: docs/domains/hydrodynamics/
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
+    submodules:
+      diffraction:
+        agent_pack: src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md
+        qa_family: diffraction
   - module: infrastructure
     entry_point: src/digitalmodel/infrastructure/
     maturity: beta
