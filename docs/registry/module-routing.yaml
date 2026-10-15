@@ -254,6 +254,8 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#signal_processing
   - module: solvers
     entry_point: src/digitalmodel/solvers/
+    agent_pack: src/digitalmodel/solvers/openfoam/docs/agent-pack.md
+    qa_family: CF
     maturity: beta
     owner_wiki: docs/domains/solvers/
     key_tests: [tests/solvers/]
