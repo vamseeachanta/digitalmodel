@@ -9,9 +9,31 @@ import textwrap
 from pathlib import Path
 
 import yaml
+import pytest
 
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domains.py"
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("docs/registry/module-routing.yaml", {"contracts", "workflows", "subsea"}),
+        ("docs/maps/example.md", {"contracts"}),
+        ("src/digitalmodel/solvers/orcaflex/docs/agent-pack.md",
+         {"contracts", "orcaflex-solver"}),
+        ("src/digitalmodel/cathodic_protection/docs/agent-pack.md",
+         {"contracts", "cathodic-protection"}),
+        ("src/digitalmodel/weather_window/docs/x.md", None),
+        ("src/digitalmodel/subsea/docs/example.py", None),
+        ("src/digitalmodel/unknown/docs/example.md", None),
+    ],
+)
+def test_documentation_routes(path: str, expected: set[str] | None) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    assert selected == (expected if expected is not None else {d.name for d in domains})
 
 
 def load_detector_module():
