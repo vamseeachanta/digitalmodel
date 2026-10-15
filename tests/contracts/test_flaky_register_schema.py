@@ -13,7 +13,7 @@ def test_flaky_register_schema():
     path = Path(__file__).resolve().parents[2] / ".github/ci/flaky-register.yml"
     assert path.is_file()
     rows = yaml.safe_load(path.read_text())
-    assert isinstance(rows, list) and len(rows) == 2
+    assert isinstance(rows, list) and rows
     assert len({row["id"] for row in rows}) == len(rows)
     for row in rows:
         assert set(row) == {"id", "kind", "first_seen", "last_seen", "evidence", "cause", "fix_issue", "status"}

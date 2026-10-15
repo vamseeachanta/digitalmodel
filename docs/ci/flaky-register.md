@@ -1,29 +1,44 @@
 # Flaky register
 
-The daily main-health loop adds entries from `flaky-*.json` artifacts and evidenced same-tree mismatches through a pull request; entries close with the merged fix pull request recorded in `fix_issue`.
+The planned daily main-health loop will propose entries from retry artifacts
+and evidenced same-tree mismatches through a pull request. That automation is
+not part of this change. Entries close with the merged fix recorded in `fix_issue`.
 
-The register is informational: it never selects tests or changes gate conclusions.
-Each entry records a unique test or command ID, kind, first and last observation
-dates, nonempty run evidence, cause (including uncertainty), fix pull request
-number or `pending`, and `open` or `fixed` status.
+The register never deselects or skips a test. In enforce mode, a retry-recovered
+test ID can clear only when its register entry has `status: open` and a nonempty
+`evidence` list. Missing, fixed, empty or unreadable entries keep the shard red.
+Each entry records a unique ID, kind, first and last observation dates, run
+evidence, cause (including uncertainty), fix reference or `pending`, and status.
 
-`scripts/ci/run_shard.py --shard NAME --junit reports/junit-NAME.xml --max-retry-ids 20 -- COMMAND`
-runs the original command unchanged. After exit 1, a fresh parsed JUnit report
-with collected tests and 1 to 20 failed or errored IDs permits one retry with
-the original non-path flags. Collection errors, timeouts, incomplete evidence
-and larger failure sets remain red. Exit 5 is propagated unchanged. A retry
-must report every requested ID passing and exit zero to clear the shard.
-Recovered IDs leave warnings and a JSON record containing the first failure
-message (at most 500 characters), commit, run ID and observed CPU model.
-Both attempts retain their full console output and separate JUnit reports.
+`scripts/ci/run_shard.py --mode report --shard NAME --junit reports/junit-NAME.xml --max-retry-ids 20 -- COMMAND`
+runs the original command unchanged. Report mode is the default: it always
+returns the first attempt's exit code, even if a diagnostic retry passes with
+register evidence. Only the `orcaflex` shard uses the wrapper in the domain gate
+and full sweep. Other shards run their direct commands; contracts never retry.
+Widening the pilot and selecting enforce mode are separate changes after a week
+of report-mode observations.
 
-`--signal-retry` retries a non-pytest command once after a signal exit (128 or
-above), excluding timeout and termination codes. Ordinary exits 1 to 127 are
-propagated without retry. `--decide-only --from-log LOG` reads cached hosted
-logs without executing their content; it requires a terminal exit code and
-collection evidence for test-ID decisions.
+After exit 1, a fresh parsed JUnit report with collected tests and 1 to 20 failed
+or errored IDs permits one retry with the original non-path flags. Collection
+errors, timeouts, incomplete evidence and larger sets are never retried. All
+non-retried exits retain their original codes, including 2, 3, 4, 5 and signals.
+Enforce mode requires a zero retry exit, every requested ID passing (no skips),
+and register evidence for every recovered ID before returning zero.
 
-The SCR case may remain red on a second attempt on the same runner; runner
-dependence is inferred from the observed floating-point differences. Retry
-eligibility is not evidence that a failure is transient. Code failures remain
-red after their retry. Signal retry does not establish the abort's cause.
+The retry record keeps each first-attempt failed ID and its first message (up
+to 500 characters per ID), recovered IDs, original exit, retry outcome, register
+decisions, commit, run ID and CPU model. Warnings and the job summary include
+each first failure even when the retry passes. Separate JUnit files preserve both
+attempts. Extraction carries `first_attempt_failed` and `recovered` into shard
+results. Comparison considers first failures from successful and failed shards,
+classifying each as pre-existing on fresh main evidence for the same shard and
+ID, registered with evidence after recovery, or NEW. The committed baseline mode
+remains `report`. Recovered IDs are excluded from open main-baseline failures.
+
+`--signal-retry` retains the separate Atlas behavior: it retries the whole
+command once after a signal exit (128 or above), excluding timeout and termination
+codes. Ordinary exits 1 to 127 propagate without retry. This path is independent
+of the pytest pilot mode. `--decide-only --from-log LOG` inspects cached hosted
+logs without executing their content. Neither an isolated pass nor a signal
+retry establishes a failure's cause; shared state and leftover files can also
+produce a retry pass. Register evidence remains a human decision.
