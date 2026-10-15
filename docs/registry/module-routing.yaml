@@ -294,6 +294,8 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
   - module: subsea
     entry_point: src/digitalmodel/subsea/
+    agent_pack: src/digitalmodel/subsea/pipeline/docs/agent-pack.md
+    qa_family: EC
     maturity: stable
     owner_wiki: docs/domains/subsea/
     key_tests: [tests/subsea/]
