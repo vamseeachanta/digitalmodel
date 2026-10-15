@@ -3,7 +3,7 @@
 - Module: `hydrodynamics/diffraction`
 - Repository: `digitalmodel`
 - Path: `src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md`
-- Pack revision: 0
+- Pack revision: 1
 - Code revision: `d921eedae7f527996d601c0c06959c5537fbc284`
 - Analysis family: diffraction (AQWA and OrcaWave)
 - Quality manager role: diffraction quality manager
@@ -50,7 +50,7 @@ AQWA motion phases are negated by `_build_rao_set`; the code describes conversio
 | Mean drift / QTF  | unit, wave-amplitude normalization, origin and phase convention UNVERIFIED (U3)                             | solve options name mean_drift, diagonal_qtf and full_qtf; unified export result has no such coefficient field | `[src/digitalmodel/hydrodynamics/diffraction/input_schemas.py:L509-L520]` `[src/digitalmodel/hydrodynamics/diffraction/output_schemas.py:L372-L391]`                                                                                                                                                                 |
 | Export files      | YAML references CSV; RAO CSV writes stored phases; added-mass/damping CSV carry per-term labels             | CSV, workbook and summary paths are returned by export_all                                                    | `[src/digitalmodel/hydrodynamics/diffraction/orcaflex_exporter.py:L49-L69]` `[src/digitalmodel/hydrodynamics/diffraction/orcaflex_exporter.py:L80-L100]` `[src/digitalmodel/hydrodynamics/diffraction/orcaflex_exporter.py:L145-L159]` `[src/digitalmodel/hydrodynamics/diffraction/orcaflex_exporter.py:L182-L196]` |
 
-The spreadsheet bridge copies supplied motion amplitudes/phases and labels rotations deg/m; absent coefficients produce zero-filled matrices. Provenance remains caller-supplied, with unknown as its default. Such arrays are not measured zero coefficients. `[src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py:L67-L99]` `[src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py:L115-L125]` `[src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py:L142-L215]`
+The spreadsheet bridge copies supplied motion amplitudes/phases and labels rotations deg/m. `[src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py:L115-L125]` Supplied coefficients use caller-supplied provenance, default `unknown`; absent coefficients yield zero 6×6 added-mass and damping matrices tagged `source="placeholder"`, rather than measured zero coefficients. `[src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py:L67-L99]` `[src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py:L143-L170]` `[src/digitalmodel/hydrodynamics/diffraction/orcawave_to_orcaflex.py:L196-L215]`
 
 Named conversion helpers implement kg↔tonnes, density and inertia scaling, Hz↔rad/s, period↔rad/s, and radians↔degrees; complex phase is `degrees(angle(value))`. `[src/digitalmodel/hydrodynamics/diffraction/diffraction_units.py:L21-L56]` `[src/digitalmodel/hydrodynamics/diffraction/diffraction_units.py:L63-L106]`
 
