@@ -46,7 +46,7 @@ and the [Open Source Drilling Community model](https://github.com/Open-Source-Dr
 | --- | --- |
 | R1 | Error: exactly one bit, at position 1; contiguous ascending positions. |
 | R2 | Error: near-bit stabilizer directly on the bit, count 1, bottom box. Either catalogue or assembly role triggers the rule. |
-| R3 | Error: body, maximum and blade OD shall not exceed hole size. |
+| R3 | Error: nominal bit OD shall match hole size; body, maximum and blade OD shall not exceed it (relative tolerance 1e-9 in metres). |
 | R4 | Error: collar, HWDP, drill-pipe types shall retain bit-up order; intervening tools are permitted. Incomplete strings are permitted. |
 | R5 | Error: each adjacent interface, including both sides of a crossover and repeated joints, requires equal thread labels and opposite genders. |
 | R6 | Error: every item shall reference a known component. |
@@ -68,10 +68,14 @@ The public loader refuses `CLIENT-PRIVATE` components and assemblies, including
 when their manifest is valid. Unknown classifications and fields also fail.
 Only fixed files are read, at most 1 MiB each; aliases, duplicate YAML keys,
 symlinks and unexpected files are refused. Errors do not echo row payloads.
-Exact connection spelling is required; aliases are not normalized.
+This synthetic slice supports exactly `NC46` and `NC50` connection labels;
+other labels and aliases are refused. This subset is not a connection standard
+or a catalogue of all available connections. The examples use equal nominal
+12-inch bit and hole diameters; wear and undergauge operation are not modelled.
 
 Held outside this PR: ISO 10424-1:2004 Table 14 rows and their PDF comparison
-record on `bha-iso-table14`, pending maintainer publication confirmation
-(intake row I-0204). No licensed PDF is retained in Git. API RP 7G weight-table
+record, held privately pending a publication decision. The former public
+standard-table branch has been removed; this slice has no dependency on it.
+No licensed PDF is retained in Git. API RP 7G weight-table
 comparison and a verified R7 margin clause remain OPEN. The public tests replace
 the held table-specific checks with synthetic schema and assembly checks.

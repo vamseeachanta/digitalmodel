@@ -1,4 +1,6 @@
 """Assembly errors R1–R6; weight advisory R7 is calculated separately."""
+from math import isclose
+
 from .loader import BhaDatabaseError
 from .schema import physical
 
@@ -21,12 +23,16 @@ def check_assembly(assembly, components):
         fail('R1', 'positions must be contiguous, ascending, bit at position 1')
     if parts[0].type != 'bit' or sum(c.type == 'bit' for c in parts) != 1 or items[0].count != 1:
         fail('R1', 'exactly one bit must occupy position 1')
+    hole_size = assembly.hole_size.to('m')
+    if not isclose(parts[0].od.to('m'), hole_size, rel_tol=1e-9):
+        fail('R3', 'nominal bit OD must match hole size')
     for index, (item, c) in enumerate(zip(items, parts)):
         if item.role == 'near_bit' or c.role == 'near_bit':
             if (c.type != 'stabilizer' or index != 1 or item.count != 1
                     or c.bottom_connection is None or c.bottom_connection.gender != 'box'):
                 fail('R2', 'near-bit stabilizer must sit directly on bit with bottom box')
-        if max(q.to('m') for q in (c.od, c.od_max, c.blade_od or c.od)) > assembly.hole_size.to('m'):
+        max_od = max(q.to('m') for q in (c.od, c.od_max, c.blade_od or c.od))
+        if max_od > hole_size and not isclose(max_od, hole_size, rel_tol=1e-9):
             fail('R3', 'component or blade OD exceeds hole size')
         if item.length_override:
             physical(item.length_override, 'm')

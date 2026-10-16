@@ -67,7 +67,7 @@ class Source(StrictModel):
 
 
 class Connection(StrictModel):
-    label: str = Field(pattern=r'^(NC(2[3-9]|[3-6][0-9]|7[0-7])|[678] 5/8 REG)$')
+    label: str = Field(pattern=r'^(?:NC46|NC50)$')
     gender: Literal['pin', 'box']
 
 

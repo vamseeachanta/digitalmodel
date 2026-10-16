@@ -5,9 +5,11 @@ import shutil
 
 import pytest
 import yaml
+from pydantic import ValidationError
 
 from digitalmodel.bha_database import BhaDatabaseError, load_database
 from digitalmodel.bha_database.loader import DEFAULT_ROOT
+from digitalmodel.bha_database.schema import Connection
 
 
 @pytest.fixture
@@ -46,7 +48,11 @@ def test_three_synthetic_examples():
     for key, assembly in db.assemblies.items():
         assert assembly.data_class == 'SYNTHETIC-EXAMPLE'
         assert 'SYNTHETIC' in assembly.name
+        bit = db.components[assembly.items[0].component_id]
+        assert bit.od.to('m') == pytest.approx(assembly.hole_size.to('m'))
+        assert bit.top_connection.gender == 'pin'
         assert not db.summary(key)['warnings']
+    assert db.components['SYN-MOTOR'].bottom_connection.gender == 'box'
     with pytest.raises(BhaDatabaseError, match='unknown bha_id'):
         db.summary('missing')
 
@@ -102,6 +108,14 @@ def test_strict_keys_duplicates_and_yaml(catalogue):
         else:
             doc['sources'].append(doc['sources'][0])
         write(catalogue, doc)
+        with pytest.raises(BhaDatabaseError):
+            load_database(catalogue)
+    for label in ('NC24', 'NC27', 'NC50extra', 'NC50\n', ' NC50'):
+        doc = deepcopy(original)
+        doc['components'][0]['top_connection']['label'] = label
+        write(catalogue, doc)
+        with pytest.raises(ValidationError, match='label'):
+            Connection(label=label, gender='pin')
         with pytest.raises(BhaDatabaseError):
             load_database(catalogue)
     for text in ('schema_version: 1\nschema_version: 1\n', 'a: &x []\nb: *x\n'):
@@ -185,12 +199,27 @@ def test_rules(catalogue):
             load_database(catalogue)
         if rule == 2:
             assert 'directly' in str(error.value) and 'bit' in str(error.value)
+    check_bit_hole_geometry(catalogue, original)
     # A crossover is a physical adapter, never a waiver of its interfaces.
     doc = deepcopy(original)
     doc['components'][1]['type'] = 'crossover_sub'
     doc['components'][1]['bottom_connection']['label'] = 'NC46'
     write(catalogue, doc)
     with pytest.raises(BhaDatabaseError, match='R5'):
+        load_database(catalogue)
+
+
+def check_bit_hole_geometry(catalogue, original):
+    for factor in (1 + 2e-9, 1 - 2e-9, 13 / 12):
+        doc = deepcopy(original)
+        doc['assemblies'][0]['hole_size']['value'] = 12 * factor
+        write(catalogue, doc)
+        with pytest.raises(BhaDatabaseError, match='R3.*bit.*hole'):
+            load_database(catalogue)
+    for factor in (1.0, 1 + 0.5e-9, 1 - 0.5e-9):
+        doc = deepcopy(original)
+        doc['assemblies'][0]['hole_size'].update(value=0.3048 * factor, unit='m')
+        write(catalogue, doc)
         load_database(catalogue)
 
 
@@ -207,7 +236,7 @@ def test_calcs_count_override_and_blade(catalogue):
     assert summary['air_weight_N']['value'] == pytest.approx(101 * 80 * 4.4482216152605)
     assert summary['buoyed_weight_N']['value'] == pytest.approx(
         101 * 80 * 4.4482216152605 * (1 - 10 / 65.5), rel=.001)
-    assert summary['max_od_m']['value'] == pytest.approx(11 * .0254)
+    assert summary['max_od_m']['value'] == pytest.approx(12 * .0254)
     sections = db.sections('SYNTHETIC-BUILDING')
     assert sections[1]['blade_centre_from_bit']['value'] == pytest.approx(2 * .3048)
     assert sections[-1]['distance_from_bit']['value'] > sections[1]['distance_from_bit']['value']
@@ -245,7 +274,9 @@ def test_public_loader_refuses_restricted_rows(catalogue):
             doc = deepcopy(original)
             doc[table][0]['data_class'] = marker
             write(catalogue, doc)  # Valid hash must never bypass the classification gate.
-            with pytest.raises(BhaDatabaseError):
+            with pytest.raises(
+                BhaDatabaseError, match='CLIENT-PRIVATE' if marker == 'CLIENT-PRIVATE' else None,
+            ):
                 load_database(catalogue)
     # Outgoing rows contain no e-mail, local absolute path or copied source URL.
     for row in original['components'] + original['assemblies']:

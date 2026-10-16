@@ -31,9 +31,9 @@ components:
   type: bit
   data_class: SYNTHETIC-EXAMPLE
   source_key: SYNTHETIC-DESIGN-v1
-  od: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  od: {value: 12, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '12', as_published_on: '2026-10-16'}
   id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
-  od_max: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  od_max: {value: 12, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '12', as_published_on: '2026-10-16'}
   length: {value: 1, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '1', as_published_on: '2026-10-16'}
   weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
   top_connection:
@@ -108,14 +108,14 @@ components:
   type: bit
   data_class: SYNTHETIC-EXAMPLE
   source_key: SYNTHETIC-DESIGN-v1
-  od: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  od: {value: 12, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '12', as_published_on: '2026-10-16'}
   id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
-  od_max: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  od_max: {value: 12, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '12', as_published_on: '2026-10-16'}
   length: {value: 1, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '1', as_published_on: '2026-10-16'}
   weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
   top_connection:
     label: NC50
-    gender: box
+    gender: pin
   bottom_connection: null
 - component_id: SYN-MOTOR
   type: motor
@@ -131,7 +131,7 @@ components:
     gender: box
   bottom_connection:
     label: NC50
-    gender: pin
+    gender: box
 - component_id: SYN-MWD
   type: mwd
   data_class: SYNTHETIC-EXAMPLE
