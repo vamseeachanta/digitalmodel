@@ -23,8 +23,8 @@ bodies:
       name: "Turret"
       type: "turret"
       geometry:
-        mesh_file: "../../bemrosetta/fixtures/sample_box.dat"
-        mesh_format: dat
+        mesh_file: "../../bemrosetta/fixtures/sample_box.gdf"
+        mesh_format: gdf
         symmetry: none
         reference_point: [100.0, 0.0, 0.0]
         waterline_z: 0.0
