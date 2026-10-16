@@ -190,6 +190,7 @@ The global-model pack owns the generated campaign-model gate procedures; C11, C2
 C21 and C22 require a qualified independent reference and configuration-specific physical bounds; passing this pack's offline examples alone does not establish solver model acceptance (AQG r0, G2.3–G2.6).
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom or pitfall | Cause and detection | Incident or follow-up; observation date | Evidence |
 | --- | --- | --- | --- |

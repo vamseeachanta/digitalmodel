@@ -131,6 +131,7 @@ The applicable gate set is G0, G1, G2, G3 and G5; G4 is conditional on newly imp
 Checks feeding G0 also require the AQG parse, selector-order, starting-shape, units and provenance checks for every complete native input; dictionary-only unit tests do not supply those records. (AQG r0, section 4.)
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 The entries below distinguish source-confirmed behavior from an executed detection; proposed checks have no new committed tests in this documentation change.
 

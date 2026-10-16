@@ -135,6 +135,7 @@ Proposed checks use pass criteria below; changing them requires an engineering d
 | M13 / G5 | Tie workflow summary and every exported model to input digest, code revision, gate records and review signature | 0 results lacking matching fingerprint or disposition (count) | Proposed QA appendix index; NOT_RUN: no engineering report or native run delivered. [src/digitalmodel/subsea/mooring_analysis/fpso_workflow.py:L111-L126] (AQG r0, section 9.) |
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom / cause | Detection | Incident or open item; recorded 2026-10-15 |
 | --- | --- | --- |

@@ -163,6 +163,7 @@ Offline diagnostics executed 7 checks at BASE and AFTER: 3 PASS and 4 FAIL (2 sp
 Checks I2, I21 and I23 require a sourced mass/displacement/rigging basis before application to a real structure; the box displacement calculation is not such a basis for an open frame. [src/digitalmodel/marine_ops/installation/models.py:L85-L89] [src/digitalmodel/marine_ops/installation/splash_zone.py:L123-L137]
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom | Cause and detection | Incident / open item | Evidence | Date |
 | --- | --- | --- | --- | --- |

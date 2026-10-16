@@ -181,6 +181,7 @@ assert report.ok and not report.inverted_panels and report.symmetry_plane is Non
 The offline record qualifies only the stated geometric parts of C42, C45 and C46; G4.2's comparison with program hydrostatics and all solver-load/response checks remain NOT_RUN. (AQG r0, section 8, G4.2, G4.5 and G4.6.)
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Incident | Symptom / current evidence | Detection and disposition |
 | --- | --- | --- |

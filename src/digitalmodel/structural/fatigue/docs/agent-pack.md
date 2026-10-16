@@ -210,6 +210,7 @@ The gate set defines seven checks: G0 two, G1 one, G2 three, G3 zero, G4 zero an
 UNVERIFIED: configured-wiki citation failure is not detected by the named fatigue suite; test a deliberately stale configured standards page and require 1 `CitationResolutionError` and 0 empty sidecars (count) before relying on that consumer wrapper; no detection check exists in this module for that scenario (#2166). [src/digitalmodel/riser_database/getters.py:L365-L395]
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom / cause | Detection / limit | Incident and evidence |
 | --- | --- | --- |
