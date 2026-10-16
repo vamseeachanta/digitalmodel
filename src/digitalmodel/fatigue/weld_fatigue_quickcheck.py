@@ -99,7 +99,7 @@ class WeldFatigueResult:
 
     @property
     def passed(self) -> bool:
-        return self.pass_fail == "PASS"
+        return self.pass_fail == "PASS"  # nosec B105 # Fatigue acceptance status, not a credential.
 
 
 def weld_fatigue_quickcheck(

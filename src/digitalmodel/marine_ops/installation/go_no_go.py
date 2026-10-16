@@ -28,7 +28,7 @@ class DecisionState(enum.Enum):
 
 class CriterionState(enum.Enum):
     """Individual criterion pass/fail state."""
-    PASS = "PASS"
+    PASS = "PASS"  # nosec B105 # Public criterion outcome label, not a credential.
     FAIL = "FAIL"
     WARNING = "WARNING"
 
