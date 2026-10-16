@@ -115,20 +115,20 @@ generic:
             - [0.06, 0.72, 270, 0, 0, 0.5, 13, 0, 0, 0.4, 96, 0, 0]
             - [0.05, 0.95, 270, 0, 0, 1.38, 331, 0, 0, 0.45, 77, 0, 0]
             - [0.04, 0, 270, 0, 0, 1.12, 353, 0, 0, 0.35, 80, 0, 0]
-      AMDMethod: Constant
-      ReferenceOrigin: [0, 0, 0]
-      ReferenceOriginDatumPosition: [0, 0, 0]
-      HydrostaticStiffnessMethod: Displacement
-      HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
-      - - 17e3
-        - 0
-        - 26e3
-      - - 0
-        - 270e3
-        - 0
-      - - 26e3
-        - 0
-        - 13e6
+        AMDMethod: Constant
+        ReferenceOrigin: [0, 0, 0]
+        ReferenceOriginDatumPosition: [0, 0, 0]
+        HydrostaticStiffnessMethod: Displacement
+        HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+        - - 17e3
+          - 0
+          - 26e3
+        - - 0
+          - 270e3
+          - 0
+        - - 26e3
+          - 0
+          - 13e6
 
   vessels:
   - name: Semisub                              # Drilling vessel

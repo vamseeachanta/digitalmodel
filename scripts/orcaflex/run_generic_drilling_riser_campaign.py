@@ -120,8 +120,8 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     started = time.perf_counter()
     try:
         import OrcFxAPI
-    except ImportError as exc:
-        raise ConfigurationError('Solver interface not importable') from exc
+    except Exception as exc:
+        raise ConfigurationError(f'Solver interface not importable ({type(exc).__name__})') from exc
     try:
         reference_z = ring_reference_z(model_path)
         model = OrcFxAPI.Model(str(model_path))

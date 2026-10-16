@@ -392,28 +392,28 @@ VesselTypes:
             - 80
             - 0
             - 0
-  AMDMethod: Constant
-  ReferenceOrigin:
-  - 0
-  - 0
-  - 0
-  ReferenceOriginDatumPosition:
-  - 0
-  - 0
-  - 0
-  HydrostaticStiffnessMethod: Displacement
-  HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
-  - - 17e3
+    AMDMethod: Constant
+    ReferenceOrigin:
     - 0
-    - 26e3
-  - - 0
-    - 270e3
     - 0
-  - - 26e3
     - 0
-    - 13e6
+    ReferenceOriginDatumPosition:
+    - 0
+    - 0
+    - 0
+    HydrostaticStiffnessMethod: Displacement
+    HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+    - - 17e3
+      - 0
+      - 26e3
+    - - 0
+      - 270e3
+      - 0
+    - - 26e3
+      - 0
+      - 13e6
   Length: 90.0
-PyModels:
+P-yModels:
 - Name: P-y Model1
   PyCurves:
   - DepthBelowSeabedFrom: 0

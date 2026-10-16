@@ -37,7 +37,7 @@ OBJECTS = (
     "AttachedBuoys",
     "VariableData",
     "ExpansionTables",
-    "PyModels",
+    "P-yModels",
     "WakeModels",
     "MultibodyGroups",
     "BrowserGroups",

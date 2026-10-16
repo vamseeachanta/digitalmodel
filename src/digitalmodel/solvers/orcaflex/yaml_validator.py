@@ -78,7 +78,7 @@ VALID_TOP_LEVEL_SECTIONS = {
     "AttachedBuoys", "LineContents",
     "SolidTypes", "CodeChecks", "TurbineTypes", "Turbines",
     "VariableData", "FrictionCoefficients", "Groups",
-    "ExpansionTables", "LineContactData", "MultibodyGroups", "PyModels",
+    "ExpansionTables", "LineContactData", "MultibodyGroups", "P-yModels",
     "RayleighDampingCoefficients", "StiffenerTypes",
 }
 

@@ -1,7 +1,7 @@
 schema_version: 1
 method: 'vessel offset applied as a static mean position; no prescribed vessel motion;
   no wave is applied: this sweep covers vessel offset and current only'
-template_sha256: 88c1d0fb97506bfceee244e3ade85f6d4de9c3436802123e6553107359dbf2d0
+template_sha256: fa93aaef97fce3785148f4fbd68dd2e1cdd357d9d526386dfd68334016ae871b
 template_digest_basis: UTF-8 source text normalized to LF
 basis:
   environment:
@@ -890,62 +890,62 @@ basis:
                   - value: 0
                     unit: as specified
                     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:117
-        AMDMethod:
-          value: Constant
-          unit: as specified
-          source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:118
-        ReferenceOrigin:
-        - value: 0
-          unit: as specified
-          source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:119
-        - value: 0
-          unit: as specified
-          source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:119
-        - value: 0
-          unit: as specified
-          source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:119
-        ReferenceOriginDatumPosition:
-        - value: 0
-          unit: as specified
-          source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:120
-        - value: 0
-          unit: as specified
-          source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:120
-        - value: 0
-          unit: as specified
-          source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:120
-        HydrostaticStiffnessMethod:
-          value: Displacement
-          unit: as specified
-          source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:121
-        HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
-        - - value: 17e3
+          AMDMethod:
+            value: Constant
             unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:123
+            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:118
+          ReferenceOrigin:
           - value: 0
             unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:124
-          - value: 26e3
-            unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:125
-        - - value: 0
-            unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:126
-          - value: 270e3
-            unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:127
+            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:119
           - value: 0
             unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:128
-        - - value: 26e3
-            unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:129
+            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:119
           - value: 0
             unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:130
-          - value: 13e6
+            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:119
+          ReferenceOriginDatumPosition:
+          - value: 0
             unit: as specified
-            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:131
+            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:120
+          - value: 0
+            unit: as specified
+            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:120
+          - value: 0
+            unit: as specified
+            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:120
+          HydrostaticStiffnessMethod:
+            value: Displacement
+            unit: as specified
+            source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:121
+          HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy:
+          - - value: 17e3
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:123
+            - value: 0
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:124
+            - value: 26e3
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:125
+          - - value: 0
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:126
+            - value: 270e3
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:127
+            - value: 0
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:128
+          - - value: 26e3
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:129
+            - value: 0
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:130
+            - value: 13e6
+              unit: as specified
+              source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:131
     vessels:
     - name:
         value: Semisub
