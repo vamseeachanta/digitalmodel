@@ -1,6 +1,6 @@
 {
   "schema": "slay-timed-case-1",
-  "criteria_revision": "execution-1",
+  "criteria_revision": "execution-2",
   "case_id": "d0-t0",
   "input_locator": "case-table.yml#cases/d0-t0",
   "model_locator": "models/d0-t0/master.yml",

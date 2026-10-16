@@ -277,7 +277,8 @@ def test_native_load_and_statics_of_every_generated_case(case_id, record_propert
     model.CalculateStatics()
     assert model.state == OrcFxAPI.ModelState.InStaticState
 
-    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import assert_static_acceptance
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import (
+        assert_static_acceptance, end_a_support_reaction)
     spec = _case_spec(case_id)
     line = model[spec.pipeline.name]
     sections = _resolve_case(CAMPAIGN / "models" / case_id)
@@ -330,10 +331,13 @@ def test_native_load_and_statics_of_every_generated_case(case_id, record_propert
     reference = next(row["stiff_reference"] for row in TABLE["cases"] if row["id"] == case_id)
     reference = {key: reference[key] for key in
                  ("lift_off_arc", "departure_angle", "touchdown_x", "sag_bend_strain")}
+    points = _pipe_seed_points(sections, spec)
+    support_x = [points[f"roller {i}"][0] for i in range(len(forces))]
     result = assert_static_acceptance(
         reference=reference,
         wire_length=model[spec.equipment.tensioner.name].StaticResult("Length"),
-        end_a_reaction=forces[0], last_support_force=forces[-1],
+        end_a_reaction=end_a_support_reaction(x[0], support_x, forces),
+        last_support_force=forces[-1],
         grounded_tension=[tensions[i] for i in grounded], overbend_strain=max(overbend),
         lift_off_arc=lift_off, departure_angle=departure,
         touchdown_x=x[touchdown], sag_bend_strain=max(sag_bend),

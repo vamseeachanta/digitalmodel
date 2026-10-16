@@ -231,13 +231,9 @@ class LinesBuilder(BaseBuilder):
 
     def _slay_endpoints(self) -> list[list]:
         """Seed a free upper end and a separated seabed anchor.
-
-        A declared anchor coordinate takes precedence over the weight-only
-        fallback. The firing line moves End A ahead of the stinger. Neither is a solved
-        bending/contact state; the seabed surface approximates touchdown.
-        Only planar, level-hull geometry is supported by this seed. With a
-        sloping seabed the horizontal span estimate is approximate; anchored
-        endpoint z remains relative to the local seabed.
+        Declared anchors override the weight-only fallback. Neither supplies a
+        solved contact state. The seed requires a planar, level hull; on sloping
+        seabeds the span is approximate and End B z is relative to local seabed.
         """
         vessel = self.spec.equipment.vessel
         stinger = self.spec.equipment.stinger
@@ -265,6 +261,10 @@ class LinesBuilder(BaseBuilder):
         coated_radius += sum(coating.thickness for coating in pipeline.coatings.weight)
         if height <= 0 or span <= 0:
             raise ValueError("S-lay endpoint height must be positive and below pipe length")
+        # Necessary seed-geometry screen; this does not establish static closure.
+        length = sum(segment.length for segment in pipeline.segments)
+        if math.hypot(span, height - coated_radius) > length:
+            raise ValueError("S-lay End B is beyond pipe reach: endpoint chord exceeds pipe length")
         return [["Free", x, y, z, 180, 90, 0, None],
                 ["Anchored", x - span * c, y - span * s, coated_radius, 180,
                  90 + self.spec.environment.seabed.slope, 0, None]]

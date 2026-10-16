@@ -1,4 +1,4 @@
-criteria_revision: execution-1
+criteria_revision: execution-2
 source_revision: c9ae7591129b40732846b50661045f99ab249aba
 qualification: assumed, based on previous experience; generic scenario only, no previous
   model used
@@ -279,7 +279,7 @@ static_equilibrium_screen:
     The 40 m layout is superseded; Table A reported excessive tip curvature
     and nonzero tip reaction. The revised layout adds a 60 m firing line and
     depth-specific stingers. D/(2R) = 0.00254 is a screen, not a pass criterion.
-    Static QA requires a 5-15 m wire, nonnegative End A support reaction,
+    Static QA requires a 5-15 m wire, a positive contact-presence screen at the support nearest measured End A X,
     S1 strain <= 1.10*D/(2R) with zero last-stinger-support force, lift-off arc
     within 5 m, departure within 3 degrees, and nonnegative grounded tension.
     Touchdown x, sag-bend strain and stiff closure are NOT_EVALUATED:

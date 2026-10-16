@@ -1,8 +1,8 @@
 {
   "schema": "slay-preparation-1",
   "model_digest_serialization": "parsed-yaml-json-sort-keys-compact-ascii-v1",
-  "criteria_revision": "execution-1",
-  "case_table_sha256": "83a9af77c67cbd4f44b664feda72bf5289cc0f66519ac9f3e9f0df5adefcd33b",
+  "criteria_revision": "execution-2",
+  "case_table_sha256": "cab57bc4ecf527b3ae3426ec1e1809bbe9ff056834da4c722511bbe45f821d0b",
   "native_attempted": 0,
   "native_completed": 0,
   "qualified_results": 0,
