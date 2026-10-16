@@ -166,6 +166,9 @@ modules:
     key_tests: [tests/marine_ops/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#marine_ops
     submodules:
+      installation:
+        agent_pack: src/digitalmodel/marine_ops/installation/docs/agent-pack.md
+        qa_family: IN
       marine_analysis:
         agent_pack: src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md
         qa_family: MR
@@ -312,6 +315,9 @@ modules:
         qa_family: MR
       orcaflex/modular_input_validation:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_input_validation/docs/agent-pack.md
+        qa_family: MR
+      orcaflex:
+        agent_pack: src/digitalmodel/solvers/orcaflex/docs/agent-pack.md
         qa_family: MR
   - module: specialized
     entry_point: src/digitalmodel/specialized/
