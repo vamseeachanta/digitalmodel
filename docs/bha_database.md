@@ -55,7 +55,7 @@ and the [Open Source Drilling Community model](https://github.com/Open-Source-Dr
 
 Table 1. Validation semantics for this slice.
 
-The 15% margin and 65.5 lb/US gallon material density in the examples are
+The 15% margin and 65.5 lb/U.S. liquid gallon material density in the examples are
 assumptions, not API-prescribed values. Buoyancy uses the uniform-material
 identity `1 - mud_density/material_density`, and includes all components for
 assembly totals. R7 excludes the HWDP and everything above it. With no HWDP,
