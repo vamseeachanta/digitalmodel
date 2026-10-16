@@ -1,0 +1,7 @@
+files:
+  examples.yml:
+    assemblies: 3
+    components: 9
+    sha256: 2a98770f950c01aa46838d63fa8d5e4ce03ba8b5ab86ed32c0c64b5557e6bf68
+    sources: 3
+schema_version: 1

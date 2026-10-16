@@ -1,0 +1,243 @@
+schema_version: 1
+sources:
+- key: SYNTHETIC-DESIGN-v1
+  type: synthetic
+  title: SYNTHETIC illustrative BHA design assumptions
+  publisher: Project example authors
+  edition: v1
+  locator: examples.yml
+  terms: MIT; assumed teaching values, not qualified design inputs
+  checked: '2026-10-16'
+- key: OSDC-DrillString
+  type: open-code
+  title: Open Source Drilling Community DrillString types
+  publisher: Open Source Drilling Community
+  edition: accessed 2026-10-16
+  locator: Model/DrillStringComponentTypes/DrillStringComponentTypes.cs
+  url: https://github.com/Open-Source-Drilling-Community/DrillString
+  terms: MIT; terminology mapping only, no numerical values reused
+  checked: '2026-10-16'
+- key: WITSML-2.0
+  type: open-data
+  title: WITSML 2.0 TubularComponent
+  publisher: Energistics
+  edition: '2.0'
+  locator: 12.16.34
+  url: https://docs.energistics.org/WITSML/WITSML_TOPICS/WITSML-500-276-0-R-sv2000.html
+  terms: Field-name alignment only; no schema files copied
+  checked: '2026-10-16'
+components:
+- component_id: SYN-BIT
+  type: bit
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  length: {value: 1, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '1', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: pin
+  bottom_connection: null
+- component_id: SYN-DC
+  type: drill_collar
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  length: {value: 30, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '30', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: box
+  bottom_connection:
+    label: NC50
+    gender: pin
+- component_id: SYN-HWDP
+  type: hwdp
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  length: {value: 30, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '30', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: box
+  bottom_connection:
+    label: NC50
+    gender: pin
+- component_id: SYN-DP
+  type: drill_pipe
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  length: {value: 30, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '30', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: box
+  bottom_connection:
+    label: NC50
+    gender: pin
+- component_id: SYN-NB
+  type: stabilizer
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  length: {value: 3, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '3', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: box
+  bottom_connection:
+    label: NC50
+    gender: box
+  blade_od: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  blade_length: {value: 2, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  blade_bottom_to_component_bottom: {value: 0, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '0', as_published_on: '2026-10-16'}
+  role: near_bit
+- component_id: SYN-MOTOR-BIT
+  type: bit
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 11, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '11', as_published_on: '2026-10-16'}
+  length: {value: 1, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '1', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: box
+  bottom_connection: null
+- component_id: SYN-MOTOR
+  type: motor
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  length: {value: 15, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '15', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: box
+  bottom_connection:
+    label: NC50
+    gender: pin
+- component_id: SYN-MWD
+  type: mwd
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  length: {value: 10, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '10', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: box
+  bottom_connection:
+    label: NC50
+    gender: pin
+- component_id: SYN-PILOT-DC
+  type: drill_collar
+  data_class: SYNTHETIC-EXAMPLE
+  source_key: SYNTHETIC-DESIGN-v1
+  od: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  id: {value: 2, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '2', as_published_on: '2026-10-16'}
+  od_max: {value: 6, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '6', as_published_on: '2026-10-16'}
+  length: {value: 30, unit: ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '30', as_published_on: '2026-10-16'}
+  weight_per_length: {value: 80, unit: lbf/ft, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '80', as_published_on: '2026-10-16'}
+  top_connection:
+    label: NC50
+    gender: box
+  bottom_connection:
+    label: NC50
+    gender: box
+assemblies:
+- bha_id: SYNTHETIC-PENDULUM
+  name: "SYNTHETIC-PENDULUM \u2014 assumed teaching example"
+  data_class: SYNTHETIC-EXAMPLE
+  purpose: pendulum
+  hole_size: {value: 12, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '12', as_published_on: '2026-10-16'}
+  source_key: SYNTHETIC-DESIGN-v1
+  checked: '2026-10-16'
+  mud_weight_basis: {value: 10, unit: lb/gallon, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '10', as_published_on: '2026-10-16'}
+  material_density: {value: 65.5, unit: lb/gallon, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '65.5', as_published_on: '2026-10-16'}
+  planned_wob: {value: 100, unit: lbf, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '100', as_published_on: '2026-10-16'}
+  wob_margin: {value: 0.15, unit: dimensionless, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '0.15', as_published_on: '2026-10-16'}
+  items:
+  - pos: 1
+    component_id: SYN-BIT
+    count: 1
+  - pos: 2
+    component_id: SYN-PILOT-DC
+    count: 1
+  - pos: 3
+    component_id: SYN-HWDP
+    count: 1
+  - pos: 4
+    component_id: SYN-DP
+    count: 1
+- bha_id: SYNTHETIC-BUILDING
+  name: "SYNTHETIC-BUILDING \u2014 assumed teaching example"
+  data_class: SYNTHETIC-EXAMPLE
+  purpose: building
+  hole_size: {value: 12, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '12', as_published_on: '2026-10-16'}
+  source_key: SYNTHETIC-DESIGN-v1
+  checked: '2026-10-16'
+  mud_weight_basis: {value: 10, unit: lb/gallon, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '10', as_published_on: '2026-10-16'}
+  material_density: {value: 65.5, unit: lb/gallon, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '65.5', as_published_on: '2026-10-16'}
+  planned_wob: {value: 100, unit: lbf, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '100', as_published_on: '2026-10-16'}
+  wob_margin: {value: 0.15, unit: dimensionless, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '0.15', as_published_on: '2026-10-16'}
+  items:
+  - pos: 1
+    component_id: SYN-BIT
+    count: 1
+  - pos: 2
+    component_id: SYN-NB
+    count: 1
+  - pos: 3
+    component_id: SYN-MWD
+    count: 1
+  - pos: 4
+    component_id: SYN-DC
+    count: 1
+  - pos: 5
+    component_id: SYN-HWDP
+    count: 1
+- bha_id: SYNTHETIC-MOTOR
+  name: "SYNTHETIC-MOTOR \u2014 assumed teaching example"
+  data_class: SYNTHETIC-EXAMPLE
+  purpose: motor
+  hole_size: {value: 12, unit: inch, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '12', as_published_on: '2026-10-16'}
+  source_key: SYNTHETIC-DESIGN-v1
+  checked: '2026-10-16'
+  mud_weight_basis: {value: 10, unit: lb/gallon, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '10', as_published_on: '2026-10-16'}
+  material_density: {value: 65.5, unit: lb/gallon, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '65.5', as_published_on: '2026-10-16'}
+  planned_wob: {value: 100, unit: lbf, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '100', as_published_on: '2026-10-16'}
+  wob_margin: {value: 0.15, unit: dimensionless, source_key: SYNTHETIC-DESIGN-v1, basis: assumed, as_published: '0.15', as_published_on: '2026-10-16'}
+  items:
+  - pos: 1
+    component_id: SYN-MOTOR-BIT
+    count: 1
+  - pos: 2
+    component_id: SYN-MOTOR
+    count: 1
+  - pos: 3
+    component_id: SYN-MWD
+    count: 1
+  - pos: 4
+    component_id: SYN-DC
+    count: 1
+  - pos: 5
+    component_id: SYN-HWDP
+    count: 1
