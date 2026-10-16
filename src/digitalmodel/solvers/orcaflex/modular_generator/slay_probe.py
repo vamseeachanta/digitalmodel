@@ -1,18 +1,12 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Prepare anchor-span diagnostic variations without native execution."""
+"""Weight-only bounds and static QA for declared S-lay layouts."""
 
-from copy import deepcopy
-import hashlib
-import json
 import math
 from pathlib import Path
 
 import yaml
-
-from . import _NoAliasDumper
-from .writers.basefile import build_variation_document
 
 
 def screen_case(campaign: Path, case_id: str) -> dict:
@@ -36,7 +30,8 @@ def screen_case(campaign: Path, case_id: str) -> dict:
     weight = (mass - basis["water_density_te_m3"] * math.pi / 4 * od**2) * basis["gravity_m_s2"]
     stinger = basis["equipment"]["stinger"]
     radius = stinger["radius"]
-    arc = sum(section["length"] for section in stinger["sections"])
+    layout = basis.get("stinger_by_depth", {}).get(str(case["depth_m"]))
+    arc = layout["length_m"] if layout else sum(section["length"] for section in stinger["sections"])
     folder = campaign / "models" / case_id / "includes"
     support_types = yaml.safe_load((folder / "13_supports.yml").read_text(encoding="utf-8"))["SupportTypes"]
     supports = yaml.safe_load((folder / "06_vessels.yml").read_text(encoding="utf-8"))["Vessels"][0]["Supports"]
@@ -51,9 +46,9 @@ def screen_case(campaign: Path, case_id: str) -> dict:
     top, bottom = line[connection_key]
     span = top[1] - bottom[1]
     winch = yaml.safe_load((folder / "11_winches.yml").read_text(encoding="utf-8"))["Winches"][0]
-    lead = winch["Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"][0][1] - origin[0]
+    lead = winch["Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"][0][1] - top[1]
     if origin[1:] != [0, 0] or abs(axis_offset) > 1e-9:
-        raise ValueError("Probe screen requires the declared level pipe-axis arc")
+        raise ValueError("Weight-only screen requires the declared level pipe-axis arc")
 
     def geometry(supported_arc):
         theta = supported_arc / radius
@@ -102,85 +97,62 @@ def screen_case(campaign: Path, case_id: str) -> dict:
                          "anchor_span_m": angle_only["taut_anchor_span_m"],
                          "excess_m": angle_only["excess_m"] - (angle_only["taut_anchor_span_m"] - span),
                          "angle_mismatch_deg": angle_only["departure_deg"] - angle_only["tip_angle_deg"],
-                         "qualification": "Counterfactual only; stinger length requires a maintainer case-design decision."}}
+                         "qualification": "Weight-only counterfactual; not the declared stiff design basis."}}
 
 
-def prepare_anchor_span_probe(campaign: Path, output: Path, case_id: str = "d0-t0") -> dict:
-    """Write one text-only variation; preserve every base input and load form.
+PENDING_TABLE_B_ROWS = ("touchdown_x", "sag_bend_strain", "stiff_closure")
+PENDING_REFERENCE_REASON = "published reference pending, #2608"
 
-    Only End B x changes. The manifest binds base bytes and names the native
-    readings needed to distinguish length closure from bending/contact effects.
-    Neither a queue entry nor a native execution is produced.
+
+def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_force,
+                               grounded_tension, overbend_strain, lift_off_arc,
+                               departure_angle, reference, touchdown_x=None,
+                               sag_bend_strain=None, diameter=0.762, radius=150):
+    """Report static QA with separate pass, fail and NOT_EVALUATED counts.
+
+    Touchdown, sag-bend and stiff closure await published references in #2608.
+    Their readings and any supplied reference values do not affect acceptance.
+    S1 bounds conformity; S2 design acceptance and convergence remain separate.
     """
-    if case_id not in {"d0-t0", "d1-t0"}:
-        raise ValueError("Probe case must cover one of the two declared depths")
-    screen = screen_case(campaign, case_id)
-    model = campaign / "models" / case_id
-    lines = yaml.safe_load((model / "includes/07_lines.yml").read_text(encoding="utf-8"))
-    overrides = deepcopy(lines)
-    line = overrides["Lines"][0]
-    key = next(key for key in line if key.startswith("Connection, "))
-    top, bottom = line[key]
-    initial_span = top[1] - bottom[1]
-    target_span = screen["current"]["taut_anchor_span_m"]
-    bottom[1] = top[1] - target_span
-    relative = f"probes/{case_id}-anchor-span.yml"
-    document = build_variation_document(model / "master.yml", overrides, campaign / relative)
-    path = output / relative
-    manifest_path = path.with_suffix(".json")
-    if path.exists() or manifest_path.exists():
-        raise ValueError("Use a new output directory; existing probe files are preserved")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.dump(document, Dumper=_NoAliasDumper, sort_keys=False,
-                              allow_unicode=True), encoding="utf-8", newline="\n")
-    manifest = {"schema": "slay-anchor-span-probe-1", "production_case": False,
-                "base_case": case_id, "native_status": "not_run",
-                "current_inputs_native_status": "not_run",
-                "qa_pass_criteria": {"converged_statics": True, "positive_wire_length": True,
-                                     "end_a_within_lead": True, "nonnegative_grounded_tension": True,
-                                     "maximum_overbend_strain": 0.00254},
-                "case_table_sha256": hashlib.sha256((campaign / "case-table.yml").read_bytes()).hexdigest(),
-                "base_files": {p.relative_to(campaign).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-                               for p in sorted(model.rglob("*.yml"))},
-                "probe_file": relative, "probe_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-                "initial_span_m": initial_span, "target_span_m": target_span,
-                "screen": screen,
-                "required_readings": ["end_a_displacement", "wire_direction_and_length",
-                                      "active_roller_contacts", "departure_slope", "force_residuals",
-                                      "tip_contact_force_and_curvature", "maximum_overbend_strain",
-                                      "grounded_effective_tension"],
-                "interpretation": "Continue anchor span from initial to target with loads and supports fixed. "
-                                  "Convergence with a positive wire and the intended force/contact state "
-                                  "would show length closure is sufficient for this configuration. "
-                                  "Failure alone cannot identify the tip angle: anchor embedment and "
-                                  "bending/contact residuals remain unresolved. The combined length/angle "
-                                  "counterfactual is not an approved stinger design."}
-    table = yaml.safe_load((campaign / "case-table.yml").read_text(encoding="utf-8"))
-    previous = table.get("static_equilibrium_screen", {}).get("previous_native_qa", {}).get(case_id)
-    if previous:
-        manifest["previous_qa"] = previous
-        manifest["native_status"] = previous["native_status"]
-    manifest_path.write_text(json.dumps(manifest, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
-    return manifest
-
-
-def assert_static_acceptance(*, wire_length, displacement, lead,
-                             grounded_tension, overbend_strain):
-    """Require the review QA screen in addition to a converged native state.
-
-    The 0.00254 threshold is the campaign QA criterion recorded in
-    case-table.yml; passing this screen does not establish design acceptance.
-    """
-    if not grounded_tension:
+    if len(grounded_tension) == 0:
         raise ValueError("Grounded tension readback is required")
-    values = [wire_length, displacement, lead, overbend_strain, *grounded_tension]
-    if not all(math.isfinite(value) for value in values):
-        raise ValueError("Finite native readings required")
-    if wire_length <= 0:
-        raise ValueError("Tensioner wire must remain positive")
-    if not 0 <= displacement <= lead:
-        raise ValueError("End A must remain within its initial lead")
-    if min(grounded_tension) < 0:
-        raise ValueError("Grounded effective tension must be nonnegative")
-    if not 0 <= overbend_strain <= 0.00254:
-        raise ValueError("Overbend strain exceeds the QA criterion")
+    reference_values = [reference.get(name) for name in ("lift_off_arc", "departure_angle")]
+    values = [wire_length, end_a_reaction, last_support_force, overbend_strain,
+              diameter, radius, lift_off_arc, departure_angle,
+              *grounded_tension, *reference_values]
+    if not all(isinstance(value, (int, float)) and math.isfinite(value) for value in values):
+        raise ValueError("Finite native readings and reference values required")
+    if diameter <= 0 or radius <= 0:
+        raise ValueError("Positive diameter and radius required")
+    checks = {
+        "wire_length": (5 <= wire_length <= 15, "Tensioner wire must remain between 5 and 15 m"),
+        "end_a_reaction": (end_a_reaction >= 0, "End A support reaction must be nonnegative"),
+        "stinger_conformity": (
+            0 <= overbend_strain <= 1.10 * diameter / (2 * radius) and last_support_force == 0,
+            "S1 requires strain conformity and zero last-support force"),
+        "lift_off_arc": (abs(lift_off_arc - reference["lift_off_arc"]) <= 5 + 1e-12,
+                         "lift_off_arc differs from Table B beyond its QA tolerance"),
+        "departure_angle": (abs(departure_angle - reference["departure_angle"]) <= 3 + 1e-12,
+                            "departure_angle differs from Table B beyond its QA tolerance"),
+        "grounded_tension": (min(grounded_tension) >= 0,
+                             "Grounded effective tension must be nonnegative"),
+    }
+    rows = {name: {"status": "PASS" if passed else "FAIL", "reason": reason}
+            for name, (passed, reason) in checks.items()}
+    rows.update({name: {"status": "NOT_EVALUATED", "reason": PENDING_REFERENCE_REASON}
+                 for name in PENDING_TABLE_B_ROWS})
+    counts = {name: sum(row["status"] == status for row in rows.values())
+              for name, status in (("passed", "PASS"), ("failed", "FAIL"),
+                                   ("not_evaluated", "NOT_EVALUATED"))}
+    status = ("rejected" if counts["failed"] else
+              f"accepted with {counts['not_evaluated']} rows not evaluated")
+    return {"status": status, "fully_accepted": False, "counts": counts, "rows": rows}
+
+
+def assert_static_acceptance(**readings):
+    """Reject failed evaluated rows and return an explicit partial QA report."""
+    result = evaluate_static_acceptance(**readings)
+    failed = [row["reason"] for row in result["rows"].values() if row["status"] == "FAIL"]
+    if failed:
+        raise ValueError("; ".join(failed))
+    return result

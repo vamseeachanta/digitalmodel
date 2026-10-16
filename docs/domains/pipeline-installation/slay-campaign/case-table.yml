@@ -18,17 +18,21 @@ provenance:
   pipeline_seabed_and_generic_hull_properties: tests/solvers/orcaflex/modular_generator/schema/test_campaign.py::_make_base_spec_data
   stinger: tests/solvers/orcaflex/modular_generator/test_slay_schema.py::stinger_data
   layout: Stern origin is minus half declared hull length; roller arc stations use
-    declared pipe mesh spacing through the 40 m stinger section. Roller centre offset
+    declared 5 m spacing through depth-specific 60 m and 90 m stinger sections.
+    A 60 m level firing line has 12 supports ahead of the stinger origin. Roller centre offset
     is minus half coated pipe diameter minus half Support type2 diameter (2 m,
-    builders/supports_builder.py). Generic geometry assumed, based on previous experience.
-  endpoint_seed: builders/lines_builder.py::_slay_endpoints; span closes the supported arc, suspended catenary and grounded remainder
-    in the weight-only screen for each tension and depth; not an equilibrium solution.
+    builders/supports_builder.py). The 40 m layout is superseded by Table A of
+    the design basis; Table B supplies the adopted depth-specific layout.
+    Generic geometry assumed, based on previous experience.
+  endpoint_seed: >-
+    stiff hand estimate, Table B of the design basis for #2546;
+    declared case coordinates override the weight-only bound, which is not the design basis.
   tensioner_lead: builders/winch_builder.py; prior initial wire length of 10 m reused
-    as forward lead from the stinger origin; assumed, based on previous experience.
+    as forward lead from End A; assumed, based on previous experience.
   water_density: schema/environment.py::Water
   steel_density: builders/linetype_builder.py::MATERIAL_PROPERTIES; modelling default
   gravity: src/digitalmodel/installation/pipelay/integrity.py::G_STANDARD
-  depth: stinger section length times 1 and 2; method choice
+  depth: independently declared water depths of 40 m and 80 m; method choice
   tension: submerged_weight * depth * factor; factors 2, 3, 4 are method choices
   defaults: ProjectInputSpec and builder defaults; no wave/current input, empty pipe
     contents, no calibrated RAO
@@ -59,6 +63,9 @@ basis:
     - type: X65+CWC
       length: 2000
       segment_length: 5
+  stinger_by_depth:
+    '40': {length_m: 60, support_count: 13, tip_angle_deg: 22.9, tip_axis_depth_m: 11.8}
+    '80': {length_m: 90, support_count: 19, tip_angle_deg: 34.4, tip_axis_depth_m: 26.2}
   equipment:
     vessel:
       name: Generic lay hull
@@ -78,8 +85,10 @@ basis:
     stinger:
       radius: 150
       origin_position: [-91.1, 0, 0]
+      firing_line_length: 60
+      firing_line_spacing: 5
       sections:
-      - length: 40
+      - length: 60
         bend_radius: 150
       rollers:
       - {arc_length: 0, z_offset: -1.485}
@@ -91,31 +100,119 @@ basis:
       - {arc_length: 30, z_offset: -1.485}
       - {arc_length: 35, z_offset: -1.485}
       - {arc_length: 40, z_offset: -1.485}
+      - {arc_length: 45, z_offset: -1.485}
+      - {arc_length: 50, z_offset: -1.485}
+      - {arc_length: 55, z_offset: -1.485}
+      - {arc_length: 60, z_offset: -1.485}
     tensioner:
       capacity_kn: 5393.657499999999
       tension_value: 400
 cases:
 - id: d0-t0
+  end_b_x_m: -2024.8
+  stiff_reference:
+    source: "stiff hand estimate, Table B of the design basis for #2546"
+    lift_off_arc: 55
+    departure_angle: 21.0
+    touchdown_x: null
+    sag_bend_strain: null
+    stiff_excess_m: null
+    not_evaluated:
+      touchdown_x: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      sag_bend_strain: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      stiff_closure: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+    maximum_overbend_strain: 0.00261
+    reference_status: "published reference pending, #2608"
   depth_m: 40
   top_tension_kn: 418.19666603382643
   tension_factor: 2
 - id: d0-t1
+  end_b_x_m: -2025.0
+  stiff_reference:
+    source: "stiff hand estimate, Table B of the design basis for #2546"
+    lift_off_arc: 55
+    departure_angle: 20.9
+    touchdown_x: null
+    sag_bend_strain: null
+    stiff_excess_m: null
+    not_evaluated:
+      touchdown_x: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      sag_bend_strain: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      stiff_closure: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+    maximum_overbend_strain: 0.00267
+    reference_status: "published reference pending, #2608"
   depth_m: 40
   top_tension_kn: 627.2949990507396
   tension_factor: 3
 - id: d0-t2
+  end_b_x_m: -2025.2
+  stiff_reference:
+    source: "stiff hand estimate, Table B of the design basis for #2546"
+    lift_off_arc: 50
+    departure_angle: 19.1
+    touchdown_x: null
+    sag_bend_strain: null
+    stiff_excess_m: null
+    not_evaluated:
+      touchdown_x: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      sag_bend_strain: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      stiff_closure: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+    maximum_overbend_strain: 0.0026
+    reference_status: "published reference pending, #2608"
   depth_m: 40
   top_tension_kn: 836.3933320676529
   tension_factor: 4
 - id: d1-t0
+  end_b_x_m: -2012.2
+  stiff_reference:
+    source: "stiff hand estimate, Table B of the design basis for #2546"
+    lift_off_arc: 85
+    departure_angle: 32.4
+    touchdown_x: null
+    sag_bend_strain: null
+    stiff_excess_m: null
+    not_evaluated:
+      touchdown_x: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      sag_bend_strain: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      stiff_closure: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+    maximum_overbend_strain: 0.0026
+    reference_status: "published reference pending, #2608"
   depth_m: 80
   top_tension_kn: 836.3933320676529
   tension_factor: 2
 - id: d1-t1
+  end_b_x_m: -2013.9
+  stiff_reference:
+    source: "stiff hand estimate, Table B of the design basis for #2546"
+    lift_off_arc: 75
+    departure_angle: 28.7
+    touchdown_x: null
+    sag_bend_strain: null
+    stiff_excess_m: null
+    not_evaluated:
+      touchdown_x: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      sag_bend_strain: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      stiff_closure: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+    maximum_overbend_strain: 0.00261
+    reference_status: "published reference pending, #2608"
   depth_m: 80
   top_tension_kn: 1254.5899981014793
   tension_factor: 3
 - id: d1-t2
+  end_b_x_m: -2015.3
+  stiff_reference:
+    source: "stiff hand estimate, Table B of the design basis for #2546"
+    lift_off_arc: 70
+    departure_angle: 26.7
+    touchdown_x: null
+    sag_bend_strain: null
+    stiff_excess_m: null
+    not_evaluated:
+      touchdown_x: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      sag_bend_strain: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+      stiff_closure: {status: NOT_EVALUATED, reason: "published reference pending, #2608"}
+    maximum_overbend_strain: 0.00261
+    reference_status: "published reference pending, #2608"
   depth_m: 80
   top_tension_kn: 1672.7866641353057
   tension_factor: 4
@@ -169,25 +266,30 @@ static_equilibrium_screen:
       26.2 m excess and 57.4 degrees departure. The earlier 57.2 degree
       screen is not reproduced.
   all_cases:
-  # Computed without rounding intermediate values; displayed figures only.
-  # Angle-only holds radius fixed and extends the supported arc.
-  - {id: d0-t0, excess_m: 0.0, departure_deg: 57.6, angle_only_arc_m: 96.5, angle_only_tip_deg: 36.9, angle_only_excess_m: 5.3, combined_arc_m: 96.5, combined_span_m: 1991.2}
-  - {id: d0-t1, excess_m: 0.0, departure_deg: 45.8, angle_only_arc_m: 86.8, angle_only_tip_deg: 33.2, angle_only_excess_m: 2.7, combined_arc_m: 86.8, combined_span_m: 1992.1}
-  - {id: d0-t2, excess_m: 0.0, departure_deg: 39.1, angle_only_arc_m: 79.8, angle_only_tip_deg: 30.5, angle_only_excess_m: 1.6, combined_arc_m: 79.8, combined_span_m: 1992.7}
-  - {id: d1-t0, excess_m: 0.0, departure_deg: 58.9, angle_only_arc_m: 119.8, angle_only_tip_deg: 45.8, angle_only_excess_m: 8.2, combined_arc_m: 119.8, combined_span_m: 1977.5}
-  - {id: d1-t1, excess_m: 0.0, departure_deg: 47.0, angle_only_arc_m: 102.5, angle_only_tip_deg: 39.2, angle_only_excess_m: 4.0, combined_arc_m: 102.5, combined_span_m: 1980.9}
-  - {id: d1-t2, excess_m: 0.0, departure_deg: 40.3, angle_only_arc_m: 91.6, angle_only_tip_deg: 35.0, angle_only_excess_m: 2.3, combined_arc_m: 91.6, combined_span_m: 1983.1}
-  decision: Production anchor spans will use zero-excess weight-only seeds.
-    Combined span and arc corrections close both hand-model quantities, as
-    recorded per case below; they are counterfactuals, not production designs.
-    Stinger length remains a maintainer case-design decision before production.
-    Finite bending stiffness, lift-off and reactions are absent from the screen.
-    QA shall converge with positive wire length, End A within the lead,
-    nonnegative grounded effective tension and maximum overbend strain <= 0.00254.
+  # Weight-only bound, with unrounded intermediate calculations.
+  - {id: d0-t0, excess_m: -5.4, departure_deg: 54.1, angle_only_arc_m: 96.5, angle_only_tip_deg: 36.9, angle_only_excess_m: -2.5, combined_arc_m: 96.5, combined_span_m: 1991.2}
+  - {id: d0-t1, excess_m: -3.0, departure_deg: 42.3, angle_only_arc_m: 86.8, angle_only_tip_deg: 33.2, angle_only_excess_m: -1.8, combined_arc_m: 86.8, combined_span_m: 1992.1}
+  - {id: d0-t2, excess_m: -1.9, departure_deg: 35.9, angle_only_arc_m: 79.8, angle_only_tip_deg: 30.5, angle_only_excess_m: -1.4, combined_arc_m: 79.8, combined_span_m: 1992.7}
+  - {id: d1-t0, excess_m: -5.4, departure_deg: 53.3, angle_only_arc_m: 119.8, angle_only_tip_deg: 45.8, angle_only_excess_m: -3.6, combined_arc_m: 119.8, combined_span_m: 1977.5}
+  - {id: d1-t1, excess_m: -2.1, departure_deg: 41.6, angle_only_arc_m: 102.5, angle_only_tip_deg: 39.2, angle_only_excess_m: -1.9, combined_arc_m: 102.5, combined_span_m: 1980.9}
+  - {id: d1-t2, excess_m: -1.1, departure_deg: 35.2, angle_only_arc_m: 91.6, angle_only_tip_deg: 35.0, angle_only_excess_m: -1.1, combined_arc_m: 91.6, combined_span_m: 1983.1}
+  decision: >-
+    Declared End B positions use the stiff hand estimate, Table B.
+    The weight-only screen is retained as a bound only, not the design basis.
+    The 40 m layout is superseded; Table A reported excessive tip curvature
+    and nonzero tip reaction. The revised layout adds a 60 m firing line and
+    depth-specific stingers. D/(2R) = 0.00254 is a screen, not a pass criterion.
+    Static QA requires a 5-15 m wire, nonnegative End A support reaction,
+    S1 strain <= 1.10*D/(2R) with zero last-stinger-support force, lift-off arc
+    within 5 m, departure within 3 degrees, and nonnegative grounded tension.
+    Touchdown x, sag-bend strain and stiff closure are NOT_EVALUATED:
+    published reference pending, #2608. Their future comparison bands are
+    touchdown x within 10 m, sag-bend strain within 20 percent of Table B,
+    and stiff excess between 0 m and the 10 m lead; no reference is substituted.
     This QA screen does not establish installation design acceptance.
-  additional_static_suspects: The pipe axis at seabed level and bending/contact
-    residuals remain unresolved. Torsion is now excluded using the saved free-end
-    form. Prior nonconvergence cannot be attributed to tip angle without residuals.
+  additional_static_suspects: Native bending/contact residuals require fresh
+    readback. Anchored End B is one coated radius above the seabed. Torsion is
+    excluded using the saved free-end form.
   previous_native_qa:
     d0-t0:
       source: Dispatched solver-manager QA report; source record not accessible in this lane.
@@ -201,24 +303,5 @@ static_equilibrium_screen:
         with current only, and prior anchor-span probe
       required_readings_available: false
       qualification: Reported historical outcome only; regenerated inputs have not run.
-  probe:
-    id: d0-t0-anchor-span
-    production_case: false
-    generator: digitalmodel.solvers.orcaflex.modular_generator.slay_probe.prepare_anchor_span_probe
-    variant: probes/d0-t0-anchor-span.yml
-    manifest: probes/d0-t0-anchor-span.json
-    control: Both d0-t0 and d1-t0 variations retain the zero-excess production
-      seed and all loads and supports. End B x is recomputed at full precision.
-      They provide explicit diagnostic readback contracts for both depths.
-    required_readings:
-    - End A displacement relative to its initial position and the tensioner lead
-    - Wire direction and positive wire length
-    - Active roller contacts and departure slope
-    - Whole-system force residuals, including torsional residuals
-    - Tip contact force and curvature, and maximum overbend strain against 0.00254
-    - Effective tension along the grounded pipe, including any compression
-    interpretation: Convergence with positive wire length and the intended
-      force/contact state would show that length closure is sufficient for this
-      configuration. Failure alone does not establish the angle as governing.
-      Prior load succeeded but prior statics failed as recorded above. Current
-      inputs require fresh QA; no execution or queue is prepared.
+  retired_diagnostics: Both anchor-span probes are retired; the declared stiff
+    geometry replaces the weight-only seed. screen_case remains a bound only.

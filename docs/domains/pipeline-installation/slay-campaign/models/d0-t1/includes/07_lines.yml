@@ -13,7 +13,7 @@ Lines:
   ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
     ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
   : - - Free
-      - -91.1
+      - -31.099999999999994
       - 0.0
       - 0.0
       - 180
@@ -21,9 +21,9 @@ Lines:
       - 0
       - ~
     - - Anchored
-      - -2080.484626544703
+      - -2025.0
       - 0.0
-      - 0
+      - 0.485
       - 180
       - 90.0
       - 0

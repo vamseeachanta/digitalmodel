@@ -43,6 +43,11 @@ def model_files():
         path = ROOT / name
         if path.is_symlink():
             continue
+        # These diagnostics are deliberately retired before the deletion is committed.
+        retired = {f"docs/domains/pipeline-installation/slay-campaign/probes/{case}-anchor-span.yml"
+                   for case in ("d0-t0", "d1-t0")}
+        if name in retired and not path.exists():
+            continue
         raw = path.read_bytes()
         encoding = "utf-16" if raw.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8-sig"
         try:
@@ -198,13 +203,13 @@ BASE_MODEL_VALUES = {
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/07_lines.yml':
-        '2d723c1b3994c555ce091eaeac9cdc97d8cec0916d9a3b9aaa68d8776691879a',
+        '5e0e9f995b4ac45172528dba816c40c1d0a45f6c725d74c8cb9833fbcee98101',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/09_shapes.yml':
         '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/10_groups.yml':
         'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/11_winches.yml':
-        'f003ecf7dc7f1cf4295e7620fa15a7c7485db7552e3b685dcf673f9f8b722f5e',
+        '94e103080e663bd1f9286109e9f7bb0662f1e77c7a365aaabdff6f15cef2956d',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/01_general.yml':
@@ -216,13 +221,13 @@ BASE_MODEL_VALUES = {
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/07_lines.yml':
-        '73c91138ab41b6bed1e60fa515f78bcb0c2671bf9a1c2c19de7795cba8a4fe0a',
+        '7e82a4dbb74d006ed22485c944fb0e5d408880cfd2bad2e7c7b5e2a6a8e5d3bd',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/09_shapes.yml':
         '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/10_groups.yml':
         'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/11_winches.yml':
-        '05e9b90cbc2cda19ee11aed60ec7260c1aef08c6042e08542bdcc41085a4f130',
+        '1ac9a46df577a304dcc4ec7199d8780dadf4e6be0bd57539982c56fa9aa66864',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/01_general.yml':
@@ -234,13 +239,13 @@ BASE_MODEL_VALUES = {
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/07_lines.yml':
-        '765f49843f263aaa9362682fffc767d5966ea92718bd97d6f7b1cd8c72be7da4',
+        '71fc4540fec5bcff2db4c541c543b8c17e208d37acc3c003d33074970155295f',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/09_shapes.yml':
         '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/10_groups.yml':
         'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/11_winches.yml':
-        '093426260737efa4a970a9cf099597a76475b20664d9226de20823dcc5cacac8',
+        '57a0d14d640f5b293a691c58afd4e5b5289eef28f17343266f1be046a92b5ba4',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/01_general.yml':
@@ -252,13 +257,13 @@ BASE_MODEL_VALUES = {
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/07_lines.yml':
-        '3e5814a189c081aa28bb754c015b1bfdfc7d40cf5dfa3a3a21616972fecbde11',
+        '520912559cce9cca0320dd7eafa9c82d34cfc3a039275dcc7845a66bbf7ee8fb',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/09_shapes.yml':
         '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/10_groups.yml':
         'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/11_winches.yml':
-        '093426260737efa4a970a9cf099597a76475b20664d9226de20823dcc5cacac8',
+        '57a0d14d640f5b293a691c58afd4e5b5289eef28f17343266f1be046a92b5ba4',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/01_general.yml':
@@ -270,13 +275,13 @@ BASE_MODEL_VALUES = {
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/07_lines.yml':
-        'cd4a2e9b97cb0716f68333ab3d86c3dd1c113798a82c6216dfc09321e7d560b7',
+        '2258cd02ca8f638edb038c76e6cc57a6179e4edc43251783e1d0e9376f860d39',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/09_shapes.yml':
         '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/10_groups.yml':
         'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/11_winches.yml':
-        '0c748f5eec64cdc5cfd08ab829d1f8bf8231bfdfd3f77b6de19da7f09ab64fef',
+        '7f68e10d9ebf0b925af7f47242a2659d37d565e92a7b22f9f86555cdb1f3a0f3',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/01_general.yml':
@@ -288,13 +293,13 @@ BASE_MODEL_VALUES = {
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/07_lines.yml':
-        '3ed7edfaa16c41f2905b34c6cb200e816a6c5d30d7f4401d7c0c6c97e2ddea39',
+        '814931b3033924e3d39f786e40bb3d6a51fcb69935702ee7def5e724aaf459aa',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/09_shapes.yml':
         '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/10_groups.yml':
         'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/11_winches.yml':
-        '64ae0cdc724bf8d3896ebbf78db457dbad2a79582adf88ab94c8887689c6e98a',
+        '5289ec75618dbfafdf83bdeb72304610af12f37cf2638437eed3176378e07bea',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'tests/solvers/fea/test_data/mooring/C05 Single point mooring.yml':
@@ -451,3 +456,21 @@ def test_wave_order_detection(train, expected):
         f"  - {train}\nLines:\n  WaveTp: 1\n"
     )
     assert wave_order_findings(text) == expected
+
+
+def test_model_discovery_handles_uncommitted_probe_retirement(tmp_path, monkeypatch):
+    relative = "docs/domains/pipeline-installation/slay-campaign/probes/d0-t0-anchor-span.yml"
+    removed = tmp_path / relative
+    removed.parent.mkdir(parents=True)
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
+    assert list(model_files()) == []
+
+
+
+def test_model_discovery_still_rejects_other_missing_tracked_inputs(tmp_path, monkeypatch):
+    relative = "docs/domains/orcaflex/templates/modular/includes/missing.yml"
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
+    with pytest.raises(FileNotFoundError):
+        list(model_files())

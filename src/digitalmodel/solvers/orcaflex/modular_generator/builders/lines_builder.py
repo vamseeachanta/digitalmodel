@@ -232,8 +232,8 @@ class LinesBuilder(BaseBuilder):
     def _slay_endpoints(self) -> list[list]:
         """Seed a free upper end and a separated seabed anchor.
 
-        The horizontal seed closes a weight-only catenary below the supported
-        arc when a stinger and tensioner are supplied. It is not a solved
+        A declared anchor coordinate takes precedence over the weight-only
+        fallback. The firing line moves End A ahead of the stinger. Neither is a solved
         bending/contact state; the seabed surface approximates touchdown.
         Only planar, level-hull geometry is supported by this seed. With a
         sloping seabed the horizontal span estimate is approximate; anchored
@@ -246,7 +246,9 @@ class LinesBuilder(BaseBuilder):
             raise ValueError("S-lay endpoints require vessel and pipeline")
         if any(vessel.orientation[:2]):
             raise ValueError("S-lay endpoint seed requires level hull")
-        origin = stinger.origin_position if stinger else [0, 0, 0]
+        origin = list(stinger.origin_position) if stinger else [0, 0, 0]
+        if stinger:
+            origin[0] += stinger.firing_line_length
         heading = math.radians(vessel.orientation[2])
         c, s = math.cos(heading), math.sin(heading)
         x = vessel.position[0] + c * origin[0] - s * origin[1]
@@ -254,12 +256,17 @@ class LinesBuilder(BaseBuilder):
         z = vessel.position[2] + origin[2]
         height = self.spec.environment.water.depth + z
         span = sum(segment.length for segment in pipeline.segments) - height
-        if stinger is not None and stinger.sections and self.spec.equipment.tensioner is not None:
+        if self.spec.equipment.slay_end_b_x is not None:
+            span = origin[0] - self.spec.equipment.slay_end_b_x
+        elif stinger is not None and stinger.sections and self.spec.equipment.tensioner is not None:
             span = self._slay_taut_span(height)
+        coated_radius = pipeline.dimensions.outer_diameter / 2
+        coated_radius += pipeline.coatings.corrosion.thickness
+        coated_radius += sum(coating.thickness for coating in pipeline.coatings.weight)
         if height <= 0 or span <= 0:
             raise ValueError("S-lay endpoint height must be positive and below pipe length")
         return [["Free", x, y, z, 180, 90, 0, None],
-                ["Anchored", x - span * c, y - span * s, 0, 180,
+                ["Anchored", x - span * c, y - span * s, coated_radius, 180,
                  90 + self.spec.environment.seabed.slope, 0, None]]
 
     def _slay_taut_span(self, height: float) -> float:
