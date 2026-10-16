@@ -120,10 +120,13 @@ class BenchmarkConfig(BaseModel):
     headings: Optional[list[float]] = None
     timeout_seconds: int = 7200
     reference_solver: Optional[str] = None
+    comparison_order: Optional[list[str]] = None
 
     # UI / Reporting overrides
     report_title: Optional[str] = None
     report_subtitle: Optional[str] = None
+    report_page_title: Optional[str] = None
+    plot_title: Optional[str] = None
     navigation_html: Optional[str] = None
 
 
@@ -240,6 +243,11 @@ class BenchmarkRunner:
             solver_results,
             policy=self._build_comparison_policy(),
         )
+        order = self.config.comparison_order
+        if order is not None:
+            if len(order) != len(solver_results) or set(order) != set(solver_results):
+                raise ValueError("comparison_order must list each series exactly once")
+            comparator.solver_names = list(order)
         return comparator.generate_report()
 
     def _build_comparison_policy(self) -> Optional[ComparisonPolicy]:
@@ -284,6 +292,7 @@ class BenchmarkRunner:
             solver_results,
             output_dir=self.config.output_dir,
             x_axis=self.config.x_axis,
+            plot_title=self.config.plot_title,
         )
 
         paths = plotter.plot_all(headings=self.config.headings)
@@ -780,7 +789,9 @@ class BenchmarkRunner:
         report_data.notes = list(report.notes)
 
         # --- 8. Generate via unified template --------------------------------
-        generate_diffraction_report(report_data, html_path)
+        generate_diffraction_report(
+            report_data, html_path, page_title=self.config.report_page_title,
+        )
         return html_path
 
 

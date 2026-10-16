@@ -124,7 +124,7 @@ BaseFile: __03a_umbilical_br_ap.yml
     SeabedFrictionCoefficient: 0
     ShadedDrawingCullingMode: No culling
     ShadedDrawingDrawSize: '~'
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
     ShadedDrawingMirrorInPlane: Not mirrored
     ShadedDrawingOrientation:
     - 0

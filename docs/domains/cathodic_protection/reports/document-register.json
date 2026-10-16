@@ -63,11 +63,11 @@
     "approved_by": "Pending",
     "checked_by": "Pending",
     "client": "Internal module review - no client issuance",
-    "date": "2026-10-03",
+    "date": "2026-10-14",
     "number": "R2281-CP-004-00",
     "prepared_by": "Automated regression report",
     "project": "Digitalmodel CP regression portfolio",
-    "revision": "00",
+    "revision": "01",
     "revision_history": [
       {
         "approved": "Pending",
@@ -75,9 +75,16 @@
         "date": "2026-10-03",
         "description": "Internal review draft",
         "rev": "00"
+      },
+      {
+        "approved": "Pending",
+        "checked": "Pending",
+        "date": "2026-10-14",
+        "description": "Internal draft: clarify hull provenance and remove ignored capacity input",
+        "rev": "01"
       }
     ],
-    "title": "CP module review: Ship hull"
+    "title": "Hull cathodic protection analysis"
   },
   "S05": {
     "approved_by": "Pending",

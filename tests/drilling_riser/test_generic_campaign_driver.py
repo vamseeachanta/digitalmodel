@@ -48,6 +48,29 @@ class DriverTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'finite and positive'):
             driver.criterion_rows({name: 1.0 for name in driver.METRICS}, criteria)
 
+    def test_null_criteria_raise_value_error(self):
+        driver = load_driver()
+        from digitalmodel.drilling_riser.generic_campaign import case_table
+        with self.assertRaisesRegex(ValueError, 'finite and positive'):
+            driver.criterion_rows({}, case_table(ROOT)['criteria'])
+
+    def test_missing_interface_is_configuration_failure(self):
+        driver = load_driver()
+        import sys
+        with patch.dict(sys.modules, {'OrcFxAPI': None}):
+            with self.assertRaisesRegex(RuntimeError, 'interface not importable'):
+                driver.run_case(Path('unused'), Path('unused'))
+
+    def test_ring_reference_uses_case_table(self):
+        driver = load_driver()
+        import yaml
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            table = {'cases': [{'id': 'synthetic',
+                'ring_initial_position_m': {'value': [0, 0, 37]}}]}
+            (folder / 'case-table.yml').write_text(yaml.safe_dump(table), encoding='utf-8')
+            self.assertEqual(driver.ring_reference_z(folder / 'models/synthetic/master.yml'), 37)
+
     def test_interface_import_is_local(self):
         tree = ast.parse(DRIVER.read_text(encoding='utf-8'))
         imports = []

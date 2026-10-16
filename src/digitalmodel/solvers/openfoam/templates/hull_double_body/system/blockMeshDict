@@ -1,0 +1,130 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// THREE z-levels, not seven. The free-surface sibling stacks six blocks so it
+// can put a thin band of cells either side of the interface and an air column
+// above it. This case has no interface and no air: the domain is the water,
+// truncated at the waterline, and the waterline itself is a SYMMETRY PLANE.
+//
+//   Z2  ---- waterline (z = draft) ------- symmetryPlane `waterline`
+//         |  near field, uniform in z
+//   Z1  ----- keel clearance -------------
+//         |  far field, graded towards the near field
+//   Z0  ----- domain floor ---------------- symmetryPlane `bottom`
+//
+// The vertical ladder is the free-surface case's own: Z0 and Z1 are its first
+// two levels and the near-field cell height is its near-field cell height.
+// That is deliberate -- a form factor is only interpretable if the viscous
+// resistance it is built from was computed on the same discretisation as the
+// run it will be applied to.
+
+scale   1;
+
+vertices
+(
+    (@X0@ @Y0@ @Z0@)
+    (@X1@ @Y0@ @Z0@)
+    (@X1@ 0 @Z0@)
+    (@X0@ 0 @Z0@)
+
+    (@X0@ @Y0@ @Z1@)
+    (@X1@ @Y0@ @Z1@)
+    (@X1@ 0 @Z1@)
+    (@X0@ 0 @Z1@)
+
+    (@X0@ @Y0@ @Z2@)
+    (@X1@ @Y0@ @Z2@)
+    (@X1@ 0 @Z2@)
+    (@X0@ 0 @Z2@)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (@NX@ @NY@ @NZDEEP@) simpleGrading (1 1 0.05)
+    hex (4 5 6 7 8 9 10 11) (@NX@ @NY@ @NZNEAR@) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    // The free surface, removed. A symmetry plane imposes zero normal
+    // velocity and zero normal gradient on everything else, which is the
+    // undisturbed-waterline (zero Froude number) limit of a free surface: no
+    // wave elevation, therefore no wave-making resistance. That is what makes
+    // the remaining resistance purely viscous.
+    waterline
+    {
+        type symmetryPlane;
+        faces
+        (
+            (8 9 10 11)
+        );
+    }
+    inlet
+    {
+        type patch;
+        faces
+        (
+            (1 2 6 5)
+            (5 6 10 9)
+        );
+    }
+    outlet
+    {
+        type patch;
+        faces
+        (
+            (0 4 7 3)
+            (4 8 11 7)
+        );
+    }
+    bottom
+    {
+        type symmetryPlane;
+        faces
+        (
+            (0 3 2 1)
+        );
+    }
+    side
+    {
+        type symmetryPlane;
+        faces
+        (
+            (0 1 5 4)
+            (4 5 9 8)
+        );
+    }
+    midPlane
+    {
+        type symmetryPlane;
+        faces
+        (
+            (3 7 6 2)
+            (7 11 10 6)
+        );
+    }
+);
+
+mergePatchPairs
+(
+);
+
+
+// ************************************************************************* //

@@ -1,0 +1,40 @@
+# Case registry for the KCS ship-resistance solve chain (#1173, #2023).
+#
+# The host-side scripts this replaces hard-coded the case list as
+# `for case in kcs_production kcs_companion`, and the runaway budgets as a
+# bash associative array. Both lived only on the solve host, so a clean
+# checkout could not reproduce the chain at all. Externalised here so the
+# chain is data-driven and reviewable.
+#
+# budget_hours is a RUNAWAY BOUND, not a schedule. It should never fire on a
+# healthy run; if it fires, something is wrong and stopping is correct.
+# Derived from the committed benchmark: 2.392 us/cell-iteration at 8 ranks,
+# with 2x headroom.
+
+defaults:
+  ranks: 8
+  end_time: 25000
+  write_interval: 2500
+  # hierarchical decomposition requires prod(n) == ranks, else decomposePar
+  # exits fatally with "Wrong number of domain divisions". Split the longest
+  # axis (x) so subdomains stay compact.
+  decompose_n:
+    8: [2, 2, 2]
+    16: [4, 2, 2]
+    32: [8, 2, 2]
+
+cases:
+  - name: kcs_production
+    budget_hours: 60
+    description: production grid, KCS benchmark hull
+  - name: kcs_companion
+    budget_hours: 24
+    description: companion (coarser) grid for grid-convergence ratio
+  - name: kcs_fine
+    budget_hours: 96
+    ranks: 8
+    description: fine grid, prolonged from the medium solution via mapFieldsPar
+  - name: kcs_prod_yplus
+    budget_hours: 48
+    ranks: 16
+    description: wall-refined production grid (near-wall resolution study)

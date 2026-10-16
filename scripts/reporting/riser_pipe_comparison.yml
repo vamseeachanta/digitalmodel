@@ -1,0 +1,33 @@
+basis_commit: cc36804fbdfe803b9bc272269dec3056aa48b009
+pipe:
+  outer_diameter_mm: 273
+  wall_thickness_mm: 21.4
+  grade: generic assumed material
+  smys: 240
+  smts: 415
+  strength_unit: MPa
+  youngs_modulus_pa: 207000000000
+  poissons_ratio: 0.3
+  corrosion_allowance_mm: 0
+  fabrication_tolerance: 0
+water_depth_m: 1000
+cases:
+  - name: operating
+    internal_pressure_pa: 20000000
+    external_pressure_pa: 10000000
+    bending_moment_nm: 250000
+    effective_tension_n: 1500000
+sources: []
+input_basis:
+  outer_diameter_mm: Assumed
+  wall_thickness_mm: Assumed
+  smys: Assumed
+  smts: Assumed
+assumptions:
+  - Loads, depth and elastic properties are assumed, based on previous experience.
+  - Zero corrosion allowance and fabrication deduction are assumed.
+  - Pressures are supplied as absolute values at the checked section.
+  - Water depth is context; external pressure is supplied independently.
+  - Both strategies use nominal wall and credit no internal support in collapse.
+  - Dimensions and strengths are assumed generic properties, without a schedule or grade designation.
+  - Material suitability and availability are not established.

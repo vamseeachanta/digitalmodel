@@ -31,6 +31,13 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/cfd/build_calm_water_study.py": (
+        "writes native records and docs/domains HTML, not docs/api pages"
+    ),
+    "scripts/reporting/build_reference_jacket_analysis.py": (
+        "renders the reference-jacket analysis under docs/domains, not docs/api; "
+        "dedicated reporting tests verify byte reproduction"
+    ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
     ),
@@ -96,6 +103,9 @@ DISCOVERY_FALSE_POSITIVES = {
 
 # Active generators which cannot run from repository-owned deterministic inputs.
 EXCLUDED_GENERATORS = {
+    "scripts/cfd/generate-kcs-verification.py": (
+        "requires a caller-supplied solved OpenFOAM case"
+    ),
     "docs/api/cfd/report_build/build_dam_break.py": (
         "requires a caller-supplied solved OpenFOAM case"
     ),
@@ -193,6 +203,10 @@ PAGE_EXCLUSIONS = {
 # than source-text heuristics alone, prevents new docs/api output from silently
 # bypassing ownership.
 MANUAL_PAGES = {
+    "docs/api/cfd/kcs-calm-water-resistance-verification.html": (
+        "emitted from a solved case by scripts/cfd/generate-kcs-verification.py; "
+        "the solve output is not in the repo, so CI cannot regenerate it"
+    ),
     "docs/api/buckling/ship-panel-buckling.html": (
         "hand-maintained interactive report; no scripts producer found"
     ),

@@ -34,7 +34,8 @@ REFERENCES = {
            'Riser Systems, second edition, April 2017',
     '5L': 'API Spec 5L, Line Pipe, 46th edition, April 2018',
     '2RD': 'API RP 2RD, Design of Risers for Floating Production Systems (FPSs) and '
-           'Tension-Leg Platforms (TLPs), first edition, June 1998',
+           'Tension-Leg Platforms (TLPs), first edition, June 1998; historical background only, '
+           'retained to match the cited public errata; no acceptance criterion uses this edition',
 }
 RUNTIME_UNITS = {'mean_angle_deg': 'degrees', 'max_angle_deg': 'degrees',
                  'yield_strength_mpa': 'MPa', 'stress_design_factor': '1'}
@@ -43,7 +44,7 @@ RUNTIME_UNITS = {'mean_angle_deg': 'degrees', 'max_angle_deg': 'degrees',
 def horizontal_shift(offset: float, direction: float) -> list[float]:
     """Resolve offset along current bearing by Cartesian sine/cosine projection."""
     angle = math.radians(direction)
-    return [round(offset * math.cos(angle), 10), round(offset * math.sin(angle), 10)]
+    return [round(offset * math.cos(angle), 10) + 0.0, round(offset * math.sin(angle), 10) + 0.0]
 
 
 def load_criteria(path: Path | None, table: dict) -> tuple[dict, str]:
@@ -169,7 +170,7 @@ def case_table(root: Path) -> dict:
                 'current_mps': tagged(speed, unit='m/s'),
                 'current_direction_deg': source['environment']['current']['direction'],
                 'current_profile': tagged([[0, 1], [depth, 1]], unit='m, 1'),
-                'wave_applied': tagged(False, f'{SPEC.as_posix()}:35-39; specification wave is not applied; '
+                'wave_applied': tagged(False, f'{SPEC.as_posix()}:37-41; specification wave is not applied; '
                     'offset and current only by scope'),
                 'ring_initial_position_m': tagged(
                     horizontal_shift(watch_circle_radius_m(offset, depth), spec['environment']['current']['direction'])
@@ -184,6 +185,7 @@ def case_table(root: Path) -> dict:
         'template_sha256': source_digest(root / SPEC),
         'template_digest_basis': 'UTF-8 source text normalized to LF',
         'basis': {key: source[key] for key in ('environment', 'simulation', 'generic')},
+        'wave_basis_note': 'Specification wave data are retained for provenance only; no wave is applied.',
         'profile_description': 'Uniform current from surface to seabed; assumed, based on previous experience',
         'criteria': {
             'mean_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),
@@ -205,7 +207,9 @@ def case_table(root: Path) -> dict:
         },
         'screen_limitations': 'Approximate riser-column screen; constant assumed top tension, uniform drag, pinned ends; '
             'lower joint angle is not established because effective tension varies along the column. '
-            'Upper angle and stress retain the constant-tension approximation. '
+            'Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. '
+            'Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. '
+            'Stress retains the constant-tension approximation. '
             'Screen tension is an assumed criterion value, not the modelled tension. '
             'attached members, nonlinear tensioner response, pressure stress and wave loading omitted. '
             'Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.',
@@ -231,6 +235,10 @@ def build_models(root: Path, destination: Path, table: dict) -> None:
     from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
     if source_digest(root / SPEC) != table['template_sha256']:
         raise ValueError('Source specification digest mismatch')
+    for case in table['cases']:
+        for key in case:
+            if key.startswith('PrescribedMotion'):
+                raise ValueError(f'Unsupported vessel motion: {key}')
     if table != case_table(root):
         raise ValueError('Unsupported case table; use the fixed sourced sweep')
     for case in table['cases']:
@@ -240,6 +248,10 @@ def build_models(root: Path, destination: Path, table: dict) -> None:
         vessel['initial_position'] = shift + [0]
         ring = next(b for b in spec['generic']['buoys_6d'] if b['name'] == 'Tensioner Ring')
         ring['initial_position'] = case['ring_initial_position_m']['value']
+        drill = next(line for line in spec['generic']['lines'] if line['name'] == 'Drill String')
+        connections = next(value for key, value in drill['properties'].items()
+                           if key.startswith('Connection, '))
+        connections[0][1:3] = shift
         # Calm-water precedent: library/templates/installation_pull_in/spec.yml:35-36.
         spec['environment']['waves'].update(type='Airy', height=0)
         props = vessel['properties']
@@ -280,7 +292,6 @@ def screen_rows(root: Path, table: dict) -> list[dict]:
         rows.append({'case_id': case['id'], 'offset_pct': case['offset_pct']['value'],
             'current_mps': speed, 'submerged_weight_kn': basis['weight_kn'],
             'required_top_tension_kn': basis['min_tension_kn'],
-            'upper_angle_deg': abs(response.angle_upper_deg),
             'axial_plus_bending_stress_mpa': stress,
             'geometric_extension_m': math.hypot(basis['length'], offset) - basis['length'],
             'scope': 'approximate riser-column screen'})

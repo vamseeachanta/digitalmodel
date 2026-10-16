@@ -114,8 +114,7 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
     for case in cases:
         result, screen = summaries[case['id']], screens[case['id']]
         for label, metric, column in (
-                ('upper mean angle (°)', 'upper_mean_deg', 'upper_angle_deg'),
-                ('maximum stress (MPa)', 'stress_max_mpa', 'axial_plus_bending_stress_mpa')):
+                ('maximum stress (MPa)', 'stress_max_mpa', 'axial_plus_bending_stress_mpa'),):
             reference = float(screen[column])
             demand = result[metric]
             difference = (demand - reference) / abs(reference) * 100 if abs(reference) > 1e-9 else 'not defined'
@@ -162,8 +161,8 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             'elevation relative to its initial 20 m elevation; vessel elevation is fixed. Maximum von Mises stress is '
             'taken over the main riser. Native channel qualification is required before engineering acceptance.\n\n'
             'The static comparison uses a pinned beam with constant assumed top tension and uniform drag. '
-            'The lower joint angle is not established and is omitted from the comparison. Upper angle remains '
-            'approximate because column tension varies. Its '
+            'Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. '
+            'The above-water column is treated as submerged, underestimating weight by about 1.0 %. Its '
             'axial-plus-bending stress omits pressure stress. It is an approximate screening estimate, not an assembly calculation.')),
         section('results', '5. Detailed Results', text('The governing demand is stated with its criterion, component and '
             'limit. Percentage differences use the static screen as reference: 100 × (dynamic demand − screen) / |screen|. '

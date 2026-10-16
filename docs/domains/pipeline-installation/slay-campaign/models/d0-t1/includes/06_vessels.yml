@@ -1,0 +1,118 @@
+Vessels:
+- Name: Generic lay hull
+  VesselType: Generic lay hull Type
+  Length: 182.2
+  Connection: Free
+  InitialPosition:
+  - 0
+  - 0
+  - 0
+  InitialHeading: 0
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludedInStatics: None
+  WaveCalculationMethod: Specified by environment
+  SupportGeometrySpecification: Explicit
+  SupportCoordinateSystems:
+  - SupportCoordinateSystemName: Stinger
+    SupportCoordinateSystemPos:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystemOrientation:
+    - 0
+    - 0
+    - 0
+  SupportedLine:
+  - Generic pipe
+  Supports:
+  - SupportType: Support type2
+    SupportPosition:
+    - -91.1
+    - 0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -96.099
+    - 0
+    - -1.568
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -101.093
+    - 0
+    - -1.818
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -106.075
+    - 0
+    - -2.234
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -111.041
+    - 0
+    - -2.816
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -115.984
+    - 0
+    - -3.564
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -120.9
+    - 0
+    - -4.475
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -125.783
+    - 0
+    - -5.55
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -130.628
+    - 0
+    - -6.787
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger

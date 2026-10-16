@@ -63,12 +63,13 @@ class GenericCampaignTests(unittest.TestCase):
         table = campaign.case_table(ROOT)
         table['cases'][0]['PrescribedMotionSpeedValue'] = campaign.tagged(1)
         with tempfile.TemporaryDirectory() as temporary:
-            with self.assertRaisesRegex(ValueError, 'Unsupported case table'):
+            with self.assertRaisesRegex(ValueError, 'PrescribedMotionSpeedValue'):
                 campaign.build_models(ROOT, Path(temporary), table)
 
     def test_offset_direction_projection(self):
         self.assertEqual(campaign.horizontal_shift(10, 90), [0, 10])
         self.assertEqual(campaign.horizontal_shift(10, 180), [-10, 0])
+        self.assertEqual(str(campaign.horizontal_shift(0, 180)), '[0.0, 0.0]')
 
     def test_preparation_release_role(self):
         data = json.loads((ROOT / campaign.DEST / 'preparation.json').read_text(encoding='utf-8'))
@@ -145,6 +146,9 @@ class GenericCampaignTests(unittest.TestCase):
                 ring = next(item for item in data['6DBuoys'] if item['Name'] == 'Tensioner Ring')
                 self.assertEqual(ring['InitialPosition'][:2], vessel['InitialPosition'][:2])
                 self.assertEqual(ring['InitialPosition'], case['ring_initial_position_m']['value'])
+                drill = next(item for item in data['Lines'] if item['Name'] == 'Drill String')
+                connections = next(value for key, value in drill.items() if key.startswith('Connection, '))
+                self.assertEqual(connections[0][1:3], vessel['InitialPosition'][:2])
                 self.assertIn('assumed', (folder / 'master.yml').read_text(encoding='utf-8'))
                 campaign.validate_model(folder)
 
@@ -153,7 +157,9 @@ class GenericCampaignTests(unittest.TestCase):
         rows = campaign.screen_rows(ROOT, table)
         self.assertEqual(len(rows), 24)
         self.assertNotIn('lower_angle_deg', rows[0])
-        self.assertGreater(rows[-1]['upper_angle_deg'], 0)
+        self.assertNotIn('upper_angle_deg', rows[-1])
+        self.assertIn('factor of two', table['screen_limitations'])
+        self.assertIn('above-water', table['screen_limitations'])
         self.assertIn('lower joint angle is not established', table['screen_limitations'])
         self.assertEqual(rows[0]['scope'], 'approximate riser-column screen')
 

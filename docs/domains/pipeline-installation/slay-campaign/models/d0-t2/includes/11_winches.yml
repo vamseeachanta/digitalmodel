@@ -1,0 +1,21 @@
+Winches:
+- Name: Tensioner
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Generic lay hull
+    - -81.1
+    - 0.0
+    - 0.0
+  - - Generic pipe
+    - 0
+    - 0
+    - 0
+    - End A
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified tension
+    - 836.3933320676529
+  - - Specified tension
+    - 836.3933320676529
+  - - Specified tension
+    - 836.3933320676529

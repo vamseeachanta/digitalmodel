@@ -40,13 +40,13 @@ LineTypes:
   TensionTorqueCoupling: 0
   Ca:
   - 1
-  - null
+  - ~
   - 0
   Cs: 0
   Ce: 0
   Cd:
   - 1.2
-  - null
+  - ~
   - 0.008
   Cl: 0
   SeabedLateralFrictionCoefficient: 0.5
@@ -55,7 +55,7 @@ LineTypes:
   MassPerUnitLength: 0.385
   EI:
   - 508.9441458046986e3
-  - null
+  - ~
   EA: 1.0
 - Name: Drill Pipe
   Category: Homogeneous pipe
@@ -108,13 +108,13 @@ LineTypes:
   OuterContactDiameter: 0.2
   Ca:
   - 0
-  - null
+  - ~
   - 0
   Cs: 0
   Ce: 0
   Cd:
   - 0
-  - null
+  - ~
   - 0
   Cl: 0
   SeabedLateralFrictionCoefficient: 0
@@ -123,7 +123,7 @@ LineTypes:
   MassPerUnitLength: 100e-6
   EI:
   - 0
-  - null
+  - ~
   EA: 1.0
 VesselTypes:
 - Name: 8 column semisub
@@ -163,8 +163,8 @@ VesselTypes:
       - 0
       - 0
       PhaseOrigin:
-      - null
-      - null
+      - ~
+      - ~
       - 0
       RAOs:
       - RAODirection: 180
@@ -454,7 +454,7 @@ Lines:
       - 0
       - 180
       - 180
-      - null
+      - ~
     - - Flex Joint
       - 0
       - 0
@@ -462,13 +462,13 @@ Lines:
       - 0
       - 180
       - 180
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - - Infinity
-    - null
+    - ~
     - Infinity
   - - Infinity
-    - null
+    - ~
     - Infinity
   LineType, Length, TargetSegmentLength:
   - - 24" RISER
@@ -497,7 +497,7 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
     - - Tensioner Ring
       - 0
       - 0
@@ -505,14 +505,14 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - - 30
-    - null
+    - ~
     - 100
     - 0
   - - Infinity
-    - null
+    - ~
     - Infinity
   Sections:
   - LineType: Slip Joint
@@ -535,13 +535,13 @@ Lines:
   ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
     ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
   : - - Free
-      - 0
-      - 0
+      - -51.0
+      - 0.0
       - 34
       - 0
       - 180
       - 0
-      - null
+      - ~
     - - Drill String Connection
       - 0
       - 0
@@ -549,11 +549,11 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - []
   - - Infinity
-    - null
+    - ~
     - Infinity
   ? MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX,
     MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination,
@@ -567,7 +567,7 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
   LineType, Length, TargetSegmentLength:
   - - Drill Pipe
     - 1035
@@ -598,7 +598,7 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
     - - Flex Joint
       - 0.7997588543679546
       - 0
@@ -606,13 +606,13 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - - Infinity
-    - null
+    - ~
     - Infinity
   - - Infinity
-    - null
+    - ~
     - Infinity
   LineType, Length, TargetSegmentLength:
   - - Choke and Kill
@@ -644,7 +644,7 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
     - - Flex Joint
       - -0.8
       - 0
@@ -652,13 +652,13 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - - Infinity
-    - null
+    - ~
     - Infinity
   - - Infinity
-    - null
+    - ~
     - Infinity
   LineType, Length, TargetSegmentLength:
   - - Choke and Kill
@@ -689,7 +689,7 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
     - - Fixed
       - 0
       - 0
@@ -697,12 +697,12 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - - Infinity
-    - null
+    - ~
   - - 120
-    - null
+    - ~
   Sections:
   - LineType: 24" RISER
     Length: 0.25
@@ -731,7 +731,7 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
     - - DHA
       - 0
       - 0
@@ -739,12 +739,12 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - - Infinity
-    - null
+    - ~
   - - Infinity
-    - null
+    - ~
   LineType, Length, TargetSegmentLength:
   - - Drill Pipe
     - 465
@@ -774,7 +774,7 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
     - - Fixed
       - 0
       - 0
@@ -782,13 +782,13 @@ Lines:
       - 0
       - 180
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - - Infinity
-    - null
+    - ~
     - Infinity
   - - Infinity
-    - null
+    - ~
     - Infinity
   LineType, Length, TargetSegmentLength:
   - - 24" RISER
@@ -815,7 +815,7 @@ Lines:
       - 270
       - 90
       - 0
-      - null
+      - ~
     - - Semisub
       - 5
       - -5
@@ -823,12 +823,12 @@ Lines:
       - 270
       - 90
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - - 0
-    - null
+    - ~
   - - 0
-    - null
+    - ~
   Sections:
   - LineType: Moonpool Edge
     Length: 1
@@ -854,7 +854,7 @@ Lines:
       - 180
       - 90
       - 0
-      - null
+      - ~
     - - Semisub
       - -5
       - 5
@@ -862,12 +862,12 @@ Lines:
       - 180
       - 90
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - - 0
-    - null
+    - ~
   - - 0
-    - null
+    - ~
   Sections:
   - LineType: Moonpool Edge
     Length: 1
@@ -893,7 +893,7 @@ Lines:
       - 270
       - 90
       - 0
-      - null
+      - ~
     - - Semisub
       - -5
       - -5
@@ -901,12 +901,12 @@ Lines:
       - 270
       - 90
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - - 0
-    - null
+    - ~
   - - 0
-    - null
+    - ~
   Sections:
   - LineType: Moonpool Edge
     Length: 1
@@ -932,7 +932,7 @@ Lines:
       - 0
       - 90
       - 0
-      - null
+      - ~
     - - Semisub
       - 5
       - -5
@@ -940,12 +940,12 @@ Lines:
       - 0
       - 90
       - 0
-      - null
+      - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness:
   - - 0
-    - null
+    - ~
   - - 0
-    - null
+    - ~
   Sections:
   - LineType: Moonpool Edge
     Length: 1

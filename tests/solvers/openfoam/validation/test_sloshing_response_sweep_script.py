@@ -168,3 +168,27 @@ def test_cli_forwards_requested_roll_amplitude(
         == 0
     )
     assert seen == [8.0]
+
+
+def test_build_accepts_longitudinal_dimensions_and_fill_depth(tmp_path, sweep_module):
+    spec = {"kind": "forced", "hl": 1 / 3, "ratio": 1.0,
+            "drive_period": 1.4882, "name": "longitudinal"}
+    case = sweep_module._build(tmp_path, spec, breadth=1.35, tank_height=0.9, fill_depth=0.45)
+    mesh = (case / "system/blockMeshDict").read_text()
+    control = (case / "system/controlDict").read_text()
+    assert "(1.35" in mesh
+    assert "(0.01125 0 0.005)" in control
+    stored = json.loads((case / "_spec.json").read_text())
+    assert stored["breadth"] == 1.35
+    assert stored["tank_height"] == 0.9
+    assert stored["fill_depth"] == 0.45
+
+
+def test_default_cases_match_independent_base_hashes(tmp_path, sweep_module):
+    import hashlib
+    fixture = Path(__file__).parent / "fixtures/sloshing_response_default_sha256.json"
+    for spec in sweep_module._specs():
+        sweep_module._build(tmp_path, spec)
+    actual = {p.relative_to(tmp_path).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in sorted(tmp_path.rglob("*")) if p.is_file()}
+    assert actual == json.loads(fixture.read_text())

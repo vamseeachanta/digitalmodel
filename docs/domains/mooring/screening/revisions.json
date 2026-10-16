@@ -1,0 +1,9 @@
+{
+  "history": [
+    {
+      "change": "Static catenary lines and a traceable run record are added; unsupported illustrative response values are removed.",
+      "date": "2026-10-14",
+      "revision": "R1"
+    }
+  ]
+}

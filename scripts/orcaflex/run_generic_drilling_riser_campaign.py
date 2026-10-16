@@ -72,9 +72,10 @@ def criterion_rows(result: dict[str, Any], criteria: dict[str, Any]) -> list[tup
     """Criterion, component, demand, limit, unit, utilization; all checks active."""
     limit = {key: entry['value'] for key, entry in criteria.items()}
     for key in ('mean_angle_deg', 'max_angle_deg', 'min_top_tension_kn', 'stress_limit_mpa'):
-        if isinstance(limit[key], bool) or not math.isfinite(limit[key]) or limit[key] <= 0:
+        if isinstance(limit[key], bool) or not isinstance(limit[key], (int, float)) or not math.isfinite(limit[key]) or limit[key] <= 0:
             raise ValueError('Criteria must be finite and positive')
     if not (not isinstance(limit['stroke_min_m'], bool) and not isinstance(limit['stroke_max_m'], bool)
+            and all(isinstance(limit[key], (int, float)) for key in ('stroke_min_m', 'stroke_max_m'))
             and math.isfinite(limit['stroke_min_m']) and math.isfinite(limit['stroke_max_m'])
             and limit['stroke_min_m'] < 0 < limit['stroke_max_m']):
         raise ValueError('Stroke bounds must be finite and span zero')
@@ -96,6 +97,13 @@ def criterion_rows(result: dict[str, Any], criteria: dict[str, Any]) -> list[tup
     return rows
 
 
+def ring_reference_z(model_path: Path) -> float:
+    """Read the initial ring elevation from the owning case table."""
+    table = yaml.safe_load((model_path.parents[2] / 'case-table.yml').read_text(encoding='utf-8'))
+    case = next(case for case in table['cases'] if case['id'] == model_path.parent.name)
+    return float(case['ring_initial_position_m']['value'][2])
+
+
 def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     """Native execution only. Never invoked by preparation or fake tests.
 
@@ -108,7 +116,7 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     try:
         import OrcFxAPI
     except ImportError as exc:
-        raise LicenceUnavailable('Solver interface unavailable') from exc
+        raise RuntimeError('Solver interface not importable') from exc
     try:
         model = OrcFxAPI.Model(str(model_path))
         model.CalculateStatics()
@@ -132,7 +140,8 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
         upper = [abs(v) for v in series('Riser Slip Joint', 'Ez-Angle', OrcFxAPI.oeEndA)]
         tension = series('Riser', 'Effective tension', OrcFxAPI.oeEndA)
         # The vessel is fixed in this sweep, so its vertical displacement is zero.
-        stroke = [v - 20.0 for v in series('Tensioner Ring', 'Z')]
+        reference_z = ring_reference_z(model_path)
+        stroke = [v - reference_z for v in series('Tensioner Ring', 'Z')]
         stress = [float(v) / 1000 for v in model['Riser'].RangeGraph('Max von Mises stress', period).Max]
         if not stress or not all(math.isfinite(v) for v in stress):
             raise ValueError('Empty or nonfinite stress channel')

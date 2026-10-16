@@ -1,0 +1,328 @@
+{
+  "schema_version": 1,
+  "dataset": "digitalmodel",
+  "intended_use": "Analytical static reconciliation only; no design qualification.",
+  "basis": "Generic assumed cases; no claim of a published benchmark.",
+  "cases": [
+    {
+      "id": "scr-shallow",
+      "type": "SCR",
+      "values": {
+        "water_depth": 1500.0,
+        "angle": 12.0,
+        "hang_off_elevation": 0.0,
+        "outer_diameter": 0.2731,
+        "wall_thickness": 0.0254,
+        "coating_thickness": 0.04,
+        "coating_density": 900.0,
+        "contents_density": 800.0,
+        "corrosion_allowance": 0.003,
+        "seawater_density": 1025.0
+      },
+      "provenance": {
+        "water_depth": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "angle": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "deg"
+        },
+        "hang_off_elevation": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "outer_diameter": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "wall_thickness": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "coating_thickness": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "coating_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "contents_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "corrosion_allowance": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "seawater_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        }
+      }
+    },
+    {
+      "id": "scr-deep",
+      "type": "SCR",
+      "values": {
+        "water_depth": 2000.0,
+        "angle": 16.0,
+        "hang_off_elevation": 0.0,
+        "outer_diameter": 0.2731,
+        "wall_thickness": 0.0254,
+        "coating_thickness": 0.04,
+        "coating_density": 900.0,
+        "contents_density": 800.0,
+        "corrosion_allowance": 0.003,
+        "seawater_density": 1025.0
+      },
+      "provenance": {
+        "water_depth": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "angle": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "deg"
+        },
+        "hang_off_elevation": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "outer_diameter": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "wall_thickness": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "coating_thickness": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "coating_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "contents_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "corrosion_allowance": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "seawater_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        }
+      }
+    },
+    {
+      "id": "slwr-shallow",
+      "type": "SLWR",
+      "values": {
+        "water_depth": 1500.0,
+        "angle": 8.0,
+        "hang_off_elevation": 0.0,
+        "outer_diameter": 0.2731,
+        "wall_thickness": 0.0254,
+        "coating_thickness": 0.04,
+        "coating_density": 900.0,
+        "contents_density": 800.0,
+        "corrosion_allowance": 0.003,
+        "seawater_density": 1025.0,
+        "sag_elevation": 150.0,
+        "hog_elevation": 600.0,
+        "buoyancy_od": 0.65,
+        "buoyancy_density": 450.0
+      },
+      "provenance": {
+        "water_depth": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "angle": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "deg"
+        },
+        "hang_off_elevation": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "outer_diameter": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "wall_thickness": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "coating_thickness": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "coating_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "contents_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "corrosion_allowance": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "seawater_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "sag_elevation": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "hog_elevation": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "buoyancy_od": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "buoyancy_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        }
+      }
+    },
+    {
+      "id": "slwr-deep",
+      "type": "SLWR",
+      "values": {
+        "water_depth": 2000.0,
+        "angle": 12.0,
+        "hang_off_elevation": 0.0,
+        "outer_diameter": 0.2731,
+        "wall_thickness": 0.0254,
+        "coating_thickness": 0.04,
+        "coating_density": 900.0,
+        "contents_density": 800.0,
+        "corrosion_allowance": 0.003,
+        "seawater_density": 1025.0,
+        "sag_elevation": 200.0,
+        "hog_elevation": 800.0,
+        "buoyancy_od": 0.65,
+        "buoyancy_density": 450.0
+      },
+      "provenance": {
+        "water_depth": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "angle": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "deg"
+        },
+        "hang_off_elevation": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "outer_diameter": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "wall_thickness": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "coating_thickness": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "coating_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "contents_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "corrosion_allowance": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "seawater_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        },
+        "sag_elevation": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "hog_elevation": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "buoyancy_od": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "m"
+        },
+        "buoyancy_density": {
+          "status": "assumed generic value",
+          "reason": "Controlled analytical comparison; no measured or historical result is used.",
+          "units": "kg/m^3"
+        }
+      }
+    }
+  ]
+}

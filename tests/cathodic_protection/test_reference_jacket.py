@@ -251,8 +251,9 @@ def test_reference_inputs_anode_mass_and_mass_only_arrangement():
     result = cfg["results"]
     req, ver = result["anode_requirements"], result["current_output_verification"]
     needed = result["current_demand_A"]["total_mean_A"] * kernel.HOURS_PER_YEAR * result["design_life_years"] / (req["electrochemical_capacity_Ah_kg"] * req["utilization_factor"])
-    assert ver["anode_count_source"] == "mass"
-    assert ver["anode_count"] == math.ceil(needed / mass)
+    assert ver["anode_count_source"] == "input"
+    assert ver["anode_count"] == anode["count"] == 252
+    assert ver["count_by_mass"] == math.ceil(needed / mass) == 424
     arrangements = reference_arrangements(cfg)
     assert arrangements["stated"]["current_output_verification"] == ver
     if result["status"]["result"] == "PASS":
@@ -291,7 +292,9 @@ def test_reference_case_retains_the_repository_held_cp_basis():
     for name in ("material", "type", "length_m", "radius_m"):
         assert cfg["anode"][name] == held["anode"][name]
     assert "utilization_factor" not in cfg["anode"]
-    assert all(z["coating_category"] == held["structure"]["zones"][0]["coating_category"] for z in cfg["structure"]["zones"])
+    assert all(z["coating_category"] == ("bare" if z["zone"] == "buried" else
+               held["structure"]["zones"][0]["coating_category"])
+               for z in cfg["structure"]["zones"])
 
 
 def test_reference_checks_show_every_demand_capacity_margin_and_verdict():
@@ -309,8 +312,8 @@ def test_reference_checks_show_every_demand_capacity_margin_and_verdict():
         "Final current": (result["current_demand_A"]["total_final_A"], ver["total_anode_current_output_final_A"], "A"),
         "Mass": (result["current_demand_A"]["total_mean_A"] * kernel.HOURS_PER_YEAR * result["design_life_years"] / (req["electrochemical_capacity_Ah_kg"] * req["utilization_factor"]), ver["anode_count"] * cfg["inputs"]["anode"]["individual_anode_mass_kg"], "kg")}
     assert table.columns == ["Arrangement", "Check", "Demand", "Capacity", "Margin", "Result", "Unit", "Locator"]
-    assert len(table.rows) == 3
-    for row in table.rows:
+    assert len(table.rows) == 6
+    for row in (r for r in table.rows if r[0] == "Stated arrangement"):
         demand, capacity, unit = expected[row[1]]
         decimals = 0 if unit == "kg" else 3
         assert row[2] == f"{demand:.{decimals}f}"
@@ -375,17 +378,19 @@ def test_reference_report_opens_with_analysis_summary_and_checks(reference_spec)
     assert reference_spec.sections[0].title == "Summary"
     summary = next(b.markdown for b in reference_spec.sections[0].blocks if isinstance(b, TextBlock))
     assert summary.startswith("The 252-anode arrangement on the reference jacket is analysed")
-    assert "All evaluated aggregate checks PASS" in summary
+    assert "The stated arrangement fails an aggregate check" in summary
+    assert "Increasing to 424 anodes is rechecked and passes" in summary
     assert "30.6%" in summary
     assert "published CP outputs are not available" in summary
     text = _visible_text(render_html(reference_spec))
     assert text.count("based on previous project experience") == 3
     assert "Draft for review" in text
     assert "No measured potentials are available for this structure" in text
-    assert "Increase at design" not in text and "Retrofit" not in text
+    assert "Increase at design" in text and "Retrofit" in text
     checks = next(b for s in reference_spec.sections for b in s.blocks if isinstance(b, TableBlock) and b.title == "Aggregate mass and current checks")
-    assert len(checks.rows) == 3
-    assert all(r[5] == "PASS" for r in checks.rows)
+    assert len(checks.rows) == 6
+    assert next(r[5] for r in checks.rows if r[0] == "Stated arrangement" and r[1] == "Mass") == "FAIL"
+    assert all(r[5] == "PASS" for r in checks.rows if r[0] == "Rechecked arrangement")
 
 
 def test_reference_report_has_numbered_sources_geometry_and_area_arithmetic(reference_spec):
@@ -466,8 +471,8 @@ def test_reference_failing_report_sizes_recheck_and_removes_process_wording():
     spec = anode_design_report(run_cathodic_protection(cfg))
     text = _visible_text(render_html(spec))
     summary = spec.sections[0].blocks[0].markdown
-    assert "252 anodes" in summary and "rechecked" in summary
-    assert "251 anodes" in text and "mass-only requirement of 252" in text
+    assert "424 anodes" in summary and "rechecked" in summary
+    assert "251 anodes" in text and "mass-only requirement of 424" in text
     for removed in REMOVED_VERIFICATION_TEXT:
         assert " ".join(removed.split()).lower() not in text.lower()
     assert "Increase at design" in text and "Retrofit" in text

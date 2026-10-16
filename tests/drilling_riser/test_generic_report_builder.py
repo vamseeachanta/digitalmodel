@@ -45,6 +45,7 @@ class ReportTests(unittest.TestCase):
             self.assertIn(METHOD, spec.sections[6].blocks[0].markdown)
             self.assertIn('not the modelled tension', spec.sections[2].blocks[0].markdown)
             self.assertNotIn('lower mean angle', str(spec.appendices))
+            self.assertNotIn('upper mean angle', str(spec.appendices))
             html = builder.render(campaign, output, criteria_file=CRITERIA, allow_synthetic=True)
             soup = BeautifulSoup(html, 'html.parser')
             main_sections = soup.select('main.main > section')

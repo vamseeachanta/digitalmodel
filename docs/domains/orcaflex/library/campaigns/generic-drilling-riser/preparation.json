@@ -26,6 +26,6 @@
     "Run runner validation against the resolved approval copy.",
     "Add its new digest to approvals.tsv only after approval."
   ],
-  "screen_comparison_boundary": "The analytical screen uses constant assumed top tension and uniform drag with pinned ends. The lower joint angle is not established and is omitted because effective tension varies along the column. Upper angle and stress remain approximate. Attached members, pressure stress and nonlinear tensioners are omitted. Geometric extension is not a mechanical stroke prediction.",
+  "screen_comparison_boundary": "The analytical screen uses constant assumed top tension and uniform drag with pinned ends. Both joint-angle comparisons are omitted because constant tension can introduce an error of about a factor of two. Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. Stress remains approximate. Attached members, pressure stress and nonlinear tensioners are omitted. Geometric extension is not a mechanical stroke prediction.",
   "release_boundary": "External sharing of results and method remains conditional on maintainer acceptance of the derivative basis and redistribution terms."
 }

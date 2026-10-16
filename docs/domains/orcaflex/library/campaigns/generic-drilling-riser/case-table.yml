@@ -4547,6 +4547,8 @@ basis:
         value: 0.1
         unit: as specified
         source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:1149
+wave_basis_note: Specification wave data are retained for provenance only; no wave
+  is applied.
 profile_description: Uniform current from surface to seabed; assumed, based on previous
   experience
 criteria:
@@ -4605,13 +4607,15 @@ assumptions:
     value: independent assumed range; model line length is not equipment capacity
     unit: '1'
     source: assumed, based on previous experience
-screen_limitations: Approximate riser-column screen; constant assumed top tension,
+screen_limitations: 'Approximate riser-column screen; constant assumed top tension,
   uniform drag, pinned ends; lower joint angle is not established because effective
-  tension varies along the column. Upper angle and stress retain the constant-tension
-  approximation. Screen tension is an assumed criterion value, not the modelled tension.
-  attached members, nonlinear tensioner response, pressure stress and wave loading
-  omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance
-  is established.
+  tension varies along the column. Both joint-angle comparisons are omitted: constant
+  tension can introduce an error of about a factor of two. Weight treats the above-water
+  20 m as submerged, underestimating column weight by about 1.0 %. Stress retains
+  the constant-tension approximation. Screen tension is an assumed criterion value,
+  not the modelled tension. attached members, nonlinear tensioner response, pressure
+  stress and wave loading omitted. Geometric extension is not mechanical tensioner
+  stroke. No assembly acceptance is established.'
 cases:
 - id: o0-c0
   offset_pct:
@@ -4639,11 +4643,11 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
-    - -0.0
+    - 0.0
     - 0.0
     - 20
     unit: m
@@ -4681,11 +4685,11 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
-    - -0.0
+    - 0.0
     - 0.0
     - 20
     unit: m
@@ -4721,11 +4725,11 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
-    - -0.0
+    - 0.0
     - 0.0
     - 20
     unit: m
@@ -4761,11 +4765,11 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
-    - -0.0
+    - 0.0
     - 0.0
     - 20
     unit: m
@@ -4801,7 +4805,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -4841,7 +4845,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -4881,7 +4885,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -4921,7 +4925,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -4961,7 +4965,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5001,7 +5005,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5041,7 +5045,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5081,7 +5085,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5121,7 +5125,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5161,7 +5165,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5201,7 +5205,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5241,7 +5245,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5281,7 +5285,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5321,7 +5325,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5361,7 +5365,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5401,7 +5405,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5441,7 +5445,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5481,7 +5485,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5521,7 +5525,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
@@ -5561,7 +5565,7 @@ cases:
   wave_applied:
     value: false
     unit: '1'
-    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:35-39;
+    source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:37-41;
       specification wave is not applied; offset and current only by scope
   ring_initial_position_m:
     value:
