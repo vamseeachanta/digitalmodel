@@ -38,14 +38,14 @@ def fake_gate(tmp_path, first=1, second=0, count=1, mode="failure"):
         "print('attempt', len(history), flush=True)\n"
         f"mode = {mode!r}\n"
         "target = next((a.split('=', 1)[1] for a in args if a.startswith('--junitxml=')), None)\n"
-        "if target and mode != 'missing':\n"
+        "if target and mode not in {'missing', 'stale'}:\n"
         "    root = Element('testsuites')\n"
         f"    suite = SubElement(root, 'testsuite', tests=str({count}))\n"
         f"    for i in range({count}):\n"
         "        case = SubElement(suite, 'testcase', classname='tests.test_fake', name=f'test_case_{i}')\n"
         "        if code and not (mode == 'partial' and len(history) == 2 and i == 0):\n"
         "            tag = 'error' if mode == 'collection' else 'failure'\n"
-        "            SubElement(case, tag, message='collection failure' if mode == 'collection' else 'assert mismatch')\n"
+        "            SubElement(case, tag, message='collection failure' if mode == 'collection' else ('Timeout exceeded' if mode == 'timeout' else 'assert mismatch'))\n"
         "        if mode == 'retry_skipped' and len(history) == 2:\n"
         "            SubElement(case, 'skipped')\n"
         "    pathlib.Path(target).parent.mkdir(parents=True, exist_ok=True)\n"
@@ -73,9 +73,9 @@ def history(tmp_path):
     return json.loads((tmp_path / "attempts.json").read_text())
 
 
-def test_failure_then_pass_records_and_warns(tmp_path):
+def test_failure_then_pass_records_and_warns_but_stays_red(tmp_path):
     result = invoke(tmp_path, fake_gate(tmp_path))
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 1, result.stderr
     record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
     assert record["ids"] == ["tests/test_fake.py::test_case_0"]
     assert len(record["first_failure_message"]) <= 500
@@ -101,7 +101,7 @@ def test_partial_recovery_is_recorded_while_shard_stays_red(tmp_path):
 def test_skipped_retry_does_not_count_as_a_pass(tmp_path):
     result = invoke(tmp_path, fake_gate(tmp_path, mode="retry_skipped"))
     assert result.returncode == 1
-    assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["ids"] == []
+    assert not (tmp_path / "reports/flaky-sample.json").exists()
 
 
 @pytest.mark.parametrize("count,mode", [(21, "failure"), (1, "collection"), (1, "missing")])
@@ -112,7 +112,7 @@ def test_unproven_or_excess_failures_never_retry(tmp_path, count, mode):
 
 def test_signal_abort_then_pass(tmp_path):
     result = invoke(tmp_path, fake_gate(tmp_path, first=134), signal=True)
-    assert result.returncode == 0
+    assert result.returncode == 134
     assert len(history(tmp_path)) == 2
     assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["kind"] == "signal-exit"
 
@@ -174,9 +174,77 @@ def test_real_pytest_xunit2_class_and_parameter_ids(tmp_path):
          "--junitxml=reports/junit-real.xml", "-o", "junit_family=xunit2"],
         cwd=tmp_path, text=True, capture_output=True, check=False,
     )
-    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.returncode == 1, result.stdout + result.stderr
     record = json.loads((tmp_path / "reports/flaky-real.json").read_text())
     assert record["ids"] == [
         "tests/test_example.py::TestExample::test_once[a.b]",
         "tests/test_example.py::TestExample::test_once[with space]",
     ]
+
+
+@pytest.mark.parametrize("code", [2, 3, 4, 134, 139])
+@pytest.mark.parametrize("mode", ["missing", "failure"])
+def test_non_test_exit_is_preserved_without_signal_retry(tmp_path, code, mode):
+    result = invoke(tmp_path, fake_gate(tmp_path, first=code, mode=mode))
+    assert result.returncode == code
+    assert len(history(tmp_path)) == 1
+
+
+@pytest.mark.parametrize("code", [2, 3, 4, 134, 139])
+def test_retry_error_preserves_original_failure(tmp_path, code):
+    result = invoke(tmp_path, fake_gate(tmp_path, second=code))
+    assert result.returncode == 1
+    assert len(history(tmp_path)) == 2
+
+
+def test_stale_junit_never_retries(tmp_path):
+    gate = fake_gate(tmp_path, mode="stale")
+    report = tmp_path / "reports/junit-sample.xml"
+    report.parent.mkdir()
+    report.write_text('<testsuites><testsuite><testcase classname="tests.test_fake" '
+                      'name="test_case_0"><failure/></testcase></testsuite></testsuites>')
+    os.utime(report, ns=(1, 1))
+    assert invoke(tmp_path, gate).returncode == 1
+    assert len(history(tmp_path)) == 1
+
+
+def test_timeout_failure_text_never_retries(tmp_path):
+    assert invoke(tmp_path, fake_gate(tmp_path, mode="timeout")).returncode == 1
+    assert len(history(tmp_path)) == 1
+
+
+def test_failure_twice_does_not_claim_recovery(tmp_path):
+    assert invoke(tmp_path, fake_gate(tmp_path, second=1)).returncode == 1
+    assert not (tmp_path / "reports/flaky-sample.json").exists()
+
+
+def test_signal_failure_twice_does_not_claim_recovery(tmp_path):
+    assert invoke(tmp_path, fake_gate(tmp_path, first=134, second=139), signal=True).returncode == 134
+    assert len(history(tmp_path)) == 2
+    assert not (tmp_path / "reports/flaky-sample.json").exists()
+
+
+def test_recovered_retry_keeps_first_attempt_baseline_failure(tmp_path):
+    gate = fake_gate(tmp_path)
+    outcome = invoke(tmp_path, gate)
+    report = tmp_path / "reports/junit-sample.xml"
+    spec = importlib.util.spec_from_file_location("baseline", SCRIPT.with_name("ci_baseline.py"))
+    baseline = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(baseline)
+    from xml.etree import ElementTree
+    root = ElementTree.parse(report)
+    for suite in root.iter("testsuite"):
+        suite.set("failures", "1")
+        suite.set("errors", "0")
+    root.write(report)
+    output = tmp_path / "result-sample.json"
+    assert baseline.main([
+        "extract", "--junit", str(report), "--shard", "sample", "--sha", "test",
+        "--run", "1", "--attempt", "1", "--conclusion",
+        "success" if outcome.returncode == 0 else "failure",
+        "--exit-code", str(outcome.returncode), "--out", str(output),
+    ]) == 0
+    row = json.loads(output.read_text())
+    assert row["conclusion"] == "failure"
+    assert row["exit_code"] == 1
+    assert row["failed"] == ["tests/test_fake.py::test_case_0"]

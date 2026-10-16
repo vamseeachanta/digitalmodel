@@ -5,6 +5,7 @@
 
 The register is informational and is never read by this module. Child output is
 inherited so both attempts appear in full in the calling workflow log.
+Retries provide evidence only; the original exit code determines the gate.
 """
 
 import argparse
@@ -168,22 +169,22 @@ def record(path: Path, ids: list[str], message: str, kind: str) -> None:
 
 
 def retry_tests(args: argparse.Namespace, command: list[str], code: int, started: int) -> int:
-    """Retry each proven failed ID once; missing or nonpassing results stay red."""
+    """Retry each proven failed ID once while preserving the original failure."""
     if not fresh(args.junit, started):
-        return 1
+        return code
     result = junit_decision(args.junit, code, args.max_retry_ids)
     if not result["retry"]:
-        return 1
+        return code
     retry_report = args.junit.with_name(args.junit.stem + "-retry.xml")
     try:
         retry = retry_command(command, result["ids"], retry_report)
     except (ValueError, StopIteration):
-        return 1
+        return code
     failures = [case for case in read_cases(args.junit) if case.find("failure") is not None or case.find("error") is not None]
     failure = next(child for child in failures[0] if child.tag in {"failure", "error"})
     message = (failure.get("message", "") + "\n" + (failure.text or "")).strip()
     retry_started = time.time_ns()
-    retry_code = execute(retry)
+    execute(retry)
     passed: set[str] = set()
     try:
         if fresh(retry_report, retry_started):
@@ -192,8 +193,9 @@ def retry_tests(args: argparse.Namespace, command: list[str], code: int, started
     except (OSError, ET.ParseError, ValueError):
         passed = set()
     recovered = sorted(set(result["ids"]) & passed)
-    record(args.junit.parent / f"flaky-{args.shard}.json", recovered, message, "retry-pass")
-    return 0 if retry_code == 0 and set(result["ids"]) == set(recovered) else 1
+    if recovered:
+        record(args.junit.parent / f"flaky-{args.shard}.json", recovered, message, "retry-pass")
+    return code
 
 
 def main() -> int:
@@ -225,9 +227,10 @@ def main() -> int:
         if code < 128:
             return code
         retry_code = execute(command)
-        record(args.junit.parent / f"flaky-{args.shard}.json", [args.shard] if retry_code == 0 else [],
-               f"signal exit {code}", "signal-exit")
-        return retry_code
+        if retry_code == 0:
+            record(args.junit.parent / f"flaky-{args.shard}.json", [args.shard],
+                   f"signal exit {code}", "signal-exit")
+        return code
     return retry_tests(args, command, code, started)
 
 
