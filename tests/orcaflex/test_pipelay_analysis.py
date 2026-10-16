@@ -66,6 +66,17 @@ class TestSLayConfig:
             assert "water_depth_m" in row
             assert "departure_angle_deg" in row
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason="S-lay departure-angle table does not recompute angle with depth",
+        raises=AssertionError,
+    )
+    def test_departure_angle_recomputed_with_depth(self):
+        """A depth sweep must recompute the departure angle for each depth."""
+        table = SLayConfig(water_depth=200.0).calculate_departure_angle_table()
+        assert len({row["water_depth_m"] for row in table}) > 1
+        assert len({row["departure_angle_deg"] for row in table}) > 1
+
 
 class TestJLayConfig:
     """Tests for J-Lay configuration."""
