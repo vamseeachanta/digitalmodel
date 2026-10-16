@@ -57,6 +57,7 @@ class MeshFormatType(str, Enum):
 
     GDF = "gdf"
     DAT = "dat"
+    AQWA_DAT = "aqwa_dat"
     STL = "stl"
     MSH = "msh"
     OBJ = "obj"

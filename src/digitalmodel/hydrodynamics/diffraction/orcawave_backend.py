@@ -46,28 +46,47 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
 # Constants
 # ---------------------------------------------------------------------------
 
-# Source: OrcaWave 11.6c load error for BodyMeshFormat=Auto:
-# "Possible values are: Wamit gdf, Nemoh dat, Hydrostar hst, Aqwa dat,
-# Sesam fem, Gmsh msh and Wavefront obj". The generic dat schema value
-# does not identify a dialect; STL and Auto are not native format names.
+# Source: OrcaWave documentation, Mesh file formats:
+# https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Meshfileformats.htm
+# DAT requires an explicit dialect; its suffix alone is ambiguous.
 _MESH_FORMAT_MAP: dict[str, str] = {
     "gdf": "Wamit gdf",
+    "aqwa_dat": "Aqwa dat",
     "msh": "Gmsh msh",
     "obj": "Wavefront obj",
 }
 
 
-def _resolve_mesh_format(mesh_format: str, mesh_file: str) -> str:
-    """Resolve only unambiguous formats supported by this input writer."""
-    key = Path(mesh_file).suffix.lower().lstrip(".") if mesh_format == "auto" else mesh_format
-    if key not in _MESH_FORMAT_MAP:
-        allowed = ", ".join(_MESH_FORMAT_MAP.values())
+def _resolve_mesh_format(
+    mesh_format: str,
+    mesh_file: str,
+    *,
+    section: str = "body",
+    formats: dict[str, str] | None = None,
+    context: str = "",
+) -> str:
+    """Resolve native names without guessing dialects or section support."""
+    formats = _MESH_FORMAT_MAP if formats is None else formats
+    extension = Path(mesh_file).suffix.lower().lstrip(".")
+    key = mesh_format.lower()
+    key = extension if key == "auto" else key
+    location = f"{section} mesh format {key!r} for {mesh_file!r} {context}".rstrip()
+    if key not in formats:
         raise ValueError(
-            f"Unsupported or ambiguous OrcaWave mesh format {key!r}. "
-            f"Allowed values: {allowed} (gdf, msh, obj). "
+            f"Unsupported or ambiguous OrcaWave {location}. "
+            f"Allowed values: {', '.join(formats.values())} "
+            f"({', '.join(formats)}). "
             "AUTO requires an unambiguous supported file extension."
         )
-    return _MESH_FORMAT_MAP[key]
+    expected_extension = "dat" if key == "aqwa_dat" else key
+    recognised = {"gdf", "dat", "stl", "msh", "obj", "fdf", "csf", "hst", "fem"}
+    if extension in recognised and extension != expected_extension:
+        raise ValueError(
+            f"OrcaWave {location} contradicts the recognised "
+            f"extension {extension!r} of {mesh_file!r}."
+        )
+    return formats[key]
+
 
 # Control-surface mesh formats. Native OrcaWave pairs .gdf control surfaces
 # with 'Wamit gdf' (docs/domains/orcawave/examples/L03 Semi-sub multibody
@@ -77,8 +96,7 @@ def _resolve_mesh_format(mesh_format: str, mesh_file: str) -> str:
 _CONTROL_SURFACE_FORMAT_MAP: dict[str, str] = {
     "csf": "Wamit csf",
     "gdf": "Wamit gdf",
-    "dat": "Wamit dat",
-    "stl": "STL",
+    "aqwa_dat": "Aqwa dat",
 }
 
 _DOF_MAP: dict[str, str] = {
@@ -284,7 +302,9 @@ def _build_body_dict(
     inertia = vessel.inertia
 
     mesh_file = Path(geom.mesh_file).name
-    mesh_fmt = _resolve_mesh_format(geom.mesh_format.value, geom.mesh_file)
+    mesh_fmt = _resolve_mesh_format(
+        geom.mesh_format.value, geom.mesh_file, context=f"body {vessel.name!r}"
+    )
     _check_full_gdf(geom, spec)
     # Full meshes must not be expanded a second time.
     mesh_sym = "None"
@@ -315,22 +335,10 @@ def _build_body_dict(
     if cs is not None and cs.mesh_file is not None:
         body["BodyControlSurfaceType"] = "Defined by mesh file"
         body["BodyControlSurfaceMeshFileName"] = Path(cs.mesh_file).name
-        # Explicit format wins; otherwise infer from the file extension so a
-        # .gdf control surface is declared 'Wamit gdf', not 'Wamit csf'
-        # (formats have different layouts; see L03 Semi-sub native example).
-        cs_format = cs.mesh_format
-        if cs_format is None:
-            cs_format = Path(cs.mesh_file).suffix.lstrip(".")
-        cs_key = str(cs_format).lower()
-        if cs_key not in _CONTROL_SURFACE_FORMAT_MAP:
-            raise ValueError(
-                f"Unsupported control surface mesh format {cs_format!r} for "
-                f"body '{vessel.name}' (file {cs.mesh_file!r}). Supported: "
-                f"{sorted(_CONTROL_SURFACE_FORMAT_MAP)}"
-            )
-        body["BodyControlSurfaceMeshFormat"] = _CONTROL_SURFACE_FORMAT_MAP[
-            cs_key
-        ]
+        body["BodyControlSurfaceMeshFormat"] = _resolve_mesh_format(
+            cs.mesh_format or "auto", cs.mesh_file, section="control surface",
+            formats=_CONTROL_SURFACE_FORMAT_MAP, context=f"body {vessel.name!r}",
+        )
         body["BodyControlSurfaceMeshLengthUnits"] = geom.length_units
     elif cs is not None:
         # Auto-generated control surface (#324): keys per the native OrcaWave
@@ -682,7 +690,10 @@ def _build_damping_lid_section(spec: DiffractionSpec) -> dict[str, Any]:
     if lid is None:
         return {}
 
-    mesh_fmt = _resolve_mesh_format(lid.mesh_format, lid.mesh_file)
+    mesh_fmt = _resolve_mesh_format(
+        lid.mesh_format, lid.mesh_file, section="damping lid",
+        formats={"gdf": "Wamit gdf"},
+    )
     return {
         "DampingLidMeshFileName": Path(lid.mesh_file).name,
         "DampingLidMeshFormat": mesh_fmt,
@@ -713,8 +724,9 @@ def _build_qtf_section(spec: DiffractionSpec) -> dict[str, Any]:
     if fsz is not None and fsz.mesh_file:
         section["FreeSurfacePanelledZoneType"] = "Defined by mesh file"
         section["FreeSurfacePanelledZoneMeshFileName"] = Path(fsz.mesh_file).name
-        mesh_fmt = "Wamit fdf" if fsz.mesh_format == "fdf" else _resolve_mesh_format(
-            fsz.mesh_format, fsz.mesh_file
+        mesh_fmt = _resolve_mesh_format(
+            fsz.mesh_format, fsz.mesh_file, section="free surface zone",
+            formats={"gdf": "Wamit gdf", "fdf": "Wamit fdf"},
         )
         section["FreeSurfacePanelledZoneMeshFormat"] = mesh_fmt
         section["FreeSurfacePanelledZoneMeshLengthUnits"] = fsz.length_units

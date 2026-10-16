@@ -265,6 +265,7 @@ def test_heading_helper_limits_symmetric_range(headings, expected):
 
 # CRLF single-deck digests captured at 47876058 before changing the writer,
 # with geometry.symmetry="none" and the existing heading flags unchanged.
+# The multi-body fixture digests reflect the explicit GDF fixture migration.
 _NONE_DIGESTS = {
     "spec_ship_raos.yml": (
         "fced3caccca828ff595cd0bd6261da338c7ab25ece791c12a6b828924fe01efe",
@@ -275,8 +276,8 @@ _NONE_DIGESTS = {
         "6b44238a436779bbb38424ecc15a884d71b32b7e1094658d6cbf653d53e0e2f4",
     ),
     "spec_fpso_turret.yml": (
-        "f791f9b96f9d244dbefe822aafb12976ab51c244576721a2adfc1e479ec91a82",
-        "7f602e7f45772fa39558e660cd13863ce83a959827336858227ce133a325d9fe",
+        "2c0180359f28658263cf80ef3ba2abc7579cd1262d564dbfb9170dce4a5911e5",
+        "5a3bcd9c0919814f4f61249c912d4591df9412cce71c4cc0b6c0523f16624cd7",
     ),
 }
 
@@ -390,23 +391,66 @@ def test_orcawave_box_writes_concrete_mesh_format(tmp_path, mesh_format):
     assert "BodyMeshFormat: Auto" not in text
 
 
-@pytest.mark.parametrize("mesh_format", ["auto", "gdf", "msh", "obj"])
-@pytest.mark.parametrize("extension, expected", [
-    ("gdf", "Wamit gdf"), ("MSH", "Gmsh msh"), ("obj", "Wavefront obj"),
+@pytest.mark.parametrize("mesh_format, extension, expected", [
+    ("auto", "gdf", "Wamit gdf"), ("gdf", "GDF", "Wamit gdf"),
+    ("auto", "MSH", "Gmsh msh"), ("msh", "msh", "Gmsh msh"),
+    ("auto", "obj", "Wavefront obj"), ("obj", "obj", "Wavefront obj"),
+    ("aqwa_dat", "dat", "Aqwa dat"),
 ])
 def test_orcawave_mesh_formats_across_sections(mesh_format, extension, expected):
-    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
-        _build_bodies_section, _build_damping_lid_section, _build_qtf_section,
-    )
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_bodies_section
 
     spec = _format_spec(extension, mesh_format)
-    if mesh_format != "auto":
-        expected = {"gdf": "Wamit gdf", "msh": "Gmsh msh",
-                    "obj": "Wavefront obj"}[mesh_format]
     assert _build_bodies_section(spec)["Bodies"][0]["BodyMeshFormat"] == expected
-    assert _build_damping_lid_section(spec)["DampingLidMeshFormat"] == expected
-    assert _build_qtf_section(spec)["FreeSurfacePanelledZoneMeshFormat"] == expected
-    assert expected != "Auto"
+
+
+@pytest.mark.parametrize("mesh_format", ["auto", "gdf", "GDF", "Auto"])
+def test_orcawave_lid_and_zone_use_native_gdf(mesh_format):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+        _build_damping_lid_section, _build_qtf_section,
+    )
+
+    spec = _format_spec("gdf", "gdf")
+    spec.damping_lid.mesh_format = mesh_format
+    spec.free_surface_zone.mesh_format = mesh_format
+    assert _build_damping_lid_section(spec)["DampingLidMeshFormat"] == "Wamit gdf"
+    assert _build_qtf_section(spec)["FreeSurfacePanelledZoneMeshFormat"] == "Wamit gdf"
+
+
+@pytest.mark.parametrize("extension", ["msh", "obj"])
+@pytest.mark.parametrize("section", ["lid", "zone"])
+def test_orcawave_auxiliary_formats_require_native_evidence(extension, section):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+        _build_damping_lid_section, _build_qtf_section,
+    )
+
+    build = {"lid": _build_damping_lid_section, "zone": _build_qtf_section}[section]
+    with pytest.raises(ValueError, match="mesh format"):
+        build(_format_spec(extension, "auto"))
+
+
+@pytest.mark.parametrize("extension, mesh_format", [("obj", "gdf"), ("gdf", "msh"), ("gdf", "aqwa_dat")])
+def test_orcawave_refuses_contradictory_extensions(extension, mesh_format):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_bodies_section
+
+    with pytest.raises(ValueError, match="contradicts.*synthetic"):
+        _build_bodies_section(_format_spec(extension, mesh_format))
+
+
+@pytest.mark.parametrize("mesh_format, extension", [("gdf", "gdf"), ("msh", "msh"), ("obj", "obj"), ("aqwa_dat", "dat")])
+def test_orcawave_mesh_format_round_trip(mesh_format, extension):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_bodies_section
+    from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
+
+    native = _build_bodies_section(_format_spec(extension, mesh_format))["Bodies"][0]["BodyMeshFormat"]
+    assert OrcaWaveInputParser._reverse_mesh_format(native) == mesh_format
+
+
+def test_orcawave_unknown_reverse_mesh_format_is_refused():
+    from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
+
+    with pytest.raises(ValueError, match="mesh format"):
+        OrcaWaveInputParser._reverse_mesh_format("unknown")
 
 
 def _format_spec(extension, mesh_format):
@@ -441,14 +485,15 @@ def test_orcawave_refuses_unsupported_mesh_formats(extension, mesh_format, secti
 
     build = {"body": _build_bodies_section, "lid": _build_damping_lid_section,
              "zone": _build_qtf_section}[section]
-    with pytest.raises(ValueError, match="Wamit gdf.*Gmsh msh.*Wavefront obj"):
+    with pytest.raises(ValueError, match="mesh format"):
         build(_format_spec(extension, mesh_format))
 
 
-def test_orcawave_zone_preserves_fdf():
+@pytest.mark.parametrize("mesh_format", ["fdf", "FDF", "auto", "Auto"])
+def test_orcawave_zone_preserves_fdf(mesh_format):
     from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_qtf_section
 
     spec = _format_spec("gdf", "gdf")
     spec.free_surface_zone.mesh_file = "zone.fdf"
-    spec.free_surface_zone.mesh_format = "fdf"
+    spec.free_surface_zone.mesh_format = mesh_format
     assert _build_qtf_section(spec)["FreeSurfacePanelledZoneMeshFormat"] == "Wamit fdf"
