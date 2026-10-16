@@ -109,6 +109,39 @@ def ring_reference_z(model_path: Path) -> float:
     return float(case['ring_initial_position_m']['value'][2])
 
 
+def calculate_staged_statics(model: Any) -> None:
+    """Seed target-current statics from zero-current equilibrium at this offset.
+
+    API ordering follows drilling_riser/campaign.py::_statics_path: retain
+    calculated positions before changing current, which resets native state.
+    Native pre-flight must call this helper; direct statics is a different method.
+    No drag, tension, offset, damping or convergence tolerance is changed.
+    """
+    speed = float(model.environment.RefCurrentSpeed)
+    if not math.isfinite(speed) or speed < 0:
+        raise ValueError('Current speed must be finite and nonnegative')
+
+    def solve() -> None:
+        model.CalculateStatics()
+        if getattr(model.state, 'name', '') != 'InStaticState':
+            raise ValueError('Statics did not complete')
+
+    if speed == 0:
+        solve()
+        return
+    try:
+        model.environment.RefCurrentSpeed = 0.0
+        solve()
+        model.UseCalculatedPositions(True)
+        model.environment.RefCurrentSpeed = speed
+        solve()
+    except Exception:
+        # Restore input current after a failed seed; never continue to dynamics.
+        if float(model.environment.RefCurrentSpeed) != speed:
+            model.environment.RefCurrentSpeed = speed
+        raise
+
+
 def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     """Native execution only. Never invoked by preparation or fake tests.
 
@@ -125,9 +158,7 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     reference_z = ring_reference_z(model_path)
     try:
         model = OrcFxAPI.Model(str(model_path))
-        model.CalculateStatics()
-        if getattr(model.state, 'name', '') != 'InStaticState':
-            raise ValueError('Statics did not complete')
+        calculate_staged_statics(model)
         model.RunSimulation()
         if getattr(model.state, 'name', '') != 'SimulationStopped':
             raise ValueError('Dynamics did not complete normally')
@@ -261,7 +292,8 @@ def run_campaign(campaign: Path, output: Path, *,
                 return LICENCE_EXIT
             except Exception as exc:
                 write_json(output / f'{case_id}.failure.json', {'case_id': case_id,
-                           'status': 'incomplete', 'error_type': type(exc).__name__})
+                           'status': 'incomplete', 'error_type': type(exc).__name__,
+                           'message': str(exc)[:500]})
                 failures += 1
                 continue
         if version is not None and version != result['solver_version']:

@@ -192,12 +192,24 @@ def case_table(root: Path) -> dict:
         'profile_description': 'Uniform current from surface to seabed; assumed, based on previous experience',
         'tension_acceptance_basis': (
             'The stored minimum top tension is retained as an assumed criterion. '
-            'By hand estimate, the modelled tensioner gives the main riser 7.1–7.6 MN top effective tension '
-            f"against the {basis['min_tension_kn']:,.1f} kN minimum, so this criterion is not met by the hand estimate. "
-            'The four links support the ring and share their vertical load between the riser, choke and kill lines '
+            f"The minimum remains {basis['min_tension_kn']:,.1f} kN. "
+            'The review reports native pre-flight statics below this criterion in the converged cases; '
+            'numerical reconciliation remains pending access to the diagnostic records. '
+            'The four links share their vertical load between the riser, choke and kill lines '
             'and the slip joint; total tensioner force is not main-riser top effective tension. '
-            'No operating window is established by this estimate. Confirm the load path and tensions with '
-            'pre-flight statics case by case before production; no native confirmation is available.'),
+            'No operating window is established. Requalify the staged method case by case '
+            'before production; the prior pre-flight does not qualify the changed method.'),
+        'statics_method': tagged(
+            'At the specified vessel offset, solve zero-current statics, retain calculated positions, '
+            'then solve at the specified current. Zero-current cases solve once. '
+            'Both stages must reach InStaticState before dynamics. Native convergence remains unverified.',
+            'src/digitalmodel/drilling_riser/campaign.py::_statics_path; '
+            'scripts/orcaflex/run_generic_drilling_riser_campaign.py::calculate_staged_statics'),
+        'drill_string_current_basis': tagged(
+            'Normal drag is retained from the source specification. Shielding by the containing riser '
+            'has not been established by native readback; no drag reduction is applied. '
+            'The contribution to contact loads and angles requires qualification.',
+            f'{SPEC.as_posix()}; generic.line_types and generic.line_contact_data'),
         'criteria': {
             'mean_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),
             'max_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),

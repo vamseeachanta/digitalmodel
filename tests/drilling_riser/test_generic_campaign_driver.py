@@ -227,3 +227,105 @@ def test_native_library_import_failure_is_configuration():
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class StagedModel:
+    """Synthetic API state machine; changing current invalidates statics."""
+    def __init__(self, speed=1.0, fail_stage=None, bad_state=False):
+        from types import SimpleNamespace
+        self.state = SimpleNamespace(name='Reset')
+        self.environment = self
+        self.speed = speed
+        self.calls = []
+        self.fail_stage = fail_stage
+        self.bad_state = bad_state
+
+    @property
+    def RefCurrentSpeed(self):
+        return self.speed
+
+    @RefCurrentSpeed.setter
+    def RefCurrentSpeed(self, value):
+        self.calls.append(('current', value))
+        self.speed = value
+        self.state.name = 'Reset'
+
+    def CalculateStatics(self):
+        self.calls.append(('solve', self.speed))
+        if self.speed == self.fail_stage:
+            if not self.bad_state:
+                raise RuntimeError('synthetic non-convergence')
+            return
+        self.state.name = 'InStaticState'
+
+    def UseCalculatedPositions(self, enabled):
+        assert self.state.name == 'InStaticState'
+        assert enabled is True
+        self.calls.append(('seed', self.speed))
+        self.state.name = 'Reset'
+
+    def RunSimulation(self):
+        self.calls.append(('dynamics', self.speed))
+        raise RuntimeError('synthetic dynamics reached')
+
+
+def test_staged_statics_seeds_before_current_change():
+    model = StagedModel()
+    load_driver().calculate_staged_statics(model)
+    assert model.calls == [('current', 0.0), ('solve', 0.0), ('seed', 0.0),
+                           ('current', 1.0), ('solve', 1.0)]
+    assert model.state.name == 'InStaticState'
+    assert model.RefCurrentSpeed == 1.0
+
+
+def test_zero_current_solves_once():
+    model = StagedModel(speed=0.0)
+    load_driver().calculate_staged_statics(model)
+    assert model.calls == [('solve', 0.0)]
+
+
+def test_staged_failure_never_reaches_dynamics():
+    import sys
+    import pytest
+    from types import SimpleNamespace
+    driver = load_driver()
+    for stage in (0.0, 1.0):
+        for bad_state in (False, True):
+            model = StagedModel(fail_stage=stage, bad_state=bad_state)
+            with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
+                with patch.object(driver, 'ring_reference_z', return_value=37):
+                    with pytest.raises((RuntimeError, ValueError)):
+                        driver.run_case(Path('unused'), Path('unused'))
+            assert not any(call[0] == 'dynamics' for call in model.calls)
+            assert model.RefCurrentSpeed == 1.0
+            if stage == 0.0:
+                assert not any(call[0] == 'seed' for call in model.calls)
+
+
+def test_successful_staging_precedes_dynamics():
+    import sys
+    import pytest
+    from types import SimpleNamespace
+    driver = load_driver()
+    model = StagedModel()
+    with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
+        with patch.object(driver, 'ring_reference_z', return_value=37):
+            with pytest.raises(RuntimeError, match='synthetic dynamics reached'):
+                driver.run_case(Path('unused'), Path('unused'))
+    assert model.calls[-3:] == [('current', 1.0), ('solve', 1.0), ('dynamics', 1.0)]
+
+
+def test_failure_message_is_bounded(tmp_path):
+    from digitalmodel.drilling_riser.generic_campaign import DEST
+    driver = load_driver()
+    message = 'synthetic non-convergence ' + 'x' * 600
+    def broken(*args):
+        raise RuntimeError(message)
+    assert driver.run_campaign(ROOT / DEST, tmp_path, criteria_file=CRITERIA,
+                               case_runner=broken) == 1
+    records = list(tmp_path.glob('*.failure.json'))
+    assert len(records) == 24
+    for path in records:
+        record = json.loads(path.read_text(encoding='utf-8'))
+        assert record['message'] == message[:500]
+        assert record['error_type'] == 'RuntimeError'
