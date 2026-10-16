@@ -899,3 +899,233 @@ def test_registry_reader_guard_detects_missing_shard(
     routed = detector.mapped_domain_names("docs/registry/workflows.yaml")
     with pytest.raises(AssertionError, match="missing.*structural"):
         assert_registry_readers_routed(readers, routed)
+
+
+# Record pins add contract coverage without replacing existing domain routes.
+def test_pinned_source_adds_contracts_with_old_route_calibration() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    path = "src/digitalmodel/orcaflex/mooring_design.py"
+    assert {d.name for d in detector.touched_domains(
+        [path], domains, pinned_paths={path}
+    )} == {"contracts", "orcaflex"}
+    assert {d.name for d in detector.touched_domains(
+        [path], domains, pinned_paths=set()
+    )} == {"orcaflex"}
+
+
+def test_unpinned_source_keeps_own_shard() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = detector.touched_domains(
+        ["src/digitalmodel/orcaflex/other.py"], domains,
+        pinned_paths={"src/digitalmodel/orcaflex/mooring_design.py"},
+    )
+    assert {d.name for d in selected} == {"orcaflex"}
+
+
+def test_domain_record_document_selects_contracts() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = detector.touched_domains(["docs/domains/new-record.md"], domains)
+    assert {d.name for d in selected} == {"contracts"}
+
+
+def test_extract_manifest_pins_reads_nested_shapes_and_relative_paths() -> None:
+    detector = load_detector_module()
+    tracked = {"src/source.py", "inputs/data.json", "records/output.csv",
+               "records/local.txt", "local.txt"}
+    payload = {
+        "source_files": {"src/source.py": "a" * 64},
+        "nested": [{"record_inputs": {"inputs/data.json": "B" * 64}}],
+        "files": {"records/output.csv": {"sha256": "c" * 64, "bytes": 10}},
+        "sha256": {"./output.csv": "d" * 64, "local.txt": "e" * 64},
+        "absent.txt": "f" * 64,
+        "records/local.txt": "g" * 64,
+    }
+    assert detector.extract_manifest_pins(
+        payload, "records/manifest.json", tracked
+    ) == {"src/source.py", "inputs/data.json", "records/output.csv", "local.txt"}
+
+
+def test_git_pinned_paths_discovers_manifest_names_and_shapes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    detector = load_detector_module()
+    init_repo(tmp_path)
+    for path in ("src/source.py", "inputs/data.json", "records/output.csv"):
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("retained\n")
+    manifests = {
+        "manifest.json": {"source_files": {"src/source.py": "a" * 64}},
+        "records/basis.json": {
+            "nested": [{"record_inputs": {"inputs/data.json": "b" * 64}}],
+            "files": {"src/source.py": {"sha256": "c" * 64}},
+        },
+        "records/new.manifest.json": {"sha256": {"output.csv": "d" * 64}},
+        "ignored.json": {"absent.txt": "e" * 64},
+    }
+    for path, payload in manifests.items():
+        (tmp_path / path).write_text(json.dumps(payload))
+    ref = commit_all(tmp_path, "record fixtures")
+    (tmp_path / "manifest.json").write_text("{}")
+    monkeypatch.chdir(tmp_path)
+    assert detector.git_pinned_paths(ref) == {
+        "src/source.py", "inputs/data.json", "records/output.csv",
+    }
+
+
+def test_git_pinned_paths_skips_invalid_json_with_notice(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+) -> None:
+    detector = load_detector_module()
+    init_repo(tmp_path)
+    (tmp_path / "manifest.json").write_text("not JSON\n")
+    (tmp_path / "basis.json").write_text(json.dumps({"basis.json": "a" * 64}))
+    ref = commit_all(tmp_path, "invalid manifest fixture")
+    monkeypatch.chdir(tmp_path)
+    assert detector.git_pinned_paths(ref) == {"basis.json"}
+    notice = capsys.readouterr().err
+    assert len(notice.splitlines()) == 1
+    assert "manifest.json" in notice and "JSON" in notice
+
+
+def test_git_pinned_paths_skips_oversized_manifest_with_notice(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+) -> None:
+    detector = load_detector_module()
+    init_repo(tmp_path)
+    payload = {"manifest.json": "a" * 64, "padding": "x" * (5 * 1024 * 1024)}
+    (tmp_path / "manifest.json").write_text(json.dumps(payload))
+    ref = commit_all(tmp_path, "large manifest fixture")
+    monkeypatch.chdir(tmp_path)
+    assert detector.git_pinned_paths(ref) == set()
+    notice = capsys.readouterr().err
+    assert len(notice.splitlines()) == 1
+    assert "manifest.json" in notice and "5 MB" in notice
+
+
+def write_pin_domains(path: Path) -> None:
+    path.write_text(
+        "| Domain | Test roots |\n| --- | --- |\n"
+        "| contracts | `tests/docs/` |\n"
+        "| citations | `tests/citations/` |\n"
+        "| orcaflex | `tests/orcaflex/` |\n"
+    )
+
+
+def test_new_manifest_pin_routes_without_detector_change(tmp_path: Path) -> None:
+    init_repo(tmp_path)
+    domains_file = tmp_path / "DOMAINS.md"
+    write_pin_domains(domains_file)
+    source = tmp_path / "src/digitalmodel/citations/new_source.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("VALUE = 1\n")
+    base = commit_all(tmp_path, "source fixture")
+    record = tmp_path / "records/new.manifest.json"
+    record.parent.mkdir()
+    record.write_text(json.dumps({source.relative_to(tmp_path).as_posix(): "a" * 64}))
+    source.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "new record fixture")
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", base,
+        "--head", head, "--output-format", "list",
+    )
+    assert result.returncode == 0, result.stderr
+    assert set(result.stdout.splitlines()) == {"contracts", "citations"}
+
+
+def test_base_only_pin_still_routes_after_removal(tmp_path: Path) -> None:
+    init_repo(tmp_path)
+    domains_file = tmp_path / "DOMAINS.md"
+    write_pin_domains(domains_file)
+    source = tmp_path / "src/digitalmodel/orcaflex/source.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("VALUE = 1\n")
+    record = tmp_path / "basis.json"
+    record.write_text(json.dumps({source.relative_to(tmp_path).as_posix(): "a" * 64}))
+    base = commit_all(tmp_path, "pinned source fixture")
+    record.write_text("{}")
+    source.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "removed pin fixture")
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", base,
+        "--head", head, "--output-format", "list",
+    )
+    assert result.returncode == 0, result.stderr
+    assert set(result.stdout.splitlines()) == {"contracts", "orcaflex"}
+
+
+def test_pinned_no_domain_path_selects_contracts() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    path = "scripts/ci/detect_touched_domains.py"
+    assert detector.is_no_domain_path(path)
+    selected = detector.touched_domains([path], domains, pinned_paths={path})
+    assert {d.name for d in selected} == {"contracts"}
+
+
+@pytest.mark.parametrize("path", ["src/digitalmodel/orcaflex/source.py",
+                                  "docs/domains/new-record.md"])
+def test_record_route_without_contracts_selects_full_matrix(path: str) -> None:
+    detector = load_detector_module()
+    domains = [detector.Domain("orcaflex", ("tests/orcaflex/",)),
+               detector.Domain("structural", ("tests/structural/",))]
+    assert detector.touched_domains([path], domains, pinned_paths={path}) == domains
+
+
+def test_real_manifest_pins_exist_and_select_contracts(monkeypatch: pytest.MonkeyPatch) -> None:
+    detector = load_detector_module()
+    root = SCRIPT.parents[2]
+    monkeypatch.chdir(root)
+    tracked = set(subprocess.check_output(
+        ["git", "ls-tree", "-r", "--name-only", "-z", "HEAD"], text=True,
+    ).rstrip("\0").split("\0"))
+    working_pins = set()
+    for path in tracked:
+        if Path(path).name in {"manifest.json", "basis.json"} or path.endswith(".manifest.json"):
+            working_pins.update(detector.extract_manifest_pins(
+                json.loads((root / path).read_text()), path, tracked,
+            ))
+    assert working_pins
+    assert working_pins == detector.git_pinned_paths("HEAD")
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    for path in sorted(working_pins):
+        assert (root / path).is_file(), path
+        selected = detector.touched_domains([path], domains, pinned_paths=working_pins)
+        assert "contracts" in {d.name for d in selected}, path
+
+
+@pytest.mark.parametrize("operation", ["ls-tree", "show"])
+def test_pin_git_failure_selects_full_matrix(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture, operation: str,
+) -> None:
+    detector = load_detector_module()
+    init_repo(tmp_path)
+    domains_file = tmp_path / "DOMAINS.md"
+    write_pin_domains(domains_file)
+    source = tmp_path / "tests/citations/test_source.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("VALUE = 1\n")
+    (tmp_path / "manifest.json").write_text("{}")
+    base = commit_all(tmp_path, "base fixture")
+    source.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "head fixture")
+    real_run = subprocess.run
+
+    def fail_pin_read(args, **kwargs):
+        if args[:2] == ["git", operation]:
+            raise subprocess.CalledProcessError(1, args)
+        return real_run(args, **kwargs)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(detector.subprocess, "run", fail_pin_read)
+    assert detector.main([
+        "--domains-file", str(domains_file), "--mode", "touched",
+        "--base", base, "--head", head, "--output-format", "list",
+    ]) == 0
+    output = capsys.readouterr()
+    assert set(output.out.splitlines()) == {"contracts", "citations", "orcaflex"}
+    assert "pin" in output.err and "full matrix" in output.err
