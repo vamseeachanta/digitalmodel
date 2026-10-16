@@ -519,3 +519,48 @@ def test_mass_integration_rejects_open_boundary_off_waterline(duplicate_vertices
     vertices[np.all(vertices == corner, axis=1), 2] = 2e-9
     with pytest.raises(ValueError, match=r"2 boundary edges.*largest \|z\|=2e-09"):
         pilot.homogeneous_mass_properties(vertices, panels, 1025)
+
+
+def test_repeatability_limits_are_visible_and_retained_in_metadata():
+    """Disclose unexplained retained-point scatter without implying a new solve."""
+    from digitalmodel.hydrodynamics.hull_library.rao_database import RAODatabase
+    from digitalmodel.hydrodynamics.hull_library.parametric_rao_report import build_lookup
+    output = ROOT / "docs/domains/hydrodynamics/parametric-rao"
+    results = json.loads((output / "results.json").read_text())
+    revisions = json.loads(REVISIONS.read_text())
+    html = build_lookup(output / "pilot.parquet", revisions, results)
+    for text in ("1.3 %", "0.46 %", "cause is not established",
+                 "does not discriminate", "face-centre quadrature",
+                 "beam-sea roll is not mesh-qualified"):
+        assert text in html
+    assert "uses 0.5%" in html
+    assert "0.03 %" in revisions[2]["change"]
+    assert "cause is not established" in revisions[2]["change"]
+    environment = revisions[2]["rebuild_environment"]
+    assert environment["solver_environment"] == "Historical package versions beyond Capytaine are not recorded."
+    assert environment["builder_revision"]
+    assert set(environment["packages"]) >= {"numpy", "scipy", "xarray", "pandas", "pyarrow"}
+    db = RAODatabase()
+    db.load_from_disk(output / "pilot.parquet")
+    for entry in db.query({}):
+        assert "cause is not established" in entry.metadata["repeatability_limit"]
+        assert "0.46 %" in entry.metadata["repeatability_limit"]
+
+
+def test_retained_records_remain_bound_to_basis_and_implementation():
+    """Reapply screening and input binding to all retained native coefficients."""
+    from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
+    output = ROOT / "docs/domains/hydrodynamics/parametric-rao"
+    basis = json.loads(BASIS.read_text())
+    manifest = json.loads((output / "manifest.json").read_text())
+    results = json.loads((output / "results.json").read_text())
+    convergence = json.loads((output / "convergence-native.json").read_text())
+    for record in results["records"] + convergence:
+        local_basis = basis
+        if record in convergence:
+            local_basis = basis | {"omega_rad_s": record["omega_rad_s"]}
+        pilot.validate_physical_points(record, local_basis)
+        assert record["input_sha256"] == pilot.input_digest(
+            record["case"], local_basis, record["geometry_sha256"],
+            record["solver_version"], manifest["criteria_receipt"],
+        )

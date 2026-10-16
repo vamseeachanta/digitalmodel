@@ -4,8 +4,16 @@
 """Deterministic self-contained lookup graphs read from the pilot database."""
 
 from html import escape
+from math import ceil
 
 from .rao_database import RAODatabase
+
+
+REPEATABILITY_LIMIT = (
+    "Retained box values at 1.32 rad/s repeat to about 1.3 %; "
+    "two records with identical mesh digests differ by 0.46 % there. "
+    "The cause is not established."
+)
 
 
 def comparison_graph(entries):
@@ -67,10 +75,10 @@ def build_lookup(database_path, revisions, results):
         document.append(f'<p>Solver: Capytaine {escape(results["solver_version"])}. Reference: {escape(basis["reference_file"])} at revision {escape(basis["source_revision"])}; the no-lid run is compared. Geometry and loading source digests are retained with the database manifest.</p><p>Pointwise benchmark bound: {criteria["heave_absolute_tolerance_m_per_m"]:g} m/m plus {100*criteria["heave_relative_tolerance"]:.1f}% of the reference amplitude. Finest-pair convergence bound: {criteria["convergence_absolute_tolerance_m_per_m"]:g} m/m. These are beforehand pilot screening inputs.</p>')
     if "benchmark" in results:
         benchmark = results["benchmark"]
-        document.append(f'<p>Matched box heave uses {100*benchmark["max_fraction_of_bound"]:.1f}% of the beforehand pointwise bound. Criterion satisfied: {str(benchmark["passed"]).lower()}. The comparison is reproduction of an open-source calculation, not independent experimental validation.</p>')
+        document.append(f'<p>Matched box heave uses {ceil(1000*benchmark["max_fraction_of_bound"])/10:.1f}% of the beforehand pointwise bound. Criterion satisfied: {str(benchmark["passed"]).lower()}. The comparison is reproduction of an open-source calculation, not independent experimental validation.</p>')
     if "convergence" in results:
         convergence = results["convergence"]
-        document.append(f'<p>Panel counts: {escape(str(convergence["panel_counts"]))}. Finest-pair heave change uses {100*convergence["max_absolute_change_m_per_m"]/convergence["criterion_m_per_m"]:.1f}% of the stated absolute bound. Criterion satisfied: {str(convergence["passed"]).lower()}. {escape(convergence["scope"])}.</p>')
+        document.append(f'<p>Panel counts: {escape(str(convergence["panel_counts"]))}. Finest-pair heave change uses {ceil(1000*convergence["max_absolute_change_m_per_m"]/convergence["criterion_m_per_m"])/10:.1f}% of the stated absolute bound. Criterion satisfied: {str(convergence["passed"]).lower()}. {escape(convergence["scope"])}.</p>')
     masked = "; ".join(
         f"{r['case']['case_id']} at {point['omega_rad_s']:.2f} rad/s ({', '.join(point['reasons'])})"
         for r in results.get("records", []) for point in r.get("masked_points", [])
@@ -80,6 +88,6 @@ def build_lookup(database_path, revisions, results):
         for r in results.get("records", []) if r.get("interior_mode_omega_rad_s") is not None
     ) or "no box estimates in the supplied records"
     band_reason = results.get("basis", {}).get("irregular_frequency_band_reason", "")
-    document.append(f'<h2>Basis and limits</h2><p>Linear, inviscid, zero-speed potential flow; rigid bodies; no viscous or mooring damping. The box uses the merged reference loading and scaled gyradii; the analytic ship uses homogeneous closed-body inertia about its uniform-density volume centroid, evaluated with waterplane-origin tetrahedral integrals and the parallel-axis theorem. These are pilot design assumptions, not measured loading conditions. All forms are fore-aft symmetric. Coordinates use x along the hull, y across the beam and z upward, with waterline z=0. Headings are wave propagation angles measured counterclockwise from +x; 0 deg is the matched longitudinal case. No lid is used to retain the reference condition. Identified response points removed from the Parquet response arrays and the graphs: {escape(masked)}. Negative diagonal radiation damping or negative heave added mass also requires masking. The box estimate uses omega^2 = g*k*coth(k*T), k = pi*sqrt(1/L^2 + 1/B^2). Lowest box interior-mode estimates: {escape(modes)}. {escape(band_reason)} Masked native coefficients and diagnostic responses remain flagged in the retained JSON; they are unqualified for design use. Range coverage is limited to the listed discrete dimensions and frequencies. Roll resonance and independent experimental qualification remain outside this pilot.</p>')
+    document.append(f'<h2>Basis and limits</h2><p>Linear, inviscid, zero-speed potential flow; rigid bodies; no viscous or mooring damping. The box uses the merged reference loading and scaled gyradii; the analytic ship uses homogeneous closed-body inertia about its uniform-density volume centroid, evaluated with waterplane-origin tetrahedral integrals and the parallel-axis theorem. These are pilot design assumptions, not measured loading conditions. All forms are fore-aft symmetric. Coordinates use x along the hull, y across the beam and z upward, with waterline z=0. Headings are wave propagation angles measured counterclockwise from +x; 0 deg is the matched longitudinal case. No lid is used to retain the reference condition. Identified response points removed from the Parquet response arrays and the graphs: {escape(masked)}. Negative diagonal radiation damping or negative heave added mass also requires masking. The box estimate uses omega^2 = g*k*coth(k*T), k = pi*sqrt(1/L^2 + 1/B^2). Lowest box interior-mode estimates: {escape(modes)}. {escape(band_reason)} Masked native coefficients and diagnostic responses remain flagged in the retained JSON; they are unqualified for design use. {escape(REPEATABILITY_LIMIT)} The 0.02 m/m convergence bound does not discriminate at 1.32 rad/s; the measured finest-pair change is 8.9e-5 m/m (1.3 % of the amplitude). Hydrostatic stiffness uses face-centre quadrature, whereas ship inertia uses exact polyhedral integrals. Box sway-roll reciprocity remains unresolved; box beam-sea roll is not mesh-qualified. Range coverage is limited to the listed discrete dimensions and frequencies. Roll resonance and independent experimental qualification remain outside this pilot.</p>')
     document.append('<script>function filterCases(){document.querySelectorAll(".case,.comparison-line").forEach(e=>{let hide=["form","length_m","beam_m","draft_m"].some(k=>{let v=document.getElementById(k).value;return v && e.getAttribute("data-"+k)!==v;});e.style.display=hide?"none":"";});}document.querySelectorAll("select").forEach(e=>e.addEventListener("change",filterCases));</script></html>\n')
     return "".join(document)

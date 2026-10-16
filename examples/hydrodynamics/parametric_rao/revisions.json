@@ -10,8 +10,29 @@
     "revision": 1
   },
   {
-    "change": "Extends the assumed interior-mode screening band to include box_07 at 1.32 rad/s and validates waterline boundary edges before integrating inertia.",
+    "change": "Extends the assumed interior-mode screening band to include box_07 at 1.32 rad/s and validates waterline boundary edges before integrating inertia. The re-solve changed retained values by 0.03 % or less below 1.32 rad/s and by up to 1.3 % at 1.32 rad/s (box_00). Two records with identical mesh digests differ by 0.46 % there. The cause is not established.",
     "date": "2026-10-15",
+    "rebuild_environment": {
+      "build_install_source": "Public package index, isolated uv environment; retained coefficients only.",
+      "builder_revision": "4f9eccc0030dee5b83767c9f6d4143a7e7590831",
+      "builder_sha256": {
+        "examples/hydrodynamics/parametric_rao/run.py": "619d2d5d8f78597f988fa8ce6e0531c21a05b9721c70c70161e0a80e350c056e",
+        "src/digitalmodel/hydrodynamics/hull_library/parametric_rao_report.py": "8d0a97868239bbacdb3baa48e24e4aa752e7c386f1fe86259a27808ca1a46e12"
+      },
+      "host_class": "Linux workstation",
+      "packages": {
+        "capytaine": "3.0.0",
+        "numpy": "2.3.3",
+        "pandas": "2.3.3",
+        "pyarrow": "26.0.0",
+        "scipy": "1.18.1",
+        "xarray": "2025.12.0"
+      },
+      "platform": "Linux x86_64",
+      "python": "3.12.3",
+      "solver_environment": "Historical package versions beyond Capytaine are not recorded.",
+      "utc_date": "2026-10-15"
+    },
     "revision": 2
   }
 ]

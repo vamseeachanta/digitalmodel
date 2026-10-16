@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from digitalmodel.hydrodynamics.hull_library import parametric_rao_pilot as pilot
-from digitalmodel.hydrodynamics.hull_library.parametric_rao_report import build_lookup
+from digitalmodel.hydrodynamics.hull_library.parametric_rao_report import REPEATABILITY_LIMIT, build_lookup
 from digitalmodel.hydrodynamics.hull_library.rao_database import RAODatabase
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -26,6 +26,7 @@ def build(records, basis, criteria, receipt, reference, convergence, output):
         entry = pilot.database_entry(record)
         entry.metadata.update({
             "readiness_status": "partial",
+            "repeatability_limit": REPEATABILITY_LIMIT,
             "intended_use": "Discrete pilot lookup; design use remains unverified",
             "heading_convention": "wave propagation angle measured counterclockwise from +x",
             "benchmark_qualified_dofs": ["Heave"] if entry.variation_id == "box_00" else [],

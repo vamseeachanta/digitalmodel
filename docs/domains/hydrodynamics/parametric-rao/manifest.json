@@ -23,7 +23,7 @@
     "revisions.json": {
       "record_count": 3,
       "retrieved_on": "2026-10-15",
-      "sha256": "6c00c3ab0d87d89c4f977eaf5a653b1e164893de6bb57085e79434005e978cc5",
+      "sha256": "142232f18dfdd5873996b288cd93db08958efa732bf997365c4fa11128b586bd",
       "source_url": "revisions.json"
     }
   },
@@ -34,12 +34,12 @@
       "sha256": "33b6cd8d788f0ba37620b51386604caed52af4fac39a9638a32af68baaf7c672"
     },
     "lookup.html": {
-      "bytes": 90531,
-      "sha256": "56aa136dcf3e022a6636e5a5c95281718f0bbd69e1c2be3e32c5cc6d923a23e7"
+      "bytes": 91223,
+      "sha256": "a0946b373ce63c283135a69372a51379f34c7bca5f6d38711087480e1b2daac7"
     },
     "pilot.parquet": {
-      "bytes": 43701,
-      "sha256": "b161cc35d18d7e0c2e9c0bdc4f0822550dbd5b2990fc071cb480a027c94ea1c6"
+      "bytes": 39151,
+      "sha256": "822afa722ff9af3483a5d798657db7a3fb2029f2bf5c1f8f6484eafd8d473dd5"
     },
     "results.json": {
       "bytes": 503197,
@@ -48,7 +48,7 @@
   },
   "qualification": "Open-source reproduction and head-sea heave panel sensitivity only",
   "record_count": 16,
-  "revisions_sha256": "6c00c3ab0d87d89c4f977eaf5a653b1e164893de6bb57085e79434005e978cc5",
+  "revisions_sha256": "142232f18dfdd5873996b288cd93db08958efa732bf997365c4fa11128b586bd",
   "schema_version": 1,
   "solver_version": "3.0.0",
   "sources": [
