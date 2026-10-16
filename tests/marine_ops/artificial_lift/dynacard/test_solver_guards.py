@@ -59,14 +59,14 @@ def test_direct_comparison_solver_warns_and_serializes_flag(context, method, fla
     assert results.solver_method == method
 
 
-@pytest.mark.parametrize("method", ["everitt_jennings", "gibbs", "finite_difference"])
+@pytest.mark.parametrize("method", ["gibbs"])
 def test_direct_solver_rejects_excessive_downhole_stroke(context, method):
     context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
     with pytest.raises(PhysicsError, match="downhole stroke exceeds surface stroke"):
         _solve(context, method)
 
 
-@pytest.mark.parametrize("method", ["everitt_jennings", "gibbs", "finite_difference"])
+@pytest.mark.parametrize("method", ["gibbs"])
 def test_workflow_rejects_invalid_stroke_before_diagnosis(context, method):
     workflow = DynacardWorkflow(context, solver_method=method)
     invalid = AnalysisResults(downhole_card=CardData(
@@ -151,3 +151,50 @@ def test_production_utility_keeps_default_solver(context):
     result = perform_well_troubleshooting(context.model_dump())
     assert result.solver_method == "everitt_jennings"
     assert not any("comparison only" in flag for flag in result.solver_flags)
+
+
+@pytest.mark.parametrize("method", ["everitt_jennings", "finite_difference"])
+def test_direct_solver_allows_downhole_overtravel(context, method):
+    context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
+    results = _solve(context, method)
+    assert np.ptp(results.downhole_card.position) > np.ptp(context.surface_card.position)
+    assert np.all(np.isfinite(results.downhole_card.load))
+
+
+@pytest.mark.parametrize("method", ["everitt_jennings", "finite_difference"])
+def test_workflow_allows_overtravel_before_diagnosis(context, method):
+    context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
+    expected = _solve(context, method).downhole_card
+    expected_position = np.array(expected.position)
+    expected_load = np.array(expected.load)
+    result = DynacardWorkflow(context, solver_method=method).run_full_analysis()
+    np.testing.assert_allclose(result.downhole_card.position, expected_position)
+    np.testing.assert_allclose(result.downhole_card.load, expected_load)
+    assert np.ptp(result.downhole_card.position) > np.ptp(context.surface_card.position)
+
+
+@pytest.mark.parametrize("method", ["everitt_jennings", "gibbs", "finite_difference"])
+@pytest.mark.parametrize("position,load,message", [
+    ([0.0, float("nan"), 0.0], [1.0, 2.0, 3.0], "non-finite"),
+    ([0.0, 1.0, 0.0], [1.0, float("inf"), 3.0], "non-finite"),
+    ([0.0, 1.0], [1.0, 2.0], "at least three"),
+    ([0.0, 1.0, 0.0], [1.0, 2.0, 3.0, 4.0], "lengths differ"),
+])
+def test_shared_card_validity_is_independent_of_stroke(method, position, load, message):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.solver_guards import validate_stroke
+
+    with pytest.raises(PhysicsError, match=message):
+        validate_stroke([0.0, 1.0, 0.0], position, load, method)
+
+
+@pytest.mark.parametrize("solver,entry", [
+    (DynacardPhysicsSolver, "solve_wave_equation"),
+    (FiniteDifferenceSolver, "solve"),
+])
+def test_candidate_programming_error_propagates(context, monkeypatch, solver, entry):
+    def broken_candidate(_):
+        raise ValueError("candidate programming error")
+
+    monkeypatch.setattr(solver, entry, broken_candidate)
+    with pytest.raises(ValueError, match="candidate programming error"):
+        DynacardWorkflow(context).compare_solvers(allow_divergence=True)

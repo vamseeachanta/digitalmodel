@@ -100,7 +100,10 @@ class DynacardPhysicsSolver:
 
         # Stroke Synchronization
         dh_pos = dh_pos - np.min(dh_pos)
-        # Final scaling tweak to hit the <2% stroke limit
+        # This legacy empirical factor remains unqualified (#1857). The Gibbs
+        # comparison path is restricted to measured surface travel by
+        # GIBBS_STROKE_RATIO_LIMIT; that is an implementation envelope, not a
+        # physical prohibition on plunger overtravel.
         dh_pos = dh_pos * STROKE_SCALING_FACTOR
 
         validate_stroke(u_surf, dh_pos, dh_load, "gibbs")

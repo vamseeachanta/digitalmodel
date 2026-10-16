@@ -284,8 +284,9 @@ class DynacardWorkflow:
         outputs at opposite ends of that bound can differ by twice the bound.
         This stated engineering comparison envelope is not a guarantee of
         physical accuracy or an exact bound under changing normalization.
-        Stroke differences are reported separately; exceeding the measured
-        surface stroke invalidates an output before any comparison.
+        Stroke differences are reported separately. Only the empirical Gibbs
+        comparison path is restricted to the measured surface stroke; other
+        methods may exhibit plunger overtravel.
 
         Invalid cards and load nRMSE above the envelope raise PhysicsError.
         ``allow_divergence=True`` returns the failed gate and its evidence for
@@ -355,7 +356,7 @@ class DynacardWorkflow:
                 metrics["load_nrmse_pct"] <= COMPARISON_LOAD_NRMSE_LIMIT_PCT
             )
             return metrics, results
-        except (PhysicsError, ValueError, FloatingPointError) as error:
+        except (PhysicsError, FloatingPointError) as error:
             return {"error": str(error), "within_threshold": False,
                     "details": getattr(error, "details", None)}, None
 

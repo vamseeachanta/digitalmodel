@@ -20,13 +20,19 @@ COMPARISON_ONLY_FLAGS = {
     "finite_difference": "comparison only: not validated",
 }
 VERTICAL_APPROXIMATION_FLAG = "deviation present, vertical approximation applied"
+# Implementation envelope for the Gibbs comparison path's empirical
+# STROKE_SCALING_FACTOR, pending its qualification and load propagation (#1857).
+# This is not a physical limit: elastic-wave solutions can exhibit overtravel.
+# The other solvers therefore have no ceiling on the ratio of pump to surface stroke.
+GIBBS_STROKE_RATIO_LIMIT = 1.0
 
 
 def validate_stroke(surface_position, downhole_position, downhole_load, method):
-    """Reject non-finite output or stroke exceeding the measured surface range.
+    """Validate every card and restrict only the empirical Gibbs stroke.
 
-    Units cancel in the range comparison; both position arrays must use the
-    same units. No divergence opt-in can waive this result restriction.
+    Units cancel in the Gibbs range comparison; both position arrays must use
+    the same units. No divergence opt-in can waive card validity or the Gibbs
+    implementation envelope. Overtravel alone does not invalidate other methods.
     """
     arrays = [np.asarray(values, dtype=np.float64)
               for values in (surface_position, downhole_position, downhole_load)]
@@ -37,7 +43,7 @@ def validate_stroke(surface_position, downhole_position, downhole_load, method):
     if any(not np.all(np.isfinite(values)) for values in arrays):
         raise PhysicsError("solver card contains non-finite values", solver=method)
     surface_stroke, downhole_stroke = (float(np.ptp(values)) for values in arrays[:2])
-    if downhole_stroke > surface_stroke:
+    if method == "gibbs" and downhole_stroke > surface_stroke * GIBBS_STROKE_RATIO_LIMIT:
         raise PhysicsError(
             "downhole stroke exceeds surface stroke", solver=method,
             details={"surface_stroke": surface_stroke, "downhole_stroke": downhole_stroke},

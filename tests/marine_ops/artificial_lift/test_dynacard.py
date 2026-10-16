@@ -135,7 +135,7 @@ def test_compare_solvers(sample_context):
     from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import PhysicsError
 
     workflow = DynacardWorkflow(sample_context)
-    with pytest.raises(PhysicsError, match="solver disagreement"):
+    with pytest.raises(PhysicsError, match="solver disagreement") as caught:
         workflow.compare_solvers()
     comparison = workflow.compare_solvers(allow_divergence=True)
     assert comparison['reference_solver'] == 'everitt_jennings'
@@ -143,8 +143,15 @@ def test_compare_solvers(sample_context):
     assert set(comparison['comparisons']) == {'gibbs', 'finite_difference'}
     assert comparison['within_threshold'] is False
     for metrics in comparison['comparisons'].values():
-        assert 'error' in metrics or 'stroke_error_pct' in metrics
-        assert 'error' in metrics or 'load_nrmse_pct' in metrics
+        assert np.isfinite(metrics['stroke_error_pct'])
+        assert np.isfinite(metrics['load_nrmse_pct'])
+    assert comparison['threshold_load_nrmse_pct'] == pytest.approx(4.4)
+    assert comparison['comparisons']['gibbs']['stroke_error_pct'] < 20.0
+    gibbs = comparison['comparisons']['gibbs']
+    assert gibbs['load_nrmse_pct'] == pytest.approx(16.8, abs=0.05)
+    assert gibbs['load_nrmse_pct'] > comparison['threshold_load_nrmse_pct']
+    assert gibbs['within_threshold'] is False
+    assert caught.value.details['comparisons']['gibbs'] == gibbs
 
 
 def test_perform_well_troubleshooting(sample_context):
