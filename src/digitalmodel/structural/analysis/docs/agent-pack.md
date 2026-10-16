@@ -127,7 +127,7 @@ Gate applicability follows AQG r0, section 10, Python calculations, with G5 from
 | --- | --- | --- | --- | --- |
 | C01 | `PipeGeometry` construction; run `TestPipeGeometry` in `tests/test_wall_thickness.py` | 0 accepted invalid cases (count) for the inputs asserted by that class | pytest results; PASS at BASE and AFTER; [tests/test_wall_thickness.py:L51-L97] | G0 |
 | C02 | `compute_hydrostatic_pressure`; execute V1 | Absolute pressure error ≤ 1e-3 Pa | V1; PASS at BASE and AFTER, error 0 Pa; [tests/test_wall_thickness_phases.py:L75-L77] | G0 |
-| C03 | `ParametricSweep.run`; execute `TestParametricSweep::test_sweep_correct_row_count` in `tests/test_wall_thickness_parametric.py` | 0 rows difference from the product of the valid input array lengths (count) | pytest results; PASS at BASE and AFTER; [tests/test_wall_thickness_parametric.py:L58-L71] | G0 |
+| C03 | `ParametricSweep.run`; execute `tests/test_wall_thickness_parametric.py::TestParametricSweep::test_sweep_correct_row_count` in `tests/test_wall_thickness_parametric.py` | 0 rows difference from the product of the valid input array lengths (count) | pytest results; PASS at BASE and AFTER; [tests/test_wall_thickness_parametric.py:L58-L71] | G0 |
 | C11 | Import public package and run the 32-file package/consumer/boundary selection in section 10 | 0 failed and 0 skipped tests (count); 548 passed tests (count) | Offline pytest log; PASS at BASE and AFTER; public exports in [src/digitalmodel/structural/analysis/__init__.py:L4-L80] | G1 |
 | C12 | `DnvStF201Strategy.check_names`; run `tests/test_wall_thickness_codes/test_dnv_st_f201.py::TestF201Registration::test_check_names` | Exactly 1 check name (count), `pressure_containment` | pytest results; PASS at BASE and AFTER; [tests/test_wall_thickness_codes/test_dnv_st_f201.py:L44-L45] | G1 |
 | C13 | Run `tests/test_no_corrupted_py_files.py::test_all_src_py_files_parse` and `tests/contracts/test_string_addressed_dependencies.py::test_the_three_known_defects_are_still_derived` in the contracts selection | 0 failed tests (count) | FAIL: 2 baseline failures at BASE and AFTER; issue pending (5); [tests/test_no_corrupted_py_files.py:L14-L24] [tests/contracts/test_string_addressed_dependencies.py:L620-L636] | G1 |
@@ -140,6 +140,7 @@ Gate applicability follows AQG r0, section 10, Python calculations, with G5 from
 The applicable G1 load route is ordinary Python import followed by the offline test selection; report generation writes HTML, Markdown and JSON. [src/digitalmodel/structural/analysis/__init__.py:L4-L80] [src/digitalmodel/structural/analysis/wall_thickness_compare_workflow.py:L96-L109]
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom | Cause and detection | Incident or tracking | Evidence |
 | --- | --- | --- | --- |

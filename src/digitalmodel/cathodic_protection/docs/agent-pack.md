@@ -228,6 +228,7 @@ The following are acceptance checks, not a claim of completed gate clearance; ex
 No OrcaFlex, AQWA or other solver-program load route belongs to G1 for this family; G1 executes the module's Python APIs/tests, and report rendering is covered under G5 (AQG r0, *Analysis QA gates*, section 10). [src/digitalmodel/cathodic_protection/engine_adapter.py:L1272-L1301]
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 Silent status/provenance failures precede numerical incidents in this table. [src/digitalmodel/cathodic_protection/engine_adapter.py:L287-L310] [tests/cathodic_protection/test_report_edition_citations.py:L42-L58]
 

@@ -148,6 +148,7 @@ AQG r0, section 10, Python calculations: G0 inputs/units/citations, G1 imports/t
 Shared-method QA is referenced to #2552; EC-02 and EC-07 are retired from this pack. EC-08 remains the local detection for #2583 because the reference pack has no spectral check. The retired EC-04 workflow row-count check is not yet recorded there; O11 tracks its placement with the two adapter nodes. [src/digitalmodel/structural/fatigue/docs/agent-pack.md:L198-L203]
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | ID / symptom | Cause and detection | Tracking / evidence |
 | --- | --- | --- |

@@ -117,6 +117,7 @@ Acceptance criteria below comprise executable checks and the explicit C09 adapte
 Defined checks by gate: G0 3; G1 1; G2 4; G3 2; G4 1 conditional; G5 1 (12 total, including the C09 gap). Only C04, C06 and C07 are NOT_RUN for licensed source-model evidence; C09 is a non-executable gap. No solver gate is signed here. AQG r0, sections 3–10 and 13.
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom (silent paths first) | Cause and detection | Incident / disposition |
 | --- | --- | --- |

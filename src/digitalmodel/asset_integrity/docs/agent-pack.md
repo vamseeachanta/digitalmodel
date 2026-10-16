@@ -166,6 +166,7 @@ Gate application requires applicability and qualification evidence before any ac
 C03/C04 record known failing eligibility properties and C11 records a unit-label defect; these records do not establish engineering gate clearance; the current pipeline screen uses MAX, and the dedicated pitting workflow has stronger background gates than other callers. [src/digitalmodel/asset_integrity/pipeline_defect_screen.py:L55-L63] [src/digitalmodel/asset_integrity/assessment/pitting_workflow.py:L83-L98] [src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py:L175-L205] [tests/asset_integrity/test_ffs_published_examples.py:L88-L116]
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom first / cause | Detection / status | Incident and date | Source evidence |
 | --- | --- | --- | --- |
