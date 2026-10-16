@@ -41,7 +41,7 @@ def read_contract(campaign: Path, expected_hours: float, max_hours: float) -> di
         raise ValueError("Criteria revisions must agree")
     required = {"source_qualification", "geometry", "force_balance", "native_convergence",
                 "mesh_convergence", "catenary_relative_tolerance", "overbend_strain_limit",
-                "installation_acceptance"}
+                "installation_acceptance", "stinger_conformity"}
     if set(criteria["criteria"]) != required:
         raise ValueError("Complete native and installation criteria are required")
     for criterion in criteria["criteria"].values():
