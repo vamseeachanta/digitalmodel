@@ -110,7 +110,7 @@
   "observed_at_utc": "2026-10-14T10:43:02.740756+00:00",
   "owner_repo": "digitalmodel",
   "readiness": "partial; synthetic static lines with held empirical data; no environmental acceptance",
-  "revision": "R1",
+  "revision": "R2",
   "run_record_url": "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/mooring/screening/README.md",
   "schema_version": 1,
   "solver_module": "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py",
@@ -120,7 +120,7 @@
     "src/digitalmodel/data/marine_engineering/mooring_components/sources/moorpy_coefficients.json": "dc9ec64bafdaa0015847572e40f37e47cf804cead2f72c973b3857f1fb297cad",
     "src/digitalmodel/data/marine_engineering/mooring_components/wire_properties.csv": "d9f6e963f22d5ecdcd1aa1ba9177fc2e4b5799cb778cd550cc03d2970a99271e",
     "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py": "5a0e89d7f4b07f70bb78fd90ed9dc621fae49c7e079c6b43ed81045ab4b5c969",
-    "src/digitalmodel/orcaflex/mooring_design.py": "309a0344eddd6f33e8de122daa0b07de192ec59519f6d7af1d709d15bcdd38ed",
+    "src/digitalmodel/orcaflex/mooring_design.py": "9d9c44ffd0b5c2d4075b3dd8493ce12840b624c162550e9a2cc92cb03afb1777",
     "tests/marine_ops/marine_engineering/catenary/test_simplified.py": "6cf7d94d490c7111228fb1086af6580b4a5121e5f6614e09d35b64fc7aa5f786",
     "tests/orcaflex/test_mooring_design.py": "44478677d506537c2410459a9746288880c0edbf0ebfa20cb733bf527f6648ca"
   },
