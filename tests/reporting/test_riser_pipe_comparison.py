@@ -378,3 +378,58 @@ def test_optional_deductions_are_zero_and_external_input_path_is_portable(tmp_pa
     manifest = builder.build(changed, tmp_path / "out")
     assert "external-input.yml" in manifest["inputs"]
     assert not any(Path(name).is_absolute() for name in manifest["inputs"])
+
+
+def test_rp1111_factor_basis_is_visible(tmp_path):
+    """Expose native factors without qualifying them as riser-code factors."""
+    builder, source = builder_and_input()
+    builder.build(source, tmp_path)
+    page = (tmp_path / "riser-pipe-comparison.html").read_text()
+    native = builder.evaluate(yaml.safe_load(source.read_text()))["results"]["API RP 1111"]
+    assert "pipeline burst factor; collapse factor unqualified" in page
+    for state, symbol in (("burst", "f_d"), ("collapse", "f_c"), ("propagation", "f_p")):
+        assert f'{symbol} = {native[state]["details"][symbol]:.2f}' in page
+    assert "pipeline burst basis, not a riser burst basis" in page
+    assert "Collapse and propagation factors are unqualified implementation values" in page
+    assert "All three strategies ignore the DesignFactors argument" in page
+
+
+def test_empty_pipe_screen_and_distinct_wall_criteria_are_disclosed(tmp_path):
+    """Keep external-only demand and arrestor interpretation beside the results."""
+    builder, source = builder_and_input()
+    builder.build(source, tmp_path)
+    page = (tmp_path / "riser-pipe-comparison.html").read_text()
+    summary = page.split("<h2>Revision history</h2>")[0]
+    wall = page.split("<h2>Minimum passing nominal wall</h2>")[1].split('<h2 id="burst">')[0]
+    propagation = page.split('<h2 id="propagation">')[1].split('<h2 id="hoop">')[0]
+    for section in (summary, wall, propagation):
+        assert "empty-pipe screen" in section
+        assert "external pressure with no internal-pressure credit" in section
+        assert "buckle-arrestor criterion, not a wall requirement" in section
+    assert "RP 1111 includes propagation; RP 2RD omits combined loads; STD 2RD includes combined loads" in wall
+    assert "not directly comparable design minima" in wall
+    assert "p_o - p_i" in propagation
+    assert "non-positive for every case accepted by this builder" in propagation
+
+
+def test_displayed_inputs_retain_supplied_precision(tmp_path):
+    """Read back dimensions, material properties and loads without rounding."""
+    builder, source = builder_and_input()
+    config = yaml.safe_load(source.read_text())
+    config["pipe"].update(outer_diameter_mm=273.05, wall_thickness_mm=21.44,
+                          smys=240.125, smts=415.375, youngs_modulus_pa=207125000000,
+                          poissons_ratio=0.2995)
+    config["water_depth_m"] = 1500.125
+    config["cases"][0].update(internal_pressure_pa=20123456, external_pressure_pa=10123456,
+                               bending_moment_nm=250125, effective_tension_n=1500125)
+    changed = tmp_path / "precise.yml"
+    changed.write_text(yaml.safe_dump(config))
+    builder.build(changed, tmp_path / "out")
+    parser = Numbers()
+    parser.feed((tmp_path / "out/riser-pipe-comparison.html").read_text())
+    expected = {"od": "273.05", "wall": "21.44", "smys": "240.125", "smts": "415.375",
+                "elastic": "207.125", "poisson": "0.2995", "depth": "1500.125",
+                "case-0-internal_pressure_pa": "20.123456",
+                "case-0-external_pressure_pa": "10.123456",
+                "case-0-bending_moment_nm": "250.125", "case-0-effective_tension_n": "1500.125"}
+    assert {key: parser.values[key] for key in expected} == expected

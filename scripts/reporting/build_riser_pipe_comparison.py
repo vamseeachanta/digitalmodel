@@ -9,6 +9,7 @@ import html
 import inspect
 import json
 import math
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -190,6 +191,11 @@ def _code_key(code):
     return code.lower().replace(" ", "-")
 
 
+def _input_number(value, divisor=1):
+    """Preserve supplied numeric precision through display-unit scaling."""
+    return format(Decimal(str(value)) / Decimal(str(divisor)), "f")
+
+
 def numeric_values(model):
     """Return formatted values used in the page's summary and tables.
 
@@ -200,17 +206,17 @@ def numeric_values(model):
         Numeric-cell identifiers mapped to display strings.
     """
     config, pipe = model["config"], model["config"]["pipe"]
-    values = {"od": f'{pipe["outer_diameter_mm"]:.1f}',
-              "wall": f'{pipe["wall_thickness_mm"]:.1f}',
-              "smys": f'{model["pipe_si"]["smys_pa"] / 1e6:.1f}',
-              "smts": f'{model["pipe_si"]["smts_pa"] / 1e6:.1f}',
-              "elastic": f'{pipe["youngs_modulus_pa"] / 1e9:.1f}',
-              "poisson": f'{pipe["poissons_ratio"]:.1f}',
-              "depth": f'{config["water_depth_m"]:.1f}'}
+    values = {"od": _input_number(pipe["outer_diameter_mm"]),
+              "wall": _input_number(pipe["wall_thickness_mm"]),
+              "smys": _input_number(model["pipe_si"]["smys_pa"], 1e6),
+              "smts": _input_number(model["pipe_si"]["smts_pa"], 1e6),
+              "elastic": _input_number(pipe["youngs_modulus_pa"], 1e9),
+              "poisson": _input_number(pipe["poissons_ratio"]),
+              "depth": _input_number(config["water_depth_m"])}
     for index, case in enumerate(config["cases"]):
         for field, divisor in (("internal_pressure_pa", 1e6), ("external_pressure_pa", 1e6),
                                ("bending_moment_nm", 1e3), ("effective_tension_n", 1e3)):
-            values[f"case-{index}-{field}"] = f"{case[field] / divisor:.1f}"
+            values[f"case-{index}-{field}"] = _input_number(case[field], divisor)
     for code, states in model["results"].items():
         key = _code_key(code)
         minimum = model["minimum_wall"][code]
@@ -228,6 +234,34 @@ def _number(values, key):
     return f'<span data-number="{key}">{values[key]}</span>'
 
 
+def _rp1111_screen_note():
+    """Qualify external-only screening wherever its results are presented."""
+    return ('<p>RP 1111 collapse and propagation use external pressure with no internal-pressure credit: '
+            'these are empty-pipe screens, not net-pressure results for the supplied operating condition. '
+            'Under RP 1111, a propagation exceedance is a buckle-arrestor criterion, not a wall requirement. '
+            'Arrestor design and standard conformity are not established.</p>')
+
+
+def _factor_basis(model):
+    """Disclose returned implementation factors without qualifying a standard."""
+    states = model["results"]["API RP 1111"]
+    factors = [(state, symbol, states[state]["details"][symbol])
+               for state, symbol in (("burst", "f_d"), ("collapse", "f_c"), ("propagation", "f_p"))]
+    rows = ''.join(f'<tr><td>{state.capitalize()}</td><td>{symbol} = {value:.2f}</td></tr>'
+                   for state, symbol, value in factors)
+    return ('<h2>Module factor basis</h2><p>API RP 1111: pipeline burst factor; collapse factor unqualified. '
+            'The module uses the pipeline burst basis, not a riser burst basis. '
+            'Collapse and propagation factors are unqualified implementation values; '
+            'their standard applicability is not established.</p>'
+            '<table><thead><tr><th>Returned check</th><th>Implementation factor (1)</th></tr></thead><tbody>' +
+            rows + '</tbody></table><p class="caption">Factors read from the returned module details; '
+            'citation symbols and pinned module bytes are retained in the sidecars.</p>'
+            '<p>All three strategies ignore the DesignFactors argument and use factors fixed inside the modules. '
+            'The builder cannot request a riser-factor RP 1111 run through that argument. '
+            'Factor overrides, edition metadata and historical propagation factors require module qualification '
+            '(tracked in #377).</p>')
+
+
 def _summary(model, values):
     """State the largest returned result without claiming complete code coverage."""
     lines = ['<h2>Summary</h2><p>Internal program benchmarking analysis for one generic assumed pipe. '
@@ -241,6 +275,7 @@ def _summary(model, values):
     lines.append('<p>API RP 1111 module edition metadata is unqualified: the strategy defaults to '
                  '2015, with an edition label that conflicts with the standards inventory. '
                  'The comparison uses that implementation without endorsing the edition label.</p>')
+    lines.append(_rp1111_screen_note())
     return "\n".join(lines)
 
 
@@ -279,7 +314,7 @@ def _input_table(model, values):
             ''.join(rows) + '</tbody></table><p class="caption">Nominal properties and supplied load cases.</p>'
             '<p>Loads, depth and elastic properties are assumed, based on previous experience. '
             'Zero corrosion allowance and fabrication deduction are assumed. All three modules use nominal wall; '
-            'collapse credits no internal-pressure support. Water depth is context and does not determine '
+            'collapse and RP 1111 propagation credit no internal-pressure support. Water depth is context and does not determine '
             'the independently supplied absolute external pressure. Material suitability, tolerance allowances '
             'and material certification are not established.</p>')
 
@@ -299,7 +334,8 @@ def _state_table(state, model, values, criteria):
         section = reference["checks"][state]["section"]
         edition = reference.get("reference_edition", reference["revision"])
         disposition = "Within module limit" if result["utilisation"] <= 1 else "Above module limit"
-        rows.append(f'<tr><td>{code}</td><td>{_number(values, key + "-" + state)}</td>'
+        label = code + ("<br>pipeline burst factor; collapse factor unqualified" if code == "API RP 1111" else "")
+        rows.append(f'<tr><td>{label}</td><td>{_number(values, key + "-" + state)}</td>'
                     f'<td>{html.escape(result["case"])}</td><td>Utilisation &le; '
                     f'{_number(values, "limit-" + key + "-" + state)}%; '
                     f'{html.escape(reference["title"])}; {html.escape(edition)}; '
@@ -309,7 +345,10 @@ def _state_table(state, model, values, criteria):
         bars.append(f'<text x="0" y="{y + 12}">{code}</text><rect x="130" y="{y}" '
                     f'width="{width:.1f}" height="16"/><text x="440" y="{y + 12}">'
                     f'{values[key + "-" + state]}%</text>')
-    return (f'<h2 id="{state}">{state.capitalize()}</h2><table><thead><tr><th>Code</th>'
+    pressure_note = (_rp1111_screen_note() + '<p>RP 1111 propagation net demand would be p_o - p_i, '
+                     'non-positive for every case accepted by this builder; the returned module screen uses p_o alone.</p>'
+                     if state == "propagation" else "")
+    return (f'<h2 id="{state}">{state.capitalize()}</h2>' + pressure_note + '<table><thead><tr><th>Code</th>'
             '<th>Utilisation (%)</th><th>Governing supplied case</th><th>Criterion and reference</th>'
             '<th>Disposition</th></tr></thead><tbody>' + ''.join(rows) +
             '</tbody></table><p class="caption">Returned ' + state + ' results; reference locators remain unqualified.</p>'
@@ -331,7 +370,11 @@ def _minimum_table(model: dict[str, Any], values: dict[str, str]) -> str:
             'checks must pass for every supplied case. Enumeration makes no monotonicity assumption. '
             'The governing check and case below apply at the searched wall, not the supplied wall. '
             'This is not a qualified design minimum: missing checks, applicability ranges, '
-            'corrosion, fabrication deductions and manufacturing availability are not established.</p>'
+            'corrosion, fabrication deductions and manufacturing availability are not established.</p>' +
+            _rp1111_screen_note() +
+            '<p>RP 1111 includes propagation; RP 2RD omits combined loads; STD 2RD includes combined loads. '
+            'The values are not directly comparable design minima. The RP 1111 grid result includes an '
+            'empty-pipe propagation screen; it does not establish a required operating wall.</p>'
             '<table><thead><tr><th>Code</th><th>Nominal wall (mm)</th><th>Governing check</th>'
             '<th>Governing supplied case</th></tr></thead><tbody>' + ''.join(rows) +
             '</tbody></table><p class="caption">Module-only minimum on the declared search grid.</p>')
@@ -381,7 +424,7 @@ def _citations(criteria):
 def _page(model, criteria, record):
     """Render one standalone page with local styling and inline graphics."""
     values = numeric_values(model)
-    body = [_summary(model, values), _history(record), _input_table(model, values)]
+    body = [_summary(model, values), _history(record), _input_table(model, values), _factor_basis(model)]
     body.append(_minimum_table(model, values))
     for state in ("burst", "collapse", "propagation", "hoop", "combined"):
         body.append(_state_table(state, model, values, criteria))
