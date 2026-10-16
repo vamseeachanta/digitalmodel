@@ -1,8 +1,42 @@
 {
-  "criteria_revision": "1",
+  "criteria_revision": "2",
   "comparison_kind": "repository-module outputs; standard conformity not established",
   "limit": 1.0,
   "codes": {
+    "API RP 1111": {
+      "code_id": "api-rp-1111",
+      "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)",
+      "revision": "strategy default metadata: 2015; publisher edition unqualified",
+      "publisher": "API",
+      "source_sibling": "generic",
+      "source_project": null,
+      "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+      "module_sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+      "checks": {
+        "burst": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned utilisation <= unity"
+        },
+        "collapse": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned utilisation <= unity"
+        },
+        "propagation": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned utilisation <= unity"
+        }
+      },
+      "constants": [
+        "_check_burst.p_b coefficients and branch threshold",
+        "EDITION_FACTORS.f_d",
+        "EDITION_FACTORS.f_c",
+        "EDITION_FACTORS.f_p",
+        "_check_collapse.p_el coefficient",
+        "_check_collapse.p_y coefficient",
+        "_check_propagation.p_pr coefficient and exponent"
+      ],
+      "qualification": "Module metadata only; edition label conflicts with the standards inventory; standard conformity not established"
+    },
     "API RP 2RD": {
       "code_id": "api-rp-2rd",
       "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)",
