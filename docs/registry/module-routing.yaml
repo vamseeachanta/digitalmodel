@@ -375,6 +375,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#web
   - module: well
     entry_point: src/digitalmodel/well/
+    submodules:
+      well:
+        agent_pack: src/digitalmodel/well/docs/agent-pack.md
+        qa_family: EC
     maturity: stable
     owner_wiki: docs/domains/README.md
     key_tests: [tests/well/]
