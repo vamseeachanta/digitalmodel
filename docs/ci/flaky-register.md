@@ -35,13 +35,12 @@ classifying each as pre-existing on fresh main evidence for the same shard and
 ID, registered with evidence after recovery, or NEW. The committed baseline mode
 remains `report`. Recovered IDs are excluded from open main-baseline failures.
 
-Atlas runs its direct command and is outside the retry pilot. The optional
-`--signal-retry` diagnostic retries the whole command once after a signal exit
-(128 or above), excluding timeout and termination codes. Report mode preserves
-the first exit even when that retry passes. Ordinary exits 1 to 127 propagate
-without retry. `--decide-only --from-log LOG` inspects cached hosted logs without
-executing their content. Neither an isolated pass nor a signal retry establishes
-a failure's cause; shared state and leftover files can produce a retry pass.
+Atlas runs its direct command and is outside the retry pilot. Signal exits
+propagate without retry in both modes. `--decide-only --from-log LOG` inspects
+cached hosted logs without executing their content. An isolated pass does not
+establish a failure's cause; shared state and leftover files can produce a retry
+pass. Failures whose test IDs cannot be established retain their raw classname
+and name in the retry record and job summary.
 Register evidence remains a human decision.
 
 On pull requests, register selection fetches the base branch tip at run time

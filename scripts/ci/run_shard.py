@@ -5,8 +5,7 @@
 
 Report mode preserves the first exit code. Enforce mode requires register
 evidence for every recovered ID. Both attempts inherit console output.
-The signal diagnostic also preserves the first exit in report mode. Atlas
-runs directly and does not participate in the retry pilot.
+Atlas runs directly and does not participate in the retry pilot.
 """
 
 import argparse
@@ -165,16 +164,6 @@ def observation() -> dict:
             "run_id": os.environ.get("GITHUB_RUN_ID", "unknown"), "runner_cpu": cpu}
 
 
-def record(path: Path, ids: list[str], message: str, kind: str) -> None:
-    """Record the scoped whole-command signal retry."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = dict(observation(), ids=ids, first_failure_message=message[:500], kind=kind)
-    path.write_text(json.dumps(payload, indent=2) + "\n")
-    for test_id in ids:
-        escaped = test_id.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-        print(f"::warning::flaky, passed on retry: {escaped}", flush=True)
-
-
 def register_decisions(path: Path, ids: list[str]) -> dict[str, str]:
     """Require an open entry with a nonempty list of substantive evidence."""
     try:
@@ -199,19 +188,21 @@ def register_decisions(path: Path, ids: list[str]) -> dict[str, str]:
     return decisions
 
 
-def first_failures(path: Path) -> dict[str, str]:
-    """Keep one first-attempt message per established failed test identity."""
+def first_failures(path: Path) -> tuple[dict[str, str], list[dict[str, str]]]:
+    """Keep established failures and raw attributes of unidentified failures."""
     failures: dict[str, str] = {}
+    unidentified: list[dict[str, str]] = []
     for case in read_cases(path):
         failure = next((child for child in case if child.tag in {"failure", "error"}), None)
         if failure is not None:
             try:
                 node = node_id(case)
             except ValueError:
+                unidentified.append({key: case.get(key, "") for key in ("classname", "name")})
                 continue
             message = (failure.get("message", "") + "\n" + (failure.text or "")).strip()
             failures.setdefault(node, message[:500])
-    return failures
+    return failures, unidentified
 
 
 def test_evidence(args: argparse.Namespace, payload: dict) -> None:
@@ -229,6 +220,9 @@ def test_evidence(args: argparse.Namespace, payload: dict) -> None:
                       f"<pre>{html.escape(message)}</pre>"])
         escaped = node.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
         print(f"::warning::flaky, {outcome}: {escaped}; {choice}", flush=True)
+    for case in payload["unidentified_failures"]:
+        lines.append(f"- Unidentified failure: classname=<code>{html.escape(case['classname'])}</code>; "
+                     f"name=<code>{html.escape(case['name'])}</code>; test ID could not be established.")
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as handle:
             handle.write("\n".join(lines) + "\n")
@@ -237,17 +231,19 @@ def test_evidence(args: argparse.Namespace, payload: dict) -> None:
 def retry_tests(args: argparse.Namespace, command: list[str], code: int, started: int) -> int:
     """Observe one diagnostic retry; only evidenced recovery may clear enforce."""
     failures: dict[str, str] = {}
+    unidentified: list[dict[str, str]] = []
     result: dict[str, Any] = {"retry": False, "reason": "missing-or-stale-report", "ids": []}
     if fresh(args.junit, started):
         result = junit_decision(args.junit, code, args.max_retry_ids)
         try:
-            failures = first_failures(args.junit)
+            failures, unidentified = first_failures(args.junit)
         except (OSError, ET.ParseError, ValueError):
             pass
     if args.shard in NO_RETRY_SHARDS:
         result.update(retry=False, reason="no-retry-shard")
     choices = register_decisions(args.register, list(failures))
     payload = dict(observation(), ids=[], recovered=[], first_attempt_failed=failures,
+                   unidentified_failures=unidentified,
                    first_attempt_exit_code=code, mode=args.mode, register=choices,
                    kind="test-ids", reason=result["reason"])
     enforce_code = code
@@ -288,7 +284,6 @@ def main() -> int:
     parser.add_argument("--max-retry-ids", type=int, default=20)
     parser.add_argument("--mode", choices=("report", "enforce"), default="report")
     parser.add_argument("--register", type=Path, default=Path(".github/ci/flaky-register.yml"))
-    parser.add_argument("--signal-retry", action="store_true")
     parser.add_argument("--decide-only", action="store_true")
     parser.add_argument("--from-log", type=Path)
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -307,13 +302,6 @@ def main() -> int:
     code = execute(command)
     if code == 0:
         return code
-    if args.signal_retry and args.shard not in NO_RETRY_SHARDS:
-        if code < 128 or code in TIMEOUT_CODES:
-            return code
-        retry_code = execute(command)
-        record(args.junit.parent / f"flaky-{args.shard}.json", [args.shard] if retry_code == 0 else [],
-               f"signal exit {code}", "signal-exit")
-        return code if args.mode == "report" else retry_code
     return retry_tests(args, command, code, started)
 
 

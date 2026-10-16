@@ -60,14 +60,20 @@ def fake_gate(tmp_path, first=1, second=0, count=1, mode="failure"):
     return gate
 
 
-def invoke(tmp_path, gate, signal=False, shard="sample", options=()):
+def child_environment(summary=None):
+    env = {k: v for k, v in os.environ.items()
+           if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GITHUB_STEP_SUMMARY"}}
+    if summary is not None:
+        env["GITHUB_STEP_SUMMARY"] = str(summary)
+    return env
+
+
+def invoke(tmp_path, gate, shard="sample", options=(), summary=None):
     args = [sys.executable, str(SCRIPT), "--shard", shard, "--junit", "reports/junit-sample.xml", *options]
-    if signal:
-        args.append("--signal-retry")
     return subprocess.run(
         args + ["--", str(gate), "-m", "pytest", "tests/", "-q", "-p", "no:sugar", "-p", "no:randomly", "--tb=line", "-o", "junit_family=xunit2", "--junitxml=reports/junit-sample.xml"],
         cwd=tmp_path, text=True, capture_output=True, check=False,
-        env={k: v for k, v in os.environ.items() if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}},
+        env=child_environment(summary),
     )
 
 
@@ -84,7 +90,8 @@ def register(tmp_path, evidence=None, status="open"):
 
 def test_failure_then_pass_records_and_warns(tmp_path, monkeypatch):
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
-    result = invoke(tmp_path, fake_gate(tmp_path), options=register(tmp_path))
+    result = invoke(tmp_path, fake_gate(tmp_path), options=register(tmp_path),
+                    summary=tmp_path / "summary.md")
     assert result.returncode == 0, result.stderr
     record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
     assert record["ids"] == ["tests/test_fake.py::test_case_0"]
@@ -124,21 +131,50 @@ def test_unproven_or_excess_failures_never_retry(tmp_path, count, mode):
     assert len(history(tmp_path)) == 1
 
 
-def test_signal_abort_then_pass(tmp_path):
-    result = invoke(tmp_path, fake_gate(tmp_path, first=134), signal=True)
-    assert result.returncode == 134
-    assert len(history(tmp_path)) == 2
-    assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["kind"] == "signal-exit"
+@pytest.mark.parametrize("mode", ["report", "enforce"])
+@pytest.mark.parametrize("code", [134, 139])
+def test_signal_abort_preserves_first_exit(tmp_path, mode, code):
+    result = invoke(tmp_path, fake_gate(tmp_path, first=code, second=0), options=("--mode", mode))
+    assert result.returncode == code
+    assert len(history(tmp_path)) == 1
+    report = tmp_path / "reports/junit-sample.xml"
+    assert "assert mismatch" in report.read_text()
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    assert record["first_attempt_exit_code"] == code
+    assert record["exit_code"] == code
+    assert record["first_attempt_failed"] == {"tests/test_fake.py::test_case_0": "assert mismatch"}
+
+
+def test_signal_retry_enforce_stays_red(tmp_path):
+    gate = fake_gate(tmp_path, first=134, second=0)
+    result = invoke(tmp_path, gate, options=("--mode", "enforce", "--signal-retry"))
+    assert result.returncode == 2
+    assert "unrecognized arguments: --signal-retry" in result.stderr
+    assert not (tmp_path / "attempts.json").exists()
+
+
+def test_invoke_does_not_inherit_hosted_summary(tmp_path, monkeypatch):
+    summary = tmp_path / "hosted-summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    assert invoke(tmp_path, fake_gate(tmp_path)).returncode == 1
+    assert not summary.exists()
+
+
+def test_unidentified_failure_is_reported(tmp_path):
+    summary = tmp_path / "summary.md"
+    gate = fake_gate(tmp_path)
+    gate.write_text(gate.read_text().replace("classname='tests.test_fake'", "classname='missing.module'"))
+    result = invoke(tmp_path, gate, summary=summary)
+    assert result.returncode == 1
+    assert len(history(tmp_path)) == 1
+    text = summary.read_text()
+    assert "Unidentified failure" in text
+    assert "missing.module" in text and "test_case_0" in text
 
 
 def test_atlas_uses_direct_command():
     workflow = SCRIPT.parents[2] / ".github/workflows/parametric-atlas-drift.yml"
     assert "run_shard.py" not in workflow.read_text()
-
-
-def test_signal_normal_failure_never_retries(tmp_path):
-    assert invoke(tmp_path, fake_gate(tmp_path), signal=True).returncode == 1
-    assert len(history(tmp_path)) == 1
 
 
 def test_retry_contains_only_failed_ids_and_original_flags(tmp_path):
@@ -156,7 +192,7 @@ def test_exit_five_is_unchanged(tmp_path):
 
 @pytest.mark.parametrize("code", [124, 137, 143])
 def test_timeout_or_termination_never_retries(tmp_path, code):
-    assert invoke(tmp_path, fake_gate(tmp_path, first=code), signal=True).returncode == code
+    assert invoke(tmp_path, fake_gate(tmp_path, first=code)).returncode == code
     assert len(history(tmp_path)) == 1
 
 
@@ -175,7 +211,9 @@ def test_log_decisions_fail_closed():
 
 
 @pytest.mark.parametrize("mode,registered", [("report", False), ("enforce", False), ("enforce", True)])
-def test_n4_marker_file_stays_red_with_xunit2_parameter_ids(tmp_path, mode, registered):
+def test_n4_marker_file_stays_red_with_xunit2_parameter_ids(tmp_path, monkeypatch, mode, registered):
+    inherited_summary = tmp_path / "hosted-summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(inherited_summary))
     tests = tmp_path / "tests"
     tests.mkdir()
     (tests / "test_example.py").write_text(
@@ -202,8 +240,9 @@ def test_n4_marker_file_stays_red_with_xunit2_parameter_ids(tmp_path, mode, regi
         [sys.executable, str(SCRIPT), "--shard", "real", "--junit", "reports/junit-real.xml", *options, "--",
          sys.executable, "-m", "pytest", "tests/", "-q", "-p", "no:cacheprovider", "-p", "no:randomly",
          "--junitxml=reports/junit-real.xml", "-o", "junit_family=xunit2"],
-        cwd=tmp_path, text=True, capture_output=True, check=False,
+        cwd=tmp_path, text=True, capture_output=True, check=False, env=child_environment(),
     )
+    assert not inherited_summary.exists()
     assert result.returncode == (0 if registered else 1), result.stdout + result.stderr
     record = json.loads((tmp_path / "reports/flaky-real.json").read_text())
     assert record["ids"] == expected_ids
@@ -280,7 +319,7 @@ def test_report_registered_recovery_preserves_original_exit(tmp_path):
 def test_summary_keeps_message_for_each_failure(tmp_path, monkeypatch):
     summary = tmp_path / "summary.md"
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
-    assert invoke(tmp_path, fake_gate(tmp_path, count=2)).returncode == 1
+    assert invoke(tmp_path, fake_gate(tmp_path, count=2), summary=summary).returncode == 1
     payload = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
     assert len(payload["first_attempt_failed"]) == 2
     for node, message in payload["first_attempt_failed"].items():
@@ -299,8 +338,8 @@ def test_stale_report_does_not_retry_or_change_exit(tmp_path):
     assert len(history(tmp_path)) == 1
 
 
-def test_contracts_signal_retry_is_also_denied(tmp_path):
-    assert invoke(tmp_path, fake_gate(tmp_path, first=139), shard="contracts", signal=True).returncode == 139
+def test_contracts_signal_exit_never_retries(tmp_path):
+    assert invoke(tmp_path, fake_gate(tmp_path, first=139), shard="contracts").returncode == 139
     assert len(history(tmp_path)) == 1
 
 
