@@ -1,0 +1,115 @@
+{
+  "allowables": [
+    {
+      "key": "allowables.shear_force",
+      "label": "not established",
+      "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
+      "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
+      "units": "t",
+      "name": "Still-water shear force, both signs"
+    },
+    {
+      "key": "allowables.bending_moment",
+      "label": "not established",
+      "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
+      "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
+      "units": "t·m",
+      "name": "Still-water bending moment, hogging and sagging"
+    },
+    {
+      "key": "allowables.total_shear_force",
+      "label": "not established",
+      "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
+      "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
+      "units": "t",
+      "name": "Total shear force, both signs"
+    },
+    {
+      "key": "allowables.total_bending_moment",
+      "label": "not established",
+      "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
+      "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
+      "units": "t·m",
+      "name": "Total bending moment, hogging and sagging"
+    },
+    {
+      "key": "section_modulus.approved_sm.deck_m3",
+      "label": "not established",
+      "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
+      "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
+      "units": "m³",
+      "name": "Deck section modulus"
+    },
+    {
+      "key": "section_modulus.approved_sm.keel_m3",
+      "label": "not established",
+      "reason": "Only a synthetic placeholder is held; no approved loading-manual evidence is available.",
+      "required_evidence": "Approved loading-manual values and their configuration, condition, edition and applicability.",
+      "units": "m³",
+      "name": "Keel section modulus"
+    },
+    {
+      "key": "section_modulus.yield_mpa",
+      "label": "not established",
+      "reason": "The existing synthetic material input has no material certificate or qualified public specification.",
+      "required_evidence": "Material grade, thickness applicability and a qualified certificate or publicly reproducible specification.",
+      "units": "MPa",
+      "name": "Material yield strength"
+    },
+    {
+      "citation": {
+        "clause_title": "not established from the opened catalogue metadata",
+        "edition": "Rev.10, December 2020",
+        "implementation_edition": "Rev.7, 2010; edition equivalence not established",
+        "number": "IACS UR S11",
+        "publisher": "IACS",
+        "title": "Longitudinal Strength Standard"
+      },
+      "key": "permissible_stress",
+      "label": "not established",
+      "reason": "Numerical reproduction is not authorized by the opened publication terms. The catalogue edition differs from the implementation basis.",
+      "required_evidence": "Applicable edition and clause title, reproduction permission and material-factor applicability.",
+      "source": "iacs_catalogue",
+      "units": "MPa",
+      "name": "Permissible hull-girder bending stress"
+    }
+  ],
+  "intended_use": "Still-water demand analysis; no strength acceptance.",
+  "readiness": "partial",
+  "reporting_conventions": {
+    "revision": "P6",
+    "source_commit": "3f829f2c5df735b7f2a7a65f542eac83da99c9db",
+    "title": "Engineering reporting conventions"
+  },
+  "rights": "Publication metadata and citations only; no licensed numerical value or document is copied.",
+  "schema": "hull-allowable-evidence/1",
+  "sources": {
+    "iacs_catalogue": {
+      "http_status": 200,
+      "observed_at_utc": "2026-10-15T00:16:43Z",
+      "response_sha256": "1e73efce72833f83e143d419631232e32303227d0a0035272ca918d7bf96b469",
+      "url": "https://iacs.flumeserver.co.za/wp-json/wp/v2/publications?search=longitudinal&per_page=20"
+    },
+    "iacs_index": {
+      "http_status": 200,
+      "observed_at_utc": "2026-10-15T00:15:08Z",
+      "response_sha256": "86406226804eb2afdc33548013453c48eb3d9f37a20f463c6fc2e58b35b9e314",
+      "url": "https://iacs.org.uk/resolutions/unified-requirements/ur-s"
+    },
+    "iacs_terms": {
+      "http_status": 200,
+      "observed_at_utc": "2026-10-15T00:17:28Z",
+      "response_sha256": "983a3402683077d5f9f3e39d231d0292d075b8dd1b1e72ca1f26f17617ca0dd3",
+      "url": "https://iacs.org.uk/terms-and-conditions"
+    }
+  },
+  "validation": {
+    "bending_relative_tolerance": 0.001,
+    "shear_relative_tolerance": 0.01,
+    "source": "tests/naval_architecture/test_hull_girder_screening.py",
+    "source_commit": "096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+    "symbols": [
+      "test_sagging_barge_matches_hand_calc"
+    ]
+  }
+}

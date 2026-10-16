@@ -258,7 +258,7 @@ def compare_frequency_domain(
 # ---------------------------------------------------------------------------
 class BenchmarkPassFail(str, Enum):
     """Benchmark result status."""
-    PASS = "pass"
+    PASS = "pass"  # nosec B105 # Public benchmark outcome label, not a credential.
     WARN = "warn"
     FAIL = "fail"
     SKIP = "skip"

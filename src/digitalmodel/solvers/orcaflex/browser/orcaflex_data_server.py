@@ -984,9 +984,28 @@ def get_max_strut_force_config():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+def run_server(host="127.0.0.1", debug=False):
+    """Launch the development server with explicit host and debug settings."""
+    if debug and host not in ("127.0.0.1", "localhost", "::1"):
+        import warnings
+
+        warnings.warn(
+            "Debug mode exposes the interactive debugger beyond loopback.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+    app.run(host=host, debug=debug, port=5000)
+
+
 if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Development data server")
+    parser.add_argument("--host", default="127.0.0.1", help="Bind address")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    args = parser.parse_args()
     print(f"Starting OrcaFlex Data Server...")
     print(f"Base directory: {BASE_DIR}")
-    print(f"Server running at http://localhost:5000")
-    print(f"Dashboard available at http://localhost:5000/")
-    app.run(debug=True, port=5000)
+    print(f"Server running at http://{args.host}:5000")
+    print(f"Dashboard available at http://{args.host}:5000/")
+    run_server(host=args.host, debug=args.debug)
