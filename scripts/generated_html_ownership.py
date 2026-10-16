@@ -74,6 +74,9 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/debug_html_report.py": (
         "debugs an existing docs/reports HTML file; it does not target docs/api"
     ),
+    "scripts/generate_implementation_map.py": (
+        "writes a YAML implementation inventory, not committed docs/api HTML pages"
+    ),
     "scripts/generated_html_ownership.py": (
         "contains this ownership census; it does not write HTML"
     ),
