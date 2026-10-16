@@ -51,7 +51,8 @@ def number(value: Any) -> str:
 
 def delta(value: float, reference: float) -> str:
     """Format a signed comparison against its named reference to 0.1 percent."""
-    return f"{100*(value/reference-1):+.1f} %"
+    difference = 100*(value/reference-1)
+    return "0.0 %" if round(difference, 1) == 0 else f"{difference:+.1f} %"
 
 
 def offset(value: float) -> str:
@@ -127,7 +128,11 @@ def _design_data(basis: dict, results: dict) -> str:
         for key in ("central_column_diameter", "outer_column_diameter", "outer_column_radius", "draft", "freeboard", "pontoon_width", "pontoon_height")],
         "Table 2. Public reference dimensions. Three radial rectangular pontoons join one central and three outer columns; internal overlap is removed.")
     line_data = table(("Quantity", "Value", "Unit"), [
-        (key.replace("_", " ").title(), str(mooring[key]["value"]) if key == "line_type" else number(mooring[key]["value"]), mooring[key]["unit"])
+        (key.replace("_", " ").title(),
+         str(mooring[key]["value"]) if key == "line_type" else
+         number(mooring[key]["value"]/1e6) if key in ("axial_stiffness", "minimum_breaking_load") else
+         number(mooring[key]["value"]),
+         "MN" if key in ("axial_stiffness", "minimum_breaking_load") else mooring[key]["unit"])
         for key in ("line_count", "line_type", "nominal_diameter", "mass_per_length", "axial_stiffness", "minimum_breaking_load", "unstretched_length")],
         "Table 3. Mooring properties, Allen et al. (2020), Table 6, printed page 13.")
     coordinates = table(("Line", "Fairlead x,y,z [m]", "Anchor x,y,z [m]"), [
@@ -140,7 +145,7 @@ def _design_data(basis: dict, results: dict) -> str:
             "<h3>3.3 Environmental data</h3>"+seas+
             "<p>Mean current drag is not included. Rated thrust is applied to both seas as an envelope; the extreme combination does not represent parked aerodynamic loading.</p>"
             "<h3>3.4 Vessel data: platform and mooring</h3>"+dimensions+line_data+coordinates+
-            f"<h3>3.5 Criteria</h3><p>Utilisation is tension multiplied by a factor and divided by minimum breaking load; the limit is 1.0. The intact factor {number(basis['analysis']['intact_tension_factor']['value'])} and damaged factor {number(basis['analysis']['damaged_tension_factor']['value'])} are assumed, based on previous experience, as independent project screening criteria. Their basis is three multiplicative 25 % allowances for uncertainty in mean loading, wave excursion and quasi-static line demand: 1.25 × 1.25 × 1.25. Equal allowances are assumed for both configurations; they do not establish compliance with a licensed standard. No offset limit is established; tension utilisation alone does not establish stationkeeping acceptance.</p>"
+            f"<h3>3.5 Criteria</h3><p>Utilisation is tension multiplied by a factor and divided by minimum breaking load; the limit is 1.0. The intact factor {number(basis['analysis']['intact_tension_factor']['value'])} and damaged factor {number(basis['analysis']['damaged_tension_factor']['value'])} are assumed as independent screening criteria. Their basis is three multiplicative 25 % allowances for uncertainty in mean loading, wave excursion and quasi-static line demand: 1.25 × 1.25 × 1.25. Equal allowances are assumed for both configurations. This screening criterion is not the factor of API RP 2SK, 3rd edition (2005), and does not establish compliance with it. The safety-factor clause title is UNVERIFIED because an authoritative public source for that title is not available. No offset limit is established; tension utilisation alone does not establish stationkeeping acceptance.</p>"
             "<h3>3.6 Method</h3><p>The method and assumptions are defined in Section 4.</p>"
             "<h3>3.7 Load cases</h3><p>Three headings × two sea states × two configurations give 12 cases. Headings 0°, 30° and 60° span half the 120° sector of the three-line geometry. RNA orientation remains on the reference axis while the applied horizontal load and wave headings vary. An all-heading response envelope of the asymmetric turbine–platform system is not established. The damaged configuration removes the most loaded intact line for each sea and heading.</p>")
 
@@ -233,7 +238,7 @@ def _sensitivity(results: dict) -> str:
         output += "<p>Line-tension acceptance is conditional on the adopted inertia reading. The peak-response comparison alone does not establish whether each line-utilisation conclusion is invariant to the inertia interpretation.</p>"
     projection = results.get("projection_sensitivity")
     if projection:
-        output += "<p>Retaining the unprojected mass properties changes peak surge, heave and pitch responses relative to the reflection-symmetric calculation by "+", ".join(f"{projection[k]:+.1f} %" for k in ("surge_peak_difference_percent", "heave_peak_difference_percent", "pitch_peak_difference_percent"))+", respectively. This quantifies the symmetry approximation rather than establishing exact physical symmetry.</p>"
+        output += "<p>Retaining the unprojected mass properties changes peak surge, heave and pitch responses relative to the reflection-symmetric calculation by "+", ".join(delta(1+projection[k]/100, 1) for k in ("surge_peak_difference_percent", "heave_peak_difference_percent", "pitch_peak_difference_percent"))+", respectively. This quantifies the symmetry approximation rather than establishing exact physical symmetry.</p>"
     return output
 
 
@@ -277,12 +282,11 @@ def _findings(results: dict, intact: dict, damaged: dict) -> str:
                "comparisons in Tables 5–6 are the validation of this model; the stated "
                "differences are retained rather than treated as equivalence. Static offsets "
                "in Allen et al. Section 3.1 are not tabulated and are not compared.</p>"
-               "<h3>6.3 Published inertia inconsistency</h3><p>The public RNA tensor "
-               "cells F24:K24 and L24:Q24 disagree with the parallel-axis identity by "
-               "27.2 %, 34.2 % and 35.9 % on the three diagonals. The tower-top reading "
-               "is adopted as assumed because it gives the smaller identity residual; "
-               "the inconsistency remains unresolved. Appendix A quantifies the effects "
-               "of both readings and of additional damping.</p>"
+               "<h3>6.3 Published inertia inconsistency</h3><p>The published RNA inertia "
+               "about the centre of gravity and about tower top disagrees with the "
+               "parallel-axis identity by 27.2 %, 34.2 % and 35.9 % on the three diagonals. "
+               "The tower-top reading is adopted as assumed because exchanging the tensor labels reduces the identity residual, and inertia diagonals about tower top cannot be smaller than the corresponding centre-of-gravity diagonals for a displaced reference point. The inconsistency remains unresolved. Appendix A quantifies "
+               "the effects of both readings and of additional damping.</p>"
                f"<h3>6.4 Symmetry approximation</h3><p>The 0° sway, roll and yaw response "
                f"ratio is {number(results['symmetry_ratio'])} relative to peak response "
                "under reflection projection. This ratio concerns the assumed symmetric "
@@ -300,8 +304,8 @@ def _excursion_finding(results: dict) -> str:
     case, radius = governing["damaged"]
     intact = governing["intact"][1]
     return ("<h3>6.5 Large damaged excursion</h3>"
-            f"<p>The greatest damaged design excursion is {number(radius)} m "
-            f"for {escape(_case_name(case))}, compared with {number(intact)} m "
+            f"<p>The greatest damaged design excursion is {offset(radius)} m "
+            f"for {escape(_case_name(case))}, compared with {offset(intact)} m "
             f"for the greatest intact excursion, a ratio of {radius/intact:.1f}. "
             "The calculated two-line equilibrium lies at a large displacement. "
             "A mooring-layout and allowable-excursion assessment is required before "
@@ -323,10 +327,11 @@ def _revision_history() -> str:
     rows = [
         ("A", "14 October 2026", "Initial public-reference analysis; both published RNA inertia readings are propagated through natural periods, response and line demand, with the tower-top reading assumed because of the source inconsistency."),
         ("B", "14 October 2026", "Add the revision record, clarify the governing lost-line capacity limitation, round offsets, and recalculate strength utilisation with an independently assumed uncertainty allowance."),
+        ("C", "15 October 2026", "Clarify the assumed strength criterion and unresolved standard reference, align the inertia rationale, and state the omitted slow-drift response and display precision."),
     ]
     return ("<section id='revision-history'><h2>Revision history</h2>"+
             table(("Revision", "Date", "Change and reason"), rows,
-                  "Report issues; earlier entries are retained.")+"</section>")
+                  "Report revision record.")+"</section>")
 
 
 def validate_cases(cases: list[dict]) -> None:
@@ -371,7 +376,7 @@ def _methodology(results: dict) -> str:
         "<p>The submerged boundary is the union of circular columns and rectangular radial pontoons with an irregular-frequency lid. Two panel resolutions are evaluated. Natural periods solve det[K−ω²(M+A(ω))]=0 with six-degree coupling and zero-offset mooring stiffness for the intact system. Radiation damping is supplemented in surge, heave and pitch by 5 % critical damping, assumed, based on previous experience; 2 % and 10 % sensitivities are carried. The additional coefficient is Bextraᵢ(ω)=2ζ√[(Mᵢᵢ+Aᵢᵢ(ω))Kᵢᵢ]; its frequency dependence is retained, and the response remains linear in motion amplitude.</p>"
         "<p>The response is obtained from [K−ω²(M+A)−iω(B+Bextra)]q=F over 0.05–2 rad/s, consistent with the exp(−iωt) excitation convention. The intact system uses zero-offset stiffness; the damaged system uses stiffness at its constrained mean equilibrium. Aligned load and wave headings are assumed. The xz plane is a reflection plane; lateral mass-centre offset and inertia cross-products that break this reflection are projected to zero, an assumed symmetry approximation.</p>"
         "<p>For response spectral density |RAO|²S, m₀ and m₂ are frequency moments. Significant single amplitude is 2√m₀; the Rayleigh three-hour maximum is √[2m₀ ln N], where N=T/(2π√(m₀/m₂)), following Longuet-Higgins (1952). Each horizontal maximum is added independently with both signs to the static mean, and the largest tension of four combinations is retained. This envelope is an assumption about concurrent horizontal excursions; the two maxima need not occur simultaneously. Elastic catenary relations follow Irvine (1981). Seabed friction is assumed zero; anchor holding capacity is not established by line-strength utilisation.</p>"
-        "<p>The published RNA tensors do not satisfy Iref=ICG+m[(r·r)I−rrᵀ]. Cells F24:K24 and L24:Q24 in the public tabular data give diagonal discrepancies of 27.2 %, 34.2 % and 35.9 %. Treating F24:K24 as about the RNA centre of gravity or about tower top produces the two analysed readings. The tower-top reading is adopted as assumed; exchanging the tensor labels reduces the full-tensor relative residual from 31.7 % to 23.1 %. Retaining F24:K24 as the trusted endpoint is a further assumption; neither reading resolves the published inconsistency. Published RNA mass and centre of gravity are retained separately.</p>")
+        "<p>The published RNA tensors do not satisfy Iref=ICG+m[(r·r)I−rrᵀ]. The published RNA inertia about the centre of gravity and about tower top gives diagonal discrepancies of 27.2 %, 34.2 % and 35.9 %. Treating the tensor published as about the centre of gravity as about either the RNA centre of gravity or tower top produces the two analysed readings. The tower-top reading is adopted as assumed because exchanging the tensor labels reduces the identity residual, and inertia diagonals about tower top cannot be smaller than the corresponding centre-of-gravity diagonals for a displaced reference point. The full-tensor relative residual falls from 31.7 % to 23.1 % when labels are exchanged. Retaining the tensor published as about the centre of gravity as the trusted endpoint is a further assumption; neither reading resolves the published inconsistency. Published RNA mass and centre of gravity are retained separately.</p>")
     return methodology
 
 
@@ -383,6 +388,7 @@ def _references() -> str:
         "<p>Capytaine and MoorPy: open-source boundary-element and quasi-static mooring formulations, versions identified in Section 4.</p>"
         "<p>Longuet-Higgins, M. S. (1952). On the statistical distribution of the height of sea waves. JMR 11, 245–266. Irvine (1981). Cable Structures; elastic catenary formulation.</p>"
         )
+    references += ("<p>API RP 2SK, Design and Analysis of Stationkeeping Systems for Floating Structures, 3rd edition, October 2005. Safety-factor clause title: UNVERIFIED; an authoritative public source for the title is not available. The title and edition are confirmed by the <a href='https://www.api.org/products-and-services/standards/addenda-and-errata'>publisher catalogue</a>. No standard factor is reproduced, and compliance is not established.</p>")
     return references
 
 
@@ -393,9 +399,9 @@ def _document_sections(basis: dict, results: dict) -> list[str]:
     damaged = max((c for c in results["cases"] if c["state"] == "damaged"), key=lambda c: c["governing"]["utilisation"])
     summary = _damaged_capacity()+"<p>"
     for case in (intact, damaged):
-        summary += (f"The governing {case['state']} design offset is ({offset(case['design'][0])}, {offset(case['design'][1])}) m, with line utilisation {number(case['governing']['utilisation'])} at {number(case['heading'])}° in the {case['sea']} sea; ")
-    summary = summary.rstrip("; ")+". Coupled dynamics and mean wave drift are not included. No allowable excursion or anchor holding criterion is established; tension strength alone does not establish stationkeeping acceptance.</p>"+remedies
-    cover = f"<header class='cover'><p class='eyebrow'>AceEngineer Inc. · Floating wind and mooring</p><h1>{TITLE}</h1><p>14 October 2026 · Revision B</p></header>"
+        summary += (f"The governing {case['state']} design offset is ({offset(case['design'][0])}, {offset(case['design'][1])}) m, with line utilisation {number(case['governing']['utilisation'])} at {number(case['heading'])}° in the {case['sea']} sea. ")
+    summary = summary.rstrip()+" Coupled dynamics and mean wave drift are not included. Design offsets exclude low-frequency (slow-drift) response and are not upper bounds; the surge natural period is "+offset(results["periods"]["at_tower_top"][0])+" s. No allowable excursion or anchor holding criterion is established; tension strength alone does not establish stationkeeping acceptance.</p>"+remedies
+    cover = f"<header class='cover'><p class='eyebrow'>AceEngineer Inc. · Floating wind and mooring</p><h1>{TITLE}</h1><p>15 October 2026 · Revision C</p></header>"
     methodology = _methodology(results)
     references = _references()
     sections = [

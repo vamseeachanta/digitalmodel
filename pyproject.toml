@@ -275,6 +275,8 @@ digitalmodel = [
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
     "data_systems/data/*.yml",
+    "data_systems/data/steel_shapes*.json",
+    "data_systems/data/steel_shapes_provenance.yaml",
     "foam_system/data/*.yml",
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
@@ -327,6 +329,7 @@ addopts = [
     "--strict-config",
 ]
 markers = [
+    "store_data: marks tests requiring manifest-listed content-store data",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",

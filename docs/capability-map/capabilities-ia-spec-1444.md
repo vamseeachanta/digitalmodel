@@ -71,7 +71,7 @@ Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unli
 | [`#wall-thickness`](https://www.aceengineer.com/capabilities/#wall-thickness) | pipelines-risers | `docs/api/structural/wall-thickness-explorer.html` | `docs/api/capabilities/pdf/sec-wall-thickness.pdf` | 2026-07-04 (#1389) |
 | [`#subsea`](https://www.aceengineer.com/capabilities/#subsea) | moorings-stationkeeping | *gap* | `docs/api/capabilities/pdf/sec-subsea.pdf` | unknown |
 | [`#viv`](https://www.aceengineer.com/capabilities/#viv) | pipelines-risers | `docs/api/structural/viv-explorer.html` | `docs/api/capabilities/pdf/sec-viv.pdf` | 2026-07-04 (#1396) |
-| [`#installation`](https://www.aceengineer.com/capabilities/#installation) | installation-ops | *gap* | `docs/api/capabilities/pdf/sec-installation.pdf` | unknown |
+| [`#installation`](https://www.aceengineer.com/capabilities/#installation) | installation-ops | `docs/api/installation/installation-heading-explorer.html` | `docs/api/capabilities/pdf/sec-installation.pdf` | unknown |
 | [`#wind`](https://www.aceengineer.com/capabilities/#wind) | field-dev-economics | *gap* | `docs/api/capabilities/pdf/sec-wind.pdf` | unknown |
 | [`#field-development`](https://www.aceengineer.com/capabilities/#field-development) | field-dev-economics | `docs/api/structural/field-economics-explorer.html` | `docs/api/capabilities/pdf/sec-field-development.pdf` | 2026-07-04 (#1396) |
 | [`#manoeuvring`](https://www.aceengineer.com/capabilities/#manoeuvring) | hydro-naval | `docs/api/hydro/rudder-maneuvering-explorer.html` | `docs/api/capabilities/pdf/sec-manoeuvring.pdf` | unknown |
@@ -85,7 +85,7 @@ Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unli
 | [`#corrosion-production`](https://www.aceengineer.com/capabilities/#corrosion-production) | wells-drilling-production | `docs/api/corrosion/galvanic-compatibility-explorer.html`<br>`docs/api/production/scale-si-explorer.html` | `docs/api/capabilities/pdf/sec-corrosion-production.pdf` | unknown |
 | [`#validation`](https://www.aceengineer.com/capabilities/#validation) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-validation.pdf` | unknown |
 
-**PDF gap set (0):** 
+**PDF gap set (0):**
 
 **Unlinked explorers:** `docs/api/structural/wall-thickness-3d-explorer.html`
 

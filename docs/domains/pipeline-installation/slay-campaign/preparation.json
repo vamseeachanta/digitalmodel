@@ -1,0 +1,209 @@
+{
+  "schema": "slay-preparation-1",
+  "model_digest_serialization": "parsed-yaml-json-sort-keys-compact-ascii-v1",
+  "criteria_revision": "execution-1",
+  "case_table_sha256": "be696c0da761ef657980621a651058aef5d0025584272c12c0cb108c3153c0a4",
+  "native_attempted": 0,
+  "native_completed": 0,
+  "qualified_results": 0,
+  "cases": [
+    {
+      "id": "d0-t0",
+      "files": {
+        "models/d0-t0/includes/01_general.yml": "e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0",
+        "models/d0-t0/includes/02_var_data.yml": "585fde739d61fc5fd2e7827b96168bd161540b364cf80d55e3abb45a7af7700b",
+        "models/d0-t0/includes/03_environment.yml": "fb34b102bc139f5486a733861843a14af4493507bd4b9e924391d58985762e6a",
+        "models/d0-t0/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
+        "models/d0-t0/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
+        "models/d0-t0/includes/06_vessels.yml": "57cf6384abe89ceca9e7a8e3f5c8b70d1d584350c9e1831bab3adf6490262a5c",
+        "models/d0-t0/includes/07_lines.yml": "b9a1644d95285f53d589af363ceb204faf32a960732440d554ff5c6facc471e2",
+        "models/d0-t0/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
+        "models/d0-t0/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
+        "models/d0-t0/includes/11_winches.yml": "f003ecf7dc7f1cf4295e7620fa15a7c7485db7552e3b685dcf673f9f8b722f5e",
+        "models/d0-t0/includes/13_supports.yml": "11aa8827ef756bf929f7b7994e1c59e7f0a8e3e0ae404683ee7281dea58392e6",
+        "models/d0-t0/includes/14_morison.yml": "a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5",
+        "models/d0-t0/inputs/parameters.yml": "24ed32d0e16eedcb724c3ec97458302f17a48f39d40cee49ad766e2eb4a493f6",
+        "models/d0-t0/master.yml": "75e51ec3cd062be116e935e163b676fabf9b29ac91f1eb498690d88045284f97"
+      },
+      "validator_errors": 0,
+      "validator_warnings": [],
+      "screen": {
+        "horizontal_tension_kn": 209.09833301691322,
+        "suspended_length_m": 69.2820323027551,
+        "span_m": 52.67831587699266,
+        "top_tension_kn": 418.1966660338265,
+        "touchdown_curvature_per_m": 0.025,
+        "overbend_strain": 0.00254,
+        "submerged_weight_kn_m": 5.22745832542283
+      },
+      "preparation_wall_seconds": 0.15673145977780223,
+      "native_wall_seconds": null,
+      "native_status": "not_run"
+    },
+    {
+      "id": "d0-t1",
+      "files": {
+        "models/d0-t1/includes/01_general.yml": "e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0",
+        "models/d0-t1/includes/02_var_data.yml": "585fde739d61fc5fd2e7827b96168bd161540b364cf80d55e3abb45a7af7700b",
+        "models/d0-t1/includes/03_environment.yml": "fb34b102bc139f5486a733861843a14af4493507bd4b9e924391d58985762e6a",
+        "models/d0-t1/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
+        "models/d0-t1/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
+        "models/d0-t1/includes/06_vessels.yml": "57cf6384abe89ceca9e7a8e3f5c8b70d1d584350c9e1831bab3adf6490262a5c",
+        "models/d0-t1/includes/07_lines.yml": "b9a1644d95285f53d589af363ceb204faf32a960732440d554ff5c6facc471e2",
+        "models/d0-t1/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
+        "models/d0-t1/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
+        "models/d0-t1/includes/11_winches.yml": "05e9b90cbc2cda19ee11aed60ec7260c1aef08c6042e08542bdcc41085a4f130",
+        "models/d0-t1/includes/13_supports.yml": "11aa8827ef756bf929f7b7994e1c59e7f0a8e3e0ae404683ee7281dea58392e6",
+        "models/d0-t1/includes/14_morison.yml": "a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5",
+        "models/d0-t1/inputs/parameters.yml": "24ed32d0e16eedcb724c3ec97458302f17a48f39d40cee49ad766e2eb4a493f6",
+        "models/d0-t1/master.yml": "75e51ec3cd062be116e935e163b676fabf9b29ac91f1eb498690d88045284f97"
+      },
+      "validator_errors": 0,
+      "validator_warnings": [],
+      "screen": {
+        "horizontal_tension_kn": 418.19666603382643,
+        "suspended_length_m": 89.44271909999159,
+        "span_m": 76.99389200953655,
+        "top_tension_kn": 627.2949990507396,
+        "touchdown_curvature_per_m": 0.0125,
+        "overbend_strain": 0.00254,
+        "submerged_weight_kn_m": 5.22745832542283
+      },
+      "preparation_wall_seconds": 0.1276273550465703,
+      "native_wall_seconds": null,
+      "native_status": "not_run"
+    },
+    {
+      "id": "d0-t2",
+      "files": {
+        "models/d0-t2/includes/01_general.yml": "e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0",
+        "models/d0-t2/includes/02_var_data.yml": "585fde739d61fc5fd2e7827b96168bd161540b364cf80d55e3abb45a7af7700b",
+        "models/d0-t2/includes/03_environment.yml": "fb34b102bc139f5486a733861843a14af4493507bd4b9e924391d58985762e6a",
+        "models/d0-t2/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
+        "models/d0-t2/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
+        "models/d0-t2/includes/06_vessels.yml": "57cf6384abe89ceca9e7a8e3f5c8b70d1d584350c9e1831bab3adf6490262a5c",
+        "models/d0-t2/includes/07_lines.yml": "b9a1644d95285f53d589af363ceb204faf32a960732440d554ff5c6facc471e2",
+        "models/d0-t2/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
+        "models/d0-t2/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
+        "models/d0-t2/includes/11_winches.yml": "093426260737efa4a970a9cf099597a76475b20664d9226de20823dcc5cacac8",
+        "models/d0-t2/includes/13_supports.yml": "11aa8827ef756bf929f7b7994e1c59e7f0a8e3e0ae404683ee7281dea58392e6",
+        "models/d0-t2/includes/14_morison.yml": "a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5",
+        "models/d0-t2/inputs/parameters.yml": "24ed32d0e16eedcb724c3ec97458302f17a48f39d40cee49ad766e2eb4a493f6",
+        "models/d0-t2/master.yml": "75e51ec3cd062be116e935e163b676fabf9b29ac91f1eb498690d88045284f97"
+      },
+      "validator_errors": 0,
+      "validator_warnings": [],
+      "screen": {
+        "horizontal_tension_kn": 627.2949990507396,
+        "suspended_length_m": 105.83005244258362,
+        "span_m": 95.44385534686867,
+        "top_tension_kn": 836.3933320676529,
+        "touchdown_curvature_per_m": 0.008333333333333333,
+        "overbend_strain": 0.00254,
+        "submerged_weight_kn_m": 5.22745832542283
+      },
+      "preparation_wall_seconds": 0.12608299078419805,
+      "native_wall_seconds": null,
+      "native_status": "not_run"
+    },
+    {
+      "id": "d1-t0",
+      "files": {
+        "models/d1-t0/includes/01_general.yml": "e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0",
+        "models/d1-t0/includes/02_var_data.yml": "585fde739d61fc5fd2e7827b96168bd161540b364cf80d55e3abb45a7af7700b",
+        "models/d1-t0/includes/03_environment.yml": "a2f66b740f9664d53f428efc8ecac0e76403a0059e775506d0adf36cdf15e87c",
+        "models/d1-t0/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
+        "models/d1-t0/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
+        "models/d1-t0/includes/06_vessels.yml": "57cf6384abe89ceca9e7a8e3f5c8b70d1d584350c9e1831bab3adf6490262a5c",
+        "models/d1-t0/includes/07_lines.yml": "af2ae44d3a911b2c66570a2a1708a8c17b8d5f3da26980fb499ef6010f05e6db",
+        "models/d1-t0/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
+        "models/d1-t0/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
+        "models/d1-t0/includes/11_winches.yml": "093426260737efa4a970a9cf099597a76475b20664d9226de20823dcc5cacac8",
+        "models/d1-t0/includes/13_supports.yml": "11aa8827ef756bf929f7b7994e1c59e7f0a8e3e0ae404683ee7281dea58392e6",
+        "models/d1-t0/includes/14_morison.yml": "a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5",
+        "models/d1-t0/inputs/parameters.yml": "2cfd188f71762aae0ca9a0c9b77a91c9d1f38a0d4d36c187cdfbea7d18c2f657",
+        "models/d1-t0/master.yml": "75e51ec3cd062be116e935e163b676fabf9b29ac91f1eb498690d88045284f97"
+      },
+      "validator_errors": 0,
+      "validator_warnings": [],
+      "screen": {
+        "horizontal_tension_kn": 418.19666603382643,
+        "suspended_length_m": 138.5640646055102,
+        "span_m": 105.35663175398533,
+        "top_tension_kn": 836.393332067653,
+        "touchdown_curvature_per_m": 0.0125,
+        "overbend_strain": 0.00254,
+        "submerged_weight_kn_m": 5.22745832542283
+      },
+      "preparation_wall_seconds": 0.12611991167068481,
+      "native_wall_seconds": null,
+      "native_status": "not_run"
+    },
+    {
+      "id": "d1-t1",
+      "files": {
+        "models/d1-t1/includes/01_general.yml": "e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0",
+        "models/d1-t1/includes/02_var_data.yml": "585fde739d61fc5fd2e7827b96168bd161540b364cf80d55e3abb45a7af7700b",
+        "models/d1-t1/includes/03_environment.yml": "a2f66b740f9664d53f428efc8ecac0e76403a0059e775506d0adf36cdf15e87c",
+        "models/d1-t1/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
+        "models/d1-t1/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
+        "models/d1-t1/includes/06_vessels.yml": "57cf6384abe89ceca9e7a8e3f5c8b70d1d584350c9e1831bab3adf6490262a5c",
+        "models/d1-t1/includes/07_lines.yml": "af2ae44d3a911b2c66570a2a1708a8c17b8d5f3da26980fb499ef6010f05e6db",
+        "models/d1-t1/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
+        "models/d1-t1/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
+        "models/d1-t1/includes/11_winches.yml": "0c748f5eec64cdc5cfd08ab829d1f8bf8231bfdfd3f77b6de19da7f09ab64fef",
+        "models/d1-t1/includes/13_supports.yml": "11aa8827ef756bf929f7b7994e1c59e7f0a8e3e0ae404683ee7281dea58392e6",
+        "models/d1-t1/includes/14_morison.yml": "a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5",
+        "models/d1-t1/inputs/parameters.yml": "2cfd188f71762aae0ca9a0c9b77a91c9d1f38a0d4d36c187cdfbea7d18c2f657",
+        "models/d1-t1/master.yml": "75e51ec3cd062be116e935e163b676fabf9b29ac91f1eb498690d88045284f97"
+      },
+      "validator_errors": 0,
+      "validator_warnings": [],
+      "screen": {
+        "horizontal_tension_kn": 836.3933320676529,
+        "suspended_length_m": 178.88543819998318,
+        "span_m": 153.9877840190731,
+        "top_tension_kn": 1254.5899981014793,
+        "touchdown_curvature_per_m": 0.00625,
+        "overbend_strain": 0.00254,
+        "submerged_weight_kn_m": 5.22745832542283
+      },
+      "preparation_wall_seconds": 0.1297531509771943,
+      "native_wall_seconds": null,
+      "native_status": "not_run"
+    },
+    {
+      "id": "d1-t2",
+      "files": {
+        "models/d1-t2/includes/01_general.yml": "e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0",
+        "models/d1-t2/includes/02_var_data.yml": "585fde739d61fc5fd2e7827b96168bd161540b364cf80d55e3abb45a7af7700b",
+        "models/d1-t2/includes/03_environment.yml": "a2f66b740f9664d53f428efc8ecac0e76403a0059e775506d0adf36cdf15e87c",
+        "models/d1-t2/includes/04_vessel_types.yml": "7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865",
+        "models/d1-t2/includes/05_line_types.yml": "a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025",
+        "models/d1-t2/includes/06_vessels.yml": "57cf6384abe89ceca9e7a8e3f5c8b70d1d584350c9e1831bab3adf6490262a5c",
+        "models/d1-t2/includes/07_lines.yml": "af2ae44d3a911b2c66570a2a1708a8c17b8d5f3da26980fb499ef6010f05e6db",
+        "models/d1-t2/includes/09_shapes.yml": "1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe",
+        "models/d1-t2/includes/10_groups.yml": "e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5",
+        "models/d1-t2/includes/11_winches.yml": "64ae0cdc724bf8d3896ebbf78db457dbad2a79582adf88ab94c8887689c6e98a",
+        "models/d1-t2/includes/13_supports.yml": "11aa8827ef756bf929f7b7994e1c59e7f0a8e3e0ae404683ee7281dea58392e6",
+        "models/d1-t2/includes/14_morison.yml": "a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5",
+        "models/d1-t2/inputs/parameters.yml": "2cfd188f71762aae0ca9a0c9b77a91c9d1f38a0d4d36c187cdfbea7d18c2f657",
+        "models/d1-t2/master.yml": "75e51ec3cd062be116e935e163b676fabf9b29ac91f1eb498690d88045284f97"
+      },
+      "validator_errors": 0,
+      "validator_warnings": [],
+      "screen": {
+        "horizontal_tension_kn": 1254.5899981014793,
+        "suspended_length_m": 211.66010488516724,
+        "span_m": 190.88771069373735,
+        "top_tension_kn": 1672.7866641353057,
+        "touchdown_curvature_per_m": 0.004166666666666667,
+        "overbend_strain": 0.00254,
+        "submerged_weight_kn_m": 5.22745832542283
+      },
+      "preparation_wall_seconds": 0.13008959498256445,
+      "native_wall_seconds": null,
+      "native_status": "not_run"
+    }
+  ]
+}

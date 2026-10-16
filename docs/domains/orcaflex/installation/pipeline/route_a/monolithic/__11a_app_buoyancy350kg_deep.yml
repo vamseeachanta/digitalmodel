@@ -117,7 +117,7 @@ BaseFile: __06__structure_at_port.yml
     SeabedFrictionCoefficient: 0
     ShadedDrawingCullingMode: No culling
     ShadedDrawingDrawSize: '~'
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
     ShadedDrawingMirrorInPlane: Not mirrored
     ShadedDrawingOrientation:
     - 0

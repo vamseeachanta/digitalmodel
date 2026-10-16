@@ -71,6 +71,22 @@ class Generator:
 
 GENERATORS = (
     Generator(
+        "scripts/capabilities/build_installation_heading_explorer.py",
+        ("docs/api/installation/installation-heading-explorer.html",),
+        inputs=(
+            "scripts/capabilities/installation_heading/limits.json",
+            "scripts/capabilities/installation_heading/revisions.json",
+            "scripts/capabilities/installation_heading/page.html.template",
+        ),
+    ),
+    Generator(
+        "scripts/reporting/build_riser_pipe_comparison.py",
+        ("docs/reports/2026-10-09-compute-program/riser-pipe-comparison/riser-pipe-comparison.html",),
+        inputs=("scripts/reporting/riser_pipe_comparison.yml",
+                "scripts/reporting/riser_pipe_comparison.criteria.json",
+                "scripts/reporting/riser_pipe_comparison.revisions.json"),
+    ),
+    Generator(
         "scripts/capabilities/build_anchor_holding_explorer.py",
         ("docs/api/structural/anchor-holding-explorer.html",),
     ),

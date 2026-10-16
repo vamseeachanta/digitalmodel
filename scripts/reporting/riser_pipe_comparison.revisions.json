@@ -1,0 +1,17 @@
+{
+  "revision": "1",
+  "history": [
+    {
+      "revision": "0",
+      "date": "2026-10-14",
+      "change": "First issue: compare the two eligible riser modules for one public nominal pipe; expose edition and combined-load gaps."
+    },
+    {
+      "revision": "1",
+      "date": "2026-10-14",
+      "change": "Generic assumed properties replace nominal size and grade values; evaluation wording identifies the missing comparisons."
+    }
+  ],
+  "criteria_sha256": "7c36f14e1ebba010e70222bbac85bf638707838365bc48bb759aa54379ca6ada",
+  "criteria_recorded_at": "2026-10-14T16:57:05.340387+00:00"
+}

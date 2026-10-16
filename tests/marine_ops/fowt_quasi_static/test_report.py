@@ -146,7 +146,7 @@ def test_revision_history_follows_summary_and_retains_initial_issue():
     assert "A" in history and "B" in history
     assert "14 October 2026" in history
     assert "both published RNA inertia readings" in history
-    assert "Revision B" in REPORT.read_text()
+    assert "Revision C" in REPORT.read_text()
 
 
 def test_offsets_use_one_decimal_and_document_roundoff_tolerance():
@@ -193,3 +193,68 @@ def test_project_strength_criterion_has_independent_stated_basis():
     for case in manifest["results"]["cases"]:
         for line in case["lines"]:
             assert line["utilisation"] == pytest.approx(line["tension"] * 1.25 ** 3 / strength)
+
+
+def test_screening_factor_does_not_claim_prior_experience_or_compliance():
+    import yaml
+    from digitalmodel.marine_ops.fowt_quasi_static.report import BASIS, INPUT
+    parser = Text()
+    parser.feed(REPORT.read_text())
+    criteria = ' '.join(parser.section_text['section-3'])
+    assert 'based on previous experience' not in criteria
+    assert 'This screening criterion is not the factor of API RP 2SK' in criteria
+    assert 'UNVERIFIED' in criteria
+    references = ' '.join(parser.section_text['section-9'])
+    assert 'API RP 2SK' in references
+    assert '3rd edition, October 2005' in references
+    assert 'UNVERIFIED' in references
+    for path in (BASIS, INPUT):
+        analysis = yaml.safe_load((ROOT/path).read_text())['analysis']
+        for state in ('intact', 'damaged'):
+            source = analysis[f'{state}_tension_factor']['source']
+            assert 'based on previous experience' not in source
+
+
+def test_inertia_rationale_is_consistent_and_names_quantities():
+    import yaml
+    from digitalmodel.marine_ops.fowt_quasi_static.report import BASIS
+    basis = yaml.safe_load((ROOT/BASIS).read_text())
+    rationale = basis['system']['inertia_rationale']
+    parser = Text()
+    parser.feed(REPORT.read_text())
+    for section in ('section-4', 'section-6'):
+        content = ' '.join(parser.section_text[section])
+        assert rationale in content
+        assert 'F24:K24' not in content and 'L24:Q24' not in content
+    assert 'cannot be smaller' in rationale
+    assert 'adopted_origin' in basis['system']['rna_inertia_cg']
+
+
+@pytest.mark.parametrize('value', [1.0, 0.99999, 1.00001])
+def test_percentage_display_normalises_rounded_zero(value):
+    from digitalmodel.marine_ops.fowt_quasi_static.report import delta
+    assert delta(value, 1.0) == '0.0 %'
+    assert delta(1.001, 1.0) == '+0.1 %'
+    assert delta(0.999, 1.0) == '-0.1 %'
+
+
+def test_summary_excludes_slow_drift_and_excursions_match_table_precision():
+    parser = Text()
+    parser.feed(REPORT.read_text())
+    summary = ' '.join(parser.section_text['section-1'])
+    assert 'not upper bounds' in summary
+    assert 'low-frequency (slow-drift)' in summary
+    assert '; The governing' not in summary
+    assert 'surge natural period' in summary
+    findings = ' '.join(parser.section_text['section-6'])
+    assert '39.3 m' in findings
+    assert '39.26 m' not in findings
+    assert 'Report issues; earlier entries are retained.' not in REPORT.read_text()
+
+
+def test_mooring_force_properties_use_meganewtons():
+    parser = Text()
+    parser.feed(REPORT.read_text())
+    design = ' '.join(parser.section_text['section-3'])
+    assert 'Axial Stiffness 3270 MN' in design
+    assert 'Minimum Breaking Load 22.29 MN' in design

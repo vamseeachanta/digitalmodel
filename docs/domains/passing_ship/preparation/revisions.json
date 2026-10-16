@@ -1,0 +1,20 @@
+{
+  "revision": "3",
+  "history": [
+    {
+      "revision": "initial",
+      "date": "2026-10-14",
+      "change": "Prepared public input ranges and a report skeleton; numerical reference values remain unavailable without plot digitisation."
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-15",
+      "change": "Recorded the unrun benchmark check in the manifest and report because the published references provide plots only; numerical qualification remains open."
+    },
+    {
+      "revision": "3",
+      "date": "2026-10-15",
+      "change": "Defined coefficient peaks and frozen comparison tolerances, identified the depth placeholder, and resized assumed mooring lines with static catenaries; fresh-build checks protect the generated outputs."
+    }
+  ]
+}

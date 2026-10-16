@@ -23,7 +23,7 @@ analysis:
     value: 1.953125
     unit: dimensionless
     source:
-      "assumed, based on previous experience; independent project screening
+      "assumed; independent screening
       criterion: three multiplicative 25% allowances for uncertainty in mean loading,
       wave excursion and quasi-static line demand; computed as 1.25**3. Equal allowances
       are assumed for intact and damaged configurations. This criterion does not establish
@@ -32,7 +32,7 @@ analysis:
     value: 1.953125
     unit: dimensionless
     source:
-      "assumed, based on previous experience; independent project screening
+      "assumed; independent screening
       criterion: three multiplicative 25% allowances for uncertainty in mean loading,
       wave excursion and quasi-static line demand; computed as 1.25**3. Equal allowances
       are assumed for intact and damaged configurations. This criterion does not establish

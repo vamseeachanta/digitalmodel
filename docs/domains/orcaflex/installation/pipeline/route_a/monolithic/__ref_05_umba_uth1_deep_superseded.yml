@@ -1,4 +1,4 @@
-﻿BaseFile: __02__field_and_general.yml
+BaseFile: __02__field_and_general.yml
 General:
   StaticsMaxIterations: 1600
   StaticsTolerance: 0.025
@@ -372,7 +372,7 @@ StiffenerTypes:
       - [2, 6, ~]
       - [3, 7, ~]
       - [4, 8, ~]
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored
@@ -450,7 +450,7 @@ StiffenerTypes:
       - [2, 6, ~]
       - [3, 7, ~]
       - [4, 8, ~]
-    ShadedDrawingFileName: 
+    ShadedDrawingFileName:
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored
@@ -726,7 +726,7 @@ Shapes:
     OutsidePen: [1, Solid, Gray]
     InsidePen: [1, Solid, $FF6000]
     NumberOfLines: 10
-    ShadedDrawingFileName: 
+    ShadedDrawingFileName:
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored

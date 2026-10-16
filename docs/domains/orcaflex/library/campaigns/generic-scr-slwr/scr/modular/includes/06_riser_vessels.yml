@@ -1,0 +1,13 @@
+Vessels:
+- Name: GenericHost
+  VesselType: Vessel Type1
+  Connection: Free
+  InitialPosition:
+  - 0.0
+  - 0.0
+  - 0.0
+  InitialHeading: 0.0
+  PrimaryMotion: None
+  SuperimposedMotion: None
+  IncludedInStatics: None
+  Length: 103.0

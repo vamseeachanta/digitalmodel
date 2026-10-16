@@ -1,15 +1,17 @@
+# Prerequisite: the SLWR input models whose results this configuration reads are held in the content store;
+# restore them first with the command in ../README.md (python scripts/data/fetch.py).
 default:
   Analysis:
     AddMinimumToSummary: True
     AddMaximumToSummary: True
     AddMeanToSummary: True
 
-Files: 
-  - 
+Files:
+  -
     Name: ..\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
-    Label: BaseCase,Intact Mooring 6% Offset 
+    Label: BaseCase,Intact Mooring 6% Offset
     ObjectName: SLWR
-  - 
+  -
     Name: ..\MooringCondition\SLWR_16OD_SE1200_HE1500_8percent_Offset_GA2_Driving.sim
     Label: Failed Mooring 8% Offset
     ObjectName: SLWR
@@ -22,7 +24,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -38,7 +40,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Min
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -54,7 +56,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -70,7 +72,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -86,7 +88,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -102,7 +104,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -118,7 +120,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Min
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -134,7 +136,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -150,7 +152,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -166,7 +168,7 @@ RangeGraph:
 -
   Command: Range Graph
   ObjectName: Line1
-  AdditionalData: 
+  AdditionalData:
     - Max
   SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
   ArcLength:
@@ -187,7 +189,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -198,7 +200,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -209,7 +211,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -220,7 +222,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -231,7 +233,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -246,7 +248,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -257,7 +259,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -268,7 +270,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -279,7 +281,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -290,7 +292,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -304,7 +306,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -315,7 +317,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -326,7 +328,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -337,7 +339,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -348,7 +350,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -362,7 +364,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -373,7 +375,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -384,7 +386,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -395,7 +397,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -406,7 +408,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -420,7 +422,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -431,7 +433,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -442,7 +444,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -453,7 +455,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -464,7 +466,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -478,7 +480,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -489,7 +491,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Min
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -500,7 +502,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -511,7 +513,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -522,7 +524,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod:  SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -537,7 +539,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -548,7 +550,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -559,7 +561,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -570,7 +572,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -581,7 +583,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:
@@ -592,7 +594,7 @@ Summary:
     -
       Command: Range Graph
       ObjectName: Line1
-      AdditionalData: 
+      AdditionalData:
         - Max
       SimulationPeriod: SpecifiedPeriod(10.0, 100.0)
       ArcLength:

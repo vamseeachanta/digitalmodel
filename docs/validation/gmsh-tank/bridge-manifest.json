@@ -1,0 +1,73 @@
+{
+  "case_inputs": {
+    "file_count": 14,
+    "total_bytes": 180710,
+    "tree_sha256": "58e05ecc4151623b68215c691129f333877e56df18946fc116ab0ae94f66a737"
+  },
+  "commands": [
+    {
+      "argv": [
+        "gmshToFoam",
+        "source.msh"
+      ],
+      "return_code": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "40903d2ed88e1f02793d8409f99f8d5db8cdaf71f0569240cf5de1ae73a119a4"
+    },
+    {
+      "argv": [
+        "changeDictionary",
+        "-constant",
+        "-subDict",
+        "dictionaryReplacement"
+      ],
+      "return_code": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "bc4f63d39caff7072d1db0338e23a2acc4eb770cc629e8244b026e37f7775054"
+    },
+    {
+      "argv": [
+        "checkMesh",
+        "-allGeometry",
+        "-allTopology"
+      ],
+      "return_code": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "2427b44792f569dfdfa3c4ec23de804d115542f2bd4be1d6aeb6d15f2d82a74b"
+    }
+  ],
+  "contract": {
+    "atmosphere_patch": "atmosphere",
+    "cells": 3618,
+    "faces": 7824,
+    "fluid_zone": "fluid",
+    "internal_faces": 6648,
+    "patches": [
+      "walls",
+      "atmosphere"
+    ],
+    "wall_patches": [
+      "walls"
+    ]
+  },
+  "created_utc": "2026-10-14T16:54:41.912409Z",
+  "poly_mesh": {
+    "file_count": 9,
+    "path": "constant/polyMesh",
+    "total_bytes": 253939,
+    "tree_sha256": "36aa3b98d34010f68644cd864c2df742d43eddbad2f4eff2a06d94824dac2cd2"
+  },
+  "schema_version": 1,
+  "source_msh": {
+    "format": "2.2",
+    "path": "source.msh",
+    "sha256": "9c9015a7e574c624a4bfb986eaba65aa658a312e1b0886bbbb9752f4b17e1679",
+    "size": 175391
+  },
+  "status": "completed",
+  "toolchain": {
+    "gmsh": "4.15.1",
+    "openfoam_package": "2312.260127-2",
+    "openmpi_package": "4.1.6-7ubuntu2"
+  }
+}

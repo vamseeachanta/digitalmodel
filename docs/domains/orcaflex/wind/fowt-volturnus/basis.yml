@@ -355,9 +355,10 @@ system:
     unit: kg
     source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Nacelle Mass
       Properties RNA row24 column B; commit e4993d63de10f165389534461dd544006750fe60
+  inertia_rationale: The tower-top reading is adopted as assumed because exchanging the tensor labels reduces the identity residual, and inertia diagonals about tower top cannot be smaller than the corresponding centre-of-gravity diagonals for a displaced reference point.
   aggregation_note: 'Both readings of published F24:K24 are propagated: at the RNA
     CG, or at tower top with CG tensor F-P. The tower-top reading is adopted as assumed
-    because swapping the source tensor labels gives the lower relative identity residual.
+    because exchanging labels reduces the residual and the tower-top inertia diagonals cannot be smaller than the corresponding CG diagonals.
     Retaining F rather than L as the trusted endpoint is an additional assumption;
     L24:Q24 remains the independent published comparator. Neither resolves the source
     discrepancy.'
@@ -498,6 +499,7 @@ system:
       IEA-15-240-RWT; OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat;
       TowerHt; commit e4993d63de10f165389534461dd544006750fe60
   rna_inertia_cg:
+    adopted_origin: tower top; the key retains the published label, not the adopted origin
     value:
     - - 499865525.6141458
       - 691780.4070305955
@@ -640,7 +642,7 @@ analysis:
   intact_tension_factor:
     value: 1.953125
     unit: dimensionless
-    source: 'assumed, based on previous experience; independent project screening
+    source: 'assumed; independent screening
       criterion: three multiplicative 25% allowances for uncertainty in mean loading,
       wave excursion and quasi-static line demand; computed as 1.25**3. Equal
       allowances are assumed for intact and damaged configurations. This criterion
@@ -648,7 +650,7 @@ analysis:
   damaged_tension_factor:
     value: 1.953125
     unit: dimensionless
-    source: 'assumed, based on previous experience; independent project screening
+    source: 'assumed; independent screening
       criterion: three multiplicative 25% allowances for uncertainty in mean loading,
       wave excursion and quasi-static line demand; computed as 1.25**3. Equal
       allowances are assumed for intact and damaged configurations. This criterion
