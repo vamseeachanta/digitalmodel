@@ -489,6 +489,23 @@ def test_orcawave_refuses_unsupported_mesh_formats(extension, mesh_format, secti
         build(_format_spec(extension, mesh_format))
 
 
+@pytest.mark.parametrize("section", ["lid", "zone"])
+def test_orcawave_auxiliary_mesh_extension_conflict(section):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+        _build_damping_lid_section, _build_qtf_section,
+    )
+
+    spec = _format_spec("gdf", "gdf")
+    if section == "lid":
+        spec.damping_lid.mesh_file = "lid.fdf"
+        build = _build_damping_lid_section
+    else:
+        spec.free_surface_zone.mesh_format = "fdf"
+        build = _build_qtf_section
+    with pytest.raises(ValueError, match="contradicts"):
+        build(spec)
+
+
 @pytest.mark.parametrize("mesh_format", ["fdf", "FDF", "auto", "Auto"])
 def test_orcawave_zone_preserves_fdf(mesh_format):
     from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_qtf_section
