@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 from digitalmodel.engine import engine
-from digitalmodel.orcaflex import mooring_design_fowt
+from digitalmodel.citations import CitationResolutionError
 from digitalmodel.marine_ops.artificial_lift.field_health import STATUS_RANK
 from tests.workflows.field_dev_production_assertions import (
     FIELD_DEV_PRODUCTION_WORKFLOWS,
@@ -62,15 +62,26 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
     if workflow["id"] == "fowt-mooring":
         (tmp_path / "wikis").mkdir()
         monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
-        monkeypatch.setattr(mooring_design_fowt, "_CITATION_EMITTED_CACHE", {})
         # Detach and close file streams before the engine replaces its handlers.
         for handler in list(logging.root.handlers):
             if isinstance(handler, logging.FileHandler):
                 logging.root.removeHandler(handler)
                 handler.close()
-        with pytest.warns(RuntimeWarning, match="wiki page missing"):
-            cfg = engine(inputfile=str(input_path))
-        assert cfg["fowt_mooring"]["result"]["citations"] == []
+        with pytest.raises(CitationResolutionError) as exc_info:
+            engine(inputfile=str(input_path))
+        assert exc_info.value.code_id == "DNV-RP-0360"
+        assert exc_info.value.reason == "page_missing"
+
+        page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+        page.parent.mkdir(parents=True)
+        page.write_text(
+            "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+            encoding="utf-8",
+        )
+        cfg = engine(inputfile=str(input_path))
+        citations = cfg["fowt_mooring"]["result"]["citations"]
+        assert len(citations) == 1
+        assert citations[0]["code_id"] == "DNV-RP-0360"
     else:
         cfg = engine(inputfile=str(input_path))
 

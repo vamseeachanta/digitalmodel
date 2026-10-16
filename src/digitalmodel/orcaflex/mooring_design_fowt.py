@@ -71,9 +71,9 @@ Standards references
 
 Citation posture
 ----------------
-A page that exists is validated at calculation time; missing or mismatched
-frontmatter raises CitationResolutionError. With no wiki configured or with the
-page not yet published, the geometric screen warns once and returns an empty sidecar:
+A configured wiki is validated at calculation time; a missing page or missing
+or mismatched frontmatter raises CitationResolutionError. With no wiki configured,
+the geometric screen warns once and returns an empty sidecar:
 no universal standards-derived MBR is computed, and the caller supplies the
 cable-specific limit. This exception does not establish standards compliance.
 * DNV-OS-E301 (position mooring), API RP 2SK (mooring) — covered in
@@ -94,8 +94,8 @@ from digitalmodel.citations import Citation, validate_citation
 
 
 # DNV-RP-0360 wiki page backing the MBR citation (depends on #574). Emitted only
-# when a live wiki tree is available; an existing page with missing or
-# mismatched metadata fails closed.
+# when a live wiki tree is available; a missing page or missing or mismatched
+# metadata fails closed.
 _DNV_RP_0360_WIKI_PATH = "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
 _CITATION_EMITTED_CACHE: dict[str, bool] = {}
 
@@ -206,7 +206,7 @@ class WatchCircleConstraint(BaseModel):
             repo_root: Optional override to locate the wiki tree for citation
                 emission. In standalone mode (no wiki) the result still computes;
                 citation list is empty and a one-shot RuntimeWarning is issued.
-                An existing page with missing or mismatched metadata fails closed.
+                A configured wiki with a missing page or invalid metadata fails closed.
 
         Returns:
             WatchCircleResult with pass/fail, governing bend radius, MBR limit,
@@ -246,8 +246,8 @@ class WatchCircleConstraint(BaseModel):
     def _emit_citation(self, repo_root: Optional[Path]) -> List[Citation]:
         """Emit a DNV-RP-0360 MBR citation when a live wiki tree is available.
 
-        Existing pages fail closed on missing or mismatched metadata.
-        Unconfigured installations and missing pages warn once and omit citations.
+        Configured wikis fail closed on missing pages or invalid metadata.
+        Unconfigured installations warn once and omit citations.
         """
         from digitalmodel.citations.resolver import resolve_wiki_base, resolve_wiki_path
         from digitalmodel.citations import CitationResolutionError
@@ -273,16 +273,11 @@ class WatchCircleConstraint(BaseModel):
 
         page = resolve_wiki_path(_DNV_RP_0360_WIKI_PATH, override=wiki_base)
         if not page.is_file():
-            warning_key = str(page)
-            if warning_key not in _CITATION_EMITTED_CACHE:
-                warnings.warn(
-                    "DNV-RP-0360 citation unavailable "
-                    f"(wiki page missing: {page}). Watch-circle check proceeds.",
-                    RuntimeWarning,
-                    stacklevel=3,
-                )
-                _CITATION_EMITTED_CACHE[warning_key] = True
-            return []
+            raise CitationResolutionError(
+                code_id="DNV-RP-0360",
+                wiki_path=_DNV_RP_0360_WIKI_PATH,
+                reason="page_missing",
+            )
 
         citation = Citation(
             code_id="DNV-RP-0360",
