@@ -336,3 +336,16 @@ def test_inventory_excludes_external_links_without_reading_them(sample, tmp_path
     assert exclusions["external_links"] == 1
     doc["families"][0]["implementations"][0]["path"] = "external.py"
     assert any("escaping path" in p for p in check_map(doc, root))
+
+
+def test_registry_generator_has_a_reasoned_non_html_classification():
+    import sys
+    sys.path.insert(0, str(ROOT / "scripts"))
+    try:
+        import check_generated_html as checker
+        path = "scripts/generate_implementation_map.py"
+        assert path in checker.discover_candidate_generators(ROOT)
+        assert checker.DISCOVERY_FALSE_POSITIVES.get(path, "").strip()
+        assert not any(path in problem for problem in checker.validate_registry(ROOT))
+    finally:
+        sys.path.remove(str(ROOT / "scripts"))
