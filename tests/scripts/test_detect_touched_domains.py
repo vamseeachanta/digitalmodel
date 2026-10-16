@@ -1362,3 +1362,22 @@ def test_record_reader_routes_union_base_and_head(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert set(result.stdout.splitlines()) == {"contracts", "citations"}
+
+
+def test_bha_database_owned_and_executed_by_subsea():
+    """Ownership alone must not leave the acceptance suite unexecuted."""
+    root = SCRIPT.parents[2]
+    detector = load_detector_module()
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    for path in ("tests/bha_database/test_database.py", "data/bha_database/examples.yml",
+                 "data/bha_database/manifest.yaml", "scripts/bha_database/build_manifest.py",
+                 "docs/bha_database.md"):
+        selected = detector.touched_domains([path], domains)
+        assert {domain.name for domain in selected} == {"subsea"}, path
+    selected = detector.touched_domains(["src/digitalmodel/bha_database/schema.py"], domains)
+    assert "subsea" in {domain.name for domain in selected}
+    subsea = next(domain for domain in domains if domain.name == "subsea")
+    assert "tests/bha_database/" in subsea.roots
+    gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
+    assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
+    assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]

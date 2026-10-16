@@ -471,6 +471,12 @@ modules:
     owner_wiki: examples/workflows/riser-configuration-screen/
     key_tests: [tests/riser_configuration_screen/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_configuration_screen
+  - module: bha_database
+    entry_point: src/digitalmodel/bha_database/
+    maturity: development
+    owner_wiki: docs/bha_database.md
+    key_tests: [tests/bha_database/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#bha_database
   - module: riser_database
     entry_point: src/digitalmodel/riser_database/
     maturity: development
