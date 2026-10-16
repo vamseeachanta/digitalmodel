@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 from digitalmodel.engine import engine
-from digitalmodel.orcaflex import mooring_design_fowt
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 INPUT_YML = REPO_ROOT / "examples" / "workflows" / "fowt-mooring" / "input.yml"
@@ -32,22 +31,26 @@ SUMMARY_JSON = (
 def test_fowt_mooring_workflow_offline(tmp_path, monkeypatch):
     assert INPUT_YML.exists(), f"missing example input: {INPUT_YML}"
 
-    (tmp_path / "wikis").mkdir()
+    page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        encoding="utf-8",
+    )
     monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
-    monkeypatch.setattr(mooring_design_fowt, "_CITATION_EMITTED_CACHE", {})
     # Detach and close file streams before the engine replaces its handlers.
     for handler in list(logging.root.handlers):
         if isinstance(handler, logging.FileHandler):
             logging.root.removeHandler(handler)
             handler.close()
-    with pytest.warns(RuntimeWarning, match="wiki page missing"):
-        cfg = engine(inputfile=str(INPUT_YML))
+    cfg = engine(inputfile=str(INPUT_YML))
 
     assert isinstance(cfg, dict)
     assert cfg["basename"] == "fowt_mooring"
 
     result = cfg["fowt_mooring"]["result"]
-    assert result["citations"] == []
+    assert len(result["citations"]) == 1
+    assert result["citations"][0]["code_id"] == "DNV-RP-0360"
     # Healthy feasibility screen: governing bend radius well above the MBR limit.
     assert result["passes"] is True
     assert result["governing_bend_radius_m"] == pytest.approx(136.554, abs=1e-2)
