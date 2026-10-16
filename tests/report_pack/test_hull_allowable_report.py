@@ -155,6 +155,7 @@ def test_report_contains_no_external_resources_or_unqualified_strength_verdict(t
     assert "synthetic textbook" in text
     assert "assumed" not in text.lower()
     assert "Internal still-water demand analysis" not in text
+    assert "This internal analysis" not in text
     for word in ["permissible_mpa", "Prepared by", "Checked by", "Approved by"]:
         assert word not in text
     assert '<svg ' in text and '<caption>' in text

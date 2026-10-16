@@ -1321,3 +1321,19 @@ workflows:
     result:
       kind: in_memory
       key: pipeline_defect_screen
+
+  - id: on-bottom-stability-e305
+    basename: on_bottom_stability_e305
+    title: Simplified on-bottom stability parity and external tables
+    input: examples/workflows/on-bottom-stability-e305/input.yml
+    outputs:
+      - examples/workflows/on-bottom-stability-e305/results/e305.json
+      - examples/workflows/on-bottom-stability-e305/results/e305.csv
+      - examples/workflows/on-bottom-stability-e305/results/e305.manifest.json
+    test: tests/subsea/on_bottom_stability/test_e305_workflow.py::test_e305_registration_and_registered_batch_are_reproducible
+    runtime: offline
+    status: experimental
+    version: 1
+    result:
+      kind: in_memory
+      key: on_bottom_stability_e305_result

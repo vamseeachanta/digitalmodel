@@ -342,7 +342,7 @@ def _render(results: dict, inventory: list, basis: dict, revisions: dict) -> str
               '<a href="#i2">[I2]</a>. No wave or strength calculation is performed.</p>')
     sections = [
         _section('summary', '1 Executive Summary', _summary(results)), revision_html,
-        _section('introduction', '2 Introduction', '<p>This internal analysis identifies still-water demand and the evidence needed for a longitudinal-strength decision. Local strength, ultimate collapse and class compliance are outside the calculated scope.</p>'),
+        _section('introduction', '2 Introduction', '<p>This analysis identifies still-water demand and the evidence needed for a longitudinal-strength decision. Local strength, ultimate collapse and class compliance are outside the calculated scope.</p>'),
         _section('design-data', '3 Design Data', _design(results, inventory)),
         _section('methodology', '4 Analysis Methodology', method),
         _section('results', '5 Detailed Results', _detailed_results(results)),

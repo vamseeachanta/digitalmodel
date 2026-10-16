@@ -10,11 +10,15 @@
 <p>Six generic still-water S-lay models are prepared by the repository builders.
 Schema and cross-builder checks establish structural consistency only. Native runs attempted: 0;
 native runs completed: 0; qualified results: 0. Installation acceptance is not established.
-The way forward is geometry qualification, a timed native canary, independent comparison,
-then the remaining cases. No previous model or licensed interface is used in preparation.</p>
+The builders now separate the pipe ends, attach discrete stinger rollers and apply tension
+from statics and the first stage. Sourced workflow criteria and a timed-case record are defined;
+numerical native tolerances and design allowables remain not established. The execution adapter
+writes queue inputs without executing them. The way forward is native geometry qualification,
+a timed canary and independent comparison before the remaining cases.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>0</td><td>2026-10-14</td><td>Initial generic campaign, analytical comparator and unfilled native evidence sections; distinguish preparation from solved results.</td></tr>
+<tr><td>1</td><td>2026-10-14</td><td>Correct builder topology, regenerate models, define sourced criteria and the timed canary, and prepare digest-gated queue inputs without native execution.</td></tr>
 <caption>Table 1. Revision history.</caption></table>
 <h2>Basis and scope</h2>
 <p><a href="case-table.yml">Case table</a> holds every explicit input, its basis and six cases.
@@ -49,7 +53,7 @@ are traced to the repository in the case table. There is no wave, current or cal
 <tr><td>d1-t1</td><td>80.0</td><td>3 × w × depth</td><td><a href="models/d1-t1/master.yml">master</a></td></tr>
 <tr><td>d1-t2</td><td>80.0</td><td>4 × w × depth</td><td><a href="models/d1-t2/master.yml">master</a></td></tr>
 <caption>Table 2. Prepared cases; w is empty coated-pipe submerged weight in kN/m.</caption></table>
-<h2>Independent analytical method</h2>
+<h2 id="analytical-method">Independent analytical method</h2>
 <p>For steel outside diameter D and wall t, steel area is π[D² − (D − 2t)²]/4.
 Each coating adds its annular area times density. The external displaced area includes every coating.
 Empty-pipe submerged weight w equals gravity times (total mass per length minus displaced water mass per length).
@@ -64,7 +68,11 @@ friction, buoyancy discontinuity or vessel motion. No standard allowable is infe
 not automatically water depth. T shall be effective tension at the same upper endpoint.
 The current screens use water depth as an explicitly idealized h. Substituting matched native
 endpoints will require a new evidence record. The full supported S-shape is not a free catenary.</p>
-<h2>Acceptance assessment and limits</h2>
+<h2 id="acceptance-assessment">Acceptance assessment and limits</h2>
+<p><a href="criteria.json">Versioned criteria</a> give a source title and locator for each
+criterion. Repository workflow requirements are distinguished from missing numerical tolerances.
+No licensed allowable is reproduced or inferred. Force-balance, mesh-comparison, catenary-agreement
+and strain acceptance thresholds are <strong>not established</strong>; a null criterion cannot pass.</p>
 <table><tr><th>Item</th><th>Status</th><th>Evidence or next criterion</th></tr>
 <tr><td>Input schema and generated references</td><td>Prepared</td><td>ProjectInputSpec and PostGenerationValidator; error findings block preparation.</td></tr>
 <tr><td>Independent catenary and overbend</td><td>Analytical screen</td><td>Force and geometry identities are tested; comparator values are in preparation.json.</td></tr>
@@ -73,31 +81,54 @@ endpoints will require a new evidence record. The full supported S-shape is not 
 <tr><td>Native timing and convergence</td><td>Not Evaluated</td><td>First case d0-t0 shall retain native state, convergence evidence and measured wall time.</td></tr>
 <tr><td>Installation acceptance</td><td>Not Evaluated</td><td>Versioned allowables, comparator tolerances, mesh convergence and all applicable cases are required.</td></tr>
 <caption>Table 3. Preparation status against the evidence needed for native acceptance.</caption></table>
-<p>The unmodified builders place both endpoint horizontal coordinates at zero, use rigid pipeline-end
-bending restraint, create a vessel support path without attaching discrete stinger roller contacts,
-and apply operational winch tension only in a later stage. The tensioner connection is coincident
-with the pipeline end by default. Structural validation does not resolve these physical issues.
-This packet is a builder-validation campaign, not a launch-ready installation design.
-A later execution adapter shall qualify or correct this topology with separate failing-first tests
-before a native canary; that correction is not silently introduced in these generated inputs.</p>
-<h2>Driver, retained data and timing</h2>
+<p>The earlier preparation identified coincident endpoint horizontal coordinates, rigid end bending
+restraints, missing discrete stinger contacts and later-stage tension. The corrected builders use
+a free upper end at the stinger origin, a separated seabed anchor, released end moments, attached
+roller stations and tension control from statics and every stage. The upper end is free so that
+the winch can apply a load without a redundant fixed-end reaction. The forward winch lead reuses
+the earlier builder's initial wire length; it is a generic geometry assumption.</p>
+<p>The stern origin is minus half the declared hull length. Roller arc stations follow the declared
+pipe mesh spacing along the declared stinger section. Their centre offset is minus half the coated
+pipe diameter minus half the support diameter. The horizontal endpoint seed is pipe length minus
+endpoint height; this leaves slack for bending and contact and does not predict equilibrium or
+touchdown. The endpoint seed supports level hulls and seabeds with a heading rotation; other
+orientations are refused. Native readback remains necessary to establish contact and geometry.</p>
+<h2 id="driver-retention">Driver, retained data and timing</h2>
 <p><code>PYTHONPATH=src uv run --no-sources python scripts/orcaflex/prepare_slay_campaign.py --campaign docs/domains/pipeline-installation/slay-campaign --output &lt;new-output-directory&gt; --dry-run</code>
 generates and validates all models, records SHA-256 per file and preparation elapsed time.
-An existing model directory is refused. <code>--launch</code> fails closed until a qualified execution
-adapter exists; no solver import or licence probe is implemented.</p>
+An existing model directory is refused. Add <code>--queue --expected-hours &lt;scheduling-estimate&gt;
+--max-hours &lt;scheduling-ceiling&gt;</code> to write a native batch input, a queue manifest and
+<code>run-manifest.json</code>. The time budgets must be supplied explicitly; they are not measured
+native durations. No solver import, licence probe or process launch occurs in preparation.
+<code>--launch</code> remains refused by this preparation-only command.</p>
+<p>The adapter follows the fixed manifest fields of the workspace repository campaign runner at
+<code>a14ab1b09988a2316d712785f1ed194f66cdcf8e</code>,
+<code>scripts/operations/solver-campaign/campaign_runner.py::validate_manifest_data</code>.
+The queue manifest pins the checkout revision, invokes the existing
+<code>digitalmodel.workflows.orcaflex_run_batch</code> engine route and selects only the canary.
+It is local execution staging, not an archive. The queue requires an external
+<code>approvals.tsv</code> record containing the campaign identity, exact manifest SHA-256,
+approval reference and date. Preparation creates no approval and writes no queue state.</p>
+<p>The generated queue permits one attempt with one worker and one native thread. A failed or
+incomplete run is held for inspection. A qualified readback marker is required for queue completion;
+the batch workflow does not produce that marker. The later native execution step shall verify the
+run record's byte digests, retain and reopen the native state, measure the complete canary interval,
+and record a criterion-based disposition before writing any qualified marker. Remaining cases are
+held. The native batch worker duration alone cannot establish readback or installation acceptance.</p>
 <p><a href="preparation.json">Preparation evidence</a> records timing for each preparation case;
-native timing remains null. <a href="manifest.template.json">Native manifest template</a> assigns d0-t0
-as the first timed case. Retain inputs, model digests, native outputs, compact metrics,
+native timing remains null. <a href="manifest.template.json">Native manifest template</a> keeps
+launch disabled. <a href="first-timed-case.json">The timed-case record</a> defines d0-t0 inputs,
+readback quantities, clock boundaries and retained intervals. Retain inputs, model digests, native outputs, compact metrics,
 arc-length arrays for geometry/tension/moment/curvature, roller loads, criteria revision and
 archive digest. Read back saved native files before assigning complete. No native output is deleted.</p>
-<h2>Native results — unfilled report sections</h2>
+<h2 id="native-results">Native results — unfilled report sections</h2>
 <p>Native model version, static configuration, tension, moment, overbend and sagbend curvature,
 steel strain, roller reactions, touchdown position, force balance, mesh comparison, elapsed time,
 comparison residuals and governing case: <strong>Not Evaluated</strong>. No output exists from which
 these results can be calculated. Each future result row will name the quantity, unit, demand,
 criterion, comparator, case, residual and disposition; differences will use one decimal place.</p>
 <h2>Way forward</h2>
-<p>Resolve topology and source qualification, assign criteria before execution, complete the timed
+<p>Qualify the corrected topology and sources, establish numerical criteria before acceptance, complete the timed
 canary with native read-back, compare the matched free span and overbend, then release remaining cases.
 Follow <a href="calibration.html">the calibration plan</a> and
 <a href="vessel-pipe-matrix.html">the vessel and pipe-size matrix plan</a> for later evidence.

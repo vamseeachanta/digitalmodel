@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for LinesBuilder property mapping."""
 from __future__ import annotations
 
@@ -180,15 +183,18 @@ class TestSlayConnections:
         )
 
     def test_end_a_vessel(self):
-        """S-lay: End A connects to vessel."""
-        lines = _build(self._make_slay())
+        """S-lay: Free End A is seeded at the vessel stinger origin."""
+        spec = self._make_slay()
+        lines = _build(spec)
         conn_key = (
             "Connection, ConnectionX, ConnectionY, ConnectionZ, "
             "ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, "
             "ConnectionReleaseStage, ConnectionzRelativeTo"
         )
         connections = lines[0][conn_key]
-        assert connections[0][0] == "Eclipse"
+        origin = spec.equipment.stinger.origin_position
+        position = spec.equipment.vessel.position
+        assert connections[0][:4] == ["Free", *[a + b for a, b in zip(position, origin)]]
 
     def test_end_b_anchored(self):
         """S-lay: End B is Anchored."""
@@ -210,6 +216,7 @@ class TestSlayConnections:
         )
         connections = lines[0][conn_key]
         assert connections[1][5] == 92  # 90 + slope
+        assert connections[1][3] == 0  # Anchored z is relative to the seabed
 
 
 # ---------------------------------------------------------------------------

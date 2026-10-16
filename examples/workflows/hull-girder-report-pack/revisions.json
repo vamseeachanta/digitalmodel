@@ -14,7 +14,12 @@
       "revision": "2",
       "date": "2026-10-15",
       "change": "Synthetic fixture wording is made consistent and residual internal-report wording is removed to match the public evidence basis."
+    },
+    {
+      "revision": "3",
+      "date": "2026-10-16",
+      "change": "The remaining internal-analysis wording is removed from the introduction to complete the public evidence description."
     }
   ],
-  "revision": "2"
+  "revision": "3"
 }

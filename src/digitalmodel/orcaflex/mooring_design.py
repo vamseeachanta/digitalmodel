@@ -1,8 +1,13 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Mooring system preliminary design utilities.
 
 Provides catenary equations, anchor radius calculation, line length estimation,
 pretension calculation, and a library of chain/wire/polyester properties.
 Supports spread mooring and turret mooring configurations.
+The companion ``mooring_design_fowt`` module checks the floating-wind watch
+circle against dynamic-cable curvature and emits a DNV-RP-0360 sidecar.
 
 Does NOT require OrcFxAPI — all calculations are analytical/numerical.
 

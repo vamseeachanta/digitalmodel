@@ -1,0 +1,12 @@
+{
+  "illustrative": true,
+  "records": 156,
+  "revision": "2",
+  "sha256": {
+    "docs/api/installation/installation-heading-explorer.html": "4c8b9a8c18118afb14c0c14c321aa64a83ce6f08406ab2a1634fda015c4eefff",
+    "scripts/capabilities/build_installation_heading_explorer.py": "b2fa1a9b2f21e65884e989e095ce09746e99da371ca181a2ef8698bd47b8faff",
+    "scripts/capabilities/installation_heading/limits.json": "55a27b5e82f27568e1900712fba6fe5288408b475c18efa39b94e789e651c97d",
+    "scripts/capabilities/installation_heading/page.html.template": "34c63b24f0c358098fb230736c85f6ded80893f0235ea52f89e4ada9286a18ec",
+    "scripts/capabilities/installation_heading/revisions.json": "da1afaac23695ac598d30d2dd996cc321a2016e199b4a3ab33725f5537c22e3b"
+  }
+}

@@ -1,14 +1,41 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 import importlib.util
 import json
+import re
+import shlex
 import subprocess
 import sys
 import textwrap
 from pathlib import Path
 
 import yaml
+import pytest
 
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domains.py"
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("docs/registry/module-routing.yaml", {"asset-integrity", "contracts", "workflows", "subsea"}),
+        ("docs/maps/example.md", {"contracts"}),
+        ("src/digitalmodel/solvers/orcaflex/docs/agent-pack.md",
+         {"contracts", "orcaflex-solver"}),
+        ("src/digitalmodel/cathodic_protection/docs/agent-pack.md",
+         {"contracts", "cathodic-protection"}),
+        ("src/digitalmodel/weather_window/docs/x.md", None),
+        ("src/digitalmodel/subsea/docs/example.py", None),
+        ("src/digitalmodel/unknown/docs/example.md", None),
+    ],
+)
+def test_documentation_routes(path: str, expected: set[str] | None) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    assert selected == (expected if expected is not None else {d.name for d in domains})
 
 
 def load_detector_module():
@@ -26,9 +53,9 @@ def run_detector(
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
-            "uv",
-            "run",
-            "python",
+            sys.executable,
+            "-I",
+            "-S",
             str(SCRIPT),
             "--domains-file",
             str(domains_file),
@@ -748,3 +775,127 @@ def test_rig_transcription_selects_existing_contracts_shard() -> None:
     assert [domain.name for domain in selected] == ["contracts"]
     assert any(detector.path_matches_root(module_path.as_posix(), root)
                for root in selected[0].roots)
+
+
+def test_structure_tests_select_contracts_shard() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains(
+        ["tests/repo_structure/test_repo_structure_contract.py"], domains
+    )
+    assert [domain.name for domain in selected] == ["contracts"]
+
+
+def test_structure_config_selects_contracts_shard() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains(["config/repo_structure.yml"], domains)
+    assert [domain.name for domain in selected] == ["contracts"]
+
+
+def test_structure_validator_selects_contracts_shard() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains(
+        ["scripts/maintenance/verify_repo_structure.py"], domains
+    )
+    assert [domain.name for domain in selected] == ["contracts"]
+
+
+def test_package_document_without_pyyaml_selects_full_matrix(tmp_path: Path) -> None:
+    """A dependency-free subprocess must retain all shards for package docs."""
+    domains_file = tmp_path / "DOMAINS.md"
+    write_domains(domains_file)
+    init_repo(tmp_path)
+    pack = tmp_path / "src/digitalmodel/cathodic_protection/docs/agent-pack.md"
+    pack.parent.mkdir(parents=True)
+    pack.write_text("Initial documentation\n")
+    base = commit_all(tmp_path, "base")
+    pack.write_text("Updated documentation\n")
+    head = commit_all(tmp_path, "head")
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", base,
+        "--head", head, "--output-format", "list",
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [
+        "asset-integrity", "citations", "structural", "workflows",
+    ]
+
+
+def registry_reader_shards(root: Path, detector) -> dict[str, set[str]]:
+    """Resolve registry references that are covered by actual gate commands."""
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
+    executed = {
+        token.split("::", 1)[0]
+        for gate in gates.values()
+        for token in shlex.split(gate.get("command", ""))
+        if token.startswith("tests/")
+    }
+    executed = {
+        item.rstrip("/") + "/" if (root / item).is_dir() else item
+        for item in executed
+    }
+    references = re.compile(
+        r"""docs/registry|module-routing|workflows\.yaml|['"]docs['"]\s*/\s*['"]registry['"]"""
+    )
+    readers = {}
+    for path in (root / "tests").rglob("*.py"):
+        relative = path.relative_to(root).as_posix()
+        if not references.search(path.read_text(encoding="utf-8")):
+            continue
+        if not any(detector.path_matches_root(relative, item) for item in executed):
+            continue
+        owners = {
+            domain.name for domain in domains for test_root in domain.roots
+            if detector.path_matches_root(relative, test_root)
+        }
+        assert owners, f"Registry reader has no domain: {relative}"
+        readers[relative] = owners
+    return readers
+
+
+def assert_registry_readers_routed(readers: dict[str, set[str]], routed: set[str]) -> None:
+    """Require every discovered reader's shard in the registry route."""
+    for reader, owners in readers.items():
+        assert owners <= routed, f"{reader}: missing {sorted(owners - routed)}"
+
+
+def test_registry_route_covers_gate_readers() -> None:
+    """Check registry readers; roots run by no gate command are not asserted."""
+    detector = load_detector_module()
+    readers = registry_reader_shards(SCRIPT.parents[2], detector)
+    assert readers
+    routed = detector.mapped_domain_names("docs/registry/workflows.yaml")
+    assert_registry_readers_routed(readers, routed)
+
+
+@pytest.mark.parametrize("gate_root", ["tests/structural/", "tests/structural"])
+@pytest.mark.parametrize("reference", [
+    'ROOT / "docs/registry/extra.yaml"',
+    'ROOT / "docs" / "registry" / "extra.yaml"',
+    'ROOT / "workflows.yaml"',
+    'ROOT / "module-routing.yaml"',
+])
+def test_registry_reader_guard_detects_missing_shard(
+    tmp_path: Path, reference: str, gate_root: str,
+) -> None:
+    """Calibrate each spelling against a reader outside the current route."""
+    detector = load_detector_module()
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    write_domains(tests / "DOMAINS.md")
+    gates = tmp_path / ".claude"
+    gates.mkdir()
+    (gates / "quality-gates.yaml").write_text(
+        f"gates:\n  tests-structural:\n    command: python -m pytest {gate_root}\n"
+    )
+    reader = tests / "structural/test_registry_reader.py"
+    reader.parent.mkdir()
+    reader.write_text(f"REGISTRY = {reference}\n")
+    readers = registry_reader_shards(tmp_path, detector)
+    assert readers == {"tests/structural/test_registry_reader.py": {"structural"}}
+    routed = detector.mapped_domain_names("docs/registry/workflows.yaml")
+    with pytest.raises(AssertionError, match="missing.*structural"):
+        assert_registry_readers_routed(readers, routed)

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Builder for the Winches section of OrcaFlex models.
 
 Generates winch definitions connecting vessel tensioner to pipeline
@@ -7,6 +10,7 @@ for S-lay installation operations with stage-controlled tension.
 from typing import Any
 
 from .base import BaseBuilder
+from .general_builder import GeneralBuilder
 from .registry import BuilderRegistry
 
 
@@ -41,32 +45,32 @@ class WinchBuilder(BaseBuilder):
         """
         tensioner = self.spec.equipment.tensioner
         vessel = self.spec.equipment.vessel
+        if tensioner is None or vessel is None:
+            raise ValueError("Winch requires tensioner and vessel")
         pipeline_name = self.context.main_pipeline_name or self.spec.pipeline.name
 
         winch_name = tensioner.name
 
         # Tensioner position on vessel (default to stern area)
-        position = tensioner.position_on_vessel or [0, 0, 0]
+        origin = self.spec.equipment.stinger.origin_position if self.spec.equipment.stinger else [0, 0, 0]
+        # Reuse the previous 10 m initial wire length as the forward lead.
+        position = tensioner.position_on_vessel or [origin[0] + 10, origin[1], origin[2]]
+        if position == origin:
+            raise ValueError("Tensioner lead must be separated from the pipe upper end")
 
-        winch_def = {
+        general = GeneralBuilder(self.spec, self.context).build()["General"]
+        stage_rows = len(general["StageDuration"]) + 1
+        winch_def: dict[str, Any] = {
             "Name": winch_name,
-            "Connection": [vessel.name, pipeline_name],
-            "ConnectionPoint": [position, [0, 0, 0]],
-            "ConnectionzRelativeTo": [None, "End A"],
-            "StageMode": [
-                "Specified length",  # Stage 0: build-up
-                "Specified tension",  # Stage 1: operational
+            "WinchType": "Simple",
+            "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo": [
+                [vessel.name, *position],
+                [pipeline_name, 0, 0, 0, "End A"],
             ],
-            "StageTension": [
-                0,  # Stage 0: no tension during build-up
-                tensioner.tension_value,  # Stage 1: operational tension
+            "WinchControlType": "By stage",
+            "StageMode, StageValue": [
+                ["Specified tension", tensioner.tension_value] for _ in range(stage_rows)
             ],
-            "StageValue": [
-                10,  # Stage 0: initial wire length
-                None,  # Stage 1: tension-controlled
-            ],
-            "WireType": "Winch wire_LT",
-            "StaticsStep1": "Specified length",
         }
 
         # Stiffness and damping if provided
