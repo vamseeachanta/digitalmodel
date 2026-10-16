@@ -133,6 +133,7 @@ class TestJudge:
                       depth=500, absolute_tolerance=0.01)
         assert check.verdict == verdict
         assert check.relative_difference is None
+        assert check.basis == "absolute"
 
     @pytest.mark.parametrize("mode, heading", [
         ("surge", 90), ("sway", 180), ("roll", 180),
@@ -174,8 +175,8 @@ class TestJudge:
 
 
 @pytest.mark.parametrize("expected, delta, verdict", [
-    (0.0, 0.01, "not_implausible"), (0.0, 0.03, "implausible"),
-    (0.01, -0.015, "not_implausible"), (0.01, -0.03, "implausible"),
+    (0.0, 0.005, "not_implausible"), (0.0, 0.0051, "implausible"),
+    (0.01, -0.005, "not_implausible"), (0.01, -0.0051, "implausible"),
     (10.0, 0.19, "not_implausible"), (10.0, 0.21, "implausible"),
 ])
 def test_fixed_reference_floor(expected, delta, verdict):
@@ -221,3 +222,34 @@ def test_reference_and_absolute_tolerance_are_mutually_exclusive():
     with pytest.raises(ValueError, match="either"):
         judge(0, 0, 0.02, body_length=10, omega=0.05, depth=500,
               reference_amplitude=1, absolute_tolerance=0.01)
+
+
+@pytest.mark.parametrize("heading, observed, verdict", [
+    (0, 3.6e-6, "not_implausible"), (0, 3.7e-6, "implausible"),
+])
+def test_a1_cardinal_roll_floor(heading, observed, verdict):
+    reference = expected_rao("roll", 0.05, 90, 500)
+    check = judge(observed, expected_rao("roll", 0.05, heading, 500), 0.02,
+                  body_length=10, omega=0.05, depth=500,
+                  reference_amplitude=reference)
+    assert check.verdict == verdict
+    assert check.basis == "floor"
+
+
+def test_a1_subpeak_roll_rejects_excess_floor():
+    reference = expected_rao("roll", 0.05, 90, 500)
+    expected = expected_rao("roll", 0.05, 10, 500)
+    for factor, verdict in [(1.0, "not_implausible"), (1.2, "implausible")]:
+        check = judge(expected + factor * 0.005 * reference, expected, 0.02,
+                      body_length=10, omega=0.05, depth=500,
+                      reference_amplitude=reference)
+        assert check.verdict == verdict
+        assert check.basis == "floor"
+
+
+@pytest.mark.parametrize("reference", [None, 1.0])
+def test_a1_relative_uses_larger_magnitude(reference):
+    check = judge(1.0203, 1.0, 0.02, body_length=10, omega=0.05,
+                  depth=500, reference_amplitude=reference)
+    assert check.verdict == "not_implausible"
+    assert check.basis == "relative"

@@ -259,8 +259,8 @@ class TestBodyPropertyMapping:
         body = data["Bodies"][0]
         assert body["BodyMeshFormat"] == "Wamit gdf"
 
-    def test_body_mesh_symmetry_mapping(self, tmp_path: Path):
-        """Mesh symmetry maps to OrcaWave symmetry convention."""
+    def test_full_mesh_has_no_expansion(self, tmp_path: Path):
+        """Full meshes are emitted without OrcaWave expansion."""
         from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
             OrcaWaveBackend,
         )
@@ -822,4 +822,39 @@ def test_full_body_symmetry_does_not_request_mesh_expansion(symmetry):
     spec.vessel.geometry.symmetry = type(spec.vessel.geometry.symmetry)(symmetry)
     body = _build_body_dict(spec.get_bodies()[0], spec)
     assert body["BodyMeshSymmetry"] == "None"
+    assert body["BodyOrcaFlexImportSymmetry"] == "None"
     assert body["BodyMeshFileName"] == Path(spec.vessel.geometry.mesh_file).name
+
+
+@pytest.mark.parametrize("body_index", [0, 1])
+def test_validation_case_3_3_partial_gdf_is_refused(body_index):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_body_dict
+
+    path = Path(__file__).resolve().parents[3] / (
+        "docs/domains/orcawave/L00_validation_wamit/3.3/spec.yml"
+    )
+    spec = DiffractionSpec.from_yaml(path)
+    body = spec.get_bodies()[body_index]
+    with pytest.raises(ValueError, match="Partial GDF mesh") as error:
+        _build_body_dict(body, spec)
+    assert Path(body.vessel.geometry.mesh_file).name in str(error.value)
+
+
+@pytest.mark.parametrize("flags, refused", [("0 0", False), ("1 0", True)])
+def test_gdf_title_encoding_does_not_hide_symmetry_flags(monkeypatch, flags, refused):
+    import io
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_body_dict
+
+    spec = _ship_spec()
+    spec.vessel.geometry.symmetry = "xz"
+    payload = b"title \xff\n1 9.81\n" + flags.encode("ascii") + b"\n"
+
+    def open_header(path, **kwargs):
+        return io.TextIOWrapper(io.BytesIO(payload), **kwargs)
+
+    monkeypatch.setattr(Path, "open", open_header)
+    if refused:
+        with pytest.raises(ValueError, match="Partial GDF mesh"):
+            _build_body_dict(spec.get_bodies()[0], spec)
+    else:
+        assert _build_body_dict(spec.get_bodies()[0], spec)["BodyMeshSymmetry"] == "None"

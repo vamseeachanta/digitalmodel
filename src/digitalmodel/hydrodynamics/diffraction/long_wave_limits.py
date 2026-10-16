@@ -113,6 +113,7 @@ class LongWaveCheck:
     verdict: str  # "not_applicable", "not_implausible" or "implausible"
     absolute_tolerance: float | None = None
     reference_amplitude: float | None = None
+    basis: str | None = None  # relative, floor or absolute; None when not applicable
 
 
 def judge(observed: float, expected: float, tolerance: float, *,
@@ -126,15 +127,18 @@ def judge(observed: float, expected: float, tolerance: float, *,
     This is an explicit applicability screen, not an error bound; callers may fix a
     stricter ratio in advance. ``body_length`` and ``depth`` are metres, ``omega``
     is rad/s. With ``reference_amplitude``, the allowed absolute difference is
-    ``tolerance * max(abs(expected), reference_amplitude)``. Fix that positive
+    ``max(tolerance * max(abs(observed), abs(expected)),
+    (tolerance / 4) * reference_amplitude)`` (QA amendment A1, rule T1). Fix that positive
     reference before observing results, e.g. the largest comparator magnitude
     for the same quantity across the compared headings at this period. It has
     the same units as the RAO; never derive it from observed values or errors.
 
-    Without a reference, nonzero comparators use relative error. An exact zero
+    Without a reference, nonzero comparators use the same larger-magnitude
+    relative allowance. An exact zero
     requires ``absolute_tolerance`` in RAO units instead. The two tolerance bases
     are mutually exclusive. ``relative_difference`` remains the signed difference
-    divided by expected (None for zero), even when the reference sets the verdict.
+    divided by expected (None for zero) and is informational. Both relative routes
+    judge on the larger magnitude, with the reference floor applied when supplied.
     """
     inputs = (observed, expected, tolerance, body_length, minimum_wavelength_ratio)
     if not all(math.isfinite(value) for value in inputs):
@@ -155,18 +159,26 @@ def judge(observed: float, expected: float, tolerance: float, *,
         return LongWaveCheck(observed, expected, tolerance, None, "not_applicable",
                              absolute_tolerance, reference_amplitude)
     if reference_amplitude is not None:
-        scale = max(abs(expected), reference_amplitude)
+        relative = tolerance * max(abs(observed), abs(expected))
+        floor = 0.25 * tolerance * reference_amplitude
+        allowed = max(relative, floor)
+        basis = "relative" if relative >= floor else "floor"
         difference = observed - expected
-        verdict = ("not_implausible" if abs(difference) / scale <= tolerance + 1e-12
+        verdict = ("not_implausible" if abs(difference) <= allowed or math.isclose(
+                       abs(difference), allowed, rel_tol=1e-12, abs_tol=0.0)
                    else "implausible")
         rel = difference / expected if expected != 0.0 else None
         return LongWaveCheck(observed, expected, tolerance, rel, verdict,
-                             reference_amplitude=reference_amplitude)
+                             reference_amplitude=reference_amplitude, basis=basis)
     if expected == 0.0:
         if absolute_tolerance is None:
             raise ValueError("a zero comparator requires an absolute tolerance")
         verdict = "not_implausible" if abs(observed) <= absolute_tolerance else "implausible"
-        return LongWaveCheck(observed, expected, tolerance, None, verdict, absolute_tolerance)
+        return LongWaveCheck(observed, expected, tolerance, None, verdict, absolute_tolerance, basis="absolute")
     rel = (observed - expected) / expected
-    verdict = "not_implausible" if abs(rel) <= tolerance + 1e-12 else "implausible"
-    return LongWaveCheck(observed, expected, tolerance, rel, verdict)
+    difference = abs(observed - expected)
+    allowed = tolerance * max(abs(observed), abs(expected))
+    verdict = ("not_implausible" if difference <= allowed or math.isclose(
+                   difference, allowed, rel_tol=1e-12, abs_tol=0.0)
+               else "implausible")
+    return LongWaveCheck(observed, expected, tolerance, rel, verdict, basis="relative")
