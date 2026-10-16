@@ -120,6 +120,51 @@ def surge_oscillator_reference():
     }
 
 
+def broadband_surge_oscillator_reference():
+    """Filter a fixed-amplitude, random-phase force ensemble in periodic steady state.
+
+    The synthetic sea matches narrow_band_reference. Its many pairs share beat
+    bins, unlike the bichromatic case. The envelope-squared force is independent
+    of the production pair sum. Nyquist 2.048 rad/s exceeds all beats (1.024).
+    The complex oscillator transfer is applied to the real force FFT, with DC
+    removed and negative-frequency conjugate symmetry supplied by irfft.
+    """
+    omega = np.linspace(0.2, 1.224, 2049)
+    dw = omega[1] - omega[0]
+    spectrum = jonswap(omega, hs=2.0, tp=2 * np.pi / 0.8, gamma=10.0)
+    amplitudes = np.sqrt(2 * spectrum * dw)
+    mass, damping, stiffness = 10000.0, 200.0, 100.0  # kN*s^2/m, kN*s/m, kN/m
+    delta = omega[:, None] - omega[None, :]
+    response_qtf = _qtf(
+        omega, 10.0 / np.abs(stiffness - mass * delta**2 + 1j * damping * delta),
+    )
+    predicted = full_qtf_slowly_varying(response_qtf, spectrum, omega)
+    samples = 8192
+    beat_omega = dw * np.arange(samples // 2 + 1)
+    transfer = 1 / (stiffness - mass * beat_omega**2 + 1j * damping * beat_omega)
+    rng = np.random.default_rng(2617)
+    variances = []
+    for _ in range(8):
+        phases = rng.uniform(0.0, 2 * np.pi, (64, len(omega)))
+        envelope = np.fft.ifft(
+            amplitudes * np.exp(1j * phases), n=samples, axis=1,
+        ) * samples
+        force_fft = np.fft.rfft(10.0 * np.abs(envelope)**2, axis=1)
+        force_fft[:, 0] = 0.0
+        response = np.fft.irfft(force_fft * transfer, n=samples, axis=1)
+        variances.extend(np.var(response, axis=1).tolist())
+    variances = np.asarray(variances)
+    return {
+        "seed": 2617, "records": len(variances), "samples_per_record": samples,
+        "duration_per_record_s": float(2 * np.pi / dw),
+        "predicted_std_m": predicted,
+        "monte_carlo_std_m": float(np.sqrt(variances.mean())),
+        "relative_variance_95pct_halfwidth": float(
+            1.96 * variances.std(ddof=1) / np.sqrt(len(variances)) / variances.mean()
+        ),
+    }
+
+
 @pytest.mark.parametrize("pair", [10.0 + 0j, 3.0 + 4j])
 def test_bichromatic_pair_variance_excludes_double_count(pair):
     omega = np.array([0.7, 0.8])
@@ -180,8 +225,19 @@ def test_linear_surge_oscillator_std_matches_time_domain():
     assert np.ptp(result["phase_record_stds_m"]) < 1e-10
 
 
+@pytest.mark.slow
+def test_broadband_surge_oscillator_std_matches_monte_carlo():
+    """Response SD shall be within 5 % of the fixed-amplitude phase ensemble."""
+    result = broadband_surge_oscillator_reference()
+    assert result["relative_variance_95pct_halfwidth"] < 0.02
+    assert result["predicted_std_m"] == pytest.approx(
+        result["monte_carlo_std_m"], rel=0.05,
+    )
+
+
 if __name__ == "__main__":
     print(json.dumps({
         "narrow_band": narrow_band_reference(),
         "surge_oscillator": surge_oscillator_reference(),
+        "broadband_surge_oscillator": broadband_surge_oscillator_reference(),
     }, indent=2))

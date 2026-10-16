@@ -18,7 +18,7 @@ VERDICT: MINOR
 
 3. The Monte Carlo reference is itself a fixed-amplitude, random-phase ensemble, and the sea is not Gaussian.
    - A Gaussian sea has Rayleigh-random amplitudes, which is a different ensemble on a coarse grid.
-   - Report line 9 claims qualification of "the documented numerical cases". That scope is acceptable, but the ensemble definition belongs in the docstring and in the report conclusion, not just in a comment.
+   - Report line 9 claims qualification of "the documented numerical cases". The force-variance qualification is limited to agreement within 1 % of the fixed-amplitude random-phase Monte Carlo reference; the ensemble definition belongs in the docstring and in the report conclusion, not just in a comment.
    - The narrow-band test cannot detect a diagonal-handling error. The report concedes this at lines 37-38, and only the sparse tests guard it.
 
 4. `newman_approximation` and `full_qtf_slowly_varying` take `d_omega` from different grids (`omega` at line 167, `freqs` at line 212). A mismatched `omega` and `qtf.frequencies_rad_s` is interpolated silently, and no test covers this. Newman's zero-lag bin changed from positive to zero, which is a behavior change for consumers. The report flags it, but external consumers are not inventoried (report line 75).
