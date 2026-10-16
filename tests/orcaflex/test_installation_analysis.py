@@ -123,6 +123,28 @@ class TestSlingConfig:
 class TestSplashZone:
     """Tests for splash zone analysis."""
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason="splash-zone added-mass force is divided by 1000 twice",
+        raises=AssertionError,
+    )
+    def test_hook_load_equals_force_component_sum(self):
+        """Hook load must include each reported force component once in kN."""
+        sz = SplashZoneInput()
+        result = sz.calculate_splash_zone_loads()
+        components = math.fsum(
+            result[key]
+            for key in (
+                "slamming_force_kN",
+                "drag_force_kN",
+                "added_mass_force_kN",
+            )
+        )
+        # Four independently rounded outputs can differ by at most 0.2 kN.
+        assert result["max_dynamic_hook_load_kN"] == pytest.approx(
+            sz.dry_weight_kN + components, abs=0.2
+        )
+
     def test_slamming_force_positive(self):
         """Slamming force should be positive."""
         sz = SplashZoneInput(

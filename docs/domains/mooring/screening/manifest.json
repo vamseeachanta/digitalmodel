@@ -16,44 +16,44 @@
   },
   "files": {
     "README.md": {
-      "bytes": 4614,
-      "sha256": "76c6a60e725521b24f62e318fc21727d0ceea88b1955bd37fa0b454161c76862"
+      "bytes": 4884,
+      "sha256": "3309f9e4e9185d3df80408dc3cfc06a33fa4d53aacd6f8c0ddb4bea7f45f0b9c"
     },
     "comparison.md": {
-      "bytes": 4991,
-      "sha256": "616447bddc38c2dad4f8252af1109b419a40363548a16767315c18c3dd86006d"
+      "bytes": 5261,
+      "sha256": "4c349a7f8e1a27ec5f944140765dba905ba3c2e66879e3eb750f84ed27748f50"
     },
     "report.html": {
-      "bytes": 10043,
-      "sha256": "b2d4707cde15ab4178f9b3c161b614b27a0e5cc3adaf91ed4a155f436a833c0f"
+      "bytes": 10338,
+      "sha256": "72f1ef651395a48af9607ff2e74221bed1e1d34a13212d10ea5fe00422488f5c"
     },
     "results.json": {
       "bytes": 35790,
-      "sha256": "a191b4f6ac28f7849adcf51f30654f5ba54af892ea9abd343a174335738e2736"
+      "sha256": "170124df462de46cec682fa81eb72eb97ff9f471dcc9022006e5dff0a8203e63"
     }
   },
   "header_replacements": "none; native JSON contains no runtime paths or host headers",
   "module_commit": "f60b9ad2bc6346d919bfa3707083e04bc585bb68",
   "numeric_bindings": 39,
-  "python_version": "3.11.15",
+  "python_version": "3.11.14",
   "record_inputs": {
     "README.template.md": "f584722f7ee82b6bdbeee81c0d133be0cfbc4aaf08380f99f8a68b8d7beb5f71",
-    "basis.json": "4ad61bca29e0ac99d1cce47df86d03d6987db443bd4042ddd5d0c3bf5a0ca04c",
+    "basis.json": "140511386ccbeb692fe78d72680ccc88dba0ae1467ee2902b6b59c6455d61bcd",
     "build_report.py": "5e91834ae7f6b5a2b15bc3172e350b0d3010cf8568a3bad4bce57be0222b2157",
     "comparison.template.md": "612d73a19a672510480f7d018e33e4aa4d004ff9b400a115d65df3b82b70dece",
     "criteria.json": "2ee2eb574303125f0c0c23f611b225dc1adf8e156ee183af651fef7e2d06f5fb",
     "execution.json": "4fadfc090938bff4863f41dab1d02f323891036751c7641ccae0dc68a9bc9bb3",
-    "revisions.json": "a9d55c53f30432630b13bf0e6c94e71d8d261de64fdd905fd50c04f3381a341d",
+    "revisions.json": "85d01b9a8f3339ce6e15155974324dd619f04cef164d30939c99b449f41328f6",
     "run_screening.py": "1c933a38712b3f0ad9285676f1b6f65f7dd2e6ad02612a09e5b845099cc14937"
   },
-  "revision": "R1",
+  "revision": "R2",
   "source_files": {
     "src/digitalmodel/citations/registry.py": "499c95fd0c5930d60a3ea2719cc12bbd9bb1ad2f2ced8dc2f500b12c4e5f5834",
     "src/digitalmodel/data/marine_engineering/mooring_components/provenance.json": "7325f2e47cee62c9d88614c62e46b2e826de92ecff50a1dd9516e35e1204a99b",
     "src/digitalmodel/data/marine_engineering/mooring_components/sources/moorpy_coefficients.json": "dc9ec64bafdaa0015847572e40f37e47cf804cead2f72c973b3857f1fb297cad",
     "src/digitalmodel/data/marine_engineering/mooring_components/wire_properties.csv": "d9f6e963f22d5ecdcd1aa1ba9177fc2e4b5799cb778cd550cc03d2970a99271e",
     "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py": "5a0e89d7f4b07f70bb78fd90ed9dc621fae49c7e079c6b43ed81045ab4b5c969",
-    "src/digitalmodel/orcaflex/mooring_design.py": "309a0344eddd6f33e8de122daa0b07de192ec59519f6d7af1d709d15bcdd38ed",
+    "src/digitalmodel/orcaflex/mooring_design.py": "9d9c44ffd0b5c2d4075b3dd8493ce12840b624c162550e9a2cc92cb03afb1777",
     "tests/marine_ops/marine_engineering/catenary/test_simplified.py": "6cf7d94d490c7111228fb1086af6580b4a5121e5f6614e09d35b64fc7aa5f786",
     "tests/orcaflex/test_mooring_design.py": "44478677d506537c2410459a9746288880c0edbf0ebfa20cb733bf527f6648ca"
   }

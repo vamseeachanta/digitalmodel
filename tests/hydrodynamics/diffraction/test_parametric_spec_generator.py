@@ -214,7 +214,8 @@ class TestGenerateDiffractionSpec:
         spec = generate_diffraction_spec(profile, tmp_path)
         assert spec.vessel.inertia.mode == "explicit"
 
-    def test_mass_and_cog_reach_orcawave_deck(self, tmp_path: Path):
+    @pytest.mark.parametrize("symmetry", [False, True])
+    def test_mass_and_cog_reach_orcawave_deck(self, tmp_path: Path, symmetry):
         """mass_override and full cog_override must appear in the generated
         OrcaWave body block (BodyMass in tonnes, BodyCentreOfMass verbatim) —
         regression: free_floating mode silently dropped both."""
@@ -224,13 +225,23 @@ class TestGenerateDiffractionSpec:
             OrcaWaveBackend,
         )
 
+        from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
+            MeshGeneratorConfig,
+        )
+
         config = SpecGeneratorConfig(
+            mesh_config=MeshGeneratorConfig(symmetry=symmetry),
             mass_override=5.0e7,  # kg
             cog_override=[10.0, 0.0, -3.0],
             radii_override=[7.0, 25.0, 27.0],
         )
         profile = _make_barge_profile()
         spec = generate_diffraction_spec(profile, tmp_path, config)
+        assert spec._source_dir == tmp_path.resolve()
+        if symmetry:
+            with pytest.raises(ValueError, match="Partial GDF mesh"):
+                OrcaWaveBackend().generate_single(spec, tmp_path)
+            return
         deck_path = OrcaWaveBackend().generate_single(spec, tmp_path)
 
         body = yaml.safe_load(deck_path.read_text())["Bodies"][0]

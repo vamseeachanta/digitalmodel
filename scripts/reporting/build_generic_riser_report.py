@@ -47,6 +47,15 @@ def section(key: str, title: str, *blocks: Any) -> Section:
     return Section(key=key, title=title, blocks=list(blocks))
 
 
+def ring_reference_description(table: dict) -> str:
+    """Describe the initial elevation recorded for each prepared case."""
+    elevations = [(case['id'], float(case['ring_initial_position_m']['value'][2]))
+                  for case in table['cases']]
+    if len({value for _, value in elevations}) == 1:
+        return f'{elevations[0][1]:g} m for every case'
+    return '; '.join(f'{case_id}: {value:g} m' for case_id, value in elevations)
+
+
 def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = None, allow_synthetic: bool = False) -> ReportSpec:
     """Build a report specification after checking complete matched inputs."""
     driver = driver_module()

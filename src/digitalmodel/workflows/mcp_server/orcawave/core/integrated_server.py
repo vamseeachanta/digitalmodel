@@ -5,6 +5,7 @@ Combines Phase 1 (COM API) and Phase 2 (Vision & Monitoring) components
 """
 
 import asyncio
+import os
 import time
 from typing import Optional, Dict, Any, List
 from pathlib import Path
@@ -103,8 +104,12 @@ class IntegratedOrcaWaveMCP:
         """Start the integrated server"""
         # Start WebSocket server if available
         if self.websocket_monitor:
+            # Explicit configuration overrides the container environment setting.
+            host = self.config.get(
+                "websocket_host", os.environ.get("ORCAWAVE_WEBSOCKET_HOST", "127.0.0.1")
+            )
             self.websocket_task = asyncio.create_task(
-                self.websocket_monitor.start_server()
+                self.websocket_monitor.start_server(host=host)
             )
             logger.info("websocket_server_started",
                        port=self.config.get('websocket_port', 8765))

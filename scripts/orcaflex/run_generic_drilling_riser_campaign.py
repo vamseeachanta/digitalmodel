@@ -120,8 +120,8 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     started = time.perf_counter()
     try:
         import OrcFxAPI
-    except ImportError as exc:
-        raise ConfigurationError('Solver interface not importable') from exc
+    except Exception as exc:
+        raise ConfigurationError(f'Solver interface not importable ({type(exc).__name__})') from exc
     reference_z = ring_reference_z(model_path)
     try:
         model = OrcFxAPI.Model(str(model_path))
@@ -251,13 +251,14 @@ def run_campaign(campaign: Path, output: Path, *,
                               simulation_retained=True, simulation_sha256=hashlib.sha256(
                                   (output / f'{case_id}.sim').read_bytes()).hexdigest())
                 write_json(summary_path, result)
+            except ConfigurationError as exc:
+                write_json(output / f'{case_id}.failure.json', {'case_id': case_id,
+                    'status': 'configuration-failure', 'error_type': type(exc).__name__,
+                    'message': str(exc)})
+                return CONFIGURATION_EXIT
             except LicenceUnavailable:
                 write_json(output / f'{case_id}.failure.json', {'case_id': case_id, 'status': 'licence-unavailable'})
                 return LICENCE_EXIT
-            except ConfigurationError as exc:
-                write_json(output / f'{case_id}.failure.json', {'case_id': case_id,
-                    'status': 'configuration-failure', 'error_type': type(exc).__name__, 'message': str(exc)})
-                return CONFIGURATION_EXIT
             except Exception as exc:
                 write_json(output / f'{case_id}.failure.json', {'case_id': case_id,
                            'status': 'incomplete', 'error_type': type(exc).__name__})

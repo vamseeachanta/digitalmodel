@@ -22,7 +22,8 @@ class GenericCampaignTests(unittest.TestCase):
         table = campaign.case_table(ROOT)
         note = table['tension_acceptance_basis']
         self.assertIn('hand estimate', note)
-        self.assertIn('not met in any case', note)
+        self.assertIn('not met by the hand estimate', note)
+        self.assertIn('case by case', note)
         self.assertIn('pre-flight statics', note)
         public = ROOT / campaign.DEST
         for path in ('case-table.yml', 'screens/basis.json'):

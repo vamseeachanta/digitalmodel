@@ -65,8 +65,8 @@ class Category(Enum):
 
 
 class Verdict(Enum):
-    PASS = "pass"
-    PASS_CONDITIONAL = "pass_conditional"
+    PASS = "pass"  # nosec B105 # Public acceptance outcome label, not a credential.
+    PASS_CONDITIONAL = "pass_conditional"  # nosec B105 # Public acceptance outcome label, not a credential.
     FAIL = "fail"
 
 

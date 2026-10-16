@@ -1,10 +1,10 @@
 {
-  "template_sha256": "88c1d0fb97506bfceee244e3ade85f6d4de9c3436802123e6553107359dbf2d0",
+  "template_sha256": "298fa98a2c3065d55b5c05bc67f36106a9bbafda4faa74644a288a7861ec7629",
   "limitations": "Approximate riser-column screen; constant assumed top tension, uniform drag, pinned ends; lower joint angle is not established because effective tension varies along the column. Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. Stress retains the constant-tension approximation. Screen tension is an assumed criterion value, not the modelled tension. attached members, nonlinear tensioner response, pressure stress and wave loading omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.",
-  "case_table_sha256": "c1f5815139a5b8b4b2a0d4bad8e6646062f7f89a3e9976dcb9e9923a7346a0e7",
+  "case_table_sha256": "8b5ccdafa10619da0071007c2dfd6c7794970fc561c3ca7e2af45dbb7fd8605d",
   "screen_csv_sha256": "8a81c1d56c91bfd2708e0171f51d694fa1eb7f32b5bc9af61a227123d7a63bab",
   "calculation_fingerprints": {
-    "generic_campaign.py": "2836278f541a56a438753769a3e5e7674a2bf74411b1d26f4aa61f00efbabce6",
+    "generic_campaign.py": "9a5a6330a4c8696a26566c382af6a852309342130bc1aa41fa1509de446a121a",
     "operability.py": "08a7a80df8ceb4104fe19709bda3df89d6b71528a34c6271f4844347b2391c5b",
     "riser_response.py": "444dbd62bcc1923515a98dece2de62aed14c373516c2d916604fff3782886f1f",
     "section.py": "b7b8c7436c86d1bf72a0d9b9fbf3e113a31c6ed0ebf2205b48e2f721b006178b",
@@ -74,6 +74,6 @@
       "source": "assumed, based on previous experience"
     }
   },
-  "tension_acceptance_basis": "The stored minimum top tension is retained as an assumed criterion. By hand estimate, the modelled tensioner gives the main riser 7.1–7.6 MN top effective tension against the 8,345.7 kN minimum, so this criterion is not met in any case. The four links support the ring and share their vertical load between the riser, choke and kill lines and the slip joint; total tensioner force is not main-riser top effective tension. No operating window is established by this estimate. Confirm the load path and tensions with pre-flight statics before production; no native confirmation is available.",
+  "tension_acceptance_basis": "The stored minimum top tension is retained as an assumed criterion. By hand estimate, the modelled tensioner gives the main riser 7.1–7.6 MN top effective tension against the 8,345.7 kN minimum, so this criterion is not met by the hand estimate. The four links support the ring and share their vertical load between the riser, choke and kill lines and the slip joint; total tensioner force is not main-riser top effective tension. No operating window is established by this estimate. Confirm the load path and tensions with pre-flight statics case by case before production; no native confirmation is available.",
   "units": "Column suffixes: kn = kN, mpa = MPa, m = m, deg = degrees, mps = m/s, pct = %"
 }

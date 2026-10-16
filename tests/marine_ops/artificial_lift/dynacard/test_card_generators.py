@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for synthetic dynacard generators.
 # ABOUTME: Validates all 20 failure mode generators produce valid CardData.
 

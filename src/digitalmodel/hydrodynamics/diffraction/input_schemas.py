@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Canonical input schema for diffraction analysis (WRK-057).
 
 Solver-agnostic specification that can generate inputs for AQWA, OrcaWave,
@@ -27,6 +30,7 @@ import numpy as np
 from pydantic import (
     BaseModel,
     Field,
+    PrivateAttr,
     field_validator,
     model_serializer,
     model_validator,
@@ -125,7 +129,16 @@ class OutputComponent(str, Enum):
 
 
 class VesselGeometry(BaseModel):
-    """Vessel mesh geometry specification."""
+    """Geometry and declared body symmetry.
+
+    Full-body meshes are required by the current forward backends. Legacy
+    validation specs also describe partial meshes; for non-none symmetry
+    declarations, OrcaWave refuses GDF symmetry flags rather than silently
+    emitting an incomplete body. A none declaration is not header-checked.
+    Full meshes emit BodyMeshSymmetry: None. AQWA verifies xz mirror panels
+    and extracts the nonnegative-y half for SYMX; panels must be split at
+    y = 0, with no panels lying wholly in that plane.
+    """
 
     mesh_file: str = Field(
         ...,
@@ -139,7 +152,7 @@ class VesselGeometry(BaseModel):
     )
     symmetry: SymmetryType = Field(
         SymmetryType.NONE,
-        description="Mesh symmetry plane(s)",
+        description="Symmetry plane(s) of the full-body mesh; not a half-mesh flag",
     )
     reference_point: list[float] = Field(
         default=[0.0, 0.0, 0.0],
@@ -157,6 +170,7 @@ class VesselGeometry(BaseModel):
     @field_validator("reference_point")
     @classmethod
     def validate_reference_point(cls, v: list[float]) -> list[float]:
+        """Require three reference-point coordinates."""
         if len(v) != 3:
             raise ValueError(
                 "reference_point must have exactly 3 values [x, y, z]"
@@ -217,6 +231,7 @@ class VesselInertia(BaseModel):
     @field_validator("centre_of_gravity")
     @classmethod
     def validate_cog(cls, v: list[float]) -> list[float]:
+        """Require three centre-of-gravity coordinates."""
         if len(v) != 3:
             raise ValueError(
                 "centre_of_gravity must have exactly 3 values [x, y, z]"
@@ -228,6 +243,7 @@ class VesselInertia(BaseModel):
     def validate_rog(
         cls, v: Optional[list[float]]
     ) -> Optional[list[float]]:
+        """Require three radii of gyration when supplied."""
         if v is not None and len(v) != 3:
             raise ValueError(
                 "radii_of_gyration must have exactly 3 values [kxx, kyy, kzz]"
@@ -236,6 +252,7 @@ class VesselInertia(BaseModel):
 
     @model_validator(mode="after")
     def check_inertia_specified(self) -> VesselInertia:
+        """Require inertia data appropriate to the specified mode."""
         if self.mode == "free_floating":
             if self.radii_of_gyration is None:
                 raise ValueError(
@@ -301,6 +318,7 @@ class EnvironmentSpec(BaseModel):
     @field_validator("water_depth", mode="before")
     @classmethod
     def validate_water_depth(cls, v: Any) -> float | str:
+        """Normalize deep water or require a positive numerical depth."""
         if isinstance(v, str):
             if v.lower() in ("infinite", "inf", "deep"):
                 return "infinite"
@@ -371,6 +389,7 @@ class FrequencySpec(BaseModel):
 
     @model_validator(mode="after")
     def check_values_or_range(self) -> FrequencySpec:
+        """Require exactly one frequency definition."""
         if self.values is None and self.range is None:
             raise ValueError(
                 "Either 'values' or 'range' must be specified for frequencies"
@@ -439,6 +458,7 @@ class WaveHeadingSpec(BaseModel):
 
     @model_validator(mode="after")
     def check_values_or_range(self) -> WaveHeadingSpec:
+        """Require exactly one heading definition."""
         if self.values is None and self.range is None:
             raise ValueError(
                 "Either 'values' or 'range' must be specified "
@@ -997,6 +1017,7 @@ class DiffractionSpec(BaseModel):
 
     @model_validator(mode="after")
     def check_vessel_or_bodies(self) -> DiffractionSpec:
+        """Require a single vessel or a multi-body list, exclusively."""
         if self.vessel is None and self.bodies is None:
             raise ValueError(
                 "Either 'vessel' (single body) or 'bodies' (multi-body) "
@@ -1034,6 +1055,10 @@ class DiffractionSpec(BaseModel):
             return self.bodies
         return [BodySpec(vessel=self.vessel)]
 
+    # Pydantic includes private attributes in model equality: loading the same
+    # fields from YAML and model_validate need not produce equal whole models.
+    _source_dir: Path | None = PrivateAttr(default=None)
+
     @classmethod
     def from_yaml(cls, path: str | Path) -> DiffractionSpec:
         """Load spec from a YAML file."""
@@ -1041,7 +1066,9 @@ class DiffractionSpec(BaseModel):
 
         with open(path) as f:
             data = yaml.safe_load(f)
-        return cls.model_validate(data)
+        spec = cls.model_validate(data)
+        spec._source_dir = Path(path).resolve().parent
+        return spec
 
     def to_yaml(self, path: str | Path) -> Path:
         """Save spec to a YAML file."""

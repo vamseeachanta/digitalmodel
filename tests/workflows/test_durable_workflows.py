@@ -865,6 +865,9 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert content.count("HRTZ") == 3
         assert content.count("DIRN") == 5
         assert content.count("QPPL") == 5
+        assert "SYMX" not in content
+        assert [float(line.split()[-1]) for line in content.splitlines()
+                if "DIRN" in line] == [-180, -90, 0, 90, 180]
         assert "could not be loaded" not in content
     elif workflow["id"] == "dynacard-diagnostics":
         results = cfg["results"]

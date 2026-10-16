@@ -54,7 +54,7 @@ _OBJECT_SECTIONS = (
     "MorisonElementTypes",
     "AttachedBuoys",
     "MultibodyGroups",
-    "PyModels",
+    "P-yModels",
     "WakeModels",
     "FlexJointTypes",
     "DragChainTypes",

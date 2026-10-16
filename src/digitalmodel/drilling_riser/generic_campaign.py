@@ -184,17 +184,20 @@ def case_table(root: Path) -> dict:
         'method': METHOD,
         'template_sha256': source_digest(root / SPEC),
         'template_digest_basis': 'UTF-8 source text normalized to LF',
+        'line_contact_source': 'In-repository program example specification: '
+            'docs/domains/orcaflex/library/model_library/b01_drilling_riser/spec.yml; '
+            'generic.line_contact_data copied unchanged; native statics not established',
         'basis': {key: source[key] for key in ('environment', 'simulation', 'generic')},
         'wave_basis_note': 'Specification wave data are retained for provenance only; no wave is applied.',
         'profile_description': 'Uniform current from surface to seabed; assumed, based on previous experience',
         'tension_acceptance_basis': (
             'The stored minimum top tension is retained as an assumed criterion. '
             'By hand estimate, the modelled tensioner gives the main riser 7.1–7.6 MN top effective tension '
-            f"against the {basis['min_tension_kn']:,.1f} kN minimum, so this criterion is not met in any case. "
+            f"against the {basis['min_tension_kn']:,.1f} kN minimum, so this criterion is not met by the hand estimate. "
             'The four links support the ring and share their vertical load between the riser, choke and kill lines '
             'and the slip joint; total tensioner force is not main-riser top effective tension. '
             'No operating window is established by this estimate. Confirm the load path and tensions with '
-            'pre-flight statics before production; no native confirmation is available.'),
+            'pre-flight statics case by case before production; no native confirmation is available.'),
         'criteria': {
             'mean_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),
             'max_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),
