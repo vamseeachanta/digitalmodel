@@ -193,7 +193,8 @@ def case_table(root: Path) -> dict:
         'tension_acceptance_basis': (
             'The stored minimum top tension is retained as an assumed criterion. '
             f"The minimum remains {basis['min_tension_kn']:,.1f} kN. "
-            'The review reports native pre-flight statics below this criterion in the converged cases; '
+            'Native pre-flight statics on the earlier models, reported on #2469, give the main-riser '
+            'top effective tension below this criterion in every converged case; '
             'numerical reconciliation remains pending access to the diagnostic records. '
             'The four links share their vertical load between the riser, choke and kill lines '
             'and the slip joint; total tensioner force is not main-riser top effective tension. '

@@ -25,6 +25,7 @@ class GenericCampaignTests(unittest.TestCase):
         self.assertIn('numerical reconciliation remains pending', note)
         self.assertIn('case by case', note)
         self.assertIn('pre-flight statics', note)
+        self.assertIn('reported on #2469', note)
         self.assertIn('calculated positions', table['statics_method']['value'])
         self.assertTrue(table['statics_method']['source'])
         public = ROOT / campaign.DEST

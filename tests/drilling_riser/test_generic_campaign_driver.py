@@ -225,10 +225,6 @@ def test_native_library_import_failure_is_configuration():
     assert isinstance(caught.value.__cause__, OSError)
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 class StagedModel:
     """Synthetic API state machine; changing current invalidates statics."""
     def __init__(self, speed=1.0, fail_stage=None, bad_state=False):
@@ -284,6 +280,20 @@ def test_zero_current_solves_once():
     assert model.calls == [('solve', 0.0)]
 
 
+def test_invalid_current_is_refused_before_statics():
+    import math
+    import pytest
+    driver = load_driver()
+    for speed in (-1.0, float('nan'), float('inf'), float('-inf')):
+        model = StagedModel(speed=speed)
+        with pytest.raises(ValueError, match='finite and nonnegative'):
+            driver.calculate_staged_statics(model)
+        assert model.calls == []
+        assert model.state.name == 'Reset'
+        assert (math.isnan(model.RefCurrentSpeed) if math.isnan(speed)
+                else model.RefCurrentSpeed == speed)
+
+
 def test_staged_failure_never_reaches_dynamics():
     import sys
     import pytest
@@ -329,3 +339,7 @@ def test_failure_message_is_bounded(tmp_path):
         record = json.loads(path.read_text(encoding='utf-8'))
         assert record['message'] == message[:500]
         assert record['error_type'] == 'RuntimeError'
+
+
+if __name__ == '__main__':
+    unittest.main()

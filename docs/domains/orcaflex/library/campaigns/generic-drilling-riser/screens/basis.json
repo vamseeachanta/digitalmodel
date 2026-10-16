@@ -1,10 +1,10 @@
 {
   "template_sha256": "298fa98a2c3065d55b5c05bc67f36106a9bbafda4faa74644a288a7861ec7629",
   "limitations": "Approximate riser-column screen; constant assumed top tension, uniform drag, pinned ends; lower joint angle is not established because effective tension varies along the column. Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. Stress retains the constant-tension approximation. Screen tension is an assumed criterion value, not the modelled tension. attached members, nonlinear tensioner response, pressure stress and wave loading omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.",
-  "case_table_sha256": "dab78027ccf6e130dc8ac5fc8bc3eba6f03ffc4f78ef6a9951bd52df60b36eb3",
+  "case_table_sha256": "07b0cb319f6bd0645180cd1d9fb2cdf5a110628e5b2e1a56f1f3b1434dd8c97a",
   "screen_csv_sha256": "8a81c1d56c91bfd2708e0171f51d694fa1eb7f32b5bc9af61a227123d7a63bab",
   "calculation_fingerprints": {
-    "generic_campaign.py": "20b87dcf93b0cc4d9a564dcb803a01bbe2479177c93b0ea62ce31ca5bbb66d4c",
+    "generic_campaign.py": "ebfb3989be1bfbda5efc65e094009d66eb6daedcd13e50b35519ec9b38697ea3",
     "operability.py": "08a7a80df8ceb4104fe19709bda3df89d6b71528a34c6271f4844347b2391c5b",
     "riser_response.py": "444dbd62bcc1923515a98dece2de62aed14c373516c2d916604fff3782886f1f",
     "section.py": "b7b8c7436c86d1bf72a0d9b9fbf3e113a31c6ed0ebf2205b48e2f721b006178b",
@@ -74,6 +74,6 @@
       "source": "assumed, based on previous experience"
     }
   },
-  "tension_acceptance_basis": "The stored minimum top tension is retained as an assumed criterion. The minimum remains 8,345.7 kN. The review reports native pre-flight statics below this criterion in the converged cases; numerical reconciliation remains pending access to the diagnostic records. The four links share their vertical load between the riser, choke and kill lines and the slip joint; total tensioner force is not main-riser top effective tension. No operating window is established. Requalify the staged method case by case before production; the prior pre-flight does not qualify the changed method.",
+  "tension_acceptance_basis": "The stored minimum top tension is retained as an assumed criterion. The minimum remains 8,345.7 kN. Native pre-flight statics on the earlier models, reported on #2469, give the main-riser top effective tension below this criterion in every converged case; numerical reconciliation remains pending access to the diagnostic records. The four links share their vertical load between the riser, choke and kill lines and the slip joint; total tensioner force is not main-riser top effective tension. No operating window is established. Requalify the staged method case by case before production; the prior pre-flight does not qualify the changed method.",
   "units": "Column suffixes: kn = kN, mpa = MPa, m = m, deg = degrees, mps = m/s, pct = %"
 }
