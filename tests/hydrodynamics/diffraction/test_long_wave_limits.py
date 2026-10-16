@@ -133,6 +133,7 @@ class TestJudge:
                       depth=500, absolute_tolerance=0.01)
         assert check.verdict == verdict
         assert check.relative_difference is None
+        assert check.basis == "absolute"
 
     @pytest.mark.parametrize("mode, heading", [
         ("surge", 90), ("sway", 180), ("roll", 180),
@@ -246,8 +247,9 @@ def test_a1_subpeak_roll_rejects_excess_floor():
         assert check.basis == "floor"
 
 
-def test_a1_relative_uses_larger_magnitude():
+@pytest.mark.parametrize("reference", [None, 1.0])
+def test_a1_relative_uses_larger_magnitude(reference):
     check = judge(1.0203, 1.0, 0.02, body_length=10, omega=0.05,
-                  depth=500, reference_amplitude=1.0)
+                  depth=500, reference_amplitude=reference)
     assert check.verdict == "not_implausible"
     assert check.basis == "relative"

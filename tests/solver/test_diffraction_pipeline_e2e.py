@@ -2,7 +2,7 @@
 
 Pipeline: spec.yml -> DiffractionSpec -> OrcaWaveBackend -> native solver YAML
 
-Tests use real L00 spec.yml fixture data but mock the actual solver call.
+Tests use the committed unit-box spec.yml fixture but mock the actual solver call.
 No OrcaWave license required.
 
 Issue: #1598
@@ -26,19 +26,20 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBack
 
 REPO_ROOT = Path(__file__).resolve().parents[2]  # digitalmodel/
 L00_DIR = REPO_ROOT / "docs" / "domains" / "orcawave" / "L00_validation_wamit"
-L00_2_1_SPEC = L00_DIR / "2.1" / "spec.yml"  # Simple cylinder case
+L00_2_1_SPEC = L00_DIR / "2.1" / "spec.yml"  # Expected refusal
+FULL_SPEC = REPO_ROOT / "examples/hydrodynamics/diffraction/unit_box_rao/spec.yml"
 
 
 @pytest.fixture
 def l00_spec_path() -> Path:
-    """Return path to L00 case 2.1 spec.yml."""
-    assert L00_2_1_SPEC.exists(), f"Fixture not found: {L00_2_1_SPEC}"
-    return L00_2_1_SPEC
+    """Return the committed full-mesh fixture."""
+    assert FULL_SPEC.exists(), f"Fixture not found: {FULL_SPEC}"
+    return FULL_SPEC
 
 
 @pytest.fixture
 def l00_spec(l00_spec_path) -> DiffractionSpec:
-    """Load and return a validated DiffractionSpec from L00 case 2.1."""
+    """Load the validated full-mesh DiffractionSpec."""
     return DiffractionSpec.from_yaml(str(l00_spec_path))
 
 
@@ -65,24 +66,24 @@ class TestSpecLoadAndValidate:
 
     def test_spec_has_vessel(self, l00_spec):
         assert l00_spec.vessel is not None
-        assert l00_spec.vessel.name == "Test01_cylinder"
+        assert l00_spec.vessel.name == "UnitBoxRAO"
 
     def test_spec_has_environment(self, l00_spec):
         assert l00_spec.environment is not None
-        assert l00_spec.environment.water_depth == "infinite"
-        assert l00_spec.environment.water_density == 1000.0
+        assert l00_spec.environment.water_depth == 100.0
+        assert l00_spec.environment.water_density == 1025.0
 
     def test_spec_has_frequencies(self, l00_spec):
         freqs = l00_spec.frequencies.to_frequencies_rad_s()
-        assert len(freqs) == 50  # 0.1 to 5.0 in steps of 0.1
+        assert len(freqs) == 3
 
     def test_spec_has_headings(self, l00_spec):
         headings = l00_spec.wave_headings.to_heading_list()
-        assert headings == [0.0, 27.0]
+        assert headings == [0.0, 90.0, 180.0]
 
     def test_spec_metadata_present(self, l00_spec):
         assert l00_spec.metadata is not None
-        assert "validation" in (l00_spec.metadata.tags or [])
+        assert "canonical" in (l00_spec.metadata.tags or [])
 
 
 # ---------------------------------------------------------------------------
@@ -105,12 +106,17 @@ class TestBackendInitialization:
 
     def test_backend_analysis_name_from_single_body(self, l00_spec, backend):
         name = backend._analysis_name(l00_spec)
-        assert name == "Test01_cylinder"
+        assert name == "UnitBoxRAO"
 
 
 # ---------------------------------------------------------------------------
 # Test 3: Native YAML generation
 # ---------------------------------------------------------------------------
+
+
+def test_l00_case_2_1_is_refused(backend, tmp_path):
+    with pytest.raises(ValueError, match="Cannot verify GDF symmetry"):
+        backend.generate_single(DiffractionSpec.from_yaml(L00_2_1_SPEC), tmp_path)
 
 
 class TestNativeYamlGeneration:
@@ -151,7 +157,7 @@ class TestNativeYamlGeneration:
         with open(output) as f:
             data = yaml.safe_load(f)
         headings = data.get("WaveHeading", [])
-        assert headings == [0.0, 27.0]
+        assert headings == [0.0, 90.0, 180.0]
 
     def test_single_yml_body_name(self, l00_spec, backend, tmp_path):
         output = backend.generate_single(l00_spec, tmp_path)
@@ -159,7 +165,7 @@ class TestNativeYamlGeneration:
             data = yaml.safe_load(f)
         bodies = data.get("Bodies", [])
         assert len(bodies) == 1
-        assert bodies[0]["BodyName"] == "Test01_cylinder"
+        assert bodies[0]["BodyName"] == "UnitBoxRAO"
 
     def test_modular_yml_created(self, l00_spec, backend, tmp_path):
         master = backend.generate_modular(l00_spec, tmp_path)
@@ -183,8 +189,8 @@ class TestRoundTrip:
         output = backend.generate_single(l00_spec, tmp_path)
         with open(output) as f:
             data = yaml.safe_load(f)
-        # L00 case 2.1 has infinite depth
-        assert data["WaterDepth"] == "Infinity"
+        # The unit box uses finite depth
+        assert data["WaterDepth"] == 100.0
 
     def test_body_count_round_trip(self, l00_spec, backend, tmp_path):
         output = backend.generate_single(l00_spec, tmp_path)
@@ -215,11 +221,21 @@ class TestRoundTrip:
             data = yaml.safe_load(f)
         body = data["Bodies"][0]
         # OrcaWave only uses the basename
-        assert "val_cylinder_r1_t05.gdf" in body["BodyMeshFileName"]
+        assert "unit_box.gdf" in body["BodyMeshFileName"]
 
-    def test_symmetry_preserved(self, l00_spec, backend, tmp_path):
+    def test_symmetric_declaration_emits_full_mesh(self, l00_spec, backend, tmp_path):
+        source = FULL_SPEC.parent / l00_spec.vessel.geometry.mesh_file
+        lines = source.read_text(encoding="utf-8").splitlines()
+        for index in range(4, len(lines)):
+            x, y, z = map(float, lines[index].split())
+            lines[index] = f"{x:.6f} {y - 0.5:.6f} {z:.6f}"
+        assert {float(line.split()[1]) for line in lines[4:]} == {-0.5, 0.5}
+        mesh = tmp_path / "symmetric_box.gdf"
+        mesh.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        l00_spec.vessel.geometry.mesh_file = str(mesh)
+        l00_spec.vessel.geometry.symmetry = "xz"
         output = backend.generate_single(l00_spec, tmp_path)
         with open(output) as f:
             data = yaml.safe_load(f)
         body = data["Bodies"][0]
-        assert body["BodyMeshSymmetry"] == "xz and yz planes"
+        assert body["BodyMeshSymmetry"] == "None"

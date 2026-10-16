@@ -244,7 +244,7 @@ def _check_full_gdf(geom: Any, spec: DiffractionSpec) -> None:
     if not path.is_absolute() and spec._source_dir is not None:
         path = spec._source_dir / path
     try:
-        with path.open(encoding="utf-8") as stream:
+        with path.open(encoding="utf-8", errors="replace") as stream:
             stream.readline()  # title
             stream.readline()  # length unit and gravity
             flags = stream.readline().split()

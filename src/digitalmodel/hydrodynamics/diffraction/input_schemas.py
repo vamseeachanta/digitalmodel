@@ -132,8 +132,9 @@ class VesselGeometry(BaseModel):
     """Geometry and declared body symmetry.
 
     Full-body meshes are required by the current forward backends. Legacy
-    validation specs also describe partial meshes; OrcaWave refuses GDF
-    symmetry flags rather than silently emitting an incomplete body.
+    validation specs also describe partial meshes; for non-none symmetry
+    declarations, OrcaWave refuses GDF symmetry flags rather than silently
+    emitting an incomplete body. A none declaration is not header-checked.
     Full meshes emit BodyMeshSymmetry: None. AQWA verifies xz mirror panels
     and extracts the nonnegative-y half for SYMX; panels must be split at
     y = 0, with no panels lying wholly in that plane.
@@ -1048,6 +1049,8 @@ class DiffractionSpec(BaseModel):
             return self.bodies
         return [BodySpec(vessel=self.vessel)]
 
+    # Pydantic includes private attributes in model equality: loading the same
+    # fields from YAML and model_validate need not produce equal whole models.
     _source_dir: Path | None = PrivateAttr(default=None)
 
     @classmethod

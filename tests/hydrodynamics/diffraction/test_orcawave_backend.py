@@ -838,3 +838,23 @@ def test_validation_case_3_3_partial_gdf_is_refused(body_index):
     with pytest.raises(ValueError, match="Partial GDF mesh") as error:
         _build_body_dict(body, spec)
     assert Path(body.vessel.geometry.mesh_file).name in str(error.value)
+
+
+@pytest.mark.parametrize("flags, refused", [("0 0", False), ("1 0", True)])
+def test_gdf_title_encoding_does_not_hide_symmetry_flags(monkeypatch, flags, refused):
+    import io
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_body_dict
+
+    spec = _ship_spec()
+    spec.vessel.geometry.symmetry = "xz"
+    payload = b"title \xff\n1 9.81\n" + flags.encode("ascii") + b"\n"
+
+    def open_header(path, **kwargs):
+        return io.TextIOWrapper(io.BytesIO(payload), **kwargs)
+
+    monkeypatch.setattr(Path, "open", open_header)
+    if refused:
+        with pytest.raises(ValueError, match="Partial GDF mesh"):
+            _build_body_dict(spec.get_bodies()[0], spec)
+    else:
+        assert _build_body_dict(spec.get_bodies()[0], spec)["BodyMeshSymmetry"] == "None"
