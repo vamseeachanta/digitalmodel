@@ -10,13 +10,14 @@ import inspect
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode, DesignFactors, DesignLoads, PipeGeometry, PipeMaterial,
 )
-from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
+from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY, CodeStrategy
 from digitalmodel.units import Q_
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -26,7 +27,8 @@ CRITERIA = DATA / "riser_pipe_comparison.criteria.json"
 REVISIONS = DATA / "riser_pipe_comparison.revisions.json"
 STEM = "riser-pipe-comparison"
 DEFAULT_OUTPUT = ROOT / "docs/reports/2026-10-09-compute-program/riser-pipe-comparison"
-CODES = {"API RP 2RD": DesignCode.API_RP_2RD,
+CODES = {"API RP 1111": DesignCode.API_RP_1111,
+         "API RP 2RD": DesignCode.API_RP_2RD,
          "API STD 2RD": DesignCode.API_STD_2RD}
 
 
@@ -59,7 +61,8 @@ def evaluate(config):
     _validate(config)
     geometry, material = _pipe_objects(config)
     model = {"results": {}, "governing": {}, "config": config,
-             "pipe_si": {"smys_pa": material.smys, "smts_pa": material.smts}}
+             "pipe_si": {"smys_pa": material.smys, "smts_pa": material.smts},
+             "minimum_wall": {}}
     for name, code in CODES.items():
         states = {}
         for case in config["cases"]:
@@ -69,7 +72,7 @@ def evaluate(config):
                 bending_moment=case["bending_moment_nm"],
                 effective_tension=case["effective_tension_n"],
             )
-            native = CODE_REGISTRY[code]().run_checks(
+            native = _module_checks(CODE_REGISTRY[code](),
                 geometry, material, loads, DesignFactors())
             for state, (utilisation, details) in native.items():
                 if state not in states or utilisation > states[state]["utilisation"]:
@@ -78,7 +81,46 @@ def evaluate(config):
         model["results"][name] = states
         governing = max(states, key=lambda state: states[state]["utilisation"])
         model["governing"][name] = {"state": governing, **states[governing]}
+        model["minimum_wall"][name] = _minimum_wall(config, code, material)
     return model
+
+
+def _module_checks(
+    strategy: CodeStrategy, geometry: PipeGeometry, material: PipeMaterial,
+    loads: DesignLoads, factors: DesignFactors,
+) -> dict[str, tuple[float, dict[str, float]]]:
+    """Reject empty, negative or NaN results while preserving positive infinity."""
+    native: dict[str, tuple[float, dict[str, float]]] = strategy.run_checks(geometry, material, loads, factors)
+    if not native or any(math.isnan(value) or value < 0 for value, _ in native.values()):
+        raise ValueError("Invalid module result")
+    return native
+
+
+def _minimum_wall(
+    config: dict[str, Any], code: DesignCode, material: PipeMaterial,
+) -> dict[str, Any]:
+    """Find the first nominal wall passing all returned checks on a 0.1 mm grid.
+
+    Enumerate the grid rather than assuming that every check is monotonic.
+    The upper bound is strictly below half the supplied outside diameter.
+    This is a module-only search, without code applicability qualification.
+    """
+    diameter = config["pipe"]["outer_diameter_mm"]
+    strategy = CODE_REGISTRY[code]()
+    for tick in range(1, math.ceil(diameter * 5)):
+        wall_mm = tick / 10
+        geometry = PipeGeometry(diameter / 1000, wall_mm / 1000,
+                                corrosion_allowance=0, fabrication_tolerance=0)
+        envelope: list[tuple[float, str, str]] = []
+        for case in config["cases"]:
+            loads = DesignLoads(case["internal_pressure_pa"], case["external_pressure_pa"],
+                                case["bending_moment_nm"], case["effective_tension_n"])
+            native = _module_checks(strategy, geometry, material, loads, DesignFactors())
+            envelope.extend((value, state, case["name"]) for state, (value, _) in native.items())
+        utilisation, state, case_name = max(envelope, key=lambda row: row[0])
+        if utilisation <= 1:
+            return {"status": "found", "wall_mm": wall_mm, "state": state, "case": case_name}
+    return {"status": "not found on search grid"}
 
 
 def _validate(config):
@@ -159,7 +201,7 @@ def numeric_values(model):
     """
     config, pipe = model["config"], model["config"]["pipe"]
     values = {"od": f'{pipe["outer_diameter_mm"]:.1f}',
-              "wall": f'{pipe["wall_thickness_mm"]:.3f}',
+              "wall": f'{pipe["wall_thickness_mm"]:.1f}',
               "smys": f'{model["pipe_si"]["smys_pa"] / 1e6:.1f}',
               "smts": f'{model["pipe_si"]["smts_pa"] / 1e6:.1f}',
               "elastic": f'{pipe["youngs_modulus_pa"] / 1e9:.1f}',
@@ -171,6 +213,9 @@ def numeric_values(model):
             values[f"case-{index}-{field}"] = f"{case[field] / divisor:.1f}"
     for code, states in model["results"].items():
         key = _code_key(code)
+        minimum = model["minimum_wall"][code]
+        if minimum["status"] == "found":
+            values[f"minimum-{key}"] = f'{minimum["wall_mm"]:.1f}'
         values[f"governing-{key}"] = _percentage(model["governing"][code]["utilisation"])
         for state, result in states.items():
             values[f"{key}-{state}"] = _percentage(result["utilisation"])
@@ -193,7 +238,9 @@ def _summary(model, values):
                      f'{html.escape(result["case"])}, utilisation '
                      f'{_number(values, "governing-" + _code_key(code))}% — {disposition} '
                      'the module unity criterion. Dispositions use unrounded results.</p>')
-    lines.append('<p>API RP 1111 is not compared because its recorded edition conflicts with the standards inventory.</p>')
+    lines.append('<p>API RP 1111 module edition metadata is unqualified: the strategy defaults to '
+                 '2015, with an edition label that conflicts with the standards inventory. '
+                 'The comparison uses that implementation without endorsing the edition label.</p>')
     return "\n".join(lines)
 
 
@@ -231,7 +278,7 @@ def _input_table(model, values):
             '.</p><table><thead><tr><th>Quantity (units)</th><th>Value</th><th>Basis</th></tr></thead><tbody>' +
             ''.join(rows) + '</tbody></table><p class="caption">Nominal properties and supplied load cases.</p>'
             '<p>Loads, depth and elastic properties are assumed, based on previous experience. '
-            'Zero corrosion allowance and fabrication deduction are assumed. Both modules use nominal wall; '
+            'Zero corrosion allowance and fabrication deduction are assumed. All three modules use nominal wall; '
             'collapse credits no internal-pressure support. Water depth is context and does not determine '
             'the independently supplied absolute external pressure. Material suitability, tolerance allowances '
             'and material certification are not established.</p>')
@@ -243,7 +290,8 @@ def _state_table(state, model, values, criteria):
     for code, states in model["results"].items():
         if state not in states:
             gap = ("Not Evaluated: the legacy module returns no combined-load check (tracked in #377)"
-                   if state == "combined" else "Not returned by this strategy")
+                   if state == "combined" and code == "API RP 2RD"
+                   else "Not Evaluated: not returned by this strategy")
             rows.append(f'<tr><td>{code}</td><td colspan="4">{html.escape(gap)}</td></tr>')
             continue
         result, key = states[state], _code_key(code)
@@ -261,13 +309,32 @@ def _state_table(state, model, values, criteria):
         bars.append(f'<text x="0" y="{y + 12}">{code}</text><rect x="130" y="{y}" '
                     f'width="{width:.1f}" height="16"/><text x="440" y="{y + 12}">'
                     f'{values[key + "-" + state]}%</text>')
-    rows.append('<tr><td>API RP 1111</td><td colspan="4">Not compared: edition defect</td></tr>')
     return (f'<h2 id="{state}">{state.capitalize()}</h2><table><thead><tr><th>Code</th>'
             '<th>Utilisation (%)</th><th>Governing supplied case</th><th>Criterion and reference</th>'
             '<th>Disposition</th></tr></thead><tbody>' + ''.join(rows) +
             '</tbody></table><p class="caption">Returned ' + state + ' results; reference locators remain unqualified.</p>'
-            '<figure><svg viewBox="0 0 540 80" role="img" aria-label="Returned utilisation comparison">' +
+            '<figure><svg viewBox="0 0 540 110" role="img" aria-label="Returned utilisation comparison">' +
             ''.join(bars) + '</svg><figcaption>Returned utilisation; bar lengths are capped at twice unity.</figcaption></figure>')
+
+
+def _minimum_table(model: dict[str, Any], values: dict[str, str]) -> str:
+    """Report the search bounds and the governing check at the first passing wall."""
+    rows = []
+    for code, result in model["minimum_wall"].items():
+        if result["status"] == "found":
+            rows.append(f'<tr><td>{code}</td><td>{_number(values, "minimum-" + _code_key(code))}</td>'
+                        f'<td>{result["state"]}</td><td>{html.escape(result["case"])}</td></tr>')
+        else:
+            rows.append(f'<tr><td>{code}</td><td colspan="3">Not found on search grid</td></tr>')
+    return ('<h2>Minimum passing nominal wall</h2><p>First passing point on a 0.1 mm grid, '
+            'starting at 0.1 mm and ending strictly below half the outer diameter. All returned '
+            'checks must pass for every supplied case. Enumeration makes no monotonicity assumption. '
+            'The governing check and case below apply at the searched wall, not the supplied wall. '
+            'This is not a qualified design minimum: missing checks, applicability ranges, '
+            'corrosion, fabrication deductions and manufacturing availability are not established.</p>'
+            '<table><thead><tr><th>Code</th><th>Nominal wall (mm)</th><th>Governing check</th>'
+            '<th>Governing supplied case</th></tr></thead><tbody>' + ''.join(rows) +
+            '</tbody></table><p class="caption">Module-only minimum on the declared search grid.</p>')
 
 
 def _discussion(model):
@@ -286,8 +353,10 @@ def _discussion(model):
                  'A ranking of complete code assessments is not established. '
                  'Not Evaluated: legacy edition and clause locators are not established; '
                  'STD clause locators are inherited from repository '
-                 'references and have not been checked against a licensed standard. Required minimum wall '
-                 'and a second sourced pipe configuration are not calculated. The next step is to qualify '
+                 'references and have not been checked against a licensed standard. RP 1111 returns propagation '
+                 'but no hoop or combined check; neither 2RD strategy returns propagation. '
+                 'The report uses one generic pipe; shallow and deep reference configurations are tested separately. '
+                 'The next step is to qualify '
                  'the citation basis and complete legacy combined-load coverage before a design disposition.</p>')
     return '\n'.join(lines)
 
@@ -303,7 +372,7 @@ def _citations(criteria):
                                                                "source_sibling", "source_project", "module",
                                                                "module_sha256")},
                             "section": reference["checks"][state]["section"],
-                            "qualification": "reference only; clause mapping not established"})
+                            "qualification": "unqualified module metadata; clause mapping not established"})
     return {"citations": entries,
             "qualification": "partial; standard conformity not established",
             "note": "No new standards-derived coefficient is introduced. Existing module coefficients are inventoried by symbol; numeric factors are not reproduced."}
@@ -313,7 +382,8 @@ def _page(model, criteria, record):
     """Render one standalone page with local styling and inline graphics."""
     values = numeric_values(model)
     body = [_summary(model, values), _history(record), _input_table(model, values)]
-    for state in ("burst", "collapse", "hoop", "combined"):
+    body.append(_minimum_table(model, values))
+    for state in ("burst", "collapse", "propagation", "hoop", "combined"):
         body.append(_state_table(state, model, values, criteria))
     body.append(_discussion(model))
     links = ''.join(f'<li><a href="{html.escape(source["url"], quote=True)}">'
@@ -384,6 +454,8 @@ def _manifest(model, criteria, record, input_path, criteria_path, revisions_path
     return {"revision": record["revision"], "criteria_revision": criteria["criteria_revision"],
             "criteria_recorded_at": record["criteria_recorded_at"], "basis_commit": model["config"]["basis_commit"],
             "qualification": "partial; standard conformity not established", "results": results,
+            "minimum_wall": model["minimum_wall"],
+            "wall_search": "0.1 mm grid; positive wall strictly below half the outside diameter; all returned checks and supplied cases",
             "precision": "0.1 percent; dispositions use unrounded module results",
             "inputs": {_relative(path): _sha(path) for path in paths},
             "artifacts": {path.name: {"sha256": _sha(path), "size_bytes": path.stat().st_size} for path in outputs}}

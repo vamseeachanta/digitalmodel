@@ -1,28 +1,66 @@
 {
   "artifacts": {
     "riser-pipe-comparison.citations.json": {
-      "sha256": "bb7ab5e501cd88e099e9a1cee48fd9a5aec3004674bfee23ed3eac6296b78909",
-      "size_bytes": 8057
+      "sha256": "f3181c12f1a29c3dba7456421774d598b1224ed1ee7fb5d48a08d34312c8f91d",
+      "size_bytes": 13471
     },
     "riser-pipe-comparison.html": {
-      "sha256": "867104d3308200595301f757c35fd1192c50983ec95f954997d213144250ca74",
-      "size_bytes": 10341
+      "sha256": "e96e9b42c9186ba59e11800ec71d72e56ebd28ad55280714b2352bd42d9f7c27",
+      "size_bytes": 14349
     }
   },
-  "basis_commit": "cc36804fbdfe803b9bc272269dec3056aa48b009",
-  "criteria_recorded_at": "2026-10-14T16:57:05.340387+00:00",
-  "criteria_revision": "1",
+  "basis_commit": "fcfff5631bd3535147af43f1afc9c8f6c0524ee8",
+  "criteria_recorded_at": "2026-10-16T08:02:05Z",
+  "criteria_revision": "2",
   "inputs": {
-    "scripts/reporting/build_riser_pipe_comparison.py": "a0afa95d8b50592dfbc25debafc82328b79dd5b6fd76e272524d43f00478eca7",
-    "scripts/reporting/riser_pipe_comparison.criteria.json": "7c36f14e1ebba010e70222bbac85bf638707838365bc48bb759aa54379ca6ada",
-    "scripts/reporting/riser_pipe_comparison.revisions.json": "520d6c42e6f211d7705d924dbd70570ffb0bea3779aa45aa4fcd1286f2fa6061",
-    "scripts/reporting/riser_pipe_comparison.yml": "99984efca047d08d73a9c032936e363b8ae0e32a84253cba0c9e2f8ea26b533a",
+    "scripts/reporting/build_riser_pipe_comparison.py": "0773f611c12cd899128d53dac4d927e699c6c8c35fc9c5f37894e6193e7c582a",
+    "scripts/reporting/riser_pipe_comparison.criteria.json": "644f15e3d4f459a52c01a4a528ed424a5683a4424de1d9069708771ec597f527",
+    "scripts/reporting/riser_pipe_comparison.revisions.json": "95cac08ae96ce456107c89997619c9af23bc2ec80436923ad77e418007d42665",
+    "scripts/reporting/riser_pipe_comparison.yml": "57fa40293b029da07adfdbffcf9a0b5bc9d8d002529ac775a6876ec262f62b44",
+    "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
     "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
     "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f"
+  },
+  "minimum_wall": {
+    "API RP 1111": {
+      "case": "operating",
+      "state": "propagation",
+      "status": "found",
+      "wall_mm": 21.3
+    },
+    "API RP 2RD": {
+      "case": "operating",
+      "state": "collapse",
+      "status": "found",
+      "wall_mm": 10.5
+    },
+    "API STD 2RD": {
+      "case": "operating",
+      "state": "combined",
+      "status": "found",
+      "wall_mm": 42.2
+    }
   },
   "precision": "0.1 percent; dispositions use unrounded module results",
   "qualification": "partial; standard conformity not established",
   "results": {
+    "API RP 1111": {
+      "burst": {
+        "case": "operating",
+        "utilisation_percent": 27.6,
+        "within_module_limit": true
+      },
+      "collapse": {
+        "case": "operating",
+        "utilisation_percent": 33.7,
+        "within_module_limit": true
+      },
+      "propagation": {
+        "case": "operating",
+        "utilisation_percent": 97.8,
+        "within_module_limit": true
+      }
+    },
     "API RP 2RD": {
       "burst": {
         "case": "operating",
@@ -58,5 +96,6 @@
       }
     }
   },
-  "revision": "1"
+  "revision": "2",
+  "wall_search": "0.1 mm grid; positive wall strictly below half the outside diameter; all returned checks and supplied cases"
 }

@@ -1,5 +1,5 @@
 {
-  "revision": "1",
+  "revision": "2",
   "history": [
     {
       "revision": "0",
@@ -10,8 +10,13 @@
       "revision": "1",
       "date": "2026-10-14",
       "change": "Generic assumed properties replace nominal size and grade values; evaluation wording identifies the missing comparisons."
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-16",
+      "change": "Add the RP 1111 module with unqualified edition metadata, propagation results and a minimum passing wall search to complete the three-module comparison."
     }
   ],
-  "criteria_sha256": "7c36f14e1ebba010e70222bbac85bf638707838365bc48bb759aa54379ca6ada",
-  "criteria_recorded_at": "2026-10-14T16:57:05.340387+00:00"
+  "criteria_sha256": "644f15e3d4f459a52c01a4a528ed424a5683a4424de1d9069708771ec597f527",
+  "criteria_recorded_at": "2026-10-16T08:02:05Z"
 }
