@@ -47,6 +47,15 @@ def section(key: str, title: str, *blocks: Any) -> Section:
     return Section(key=key, title=title, blocks=list(blocks))
 
 
+def ring_reference_description(table: dict) -> str:
+    """Describe the initial elevation recorded for each prepared case."""
+    elevations = [(case['id'], float(case['ring_initial_position_m']['value'][2]))
+                  for case in table['cases']]
+    if len({value for _, value in elevations}) == 1:
+        return f'{elevations[0][1]:g} m for every case'
+    return '; '.join(f'{case_id}: {value:g} m' for case_id, value in elevations)
+
+
 def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = None, allow_synthetic: bool = False) -> ReportSpec:
     """Build a report specification after checking complete matched inputs."""
     driver = driver_module()
@@ -158,7 +167,8 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             'Statics precede dynamics. Statistics use the main stage and exclude build-up. Angles are mean absolute '
             'and maximum absolute rotations at the compliant connections: upper slip-joint vessel end and lower '
             'rigid-piece fixed end. Tension is effective tension at the main-riser top. Vertical stroke is tensioner-ring '
-            'elevation relative to its initial 20 m elevation; vessel elevation is fixed. Maximum von Mises stress is '
+            f'elevation relative to its initial elevation ({ring_reference_description(table)}); '
+            'vessel elevation is fixed. Maximum von Mises stress is '
             'taken over the main riser. Native channel qualification is required before engineering acceptance.\n\n'
             'The static comparison uses a pinned beam with constant assumed top tension and uniform drag. '
             'Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. '
