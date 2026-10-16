@@ -166,5 +166,64 @@ class DriverTests(unittest.TestCase):
             self.assertFalse(list(Path(temporary).glob('*.summary.json')))
 
 
+def test_configuration_failure_stops_campaign_once(tmp_path):
+    driver = load_driver()
+    from digitalmodel.drilling_riser.generic_campaign import DEST
+    calls = []
+
+    def unavailable(*args):
+        calls.append(args)
+        raise driver.ConfigurationError('Solver interface not importable')
+
+    result = driver.run_campaign(ROOT / DEST, tmp_path,
+                                 criteria_file=CRITERIA, case_runner=unavailable)
+    assert result == driver.CONFIGURATION_EXIT
+    assert result not in (0, 1, driver.LICENCE_EXIT)
+    assert len(calls) == 1
+    assert len(list(tmp_path.glob('*.failure.json'))) == 1
+    record = json.loads((tmp_path / 'o0-c0.failure.json').read_text(encoding='utf-8'))
+    assert record['status'] == 'configuration-failure'
+    assert record['error_type'] == 'ConfigurationError'
+    assert record['message'] == 'Solver interface not importable'
+
+
+
+def test_case_fault_is_not_configuration_failure(tmp_path):
+    driver = load_driver()
+    from digitalmodel.drilling_riser.generic_campaign import DEST
+    calls = []
+
+    def broken(*args):
+        calls.append(args)
+        raise RuntimeError('synthetic case fault')
+
+    result = driver.run_campaign(ROOT / DEST, tmp_path,
+                                 criteria_file=CRITERIA, case_runner=broken)
+    assert result == 1
+    assert len(calls) == 24
+    records = list(tmp_path.glob('*.failure.json'))
+    assert len(records) == 24
+    assert all(json.loads(path.read_text(encoding='utf-8'))['status'] == 'incomplete'
+               for path in records)
+
+
+
+def test_native_library_import_failure_is_configuration():
+    import builtins
+    import pytest
+    driver = load_driver()
+    original_import = builtins.__import__
+
+    def fail_interface(name, *args, **kwargs):
+        if name == 'OrcFxAPI':
+            raise OSError('synthetic native library failure')
+        return original_import(name, *args, **kwargs)
+
+    with patch.object(builtins, '__import__', side_effect=fail_interface):
+        with pytest.raises(driver.ConfigurationError, match='OSError') as caught:
+            driver.run_case(Path('unused'), Path('unused'))
+    assert isinstance(caught.value.__cause__, OSError)
+
+
 if __name__ == '__main__':
     unittest.main()
