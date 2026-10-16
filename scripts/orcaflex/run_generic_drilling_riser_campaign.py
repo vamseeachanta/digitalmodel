@@ -25,6 +25,11 @@ METRICS = ('lower_mean_deg', 'lower_max_deg', 'upper_mean_deg', 'upper_max_deg',
            'top_min_kn', 'top_max_kn', 'stroke_min_m', 'stroke_max_m', 'stress_max_mpa')
 EXTRACTION_VERSION = 'connection-angles-vertical-ring-1'
 LICENCE_EXIT = 12
+CONFIGURATION_EXIT = 13
+
+
+class ConfigurationError(RuntimeError):
+    """Execution prerequisites are absent; stop before trying further cases."""
 
 
 class LicenceUnavailable(RuntimeError):
@@ -116,7 +121,8 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     try:
         import OrcFxAPI
     except ImportError as exc:
-        raise RuntimeError('Solver interface not importable') from exc
+        raise ConfigurationError('Solver interface not importable') from exc
+    reference_z = ring_reference_z(model_path)
     try:
         model = OrcFxAPI.Model(str(model_path))
         model.CalculateStatics()
@@ -140,7 +146,6 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
         upper = [abs(v) for v in series('Riser Slip Joint', 'Ez-Angle', OrcFxAPI.oeEndA)]
         tension = series('Riser', 'Effective tension', OrcFxAPI.oeEndA)
         # The vessel is fixed in this sweep, so its vertical displacement is zero.
-        reference_z = ring_reference_z(model_path)
         stroke = [v - reference_z for v in series('Tensioner Ring', 'Z')]
         stress = [float(v) / 1000 for v in model['Riser'].RangeGraph('Max von Mises stress', period).Max]
         if not stress or not all(math.isfinite(v) for v in stress):
@@ -249,6 +254,10 @@ def run_campaign(campaign: Path, output: Path, *,
             except LicenceUnavailable:
                 write_json(output / f'{case_id}.failure.json', {'case_id': case_id, 'status': 'licence-unavailable'})
                 return LICENCE_EXIT
+            except ConfigurationError as exc:
+                write_json(output / f'{case_id}.failure.json', {'case_id': case_id,
+                    'status': 'configuration-failure', 'error_type': type(exc).__name__, 'message': str(exc)})
+                return CONFIGURATION_EXIT
             except Exception as exc:
                 write_json(output / f'{case_id}.failure.json', {'case_id': case_id,
                            'status': 'incomplete', 'error_type': type(exc).__name__})

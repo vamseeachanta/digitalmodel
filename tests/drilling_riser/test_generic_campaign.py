@@ -18,6 +18,19 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class GenericCampaignTests(unittest.TestCase):
+    def test_tension_acceptance_warning_is_carried_with_prepared_inputs(self):
+        table = campaign.case_table(ROOT)
+        note = table['tension_acceptance_basis']
+        self.assertIn('hand estimate', note)
+        self.assertIn('not met in any case', note)
+        self.assertIn('pre-flight statics', note)
+        public = ROOT / campaign.DEST
+        for path in ('case-table.yml', 'screens/basis.json'):
+            data = yaml.safe_load((public / path).read_text(encoding='utf-8'))
+            self.assertEqual(data['tension_acceptance_basis'], note)
+        preparation = json.loads((public / 'preparation.json').read_text(encoding='utf-8'))
+        self.assertEqual(preparation['tension_acceptance_basis'], note)
+
     def test_derived_criterion_rejects_underflow(self):
         fixture = Path(__file__).parent / 'fixtures/generic_synthetic_criteria.json'
         data = json.loads(fixture.read_text(encoding='utf-8'))

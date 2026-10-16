@@ -4551,6 +4551,14 @@ wave_basis_note: Specification wave data are retained for provenance only; no wa
   is applied.
 profile_description: Uniform current from surface to seabed; assumed, based on previous
   experience
+tension_acceptance_basis: The stored minimum top tension is retained as an assumed
+  criterion. By hand estimate, the modelled tensioner gives the main riser 7.1–7.6
+  MN top effective tension against the 8,345.7 kN minimum, so this criterion is not
+  met in any case. The four links support the ring and share their vertical load between
+  the riser, choke and kill lines and the slip joint; total tensioner force is not
+  main-riser top effective tension. No operating window is established by this estimate.
+  Confirm the load path and tensions with pre-flight statics before production; no
+  native confirmation is available.
 criteria:
   mean_angle_deg:
     value: null

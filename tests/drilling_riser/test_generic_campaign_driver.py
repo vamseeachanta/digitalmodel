@@ -4,7 +4,7 @@
 """Driver contract exercised with a synthetic case runner only."""
 import ast
 import os
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import importlib.util
 import json
 from pathlib import Path
@@ -60,6 +60,35 @@ class DriverTests(unittest.TestCase):
         with patch.dict(sys.modules, {'OrcFxAPI': None}):
             with self.assertRaisesRegex(RuntimeError, 'interface not importable'):
                 driver.run_case(Path('unused'), Path('unused'))
+
+    def test_missing_interface_stops_campaign_with_one_configuration_record(self):
+        driver = load_driver()
+        import sys
+        from digitalmodel.drilling_riser.generic_campaign import DEST
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(sys.modules, {'OrcFxAPI': None}):
+            output = Path(temporary)
+            with patch.object(driver, 'run_case', wraps=driver.run_case) as runner:
+                code = driver.run_campaign(ROOT / DEST, output, criteria_file=CRITERIA)
+            self.assertEqual(code, 13)
+            runner.assert_called_once()
+            records = list(output.glob('*.failure.json'))
+            self.assertEqual(len(records), 1)
+            self.assertEqual(json.loads(records[0].read_text(encoding='utf-8')), {
+                'case_id': 'o0-c0', 'status': 'configuration-failure',
+                'error_type': 'ConfigurationError', 'message': 'Solver interface not importable'})
+            self.assertFalse(list(output.glob('*.summary.json')))
+            self.assertFalse((output / 'timing.json').exists())
+
+    def test_ring_reference_errors_precede_native_model_creation(self):
+        driver = load_driver()
+        import sys
+        for error in (FileNotFoundError('missing case table'), StopIteration('unmatched case')):
+            api = Mock()
+            with self.subTest(error=type(error).__name__), patch.dict(sys.modules, {'OrcFxAPI': api}):
+                with patch.object(driver, 'ring_reference_z', side_effect=error):
+                    with self.assertRaises(type(error)):
+                        driver.run_case(Path('unused'), Path('unused'))
+                api.Model.assert_not_called()
 
     def test_ring_reference_uses_case_table(self):
         driver = load_driver()
