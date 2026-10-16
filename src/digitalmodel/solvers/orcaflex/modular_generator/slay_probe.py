@@ -9,6 +9,43 @@ from pathlib import Path
 import yaml
 
 
+def stinger_layout_for_depth(basis, depth):
+    """Match declared depth numerically; a present map must contain the depth."""
+    if "stinger_by_depth" not in basis:
+        return None
+    layouts = basis["stinger_by_depth"]
+    if not isinstance(layouts, dict):
+        raise ValueError("Invalid stinger depth map")
+    numeric = {}
+    for key, layout in layouts.items():
+        try:
+            value = float(key)
+        except (TypeError, ValueError) as error:
+            raise ValueError("Invalid stinger depth key") from error
+        if not math.isfinite(value) or value in numeric:
+            raise ValueError("Nonfinite or duplicate stinger depth key")
+        numeric[value] = layout
+    layout = numeric.get(float(depth))
+    if not layout:
+        raise ValueError(f"No stinger layout declared for depth {depth} m")
+    return layout
+
+
+def end_a_support_reaction(end_a_x, support_x, forces):
+    """Read contact resultant at the support nearest measured global End A X.
+
+    The declared fixed, level supports and End A must use the same global
+    frame. Ties use support order. Positive resultant denotes contact, as in
+    the stinger lift-off readback; zero denotes loss of contact.
+    """
+    if len(support_x) == 0 or len(support_x) != len(forces):
+        raise ValueError("Aligned nonempty support positions and forces required")
+    if not all(math.isfinite(value) for value in [end_a_x, *support_x, *forces]):
+        raise ValueError("Finite End A and support readbacks required")
+    index = min(range(len(support_x)), key=lambda i: abs(support_x[i] - end_a_x))
+    return forces[index]
+
+
 def screen_case(campaign: Path, case_id: str) -> dict:
     """Separate length closure and tangent closure in a weight-only hand model.
 
@@ -30,7 +67,7 @@ def screen_case(campaign: Path, case_id: str) -> dict:
     weight = (mass - basis["water_density_te_m3"] * math.pi / 4 * od**2) * basis["gravity_m_s2"]
     stinger = basis["equipment"]["stinger"]
     radius = stinger["radius"]
-    layout = basis.get("stinger_by_depth", {}).get(str(case["depth_m"]))
+    layout = stinger_layout_for_depth(basis, case["depth_m"])
     arc = layout["length_m"] if layout else sum(section["length"] for section in stinger["sections"])
     folder = campaign / "models" / case_id / "includes"
     support_types = yaml.safe_load((folder / "13_supports.yml").read_text(encoding="utf-8"))["SupportTypes"]
@@ -126,7 +163,7 @@ def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_forc
         raise ValueError("Positive diameter and radius required")
     checks = {
         "wire_length": (5 <= wire_length <= 15, "Tensioner wire must remain between 5 and 15 m"),
-        "end_a_reaction": (end_a_reaction >= 0, "End A support reaction must be nonnegative"),
+        "end_a_reaction": (end_a_reaction > 0, "End A must remain in contact with its nearest support"),
         "stinger_conformity": (
             0 <= overbend_strain <= 1.10 * diameter / (2 * radius) and last_support_force == 0,
             "S1 requires strain conformity and zero last-support force"),

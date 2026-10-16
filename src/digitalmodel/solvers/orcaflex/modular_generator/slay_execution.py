@@ -39,6 +39,8 @@ def read_contract(campaign: Path, expected_hours: float, max_hours: float) -> di
     if (criteria["revision"] != first["criteria_revision"]
             or criteria["revision"] != template["criteria_revision"]):
         raise ValueError("Criteria revisions must agree")
+    if not isinstance(criteria.get("static_qa"), dict):
+        raise ValueError("A static_qa section is required before queue preparation")
     required = {"source_qualification", "geometry", "force_balance", "native_convergence",
                 "mesh_convergence", "catenary_relative_tolerance", "overbend_strain_limit",
                 "installation_acceptance", "stinger_conformity"}
@@ -143,7 +145,8 @@ def write_queue(campaign: Path, output: Path, repo: Path, revision: str,
     inputs[batch_path.name] = _digest(batch_path)
     record = {"schema": "slay-run-manifest-1", "launch_enabled": False,
               "input_revision": revision, "criteria_revision": contract["criteria"]["revision"],
-              "criteria": contract["criteria"]["criteria"], "first_timed_case": first,
+              "criteria": contract["criteria"]["criteria"],
+              "static_qa": contract["criteria"]["static_qa"], "first_timed_case": first,
               "native_attempted": 0, "native_completed": 0, "qualified_results": 0,
               "approval_required": {"record": "approvals.tsv",
                   "campaign_id": queue["id"], "manifest_sha256": _digest(queue_path),

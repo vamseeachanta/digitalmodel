@@ -21,6 +21,7 @@ from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerato
 from digitalmodel.solvers.orcaflex.modular_generator.post_validator import PostGenerationValidator
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 from digitalmodel.solvers.orcaflex.modular_generator.slay_execution import read_contract, write_queue
+from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import stinger_layout_for_depth
 
 
 def catenary(weight_kn_m: float, depth_m: float, tension_kn: float) -> dict[str, float]:
@@ -75,7 +76,7 @@ def case_spec(basis: dict[str, Any], case: dict[str, Any]) -> ProjectInputSpec:
             "pipeline": basis["pipeline"], "equipment": equipment}
     data = json.loads(json.dumps(data))
     data["equipment"]["tensioner"]["tension_value"] = case["top_tension_kn"]
-    layout = basis.get("stinger_by_depth", {}).get(str(case["depth_m"]))
+    layout = stinger_layout_for_depth(basis, case["depth_m"])
     if layout:
         stinger = data["equipment"]["stinger"]
         stinger["sections"] = [{"length": layout["length_m"], "bend_radius": stinger["radius"]}]

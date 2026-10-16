@@ -112,7 +112,7 @@ def test_anchor_span_probes_are_retired():
 
 @pytest.mark.parametrize("field,bad", [
     ("wire_length", 4.9), ("wire_length", 15.1),
-    ("end_a_reaction", -0.1), ("last_support_force", 0.1),
+    ("end_a_reaction", -0.1), ("end_a_reaction", 0), ("last_support_force", 0.1),
     ("lift_off_arc", 61), ("departure_angle", 25),
     ("grounded_tension", [-0.1]), ("overbend_strain", 0.0028),
     ("wire_length", float("nan")),
@@ -132,7 +132,7 @@ def test_static_qa_table_rejects_each_bad_reading(field, bad):
 def test_static_qa_accepts_wire_band_edges(wire):
     from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import assert_static_acceptance
     reference = dict(lift_off_arc=55, departure_angle=21)
-    assert_static_acceptance(reference=reference, wire_length=wire, end_a_reaction=0,
+    assert_static_acceptance(reference=reference, wire_length=wire, end_a_reaction=1,
                              last_support_force=0, grounded_tension=[0],
                              overbend_strain=1.10 * 0.762 / 300, **reference)
 
@@ -174,7 +174,7 @@ def test_pending_rows_cannot_change_evaluated_outcomes(value):
 
 @pytest.mark.parametrize("field,bad", [
     ("wire_length", 4.9), ("wire_length", 15.1),
-    ("end_a_reaction", -0.1), ("last_support_force", 0.1),
+    ("end_a_reaction", -0.1), ("end_a_reaction", 0), ("last_support_force", 0.1),
     ("lift_off_arc", 61), ("departure_angle", 25),
     ("grounded_tension", [-0.1]), ("overbend_strain", 0.0028),
 ])
