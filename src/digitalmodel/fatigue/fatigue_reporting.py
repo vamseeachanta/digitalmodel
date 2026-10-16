@@ -127,7 +127,7 @@ def generate_report(
     -------
     FatigueReport
     """
-    n_pass = sum(1 for loc in locations if loc.pass_fail == "PASS")
+    n_pass = sum(1 for loc in locations if loc.pass_fail == "PASS")  # nosec B105 # Fatigue acceptance status, not a credential.
     n_fail = len(locations) - n_pass
     max_util = max((loc.utilisation for loc in locations), default=0.0)
     min_life = min(
@@ -225,7 +225,7 @@ def report_to_markdown(report: FatigueReport) -> str:
     lines.append("")
 
     # Notes for failed locations
-    failed = [loc for loc in report.locations if loc.pass_fail == "FAIL"]
+    failed = [loc for loc in report.locations if loc.pass_fail == "FAIL"]  # nosec B105 # Fatigue acceptance status, not a credential.
     if failed:
         lines.append("## Failed Locations — Actions Required")
         lines.append("")
@@ -279,7 +279,7 @@ def damage_barchart_data(report: FatigueReport) -> Dict[str, list]:
         labels.append(loc.location_id)
         damages.append(loc.cumulative_damage)
         utilisations.append(loc.utilisation)
-        colors.append("green" if loc.pass_fail == "PASS" else "red")
+        colors.append("green" if loc.pass_fail == "PASS" else "red")  # nosec B105 # Fatigue acceptance status, not a credential.
 
     return {
         "labels": labels,

@@ -4,6 +4,11 @@
       "change": "Static catenary lines and a traceable run record are added; unsupported illustrative response values are removed.",
       "date": "2026-10-14",
       "revision": "R1"
+    },
+    {
+      "change": "The pinned source digest of the mooring design module is updated because merged change #2481 added a licence header and one module-docstring sentence. No numerical result changed. Python 3.11.14 replaces 3.11.15 as patch-version run metadata only.",
+      "date": "2026-10-15",
+      "revision": "R2"
     }
   ]
 }

@@ -1,18 +1,22 @@
-"""
-ABOUTME: BEM solver wrapper for Capytaine hydrodynamic analysis.
-ABOUTME: Runs diffraction + radiation problems and extracts hydrodynamic coefficients.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Solve Capytaine diffraction and radiation boundary-element problems.
+
+Hydrodynamic coefficients are extracted into the existing BEMResult model.
 """
 
 from __future__ import annotations
 
 import logging
+import warnings
 from typing import Dict, List, Optional, Tuple, Any
 
 import numpy as np
 import xarray as xr
 
-from .models import BEMResult, BodyConfig, SolverConfig, WaveConditions
-from .mesh_adapter import create_floating_body
+from .models import BEMResult, BodyConfig, DOF, SolverConfig, WaveConditions
+from .mesh_adapter import create_floating_body, _require_capytaine3
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +45,13 @@ class CapytaineSolver:
         wave_conditions: WaveConditions,
         solver_config: Optional[SolverConfig] = None,
     ):
+        """Configure the body, wave conditions and solver settings.
+
+        Args:
+            body_config: Mesh, rigid-body DOFs and mass properties.
+            wave_conditions: Frequencies, headings and fluid properties.
+            solver_config: Optional numerical solver settings.
+        """
         self.body_config = body_config
         self.wave_conditions = wave_conditions
         self.solver_config = solver_config or SolverConfig()
@@ -87,6 +98,7 @@ class CapytaineSolver:
             RuntimeError: If the solver encounters an error.
         """
         cpt = _import_capytaine()
+        _require_capytaine3(cpt)
 
         # Validate
         valid, errors = self.validate_inputs()
@@ -112,16 +124,44 @@ class CapytaineSolver:
     def _compute_and_attach_hydrostatics(self, cpt):
         """Compute and attach hydrostatic properties to the body."""
         rho = self.wave_conditions.rho
+        prescribed = (
+            self._configured_inertia()
+            if self.body_config.inertia_matrix is not None else None
+        )
         try:
-            self._body.inertia_matrix = self._body.compute_rigid_body_inertia(rho=rho)
-            self._body.hydrostatic_stiffness = self._body.compute_hydrostatic_stiffness(rho=rho)
+            if prescribed is None:
+                self._body.inertia_matrix = self._body.compute_rigid_body_inertia(rho=rho)
+            else:
+                self._body.inertia_matrix = prescribed
+            self._body.hydrostatic_stiffness = self._body.compute_hydrostatic_stiffness(
+                rho=rho, g=self.wave_conditions.g,
+            )
             logger.info("Computed hydrostatic stiffness and inertia for '%s'", self._body.name)
         except Exception as e:
             logger.warning("Could not compute hydrostatics: %s", e)
 
+    def _configured_inertia(self) -> xr.DataArray:
+        """Label the user-provided six-DOF matrix and select the active DOFs."""
+        matrix = np.asarray(self.body_config.inertia_matrix, dtype=float)
+        if matrix.shape != (6, 6) or not np.all(np.isfinite(matrix)):
+            raise ValueError("The configured inertia matrix must be finite and 6 by 6")
+        names = [d.value for d in DOF.all_dofs()]
+        selected = [d.value for d in self.body_config.dofs]
+        return xr.DataArray(
+            matrix, dims=("influenced_dof", "radiating_dof"),
+            coords={"influenced_dof": names, "radiating_dof": names},
+        ).sel(influenced_dof=selected, radiating_dof=selected)
+
     def _build_solver(self, cpt):
         """Construct the Capytaine BEMSolver with configured options."""
+        _require_capytaine3(cpt)
         sc = self.solver_config
+        if sc.matrix_cache_size != 1:
+            warnings.warn(
+                "matrix_cache_size has no effect with Capytaine 3.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
         # Green function
         gf_map = {
@@ -131,15 +171,18 @@ class CapytaineSolver:
         gf = gf_cls() if gf_cls else cpt.Delhommeau()
 
         # Engine
-        engine = cpt.BasicMatrixEngine(
-            matrix_cache_size=sc.matrix_cache_size,
+        # Capytaine (2026), 3.0 changelog, Internals: the Green function
+        # belongs to DefaultMatrixEngine; the previous engine was removed.
+        # https://capytaine.org/stable/changelog.html
+        engine = cpt.DefaultMatrixEngine(
+            green_function=gf,
             linear_solver=sc.linear_solver,
         )
 
-        solver = cpt.BEMSolver(green_function=gf, engine=engine)
+        solver = cpt.BEMSolver(engine=engine)
         logger.info(
             "BEMSolver created: gf=%s, engine=%s, method=%s",
-            sc.green_function, sc.engine, sc.method,
+            sc.green_function, type(engine).__name__, sc.method,
         )
         return solver
 
@@ -154,6 +197,7 @@ class CapytaineSolver:
             "radiating_dof": dof_names,
             "water_depth": [wc.water_depth],
             "rho": [wc.rho],
+            "g": [wc.g],
         })
 
         n_problems = len(wc.omega_array) * (len(wc.headings) + len(dof_names))
@@ -175,8 +219,16 @@ class CapytaineSolver:
     def _extract_results(self) -> BEMResult:
         """Extract numpy arrays from xarray dataset into BEMResult."""
         ds = self._dataset
+        if ds is None:
+            raise ValueError("No solved dataset is available")
         wc = self.wave_conditions
         dof_names = [d.value for d in self.body_config.dofs]
+
+        requested = {
+            "omega": wc.omega_array, "wave_direction": wc.headings,
+            "radiating_dof": dof_names, "influenced_dof": dof_names,
+        }
+        ds = ds.sel({key: value for key, value in requested.items() if key in ds.coords})
 
         result = BEMResult(
             dataset=ds,
@@ -190,27 +242,17 @@ class CapytaineSolver:
             g=wc.g,
         )
 
-        # Added mass: (omega, radiating_dof, influenced_dof) → (n_omega, n_dof, n_dof)
-        if "added_mass" in ds:
-            result.added_mass = ds["added_mass"].values
-
-        # Radiation damping
-        if "radiation_damping" in ds:
-            result.radiation_damping = ds["radiation_damping"].values
-
-        # Excitation force = diffraction + Froude-Krylov (DNV-RP-C205 §7.3.1)
-        if "excitation_force" in ds:
-            result.excitation_force = ds["excitation_force"].values
-        if "diffraction_force" in ds:
-            result.diffraction_force = ds["diffraction_force"].values
-        if "Froude_Krylov_force" in ds:
-            result.froude_krylov_force = ds["Froude_Krylov_force"].values
-
-        # Hydrostatics
-        if "hydrostatic_stiffness" in ds:
-            result.hydrostatic_stiffness = ds["hydrostatic_stiffness"].values
-        if "inertia_matrix" in ds:
-            result.inertia_matrix = ds["inertia_matrix"].values
+        groups = [
+            (("added_mass", "radiation_damping"), ("omega", "influenced_dof", "radiating_dof")),
+            (("excitation_force", "diffraction_force", "Froude_Krylov_force"),
+             ("omega", "wave_direction", "influenced_dof")),
+            (("hydrostatic_stiffness", "inertia_matrix"), ("influenced_dof", "radiating_dof")),
+        ]
+        for variables, dimensions in groups:
+            for name in variables:
+                if name in ds:
+                    attribute = "froude_krylov_force" if name == "Froude_Krylov_force" else name
+                    setattr(result, attribute, _ordered_values(ds, name, dimensions))
 
         return result
 
@@ -223,6 +265,17 @@ class CapytaineSolver:
     def body(self):
         """Access the Capytaine FloatingBody after solving."""
         return self._body
+
+
+def _ordered_values(dataset: xr.Dataset, name: str, dimensions: Tuple[str, ...]) -> np.ndarray:
+    """Retain physical axes and remove only singleton environmental dimensions."""
+    array = dataset[name]
+    for dimension in array.dims:
+        if dimension not in dimensions:
+            if array.sizes[dimension] != 1:
+                raise ValueError(f"Unexpected non-singleton dimension in {name}: {dimension}")
+            array = array.isel({dimension: 0}, drop=True)
+    return np.asarray(array.transpose(*dimensions).values)
 
 
 def run_bem_analysis(

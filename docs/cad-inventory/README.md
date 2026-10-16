@@ -5,6 +5,8 @@
 
 This folder holds the discovery output for the CAD/CAM automation initiative. This file (`README.md`) is the
 aggregate inventory; the per-file manifest is `cad-file-manifest-deidentified.csv.gz`.
+The per-file manifest is held in the content store as `blobs/sha256/95/95b2c928ded416fdc4fa3ef0e48deef8a3006e6e6ce9b9ab36052d5fb6b1ca29.gz`.
+Restore it from the repository root with `python scripts/data/fetch.py blobs/sha256/95/95b2c928ded416fdc4fa3ef0e48deef8a3006e6e6ce9b9ab36052d5fb6b1ca29.gz` before running the decompression command below.
 
 > **Methodology.** This work is an instance of the [raw-to-knowledge-playbook](https://github.com/vamseeachanta/raw-to-knowledge-playbook)
 > — *extract deterministically, verify, trust nothing by default*. The binary-CAD/B-rep lane it embodies is written up

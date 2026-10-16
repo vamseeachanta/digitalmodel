@@ -2,8 +2,46 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Pytest configuration for marine engineering tests."""
 import sys
+import importlib.util
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
+
+
+@pytest.fixture
+def store_file():
+    """Return a fetch helper that skips only when store data is unavailable."""
+    root = Path(__file__).resolve().parent.parent
+    spec = importlib.util.spec_from_file_location("store_fetch", root / "scripts/data/fetch.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    def fetch(store_id):
+        reason = (f"store_data: {store_id} not available (store not reachable); "
+                  f"run scripts/data/fetch.py {store_id}")
+        if not module.store_configured():
+            pytest.skip(reason)
+        try:
+            rows = module.select_rows(module.read_manifest(root), store_id)
+            return module.fetch_row(root, rows[0])
+        except module.StoreUnavailable:
+            pytest.skip(reason)
+
+    return fetch
+
+
+@pytest.fixture(autouse=True)
+def store_data_marker(request):
+    """Fetch the optional store identifier attached to a store_data marker."""
+    marker = request.node.get_closest_marker("store_data")
+    if marker and marker.args:
+        request.getfixturevalue("store_file")(marker.args[0])
+    elif marker:
+        pytest.skip(
+            "store_data: <id> not available (store not reachable); "
+            "run scripts/data/fetch.py <id>"
+        )
 
 # Tests that fail at collection due to missing modules, deleted files, or
 # platform-specific imports. Excluded so the rest of the suite can run.

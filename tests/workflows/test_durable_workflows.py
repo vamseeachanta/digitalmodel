@@ -1,4 +1,8 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 import json
+import logging
 import math
 from pathlib import Path
 
@@ -7,6 +11,7 @@ import pytest
 import yaml
 
 from digitalmodel.engine import engine
+from digitalmodel.orcaflex import mooring_design_fowt
 from digitalmodel.marine_ops.artificial_lift.field_health import STATUS_RANK
 from tests.workflows.field_dev_production_assertions import (
     FIELD_DEV_PRODUCTION_WORKFLOWS,
@@ -49,12 +54,25 @@ def _workflow_params():
 
 
 @pytest.mark.parametrize("workflow", _workflow_params())
-def test_workflow_registry(workflow, monkeypatch):
+def test_workflow_registry(workflow, monkeypatch, tmp_path):
     if workflow.get("runtime", "offline") != "offline":
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
 
     input_path = REPO_ROOT / workflow["input"]
-    cfg = engine(inputfile=str(input_path))
+    if workflow["id"] == "fowt-mooring":
+        (tmp_path / "wikis").mkdir()
+        monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
+        monkeypatch.setattr(mooring_design_fowt, "_CITATION_EMITTED_CACHE", {})
+        # Detach and close file streams before the engine replaces its handlers.
+        for handler in list(logging.root.handlers):
+            if isinstance(handler, logging.FileHandler):
+                logging.root.removeHandler(handler)
+                handler.close()
+        with pytest.warns(RuntimeWarning, match="wiki page missing"):
+            cfg = engine(inputfile=str(input_path))
+        assert cfg["fowt_mooring"]["result"]["citations"] == []
+    else:
+        cfg = engine(inputfile=str(input_path))
 
     assert isinstance(cfg, dict)
     assert cfg["basename"] == workflow["basename"]
@@ -847,6 +865,9 @@ def test_workflow_registry(workflow, monkeypatch):
         assert content.count("HRTZ") == 3
         assert content.count("DIRN") == 5
         assert content.count("QPPL") == 5
+        assert "SYMX" not in content
+        assert [float(line.split()[-1]) for line in content.splitlines()
+                if "DIRN" in line] == [-180, -90, 0, 90, 180]
         assert "could not be loaded" not in content
     elif workflow["id"] == "dynacard-diagnostics":
         results = cfg["results"]

@@ -13,7 +13,7 @@ vessel:
   geometry:
     mesh_file: "unit_box.gdf"
     mesh_format: gdf
-    symmetry: xz
+    symmetry: none
     reference_point: [0.0, 0.0, 0.0]
     waterline_z: 0.0
     length_units: m

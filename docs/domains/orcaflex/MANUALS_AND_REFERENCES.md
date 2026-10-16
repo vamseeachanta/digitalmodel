@@ -217,3 +217,21 @@ for PDF extraction and classification, not for web-scraped HTML documentation.
 - Metadata extraction (topic title, section hierarchy, cross-references)
 - Storage convention: `/mnt/ace/digitalmodel/llm-wiki/<product>/`
 - Search/retrieval index for agent queries
+
+## Private help retrieval
+
+`scripts/retrieve_orcina_help.py` searches an explicitly configured private wiki
+through read-only `gh api` requests. Supply `--wiki-repo <organisation/repository>`,
+`--prefix <corpus-directory>` and a query; `--revision` defaults to `main` and
+is resolved to one commit before topic blobs are read. Product directories
+below the prefix are `orcaflex`, `orcawave` and `orcfxapi`.
+
+Ranking operates on Markdown sections, preserving code fences. JSON output
+contains topic and section pointers, line numbers, Orcina attribution and
+source URLs. It excludes licensed section text. There is no public-corpus
+fallback and no solver interface is imported or called.
+
+A truncated private tree fails explicitly rather than returning an incomplete
+result. Corpus placement, live demonstrations over all three products and
+agent-skill wiring remain open under #2004. Existing converted files and the
+historical ingestion locations are not evidence of private-corpus readiness.
