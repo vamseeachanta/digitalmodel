@@ -1,6 +1,9 @@
-"""
-ABOUTME: Result export for Capytaine BEM analysis — xarray, plots, summary tables.
-ABOUTME: Provides visualization and data export for hydrodynamic coefficients and RAOs.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Export Capytaine coefficients and responses as datasets, tables and plots.
+
+Native NetCDF retains complex excitation forces for subsequent calculations.
 """
 
 from __future__ import annotations
@@ -36,7 +39,7 @@ def export_netcdf(bem_result: BEMResult, path: Union[str, Path]) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    export_dataset(bem_result.dataset, str(path))
+    export_dataset(str(path), bem_result.dataset)
     logger.info("Exported dataset to %s", path)
     return path
 

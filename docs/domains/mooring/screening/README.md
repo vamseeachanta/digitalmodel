@@ -1,4 +1,4 @@
-# Mooring static-line analysis — R1
+# Mooring static-line analysis — R2
 
 Five homogeneous static line solutions are computed at the source page's depths.
 Sixty catenary matrix entries reuse those solutions; sixty taut or hybrid entries
@@ -10,6 +10,7 @@ constrained by prescribed, assumed pretension and is not peak sea-state tension.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | R1 | 2026-10-14 | Static catenary lines and a traceable run record are added; unsupported illustrative response values are removed. |
+| R2 | 2026-10-15 | The pinned source digest of the mooring design module is updated because merged change #2481 added a licence header and one module-docstring sentence. No numerical result changed. Python 3.11.14 replaces 3.11.15 as patch-version run metadata only. |
 
 The human-readable result is [report.html](report.html). Native line components,
 geometry and every matrix entry are retained in [results.json](results.json).
