@@ -247,8 +247,8 @@ gates:
     order: 1
     description: "Domain tests for marine-engineering"
     domain: "marine-engineering"
-    test_roots: ["tests/marine_ops/marine_engineering/"]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/marine_ops/marine_engineering/ -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    test_roots: ["tests/marine_ops/marine_engineering/", "tests/marine_ops/fowt_quasi_static/"]
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test,fowt]' python -m pytest tests/marine_ops/marine_engineering/ tests/marine_ops/fowt_quasi_static/ -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
