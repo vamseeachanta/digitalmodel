@@ -21,10 +21,13 @@ class GenericCampaignTests(unittest.TestCase):
     def test_tension_acceptance_warning_is_carried_with_prepared_inputs(self):
         table = campaign.case_table(ROOT)
         note = table['tension_acceptance_basis']
-        self.assertIn('hand estimate', note)
-        self.assertIn('not met by the hand estimate', note)
+        self.assertNotIn('hand estimate', note)
+        self.assertIn('numerical reconciliation remains pending', note)
         self.assertIn('case by case', note)
         self.assertIn('pre-flight statics', note)
+        self.assertIn('reported on #2469', note)
+        self.assertIn('calculated positions', table['statics_method']['value'])
+        self.assertTrue(table['statics_method']['source'])
         public = ROOT / campaign.DEST
         for path in ('case-table.yml', 'screens/basis.json'):
             data = yaml.safe_load((public / path).read_text(encoding='utf-8'))

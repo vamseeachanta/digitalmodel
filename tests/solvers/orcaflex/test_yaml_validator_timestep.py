@@ -267,7 +267,7 @@ def test_production_validator_refuses_wrong_load_format(tmp_path, misplaced):
     from pathlib import Path
     campaign = (Path(__file__).resolve().parents[3] /
                 "docs/domains/orcaflex/library/campaigns/generic-drilling-riser/models")
-    objects = yaml.safe_load((campaign / "o0-c0/includes/20_generic_objects.yml").read_text())
+    objects = yaml.safe_load((campaign / "o0-c0/includes/20_generic_objects.yml").read_text(encoding="utf-8"))
     wrong = copy.deepcopy(objects)
     if misplaced == "PyModels":
         wrong[misplaced] = wrong.pop("P-yModels")
