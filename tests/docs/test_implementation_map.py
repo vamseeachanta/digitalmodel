@@ -1,149 +1,275 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Validate implementation-map references against the current checkout."""
+"""Validate live references and test reproducible snapshot diagnostics."""
 
-import ast
 import copy
-import warnings
+import hashlib
+import importlib.util
 from pathlib import Path
 
+import pytest
 import yaml
-
 
 ROOT = Path(__file__).resolve().parents[2]
 MAP_PATH = ROOT / "docs/registry/implementation-map.yaml"
-FAMILY_IDS = (
-    "catenary-mooring-line-statics",
-    "effective-tension-riser-stack-up",
-    "orcaflex-text-model-writers",
-    "rao-readers-and-orcaflex-converters",
-    "irregular-frequency-treatment",
-    "wave-spectra",
-    "wind-and-current-force-routes",
-    "sn-curves-and-miner-damage",
-    "cathodic-protection-calculations",
-    "api-5ct-5l-grade-tables",
-    "external-solver-batch-run-stacks",
-    "dnv-rp-e305-on-bottom-stability",
-)
-REQUIRED_KEYS = {
-    "schema_version", "repository", "revision", "searched", "families",
-    "byte_identical_groups", "identical_body_groups", "known_defects",
-    "other_defects", "seed_verification", "rejected_candidates", "notes",
-}
+_SPEC = importlib.util.spec_from_file_location(
+    "implementation_map_generator", ROOT / "scripts/generate_implementation_map.py")
+_MODULE = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(_MODULE)
+FAMILY_IDS = _MODULE.FAMILY_IDS
+REQUIRED_KEYS = _MODULE.REQUIRED_KEYS
+check_map = _MODULE.check_map
 
 
-def check_map(doc, root):
-    """Return reference and schema problems without running mapped code."""
-    root = Path(root).resolve()
-    problems = []
-    text_cache = {}
-    ast_cache = {}
-    if not isinstance(doc, dict):
-        return ["document must be a mapping"]
-    for key in sorted(REQUIRED_KEYS - doc.keys()):
-        problems.append(f"missing key: {key}")
-    families = {f["id"]: f for f in doc.get("families", [])}
-    for family_id in FAMILY_IDS:
-        if not families.get(family_id, {}).get("implementations"):
-            problems.append(f"missing or empty family: {family_id}")
-    issues = {d.get("number") for d in doc.get("known_defects", [])}
-    for issue in (2050, 2107, 2543):
-        if issue not in issues:
-            problems.append(f"missing known defect: {issue}")
-
-    def check_path(path, allow_directory=False):
-        if not isinstance(path, str):
-            problems.append(f"invalid path: {path!r}")
-            return None
-        relative = Path(path)
-        target = root / relative
-        if relative.is_absolute() or ".." in relative.parts:
-            problems.append(f"path escapes checkout: {path}")
-            return None
-        if allow_directory and target.is_dir():
-            if not any(f.is_file() for f in target.rglob("*")):
-                problems.append(f"empty seed directory: {path}")
-            return None
-        if not target.is_file():
-            problems.append(f"missing file: {path}")
-            return None
-        if path not in text_cache:
-            text_cache[path] = target.read_text(encoding="utf-8").splitlines()
-        return target
-
-    def walk(value, context=""):
-        if isinstance(value, list):
-            for item in value:
-                walk(item, context)
-        elif isinstance(value, dict):
-            path = value.get("path")
-            absent_seed = context == "seed_verification" and value.get("exists") in (False, "no")
-            if path is not None and not absent_seed:
-                target = check_path(path, context == "seed_verification")
-                if target is not None:
-                    line = value.get("line")
-                    if line is not None and (
-                        not isinstance(line, int) or not 1 <= line <= len(text_cache[path])
-                    ):
-                        problems.append(f"invalid line: {path}:{line}")
-                    symbol = value.get("symbol")
-                    if target.suffix == ".py" and symbol and line is not None:
-                        if path not in ast_cache:
-                            try:
-                                # Legacy escape warnings do not invalidate a definition.
-                                # Record them locally even when the suite escalates warnings.
-                                with warnings.catch_warnings(record=True):
-                                    warnings.simplefilter("always", SyntaxWarning)
-                                    ast_cache[path] = ast.parse("\n".join(text_cache[path]))
-                            except SyntaxError:
-                                ast_cache[path] = None
-                        tree = ast_cache[path]
-                        name = symbol.rsplit(".", 1)[-1]
-                        if tree is None or not any(
-                            isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
-                            and n.name == name and n.lineno <= line <= n.end_lineno
-                            for n in ast.walk(tree)
-                        ):
-                            problems.append(f"symbol does not contain line: {path}:{symbol}:{line}")
-            for key, item in value.items():
-                if key == "paths":
-                    for member in item:
-                        check_path(member)
-                elif key == "evidence" and isinstance(item, str) and ":L" in item:
-                    evidence_path, span = item.rsplit(":L", 1)
-                    if check_path(evidence_path) is not None:
-                        try:
-                            start, end = (int(v.removeprefix("L")) for v in span.split("-"))
-                            if not 1 <= start <= end <= len(text_cache[evidence_path]):
-                                raise ValueError
-                        except ValueError:
-                            problems.append(f"invalid evidence: {item}")
-                else:
-                    walk(item, key if key == "seed_verification" else context)
-
-    walk(doc)
-    entries = [e for f in doc.get("families", []) for e in f.get("implementations", [])]
-    identities = {(e["path"], e.get("symbol"), e["line"]) for e in entries}
-    for entry in entries:
-        for other in entry.get("identical_to", []):
-            identity = (other["path"], other.get("symbol"), other["line"])
-            if identity not in identities or identity == (
-                entry["path"], entry.get("symbol"), entry["line"]
-            ):
-                problems.append(f"unknown identical member: {identity}")
-    return problems
+@pytest.fixture(scope="module")
+def map_document():
+    return yaml.safe_load(MAP_PATH.read_text(encoding="utf-8"))
 
 
-def test_implementation_map_references():
-    doc = yaml.safe_load(MAP_PATH.read_text(encoding="utf-8"))
-    assert check_map(doc, ROOT) == []
+def test_implementation_map_references(map_document):
+    assert check_map(map_document, ROOT) == []
+    stale = _MODULE.map_staleness(map_document, ROOT)
+    if stale:
+        import logging
+        logging.getLogger(__name__).warning(
+            "Implementation map snapshot has %s staleness diagnostics; run the generator to inspect drift.", len(stale))
 
 
-def test_missing_path_is_reported():
-    doc = copy.deepcopy(yaml.safe_load(MAP_PATH.read_text(encoding="utf-8")))
+def test_missing_path_is_reported(map_document):
+    doc = copy.deepcopy(map_document)
     missing = "src/implementation_map_missing_probe.py"
     doc["families"][0]["implementations"][0]["path"] = missing
     problems = check_map(doc, ROOT)
     assert any(missing in problem for problem in problems), problems
+
+
+# Mutation fixtures keep checkout-wide validation out of the negative tests.
+
+
+@pytest.fixture
+def sample(tmp_path):
+    source = tmp_path / "sample.py"
+    source.write_text("class First:\n    def calculate(self):\n        return 1\n\nclass Second:\n    def calculate(self):\n        return 2\n")
+    entry = {"path": "sample.py", "symbol": "First.calculate", "line": 2,
+             "file_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
+    doc = {key: [] for key in REQUIRED_KEYS}
+    doc.update(schema_version=1, repository="sample", revision="a" * 40,
+               searched={}, notes=[], families=[
+                   {"id": name, "implementations": [copy.deepcopy(entry)],
+                    "search_signals": [{"search": "algorithm", "pattern": "calculate"}]}
+                   for name in dict.fromkeys((*FAMILY_IDS, "linear-wave-kinematics"))
+               ], known_defects=[{"number": n} for n in (2050, 2107, 2543)])
+    return doc, tmp_path
+
+
+def generator():
+    return _MODULE
+
+
+def test_shifted_line_is_staleness_not_reference_failure(sample):
+    doc, root = sample
+    doc["families"][0]["implementations"][0]["line"] = 999
+    assert check_map(doc, root) == []
+    assert any("line drift" in p for p in generator().map_staleness(doc, root))
+
+
+def test_same_named_method_does_not_satisfy_wrong_qualified_symbol(sample):
+    doc, root = sample
+    doc["families"][0]["implementations"][0]["symbol"] = "Missing.calculate"
+    assert any("symbol" in p for p in check_map(doc, root))
+
+
+def test_interior_line_is_reported_as_staleness(sample):
+    doc, root = sample
+    doc["families"][0]["implementations"][0]["line"] = 3
+    assert any("line drift" in p for p in generator().map_staleness(doc, root))
+
+
+def test_missing_linear_wave_family_is_reported(sample):
+    doc, root = sample
+    doc["families"] = [f for f in doc["families"] if f["id"] != "linear-wave-kinematics"]
+    assert any("linear-wave-kinematics" in p for p in check_map(doc, root))
+
+
+def test_missing_known_defect_is_reported(sample):
+    doc, root = sample
+    doc["known_defects"] = doc["known_defects"][1:]
+    assert any("2050" in p for p in check_map(doc, root))
+
+
+def test_file_and_group_digest_drift_is_reported(sample):
+    doc, root = sample
+    doc["families"][0]["implementations"][0]["file_sha256"] = "0" * 64
+    doc["byte_identical_groups"] = [{"id": "copy", "sha256": "0" * 64,
+                                     "paths": ["sample.py"]}]
+    doc["identical_body_groups"] = [{"id": "body", "sha256": "0" * 64,
+                                    "members": [doc["families"][0]["implementations"][0]]}]
+    assert check_map(doc, root) == []
+    stale = generator().map_staleness(doc, root)
+    assert all(any(kind in p for p in stale) for kind in
+               ("file digest drift", "byte group drift", "body group drift"))
+
+
+def test_generator_reconciles_named_definitions_not_whole_file_rejections(sample):
+    doc, root = sample
+    doc["rejected_candidates"] = [{"path": "sample.py", "symbol": None,
+                                     "families": [FAMILY_IDS[0]], "reason": "prose"}]
+    module = generator()
+    result = module.regenerate(doc, root, tracked_paths=["sample.py"], revision="b" * 40)
+    family = result["families"][0]
+    assert family["coverage"] == "partial"
+    rejected = [r for r in result["rejected_candidates"] if r.get("symbol") == "Second.calculate"]
+    assert rejected and FAMILY_IDS[0] in rejected[0]["families"]
+    assert rejected[0]["disposition"] == "needs_review"
+    assert family["reconciliation"]["unresolved_definitions"] == 1
+    assert result["revision"] == "b" * 40
+    assert result["searched"]["tracked_files"] == 1
+    assert result["searched"]["text_files_searched"] == 1
+    assert result == module.regenerate(result, root, tracked_paths=["sample.py"], revision="b" * 40)
+
+
+@pytest.mark.parametrize("family,path,symbol", [
+    ("dnv-rp-e305-on-bottom-stability", "subsea/on_bottom_stability/dnv_rp_f109.py", "generalized_stability_check"),
+    ("wind-and-current-force-routes", "subsea/on_bottom_stability/dnv_rp_f109.py", "hydrodynamic_force_per_meter"),
+    ("dnv-rp-e305-on-bottom-stability", "subsea/on_bottom_stability/simplified.py", "submerged_weight"),
+    ("sn-curves-and-miner-damage", "structural/fatigue/sn_curves.py", "BilinearSNCurve.get_stress_range"),
+    ("sn-curves-and-miner-damage", "subsea/pipeline/free_span/_bilinear_sn.py", "BilinearSNCurve.get_allowable_cycles"),
+    ("catenary-mooring-line-statics", "subsea/catenary_riser/simple_catenary.py", "SimpleCatenaryAnalyzer.calculate_tension_along_riser"),
+    ("catenary-mooring-line-statics", "marine_ops/marine_analysis/catenary/simplified.py", "SimplifiedCatenarySolver.calculate_forces"),
+    ("wave-spectra", "fatigue/fatg.py", "fatg_significant_stress_range"),
+    ("linear-wave-kinematics", "hydrodynamics/planing_hull/solver.py", "PlaningMotionSolver._wave_number"),
+    ("linear-wave-kinematics", "solvers/openfoam/hull_free_surface.py", "deep_water_wavelength"),
+    ("linear-wave-kinematics", "solvers/openfoam/validation/wave_excited_body_rao.py", "group_velocity"),
+])
+def test_reviewed_family_members_are_mapped(family, path, symbol, map_document):
+    doc = map_document
+    entries = next(f for f in doc["families"] if f["id"] == family)["implementations"]
+    assert any(e["path"] == "src/digitalmodel/" + path and e["symbol"] == symbol for e in entries)
+
+
+def test_generator_normalizes_recorded_escaped_patterns(sample):
+    doc, root = sample
+    doc["families"][0]["search_signals"][0]["pattern"] = r"\\bcalculate\\b"
+    result = generator().regenerate(doc, root, tracked_paths=["sample.py"], revision="b" * 40)
+    assert result["families"][0]["reconciliation"]["matched_definitions"] == 2
+
+
+def test_generator_preserves_unchanged_yaml_bytes():
+    text = "schema_version: 1\nnotes: ['a note']\nfamilies: []\n"
+    assert generator().render_map(text, yaml.safe_load(text)) == text
+
+
+def test_path_escape_is_rejected(sample):
+    doc, root = sample
+    doc["families"][0]["implementations"][0]["path"] = "../sample.py"
+    assert any("path" in p for p in check_map(doc, root))
+
+
+def test_symlink_escape_is_rejected(sample, tmp_path_factory):
+    doc, root = sample
+    outside = tmp_path_factory.mktemp("outside") / "source.py"
+    outside.write_text("class First:\n    def calculate(self):\n        return 1\n")
+    (root / "escaped.py").symlink_to(outside)
+    doc["families"][0]["implementations"][0]["path"] = "escaped.py"
+    assert any("path" in p for p in check_map(doc, root))
+
+
+def test_regeneration_does_not_reuse_changed_scalar_anchors():
+    text = "first: &ref old\nsecond: *ref\nthird: [*ref]\n"
+    changed = {"first": "new", "second": "another", "third": ["old"]}
+    assert yaml.safe_load(generator().render_map(text, changed)) == changed
+
+
+def test_regeneration_does_not_mutate_other_alias_consumers():
+    text = "first: &rows [one, two]\nsecond: *rows\n"
+    changed = {"first": ["one", "changed"], "second": ["one", "two"]}
+    assert yaml.safe_load(generator().render_map(text, changed)) == changed
+
+
+def test_decorated_definition_accepts_definition_or_first_decorator(sample):
+    doc, root = sample
+    (root / "sample.py").write_text(
+        "class First:\n    @staticmethod\n    def calculate():\n        return 1\n")
+    for line in (2, 3):
+        for family in doc["families"]:
+            family["implementations"][0]["line"] = line
+        assert check_map(doc, root) == []
+        assert not any("line drift" in p for p in generator().map_staleness(doc, root))
+
+
+def test_diverged_copy_warns_without_losing_symbol_validity(sample):
+    doc, root = sample
+    (root / "copy.py").write_bytes((root / "sample.py").read_bytes())
+    entry = copy.deepcopy(doc["families"][0]["implementations"][0])
+    entry["path"] = "copy.py"
+    doc["families"][0]["implementations"].append(entry)
+    result = generator().regenerate(doc, root, tracked_paths=["sample.py", "copy.py"], revision="b" * 40)
+    assert generator().map_staleness(result, root) == []
+    (root / "copy.py").write_text((root / "copy.py").read_text().replace("return 1", "return 9"))
+    assert check_map(result, root) == []
+    stale = generator().map_staleness(result, root)
+    assert any("byte group drift" in p for p in stale)
+    assert any("body group drift" in p for p in stale)
+
+
+def test_reference_check_runs_in_ci_harness():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    job = workflow["jobs"]["ci-harness-tests"]
+    assert "if" not in job
+    assert any("tests/docs/test_implementation_map.py" in step.get("run", "") for step in job["steps"])
+    assert any("tests/docs/test_implementation_map_search.py" in step.get("run", "") for step in job["steps"])
+
+
+def test_git_reads_ignore_inherited_repository_bindings(tmp_path, monkeypatch):
+    import os
+
+    module = generator()
+    expected = module.git_output(ROOT, "rev-parse", "HEAD")
+    invalid = tmp_path / "invalid-repository"
+    invalid.mkdir()
+    names = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")
+    for name in names:
+        monkeypatch.setenv(name, str(invalid))
+    assert module.git_output(ROOT, "rev-parse", "HEAD") == expected
+    assert all(os.environ[name] == str(invalid) for name in names)
+
+
+def test_empty_seed_directory_is_reported(sample):
+    doc, root = sample
+    (root / "empty").mkdir()
+    doc["seed_verification"] = [{"path": "empty", "exists": "yes"}]
+    assert any("empty seed" in p for p in check_map(doc, root))
+
+
+def test_moved_seed_requires_its_qualified_destination_symbol(sample):
+    doc, root = sample
+    doc["seed_verification"] = [{"path": "old.py", "exists": "no", "status": "moved",
+                                 "moved_to": "sample.py", "symbol": "Absent.calculate"}]
+    assert any("symbol" in p for p in check_map(doc, root))
+
+
+def test_long_numeric_reports_have_bounded_search_cost(sample, map_document):
+    import json
+    import subprocess
+    import sys
+
+    doc, root = sample
+    signal = next(f for f in map_document["families"] if f["id"] == "wind-and-current-force-routes")["search_signals"][0]
+    doc["families"][0]["search_signals"] = [signal]
+    (root / "numeric-report.txt").write_text("0.5 " * 200000)
+    (root / "document.json").write_text(json.dumps(doc))
+    program = """
+import importlib.util, json, pathlib, sys
+spec = importlib.util.spec_from_file_location('map_generator', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+root = pathlib.Path(sys.argv[2])
+doc = json.loads((root / 'document.json').read_text())
+result = module.regenerate(doc, root, tracked_paths=['sample.py', 'numeric-report.txt'], revision='b' * 40)
+assert result['searched']['text_files_searched'] == 2
+assert result['families'][0]['search_audit'][0]['matching_files'] == 0
+"""
+    subprocess.run([sys.executable, "-c", program,
+                    str(ROOT / "scripts/generate_implementation_map.py"), str(root)],
+                   check=True, capture_output=True, text=True, timeout=30)
