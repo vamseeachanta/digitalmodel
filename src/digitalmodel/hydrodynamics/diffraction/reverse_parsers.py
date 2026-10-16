@@ -793,6 +793,10 @@ class OrcaWaveInputParser:
         fmt_map = {
             "wamit gdf": "gdf",
             "wamit dat": "dat",
+            "aqwa dat": "aqwa_dat",
+            "nemoh dat": "nemoh_dat",
+            "gmsh msh": "msh",
+            "wavefront obj": "obj",
             "stl": "stl",
             "gmsh": "msh",
             "obj": "obj",

@@ -400,13 +400,19 @@ def test_orcawave_mesh_formats_across_sections(mesh_format, extension, expected)
     )
 
     spec = _format_spec(extension, mesh_format)
-    if mesh_format != "auto":
-        expected = {"gdf": "Wamit gdf", "msh": "Gmsh msh",
-                    "obj": "Wavefront obj"}[mesh_format]
+    if mesh_format != "auto" and mesh_format != extension.lower():
+        for build in (_build_bodies_section, _build_damping_lid_section, _build_qtf_section):
+            with pytest.raises(ValueError):
+                build(spec)
+        return
     assert _build_bodies_section(spec)["Bodies"][0]["BodyMeshFormat"] == expected
-    assert _build_damping_lid_section(spec)["DampingLidMeshFormat"] == expected
-    assert _build_qtf_section(spec)["FreeSurfacePanelledZoneMeshFormat"] == expected
-    assert expected != "Auto"
+    for build, field in [(_build_damping_lid_section, "DampingLidMeshFormat"),
+                         (_build_qtf_section, "FreeSurfacePanelledZoneMeshFormat")]:
+        if extension.lower() == "gdf":
+            assert build(spec)[field] == expected
+        else:
+            with pytest.raises(ValueError, match="Allowed values"):
+                build(spec)
 
 
 def _format_spec(extension, mesh_format):
@@ -441,7 +447,7 @@ def test_orcawave_refuses_unsupported_mesh_formats(extension, mesh_format, secti
 
     build = {"body": _build_bodies_section, "lid": _build_damping_lid_section,
              "zone": _build_qtf_section}[section]
-    with pytest.raises(ValueError, match="Wamit gdf.*Gmsh msh.*Wavefront obj"):
+    with pytest.raises(ValueError, match="Unsupported or ambiguous.*Allowed values:.*Wamit gdf"):
         build(_format_spec(extension, mesh_format))
 
 

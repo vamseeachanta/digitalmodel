@@ -46,7 +46,8 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
 # Constants
 # ---------------------------------------------------------------------------
 
-# Source: OrcaWave 11.6c load error for BodyMeshFormat=Auto:
+# Source: docs/domains/orcawave/mesh-format-diagnostic.txt
+# OrcaWave 11.6c load error for BodyMeshFormat=Auto:
 # "Possible values are: Wamit gdf, Nemoh dat, Hydrostar hst, Aqwa dat,
 # Sesam fem, Gmsh msh and Wavefront obj". The generic dat schema value
 # does not identify a dialect; STL and Auto are not native format names.
@@ -54,20 +55,35 @@ _MESH_FORMAT_MAP: dict[str, str] = {
     "gdf": "Wamit gdf",
     "msh": "Gmsh msh",
     "obj": "Wavefront obj",
+    "aqwa_dat": "Aqwa dat",
+    "nemoh_dat": "Nemoh dat",
 }
 
 
-def _resolve_mesh_format(mesh_format: str, mesh_file: str) -> str:
-    """Resolve only unambiguous formats supported by this input writer."""
-    key = Path(mesh_file).suffix.lower().lstrip(".") if mesh_format == "auto" else mesh_format
-    if key not in _MESH_FORMAT_MAP:
-        allowed = ", ".join(_MESH_FORMAT_MAP.values())
+def _resolve_mesh_format(
+    mesh_format: str, mesh_file: str, *, section: str = "body",
+    formats: dict[str, str] | None = None,
+) -> str:
+    """Resolve a field's evidenced formats and reject extension contradictions."""
+    formats = _MESH_FORMAT_MAP if formats is None else formats
+    declared = mesh_format.lower()
+    extension = Path(mesh_file).suffix.lower().lstrip(".")
+    key = extension if declared == "auto" else declared
+    context = f"{section} mesh format {key!r} (file {mesh_file!r})"
+    if key not in formats:
+        allowed = ", ".join(f"{k}: {v}" for k, v in formats.items())
         raise ValueError(
-            f"Unsupported or ambiguous OrcaWave mesh format {key!r}. "
-            f"Allowed values: {allowed} (gdf, msh, obj). "
+            f"Unsupported or ambiguous OrcaWave {context}. "
+            f"Allowed values: {allowed}. "
             "AUTO requires an unambiguous supported file extension."
         )
-    return _MESH_FORMAT_MAP[key]
+    expected_extension = "dat" if key in {"aqwa_dat", "nemoh_dat"} else key
+    known_extensions = {"gdf", "dat", "msh", "obj", "stl", "fdf", "csf",
+                        "hst", "fem"}
+    if extension in known_extensions and extension != expected_extension:
+        raise ValueError(f"Mesh format conflict for {context}: extension .{extension}")
+    return formats[key]
+
 
 # Control-surface mesh formats. Native OrcaWave pairs .gdf control surfaces
 # with 'Wamit gdf' (docs/domains/orcawave/examples/L03 Semi-sub multibody
@@ -77,8 +93,6 @@ def _resolve_mesh_format(mesh_format: str, mesh_file: str) -> str:
 _CONTROL_SURFACE_FORMAT_MAP: dict[str, str] = {
     "csf": "Wamit csf",
     "gdf": "Wamit gdf",
-    "dat": "Wamit dat",
-    "stl": "STL",
 }
 
 _DOF_MAP: dict[str, str] = {
@@ -284,7 +298,9 @@ def _build_body_dict(
     inertia = vessel.inertia
 
     mesh_file = Path(geom.mesh_file).name
-    mesh_fmt = _resolve_mesh_format(geom.mesh_format.value, geom.mesh_file)
+    mesh_fmt = _resolve_mesh_format(
+        geom.mesh_format.value, geom.mesh_file, section=f"body {vessel.name!r}"
+    )
     _check_full_gdf(geom, spec)
     # Full meshes must not be expanded a second time.
     mesh_sym = "None"
@@ -315,22 +331,13 @@ def _build_body_dict(
     if cs is not None and cs.mesh_file is not None:
         body["BodyControlSurfaceType"] = "Defined by mesh file"
         body["BodyControlSurfaceMeshFileName"] = Path(cs.mesh_file).name
-        # Explicit format wins; otherwise infer from the file extension so a
-        # .gdf control surface is declared 'Wamit gdf', not 'Wamit csf'
-        # (formats have different layouts; see L03 Semi-sub native example).
-        cs_format = cs.mesh_format
-        if cs_format is None:
-            cs_format = Path(cs.mesh_file).suffix.lstrip(".")
-        cs_key = str(cs_format).lower()
-        if cs_key not in _CONTROL_SURFACE_FORMAT_MAP:
-            raise ValueError(
-                f"Unsupported control surface mesh format {cs_format!r} for "
-                f"body '{vessel.name}' (file {cs.mesh_file!r}). Supported: "
-                f"{sorted(_CONTROL_SURFACE_FORMAT_MAP)}"
-            )
-        body["BodyControlSurfaceMeshFormat"] = _CONTROL_SURFACE_FORMAT_MAP[
-            cs_key
-        ]
+        # Only native control-surface examples establish these field values;
+        # the BodyMeshFormat diagnostic does not establish DAT support here.
+        body["BodyControlSurfaceMeshFormat"] = _resolve_mesh_format(
+            cs.mesh_format or "auto", cs.mesh_file,
+            section=f"control surface mesh format for body {vessel.name!r}",
+            formats=_CONTROL_SURFACE_FORMAT_MAP,
+        )
         body["BodyControlSurfaceMeshLengthUnits"] = geom.length_units
     elif cs is not None:
         # Auto-generated control surface (#324): keys per the native OrcaWave
@@ -682,7 +689,12 @@ def _build_damping_lid_section(spec: DiffractionSpec) -> dict[str, Any]:
     if lid is None:
         return {}
 
-    mesh_fmt = _resolve_mesh_format(lid.mesh_format, lid.mesh_file)
+    # Native evidence: L00_validation_wamit/2.9/OrcaWave v11.0 files/
+    # Moonpool Body.yml, DampingLidMeshFormat (under docs/domains/orcawave).
+    mesh_fmt = _resolve_mesh_format(
+        lid.mesh_format, lid.mesh_file, section="damping lid",
+        formats={"gdf": "Wamit gdf"},
+    )
     return {
         "DampingLidMeshFileName": Path(lid.mesh_file).name,
         "DampingLidMeshFormat": mesh_fmt,
@@ -713,8 +725,12 @@ def _build_qtf_section(spec: DiffractionSpec) -> dict[str, Any]:
     if fsz is not None and fsz.mesh_file:
         section["FreeSurfacePanelledZoneType"] = "Defined by mesh file"
         section["FreeSurfacePanelledZoneMeshFileName"] = Path(fsz.mesh_file).name
-        mesh_fmt = "Wamit fdf" if fsz.mesh_format == "fdf" else _resolve_mesh_format(
-            fsz.mesh_format, fsz.mesh_file
+        # Native zone evidence: L00_validation_wamit/3.3/OrcaWave v11.0
+        # files/test.yml and L03_ship_benchmark/source_data/orcawave/
+        # orcawave_001_ship_raos_rev2.yml (under docs/domains/orcawave).
+        mesh_fmt = _resolve_mesh_format(
+            fsz.mesh_format, fsz.mesh_file, section="free surface zone",
+            formats={"gdf": "Wamit gdf", "fdf": "Wamit fdf"},
         )
         section["FreeSurfacePanelledZoneMeshFormat"] = mesh_fmt
         section["FreeSurfacePanelledZoneMeshLengthUnits"] = fsz.length_units

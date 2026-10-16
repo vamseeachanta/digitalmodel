@@ -1,0 +1,13 @@
+OrcaWave 11.6c BodyMeshFormat load diagnostic
+
+Source: OrcaWave 11.6c, Orcina; BodyMeshFormat=Auto load error.
+Diagnostic supplied in the maintainer dispatch dated 2026-10-16 and quoted
+in the second-provider review on pull request 2605 at revision e6f875ab.
+This is a transcription, not a native run performed by this change.
+
+Possible values are: Wamit gdf, Nemoh dat, Hydrostar hst, Aqwa dat,
+Sesam fem, Gmsh msh and Wavefront obj
+
+The diagnostic applies to BodyMeshFormat only. It does not establish
+support for these values in lid, zone or control-surface fields.
+Native loads of generated inputs remain a separate QA checkpoint.
