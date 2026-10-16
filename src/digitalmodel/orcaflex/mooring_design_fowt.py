@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FOWT (floating offshore wind turbine) watch-circle vs dynamic-cable check.
 
 A FOWT dynamic export cable hangs from the floater hang-off point down to a
@@ -61,7 +64,18 @@ Standards references
   this check (typically the manufacturer MBR with the RP-0360 design factor
   applied); no universal numeric MBR is hard-coded here — the caller supplies
   ``mbr_limit_m``. See issue #574 for the DNV-RP-0360 wiki page that backs the
-  citation emitted by this module.
+  citation emitted by this module. The title recorded here is "Subsea power
+  cables in shallow water"; the existing emission records edition 2016 and
+  clause title "Dynamic cable minimum bend radius (MBR)". These repository
+  labels are retained pending the authoritative standards page.
+
+Citation posture
+----------------
+A page that exists is validated at calculation time; missing or mismatched
+frontmatter raises CitationResolutionError. With no wiki configured or with the
+page not yet published, the geometric screen warns once and returns an empty sidecar:
+no universal standards-derived MBR is computed, and the caller supplies the
+cable-specific limit. This exception does not establish standards compliance.
 * DNV-OS-E301 (position mooring), API RP 2SK (mooring) — covered in
   ``mooring_design.py``.
 """
@@ -76,13 +90,14 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from digitalmodel.citations import Citation
+from digitalmodel.citations import Citation, validate_citation
 
 
 # DNV-RP-0360 wiki page backing the MBR citation (depends on #574). Emitted only
-# when a live wiki tree is available; standalone mode degrades gracefully.
-_DNV_RP_0360_WIKI_PATH = "wikis/engineering/wiki/standards/dnv-rp-0360.md"
-_CITATION_EMITTED_CACHE: dict = {}
+# when a live wiki tree is available; an existing page with missing or
+# mismatched metadata fails closed.
+_DNV_RP_0360_WIKI_PATH = "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+_CITATION_EMITTED_CACHE: dict[str, bool] = {}
 
 
 class MooringType(str, Enum):
@@ -168,8 +183,7 @@ class WatchCircleConstraint(BaseModel):
     closed form, that the cable's curvature stays within its DNV-RP-0360 MBR
     limit across the watch circle.
 
-    Example
-    -------
+    Example:
     >>> cfg = DynamicCableConfig(
     ...     suspended_length=250.0, hang_off_elevation=80.0,
     ...     nominal_horizontal_span=200.0, mbr_limit_m=50.0)
@@ -192,6 +206,7 @@ class WatchCircleConstraint(BaseModel):
             repo_root: Optional override to locate the wiki tree for citation
                 emission. In standalone mode (no wiki) the result still computes;
                 citation list is empty and a one-shot RuntimeWarning is issued.
+                An existing page with missing or mismatched metadata fails closed.
 
         Returns:
             WatchCircleResult with pass/fail, governing bend radius, MBR limit,
@@ -231,16 +246,17 @@ class WatchCircleConstraint(BaseModel):
     def _emit_citation(self, repo_root: Optional[Path]) -> List[Citation]:
         """Emit a DNV-RP-0360 MBR citation when a live wiki tree is available.
 
-        Mirrors the standalone-graceful behaviour of mooring_design.py: fail-soft
-        (empty citation list + one-shot warning) when the wiki page is absent,
-        rather than blocking the geometric calc. Depends on #574.
+        Existing pages fail closed on missing or mismatched metadata.
+        Unconfigured installations and missing pages warn once and omit citations.
         """
-        from digitalmodel.citations.resolver import resolve_wiki_base
+        from digitalmodel.citations.resolver import resolve_wiki_base, resolve_wiki_path
         from digitalmodel.citations import CitationResolutionError
 
         try:
             wiki_base = resolve_wiki_base(override=repo_root)
-        except CitationResolutionError:
+        except CitationResolutionError as error:
+            if not error.reason.startswith("resolver_unconfigured:"):
+                raise
             wiki_base = None
 
         if wiki_base is None:
@@ -255,20 +271,30 @@ class WatchCircleConstraint(BaseModel):
                 _CITATION_EMITTED_CACHE["standalone"] = True
             return []
 
-        page = (wiki_base / _DNV_RP_0360_WIKI_PATH)
-        if not page.exists():
+        page = resolve_wiki_path(_DNV_RP_0360_WIKI_PATH, override=wiki_base)
+        if not page.is_file():
+            warning_key = str(page)
+            if warning_key not in _CITATION_EMITTED_CACHE:
+                warnings.warn(
+                    "DNV-RP-0360 citation unavailable "
+                    f"(wiki page missing: {page}). Watch-circle check proceeds.",
+                    RuntimeWarning,
+                    stacklevel=3,
+                )
+                _CITATION_EMITTED_CACHE[warning_key] = True
             return []
 
-        return [
-            Citation(
-                code_id="DNV-RP-0360",
-                publisher="DNV",
-                revision="2016",
-                section="Dynamic cable minimum bend radius (MBR)",
-                wiki_path=_DNV_RP_0360_WIKI_PATH,
-                note="MBR limit is a cable-specific design input supplied by caller",
-            )
-        ]
+        citation = Citation(
+            code_id="DNV-RP-0360",
+            publisher="DNV",
+            revision="2016",
+            section="Dynamic cable minimum bend radius (MBR)",
+            wiki_path=_DNV_RP_0360_WIKI_PATH,
+            source_sibling="generic",
+            note="MBR limit is a cable-specific design input supplied by caller",
+        )
+        validate_citation(citation, repo_root=wiki_base)
+        return [citation]
 
 
 def _arc_radius_from_chord(arc_length: float, chord: float) -> float:

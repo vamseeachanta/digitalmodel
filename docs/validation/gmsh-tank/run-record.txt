@@ -1,0 +1,13 @@
+criteria_sha256 b75863c9d56b7fdb7893e1efb3ed61b32f2661874c09b9276d3d93cb6d678229
+criteria_recorded_utc 2026-10-14T16:54:38.147710+00:00
+first_run_started_utc 2026-10-14T16:54:38.147879+00:00
+mesh_wall_time_s 1.7089642249047756
+rebuild_wall_time_s 1.6948227025568485
+command gmshToFoam source.msh wall_time_s 0.20560380816459656 return_code 0
+command changeDictionary -constant -subDict dictionaryReplacement wall_time_s 0.04997270926833153 return_code 0
+command checkMesh -allGeometry -allTopology wall_time_s 0.061628472059965134 return_code 0
+command setFields wall_time_s 0.026685640215873718 return_code 0
+command decomposePar -force wall_time_s 0.05727032199501991 return_code 0
+command mpirun -np 2 interFoam -parallel wall_time_s 2.513996582478285 return_code 0
+command reconstructParMesh -latestTime wall_time_s 0.01608232408761978 return_code 0
+command reconstructPar -latestTime -no-fields -no-lagrangian wall_time_s 1.0092345364391804 return_code 0

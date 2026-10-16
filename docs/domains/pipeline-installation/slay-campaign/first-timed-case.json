@@ -1,0 +1,37 @@
+{
+  "schema": "slay-timed-case-1",
+  "criteria_revision": "execution-1",
+  "case_id": "d0-t0",
+  "input_locator": "case-table.yml#cases/d0-t0",
+  "model_locator": "models/d0-t0/master.yml",
+  "input_selection": "Use the first declared case, its complete basis and every generated include, without overrides. The runtime manifest binds the case table and model bytes by SHA-256.",
+  "analysis_type": "both",
+  "workers": 1,
+  "solver_threads": 1,
+  "resource_basis": "One timed canary before extrapolating; no parallel native cases.",
+  "readback": {
+    "native_version": "version and saved-state identity",
+    "static_convergence": "diagnostics and convergence state",
+    "endpoint_positions": "m; global frame, including stinger exit and touchdown",
+    "endpoint_forces": "kN; common global frame",
+    "effective_tension": "kN; arc-length array and matched upper free-span endpoint",
+    "bending_moment": "kN.m; arc-length array",
+    "curvature": "1/m; arc-length array",
+    "steel_bending_strain": "1; arc-length array and governing location",
+    "roller_reaction": "kN; each station, contact state and force direction",
+    "touchdown_position": "m; position and arc length",
+    "exit_angle": "deg; stinger-exit tangent",
+    "force_balance": "kN; sum of endpoint, support and distributed forces"
+  },
+  "timing": {
+    "clock": "monotonic wall clock, time.perf_counter",
+    "start": "Immediately before native model loading for this case, after preparation and queue wait.",
+    "stop": "After the saved native state is reopened and all required readback quantities are retained.",
+    "retained_intervals": ["model load", "statics", "dynamics", "save", "reopen and readback", "total native wall time"],
+    "existing_batch_duration": "cases.csv wall_seconds is a worker duration only; it does not substitute for complete native readback timing.",
+    "projection": "No campaign projection until the timed case has native readback and a recorded resource configuration. A single case does not establish the duration of every case."
+  },
+  "retained": ["source and model byte digests", "criteria revision and digest", "native input and saved state", "convergence diagnostics", "readback arrays and units", "roller loads", "compact metrics", "phase timings", "archive manifest and digest"],
+  "release": "Remaining cases remain held pending canary readback, sourced numerical criteria and explicit digest-bound queue approval.",
+  "source": {"title": "S-lay installation analysis", "locator": "analysis.html#driver-retention"}
+}
