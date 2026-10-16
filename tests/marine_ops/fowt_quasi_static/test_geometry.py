@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_panel_coefficients_preserve_physical_reflection_symmetry():
     from digitalmodel.marine_ops.fowt_quasi_static.hydrodynamics import solve_hydrodynamics, coefficient_arrays
     basis = yaml.safe_load((ROOT/"docs/domains/orcaflex/wind/fowt-volturnus/basis.yml").read_text())
-    dataset, _ = solve_hydrodynamics(basis, 6., np.array([.22, .23]), np.array([0., 30.]))
+    dataset, _ = solve_hydrodynamics(basis, 6., np.array([.22, .23]), np.array([0., 30.]), n_threads=1)
     added, damping, excitation = coefficient_arrays(dataset)
     parity = np.diag([1., -1., 1., -1., 1., -1.])
     for array in (added, damping):
@@ -50,3 +50,38 @@ def test_horizontal_cap_panels_obey_the_specified_refinement_size():
     step = 2.0
     mesh = hull_mesh(basis, step)
     assert mesh.faces_radiuses.max() < step
+
+
+@pytest.mark.parametrize("threads", [None, 2])
+def test_solver_thread_limit_reaches_both_frequency_kernels(monkeypatch, threads):
+    import capytaine as cpt
+    import xarray as xr
+    from digitalmodel.marine_ops.fowt_quasi_static.hydrodynamics import solve_hydrodynamics
+
+    calls = []
+
+    def capture(self, dataset, body, *, n_jobs, n_threads):
+        calls.append((type(self.engine.green_function), n_jobs, n_threads))
+        return xr.Dataset(coords={"omega": dataset.omega})
+
+    monkeypatch.setattr(cpt.BEMSolver, "fill_dataset", capture)
+    basis = yaml.safe_load((ROOT / "docs/domains/orcaflex/wind/fowt-volturnus/basis.yml").read_text())
+    kwargs = {} if threads is None else {"n_threads": threads}
+    dataset, _ = solve_hydrodynamics(
+        basis, 6., np.array([.02, .22]), np.array([0., 30.]), **kwargs)
+    np.testing.assert_array_equal(dataset.omega, [.02, .22])
+    expected = 1 if threads is None else threads
+    assert calls == [(cpt.Delhommeau, 1, expected), (cpt.FinGreen3D, 1, expected)]
+
+
+@pytest.mark.parametrize("threads", [0, -1, 1.5, True, "2", None])
+def test_solver_rejects_invalid_thread_limits_before_meshing(monkeypatch, threads):
+    from digitalmodel.marine_ops.fowt_quasi_static import hydrodynamics
+
+    def unexpected_mesh(*args):
+        pytest.fail("Invalid thread limit reached mesh construction")
+
+    monkeypatch.setattr(hydrodynamics, "hull_mesh", unexpected_mesh)
+    with pytest.raises(ValueError, match="positive integer"):
+        hydrodynamics.solve_hydrodynamics(
+            {}, 6., np.array([.22]), np.array([0.]), n_threads=threads)

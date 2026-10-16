@@ -2,6 +2,7 @@
 # # Licensed under the MIT License. See LICENSE file for details.
 
 """Optional solver installation and required CI enrolment contracts."""
+from importlib.metadata import version
 import os
 from pathlib import Path
 import shlex
@@ -16,8 +17,11 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def test_solver_extra_declares_the_executed_versions():
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    versions = {"capytaine": "3.0.0", "moorpy": "1.3.0",
+                "shapely": "2.1.2", "matplotlib": "3.10.9"}
     assert set(project["project"]["optional-dependencies"]["fowt"]) == {
-        "capytaine==3.0.0", "moorpy==1.3.0"}
+        f"{name}=={release}" for name, release in versions.items()}
+    assert {name: version(name) for name in versions} == versions
 
 
 def test_ci_domain_enrols_the_suite_and_installs_the_solver_extra():

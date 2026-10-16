@@ -101,7 +101,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-fowt = ["capytaine==3.0.0", "moorpy==1.3.0"]
+fowt = [
+    "capytaine==3.0.0",
+    "moorpy==1.3.0",
+    # Preserve the panel-radius criterion and retained report image bytes.
+    "shapely==2.1.2",
+    "matplotlib==3.10.9",
+]
 drawings = ["ezdxf>=1.3,<2"]
 cad = [
     # Optional CAD readers for client geometry ingestion (#2023).

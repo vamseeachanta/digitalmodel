@@ -41,8 +41,13 @@ def cylinder_added_mass(segments: int) -> float:
 
 
 def solve_hydrodynamics(basis: dict, step: float, omega: np.ndarray,
-                        headings: np.ndarray) -> tuple:
-    """Solve all six radiation modes and selected first-order wave headings."""
+                        headings: np.ndarray, *, n_threads: int = 1) -> tuple:
+    """Solve six radiation modes and wave headings with a positive thread limit.
+
+    One thread is used by default to avoid oversubscribing numerical libraries.
+    """
+    if isinstance(n_threads, bool) or not isinstance(n_threads, int) or n_threads < 1:
+        raise ValueError("n_threads must be a positive integer")
     import capytaine as cpt
     mesh = hull_mesh(basis, step)
     data = aggregate(basis, basis["system"]["adopted_reading"])
@@ -62,10 +67,10 @@ def solve_hydrodynamics(basis: dict, step: float, omega: np.ndarray,
         "omega": omega, "wave_direction": np.radians(headings), "radiating_dof": DOFS,
         "water_depth": [environment["water_depth"]["value"]], "rho": [rho], "g": [gravity]})
     regular = test.sel(omega=omega[omega >= 0.05])
-    solved = cpt.BEMSolver().fill_dataset(regular, body, n_jobs=1, n_threads=8)
+    solved = cpt.BEMSolver().fill_dataset(regular, body, n_jobs=1, n_threads=n_threads)
     if np.any(omega < 0.05):
         low = low_frequency_solver().fill_dataset(
-            test.sel(omega=omega[omega < 0.05]), body, n_jobs=1, n_threads=8)
+            test.sel(omega=omega[omega < 0.05]), body, n_jobs=1, n_threads=n_threads)
         solved = low.combine_first(solved).sortby("omega")
     if len(solved.omega) != len(omega):
         raise ValueError("BEM did not return all requested frequencies")
