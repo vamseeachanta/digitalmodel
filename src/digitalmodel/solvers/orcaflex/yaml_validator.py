@@ -206,6 +206,13 @@ class OrcaFlexYAMLValidator:
             result.add(Severity.WARNING, "File parses to null/empty", file=filename)
             return result
 
+        if isinstance(data, dict) and "PyModels" in data:
+            result.add(
+                Severity.ERROR,
+                "Unknown top-level section: 'PyModels'; use 'P-yModels'.",
+                file=filename, prop="PyModels",
+            )
+
         fmt = self._detect_format(data)
         result.format_detected = fmt
 
@@ -540,6 +547,18 @@ class OrcaFlexYAMLValidator:
                     f"VesselTypes[{idx}] is missing 'Name'",
                     file=filename, prop="VesselTypes",
                 )
+
+            for key in (
+                "AMDMethod", "ReferenceOrigin", "ReferenceOriginDatumPosition",
+                "HydrostaticStiffnessMethod",
+                "HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy",
+            ):
+                if key in vt:
+                    result.add(
+                        Severity.ERROR,
+                        f"VesselTypes[{idx}] property '{key}' belongs inside Draughts.",
+                        file=filename, prop=key,
+                    )
 
             # Check for inline vessel type definition (common mistake)
             if "VesselType" in vt and isinstance(vt.get("VesselType"), dict):

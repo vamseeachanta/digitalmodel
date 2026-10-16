@@ -74,7 +74,7 @@ LIST_SECTIONS = {
     "DragChains",
     "Turbines",
     "AttachedBuoys",
-    "PyModels",
+    "P-yModels",
     "WakeModels",
     "MultibodyGroups",
     "ExpansionTables",

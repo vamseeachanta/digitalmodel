@@ -25,11 +25,11 @@ METRICS = ('lower_mean_deg', 'lower_max_deg', 'upper_mean_deg', 'upper_max_deg',
            'top_min_kn', 'top_max_kn', 'stroke_min_m', 'stroke_max_m', 'stress_max_mpa')
 EXTRACTION_VERSION = 'connection-angles-vertical-ring-1'
 LICENCE_EXIT = 12
-CONFIGURATION_EXIT = 2
+CONFIGURATION_EXIT = 13
 
 
 class ConfigurationError(RuntimeError):
-    """Execution configuration is unavailable; case retries cannot resolve it."""
+    """Execution prerequisites are absent; stop before trying further cases."""
 
 
 class LicenceUnavailable(RuntimeError):
@@ -122,8 +122,8 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
         import OrcFxAPI
     except Exception as exc:
         raise ConfigurationError(f'Solver interface not importable ({type(exc).__name__})') from exc
+    reference_z = ring_reference_z(model_path)
     try:
-        reference_z = ring_reference_z(model_path)
         model = OrcFxAPI.Model(str(model_path))
         model.CalculateStatics()
         if getattr(model.state, 'name', '') != 'InStaticState':

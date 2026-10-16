@@ -44,7 +44,8 @@ OBJECTS = (
 )
 SPEC_OBJECTS = {re.sub(r"(?<!^)(?=[A-Z])", "_", key).lower(): key for key in OBJECTS}
 SPEC_OBJECTS.update(
-    buoys_6d="6DBuoys", buoys_3d="3DBuoys", variable_data_sources="VariableData"
+    buoys_6d="6DBuoys", buoys_3d="3DBuoys", variable_data_sources="VariableData",
+    py_models="P-yModels",
 )
 ENV_KEYS = (
     "WaterDepth",

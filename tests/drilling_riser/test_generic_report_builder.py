@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from bs4 import BeautifulSoup
 
@@ -23,6 +24,37 @@ def module(path, name):
 
 
 class ReportTests(unittest.TestCase):
+    def test_report_uses_case_ring_elevations_and_explains_tension_shortfall(self):
+        import yaml
+        from digitalmodel.drilling_riser import generic_campaign
+        builder = module('scripts/reporting/build_generic_riser_report.py', 'generic_report')
+        driver = module('scripts/orcaflex/run_generic_drilling_riser_campaign.py', 'generic_driver')
+        fixture = json.loads((Path(__file__).parent / 'fixtures/generic_synthetic_result.json').read_text(encoding='utf-8'))
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            campaign = folder / 'inputs'
+            shutil.copytree(ROOT / generic_campaign.DEST, campaign)
+            table = generic_campaign.case_table(ROOT)
+            for index, case in enumerate(table['cases']):
+                case['ring_initial_position_m']['value'][2] = 37 if index % 2 else 42
+            (campaign / 'case-table.yml').write_text(yaml.safe_dump(table), encoding='utf-8')
+            basis_path = campaign / 'screens/basis.json'
+            basis = json.loads(basis_path.read_text(encoding='utf-8'))
+            basis['case_table_sha256'] = generic_campaign.digest(campaign / 'case-table.yml')
+            basis_path.write_text(json.dumps(basis), encoding='utf-8')
+            output = folder / 'results'
+            def fake(model, simulation):
+                simulation.write_text('synthetic only', encoding='utf-8')
+                return dict(fixture)
+            self.assertEqual(driver.run_campaign(campaign, output, criteria_file=CRITERIA, case_runner=fake), 0)
+            with patch.object(generic_campaign, 'case_table', return_value=table):
+                spec = builder.build_spec(campaign, output, criteria_file=CRITERIA, allow_synthetic=True)
+            method = spec.sections[3].blocks[0].markdown
+            self.assertIn('37 m, 42 m', method)
+            self.assertIn('each case', method)
+            self.assertNotIn('initial 20 m', method)
+            self.assertIn(table['tension_acceptance_basis'], spec.sections[2].blocks[0].markdown)
+
     def test_synthetic_report_and_incomplete_rejection(self):
         builder = module('scripts/reporting/build_generic_riser_report.py', 'generic_report')
         driver = module('scripts/orcaflex/run_generic_drilling_riser_campaign.py', 'generic_driver')

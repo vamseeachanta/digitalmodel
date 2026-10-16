@@ -12,7 +12,7 @@ MAXIMUM = "ImplicitVariableMaxTimeStep"
 MODE = "ImplicitUseVariableTimeStep"
 METHOD = "DynamicsSolutionMethod"
 SECTIONS = [
-    "ExpansionTables", "LineContactData", "MultibodyGroups", "PyModels",
+    "ExpansionTables", "LineContactData", "MultibodyGroups", "P-yModels",
     "RayleighDampingCoefficients", "StiffenerTypes",
 ]
 
@@ -255,3 +255,49 @@ def test_generator_preserves_and_reorders_maximum_then_validator_recognizes(tmp_
     result = check(tmp_path, yaml.safe_dump({"General": combined}, sort_keys=False))
     assert not result.errors
     assert not result.warnings
+
+
+@pytest.mark.parametrize("misplaced", [
+    "PyModels", "AMDMethod", "ReferenceOrigin", "ReferenceOriginDatumPosition",
+    "HydrostaticStiffnessMethod",
+    "HydrostaticStiffnessz, HydrostaticStiffnessRx, HydrostaticStiffnessRy",
+])
+def test_production_validator_refuses_wrong_load_format(tmp_path, misplaced):
+    import copy
+    from pathlib import Path
+    campaign = (Path(__file__).resolve().parents[3] /
+                "docs/domains/orcaflex/library/campaigns/generic-drilling-riser/models")
+    objects = yaml.safe_load((campaign / "o0-c0/includes/20_generic_objects.yml").read_text())
+    wrong = copy.deepcopy(objects)
+    if misplaced == "PyModels":
+        wrong[misplaced] = wrong.pop("P-yModels")
+        expected = "P-yModels"
+    else:
+        vessel = wrong["VesselTypes"][0]
+        vessel[misplaced] = vessel["Draughts"][0].pop(misplaced)
+        expected = "Draughts"
+    path = tmp_path / "wrong.yml"
+    path.write_text(yaml.safe_dump(wrong, sort_keys=False), encoding="utf-8")
+    result = validate_orcaflex_yaml(path)
+    assert not result.valid
+    assert any(misplaced in issue.message and expected in issue.message
+               for issue in result.errors)
+
+
+def test_production_validator_accepts_campaign_objects():
+    from pathlib import Path
+    campaign = (Path(__file__).resolve().parents[3] /
+                "docs/domains/orcaflex/library/campaigns/generic-drilling-riser/models")
+    paths = sorted(campaign.glob("*/includes/20_generic_objects.yml"))
+    assert len(paths) == 24
+    for path in paths:
+        result = validate_orcaflex_yaml(path)
+        assert result.valid, result.errors
+        assert not result.errors
+
+
+def test_stale_soil_section_is_error_without_other_sections(tmp_path):
+    result = check(tmp_path, "PyModels: []\n")
+    assert not result.valid
+    assert any("PyModels" in issue.message and "P-yModels" in issue.message
+               for issue in result.errors)

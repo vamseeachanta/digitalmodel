@@ -15,7 +15,7 @@
   ],
   "cwd": "<SOLVER_REPO_DIR>",
   "env": {
-    "SOURCE_SHA256": "fa93aaef97fce3785148f4fbd68dd2e1cdd357d9d526386dfd68334016ae871b"
+    "SOURCE_SHA256": "298fa98a2c3065d55b5c05bc67f36106a9bbafda4faa74644a288a7861ec7629"
   },
   "expected_hours": 6,
   "max_hours": 18,

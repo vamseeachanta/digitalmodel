@@ -132,6 +132,8 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
                         item['source'].split('; src/')[0]] for key, item in criteria.items()]
     load_cases = [[case['id'], case['offset_pct']['value'], case['offset_m']['value'],
                    case['current_mps']['value']] for case in cases]
+    ring_elevations = ', '.join(f'{height:g} m' for height in sorted({
+        float(case['ring_initial_position_m']['value'][2]) for case in cases}))
     intro = ('The discrete operating points listed below meet every supplied or assumed criterion '
              'listed with its source in Section 3.5: lower and upper mean angle '
              f"≤ {criteria['mean_angle_deg']['value']:g}°, maximum angle ≤ {criteria['max_angle_deg']['value']:g}°, "
@@ -159,6 +161,7 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             'Top tension is 1.25 times the approximate submerged '
             'riser-column weight using gravity 9.81 m/s², omitting attached members. Stroke limits are independent '
             'assumptions, not capacities inferred from slip-joint length.\n\n'
+            f"{table['tension_acceptance_basis']}\n\n"
             '3.6 Method: see Section 4.\n\n3.7 Load cases: six offsets and four current speeds; '
             'offsets and profile are assumed, based on previous experience. Build-up 8 s and main stage 42 s.'),
             TableBlock(title='Criteria and sources', columns=['Criterion', 'Limit', 'Unit', 'Basis'], rows=criterion_table),
@@ -167,7 +170,7 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             'Statics precede dynamics. Statistics use the main stage and exclude build-up. Angles are mean absolute '
             'and maximum absolute rotations at the compliant connections: upper slip-joint vessel end and lower '
             'rigid-piece fixed end. Tension is effective tension at the main-riser top. Vertical stroke is tensioner-ring '
-            f'elevation relative to its initial elevation ({ring_reference_description(table)}); '
+            f'elevation relative to each case\'s initial elevation ({ring_elevations}), read from the case table; '
             'vessel elevation is fixed. Maximum von Mises stress is '
             'taken over the main riser. Native channel qualification is required before engineering acceptance.\n\n'
             'The static comparison uses a pinned beam with constant assumed top tension and uniform drag. '
