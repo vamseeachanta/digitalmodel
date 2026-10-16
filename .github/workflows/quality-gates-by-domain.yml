@@ -62,6 +62,8 @@ jobs:
           EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
           if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
             echo "::error::Checkout does not match the pull request head"
             exit 1
@@ -208,6 +210,8 @@ jobs:
           EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
           if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
             echo "::error::Checkout does not match the pull request head"
             exit 1
@@ -309,6 +313,8 @@ jobs:
           EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
           if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
             echo "::error::Checkout does not match the pull request head"
             exit 1
@@ -498,6 +504,8 @@ jobs:
           EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
           if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
             echo "::error::Checkout does not match the pull request head"
             exit 1

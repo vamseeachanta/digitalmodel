@@ -202,6 +202,16 @@ def test_repository_checkouts_verify_current_merge(filename: str) -> None:
                    if re.search(r"^\s*(?:if\b|elif\b|test\b|\[)", line))
 
 
+@pytest.mark.parametrize("filename", GATES)
+def test_merge_fetches_disable_automatic_maintenance(filename: str) -> None:
+    """Prevent detached repacking from rewriting shallow boundaries during fetch."""
+    for job, index in repository_checkouts(filename):
+        script = job["steps"][index + 1]["run"]
+        first_fetch = script.index("git fetch ")
+        for setting in ("gc.auto 0", "maintenance.auto false"):
+            assert script.index(f"git config {setting}") < first_fetch
+
+
 def git(directory: Path, *args: str) -> str:
     """Run fixture Git without inheriting bindings to the caller checkout."""
     env = {key: value for key, value in os.environ.items()
@@ -313,7 +323,7 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
     result = subprocess.run([bash, "-x", str(script)], cwd=runner, env=env,
                             capture_output=True, text=True, timeout=60)
     if case == "full-history":
-        assert "--unshallow" in result.stderr
+        assert "--unshallow" in result.stderr, result.stderr
     if case in ("shallow", "fork-shallow"):
         assert "--deepen=" in result.stderr
     if case == "conflict":
