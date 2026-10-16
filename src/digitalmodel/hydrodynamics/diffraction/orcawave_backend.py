@@ -67,13 +67,6 @@ _CONTROL_SURFACE_FORMAT_MAP: dict[str, str] = {
     "stl": "STL",
 }
 
-_SYMMETRY_MAP: dict[str, str] = {
-    "none": "None",
-    "xz": "xz plane",
-    "yz": "yz plane",
-    "xz+yz": "xz and yz planes",
-}
-
 _DOF_MAP: dict[str, str] = {
     "surge": "BodyFixedDOFx",
     "sway": "BodyFixedDOFy",
@@ -241,6 +234,32 @@ def _zero_6x6() -> list[list[float]]:
     return [[0, 0, 0, 0, 0, 0] for _ in range(6)]
 
 
+def _check_full_gdf(geom: Any, spec: DiffractionSpec) -> None:
+    """Reject partial or unreadable GDFs for declared body symmetry."""
+    if geom.symmetry == SymmetryType.NONE:
+        return
+    path = Path(geom.mesh_file)
+    if geom.mesh_format.value != "gdf" and path.suffix.lower() != ".gdf":
+        return
+    if not path.is_absolute() and spec._source_dir is not None:
+        path = spec._source_dir / path
+    try:
+        with path.open(encoding="utf-8", errors="replace") as stream:
+            stream.readline()  # title
+            stream.readline()  # length unit and gravity
+            flags = stream.readline().split()
+        isx, isy = int(flags[0]), int(flags[1])
+    except (OSError, ValueError, IndexError) as exc:
+        raise ValueError(
+            f"Cannot verify GDF symmetry for mesh {Path(geom.mesh_file).name!r}"
+        ) from exc
+    if isx != 0 or isy != 0:
+        raise ValueError(
+            f"Partial GDF mesh {Path(geom.mesh_file).name!r} has symmetry flags; "
+            "provide a full mesh with ISX and ISY zero"
+        )
+
+
 def _build_body_dict(
     body_spec: BodySpec,
     spec: DiffractionSpec,
@@ -252,7 +271,9 @@ def _build_body_dict(
 
     mesh_file = Path(geom.mesh_file).name
     mesh_fmt = _MESH_FORMAT_MAP.get(geom.mesh_format.value, "Auto")
-    mesh_sym = _SYMMETRY_MAP.get(geom.symmetry.value, "None")
+    _check_full_gdf(geom, spec)
+    # Full meshes must not be expanded a second time.
+    mesh_sym = "None"
 
     body: dict[str, Any] = {}
     body["BodyName"] = vessel.name
@@ -310,11 +331,7 @@ def _build_body_dict(
         body["BodyControlSurfaceIncludeFreeSurface"] = "Yes"
 
     # OrcaFlex import settings
-    body["BodyOrcaFlexImportSymmetry"] = (
-        "Use global mesh symmetry"
-        if geom.symmetry != SymmetryType.NONE
-        else "None"
-    )
+    body["BodyOrcaFlexImportSymmetry"] = "None"
     body["BodyHydrostaticIntegralMethod"] = "Standard"
     body["BodyHydrostaticStiffnessMethod"] = "Displacement"
 
