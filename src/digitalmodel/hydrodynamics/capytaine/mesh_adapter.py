@@ -1,6 +1,13 @@
-"""
-ABOUTME: Mesh adapter for importing geometry into Capytaine FloatingBody objects.
-ABOUTME: Supports STL, GDF, MSH, meshio formats and predefined test shapes.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Import geometry into Capytaine FloatingBody objects.
+
+The optional solver dependency is Capytaine >= 3.0.0. The public load_mesh()
+and non-mutating immersed_part() calls also exist in the preceding major
+version; the solver wrapper uses the version 3 matrix engine.
+Reference: Capytaine (2026), version 3.0 changelog, new mesh module:
+https://capytaine.org/stable/changelog.html
 """
 
 from __future__ import annotations
@@ -28,6 +35,19 @@ def _import_capytaine():
         ) from e
 
 
+def _require_capytaine3(cpt):
+    """Check the matrix-engine requirement before any native preparation."""
+    version = str(getattr(cpt, "__version__", "unknown"))
+    try:
+        major = int(version.split(".", 1)[0])
+    except ValueError:
+        major = 0
+    if major < 3:
+        raise RuntimeError(
+            f"Installed Capytaine version {version}; Capytaine 3 or later is required."
+        )
+
+
 def create_floating_body(config: BodyConfig):
     """Create a Capytaine FloatingBody from a BodyConfig.
 
@@ -38,6 +58,7 @@ def create_floating_body(config: BodyConfig):
         capytaine.FloatingBody configured with DOFs and properties.
     """
     cpt = _import_capytaine()
+    _require_capytaine3(cpt)
 
     if config.mesh.predefined_shape is not None:
         mesh = _create_predefined_mesh(cpt, config.mesh.predefined_shape, config.mesh.shape_params)
@@ -50,6 +71,23 @@ def create_floating_body(config: BodyConfig):
     if config.mesh.use_symmetry and config.mesh.symmetry_plane:
         mesh = _apply_symmetry(cpt, mesh, config.mesh.symmetry_plane)
 
+    mesh = mesh.immersed_part()
+    lid_mesh = None
+    if config.use_lid:
+        lid_z = config.lid_z if config.lid_z is not None else 0.0
+        if not np.isfinite(lid_z) or lid_z > 0.0:
+            raise ValueError("The lid must be at or below the free surface")
+        radius = config.lid_faces_max_radius
+        if radius is not None and (not np.isfinite(radius) or radius <= 0.0):
+            raise ValueError("The lid panel radius must be finite and positive")
+        if radius is None:
+            lid_mesh = mesh.generate_lid(z=lid_z)
+        else:
+            from .lid import resolved_lid
+            lid_mesh = resolved_lid(mesh, lid_z, radius)
+        if lid_mesh.nb_faces == 0:
+            raise ValueError("The requested lid is empty")
+
     # Create body with all rigid body DOFs, then remove unwanted ones.
     # Capytaine 2.3+ returns a RigidBodyDofsPlaceholder from rigid_body_dofs()
     # that is resolved inside FloatingBody.__init__.
@@ -57,6 +95,8 @@ def create_floating_body(config: BodyConfig):
         mesh=mesh,
         dofs=cpt.rigid_body_dofs(rotation_center=config.rotation_center_or_com),
         center_of_mass=config.center_of_mass,
+        mass=config.mass,
+        lid_mesh=lid_mesh,
         name=config.mesh.name,
     )
 
@@ -66,17 +106,8 @@ def create_floating_body(config: BodyConfig):
         if dof_name not in requested_dof_names:
             del body.dofs[dof_name]
 
-    # Keep only the immersed part (panels below z=0)
-    body.keep_immersed_part()
-
-    # Lid mesh for irregular frequency removal
-    if config.use_lid:
-        lid_z = config.lid_z if config.lid_z is not None else 0.0
-        try:
-            body.add_lid(z=lid_z)
-            logger.info("Added lid mesh at z=%.2f for irregular frequency removal", lid_z)
-        except Exception:
-            logger.warning("Failed to add lid mesh — continuing without it")
+    if config.use_lid and body.lid_mesh is None:
+        raise ValueError("The requested lid was not attached")
 
     logger.info(
         "Created FloatingBody '%s': %d panels, %d DOFs",
