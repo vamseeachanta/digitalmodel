@@ -201,6 +201,11 @@ def check_map(doc: Any, root: str | Path) -> list[str]:
             if Path(path).suffix == ".py" and symbol and symbol not in sources.index(path):
                 problems.append(f"missing qualified symbol: {path}:{symbol}")
     entries = [e for f in doc.get("families", []) for e in f.get("implementations", [])]
+    for family in doc.get("families", []):
+        mapped = {(e["path"], e.get("symbol")) for e in family.get("implementations", [])}
+        for row in doc.get("rejected_candidates", []):
+            if family["id"] in row.get("families", []) and (row["path"], row.get("symbol")) in mapped:
+                problems.append(f"mapped and rejected: {family['id']}:{row['path']}:{row.get('symbol')}")
     identities = {(e["path"], e.get("symbol")) for e in entries}
     for entry in entries:
         for other in entry.get("identical_to", []):
@@ -294,6 +299,9 @@ def inventory(root: str | Path, tracked_paths: list[str], sources: Sources | Non
         if relative.name.endswith(".lock") or relative.name in ("package-lock.json", "yarn.lock"):
             exclusions["lock_files"] += 1
             continue
+        if (sources.root / relative).is_symlink() and not (sources.root / relative).resolve().is_relative_to(sources.root):
+            exclusions["external_links"] += 1
+            continue
         target = sources.target(path)
         if not target.is_file():
             exclusions["not_regular_file"] += 1
@@ -335,6 +343,27 @@ def _reconcile_names(family: dict[str, Any], doc: dict[str, Any], texts: dict[st
                 "reason": "Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.",
             })
     return named_hits, unresolved
+
+
+def _refresh_rejections(doc: dict[str, Any], sources: Sources) -> None:
+    """Drop vanished candidates and retain only families without a mapped row."""
+    mapped = {f["id"]: {(e["path"], e.get("symbol")) for e in f["implementations"]}
+              for f in doc["families"]}
+    retained = []
+    for row in doc["rejected_candidates"]:
+        path, symbol = row["path"], row.get("symbol")
+        if not sources.target(path).is_file():
+            continue
+        if symbol and path.endswith(".py") and symbol not in sources.index(path):
+            continue
+        families = row.get("families", [])
+        remaining = [f for f in families if (path, symbol) not in mapped.get(f, set())]
+        if families and not remaining:
+            continue
+        if families:
+            row["families"] = remaining
+        retained.append(row)
+    doc["rejected_candidates"] = retained
 
 
 def reconcile(doc: dict[str, Any], texts: dict[str, str], sources: Sources) -> None:
@@ -435,6 +464,7 @@ def regenerate(doc: dict[str, Any], root: str | Path, tracked_paths: list[str] |
         for entry in family["implementations"]:
             entry["signals"] = [s.replace("\\\\", "\\") for s in entry.get("signals", [])]
     texts, folders, exclusions = inventory(root, tracked_paths, sources)
+    _refresh_rejections(doc, sources)
     _refresh_references(doc, sources)
     reconcile(doc, texts, sources)
     rebuild_groups(doc, sources)

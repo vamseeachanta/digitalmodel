@@ -273,3 +273,66 @@ assert result['families'][0]['search_audit'][0]['matching_files'] == 0
     subprocess.run([sys.executable, "-c", program,
                     str(ROOT / "scripts/generate_implementation_map.py"), str(root)],
                    check=True, capture_output=True, text=True, timeout=30)
+
+
+@pytest.mark.parametrize("path,symbol", [
+    ("removed.py", "First.calculate"), ("sample.py", "Removed.calculate"),
+])
+def test_regeneration_drops_missing_curated_rejections(sample, path, symbol):
+    doc, root = sample
+    doc["rejected_candidates"] = [{
+        "path": path, "symbol": symbol, "families": [FAMILY_IDS[0]],
+        "reason": "Previously inspected candidate",
+    }]
+    result = generator().regenerate(doc, root, tracked_paths=["sample.py"], revision="b" * 40)
+    assert check_map(result, root) == []
+    assert not any(r["path"] == path and r.get("symbol") == symbol
+                   for r in result["rejected_candidates"])
+
+
+def test_mapped_definition_cannot_be_rejected_in_same_family(sample):
+    doc, root = sample
+    doc["rejected_candidates"] = [{
+        "path": "sample.py", "symbol": "First.calculate",
+        "families": [FAMILY_IDS[0]], "reason": "Presentation only",
+    }]
+    assert any("mapped and rejected" in p for p in check_map(doc, root))
+    result = generator().regenerate(doc, root, tracked_paths=["sample.py"], revision="b" * 40)
+    assert check_map(result, root) == []
+    assert not any(r.get("symbol") == "First.calculate"
+                   for r in result["rejected_candidates"])
+
+
+def test_rejection_in_another_family_is_retained(sample):
+    doc, root = sample
+    doc["families"][1]["implementations"][0]["symbol"] = "Second.calculate"
+    doc["rejected_candidates"] = [{
+        "path": "sample.py", "symbol": "First.calculate",
+        "families": [FAMILY_IDS[0], FAMILY_IDS[1]], "reason": "Presentation only",
+    }]
+    result = generator().regenerate(doc, root, tracked_paths=["sample.py"], revision="b" * 40)
+    rejected = [r for r in result["rejected_candidates"]
+                if r.get("symbol") == "First.calculate"]
+    assert len(rejected) == 1
+    assert rejected[0]["families"] == [FAMILY_IDS[1]]
+    assert check_map(result, root) == []
+
+
+def test_ci_harness_prints_staleness_diagnostics():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    steps = workflow["jobs"]["ci-harness-tests"]["steps"]
+    commands = [step.get("run", "") for step in steps]
+    assert any("python scripts/generate_implementation_map.py" in command
+               and "--write" not in command for command in commands)
+
+
+def test_inventory_excludes_external_links_without_reading_them(sample, tmp_path_factory):
+    doc, root = sample
+    outside = tmp_path_factory.mktemp("external_inventory") / "source.py"
+    outside.write_text("external source must not be searched")
+    (root / "external.py").symlink_to(outside)
+    texts, _, exclusions = generator().inventory(root, ["sample.py", "external.py"])
+    assert set(texts) == {"sample.py"}
+    assert exclusions["external_links"] == 1
+    doc["families"][0]["implementations"][0]["path"] = "external.py"
+    assert any("escaping path" in p for p in check_map(doc, root))
