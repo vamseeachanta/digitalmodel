@@ -313,6 +313,9 @@ modules:
       orcaflex/modular_input_validation:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_input_validation/docs/agent-pack.md
         qa_family: MR
+      orcaflex:
+        agent_pack: src/digitalmodel/solvers/orcaflex/docs/agent-pack.md
+        qa_family: MR
   - module: specialized
     entry_point: src/digitalmodel/specialized/
     maturity: stub
