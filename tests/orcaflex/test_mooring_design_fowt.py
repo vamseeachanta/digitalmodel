@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for digitalmodel.orcaflex.mooring_design_fowt (#576).
 
 FOWT watch-circle envelope vs dynamic-cable curvature (DNV-RP-0360 MBR).
@@ -26,6 +29,20 @@ from digitalmodel.orcaflex.mooring_design_fowt import (
     _arc_radius_from_chord,
     check_watch_circle_vs_cable,
 )
+
+
+@pytest.fixture(autouse=True)
+def citation_tree(tmp_path, monkeypatch):
+    """Provide valid synthetic metadata for the geometry-only tests."""
+    page = (
+        tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+    )
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
 
 
 def _suppress_standalone_warning():

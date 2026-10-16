@@ -50,13 +50,13 @@ Environment:
   WaveTrains:
     - Name: Wave1
       WaveDirection: 0
-      WaveHeight: 0
       WaveOrigin:
         - 0
         - 0
-      WavePeriod: 3
       WaveTimeOrigin: 0
       WaveType: Airy
+      WaveHeight: 0
+      WavePeriod: 3
   WindDirection: 0
   WindSpeed: 0
   WindType: Constant

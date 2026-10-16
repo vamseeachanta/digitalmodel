@@ -219,7 +219,9 @@
     {
       "added": "unknown",
       "cluster": "installation-ops",
-      "explorers": [],
+      "explorers": [
+        "docs/api/installation/installation-heading-explorer.html"
+      ],
       "id": "installation",
       "pdf": "docs/api/capabilities/pdf/sec-installation.pdf",
       "title": "Installation"

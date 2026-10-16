@@ -585,6 +585,10 @@ def engine(
 
         dm = DigitalMarketing()
         cfg_base = dm.router(cfg_base)
+    elif basename == "on_bottom_stability_e305":
+        from digitalmodel.subsea.on_bottom_stability.e305_workflow import router as run_e305
+
+        cfg_base = run_e305(cfg_base)
     elif basename == "on_bottom_stability":
         from digitalmodel.subsea.pipeline.integrity_workflows import (
             run_on_bottom_stability,

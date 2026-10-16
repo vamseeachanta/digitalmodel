@@ -9,8 +9,10 @@ import argparse
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import re
+import subprocess
 import time
 from typing import Any
 
@@ -19,6 +21,7 @@ import yaml
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.post_validator import PostGenerationValidator
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+from digitalmodel.solvers.orcaflex.modular_generator.slay_execution import read_contract, write_queue
 
 
 def catenary(weight_kn_m: float, depth_m: float, tension_kn: float) -> dict[str, float]:
@@ -139,13 +142,34 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--campaign", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--queue", action="store_true", help="Write queue inputs without execution")
+    parser.add_argument("--expected-hours", type=float, help="Queue scheduling estimate, not measured time")
+    parser.add_argument("--max-hours", type=float, help="Queue scheduling ceiling")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--launch", action="store_true")
     args = parser.parse_args()
     if args.launch:
-        parser.error("A qualified execution adapter is required in a later solver job")
+        parser.error("The execution adapter only writes queue inputs; native launch requires digest-bound queue approval")
+    contract = None
+    if args.queue:
+        if args.expected_hours is None or args.max_hours is None:
+            parser.error("Queue scheduling budgets must be explicitly supplied")
+        contract = read_contract(args.campaign, args.expected_hours, args.max_hours)
+    if contract is not None:
+        repo = Path(__file__).resolve().parents[2]
+        env = dict(os.environ)
+        for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+            env.pop(name, None)
+        status = subprocess.run(["git", "-C", str(repo), "status", "--porcelain"],
+                                capture_output=True, text=True, check=True, env=env).stdout
+        if status:
+            parser.error("Queue preparation requires a clean working tree; commit-pinned inputs cannot record uncommitted changes")
+        revision = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                                  capture_output=True, text=True, check=True, env=env).stdout.strip()
     prepare(args.campaign, args.output)
+    if contract is not None:
+        write_queue(args.campaign, args.output, repo, revision, contract)
     return 0
 
 

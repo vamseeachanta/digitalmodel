@@ -3,11 +3,19 @@
   "decision_conflicts": [],
   "prior_rounds": [],
   "report_id": "S04",
-  "report_sha256": "ed100ecb0a03f8b2532be48f2e40ff25f426277045971dd1e45ec4ef644488e5",
+  "report_sha256": "a1951013f39024ec3cd4596c04a135d4532df83632855f688ce53db11dbbc367",
   "results": [
     {
       "decision": "pending",
       "id": "review-1"
+    },
+    {
+      "decision": "pending",
+      "id": "revision-history"
+    },
+    {
+      "decision": "pending",
+      "id": "source-provenance"
     },
     {
       "decision": "pending",
@@ -71,7 +79,7 @@
     }
   ],
   "reviewer_assignment": "pending",
-  "revision": "00",
+  "revision": "01",
   "schema_version": 1,
   "standard_revision": "c955b86159acc4f9e9f5964690c24dd1411e5b48",
   "visual_review": "deferred by the owner"

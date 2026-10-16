@@ -1,0 +1,53 @@
+{
+  "schema": "slay-criteria-1",
+  "revision": "execution-1",
+  "qualification": "Repository workflow criteria; no licensed allowable is reproduced or inferred.",
+  "criteria": {
+    "source_qualification": {
+      "status": "defined",
+      "requirement": "Every input retains its declared source or its assumed, based on previous experience qualification; a generic assumption does not qualify an installation design.",
+      "source": {"title": "Generic S-lay case table", "locator": "case-table.yml#provenance"}
+    },
+    "geometry": {
+      "status": "defined",
+      "requirement": "Read back both endpoint positions, contact order, exit angle, curvature and every roller reaction. Reconcile them with the generated separated endpoints and attached supports before comparison.",
+      "numeric_tolerance": null,
+      "numeric_tolerance_status": "not established",
+      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#acceptance-assessment"}
+    },
+    "force_balance": {
+      "status": "not established",
+      "requirement": "Retain endpoint forces, submerged weight and all support reactions in a common global frame; report the resultant force residual and its normalization. A native acceptance tolerance is not established.",
+      "numeric_tolerance": null,
+      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#native-results"}
+    },
+    "native_convergence": {
+      "status": "defined",
+      "requirement": "Retain convergence diagnostics and saved native state, reopen it and read back the required quantities. A process exit or a preparation result alone is insufficient.",
+      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#driver-retention"}
+    },
+    "mesh_convergence": {
+      "status": "not established",
+      "requirement": "Compare tension, bending moment, curvature, touchdown and roller reactions across refined meshes before acceptance; refinement levels and allowable changes are not established.",
+      "numeric_tolerance": null,
+      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#acceptance-assessment"}
+    },
+    "catenary_relative_tolerance": {
+      "status": "not established",
+      "requirement": "Use measured stinger-exit height and effective tension at the same endpoint for the independent free-span comparator. Report residuals; native agreement tolerance is not established.",
+      "numeric_tolerance": null,
+      "source": {"title": "Independent weight-only catenary", "locator": "scripts/orcaflex/prepare_slay_campaign.py::catenary"}
+    },
+    "overbend_strain_limit": {
+      "status": "not established",
+      "requirement": "D/(2R) is a circular bending-strain screen, not an allowable. No sourced design strain limit is available in this preparation basis.",
+      "numeric_limit": null,
+      "source": {"title": "Independent analytical method", "locator": "analysis.html#analytical-method"}
+    },
+    "installation_acceptance": {
+      "status": "not established",
+      "requirement": "Acceptance requires versioned allowables, comparator tolerances, mesh convergence and reconciliation of every applicable case. Null tolerances and generic assumptions cannot produce an accepted design.",
+      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#acceptance-assessment"}
+    }
+  }
+}
