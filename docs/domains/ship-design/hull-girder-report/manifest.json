@@ -1,16 +1,16 @@
 {
   "inputs": {
     "examples/workflows/hull-girder-report-pack/allowable-basis.json": {
-      "bytes": 5202,
-      "sha256": "263aef6bf5a3bc937411691e899a74c15db2981f42dd6a1b339e51b144f3fb15"
+      "bytes": 5193,
+      "sha256": "d37471a7fb7ea91b774699f93a025091c116af790c5bf3f2e95027cb82031242"
     },
     "examples/workflows/hull-girder-report-pack/build_report.py": {
-      "bytes": 27043,
-      "sha256": "c700a9091f71129fcd3902b2948b5d2cb35466c012f38bd513480857580436ee"
+      "bytes": 27057,
+      "sha256": "6e8edeb35baf2dcaa8cb69c75ca6c2cd67a70caf1f646a899c6161f90bbfe840"
     },
     "examples/workflows/hull-girder-report-pack/revisions.json": {
-      "bytes": 541,
-      "sha256": "ef0ff7b67e18b1272c6c86fa3372070bc7e92611ad20a0e6f3a8e4202b7dc296"
+      "bytes": 752,
+      "sha256": "6c7181e1d14e2be051e7d6f9f59096411ca9a475d602fd7c88a68d162e39b35c"
     },
     "examples/workflows/hull-girder-report-pack/screening_input.yml": {
       "bytes": 2187,
@@ -31,16 +31,16 @@
   },
   "outputs": {
     "report.html": {
-      "bytes": 21215,
-      "sha256": "a58274ab8f4cafc1e60310df2efc9bf902849a7c5f4e69c6bb71c5ed341bda51"
+      "bytes": 21422,
+      "sha256": "661afabb858852cc291e5d8dd8b3ee42e29889782ba398b059d35a3f40c8dc1e"
     },
     "results.json": {
       "bytes": 15803,
-      "sha256": "ee1083210653f35e243d17e463969387ffcc8deb9dfe6ce5c0c825f3f4947fad"
+      "sha256": "cecb75a917f1998ff858b27b003f9e500b5b4110e28b1ad3602786598936aa01"
     }
   },
   "project_version": "2.1.0",
-  "report_revision": "1",
+  "report_revision": "2",
   "reporting_conventions": {
     "revision": "P6",
     "source_commit": "3f829f2c5df735b7f2a7a65f542eac83da99c9db",

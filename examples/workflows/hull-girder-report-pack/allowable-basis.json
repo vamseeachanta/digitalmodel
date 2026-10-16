@@ -74,7 +74,7 @@
       "name": "Permissible hull-girder bending stress"
     }
   ],
-  "intended_use": "Internal still-water demand analysis; no strength acceptance.",
+  "intended_use": "Still-water demand analysis; no strength acceptance.",
   "readiness": "partial",
   "reporting_conventions": {
     "revision": "P6",

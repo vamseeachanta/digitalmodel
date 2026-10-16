@@ -1,6 +1,6 @@
 # Hull-girder report pack
 
-The internal report separates calculated still-water demand from unqualified
+The report separates calculated still-water demand from unqualified
 strength inputs. Eight strength entries remain unsourced: four signed allowable
 curve groups, deck and keel section moduli, material yield strength and permissible
 bending stress. No strength utilisation or permitted loading condition is issued.
@@ -37,7 +37,7 @@ sequence and a separate appendix for the evidence required before acceptance.
 
 The numerical check compares the central-block still-water solution with the
 existing analytical fixture and its existing tolerances. It establishes numerical
-agreement for that assumed loading geometry. No independent finite-element
+agreement for the synthetic fixture loading geometry. No independent finite-element
 comparison, wave combination, section stress, ultimate strength, local buckling
 or class compliance is established.
 
@@ -47,4 +47,9 @@ and document metadata are not the current report issued by the new
 builder. Replacement of the eight strength entries remains incomplete pending
 the qualified evidence listed in the report.
 
-Report tests are currently run locally only; hosted inclusion is not established.
+The `tests-infrastructure-other` hosted gate includes `tests/report_pack/` and
+`tests/postprocess/`.
+
+The builder currently accepts only `not established` strength-input labels. A
+qualified input will require a code change and tests of its evidence qualification
+before a different register label can be accepted.

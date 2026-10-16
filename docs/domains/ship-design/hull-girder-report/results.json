@@ -562,7 +562,7 @@
   "max_shear_t": -2487.5,
   "n_stations": 401,
   "qualified_allowables": 0,
-  "report_revision": "1",
+  "report_revision": "2",
   "strength_disposition": "not evaluated",
   "weight_t": 10000.0,
   "x_m": [

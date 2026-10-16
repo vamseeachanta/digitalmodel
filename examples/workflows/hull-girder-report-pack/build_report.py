@@ -203,7 +203,7 @@ def _bending_svg(results: dict) -> str:
     return (
         '<figure id="figure-5-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" '
         'role="img" aria-labelledby="bm-title"><title id="bm-title">'
-        'Still-water bending moment along the assumed box hull</title>'
+        'Still-water bending moment along the synthetic fixture</title>'
         '<path d="M62 46H612 M62 46V286H612" fill="none" stroke="#6b6a60"/>'
         f'<polyline points="{points}" fill="none" stroke="#2a78d6" stroke-width="2"/>'
         '<g font-size="12" fill="#172033"><text x="18" y="50">0</text>'
@@ -220,7 +220,7 @@ def _bending_svg(results: dict) -> str:
 def _design(results: dict, inventory: list) -> str:
     rows = [[r["name"], r["units"], r["label"], r["reason"]] for r in inventory]
     return (
-        '<p>The assumed load distribution and missing strength basis define the scope below.</p>'
+        '<p>The synthetic fixture load distribution and missing strength basis define the scope below.</p>'
         '<h3>3.1 Site data</h3><p>Not applicable: the example has no site-specific loading.</p>'
         '<h3>3.2 Structure data</h3><p>No midship scantlings or qualified section properties '
         'are supplied; elastic stress and ultimate capacity are not calculated.</p>'
@@ -315,7 +315,7 @@ def _summary(results: dict) -> str:
         'strength inputs are qualified. Missing loading-manual, material and rule '
         'evidence prevents an operating-limit conclusion; no independent finite-element '
         'comparison is established.</p>'
-        '<p>The assumed box hull has its governing still-water sagging moment of '
+        '<p>The synthetic fixture has its governing still-water sagging moment of '
         f'{results["max_sagging_t_m"]:.4g} t·m at {results["x_max_sagging_m"]:.4g} m. '
         f'The maximum shear magnitude is {abs(results["max_shear_t"]):.4g} t. '
         'The shear and moment comparisons satisfy their existing numerical criteria '
@@ -348,7 +348,7 @@ def _render(results: dict, inventory: list, basis: dict, revisions: dict) -> str
         _section('results', '5 Detailed Results', _detailed_results(results)),
         _section('findings', '6 Key Findings', '<p>The two analytical demand comparisons satisfy their numerical criteria in <a href="#table-5-2">Table 5.2</a>. No frame or section can be assigned a strength disposition because all eight strength-input entries remain unqualified.</p>'),
         _section('limitations', '7 Limitations', '<p>Missing strength evidence prevents allowable replacement and strength acceptance; no measured loading condition, wave combination, section stress, ultimate collapse, local buckling or independent finite-element validation is established. The consequences and required evidence are given in <a href="#appendix-a">Appendix A</a>.</p>'),
-        _section('recommendations', '8 Recommendations', '<p>Obtain the six loading-manual curve/property entries, qualified material evidence and the applicable rule clause before assigning a permitted loading condition. Confirm the actual weight, buoyancy and section model and obtain an independent comparison before extending this assumed example to an engineering configuration.</p>'),
+        _section('recommendations', '8 Recommendations', '<p>Obtain the six loading-manual curve/property entries, qualified material evidence and the applicable rule clause before assigning a permitted loading condition. Confirm the actual weight, buoyancy and section model and obtain an independent comparison before extending this synthetic fixture to an engineering configuration.</p>'),
         _section('references', '9 References', _references(basis, version)),
         _section('symbols', '10 Acronyms and Symbols', '<p>SF denotes shear force; BM denotes bending moment. In the marine convention used here, t is a mass-equivalent load ordinate and t·m is its moment; no force conversion is applied. W is total distributed weight (t), L hull length (m), x longitudinal position (m), q net load (t/m), V shear (t), M bending moment (t·m), and Z section modulus (m³). Strength utilisation means demand divided by a qualified limit and is not calculated.</p>'),
         _section('appendix-a', 'Appendix A — Missing strength evidence', '<p>The synthetic curves and section properties in the original example have no qualified strength basis; all eight strength inputs are labelled not established. No numerical placeholder is promoted to an approved limit. Restricted standard values are not established because reproduction permission is unavailable <a href="#p1">[P1]</a>, <a href="#p2">[P2]</a>. The general rule cannot authenticate configuration-specific loading-manual curves. Missing evidence affects both signs of every curve.</p>' + _table(['Strength input', 'Label', 'Missing evidence', 'Required evidence'], [[r['name'], r['label'], r['reason'], r['required_evidence']] for r in inventory], 'Table A.1. Evidence required before a strength conclusion.')),

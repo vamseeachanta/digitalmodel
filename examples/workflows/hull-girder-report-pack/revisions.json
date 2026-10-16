@@ -9,7 +9,12 @@
       "revision": "1",
       "date": "2026-10-15",
       "change": "Evidence labels and synthetic fixture provenance are corrected; report integrity now checks the committed outputs and only relevant inputs. Source access occurred on this date, after revision 0."
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-15",
+      "change": "Synthetic fixture wording is made consistent and residual internal-report wording is removed to match the public evidence basis."
     }
   ],
-  "revision": "1"
+  "revision": "2"
 }
