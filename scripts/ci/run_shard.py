@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 import time
+from typing import Any
 import xml.etree.ElementTree as ET
 
 NO_RETRY_SHARDS = frozenset({"contracts"})
@@ -200,7 +201,7 @@ def register_decisions(path: Path, ids: list[str]) -> dict[str, str]:
 
 def first_failures(path: Path) -> dict[str, str]:
     """Keep one first-attempt message per established failed test identity."""
-    failures = {}
+    failures: dict[str, str] = {}
     for case in read_cases(path):
         failure = next((child for child in case if child.tag in {"failure", "error"}), None)
         if failure is not None:
@@ -235,8 +236,8 @@ def test_evidence(args: argparse.Namespace, payload: dict) -> None:
 
 def retry_tests(args: argparse.Namespace, command: list[str], code: int, started: int) -> int:
     """Observe one diagnostic retry; only evidenced recovery may clear enforce."""
-    failures = {}
-    result = {"retry": False, "reason": "missing-or-stale-report", "ids": []}
+    failures: dict[str, str] = {}
+    result: dict[str, Any] = {"retry": False, "reason": "missing-or-stale-report", "ids": []}
     if fresh(args.junit, started):
         result = junit_decision(args.junit, code, args.max_retry_ids)
         try:
@@ -273,9 +274,10 @@ def retry_tests(args: argparse.Namespace, command: list[str], code: int, started
                     and all(choices.get(node) == "registered with evidence" for node in result["ids"])):
                 enforce_code = 0
     payload["enforce_exit_code"] = enforce_code
-    payload["exit_code"] = code if args.mode == "report" else enforce_code
+    exit_code = code if args.mode == "report" else enforce_code
+    payload["exit_code"] = exit_code
     test_evidence(args, payload)
-    return payload["exit_code"]
+    return exit_code
 
 
 def main() -> int:

@@ -432,7 +432,7 @@ def select_register(output: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Dispatch the four artifact operations."""
+    """Dispatch artifact operations and trusted-register selection."""
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     sub = commands.add_parser("register")
