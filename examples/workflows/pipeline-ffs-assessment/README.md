@@ -23,8 +23,9 @@ the Section B factors from named numerical-method defaults at calculation time.
 Both grids are bounded local patches; general-loss averaging is not applied.
 Section A requires formal local-loss evaluation because its remaining strength
 factor is below the allowable factor; its field data is adequate. The current
-reduced rating exceeds demand. Section B requires added readings to resolve at least three more degraded cells:
-two degraded cells resolve its flaw against an assessment default of five.
+reduced rating exceeds demand. Section B requires added readings to resolve at
+least three more degraded cells: two degraded cells resolve its flaw against an
+assessment default of five.
 Interim operation is a decision for the maintainer of the pipeline record.
 
 Applicability flags and severe loss below the replacement floor require
