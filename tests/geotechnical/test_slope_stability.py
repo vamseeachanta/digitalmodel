@@ -4,6 +4,8 @@
 """Reproduce public xslope benchmarks; optional dependencies remain optional."""
 
 from pathlib import Path
+from dataclasses import asdict
+import json
 
 import pytest
 
@@ -12,7 +14,7 @@ pytest.importorskip("gmsh")
 
 from xslope.fileio import load_slope_data
 from digitalmodel.geotechnical.slope_stability import (
-    analyze_model, build_slope_model, run_seepage,
+    analyze_model, analyze_profile, build_slope_model, run_seepage,
 )
 from tests.geotechnical.test_slope_profile import profile
 
@@ -120,9 +122,103 @@ def test_both_circular_searches(tmp_path):
         assert method.search_converged is True
         assert method.critical_circle is not None
         assert method.unsolved_trials["attempted"] >= method.unsolved_trials["unsolved"]
-    from dataclasses import asdict
-    import json
-    print(json.dumps(asdict(result), sort_keys=True))
+    assert json.loads(json.dumps(asdict(result)))["num_slices"] == 20
+
+
+@pytest.mark.parametrize("source", ["workbook", "profile"])
+def test_readme_bishop_search_minimum(source, tmp_path):
+    """README minimum FS = 1.215; xslope 1.0.3 search defaults to 40 slices.
+
+    The README call omits num_slices. All other search settings remain the
+    upstream defaults; 1% relative tolerance allows published-value rounding.
+    """
+    model = (load_slope_data(FIXTURES / "xslope_simple1.xlsx")
+             if source == "workbook" else build_slope_model(equivalent_profile(), tmp_path))
+    result = analyze_model(model, methods=("bishop",), num_slices=40)
+    assert result.methods["bishop"].factor_of_safety == pytest.approx(1.215, rel=0.01)
+    assert result.methods["bishop"].search_converged is True
+
+
+def seepage_profile():
+    """Use the public SI conversion with a head gradient along the surface."""
+    data = equivalent_profile()
+    data["layers"][0]["permeability_m_s"] = 1e-5
+    surface = data["ground_surface_m"]
+    data["seepage"] = {"element_size_m": 1.0, "heads_m": [
+        {"head_m": 0.0, "boundary_m": surface[:2]},
+        {"head_m": 1.0, "boundary_m": surface[1:]},
+    ]}
+    return data
+
+
+def test_profile_seepage_then_both_methods(tmp_path, monkeypatch):
+    from digitalmodel.geotechnical import slope_stability
+
+    real_analyze = slope_stability.analyze_model
+    observed = []
+
+    def inspect_and_solve(model, **kwargs):
+        observed.append(model)
+        assert model["time_unit"] == "sec"
+        assert model["unit_system"] == "si"
+        assert model["seep_u"] is not None
+        drained = [m for m in model["materials"] if m["option"] != "cp"]
+        assert drained
+        assert all(m["u"] == "seep" for m in drained)
+        return real_analyze(model, **kwargs)
+
+    monkeypatch.setattr(slope_stability, "analyze_model", inspect_and_solve)
+    result = analyze_profile(seepage_profile(), tmp_path)
+    assert len(observed) == 1
+    assert (result.seepage.length_unit, result.seepage.time_unit) == ("m", "sec")
+    assert result.seepage.converged
+    assert set(result.methods) == {"bishop", "spencer"}
+    for method in result.methods.values():
+        assert method.factor_of_safety > 0
+        assert method.search_converged is True
+        assert method.critical_circle is not None
+
+
+@pytest.mark.parametrize("flow", [0.0, float("nan")])
+def test_nonconverged_seepage_rejected_before_stability(tmp_path, monkeypatch, flow):
+    from xslope import seep
+
+    model = build_slope_model(seepage_profile(), tmp_path)
+    monkeypatch.setattr(seep, "run_seepage_analysis", lambda _: {
+        "converged": False, "flowrate": flow, "closure_fraction": flow,
+    })
+    with pytest.raises(RuntimeError, match="seepage did not converge"):
+        run_seepage(model, element_size=1.0)
+    assert model.get("seep_u") is None
+    assert all(m["u"] != "seep" for m in model["materials"])
+
+
+def test_example_matches_conversion_and_runs_engine(tmp_path):
+    import yaml
+    from digitalmodel.engine import engine
+
+    example = Path(__file__).parents[2] / "examples/workflows/slope-stability/input.yml"
+    config = yaml.safe_load(example.read_text())
+    expected = equivalent_profile()
+    actual = config["slope_stability"]["profile"]
+    assert actual["units"] == expected["units"]
+    for field in ("water_unit_weight_kn_m3", "bottom_elevation_m"):
+        assert actual[field] == pytest.approx(expected[field], rel=1e-12)
+    for point, converted in zip(actual["ground_surface_m"], expected["ground_surface_m"], strict=True):
+        assert point == pytest.approx(converted, rel=1e-12)
+    for field in ("layers", "circles"):
+        assert len(actual[field]) == len(expected[field])
+        for values, converted in zip(actual[field], expected[field], strict=True):
+            assert values == pytest.approx(converted, rel=1e-12)
+    config["slope_stability"]["outputs"]["directory"] = str(tmp_path / "results")
+    input_path = tmp_path / "input.yml"
+    input_path.write_text(yaml.safe_dump(config))
+    result = engine(str(input_path))
+    summary_path = Path(result["slope_stability"]["summary_json"])
+    summary = json.loads(summary_path.read_text())
+    assert summary["screening_status"] == "screening_only"
+    assert set(summary["result"]["methods"]) == {"bishop", "spencer"}
+    assert summary["result"]["xslope_version"] == "1.0.3"
 
 
 def test_seepage_boundary_mapping(tmp_path):

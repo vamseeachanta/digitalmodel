@@ -139,10 +139,10 @@ def run_seepage(model: dict[str, Any], element_size: float) -> SeepageResult:
     mesh = build_mesh_from_polygons(build_polygons(model), element_size, "tri3")
     model["mesh"] = mesh
     solution = run_seepage_analysis(build_seep_data(mesh, model))
-    flow = _number(float(solution["flowrate"]), "discharge_per_width", 0)
-    closure = _number(float(solution["closure_fraction"]), "closure_fraction", 0)
     if not solution["converged"]:
         raise RuntimeError("seepage did not converge; stability field is not accepted")
+    flow = _number(float(solution["flowrate"]), "discharge_per_width", 0)
+    closure = _number(float(solution["closure_fraction"]), "closure_fraction", 0)
     apply_steady_stability_field(model, solution, verbose=False)
     for material in model["materials"]:
         if material["option"] != "cp":

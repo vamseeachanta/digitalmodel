@@ -9,6 +9,7 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | Revision | Date | Change and purpose |
 | --- | --- | --- |
 | 0 | 2026-10-14 | Add the SI profile interface and public benchmark reproductions for slope screening. |
+| 1 | 2026-10-15 | Add the Bishop search benchmark, seepage handoff and example tests, and hosted solver execution; clarify validation limits. |
 
 ## Basis and boundaries
 
@@ -85,8 +86,10 @@ same model before stability runs. Every seepage layer requires conductivity.
 Overlapping existing fields are accepted only where units and meaning match
 (Su_kpa, phi_deg). SPT counts, stress samples and pile geometry are not slope
 properties and are rejected. Unknown fields, conflicting aliases, Booleans,
-non-finite numbers, negative strengths, crossing boundaries and inconsistent
-units are rejected. Layer tops span the same horizontal extent. Vertical or
+non-finite numbers, negative strengths, crossing boundaries and a units label
+other than SI are rejected. Numeric values are not checked for unit plausibility;
+the caller shall supply values in the declared units. Layer tops span the same
+horizontal extent. Vertical or
 overhanging polylines are unsupported. Head boundary polylines currently require
 increasing x; other boundaries remain no-flow by default. Upstream preflight
 checks whether specified heads bind mesh edges.
@@ -110,12 +113,29 @@ and soil properties require engineering review. Each method searches independent
 
 ## Benchmarks and limits
 
-Tests quote README Bishop FS = 1.279 at 20 slices and
+Tests quote README Bishop FS = 1.279 at 20 slices, its circular-search minimum
+FS = 1.215 at the upstream default of 40 slices, and
 [SEEP-1](https://xslope.org/en/latest/tutorials/seep01_sheetpile/) discharge
 40.111 m³/yr per m on a 0.5 m linear-triangle mesh. A 1% relative tolerance
 allows mesh/platform variation and printed-value rounding. The equivalent SI
-profile is also compared directly with the README workbook. Fixture provenance,
+profile and workbook each reproduce the search minimum. The SI single-circle
+result is also compared directly with the README workbook at 1e-8 relative
+tolerance. Spencer searches are exercised for convergence and serialization;
+no published Spencer benchmark is established here. Fixture provenance,
 digests and upstream licence notices accompany the workbooks.
+
+The SI profile-driven seepage test checks metre/second units and the drained
+material pore-pressure handoff before both stability searches solve. Failed
+seepage convergence raises RuntimeError before its outputs are consumed,
+including when those outputs contain NaN. The YAML example is compared with
+the public workbook conversion and run through the engine with temporary output.
+
+At the previously reviewed revision, hosted tests skipped the solver module
+because xslope was absent; solver benchmarks were local only. The specialized
+hosted shard now includes an additional geotechnical test step with xslope 1.0.3
+and gmsh>=4.15, plus the Gmsh runtime libraries. Hosted success at a new revision
+shall be confirmed from that step's result; configuration alone is not evidence
+of a completed hosted solve.
 
 The upstream [validation overview](https://xslope.org/en/latest/verification/)
 and [groundwater corpus](https://xslope.org/en/latest/verification/rocscience_groundwater/)
