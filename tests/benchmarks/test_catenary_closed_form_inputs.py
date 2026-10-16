@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import re
+import runpy
 import subprocess
 import sys
 
@@ -60,6 +61,7 @@ def test_benchmark_schema_and_band():
         assert set(c["inputs"]) == {
             "w_N_per_m", "EA_N", "L_m", "h_m", "X_m", "outer_diameter_m",
             "mass_te_per_m", "EA_kN", "EI_kN_m2",
+            "seabed_normal_stiffness_kN_per_m_per_m2",
         }
         assert set(c["expected"]) == QUANTITIES
         assert all(isinstance(v, (int, float)) for v in c["inputs"].values())
@@ -74,8 +76,15 @@ def test_benchmark_schema_and_band():
         "applies_to": "each case, program result against the expected value",
     }
     assert len(data["results_to_export"]) == 3
-    assert len(data["sources"]) == 2
-    assert "03143504bb05ed7ad4a71a3288b3826b8a521046" in str(data["sources"])
+    assert len(data["sources"]) == 3
+    primary = [s for s in data["sources"] if s["role"] == "checked_equations"]
+    assert len(primary) == 1
+    assert primary[0]["section"] == "2.5, Mooring System Modeling"
+    assert primary[0]["equation_numbers"] == [
+        "(2-36)", "(2-37a)", "(2-38)", "(2-42b)",
+        "(2-43a)", "(2-43b)", "(2-44)",
+    ]
+    assert primary[0]["url"] == "https://www.osti.gov/servlets/purl/921803"
 
 
 def test_hand_values_and_self_checks():
@@ -174,7 +183,7 @@ def test_model_settings():
         assert env["Density"] == 1.025
         assert env["SeabedType"] == "Flat"
         assert env["SeabedSlope"] == 0
-        assert env["SeabedNormalStiffness"] == 10000
+        assert env["SeabedNormalStiffness"] == inputs["seabed_normal_stiffness_kN_per_m_per_m2"] == 10000
         assert env["RefCurrentSpeed"] == env["WindSpeed"] == 0
         assert all(w["WaveType"] == "No waves" for w in env["WaveTrains"])
         assert line["EndAConnection"] == line["EndBConnection"] == "Fixed"
@@ -191,6 +200,18 @@ def test_model_settings():
         assert lt["MassPerUnitLength"] == inputs["mass_te_per_m"]
         assert lt["SeabedLateralFrictionCoefficient"] == 0
         assert lt["SeabedAxialFrictionCoefficient"] == 0
+
+
+def test_builder_uses_recorded_seabed_stiffness():
+    """Keep the generated seabed tied to the machine-readable input."""
+    specification = runpy.run_path(
+        str(ROOT / "scripts/benchmark/build_catenary_closed_form_inputs.py")
+    )["specification"]
+    for original in benchmark()["cases"]:
+        case = {**original, "inputs": {**original["inputs"],
+            "seabed_normal_stiffness_kN_per_m_per_m2": 20000}}
+        spec = specification(case)
+        assert spec.environment.seabed.stiffness.normal == 20000
 
 
 @pytest.mark.parametrize("case_name", ["C1", "C2"])

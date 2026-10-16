@@ -40,6 +40,7 @@ def specification(case):
     Zero friction coefficients switch off both components of seabed friction.
     Fixed connections express global z directly, without an anchored end's
     seabed-relative elevation. Zero connection stiffness permits rotation.
+    The recorded normal stiffness bounds penetration; see the README Limits.
     """
     inputs = case["inputs"]
     name = f"catenary_{case['case'].lower()}"
@@ -50,7 +51,13 @@ def specification(case):
         },
         environment={
             "water": {"depth": 150, "density": 1.025},
-            "seabed": {"slope": 0, "stiffness": {"normal": 10000}, "friction_coefficient": 0},
+            "seabed": {
+                "slope": 0,
+                "stiffness": {
+                    "normal": inputs["seabed_normal_stiffness_kN_per_m_per_m2"]
+                },
+                "friction_coefficient": 0,
+            },
             "waves": {"trains": [{"type": "No waves", "height": 0}]},
             "current": {"speed": 0}, "wind": {"speed": 0},
         },

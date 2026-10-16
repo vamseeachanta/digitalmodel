@@ -16,6 +16,7 @@ distance from the top to touchdown. Each quantity must satisfy its own band.
 | --- | --- | --- |
 | 1 | 2026-10-15 | Initial closed-form references and generated statics inputs. |
 | 2 | 2026-10-15 | Added seabed support and penetration bounds; clarified angle exports and the finite-EA offset. |
+| 3 | 2026-10-15 | Added a checked public equation source and recorded normal stiffness in the reference inputs. |
 
 ## Inputs and units
 
@@ -36,6 +37,7 @@ at the generic route's defaults; there is no hydrodynamic loading in this check.
 | Mass per unstretched length (te/m) | 0.1100219 | 0.0224069 |
 | EA (kN) | 1000000 | 20000 |
 | Nominal submerged weight (kN/m) | 1.000 | 0.200 |
+| Seabed normal stiffness (kN/m/m2) | 10000 | 10000 |
 | Governing form | plain | elastic |
 | Top tension (kN) | 224.788 | 150.886 |
 | Top angle from vertical (degrees) | 19.433 | 53.371 |
@@ -123,16 +125,29 @@ with classical RK4 and 20000 steps. It checks relative top tension below 1e-9
 and angle difference below 1e-9 degree against the elastic closed form for
 both cases. Its initial guesses depend only on the inputs.
 
-The equation references are:
+The checked equation source is Jonkman (2007),
+[*Dynamics Modeling and Loads Analysis of an Offshore Floating Wind Turbine*](https://www.osti.gov/servlets/purl/921803),
+NREL/TP-500-41958, November 2007 issue, Section 2.5, "Mooring System
+Modeling", printed pages 39 and 41. The open institutional PDF supplies:
 
-- Faltinsen, *Sea Loads on Ships and Offshore Structures* (1990), textbook
-  catenary; equation number not checked.
-- Irvine, *Cable Structures* (1981), elastic cable equations; equation number
-  not checked. The two differential equations were confirmed in lines 7 to 17
-  of the [public equation reference](https://github.com/xabi80/HSP/blob/03143504bb05ed7ad4a71a3288b3826b8a521046/tests/validation/test_m4_catenary_irvine.py#L7-L17),
-  at commit `03143504bb05ed7ad4a71a3288b3826b8a521046`. That file has no
-  stated licence; its source text is not reproduced here. Its general vertical
-  force expression reduces to `V = w*s` when force at touchdown is zero.
+- Equations (2-43a) and (2-43b): suspended elastic coordinates. Set `VA = 0`
+  at touchdown and measure the unstretched coordinate `s` from there to obtain
+  this benchmark's `x(s)` and `z(s)`. Equation (2-36) converts logarithms to
+  `asinh`.
+- Equation (2-38): grounded length `LB = L - VF/w = L - s`. The frictionless
+  limit of Equation (2-37a) gives total span
+  `X = L - s + (H/w)*asinh(w*s/H) + H*L/EA`, equivalent to the expression
+  above including grounded stretch `H*(L-s)/EA`.
+- Equation (2-42b): zero vertical force at the supported end. Equation (2-44)
+  gives tension. Taking `EA` to infinity in the coordinate equations gives
+  the plain form used for C1; that limit is a derivation from these equations.
+
+Faltinsen, *Sea Loads on Ships and Offshore Structures* (1990), and Irvine,
+*Cable Structures* (1981), remain background references: **equation number
+not checked** for each. Their publisher pages returned HTTP 403, so their
+editions, sections and equation numbers could not be inspected. The numbered
+source above provides the equation-level basis. The earlier third-party test
+pointer has been removed from the reference metadata.
 
 The script imports nothing from `src/digitalmodel`. Issue #2050 records an
 elastic-stretch defect in the repository's catenary implementation; the hand
@@ -169,7 +184,9 @@ The hand values assume a rigid horizontal seabed and a homogeneous line with
 zero bending stiffness, no friction and a positive grounded length. They do
 not cover lifted anchors, fully suspended lines or dynamic response.
 
-Both inputs explicitly set `SeabedNormalStiffness` to **10000 kN/m/m2** with
+The builder reads `seabed_normal_stiffness_kN_per_m_per_m2` from each case
+in `benchmark.json`. Both inputs set `SeabedNormalStiffness` to
+**10000 kN/m/m2** with
 `SeabedModel: Elastic`. Taking contact width as OD, the nominal penetration
 estimate `delta = w/(K*OD)` is 1.0 mm for C1 and 0.4 mm for C2. The offline
 tests require penetration below 10.0 mm for each case, using both nominal and

@@ -162,6 +162,7 @@ def calculate():
                 "w_N_per_m": w, "EA_N": EA, "L_m": 600, "h_m": 150, "X_m": X,
                 "outer_diameter_m": diameter, "mass_te_per_m": mass,
                 "EA_kN": EA / 1000, "EI_kN_m2": 0,
+                "seabed_normal_stiffness_kN_per_m_per_m2": 10000,
             },
             "governing_form": governing,
             "top_strain_percent": value["top_tension_kN"] * 1000 / EA * 100,
@@ -210,12 +211,31 @@ def calculate():
             "Horizontal distance from End B to touchdown (m): X minus the touchdown x coordinate",
         ],
         "sources": [
+            {
+                "citation": "Jonkman, Dynamics Modeling and Loads Analysis of an Offshore Floating Wind Turbine, 2007",
+                "edition": "NREL/TP-500-41958, November 2007 issue",
+                "role": "checked_equations",
+                "section": "2.5, Mooring System Modeling",
+                "printed_pages": [39, 41],
+                "equation_numbers": [
+                    "(2-36)", "(2-37a)", "(2-38)", "(2-42b)",
+                    "(2-43a)", "(2-43b)", "(2-44)",
+                ],
+                "url": "https://www.osti.gov/servlets/purl/921803",
+                "application": (
+                    "Set VA=0 in (2-43a,b) on the suspended segment, measured from touchdown; "
+                    "(2-36) converts logarithms to asinh. With VF=w*s, (2-38) gives grounded "
+                    "length L-s. The frictionless limit of (2-37a) includes grounded stretch "
+                    "H*(L-s)/EA. Equation (2-44) gives tension; EA tending to infinity gives "
+                    "the plain form."
+                ),
+            },
             {"citation": "Faltinsen, Sea Loads on Ships and Offshore Structures, 1990",
+             "role": "unchecked_background",
              "equation_number": "equation number not checked"},
             {"citation": "Irvine, Cable Structures, 1981",
-             "equation_number": "equation number not checked",
-             "public_equations": "https://github.com/xabi80/HSP/blob/03143504bb05ed7ad4a71a3288b3826b8a521046/tests/validation/test_m4_catenary_irvine.py#L7-L17",
-             "commit": "03143504bb05ed7ad4a71a3288b3826b8a521046", "lines": [7, 17]},
+             "role": "unchecked_background",
+             "equation_number": "equation number not checked"},
         ],
     }
     return {"benchmark": document, "computed": computed, "self_checks": checks}
