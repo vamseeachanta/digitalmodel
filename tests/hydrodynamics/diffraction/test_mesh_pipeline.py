@@ -310,6 +310,22 @@ class TestFormatMapping:
         result = pipeline.map_format_type(MeshFormatType.DAT)
         assert result.value == "dat"
 
+    def test_map_aqwa_dat(self, pipeline):
+        assert pipeline.map_format_type(MeshFormatType.AQWA_DAT).value == "dat"
+
+    def test_load_aqwa_dat(self, pipeline, dat_fixture):
+        explicit = pipeline.load(dat_fixture, format=MeshFormatType.AQWA_DAT)
+        detected = pipeline.load(dat_fixture)
+        assert explicit.format_origin.value == "dat"
+        np.testing.assert_array_equal(explicit.vertices, detected.vertices)
+        np.testing.assert_array_equal(explicit.panels, detected.panels)
+
+    def test_nemoh_dat_is_not_aqwa_dat(self, pipeline, dat_fixture):
+        with pytest.raises(ValueError, match="No BEMRosetta MeshFormat mapping"):
+            pipeline.map_format_type(MeshFormatType.NEMOH_DAT)
+        with pytest.raises(ValueError, match="No BEMRosetta MeshFormat mapping"):
+            pipeline.load(dat_fixture, format=MeshFormatType.NEMOH_DAT)
+
     def test_map_stl(self, pipeline):
         """Test mapping MeshFormatType.STL to MeshFormat.STL."""
         result = pipeline.map_format_type(MeshFormatType.STL)

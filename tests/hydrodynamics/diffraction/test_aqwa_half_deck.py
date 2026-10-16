@@ -265,6 +265,8 @@ def test_heading_helper_limits_symmetric_range(headings, expected):
 
 # CRLF single-deck digests captured at 47876058 before changing the writer,
 # with geometry.symmetry="none" and the existing heading flags unchanged.
+# Turret pair recaptured at 15e8223a after the fixture changed from DAT to GDF;
+# parent-deck comparison confines differences to its mesh reference and geometry.
 _NONE_DIGESTS = {
     "spec_ship_raos.yml": (
         "fced3caccca828ff595cd0bd6261da338c7ab25ece791c12a6b828924fe01efe",
@@ -275,8 +277,8 @@ _NONE_DIGESTS = {
         "6b44238a436779bbb38424ecc15a884d71b32b7e1094658d6cbf653d53e0e2f4",
     ),
     "spec_fpso_turret.yml": (
-        "f791f9b96f9d244dbefe822aafb12976ab51c244576721a2adfc1e479ec91a82",
-        "7f602e7f45772fa39558e660cd13863ce83a959827336858227ce133a325d9fe",
+        "2c0180359f28658263cf80ef3ba2abc7579cd1262d564dbfb9170dce4a5911e5",
+        "5a3bcd9c0919814f4f61249c912d4591df9412cce71c4cc0b6c0523f16624cd7",
     ),
 }
 
@@ -449,6 +451,23 @@ def test_orcawave_refuses_unsupported_mesh_formats(extension, mesh_format, secti
              "zone": _build_qtf_section}[section]
     with pytest.raises(ValueError, match="Unsupported or ambiguous.*Allowed values:.*Wamit gdf"):
         build(_format_spec(extension, mesh_format))
+
+
+@pytest.mark.parametrize("section", ["lid", "zone"])
+def test_orcawave_auxiliary_mesh_extension_conflict(section):
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+        _build_damping_lid_section, _build_qtf_section,
+    )
+
+    spec = _format_spec("gdf", "gdf")
+    if section == "lid":
+        spec.damping_lid.mesh_file = "lid.fdf"
+        build = _build_damping_lid_section
+    else:
+        spec.free_surface_zone.mesh_format = "fdf"
+        build = _build_qtf_section
+    with pytest.raises(ValueError, match="Mesh format conflict"):
+        build(spec)
 
 
 def test_orcawave_zone_preserves_fdf():
