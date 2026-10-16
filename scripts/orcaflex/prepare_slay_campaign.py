@@ -13,7 +13,6 @@ import os
 from pathlib import Path
 import re
 import subprocess
-import time
 from typing import Any
 
 import yaml
@@ -76,6 +75,15 @@ def case_spec(basis: dict[str, Any], case: dict[str, Any]) -> ProjectInputSpec:
             "pipeline": basis["pipeline"], "equipment": equipment}
     data = json.loads(json.dumps(data))
     data["equipment"]["tensioner"]["tension_value"] = case["top_tension_kn"]
+    layout = basis.get("stinger_by_depth", {}).get(str(case["depth_m"]))
+    if layout:
+        stinger = data["equipment"]["stinger"]
+        stinger["sections"] = [{"length": layout["length_m"], "bend_radius": stinger["radius"]}]
+        roller = stinger["rollers"][0]
+        stinger["rollers"] = [dict(roller, arc_length=station)
+                              for station in range(0, layout["length_m"] + 1, 5)]
+    if "end_b_x_m" in case:
+        data["equipment"]["slay_end_b_x"] = case["end_b_x_m"]
     return ProjectInputSpec.model_validate(data)
 
 
@@ -89,7 +97,6 @@ def model_digest(path: Path) -> str:
 
 def prepare_case(basis: dict[str, Any], case: dict[str, Any], output: Path) -> dict[str, Any]:
     """Generate one model, reject validator errors and bind every output by digest."""
-    started = time.perf_counter()
     folder = output / "models" / case["id"]
     if folder.exists():
         raise ValueError("Use a new output directory; existing models are preserved")
@@ -106,15 +113,16 @@ def prepare_case(basis: dict[str, Any], case: dict[str, Any], output: Path) -> d
     screen = catenary(weight, case["depth_m"], case["top_tension_kn"])
     screen["overbend_strain"] = (basis["pipeline"]["dimensions"]["outer_diameter"] /
                                   (2 * basis["equipment"]["stinger"]["radius"]))
+    screen["overbend_strain_basis"] = "D/(2R) screen"
     screen["submerged_weight_kn_m"] = weight
     return {"id": case["id"], "files": files, "validator_errors": 0,
             "validator_warnings": [f.category for f in findings], "screen": screen,
-            "preparation_wall_seconds": time.perf_counter() - started,
+            "preparation_wall_seconds": None,
             "native_wall_seconds": None, "native_status": "not_run"}
 
 
 def prepare(campaign: Path, output: Path) -> dict[str, Any]:
-    """Prepare all declared cases; record preparation timing separately from solves."""
+    """Prepare all declared cases with reproducible manifests and no native solves."""
     source = campaign / "case-table.yml"
     table = yaml.safe_load(source.read_text(encoding="utf-8"))
     identities = [case["id"] for case in table["cases"]]

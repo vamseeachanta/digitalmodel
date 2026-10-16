@@ -10,8 +10,9 @@
 <p>Six generic still-water S-lay models are prepared by the repository builders.
 Schema and cross-builder checks establish structural consistency only. Native runs attempted: 0;
 native runs completed: 0; qualified results: 0. Installation acceptance is not established.
-The builders now separate the pipe ends, attach discrete stinger rollers and apply tension
-from statics and the first stage. Sourced workflow criteria and a timed-case record are defined;
+The builders use depth-specific stingers, a 60.0 m firing line, declared stiff-estimate anchors
+and tension from statics and the first stage. Touchdown, sag-bend and stiff closure are
+NOT_EVALUATED: published reference pending, #2608. Sourced workflow criteria and a timed-case record are defined;
 numerical native tolerances and design allowables remain not established. The execution adapter
 writes queue inputs without executing them. The way forward is native geometry qualification,
 a timed canary and independent comparison before the remaining cases.</p>
@@ -19,6 +20,7 @@ a timed canary and independent comparison before the remaining cases.</p>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>0</td><td>2026-10-14</td><td>Initial generic campaign, analytical comparator and unfilled native evidence sections; distinguish preparation from solved results.</td></tr>
 <tr><td>1</td><td>2026-10-14</td><td>Correct builder topology, regenerate models, define sourced criteria and the timed canary, and prepare digest-gated queue inputs without native execution.</td></tr>
+<tr><td>2</td><td>2026-10-16</td><td>Apply depth-specific geometry, separate S1 conformity from design acceptance and explicitly defer three Table B rows until published references are available.</td></tr>
 <caption>Table 1. Revision history.</caption></table>
 <h2>Basis and scope</h2>
 <p><a href="case-table.yml">Case table</a> holds every explicit input, its basis and six cases.
@@ -41,17 +43,20 @@ and <code>scripts/orcaflex/run_generic_drilling_riser_campaign.py</code> at
 <code>14998ee8a2d28ed7bcf3f0d8ad209504bad714fa</code>; those references are unmerged.</p>
 <h2>Installation methods and case table</h2>
 <p>The prepared scope is S-lay. J-lay, reel-lay and on-bottom stability remain outside this campaign.
-Depth is the declared stinger section length times one or two. The three total-tension factors
+Water depths are independently declared as 40.0 m and 80.0 m. The corresponding
+stingers are 60.0 m with 13 supports and 90.0 m with 19 supports; tip angles are
+22.9 and 34.4 degrees and tip axis depths are 11.8 and 26.2 m. A 60.0 m firing line
+adds 12 supports, with End A at x = -31.1 m and the tensioner at x = -21.1 m. The three total-tension factors
 are method choices: two, three and four times submerged weight times water depth. They do not
 represent an operating envelope. The empty coated pipe, stiffness, mesh and material defaults
 are traced to the repository in the case table. There is no wave, current or calibrated RAO input.</p>
-<table><tr><th>Case</th><th>Water depth (m)</th><th>Top tension definition</th><th>Generated model</th></tr>
-<tr><td>d0-t0</td><td>40.0</td><td>2 × w × depth</td><td><a href="models/d0-t0/master.yml">master</a></td></tr>
-<tr><td>d0-t1</td><td>40.0</td><td>3 × w × depth</td><td><a href="models/d0-t1/master.yml">master</a></td></tr>
-<tr><td>d0-t2</td><td>40.0</td><td>4 × w × depth</td><td><a href="models/d0-t2/master.yml">master</a></td></tr>
-<tr><td>d1-t0</td><td>80.0</td><td>2 × w × depth</td><td><a href="models/d1-t0/master.yml">master</a></td></tr>
-<tr><td>d1-t1</td><td>80.0</td><td>3 × w × depth</td><td><a href="models/d1-t1/master.yml">master</a></td></tr>
-<tr><td>d1-t2</td><td>80.0</td><td>4 × w × depth</td><td><a href="models/d1-t2/master.yml">master</a></td></tr>
+<table><tr><th>Case</th><th>Water depth (m)</th><th>Top tension definition</th><th>End B x (m)</th><th>Generated model</th></tr>
+<tr><td>d0-t0</td><td>40.0</td><td>2 × w × depth</td><td>-2024.8</td><td><a href="models/d0-t0/master.yml">master</a></td></tr>
+<tr><td>d0-t1</td><td>40.0</td><td>3 × w × depth</td><td>-2025.0</td><td><a href="models/d0-t1/master.yml">master</a></td></tr>
+<tr><td>d0-t2</td><td>40.0</td><td>4 × w × depth</td><td>-2025.2</td><td><a href="models/d0-t2/master.yml">master</a></td></tr>
+<tr><td>d1-t0</td><td>80.0</td><td>2 × w × depth</td><td>-2012.2</td><td><a href="models/d1-t0/master.yml">master</a></td></tr>
+<tr><td>d1-t1</td><td>80.0</td><td>3 × w × depth</td><td>-2013.9</td><td><a href="models/d1-t1/master.yml">master</a></td></tr>
+<tr><td>d1-t2</td><td>80.0</td><td>4 × w × depth</td><td>-2015.3</td><td><a href="models/d1-t2/master.yml">master</a></td></tr>
 <caption>Table 2. Prepared cases; w is empty coated-pipe submerged weight in kN/m.</caption></table>
 <h2 id="analytical-method">Independent analytical method</h2>
 <p>For steel outside diameter D and wall t, steel area is π[D² − (D − 2t)²]/4.
@@ -72,7 +77,11 @@ endpoints will require a new evidence record. The full supported S-shape is not 
 <p><a href="criteria.json">Versioned criteria</a> give a source title and locator for each
 criterion. Repository workflow requirements are distinguished from missing numerical tolerances.
 No licensed allowable is reproduced or inferred. Force-balance, mesh-comparison, catenary-agreement
-and strain acceptance thresholds are <strong>not established</strong>; a null criterion cannot pass.</p>
+and S2 design strain thresholds are <strong>not established</strong>; a null criterion cannot pass.
+S1 stinger conformity is defined separately as strain no greater than 1.10*D/(2R),
+approximately 0.00279, plus zero force on the last stinger support. D/(2R) = 0.00254
+is the D/(2R) screen. S2 cites DNV-ST-F101 simplified laying criteria and requires
+a qualified concrete-crushing strength and support contact-pressure basis.</p>
 <table><tr><th>Item</th><th>Status</th><th>Evidence or next criterion</th></tr>
 <tr><td>Input schema and generated references</td><td>Prepared</td><td>ProjectInputSpec and PostGenerationValidator; error findings block preparation.</td></tr>
 <tr><td>Independent catenary and overbend</td><td>Analytical screen</td><td>Force and geometry identities are tested; comparator values are in preparation.json.</td></tr>
@@ -81,21 +90,37 @@ and strain acceptance thresholds are <strong>not established</strong>; a null cr
 <tr><td>Native timing and convergence</td><td>Not Evaluated</td><td>First case d0-t0 shall retain native state, convergence evidence and measured wall time.</td></tr>
 <tr><td>Installation acceptance</td><td>Not Evaluated</td><td>Versioned allowables, comparator tolerances, mesh convergence and all applicable cases are required.</td></tr>
 <caption>Table 3. Preparation status against the evidence needed for native acceptance.</caption></table>
+<table><tr><th>Table B row</th><th>Status</th><th>Reason</th></tr>
+<tr><td>Touchdown x</td><td>NOT_EVALUATED</td><td>published reference pending, #2608</td></tr>
+<tr><td>Sag-bend strain</td><td>NOT_EVALUATED</td><td>published reference pending, #2608</td></tr>
+<tr><td>Stiff closure</td><td>NOT_EVALUATED</td><td>published reference pending, #2608</td></tr>
+<caption>Table 4. Pending published references; these rows count as neither passed nor failed.</caption></table>
+<p>The static QA helper evaluates wire length from 5.0 to 15.0 m, nonnegative End A support
+reaction, S1, lift-off arc within 5.0 m and departure within 3.0 degrees of Table B,
+and nonnegative grounded effective tension. It reports passed, failed and not-evaluated
+counts separately. If all six evaluable rows pass, the status is
+&quot;accepted with 3 rows not evaluated&quot;: 6 passed, 0 failed and 3 not evaluated, out of 9 rows.
+This is partial static QA, with no full acceptance. No native results are available here.
+The three deferred rows cannot change an evaluated row's disposition. Their future bands
+are touchdown x within 10.0 m, sag-bend strain within 20.0 % of Table B, and stiff excess
+from 0.0 m to the 10.0 m lead; no reference value is substituted.</p>
 <p>The earlier preparation identified coincident endpoint horizontal coordinates, rigid end bending
 restraints, missing discrete stinger contacts and later-stage tension. The corrected builders use
-a free upper end at the stinger origin, a separated seabed anchor, released end moments, attached
+a free upper end ahead of the firing line, a separated seabed anchor, released end moments, attached
 roller stations and tension control from statics and every stage. The upper end is free so that
 the winch can apply a load without a redundant fixed-end reaction. The forward winch lead reuses
 the earlier builder's initial wire length; it is a generic geometry assumption.</p>
 <p>The stern origin is minus half the declared hull length. Roller arc stations follow the declared
 pipe mesh spacing along the declared stinger section. Their centre offset is minus half the coated
-pipe diameter minus half the support diameter. The horizontal endpoint seed is pipe length minus
-endpoint height; this leaves slack for bending and contact and does not predict equilibrium or
-touchdown. The endpoint seed supports level hulls and seabeds with a heading rotation; other
+pipe diameter minus half the support diameter. Declared Table B stiff hand estimates
+set the anchor coordinates; the weight-only screen remains a bound only. Anchored End B
+is one coated radius (0.485 m) above the seabed. The earlier 40.0 m stinger layout is
+superseded by the Table A findings; the revised geometry includes the firing line. The endpoint seed supports level hulls and seabeds with a heading rotation; other
 orientations are refused. Native readback remains necessary to establish contact and geometry.</p>
 <h2 id="driver-retention">Driver, retained data and timing</h2>
 <p><code>PYTHONPATH=src uv run --no-sources python scripts/orcaflex/prepare_slay_campaign.py --campaign docs/domains/pipeline-installation/slay-campaign --output &lt;new-output-directory&gt; --dry-run</code>
-generates and validates all models, records SHA-256 per file and preparation elapsed time.
+generates and validates all models and records SHA-256 per file. Preparation elapsed time
+is null in the committed manifest so regeneration is reproducible.
 An existing model directory is refused. Add <code>--queue --expected-hours &lt;scheduling-estimate&gt;
 --max-hours &lt;scheduling-ceiling&gt;</code> to write a native batch input, a queue manifest and
 <code>run-manifest.json</code>. The time budgets must be supplied explicitly; they are not measured
@@ -115,8 +140,8 @@ the batch workflow does not produce that marker. The later native execution step
 run record's byte digests, retain and reopen the native state, measure the complete canary interval,
 and record a criterion-based disposition before writing any qualified marker. Remaining cases are
 held. The native batch worker duration alone cannot establish readback or installation acceptance.</p>
-<p><a href="preparation.json">Preparation evidence</a> records timing for each preparation case;
-native timing remains null. <a href="manifest.template.json">Native manifest template</a> keeps
+<p><a href="preparation.json">Preparation evidence</a> retains null preparation timing for reproducibility;
+native timing also remains null. <a href="manifest.template.json">Native manifest template</a> keeps
 launch disabled. <a href="first-timed-case.json">The timed-case record</a> defines d0-t0 inputs,
 readback quantities, clock boundaries and retained intervals. Retain inputs, model digests, native outputs, compact metrics,
 arc-length arrays for geometry/tension/moment/curvature, roller loads, criteria revision and
