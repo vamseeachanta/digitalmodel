@@ -650,3 +650,80 @@ def test_extract_mismatched_retry_record_fails_closed(tmp_path):
     xml = ('<testsuite tests="1" failures="1" errors="0">'
            '<testcase classname="tests.test_new" name="test_racy"><failure/></testcase></testsuite>')
     assert extract(tmp_path, xml)["parsed"] is False
+
+
+@pytest.mark.parametrize("content", ["[]\n", None, '[{"id": "base-id", "status": "open", "evidence": ["main run"]}]\n'])
+def test_pr_register_comes_from_fetched_base(tmp_path, monkeypatch, content):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    monkeypatch.chdir(tmp_path)
+    local = tmp_path / ".github/ci/flaky-register.yml"
+    local.parent.mkdir(parents=True)
+    local.write_text('[{"id": "self-certified"}]')
+    calls = []
+
+    def git_output(command, **kwargs):
+        calls.append(command)
+        if command[1] == "fetch":
+            return ""
+        if command[1] == "rev-parse":
+            return "a" * 40 + "\n"
+        if command[1] == "ls-tree":
+            return ".github/ci/flaky-register.yml\n" if content is not None else ""
+        assert command == ["git", "show", "a" * 40 + ":.github/ci/flaky-register.yml"]
+        return content
+
+    monkeypatch.setattr(ci.subprocess, "check_output", git_output)
+    output = tmp_path / "selected.yml"
+    assert ci.main(["register", "--out", str(output)]) == 0
+    assert output.read_text() == (content if content is not None else "[]\n")
+    assert calls[0] == ["git", "fetch", "--no-tags", "origin", "refs/heads/main"]
+    assert local.read_text() == '[{"id": "self-certified"}]'
+
+
+def test_non_pr_register_uses_checkout(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "push")
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / ".github/ci/flaky-register.yml"
+    source.parent.mkdir(parents=True)
+    source.write_text("[]\n")
+    output = tmp_path / "selected.yml"
+    assert ci.main(["register", "--out", str(output)]) == 0
+    assert output.read_bytes() == source.read_bytes()
+
+
+def test_workflow_register_is_selected_before_retry_and_comparison():
+    for name, job in (("quality-gates-by-domain.yml", "domain-tests"),
+                      ("full-matrix-sweep.yml", "sweep-tests")):
+        workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
+        steps = workflow["jobs"][job]["steps"]
+        select = next(s for s in steps if s["name"] == "Select trusted register")
+        gate = next(s for s in steps if s["name"] == "Run domain gate")
+        assert steps.index(select) < steps.index(gate)
+        assert "ci_baseline.py register" in select["run"]
+        assert select["env"]["GITHUB_BASE_REF"] == "${{ github.base_ref }}"
+        assert '--register "$RUNNER_TEMP/flaky-register.yml"' in gate["run"]
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    steps = workflow["jobs"]["domain-tests-required"]["steps"]
+    enforce = next(s for s in steps if s["name"] == "Enforce required domain result")
+    assert "ci_baseline.py register" in enforce["run"]
+    assert '--register "$RUNNER_TEMP/flaky-register.yml"' in enforce["run"]
+
+
+@pytest.mark.parametrize("failure", ["fetch", "show"])
+def test_register_transport_failure_never_falls_back(tmp_path, monkeypatch, failure):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    output = tmp_path / "selected.yml"
+
+    def git_output(command, **kwargs):
+        if command[1] == failure:
+            raise subprocess.CalledProcessError(1, command)
+        if command[1] == "rev-parse":
+            return "a" * 40
+        return ".github/ci/flaky-register.yml"
+
+    monkeypatch.setattr(ci.subprocess, "check_output", git_output)
+    with pytest.raises(subprocess.CalledProcessError):
+        ci.select_register(output)
+    assert not output.exists()

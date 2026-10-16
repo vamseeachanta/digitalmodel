@@ -127,12 +127,18 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Select trusted register
+        if: matrix.domain == 'orcaflex'
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: python scripts/ci/ci_baseline.py register --out "$RUNNER_TEMP/flaky-register.yml"
+
       - name: Run domain gate
         id: domain-gate
         run: |
           set +e
           if [ "${{ matrix.domain }}" = "orcaflex" ]; then
-            uv run --no-sources --with pyyaml python scripts/ci/run_shard.py --mode report --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+            uv run --no-sources --with pyyaml python scripts/ci/run_shard.py --register "$RUNNER_TEMP/flaky-register.yml" --mode report --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           else
             ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           fi

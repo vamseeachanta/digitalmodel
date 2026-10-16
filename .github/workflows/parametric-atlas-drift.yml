@@ -48,12 +48,4 @@ jobs:
           uv pip install pyyaml
 
       - name: Atlas drift check (computed atlases must be up to date)
-        run: python scripts/ci/run_shard.py --shard parametric.refresh --junit reports/junit-atlas.xml --signal-retry -- python -m digitalmodel.parametric.refresh
-
-      - name: Upload retry evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: atlas-retry-evidence
-          path: reports/flaky-*.json
-          if-no-files-found: ignore
+        run: python -m digitalmodel.parametric.refresh

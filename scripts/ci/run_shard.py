@@ -5,6 +5,8 @@
 
 Report mode preserves the first exit code. Enforce mode requires register
 evidence for every recovered ID. Both attempts inherit console output.
+The signal diagnostic also preserves the first exit in report mode. Atlas
+runs directly and does not participate in the retry pilot.
 """
 
 import argparse
@@ -309,7 +311,7 @@ def main() -> int:
         retry_code = execute(command)
         record(args.junit.parent / f"flaky-{args.shard}.json", [args.shard] if retry_code == 0 else [],
                f"signal exit {code}", "signal-exit")
-        return retry_code
+        return code if args.mode == "report" else retry_code
     return retry_tests(args, command, code, started)
 
 

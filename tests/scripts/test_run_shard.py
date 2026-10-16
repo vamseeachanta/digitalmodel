@@ -65,7 +65,7 @@ def invoke(tmp_path, gate, signal=False, shard="sample", options=()):
     if signal:
         args.append("--signal-retry")
     return subprocess.run(
-        args + ["--", str(gate), "-m", "pytest", "tests/", "-q", "-p", "no:sugar", "--tb=line", "-o", "junit_family=xunit2", "--junitxml=reports/junit-sample.xml"],
+        args + ["--", str(gate), "-m", "pytest", "tests/", "-q", "-p", "no:sugar", "-p", "no:randomly", "--tb=line", "-o", "junit_family=xunit2", "--junitxml=reports/junit-sample.xml"],
         cwd=tmp_path, text=True, capture_output=True, check=False,
         env={k: v for k, v in os.environ.items() if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}},
     )
@@ -126,9 +126,14 @@ def test_unproven_or_excess_failures_never_retry(tmp_path, count, mode):
 
 def test_signal_abort_then_pass(tmp_path):
     result = invoke(tmp_path, fake_gate(tmp_path, first=134), signal=True)
-    assert result.returncode == 0
+    assert result.returncode == 134
     assert len(history(tmp_path)) == 2
     assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["kind"] == "signal-exit"
+
+
+def test_atlas_uses_direct_command():
+    workflow = SCRIPT.parents[2] / ".github/workflows/parametric-atlas-drift.yml"
+    assert "run_shard.py" not in workflow.read_text()
 
 
 def test_signal_normal_failure_never_retries(tmp_path):
@@ -139,7 +144,7 @@ def test_signal_normal_failure_never_retries(tmp_path):
 def test_retry_contains_only_failed_ids_and_original_flags(tmp_path):
     invoke(tmp_path, fake_gate(tmp_path))
     assert history(tmp_path)[1] == [
-        "-m", "pytest", "tests/test_fake.py::test_case_0", "-q", "-p", "no:sugar",
+        "-m", "pytest", "tests/test_fake.py::test_case_0", "-q", "-p", "no:sugar", "-p", "no:randomly",
         "--tb=line", "-o", "junit_family=xunit2", "--junitxml=reports/junit-sample-retry.xml",
     ]
 
@@ -195,7 +200,7 @@ def test_n4_marker_file_stays_red_with_xunit2_parameter_ids(tmp_path, mode, regi
         options.extend(["--register", str(path)])
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--shard", "real", "--junit", "reports/junit-real.xml", *options, "--",
-         sys.executable, "-m", "pytest", "tests/", "-q", "-p", "no:cacheprovider",
+         sys.executable, "-m", "pytest", "tests/", "-q", "-p", "no:cacheprovider", "-p", "no:randomly",
          "--junitxml=reports/junit-real.xml", "-o", "junit_family=xunit2"],
         cwd=tmp_path, text=True, capture_output=True, check=False,
     )
@@ -299,12 +304,40 @@ def test_contracts_signal_retry_is_also_denied(tmp_path):
     assert len(history(tmp_path)) == 1
 
 
-@pytest.mark.parametrize("registered", [False, True])
+@pytest.mark.parametrize("registered", [False, True, None])
 def test_recovery_extract_compare_publish_roundtrip(tmp_path, monkeypatch, registered):
     monkeypatch.setenv("GITHUB_SHA", "abc123")
     monkeypatch.setenv("GITHUB_RUN_ID", "123")
-    options = register(tmp_path) if registered else ("--mode", "enforce")
-    outcome = invoke(tmp_path, fake_gate(tmp_path), options=options)
+    gate = fake_gate(tmp_path)
+    source = tmp_path / ".github/ci/flaky-register.yml"
+    source.parent.mkdir(parents=True)
+    entry = dict(id="tests/test_fake.py::test_case_0", status="open", evidence=["main run"])
+    source.write_text(json.dumps([entry]))
+    spec = importlib.util.spec_from_file_location("ci", SCRIPT.with_name("ci_baseline.py"))
+    selector = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(selector)
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    monkeypatch.chdir(tmp_path)
+    calls = []
+
+    def base_output(command, **kwargs):
+        calls.append(command)
+        if command[1] == "fetch":
+            return ""
+        if command[1] == "rev-parse":
+            return "a" * 40
+        if command[1] == "ls-tree":
+            return ".github/ci/flaky-register.yml" if registered is not None else ""
+        assert command == ["git", "show", "a" * 40 + ":.github/ci/flaky-register.yml"]
+        return json.dumps([entry] if registered else [])
+
+    monkeypatch.setattr(selector.subprocess, "check_output", base_output)
+    selected = tmp_path / "register.yml"
+    selector.select_register(selected)
+    assert calls[0] == ["git", "fetch", "--no-tags", "origin", "refs/heads/main"]
+    options = ("--mode", "enforce", "--register", str(selected))
+    outcome = invoke(tmp_path, gate, options=options)
     assert outcome.returncode == (0 if registered else 1)
     spec = importlib.util.spec_from_file_location("ci", SCRIPT.with_name("ci_baseline.py"))
     ci = importlib.util.module_from_spec(spec)

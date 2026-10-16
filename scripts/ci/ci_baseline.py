@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import re
 import subprocess
 import zipfile
@@ -400,10 +401,42 @@ def reconcile_results(directory: Path, jobs: list[dict[str, Any]], prefix: str,
         write_json(directory / f"result-{shard}.json", row)
 
 
+def select_register(output: Path) -> None:
+    """Copy the base-tip register for PRs, or the checkout for other events.
+
+    Fetch and object-read failures propagate. An absent file is an empty
+    register, never a reason to fall back to the pull request's own entries.
+    """
+    path = ".github/ci/flaky-register.yml"
+    content = "[]\n"
+    if os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
+        base = os.environ.get("GITHUB_BASE_REF", "")
+        if not base or not re.fullmatch(r"[A-Za-z0-9_./-]+", base):
+            raise ValueError("Invalid base branch")
+        env = {key: value for key, value in os.environ.items()
+               if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+
+        def git(*args: str) -> str:
+            return subprocess.check_output(["git", *args], text=True, env=env)
+
+        git("fetch", "--no-tags", "origin", f"refs/heads/{base}")
+        tip = git("rev-parse", "FETCH_HEAD").strip()
+        if not re.fullmatch(r"[0-9a-f]{40,64}", tip):
+            raise ValueError("Invalid fetched base tip")
+        if git("ls-tree", "--name-only", tip, "--", path).strip():
+            content = git("show", f"{tip}:{path}")
+    elif Path(path).is_file():
+        content = Path(path).read_text(encoding="utf-8")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(content, encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     """Dispatch the four artifact operations."""
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    sub = commands.add_parser("register")
+    sub.add_argument("--out", type=Path, required=True)
     for command, source in (("extract", "--junit"), ("extract-log", "--log")):
         sub = commands.add_parser(command)
         sub.add_argument(source, dest="source", type=Path, required=True)
@@ -426,7 +459,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_argument("--verdict", type=Path, required=True)
     sub.add_argument("--now", type=instant)
     args = parser.parse_args(argv)
-    if args.command in {"extract", "extract-log"}:
+    if args.command == "register":
+        select_register(args.out)
+    elif args.command in {"extract", "extract-log"}:
         extract(args)
     elif args.command == "publish":
         publish(args.results, args.previous, args.out)
