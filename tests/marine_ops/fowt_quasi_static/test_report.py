@@ -258,3 +258,12 @@ def test_mooring_force_properties_use_meganewtons():
     design = ' '.join(parser.section_text['section-3'])
     assert 'Axial Stiffness 3270 MN' in design
     assert 'Minimum Breaking Load 22.29 MN' in design
+
+
+def test_report_rebuild_is_independent_of_caller_plot_settings(tmp_path):
+    import matplotlib
+    from digitalmodel.marine_ops.fowt_quasi_static.report import build_report
+    manifest = json.loads(REPORT.with_suffix('.manifest.json').read_text())
+    with matplotlib.rc_context({'font.size': 22, 'axes.facecolor': 'pink'}):
+        built, _ = build_report(ROOT, manifest['results'], tmp_path)
+    assert built.read_bytes() == REPORT.read_bytes()

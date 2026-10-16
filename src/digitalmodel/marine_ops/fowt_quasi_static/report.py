@@ -353,7 +353,9 @@ def build_report(root: Path, results: dict, output_dir: Path) -> tuple[Path, Pat
     root, output_dir = Path(root), Path(output_dir)
     basis = yaml.safe_load((root/BASIS).read_text())
     validate_cases(results["cases"])
-    sections = _document_sections(basis, results)
+    import matplotlib
+    with matplotlib.rc_context(matplotlib.rcParamsDefault):
+        sections = _document_sections(basis, results)
     notice = (root/SOURCES).read_text().split("## Publisher data notice\n", 1)[1].split("\n## ", 1)[0].strip()
     sections[-1] = sections[-1].removesuffix("</section>")+(
         "<h3 id='appendix-c'>Appendix C. Public data terms</h3>"
