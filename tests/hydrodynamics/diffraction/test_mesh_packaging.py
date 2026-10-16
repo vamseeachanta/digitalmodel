@@ -75,9 +75,17 @@ def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, pa
     meshes.mkdir(parents=True)
     source = Path(__file__).resolve().parents[3] / "examples/hydrodynamics/diffraction/unit_box_rao/unit_box.gdf"
     lines = source.read_text(encoding="utf-8").splitlines()
+    for index in range(4, len(lines)):
+        x, y, z = map(float, lines[index].split())
+        lines[index] = f"{x:.6f} {y - 0.5:.6f} {z:.6f}"
+    assert {float(line.split()[1]) for line in lines[4:]} == {-0.5, 0.5}
+    if partial:
+        # Omit the panel on x = 0 so reflection does not duplicate an interior wall.
+        lines = lines[:-4]
+        lines[3] = "4"
     lines[2] = "1 0" if partial else "0 0"
     (meshes / "hull.gdf").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    lines[2] = "1 1"
+    lines[2] = "0 0" if partial else "1 1"
     (case / "hull.gdf").write_text("\n".join(lines) + "\n", encoding="utf-8")
     data = _spec_data("meshes/hull.gdf")
     data["vessel"]["geometry"]["symmetry"] = "xz"

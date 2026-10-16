@@ -223,7 +223,16 @@ class TestRoundTrip:
         # OrcaWave only uses the basename
         assert "unit_box.gdf" in body["BodyMeshFileName"]
 
-    def test_symmetry_preserved(self, l00_spec, backend, tmp_path):
+    def test_symmetric_declaration_emits_full_mesh(self, l00_spec, backend, tmp_path):
+        source = FULL_SPEC.parent / l00_spec.vessel.geometry.mesh_file
+        lines = source.read_text(encoding="utf-8").splitlines()
+        for index in range(4, len(lines)):
+            x, y, z = map(float, lines[index].split())
+            lines[index] = f"{x:.6f} {y - 0.5:.6f} {z:.6f}"
+        assert {float(line.split()[1]) for line in lines[4:]} == {-0.5, 0.5}
+        mesh = tmp_path / "symmetric_box.gdf"
+        mesh.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        l00_spec.vessel.geometry.mesh_file = str(mesh)
         l00_spec.vessel.geometry.symmetry = "xz"
         output = backend.generate_single(l00_spec, tmp_path)
         with open(output) as f:

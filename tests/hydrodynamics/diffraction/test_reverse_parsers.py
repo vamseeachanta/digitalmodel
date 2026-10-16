@@ -1010,8 +1010,8 @@ class TestCrossConversion:
 class TestParseExistingOrcaWaveFile:
     """Test parsing a real OrcaWave .yml example file."""
 
-    def test_parse_l01_default_vessel(self):
-        """Parse the L01 Default vessel example OrcaWave .yml file."""
+    def test_example_symmetry_refusal_and_full_mesh_properties(self, tmp_path):
+        """Refuse declared symmetry and retain full-mesh property coverage."""
         from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
             OrcaWaveInputParser,
         )
@@ -1019,8 +1019,19 @@ class TestParseExistingOrcaWaveFile:
         example_path = Path(__file__).resolve().parents[3] / (
             "docs/domains/orcawave/examples/L01_default_vessel/L01 Default vessel.yml"
         )
-        with pytest.raises(ValueError, match="symmetry"):
+        with pytest.raises(ValueError, match="Unsupported OrcaWave mesh symmetry"):
             OrcaWaveInputParser().parse(example_path)
+
+        data = yaml.safe_load(example_path.read_text(encoding="utf-8-sig"))
+        data["Bodies"][0]["BodyMeshSymmetry"] = "None"
+        full_path = tmp_path / "full_mesh.yml"
+        full_path.write_text(yaml.safe_dump(data), encoding="utf-8")
+        result = OrcaWaveInputParser().parse(full_path)
+        assert result.environment.water_depth == pytest.approx(400.0)
+        assert result.environment.water_density == pytest.approx(1025.0)
+        assert len(result.frequencies.to_frequencies_rad_s()) == 24
+        assert len(result.wave_headings.to_heading_list()) == 9
+        assert result.vessel.inertia.mass == pytest.approx(9017950.0)
 
 
 @pytest.mark.parametrize("symmetry", ["xz plane", "yz plane", "xz and yz planes", "unknown"])

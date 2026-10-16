@@ -137,7 +137,8 @@ def judge(observed: float, expected: float, tolerance: float, *,
     relative allowance. An exact zero
     requires ``absolute_tolerance`` in RAO units instead. The two tolerance bases
     are mutually exclusive. ``relative_difference`` remains the signed difference
-    divided by expected (None for zero), even when the reference sets the verdict.
+    divided by expected (None for zero) and is informational. Both relative routes
+    judge on the larger magnitude, with the reference floor applied when supplied.
     """
     inputs = (observed, expected, tolerance, body_length, minimum_wavelength_ratio)
     if not all(math.isfinite(value) for value in inputs):
