@@ -1,166 +1,39 @@
-scope: Active metal-loss calculations and decision criteria only; no repair design or pitting assessment is issued.
-report_label: assumed, based on previous experience
+scope: Synthetic local metal loss; no licensed factors or equation constants are reproduced.
+report_label: assumed for this assessment
 assumptions:
-  - parameter: Pressure safety factor
-    value: '1.39'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/corroded_pipe.py:63
-    basis_as_written: '1/F with F = 0.72; default only so every validated golden reproduces unchanged'
-  - parameter: Operational usage, axial design and pressure design factors
-    value: '0.72 each'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/assessment/level1_screener.py:40
-    basis_as_written: Default design factors; override via constructor kwargs
-  - parameter: Modelling factor F1
-    value: '0.9'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/pipeline_defect_screen.py:82
-    basis_as_written: Part B modelling factor
-  - parameter: Total pressure usage factor
-    value: '0.648 = 0.9 × 0.72'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/dnv_rp_f101.py:343
-    basis_as_written: modelling_factor times operational_usage_factor
-  - parameter: Allowable remaining strength factor
-    value: '0.90'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py:65
-    basis_as_written: allowable remaining strength factor
-  - parameter: Original-method flow stress
-    value: '1.1 × SMYS'
-    units: psi
-    source: src/digitalmodel/asset_integrity/corroded_pipe.py:189
-    basis_as_written: Original B31G flow stress
-  - parameter: Modified and effective-area flow stress
-    value: 'SMYS + 1e4'
-    units: psi
-    source: src/digitalmodel/asset_integrity/corroded_pipe.py:47
-    basis_as_written: Flow-stress adder for Modified B31G / RSTRENG
-  - parameter: Tensile and axial flow-stress bases
-    value: 'SMTS; SMYS respectively'
-    units: psi
-    source: src/digitalmodel/asset_integrity/pipeline_defect_screen.py:81
-    basis_as_written: DNV uses SMTS; circumferential net-section uses SMYS
-  - parameter: Original area and bulging coefficients
-    value: '2/3; 0.8; length parameter boundary 20'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/corroded_pipe.py:13
-    basis_as_written: Formula constants confirmed against ASME B31G-2012 / pipenostics reference
-  - parameter: Modified area and bulging coefficients
-    value: '0.85; 0.6275; 0.003375; boundary 50; 0.032; 3.3'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/corroded_pipe.py:17
-    basis_as_written: Formula constants confirmed against ASME B31G-2012 / pipenostics reference
-  - parameter: Area-ratio numerical cap; trapezoidal weight
-    value: '0.999; 0.5'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/corroded_pipe.py:120
-    basis_as_written: Area cap in failure-pressure evaluation; prefix trapezoidal integral
-  - parameter: Tensile-strength length-correction coefficient
-    value: '0.31'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/dnv_rp_f101.py:275
-    basis_as_written: Q = sqrt(1 + 0.31 (L / sqrt(D t)) squared)
-  - parameter: Relative-depth applicability limits
-    value: '0.80 original family; 0.85 tensile-strength method; below 1 for net-section'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/corroded_pipe.py:73
-    basis_as_written: Calibrated relative-depth range; DNV limit at dnv_rp_f101.py:167; circumferential through-wall flag
-  - parameter: Longitudinal and circumferential joint efficiencies
-    value: '1 each'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/circumferential_defect.py:234
-    basis_as_written: default 1.0 for seamless
-  - parameter: Circumferential extent multiplier
-    value: '2'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/circumferential_defect.py:285
-    basis_as_written: c <= 2 s (E_L/E_C); net-section evaluation remains applicable beyond this extent test
-  - parameter: Pressure joint and temperature factors
-    value: '1 each'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/assessment/level1_screener.py:107
-    basis_as_written: temperature_derating and longitudinal_joint_factor
-  - parameter: Future corrosion allowance
-    value: '0.000'
-    units: in
-    source: src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py:64
-    basis_as_written: future corrosion allowance default
-  - parameter: Level 2 simplified bulging parameters
-    value: '1.285; 0.48; lower 0.354; upper 20; minimum factor 1'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/assessment/level2_engine.py:25
-    basis_as_written: Simplified cylindrical closed form; frozen beyond the upper limit with applicability flag
-  - parameter: Level 2 reference wall and strength cap
-    value: 'required pressure wall; strength and wall ratios capped at 1'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/assessment/level2_engine.py:134
-    basis_as_written: use t_min as the reference; RSF cannot exceed 1.0
-  - parameter: Degraded-cell threshold and general-loss fraction
-    value: '0.90 of nominal wall; 0.25 of all cells'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/assessment/ffs_router.py:46
-    basis_as_written: More than 10 percent loss counts as degraded; GML fraction threshold
-  - parameter: Classification morphology thresholds
-    value: '5 regions; 0.10 total fraction; 0.02 largest fraction; 0.95 background ratio'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/assessment/ffs_router.py:52
-    basis_as_written: Pitting-morphology heuristic; neither supplied section routes to pitting
-  - parameter: Minimum readings; maximum general-loss variation
-    value: '15; 0.10'
-    units: count and ratio
-    source: src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py:98
-    basis_as_written: engineering defaults informed by API 579-1/ASME FFS-1 Part 4 and common UT practice; not code mandates
-  - parameter: Thickness tolerance; local-profile cell count
-    value: '0.020; 5'
-    units: in and count
-    source: src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py:100
-    basis_as_written: Ultrasonic thickness measurement tolerance; minimum local flaw cells
-  - parameter: Severe-loss floor; repeat readings; confidence multiplier
-    value: '0.50; 3; 2'
-    units: ratio and counts
-    source: src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py:42
-    basis_as_written: Severe RSF floor; remeasure minimum cell count; comfortable margin twice UT tolerance
-  - parameter: Population scatter; minimum cell convention
-    value: 'population standard deviation; zero-based row and column'
-    units: '1'
-    source: src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py:280
-    basis_as_written: population std (ddof=0); positional indices
-  - parameter: Strength-decision bands
-    value: '0 monitor band; 0 de-rating floor; 0 repair-life band'
-    units: ratios and yr
-    source: src/digitalmodel/asset_integrity/pipeline_defect_screen.py:137
-    basis_as_written: capacity/demand, not API 579 RSF severity bands
-  - parameter: Supplemental decision bands
-    value: '0.05 monitor band; 0.50 de-rating floor; 2 repair-life band'
-    units: ratios and yr
-    source: src/digitalmodel/asset_integrity/assessment/ffs_decision.py:106
-    basis_as_written: Per-class decision thresholds
-  - parameter: Corrosion rate
-    value: '0.005; sensitivities 0.0025 and 0.01'
-    units: in/yr
-    source: examples/workflows/ffs-metal-loss/input.yml
-    basis_as_written: corrosion_rate_in_per_yr; half and double rate requested for this assessment
-    report_label: assumed for this assessment; to be replaced by a rate from repeat inspection
-  - parameter: Re-inspection interval
-    value: 'half the remaining life; immediate action when life is zero'
-    units: yr
-    source: examples/workflows/pipeline-ffs-assessment/input.yml
-    basis_as_written: Assessed interval assumption
-  - parameter: Section B supplementary strength, loads and geometry
-    value: 'SMTS 6.67e4 psi; axial stress 1e4 psi; arc width 4 in; row spacing 1 in'
-    units: psi and in
-    source: examples/workflows/pipeline-ffs-assessment/input.yml
-    basis_as_written: Section A values assumed for missing fields; unit spacing matches held Level 2 default
-  - parameter: Section A pressure design basis
-    value: 'B31.8; allowable strength ratio 0.90'
-    units: '1'
-    source: examples/workflows/ffs-metal-loss/input.yml
-    basis_as_written: Section B basis assumed for the supplemental Section A assessment
-  - parameter: Ancillary automatic repair defaults
-    value: '100 °F; 20 yr repair life; 0.5 interval fraction; 2500 psi class pressure limits except zero for structural-only class; 180 °F temperature limits'
-    units: °F, yr and psi
-    source: src/digitalmodel/asset_integrity/composite_repair.py:40
-    basis_as_written: operator-practice defaults, not values claimed from standard tables
-    used_for_assessment: false
-    disposition: Coordinator invokes this helper, but its candidate advice and repair-life interval are excluded from the assessment and manifest; no repair-specific design basis is supplied.
+- parameter: Corrosion rate
+  value: 0.005; sensitivities 0.0025 and 0.01
+  units: in/yr
+  source: examples/workflows/ffs-metal-loss/input.yml
+  basis_as_written: corrosion_rate_in_per_yr; half and double rate requested for this assessment
+  report_label: assumed for this assessment; to be replaced by a rate from repeat inspection
+- parameter: Re-inspection interval
+  value: half the remaining life; immediate action when life is zero
+  units: yr
+  source: examples/workflows/pipeline-ffs-assessment/input.yml
+  basis_as_written: Assessed interval assumption
+- parameter: Section B supplementary strength, loads and geometry
+  value: SMTS 66,700 psi; axial stress 10,000 psi; arc width 4 in; row spacing 1 in
+  units: psi and in
+  source: examples/workflows/pipeline-ffs-assessment/input.yml
+  basis_as_written: Strength, load and arc width copied from Section A; 1 in row spacing assumed for this assessment
+- parameter: Decision precedence
+  value: Applicability and severe loss first; sampling adequacy before the strength-factor referral; re-rating and acceptance follow
+  units: order
+  source: scripts/reporting/build_pipeline_ffs_report.py
+  report_label: assumed for this assessment
+- parameter: Remaining-life routes
+  value: Section A projects to design pressure on the fixed-geometry reduced local-loss rating; Section B projects to the required pressure wall
+  units: basis
+  source: scripts/reporting/build_pipeline_ffs_report.py
+  report_label: assumed for this assessment; not an API Level 1 criterion
+- parameter: Location class
+  value: Class 1, Division 1
+  units: classification
+  source: src/digitalmodel/asset_integrity/assessment/level1_screener.py
+  report_label: assumed for both synthetic sections
+method_sources:
+- ASME B31G, Manual for Determining the Remaining Strength of Corroded Pipelines, 2012
+- DNV-RP-F101, Corroded Pipelines, 2010-10
+- API 579-1/ASME FFS-1, Fitness-For-Service, 2021; Part 2, Fitness-For-Service Engineering Assessment Procedure; Part 5, Assessment of Local Metal Loss
+- ASME B31.8, Gas Transmission and Distribution Piping Systems, 2022; 841, Steel Pipe

@@ -6,9 +6,9 @@
 <title>{{ doc.title }}</title>
 {% if plotlyjs %}<script>{{ plotlyjs|safe }}</script>{% endif %}
 <style>
-:root{color-scheme:light;--ink:#183449;--accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
 *{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
-header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--accent)}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
 h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
 .layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
 nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
@@ -26,7 +26,11 @@ figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption
 </style>
 </head>
 <body>
-<header><h1>{{ doc.title }}</h1></header>
+<header><h1>{{ doc.title }}</h1>
+<p>Document {{ doc.number }} | Revision {{ doc.revision }}{% if doc.date %} | {{ doc.date }}{% endif %}</p>
+{% if doc.assessment_label or doc.prepared_by or doc.checked_by or doc.approved_by %}<div id="document-control">{% if doc.assessment_label %}<p>{{ doc.assessment_label }}</p>{% endif %}
+{% if doc.prepared_by or doc.checked_by or doc.approved_by %}<p>{% if doc.prepared_by %}Prepared: {{ doc.prepared_by }}{% endif %}{% if doc.checked_by %}{% if doc.prepared_by %} | {% endif %}Checked: {{ doc.checked_by }}{% endif %}{% if doc.approved_by %}{% if doc.prepared_by or doc.checked_by %} | {% endif %}Approved: {{ doc.approved_by }}{% endif %}</p>{% endif %}</div>{% endif %}
+</header>
 <div class="layout">
 <nav aria-label="Contents"><ol>
 {% for section in sections %}<li><a href="#{{ section.key }}">{{ section.title }}</a></li>{% endfor %}
@@ -61,6 +65,10 @@ figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption
 <section id="{{ section.key }}"><h2>{{ loop.index }}. {{ section.title }}</h2>
 {% if section.subtitle %}<p>{{ section.subtitle }}</p>{% endif %}
 {{ blocks(section, loop.index) }}</section>
+{% if loop.first and doc.revision_history %}<div id="revision-history"><h3>Revision history</h3>
+<table><caption>Revision history</caption><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
+<tbody>{% for row in doc.revision_history %}<tr><td>{{ row.rev }}</td><td>{{ row.date }}</td><td>{{ row.description }}</td></tr>{% endfor %}</tbody>
+</table></div>{% endif %}
 {% endfor %}
 {% for section in appendices %}
 <section id="{{ section.key }}"><h2>{{ section.title }}</h2>{{ blocks(section, letters[loop.index0]) }}</section>

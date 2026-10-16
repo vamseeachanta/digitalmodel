@@ -17,31 +17,21 @@
           "fca_in": 0.0,
           "nominal_od_in": 24.0,
           "nominal_wt_in": 0.5,
-          "rsf_a": 0.9,
           "smys_psi": 52000.0
         },
         "coordinator": {
-          "assessment_type": "GML",
-          "code_reference": "API 579-1/ASME FFS-1 (2021)",
+          "assessment_type": "LML",
           "component_id": "Section A, 24 in line",
           "fca_in": 0.0,
-          "folias_factor": 1.0,
           "level_reached": 2,
-          "passes": false,
           "remaining_life_yr": 0.0,
-          "rerated_pressure_psi": 800.0,
-          "rsf": 1.0,
-          "rsf_a": 0.9,
-          "sufficiency_status": "TAKE_MORE",
           "t_measured_avg_in": 0.42,
           "t_measured_min_in": 0.2,
           "t_min_in": 0.2564102564102564,
-          "t_nominal_in": 0.5,
-          "verdict": "REPAIR"
+          "t_nominal_in": 0.5
         },
-        "decision": "take more measurements",
+        "decision": "escalate",
         "inputs": {
-          "axial_design_factor": 0.72,
           "axial_positions_in": [
             0,
             2,
@@ -83,18 +73,16 @@
           ],
           "nominal_od_in": 24.0,
           "nominal_wt_in": 0.5,
-          "safety_factor": 1.39,
           "smts_psi": 66700.0,
-          "smys_psi": 52000.0,
-          "usage_factor": 0.72
+          "smys_psi": 52000.0
         },
-        "interval_yr": 0.0,
+        "interval_yr": 5.77199028003072,
         "level1": {
           "design_code": "B31.8",
           "margin_in": -0.056410256410256376,
+          "pressure_wall_comparison": "MINIMUM_BELOW_PRESSURE_WALL",
           "t_min_in": 0.2564102564102564,
-          "t_mm_in": 0.2,
-          "verdict": "FAIL_LEVEL_1"
+          "t_mm_in": 0.2
         },
         "level2": {
           "applicability": {
@@ -102,31 +90,38 @@
             "notes": [],
             "ok": true
           },
-          "assessment_type": "GML",
-          "folias_factor": 1.0,
-          "rsf": 1.0,
-          "rsf_a": 0.9,
+          "assessment_type": "LML",
+          "flaw_length_in": 6.0,
+          "folias_factor": 1.8657826892428444,
+          "lambda": 2.2735549639085137,
+          "pressure_criterion": "RATING_ABOVE_DEMAND",
+          "rsf": 0.5896060058646886,
+          "rt": 0.4,
+          "strength_factor_comparison": "BELOW_ALLOWABLE_REDUCED_RATING_EVALUATED",
           "t_am_in": 0.42000000000000004,
-          "t_mm_in": 0.2,
-          "verdict": "ACCEPT"
+          "t_mm_in": 0.2
         },
+        "life_basis": "fixed-geometry reduced local-loss rating",
+        "life_limit_wall_in": 0.1422800971996928,
         "life_sensitivity": [
           [
             0.0025,
-            0.0
+            23.08796112012288
           ],
           [
             0.005,
-            0.0
+            11.54398056006144
           ],
           [
             0.01,
-            0.0
+            5.77199028003072
           ]
         ],
+        "local_loss_rating_psi": 1021.9837434987936,
         "name": "Section A, 24 in line",
         "pressure_rating_psi": 800.0,
-        "remaining_life_yr": 0.0,
+        "reference_wall_in": 0.5,
+        "remaining_life_yr": 11.54398056006144,
         "strength": {
           "applicability": {
             "flags": [],
@@ -156,7 +151,6 @@
           },
           "governing_method": "DNV-RP-F101",
           "inputs": {
-            "axial_design_factor": 0.72,
             "axial_positions_in": [
               0.0,
               2.0,
@@ -198,10 +192,8 @@
             ],
             "nominal_od_in": 24.0,
             "nominal_wt_in": 0.5,
-            "safety_factor": 1.39,
             "smts_psi": 66700.0,
-            "smys_psi": 52000.0,
-            "usage_factor": 0.72
+            "smys_psi": 52000.0
           },
           "limitations": [
             "The caller-defined grid window is assumed to bound one defect, including intact gaps.",
@@ -273,10 +265,7 @@
               "margin": 1.4558726015308445,
               "method": "DNV-RP-F101",
               "pressure_basis": {
-                "modelling_factor": 0.9,
-                "operational_usage_factor": 0.72,
-                "result_label": "Part B safe working pressure",
-                "total_usage_factor": 0.648
+                "result_label": "Part B safe working pressure"
               }
             },
             {
@@ -311,25 +300,24 @@
           "asset_class": "pipeline",
           "derated": null,
           "derated_units": null,
-          "governing_criterion": "Screening ACCEPT (RSF=1.456 >= RSFa=1.00).",
-          "margin": 1.4558726015308445,
+          "governing_criterion": "Minimum capacity/demand=1.277; required ratio=1. Includes the reduced local-loss pressure rating and separate axial restriction.",
+          "margin": 1.277479679373492,
           "margin_allowable": 1.0,
-          "remaining_life_yr": 0.0,
+          "minimum_capacity_to_demand": 1.277479679373492,
+          "remaining_life_yr": 11.54398056006144,
           "rerated_mawp_psi": null,
-          "rsf": 1.4558726015308445,
-          "rsf_a": 1.0,
           "verdict": "ACCEPT"
         },
         "sufficiency": {
           "actions": [
             {
-              "action": "densify_readings",
+              "action": "escalate_level_2",
               "count": null,
-              "location": "around the minimum-thickness cell (2, 1)",
-              "rationale": "high scatter — possible localised metal loss"
+              "location": "office Level 2 re-rating",
+              "rationale": "RSF below RSFa but above the replace floor"
             }
           ],
-          "confidence": "medium",
+          "confidence": "high",
           "metrics": {
             "cov": 0.23328473740792172,
             "min_degraded": true,
@@ -341,15 +329,15 @@
             "min_thickness_in": 0.2,
             "n_readings": 15,
             "profile_cells": 6,
-            "rsf": 1.0,
-            "rsf_a": 0.9,
+            "rsf": 0.5896060058646886,
             "t_margin_in": -0.056410256410256376
           },
           "reasons": [
-            "Thickness scatter COV=0.23 exceeds 0.10; loss is non-uniform, so general (area-averaged) assessment may mask a local thin spot."
+            "Remaining strength factor below the allowable factor and above the replacement floor; formal local-loss evaluation is required. Field data is adequate. Method basis: Reference 3."
           ],
-          "status": "TAKE_MORE"
-        }
+          "status": "ESCALATE"
+        },
+        "uncorroded_rating_psi": 1560.0000000000002
       },
       {
         "applicability": {
@@ -367,31 +355,21 @@
           "fca_in": 0.0,
           "nominal_od_in": 12.75,
           "nominal_wt_in": 0.5,
-          "rsf_a": 0.9,
           "smys_psi": 52000.0
         },
         "coordinator": {
           "assessment_type": "LML",
-          "code_reference": "API 579-1/ASME FFS-1 (2021)",
           "component_id": "Section B, 12.75 in line",
           "fca_in": 0.0,
-          "folias_factor": 1.5812689937754407,
           "level_reached": 1,
-          "passes": true,
           "remaining_life_yr": 25.945512820512818,
-          "rerated_pressure_psi": 1000.0,
-          "rsf": 1.0,
-          "rsf_a": 0.9,
-          "sufficiency_status": "TAKE_MORE",
           "t_measured_avg_in": 0.4894444444444444,
           "t_measured_min_in": 0.3,
           "t_min_in": 0.1702724358974359,
-          "t_nominal_in": 0.5,
-          "verdict": "ACCEPT"
+          "t_nominal_in": 0.5
         },
         "decision": "take more measurements",
         "inputs": {
-          "axial_design_factor": 0.72,
           "axial_positions_in": [
             0,
             1,
@@ -459,19 +437,16 @@
           ],
           "nominal_od_in": 12.75,
           "nominal_wt_in": 0.5,
-          "rsf_a": 0.9,
-          "safety_factor": 1.39,
           "smts_psi": 66700.0,
-          "smys_psi": 52000.0,
-          "usage_factor": 0.72
+          "smys_psi": 52000.0
         },
         "interval_yr": 12.972756410256409,
         "level1": {
           "design_code": "B31.8",
           "margin_in": 0.12972756410256409,
+          "pressure_wall_comparison": "MINIMUM_MEETS_PRESSURE_WALL",
           "t_min_in": 0.1702724358974359,
-          "t_mm_in": 0.3,
-          "verdict": "ACCEPT"
+          "t_mm_in": 0.3
         },
         "level2": {
           "applicability": {
@@ -481,15 +456,17 @@
           },
           "assessment_type": "LML",
           "flaw_length_in": 2.0,
-          "folias_factor": 1.5812689937754407,
-          "lambda": 1.768009492029805,
-          "rsf": 1.0,
-          "rsf_a": 0.9,
-          "rt": 1.0,
+          "folias_factor": 1.2408200445587279,
+          "lambda": 1.0603010411540394,
+          "pressure_criterion": "RATING_ABOVE_DEMAND",
+          "rsf": 0.8854356310284619,
+          "rt": 0.6,
+          "strength_factor_comparison": "BELOW_ALLOWABLE_REDUCED_RATING_EVALUATED",
           "t_am_in": 0.48944444444444446,
-          "t_mm_in": 0.3,
-          "verdict": "ACCEPT"
+          "t_mm_in": 0.3
         },
+        "life_basis": "point-minimum pressure wall",
+        "life_limit_wall_in": 0.1702724358974359,
         "life_sensitivity": [
           [
             0.0025,
@@ -504,8 +481,10 @@
             12.972756410256409
           ]
         ],
+        "local_loss_rating_psi": 2888.9507647673736,
         "name": "Section B, 12.75 in line",
         "pressure_rating_psi": 1000.0,
+        "reference_wall_in": 0.5,
         "remaining_life_yr": 25.945512820512818,
         "strength": {
           "applicability": {
@@ -536,7 +515,6 @@
           },
           "governing_method": "B31G",
           "inputs": {
-            "axial_design_factor": 0.72,
             "axial_positions_in": [
               0.0,
               1.0,
@@ -604,11 +582,8 @@
             ],
             "nominal_od_in": 12.75,
             "nominal_wt_in": 0.5,
-            "rsf_a": 0.9,
-            "safety_factor": 1.39,
             "smts_psi": 66700.0,
-            "smys_psi": 52000.0,
-            "usage_factor": 0.72
+            "smys_psi": 52000.0
           },
           "limitations": [
             "The caller-defined grid window is assumed to bound one defect, including intact gaps.",
@@ -680,10 +655,7 @@
               "margin": 2.8949059667477375,
               "method": "DNV-RP-F101",
               "pressure_basis": {
-                "modelling_factor": 0.9,
-                "operational_usage_factor": 0.72,
-                "result_label": "Part B safe working pressure",
-                "total_usage_factor": 0.648
+                "result_label": "Part B safe working pressure"
               }
             },
             {
@@ -718,13 +690,12 @@
           "asset_class": "pipeline",
           "derated": null,
           "derated_units": null,
-          "governing_criterion": "Screening ACCEPT (RSF=2.724 >= RSFa=1.00).",
+          "governing_criterion": "Minimum capacity/demand=2.724; required ratio=1. Includes the reduced local-loss pressure rating and separate axial restriction.",
           "margin": 2.7239815803187764,
           "margin_allowable": 1.0,
+          "minimum_capacity_to_demand": 2.7239815803187764,
           "remaining_life_yr": 25.945512820512818,
           "rerated_mawp_psi": null,
-          "rsf": 2.7239815803187764,
-          "rsf_a": 1.0,
           "verdict": "ACCEPT"
         },
         "sufficiency": {
@@ -748,15 +719,15 @@
             "min_thickness_in": 0.3,
             "n_readings": 36,
             "profile_cells": 2,
-            "rsf": 1.0,
-            "rsf_a": 0.9,
+            "rsf": 0.8854356310284619,
             "t_margin_in": 0.12972756410256409
           },
           "reasons": [
             "Local flaw is resolved by only 2 grid cells; the critical (river-bottom) thickness profile is under-sampled."
           ],
           "status": "TAKE_MORE"
-        }
+        },
+        "uncorroded_rating_psi": 2936.470588235294
       }
     ],
     "sources": [
@@ -772,8 +743,8 @@
       }
     ]
   },
-  "assumptions_sha256_lf": "61683b0ebc62fe6eb83d58ca39b20b09db96752354bbef6e3aa04446d4bed86a",
-  "builder_sha256_lf": "c7afd969d6d403138469552bdb395885a1f88ca88f37bfca365423c85acf7130",
+  "assumptions_sha256_lf": "a3149daeec132383752f45cdc9dd3b743a3752e6dd60495fd7a92d11a2d51f58",
+  "builder_sha256_lf": "611b46b0dffd154276f0d66334c7e549122db6b50f30da02071f33df2d23c742",
   "calculation_sources_sha256_lf": {
     "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e40c309ae0a5a847b640973fb6e4e2a1ad2f43bdbcf77126e484c744a09bb239",
@@ -793,11 +764,11 @@
     "src/digitalmodel/asset_integrity/rstreng_2d.py": "79ada328af4155a77f812134c21fd5f524dfbbdcc4eaf3d0b3d0ffd63e2aa1b9",
     "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
     "src/digitalmodel/materials/grades.py": "3cc745f599faefdb3c6b08218c383026445662796faa23fba0806691de4017ab",
-    "src/digitalmodel/reporting/assets/assessment_report.html.j2": "8e5c066fd7f6d6f8ff950bfedc0ecb81c9f6a4572cfec73934f787caa1d8e7d5",
+    "src/digitalmodel/reporting/assets/assessment_report.html.j2": "6ca3b435cf7104e4a8500fa97c514ceff8723f4a0e255adef08b484ea5740fb0",
     "src/digitalmodel/reporting/engine.py": "c2166904cb93dedf00e8f80955eabc23c187fa8b778f70176db93cb1409531de",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
   },
-  "configuration_sha256_lf": "e813062918986e58b28c845478c0ff1dc5275ef6029f9493a04dc5e0ff35897d",
+  "configuration_sha256_lf": "1920f2066019de88764275b269c47eb37d37c4e7da8b87256a74f7bb197ca3c9",
   "data_status": "synthetic, for demonstration",
   "digest_convention": "Input SHA-256 after CRLF to LF normalisation; output SHA-256 over exact UTF-8 bytes",
   "excluded_outputs": [
@@ -805,6 +776,6 @@
   ],
   "figures": "inline vector figures; 680-unit width; no raster or external dependencies",
   "intended_use": "worked example; no actual operating asset qualification",
-  "report_sha256": "119a9829993225a755b10cfb2b39a1a1dc20ce5aed794d87bdb2f50c5f034b8a",
+  "report_sha256": "41a4ea2e367d4b1f5fa0d55fa4bf3984040c0a9e09879838d844d3a20b8cbcee",
   "schema_version": 1
 }
