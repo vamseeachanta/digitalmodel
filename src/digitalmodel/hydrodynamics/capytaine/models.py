@@ -1,6 +1,9 @@
-"""
-ABOUTME: Data models for Capytaine BEM hydrodynamic analysis module.
-ABOUTME: Defines input configuration and output result structures.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Define Capytaine input configurations and hydrodynamic result structures.
+
+The optional solver is imported only when an analysis is executed.
 """
 
 from __future__ import annotations
@@ -34,14 +37,17 @@ class DOF(str, Enum):
 
     @classmethod
     def all_dofs(cls) -> List[DOF]:
+        """Return all six rigid-body degrees of freedom."""
         return list(cls)
 
     @classmethod
     def translational(cls) -> List[DOF]:
+        """Return surge, sway and heave."""
         return [cls.SURGE, cls.SWAY, cls.HEAVE]
 
     @classmethod
     def rotational(cls) -> List[DOF]:
+        """Return roll, pitch and yaw."""
         return [cls.ROLL, cls.PITCH, cls.YAW]
 
 
@@ -59,6 +65,7 @@ class MeshConfig:
     symmetry_plane: Optional[str] = None  # "xOz" or "yOz"
 
     def __post_init__(self):
+        """Normalise a supplied mesh path."""
         if self.path is not None:
             self.path = Path(self.path)
 
@@ -77,9 +84,12 @@ class BodyConfig:
     # Lid mesh for irregular frequency removal
     use_lid: bool = False
     lid_z: Optional[float] = None
+    # Initial boundary radius in m; merging limits interior edges to twice this.
+    lid_faces_max_radius: Optional[float] = None
 
     @property
     def rotation_center_or_com(self) -> Tuple[float, float, float]:
+        """Return the prescribed rotation centre or the centre of mass."""
         return self.rotation_center if self.rotation_center is not None else self.center_of_mass
 
 
@@ -94,6 +104,7 @@ class WaveConditions:
     g: float = 9.81  # m/s^2
 
     def __post_init__(self):
+        """Require one frequency specification and normalise headings."""
         if self.periods is not None and self.omegas is not None:
             raise ValueError("Specify either periods or omegas, not both")
         if self.periods is None and self.omegas is None:
@@ -102,12 +113,14 @@ class WaveConditions:
 
     @property
     def omega_array(self) -> np.ndarray:
+        """Return angular frequencies in rad/s."""
         if self.omegas is not None:
             return np.asarray(self.omegas, dtype=float)
         return 2.0 * np.pi / np.asarray(self.periods, dtype=float)
 
     @property
     def period_array(self) -> np.ndarray:
+        """Return wave periods in seconds."""
         if self.periods is not None:
             return np.asarray(self.periods, dtype=float)
         return 2.0 * np.pi / np.asarray(self.omegas, dtype=float)
@@ -122,6 +135,7 @@ class WaveConditions:
         water_depth: float = np.inf,
         rho: float = 1025.0,
     ) -> WaveConditions:
+        """Construct conditions on a uniformly spaced period grid."""
         return cls(
             periods=np.linspace(t_min, t_max, n_periods),
             headings=np.deg2rad(headings_deg),
@@ -139,6 +153,7 @@ class WaveConditions:
         water_depth: float = np.inf,
         rho: float = 1025.0,
     ) -> WaveConditions:
+        """Construct conditions on a uniformly spaced angular-frequency grid."""
         return cls(
             omegas=np.linspace(omega_min, omega_max, n_omega),
             headings=np.deg2rad(headings_deg),

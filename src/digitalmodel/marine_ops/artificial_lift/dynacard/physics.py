@@ -1,7 +1,11 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 import numpy as np
 from scipy.signal import savgol_filter
 from .calculations import calculate_pump_fillage
 from .exceptions import PhysicsError
+from .solver_guards import annotate_results, validate_stroke
 from .models import DynacardAnalysisContext, CardData, AnalysisResults
 from .constants import (
     FEET_TO_INCHES,
@@ -96,8 +100,13 @@ class DynacardPhysicsSolver:
 
         # Stroke Synchronization
         dh_pos = dh_pos - np.min(dh_pos)
-        # Final scaling tweak to hit the <2% stroke limit
+        # This legacy empirical factor remains unqualified (#1857). The Gibbs
+        # comparison path is restricted to measured surface travel by
+        # GIBBS_STROKE_RATIO_LIMIT; that is an implementation envelope, not a
+        # physical prohibition on plunger overtravel.
         dh_pos = dh_pos * STROKE_SCALING_FACTOR
+
+        validate_stroke(u_surf, dh_pos, dh_load, "gibbs")
 
         self.results.downhole_card = CardData(
             position=dh_pos.tolist(),
@@ -107,7 +116,7 @@ class DynacardPhysicsSolver:
         self.results.minimum_polished_rod_load = np.min(f_surf)
         self.results.ctx = self.ctx
 
-        return self.results
+        return annotate_results(self.results, self.ctx, "gibbs")
 
     def detect_buckling(self):
         """Detect rod buckling from the computed downhole card.

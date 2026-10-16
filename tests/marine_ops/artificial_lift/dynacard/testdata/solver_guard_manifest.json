@@ -1,0 +1,21 @@
+{
+  "base_revision": "64c14740da3acae9dffa0cea2c83edab1ef783e9",
+  "criteria_sha256": "c63e809772284b9c01923fb7fb77fa74b4d84cde3230e76de9d1b590eaf2902f",
+  "criteria_written_at": "2026-10-14T15:31:32.909890+00:00",
+  "first_analytical_started_at": "2026-10-14T15:49:04.552536+00:00",
+  "first_comparison_started_at": "2026-10-14T15:32:53Z",
+  "results_sha256": "83facd98e6dbb98d90dae76396d2fb026bcd5a50f3dc42e64234fe4cadccb813",
+  "source_sha256": {
+    "scripts/artificial_lift/build_solver_guard_evidence.py": "a2f622b34753aad96527e4a60528fce05c9453deba692952f676c02d2b3b402c",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/comparison.py": "dc12083366898756638ee775d5c2d633833865858a8817d87e7dc30e071c3467",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/constants.py": "e39c38e8a8d4d6eb3c82fbd4cb93f6b722b02585621a5668d415ecb8b4b9316d",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/data_loader.py": "4d7d4726bfc8b7c1bec4f7d2bfcffdb411aa1dccf29f626b175af5c245bc7135",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/everitt_jennings/adapter.py": "2498341c02b62e8c136da563beae1fa5b46e75326a04de6dbb6a34268faf24e6",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/everitt_jennings/damping.py": "46ee64b92b0466cf5c068c55bc98fe7751b5926407d978740846a258f1e73781",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/everitt_jennings/solver.py": "67a307d3f0fee24dd5c6e39791e304627f7c7038deeac76ffc20d648c4a528e8",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/everitt_jennings/units.py": "4902cf9cccf7171e9fc4cf5d6d37b2a0f62aafd8b688959b150e4a016119a993",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/models.py": "ffe6200b57b16b1cbd0467ca0f059fec1b3b6568c514b5199008d7d9b6356227",
+    "src/digitalmodel/marine_ops/artificial_lift/dynacard/solver_guards.py": "8e10c93407b9696b0945d14ec9b9fc1d833389eca365c15e3ec27507645ecf42",
+    "tests/marine_ops/artificial_lift/dynacard/test_solver_analytical.py": "0d83f25bd57921bbd77931de30cf2ca9c7b987fc0ea8575cd1ee2394c028bf04"
+  }
+}

@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import posixpath
 import re
 import subprocess
 import sys
@@ -17,6 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT_RE = re.compile(r"`(tests/[^`]+)`")
+SHA256_RE = re.compile(r"[0-9a-fA-F]{64}")
+MAX_MANIFEST_BYTES = 5 * 1024 * 1024
 PYPROJECT_PATH = "pyproject.toml"
 FULL_MATRIX_PREFIXES = ("src/digitalmodel/",)
 FULL_MATRIX_PATHS = {
@@ -34,6 +37,8 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    # Domain records bind retained inputs and outputs checked by contracts tests.
+    ("docs/domains/", ("contracts",)),
     ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
     ("docs/maps/", ("contracts",)),
     ("config/repo_structure.yml", ("contracts",)),
@@ -121,12 +126,12 @@ def parse_domains(domains_file: Path) -> list[Domain]:
 def git_changed_files(base: str, head: str) -> list[str]:
     """List changed paths between two revisions."""
     result = subprocess.run(
-        ["git", "diff", "--name-only", base, head],
+        ["git", "diff", "--name-only", "--no-renames", "-z", base, head],
         check=True,
         text=True,
         capture_output=True,
     )
-    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    return [path for path in result.stdout.split("\0") if path]
 
 
 def git_file_text(ref: str, path: str) -> str:
@@ -138,6 +143,126 @@ def git_file_text(ref: str, path: str) -> str:
         capture_output=True,
     )
     return result.stdout
+
+
+def extract_manifest_pins(
+    payload: object, manifest_path: str, tracked_files: set[str]
+) -> set[str]:
+    """Find tracked paths used as JSON keys or path fields beside SHA-256 digests.
+
+    Walk objects and lists at every depth. A digest may be the key's value or
+    its value's ``sha256`` member. Resolve each key against the repository root
+    and the manifest folder; retain both matches when ambiguous.
+    """
+    pins: set[str] = set()
+    pending = [payload]
+    while pending:
+        item = pending.pop()
+        if isinstance(item, list):
+            pending.extend(item)
+        elif isinstance(item, dict):
+            entries = list(item.items())
+            if isinstance(item.get("path"), str):
+                entries.append((item["path"], item.get("sha256")))
+            for key, value in entries:
+                pending.append(value)
+                digest = value.get("sha256") if isinstance(value, dict) else value
+                if not isinstance(digest, str) or not SHA256_RE.fullmatch(digest):
+                    continue
+                for candidate in (
+                    posixpath.normpath(key),
+                    posixpath.normpath(posixpath.join(posixpath.dirname(manifest_path), key)),
+                ):
+                    if candidate in tracked_files:
+                        pins.add(candidate)
+    return pins
+
+
+def git_record_pins(ref: str) -> dict[str, set[str]]:
+    """Read record pins with one tree listing and one read per manifest.
+
+    Manifest.json, basis.json and *.manifest.json are inspected without regard
+    to case. Invalid JSON and files over 5 MB are skipped with a notice. Git
+    errors propagate so the caller can select every shard. Blob sizes are
+    checked before reading their contents.
+    """
+    result = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", "-z", ref],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    tracked = set(result.stdout.split("\0")) - {""}
+    records: dict[str, set[str]] = {}
+    for path in sorted(tracked):
+        if posixpath.basename(path).lower() not in {"manifest.json", "basis.json"} and not path.lower().endswith(
+            ".manifest.json"
+        ):
+            continue
+        size = subprocess.run(
+            ["git", "cat-file", "-s", f"{ref}:{path}"],
+            check=True, text=True, capture_output=True,
+        )
+        if int(size.stdout) > MAX_MANIFEST_BYTES:
+            print(f"Skipping record manifest {path!r}: exceeds 5 MB", file=sys.stderr)
+            continue
+        try:
+            text = git_file_text(ref, path)
+        except UnicodeError:
+            print(f"Skipping record manifest {path!r}: invalid JSON encoding", file=sys.stderr)
+            continue
+        try:
+            payload = json.loads(text)
+        except (ValueError, RecursionError):
+            print(f"Skipping record manifest {path!r}: invalid JSON", file=sys.stderr)
+            continue
+        pins = extract_manifest_pins(payload, path, tracked)
+        if pins:
+            records[path] = pins
+    return records
+
+
+def git_pinned_paths(ref: str) -> set[str]:
+    """Read the union of retained record inputs and outputs at a revision."""
+    return {pin for pins in git_record_pins(ref).values() for pin in pins}
+
+
+def git_pinned_domains(ref: str, domains: list[Domain]) -> dict[str, set[str]]:
+    """Route each record and its pins to contracts and its committed test readers.
+
+    Discover readers by a fixed-string reference to the manifest folder under
+    tests/. A root manifest uses its filename instead. Missing readers or readers
+    without a known shard select every shard. Git read failures propagate.
+    """
+    all_names = {domain.name for domain in domains}
+    routes: dict[str, set[str]] = {}
+    for manifest, pins in git_record_pins(ref).items():
+        folder = posixpath.dirname(manifest) or manifest
+        result = subprocess.run(
+            ["git", "grep", "-l", "-z", "-F", "-e", folder, ref, "--", "tests/"],
+            check=False, text=True, capture_output=True,
+        )
+        if result.returncode not in (0, 1):
+            raise subprocess.CalledProcessError(result.returncode, result.args)
+        readers = [
+            item.removeprefix(f"{ref}:") for item in result.stdout.split("\0")
+            if item and (
+                posixpath.basename(item).startswith("test_") and item.endswith(".py")
+                or item.endswith("_test.py")
+            )
+        ]
+        names = {"contracts"}
+        for reader in readers:
+            owners = mapped_domain_names(reader) or {
+                domain.name for domain in domains for root in domain.roots
+                if path_matches_root(reader, root)
+            }
+            names.update(owners or all_names)
+        if not readers or not names <= all_names:
+            names = all_names
+        for path in pins | {manifest}:
+            routes.setdefault(path, set()).update(names)
+    return routes
 
 
 def is_full_matrix_trigger(path: str) -> bool:
@@ -303,10 +428,17 @@ def touched_domains(
     domains: list[Domain],
     base: str | None = None,
     head: str | None = None,
+    pinned_paths: set[str] | None = None,
+    pinned_domains: dict[str, set[str]] | None = None,
 ) -> list[Domain]:
     """Select the union of shards affected by changed paths."""
     selected_names: set[str] = set()
     for path in changed_files:
+        if pinned_domains:
+            selected_names.update(pinned_domains.get(normalize_root(path), set()))
+        # A pin adds record tests even for paths otherwise handled outside the matrix.
+        if pinned_paths and normalize_root(path) in pinned_paths:
+            selected_names.add("contracts")
         if is_no_domain_path(path):
             continue
 
@@ -331,6 +463,8 @@ def touched_domains(
             if any(path_matches_root(path, root) for root in domain.roots):
                 selected_names.add(domain.name)
 
+    if "contracts" in selected_names and not any(d.name == "contracts" for d in domains):
+        return domains
     return [domain for domain in domains if domain.name in selected_names]
 
 
@@ -388,12 +522,22 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     raise
             else:
-                selected = touched_domains(
-                    changed,
-                    domains,
-                    args.base,
-                    args.head,
-                )
+                try:
+                    pin_domains: dict[str, set[str]] = {}
+                    for ref in dict.fromkeys((args.base, args.head)):
+                        for path, names in git_pinned_domains(ref, domains).items():
+                            pin_domains.setdefault(path, set()).update(names)
+                except (subprocess.CalledProcessError, OSError):
+                    print("Could not read record pins; selecting full matrix", file=sys.stderr)
+                    selected = domains
+                else:
+                    selected = touched_domains(
+                        changed,
+                        domains,
+                        args.base,
+                        args.head,
+                        pinned_domains=pin_domains,
+                    )
     except Exception as exc:
         print(f"detect_touched_domains.py: {exc}", file=sys.stderr)
         return 2

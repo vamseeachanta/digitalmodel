@@ -578,8 +578,8 @@ class WebSocketMonitor:
         
         logger.info("monitoring_stopped", session=session_id)
     
-    async def start_server(self):
-        """Start WebSocket server"""
+    async def start_server(self, host="127.0.0.1", debug=False):
+        """Start on loopback unless host is supplied; debug enables diagnostic logs."""
         if not uvicorn or not self.app:
             logger.error("Cannot start server - dependencies not available")
             return
@@ -589,9 +589,9 @@ class WebSocketMonitor:
         
         config = uvicorn.Config(
             self.app,
-            host="0.0.0.0",
+            host=host,
             port=self.port,
-            log_level="info"
+            log_level="debug" if debug else "info"
         )
         
         self.server = uvicorn.Server(config)

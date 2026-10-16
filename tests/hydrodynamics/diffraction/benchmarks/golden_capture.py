@@ -45,6 +45,17 @@ def golden_path_for(spec_path: Path) -> Path:
     return GOLDEN_DIR / f"{name}.yml"
 
 
+def expected_refusal(spec_path: Path) -> str | None:
+    """Refusals remain part of the frozen corpus until full meshes are supplied."""
+    if spec_path.parent.parent.name != "L00_validation_wamit":
+        return None
+    if spec_path.parent.name == "3.3":
+        return "Partial GDF mesh"
+    if spec_path.parent.name in {"2.1", "2.2", "2.3", "2.6", "2.8", "2.9", "3.1", "3.2"}:
+        return "Cannot verify GDF symmetry"
+    return None
+
+
 def render_orcawave_bytes(spec_path: Path) -> bytes:
     """Generate the single OrcaWave input for *spec_path* and return its bytes."""
     from digitalmodel.hydrodynamics.diffraction.input_schemas import (
@@ -70,6 +81,17 @@ def capture_golden(spec_path: Path) -> Path:
 
 def main() -> None:
     for spec_path in enumerate_byte_identity_fixtures():
+        refusal = expected_refusal(spec_path)
+        if refusal:
+            try:
+                render_orcawave_bytes(spec_path)
+            except ValueError as exc:
+                if refusal not in str(exc):
+                    raise
+            else:
+                raise AssertionError(f"Expected refusal for {spec_path}")
+            print(f"refused {golden_path_for(spec_path).name}: {refusal}")
+            continue
         golden = capture_golden(spec_path)
         print(f"captured {golden.relative_to(BENCHMARKS_DIR)}")
 

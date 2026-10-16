@@ -260,6 +260,9 @@ def package_spec_meshes(
 
     packaged_spec = spec.model_copy(deep=True)
     output_dir = Path(output_dir)
+    # Rewritten basenames belong to the packaged directory, including when
+    # modular input files are generated in a child directory.
+    packaged_spec._source_dir = output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
     pipeline = None
