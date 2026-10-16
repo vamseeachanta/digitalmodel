@@ -118,6 +118,15 @@ repos:
   # Performance and complexity checks
   - repo: local
     hooks:
+      - id: verify-repo-structure
+        name: Verify repository structure
+        entry: python scripts/maintenance/verify_repo_structure.py --repo . --config config/repo_structure.yml
+        language: python
+        additional_dependencies: [PyYAML]
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
       - id: complexity-check
         name: Check code complexity
         entry: python

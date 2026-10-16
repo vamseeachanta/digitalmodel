@@ -52,6 +52,17 @@ to grandfather. `durable_exceptions` therefore starts empty; no additional
 output path is authorized. The separate evidence-retention decision stays
 with #597.
 
-Local hook and mandatory CI wiring remain open under #2012. The checker and
-its regression tests are usable directly. They do not claim that enforcement
-has been installed or that branch protection has been verified.
+The `verify-repo-structure` pre-commit hook checks the complete repository on
+every commit, including commits with no matching filenames. Its isolated Python
+environment includes PyYAML. Install the repository's configured hooks before
+using local enforcement.
+
+The Repository Structure workflow runs the checker and its regression tests on
+every pull request and every push to `main`, without path filters or optional
+failure handling. Docs CI also covers `docs/standards/**` and `docs/domains/**`
+and runs the docs routing contract tests. These checks do not change source,
+move evidence, or regenerate skill pointers.
+
+Repository administrators must require the `Repository structure contract`
+status check in branch protection to prevent merging a failing check. Workflow
+wiring alone does not establish that this repository setting is enabled.
