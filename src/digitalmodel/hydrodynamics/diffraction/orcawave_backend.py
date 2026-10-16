@@ -46,14 +46,28 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
 # Constants
 # ---------------------------------------------------------------------------
 
+# Source: OrcaWave 11.6c load error for BodyMeshFormat=Auto:
+# "Possible values are: Wamit gdf, Nemoh dat, Hydrostar hst, Aqwa dat,
+# Sesam fem, Gmsh msh and Wavefront obj". The generic dat schema value
+# does not identify a dialect; STL and Auto are not native format names.
 _MESH_FORMAT_MAP: dict[str, str] = {
     "gdf": "Wamit gdf",
-    "dat": "Wamit dat",
-    "stl": "STL",
-    "msh": "Gmsh",
-    "obj": "OBJ",
-    "auto": "Auto",
+    "msh": "Gmsh msh",
+    "obj": "Wavefront obj",
 }
+
+
+def _resolve_mesh_format(mesh_format: str, mesh_file: str) -> str:
+    """Resolve only unambiguous formats supported by this input writer."""
+    key = Path(mesh_file).suffix.lower().lstrip(".") if mesh_format == "auto" else mesh_format
+    if key not in _MESH_FORMAT_MAP:
+        allowed = ", ".join(_MESH_FORMAT_MAP.values())
+        raise ValueError(
+            f"Unsupported or ambiguous OrcaWave mesh format {key!r}. "
+            f"Allowed values: {allowed} (gdf, msh, obj). "
+            "AUTO requires an unambiguous supported file extension."
+        )
+    return _MESH_FORMAT_MAP[key]
 
 # Control-surface mesh formats. Native OrcaWave pairs .gdf control surfaces
 # with 'Wamit gdf' (docs/domains/orcawave/examples/L03 Semi-sub multibody
@@ -270,7 +284,7 @@ def _build_body_dict(
     inertia = vessel.inertia
 
     mesh_file = Path(geom.mesh_file).name
-    mesh_fmt = _MESH_FORMAT_MAP.get(geom.mesh_format.value, "Auto")
+    mesh_fmt = _resolve_mesh_format(geom.mesh_format.value, geom.mesh_file)
     _check_full_gdf(geom, spec)
     # Full meshes must not be expanded a second time.
     mesh_sym = "None"
@@ -668,7 +682,7 @@ def _build_damping_lid_section(spec: DiffractionSpec) -> dict[str, Any]:
     if lid is None:
         return {}
 
-    mesh_fmt = _MESH_FORMAT_MAP.get(lid.mesh_format, "Wamit gdf")
+    mesh_fmt = _resolve_mesh_format(lid.mesh_format, lid.mesh_file)
     return {
         "DampingLidMeshFileName": Path(lid.mesh_file).name,
         "DampingLidMeshFormat": mesh_fmt,
@@ -699,8 +713,8 @@ def _build_qtf_section(spec: DiffractionSpec) -> dict[str, Any]:
     if fsz is not None and fsz.mesh_file:
         section["FreeSurfacePanelledZoneType"] = "Defined by mesh file"
         section["FreeSurfacePanelledZoneMeshFileName"] = Path(fsz.mesh_file).name
-        mesh_fmt = "Wamit fdf" if fsz.mesh_format == "fdf" else _MESH_FORMAT_MAP.get(
-            fsz.mesh_format, fsz.mesh_format
+        mesh_fmt = "Wamit fdf" if fsz.mesh_format == "fdf" else _resolve_mesh_format(
+            fsz.mesh_format, fsz.mesh_file
         )
         section["FreeSurfacePanelledZoneMeshFormat"] = mesh_fmt
         section["FreeSurfacePanelledZoneMeshLengthUnits"] = fsz.length_units
