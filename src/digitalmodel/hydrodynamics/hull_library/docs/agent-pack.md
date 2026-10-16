@@ -5,7 +5,7 @@
 | Module | `hydrodynamics/hull_library` |
 | Repository | `digitalmodel` |
 | Path | `src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md` |
-| Pack revision | 0, 2026-10-15 |
+| Pack revision | 1, 2026-10-15 |
 | Code revision | `5721ea1b4e72a7774dd18cb188361956973e152d` |
 | Analysis family | DF |
 | Quality role | Diffraction quality manager |
@@ -17,7 +17,7 @@ The main path converts station offsets to wetted panel meshes, declares symmetry
 
 The catalog also computes spectral motion responses and point accelerations from supplied RAOs; these are calculations using existing response data, with nearest-heading selection and zero interpolation outside the supplied frequency interval. [src/digitalmodel/hydrodynamics/hull_library/catalog.py:L260-L315] [src/digitalmodel/hydrodynamics/hull_library/catalog.py:L321-L378] [src/digitalmodel/hydrodynamics/hull_library/catalog.py:L440-L457]
 
-The routing registry describes the encompassing hydrodynamics domain as production; this does not establish qualification of every geometry or optional backend. [docs/registry/module-routing.yaml:L129-L134]
+The routing registry describes the encompassing hydrodynamics domain as production; this does not establish qualification of every geometry or optional backend. [docs/registry/module-routing.yaml:L129-L134] (at the header code revision)
 
 The cutout path supports flat-keel, uncapped wetted geometry and expands only full or `y`-symmetric meshes; column/pontoon geometry has explicit layout and non-overlap restrictions. [src/digitalmodel/hydrodynamics/hull_library/mesh_cutouts.py:L110-L168] [src/digitalmodel/hydrodynamics/hull_library/column_pontoon_form.py:L62-L110]
 
@@ -40,6 +40,8 @@ The cutout path supports flat-keel, uncapped wetted geometry and expands only fu
 | Line definitions and drawings | m after conversion | CSV columns x,z,y; JSON/YAML stations, waterlines and profiles; DXF units auto/mm/m/ft/in, scale positive | Explicit drawing layers and origin offsets are required/configurable. [src/digitalmodel/hydrodynamics/hull_library/line_generator/line_parser.py:L1-L9] [src/digitalmodel/hydrodynamics/hull_library/line_generator/line_parser.py:L75-L101] [src/digitalmodel/hydrodynamics/hull_library/line_generator/dxf_lines_reader.py:L24-L61] |
 | RAO registration | rad/s, degrees, m | Hull/solver identifiers, draft, headings, frequencies, six-DOF amplitudes/phases; optional condition and benchmark revision | JSON keys declare frequency and phase units; registration alone does not establish amplitude convention. [src/digitalmodel/hydrodynamics/hull_library/rao_registry.py:L62-L91] |
 
+The pipeline coefficient parser takes frequency values directly from the sheet’s first column, without unit conversion, and sorts descending endpoints into ascending order. The native parser reads rad/s from each matrix block header. Both readers construct added-mass and damping matrices; `xlsx_to_hydro_coefficients` selects and delegates to a reader. [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L194-L242] [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L366-L461] [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L496-L515]
+
 ### Outputs and conventions
 
 | Output | Unit / representation | Contract and evidence |
@@ -55,10 +57,14 @@ The cutout path supports flat-keel, uncapped wetted geometry and expands only fu
 
 UNVERIFIED: End-to-end RAO rotation-amplitude and phase conventions are not qualified here; the plot labels use degrees/m while the acceleration calculation labels rotation rad/m; issue pending (2). [src/digitalmodel/hydrodynamics/hull_library/rao_lookup_plots.py:L42-L43] [src/digitalmodel/hydrodynamics/hull_library/catalog.py:L373-L378]
 
+With `lid=True`, `generate_column_pontoon` retains the z = 0 cap faces, turns their normals upward and reports `closed-with-lid` or `invalid-lid`. This is a geometric closure only: no classified interior-lid panels or solver qualification is established, so it does not satisfy C47 and shall not be accepted as an irregular-frequency treatment on this evidence. V3 exercises the geometric lid. [src/digitalmodel/hydrodynamics/hull_library/column_pontoon_form.py:L29-L35] [src/digitalmodel/hydrodynamics/hull_library/column_pontoon_form.py:L223-L267] [tests/hydrodynamics/hull_library/test_column_pontoon_form.py:L147-L183]
+
 ## 3. Method and governing standards
 
 | Method | Implementation and limits |
 | --- | --- |
+| Coefficient readers | `PipelineXlsxReader.read_hydro_coefficients` with `_read_matrix_sheet` and `NativeXlsxReader.read_hydro_coefficients` with `_read_native_matrix_sheet` independently parse 6×6 matrices; their frequency handling is stated in section 2. [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L194-L242] [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L366-L461] |
+| Geometric waterplane lid | `generate_column_pontoon` constructs upward-facing cap panels when requested; this closure is not a qualified C47 interior lid. [src/digitalmodel/hydrodynamics/hull_library/column_pontoon_form.py:L223-L267] |
 | Station lofting | `_shape_preserving_interp` sorts/deduplicates samples, uses linear interpolation for two points and PCHIP otherwise, with constant extrapolation; grid resolution uses an approximate count and aspect-based quadratic. [src/digitalmodel/hydrodynamics/hull_library/mesh_generator.py:L33-L66] [src/digitalmodel/hydrodynamics/hull_library/mesh_generator.py:L204-L231] |
 | Surface alternative | `HullSurfaceInterpolator` uses PCHIP through sections and B-splines or linear interpolation longitudinally; its paneliser subdivides the flat bottom and computes minimum angles separately from the main refiner. [src/digitalmodel/hydrodynamics/hull_library/line_generator/hull_surface.py:L104-L124] [src/digitalmodel/hydrodynamics/hull_library/line_generator/panelizer.py:L55-L73] [src/digitalmodel/hydrodynamics/hull_library/line_generator/panelizer.py:L100-L157] |
 | Parametric forms | Analytic section areas and three-part sectional-area curves feed a Brent solve using analytic first moments; generated sampling is a separate approximation. [src/digitalmodel/hydrodynamics/hull_library/parametric_form.py:L121-L170] [src/digitalmodel/hydrodynamics/hull_library/parametric_form_ends.py:L10-L80] |
@@ -216,6 +222,18 @@ UNVERIFIED: Solver-version qualification, dependency inventory-row links for oth
 | Stability `_hydrostatics` | Loads supplied table/CSV fields, rather than independently integrating the hull; dependency/data plumbing. [src/digitalmodel/vessel_stability_screening/workflow.py:L358-L389] |
 
 Implementation-map snapshot: `b5acbe5f61ed4c755c1f7ea4fafa4611bd14e407`; indexed-code revision: `947fa50ff9a9e210de7e8f90e01b37add85c5954`; definition citations below are relocated to the pack's code revision. The inventory retains all 766 entries in the three families that index this module (440 text-writer entries, 295 RAO-reader/converter entries and 31 irregular-frequency entries), including caller, wrapper and test-helper entries; inclusion does not assert independent equivalence. Helpers and exporters remain dependencies rather than competing implementations merely because they share a keyword.
+
+A8 inventory and search use the map snapshot and indexed-code revision above, with Python definitions searched at the header code revision. Families are ranked by in-package implementation rows, with map order breaking ties. Search signals are used as written with case-sensitive Python `re`; any signal matching `hydrodynamics/hull_library` case-insensitively is excluded. Hits are assigned to the enclosing function or class; module-level statements form one definition. No subpackage is excluded from this pack’s scope.
+
+| Counted family, in ranked order | In-package map rows | Further unlisted implementations after this revision |
+| --- | --- | --- |
+| RAO readers and OrcaFlex converters | 22 | 0 |
+| Irregular-frequency treatment | 3 | 0 |
+| OrcaFlex text-model writers | 1 | 0 |
+
+The inventory retains every mapped row in these families, including rows outside the package. The coefficient readers and parsers and the geometric lid constructor are additional explicit entries below. Other search hits are imports, schemas, validation, drawing/plotting, mesh construction without irregular-frequency treatment, delegation to external parsers, or serialization/export helpers; they do not independently compute the counted family’s result. In particular, `scan_aqwa_dat_directory` and `_parse_aqwa_to_entry` delegate to the AQWA parser, and `_parse_orcaflex_yaml` extracts catalog metadata. The total further unlisted implementation count is 0, meeting the A8 limit of 1. The geometric lid remains unqualified against C47 despite being inventoried.
+
+Map follow-up: dedicated station/surface mesh generation, hydrostatics integration, refinement, decimation, scaling and curvature-screening families lack rows under dedicated map families; these methods remain in section 3 and require map additions before they enter the counted search. Other-family or outside-package findings are map follow-up, not changes to the A8 count.
 
 The map has no dedicated mesh-generation, refinement, decimation or scaling family. The whole-repository search additionally identifies the separate line paneliser and hydrostatics integrations below; these require method-level comparison before they can serve as independent references. [src/digitalmodel/hydrodynamics/hull_library/line_generator/panelizer.py:L100-L157] [src/digitalmodel/hydrodynamics/hull_library/column_pontoon_form.py:L152-L168] [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L1-L20]
 
@@ -549,7 +567,7 @@ The map has no dedicated mesh-generation, refinement, decimation or scaling fami
 | `src/digitalmodel/hydrodynamics/hull_library/analysis_setup.py` | `_attempt_rao_lookup` [src/digitalmodel/hydrodynamics/hull_library/analysis_setup.py:L214-L261]; `setup_hull_analysis` [src/digitalmodel/hydrodynamics/hull_library/analysis_setup.py:L269-L371] |
 | `src/digitalmodel/hydrodynamics/hull_library/catalog.py` | `HullCatalog.compute_motions` [src/digitalmodel/hydrodynamics/hull_library/catalog.py:L260-L315]; `HullCatalog.compute_accelerations` [src/digitalmodel/hydrodynamics/hull_library/catalog.py:L321-L409] |
 | `src/digitalmodel/hydrodynamics/hull_library/rao_database.py` | `RAODatabase.save_to_disk` [src/digitalmodel/hydrodynamics/hull_library/rao_database.py:L163-L207]; `RAODatabase.load_from_disk` [src/digitalmodel/hydrodynamics/hull_library/rao_database.py:L209-L250] |
-| `src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py` | `PipelineXlsxReader.read_rao_data` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L125-L192]; `NativeXlsxReader.read_rao_data` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L275-L364]; `xlsx_to_rao_data` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L469-L493]; `xlsx_to_hydro_coefficients` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L496-L515]; `populate_database_from_xlsx` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L518-L561] |
+| `src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py` | `PipelineXlsxReader.read_hydro_coefficients` and `PipelineXlsxReader._read_matrix_sheet` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L194-L242]; `NativeXlsxReader.read_hydro_coefficients` and `NativeXlsxReader._read_native_matrix_sheet` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L366-L461]; `PipelineXlsxReader.read_rao_data` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L125-L192]; `NativeXlsxReader.read_rao_data` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L275-L364]; `xlsx_to_rao_data` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L469-L493]; `xlsx_to_hydro_coefficients` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L496-L515]; `populate_database_from_xlsx` [src/digitalmodel/hydrodynamics/hull_library/rao_extractor.py:L518-L561] |
 | `src/digitalmodel/hydrodynamics/hull_library/rao_fixture_comparison.py` | `compare_box_exports` [src/digitalmodel/hydrodynamics/hull_library/rao_fixture_comparison.py:L48-L85] |
 | `src/digitalmodel/hydrodynamics/hull_library/rao_fixture_population.py` | `_read_units` [src/digitalmodel/hydrodynamics/hull_library/rao_fixture_population.py:L54-L94]; `_same_content` [src/digitalmodel/hydrodynamics/hull_library/rao_fixture_population.py:L189-L193]; `store_fixture_entry` [src/digitalmodel/hydrodynamics/hull_library/rao_fixture_population.py:L207-L225]; `populate_fixture_database` [src/digitalmodel/hydrodynamics/hull_library/rao_fixture_population.py:L258-L292]; `_verify_readback` [src/digitalmodel/hydrodynamics/hull_library/rao_fixture_population.py:L295-L304]; `regenerate_fixture_database` [src/digitalmodel/hydrodynamics/hull_library/rao_fixture_population.py:L307-L350] |
 | `src/digitalmodel/hydrodynamics/hull_library/rao_registry.py` | `RaoRegistry.register_rao` [src/digitalmodel/hydrodynamics/hull_library/rao_registry.py:L62-L105]; `RaoRegistry._store_content` [src/digitalmodel/hydrodynamics/hull_library/rao_registry.py:L107-L134]; `RaoRegistry.load_rao_data` [src/digitalmodel/hydrodynamics/hull_library/rao_registry.py:L164-L185]; `_read_payload` [src/digitalmodel/hydrodynamics/hull_library/rao_registry.py:L231-L240] |
@@ -625,6 +643,7 @@ The map has no dedicated mesh-generation, refinement, decimation or scaling fami
 | `docs/reports/2026-10-09-compute-program/capytaine_barge.py` | `solve` [docs/reports/2026-10-09-compute-program/capytaine_barge.py:L44-L78] |
 | `scripts/benchmark/digitize_validation_plots.py` | `build_case_27` [scripts/benchmark/digitize_validation_plots.py:L59-L122]; `build_case_32` [scripts/benchmark/digitize_validation_plots.py:L201-L271] |
 | `scripts/benchmark/solver_metadata.py` | `_extract_from_spec` [scripts/benchmark/solver_metadata.py:L79-L133]; `_build_common` [scripts/benchmark/solver_metadata.py:L199-L214]; `_build_aqwa_meta` [scripts/benchmark/solver_metadata.py:L217-L251] |
+| `src/digitalmodel/hydrodynamics/hull_library/column_pontoon_form.py` | `generate_column_pontoon` constructs geometric waterplane caps; C47 interior-lid classification and solver qualification remain absent. [src/digitalmodel/hydrodynamics/hull_library/column_pontoon_form.py:L223-L267] |
 | `src/digitalmodel/floating_wind/solver_tier.py` | `build_orcawave_spec` [src/digitalmodel/floating_wind/solver_tier.py:L190-L260] |
 | `src/digitalmodel/hydrodynamics/bemrosetta/mesh/gdf_handler.py` | `GDFHandler.write` [src/digitalmodel/hydrodynamics/bemrosetta/mesh/gdf_handler.py:L178-L230] |
 | `src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py` | `create_floating_body` [src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py:L31-L85] |
@@ -655,7 +674,7 @@ The documentation readings cover curvature screening, public-source grading, sca
 | O3 | Classified decimation is not qualified; preserve mappings or reject classified inputs explicitly, then run C49 on every backend. [src/digitalmodel/hydrodynamics/hull_library/coarsen_mesh.py:L336-L342] [src/digitalmodel/hydrodynamics/hull_library/decimation.py:L245-L251] [src/digitalmodel/hydrodynamics/hull_library/decimation_vtk.py:L110-L115] [src/digitalmodel/hydrodynamics/hull_library/decimation_gmsh.py:L107-L112] | Maintainer; #2322. |
 | O4 | Shared angular/convexity/Jacobian criteria remain undefined; C50 is a gap, not a pass. [src/digitalmodel/hydrodynamics/hull_library/mesh_refiner.py:L188-L228] [src/digitalmodel/hydrodynamics/hull_library/column_pontoon_quality.py:L27-L61] | Maintainer; #2346. |
 | O5 | Cross-consumer source floors/generated guards need translated/refined clipping tests; do not equate all small triangles with collapsed input. [src/digitalmodel/hydrodynamics/hull_library/_cutout_geometry.py:L92-L140] | Maintainer; #2342. |
-| O6 | Optional curvature/BRep, drawing and remeshing cases need their dependencies; retain explicit offline outcomes rather than inferring behavior from absent packages. [tests/hydrodynamics/hull_library/test_parametric_form.py:L41-L43] [src/digitalmodel/hydrodynamics/hull_library/decimation_gmsh.py:L36-L40] | Maintainer; issue pending (1). |
+| O6 | Declared curvature/BRep, drawing and remeshing dependencies are installed for the expanded offline run. Missing-package and missing-fixture deferrals are removed. Two Gmsh remeshing attempts reach the existing sphere-parametrization skip; two missing-backend guards skip because the backends are installed. Remeshing qualification for the skipped cases is not established. [tests/hydrodynamics/hull_library/test_decimation_gmsh.py:L65-L96] [tests/hydrodynamics/hull_library/test_coarsen_mesh.py:L135-L156] | Maintainer; issue pending (1). |
 | O7 | Remaining curvature acceptance is not cleared merely by changing diagonal policy; distinguish the documented winding correction from residual end-share acceptance. [docs/domains/hull_library/curvature-screening.md:L94-L116] | Maintainer; #2241 and #2253. |
 | O8 | UNVERIFIED claim in section 9: dependency inventory cross-links and target-version qualification remain to be supplied; broad implementation-map classifications require family-by-family equivalence review. [src/digitalmodel/hydrodynamics/hull_library/panel_catalog.py:L35-L53] | Maintainer; issue pending (1). |
 | O9 | `max_aspect_ratio` stopping is documented as future work, and over-collapse needs an explicit rejection policy; rerun C44/C46 on decimated outputs. [src/digitalmodel/hydrodynamics/hull_library/coarsen_mesh.py:L113-L116] [src/digitalmodel/hydrodynamics/hull_library/decimation.py:L254-L262] | Maintainer; issue pending (3). |
@@ -666,81 +685,46 @@ The documentation readings cover curvature screening, public-source grading, sca
 
 ### Offline test record
 
-Command form: `PYTHONPATH=src uv run --no-sources python -m pytest tests/hydrodynamics/hull_library tests/unit/hull_library -q -rA -p no:cacheprovider --basetemp=<scratch>`, using the configured pytest options without overrides; code revision is the header pin. BASE and AFTER: each 910 passed, 86 skipped, 0 failed; all executed and skipped node outcomes match. The suite collected 991 test items plus five module-collection skips; 81 of the collected items skipped, leaving 910 executed items. The repository's existing collection exclusion for the expansion test remains in force. [tests/conftest.py:L49-L51]
+The expanded run uses `PYTHONDONTWRITEBYTECODE=1`, an external `UV_PROJECT_ENVIRONMENT`, the declared `test` and `cfd` extras, and `--with trimesh`. Command form: `PYTHONPATH=src uv run --no-sources --extra test --extra cfd --with trimesh python -m pytest tests/hydrodynamics/hull_library tests/unit/hull_library -q -rA -p no:cacheprovider --basetemp=<scratch>`. Repository pytest options and the existing expansion-test collection exclusion remain unchanged. [tests/conftest.py:L49-L51]
 
-Skipped optional or fixture-dependent coverage is recorded as NOT_RUN for engineering qualification: HullProd/BRep, trimesh, ezdxf, Gmsh, VTK, the generated panel catalog and missing GDF fixtures; Python absence guards still executed as part of the suite. [tests/hydrodynamics/hull_library/test_parametric_form.py:L41-L43] [tests/hydrodynamics/hull_library/test_panel_integration.py:L28-L31] [src/digitalmodel/hydrodynamics/hull_library/decimation_vtk.py:L29-L33] [src/digitalmodel/hydrodynamics/hull_library/decimation_gmsh.py:L36-L40]
+BASE is the reviewed documentation head `1b76bb6e56b8325f7fad5a9808c3db0eabfa4d50`; AFTER includes main `7b03f0d34ab574ea07bf83497f3361271165e21b` and this pack revision. Package implementation and module test bytes are unchanged between these revisions and the header code pin. Full runs use disposable source copies so fixture generation cannot write into the worktree. Git-history-dependent tests are rerun in the worktree with output restricted to scratch.
 
-| Skip reports | Source / reason (NOT_RUN for qualification) |
+| Full source-copy run | Collected | Passed | Failed | Setup errors | Skipped | Expected failures |
+| --- | --- | --- | --- | --- | --- | --- |
+| BASE, extras installed, before fixture generation | 1077 | 1034 | 4 | 6 | 24 | 9 |
+| AFTER, extras installed and fixtures generated | 1077 | 1054 | 4 | 6 | 4 | 9 |
+
+The four failures in `test_rao_fixture_population.py` and six setup errors in `test_rao_fixture_metadata.py` arise from `git log` returning exit 128 in source copies without Git metadata. They are test-context errors, not a source-revision or import-digest mismatch. The same tests rerun in the worktree: population 12 passed; metadata 5 passed, 1 skipped for shallow history. Package/test bytes, spreadsheet fixtures and the stored database/manifest are unchanged between BASE and AFTER, so these reruns cover both revisions. The source-revision logic is read directly on main and matches. [src/digitalmodel/hydrodynamics/hull_library/rao_fixture_population.py:L227-L254]
+
+Reconciled outcomes per distinct node, using the Git-context reruns for those ten affected nodes: BASE 1043 passed, 25 skipped, 9 expected failures; AFTER 1063 passed, 5 skipped, 9 expected failures; neither retains a failure or setup error. These are combined outcomes across runs, not a claim that either full source-copy invocation exited successfully. All five worked-example/regression nodes in section 4 pass. All 20 previously deferred fixture cases execute and pass after generation.
+
+Contract/routing source-copy runs at BASE and AFTER each report 464 passed and one failure because the tracked-source hygiene check requires Git metadata. Worktree reruns report contracts 455 passed and routing 10 passed. The earlier local `xlsxwriter` scanner failure does not recur. CI `tests-contracts` at the reviewed head reports SUCCESS; that historical CI result is separate from these local runs.
+
+Hooks that could not run: the pre-commit framework exits with `No module named pre_commit`. Main contains the same applicable hook entries; no hook is disabled or replaced. The installed Git conflict-marker hook remains active for the commit. Direct duplicate-key, parsed registry preservation, citation-range, public-wording, private-key/token-pattern, engineering-register and diff checks pass. The direct checks do not establish a successful pre-commit framework run.
+
+Baseline: the nine expected geometry/representation failures remain documented by unchanged tests read on main. The two sphere-parametrization skips and two installed-backend absence guards also match main. Their governing limitations remain open; they are not solver-free dependency deferrals.
+
+#### Generated fixture basis
+
+Five synthetic GDF fixtures are generated with repository methods in the disposable AFTER copy, under `specs/modules/orcawave/test-configs/geometry/`, and copied with a `synthetic_` prefix into `data/hull_library/panels/`. They supplement the six tracked panel files. `GDFHandler.write` exports each mesh; `scan_gdf_directory` and `PanelCatalog.to_yaml` / `to_csv` produce an 11-entry catalog in `data/hull_library/catalog/`. Output digests and panel counts are read back into a scratch manifest. These fixtures exercise parsing and catalog behavior; they do not establish historical-data equivalence or independent engineering qualification. No licensed solver or private reference input is needed.
+
+| Synthetic fixture | Repository generator parameters (dimensions in m) |
 | --- | --- |
-| 1 | could not import 'ezdxf': No module named 'ezdxf' [tests/hydrodynamics/hull_library/line_generator/test_dxf_lines_reader.py:L12-L12] |
-| 1 | could not import 'hullprod': No module named 'hullprod' [tests/hydrodynamics/hull_library/test_brep_geometry_diagnostic.py:L6-L6] |
-| 1 | could not import 'hullprod': No module named 'hullprod' [tests/hydrodynamics/hull_library/test_brep_sampling.py:L6-L6] |
-| 1 | could not import 'hullprod': No module named 'hullprod' [tests/hydrodynamics/hull_library/test_generated_form_brep.py:L6-L6] |
-| 1 | could not import 'hullprod': No module named 'hullprod' [tests/hydrodynamics/hull_library/test_hull_surface_brep.py:L7-L7] |
-| 1 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L177-L177] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L231-L231] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L240-L240] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L245-L245] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L251-L251] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L267-L267] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L278-L278] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L295-L295] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L307-L307] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L327-L327] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L339-L339] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L396-L396] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L410-L410] |
-| 2 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L446-L446] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L460-L460] |
-| 2 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L475-L475] |
-| 1 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L490-L490] |
-| 3 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L509-L509] |
-| 3 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L517-L517] |
-| 1 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L207-L207] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L539-L539] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_curvature_screen.py:L585-L585] |
-| 1 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L606-L606] |
-| 4 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L621-L621] |
-| 1 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L638-L638] |
-| 1 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L652-L652] |
-| 3 | could not import 'trimesh': No module named 'trimesh' [tests/hydrodynamics/hull_library/test_curvature_screen.py:L678-L678] |
-| 1 | GMSH not installed [tests/hydrodynamics/hull_library/test_decimation_gmsh.py:L59-L59] |
-| 1 | GMSH not installed [tests/hydrodynamics/hull_library/test_decimation_gmsh.py:L65-L65] |
-| 1 | GMSH not installed [tests/hydrodynamics/hull_library/test_decimation_gmsh.py:L83-L83] |
-| 1 | PyVista/VTK not installed [tests/hydrodynamics/hull_library/test_decimation_vtk.py:L59-L59] |
-| 1 | PyVista/VTK not installed [tests/hydrodynamics/hull_library/test_decimation_vtk.py:L65-L65] |
-| 1 | PyVista/VTK not installed [tests/hydrodynamics/hull_library/test_decimation_vtk.py:L75-L75] |
-| 1 | PyVista/VTK not installed [tests/hydrodynamics/hull_library/test_decimation_vtk.py:L88-L88] |
-| 1 | PyVista/VTK not installed [tests/hydrodynamics/hull_library/test_decimation_vtk.py:L99-L99] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L42-L42] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L47-L47] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L55-L55] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L60-L60] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L72-L72] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L81-L81] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L95-L95] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L112-L112] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L119-L119] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L130-L130] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L134-L134] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L170-L170] |
-| 1 | hull panel catalog not yet generated (data/hull_library/catalog/) [tests/hydrodynamics/hull_library/test_panel_integration.py:L173-L173] |
-| 1 | GDF test data not available in test-configs/geometry/ [tests/hydrodynamics/hull_library/test_panel_inventory.py:L77-L77] |
-| 1 | GDF test data not available in test-configs/geometry/ [tests/hydrodynamics/hull_library/test_panel_inventory.py:L86-L86] |
-| 1 | GDF test data not available in test-configs/geometry/ [tests/hydrodynamics/hull_library/test_panel_inventory.py:L97-L97] |
-| 1 | GDF test data not available in test-configs/geometry/ [tests/hydrodynamics/hull_library/test_panel_inventory.py:L107-L107] |
-| 1 | GDF test data not available in test-configs/geometry/ [tests/hydrodynamics/hull_library/test_panel_inventory.py:L114-L114] |
-| 1 | GDF test data not available in test-configs/geometry/ [tests/hydrodynamics/hull_library/test_panel_inventory.py:L190-L190] |
-| 1 | GDF test data not available in test-configs/geometry/ [tests/hydrodynamics/hull_library/test_panel_inventory.py:L211-L211] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_parametric_form.py:L205-L205] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_parametric_form.py:L215-L215] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_parametric_form.py:L229-L229] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_parametric_form.py:L247-L247] |
-| 2 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_parametric_form.py:L438-L438] |
-| 2 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_parametric_form.py:L474-L474] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_screen_inventory.py:L93-L93] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_screen_inventory.py:L118-L118] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_screen_inventory.py:L136-L136] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_screen_inventory.py:L182-L182] |
-| 1 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_screen_inventory.py:L191-L191] |
-| 2 | optional hullprod extra not installed [tests/hydrodynamics/hull_library/test_screen_inventory.py:L207-L207] |
+| `barge.gdf` | `generate_profile(MonohullFormParameters(length_bp=100, beam=20, draft=10, depth=12, box=True, cb=1, bilge_radius_fraction=0))`; `HullMeshGenerator.generate` with `target_panels=200`, `symmetry=False` |
+| `barge_fine.gdf` | Same box parameters, with `n_stations=61`; same mesh configuration |
+| `ship.gdf` | Same dimensions with default monohull shape parameters; same mesh configuration |
+| `spar.gdf` | `generate_column_pontoon(ColumnPontoonParameters(diameter=10, draft=20, panel_target_size=4))` |
+| `semi.gdf` | `generate_column_pontoon(ColumnPontoonParameters(count=4, spacing=30, square_side=8, draft=20, pontoon_layout="ring", pontoon_width=4, pontoon_height=4, pontoon_center_z=-18, panel_target_size=5))` |
+
+The 13 catalog integration tests and seven GDF inventory tests execute after generation. The previous missing-package and missing-fixture NOT_RUN table is superseded by the following actual skips.
+
+| Final skip reports, including Git-context reruns | Reason and disposition |
+| --- | --- |
+| 2 | Gmsh imports, but sphere-remeshing attempts reach the existing parametrization limitation; SKIP, no remeshing qualification claimed. [tests/hydrodynamics/hull_library/test_decimation_gmsh.py:L65-L96] |
+| 1 | Missing-VTK-backend guard is inapplicable because PyVista is installed; SKIP. The five VTK backend tests execute. [tests/hydrodynamics/hull_library/test_coarsen_mesh.py:L135-L145] [tests/hydrodynamics/hull_library/test_decimation_vtk.py:L59-L106] |
+| 1 | Missing-Gmsh-backend guard is inapplicable because Gmsh is installed; SKIP. Its backend import and remeshing tests execute or report the parametrization limitation above. [tests/hydrodynamics/hull_library/test_coarsen_mesh.py:L147-L156] |
+| 1 | Source-history equality cannot be compared in a shallow repository; SKIP. Source-byte and database-digest checks execute. [tests/hydrodynamics/hull_library/test_rao_fixture_metadata.py:L179-L189] |
+
+The Git-context metadata rerun passes five tests and skips one source-history equality check because the repository is shallow; this is a reported SKIP, not a successful history comparison. Source-byte and stored database digest checks pass in the same rerun. [tests/hydrodynamics/hull_library/test_rao_fixture_metadata.py:L151-L189]
+
+Nine expected failures execute and retain the existing geometry/representation limits; they are not NOT_RUN. Licensed destination-program qualification remains NOT_RUN under O1. No missing open-source package or generated-fixture case remains deferred.

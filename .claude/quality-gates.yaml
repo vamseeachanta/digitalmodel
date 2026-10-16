@@ -159,6 +159,7 @@ gates:
     domain: "hydrodynamics-other"
     test_roots:
       [
+        "tests/hydrodynamics/river_currents/",
         "tests/hydrodynamics/hull_library/",
         "tests/hydrodynamics/parametric_hull_analysis/",
         "tests/hydrodynamics/rao_analysis/",
@@ -170,7 +171,7 @@ gates:
         "tests/test_attenuation_formula_check.py",
         "tests/test_ht_integration.py",
       ]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/hydrodynamics/hull_library/ tests/hydrodynamics/parametric_hull_analysis/ tests/hydrodynamics/rao_analysis/ tests/hydrodynamics/test_hydrodynamics_cli.py tests/hydrodynamics/test_hydrodynamics_unit.py tests/hydrodynamics/test_seakeeping.py tests/hydrodynamics/test_shear_flow_loader.py tests/unit/hydrodynamics/ tests/test_attenuation_formula_check.py tests/test_ht_integration.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/hydrodynamics/river_currents/ tests/hydrodynamics/hull_library/ tests/hydrodynamics/parametric_hull_analysis/ tests/hydrodynamics/rao_analysis/ tests/hydrodynamics/test_hydrodynamics_cli.py tests/hydrodynamics/test_hydrodynamics_unit.py tests/hydrodynamics/test_seakeeping.py tests/hydrodynamics/test_shear_flow_loader.py tests/unit/hydrodynamics/ tests/test_attenuation_formula_check.py tests/test_ht_integration.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
