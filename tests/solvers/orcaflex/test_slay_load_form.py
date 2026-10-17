@@ -16,7 +16,7 @@ from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder impo
 from digitalmodel.solvers.orcaflex.modular_generator.slay_readback import (
     aligned_static_graphs as _aligned_static_graphs,
     last_contact, material_node_indices, sag_bend_indices as _sag_bend_indices,
-    static_readback, support_readback,
+    static_readback, support_readback, calculate_statics_recorded,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -281,7 +281,7 @@ def test_native_load_and_statics_of_every_generated_case(case_id, record_propert
     import OrcFxAPI
 
     model = OrcFxAPI.Model(str(CAMPAIGN / "models" / case_id / "master.yml"))
-    model.CalculateStatics()
+    calculate_statics_recorded(model, record_property)
     assert model.state == OrcFxAPI.ModelState.InStaticState
 
     from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import (
@@ -290,9 +290,14 @@ def test_native_load_and_statics_of_every_generated_case(case_id, record_propert
     line = model[spec.pipeline.name]
     sections = _resolve_case(CAMPAIGN / "models" / case_id)
     vessel = model[spec.equipment.vessel.name]
-    forces, contact_arcs = support_readback(
-        vessel, OrcFxAPI.oeSupport, len(sections["Vessels"][0]["Supports"]),
-        spec.pipeline.name)
+    diagnostics = {}
+    try:
+        forces, contact_arcs = support_readback(
+            vessel, OrcFxAPI.oeSupport, len(sections["Vessels"][0]["Supports"]),
+            spec.pipeline.name, diagnostics=diagnostics)
+    finally:
+        import json
+        record_property("support_readback_diagnostics", json.dumps(diagnostics, allow_nan=False))
     firing_count = math.ceil(spec.equipment.stinger.firing_line_length /
                              spec.equipment.stinger.firing_line_spacing)
     rollers = spec.equipment.stinger.rollers

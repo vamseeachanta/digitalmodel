@@ -115,7 +115,7 @@ def test_unreachable_end_b_is_rejected_before_native_execution(span):
 
 def test_criteria_revision_is_bumped_and_all_linked_records_agree():
     criteria = json.loads((CAMPAIGN / "criteria.json").read_text())
-    assert criteria["revision"] == "execution-2"
+    assert criteria["revision"] == "execution-3"
     assert TABLE["criteria_revision"] == criteria["revision"]
     for name in ("first-timed-case.json", "preparation.json", "manifest.template.json"):
         assert json.loads((CAMPAIGN / name).read_text())["criteria_revision"] == criteria["revision"]

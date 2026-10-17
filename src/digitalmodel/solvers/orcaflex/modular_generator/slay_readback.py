@@ -13,13 +13,16 @@ def _finite_number(value):
     )
 
 
-def support_readback(vessel, make_extra, count, line_name):
+def support_readback(vessel, make_extra, count, line_name, *, diagnostics=None):
     """Read individual reactions and line-specific contact material stations.
 
     Orcina, TObjectExtra2, SupportIndex and SupportedLineName:
     https://www.orcina.com/webhelp/OrcFxAPI/Content/html/TObjectExtra2.htm
     The extra factory is injected; this module never imports the native API.
     Force is independent of supported line; contact arc length requires it.
+    Only the last loaded support needs a finite contact arc. Diagnostics use
+    one-based native support indices; returned arrays remain zero-based.
+    The support table must contain firing supports followed by stinger rollers.
     """
     if isinstance(count, bool) or not isinstance(count, int) or count <= 0:
         raise ValueError("A positive support count is required")
@@ -41,8 +44,16 @@ def support_readback(vessel, make_extra, count, line_name):
                 make_extra(SupportIndex=index, SupportedLineName=line_name),
             )
         )
-    if not all(_finite_number(value) for value in [*forces, *contacts]):
-        raise ValueError("Finite support forces and contact stations required")
+    nonfinite = [i + 1 for i, arc in enumerate(contacts) if not _finite_number(arc)]
+    if diagnostics is not None:
+        diagnostics["nonfinite_contact_support_indices"] = nonfinite
+    if not all(_finite_number(value) for value in forces):
+        raise ValueError("Finite support forces required")
+    loaded = [i for i, force in enumerate(forces) if force > 0]
+    # Firing supports precede stinger supports. If last_contact succeeds, this
+    # is necessarily the same final loaded stinger support that it selects.
+    if loaded and not _finite_number(contacts[loaded[-1]]):
+        raise ValueError(f"Finite contact arc required for selected support {loaded[-1] + 1}")
     return forces, contacts
 
 
@@ -67,7 +78,7 @@ def _graph(graph):
 
 
 def material_node_indices(node_stations, targets):
-    """Map to native nodes; the representable interval midpoint uses lower arc."""
+    """Map to nearest node; midpoint ties within 1e-9 m use the lower arc."""
     from bisect import bisect_left
 
     nodes = _stations(node_stations)
@@ -80,7 +91,10 @@ def material_node_indices(node_stations, targets):
             indices.append(right)
         else:
             midpoint = nodes[right - 1] + (nodes[right] - nodes[right - 1]) / 2
-            indices.append(right - 1 if target <= midpoint else right)
+            lower = target <= midpoint or math.isclose(
+                target, midpoint, rel_tol=0, abs_tol=1e-9
+            )
+            indices.append(right - 1 if lower else right)
     return indices
 
 
@@ -202,3 +216,40 @@ def last_contact(roller_arcs, forces, firing_count):
         raise ValueError("Stinger contact readback is required")
     last = active[-1]
     return firing_count + last, arcs[last]
+
+
+def calculate_statics_recorded(model, record_property):
+    """Keep native iteration messages even when CalculateStatics raises.
+
+    Orcina Python Model reference: staticsProgressHandler(model, progress)
+    receives progress strings; False continues the calculation. The recorder
+    is injected, so this boundary has no pytest or native API dependency.
+    """
+    import json
+
+    previous = model.staticsProgressHandler
+    record = {"status": "running", "error": None, "progress": []}
+
+    def progress(_model, message):
+        record["progress"].append(str(message))
+        return False
+
+    model.staticsProgressHandler = progress
+    native_error = None
+    try:
+        model.CalculateStatics()
+    except BaseException as error:
+        native_error = error
+        record.update(status="failed" if isinstance(error, Exception) else "aborted",
+                      error=str(error))
+        raise
+    else:
+        record["status"] = "completed"
+    finally:
+        model.staticsProgressHandler = previous
+        try:
+            record_property("static_convergence", json.dumps(record, allow_nan=False))
+        except Exception as recording_error:
+            if native_error is None:
+                raise
+            native_error.add_note(f"Static convergence record failed: {recording_error}")

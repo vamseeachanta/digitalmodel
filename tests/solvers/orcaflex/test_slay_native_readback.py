@@ -172,7 +172,7 @@ def test_support_selection_requires_count_and_supported_line(count, line_name):
         slay_readback.support_readback(None, SimpleNamespace, count, line_name)
 
 
-def test_decimal_midpoint_uses_lower_material_station_without_epsilon():
+def test_decimal_midpoint_uses_lower_material_station():
     left, right = 0.1, 0.2
     midpoint = left + (right - left) / 2
     assert slay_readback.material_node_indices([left, right], [midpoint]) == [0]
