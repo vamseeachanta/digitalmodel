@@ -116,7 +116,7 @@ The following are pack requirements under AQG r0, Python calculations; the crite
 | EC8 | Balanced-flow test shall return 0 kick events (count); this does not test invalid telemetry | `tests/well/drilling/test_dysfunction_detector.py::TestKickDetection::test_kick_false_positive_balanced_flow` [tests/well/drilling/test_dysfunction_detector.py:L442-L449] | G2 |
 | EC9 | Big-hole lookup shall return exactly 4 casing strings (count); this does not qualify physical or commercial assumptions | `tests/well/drilling/test_well_bore_design.py::TestCasingProgram::test_big_hole_casing_count` [tests/well/drilling/test_well_bore_design.py:L72-L74] | G2 |
 | EC10 | Closed pore/fracture window shall report dynamic infeasibility and 0 recommended weights (count; None sentinel) | `tests/well/test_pore_pressure.py::test_infeasible_window_when_pore_exceeds_fracture` [tests/well/test_pore_pressure.py:L241-L246] | G2 |
-| EC11 | `NOT_APPLICABLE`: these calculation routes do not generate a QA appendix; node, pin and registry counts do not qualify their pressure outputs. | No package-output acceptance is claimed by this check.  G5 |
+| EC11 | `NOT_APPLICABLE`: these calculation routes do not generate a QA appendix; node, pin and registry counts do not qualify their pressure outputs. | No package-output acceptance is claimed by this check. | G5 |
 
 ## 6. Known failure modes and pitfalls
 
