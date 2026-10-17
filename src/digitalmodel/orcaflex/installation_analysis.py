@@ -18,7 +18,7 @@ from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from pydantic import BaseModel, Field, PrivateAttr, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -188,12 +188,10 @@ class DAFInput(BaseModel):
 _SKL_BY_LEG_COUNT = {2: 1.1, 3: 1.1, 4: 1.33}
 _SKL_REFERENCE = (
     "DNVGL-ST-E273, 2.7-3 Portable offshore units, Edition April 2016, "
-    "§3.5.5 (skew effects: §3.5.4)"
+    "§3.5.5, pp. 34–35 (skew effects: §3.5.4; scope: §1.4.3). "
+    "POU standard; for marine-operation lifts supply SKL explicitly from DNV-ST-N001 Sec.16"
 )
-_SKL_DOCUMENT_URL = (
-    "https://www.rd-engineering.co/wp-content/uploads/2019/04/"
-    "DNVGL-ST-E273APRIL2016.pdf#page=34"
-)
+_SKL_DOCUMENT_URL = "https://www.dnv.com/rules-standards/"
 
 
 class SlingConfig(BaseModel):
@@ -208,7 +206,10 @@ class SlingConfig(BaseModel):
     This is a hook-load tension screen, not the standard's full RSF padeye
     design check (which includes 1.2 and a separate design-load basis).
     The cited simplified RSF equation also requires no spreader bars and
-    angle from vertical >=30 degrees. Other arrangements need separate design.
+    angle from vertical >=30 degrees. POU MGW is normally <=100 t (§1.4.3).
+    Outside clause scope, supply an explicit SKL and its assessment basis.
+    MGW cannot be inferred from a dynamic hook load; an omitted MGW leaves
+    the <=100 t scope assumption unverified and is reported in the output.
     """
     num_slings: int = Field(4, ge=1, description="Number of slings")
     sling_angle_deg: float = Field(60.0, gt=0.0, lt=90.0, description="Sling angle from horizontal (deg)")
@@ -229,20 +230,73 @@ class SlingConfig(BaseModel):
         None, description="Extreme CoG (x,y) offset from lift-point centroid, metres",
     )
     tilt_factor: float = Field(1.05, ge=1.0, description="Tilt/consequence factor")
-    _skew_override: Optional[bool] = PrivateAttr(default=None)
+    matched_slings: bool = Field(True, description="Matched slings within EN 13414-1 tolerances")
+    has_spreader_bars: bool = Field(False, description="Spreader bars invalidate the clause default")
+    portable_unit_mgw_t: Optional[float] = Field(
+        None, gt=0.0, allow_inf_nan=False,
+        description="Portable unit maximum gross mass (t), not dynamic hook load; None leaves <=100 t as an unverified scope assumption",
+    )
+    skew_load_factor_justification: Optional[str] = Field(
+        None, description="Independent SKL assessment basis; required outside clause scope",
+    )
+
+    @property
+    def effective_skew_load_factor(self) -> float:
+        """Governing factor; preserve None in serialized input for provenance."""
+        minimum = _SKL_BY_LEG_COUNT.get(self.num_slings, 1.0)
+        return max(self.skew_load_factor or minimum, minimum)
 
     @model_validator(mode="after")
     def _select_skew_default(self) -> "SlingConfig":
-        if self._skew_override is None:
-            self._skew_override = self.skew_load_factor is not None
-        if self.skew_load_factor is None:
-            if self.num_slings == 1:
-                self.skew_load_factor = 1.0  # No inter-leg skew; modelling convention.
-            elif self.num_slings in _SKL_BY_LEG_COUNT:
-                self.skew_load_factor = _SKL_BY_LEG_COUNT[self.num_slings]
-            else:
-                raise ValueError("More than four legs requires an explicit skew_load_factor")
+        issues = self._clause_scope_issues()
+        if issues:
+            justification = self.skew_load_factor_justification
+            if self.skew_load_factor is None or not justification or not justification.strip():
+                raise ValueError(
+                    "outside clause scope: " + "; ".join(issues)
+                    + "; supply an explicit skew_load_factor and nonblank skew_load_factor_justification"
+                )
         return self
+
+    def _clause_scope_issues(self) -> List[str]:
+        """Scope of the tabulated default, including matched-sling tolerances."""
+        issues = []
+        if self.sling_angle_deg > 60:
+            issues.append("angle from vertical <30 degrees")
+        if self.has_spreader_bars:
+            issues.append("spreader bars present")
+        if self.portable_unit_mgw_t is not None and self.portable_unit_mgw_t > 100:
+            issues.append("POU MGW exceeds normal 100 t scope (§1.4.3)")
+        if not self.matched_slings:
+            issues.append("slings are not matched")
+        if self.num_slings > 4:
+            issues.append("more than four legs")
+        return issues
+
+    def _skew_provenance(self) -> Dict[str, object]:
+        """Record scope limitations, selected basis and declared assumptions."""
+        issues = self._clause_scope_issues()
+        scope = "outside clause scope: " + "; ".join(issues) if issues else "within clause scope"
+        if not issues and self.num_slings == 1:
+            scope = "single-leg modelling convention; no tabulated clause default"
+        if self.portable_unit_mgw_t is None:
+            scope += "; POU MGW <=100 t assumed; not verified"
+        if self.skew_load_factor is not None:
+            source = "explicit override; default reference: " + _SKL_REFERENCE
+        elif self.num_slings == 1:
+            source = "single leg: no inter-leg skew (modelling convention)"
+        else:
+            source = _SKL_REFERENCE
+        if self.num_slings == 4 and self.matched_slings:
+            source += "; matched slings, EN 13414-1 tolerances"
+        if issues:
+            source += "; " + scope
+        return {
+            "skew_load_factor_source": source,
+            "clause_scope": scope,
+            "matched_slings": self.matched_slings,
+            "skew_load_factor_justification": self.skew_load_factor_justification,
+        }
 
     def _load_share(self) -> Tuple[float, str]:
         has_geometry = self.lift_points_m is not None or self.cog_offset_m is not None
@@ -284,50 +338,39 @@ class SlingConfig(BaseModel):
         return float(np.clip(shares, 0, 1).max()), "2/3-leg statics at extreme CoG"
 
     def calculate_sling_tension(self, hook_load_kN: float) -> Dict[str, object]:
-        """Calculate the most-loaded sling tension, preserving the legacy result key.
+        """Return the most-loaded tension with scope and SKL provenance.
 
-        T_max = W_hook * PL * SKL * tilt / sin(theta).
-        PL is a fraction, not a percentage number or a second tolerance factor.
-
-        Args:
-            hook_load_kN: Total hook load including dynamics (kN).
-
-        Returns:
-            Dict with sling tension results.
+        T_max = W_hook * PL * SKL * tilt / sin(theta); PL is a fraction.
+        hook_load_kN includes dynamics. Below-minimum inputs cannot pass.
         """
         if not math.isfinite(hook_load_kN) or hook_load_kN < 0:
             raise ValueError("hook_load_kN must be finite and non-negative")
+        self._select_skew_default()
         share, share_basis = self._load_share()
         theta_rad = math.radians(self.sling_angle_deg)
         sin_theta = math.sin(theta_rad)
+        minimum = _SKL_BY_LEG_COUNT.get(self.num_slings, 1.0)
+        below_minimum = self.skew_load_factor is not None and self.skew_load_factor < minimum
+        skl = self.effective_skew_load_factor
 
-        sling_tension = (hook_load_kN * share * self.skew_load_factor *
+        sling_tension = (hook_load_kN * share * skl *
                          self.tilt_factor / sin_theta)
 
         utilisation = sling_tension / self.sling_mbl_kN
         achieved_sf = self.sling_mbl_kN / sling_tension if sling_tension > 0 else float("inf")
 
-        if self._skew_override:
-            skew_source = "explicit override; default reference: " + _SKL_REFERENCE
-        elif self.num_slings == 1:
-            skew_source = "single leg: no inter-leg skew (modelling convention)"
-        else:
-            skew_source = _SKL_REFERENCE
-
         return {
             "sling_tension_per_leg_kN": round(sling_tension, 1),
             "sling_utilisation": round(utilisation, 4),
             "achieved_safety_factor": round(achieved_sf, 2),
-            "pass": achieved_sf >= self.safety_factor,
+            "pass": achieved_sf >= self.safety_factor and not below_minimum,
             "most_loaded_share": share,
             "load_share_basis": share_basis,
-            "skew_load_factor": self.skew_load_factor,
-            "skew_load_factor_source": skew_source,
-            "skew_load_factor_below_minimum": (
-                self.num_slings in _SKL_BY_LEG_COUNT
-                and self.skew_load_factor < _SKL_BY_LEG_COUNT[self.num_slings]
-            ),
-            # Direct-document sidecar: this screen does not depend on a wiki.
+            "skew_load_factor_input": self.skew_load_factor,
+            "skew_load_factor": skl,
+            **self._skew_provenance(),
+            "skew_load_factor_below_minimum": below_minimum,
+            # Publisher-portal sidecar: this screen does not depend on a wiki.
             "citations": [{
                 "code_id": "DNVGL-ST-E273",
                 "title": "2.7-3 Portable offshore units",
@@ -335,7 +378,11 @@ class SlingConfig(BaseModel):
                 "revision": "2016-04",
                 "section": "3.5.5",
                 "url": _SKL_DOCUMENT_URL,
-                "note": "SKL minima and extreme-CoG PL; skew effects in §3.5.4",
+                "note": "SKL minima and extreme-CoG PL; skew effects in §3.5.4; "
+                        "scope in §1.4.3 (normally MGW <=100 t), no spreader bars, "
+                        "angle from vertical >=30 degrees; four-leg 1.33 assumes "
+                        "matched slings, EN 13414-1 tolerances. POU standard; "
+                        "for marine-operation lifts supply SKL explicitly from DNV-ST-N001 Sec.16",
             }],
         }
 
