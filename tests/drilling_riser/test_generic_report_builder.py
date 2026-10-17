@@ -119,3 +119,25 @@ class ReportTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_report_holds_production_and_grades_both_binding_checks():
+    builder = module('scripts/reporting/build_generic_riser_report.py', 'ruling_report')
+    driver = module('scripts/orcaflex/run_generic_drilling_riser_campaign.py', 'ruling_driver')
+    from digitalmodel.drilling_riser.generic_campaign import DEST
+    fixture = json.loads((Path(__file__).parent/'fixtures/generic_synthetic_result.json').read_text())
+    with tempfile.TemporaryDirectory() as temporary:
+        output = Path(temporary)
+        def fake(model, simulation):
+            simulation.write_text('synthetic')
+            return dict(fixture, support_loss_min_kn=8000 if model.parent.name=='o5-c3' else 9000,
+                        member_min_kn=0.1 if model.parent.name=='o4-c2' else 1)
+        assert driver.run_campaign(ROOT/DEST, output, criteria_file=CRITERIA, case_runner=fake) == 0
+        spec = builder.build_spec(ROOT/DEST, output, criteria_file=CRITERIA, allow_synthetic=True)
+        prose = spec.sections[0].blocks[0].markdown
+        assert 'Production remains held' in prose
+        assert 'No operating window is established' in prose
+        assert spec.sections[0].blocks[1].title == 'Production hold'
+        rows = spec.sections[4].blocks[1].rows
+        assert next(row for row in rows if row[1]=='check B one link lost')[0] == 'o5-c3'
+        assert next(row for row in rows if row[1]=='check A member nonnegative')[0] == 'o4-c2'

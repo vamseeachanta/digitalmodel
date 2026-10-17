@@ -15,7 +15,7 @@ The minimum-tension decision remains with the maintainer.
 ## Native evidence boundary
 
 The pre-flight QA dated 2026-10-17 reports 24/24 staged-statics
-convergence (96 of 96 current steps) and twelve warnings:
+convergence (72 of 72 current steps) and twelve warnings:
 
 | Cases | Line | Current stage | Count |
 | --- | --- | --- | --- |
@@ -104,7 +104,7 @@ requires a separate decision from the maintainer.
 ## Known limits and retained native read-back
 
 The retained o0-c0 and o5-c3 results were read back on 2026-10-17. The
-read-back applies to the unchanged models and driver at revision `6440cd33`.
+old-setting read-back applies to models tree SHA `e3b58942173d96ace534b298a86d43f25f554ecb` and driver blob SHA `a9691ac9261b1d199b255f065b0c30b4f09a3c74`. It does not qualify the raised setting.
 
 - **Shielding:** both cases record one warning that the drill string inside
   the riser is treated as shielded because the outer line is not free-flooding.
@@ -116,14 +116,14 @@ read-back applies to the unchanged models and driver at revision `6440cd33`.
   protrusion is submerged but shielded, omitting about 0.74 kN of drag at
   1.5 m/s. The above-water observation does not apply to this protrusion.
   Warning disposition remains with the maintainer.
-- **Stress:** at o5-c3, maximum von Mises stress is 307.25 MPa at riser End B,
-  arc length 1020 m and z = -1000.005 m. The coincident bending moment is
-  1858.2 kN m and wall tension is 4431.0 kN. The hand calculation gives
-  307.25 MPa at that section; the location and section-load reconciliation
-  are established, but acceptance still requires the external stress criterion.
-- **Minimum tension:** pre-flight statics give 6,923.1–8,261.7 kN against the
-  stored assumed minimum of 8,345.7 kN. No operating window is established;
-  the criterion decision remains with the maintainer.
+- **Stress:** old-setting o5-c3 maximum von Mises stress is 307.25 MPa at riser End B.
+  End B moment: 1,858 kN.m native against a 1,363-1,440 kN.m hand estimate;
+  explanation pending the checker. Section-load reconciliation does not settle
+  the moment discrepancy or establish acceptance.
+- **Minimum tension:** 8,345.7 kN is the legacy screen reading, not graded.
+  The binding comparisons are intact support (check A), loss of one link
+  (check B), the separate End B sum and nonnegative member effective tension.
+  Production remains held; no operating window is established.
 - **Path dependence:** no comparison tolerance is set for the reported
   difference of at most 1.5 kN between the two statics methods.
 

@@ -189,7 +189,10 @@ def tensioner_system_factor(
     """N / (Rf * (N - n)): the tensioner-system allowance for ``n_fail``
     sudden unit/wire failures at mechanical efficiency ``Rf``.
 
-    Note on the 16Q mapping (§3.3.2): API RP 16Q folds the mechanical
+    ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3,
+    Subsection 3, item iii), Eq. (3.1); API RP 16Q, Design, Selection, Operation
+    and Maintenance of Marine Drilling Riser Systems, second edition (2017),
+    clause text pending held-edition confirmation. The equation folds the mechanical
     efficiency and the fleet-angle allowance into a single reduction factor
     Rf. This implementation splits them — ``efficiency`` here (the Rf in this
     N/(Rf(N-n)) expression) and ``fleet_angle_factor`` in

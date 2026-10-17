@@ -23,6 +23,7 @@ from digitalmodel.drilling_riser.operability import watch_circle_radius_m
 from digitalmodel.drilling_riser.riser_response import solve_static_response
 from digitalmodel.drilling_riser.section import section_properties
 from digitalmodel.drilling_riser.stackup import top_tension_required
+from digitalmodel.drilling_riser import generic_tension
 
 SPEC = Path('docs/domains/orcaflex/library/templates/drilling_riser/spec.yml')
 DEST = Path('docs/domains/orcaflex/library/campaigns/generic-drilling-riser')
@@ -102,7 +103,7 @@ def source_digest(path: Path) -> str:
 def calculation_fingerprints(directory: Path | None = None) -> dict[str, str]:
     """Bind the screen adapter and every imported numerical implementation."""
     folder = directory or Path(__file__).parent
-    names = ('generic_campaign.py', 'operability.py', 'riser_response.py', 'section.py', 'stackup.py')
+    names = ('generic_campaign.py', 'operability.py', 'riser_response.py', 'section.py', 'stackup.py', 'assembly.py', 'generic_tension.py')
     return {name: source_digest(folder / name) for name in names}
 
 
@@ -159,11 +160,15 @@ def case_table(root: Path) -> dict:
     source = sourced_tree(yaml.compose(text), spec)
     depth = spec['environment']['water']['depth']
     basis = column_basis(root)
+    tension_basis = generic_tension.tension_basis(spec)
     cases = []
     for offset in range(6):
         for index, speed in enumerate((0, 0.5, 1.0, 1.5)):
             cases.append({
                 'id': f'o{offset}-c{index}',
+                'tension_hand_estimate': tagged(generic_tension.hand_estimate(spec, tension_basis,
+                    watch_circle_radius_m(offset, depth), speed),
+                    'approximate extensible-string hand equilibrium; native checks pending', 'kN, m, 1'),
                 'offset_pct': tagged(offset, unit='%'),
                 'offset_m': tagged(watch_circle_radius_m(offset, depth),
                     f'{ASSUMED}; offset_pct times water depth / 100', 'm'),
@@ -190,20 +195,22 @@ def case_table(root: Path) -> dict:
         'basis': {key: source[key] for key in ('environment', 'simulation', 'generic')},
         'wave_basis_note': 'Specification wave data are retained for provenance only; no wave is applied.',
         'profile_description': 'Uniform current from surface to seabed; assumed, based on previous experience',
+        'tension_basis': tension_basis,
         'tension_acceptance_basis': (
-            f"The stored minimum top tension, {basis['min_tension_kn']:,.1f} kN, "
-            'is retained as an assumed criterion. Pre-flight statics of these models give the '
-            'main-riser top effective tension 6,923.1–8,261.7 kN, below this criterion '
-            'in all 24 cases by 84.0–1,422.7 kN. '
-            'The four links share their vertical load between the riser, choke and kill lines '
-            'and the slip joint; total tensioner force is not main-riser top effective tension. '
-            'No operating window is established.'),
+            '8,345.7 kN is the legacy screen reading, not graded. '
+            + generic_tension.BASIS + '. '
+            'Check A: sum(F_link,z) - W_r >= T_SRmin, sum of Riser/Choke/Kill End B '
+            'effective tensions >= (fwt - 1)*Ws, and every member minimum >= 0. '
+            'Check B: 3/4*sum(F_link,z) - W_r >= T_SRmin. Both checks are binding. '
+            'Builder margins are hand estimates only; native qualification is pending. '
+            'Mechanical/hydraulic efficiency is assumed 1, a known limit. '
+            'Production stays held. No operating window is established.'),
         'statics_method': tagged(
             'At the specified vessel offset, solve zero-current statics, then ramp current through '
             '25%, 50%, 75% and 100% of the specified speed, retaining calculated positions '
             'before each current change. No vessel-offset continuation is applied. '
             'Zero-current cases solve once. Every stage must reach InStaticState before dynamics. '
-            'Pre-flight statics converged in all 24 cases (96 of 96 current steps).',
+            'Pre-flight statics converged in all 24 cases (72 of 72 current steps at the old setting; new setting statics pending).',
             'src/digitalmodel/drilling_riser/campaign.py::CURRENT_RAMP; _statics_path current ramp; '
             'scripts/orcaflex/run_generic_drilling_riser_campaign.py::calculate_staged_statics; '
             'docs/domains/orcaflex/reference/general-data-statics.md:16; '
@@ -224,16 +231,17 @@ def case_table(root: Path) -> dict:
         'criteria': {
             'mean_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),
             'max_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),
-            'min_top_tension_kn': tagged(basis['min_tension_kn'],
-                f'{ASSUMED}; 1.25 times approximate riser-column submerged weight; '
-                'src/digitalmodel/drilling_riser/stackup.py:28', 'kN'),
+            'tsrmin_kn': tagged(tension_basis['tsrmin_kn'], generic_tension.BASIS, 'kN'),
+            'ws_kn': tagged(tension_basis['ws_kn'], 'model flooded steel weight; fluid head counted separately', 'kN'),
             'stroke_min_m': tagged(-5.0, unit='m'),
             'stroke_max_m': tagged(5.0, unit='m'),
             'stress_limit_mpa': tagged(None, 'runtime yield strength times design factor; ' + REFERENCES['16Q'], 'MPa'),
         },
         'assumptions': {
             'gravity_mps2': tagged(9.81, unit='m/s²'),
-            'top_tension_factor': tagged(1.25),
+            'legacy_screen_kn': tagged(basis['min_tension_kn'], 'legacy screen reading, not graded', 'kN'),
+            'spring_table_factor': tagged(tension_basis['spring_table_factor'],
+                'one common multiplier, rounded up to 0.001 from hand equilibrium; native qualification pending'),
             'yield_strength_mpa': tagged(None, 'runtime criteria file; ' + REFERENCES['5L'], 'MPa'),
             'stress_design_factor': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q']),
             'stroke_reference': tagged('vertical ring displacement from initial elevation relative to fixed vessel'),
@@ -244,7 +252,7 @@ def case_table(root: Path) -> dict:
             'Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. '
             'Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. '
             'Stress retains the constant-tension approximation. '
-            'Screen tension is an assumed criterion value, not the modelled tension. '
+            'Screen tension is the legacy screen reading, not graded, not the modelled tension. '
             'attached members, nonlinear tensioner response, pressure stress and wave loading omitted. '
             'Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.',
         'cases': cases,
@@ -277,6 +285,10 @@ def build_models(root: Path, destination: Path, table: dict) -> None:
         raise ValueError('Unsupported case table; use the fixed sourced sweep')
     for case in table['cases']:
         spec = copy.deepcopy(read_spec(root))
+        for link in spec['generic']['links']:
+            if link['name'] in generic_tension.LINKS:
+                for row in link['properties']['SpringLength, SpringTension']:
+                    row[1] *= table['tension_basis']['spring_table_factor']
         vessel = spec['generic']['vessels'][0]
         shift = horizontal_shift(case['offset_m']['value'], case['current_direction_deg']['value'])
         vessel['initial_position'] = shift + [0]
@@ -325,10 +337,10 @@ def screen_rows(root: Path, table: dict) -> list[dict]:
                   * basis['od'] / 2 / basis['section'].moment_of_inertia) / 1e6
         rows.append({'case_id': case['id'], 'offset_pct': case['offset_pct']['value'],
             'current_mps': speed, 'submerged_weight_kn': basis['weight_kn'],
-            'required_top_tension_kn': basis['min_tension_kn'],
+            'legacy_screen_kn_not_graded': basis['min_tension_kn'],
             'axial_plus_bending_stress_mpa': stress,
             'geometric_extension_m': math.hypot(basis['length'], offset) - basis['length'],
-            'scope': 'approximate riser-column screen'})
+            'scope': 'approximate riser-column legacy screen reading, not graded'})
     return rows
 
 
@@ -340,6 +352,14 @@ def prepare(root: Path, destination: Path) -> None:
         'value': None, 'unit': unit, 'source': 'Supply a qualified source at run time; '
         + REFERENCES['5L' if key == 'yield_strength_mpa' else '16Q']}
         for key, unit in RUNTIME_UNITS.items()}, indent=2))
+    preparation_path = destination / 'preparation.json'
+    if preparation_path.exists():
+        preparation = json.loads(preparation_path.read_text(encoding='utf-8'))
+        preparation.update(tension_acceptance_basis=table['tension_acceptance_basis'],
+                           tension_basis=table['tension_basis'],
+                           statics_method=table['statics_method']['value'] + ' Source: '
+                           + table['statics_method']['source'])
+        write_text(preparation_path, json.dumps(preparation, indent=2, ensure_ascii=False))
     build_models(root, destination / 'models', table)
     rows = screen_rows(root, table)
     path = destination / 'screens/column-screen.csv'

@@ -112,12 +112,14 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
         if all(row[-1] <= 1 for row in rows):
             within.append(case)
     for speed in sorted({case['current_mps']['value'] for case in cases}):
-        offsets = [str(case['offset_pct']['value']) for case in within if case['current_mps']['value'] == speed]
-        window.append([speed, ', '.join(offsets) if offsets else 'none established'])
+        window.append([speed, 'production held; none established'])
     governing = []
-    for index in range(8):
-        candidates = all_rows[index::8]
-        governing_row = max(candidates, key=lambda item: item[-1])
+    count = len(driver.criterion_rows(next(iter(summaries.values())), criteria))
+    for index in range(count):
+        candidates = all_rows[index::count]
+        governing_row = (min(candidates, key=lambda item: item[3]-item[4])
+                         if index in (4, 5, 6, 7, 8) else
+                         max(candidates, key=lambda item: item[-1]))
         governing.append(governing_row[:-1])
     comparisons = []
     for case in cases:
@@ -130,21 +132,27 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             comparisons.append([case['id'], label, demand, reference, difference, demand - reference])
     criterion_table = [[key.replace('_', ' '), item['value'], item['unit'],
                         item['source'].split('; src/')[0]] for key, item in criteria.items()]
+    tension_margins = [[case['id'], summaries[case['id']]['support_intact_min_kn']-criteria['tsrmin_kn']['value'],
+        summaries[case['id']]['support_loss_min_kn']-criteria['tsrmin_kn']['value'],
+        summaries[case['id']]['bottom_sum_min_kn']-0.05*criteria['ws_kn']['value'],
+        summaries[case['id']]['member_min_kn'], summaries[case['id']]['table_clearance_min_m']] for case in cases]
     load_cases = [[case['id'], case['offset_pct']['value'], case['offset_m']['value'],
                    case['current_mps']['value']] for case in cases]
     ring_elevations = ', '.join(f'{height:g} m' for height in sorted({
         float(case['ring_initial_position_m']['value'][2]) for case in cases}))
-    intro = ('The discrete operating points listed below meet every supplied or assumed criterion '
-             'listed with its source in Section 3.5: lower and upper mean angle '
-             f"≤ {criteria['mean_angle_deg']['value']:g}°, maximum angle ≤ {criteria['max_angle_deg']['value']:g}°, "
-             f"minimum top tension ≥ {criteria['min_top_tension_kn']['value']:.3f} kN, vertical ring stroke "
-             f"between {criteria['stroke_min_m']['value']:g} and {criteria['stroke_max_m']['value']:g} m, "
-             f"and maximum main-riser stress ≤ {criteria['stress_limit_mpa']['value']:.3f} MPa. "
-             'No continuous operating interval is inferred between calculated points. '
-             'These limits do not establish equipment capacity or assembly qualification.')
+    intro = (f"Supplied mean angle ≤ {criteria['mean_angle_deg']['value']:g}°, "
+             f"maximum angle ≤ {criteria['max_angle_deg']['value']:g}°. "
+             'Production remains held; nothing released to production. '
+             'No operating window is established. Check A requires intact slip-ring support '
+             'at least T_SRmin, the separate End B sum at least 0.05 Ws, and every '
+             'member minimum effective tension at least zero. Check B requires the '
+             'three-of-four vertical link share less the carried weight at least T_SRmin. '
+             'Every link shall stay inside its spring table. Both checks bind every case. '
+             'Native channel qualification, equipment capacity and held-edition confirmation '
+             'of API RP 16Q clause text remain pending.')
     sections = [
-        section('summary', '1. Executive Summary', text(intro), TableBlock(title='Discrete operating window',
-            columns=['Current (m/s)', 'Offsets meeting every criterion (% depth)'], rows=window)),
+        section('summary', '1. Executive Summary', text(intro), TableBlock(title='Production hold',
+            columns=['Current (m/s)', 'Release status'], rows=window)),
         section('introduction', '2. Introduction', text('Connected-mode response is assessed for a generic deepwater '
             'drilling riser over vessel mean offset and uniform current. Results are compared with an approximate '
             'static riser-column calculation. No geographic site is represented.')),
@@ -157,9 +165,9 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             '3.4 Vessel data: generic semisubmersible, length 90 m, operating draught 24.38 m; four spring tensioners.\n\n'
             '3.5 Criteria: joint angle criteria, yield strength and stress design factor are supplied separately '
             'with their sources. The stress limit is their assumed uniaxial product. '
-            'Screen tension is an assumed criterion value, not the modelled tension. '
-            'Top tension is 1.25 times the approximate submerged '
-            'riser-column weight using gravity 9.81 m/s², omitting attached members. Stroke limits are independent '
+            '8,345.7 kN is a legacy screen reading, not graded, not the modelled tension. '
+            'T_SRmin includes flooded steel weight of the main tube, choke and kill, with fluid head counted once. '
+            'The mechanical/hydraulic part of Rf is assumed unity, a known limit. Stroke limits are independent '
             'assumptions, not capacities inferred from slip-joint length.\n\n'
             f"{table['tension_acceptance_basis']}\n\n"
             '3.6 Method: see Section 4.\n\n3.7 Load cases: six offsets and four current speeds; '
@@ -169,7 +177,9 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
         section('method', '4. Analysis Methodology', text(f'{METHOD}.\n\nOrcaFlex version {version}. '
             'Statics precede dynamics. Statistics use the main stage and exclude build-up. Angles are mean absolute '
             'and maximum absolute rotations at the compliant connections: upper slip-joint vessel end and lower '
-            'rigid-piece fixed end. Tension is effective tension at the main-riser top. Vertical stroke is tensioner-ring '
+            'rigid-piece fixed end. Tension acceptance uses simultaneous global link forces less ring weight and '
+            'the slip-joint End B global reaction, with separate bottom and member-profile comparisons. '
+            'The minimum over static equilibrium and main-stage dynamics is graded. Vertical stroke is tensioner-ring '
             f'elevation relative to each case\'s initial elevation ({ring_elevations}), read from the case table; '
             'vessel elevation is fixed. Maximum von Mises stress is '
             'taken over the main riser. Native channel qualification is required before engineering acceptance.\n\n'
@@ -181,14 +191,19 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             'limit. Percentage differences use the static screen as reference: 100 × (dynamic demand − screen) / |screen|. '
             'For |screen| ≤ 10⁻⁹ in its stated unit, percentage difference is not defined and absolute difference is given. '
             'Comparison arrays are in the appendix. Mechanical tensioner stroke is not represented by geometric extension.'),
-            TableBlock(title='Governing envelopes', columns=['Case', 'Criterion', 'Component', 'Demand', 'Limit', 'Unit'], rows=governing)),
-        section('findings', '6. Key Findings', text(f'{len(within)} of 24 calculated operating points meet all supplied or assumed '
-            'criteria. The governing envelope table identifies the controlling cases. Static-screen agreement does not '
+            TableBlock(title='Governing envelopes', columns=['Case', 'Criterion', 'Component', 'Demand', 'Limit', 'Unit'], rows=governing),
+            TableBlock(title='Binding tension margins; nonnegative meets each comparison',
+                columns=['Case', 'Check A margin (kN)', 'Check B margin (kN)', 'End B margin (kN)',
+                         'Member minimum (kN)', 'Spring-table clearance (m)'], rows=tension_margins)),
+        section('findings', '6. Key Findings', text(f'{len(within)} of 24 cases meet the tabulated numerical comparisons. Production remains held. '
+            'The governing envelope table identifies the controlling cases. Static-screen agreement does not '
             'establish dynamic adequacy; pressure stress, attached components and compliant support effects differ.')),
         section('limitations', '7. Limitations', text(f'The basis is a generic configuration. {METHOD}. '
             'No drift-off, recoil, VIV or fatigue; one mud weight. Native extraction qualification and confirmation of '
             'all supplied and assumed acceptance limits are required. The riser-column tension estimate does not establish the '
-            'required tension of the complete connected assembly.')),
+            'required tension of the complete connected assembly. '
+            'Old-setting End B moment: 1,858 kN.m native against a 1,363-1,440 kN.m hand estimate; '
+            'explanation pending the checker. New-setting native results remain unqualified.')),
         section('recommendations', '8. Recommendations', text('Confirm equipment capacities and operating criteria, '
             'qualify the native result channels, and evaluate the excluded operating conditions before operational use.')),
         section('references', '9. References', text(f'OrcaFlex, version {version}: connected finite-element analysis.\n\n'
@@ -203,7 +218,7 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             TableBlock(title='Screen comparisons', columns=['Case', 'Quantity', 'Demand', 'Screen reference',
                 'Difference (%)', 'Absolute difference'], rows=comparisons),
             TableBlock(title='Complete envelopes', columns=['Case', 'Criterion', 'Component', 'Demand', 'Limit',
-                'Unit', 'Demand ratio'], rows=all_rows))],
+                'Unit', 'Comparison score'], rows=all_rows))],
         provenance=Provenance(sources=[DataSource(kind='design data', identifier='generic-connected-basis',
             digest=table['template_sha256']), DataSource(kind='analytical results', identifier='column-screen',
             digest=digest(screen_path)), DataSource(kind='acceptance criteria', identifier='runtime-criteria',
