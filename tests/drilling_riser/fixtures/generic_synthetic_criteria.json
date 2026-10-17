@@ -1,0 +1,22 @@
+{
+  "mean_angle_deg": {
+    "value": 1.1,
+    "unit": "degrees",
+    "source": "synthetic test criterion; not an engineering limit"
+  },
+  "max_angle_deg": {
+    "value": 3.3,
+    "unit": "degrees",
+    "source": "synthetic test criterion; not an engineering limit"
+  },
+  "yield_strength_mpa": {
+    "value": 321,
+    "unit": "MPa",
+    "source": "synthetic test criterion; not an engineering limit"
+  },
+  "stress_design_factor": {
+    "value": 0.61,
+    "unit": "1",
+    "source": "synthetic test criterion; not an engineering limit"
+  }
+}
