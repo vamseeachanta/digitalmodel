@@ -1,0 +1,308 @@
+{
+  "cases": {
+    "incline-aided": {
+      "includes/01_general.yml": "General:\n  UnitsSystem: SI\n  JacobianBufferingPolicy: 1\n  JacobianPerturbationFactor: 0\n  BuoysIncludedInStatics: Individually specified\n  LineStaticsStep1Policy: All lines included\n  LineStaticsStep2Policy: Solve coupled systems\n  WholeSystemStaticsEnabled: true\n  DynamicsSolutionMethod: Implicit time domain\n  ImplicitUseVariableTimeStep: false\n  ImplicitConstantTimeStep: 0.1\n  LogPrecision: Single\n  TargetLogSampleInterval: 0.1\n  LogStartTime: ~\n  StartTime: ~\n  FirstStage: ~\n  RampStartTime: ~\n  RampFinishTime: ~\n  TimeHistoryImportFrom: ~\n  TimeHistoryImportTo: ~\n  StageDuration:\n  - 8\n  - 16\n  RestartStateRecordingPeriodicCount: 0\n  RestartStateRecordingTest: ''\n",
+      "includes/02_var_data.yml": "VariableData:\n  Coatingsorlinings:\n  - Name: coating+CWC\n    LayerThickness, LayerMaterialDensity:\n    - - 0.004\n      - 0.95\n    - - 0.1\n      - 3.0\n  - Name: coating\n    LayerThickness, LayerMaterialDensity:\n    - - 0.004\n      - 0.95\n",
+      "includes/03_environment.yml": "Environment:\n  WaterSurfaceZ: 0\n  KinematicViscosity: 1.35e-06\n  SeaTemperature: 10\n  ReynoldsNumberCalculation: Flow direction\n  HorizontalWaterDensityFactor: ~\n  VerticalDensityVariation: Constant\n  SeabedType: Flat\n  SeabedOrigin:\n  - 0\n  - 0\n  NominalDepth: ~\n  SeabedSlopeDirection: 0\n  SeabedModel: Elastic\n  WaveKinematicsCutoffDepth: Infinity\n  WaveCalculationMethod: Instantaneous position (exact)\n  WaveCalculationTimeInterval: 0\n  WaveCalculationSpatialInterval: 0\n  MultipleCurrentDataCanBeDefined: 'No'\n  CurrentModel: Variation scheme\n  CurrentRamped: 'No'\n  CurrentApplyVerticalStretching: 'No'\n  HorizontalCurrentFactor: ~\n  VerticalCurrentVariationMethod: Interpolated\n  IncludeVesselWindLoads: 'Yes'\n  IncludeLineWindLoads: 'Yes'\n  IncludeBuoyWindLoads: 'Yes'\n  IncludeBuoyWingWindLoads: 'Yes'\n  WindRamping: From mean\n  WindType: Constant\n  AirDensity: 0.00128\n  AirSpeedOfSound: 343\n  Density: 1.025\n  SeabedOriginDepth: 40.0\n  SeabedSlope: 0.0\n  SeabedNormalStiffness: 1000.0\n  SeabedShearStiffness: 100.0\n  WaveTrains:\n  - Name: Wave 1\n    WaveOrigin:\n    - 0\n    - 0\n    WaveTimeOrigin: 0\n    WaveType: Airy\n    WaveDirection: 0\n    WaveHeight: 0\n    WavePeriod: 8\n  RefCurrentSpeed: 0\n  RefCurrentDirection: 0\n  CurrentDepth, CurrentFactor, CurrentRotation:\n  - - 0\n    - 1.0\n    - 0\n  - - 40.0\n    - 1.0\n    - 0\n  WindSpeed: 0\n  WindDirection: 0\n",
+      "includes/04_vessel_types.yml": "VesselTypes:\n- Name: Generic lay hull Type\n  Length: 182.6\n  Draughts:\n  - 15.5\n  Symmetry: xz plane\n  CalculationMethod: Single draught\n  Displacement:\n  - 52596.172474999985\n  WaveReferencePoint:\n  - 0\n  - 0\n  - 0\n  CentreOfGravityRelativeToCoG:\n  - 0\n  - 0\n  - 0\n  MomentsOfInertia:\n  - - 5259617.247499999\n    - 47336555.227499984\n    - 47336555.227499984\n",
+      "includes/05_line_types.yml": "LineTypes:\n- Name: X65+CWC\n  Category: Homogeneous pipe\n  OD: 0.9144\n  ID: 0.8636\n  MaterialDensity: 7.85\n  E: 207000000.0\n  PoissonRatio: 0.293\n  ExpansionTable: None\n  Cdn: 1.18\n  Cdz: 0.008\n  Cl: 0\n  Can: 1\n  Caz: 0\n  Cs: 0\n  Ce: 0\n  SeabedLateralFrictionCoefficient: 0.32\n  SeabedAxialFrictionCoefficient: 0.32\n  ClashStiffness: 0\n  AllowableStress: ~\n  RayleighDampingCoefficients: (no damping)\n  CoatingThickness: coating+CWC\n  LiningThickness: 0\n  AdditionalEI: 0\n- Name: Winch wire_LT\n  Category: General\n  OD: 0.08\n  ID: 0\n  CentreOfMass:\n  - 0\n  - 0\n  BulkModulus: Infinity\n  MassPerUnitLength: 0.0399\n  CompressionIsLimited: 'Yes'\n  AllowableTension: 6300\n  MinRadius:\n  - ~\n  - ~\n  EI:\n  - 0\n  - ~\n  EA: 404000.0\n  PoissonRatio: 0.5\n  ExpansionTable: None\n  GJ: 80\n  TensionTorqueCoupling: 0\n  OuterContactDiameter: ~\n  InnerContactDiameter: ~\n  ClashStiffness: 0\n  Ca:\n  - 1\n  - ~\n  - 0\n  Cm:\n  - ~\n  - ~\n  - ~\n  Cs: 0\n  Ce: 0\n  Cd:\n  - 1.2\n  - ~\n  - 0.008\n  Cl: 0\n  NormalDragLiftDiameter: ~\n  AxialDragLiftDiameter: ~\n  StressOD: ~\n  StressID: ~\n  AllowableStress: ~\n  TensileStressLoadingFactor: 1\n  BendingStressLoadingFactor: 1\n  ShearStressLoadingFactor: 1\n  TorsionalStressLoadingFactor: 1\n  SeabedLateralFrictionCoefficient: 0.5\n  SeabedAxialFrictionCoefficient: ~\n  RayleighDampingCoefficients: (no damping)\n  Pen:\n  - 1\n  - Solid\n  - Lime\n",
+      "includes/06_vessels.yml": "Vessels:\n- Name: Generic lay hull\n  VesselType: Generic lay hull Type\n  Length: 182.6\n  Connection: Free\n  InitialPosition:\n  - 0\n  - 0\n  - 0\n  InitialHeading: 0\n  PrimaryMotion: Calculated (6 DOF)\n  SuperimposedMotion: None\n  IncludedInStatics: None\n  WaveCalculationMethod: Specified by environment\n",
+      "includes/07_lines.yml": "Lines:\n- Name: Generic pipe\n  IncludeTorsion: 'Yes'\n  TopEnd: End A\n  LengthAndEndOrientations: Explicit\n  Representation: Finite element\n  PyModel: (none)\n  PreBendSpecifiedBy: Bend angle\n  DragFormulation: Standard\n  StaticsVIV: None\n  DynamicsVIV: None\n  WaveCalculationMethod: Specified by environment\n  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,\n    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo\n  : - - Generic lay hull\n      - 0\n      - 0\n      - 0\n      - 0\n      - 90\n      - 0\n      - ~\n    - - Anchored\n      - 0\n      - 0\n      - 0\n      - 0\n      - 90.0\n      - 0\n      - ~\n  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:\n  - - Infinity\n    - ~\n    - Infinity\n  - - Infinity\n    - ~\n    - Infinity\n  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,\n    ConnectionApplyRamp, ConnectionUseSmoothGrowth\n  : - - ~\n      - 0\n      - 0.001\n    - - ~\n      - 0\n      - 0.001\n  LineType, Length, TargetSegmentLength:\n  - - X65+CWC\n    - 40.0\n    - 5.0\n",
+      "includes/09_shapes.yml": "Shapes:\n- Name: Ramp inclined\n  ShapeType: Elastic solid\n  Shape: Block\n  Connection: Fixed\n  Origin:\n  - -126.35\n  - -25\n  - -5\n  Size:\n  - 150\n  - 50\n  - 10\n  Orientation:\n  - 0\n  - 2.27\n  - 0\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n- Name: Ramp-curve\n  ShapeType: Elastic solid\n  Shape: Curved plate\n  Connection: Fixed\n  Origin:\n  - 4.1\n  - -25\n  - -500.55\n  Orientation:\n  - 90\n  - 90\n  - 182.27\n  IncludedAngleOfRevolution: 10\n  IsHollow: 'No'\n  ProfileDistanceAlongAxis, ProfileDiameter:\n  - - 0\n    - 1000\n  - - 50\n    - 1000\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n",
+      "includes/10_groups.yml": "Groups:\n  Structure:\n    Generic pipe: Model\n    Ramp inclined: Model\n    Ramp-curve: Model\n    Generic lay hull: Model\n    Tensioner: Model\n  State:\n    Collapsed: []\n",
+      "includes/11_winches.yml": "Winches:\n- Name: Tensioner\n  Connection:\n  - Generic lay hull\n  - Generic pipe\n  ConnectionPoint:\n  - - 0\n    - 0\n    - 0\n  - - 0\n    - 0\n    - 0\n  ConnectionzRelativeTo:\n  - ~\n  - End A\n  StageMode:\n  - Specified length\n  - Specified tension\n  StageTension:\n  - 0\n  - 44.891289394739914\n  StageValue:\n  - 10\n  - ~\n  WireType: Winch wire_LT\n  StaticsStep1: Specified length\n",
+      "includes/13_supports.yml": "SupportTypes:\n- Name: Support type1\n  Geometry: Flat\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n  Diameter: 5\n  FlatSupportLength: 10\n  Pen:\n  - 2\n  - Solid\n  - $40FF00\n- Name: Support type2\n  Geometry: Flat\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n  Diameter: 2\n  FlatSupportLength: 10\n",
+      "includes/14_morison.yml": "MorisonElementTypes:\n- Name: Morison element type1\n  NormalDragDiameter: 0\n  AxialDragDiameter: ~\n  Cd:\n  - 0\n  - ~\n  - 0\n  NormalHydrodynamicDiameter: 0\n  AxialHydrodynamicDiameter: ~\n  Ca:\n  - 0\n  - ~\n  - 0\n  Cm:\n  - ~\n  - ~\n  - ~\n",
+      "inputs/parameters.yml": "current_direction: 0\ncurrent_speed: 0\nhs: 0\nstage_durations:\n- 8\n- 16\ntime_step: 0.1\ntp: 8\nwater_density: 1.025\nwater_depth: 40.0\nwave_direction: 0\nwind_speed: 0\n",
+      "master.yml": "%YAML 1.1\n# Type: Model\n# Generated from: in-memory spec\n\n---\n- includefile: includes/01_general.yml\n- includefile: includes/02_var_data.yml\n- includefile: includes/03_environment.yml\n- includefile: includes/04_vessel_types.yml\n- includefile: includes/05_line_types.yml\n- includefile: includes/06_vessels.yml\n- includefile: includes/13_supports.yml\n- includefile: includes/14_morison.yml\n- includefile: includes/09_shapes.yml\n- includefile: includes/07_lines.yml\n- includefile: includes/11_winches.yml\n- includefile: includes/10_groups.yml\n"
+    },
+    "level-drained": {
+      "includes/01_general.yml": "General:\n  UnitsSystem: SI\n  JacobianBufferingPolicy: 1\n  JacobianPerturbationFactor: 0\n  BuoysIncludedInStatics: Individually specified\n  LineStaticsStep1Policy: All lines included\n  LineStaticsStep2Policy: Solve coupled systems\n  WholeSystemStaticsEnabled: true\n  DynamicsSolutionMethod: Implicit time domain\n  ImplicitUseVariableTimeStep: false\n  ImplicitConstantTimeStep: 0.1\n  LogPrecision: Single\n  TargetLogSampleInterval: 0.1\n  LogStartTime: ~\n  StartTime: ~\n  FirstStage: ~\n  RampStartTime: ~\n  RampFinishTime: ~\n  TimeHistoryImportFrom: ~\n  TimeHistoryImportTo: ~\n  StageDuration:\n  - 8\n  - 16\n  RestartStateRecordingPeriodicCount: 0\n  RestartStateRecordingTest: ''\n",
+      "includes/02_var_data.yml": "VariableData:\n  Coatingsorlinings:\n  - Name: coating+CWC\n    LayerThickness, LayerMaterialDensity:\n    - - 0.004\n      - 0.95\n    - - 0.1\n      - 3.0\n  - Name: coating\n    LayerThickness, LayerMaterialDensity:\n    - - 0.004\n      - 0.95\n",
+      "includes/03_environment.yml": "Environment:\n  WaterSurfaceZ: 0\n  KinematicViscosity: 1.35e-06\n  SeaTemperature: 10\n  ReynoldsNumberCalculation: Flow direction\n  HorizontalWaterDensityFactor: ~\n  VerticalDensityVariation: Constant\n  SeabedType: Flat\n  SeabedOrigin:\n  - 0\n  - 0\n  NominalDepth: ~\n  SeabedSlopeDirection: 0\n  SeabedModel: Elastic\n  WaveKinematicsCutoffDepth: Infinity\n  WaveCalculationMethod: Instantaneous position (exact)\n  WaveCalculationTimeInterval: 0\n  WaveCalculationSpatialInterval: 0\n  MultipleCurrentDataCanBeDefined: 'No'\n  CurrentModel: Variation scheme\n  CurrentRamped: 'No'\n  CurrentApplyVerticalStretching: 'No'\n  HorizontalCurrentFactor: ~\n  VerticalCurrentVariationMethod: Interpolated\n  IncludeVesselWindLoads: 'Yes'\n  IncludeLineWindLoads: 'Yes'\n  IncludeBuoyWindLoads: 'Yes'\n  IncludeBuoyWingWindLoads: 'Yes'\n  WindRamping: From mean\n  WindType: Constant\n  AirDensity: 0.00128\n  AirSpeedOfSound: 343\n  Density: 1.025\n  SeabedOriginDepth: 40.0\n  SeabedSlope: 0.0\n  SeabedNormalStiffness: 1000.0\n  SeabedShearStiffness: 100.0\n  WaveTrains:\n  - Name: Wave 1\n    WaveOrigin:\n    - 0\n    - 0\n    WaveTimeOrigin: 0\n    WaveType: Airy\n    WaveDirection: 0\n    WaveHeight: 0\n    WavePeriod: 8\n  RefCurrentSpeed: 0\n  RefCurrentDirection: 0\n  CurrentDepth, CurrentFactor, CurrentRotation:\n  - - 0\n    - 1.0\n    - 0\n  - - 40.0\n    - 1.0\n    - 0\n  WindSpeed: 0\n  WindDirection: 0\n",
+      "includes/04_vessel_types.yml": "VesselTypes:\n- Name: Generic lay hull Type\n  Length: 182.6\n  Draughts:\n  - 15.5\n  Symmetry: xz plane\n  CalculationMethod: Single draught\n  Displacement:\n  - 52596.172474999985\n  WaveReferencePoint:\n  - 0\n  - 0\n  - 0\n  CentreOfGravityRelativeToCoG:\n  - 0\n  - 0\n  - 0\n  MomentsOfInertia:\n  - - 5259617.247499999\n    - 47336555.227499984\n    - 47336555.227499984\n",
+      "includes/05_line_types.yml": "LineTypes:\n- Name: X65+CWC\n  Category: Homogeneous pipe\n  OD: 0.9144\n  ID: 0.8636\n  MaterialDensity: 7.85\n  E: 207000000.0\n  PoissonRatio: 0.293\n  ExpansionTable: None\n  Cdn: 1.18\n  Cdz: 0.008\n  Cl: 0\n  Can: 1\n  Caz: 0\n  Cs: 0\n  Ce: 0\n  SeabedLateralFrictionCoefficient: 0.4348123749609336\n  SeabedAxialFrictionCoefficient: 0.4348123749609336\n  ClashStiffness: 0\n  AllowableStress: ~\n  RayleighDampingCoefficients: (no damping)\n  CoatingThickness: coating+CWC\n  LiningThickness: 0\n  AdditionalEI: 0\n- Name: Winch wire_LT\n  Category: General\n  OD: 0.08\n  ID: 0\n  CentreOfMass:\n  - 0\n  - 0\n  BulkModulus: Infinity\n  MassPerUnitLength: 0.0399\n  CompressionIsLimited: 'Yes'\n  AllowableTension: 6300\n  MinRadius:\n  - ~\n  - ~\n  EI:\n  - 0\n  - ~\n  EA: 404000.0\n  PoissonRatio: 0.5\n  ExpansionTable: None\n  GJ: 80\n  TensionTorqueCoupling: 0\n  OuterContactDiameter: ~\n  InnerContactDiameter: ~\n  ClashStiffness: 0\n  Ca:\n  - 1\n  - ~\n  - 0\n  Cm:\n  - ~\n  - ~\n  - ~\n  Cs: 0\n  Ce: 0\n  Cd:\n  - 1.2\n  - ~\n  - 0.008\n  Cl: 0\n  NormalDragLiftDiameter: ~\n  AxialDragLiftDiameter: ~\n  StressOD: ~\n  StressID: ~\n  AllowableStress: ~\n  TensileStressLoadingFactor: 1\n  BendingStressLoadingFactor: 1\n  ShearStressLoadingFactor: 1\n  TorsionalStressLoadingFactor: 1\n  SeabedLateralFrictionCoefficient: 0.5\n  SeabedAxialFrictionCoefficient: ~\n  RayleighDampingCoefficients: (no damping)\n  Pen:\n  - 1\n  - Solid\n  - Lime\n",
+      "includes/06_vessels.yml": "Vessels:\n- Name: Generic lay hull\n  VesselType: Generic lay hull Type\n  Length: 182.6\n  Connection: Free\n  InitialPosition:\n  - 0\n  - 0\n  - 0\n  InitialHeading: 0\n  PrimaryMotion: Calculated (6 DOF)\n  SuperimposedMotion: None\n  IncludedInStatics: None\n  WaveCalculationMethod: Specified by environment\n",
+      "includes/07_lines.yml": "Lines:\n- Name: Generic pipe\n  IncludeTorsion: 'Yes'\n  TopEnd: End A\n  LengthAndEndOrientations: Explicit\n  Representation: Finite element\n  PyModel: (none)\n  PreBendSpecifiedBy: Bend angle\n  DragFormulation: Standard\n  StaticsVIV: None\n  DynamicsVIV: None\n  WaveCalculationMethod: Specified by environment\n  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,\n    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo\n  : - - Generic lay hull\n      - 0\n      - 0\n      - 0\n      - 0\n      - 90\n      - 0\n      - ~\n    - - Anchored\n      - 0\n      - 0\n      - 0\n      - 0\n      - 90.0\n      - 0\n      - ~\n  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:\n  - - Infinity\n    - ~\n    - Infinity\n  - - Infinity\n    - ~\n    - Infinity\n  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,\n    ConnectionApplyRamp, ConnectionUseSmoothGrowth\n  : - - ~\n      - 0\n      - 0.001\n    - - ~\n      - 0\n      - 0.001\n  LineType, Length, TargetSegmentLength:\n  - - X65+CWC\n    - 40.0\n    - 5.0\n",
+      "includes/09_shapes.yml": "Shapes:\n- Name: Ramp inclined\n  ShapeType: Elastic solid\n  Shape: Block\n  Connection: Fixed\n  Origin:\n  - -126.35\n  - -25\n  - -5\n  Size:\n  - 150\n  - 50\n  - 10\n  Orientation:\n  - 0\n  - 2.27\n  - 0\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n- Name: Ramp-curve\n  ShapeType: Elastic solid\n  Shape: Curved plate\n  Connection: Fixed\n  Origin:\n  - 4.1\n  - -25\n  - -500.55\n  Orientation:\n  - 90\n  - 90\n  - 182.27\n  IncludedAngleOfRevolution: 10\n  IsHollow: 'No'\n  ProfileDistanceAlongAxis, ProfileDiameter:\n  - - 0\n    - 1000\n  - - 50\n    - 1000\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n",
+      "includes/10_groups.yml": "Groups:\n  Structure:\n    Generic pipe: Model\n    Ramp inclined: Model\n    Ramp-curve: Model\n    Generic lay hull: Model\n    Tensioner: Model\n  State:\n    Collapsed: []\n",
+      "includes/11_winches.yml": "Winches:\n- Name: Tensioner\n  Connection:\n  - Generic lay hull\n  - Generic pipe\n  ConnectionPoint:\n  - - 0\n    - 0\n    - 0\n  - - 0\n    - 0\n    - 0\n  ConnectionzRelativeTo:\n  - ~\n  - End A\n  StageMode:\n  - Specified length\n  - Specified tension\n  StageTension:\n  - 0\n  - 88.22473374171605\n  StageValue:\n  - 10\n  - ~\n  WireType: Winch wire_LT\n  StaticsStep1: Specified length\n",
+      "includes/13_supports.yml": "SupportTypes:\n- Name: Support type1\n  Geometry: Flat\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n  Diameter: 5\n  FlatSupportLength: 10\n  Pen:\n  - 2\n  - Solid\n  - $40FF00\n- Name: Support type2\n  Geometry: Flat\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n  Diameter: 2\n  FlatSupportLength: 10\n",
+      "includes/14_morison.yml": "MorisonElementTypes:\n- Name: Morison element type1\n  NormalDragDiameter: 0\n  AxialDragDiameter: ~\n  Cd:\n  - 0\n  - ~\n  - 0\n  NormalHydrodynamicDiameter: 0\n  AxialHydrodynamicDiameter: ~\n  Ca:\n  - 0\n  - ~\n  - 0\n  Cm:\n  - ~\n  - ~\n  - ~\n",
+      "inputs/parameters.yml": "current_direction: 0\ncurrent_speed: 0\nhs: 0\nstage_durations:\n- 8\n- 16\ntime_step: 0.1\ntp: 8\nwater_density: 1.025\nwater_depth: 40.0\nwave_direction: 0\nwind_speed: 0\n",
+      "master.yml": "%YAML 1.1\n# Type: Model\n# Generated from: in-memory spec\n\n---\n- includefile: includes/01_general.yml\n- includefile: includes/02_var_data.yml\n- includefile: includes/03_environment.yml\n- includefile: includes/04_vessel_types.yml\n- includefile: includes/05_line_types.yml\n- includefile: includes/06_vessels.yml\n- includefile: includes/13_supports.yml\n- includefile: includes/14_morison.yml\n- includefile: includes/09_shapes.yml\n- includefile: includes/07_lines.yml\n- includefile: includes/11_winches.yml\n- includefile: includes/10_groups.yml\n"
+    },
+    "level-initial": {
+      "includes/01_general.yml": "General:\n  UnitsSystem: SI\n  JacobianBufferingPolicy: 1\n  JacobianPerturbationFactor: 0\n  BuoysIncludedInStatics: Individually specified\n  LineStaticsStep1Policy: All lines included\n  LineStaticsStep2Policy: Solve coupled systems\n  WholeSystemStaticsEnabled: true\n  DynamicsSolutionMethod: Implicit time domain\n  ImplicitUseVariableTimeStep: false\n  ImplicitConstantTimeStep: 0.1\n  LogPrecision: Single\n  TargetLogSampleInterval: 0.1\n  LogStartTime: ~\n  StartTime: ~\n  FirstStage: ~\n  RampStartTime: ~\n  RampFinishTime: ~\n  TimeHistoryImportFrom: ~\n  TimeHistoryImportTo: ~\n  StageDuration:\n  - 8\n  - 16\n  RestartStateRecordingPeriodicCount: 0\n  RestartStateRecordingTest: ''\n",
+      "includes/02_var_data.yml": "VariableData:\n  Coatingsorlinings:\n  - Name: coating+CWC\n    LayerThickness, LayerMaterialDensity:\n    - - 0.004\n      - 0.95\n    - - 0.1\n      - 3.0\n  - Name: coating\n    LayerThickness, LayerMaterialDensity:\n    - - 0.004\n      - 0.95\n",
+      "includes/03_environment.yml": "Environment:\n  WaterSurfaceZ: 0\n  KinematicViscosity: 1.35e-06\n  SeaTemperature: 10\n  ReynoldsNumberCalculation: Flow direction\n  HorizontalWaterDensityFactor: ~\n  VerticalDensityVariation: Constant\n  SeabedType: Flat\n  SeabedOrigin:\n  - 0\n  - 0\n  NominalDepth: ~\n  SeabedSlopeDirection: 0\n  SeabedModel: Elastic\n  WaveKinematicsCutoffDepth: Infinity\n  WaveCalculationMethod: Instantaneous position (exact)\n  WaveCalculationTimeInterval: 0\n  WaveCalculationSpatialInterval: 0\n  MultipleCurrentDataCanBeDefined: 'No'\n  CurrentModel: Variation scheme\n  CurrentRamped: 'No'\n  CurrentApplyVerticalStretching: 'No'\n  HorizontalCurrentFactor: ~\n  VerticalCurrentVariationMethod: Interpolated\n  IncludeVesselWindLoads: 'Yes'\n  IncludeLineWindLoads: 'Yes'\n  IncludeBuoyWindLoads: 'Yes'\n  IncludeBuoyWingWindLoads: 'Yes'\n  WindRamping: From mean\n  WindType: Constant\n  AirDensity: 0.00128\n  AirSpeedOfSound: 343\n  Density: 1.025\n  SeabedOriginDepth: 40.0\n  SeabedSlope: 0.0\n  SeabedNormalStiffness: 1000.0\n  SeabedShearStiffness: 100.0\n  WaveTrains:\n  - Name: Wave 1\n    WaveOrigin:\n    - 0\n    - 0\n    WaveTimeOrigin: 0\n    WaveType: Airy\n    WaveDirection: 0\n    WaveHeight: 0\n    WavePeriod: 8\n  RefCurrentSpeed: 0\n  RefCurrentDirection: 0\n  CurrentDepth, CurrentFactor, CurrentRotation:\n  - - 0\n    - 1.0\n    - 0\n  - - 40.0\n    - 1.0\n    - 0\n  WindSpeed: 0\n  WindDirection: 0\n",
+      "includes/04_vessel_types.yml": "VesselTypes:\n- Name: Generic lay hull Type\n  Length: 182.6\n  Draughts:\n  - 15.5\n  Symmetry: xz plane\n  CalculationMethod: Single draught\n  Displacement:\n  - 52596.172474999985\n  WaveReferencePoint:\n  - 0\n  - 0\n  - 0\n  CentreOfGravityRelativeToCoG:\n  - 0\n  - 0\n  - 0\n  MomentsOfInertia:\n  - - 5259617.247499999\n    - 47336555.227499984\n    - 47336555.227499984\n",
+      "includes/05_line_types.yml": "LineTypes:\n- Name: X65+CWC\n  Category: Homogeneous pipe\n  OD: 0.9144\n  ID: 0.8636\n  MaterialDensity: 7.85\n  E: 207000000.0\n  PoissonRatio: 0.293\n  ExpansionTable: None\n  Cdn: 1.18\n  Cdz: 0.008\n  Cl: 0\n  Can: 1\n  Caz: 0\n  Cs: 0\n  Ce: 0\n  SeabedLateralFrictionCoefficient: 0.32\n  SeabedAxialFrictionCoefficient: 0.32\n  ClashStiffness: 0\n  AllowableStress: ~\n  RayleighDampingCoefficients: (no damping)\n  CoatingThickness: coating+CWC\n  LiningThickness: 0\n  AdditionalEI: 0\n- Name: Winch wire_LT\n  Category: General\n  OD: 0.08\n  ID: 0\n  CentreOfMass:\n  - 0\n  - 0\n  BulkModulus: Infinity\n  MassPerUnitLength: 0.0399\n  CompressionIsLimited: 'Yes'\n  AllowableTension: 6300\n  MinRadius:\n  - ~\n  - ~\n  EI:\n  - 0\n  - ~\n  EA: 404000.0\n  PoissonRatio: 0.5\n  ExpansionTable: None\n  GJ: 80\n  TensionTorqueCoupling: 0\n  OuterContactDiameter: ~\n  InnerContactDiameter: ~\n  ClashStiffness: 0\n  Ca:\n  - 1\n  - ~\n  - 0\n  Cm:\n  - ~\n  - ~\n  - ~\n  Cs: 0\n  Ce: 0\n  Cd:\n  - 1.2\n  - ~\n  - 0.008\n  Cl: 0\n  NormalDragLiftDiameter: ~\n  AxialDragLiftDiameter: ~\n  StressOD: ~\n  StressID: ~\n  AllowableStress: ~\n  TensileStressLoadingFactor: 1\n  BendingStressLoadingFactor: 1\n  ShearStressLoadingFactor: 1\n  TorsionalStressLoadingFactor: 1\n  SeabedLateralFrictionCoefficient: 0.5\n  SeabedAxialFrictionCoefficient: ~\n  RayleighDampingCoefficients: (no damping)\n  Pen:\n  - 1\n  - Solid\n  - Lime\n",
+      "includes/06_vessels.yml": "Vessels:\n- Name: Generic lay hull\n  VesselType: Generic lay hull Type\n  Length: 182.6\n  Connection: Free\n  InitialPosition:\n  - 0\n  - 0\n  - 0\n  InitialHeading: 0\n  PrimaryMotion: Calculated (6 DOF)\n  SuperimposedMotion: None\n  IncludedInStatics: None\n  WaveCalculationMethod: Specified by environment\n",
+      "includes/07_lines.yml": "Lines:\n- Name: Generic pipe\n  IncludeTorsion: 'Yes'\n  TopEnd: End A\n  LengthAndEndOrientations: Explicit\n  Representation: Finite element\n  PyModel: (none)\n  PreBendSpecifiedBy: Bend angle\n  DragFormulation: Standard\n  StaticsVIV: None\n  DynamicsVIV: None\n  WaveCalculationMethod: Specified by environment\n  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,\n    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo\n  : - - Generic lay hull\n      - 0\n      - 0\n      - 0\n      - 0\n      - 90\n      - 0\n      - ~\n    - - Anchored\n      - 0\n      - 0\n      - 0\n      - 0\n      - 90.0\n      - 0\n      - ~\n  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:\n  - - Infinity\n    - ~\n    - Infinity\n  - - Infinity\n    - ~\n    - Infinity\n  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,\n    ConnectionApplyRamp, ConnectionUseSmoothGrowth\n  : - - ~\n      - 0\n      - 0.001\n    - - ~\n      - 0\n      - 0.001\n  LineType, Length, TargetSegmentLength:\n  - - X65+CWC\n    - 40.0\n    - 5.0\n",
+      "includes/09_shapes.yml": "Shapes:\n- Name: Ramp inclined\n  ShapeType: Elastic solid\n  Shape: Block\n  Connection: Fixed\n  Origin:\n  - -126.35\n  - -25\n  - -5\n  Size:\n  - 150\n  - 50\n  - 10\n  Orientation:\n  - 0\n  - 2.27\n  - 0\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n- Name: Ramp-curve\n  ShapeType: Elastic solid\n  Shape: Curved plate\n  Connection: Fixed\n  Origin:\n  - 4.1\n  - -25\n  - -500.55\n  Orientation:\n  - 90\n  - 90\n  - 182.27\n  IncludedAngleOfRevolution: 10\n  IsHollow: 'No'\n  ProfileDistanceAlongAxis, ProfileDiameter:\n  - - 0\n    - 1000\n  - - 50\n    - 1000\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n",
+      "includes/10_groups.yml": "Groups:\n  Structure:\n    Generic pipe: Model\n    Ramp inclined: Model\n    Ramp-curve: Model\n    Generic lay hull: Model\n    Tensioner: Model\n  State:\n    Collapsed: []\n",
+      "includes/11_winches.yml": "Winches:\n- Name: Tensioner\n  Connection:\n  - Generic lay hull\n  - Generic pipe\n  ConnectionPoint:\n  - - 0\n    - 0\n    - 0\n  - - 0\n    - 0\n    - 0\n  ConnectionzRelativeTo:\n  - ~\n  - End A\n  StageMode:\n  - Specified length\n  - Specified tension\n  StageTension:\n  - 0\n  - 64.9289588408924\n  StageValue:\n  - 10\n  - ~\n  WireType: Winch wire_LT\n  StaticsStep1: Specified length\n",
+      "includes/13_supports.yml": "SupportTypes:\n- Name: Support type1\n  Geometry: Flat\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n  Diameter: 5\n  FlatSupportLength: 10\n  Pen:\n  - 2\n  - Solid\n  - $40FF00\n- Name: Support type2\n  Geometry: Flat\n  NormalStiffness: 10000.0\n  ShearStiffness: 100\n  Diameter: 2\n  FlatSupportLength: 10\n",
+      "includes/14_morison.yml": "MorisonElementTypes:\n- Name: Morison element type1\n  NormalDragDiameter: 0\n  AxialDragDiameter: ~\n  Cd:\n  - 0\n  - ~\n  - 0\n  NormalHydrodynamicDiameter: 0\n  AxialHydrodynamicDiameter: ~\n  Ca:\n  - 0\n  - ~\n  - 0\n  Cm:\n  - ~\n  - ~\n  - ~\n",
+      "inputs/parameters.yml": "current_direction: 0\ncurrent_speed: 0\nhs: 0\nstage_durations:\n- 8\n- 16\ntime_step: 0.1\ntp: 8\nwater_density: 1.025\nwater_depth: 40.0\nwave_direction: 0\nwind_speed: 0\n",
+      "master.yml": "%YAML 1.1\n# Type: Model\n# Generated from: in-memory spec\n\n---\n- includefile: includes/01_general.yml\n- includefile: includes/02_var_data.yml\n- includefile: includes/03_environment.yml\n- includefile: includes/04_vessel_types.yml\n- includefile: includes/05_line_types.yml\n- includefile: includes/06_vessels.yml\n- includefile: includes/13_supports.yml\n- includefile: includes/14_morison.yml\n- includefile: includes/09_shapes.yml\n- includefile: includes/07_lines.yml\n- includefile: includes/11_winches.yml\n- includefile: includes/10_groups.yml\n"
+    }
+  },
+  "provenance": {
+    "assumed_inputs": [
+      {
+        "basis": "Diameter-to-wall class of the generic pipe",
+        "input": "pipeline.dimensions.wall_thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.0254
+      },
+      {
+        "basis": "Generic polymer corrosion coating",
+        "input": "pipeline.coatings.corrosion.thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.004
+      },
+      {
+        "basis": "Generic polymer corrosion coating",
+        "input": "pipeline.coatings.corrosion.density",
+        "label": "assumed, based on previous experience",
+        "unit": "te/m3",
+        "value": 0.95
+      },
+      {
+        "basis": "Generic concrete weight coating",
+        "input": "pipeline.coatings.weight.0.thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.1
+      },
+      {
+        "basis": "Generic concrete weight coating",
+        "input": "pipeline.coatings.weight.0.density",
+        "label": "assumed, based on previous experience",
+        "unit": "te/m3",
+        "value": 3.0
+      }
+    ],
+    "input_sources": {
+      "cases.0.buoyancy_fraction": {
+        "basis": "Define the initial-friction reference without buoyancy aids, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.0.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.0.rise_m": {
+        "basis": "Define the initial-friction reference on a level supported route, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.1.buoyancy_fraction": {
+        "basis": "Keep the drained-friction comparison without buoyancy aids, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.1.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.1.rise_m": {
+        "basis": "Keep the drained-friction comparison on a level supported route, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.2.buoyancy_fraction": {
+        "basis": "Offset half the submerged weight in the analytical comparison, dimensionless; absent from the native model.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.2.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.2.rise_m": {
+        "basis": "Introduce an uphill rise in the analytical comparison, in m; absent from the native geometry.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "equipment.vessel.properties.beam": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "equipment.vessel.properties.cog.0": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.cog.1": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.cog.2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.draft": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "equipment.vessel.properties.gmt": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.0": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.1": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.loa": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "gravity_m_s2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "pipeline.coatings.corrosion.density": {
+        "basis": "Generic polymer corrosion coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.corrosion.thickness": {
+        "basis": "Generic polymer corrosion coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.weight.0.density": {
+        "basis": "Generic concrete weight coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.weight.0.thickness": {
+        "basis": "Generic concrete weight coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.dimensions.outer_diameter": {
+        "derivation": "PIPELAY_CAPACITY_IN times metre-per-inch conversion from the unit-conversion source.",
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "pipeline.dimensions.wall_thickness": {
+        "basis": "Diameter-to-wall class of the generic pipe",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.segments.0.length": {
+        "basis": "Use a short supported length for the preparation force balance, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "pipeline.segments.0.segment_length": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.slope": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.stiffness.normal": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.stiffness.shear": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "steel_density_te_m3": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "tail_tension_kn": {
+        "basis": "Use an unloaded trailing end for the reference force balance, in kN.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "water_density_te_m3": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "water_depth_m": {
+        "qualification": "scenario assumption; depth equals supported length",
+        "source": "assumptions"
+      },
+      "winch_efficiency": {
+        "basis": "Use ideal transmission to isolate the pipe pull from mechanical losses, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      }
+    },
+    "public_dataset": {
+      "columns": {
+        "BEAM_M": "25.9",
+        "DRAFT_M": "15.5",
+        "LOA_M": "182.6",
+        "PIPELAY_CAPACITY_IN": "36.0",
+        "PIPELAY_MIN_DIAMETER_IN": "2.0"
+      },
+      "commit": "0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+      "csv_line": 68,
+      "path": "packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv",
+      "record_count": 161,
+      "retrieval_date": "2026-10-15",
+      "sha256": "7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884",
+      "url": "https://api.github.com/repositories/574746314/contents/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv?ref=0cef59201f817c28d91ef25e1bfcba99bfc9d588"
+    },
+    "sources": {
+      "assumptions": {
+        "locator": "Public repository numerical scenario inputs; not measured pipe or hull response data.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "0b5a1e30ed1c89ac9eef83226e68565b064204d3dae4ef3303f05a246d0f2ab0",
+        "url": "https://api.github.com/repositories/590299785/contents/docs/domains/pipeline-installation/slay-campaign/case-table.yml?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      },
+      "dataset": {
+        "columns": {
+          "BEAM_M": "25.9",
+          "DRAFT_M": "15.5",
+          "LOA_M": "182.6",
+          "PIPELAY_CAPACITY_IN": "36.0",
+          "PIPELAY_MIN_DIAMETER_IN": "2.0"
+        },
+        "commit": "0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+        "csv_line": 68,
+        "path": "packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv",
+        "record_count": 161,
+        "retrieval_date": "2026-10-15",
+        "sha256": "7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884",
+        "url": "https://api.github.com/repositories/574746314/contents/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv?ref=0cef59201f817c28d91ef25e1bfcba99bfc9d588"
+      },
+      "defaults": {
+        "locator": "ProjectInputSpec and builders; numerical preparation defaults, not qualified design data.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "d3be7c7c3a08cdeb2b09ca33c7fc9bca0aeb58443df5e86014299eb4a2eee6b4",
+        "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/solvers/orcaflex/modular_generator/schema/root.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      },
+      "friction": {
+        "locator": "Yan, White and Randolph (2014), Cyclic consolidation and axial friction for seabed pipelines; Results, p. 166: initial factor 0.32; drained limit tan(phi), Table 1 angle 23.5 degrees. Fully rough modified Cam clay; not a site-wide soil bound.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "75c5212a12cf67a51e4bb90907670b587c30cc8914014ff903e001c4b818a489",
+        "url": "https://api.research-repository.uwa.edu.au/ws/files/7389516/geolett.14.pdf"
+      },
+      "pull-paper": {
+        "locator": "Krioni, Semenova and Kireev (2018), The algorithm for determining the pulling force while dragging a pipeline, pp. 38-39, equations (5)-(6) and force summation. Channel/HDD context; not transferred as a surface pull-in validation.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "71cfc93ae47792948688514fbdd30ef24fbe6ff82bcf1d373d004d04bc28d7a4",
+        "url": "https://multiphasesystems.online/2018/pdf/mfs2018.3.005.pdf"
+      },
+      "unit-conversion": {
+        "locator": "Pipe OD conversion from inch to m, line 195; metre-per-inch factor also used at line 199.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "2d81029862cdcfbb480238ab4a5ad07e22d4fc3f1558a176df77d6a0c72634bc",
+        "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      }
+    }
+  },
+  "schema": "shore-pull-in-model-bundle-1"
+}

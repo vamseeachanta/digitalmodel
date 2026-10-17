@@ -1,0 +1,398 @@
+{
+  "analytical_before_models": true,
+  "case_table_sha256": "b2fd9f6c9c5d56b83565baf5fc7cd611cdffc37609bc67ffd5ac51d685af6f5c",
+  "cases": [
+    {
+      "analytical_pull_kn": 64.92895884089226,
+      "analytical_relative_error": 2.188677435907382e-15,
+      "files": {
+        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
+        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
+        "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
+        "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
+        "includes/05_line_types.yml": "73474f54106f3f3cafcf486defab6a4eea3b0530ed80b79b972a1752586968b6",
+        "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
+        "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
+        "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
+        "includes/10_groups.yml": "0f8edd3177337cbf59cc2dfdd8c1829da374d14bcf71f687775c0d6def38b705",
+        "includes/11_winches.yml": "d5db7d1e217844a25179c7bc6f2ffe564254ff8cebea44f711316b14a5cfc6c9",
+        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
+        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "inputs/parameters.yml": "fbd9c4f8237da7891ec1ec5b8040e0d8903525a81d1d7a60ed887f24974ad8fd",
+        "master.yml": "ce29ca46bc90438881af05eabda446a3e7dd53d261344bacff99ce258b11330a"
+      },
+      "id": "level-initial",
+      "method": {
+        "capacity_status": "not_evaluated",
+        "capacity_utilisation": null,
+        "friction_kn": 64.9289588408924,
+        "gravity_kn": 0.0,
+        "peak_pipe_tension_kn": 64.9289588408924,
+        "pipe_head_tension_kn": 64.9289588408924,
+        "segment_end_tensions_kn": [
+          64.9289588408924
+        ],
+        "segment_normal_loads_kn": [
+          202.90299637778878
+        ],
+        "winch_demand_kn": 64.9289588408924
+      },
+      "native_status": "not_run",
+      "native_wall_seconds": null,
+      "submerged_weight_kn_m": 5.07257490944472,
+      "validator_errors": 0,
+      "validator_warnings": []
+    },
+    {
+      "analytical_pull_kn": 88.22473374171585,
+      "analytical_relative_error": 2.2550588431955373e-15,
+      "files": {
+        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
+        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
+        "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
+        "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
+        "includes/05_line_types.yml": "4aac916e1ef9bf38d464b4734dee8ce77427bf9b52cc1013899b7e752dbe6125",
+        "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
+        "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
+        "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
+        "includes/10_groups.yml": "0f8edd3177337cbf59cc2dfdd8c1829da374d14bcf71f687775c0d6def38b705",
+        "includes/11_winches.yml": "6942439ff644736b13c88f30fd698026593181fd8ae8a4fbfd4b002b0850a429",
+        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
+        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "inputs/parameters.yml": "fbd9c4f8237da7891ec1ec5b8040e0d8903525a81d1d7a60ed887f24974ad8fd",
+        "master.yml": "ce29ca46bc90438881af05eabda446a3e7dd53d261344bacff99ce258b11330a"
+      },
+      "id": "level-drained",
+      "method": {
+        "capacity_status": "not_evaluated",
+        "capacity_utilisation": null,
+        "friction_kn": 88.22473374171605,
+        "gravity_kn": 0.0,
+        "peak_pipe_tension_kn": 88.22473374171605,
+        "pipe_head_tension_kn": 88.22473374171605,
+        "segment_end_tensions_kn": [
+          88.22473374171605
+        ],
+        "segment_normal_loads_kn": [
+          202.90299637778878
+        ],
+        "winch_demand_kn": 88.22473374171605
+      },
+      "native_status": "not_run",
+      "native_wall_seconds": null,
+      "submerged_weight_kn_m": 5.07257490944472,
+      "validator_errors": 0,
+      "validator_warnings": []
+    },
+    {
+      "analytical_pull_kn": 44.891289394739815,
+      "analytical_relative_error": 2.215930625910474e-15,
+      "files": {
+        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
+        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
+        "includes/03_environment.yml": "aaf3267ac4279a7ea36e532732a7feb53ad6b34970237ca625432c5a2a2f2300",
+        "includes/04_vessel_types.yml": "608466bdcdf74b1a4b2b1104f3eea65281f2d2a1be9d686bf8633561a85fe3ad",
+        "includes/05_line_types.yml": "73474f54106f3f3cafcf486defab6a4eea3b0530ed80b79b972a1752586968b6",
+        "includes/06_vessels.yml": "be655f674197a053d857402c7a494d17bc129fc6871e39427766f83a2c519ca1",
+        "includes/07_lines.yml": "0f8c6be02f903f0d17348f2e28ebb835dabb372f645feda8500d9dc8abaae96d",
+        "includes/09_shapes.yml": "07e3c4bf245b984d6d2d4408c61892df5c1784524a1e6b14a4eab8455b84a4e9",
+        "includes/10_groups.yml": "0f8edd3177337cbf59cc2dfdd8c1829da374d14bcf71f687775c0d6def38b705",
+        "includes/11_winches.yml": "69427b1cdc3d5ce8ec9dd2a77543b7c1880154e9950aec55dab273d3c5424c18",
+        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
+        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "inputs/parameters.yml": "fbd9c4f8237da7891ec1ec5b8040e0d8903525a81d1d7a60ed887f24974ad8fd",
+        "master.yml": "ce29ca46bc90438881af05eabda446a3e7dd53d261344bacff99ce258b11330a"
+      },
+      "id": "incline-aided",
+      "method": {
+        "capacity_status": "not_evaluated",
+        "capacity_utilisation": null,
+        "friction_kn": 32.209852121128115,
+        "gravity_kn": 12.681437273611799,
+        "peak_pipe_tension_kn": 44.891289394739914,
+        "pipe_head_tension_kn": 44.891289394739914,
+        "segment_end_tensions_kn": [
+          44.891289394739914
+        ],
+        "segment_normal_loads_kn": [
+          100.65578787852536
+        ],
+        "winch_demand_kn": 44.891289394739914
+      },
+      "native_status": "not_run",
+      "native_wall_seconds": null,
+      "submerged_weight_kn_m": 5.07257490944472,
+      "validator_errors": 0,
+      "validator_warnings": []
+    }
+  ],
+  "criteria_evidence": {
+    "first_generation_utc": "2026-10-15T06:19:08.663262+00:00",
+    "recorded_utc": "2026-10-15T06:19:08.663253+00:00",
+    "sha256": "497df15426b6ba851663cc2524940d7000a7e0b1d8ccf0daaedd77458456484a"
+  },
+  "files": {
+    "analysis.html": "f9854895385e9855f21691c8984ef25639d4f6479c92b88c6905998e82cb68c7",
+    "manifest.template.json": "f85f41eaff32e18e9e4aec350af4b236392fc93b6a7a8fc05078a31e34a4b4a1",
+    "models.json": "2db94213b3d4809e3401754bc788465ae9363011ce886ef0e571a171aa8b9b07"
+  },
+  "native_attempted": 0,
+  "native_completed": 0,
+  "provenance": {
+    "assumed_inputs": [
+      {
+        "basis": "Diameter-to-wall class of the generic pipe",
+        "input": "pipeline.dimensions.wall_thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.0254
+      },
+      {
+        "basis": "Generic polymer corrosion coating",
+        "input": "pipeline.coatings.corrosion.thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.004
+      },
+      {
+        "basis": "Generic polymer corrosion coating",
+        "input": "pipeline.coatings.corrosion.density",
+        "label": "assumed, based on previous experience",
+        "unit": "te/m3",
+        "value": 0.95
+      },
+      {
+        "basis": "Generic concrete weight coating",
+        "input": "pipeline.coatings.weight.0.thickness",
+        "label": "assumed, based on previous experience",
+        "unit": "m",
+        "value": 0.1
+      },
+      {
+        "basis": "Generic concrete weight coating",
+        "input": "pipeline.coatings.weight.0.density",
+        "label": "assumed, based on previous experience",
+        "unit": "te/m3",
+        "value": 3.0
+      }
+    ],
+    "input_sources": {
+      "cases.0.buoyancy_fraction": {
+        "basis": "Define the initial-friction reference without buoyancy aids, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.0.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.0.rise_m": {
+        "basis": "Define the initial-friction reference on a level supported route, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.1.buoyancy_fraction": {
+        "basis": "Keep the drained-friction comparison without buoyancy aids, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.1.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.1.rise_m": {
+        "basis": "Keep the drained-friction comparison on a level supported route, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.2.buoyancy_fraction": {
+        "basis": "Offset half the submerged weight in the analytical comparison, dimensionless; absent from the native model.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "cases.2.friction": {
+        "qualification": "public numerical anchor",
+        "source": "friction"
+      },
+      "cases.2.rise_m": {
+        "basis": "Introduce an uphill rise in the analytical comparison, in m; absent from the native geometry.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "equipment.vessel.properties.beam": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "equipment.vessel.properties.cog.0": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.cog.1": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.cog.2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.draft": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "equipment.vessel.properties.gmt": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.0": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.1": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.gyration_radii.2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "equipment.vessel.properties.loa": {
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "gravity_m_s2": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "pipeline.coatings.corrosion.density": {
+        "basis": "Generic polymer corrosion coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.corrosion.thickness": {
+        "basis": "Generic polymer corrosion coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.weight.0.density": {
+        "basis": "Generic concrete weight coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.coatings.weight.0.thickness": {
+        "basis": "Generic concrete weight coating",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.dimensions.outer_diameter": {
+        "derivation": "PIPELAY_CAPACITY_IN times metre-per-inch conversion from the unit-conversion source.",
+        "qualification": "public numerical anchor",
+        "source": "dataset"
+      },
+      "pipeline.dimensions.wall_thickness": {
+        "basis": "Diameter-to-wall class of the generic pipe",
+        "label": "assumed, based on previous experience"
+      },
+      "pipeline.segments.0.length": {
+        "basis": "Use a short supported length for the preparation force balance, in m.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "pipeline.segments.0.segment_length": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.slope": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.stiffness.normal": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "seabed.stiffness.shear": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "steel_density_te_m3": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "tail_tension_kn": {
+        "basis": "Use an unloaded trailing end for the reference force balance, in kN.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      },
+      "water_density_te_m3": {
+        "qualification": "scenario assumption",
+        "source": "assumptions"
+      },
+      "water_depth_m": {
+        "qualification": "scenario assumption; depth equals supported length",
+        "source": "assumptions"
+      },
+      "winch_efficiency": {
+        "basis": "Use ideal transmission to isolate the pipe pull from mechanical losses, dimensionless.",
+        "qualification": "study parameter chosen for this preparation; not sourced or measured"
+      }
+    },
+    "public_dataset": {
+      "columns": {
+        "BEAM_M": "25.9",
+        "DRAFT_M": "15.5",
+        "LOA_M": "182.6",
+        "PIPELAY_CAPACITY_IN": "36.0",
+        "PIPELAY_MIN_DIAMETER_IN": "2.0"
+      },
+      "commit": "0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+      "csv_line": 68,
+      "path": "packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv",
+      "record_count": 161,
+      "retrieval_date": "2026-10-15",
+      "sha256": "7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884",
+      "url": "https://api.github.com/repositories/574746314/contents/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv?ref=0cef59201f817c28d91ef25e1bfcba99bfc9d588"
+    },
+    "sources": {
+      "assumptions": {
+        "locator": "Public repository numerical scenario inputs; not measured pipe or hull response data.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "0b5a1e30ed1c89ac9eef83226e68565b064204d3dae4ef3303f05a246d0f2ab0",
+        "url": "https://api.github.com/repositories/590299785/contents/docs/domains/pipeline-installation/slay-campaign/case-table.yml?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      },
+      "dataset": {
+        "columns": {
+          "BEAM_M": "25.9",
+          "DRAFT_M": "15.5",
+          "LOA_M": "182.6",
+          "PIPELAY_CAPACITY_IN": "36.0",
+          "PIPELAY_MIN_DIAMETER_IN": "2.0"
+        },
+        "commit": "0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+        "csv_line": 68,
+        "path": "packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv",
+        "record_count": 161,
+        "retrieval_date": "2026-10-15",
+        "sha256": "7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884",
+        "url": "https://api.github.com/repositories/574746314/contents/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv?ref=0cef59201f817c28d91ef25e1bfcba99bfc9d588"
+      },
+      "defaults": {
+        "locator": "ProjectInputSpec and builders; numerical preparation defaults, not qualified design data.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "d3be7c7c3a08cdeb2b09ca33c7fc9bca0aeb58443df5e86014299eb4a2eee6b4",
+        "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/solvers/orcaflex/modular_generator/schema/root.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      },
+      "friction": {
+        "locator": "Yan, White and Randolph (2014), Cyclic consolidation and axial friction for seabed pipelines; Results, p. 166: initial factor 0.32; drained limit tan(phi), Table 1 angle 23.5 degrees. Fully rough modified Cam clay; not a site-wide soil bound.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "75c5212a12cf67a51e4bb90907670b587c30cc8914014ff903e001c4b818a489",
+        "url": "https://api.research-repository.uwa.edu.au/ws/files/7389516/geolett.14.pdf"
+      },
+      "pull-paper": {
+        "locator": "Krioni, Semenova and Kireev (2018), The algorithm for determining the pulling force while dragging a pipeline, pp. 38-39, equations (5)-(6) and force summation. Channel/HDD context; not transferred as a surface pull-in validation.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "71cfc93ae47792948688514fbdd30ef24fbe6ff82bcf1d373d004d04bc28d7a4",
+        "url": "https://multiphasesystems.online/2018/pdf/mfs2018.3.005.pdf"
+      },
+      "unit-conversion": {
+        "locator": "Pipe OD conversion from inch to m, line 195; metre-per-inch factor also used at line 199.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-15",
+        "sha256": "2d81029862cdcfbb480238ab4a5ad07e22d4fc3f1558a176df77d6a0c72634bc",
+        "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa"
+      }
+    }
+  },
+  "qualified_results": 0,
+  "schema": "shore-pull-in-preparation-1"
+}
