@@ -92,7 +92,7 @@ class ValidationWarning:
     """A single validation finding."""
 
     level: str  # "error", "warning"
-    category: str  # "reference", "duplicate", "coherence", "unrecognised"
+    category: str  # "reference", "duplicate", "wave_type", "coherence", "unrecognised"
     message: str
     file: str = ""
     object_name: str = ""
@@ -192,17 +192,7 @@ class PostGenerationValidator:
             )
             return warnings
 
-        # Build registry of all defined objects
-        defined_objects = self._build_object_registry(files)
-
-        # Run all checks
-        warnings.extend(self._check_line_type_references(files, defined_objects))
-        warnings.extend(self._check_vessel_references(files, defined_objects))
-        warnings.extend(self._check_winch_references(files, defined_objects))
-        warnings.extend(self._check_duplicate_names(defined_objects))
-        warnings.extend(self._check_connection_targets(files, defined_objects))
-
-        return warnings
+        return self.validate_data(files)
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -479,37 +469,6 @@ class PostGenerationValidator:
 
         return warnings
 
-    def _check_duplicate_names(
-        self, defined: dict[str, dict[str, str]]
-    ) -> list[ValidationWarning]:
-        """Check for duplicate object names within same type.
-
-        The object registry already collapses duplicates (last writer
-        wins), so we need to re-scan to detect them.  However the
-        registry is built from ``_build_object_registry`` which only
-        keeps the last occurrence.  Instead we do a fresh pass here.
-
-        For the purposes of this validator, we track names seen per
-        section and flag duplicates.
-
-        Args:
-            defined: Object registry (used to identify which sections exist).
-
-        Returns:
-            List of validation warnings for duplicate names.
-        """
-        # This method is intentionally lightweight.  The real duplicate
-        # detection happens in _check_duplicate_names_from_files which
-        # is called by validate_directory.  But since we have the
-        # registry already, we can't detect duplicates from it (they're
-        # collapsed).  We'll rely on validate_from_data for testing.
-        #
-        # In practice, duplicate objects within the same builder are
-        # very unlikely since builders generate from a single spec.
-        # Cross-builder duplicates (e.g. two builders both emitting
-        # a "Vessels" section) would be caught by YAML file merging.
-        return []
-
     def _check_connection_targets(
         self,
         files: dict[str, Any],
@@ -625,6 +584,7 @@ class PostGenerationValidator:
         warnings.extend(self._check_vessel_references(files, defined_objects))
         warnings.extend(self._check_winch_references(files, defined_objects))
         warnings.extend(self._check_duplicate_names_from_files(files))
+        warnings.extend(self._check_wave_types(files))
         warnings.extend(self._check_connection_targets(files, defined_objects))
 
         return warnings
@@ -632,44 +592,55 @@ class PostGenerationValidator:
     def _check_duplicate_names_from_files(
         self, files: dict[str, Any]
     ) -> list[ValidationWarning]:
-        """Detect duplicate object names within same section across all files.
+        """Reject reused names across list-style object collections.
 
-        Args:
-            files: Loaded YAML data.
-
-        Returns:
-            List of warnings for any duplicates found.
+        Native names are unique and case-insensitive, including type objects:
+        https://www.orcina.com/webhelp/OrcaFlex/Content/html/Datafields.htm
+        https://www.orcina.com/webhelp/OrcaFlex/Content/html/Themodel.htm
         """
         warnings: list[ValidationWarning] = []
-        # section -> name -> list of source files
-        seen: dict[str, dict[str, list[str]]] = {}
-
+        seen: dict[str, list[str]] = {}
+        display_names: dict[str, str] = {}
         for file_name, data in files.items():
             for section in _OBJECT_SECTIONS:
                 objects = data.get(section)
-                if not objects or not isinstance(objects, list):
+                if not isinstance(objects, list):
                     continue
-                section_seen = seen.setdefault(section, {})
                 for obj in objects:
                     if isinstance(obj, dict) and "Name" in obj:
-                        name = obj["Name"]
-                        section_seen.setdefault(name, []).append(file_name)
+                        name = str(obj["Name"])
+                        key = name.casefold()
+                        display_names.setdefault(key, name)
+                        seen.setdefault(key, []).append(f"{file_name}:{section}")
+        for key, sources in seen.items():
+            name = display_names[key]
+            if len(sources) > 1:
+                warnings.append(ValidationWarning(
+                    level="error", category="duplicate",
+                    message=f"Duplicate object name '{name}' found in: {', '.join(sources)}",
+                    object_name=name,
+                ))
+        return warnings
 
-        for section, names in seen.items():
-            for name, sources in names.items():
-                if len(sources) > 1:
-                    warnings.append(
-                        ValidationWarning(
-                            level="warning",
-                            category="duplicate",
-                            message=(
-                                f"Duplicate {section} name '{name}' "
-                                f"found in: {', '.join(sources)}"
-                            ),
-                            object_name=name,
-                        )
-                    )
-
+    def _check_wave_types(self, files: dict[str, Any]) -> list[ValidationWarning]:
+        """Reject the known native-invalid still-water selector."""
+        warnings: list[ValidationWarning] = []
+        for file_name, data in files.items():
+            environment = data.get("Environment")
+            if not isinstance(environment, dict):
+                continue
+            trains = environment.get("WaveTrains", [])
+            if not isinstance(trains, list):
+                continue
+            for train in trains:
+                if not isinstance(train, dict):
+                    continue
+                if str(train.get("WaveType", "")).strip().casefold() == "no waves":
+                    warnings.append(ValidationWarning(
+                        level="error", category="wave_type", file=file_name,
+                        object_name=str(train.get("Name", "")),
+                        message="Unsupported WaveType 'No waves'; use zero-height Airy for still water",
+                    ))
         return warnings
 
     # ------------------------------------------------------------------

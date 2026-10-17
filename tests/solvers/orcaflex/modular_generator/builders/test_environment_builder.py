@@ -726,3 +726,32 @@ ModularModelGenerator.from_spec(spec).generate(sys.argv[1])
             assert keys.index("WaveGamma") < keys.index(period)
         if "WaveTp" in keys and "WaveGamma" in keys:
             assert keys.index("WaveGamma") < keys.index("WaveTp")
+
+
+def test_schema_rejects_no_waves_type():
+    """Reject the native-invalid selector before generation."""
+    with pytest.raises(ValueError, match="No waves"):
+        _make_env_spec(waves={"type": "No waves", "height": 0, "period": 8})
+
+
+def test_validator_rejects_invalid_extra_raw_wave_train():
+    """Raw extra trains remain pass-through but must fail post-validation."""
+    from digitalmodel.solvers.orcaflex.modular_generator.post_validator import (
+        PostGenerationValidator,
+    )
+
+    spec = _make_env_spec(
+        waves={"type": "Airy", "height": 0, "period": 8},
+        raw_properties={"WaveTrains": [
+            {"Name": "Wave 1", "WaveType": "Airy"},
+            {"Name": "Wave 2", "WaveType": "No waves"},
+        ]},
+    )
+    environment = _build(spec)
+    findings = PostGenerationValidator().validate_data({
+        "environment.yml": {"Environment": environment},
+    })
+    assert len(findings) == 1
+    assert findings[0].level == "error"
+    assert findings[0].category == "wave_type"
+    assert findings[0].object_name == "Wave 2"
