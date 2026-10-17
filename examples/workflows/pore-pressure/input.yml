@@ -8,6 +8,7 @@ basename: pore_pressure
 # combined into a P10/P50/P90 distribution, calibrated to an offset-well RFT
 # point, then expressed as a safe mud-weight window (pore <= MW <= fracture) for
 # static and dynamic (ECD) conditions. Feeds swab/surge + hydraulics (#1036).
+# The window does not cover collapse (shear failure), weak bedding planes, natural fractures, or chemical or time-dependent effects; it does not establish wellbore stability.
 pore_pressure:
   case:
     id: registry_pore_pressure

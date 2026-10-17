@@ -306,6 +306,20 @@ def test_router_runs_example_and_writes_summary(tmp_path):
     assert all(saved_window[key] is not None for key in window_fields)
 
 
+def test_router_summary_lists_drilling_window_exclusions(tmp_path):
+    out = router(_example_cfg(tmp_path))
+    summary = out["pore_pressure"]["summary"]
+    written_summary = json.loads(Path(summary["summary_json"]).read_text())
+
+    assert written_summary["not_covered"] == [
+        "collapse (shear failure)",
+        "weak bedding planes",
+        "natural fractures",
+        "chemical or time-dependent effects",
+    ]
+    assert summary["not_covered"] == written_summary["not_covered"]
+
+
 def test_router_without_fracture_skips_window(tmp_path):
     cfg = _example_cfg(tmp_path)
     cfg["pore_pressure"].pop("fracture", None)
