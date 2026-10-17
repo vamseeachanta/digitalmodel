@@ -31,6 +31,9 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/capabilities/build_onepagers.py": (
+        "writes JSON capability cards, not docs/api HTML"
+    ),
     "scripts/cfd/build_calm_water_study.py": (
         "writes native records and docs/domains HTML, not docs/api pages"
     ),
@@ -244,15 +247,8 @@ MANUAL_PAGES = {
 }
 
 
-# Build-output pages are generated working-tree print sources of committed PDFs;
-# they are not committed pages and are not included in byte-for-byte drift checks.
-BUILD_OUTPUT_GENERATORS = {
-    "scripts/capabilities/build_onepagers.py": {
-        "command": "python3 scripts/capabilities/build_onepagers.py",
-        "output_pattern": "docs/api/capabilities/pdf/<specification-id>.html",
-        "reason": "kept self-contained print sources beside committed one-pager PDFs",
-    },
-}
+# No current generators emit uncommitted docs/api HTML print sources.
+BUILD_OUTPUT_GENERATORS = {}
 
 
 def _specification_ids(script, label: str) -> set[str]:

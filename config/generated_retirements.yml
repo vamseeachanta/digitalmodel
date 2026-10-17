@@ -1,0 +1,515 @@
+# Cold-store dataset_path values are relative to /mnt/ace/.
+retirements:
+- path: docs/api/capabilities/pdf/buckling-panel.pdf
+  sha256: 34f2fe427e344a729ccdabcca4be976baf14d26b69d55b1200f7afd3e355c110
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/buckling-plate.pdf
+  sha256: 08c7ed15af9932bb88e51d99553e03c96e67ce9daf69443d9c0cb7ea35617226
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/casing-design.pdf
+  sha256: 00c7e1ad5c197a94444a7aadf62ebcab07002d3cae0da04f45c2c4d06fa0d26b
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/cathodic-protection-explorer.pdf
+  sha256: c80430c5646af50649fe123946a1e0de1c85578c7d0e1580928bed623640319a
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/container-utilization.pdf
+  sha256: ced0ecd1559795d8d9248221e054a5c4af27f117cc0904615112ca8d60f6c9cb
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/diffraction-deck-prep.pdf
+  sha256: fb0ea13b04232b1495e77e102d0f675530bc42323fa34b762a15adbba9c60a2f
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/drilling-riser-operability-monitor.pdf
+  sha256: 71b9fd9fc18b0862922422b4a281254072aad52694fbb78568e834547e9f436c
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/drilling-riser-operability.pdf
+  sha256: dd39125b7c2d7a1b97889a551e82475104e7e9badd88a19fb1d1d970e0fbf68b
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/dynacard-field-health.pdf
+  sha256: 7bc0d93c8f66ada8d49f7a28fc416ba7918fc34e7fd5b3503c578a4475ca3a39
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/dynacard-troubleshooting.pdf
+  sha256: 6215951f91ea2956bcd25279665ebc0daa41547b417268a598c2a2ca419f5d46
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/ffs-field-dashboard.pdf
+  sha256: 6b8a43e42ddb3ed61452a0fb715568602b03ece1d2f9f68d2ea89253e12b3da8
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/ffs-showcase.pdf
+  sha256: dba7481f92e735837c8b22141d49168951599365bd11ebc2651b134a858f8273
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/galvanic-explorer.pdf
+  sha256: 20731f6ab8f9b0b5ab1ca0d8f67b84072f7c8ae888e850aee856e79213c6ea43
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/mooring-resilience.pdf
+  sha256: 9c05917cc4c67668b405e0609a8b6f66a981d2d9aa857ae19f0f04f781c3d1b0
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/ocimf.pdf
+  sha256: 449a35a5346f816fb3268c5f2fb6ea5fa288fd88854ef6121d10d5aca2dea020
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/passing-ship.pdf
+  sha256: 023778c4c380384a95488c6b630e249b11bb54392ea3338ffe7cdc02bf6e479c
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/rao-comparison.pdf
+  sha256: 9461f023b593c590b66d362e7b92f1262864cbe7b018458a2ea50457094b6f6e
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/riser-joint-acceptance.pdf
+  sha256: ba45cf13fb91c1015054dd733e0cf3d4d5b21bd3c8aa1f2cb5420035ec978d01
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/riser-mesh.pdf
+  sha256: a7b6def6c94f9a735863b3e8af3deb247de7a9d7a9aa365b7631e51dfd2b5a15
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/riser-validation.pdf
+  sha256: fa24c90b4d4dac77f01fa72ea23a5ed0255df0a8a07629d70566c3126b7a1792
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/rudder-database.pdf
+  sha256: 27993ab6ae1f3841dead55c17bd76423553adfcde84a835b621850b6ed7dbabe
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/rudder-explorer.pdf
+  sha256: 48a1405ddb3dabab72eb989db959fd01f076ad9cb0064a113a1d50af89ccace2
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/scale-si-explorer.pdf
+  sha256: ea8a96344925501cf49ed6bfd9498b3060776b40c732ffd62a78b49f7e1ced4c
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-artificial-lift.pdf
+  sha256: a33d3553c97e8e448d2d4c597a01e5127c218cd6bd7d24b95a46e3dadc43b3e5
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-cathodic.pdf
+  sha256: da7e14ec3cc4fdc1c8b2106213b9300b9776295723fd81df11263ad184e30716
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-cfd.pdf
+  sha256: dfc54292d0e8394940b51a21a2ca682286ad68449cd6e4a5c97bbd35d7425451
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-corrosion-production.pdf
+  sha256: 46dabc69e75245ee0da730c70ff3eb8cc3d5c87470da4fda76cb43221a82307f
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-drilling-engineering.pdf
+  sha256: 917e9a1d299128f17480f6b4f33792a67869ac4c30115b1d4d5606de59724d6b
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-fatigue.pdf
+  sha256: bdb2c017bb51f272b9b17aa5bcae71ecca678acb5257797556c1bdb60f474034
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-ffs.pdf
+  sha256: 3985fdd5843fc70b76909a613823d251b38b185e247249de2f4035b6676a3a24
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-field-development.pdf
+  sha256: ee8a49597d5dca7ea1c1e919ec56ae919ac97db9f05ef180fae0139ca0804abb
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-geotechnical.pdf
+  sha256: 29d0aceef14f3e6e567f3c0054a145927829190a14a91b5339222fd923465a40
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-hydro.pdf
+  sha256: da2c351c1b431bbd50d109f6b7c5fdbee731c3e648b36d5165b5fa4d4c03a215
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-installation.pdf
+  sha256: 1997db9a6cc34ce433589e04ed41c66b420638095d3721a3e9382f35dbe81f74
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-manoeuvring.pdf
+  sha256: e63e8df876847fef5eb870958e0d41c8336565c642056ae2d550170363cbb06f
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-naval-architecture.pdf
+  sha256: 887691de52ae9cdf91a521a4cff6eec940d81e2a950c1e37dce33760852f0cb4
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-production-engineering.pdf
+  sha256: 09429e858611824f15c1b4945276be02883c8c2411d05bbd673cdb10ddff7aca
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-risers.pdf
+  sha256: c521213cbadb45976798cb226a4a089c300bed6d03817d748a95af208fdf7a75
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-structural.pdf
+  sha256: eda6939e58e5a5eef3f5480fe98bea0ede3bef6256aaf23546c5e1551f239562
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-subsea.pdf
+  sha256: f0d6a7c6b5f15c3bce9da1a292dd417433b3c492ebdba1484ff141c46d52c9aa
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-validation.pdf
+  sha256: 3309bcd370f63fd7d49af648110b6fc88bb5766a447303969e33b53e6ce15b0b
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-viv.pdf
+  sha256: 167ba435671d5f3217a301d724ffff0c74b75ba4e58d6e8d91587ce11fe87b18
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-wall-thickness.pdf
+  sha256: bf4ec504f972f411ca3250299c001961215edc9bc79339f56018df2c19d61709
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-well.pdf
+  sha256: 8f4b3c9fa51c45c3f4a2a17f6fcfe492fee5a77902ad8430bb6c8f7b467e4d7f
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sec-wind.pdf
+  sha256: 7ff114104e36dfe5d93306002e1d0953fdd81588d5538196dd15e795bdd277f1
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/short-horizon-motion-forecast.pdf
+  sha256: f9739e82d668b6e937d4a7c4278103cec24e9713279a082e1ffef79b03c27fa3
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/sloshing-explorer.pdf
+  sha256: e46adf74cd0c67da8eaf6c8e9d092075766d30570b6681f49c1ffdc8f9956cef
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/subsea-xsection.pdf
+  sha256: 1fd37d4e43e0370e2c5fb864afb46b9b3cd466f41c02c28e524620f3aa840d0a
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/unitbox-amplitude.pdf
+  sha256: 3c38b8353d91e2759b62445e97e192916411dda605f9a3884402520003bb7325
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/unitbox-combined.pdf
+  sha256: cfa5ae773d657912dd978fdd1d0424bae90a1d7cafc43b743c17ee08501d3c58
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/unitbox-heatmap.pdf
+  sha256: f7fe286c8e577974fe9e13da02e92309ae07b50865926558befea301ceb12ca1
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/unitbox-phase.pdf
+  sha256: 2b0ca802ff67c53d95e0a104cf365d91c2f72250f7ab75a6bb29c5b8ff43d172
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/unitbox-report.pdf
+  sha256: b36baa91c0496a7c80c81b5b239de7913c4edde55cb4ea4de2c6b461aea9083d
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/vessel-suitability.pdf
+  sha256: 57b661268a0d3cc544f1ca82903f91ddacf895680e13c559ab8bc859151963eb
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/wall-thickness-explorer.pdf
+  sha256: 4a7666f892a57723960a23b45d6b0ca9d60ad26fecfdccde8c6a22dfb716726f
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/wind-economics.pdf
+  sha256: 6bc29c4f53e73e86273f0a29362c7f9636a10d18926ea2e08606bddcdf0e0ce8
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: docs/api/capabilities/pdf/wind-sizing.pdf
+  sha256: 1838656cace53d3a7e4eea7ba5ec9d291b5985db9b79cdc99a29e8300905ea58
+  date: '2026-10-17'
+  reason: Generated print summaries are retired in favor of the capability card metadata.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687

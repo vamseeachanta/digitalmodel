@@ -152,9 +152,9 @@ def test_joins_one_to_one_with_gaps_and_unlinked():
     for s in inv["sections"]:
         assert s["cluster"]
         assert isinstance(s["explorers"], list)
-        assert s["pdf"] is None or s["pdf"].startswith("sec-") is False
-    gaps = [s["id"] for s in inv["sections"] if s["pdf"] is None]
-    assert gaps == inv["pdf_gaps"]
+        assert s["card_id"] is None or s["card_id"].startswith("sec-")
+    gaps = [s["id"] for s in inv["sections"] if s["card_id"] is None]
+    assert gaps == inv["card_gaps"]
     # every discovered explorer either linked to exactly one section or listed
     linked = [e for s in inv["sections"] for e in s["explorers"]]
     assert len(linked) == len(set(linked)), "explorer joined to two sections"
@@ -204,7 +204,7 @@ def test_md_tables_match_inventory_json(tmp_path):
     md = ci.render_spec(inv)
     for s in inv["sections"]:
         assert f"#{s['id']}" in md, f"section {s['id']} missing from spec tables"
-    for gap in inv["pdf_gaps"]:
+    for gap in inv["card_gaps"]:
         assert gap in md
     assert str(len(inv["sections"])) in md
 
@@ -278,7 +278,7 @@ def _section_linked_files(section: dict) -> list:
 def test_specs_section_ids_biject_live_sections():
     exempt = _onepager_exempt()
     live = {s["id"] for s in ci.load_sections(REPO)}
-    covered = set(ci.load_pdf_specs(REPO))  # anchors with a sec-* SPECS entry
+    covered = set(ci.load_card_specs(REPO))  # anchors with a sec-* SPECS entry
     assert exempt <= live, f"stale onepager_exempt entries: {sorted(exempt - live)}"
     orphans = covered - live
     assert not orphans, (
@@ -292,18 +292,17 @@ def test_specs_section_ids_biject_live_sections():
     )
 
 
-# 11 — ratchet (b): every section one-pager PDF is committed (pdf_gaps == []
+# 11 — ratchet (b): every section one-pager PDF is committed (card_gaps == []
 # in the inventory is a SPECS-presence signal only; THIS closes the disk hole)
 
 
-def test_every_section_pdf_committed():
-    pdf_by_section = ci.load_pdf_specs(REPO)
-    assert pdf_by_section, "no section-kind SPECS entries found"
-    for sec, rel in sorted(pdf_by_section.items()):
-        p = REPO / rel
-        assert p.exists(), f"one-pager PDF for #{sec} not committed: {rel}"
-        size = p.stat().st_size
-        assert 0 < size < 2_000_000, f"{rel} size {size} outside (0, 2MB)"
+def test_every_section_card_committed():
+    cards = json.loads((REPO / "docs/capability-map/capability-cards.json").read_text())
+    card_ids = {card["id"] for card in cards}
+    by_section = ci.load_card_specs(REPO)
+    assert by_section, "no section card declarations found"
+    for card_id in by_section.values():
+        assert card_id in card_ids
 
 
 # 12 — standards grounding (#1391 lesson): every standards token in a

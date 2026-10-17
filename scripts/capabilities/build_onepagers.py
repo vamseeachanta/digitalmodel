@@ -1,57 +1,20 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+"""Build one deterministic capability-card file using only the standard library.
 
-# ABOUTME: Generate capability one-page HTML and PDFs (light theme, branded).
-# ABOUTME: One PDF per left-nav section and per live work; rendered via headless Chrome.
-"""Build the **capability one-pagers**.
-
-A single-page PDF is produced for every left-nav section and every live work
-surfaced on ``/capabilities/``.
-
-Each one-pager is a self-contained, light-themed, A4 page (digitalmodel logo,
-what-it-is, key figures, what-you-get, and the live link) rendered to PDF with
-headless Chrome. PDFs are committed frozen artifacts, served by mkdocs as static
-files under ``docs/api``. Kept HTML pages are self-contained print sources:
-build output, git-ignored and not committed.
-
-    docs/api/capabilities/pdf/<id>.pdf        # section + work one-pagers
-    docs/api/capabilities/pdf/<id>.html       # self-contained source pages
-
-Run (stdlib only; needs google-chrome on PATH, override with CHROME=/path):
-    python3 scripts/capabilities/build_onepagers.py
+The website remains the human capability surface. Missing source key figures
+are recorded as null; the build does not invent numerical results.
 """
-
 from __future__ import annotations
 
 import argparse
-import html
-import os
-import re
-import shutil
-import subprocess
-from collections.abc import Callable
-from html.parser import HTMLParser
+import json
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[2]
-_CAP = _REPO / "docs" / "api" / "capabilities"
-_OUT = _CAP / "pdf"
-_SITE = "https://vamseeachanta.github.io/digitalmodel"
-_CHROME = os.environ.get("CHROME") or shutil.which("google-chrome") or shutil.which(
-    "google-chrome-stable"
-) or shutil.which("chromium")
+_OUT = _REPO / "docs/capability-map/capability-cards.json"
+_CANONICAL = "https://www.aceengineer.com/capabilities/"
 
-# digitalmodel brand logo (native colors), inlined from the repo asset with any
-# XML prolog stripped so it drops cleanly into the one-pager.
-_LOGO = re.sub(
-    r"<\?xml[^>]*\?>", "", (_REPO / "assets" / "logo" / "digitalmodel_logo_compact.svg").read_text(
-        encoding="utf-8"
-    )
-).strip()
-
-# Each spec: id, kind (section|work), title, std (basis line), path (live page —
-# relative under the site, or a full http(s) URL for an external deliverable),
-# blurb (what it is), figures [(value,label)], bullets (what you get).
 SPECS: list[dict] = [
     # ---- sections (one per left-nav menu item) ----
     dict(id="sec-ffs", kind="section", title="Fitness-for-service",
@@ -662,254 +625,40 @@ SPECS: list[dict] = [
 ]
 
 
-def _report_url(spec: dict) -> str:
-    p: str = spec["path"]
-    return p if p.startswith("http") else f"{_SITE}/{p}"
-
-
-_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>{title}</title>
-<style>
-  @page{{size:A4;margin:0}}
-  :root{{--navy:#0B3D91;--teal:#0f8a7e;--ink:#13233f;--muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}}
-  *{{box-sizing:border-box;margin:0;padding:0}}
-  body{{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#fff;
-       width:210mm;min-height:297mm;padding:18mm 18mm 14mm}}
-  .top{{display:flex;align-items:center;justify-content:space-between;
-       border-bottom:2px solid var(--navy);padding-bottom:12px}}
-  .top svg{{height:30px;width:auto}}
-  .kind{{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:700}}
-  h1{{font-size:30px;color:var(--navy);margin:26px 0 4px;letter-spacing:-.4px;line-height:1.15}}
-  .std{{color:var(--teal);font-weight:700;font-size:13px}}
-  .blurb{{color:var(--ink);font-size:14.5px;line-height:1.55;margin:18px 0 4px;max-width:165mm}}
-  .figs{{display:flex;gap:14px;margin:22px 0 6px}}
-  .fig{{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px}}
-  .fig .v{{font-size:25px;font-weight:800;color:var(--navy);letter-spacing:-.5px}}
-  .fig .l{{font-size:11.5px;color:var(--muted);margin-top:3px}}
-  h2{{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
-     margin:26px 0 10px;border-left:4px solid var(--teal);padding-left:10px}}
-  ul{{list-style:none}}
-  li{{font-size:14px;line-height:1.5;padding:6px 0 6px 24px;position:relative;border-bottom:1px solid var(--line)}}
-  li:before{{content:"";position:absolute;left:4px;top:13px;width:8px;height:8px;border-radius:50%;
-            background:var(--teal)}}
-  .foot{{position:absolute;left:18mm;right:18mm;bottom:14mm;border-top:1px solid var(--line);
-        padding-top:10px;display:flex;justify-content:space-between;align-items:flex-end;
-        font-size:11.5px;color:var(--muted)}}
-  .foot .live{{color:var(--navy);font-weight:700}}
-  .cta{{background:linear-gradient(135deg,#0f8a7e,#0B3D91);color:#fff;font-weight:700;
-       font-size:12px;padding:8px 14px;border-radius:9px;display:inline-block}}
-</style>{brand_style}</head>
-<body>
-  <div class="top">{logo}<div class="kind">Capability one-pager</div></div>
-  <div class="std">{std}</div>
-  <h1>{title}</h1>
-  <p class="blurb">{blurb}</p>
-  {figs}
-  <h2>What you get</h2>
-  <ul>{bullets}</ul>
-  <div class="foot">
-    <div>digitalmodel · validated engineering solvers · governing-code provenance<br>
-      <span class="live">Explore live: {live}</span></div>
-    <span class="cta">View interactive &rarr;</span>
-  </div>
-</body></html>"""
-
-
-def _validate_brand_css(css: str) -> None:
-    """Reject resource loads and markup so the page remains self-contained."""
-    normalized = re.sub(r"\\(?:\r\n|[\r\n\f])", "", css)
-    normalized = re.sub(
-        r"\\([0-9a-fA-F]{1,6})(?:\s)?|\\(.)",
-        lambda match: chr(min(int(match[1], 16), 0x10FFFF)) if match[1] else match[2],
-        normalized,
-    )
-    normalized = re.sub(r"/\*.*?\*/", "", normalized, flags=re.S)
-    if re.search(
-        r"""@\s*import\b|\burl\s*\(|<\s*/\s*style\b"""
-        r"""|\b(?:-webkit-)?image-set\s*\([^;{}]*["']""",
-        normalized,
-        re.I,
-    ):
-        raise ValueError(
-            "Brand stylesheet must be self-contained: resource loads and "
-            "HTML markup are not supported"
-        )
-
-
-def _page_title(spec: dict) -> str:
-    """Use the specification title for both the template and output check."""
-    return spec["title"]
-
-
-def _render_html(spec: dict, brand_css: str = "") -> str:
-    _validate_brand_css(brand_css)
-    figs = ""
-    if spec["figures"]:
-        cells = "".join(
-            f'<div class="fig"><div class="v">{html.escape(value)}</div>'
-            f'<div class="l">{html.escape(label)}</div></div>'
-            for value, label in spec["figures"]
-        )
-        figs = f'<div class="figs">{cells}</div>'
-    bullets = "".join(f"<li>{html.escape(b)}</li>" for b in spec["bullets"])
-    live = _report_url(spec)
-    return _TEMPLATE.format(
-        brand_style=f"<style>{brand_css}</style>" if brand_css else "",
-        logo=_LOGO,
-        std=html.escape(spec["std"]),
-        title=html.escape(_page_title(spec)),
-        blurb=html.escape(spec["blurb"]),
-        figs=figs,
-        bullets=bullets,
-        live=html.escape(live),
-    )
-
-
-def _to_pdf(source: Path, out_pdf: Path) -> None:
-    """Print the kept HTML file to its PDF sibling."""
-    if not _CHROME:
-        raise SystemExit("No Chrome found; set CHROME=/path/to/google-chrome")
-    subprocess.run(
-        [
-            _CHROME,
-            "--headless",
-            "--no-sandbox",
-            "--disable-gpu",
-            "--no-pdf-header-footer",
-            f"--print-to-pdf={out_pdf.resolve()}",
-            source.resolve().as_uri(),
-        ],
-        check=True,
-        capture_output=True,
-        timeout=90,
-    )
-
-
-class _DocumentTitleParser(HTMLParser):
-    """Read decoded title text, including missing or repeated elements."""
-
-    def __init__(self, text: str) -> None:
-        super().__init__()
-        self.titles: list[str] = []
-        self.in_title = False
-        self.feed(text)
-
-    def handle_starttag(self, tag, attrs) -> None:
-        if tag == "title":
-            self.in_title = True
-            self.titles.append("")
-
-    def handle_endtag(self, tag) -> None:
-        if tag == "title":
-            self.in_title = False
-
-    def handle_data(self, data) -> None:
-        if self.in_title:
-            self.titles[-1] += data
-
-
-def _check_build_outputs(spec_id: str, source: Path, expected: list[str]) -> None:
-    """Require nonempty siblings and the specification title after rendering."""
-    for path in (source, source.with_suffix(".pdf")):
-        if not path.is_file():
-            raise RuntimeError(f"{spec_id}: {path.name} missing")
-        if path.stat().st_size == 0:
-            raise RuntimeError(f"{spec_id}: {path.name} empty")
-    found = _DocumentTitleParser(source.read_text(encoding="utf-8")).titles
-    if found != expected:
-        raise RuntimeError(
-            f"{spec_id}: {source.name} title found {found!r}; expected {expected!r}"
-        )
-
-
-def build_onepager(
-    spec: dict,
-    output: Path,
-    *,
-    brand_css: str = "",
-    renderer: Callable[[Path, Path], None] = _to_pdf,
-) -> Path:
-    """Validate newly rendered siblings before replacing the final files."""
-    text = _render_html(spec, brand_css)
-    output.mkdir(parents=True, exist_ok=True)
-    source = output / f"{spec['id']}.html"
-    temporary = output / f".build-{spec['id']}.html"
-    temporary_pdf = temporary.with_suffix(".pdf")
-    try:
-        # Remove interrupted output at these reserved, dot-prefixed names.
-        temporary.unlink(missing_ok=True)
-        temporary_pdf.unlink(missing_ok=True)
-        temporary.write_text(text, encoding="utf-8", newline="\n")
-        try:
-            renderer(temporary, temporary_pdf)
-        except (Exception, SystemExit) as error:
-            raise RuntimeError(
-                f"{spec['id']}: {temporary_pdf.name} render failed: {error}"
-            ) from error
-        _check_build_outputs(spec["id"], temporary, [_page_title(spec)])
-        os.replace(temporary_pdf, source.with_suffix(".pdf"))
-        os.replace(temporary, source)
-    finally:
-        temporary.unlink(missing_ok=True)
-        temporary_pdf.unlink(missing_ok=True)
-    return source
-
-
-def main(
-    argv: list[str] | None = None,
-    *,
-    renderer: Callable[[Path, Path], None] = _to_pdf,
-) -> None:
-    """Build all one-pagers, or only the supplied specification ids."""
-    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
-    parser.add_argument(
-        "ids",
-        nargs="*",
-        metavar="ID",
-        help="specification ids to build (default: all specifications)",
-    )
-    parser.add_argument(
-        "--brand",
-        type=Path,
-        metavar="CSS",
-        help="inline a self-contained stylesheet after the default styles (no resource loads)",
-    )
-    args = parser.parse_args(argv)
-    only = set(args.ids)
-    unknown = only - {spec["id"] for spec in SPECS}
-    if unknown:
-        raise SystemExit(f"Unknown spec id(s): {sorted(unknown)}")
-    brand_css = ""
-    if args.brand is not None:
-        try:
-            brand_css = args.brand.read_text(encoding="utf-8")
-        except (OSError, UnicodeError) as error:
-            raise SystemExit(f"Cannot read brand stylesheet: {error}") from error
-    try:
-        _validate_brand_css(brand_css)
-    except ValueError as error:
-        raise SystemExit(str(error)) from error
-    if renderer is _to_pdf and not _CHROME:
-        raise SystemExit("No Chrome found; set CHROME=/path/to/google-chrome")
-    ids: set[str] = set()
-    pages: set[Path] = set()
-    pdfs: set[Path] = set()
+def build_cards() -> list[dict]:
+    """Project authored metadata into cards without evaluating analysis code."""
+    cards = []
     for spec in SPECS:
-        assert spec["id"] not in ids, f"duplicate id {spec['id']}"
-        ids.add(spec["id"])
-        if only and spec["id"] not in only:
-            continue
-        try:
-            page = build_onepager(spec, _OUT, brand_css=brand_css, renderer=renderer)
-        except RuntimeError as error:
-            raise SystemExit(str(error)) from error
-        pages.add(page)
-        pdfs.add(page.with_suffix(".pdf"))
-    print(
-        f"Wrote {len(pages)} kept HTML page(s) and {len(pdfs)} one-pager PDF(s) "
-        f"into {_OUT.relative_to(_REPO)}/"
-    )
+        path = spec["path"]
+        if path.startswith("capabilities/#"):
+            link = _CANONICAL
+        elif path.startswith("https://"):
+            link = path
+        else:
+            link = "docs/api/" + path
+            if link.endswith("/"):
+                link += "index.html"
+        figure = spec["figures"][0] if spec["figures"] else None
+        cards.append({
+            "id": spec["id"], "title": spec["title"],
+            "summary": " ".join(spec["blurb"].split()),
+            "key_figure": dict(zip(("value", "label"), figure)) if figure else None,
+            "link": link,
+        })
+    return cards
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Write all cards in one file; partial builds cannot drop other cards."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=_OUT)
+    args = parser.parse_args(argv)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(build_cards(), ensure_ascii=False, indent=2) + "\n",
+                           encoding="utf-8", newline="\n")
+    print(f"Wrote {len(SPECS)} capability cards")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
