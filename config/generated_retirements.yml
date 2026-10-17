@@ -513,3 +513,201 @@ retirements:
     dataset_path: digitalmodel/generated-retirements/2026-10-17/a/docs/api/capabilities/pdf
     digest_list: SHA256SUMS.txt
   follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2687
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/00_vessel_capability_gtm_pdf_pack_index.html
+  sha256: 5ef331c8a5a9f1ad0e5cb14eb092d0e4c14843974ca8a47fb1d4799c5caa4c09
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/00_vessel_capability_gtm_pdf_pack_index.pdf
+  sha256: a10e45d2439ae4f0a15907d7bee4df44c02c0e6ff4cbb5f46d81492bc4bd2cbd
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/03_mudmat_installation_vessel_capability_digitalmodel.html
+  sha256: 9cca175a4c8e012d4f960974aae522b71f7c3d066d6ffe2be8190380d28a321d
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/03_mudmat_installation_vessel_capability_digitalmodel.pdf
+  sha256: d4b968234a14c1ae19983303433ef542d10696f6862fc5606dce6f8df5335e4d
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/04_shallow_pipelay_vessel_capability_digitalmodel.html
+  sha256: aab0eae9c93d2bf268b4f1f638a5195b13e5473cb38e61e171c72ba7b887aef9
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/04_shallow_pipelay_vessel_capability_digitalmodel.pdf
+  sha256: 9690f740a6d06552736d5ad49b990d64f7648206445297d3a313ac9a2ade5243
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/05_rigid_jumper_installation_vessel_capability_digitalmodel.html
+  sha256: a7c3e7dd3abb0345138e1a44e47b20657c428878abf80b990ba8c9bc5a7b7a82
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/05_rigid_jumper_installation_vessel_capability_digitalmodel.pdf
+  sha256: e7fd14bbeb70a8c5d6241396e97b0c150a9c55c09ded774286c8721ae27e63b7
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07.zip
+  sha256: 60b224866d6b436cc540d3be1815e31f7cd6a85a3d479aadb105d530388e9aa9
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07/00_vessel_capability_gtm_pdf_pack_index.pdf
+  sha256: a10e45d2439ae4f0a15907d7bee4df44c02c0e6ff4cbb5f46d81492bc4bd2cbd
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07/03_mudmat_installation_vessel_capability_digitalmodel.pdf
+  sha256: d4b968234a14c1ae19983303433ef542d10696f6862fc5606dce6f8df5335e4d
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07/04_shallow_pipelay_vessel_capability_digitalmodel.pdf
+  sha256: 9690f740a6d06552736d5ad49b990d64f7648206445297d3a313ac9a2ade5243
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07/05_rigid_jumper_installation_vessel_capability_digitalmodel.pdf
+  sha256: e7fd14bbeb70a8c5d6241396e97b0c150a9c55c09ded774286c8721ae27e63b7
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/client_pdf_pack_2026-05-07/digitalmodel_vessel_capability_gtm_pdf_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/00_pipeline_company_gtm_pack_index.html
+  sha256: 694ad3ea7c7f0333ad10fb37484ca6852da8bfc8ec0e26f5c14ef3d5e2f0af9f
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/00_pipeline_company_gtm_pack_index.pdf
+  sha256: 55121b8ea729a6f30d1db108a442ed6aacf0bb85e9c89c0db4a6c8d8c5b8169a
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/01_pipeline_wall_thickness_gtm_brochure_digitalmodel.html
+  sha256: 4d1ea78a0493bc4af9b353f16bc90dabe8955c5e33f5be5d02dde097c9295d75
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/01_pipeline_wall_thickness_gtm_brochure_digitalmodel.pdf
+  sha256: 6f3016c23bf8ed1a5f83dcbb2f54b4020b6e854317d950d6549520c37fb7d1d5
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/02_rigid_jumper_viv_gtm_brochure_digitalmodel.html
+  sha256: 286676895a5902f1348068c8f22c42e3022640fbe6226a0884cb7abf4aaf4819
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/02_rigid_jumper_viv_gtm_brochure_digitalmodel.pdf
+  sha256: 973414c788d409f746af47c1a21d14f11f33956a2a91793b9dd3cb5480ef07ae
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/03_rigid_jumper_installation_vessel_capability_existing_digitalmodel.pdf
+  sha256: e7fd14bbeb70a8c5d6241396e97b0c150a9c55c09ded774286c8721ae27e63b7
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/digitalmodel_pipeline_company_gtm_pack_2026-05-07.zip
+  sha256: bc91f17ade4554e4549985ab343f190391391776494154cd1dcf5d91d5ab758a
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688
+- path: examples/demos/gtm/output/pipeline_company_pack_2026-05-07/pipeline_company_outreach_email.md
+  sha256: ce6df28eabcd0fed22f59a30d329f696686c4d8dbb1bfb03e18b8172c0ce3660
+  date: '2026-10-17'
+  reason: The May demonstration pack is retired from outward use; internal screening reports replace it.
+  disposition:
+    kind: cold-store
+    dataset_path: digitalmodel/generated-retirements/2026-10-17/b/examples/demos/gtm/output/pipeline_company_pack_2026-05-07
+    digest_list: SHA256SUMS.txt
+  follow_up: https://github.com/vamseeachanta/digitalmodel/issues/2688

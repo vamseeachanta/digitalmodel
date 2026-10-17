@@ -157,67 +157,6 @@ body {
 .status-fail { color: var(--clr-danger); font-weight: 700; }
 .status-marginal { color: var(--clr-warning); font-weight: 700; }
 
-/* ── Live Mode Teaser ───────────────────────────────────────── */
-.live-mode-teaser {
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-    color: white;
-    padding: 2rem 2.5rem;
-    border-radius: 8px;
-    margin: 2rem 0;
-    position: relative;
-    overflow: hidden;
-}
-.live-mode-teaser::before {
-    content: 'LIVE';
-    position: absolute;
-    top: 1rem; right: 1.5rem;
-    background: var(--clr-danger);
-    color: white;
-    padding: 0.2rem 0.8rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    animation: pulse-live 2s infinite;
-}
-@keyframes pulse-live {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-.live-mode-teaser h3 {
-    color: var(--clr-accent);
-    font-size: 1.15rem;
-    margin-bottom: 0.8rem;
-}
-.live-mode-teaser p {
-    color: rgba(255,255,255,0.85);
-    font-size: 0.95rem;
-    line-height: 1.7;
-}
-.live-mode-teaser .cta {
-    display: inline-block;
-    margin-top: 1rem;
-    background: var(--clr-accent);
-    color: white;
-    padding: 0.6rem 1.5rem;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-/* ── Funding Badge ──────────────────────────────────────────── */
-.funding-badge {
-    background: rgba(237,137,54,0.1);
-    border: 1px solid var(--clr-accent);
-    border-radius: 6px;
-    padding: 0.8rem 1.2rem;
-    margin: 1rem 0;
-    font-size: 0.85rem;
-    color: var(--clr-text);
-}
-.funding-badge strong { color: var(--clr-accent); }
-
 /* ── Footer ─────────────────────────────────────────────────── */
 .report-footer {
     border-top: 2px solid var(--clr-border);
@@ -238,7 +177,6 @@ body {
     .report-header { padding: 1.5rem 2rem; }
     .report-body { padding: 1rem 2rem; }
     .chart-container { break-inside: avoid; page-break-inside: avoid; }
-    .live-mode-teaser { break-inside: avoid; }
     .no-print { display: none !important; }
     @page { margin: 1.5cm; }
 }
@@ -617,35 +555,12 @@ body {
         </div>
         
 
-        <div class="live-mode-teaser">
-            <h3>Take This Analysis Live During Operations</h3>
-            <p>
-                This report used <strong>design sea states</strong> to screen
-                parametric cases overnight. During the actual operation,
-                <strong>digitalmodel</strong> can feed your vessel's measured
-                motion data — VMMS, IMMS, MRU — directly into the same
-                engineering models for <strong>real-time go/no-go decisions</strong>.
-            </p>
-            <p>
-                Instead of relying on forecasted Hs limits, the installation screening
-                updates continuously with actual crane tip motions, hook loads,
-                and dynamic amplification factors measured on your vessel.
-            </p>
-            <div class="funding-badge">
-                <strong>$500K VC-funded</strong> — we are building overnight
-                engineering and real-time operations support exclusively for
-                marine installation contractors. Early adopters get priority
-                onboarding and custom model calibration for their fleet.
-            </div>
-            <a class="cta" href="mailto:info@example.com?subject=digitalmodel%20Demo%20Inquiry">
-                Schedule a Technical Demo →
-            </a>
-        </div>
+        <div class="section"><h2>Internal screening</h2><p>Internal screening, not for clients.</p></div>
         
 
         <div class="section">
             <h2>Assumptions & Limitations</h2>
-            <ul><li>Crane SWL evaluated at the 40 m overboard operating radius (a derated radius, not the most favourable maximum-capacity position)</li><li>DAF lift-off = 1.1, DAF splash zone = 1.3 per DNV-ST-N001</li><li>JONSWAP peak period approximation: Tp = 4 * sqrt(Hs)</li><li>Slamming coefficient Cs = 5.0 for flat-bottom structures per DNV-RP-H103 Table 4-1</li><li>Added mass coefficient Ca = 1.0, drag coefficient Cd = 2.0 for flat plate geometry</li><li>Wire rope MBL safety factor = 0.85 (max tension / MBL)</li><li>Landing checks a derived undrained bearing capacity q_ult = su * Nc * sc * dc (Brinch Hansen, phi=0; su = 10 kPa soft clay, Nc = 5.14), with q_allow = q_ult / FS (FS = 2); utilisation = applied / q_allow (#264)</li><li>Landing capacity assumes uniform su and is a surface-footing q_ult with a depth factor; a skirted/embedded mudmat's reverse-end-bearing / suction is not modelled (screening scope)</li><li>Vessel heave at crane tip uses simplified single-frequency RAO peak</li><li>No current loads or wind loads on structure during lowering</li><li>Rigging weight excluded from hook load calculations</li><li>Seabed assumed flat — no slope corrections for landing</li><li>Seawater density = 1025 kg/m3 throughout water column</li></ul>
+            <ul><li>Crane SWL evaluated at the 40 m overboard operating radius (a derated radius, not the most favourable maximum-capacity position)</li><li>DAF lift-off = 1.1, DAF splash zone = 1.3 per DNV-ST-N001</li><li>Tp = 4 * sqrt(Hs) is a screening simplification, not a measured or scatter-derived period; the mudmat case is superseded by R10</li><li>Slamming coefficient Cs = 5.0 for flat-bottom structures per DNV-RP-H103 Table 4-1</li><li>Added mass coefficient Ca = 1.0, drag coefficient Cd = 2.0 for flat plate geometry</li><li>Wire rope MBL safety factor = 0.85 (max tension / MBL)</li><li>Landing checks a derived undrained bearing capacity q_ult = su * Nc * sc * dc (Brinch Hansen, phi=0; su = 10 kPa soft clay, Nc = 5.14), with q_allow = q_ult / FS (FS = 2); utilisation = applied / q_allow (#264)</li><li>Landing capacity assumes uniform su and is a surface-footing q_ult with a depth factor; a skirted/embedded mudmat's reverse-end-bearing / suction is not modelled (screening scope)</li><li>Vessel heave at crane tip uses simplified single-frequency RAO peak</li><li>No current loads or wind loads on structure during lowering</li><li>Rigging weight excluded from hook load calculations</li><li>Seabed assumed flat — no slope corrections for landing</li><li>Seawater density = 1025 kg/m3 throughout water column</li></ul>
         </div>
         
     

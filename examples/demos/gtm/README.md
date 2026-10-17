@@ -1,5 +1,7 @@
 # GTM Demo Suite -- Parametric Engineering Reports
 
+Outputs are **internal screening, not for clients**. The May 2026 packs are retired from outward use (O177).
+
 > 5 demos | 1,292 cases | Overnight engineering screening for marine installation contractors
 
 Each demo sweeps a realistic parameter space, runs engineering calculations, and produces a branded HTML report with interactive Plotly charts. Reports are self-contained single-file HTML -- open in any browser, print to PDF.
@@ -156,7 +158,7 @@ report = GTMReportBuilder(
 report.add_section("Methodology", methodology_html)
 report.add_chart("chart_id", plotly_fig)
 report.add_table("table_id", pandas_df)
-report.add_live_mode_teaser()
+report.add_live_mode_teaser()  # compatibility method: adds the internal-screening notice
 report.build("output/demo_02_wall_thickness_report.html")
 ```
 
