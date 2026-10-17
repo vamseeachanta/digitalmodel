@@ -1370,7 +1370,8 @@ def test_bha_database_owned_and_executed_by_subsea():
     detector = load_detector_module()
     domains = detector.parse_domains(root / "tests/DOMAINS.md")
     for path in ("tests/bha_database/test_database.py", "data/bha_database/examples.yml",
-                 "data/bha_database/manifest.yaml", "scripts/bha_database/build_manifest.py",
+                 "data/bha_database/manifest.yaml", "data/bha_standards/drill_collars_std.yml",
+                 "scripts/bha_database/build_manifest.py",
                  "docs/bha_database.md"):
         selected = detector.touched_domains([path], domains)
         assert {domain.name for domain in selected} == {"subsea"}, path

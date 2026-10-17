@@ -23,6 +23,13 @@ distance from the top to touchdown. Each quantity must satisfy its own band.
 The model uses SI units: m, kN, te and s; gravity is 9.80665 m/s2 and water
 density is 1.025 te/m3. The sea surface is z = 0 and the flat seabed is
 z = -150 m. There is no current, wave or wind loading, vessel or other object.
+The inputs express still water as `WaveType: Airy`, `WaveHeight: 0` and
+`WavePeriod: 8`, following the repository form in
+`docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/03_environment.yml`.
+Each line retains its `catenary_c1` or `catenary_c2` name; its line type uses
+the distinct `_type` suffix, including the line section reference.
+These offline serialization checks do not establish native benchmark clearance;
+the maintainer solver loop must confirm loading and statics.
 Both ends use the generator's `Fixed` connection, with zero connection bending
 stiffness so that they can rotate. End A is at (0, 0, -150) m; End B is at
 (X, 0, 0) m. Fixed connections avoid the seabed-relative elevation convention
