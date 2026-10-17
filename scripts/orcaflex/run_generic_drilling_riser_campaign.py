@@ -26,6 +26,8 @@ METRICS = ('lower_mean_deg', 'lower_max_deg', 'upper_mean_deg', 'upper_max_deg',
 EXTRACTION_VERSION = 'connection-angles-vertical-ring-1'
 LICENCE_EXIT = 12
 CONFIGURATION_EXIT = 13
+# Current ramp from drilling_riser/campaign.py::CURRENT_RAMP / _statics_path.
+CURRENT_RAMP = (0.25, 0.5, 0.75, 1.0)
 
 
 class ConfigurationError(RuntimeError):
@@ -110,10 +112,11 @@ def ring_reference_z(model_path: Path) -> float:
 
 
 def calculate_staged_statics(model: Any) -> None:
-    """Seed target-current statics from zero-current equilibrium at this offset.
+    """Ramp current from zero-current equilibrium at the specified case offset.
 
-    API ordering follows drilling_riser/campaign.py::_statics_path: retain
-    calculated positions before changing current, which resets native state.
+    Reuse the current ramp in drilling_riser/campaign.py::_statics_path:
+    retain calculated positions before each current change (which resets state).
+    This does not apply that path's seeded vessel-offset continuation.
     Native pre-flight must call this helper; direct statics is a different method.
     No drag, tension, offset, damping or convergence tolerance is changed.
     """
@@ -132,11 +135,12 @@ def calculate_staged_statics(model: Any) -> None:
     try:
         model.environment.RefCurrentSpeed = 0.0
         solve()
-        model.UseCalculatedPositions(True)
-        model.environment.RefCurrentSpeed = speed
-        solve()
+        for fraction in CURRENT_RAMP:
+            model.UseCalculatedPositions(True)
+            model.environment.RefCurrentSpeed = fraction * speed
+            solve()
     except Exception:
-        # Restore input current after a failed seed; never continue to dynamics.
+        # Restore input current after any failed stage; never continue to dynamics.
         if float(model.environment.RefCurrentSpeed) != speed:
             model.environment.RefCurrentSpeed = speed
         raise

@@ -35,6 +35,24 @@ class GenericCampaignTests(unittest.TestCase):
         preparation = json.loads((public / 'preparation.json').read_text(encoding='utf-8'))
         self.assertEqual(preparation['tension_acceptance_basis'], note)
 
+    def test_prepared_method_and_digests_match_sources(self):
+        public = ROOT / campaign.DEST
+        table = yaml.safe_load((public / 'case-table.yml').read_text(encoding='utf-8'))
+        expected_table = campaign.case_table(ROOT)
+        method = expected_table['statics_method']
+        self.assertIn('25%, 50%, 75% and 100%', method['value'])
+        self.assertEqual(table['statics_method'], method)
+        self.assertIn('No vessel-offset continuation', method['value'])
+        preparation = json.loads((public / 'preparation.json').read_text(encoding='utf-8'))
+        self.assertIn('25%, 50%, 75% and 100%', preparation['statics_method'])
+        self.assertIn('No vessel-offset continuation', preparation['statics_method'])
+        basis = json.loads((public / 'screens/basis.json').read_text(encoding='utf-8'))
+        # Hash generated LF bytes, independent of the checkout's line endings.
+        generated = yaml.safe_dump(expected_table, sort_keys=False, allow_unicode=True)
+        self.assertEqual((public / 'case-table.yml').read_text(encoding='utf-8'), generated)
+        self.assertEqual(basis['case_table_sha256'], hashlib.sha256(generated.encode('utf-8')).hexdigest())
+        self.assertEqual(basis['calculation_fingerprints'], campaign.calculation_fingerprints())
+
     def test_derived_criterion_rejects_underflow(self):
         fixture = Path(__file__).parent / 'fixtures/generic_synthetic_criteria.json'
         data = json.loads(fixture.read_text(encoding='utf-8'))
