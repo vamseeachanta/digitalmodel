@@ -95,10 +95,13 @@ class DriverTests(unittest.TestCase):
         import yaml
         with tempfile.TemporaryDirectory() as temporary:
             folder = Path(temporary)
-            table = {'cases': [{'id': 'synthetic',
+            table = {'tension_basis': {'n_units': 4, 'n_fail': 1, 'fwt': 1.05},
+                'cases': [{'id': 'synthetic',
                 'ring_initial_position_m': {'value': [0, 0, 37]}}]}
             (folder / 'case-table.yml').write_text(yaml.safe_dump(table), encoding='utf-8')
             self.assertEqual(driver.ring_reference_z(folder / 'models/synthetic/master.yml'), 37)
+            self.assertEqual(driver.case_tension_basis(folder / 'models/synthetic/master.yml'),
+                             table['tension_basis'])
 
     def test_interface_import_is_local(self):
         tree = ast.parse(DRIVER.read_text(encoding='utf-8'))
@@ -375,7 +378,8 @@ def test_position_retention_failure_restores_current_and_stops():
 
         model.UseCalculatedPositions = fail_retention
         with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
-            with patch.object(driver, 'ring_reference_z', return_value=37):
+            with patch.object(driver, 'ring_reference_z', return_value=37), \
+                    patch.object(driver, 'case_tension_basis', return_value={}):
                 with pytest.raises(RuntimeError, match='position retention failure'):
                     driver.run_case(Path('unused'), Path('unused'))
         assert model.RefCurrentSpeed == 1.0
@@ -399,7 +403,8 @@ def test_restore_failure_preserves_original_error_and_blocks_dynamics():
     driver = load_driver()
     model = RestoreFailureModel(fail_stage=0.25)
     with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
-        with patch.object(driver, 'ring_reference_z', return_value=37):
+        with patch.object(driver, 'ring_reference_z', return_value=37), \
+                patch.object(driver, 'case_tension_basis', return_value={}):
             with pytest.raises(OSError, match='restoration failure') as caught:
                 driver.run_case(Path('unused'), Path('unused'))
     assert isinstance(caught.value.__context__, RuntimeError)

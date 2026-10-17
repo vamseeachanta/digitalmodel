@@ -13,19 +13,19 @@ FIELDS = ('support_intact_min_kn', 'support_loss_min_kn', 'bottom_sum_min_kn',
           'member_min_kn', 'table_clearance_min_m')
 
 
-def summarize_samples(rows: list[dict], basis: dict | None = None) -> dict:
+def summarize_samples(rows: list[dict], *, basis: dict) -> dict:
     """Use simultaneous force samples; missing evidence never qualifies."""
     keys = ('vertical_kn', 'carried_kn', 'bottom_kn', 'member_min_kn', 'table_clearance_m')
     if not rows or any(any(k not in r or not math.isfinite(r[k]) for k in keys) for r in rows):
         raise ValueError('Missing or nonfinite tension evidence')
     return dict(zip(FIELDS, (
         min(r['vertical_kn']-r['carried_kn'] for r in rows),
-        min(surviving_share(basis)*r['vertical_kn']-r['carried_kn'] for r in rows),
+        min(surviving_share(basis=basis)*r['vertical_kn']-r['carried_kn'] for r in rows),
         min(r['bottom_kn'] for r in rows), min(r['member_min_kn'] for r in rows),
         min(r['table_clearance_m'] for r in rows))))
 
 
-def extract(model, period, end_b, *, static: bool = False, basis: dict | None = None) -> dict:
+def extract(model, period, end_b, *, static: bool = False, basis: dict) -> dict:
     """Extract static or main-stage evidence without starting a solver."""
     def series(name, variable, end=None):
         obj = model[name]
@@ -61,4 +61,4 @@ def extract(model, period, end_b, *, static: bool = False, basis: dict | None = 
         raise ValueError('Mismatched simultaneous tension channels')
     return summarize_samples([dict(vertical_kn=math.fsum(v[i] for v in vertical), carried_kn=carried[i],
         bottom_kn=math.fsum(v[i] for v in bottom), member_min_kn=min(minima),
-        table_clearance_m=min(v[i] for v in clearances)) for i in range(len(carried))], basis)
+        table_clearance_m=min(v[i] for v in clearances)) for i in range(len(carried))], basis=basis)

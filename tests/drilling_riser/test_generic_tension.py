@@ -25,7 +25,24 @@ def test_recorded_arrangement_changes_every_check():
     from digitalmodel.drilling_riser.generic_tension_channels import summarize_samples
     rows = [dict(vertical_kn=12000, carried_kn=50, bottom_kn=300,
                  member_min_kn=1, table_clearance_m=0.2)]
-    assert summarize_samples(rows, changed)['support_loss_min_kn'] == pytest.approx(9950)
+    assert summarize_samples(rows, basis=changed)['support_loss_min_kn'] == pytest.approx(9950)
+
+
+@pytest.mark.parametrize('function,args', [
+    (tension.surviving_share, ()),
+    (tension.weight_reserve, ()),
+    (tension.checks, (12000, 50, 8700, 5000, 300, 1)),
+    ('summarize_samples', ([],)),
+    ('extract', ({}, None, 'B')),
+])
+def test_basis_is_required_by_keyword(function, args):
+    from digitalmodel.drilling_riser import generic_tension_channels as channels
+    if isinstance(function, str):
+        function = getattr(channels, function)
+    with pytest.raises(TypeError, match='basis'):
+        function(*args)
+    with pytest.raises(TypeError):
+        function(*args, {'n_units': 4, 'n_fail': 1, 'fwt': 1.05})
 
 
 def test_compensated_member_sums_are_order_independent():
@@ -88,13 +105,26 @@ def test_followup_record_native_comparators_and_correction():
         assert 0 <= row['table_fraction'] <= 1
     assert record['cases'][0]['recorded_native_old_vertical_kn'] == 9801.7
     assert record['cases'][1]['recorded_native_old_vertical_kn'] == 11684.9
+    reference = record['cases'][0]
+    basis = tension.tension_basis(campaign.read_spec(ROOT))
+    share = tension.surviving_share(basis=basis)
+    assert record['vertical_correction_kn'] == -reference['hand_minus_native_kn']
     assert record['check_b_after_correction_kn'] == pytest.approx(
-        record['check_b_before_correction_kn'] - 0.75*22.2)
+        record['check_b_before_correction_kn'] - share*reference['hand_minus_native_kn'], abs=1e-9)
+    assert record['check_b_after_ratio_calibration_kn'] == pytest.approx(
+        record['check_b_before_correction_kn'] + share*reference['raised_hand']['vertical_kn']
+        * (reference['recorded_native_old_vertical_kn']/reference['old_hand']['vertical_kn']-1), abs=1e-9)
     assert record['check_b_after_correction_kn'] > 32
     assert 32 < record['check_b_after_ratio_calibration_kn'] < 34
     html = (ROOT / campaign.DEST / 'tension-followup.html').read_text()
     assert '11,684.9' in html and 'Native statics decide' in html
     assert 'not representative' in html
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('followup_builder',
+        ROOT / 'scripts/reporting/build_generic_riser_tension_followup.py')
+    builder = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(builder)
+    assert builder.followup_record(ROOT, ROOT / campaign.DEST) == record
 
 
 def test_model_derived_basis_and_common_factor():
@@ -110,16 +140,17 @@ def test_model_derived_basis_and_common_factor():
 
 
 def test_binding_checks_values_and_boundary():
-    result = tension.checks(12000, 50, 8700, 5000, 300, 1)
+    basis = campaign.read_spec(ROOT)['tensioner_arrangement']
+    result = tension.checks(12000, 50, 8700, 5000, 300, 1, basis=basis)
     assert result['check_a_margin_kn'] == 3250
     assert result['check_b_margin_kn'] == 250
     assert result['bottom_margin_kn'] == pytest.approx(50)
     assert result['check_a_pass'] and result['check_b_pass']
-    assert not tension.checks(10000, 50, 8700, 5000, 300, 1)['check_b_pass']
-    assert not tension.checks(12000, 50, 8700, 5000, 300, -0.001)['check_a_pass']
-    assert not tension.checks(12000, 50, 8700, 5000, 249, 1)['check_a_pass']
+    assert not tension.checks(10000, 50, 8700, 5000, 300, 1, basis=basis)['check_b_pass']
+    assert not tension.checks(12000, 50, 8700, 5000, 300, -0.001, basis=basis)['check_a_pass']
+    assert not tension.checks(12000, 50, 8700, 5000, 249, 1, basis=basis)['check_a_pass']
     with pytest.raises(ValueError):
-        tension.checks(math.nan, 50, 8700, 5000, 300, 1)
+        tension.checks(math.nan, 50, 8700, 5000, 300, 1, basis=basis)
 
 
 def test_hand_equilibrium_factor_and_table_bounds():
@@ -139,26 +170,28 @@ def test_hand_equilibrium_factor_and_table_bounds():
 
 def test_native_sample_aggregation_and_fail_closed():
     from digitalmodel.drilling_riser.generic_tension_channels import summarize_samples
+    basis = campaign.read_spec(ROOT)['tensioner_arrangement']
     rows = [dict(vertical_kn=12000, carried_kn=50, bottom_kn=300,
                  member_min_kn=1, table_clearance_m=0.2),
             dict(vertical_kn=11000, carried_kn=100, bottom_kn=280,
                  member_min_kn=-1, table_clearance_m=-0.1)]
-    result = summarize_samples(rows)
+    result = summarize_samples(rows, basis=basis)
     assert result['support_intact_min_kn'] == 10900
     assert result['support_loss_min_kn'] == 8150
     assert result['bottom_sum_min_kn'] == 280
     assert result['member_min_kn'] == -1
     assert result['table_clearance_min_m'] == -0.1
     with pytest.raises(ValueError):
-        summarize_samples([])
+        summarize_samples([], basis=basis)
     with pytest.raises(ValueError):
-        summarize_samples([{}])
+        summarize_samples([{}], basis=basis)
 
 
 def test_native_adapter_projection_sign_profiles_and_table_excursion():
     from types import SimpleNamespace
     from digitalmodel.drilling_riser.generic_tension_channels import extract
     from digitalmodel.drilling_riser.generic_tension import LINKS, MEMBERS
+    basis = campaign.read_spec(ROOT)['tensioner_arrangement']
     class Object:
         Mass = 2
         SpringLength = [0, 16]
@@ -171,18 +204,18 @@ def test_native_adapter_projection_sign_profiles_and_table_excursion():
         def RangeGraph(self, variable, *args):
             return SimpleNamespace(Min=[-2, 10]) if args else SimpleNamespace(Mean=[1, 10])
     model = {name: Object() for name in (*LINKS, *MEMBERS, 'Tensioner Ring', 'Riser Slip Joint')}
-    result = extract(model, 'main stage', 'B')
+    result = extract(model, 'main stage', 'B', basis=basis)
     assert result['support_intact_min_kn'] == pytest.approx(240 - 2*9.81 - 10)
     assert result['support_loss_min_kn'] == pytest.approx(180 - 2*9.81 - 10)
     assert result['bottom_sum_min_kn'] == 600
     assert result['member_min_kn'] == -2
     assert result['table_clearance_min_m'] == -1
-    static = extract(model, None, 'B', static=True)
+    static = extract(model, None, 'B', static=True, basis=basis)
     assert static['support_intact_min_kn'] == pytest.approx(240-2*9.81-10)
     assert static['member_min_kn'] == 1
     model[LINKS[0]].TimeHistory = lambda *args: [1]
     with pytest.raises(ValueError, match='Mismatched'):
-        extract(model, 'main stage', 'B')
+        extract(model, 'main stage', 'B', basis=basis)
 
 
 def test_all_24_hand_cases_and_four_common_tables():

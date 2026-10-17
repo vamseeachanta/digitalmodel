@@ -1046,7 +1046,7 @@
   ],
   "largest_table_fraction": 0.45276967901041576,
   "check_b_before_correction_kn": 52.78584163132109,
-  "vertical_correction_kn": -22.2,
-  "check_b_after_correction_kn": 36.13584163132109,
-  "check_b_after_ratio_calibration_kn": 32.758530702523885
+  "vertical_correction_kn": -22.208403611253743,
+  "check_b_after_correction_kn": 36.12953892288078,
+  "check_b_after_ratio_calibration_kn": 32.750966681601795
 }

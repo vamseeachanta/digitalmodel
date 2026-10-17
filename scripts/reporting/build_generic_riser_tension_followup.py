@@ -59,14 +59,17 @@ def followup_record(root: Path, prepared: Path) -> dict:
         cases.append(dict(case_id=case_id, old_hand=old, raised_hand=raised,
             recorded_native_old_vertical_kn=native, hand_minus_native_kn=old['vertical_kn']-native))
     links = link_records(root, prepared, table)
-    margin = cases[0]['raised_hand']['check_b_margin_kn']
-    ratio_correction = tension.surviving_share(basis) * cases[0]['raised_hand']['vertical_kn'] * (1-9801.7/9823.9)
+    reference = cases[0]
+    margin = reference['raised_hand']['check_b_margin_kn']
+    share = tension.surviving_share(basis=basis)
+    ratio_correction = share * reference['raised_hand']['vertical_kn'] * (
+        1-reference['recorded_native_old_vertical_kn']/reference['old_hand']['vertical_kn'])
     return dict(qualification='hand operating points only; native statics decide; production held',
         source='https://github.com/vamseeachanta/digitalmodel/pull/2684',
         spring_table_factor=basis['spring_table_factor'], cases=cases, links=links,
         largest_table_fraction=max(row['table_fraction'] for row in links),
-        check_b_before_correction_kn=margin, vertical_correction_kn=-22.2,
-        check_b_after_correction_kn=margin-tension.surviving_share(basis)*22.2,
+        check_b_before_correction_kn=margin, vertical_correction_kn=-reference['hand_minus_native_kn'],
+        check_b_after_correction_kn=margin-share*reference['hand_minus_native_kn'],
         check_b_after_ratio_calibration_kn=margin-ratio_correction)
 
 
@@ -95,7 +98,7 @@ def write_followup(root: Path, prepared: Path) -> None:
 <p>The recorded arrangement supplies N = {basis['n_units']}, n = {basis['n_fail']} and fwt = {basis['fwt']}. Check A requires intact vertical support less W_r ≥ T_SRmin, separate End B sum ≥ (fwt − 1) Ws, and each member minimum ≥ 0. Check B requires (N − n)/N times vertical link sum less W_r ≥ T_SRmin. Every link shall remain inside its table.</p>
 <p>The common spring-table factor is {basis['spring_table_factor']:.3f} (+{100*(basis['spring_table_factor']-1):.1f}%), per the appended decision. Hand W_r = {basis['carried_weight_kn']:.3f} kN includes half the wet slip joint; native extraction uses the actual slip-joint End B global reaction. Required vertical sum = {basis['required_vertical_kn']:,.3f} kN. Mechanical/hydraulic efficiency = 1 is assumed; system factor = {basis['system_factor']:.9f}, fleet cosine = {basis['fleet_cosine']:.9f}, fleet-adjusted factor = {basis['fleet_adjusted_system_factor']:.9f}. Fleet angle is applied separately.</p>
 <table><thead><tr>{''.join(f'<th>{header}</th>' for header in headers)}</tr></thead><tbody>{''.join(rows)}</tbody><caption>Table 1. Hand margins against the binding criteria beside recorded old-setting native link sums; raised-setting columns are hand estimates. The old setting fails check B.</caption></table>
-<p>At o0-c0 the −22.2 kN correction to hand vertical force reduces check B by {tension.surviving_share(basis)*22.2:.3f} kN: {record['check_b_before_correction_kn']:+.3f} kN before correction, {record['check_b_after_correction_kn']:+.3f} kN after the fixed correction. Applying the review's proportional calibration 9,801.7/9,823.9 to the raised hand vertical force gives {record['check_b_after_ratio_calibration_kn']:+.3f} kN, consistent with the decision's approximately +33 kN. Neither calculation is a native result. At o5-c3 the old hand sum is 442.2 kN below the recorded native sum; its hand margins are not representative of native acceptance.</p>
+<p>At o0-c0 the {record['vertical_correction_kn']:.6f} kN correction to hand vertical force reduces check B by {record['check_b_before_correction_kn']-record['check_b_after_correction_kn']:.3f} kN: {record['check_b_before_correction_kn']:+.3f} kN before correction, {record['check_b_after_correction_kn']:+.3f} kN after the fixed correction. Applying the review's proportional calibration {record['cases'][0]['recorded_native_old_vertical_kn']:,.1f}/{record['cases'][0]['old_hand']['vertical_kn']:,.6f} to the raised hand vertical force gives {record['check_b_after_ratio_calibration_kn']:+.3f} kN, consistent with the decision's approximately +33 kN. Neither calculation is a native result. At o5-c3 the old hand sum is 442.2 kN below the recorded native sum; its hand margins are not representative of native acceptance.</p>
 <p>All 24 generated masters resolve 72 includes. All 96 scaled hand operating lengths lie inside their own 0–16 m spring tables. The largest fraction (length − minimum)/(maximum − minimum) is {record['largest_table_fraction']:.9f} ({100*record['largest_table_fraction']:.3f}%). Individual lengths, limits and input digests are retained in tension-followup.json. Native static and dynamic containment remains unqualified.</p>
 <p>The hand model omits pressure strain, bending, contact and nonlinear current shape. Old-setting evidence: models tree e3b58942173d96ace534b298a86d43f25f554ecb; driver blob a9691ac9261b1d199b255f065b0c30b4f09a3c74. Historical execution comprised 72 current ramp steps plus 24 zero-current equilibrium solves.</p>
 <p>End B moment: 1,858 kN.m native against a 1,363–1,440 kN.m hand estimate; explanation pending the checker. Next: native statics and channel readback for all 24 cases, held-edition clause confirmation, shielding and moment disposition by the maintainer.</p>

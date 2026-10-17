@@ -10,7 +10,7 @@
     "section.py": "b7b8c7436c86d1bf72a0d9b9fbf3e113a31c6ed0ebf2205b48e2f721b006178b",
     "stackup.py": "c824d847cc4d6c68ba2c6ae4d0989550a3343b9ee334a32e897e8d14db82c60b",
     "assembly.py": "0b4d0f6a684728489d24af1b1860ef24985dc8280b2acbfbeaa8aa655d366a3e",
-    "generic_tension.py": "716fb5800d646c79d12aa3ab825f4f78598bc222900282589d661c0447deee34"
+    "generic_tension.py": "74707ee279b0593f06620bb587ba121519c640cf7d9989e43c0c8a1efd373a88"
   },
   "criteria": {
     "mean_angle_deg": {

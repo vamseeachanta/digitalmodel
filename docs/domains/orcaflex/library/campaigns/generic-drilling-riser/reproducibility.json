@@ -136,10 +136,10 @@
     "models/o5-c3/inputs/parameters.yml": "42e531401053ed6ca277a4b92b6b7b6cb175bb6d76b6e6b04f854c06477e06bc",
     "models/o5-c3/master.yml": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
     "preparation.json": "052237631f037e1e686b38f41253ecf0a405622227405268f3409493faaad9dc",
-    "screens/basis.json": "25d76a53d3d54721b06d1ce0b8a6a87dc88069cc43ed82247fe57509680f332d",
+    "screens/basis.json": "e3f9fca23f75891d112e3aa574881fceba7c69e34d22373503ec8fbdafcdc7d9",
     "screens/column-screen.csv": "f35eda7ca22ef2c09b7a6b6584cd9420b1b6a96d48821c11d2cd1e5ba951585c",
-    "tension-followup.html": "46dae7bdd56a898d78ee90b93b0df796571bc8bb6e1bce58f60850065fb24ae6",
-    "tension-followup.json": "8b69068566fd7bb63b253079c57230019dae30a6e9b598e43bfeb6724d3fb50e"
+    "tension-followup.html": "e3ab7c340ce8503a3a6088879b74f6cb429978f32400adc8667629494d90fe51",
+    "tension-followup.json": "a9e3ba7be2885c1422f41b527cf2eb7b2164bc4a8afb4bc376f75abf327a3db7"
   },
   "tests": {
     "files": [
@@ -148,10 +148,21 @@
       "test_generic_campaign_driver.py",
       "test_generic_report_builder.py"
     ],
-    "passed_per_python": 45,
-    "deselected_per_python": 6,
-    "boundary": "Licensed-interface imports blocked; six interface-entry tests deselected",
-    "final_fixture_checks_per_python": 2
+    "passed_per_python": 56,
+    "deselected_per_python": 0,
+    "boundary": "Full four-file suites; only explicitly injected test doubles permitted; licensed-interface imports blocked",
+    "collected_per_python": 56,
+    "skipped_per_python": 0
   },
-  "review_boundary": "Frozen inline defect-hunting inspection; no independent-provider verdict under the no-other-assistant restriction"
+  "review_boundary": "Frozen inline defect-hunting inspection; no independent-provider verdict under the no-other-assistant restriction",
+  "followup_verification": {
+    "baseline_commit": "6ca26b41fd29a1930f19d3e8ec273f2e2a8dff13",
+    "unchanged_prepared_artifacts": 124,
+    "byte_identical_regenerated_followup_records": 2,
+    "byte_identical_refreshed_fingerprint_records": 1,
+    "fixed_check_b_margin_change_kn": -0.006302708440308891,
+    "proportional_check_b_margin_change_kn": -0.0075640209220892984,
+    "vertical_correction_change_kn": -0.008403611253744003,
+    "campaign_manifest_unchanged": true
+  }
 }

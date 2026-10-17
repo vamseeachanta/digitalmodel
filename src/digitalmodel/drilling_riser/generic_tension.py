@@ -8,8 +8,6 @@ text shall be confirmed against a held edition before report use.
 from __future__ import annotations
 
 import math
-import json
-from pathlib import Path
 from .assembly import minimum_top_tension_16q, tensioner_system_factor
 from .stackup import minimum_slip_ring_tension
 
@@ -22,25 +20,16 @@ BASIS = ('ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, '
          'edition (2017); clause text to be confirmed against a held edition before report use')
 
 
-def recorded_arrangement() -> dict:
-    """Read the campaign's single recorded source for N, n, fwt and scale."""
-    path = Path(__file__).resolve().parents[3] / (
-        'docs/domains/orcaflex/library/campaigns/generic-drilling-riser/tensioner-arrangement.json')
-    return json.loads(path.read_text(encoding='utf-8'))
-
-
-def surviving_share(basis: dict | None = None) -> float:
+def surviving_share(*, basis: dict) -> float:
     """Derive (N-n)/N from the recorded arrangement, with neutral efficiency."""
-    basis = recorded_arrangement() if basis is None else basis
     for key in ('n_units', 'n_fail'):
         if isinstance(basis[key], bool) or not isinstance(basis[key], int):
             raise ValueError('Tensioner counts must be integers')
     return 1 / tensioner_system_factor(basis['n_units'], basis['n_fail'], 1)
 
 
-def weight_reserve(basis: dict | None = None) -> float:
+def weight_reserve(*, basis: dict) -> float:
     """Derive the bottom-tension share fwt-1 from the same recorded basis."""
-    basis = recorded_arrangement() if basis is None else basis
     fwt = basis['fwt']
     if isinstance(fwt, bool) or not math.isfinite(fwt) or fwt < 1:
         raise ValueError('fwt must be finite and at least one')
@@ -109,8 +98,8 @@ def tension_basis(spec: dict) -> dict:
     """Derive acceptance inputs; half slip weight is a HAND assumption only."""
     parts = [member_basis(spec, name) for name in MEMBERS]
     arrangement = spec['tensioner_arrangement']
-    share = surviving_share(arrangement)
-    weight_reserve(arrangement)
+    share = surviving_share(basis=arrangement)
+    weight_reserve(basis=arrangement)
     ws = math.fsum(p['ws_kn'] for p in parts)
     ai = math.fsum(p['internal_area_m2'] for p in parts)
     rho_w = spec['environment']['water']['density']
@@ -140,13 +129,13 @@ def tension_basis(spec: dict) -> dict:
 
 
 def checks(vertical_kn: float, carried_kn: float, tsrmin_kn: float, ws_kn: float,
-           bottom_kn: float, member_min_kn: float, *, basis: dict | None = None) -> dict:
+           bottom_kn: float, member_min_kn: float, *, basis: dict) -> dict:
     """Binding checks; positive margin meets the stated criterion, zero included."""
     if not all(math.isfinite(v) for v in (vertical_kn, carried_kn, tsrmin_kn, ws_kn, bottom_kn, member_min_kn)):
         raise ValueError('Nonfinite tension evidence')
     a = vertical_kn - carried_kn - tsrmin_kn
-    b = surviving_share(basis) * vertical_kn - carried_kn - tsrmin_kn
-    bottom = bottom_kn - weight_reserve(basis) * ws_kn
+    b = surviving_share(basis=basis) * vertical_kn - carried_kn - tsrmin_kn
+    bottom = bottom_kn - weight_reserve(basis=basis) * ws_kn
     return dict(check_a_margin_kn=a, check_b_margin_kn=b, bottom_margin_kn=bottom,
                 check_a_pass=a >= 0 and bottom >= 0 and member_min_kn >= 0,
                 check_b_pass=b >= 0, member_min_kn=member_min_kn)

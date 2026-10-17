@@ -121,6 +121,12 @@ def ring_reference_z(model_path: Path) -> float:
     return float(case['ring_initial_position_m']['value'][2])
 
 
+def case_tension_basis(model_path: Path) -> dict:
+    """Read the tension basis from the owning case table."""
+    table = yaml.safe_load((model_path.parents[2] / 'case-table.yml').read_text(encoding='utf-8'))
+    return table['tension_basis']
+
+
 def calculate_staged_statics(model: Any) -> None:
     """Ramp current from zero-current equilibrium at the specified case offset.
 
@@ -170,8 +176,7 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     except Exception as exc:
         raise ConfigurationError(f'Solver interface not importable ({type(exc).__name__})') from exc
     reference_z = ring_reference_z(model_path)
-    basis = yaml.safe_load((model_path.parents[2] / 'case-table.yml').read_text(
-        encoding='utf-8'))['tension_basis']
+    basis = case_tension_basis(model_path)
     try:
         model = OrcFxAPI.Model(str(model_path))
         calculate_staged_statics(model)
