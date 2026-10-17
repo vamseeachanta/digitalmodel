@@ -7,14 +7,12 @@ from __future__ import annotations
 
 import argparse
 import copy
-from datetime import date
 import hashlib
 import html
 import json
 import math
 from pathlib import Path
 import re
-from urllib.parse import urlsplit
 
 from digitalmodel.marine_ops.installation.shore_approach import RouteSegment, pull_in
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
@@ -23,33 +21,19 @@ from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputS
 
 import yaml
 
-DELIVERABLES = ("models.json", "analysis.html", "manifest.template.json", "preparation.json")
-ASSUMPTION_LABEL = "assumed, based on previous experience"
-ASSUMABLE_PIPE_INPUTS = {
-    "pipeline.dimensions.wall_thickness": "m",
-    "pipeline.coatings.corrosion.thickness": "m",
-    "pipeline.coatings.corrosion.density": "te/m3",
-    "pipeline.coatings.weight.0.thickness": "m",
-    "pipeline.coatings.weight.0.density": "te/m3",
-}
-STUDY_PARAMETER_QUALIFICATION = "study parameter chosen for this preparation; not sourced or measured"
-STUDY_PARAMETER_INPUTS = (
-    "pipeline.segments.0.length",
-    "tail_tension_kn",
-    "winch_efficiency",
-    "cases.0.rise_m",
-    "cases.0.buoyancy_fraction",
-    "cases.1.rise_m",
-    "cases.1.buoyancy_fraction",
-    "cases.2.rise_m",
-    "cases.2.buoyancy_fraction",
+from digitalmodel.marine_ops.installation.shore_pull_in_provenance import (
+    STUDY_PARAMETER_INPUTS, STUDY_PARAMETER_QUALIFICATION, audit_input_sources,
+    numeric_paths as numeric_paths, source_locator,
 )
-DATASET_ANCHORS = {
-    "pipeline.dimensions.outer_diameter",
-    "equipment.vessel.properties.loa",
-    "equipment.vessel.properties.beam",
-    "equipment.vessel.properties.draft",
-}
+
+
+DELIVERABLES = ("models.json", "analysis.html", "manifest.template.json", "preparation.json")
+
+class PreparationDumper(yaml.SafeDumper):
+    """Preserve the repository's native null spelling."""
+
+
+PreparationDumper.add_representer(type(None), lambda dumper, value: dumper.represent_scalar("tag:yaml.org,2002:null", "~"))
 
 
 def digest(path: Path) -> str:
@@ -62,76 +46,6 @@ def write_json(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
 
 
-def numeric_paths(value, prefix="") -> set[str]:
-    """Identify every numeric input leaf that needs an input source."""
-    if isinstance(value, dict):
-        return set().union(*(numeric_paths(v, f"{prefix}.{k}" if prefix else k) for k, v in value.items()))
-    if isinstance(value, list):
-        return set().union(*(numeric_paths(v, f"{prefix}.{i}") for i, v in enumerate(value)))
-    return {prefix} if isinstance(value, (int, float)) else set()
-
-
-def audit_input_sources(table: dict) -> list[dict]:
-    """Require provenance or an explicitly permitted input qualification.
-
-    Diameter and measured hull dimensions retain the prescribed dataset.
-    Five unmeasured wall/coating properties may use a labelled assumption with
-    its basis and a matching table row. Only the nine listed case-definition
-    paths may instead be declared study parameters, each with its reason.
-    Other scenario inputs retain their repository assumption references.
-    """
-    required = numeric_paths(table["basis"]) | numeric_paths(table["cases"], "cases")
-    if not required <= set(table["input_sources"]):
-        raise ValueError("Missing numeric input source")
-    rows = {}
-    for path, entry in table["input_sources"].items():
-        if entry.get("qualification") == STUDY_PARAMETER_QUALIFICATION:
-            if path not in STUDY_PARAMETER_INPUTS:
-                raise ValueError(f"Only declared study parameter paths may use this qualification: {path}")
-            if "source" in entry or "label" in entry:
-                raise ValueError(f"A study parameter must not claim a source or pipe assumption: {path}")
-            basis = entry.get("basis")
-            if not isinstance(basis, str) or not basis.strip():
-                raise ValueError(f"A study parameter requires a recorded basis: {path}")
-            continue
-        label = entry.get("label")
-        if label is not None:
-            if label != ASSUMPTION_LABEL:
-                raise ValueError(f"Invalid assumption label: {path}")
-            if path not in ASSUMABLE_PIPE_INPUTS:
-                raise ValueError(f"Only pipe wall thickness or coating properties may be assumed: {path}")
-            basis = entry.get("basis")
-            if not isinstance(basis, str) or not basis.strip():
-                raise ValueError(f"An assumed input requires a recorded basis: {path}")
-            if "source" in entry:
-                raise ValueError(f"An assumed input must not claim a public source: {path}")
-            value = table["basis"]
-            for part in path.split("."):
-                value = value[int(part)] if isinstance(value, list) else value[part]
-            rows[path] = {"input": path, "value": value, "unit": ASSUMABLE_PIPE_INPUTS[path],
-                          "label": label, "basis": basis}
-            continue
-        source = table["sources"].get(entry.get("source"))
-        if not isinstance(source, dict):
-            raise ValueError(f"A public source or permitted assumption label is required: {path}")
-        try:
-            url = urlsplit(source["url"])
-            date.fromisoformat(source["retrieval_date"])
-            complete = (url.scheme in {"http", "https"} and bool(url.netloc)
-                        and isinstance(source["record_count"], int) and source["record_count"] > 0
-                        and re.fullmatch(r"[0-9a-f]{64}", source["sha256"]))
-        except (KeyError, TypeError, ValueError):
-            complete = False
-        if not complete:
-            raise ValueError(f"Incomplete public input provenance: {path}")
-        if path in DATASET_ANCHORS | ASSUMABLE_PIPE_INPUTS.keys() and (entry["source"] != "dataset" or source != table["public_dataset"]):
-            raise ValueError(f"The prescribed public dataset is required: {path}")
-        if path in ASSUMABLE_PIPE_INPUTS:
-            raise ValueError(f"The public dataset contains no wall or coating measurement: {path}")
-    expected = [rows[path] for path in ASSUMABLE_PIPE_INPUTS if path in rows]
-    if table.get("assumed_inputs", []) != expected:
-        raise ValueError("The assumption basis table must match input values, units, labels and bases")
-    return expected
 
 
 def weight(basis: dict) -> float:
@@ -144,7 +58,7 @@ def weight(basis: dict) -> float:
         outer = diameter + 2 * coat["thickness"]
         mass += coat["density"] * math.pi / 4 * (outer**2 - diameter**2)
         diameter = outer
-    return (mass - basis["water_density_te_m3"] * math.pi / 4 * diameter**2) * basis["gravity_m_s2"]
+    return float((mass - basis["water_density_te_m3"] * math.pi / 4 * diameter**2) * basis["gravity_m_s2"])
 
 
 def analytical_pull(basis: dict, case: dict) -> float:
@@ -166,16 +80,19 @@ def analytical_pull(basis: dict, case: dict) -> float:
     effective = (mass - displaced_mass) * basis["gravity_m_s2"] * (1 - case["buoyancy_fraction"])
     length = pipe["segments"][0]["length"]
     horizontal = math.sqrt((length - case["rise_m"]) * (length + case["rise_m"]))
-    return basis["tail_tension_kn"] + effective * (case["friction"] * horizontal + case["rise_m"])
+    return float(basis["tail_tension_kn"] + effective * (case["friction"] * horizontal + case["rise_m"]))
 
 
 def report(table: dict, records: list[dict]) -> str:
     """Build the self-contained analysis skeleton and revision history from data."""
     escape = html.escape
     revisions = "".join(f'<tr><td>{escape(r["revision"])}</td><td>{escape(r["date"])}</td><td>{escape(r["change"])}</td></tr>' for r in table["revisions"])
-    rows = "".join(f'<tr><td>{r["id"]}</td><td>{r["method"]["pipe_head_tension_kn"]:.1f}</td><td>{r["analytical_pull_kn"]:.1f}</td><td>{r["method"]["winch_demand_kn"]:.1f}</td><td>Not Evaluated</td></tr>' for r in records)
+    cases = {c["id"]: c for c in table["cases"]}
+    length = table["basis"]["pipeline"]["segments"][0]["length"]
+    rows = "".join(f'<tr><td>{r["id"]}</td><td>{cases[r["id"]]["friction"]:.5f}</td><td>{cases[r["id"]]["rise_m"]}</td><td>{cases[r["id"]]["buoyancy_fraction"]}</td><td>{r["submerged_weight_kn_m"]:.4f}</td><td>{length}</td><td>{r["method"]["pipe_head_tension_kn"]:.1f}</td><td>{r["analytical_pull_kn"]:.1f}</td><td>{r["method"]["winch_demand_kn"]:.1f}</td><td>Not Evaluated</td></tr>' for r in records)
     limits = "".join(f"<li>{escape(s)}</li>" for s in table["known_limits"])
-    sources = "".join(f'<li>{escape(s["locator"]) if "locator" in s else "Public dataset, row 68"} — <a href="{escape(s["url"], quote=True)}">Source</a>; retrieved {escape(s["retrieval_date"])}; SHA-256 {s["sha256"]}</li>' for s in table["sources"].values())
+    sources = "".join(f'<li>{escape(source_locator(s))} — <a href="{escape(s["url"], quote=True)}">Source</a>; retrieved {escape(s["retrieval_date"])}; SHA-256 {s["sha256"]}</li>' for s in table["sources"].values())
+    geometry = "".join(f'<li>{escape(v["locator"])} <a href="{escape(v["url"], quote=True)}">Reference</a>. {escape(v["qualification"])} {escape(v.get("derivation", ""))}</li>' for v in table["geometry_basis"].values())
     assumptions = "".join(f'<tr><td>{escape(r["input"])}</td><td>{r["value"]} {escape(r["unit"])}</td><td>{escape(r["label"])}</td><td>{escape(r["basis"])}</td></tr>' for r in table["assumed_inputs"])
     study_rows = []
     for path in STUDY_PARAMETER_INPUTS:
@@ -196,15 +113,42 @@ def report(table: dict, records: list[dict]) -> str:
 <section id="assumed-inputs"><h2>Assumed pipe inputs</h2><p>These five properties are not taken from a public source.</p><table><tr><th>Input</th><th>Value with unit</th><th>Label</th><th>Basis</th></tr>{assumptions}</table></section>
 <section id="study-parameters"><h2>Declared study parameters</h2><table><tr><th>Input</th><th>Value</th><th>Qualification</th><th>Reason</th></tr>{study_parameters}</table></section>
 <section id="method"><h2>Method and criterion</h2><p>For each straight supported segment: net weight w equals submerged weight minus buoyancy aid force per length; sin(theta) = rise / arc length. Normal load N = w L cos(theta), friction = mu N, gravity = w rise. Head tension is trailing tension plus the ordered force increments. Winch demand is head tension divided by mechanical efficiency. Loss of contact and compression are rejected. Equivalent axial friction follows the cited soil paper; gravity resolution is a straight-segment work balance.</p><p>The independent check uses separately computed annular areas and horizontal projection. Agreement criterion: relative difference no greater than the force-balance tolerance in criteria.json. All prepared cases meet that computational identity; this is not physical validation. Shore winch capacity is unassigned.</p></section>
-<h2>Prepared results</h2><table><tr><th>Case</th><th>Method pull (kN)</th><th>Independent pull (kN)</th><th>Winch demand (kN)</th><th>Native result</th></tr>{rows}</table>
+<h2>Prepared results</h2><table><tr><th>Case</th><th>Friction</th><th>Rise (m)</th><th>Buoyancy fraction</th><th>Submerged weight (kN/m)</th><th>Length (m)</th><th>Method pull (kN)</th><th>Independent pull (kN)</th><th>Winch demand (kN)</th><th>Native result</th></tr>{rows}</table>
 <h2>Native analysis skeleton</h2><p>Native model version, measured timing, effective tension, bending moment, curvature, contact reactions, final geometry, convergence and acceptance: Not Evaluated. The first timing case is level-initial. No extrapolated runtime is recorded.</p>
 <h2>Limits and way forward</h2><ul>{limits}</ul><p>Assign traced pipe and winch properties; qualify the end connections, buoyancy representation and contacts; approve a manifest digest and native comparison criteria; then measure the first native case before a campaign run.</p>
-<h2>Sources</h2><ul>{sources}</ul></body></html>
+<h2>Geometry basis</h2><ul>{geometry}</ul><h2>Sources</h2><ul>{sources}</ul></body></html>
 '''
 
 
+def audit_geometry(table: dict) -> None:
+    """Admit only the ruled, one-segment, surface-origin S-lay seed."""
+    basis = table["basis"]
+    pipe = basis["pipeline"]
+    if len(pipe["segments"]) != 1:
+        raise ValueError("Preparation requires exactly one segment")
+    depth = basis["water_depth_m"]
+    length = pipe["segments"][0]["length"]
+    draft = basis["equipment"]["vessel"]["properties"]["draft"]
+    minimum = float(table["public_dataset"]["columns"]["PIPELAY_MIN_WATER_DEPTH_M"])
+    radius = pipe["dimensions"]["outer_diameter"] / 2 + sum(
+        coat["thickness"] for coat in [pipe["coatings"]["corrosion"], *pipe["coatings"]["weight"]])
+    values = [depth, length, draft, minimum, radius, *(case["rise_m"] for case in table["cases"])]
+    if any(isinstance(v, bool) or not math.isfinite(v) for v in values):
+        raise ValueError("Geometry inputs must be finite numbers")
+    # PIANC (1997), section 5.3.2 Depth; concept-design ratio for waves <= 1 m.
+    # This is a preparation criterion, not a moored-hull clearance qualification.
+    if depth <= 0 or minimum <= 0 or draft <= 0 or depth < max(minimum, 1.3 * draft):
+        raise ValueError("Hull clearance requires depth >= max(minimum lay depth, 1.3 * draft)")
+    if length <= depth:
+        raise ValueError("Supported length must exceed depth")
+    if math.hypot(length - depth, depth - radius) > length:
+        raise ValueError("S-lay seed chord exceeds pipe length")
+    if any(not 0 <= case["rise_m"] <= depth for case in table["cases"]):
+        raise ValueError("Every case rise must lie between zero and depth")
+
+
 def prepare(campaign: Path, output: Path) -> dict:
-    """Evaluate all analytical checks before generating validated model bundles.
+    """Evaluate all analytical checks before generating solver-free validator-checked model bundles.
 
     Model folders are scratch outputs. The reproducible JSON bundle retains
     every YAML component and its byte digest without committing case folders.
@@ -217,15 +161,24 @@ def prepare(campaign: Path, output: Path) -> dict:
     if evidence["sha256"] != digest(campaign / "criteria.json"):
         raise ValueError("Criteria digest mismatch")
     if evidence["recorded_utc"] >= evidence["first_generation_utc"]:
-        raise ValueError("Criteria must be recorded before first generation")
+        raise ValueError("Recorded criteria time must precede recorded first generation time")
     if table["revisions"][-1]["revision"] != table["revision"] or criteria["revision"] != table["revision"]:
         raise ValueError("Revision records must match the declared revision")
+    audit_geometry(table)
     assumed_inputs = audit_input_sources(table)
     provenance = {"public_dataset": table["public_dataset"], "input_sources": table["input_sources"],
-                  "sources": table["sources"], "assumed_inputs": assumed_inputs}
+                  "sources": table["sources"], "assumed_inputs": assumed_inputs,
+                  "geometry_basis": table["geometry_basis"]}
     identities = [c["id"] for c in table["cases"]]
     if not identities or len(set(identities)) != len(identities) or any(not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", c) for c in identities):
         raise ValueError("Invalid case identity")
+    records, specs = evaluate_cases(table, criteria)
+    bundle = generate_models(table, output, records, specs, provenance)
+    return write_deliverables(campaign, output, table, criteria, provenance, records, bundle)
+
+
+def evaluate_cases(table: dict, criteria: dict) -> tuple[list, list]:
+    """Evaluate head tension and demand before any model generation."""
     basis = table["basis"]
     records = []
     specs = []
@@ -234,7 +187,9 @@ def prepare(campaign: Path, output: Path) -> dict:
         segment = RouteSegment(basis["pipeline"]["segments"][0]["length"], w, case["friction"], case["rise_m"], w * case["buoyancy_fraction"])
         result = pull_in([segment], tail_tension_kn=basis["tail_tension_kn"], efficiency=basis["winch_efficiency"])
         independent = analytical_pull(basis, case)
-        error = abs(result["pipe_head_tension_kn"] - independent) / max(abs(independent), 1)
+        demand = independent / basis["winch_efficiency"]
+        error = max(abs(result["pipe_head_tension_kn"] - independent) / max(abs(independent), 1),
+                    abs(result["winch_demand_kn"] - demand) / max(abs(demand), 1))
         if error > criteria["force_balance_relative_tolerance"]:
             raise ValueError("Independent analytical force check failed")
         records.append({"id": case["id"], "method": result, "analytical_pull_kn": independent,
@@ -248,8 +203,13 @@ def prepare(campaign: Path, output: Path) -> dict:
             "metadata": {"name": case["id"], "structure": "pipeline", "operation": "installation/shore-pull-in", "description": "Generic surface pull-in structural preparation"},
             "environment": {"water": {"depth": basis["water_depth_m"], "density": basis["water_density_te_m3"]}, "seabed": {**basis["seabed"], "friction_coefficient": case["friction"]}},
             "pipeline": basis["pipeline"], "equipment": equipment}))
+    return records, specs
+
+
+def generate_models(table: dict, output: Path, records: list, specs: list, provenance: dict) -> dict:
+    """Generate solver-free models and retain their validated components."""
     output.mkdir(parents=True, exist_ok=True)
-    bundle = {"schema": "shore-pull-in-model-bundle-1", "provenance": provenance, "cases": {}}
+    bundle: dict = {"schema": "shore-pull-in-model-bundle-1", "provenance": provenance, "cases": {}}
     for record, spec, case in zip(records, specs, table["cases"]):
         folder = output / "models" / record["id"]
         ModularModelGenerator.from_spec(spec).generate(folder)
@@ -269,9 +229,6 @@ def prepare(campaign: Path, output: Path) -> dict:
             for key in list(line_type):
                 if key.startswith("DNVSTF101"):
                     del line_type[key]
-        class PreparationDumper(yaml.SafeDumper):
-            """Preserve the repository's native null spelling."""
-        PreparationDumper.add_representer(type(None), lambda dumper, value: dumper.represent_scalar("tag:yaml.org,2002:null", "~"))
         types_path.write_text(yaml.dump(types_data, Dumper=PreparationDumper, sort_keys=False), encoding="utf-8")
         for path in sorted(folder.rglob("*.yml")):
             path.write_text(path.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8")
@@ -283,6 +240,14 @@ def prepare(campaign: Path, output: Path) -> dict:
         record["files"] = {name: hashlib.sha256(content.encode()).hexdigest() for name, content in files.items()}
         record["validator_errors"] = 0
         record["validator_warnings"] = [f.category for f in findings]
+    return bundle
+
+
+def write_deliverables(campaign: Path, output: Path, table: dict, criteria: dict,
+                       provenance: dict, records: list, bundle: dict) -> dict:
+    """Retain model, analysis and launch-disabled manifest outputs."""
+    evidence = table["criteria_evidence"]
+    identities = [case["id"] for case in table["cases"]]
     write_json(output / "models.json", bundle)
     (output / "analysis.html").write_text(report(table, records), encoding="utf-8")
     native = {"schema": "shore-pull-in-native-manifest-1", "status": "not_run", "launch_enabled": False,

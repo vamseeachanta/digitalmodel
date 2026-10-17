@@ -22,7 +22,7 @@ PIPE_ASSUMPTIONS = {
 ORIGINAL = json.loads((CAMPAIGN / "case-table.json").read_text())
 STUDY_QUALIFICATION = "study parameter chosen for this preparation; not sourced or measured"
 STUDY_INPUTS = (
-    "pipeline.segments.0.length",
+    "water_depth_m",
     "tail_tension_kn",
     "winch_efficiency",
     "cases.0.rise_m",
@@ -220,3 +220,45 @@ def test_nine_study_parameters_are_declared_and_retained_in_outputs(tmp_path):
         provenance = json.loads((output / name).read_text())["provenance"]
         for path in STUDY_INPUTS:
             assert provenance["input_sources"][path] == table["input_sources"][path]
+
+
+@pytest.mark.parametrize("path", ["pipeline.dimensions.outer_diameter", "equipment.vessel.properties.loa", "equipment.vessel.properties.beam", "equipment.vessel.properties.draft"])
+def test_dataset_anchor_value_must_match_recorded_column(traced_table, path):
+    value = traced_table["basis"]
+    parts = path.split(".")
+    for part in parts[:-1]:
+        value = value[part]
+    value[parts[-1]] += 1
+    with pytest.raises(ValueError, match="anchor value"):
+        driver().audit_input_sources(traced_table)
+
+
+@pytest.mark.parametrize("source", sorted(ORIGINAL["sources"]))
+@pytest.mark.parametrize("field", ["url", "sha256", "locator"])
+def test_every_listed_source_is_audited(traced_table, source, field):
+    # Dataset has a CSV locator rather than prose; remove that instead.
+    key = "csv_line" if source == "dataset" and field == "locator" else field
+    traced_table["sources"][source].pop(key)
+    with pytest.raises(ValueError, match="provenance|locator"):
+        driver().audit_input_sources(traced_table)
+
+
+def test_booleans_are_not_numeric_provenance_leaves():
+    assert driver().numeric_paths({"enabled": True, "off": False, "zero": 0}) == {"zero"}
+
+
+def test_dataset_locator_is_derived_from_csv_line(traced_table):
+    traced_table["sources"]["dataset"]["csv_line"] = 71
+    page = driver().report(traced_table, [])
+    assert "CSV line 71; header is line 1" in page
+    assert "Public dataset, row 68" not in page
+
+
+def test_report_displays_case_definitions_and_ideal_efficiency(tmp_path):
+    out = tmp_path / "output"
+    driver().prepare(CAMPAIGN, out)
+    page = (out / "analysis.html").read_text()
+    for heading in ("Friction", "Rise (m)", "Buoyancy fraction", "Submerged weight (kN/m)", "Length (m)"):
+        assert f"<th>{heading}</th>" in page
+    assert "efficiency 1.0 is ideal" in page
+    assert "Recorded declarations" in page
