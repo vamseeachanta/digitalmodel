@@ -30,7 +30,8 @@ def checker():
 
 
 @pytest.fixture
-def sample(tmp_path):
+def sample(tmp_path, monkeypatch):
+    monkeypatch.delenv("GITHUB_BASE_REF", raising=False)
     run(tmp_path, "init", "-q")
     path = "docs/api/capabilities/pdf/example.pdf"
     target = tmp_path / path
@@ -129,3 +130,51 @@ def test_retired_path_cannot_remain_in_durable_classification(sample):
     rules = yaml.safe_load((ROOT / "config/repo_structure.yml").read_text())
     rules["durable_exceptions"] = [{"pattern": row["path"]}]
     assert any("retired-path-still-allowed" in e for e in checker().check_retirements(repo, rules))
+
+
+def test_committed_deletions_use_merge_base_digest(sample, monkeypatch):
+    repo, target, row = sample
+    run(repo, "branch", "retirement-base")
+    target.unlink()
+    run(repo, "add", "-u")
+    run(repo, "-c", "user.name=maintainer", "-c",
+        "user.email=23155845+vamseeachanta@users.noreply.github.com",
+        "commit", "-qm", "retire generated fixture")
+    monkeypatch.setenv("GITHUB_BASE_REF", "retirement-base")
+    assert errors(sample, [row]) == []
+    row["sha256"] = "0" * 64
+    assert any("retirement-digest-mismatch" in e for e in errors(sample, [row]))
+    assert any("generated-artifact-deletion-or-relocation" in e for e in errors(sample, []))
+
+
+def test_base_ref_is_resolved_before_comparing_deletions(sample, monkeypatch):
+    repo, target, row = sample
+    run(repo, "branch", "retirement-base")
+    target.unlink()
+    run(repo, "add", "-u")
+    run(repo, "-c", "user.name=maintainer", "-c",
+        "user.email=23155845+vamseeachanta@users.noreply.github.com",
+        "commit", "-qm", "retire")
+    monkeypatch.setenv("GITHUB_BASE_REF", "missing-base")
+    assert any("retirement-base-unavailable" in e for e in errors(sample, [row]))
+
+
+def test_digest_uses_common_ancestor_when_base_has_advanced(sample, monkeypatch):
+    repo, target, row = sample
+    run(repo, "branch", "retirement-work")
+    target.write_bytes(b"different bytes on the comparison branch")
+    run(repo, "add", row["path"])
+    run(repo, "-c", "user.name=maintainer", "-c",
+        "user.email=23155845+vamseeachanta@users.noreply.github.com",
+        "commit", "-qm", "advance comparison branch")
+    run(repo, "branch", "retirement-base")
+    run(repo, "switch", "-q", "retirement-work")
+    target.unlink()
+    run(repo, "add", "-u")
+    run(repo, "-c", "user.name=maintainer", "-c",
+        "user.email=23155845+vamseeachanta@users.noreply.github.com",
+        "commit", "-qm", "retire original bytes")
+    monkeypatch.setenv("GITHUB_BASE_REF", "retirement-base")
+    assert errors(sample, [row]) == []
+    row["sha256"] = "0" * 64
+    assert any("retirement-digest-mismatch" in e for e in errors(sample, [row]))

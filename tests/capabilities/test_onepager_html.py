@@ -10,6 +10,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
+import pytest
+
 from scripts.capabilities import build_onepagers as builder
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,12 +41,37 @@ def test_build_writes_one_deterministic_card_file_without_browser(tmp_path):
 
 
 def test_committed_cards_are_fresh():
-    assert json.loads(builder._OUT.read_text()) == builder.build_cards()
+    assert json.loads(builder._OUT.read_text(encoding="utf-8")) == builder.build_cards()
 
 
+def test_section_cards_keep_their_declared_fragments():
+    cards = {card["id"]: card for card in builder.build_cards()}
+    for spec in builder.SPECS:
+        if spec["path"].startswith("capabilities/#"):
+            assert cards[spec["id"]]["link"] == (
+                builder._CANONICAL + spec["path"].removeprefix("capabilities/")
+            )
+
+
+def test_every_card_link_is_local_or_uses_an_approved_prefix():
+    for card in builder.build_cards():
+        link = card["link"]
+        if urlsplit(link).scheme:
+            assert link.startswith((builder._CANONICAL,
+                                    "https://github.com/vamseeachanta/digitalmodel/"))
+        else:
+            assert (ROOT / link).is_file(), card
+            assert subprocess.check_output(
+                ["git", "ls-files", "--", link], cwd=ROOT, text=True,
+            ).strip(), card
+
+
+@pytest.mark.network
+@pytest.mark.skipif(os.environ.get("CAPABILITY_NETWORK_CHECK") != "1",
+                    reason="Public-site check runs in the scheduled workflow")
 def test_every_card_links_to_a_committed_page_or_a_live_url():
     fetched = {}
-    for card in json.loads(builder._OUT.read_text()):
+    for card in json.loads(builder._OUT.read_text(encoding="utf-8")):
         url = urlsplit(card["link"])
         path = url.path.lstrip("/")
         if url.netloc == "github.com":

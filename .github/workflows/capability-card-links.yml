@@ -1,0 +1,26 @@
+name: Capability card links
+
+on:
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  card-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v5
+      - name: Verify public page and section anchors
+        env:
+          CAPABILITY_NETWORK_CHECK: '1'
+        run: >-
+          uv run --no-project --with pytest --with pytest-asyncio
+          python -m pytest tests/capabilities/test_onepager_html.py
+          -m network -q

@@ -182,18 +182,46 @@ def _git(repo: Path, *args: str) -> bytes:
                           capture_output=True).stdout
 
 
+def _deletion_sources(repo: Path) -> dict[str, str]:
+    """Bind committed deletions to the comparison base and pending ones to HEAD."""
+    try:
+        _git(repo, "rev-parse", "--verify", "HEAD")
+    except subprocess.CalledProcessError:
+        return {}
+    base_ref = os.environ.get("GITHUB_BASE_REF")
+    if base_ref:
+        # Hosted checkouts retain remote branches; fixtures can use local refs.
+        for ref in ("refs/remotes/origin/" + base_ref, base_ref):
+            try:
+                base = _git(repo, "merge-base", ref, "HEAD").decode().strip()
+                break
+            except subprocess.CalledProcessError:
+                continue
+        else:
+            raise ValueError("retirement-base-unavailable")
+    else:
+        try:
+            base = _git(repo, "merge-base", "origin/main", "HEAD").decode().strip()
+        except subprocess.CalledProcessError:
+            base = "HEAD"
+    sources = {}
+    for ref, revisions in ((base, (base, "HEAD")), ("HEAD", ("HEAD",))):
+        paths = _git(repo, "diff", *revisions, "--no-renames", "--diff-filter=D",
+                     "--name-only", "-z").decode("utf-8").split("\0")
+        sources.update({path: ref for path in paths if path})
+    return sources
+
+
 def check_retirements(repo: Path, config: dict) -> list[str]:
     """Authenticate current deletions and check historical register consistency."""
     retired, errors = load_retirements(repo / "config/generated_retirements.yml", config)
     tracked = set(_git(repo, "ls-files", "-z").decode().strip("\0").split("\0"))
-    # --no-renames treats each rename as a deletion plus an independently checked addition.
     try:
-        _git(repo, "rev-parse", "--verify", "HEAD")
-    except subprocess.CalledProcessError:
-        deleted = set()  # An initial repository has no committed source to retire.
-    else:
-        deleted = set(_git(repo, "diff", "HEAD", "--no-renames", "--diff-filter=D",
-                           "--name-only", "-z").decode().strip("\0").split("\0")) - {""}
+        sources = _deletion_sources(repo)
+    except ValueError as error:
+        errors.append(str(error))
+        sources = {}
+    deleted = set(sources)
     for path, entry in retired.items():
         if path in tracked - deleted or os.path.lexists(repo / path):
             errors.append("retirement-entry-for-tracked-path: " + path)
@@ -207,7 +235,7 @@ def check_retirements(repo: Path, config: dict) -> list[str]:
             errors.append("generated-artifact-deletion-or-relocation: " + path)
             continue
         try:
-            content = _git(repo, "cat-file", "blob", "HEAD:" + path)
+            content = _git(repo, "cat-file", "blob", sources[path] + ":" + path)
         except subprocess.CalledProcessError:
             errors.append("generated-artifact-deletion-or-relocation: " + path)
             continue
