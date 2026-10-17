@@ -85,7 +85,9 @@ The canonical-curve equality checks are regression comparisons of shared code, n
 
 ### Offline test ledger
 
-The form used is `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`; the configured warning policy and addopts remain active. [pytest.ini:L45-L60] [pytest.ini:L66-L69]
+The historical counts below were obtained on Python 3.12; they are interpreter-dependent observations. Domain CI configures Python 3.11, so the invalid-escape collection failure must not be generalised to that interpreter. CI configuration alone does not prove a hosted test result. [.github/workflows/quality-gates-by-domain.yml:L163-L169]
+
+The form used is `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`; the configured warning policy and addopts remain active. [pytest.ini:L47-L51] [pytest.ini:L68-L71]
 
 | Command group | Paths | BASE results | AFTER results |
 | --- | --- | --- | --- |
@@ -103,7 +105,7 @@ Static AST enumeration of the 3 collection-blocked modules finds 42 FAIL cases (
 
 ## 5. QA gates
 
-AQG r0, section 10, Python calculations: G0 inputs/units/citations, G1 imports/tests, G2 hand or published check, G3 and G4 NOT_APPLICABLE, and G5 QA-appendix generation NOT_APPLICABLE as scoped below. The checks below are pack-specific executable criteria; a listed criterion does not assert that the current module satisfies it.
+AQG r0, section 10, Python calculations: G0 inputs/units/citations, G1 imports/tests, G2 hand or published check, G3 and G4 NOT_APPLICABLE, and G5 package-output preservation applicable as scoped below. The checks below are pack-specific executable criteria; a listed criterion does not assert that the current module satisfies it.
 
 | Gate | Applicability | Module-specific checks / numeric pass criterion and unit | Evidence and current result |
 | --- | --- | --- | --- |
@@ -112,9 +114,9 @@ AQG r0, section 10, Python calculations: G0 inputs/units/citations, G1 imports/t
 | G2 | Applicable | C2: `Polynomial.solve_by_coefficients` cubic roots differ from 1, 2, 3 by at most 1e-8 (dimensionless absolute error); execute V1 | PASS at BASE and AFTER; applies to algebra only, not the fracture/metal-loss methods. [tests/asset_integrity/test_math_solvers.py:L49-L54] |
 | G3 | NOT_APPLICABLE | No dynamic-solver response is computed by the FAD builder or the histogram-cycle update; this is the Python-calculation gate set | Text-only scope assessment. [src/digitalmodel/asset_integrity/common/fad.py:L24-L55] [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L1111-L1122] |
 | G4 | NOT_APPLICABLE | No panel mesh or hydrodynamic coefficient comparison in the FAD build path; this is the Python-calculation gate set | Text-only scope assessment. [src/digitalmodel/asset_integrity/common/fad.py:L24-L55] |
-| G5 | NOT_APPLICABLE | C5: no package QA appendix output is established; pack-record counts do not test result-table preservation. Output overwrite qualification remains open under the existing failure disposition. | No package-output acceptance is claimed by this check. |
+| G5 | Applicable | C5: execute `FractureMechanicsComponents.save_result_tables` with two distinct locations and one table per output role; require 6 writes, 6 distinct CSV files and 0 overwritten outputs (count). | FAIL: 6 writes produce 5 distinct files and 1 overwritten location output; the second location replaces the first. The isolated-method check below detects the existing defect; issue pending (5). [src/digitalmodel/asset_integrity/common/fracture_mechanics_components.py:L65-L92] |
 
-`SaveData.WriteOrcaFlexYMLFile` G1 native-load gate is `NOT_APPLICABLE`: this generic text writer supplies no native loader or solver schema contract; text serialisation is not native-model qualification. No writer output is claimed load-qualified. [src/digitalmodel/asset_integrity/common/data.py:L614-L624]
+`SaveData.WriteOrcaFlexYMLFile` G1 native-load gate is `NOT_APPLICABLE`: a case-sensitive search at the code pin finds exactly 1 occurrence of `WriteOrcaFlexYMLFile` in the package Python files, its definition at line 614, and 0 callers. The gate is inapplicable to package execution because no package route calls this writer; external callers and native schema/load qualification remain unverified. Search: `rg -n 'WriteOrcaFlexYMLFile' src/digitalmodel/asset_integrity/common -g '*.py'`. No writer output is claimed load-qualified. [src/digitalmodel/asset_integrity/common/data.py:L614-L624]
 
 Additional executable regression checks:
 
@@ -122,10 +124,60 @@ Additional executable regression checks:
 | --- | --- | --- | --- |
 | C1P | G1 | FAD option-2 placeholder equals None: 1 matching sentinel (count) | R1 [tests/asset_integrity/test_fad.py:L111-L141] |
 | C1B | G1 | FAD final `K_r` closing row equals 0 (dimensionless), using the existing pytest.approx assertion | R2 [tests/asset_integrity/test_fad.py:L151-L186] |
-| C2F | G2 | `FAD.get_plastic_collapse_load_ratio_limit`: for SMYS = 448e6 Pa and SMUS = 531e6 Pa, compare L_r,max to the hand expression (448 + 531)/(2 * 448) = 1.0926339285714286, relative tolerance 1e-8 (dimensionless) | `tests/asset_integrity/test_fad.py::TestPlasticCollapseLoadRatioLimit::test_lr_max_formula`; PASS in the fix-up offline run (1 passed, 0 failed). [tests/asset_integrity/test_fad.py:L70-L77] |
+| C2F | G2 | `FAD.get_plastic_collapse_load_ratio_limit`: for SMYS = 448e6 Pa and SMUS = 531e6 Pa, compare L_r,max to the hand expression (448 + 531)/(2 * 448) = 1.0926339285714286, relative tolerance 1e-8 (dimensionless) | `tests/asset_integrity/test_fad.py::TestPlasticCollapseLoadRatioLimit::test_lr_max_formula`; PASS in the fix-up offline run (1 passed, 0 failed). [tests/asset_integrity/test_fad.py:L68-L74] |
 | C2R | G2 | Wrapper/canonical `K_r` differences at most 1e-12 (dimensionless absolute error) at 201 rows per material set; this is a regression-only comparison | FAIL at import; issue pending (1). [tests/asset_integrity/test_fad_curves.py:L159-L206] |
 
-Counts: G0 has 2 checks, G1 has 3 checks, G2 has 3 checks, G3/G4 have 0 applicable checks, and G5 has 0 applicable checks; total 8 including the added FAD hand check.
+Counts: G0 has 2 checks, G1 has 3 checks, G2 has 3 checks, G3/G4 have 0 applicable checks, and G5 has 1 applicable check; total 9 including the FAD hand check and output-preservation check.
+
+### C5 isolated package-output check
+
+The following check executes the unchanged method body extracted from the pinned source without constructing the spreadsheet-dependent workflow. Marker DataFrames use pandas CSV serialization; the method determines every output path and the temporary CSV contents are read back. This checks naming and preservation, not CSV numerical content. Set `TMPDIR` to a writable scratch directory before execution. The acceptance assertion fails at the pin: the external-location marker replaces the internal-location marker.
+
+```python
+import ast
+import os
+import pandas as pd
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
+
+source = Path('src/digitalmodel/asset_integrity/common/fracture_mechanics_components.py')
+tree = ast.parse(source.read_text())
+method = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == 'save_result_tables')
+namespace = {}
+exec(compile(ast.Module(body=[method], type_ignores=[]), str(source), 'exec'), namespace)
+with TemporaryDirectory(dir=os.environ['TMPDIR']) as folder:
+    from collections import UserDict
+    class Config(UserDict):
+        default = {'settings': {'location_array': ['internal', 'external']}}
+    class Table(pd.DataFrame):
+        def __init__(self, marker):
+            super().__init__({'marker': [marker]})
+        def to_csv(self, filename):
+            super().to_csv(filename, index=False)
+            writes.append(filename)
+    writes = []
+    cfg = Config(Analysis={'result_folder': folder + os.sep, 'file_name': 'probe'})
+    obj = SimpleNamespace(cfg=cfg, fad={'option_1': Table('fad')},
+        bs7910_2013_critical_flaw=SimpleNamespace(result={
+            loc: {'fracture_limit': Table(loc)} for loc in cfg.default['settings']['location_array']}),
+        bs7910_2013_flaw_growth=SimpleNamespace(
+            approximate_flaw_growth_df=Table('approximate'), flaw_growth_df=Table('growth')))
+    namespace['save_result_tables'](obj)
+    files = list(Path(folder).glob('*.csv'))
+    overwrites = len(writes) - len(set(writes))
+    print(f'C5: writes={len(writes)}, distinct files={len(files)}, overwritten outputs={overwrites}; expected=6,6,0')
+    assert len(writes) == 6 and len(files) == 6 and overwrites == 0
+    assert {'internal', 'external'} <= {pd.read_csv(file)['marker'][0] for file in files}
+```
+
+### Review-fix verification
+
+The source package is byte-identical to the code pin. The new C5 reproduction records 6 writes, 5 distinct CSV files and 1 overwrite, so the G5 acceptance criterion fails on the existing implementation. The exact example above is executable and fails its acceptance assertion; the failure is retained rather than waived. The writer-name search finds 1 definition and 0 callers in the pinned package.
+
+The focused rerun on Python 3.12 reports 134 passed and 5 failed across seven collectable files; adding the two collection-blocked files aborts with 2 collection errors. The five failures and both collection errors reach the unchanged invalid escape in `data.py`; the same source is present on the base branch. The initial two-file attempt at BASE reported 42 passed and 1 failed because `pint` was absent; installing the declared dependency resolves that environment failure. No source test, warning policy or assertion was changed. Routing and pack test-node checks report 11 passed. Citation ranges, engineering register and repository structure checks pass.
+
+The repeated textual sweep produces 322 matching lines; the existing 213-site inventory is retained. An AST cross-check finds all 118 exception, continue, empty-return, numeric-conversion and stub candidates represented by inventory rows. Numeric constants are also inspected: plot positions, indices and decorative bar widths are not engineering defaults. The pack-lint executable is not present in the available repository or shared tooling; no new `pack_lint: clean` result is claimed.
 
 ## 6. Known failure modes and pitfalls
 
@@ -148,11 +200,11 @@ The companion AST classification retains every exception handler, continue, expl
 | Applicability is only logged | Out-of-range flaw ratios do not stop evaluation | no detection check exists for enforced rejection; existing legacy tests check logging only | issue pending (3) [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L625-L705] |
 | Finite-width fallback | Failed square-root/secant evaluation substitutes unity | no detection check exists | issue pending (3) [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L264-L288] |
 | Fixed stress-intensity fallback | Missing/constant-mode setting selects embedded constants; discontinuity factors are fixed to unity | no detection check exists | issue pending (3) [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L387-L416] [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L794-L797] |
-| Secondary stress dimensions | Converted yield stress is multiplied by another psi-to-MPa conversion after forming a dimensionless stress-to-yield ratio | no detection check exists | issue pending (3) [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L227-L246] [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L799-L814] |
+| Secondary stress dimensions | Converted yield stress is multiplied by another psi-to-MPa conversion after forming a dimensionless stress-to-yield ratio; Q_m and Q_b are 1/145.04 of the intended stress (approximately 0.7 %) | no detection check exists | issue pending (3) [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L227-L246] [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L799-L814] |
 | Table lookup clamps and mixes axes | Out-of-table inputs clamp to edge values; three interpolation factors are averaged; theta_location is not used in the row filters | no detection check exists for physical validity; legacy tests characterise this algorithm | issue pending (3) [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L529-L623] |
 | Growth fallback and omission | Initial depth fallback and swallowed out-of-bounds result append can retain incomplete results | no detection check exists | issue pending (3) [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L1038-L1049] [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L1234-L1246] |
 | Critical-depth scan edges | Result selects the row preceding df_index; first-failure, no-crossing and short scans need explicit expected outcomes | no detection check exists | issue pending (3) [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L111-L144] |
-| Location CSV overwrite | Location loop writes all fracture-limit tables to the same filename | no detection check exists | issue pending (5) [src/digitalmodel/asset_integrity/common/fracture_mechanics_components.py:L71-L77] |
+| Location CSV overwrite | Location loop writes all fracture-limit tables to the same filename | C5 detects 1 overwritten output for 2 locations; acceptance requires 0 | issue pending (5) [src/digitalmodel/asset_integrity/common/fracture_mechanics_components.py:L71-L77] |
 | Spatial profile sorting | Sorting removes adjacency and slice/length use different sample counts; known incident #2133 | no detection check exists in the common-package tests | #2133 [src/digitalmodel/asset_integrity/common/API579_components.py:L1049-L1061] |
 | Wall/rate and branch boundaries | Remaining-life division has no positive-rate guard; LML reduction can read unassigned Mt/RSFa and has no branch at the upper boundary equality | no detection check exists | issue pending (4) [src/digitalmodel/asset_integrity/common/API579_components.py:L796-L822] [src/digitalmodel/asset_integrity/common/API579_components.py:L1008-L1047] |
 | Grid and interpolation defaults | Empty grids are dropped; unit-pitch simulation and endpoint interpolation can conceal range limits | no detection check exists | issue pending (4) [src/digitalmodel/asset_integrity/common/API579_components.py:L503-L558] [src/digitalmodel/asset_integrity/common/API579_components.py:L72-L77] |
@@ -418,7 +470,7 @@ NumPy, pandas, SciPy, plotting, workbook and YAML dependencies are direct import
 | --- | --- | --- |
 | SHEAR7 | One sample ASCII-reader path | Example text only; no binary/interface executed [src/digitalmodel/asset_integrity/common/data.py:L187-L206] |
 | OrcaFlex | ASCII-reader examples: lines 215-217, 230-231, 233, 239 and 271-275 | Text file samples; no version qualification [src/digitalmodel/asset_integrity/common/data.py:L214-L243] [src/digitalmodel/asset_integrity/common/data.py:L270-L275] |
-| OrcaFlex | `SaveData.WriteOrcaFlexYMLFile`, line 614 | Concatenates file text or YAML-serialises objects; requires oyaml; G1 NOT_APPLICABLE for native load because this helper only serialises or concatenates text and provides no native loader; schema/load qualification remains unestablished [src/digitalmodel/asset_integrity/common/data.py:L614-L624] |
+| OrcaFlex | `SaveData.WriteOrcaFlexYMLFile`, line 614 | Concatenates file text or YAML-serialises objects; requires oyaml; G1 native load is NOT_APPLICABLE to package execution: the pinned package search finds its definition only and 0 callers; external native-load qualification remains unestablished [src/digitalmodel/asset_integrity/common/data.py:L614-L624] |
 | OrcaFlex | `Visualization.orcaflex_range_plot`, line 521 | Plots supplied range arrays; no solver launch [src/digitalmodel/asset_integrity/common/visualizations.py:L521-L559] |
 
 Search used: `rg -n -i 'orcaflex|shear7' src/digitalmodel/asset_integrity/common -g '*.py'`. No solver version or native-load certification is inferred from a text writer.
