@@ -1,4 +1,4 @@
-atlas_id: 937764fdc168
+atlas_id: '060345160406'
 basename: lifting_lug
 physics: utilization_threshold
 response: governing_utilisation
@@ -26,11 +26,11 @@ validation:
   passes: true
 provenance:
   basename: lifting_lug
-  code_version: a094cde3
+  code_version: 2441037b
   standards:
   - id: AISC-360-ASD
     edition: '2016'
   response_kwargs: {}
   workflow_id: lifting-lug-design
-  content_fingerprint: 937764fdc1682f55010e9d5ed3d0f3fac47722ca1ea25051a20e7b54204e2731
-  input_template_sha256: 0c35fe6e1db7f6fb7cda5388b1980d0673ac07b8c328c7dd3cc2ae6f1880db41
+  content_fingerprint: 060345160406f38d679666dc96416b8894f04e18e2a752a6b853a4d32345df23
+  input_template_sha256: 575705741d349b4ea63344f8b920baaf24725577ae33cf0b4ead9bd5d82d9680
