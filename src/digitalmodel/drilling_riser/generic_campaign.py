@@ -120,7 +120,10 @@ def tagged(value: Any, source: str = ASSUMED, unit: str = '1') -> dict[str, Any]
 
 def read_spec(root: Path) -> dict:
     """Read the owning generic specification."""
-    return dict(yaml.safe_load((root / SPEC).read_text(encoding='utf-8')))
+    spec = dict(yaml.safe_load((root / SPEC).read_text(encoding='utf-8')))
+    spec['tensioner_arrangement'] = json.loads(
+        (root / DEST / 'tensioner-arrangement.json').read_text(encoding='utf-8'))
+    return spec
 
 
 def sourced_tree(node: Any, value: Any) -> Any:
@@ -201,7 +204,7 @@ def case_table(root: Path) -> dict:
             + generic_tension.BASIS + '. '
             'Check A: sum(F_link,z) - W_r >= T_SRmin, sum of Riser/Choke/Kill End B '
             'effective tensions >= (fwt - 1)*Ws, and every member minimum >= 0. '
-            'Check B: 3/4*sum(F_link,z) - W_r >= T_SRmin. Both checks are binding. '
+            'Check B: (N-n)/N*sum(F_link,z) - W_r >= T_SRmin. Both checks are binding. '
             'Builder margins are hand estimates only; native qualification is pending. '
             'Mechanical/hydraulic efficiency is assumed 1, a known limit. '
             'Production stays held. No operating window is established.'),
@@ -233,6 +236,8 @@ def case_table(root: Path) -> dict:
             'max_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),
             'tsrmin_kn': tagged(tension_basis['tsrmin_kn'], generic_tension.BASIS, 'kN'),
             'ws_kn': tagged(tension_basis['ws_kn'], 'model flooded steel weight; fluid head counted separately', 'kN'),
+            **{key: tagged(tension_basis[key], 'tensioner-arrangement.json; ' + generic_tension.BASIS)
+               for key in ('n_units', 'n_fail', 'fwt')},
             'stroke_min_m': tagged(-5.0, unit='m'),
             'stroke_max_m': tagged(5.0, unit='m'),
             'stress_limit_mpa': tagged(None, 'runtime yield strength times design factor; ' + REFERENCES['16Q'], 'MPa'),
@@ -241,7 +246,7 @@ def case_table(root: Path) -> dict:
             'gravity_mps2': tagged(9.81, unit='m/s²'),
             'legacy_screen_kn': tagged(basis['min_tension_kn'], 'legacy screen reading, not graded', 'kN'),
             'spring_table_factor': tagged(tension_basis['spring_table_factor'],
-                'one common multiplier, rounded up to 0.001 from hand equilibrium; native qualification pending'),
+                'one common multiplier per PR 2684 review decision; native statics decide'),
             'yield_strength_mpa': tagged(None, 'runtime criteria file; ' + REFERENCES['5L'], 'MPa'),
             'stress_design_factor': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q']),
             'stroke_reference': tagged('vertical ring displacement from initial elevation relative to fixed vessel'),
@@ -313,6 +318,10 @@ def build_models(root: Path, destination: Path, table: dict) -> None:
         # Normalize only newly generated files; existing generator remains unchanged.
         for path in folder.rglob('*.yml'):
             text = path.read_text(encoding='utf-8')
+            if path.name == '20_generic_objects.yml':
+                # Preserve the original Drill String stiffness row's block style.
+                text = text.replace('  - [Infinity, ~, Infinity]\n',
+                                    '  - - Infinity\n    - ~\n    - Infinity\n')
             if path.name == 'master.yml':
                 text = text.replace('# Type: Model', '# Type: Model\n# ' + METHOD
                     + '\n# Tensioner ring initial position (m): '

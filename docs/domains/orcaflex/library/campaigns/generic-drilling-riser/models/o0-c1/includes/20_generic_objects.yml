@@ -552,7 +552,9 @@ Lines:
       - ~
   ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
   - []
-  - [Infinity, ~, Infinity]
+  - - Infinity
+    - ~
+    - Infinity
   ? MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX,
     MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination,
     MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo
@@ -1264,15 +1266,15 @@ Links:
   LinearSpring: false
   SpringLength, SpringTension:
   - - 0
-    - 2778.4
+    - 2794.5
   - - 4
-    - 3382.4
+    - 3402.0
   - - 8
-    - 3624.0
+    - 3645.0000000000005
   - - 12
-    - 3865.6
+    - 3888.0000000000005
   - - 16
-    - 4348.8
+    - 4374.0
   LinearDamper: true
   DampingConstant: 5
 - Name: Tens_FWD
@@ -1289,15 +1291,15 @@ Links:
   LinearSpring: false
   SpringLength, SpringTension:
   - - 0
-    - 2778.4
+    - 2794.5
   - - 4
-    - 3382.4
+    - 3402.0
   - - 8
-    - 3624.0
+    - 3645.0000000000005
   - - 12
-    - 3865.6
+    - 3888.0000000000005
   - - 16
-    - 4348.8
+    - 4374.0
   LinearDamper: true
   DampingConstant: 5
 - Name: Tens_STBD
@@ -1314,15 +1316,15 @@ Links:
   LinearSpring: false
   SpringLength, SpringTension:
   - - 0
-    - 2778.4
+    - 2794.5
   - - 4
-    - 3382.4
+    - 3402.0
   - - 8
-    - 3624.0
+    - 3645.0000000000005
   - - 12
-    - 3865.6
+    - 3888.0000000000005
   - - 16
-    - 4348.8
+    - 4374.0
   LinearDamper: true
   DampingConstant: 5
 - Name: Tens_PORT
@@ -1339,15 +1341,15 @@ Links:
   LinearSpring: false
   SpringLength, SpringTension:
   - - 0
-    - 2778.4
+    - 2794.5
   - - 4
-    - 3382.4
+    - 3402.0
   - - 8
-    - 3624.0
+    - 3645.0000000000005
   - - 12
-    - 3865.6
+    - 3888.0000000000005
   - - 16
-    - 4348.8
+    - 4374.0
   LinearDamper: true
   DampingConstant: 5
 Winches:

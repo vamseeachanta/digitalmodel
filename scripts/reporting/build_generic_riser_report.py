@@ -114,11 +114,13 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
     for speed in sorted({case['current_mps']['value'] for case in cases}):
         window.append([speed, 'production held; none established'])
     governing = []
-    count = len(driver.criterion_rows(next(iter(summaries.values())), criteria))
-    for index in range(count):
-        candidates = all_rows[index::count]
+    minimum_criteria = {'check A intact', 'check B one link lost', 'check A bottom',
+                        'check A member nonnegative', 'spring table containment'}
+    identities = dict.fromkeys((row[1], row[2]) for row in all_rows)
+    for label, component in identities:
+        candidates = [row for row in all_rows if row[1:3] == [label, component]]
         governing_row = (min(candidates, key=lambda item: item[3]-item[4])
-                         if index in (4, 5, 6, 7, 8) else
+                         if label in minimum_criteria else
                          max(candidates, key=lambda item: item[-1]))
         governing.append(governing_row[:-1])
     comparisons = []
@@ -130,11 +132,13 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
             demand = result[metric]
             difference = (demand - reference) / abs(reference) * 100 if abs(reference) > 1e-9 else 'not defined'
             comparisons.append([case['id'], label, demand, reference, difference, demand - reference])
-    criterion_table = [[key.replace('_', ' '), item['value'], item['unit'],
+    criterion_names = {'n_units': 'installed tensioner units (N)',
+                       'n_fail': 'unavailable tensioner units (n)', 'fwt': 'weight tolerance factor (fwt)'}
+    criterion_table = [[criterion_names.get(key, key.replace('_', ' ')), item['value'], item['unit'],
                         item['source'].split('; src/')[0]] for key, item in criteria.items()]
     tension_margins = [[case['id'], summaries[case['id']]['support_intact_min_kn']-criteria['tsrmin_kn']['value'],
         summaries[case['id']]['support_loss_min_kn']-criteria['tsrmin_kn']['value'],
-        summaries[case['id']]['bottom_sum_min_kn']-0.05*criteria['ws_kn']['value'],
+        summaries[case['id']]['bottom_sum_min_kn']-(criteria['fwt']['value']-1)*criteria['ws_kn']['value'],
         summaries[case['id']]['member_min_kn'], summaries[case['id']]['table_clearance_min_m']] for case in cases]
     load_cases = [[case['id'], case['offset_pct']['value'], case['offset_m']['value'],
                    case['current_mps']['value']] for case in cases]
@@ -144,9 +148,9 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
              f"maximum angle ≤ {criteria['max_angle_deg']['value']:g}°. "
              'Production remains held; nothing released to production. '
              'No operating window is established. Check A requires intact slip-ring support '
-             'at least T_SRmin, the separate End B sum at least 0.05 Ws, and every '
+             'at least T_SRmin, the separate End B sum at least (fwt − 1) Ws, and every '
              'member minimum effective tension at least zero. Check B requires the '
-             'three-of-four vertical link share less the carried weight at least T_SRmin. '
+             '(N − n)/N vertical link share less the carried weight at least T_SRmin. '
              'Every link shall stay inside its spring table. Both checks bind every case. '
              'Native channel qualification, equipment capacity and held-edition confirmation '
              'of API RP 16Q clause text remain pending.')

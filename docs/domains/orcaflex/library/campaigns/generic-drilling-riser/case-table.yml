@@ -21864,9 +21864,10 @@ tension_basis:
   effective_weight_kn: 8515.79357651376
   stiffness_kn_m: 14836.365715723194
   required_vertical_kn: 11746.213462414957
-  spring_table_factor: 1.208
+  spring_table_factor: 1.215
   fleet_cosine: 0.8489830028137563
-  system_factor: 1.5705065106301432
+  system_factor: 1.3333333333333333
+  fleet_adjusted_system_factor: 1.570506510630143
   mechanical_hydraulic_efficiency: 1
   point_z_m: -1000
   n_units: 4
@@ -21902,7 +21903,7 @@ tension_acceptance_basis: '8,345.7 kN is the legacy screen reading, not graded. 
   of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed
   against a held edition before report use. Check A: sum(F_link,z) - W_r >= T_SRmin,
   sum of Riser/Choke/Kill End B effective tensions >= (fwt - 1)*Ws, and every member
-  minimum >= 0. Check B: 3/4*sum(F_link,z) - W_r >= T_SRmin. Both checks are binding.
+  minimum >= 0. Check B: (N-n)/N*sum(F_link,z) - W_r >= T_SRmin. Both checks are binding.
   Builder margins are hand estimates only; native qualification is pending. Mechanical/hydraulic
   efficiency is assumed 1, a known limit. Production stays held. No operating window
   is established.'
@@ -21953,6 +21954,30 @@ criteria:
     value: 4889.232532101141
     unit: kN
     source: model flooded steel weight; fluid head counted separately
+  n_units:
+    value: 4
+    unit: '1'
+    source: tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis
+      (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design,
+      Selection, Operation and Maintenance of Marine Drilling Riser Systems, second
+      edition (2017); clause text to be confirmed against a held edition before report
+      use
+  n_fail:
+    value: 1
+    unit: '1'
+    source: tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis
+      (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design,
+      Selection, Operation and Maintenance of Marine Drilling Riser Systems, second
+      edition (2017); clause text to be confirmed against a held edition before report
+      use
+  fwt:
+    value: 1.05
+    unit: '1'
+    source: tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis
+      (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design,
+      Selection, Operation and Maintenance of Marine Drilling Riser Systems, second
+      edition (2017); clause text to be confirmed against a held edition before report
+      use
   stroke_min_m:
     value: -5.0
     unit: m
@@ -21977,10 +22002,9 @@ assumptions:
     unit: kN
     source: legacy screen reading, not graded
   spring_table_factor:
-    value: 1.208
+    value: 1.215
     unit: '1'
-    source: one common multiplier, rounded up to 0.001 from hand equilibrium; native
-      qualification pending
+    source: one common multiplier per PR 2684 review decision; native statics decide
   yield_strength_mpa:
     value: null
     unit: MPa
@@ -22011,19 +22035,19 @@ cases:
 - id: o0-c0
   tension_hand_estimate:
     value:
-      vertical_kn: 11752.427217477049
+      vertical_kn: 11816.594584590053
       link_lengths_m:
-      - 5.298458209363884
-      - 5.2984582093638855
-      - 5.2984582093638855
-      - 5.2984582093638855
-      ring_z_m: 20.501815989048964
-      check_a_margin_kn: 2942.7671206658306
-      check_b_margin_kn: 4.660316296569363
-      bottom_margin_kn: 2942.7671206658315
+      - 5.2947869417546825
+      - 5.294786941754684
+      - 5.294786941754684
+      - 5.294786941754684
+      ring_z_m: 20.506140994804586
+      check_a_margin_kn: 3006.9344877788353
+      check_b_margin_kn: 52.78584163132109
+      bottom_margin_kn: 3006.9344877788362
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 719.5610475188043
+      member_min_kn: 729.5818470570637
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22071,19 +22095,19 @@ cases:
 - id: o0-c1
   tension_hand_estimate:
     value:
-      vertical_kn: 11767.754678434314
+      vertical_kn: 11831.767125713613
       link_lengths_m:
-      - 5.312906898577491
-      - 5.312906898577493
-      - 5.312906898577493
-      - 5.312906898577493
-      ring_z_m: 20.48480568381024
-      check_a_margin_kn: 2958.094581623096
-      check_b_margin_kn: 16.155912014517526
-      bottom_margin_kn: 2958.094581623097
+      - 5.308980913632208
+      - 5.30898091363221
+      - 5.30898091363221
+      - 5.30898091363221
+      ring_z_m: 20.48942594104574
+      check_a_margin_kn: 3022.1070289023955
+      check_b_margin_kn: 64.16524747399308
+      bottom_margin_kn: 3022.1070289023965
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 721.9546849796145
+      member_min_kn: 731.9512912142072
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22129,19 +22153,19 @@ cases:
 - id: o0-c2
   tension_hand_estimate:
     value:
-      vertical_kn: 11975.6805656193
+      vertical_kn: 12037.927105390347
       link_lengths_m:
-      - 5.5193496212540305
-      - 5.519349621254032
-      - 5.519349621254032
-      - 5.519349621254032
-      ring_z_m: 20.243612690114794
-      check_a_margin_kn: 3166.020468808081
-      check_b_margin_kn: 172.1003274032555
-      bottom_margin_kn: 3166.020468808082
+      - 5.51195891788172
+      - 5.511958917881722
+      - 5.511958917881722
+      - 5.511958917881722
+      ring_z_m: 20.252190914493735
+      check_a_margin_kn: 3228.2670085791287
+      check_b_margin_kn: 218.78523223154116
+      bottom_margin_kn: 3228.2670085791297
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 754.4257637855458
+      member_min_kn: 764.1465942490659
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22187,19 +22211,19 @@ cases:
 - id: o0-c3
   tension_hand_estimate:
     value:
-      vertical_kn: 12604.219756301478
+      vertical_kn: 12663.83804621407
       link_lengths_m:
-      - 6.281080716225884
-      - 6.281080716225886
-      - 6.281080716225885
-      - 6.281080716225885
-      ring_z_m: 19.377547246641846
-      check_a_margin_kn: 3794.55965949026
-      check_b_margin_kn: 643.5047204148905
-      bottom_margin_kn: 3794.559659490261
+      - 6.262451428377557
+      - 6.262451428377559
+      - 6.262451428377559
+      - 6.262451428377559
+      ring_z_m: 19.398366497816184
+      check_a_margin_kn: 3854.1779494028524
+      check_b_margin_kn: 688.2184378493348
+      bottom_margin_kn: 3854.1779494028533
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 852.5825920168459
+      member_min_kn: 861.8929776366238
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22245,19 +22269,19 @@ cases:
 - id: o1-c0
   tension_hand_estimate:
     value:
-      vertical_kn: 11795.529043673134
+      vertical_kn: 11859.993975592097
       link_lengths_m:
-      - 5.339349352408363
-      - 5.339349352408366
-      - 5.339349352408365
-      - 5.339349352408365
-      ring_z_m: 20.4537211362408
-      check_a_margin_kn: 2985.868946861916
-      check_b_margin_kn: 36.98668594363335
-      bottom_margin_kn: 2985.868946861917
+      - 5.335650162605107
+      - 5.335650162605109
+      - 5.335650162605108
+      - 5.335650162605108
+      ring_z_m: 20.458066198444993
+      check_a_margin_kn: 3050.333878780879
+      check_b_margin_kn: 85.33538488285558
+      bottom_margin_kn: 3050.33387878088
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 726.2921131597434
+      member_min_kn: 736.3593823819608
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22303,19 +22327,19 @@ cases:
 - id: o1-c1
   tension_hand_estimate:
     value:
-      vertical_kn: 11810.444605037483
+      vertical_kn: 11874.75897960117
       link_lengths_m:
-      - 5.353689654341227
-      - 5.3536896543412285
-      - 5.3536896543412285
-      - 5.3536896543412285
-      ring_z_m: 20.43688780381193
-      check_a_margin_kn: 3000.7845082262647
-      check_b_margin_kn: 48.17335696689406
-      bottom_margin_kn: 3000.7845082262656
+      - 5.3497380838663675
+      - 5.349738083866369
+      - 5.349738083866368
+      - 5.349738083866368
+      ring_z_m: 20.44152464458014
+      check_a_margin_kn: 3065.0988827899528
+      check_b_margin_kn: 96.40913788965918
+      bottom_margin_kn: 3065.0988827899537
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 728.6214256616811
+      member_min_kn: 738.6651828536546
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22361,19 +22385,19 @@ cases:
 - id: o1-c2
   tension_hand_estimate:
     value:
-      vertical_kn: 12013.293519428225
+      vertical_kn: 12075.879649599116
       link_lengths_m:
-      - 5.558870380153398
-      - 5.5588703801534
-      - 5.5588703801534
-      - 5.5588703801534
-      ring_z_m: 20.197808843522907
-      check_a_margin_kn: 3203.6334226170075
-      check_b_margin_kn: 200.3100427599511
-      bottom_margin_kn: 3203.6334226170084
+      - 5.551476574158537
+      - 5.5514765741585395
+      - 5.551476574158539
+      - 5.551476574158539
+      ring_z_m: 20.20636962694963
+      check_a_margin_kn: 3266.2195527878976
+      check_b_margin_kn: 247.2496403881196
+      bottom_margin_kn: 3266.2195527878985
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 760.2996508892086
+      member_min_kn: 770.0735140307866
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22419,19 +22443,19 @@ cases:
 - id: o1-c3
   tension_hand_estimate:
     value:
-      vertical_kn: 12630.722843286574
+      vertical_kn: 12690.671607478711
       link_lengths_m:
-      - 6.318435711040348
-      - 6.31843571104035
-      - 6.31843571104035
-      - 6.31843571104035
-      ring_z_m: 19.335846944639474
-      check_a_margin_kn: 3821.062746475356
-      check_b_margin_kn: 663.3820356537126
-      bottom_margin_kn: 3821.062746475357
+      - 6.299820176989037
+      - 6.299820176989039
+      - 6.299820176989039
+      - 6.299820176989039
+      ring_z_m: 19.35662031559118
+      check_a_margin_kn: 3881.011510667493
+      check_b_margin_kn: 708.3436087978152
+      bottom_margin_kn: 3881.011510667494
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 856.7214889947286
+      member_min_kn: 866.0834836590545
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22477,19 +22501,19 @@ cases:
 - id: o2-c0
   tension_hand_estimate:
     value:
-      vertical_kn: 11920.843162067093
+      vertical_kn: 11986.17249754957
       link_lengths_m:
-      - 5.46295790318023
-      - 5.462957903180231
-      - 5.462957903180231
-      - 5.462957903180231
-      ring_z_m: 20.30916755235072
-      check_a_margin_kn: 3111.1830652558747
-      check_b_margin_kn: 130.97227473910243
-      bottom_margin_kn: 3111.1830652558756
+      - 5.4591774036488685
+      - 5.45917740364887
+      - 5.45917740364887
+      - 5.45917740364887
+      ring_z_m: 20.313570877041837
+      check_a_margin_kn: 3176.512400738353
+      check_b_margin_kn: 179.96927635095926
+      bottom_margin_kn: 3176.512400738354
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 745.8619929325582
+      member_min_kn: 756.0642531201192
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22535,19 +22559,19 @@ cases:
 - id: o2-c1
   tension_hand_estimate:
     value:
-      vertical_kn: 11934.619494323142
+      vertical_kn: 11999.810262317449
       link_lengths_m:
-      - 5.476989689260805
-      - 5.476989689260807
-      - 5.476989689260806
-      - 5.476989689260806
-      ring_z_m: 20.292833542748973
-      check_a_margin_kn: 3124.959397511924
-      check_b_margin_kn: 141.30452393113956
-      bottom_margin_kn: 3124.959397511925
+      - 5.472963433292149
+      - 5.472963433292151
+      - 5.472963433292151
+      - 5.472963433292151
+      ring_z_m: 20.297518873812145
+      check_a_margin_kn: 3190.150165506231
+      check_b_margin_kn: 190.19759992686886
+      bottom_margin_kn: 3190.150165506232
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 748.0133958982933
+      member_min_kn: 758.1940164723878
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22593,19 +22617,19 @@ cases:
 - id: o2-c2
   tension_hand_estimate:
     value:
-      vertical_kn: 12123.300216141331
+      vertical_kn: 12186.868882211755
       link_lengths_m:
-      - 5.678530329014445
-      - 5.678530329014447
-      - 5.678530329014446
-      - 5.678530329014446
-      ring_z_m: 20.059786776106023
-      check_a_margin_kn: 3313.6401193301135
-      check_b_margin_kn: 282.81506529478065
-      bottom_margin_kn: 3313.6401193301144
+      - 5.671127050162474
+      - 5.671127050162476
+      - 5.671127050162476
+      - 5.671127050162476
+      ring_z_m: 20.068298263369474
+      check_a_margin_kn: 3377.2087854005367
+      check_b_margin_kn: 330.49156484759806
+      bottom_margin_kn: 3377.2087854005376
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 777.4790226668724
+      member_min_kn: 787.4063250990328
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22651,19 +22675,19 @@ cases:
 - id: o2-c3
   tension_hand_estimate:
     value:
-      vertical_kn: 12709.033766168937
+      vertical_kn: 12769.947010935004
       link_lengths_m:
-      - 6.431572384759993
-      - 6.431572384759995
-      - 6.431572384759994
-      - 6.431572384759994
-      ring_z_m: 19.209911629309328
-      check_a_margin_kn: 3899.3736693577193
-      check_b_margin_kn: 722.1152278154841
-      bottom_margin_kn: 3899.3736693577202
+      - 6.413001437425633
+      - 6.413001437425635
+      - 6.413001437425634
+      - 6.413001437425634
+      ring_z_m: 19.23054704183982
+      check_a_margin_kn: 3960.286914123786
+      check_b_margin_kn: 767.8001613900342
+      bottom_margin_kn: 3960.286914123787
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 868.9510395461525
+      member_min_kn: 878.4636538622538
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22709,19 +22733,19 @@ cases:
 - id: o3-c0
   tension_hand_estimate:
     value:
-      vertical_kn: 12117.348767528914
+      vertical_kn: 12184.030348574299
       link_lengths_m:
-      - 5.67189741598276
-      - 5.6718974159827615
-      - 5.671897415982761
-      - 5.671897415982761
-      ring_z_m: 20.06741241360765
-      check_a_margin_kn: 3307.6886707176964
-      check_b_margin_kn: 278.3514788354678
-      bottom_margin_kn: 3307.6886707176973
+      - 5.667989218129871
+      - 5.667989218129873
+      - 5.667989218129872
+      - 5.667989218129872
+      ring_z_m: 20.071906882288395
+      check_a_margin_kn: 3374.370251763081
+      check_b_margin_kn: 328.3626646195062
+      bottom_margin_kn: 3374.370251763082
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 776.5496051733626
+      member_min_kn: 786.9630409525373
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22767,19 +22791,19 @@ cases:
 - id: o3-c1
   tension_hand_estimate:
     value:
-      vertical_kn: 12129.50366597535
+      vertical_kn: 12196.063550996641
       link_lengths_m:
-      - 5.685463875894163
-      - 5.685463875894165
-      - 5.685463875894165
-      - 5.685463875894165
-      ring_z_m: 20.051818567989095
-      check_a_margin_kn: 3319.8435691641316
-      check_b_margin_kn: 287.4676526702933
-      bottom_margin_kn: 3319.8435691641325
+      - 5.6813198345733165
+      - 5.681319834573318
+      - 5.681319834573317
+      - 5.681319834573317
+      ring_z_m: 20.056580630503195
+      check_a_margin_kn: 3386.4034541854235
+      check_b_margin_kn: 337.387566436264
+      bottom_margin_kn: 3386.4034541854244
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 778.4477943342974
+      member_min_kn: 788.842225259184
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22825,19 +22849,19 @@ cases:
 - id: o3-c2
   tension_hand_estimate:
     value:
-      vertical_kn: 12297.692331629703
+      vertical_kn: 12362.786371273145
       link_lengths_m:
-      - 5.881381509863789
-      - 5.8813815098637905
-      - 5.88138150986379
-      - 5.88138150986379
-      ring_z_m: 19.827897094549677
-      check_a_margin_kn: 3488.0322348184854
-      check_b_margin_kn: 413.6091519110596
-      bottom_margin_kn: 3488.0322348184864
+      - 5.873962140589002
+      - 5.873962140589004
+      - 5.873962140589003
+      - 5.873962140589003
+      ring_z_m: 19.836335484457482
+      check_a_margin_kn: 3553.126274461927
+      check_b_margin_kn: 462.4296816436399
+      bottom_margin_kn: 3553.126274461928
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 804.7132463694652
+      member_min_kn: 814.8787612059039
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22883,19 +22907,19 @@ cases:
 - id: o3-c3
   tension_hand_estimate:
     value:
-      vertical_kn: 12835.662114987404
+      vertical_kn: 12898.096451422243
       link_lengths_m:
-      - 6.623522083228606
-      - 6.6235220832286075
-      - 6.623522083228607
-      - 6.623522083228607
-      ring_z_m: 18.997413491917253
-      check_a_margin_kn: 4026.0020181761865
-      check_b_margin_kn: 817.0864894293354
-      bottom_margin_kn: 4026.0020181761874
+      - 6.605035196400157
+      - 6.605035196400158
+      - 6.605035196400158
+      - 6.605035196400158
+      ring_z_m: 19.017818964149875
+      check_a_margin_kn: 4088.4363546110253
+      check_b_margin_kn: 863.9122417554645
+      bottom_margin_kn: 4088.436354611026
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 888.7261582156777
+      member_min_kn: 898.4763162456302
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22941,19 +22965,19 @@ cases:
 - id: o4-c0
   tension_hand_estimate:
     value:
-      vertical_kn: 12369.543628260468
+      vertical_kn: 12437.951983109877
       link_lengths_m:
-      - 5.969941076520537
-      - 5.969941076520539
-      - 5.969941076520538
-      - 5.969941076520538
-      ring_z_m: 19.727410839338305
-      check_a_margin_kn: 3559.88353144925
-      check_b_margin_kn: 467.4976243841338
-      bottom_margin_kn: 3559.8835314492508
+      - 5.965869208423501
+      - 5.965869208423503
+      - 5.965869208423503
+      - 5.965869208423503
+      ring_z_m: 19.73202169594296
+      check_a_margin_kn: 3628.291886298659
+      check_b_margin_kn: 518.8038905211906
+      bottom_margin_kn: 3628.29188629866
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 815.934019053389
+      member_min_kn: 826.6171192261111
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -22999,19 +23023,19 @@ cases:
 - id: o4-c1
   tension_hand_estimate:
     value:
-      vertical_kn: 12379.887443277348
+      vertical_kn: 12448.19267907105
       link_lengths_m:
-      - 5.982939908857176
-      - 5.982939908857178
-      - 5.982939908857177
-      - 5.982939908857177
-      ring_z_m: 19.71269728944938
-      check_a_margin_kn: 3570.2273464661303
-      check_b_margin_kn: 475.2554856467941
-      bottom_margin_kn: 3570.227346466131
+      - 5.978644154805886
+      - 5.978644154805888
+      - 5.978644154805888
+      - 5.978644154805888
+      ring_z_m: 19.717558714969506
+      check_a_margin_kn: 3638.5325822598315
+      check_b_margin_kn: 526.4844124920692
+      bottom_margin_kn: 3638.5325822598325
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 817.5493774732297
+      member_min_kn: 828.2163738936501
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -23057,19 +23081,19 @@ cases:
 - id: o4-c2
   tension_hand_estimate:
     value:
-      vertical_kn: 12524.71793947076
+      vertical_kn: 12591.739527587572
       link_lengths_m:
-      - 6.171787201534516
-      - 6.171787201534518
-      - 6.171787201534517
-      - 6.171787201534517
-      ring_z_m: 19.499912976958885
-      check_a_margin_kn: 3715.057842659542
-      check_b_margin_kn: 583.8783577918512
-      bottom_margin_kn: 3715.057842659543
+      - 6.164345363052293
+      - 6.164345363052295
+      - 6.164345363052294
+      - 6.164345363052294
+      ring_z_m: 19.508264959506484
+      check_a_margin_kn: 3782.0794307763535
+      check_b_margin_kn: 634.1445488794598
+      bottom_margin_kn: 3782.0794307763545
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 840.1670636068204
+      member_min_kn: 850.6335971342378
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -23115,19 +23139,19 @@ cases:
 - id: o4-c3
   tension_hand_estimate:
     value:
-      vertical_kn: 13005.181376972789
+      vertical_kn: 13069.576598278065
       link_lengths_m:
-      - 6.898760884997251
-      - 6.898760884997253
-      - 6.898760884997252
-      - 6.898760884997252
-      ring_z_m: 18.69500977412589
-      check_a_margin_kn: 4195.521280161571
-      check_b_margin_kn: 944.2259359183736
-      bottom_margin_kn: 4195.521280161572
+      - 6.880408006624088
+      - 6.88040800662409
+      - 6.880408006624089
+      - 6.880408006624089
+      ring_z_m: 18.715096314372282
+      check_a_margin_kn: 4259.916501466847
+      check_b_margin_kn: 992.5223518973307
+      bottom_margin_kn: 4259.916501466848
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 915.1994049555296
+      member_min_kn: 925.2557877082395
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -23173,19 +23197,19 @@ cases:
 - id: o5-c0
   tension_hand_estimate:
     value:
-      vertical_kn: 12660.752548533645
+      vertical_kn: 12731.137468815163
       link_lengths_m:
-      - 6.361328456834135
-      - 6.361328456834137
-      - 6.361328456834137
-      - 6.361328456834137
-      ring_z_m: 19.288038888811673
-      check_a_margin_kn: 3851.0924517224266
-      check_b_margin_kn: 685.9043145890155
-      bottom_margin_kn: 3851.0924517224275
+      - 6.3570689967936
+      - 6.3570689967936005
+      - 6.3570689967936005
+      - 6.3570689967936005
+      ring_z_m: 19.2927829697834
+      check_a_margin_kn: 3921.4773720039448
+      check_b_margin_kn: 738.6930048001541
+      bottom_margin_kn: 3921.4773720039457
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 861.4111259552722
+      member_min_kn: 872.4028996307504
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -23231,19 +23255,19 @@ cases:
 - id: o5-c1
   tension_hand_estimate:
     value:
-      vertical_kn: 12669.341149616932
+      vertical_kn: 12739.640694256464
       link_lengths_m:
-      - 6.373707753598652
-      - 6.373707753598654
-      - 6.373707753598653
-      - 6.373707753598653
-      ring_z_m: 19.274255460790833
-      check_a_margin_kn: 3859.681052805714
-      check_b_margin_kn: 692.3457654014819
-      bottom_margin_kn: 3859.681052805715
+      - 6.369237277461867
+      - 6.369237277461869
+      - 6.369237277461869
+      - 6.369237277461869
+      ring_z_m: 19.27923226335749
+      check_a_margin_kn: 3929.9805974452465
+      check_b_margin_kn: 745.0704238811304
+      bottom_margin_kn: 3929.9805974452474
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 862.7523785832338
+      member_min_kn: 873.7308194349998
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -23289,19 +23313,19 @@ cases:
 - id: o5-c2
   tension_hand_estimate:
     value:
-      vertical_kn: 12791.040354247118
+      vertical_kn: 12860.24128436857
       link_lengths_m:
-      - 6.5545849306605914
-      - 6.554584930660593
-      - 6.554584930660592
-      - 6.554584930660592
-      ring_z_m: 19.07356906618807
-      check_a_margin_kn: 3981.3802574358997
-      check_b_margin_kn: 783.6201688741203
-      bottom_margin_kn: 3981.3802574359006
+      - 6.547115419652467
+      - 6.547115419652469
+      - 6.547115419652468
+      - 6.547115419652468
+      ring_z_m: 19.081831337461637
+      check_a_margin_kn: 4050.5811875573527
+      check_b_margin_kn: 835.5208664652091
+      bottom_margin_kn: 4050.5811875573536
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 881.757729565097
+      member_min_kn: 892.5646035231161
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending
@@ -23347,19 +23371,19 @@ cases:
 - id: o5-c3
   tension_hand_estimate:
     value:
-      vertical_kn: 13210.899292813938
+      vertical_kn: 13277.557959686153
       link_lengths_m:
-      - 7.262475677125584
-      - 7.262475677125585
-      - 7.262475677125585
-      - 7.262475677125585
-      ring_z_m: 18.298988661340683
-      check_a_margin_kn: 4401.23919600272
-      check_b_margin_kn: 1098.5143727992363
-      bottom_margin_kn: 4401.239196002721
+      - 7.24431486416665
+      - 7.244314864166652
+      - 7.244314864166651
+      - 7.244314864166651
+      ring_z_m: 18.318675441861405
+      check_a_margin_kn: 4467.8978628749355
+      check_b_margin_kn: 1148.508372953398
+      bottom_margin_kn: 4467.897862874936
       check_a_pass: true
       check_b_pass: true
-      member_min_kn: 947.3256723843035
+      member_min_kn: 957.7355297349679
       qualification: hand estimate only; native checks pending
     unit: kN, m, 1
     source: approximate extensible-string hand equilibrium; native checks pending

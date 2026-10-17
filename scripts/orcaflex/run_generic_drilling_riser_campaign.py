@@ -98,7 +98,7 @@ def criterion_rows(result: dict[str, Any], criteria: dict[str, Any]) -> list[tup
     for label, metric, bound in (
             ('check A intact', 'support_intact_min_kn', limit['tsrmin_kn']),
             ('check B one link lost', 'support_loss_min_kn', limit['tsrmin_kn']),
-            ('check A bottom', 'bottom_sum_min_kn', 0.05*limit['ws_kn']),
+            ('check A bottom', 'bottom_sum_min_kn', (limit['fwt']-1)*limit['ws_kn']),
             ('check A member nonnegative', 'member_min_kn', 0.0),
             ('spring table containment', 'table_clearance_min_m', 0.0)):
         demand = result[metric]
@@ -170,10 +170,12 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     except Exception as exc:
         raise ConfigurationError(f'Solver interface not importable ({type(exc).__name__})') from exc
     reference_z = ring_reference_z(model_path)
+    basis = yaml.safe_load((model_path.parents[2] / 'case-table.yml').read_text(
+        encoding='utf-8'))['tension_basis']
     try:
         model = OrcFxAPI.Model(str(model_path))
         calculate_staged_statics(model)
-        static_tension = extract(model, None, OrcFxAPI.oeEndB, static=True)
+        static_tension = extract(model, None, OrcFxAPI.oeEndB, static=True, basis=basis)
         model.RunSimulation()
         if getattr(model.state, 'name', '') != 'SimulationStopped':
             raise ValueError('Dynamics did not complete normally')
@@ -196,10 +198,10 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
         stress = [float(v) / 1000 for v in model['Riser'].RangeGraph('Max von Mises stress', period).Max]
         if not stress or not all(math.isfinite(v) for v in stress):
             raise ValueError('Empty or nonfinite stress channel')
-        dynamic_tension = extract(model, period, OrcFxAPI.oeEndB)
+        dynamic_tension = extract(model, period, OrcFxAPI.oeEndB, basis=basis)
         tension_evidence = {key: min(static_tension[key], dynamic_tension[key]) for key in FIELDS}
-        result = {**tension_evidence, 'lower_mean_deg': sum(lower) / len(lower), 'lower_max_deg': max(lower),
-            'upper_mean_deg': sum(upper) / len(upper), 'upper_max_deg': max(upper),
+        result = {**tension_evidence, 'lower_mean_deg': math.fsum(lower) / len(lower), 'lower_max_deg': max(lower),
+            'upper_mean_deg': math.fsum(upper) / len(upper), 'upper_max_deg': max(upper),
             'top_min_kn': min(tension), 'top_max_kn': max(tension),
             'stroke_min_m': min(stroke), 'stroke_max_m': max(stroke), 'stress_max_mpa': max(stress),
             'solver_version': str(OrcFxAPI.DLLVersion()), 'native_state': 'SimulationStopped',

@@ -133,7 +133,11 @@ def test_report_holds_production_and_grades_both_binding_checks():
             return dict(fixture, support_loss_min_kn=8000 if model.parent.name=='o5-c3' else 9000,
                         member_min_kn=0.1 if model.parent.name=='o4-c2' else 1)
         assert driver.run_campaign(ROOT/DEST, output, criteria_file=CRITERIA, case_runner=fake) == 0
-        spec = builder.build_spec(ROOT/DEST, output, criteria_file=CRITERIA, allow_synthetic=True)
+        contract = builder.driver_module()
+        original_rows = contract.criterion_rows
+        contract.criterion_rows = lambda *args: list(reversed(original_rows(*args)))
+        with patch.object(builder, 'driver_module', return_value=contract):
+            spec = builder.build_spec(ROOT/DEST, output, criteria_file=CRITERIA, allow_synthetic=True)
         prose = spec.sections[0].blocks[0].markdown
         assert 'Production remains held' in prose
         assert 'No operating window is established' in prose
