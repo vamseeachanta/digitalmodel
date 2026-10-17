@@ -21,12 +21,11 @@ class GenericCampaignTests(unittest.TestCase):
     def test_tension_acceptance_warning_is_carried_with_prepared_inputs(self):
         table = campaign.case_table(ROOT)
         note = table['tension_acceptance_basis']
-        self.assertNotIn('hand estimate', note)
-        self.assertIn('6,923.1–8,261.7 kN', note)
-        self.assertIn('all 24 cases by 84.0–1,422.7 kN', note)
-        self.assertIn('Pre-flight statics', note)
+        self.assertIn('legacy screen reading, not graded', note)
+        self.assertIn('Check A:', note)
+        self.assertIn('Check B:', note)
         self.assertIn('No operating window is established.', note)
-        self.assertIn('96 of 96 current steps', table['statics_method']['value'])
+        self.assertIn('72 of 72 current steps', table['statics_method']['value'])
         self.assertIn('calculated positions', table['statics_method']['value'])
         self.assertTrue(table['statics_method']['source'])
         public = ROOT / campaign.DEST
@@ -213,7 +212,7 @@ class GenericCampaignTests(unittest.TestCase):
         self.assertIn('factor of two', table['screen_limitations'])
         self.assertIn('above-water', table['screen_limitations'])
         self.assertIn('lower joint angle is not established', table['screen_limitations'])
-        self.assertEqual(rows[0]['scope'], 'approximate riser-column screen')
+        self.assertEqual(rows[0]['scope'], 'approximate riser-column legacy screen reading, not graded')
 
 
 if __name__ == '__main__':

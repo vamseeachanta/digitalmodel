@@ -21856,18 +21856,64 @@ wave_basis_note: Specification wave data are retained for provenance only; no wa
   is applied.
 profile_description: Uniform current from surface to seabed; assumed, based on previous
   experience
-tension_acceptance_basis: The stored minimum top tension, 8,345.7 kN, is retained
-  as an assumed criterion. Pre-flight statics of these models give the main-riser
-  top effective tension 6,923.1–8,261.7 kN, below this criterion in all 24 cases by
-  84.0–1,422.7 kN. The four links share their vertical load between the riser, choke
-  and kill lines and the slip joint; total tensioner force is not main-riser top effective
-  tension. No operating window is established.
+tension_basis:
+  ws_kn: 4889.232532101141
+  internal_area_m2: 0.30326499172653004
+  tsrmin_kn: 8760.255203118819
+  carried_weight_kn: 49.40489369239872
+  effective_weight_kn: 8515.79357651376
+  stiffness_kn_m: 14836.365715723194
+  required_vertical_kn: 11746.213462414957
+  spring_table_factor: 1.215
+  fleet_cosine: 0.8489830028137563
+  system_factor: 1.3333333333333333
+  fleet_adjusted_system_factor: 1.570506510630143
+  mechanical_hydraulic_efficiency: 1
+  point_z_m: -1000
+  n_units: 4
+  n_fail: 1
+  fwt: 1.05
+  buoyancy_kn: 0
+  mud_density_te_m3: 2.2
+  member_basis:
+  - ws_kn: 3362.162892050631
+    internal_area_m2: 0.2827433388230814
+    head_kn: 3381.155115548548
+    length_m: 1020.0
+    ea_kn: 10406525.665016199
+  - ws_kn: 763.5348200252549
+    internal_area_m2: 0.01026082645172433
+    head_kn: 122.70296443203573
+    length_m: 1020.0
+    ea_kn: 2363283.6825107294
+  - ws_kn: 763.5348200252549
+    internal_area_m2: 0.01026082645172433
+    head_kn: 122.70296443203573
+    length_m: 1020.0
+    ea_kn: 2363283.6825107294
+  source: ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection
+    3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance
+    of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed
+    against a held edition before report use
+  carried_weight_basis: 'hand estimate: ring plus half dry slip-joint and contents
+    weight; native uses End B global reaction'
+tension_acceptance_basis: '8,345.7 kN is the legacy screen reading, not graded. ABS
+  Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection 3, item
+  iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance
+  of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed
+  against a held edition before report use. Check A: sum(F_link,z) - W_r >= T_SRmin,
+  sum of Riser/Choke/Kill End B effective tensions >= (fwt - 1)*Ws, and every member
+  minimum >= 0. Check B: (N-n)/N*sum(F_link,z) - W_r >= T_SRmin. Both checks are binding.
+  Builder margins are hand estimates only; native qualification is pending. Mechanical/hydraulic
+  efficiency is assumed 1, a known limit. Production stays held. No operating window
+  is established.'
 statics_method:
   value: At the specified vessel offset, solve zero-current statics, then ramp current
     through 25%, 50%, 75% and 100% of the specified speed, retaining calculated positions
     before each current change. No vessel-offset continuation is applied. Zero-current
     cases solve once. Every stage must reach InStaticState before dynamics. Pre-flight
-    statics converged in all 24 cases (96 of 96 current steps).
+    statics converged in all 24 cases (72 of 72 current steps at the old setting;
+    new setting statics pending).
   unit: '1'
   source: src/digitalmodel/drilling_riser/campaign.py::CURRENT_RAMP; _statics_path
     current ramp; scripts/orcaflex/run_generic_drilling_riser_campaign.py::calculate_staged_statics;
@@ -21897,11 +21943,41 @@ criteria:
     unit: degrees
     source: runtime criteria file; API RP 16Q, Design, Selection, Operation and Maintenance
       of Marine Drilling Riser Systems, second edition, April 2017
-  min_top_tension_kn:
-    value: 8345.731487302544
+  tsrmin_kn:
+    value: 8760.255203118819
     unit: kN
-    source: assumed, based on previous experience; 1.25 times approximate riser-column
-      submerged weight; src/digitalmodel/drilling_riser/stackup.py:28
+    source: ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection
+      3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and
+      Maintenance of Marine Drilling Riser Systems, second edition (2017); clause
+      text to be confirmed against a held edition before report use
+  ws_kn:
+    value: 4889.232532101141
+    unit: kN
+    source: model flooded steel weight; fluid head counted separately
+  n_units:
+    value: 4
+    unit: '1'
+    source: tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis
+      (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design,
+      Selection, Operation and Maintenance of Marine Drilling Riser Systems, second
+      edition (2017); clause text to be confirmed against a held edition before report
+      use
+  n_fail:
+    value: 1
+    unit: '1'
+    source: tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis
+      (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design,
+      Selection, Operation and Maintenance of Marine Drilling Riser Systems, second
+      edition (2017); clause text to be confirmed against a held edition before report
+      use
+  fwt:
+    value: 1.05
+    unit: '1'
+    source: tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis
+      (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design,
+      Selection, Operation and Maintenance of Marine Drilling Riser Systems, second
+      edition (2017); clause text to be confirmed against a held edition before report
+      use
   stroke_min_m:
     value: -5.0
     unit: m
@@ -21921,10 +21997,14 @@ assumptions:
     value: 9.81
     unit: m/s²
     source: assumed, based on previous experience
-  top_tension_factor:
-    value: 1.25
+  legacy_screen_kn:
+    value: 8345.731487302544
+    unit: kN
+    source: legacy screen reading, not graded
+  spring_table_factor:
+    value: 1.215
     unit: '1'
-    source: assumed, based on previous experience
+    source: one common multiplier per PR 2684 review decision; native statics decide
   yield_strength_mpa:
     value: null
     unit: MPa
@@ -21947,12 +22027,30 @@ screen_limitations: 'Approximate riser-column screen; constant assumed top tensi
   tension varies along the column. Both joint-angle comparisons are omitted: constant
   tension can introduce an error of about a factor of two. Weight treats the above-water
   20 m as submerged, underestimating column weight by about 1.0 %. Stress retains
-  the constant-tension approximation. Screen tension is an assumed criterion value,
-  not the modelled tension. attached members, nonlinear tensioner response, pressure
-  stress and wave loading omitted. Geometric extension is not mechanical tensioner
-  stroke. No assembly acceptance is established.'
+  the constant-tension approximation. Screen tension is the legacy screen reading,
+  not graded, not the modelled tension. attached members, nonlinear tensioner response,
+  pressure stress and wave loading omitted. Geometric extension is not mechanical
+  tensioner stroke. No assembly acceptance is established.'
 cases:
 - id: o0-c0
+  tension_hand_estimate:
+    value:
+      vertical_kn: 11816.594584590053
+      link_lengths_m:
+      - 5.2947869417546825
+      - 5.294786941754684
+      - 5.294786941754684
+      - 5.294786941754684
+      ring_z_m: 20.506140994804586
+      check_a_margin_kn: 3006.9344877788353
+      check_b_margin_kn: 52.78584163132109
+      bottom_margin_kn: 3006.9344877788362
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 729.5818470570637
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 0
     unit: '%'
@@ -21995,6 +22093,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o0-c1
+  tension_hand_estimate:
+    value:
+      vertical_kn: 11831.767125713613
+      link_lengths_m:
+      - 5.308980913632208
+      - 5.30898091363221
+      - 5.30898091363221
+      - 5.30898091363221
+      ring_z_m: 20.48942594104574
+      check_a_margin_kn: 3022.1070289023955
+      check_b_margin_kn: 64.16524747399308
+      bottom_margin_kn: 3022.1070289023965
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 731.9512912142072
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 0
     unit: '%'
@@ -22035,6 +22151,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o0-c2
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12037.927105390347
+      link_lengths_m:
+      - 5.51195891788172
+      - 5.511958917881722
+      - 5.511958917881722
+      - 5.511958917881722
+      ring_z_m: 20.252190914493735
+      check_a_margin_kn: 3228.2670085791287
+      check_b_margin_kn: 218.78523223154116
+      bottom_margin_kn: 3228.2670085791297
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 764.1465942490659
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 0
     unit: '%'
@@ -22075,6 +22209,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o0-c3
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12663.83804621407
+      link_lengths_m:
+      - 6.262451428377557
+      - 6.262451428377559
+      - 6.262451428377559
+      - 6.262451428377559
+      ring_z_m: 19.398366497816184
+      check_a_margin_kn: 3854.1779494028524
+      check_b_margin_kn: 688.2184378493348
+      bottom_margin_kn: 3854.1779494028533
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 861.8929776366238
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 0
     unit: '%'
@@ -22115,6 +22267,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o1-c0
+  tension_hand_estimate:
+    value:
+      vertical_kn: 11859.993975592097
+      link_lengths_m:
+      - 5.335650162605107
+      - 5.335650162605109
+      - 5.335650162605108
+      - 5.335650162605108
+      ring_z_m: 20.458066198444993
+      check_a_margin_kn: 3050.333878780879
+      check_b_margin_kn: 85.33538488285558
+      bottom_margin_kn: 3050.33387878088
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 736.3593823819608
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 1
     unit: '%'
@@ -22155,6 +22325,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o1-c1
+  tension_hand_estimate:
+    value:
+      vertical_kn: 11874.75897960117
+      link_lengths_m:
+      - 5.3497380838663675
+      - 5.349738083866369
+      - 5.349738083866368
+      - 5.349738083866368
+      ring_z_m: 20.44152464458014
+      check_a_margin_kn: 3065.0988827899528
+      check_b_margin_kn: 96.40913788965918
+      bottom_margin_kn: 3065.0988827899537
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 738.6651828536546
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 1
     unit: '%'
@@ -22195,6 +22383,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o1-c2
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12075.879649599116
+      link_lengths_m:
+      - 5.551476574158537
+      - 5.5514765741585395
+      - 5.551476574158539
+      - 5.551476574158539
+      ring_z_m: 20.20636962694963
+      check_a_margin_kn: 3266.2195527878976
+      check_b_margin_kn: 247.2496403881196
+      bottom_margin_kn: 3266.2195527878985
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 770.0735140307866
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 1
     unit: '%'
@@ -22235,6 +22441,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o1-c3
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12690.671607478711
+      link_lengths_m:
+      - 6.299820176989037
+      - 6.299820176989039
+      - 6.299820176989039
+      - 6.299820176989039
+      ring_z_m: 19.35662031559118
+      check_a_margin_kn: 3881.011510667493
+      check_b_margin_kn: 708.3436087978152
+      bottom_margin_kn: 3881.011510667494
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 866.0834836590545
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 1
     unit: '%'
@@ -22275,6 +22499,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o2-c0
+  tension_hand_estimate:
+    value:
+      vertical_kn: 11986.17249754957
+      link_lengths_m:
+      - 5.4591774036488685
+      - 5.45917740364887
+      - 5.45917740364887
+      - 5.45917740364887
+      ring_z_m: 20.313570877041837
+      check_a_margin_kn: 3176.512400738353
+      check_b_margin_kn: 179.96927635095926
+      bottom_margin_kn: 3176.512400738354
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 756.0642531201192
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 2
     unit: '%'
@@ -22315,6 +22557,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o2-c1
+  tension_hand_estimate:
+    value:
+      vertical_kn: 11999.810262317449
+      link_lengths_m:
+      - 5.472963433292149
+      - 5.472963433292151
+      - 5.472963433292151
+      - 5.472963433292151
+      ring_z_m: 20.297518873812145
+      check_a_margin_kn: 3190.150165506231
+      check_b_margin_kn: 190.19759992686886
+      bottom_margin_kn: 3190.150165506232
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 758.1940164723878
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 2
     unit: '%'
@@ -22355,6 +22615,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o2-c2
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12186.868882211755
+      link_lengths_m:
+      - 5.671127050162474
+      - 5.671127050162476
+      - 5.671127050162476
+      - 5.671127050162476
+      ring_z_m: 20.068298263369474
+      check_a_margin_kn: 3377.2087854005367
+      check_b_margin_kn: 330.49156484759806
+      bottom_margin_kn: 3377.2087854005376
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 787.4063250990328
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 2
     unit: '%'
@@ -22395,6 +22673,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o2-c3
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12769.947010935004
+      link_lengths_m:
+      - 6.413001437425633
+      - 6.413001437425635
+      - 6.413001437425634
+      - 6.413001437425634
+      ring_z_m: 19.23054704183982
+      check_a_margin_kn: 3960.286914123786
+      check_b_margin_kn: 767.8001613900342
+      bottom_margin_kn: 3960.286914123787
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 878.4636538622538
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 2
     unit: '%'
@@ -22435,6 +22731,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o3-c0
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12184.030348574299
+      link_lengths_m:
+      - 5.667989218129871
+      - 5.667989218129873
+      - 5.667989218129872
+      - 5.667989218129872
+      ring_z_m: 20.071906882288395
+      check_a_margin_kn: 3374.370251763081
+      check_b_margin_kn: 328.3626646195062
+      bottom_margin_kn: 3374.370251763082
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 786.9630409525373
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 3
     unit: '%'
@@ -22475,6 +22789,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o3-c1
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12196.063550996641
+      link_lengths_m:
+      - 5.6813198345733165
+      - 5.681319834573318
+      - 5.681319834573317
+      - 5.681319834573317
+      ring_z_m: 20.056580630503195
+      check_a_margin_kn: 3386.4034541854235
+      check_b_margin_kn: 337.387566436264
+      bottom_margin_kn: 3386.4034541854244
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 788.842225259184
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 3
     unit: '%'
@@ -22515,6 +22847,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o3-c2
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12362.786371273145
+      link_lengths_m:
+      - 5.873962140589002
+      - 5.873962140589004
+      - 5.873962140589003
+      - 5.873962140589003
+      ring_z_m: 19.836335484457482
+      check_a_margin_kn: 3553.126274461927
+      check_b_margin_kn: 462.4296816436399
+      bottom_margin_kn: 3553.126274461928
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 814.8787612059039
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 3
     unit: '%'
@@ -22555,6 +22905,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o3-c3
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12898.096451422243
+      link_lengths_m:
+      - 6.605035196400157
+      - 6.605035196400158
+      - 6.605035196400158
+      - 6.605035196400158
+      ring_z_m: 19.017818964149875
+      check_a_margin_kn: 4088.4363546110253
+      check_b_margin_kn: 863.9122417554645
+      bottom_margin_kn: 4088.436354611026
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 898.4763162456302
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 3
     unit: '%'
@@ -22595,6 +22963,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o4-c0
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12437.951983109877
+      link_lengths_m:
+      - 5.965869208423501
+      - 5.965869208423503
+      - 5.965869208423503
+      - 5.965869208423503
+      ring_z_m: 19.73202169594296
+      check_a_margin_kn: 3628.291886298659
+      check_b_margin_kn: 518.8038905211906
+      bottom_margin_kn: 3628.29188629866
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 826.6171192261111
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 4
     unit: '%'
@@ -22635,6 +23021,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o4-c1
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12448.19267907105
+      link_lengths_m:
+      - 5.978644154805886
+      - 5.978644154805888
+      - 5.978644154805888
+      - 5.978644154805888
+      ring_z_m: 19.717558714969506
+      check_a_margin_kn: 3638.5325822598315
+      check_b_margin_kn: 526.4844124920692
+      bottom_margin_kn: 3638.5325822598325
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 828.2163738936501
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 4
     unit: '%'
@@ -22675,6 +23079,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o4-c2
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12591.739527587572
+      link_lengths_m:
+      - 6.164345363052293
+      - 6.164345363052295
+      - 6.164345363052294
+      - 6.164345363052294
+      ring_z_m: 19.508264959506484
+      check_a_margin_kn: 3782.0794307763535
+      check_b_margin_kn: 634.1445488794598
+      bottom_margin_kn: 3782.0794307763545
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 850.6335971342378
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 4
     unit: '%'
@@ -22715,6 +23137,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o4-c3
+  tension_hand_estimate:
+    value:
+      vertical_kn: 13069.576598278065
+      link_lengths_m:
+      - 6.880408006624088
+      - 6.88040800662409
+      - 6.880408006624089
+      - 6.880408006624089
+      ring_z_m: 18.715096314372282
+      check_a_margin_kn: 4259.916501466847
+      check_b_margin_kn: 992.5223518973307
+      bottom_margin_kn: 4259.916501466848
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 925.2557877082395
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 4
     unit: '%'
@@ -22755,6 +23195,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o5-c0
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12731.137468815163
+      link_lengths_m:
+      - 6.3570689967936
+      - 6.3570689967936005
+      - 6.3570689967936005
+      - 6.3570689967936005
+      ring_z_m: 19.2927829697834
+      check_a_margin_kn: 3921.4773720039448
+      check_b_margin_kn: 738.6930048001541
+      bottom_margin_kn: 3921.4773720039457
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 872.4028996307504
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 5
     unit: '%'
@@ -22795,6 +23253,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o5-c1
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12739.640694256464
+      link_lengths_m:
+      - 6.369237277461867
+      - 6.369237277461869
+      - 6.369237277461869
+      - 6.369237277461869
+      ring_z_m: 19.27923226335749
+      check_a_margin_kn: 3929.9805974452465
+      check_b_margin_kn: 745.0704238811304
+      bottom_margin_kn: 3929.9805974452474
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 873.7308194349998
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 5
     unit: '%'
@@ -22835,6 +23311,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o5-c2
+  tension_hand_estimate:
+    value:
+      vertical_kn: 12860.24128436857
+      link_lengths_m:
+      - 6.547115419652467
+      - 6.547115419652469
+      - 6.547115419652468
+      - 6.547115419652468
+      ring_z_m: 19.081831337461637
+      check_a_margin_kn: 4050.5811875573527
+      check_b_margin_kn: 835.5208664652091
+      bottom_margin_kn: 4050.5811875573536
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 892.5646035231161
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 5
     unit: '%'
@@ -22875,6 +23369,24 @@ cases:
     unit: s
     source: docs/domains/orcaflex/library/templates/drilling_riser/spec.yml:55-57
 - id: o5-c3
+  tension_hand_estimate:
+    value:
+      vertical_kn: 13277.557959686153
+      link_lengths_m:
+      - 7.24431486416665
+      - 7.244314864166652
+      - 7.244314864166651
+      - 7.244314864166651
+      ring_z_m: 18.318675441861405
+      check_a_margin_kn: 4467.8978628749355
+      check_b_margin_kn: 1148.508372953398
+      bottom_margin_kn: 4467.897862874936
+      check_a_pass: true
+      check_b_pass: true
+      member_min_kn: 957.7355297349679
+      qualification: hand estimate only; native checks pending
+    unit: kN, m, 1
+    source: approximate extensible-string hand equilibrium; native checks pending
   offset_pct:
     value: 5
     unit: '%'

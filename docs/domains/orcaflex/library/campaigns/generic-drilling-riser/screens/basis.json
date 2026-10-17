@@ -1,14 +1,16 @@
 {
   "template_sha256": "298fa98a2c3065d55b5c05bc67f36106a9bbafda4faa74644a288a7861ec7629",
-  "limitations": "Approximate riser-column screen; constant assumed top tension, uniform drag, pinned ends; lower joint angle is not established because effective tension varies along the column. Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. Stress retains the constant-tension approximation. Screen tension is an assumed criterion value, not the modelled tension. attached members, nonlinear tensioner response, pressure stress and wave loading omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.",
-  "case_table_sha256": "20b18916150138abd5417e20eab7c1bd0102f11b4a7851ae94e929287f0b7973",
-  "screen_csv_sha256": "8a81c1d56c91bfd2708e0171f51d694fa1eb7f32b5bc9af61a227123d7a63bab",
+  "limitations": "Approximate riser-column screen; constant assumed top tension, uniform drag, pinned ends; lower joint angle is not established because effective tension varies along the column. Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. Stress retains the constant-tension approximation. Screen tension is the legacy screen reading, not graded, not the modelled tension. attached members, nonlinear tensioner response, pressure stress and wave loading omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.",
+  "case_table_sha256": "3979d0a119a032bb2aba5a75a7a6b727a7ebc4911799d57d67c404ea299ae53b",
+  "screen_csv_sha256": "f35eda7ca22ef2c09b7a6b6584cd9420b1b6a96d48821c11d2cd1e5ba951585c",
   "calculation_fingerprints": {
-    "generic_campaign.py": "d252dc77e0c678e3394da714aa7b4718fb3580ae4c4523d7eb89adf2e7c3e91f",
+    "generic_campaign.py": "455243ab63d22924c56a8e159494c133dad2dc72f1a056fdabd81c2f1329c292",
     "operability.py": "08a7a80df8ceb4104fe19709bda3df89d6b71528a34c6271f4844347b2391c5b",
     "riser_response.py": "444dbd62bcc1923515a98dece2de62aed14c373516c2d916604fff3782886f1f",
     "section.py": "b7b8c7436c86d1bf72a0d9b9fbf3e113a31c6ed0ebf2205b48e2f721b006178b",
-    "stackup.py": "1ca27fd4a41dad98f30989988cbc32365d0b09149b2771b4e5a185e873b09790"
+    "stackup.py": "c824d847cc4d6c68ba2c6ae4d0989550a3343b9ee334a32e897e8d14db82c60b",
+    "assembly.py": "0b4d0f6a684728489d24af1b1860ef24985dc8280b2acbfbeaa8aa655d366a3e",
+    "generic_tension.py": "74707ee279b0593f06620bb587ba121519c640cf7d9989e43c0c8a1efd373a88"
   },
   "criteria": {
     "mean_angle_deg": {
@@ -21,10 +23,30 @@
       "unit": "degrees",
       "source": "runtime criteria file; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, April 2017"
     },
-    "min_top_tension_kn": {
-      "value": 8345.731487302544,
+    "tsrmin_kn": {
+      "value": 8760.255203118819,
       "unit": "kN",
-      "source": "assumed, based on previous experience; 1.25 times approximate riser-column submerged weight; src/digitalmodel/drilling_riser/stackup.py:28"
+      "source": "ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed against a held edition before report use"
+    },
+    "ws_kn": {
+      "value": 4889.232532101141,
+      "unit": "kN",
+      "source": "model flooded steel weight; fluid head counted separately"
+    },
+    "n_units": {
+      "value": 4,
+      "unit": "1",
+      "source": "tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed against a held edition before report use"
+    },
+    "n_fail": {
+      "value": 1,
+      "unit": "1",
+      "source": "tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed against a held edition before report use"
+    },
+    "fwt": {
+      "value": 1.05,
+      "unit": "1",
+      "source": "tensioner-arrangement.json; ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed against a held edition before report use"
     },
     "stroke_min_m": {
       "value": -5.0,
@@ -48,10 +70,15 @@
       "unit": "m/s²",
       "source": "assumed, based on previous experience"
     },
-    "top_tension_factor": {
-      "value": 1.25,
+    "legacy_screen_kn": {
+      "value": 8345.731487302544,
+      "unit": "kN",
+      "source": "legacy screen reading, not graded"
+    },
+    "spring_table_factor": {
+      "value": 1.215,
       "unit": "1",
-      "source": "assumed, based on previous experience"
+      "source": "one common multiplier per PR 2684 review decision; native statics decide"
     },
     "yield_strength_mpa": {
       "value": null,
@@ -74,6 +101,6 @@
       "source": "assumed, based on previous experience"
     }
   },
-  "tension_acceptance_basis": "The stored minimum top tension, 8,345.7 kN, is retained as an assumed criterion. Pre-flight statics of these models give the main-riser top effective tension 6,923.1–8,261.7 kN, below this criterion in all 24 cases by 84.0–1,422.7 kN. The four links share their vertical load between the riser, choke and kill lines and the slip joint; total tensioner force is not main-riser top effective tension. No operating window is established.",
+  "tension_acceptance_basis": "8,345.7 kN is the legacy screen reading, not graded. ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed against a held edition before report use. Check A: sum(F_link,z) - W_r >= T_SRmin, sum of Riser/Choke/Kill End B effective tensions >= (fwt - 1)*Ws, and every member minimum >= 0. Check B: (N-n)/N*sum(F_link,z) - W_r >= T_SRmin. Both checks are binding. Builder margins are hand estimates only; native qualification is pending. Mechanical/hydraulic efficiency is assumed 1, a known limit. Production stays held. No operating window is established.",
   "units": "Column suffixes: kn = kN, mpa = MPa, m = m, deg = degrees, mps = m/s, pct = %"
 }

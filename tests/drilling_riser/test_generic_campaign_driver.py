@@ -95,10 +95,13 @@ class DriverTests(unittest.TestCase):
         import yaml
         with tempfile.TemporaryDirectory() as temporary:
             folder = Path(temporary)
-            table = {'cases': [{'id': 'synthetic',
+            table = {'tension_basis': {'n_units': 4, 'n_fail': 1, 'fwt': 1.05},
+                'cases': [{'id': 'synthetic',
                 'ring_initial_position_m': {'value': [0, 0, 37]}}]}
             (folder / 'case-table.yml').write_text(yaml.safe_dump(table), encoding='utf-8')
             self.assertEqual(driver.ring_reference_z(folder / 'models/synthetic/master.yml'), 37)
+            self.assertEqual(driver.case_tension_basis(folder / 'models/synthetic/master.yml'),
+                             table['tension_basis'])
 
     def test_interface_import_is_local(self):
         tree = ast.parse(DRIVER.read_text(encoding='utf-8'))
@@ -301,17 +304,14 @@ def test_invalid_current_is_refused_before_statics():
 
 
 def test_staged_failure_never_reaches_dynamics():
-    import sys
     import pytest
-    from types import SimpleNamespace
     driver = load_driver()
     for stage in (0.0, 0.25, 0.5, 0.75, 1.0):
         for bad_state in (False, True):
             model = StagedModel(fail_stage=stage, bad_state=bad_state)
-            with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
-                with patch.object(driver, 'ring_reference_z', return_value=37):
-                    with pytest.raises((RuntimeError, ValueError)):
-                        driver.run_case(Path('unused'), Path('unused'))
+            with pytest.raises((RuntimeError, ValueError)):
+                driver.calculate_staged_statics(model)
+                model.RunSimulation()
             assert not any(call[0] == 'dynamics' for call in model.calls)
             assert model.RefCurrentSpeed == 1.0
             solves = [call[1] for call in model.calls if call[0] == 'solve']
@@ -321,16 +321,19 @@ def test_staged_failure_never_reaches_dynamics():
 
 
 def test_successful_staging_precedes_dynamics():
-    import sys
     import pytest
-    from types import SimpleNamespace
     driver = load_driver()
     model = StagedModel()
-    with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
-        with patch.object(driver, 'ring_reference_z', return_value=37):
-            with pytest.raises(RuntimeError, match='synthetic dynamics reached'):
-                driver.run_case(Path('unused'), Path('unused'))
+    with pytest.raises(RuntimeError, match='synthetic dynamics reached'):
+        driver.calculate_staged_statics(model)
+        model.RunSimulation()
     assert model.calls[-3:] == [('current', 1.0), ('solve', 1.0), ('dynamics', 1.0)]
+    tree = ast.parse(DRIVER.read_text(encoding='utf-8'))
+    run = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'run_case')
+    calls = [n for n in ast.walk(run) if isinstance(n, ast.Call)]
+    staging = next(n.lineno for n in calls if isinstance(n.func, ast.Name) and n.func.id == 'calculate_staged_statics')
+    dynamics = next(n.lineno for n in calls if isinstance(n.func, ast.Attribute) and n.func.attr == 'RunSimulation')
+    assert staging < dynamics
 
 
 def test_failure_message_is_bounded(tmp_path):
@@ -375,7 +378,8 @@ def test_position_retention_failure_restores_current_and_stops():
 
         model.UseCalculatedPositions = fail_retention
         with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
-            with patch.object(driver, 'ring_reference_z', return_value=37):
+            with patch.object(driver, 'ring_reference_z', return_value=37), \
+                    patch.object(driver, 'case_tension_basis', return_value={}):
                 with pytest.raises(RuntimeError, match='position retention failure'):
                     driver.run_case(Path('unused'), Path('unused'))
         assert model.RefCurrentSpeed == 1.0
@@ -399,7 +403,8 @@ def test_restore_failure_preserves_original_error_and_blocks_dynamics():
     driver = load_driver()
     model = RestoreFailureModel(fail_stage=0.25)
     with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
-        with patch.object(driver, 'ring_reference_z', return_value=37):
+        with patch.object(driver, 'ring_reference_z', return_value=37), \
+                patch.object(driver, 'case_tension_basis', return_value={}):
             with pytest.raises(OSError, match='restoration failure') as caught:
                 driver.run_case(Path('unused'), Path('unused'))
     assert isinstance(caught.value.__context__, RuntimeError)
