@@ -6,7 +6,7 @@
     "physically_plausible": true,
     "fabrication_suspected": true,
     "citations_check": "thin",
-    "summary": "Dimensional/displacement/lift data is physically plausible and verifies well against sources for every spot-checked vessel (Sleipnir 220x102m/273,700t/2x10,000t, Pioneering Spirit 382x124m/48,000t topsides, Saipem 7000 198x87m/172,000t, Bokalift 2 231x49m/54,827t dwt, Castorone 330x39m). Gyradius values (kxx~0.35-0.40*B, kyy/kzz~0.25-0.30*L) are correctly flagged 'estimated' with sane methodology, and block coefficient/LCG/VCG/TCG/loading condition are honestly marked 'gap'. HOWEVER, fabrication is suspected in the vessel_id (IMO) field: 4 of 4 spot-checked IMO numbers are WRONG and are presented as hard facts WITHOUT being listed in any citation's fields array (except Bokalift 2, whose IMO is cited AND correct). Sleipnir actual IMO 9781425 (not 9806079); Thialf actual 8757740 (not 8757307); Saipem 7000 actual 8501567 (not 8757345); Castorone actual 9444194 (not 9522297). The two semi-sub crane vessels carry near-identical bogus '8757xxx' IMOs, a placeholder signature. Classic pattern: real cited dimensions + invented uncited identifiers. Secondary issues: Castorone builder listed 'Yantai Raffles hull / STX Korea outfit' vs sources citing Keppel Shipyard Singapore; Bokalift 2 hull builder given as generic '2000 hull' but actually Harland & Wolff Belfast (conversion-by-Boskalis is fine). Citations rated THIN: present and on-topic for dimensional fields and URLs are real/plausible, but key identifier fields (IMO) and several builder claims carry no supporting citation while stated as fact. The dataset was truncated mid-record in the final vessel (Seven Oceans), so completeness of that record is unverified.",
+    "summary": "Dimensional/displacement/lift data is physically plausible and verifies well against sources for every spot-checked vessel (Sleipnir 220x102m/273,700t/2x10,000t, Pioneering Spirit 382x124m/48,000t topsides, Saipem 7000 198x87m/172,000t, Castorone 330x39m). Gyradius values (kxx~0.35-0.40*B, kyy/kzz~0.25-0.30*L) are correctly flagged 'estimated' with sane methodology, and block coefficient/LCG/VCG/TCG/loading condition are honestly marked 'gap'. HOWEVER, fabrication is suspected in the vessel_id (IMO) field: 4 of 4 spot-checked IMO numbers are WRONG and are presented as hard facts WITHOUT being listed in any citation's fields array. Sleipnir actual IMO 9781425 (not 9806079); Thialf actual 8757740 (not 8757307); Saipem 7000 actual 8501567 (not 8757345); Castorone actual 9444194 (not 9522297). The two semi-sub crane vessels carry near-identical bogus '8757xxx' IMOs, a placeholder signature. Classic pattern: real cited dimensions + invented uncited identifiers. Secondary issues: Castorone builder listed 'Yantai Raffles hull / STX Korea outfit' vs sources citing Keppel Shipyard Singapore. Citations rated THIN: present and on-topic for dimensional fields and URLs are real/plausible, but key identifier fields (IMO) and several builder claims carry no supporting citation while stated as fact. The dataset was truncated mid-record in the final vessel (Seven Oceans), so completeness of that record is unverified.",
     "flagged_records": [
       {
         "name": "SSCV Sleipnir",
@@ -23,10 +23,6 @@
       {
         "name": "Saipem Castorone",
         "issue": "IMO 9522297 is fabricated; actual is 9444194. Builder claim (Yantai Raffles/STX Korea) conflicts with sources citing Keppel Shipyard Singapore; both uncited for those fields."
-      },
-      {
-        "name": "Bokalift 2",
-        "issue": "Hull builder stated generically as '2000 hull'; actual hull builder is Harland & Wolff, Belfast. IMO 9190705 is correct and cited (the one good identifier)."
       },
       {
         "name": "Seven Oceans",
@@ -323,13 +319,13 @@
       ]
     },
     {
-      "name": "Bokalift 2",
-      "vessel_type": "Monohull crane / offshore-wind T&I vessel, 4,000 t crane (converted VLCC-class hull)",
-      "owner_operator": "Boskalis",
-      "year_built": "2000 (hull); converted 2020",
-      "vessel_id": "IMO 9190705",
+      "name": "HLV-A",
+      "vessel_type": "Monohull crane vessel",
+      "owner_operator": "withheld",
+      "year_built": "withheld",
+      "vessel_id": "withheld",
       "fields": {
-        "builder": "Original hull 2000; conversion Vuyk/Boskalis 2020",
+        "builder": "withheld",
         "loa_m": 231,
         "beam_m": 49,
         "lbp_m": "gap",
@@ -358,29 +354,8 @@
       ],
       "citations": [
         {
-          "fields": [
-            "loa_m",
-            "beam_m",
-            "draft_summer_m",
-            "deadweight_t",
-            "year_built",
-            "vessel_id"
-          ],
-          "source": "MaritimeOptima vessel page (IMO 9190705)",
-          "url": "https://maritimeoptima.com/public/vessels/pages/imo:9190705/mmsi:209951000/BOKALIFT_2.html",
-          "access": "public",
-          "access_date": "2026-06-18"
-        },
-        {
-          "fields": [
-            "loa_m",
-            "beam_m",
-            "deadweight_t"
-          ],
-          "source": "Boskalis Bokalift 2 brochure (PDF, binary-corrupt via fetch)",
-          "url": "https://boskalis.com/media/cafdcmsf/bokalift-2.pdf",
-          "access": "brochure-pdf",
-          "access_date": "2026-06-18"
+          "source": "private provenance",
+          "access": "private"
         }
       ]
     },
