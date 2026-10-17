@@ -2,7 +2,7 @@
   "id": "generic-drilling-riser-r1",
   "title": "Generic connected drilling riser offset and current sweep",
   "repo_dir": "<SOLVER_REPO_DIR>",
-  "ref": "181f94eee8788b7c3c2141652b6684b43333e700",
+  "ref": "57b6935e9563c16811ff9bc66a71a73de88ba42b",
   "driver": [
     "python",
     "scripts/orcaflex/run_generic_drilling_riser_campaign.py",
