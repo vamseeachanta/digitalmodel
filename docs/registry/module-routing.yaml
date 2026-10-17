@@ -182,6 +182,9 @@ modules:
     key_tests: [tests/marine_ops/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#marine_ops
     submodules:
+      marine_ops:
+        agent_pack: src/digitalmodel/marine_ops/docs/agent-pack.md
+        qa_family: EC
       installation:
         agent_pack: src/digitalmodel/marine_ops/installation/docs/agent-pack.md
         qa_family: IN
