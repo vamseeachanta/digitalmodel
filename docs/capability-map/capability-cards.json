@@ -7,7 +7,7 @@
       "value": "3",
       "label": "governing FFS codes"
     },
-    "link": "https://www.aceengineer.com/capabilities/#ffs"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-structural",
@@ -17,7 +17,7 @@
       "value": "215.61 MPa",
       "label": "panel tripping f_T"
     },
-    "link": "https://www.aceengineer.com/capabilities/#structural"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-hydro",
@@ -27,28 +27,28 @@
       "value": "3",
       "label": "diffraction solvers"
     },
-    "link": "https://www.aceengineer.com/capabilities/#hydro"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-risers",
     "title": "Risers & pipelines",
     "summary": "OrcaFlex riser global-analysis verification — a validation report against reference cases and a mesh / segmentation convergence study.",
     "key_figure": null,
-    "link": "https://www.aceengineer.com/capabilities/#risers"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-subsea",
     "title": "Subsea",
     "summary": "To-scale cross-section schematics for offshore cables, umbilicals and pipelines, generated deterministically from a layer specification.",
     "key_figure": null,
-    "link": "https://www.aceengineer.com/capabilities/#subsea"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-installation",
     "title": "Installation",
     "summary": "Marine-installation suitability — a crane-vessel pamphlet with lift envelopes, splash-zone operability and weather windows, a provenance-audited installation fleet database with confidence-weighted suitability ranking, and a DNV 2.7-1 offshore-container screen.",
     "key_figure": null,
-    "link": "https://www.aceengineer.com/capabilities/#installation"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-wind",
@@ -58,7 +58,7 @@
       "value": "4",
       "label": "floater archetypes"
     },
-    "link": "https://www.aceengineer.com/capabilities/#wind"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-validation",
@@ -68,7 +68,7 @@
       "value": "16",
       "label": "validated cases"
     },
-    "link": "https://www.aceengineer.com/capabilities/#validation"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "ffs-showcase",
@@ -214,7 +214,7 @@
     "title": "Manoeuvring & station-keeping",
     "summary": "Low-speed manoeuvring and station-keeping screens — turning circle against the IMO criteria, minimum steerage speed by loading condition, the rudder angle needed to hold heading against a current, built on a researched rudder-type database, and a mooring-system resilience traffic-light composed from the pre-computed mooring atlases.",
     "key_figure": null,
-    "link": "https://www.aceengineer.com/capabilities/#manoeuvring"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "rudder-explorer",
@@ -290,7 +290,7 @@
       "value": "346",
       "label": "example cards"
     },
-    "link": "https://www.aceengineer.com/capabilities/#artificial-lift"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "dynacard-troubleshooting",
@@ -310,7 +310,7 @@
       "value": "4",
       "label": "design-check modes"
     },
-    "link": "https://www.aceengineer.com/capabilities/#well"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "casing-design",
@@ -337,7 +337,7 @@
       "value": "3",
       "label": "galvanic environment classes"
     },
-    "link": "https://www.aceengineer.com/capabilities/#corrosion-production"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "galvanic-explorer",
@@ -397,7 +397,7 @@
       "value": "221",
       "label": "S-N curves, 6 standards"
     },
-    "link": "https://www.aceengineer.com/capabilities/#fatigue"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-cfd",
@@ -407,7 +407,7 @@
       "value": "9",
       "label": "verification cases + RAO spot-check"
     },
-    "link": "https://www.aceengineer.com/capabilities/#cfd"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-wall-thickness",
@@ -417,7 +417,7 @@
       "value": "10",
       "label": "registered design codes"
     },
-    "link": "https://www.aceengineer.com/capabilities/#wall-thickness"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-viv",
@@ -427,7 +427,7 @@
       "value": "4–8",
       "label": "cross-flow lock-in V_r band"
     },
-    "link": "https://www.aceengineer.com/capabilities/#viv"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-field-development",
@@ -437,7 +437,7 @@
       "value": "4",
       "label": "decision axes"
     },
-    "link": "https://www.aceengineer.com/capabilities/#field-development"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-naval-architecture",
@@ -447,7 +447,7 @@
       "value": "3",
       "label": "hull forms, live explorer"
     },
-    "link": "https://www.aceengineer.com/capabilities/#naval-architecture"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-geotechnical",
@@ -457,7 +457,7 @@
       "value": "α / β",
       "label": "clay / sand skin friction"
     },
-    "link": "https://www.aceengineer.com/capabilities/#geotechnical"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-production-engineering",
@@ -467,7 +467,7 @@
       "value": "±5 / ±15 / ±30%",
       "label": "confidence bands (G/A/R)"
     },
-    "link": "https://www.aceengineer.com/capabilities/#production-engineering"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-drilling-engineering",
@@ -477,7 +477,7 @@
       "value": "P10/P50/P90",
       "label": "pore-pressure uncertainty"
     },
-    "link": "https://www.aceengineer.com/capabilities/#drilling-engineering"
+    "link": "https://www.aceengineer.com/capabilities/"
   },
   {
     "id": "sec-cathodic",
@@ -487,6 +487,6 @@
       "value": "18",
       "label": "CP engine modules"
     },
-    "link": "https://www.aceengineer.com/capabilities/#cathodic"
+    "link": "https://www.aceengineer.com/capabilities/"
   }
 ]
