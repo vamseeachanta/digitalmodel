@@ -5,7 +5,7 @@
 | Module | structural/fatigue_apps |
 | Repository | digitalmodel |
 | Package | src/digitalmodel/structural/fatigue_apps |
-| Pack revision | 0, 2026-10-17 |
+| Pack revision | 1, 2026-10-17 |
 | Code revision | 7aad603be1c6136106dbb2381ce5096b050654f8 |
 | Analysis family | Engineering calculations (EC) |
 | Quality role | Engineering calculations quality manager |
@@ -51,7 +51,7 @@ The reference processor discards input timestamps during superposition, truncate
 | Method / implementation | Basis and limits | Evidence |
 |---|---|---|
 | `ReferenceSeaStateProcessor.process_fatigue_condition` | Quadratic wind scaling, linear wave scaling and addition of the two histories; source histories are shortened to equal length. | [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L364-L391] |
-| `RainflowCounter.count_cycles`, `_extract_reversals`, `_rainflow_algorithm`, `_aggregate_cycles` in `rainflow_counter.py` | Reversal extraction, stack cycle counting, post-count absolute gate and range aggregation; ASTM E1049-85, *Standard Practices for Cycle Counting in Fatigue Analysis*, and Downing and Socie, *Simple rainflow counting algorithms*, are named in the docstring; clause text not checked against the licensed copy. | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L3-L11] [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L46-L119] [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L163-L259] |
+| `RainflowCounter.count_cycles`, `_extract_reversals`, `_rainflow_algorithm`, `_aggregate_cycles` in `rainflow_counter.py` | Reversal extraction, stack cycle counting, post-count absolute gate and range aggregation; ASTM E1049-85, *Standard Practices for Cycle Counting in Fatigue Analysis*, and Downing and Socie, *Simple rainflow counting algorithms*, are named in the docstring; published source: 1982, *International Journal of Fatigue*, 4(1), 31–40 ([publisher record](https://www.sciencedirect.com/science/article/pii/0142112382900184)). Clause text not checked against the licensed copy. | [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L3-L11] [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L46-L119] [src/digitalmodel/structural/fatigue_apps/rainflow_counter.py:L163-L259] |
 | `FatigueDamageCalculator.cycles_to_failure`, `calculate_damage`, `calculate_fatigue_life`, `calculate_combined_damage` | Piecewise S-N evaluation, sum of cycle count / cycles to failure, occurrence weighting, annualisation and reciprocal life; the stress/cycle threshold defect prevents use as a hand-check reference. | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L108-L231] [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L323-L361] |
 | `FatigueDamageCalculator.mean_stress_correction` | Implements three named mean-stress corrections with assumed strengths and an unknown-method identity fallback. | [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L233-L268] |
 | Alternate `fatigue_damage.SNCurve` and `FatigueDamageCalculator` | Separate curve library, stress threshold derived from cycle threshold, damage accumulation, annual damage and reciprocal life; it is a separate implementation, not the exported calculator. | [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L40-L147] [src/digitalmodel/structural/fatigue_apps/fatigue_damage.py:L170-L254] |
@@ -93,15 +93,16 @@ These are executable acceptance checks, not a claim that all production controls
 | G3 NOT_APPLICABLE | No dynamics solver | Offline fatigue calculations do not integrate a dynamic model. | No dynamics run criterion; NOT_APPLICABLE. [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L364-L428] |
 | G4 NOT_APPLICABLE | No diffraction body | No diffraction model is produced by this route. | No mesh criterion; NOT_APPLICABLE. [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L364-L428] |
 | G5 applicable | C5 output readback | Existing `test_save_results` reads generated CSV/JSON from `save_results` and checks output artifacts. | 3 named artifacts present; CSV rows =1; summary life =25.0 years. This checks serialization, not a generated AQG appendix. [tests/structural/fatigue_analysis/test_reference_seastate_processor.py:L250-L300] |
-| G0 applicable | C6 empty-input behavior | `test_missing_data_path`, `test_invalid_csv_format`, `test_empty_reference_selection` exercise the loader/selector fallback. | 0 samples in each returned array; 0 characters in each missing reference string. This documents fallback and does not reject incomplete assessments. [tests/structural/fatigue_analysis/test_reference_seastate_processor.py:L432-L480] |
+| Defect characterisation (outside G0 acceptance) | C6 empty-input behavior | `test_missing_data_path`, `test_invalid_csv_format`, `test_empty_reference_selection` exercise the loader/selector fallback. | 0 samples in each returned array; 0 characters in each missing reference string. This documents fallback and does not reject incomplete assessments. [tests/structural/fatigue_analysis/test_reference_seastate_processor.py:L432-L480] |
 | G1 applicable | C7 empty cycle behavior | `RainflowCounter.count_cycles` with an empty history and its statistics. | 0 ranges, 0 counts, total cycles =0 cycles. [tests/structural/fatigue_analysis/test_rainflow_counter.py:L87-L98] |
 | G1 applicable | C8 lookup regression | Run R1 through `TensionToStressConverter`. | Error =0 MPa at tested synthetic knots; no extrapolation qualification. [tests/structural/fatigue_analysis/test_reference_seastate_processor.py:L59-L75] |
+| G1 applicable | C9 explicit stale-test collection | Run `python -m pytest tests/structural/fatigue_apps/test_load_scaling.py --collect-only -q` explicitly; repository discovery ignores this file, so C1 cannot detect its stale import. | 0 collection errors; currently 1, exposing #1923. [tests/structural/fatigue_apps/test_load_scaling.py:L25-L25] [tests/conftest.py:L53-L57] |
 
 G1 has a Python import/test route only: no external program deck is written or loaded by this reference processor. [src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py:L588-L635]
 
 ## 6. Known failure modes and pitfalls
 
-sweep: 180 found
+sweep: 182 found
 
 This count records reviewed candidate locations, including intended empty-input behavior and explicit failure returns; it is not a count of confirmed defects. Each location below has a disposition and either a section-5 detection check or an explicit detection gap.
 
@@ -113,7 +114,7 @@ rg -n --glob '*.py' 'except|continue|return None|return \[\]|return \{\}|np\.arr
 
 | Reference / defect | Symptom and existing detection | Evidence |
 |---|---|---|
-| #1923 | Stale `LoadScaler` import is suppressed by repository collection policy; explicit collection exposes the absent name. Detection: C1 (collection failure); no implementation correction is made by this pack. | [tests/structural/fatigue_apps/test_load_scaling.py:L25-L25] [src/digitalmodel/structural/fatigue_apps/load_scaling.py:L54-L64] [tests/conftest.py:L53-L57] |
+| #1923 | Stale `LoadScaler` import is suppressed by repository collection policy; explicit collection exposes the absent name. Detection: C9 (collection failure); no implementation correction is made by this pack. | [tests/structural/fatigue_apps/test_load_scaling.py:L25-L25] [src/digitalmodel/structural/fatigue_apps/load_scaling.py:L54-L64] [tests/conftest.py:L53-L57] |
 | issue pending (4) | Alternate rainflow path is documented as failing the counting contract; its batch damage handoff raises while diagnostic APIs remain callable. No section-5 distribution detection check exists for this path; no detection check exists for its discarded filter. | [docs/domains/fatigue/rainflow-path-exposure-2026-09-11.md:L227-L261] [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L222-L245] [src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:L343-L361] |
 
 ### Sweep dispositions
@@ -302,6 +303,8 @@ Inspection date: 2026-10-17; source ranges resolve at the code pin.
 | S178: `integrated_processor_with_naming.py:399-399` [src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py:L394-L404] | Complete analysis with no successful records returns empty DataFrame and dict. | no detection check exists; issue pending (2). |
 | S179: `fatigue_damage_calculator.py:376-383` [src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py:L371-L388] | Demonstration supplies fixed occurrence weight and sample duration; these are demonstration assumptions, not production defaults. | no detection check exists; issue pending (2). |
 | S180: `load_scaling.py:329-336` [src/digitalmodel/structural/fatigue_apps/load_scaling.py:L324-L341] | Loads combine by array index and regenerated time vector rather than checked input timestamps. | no detection check exists; issue pending (2). |
+| S181: `visualizer.py:269-271` [src/digitalmodel/structural/fatigue_apps/visualizer.py:L264-L276] | Missing overall life, condition count and strut count become zero in the plotted summary, concealing absent evidence. | no detection check exists; issue pending (3). |
+| S182: `visualizer.py:465-466` [src/digitalmodel/structural/fatigue_apps/visualizer.py:L460-L471] | Missing overall life and result count become zero in the interactive summary, concealing absent evidence. | no detection check exists; issue pending (3). |
 
 ## 7. Lessons log
 
@@ -678,7 +681,7 @@ The package documentation read comprises `README.md`, `INPUT_FILE_STRUCTURE.md`,
 
 ### Test inventory and execution
 
-Execution uses `PYTHONPATH=src uv run --no-sources --extra test python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`, with the required host executable and a dedicated environment. No `addopts` override is used. AFTER means the uncommitted documentation tree at the same code revision, not a post-commit execution.
+Execution uses `PYTHONPATH=src uv run --no-sources --extra test python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`, with the uv executable and a dedicated environment. No `addopts` override is used. AFTER means the uncommitted documentation tree at the same code revision, not a post-commit execution.
 
 | Run / selected paths | BASE result | AFTER result |
 |---|---|---|
@@ -700,8 +703,9 @@ The eight directly discovered module test files contain 81 syntactic test defini
 |---|---|---|
 | UNVERIFIED: ABS/DNV/Eurocode edition, clause, preset provenance and Citation sidecar; resolve the dimensional branch defect and supply an independent damage benchmark before engineering use. | Engineering calculations quality manager | issue pending (1) |
 | UNVERIFIED: coordinate/heading/phase conventions, physical data lineage, dataset inventory IDs and calibrated stress conversion; sidecar entry: to be created. Defaults and reference histories are not a qualified design basis. | Maintainer and engineering calculations quality manager | issue pending (2) |
+| No G0 units/citation detection check exists: add checks that reject incompatible units and missing or unqualified Citation sidecars; C0 checks missing paths and C6 only characterises fallback. | Maintainer and engineering calculations quality manager | issue pending (1); issue pending (2) |
 | Missing-case completeness, fixed timestep, truncation, numeric text parsing, unit validation and synthetic fallback controls listed in section 6. | Maintainer | issue pending (2) |
-| Empty-success status, partial output, generated AQG appendix/fingerprint evidence and unimplemented validation status checks. C5 checks serialization only. | Maintainer | issue pending (3) |
+| Empty-success status, partial output, generated AQG appendix/fingerprint evidence and unimplemented validation status checks. C5 checks serialization only. Trace `overall_fatigue_life` to its input set in a generated record, including source histories, units, scaling, occurrence weights, timestep and calculation revision; no detection check exists. | Maintainer | issue pending (3) |
 | Diagnostic rainflow limits, ignored filter, stale documentation imports/test commands and shared-log assignment. README/document validation claims remain unverified until independently checked. | Maintainer | issue pending (4) |
 | Stale load-scaling test import and any test-run baseline failures recorded above; no module code is changed here. | Maintainer | #1923; issue pending (4) |
 | Additional computing definitions, dedicated method families and effective-tension classification refinement in the map. | Maintainer | issue pending (5) |
