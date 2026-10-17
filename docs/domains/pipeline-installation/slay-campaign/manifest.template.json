@@ -1,6 +1,6 @@
 {
   "schema": "slay-native-manifest-1",
-  "criteria_revision": "execution-2",
+  "criteria_revision": "execution-3",
   "status": "not_run",
   "driver": "scripts/orcaflex/prepare_slay_campaign.py",
   "launch_enabled": false,

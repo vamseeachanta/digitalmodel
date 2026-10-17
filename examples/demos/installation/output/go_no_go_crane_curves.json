@@ -64,7 +64,7 @@
       "note": "headline SWL only (no published radius curve) \u2014 radius not applied"
     },
     {
-      "vessel": "BokaLift 2",
+      "vessel": "HLV-A",
       "vessel_type": "Monohull heavy-lift crane vessel (converted drillship)",
       "swl_at_radius_te": 3898.4,
       "static_uc": 0.308,

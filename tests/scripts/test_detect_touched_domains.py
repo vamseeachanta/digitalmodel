@@ -48,6 +48,18 @@ def load_detector_module():
     return module
 
 
+@pytest.mark.parametrize(("path", "expected"), [
+    ("src/digitalmodel/orcaflex/installation_analysis.py",
+     {"orcaflex", "marine-ops-other", "workflows"}),
+    ("src/digitalmodel/orcaflex/source.py", {"orcaflex"}),
+])
+def test_shared_skew_basis_routes(path: str, expected: set[str]) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    assert selected == expected
+
+
 def run_detector(
     repo: Path, domains_file: Path, *args: str
 ) -> subprocess.CompletedProcess[str]:
@@ -1370,7 +1382,8 @@ def test_bha_database_owned_and_executed_by_subsea():
     detector = load_detector_module()
     domains = detector.parse_domains(root / "tests/DOMAINS.md")
     for path in ("tests/bha_database/test_database.py", "data/bha_database/examples.yml",
-                 "data/bha_database/manifest.yaml", "scripts/bha_database/build_manifest.py",
+                 "data/bha_database/manifest.yaml", "data/bha_standards/drill_collars_std.yml",
+                 "scripts/bha_database/build_manifest.py",
                  "docs/bha_database.md"):
         selected = detector.touched_domains([path], domains)
         assert {domain.name for domain in selected} == {"subsea"}, path

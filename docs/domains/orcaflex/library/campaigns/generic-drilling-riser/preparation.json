@@ -1,0 +1,88 @@
+{
+  "state": "pre-flight staged statics converged in all 24 cases; shielding and minimum-tension decisions pending; production blocked",
+  "bibliographic_sources": {
+    "16Q_and_5L": "API, 2019 Publications Catalog, Exploration and Production, pages 30 and 10; https://www.api.org/~/media/files/publications/2019_catalog/2019-pubs-catalog-exploration-and-production.pdf; opened 2026-10-13",
+    "2RD": "API, public errata notice dated June 10, 2009, affected-publication heading; https://www.api.org/publications-standards-and-statistics/standards-addenda-and-errata/standards-addenda-and-errata/~/media/fd3ebd590ffd42e5b9313e9e2247b691.ashx; opened 2026-10-13"
+  },
+  "duration_basis": "Measured pre-flight run_case durations are 23 s for o0-c0 and 43 s for o5-c3. Six zero-current cases and eighteen current cases give about 15 min for 24 cases (6 x 23 + 18 x 43 = 912 s). The manifest allows 0.25 h expected and 0.75 h maximum for computation, retaining the threefold allowance; retry backoff and licence waiting are additional. The full 24-case duration is an estimate from two measured cases, not a measured campaign runtime.",
+  "template_digest_basis": "UTF-8 source text normalized to LF; SOURCE_SHA256 in the runner manifest records that digest.",
+  "criteria_basis": "Joint angle criteria, yield strength and stress design factor require an external criteria file; criteria-form.json contains no numerical defaults. The report and driver require --criteria. The top-tension estimate is an assumed criterion value, not the modelled tension. Connected assembly capacity is not established.",
+  "method": "vessel offset applied as a static mean position; no prescribed vessel motion; no wave is applied: this sweep covers vessel offset and current only",
+  "extraction": {
+    "period": "main stage only; stage index one; build-up excluded",
+    "lower_angle": "Flex Joint Rigid Piece, End B, connection-relative Ez-Angle; mean and maximum absolute degrees",
+    "upper_angle": "Riser Slip Joint, End A, connection-relative Ez-Angle; mean and maximum absolute degrees",
+    "top_tension": "Riser, End A, Effective tension; minimum and maximum kN",
+    "stroke": "Tensioner Ring vertical displacement from initial elevation relative to fixed vessel; minimum and maximum m; not individual tensioner-link extension",
+    "stress": "Riser, Max von Mises stress range-graph maximum; native kN/m2 converted to MPa",
+    "qualification": "Actual channel availability, units and interpretation require native readback before engineering acceptance. Missing channels and incomplete states are refused."
+  },
+  "retention": "Every completed case retains summary metrics and input identity. Native simulation files remain only for the greatest normalized criterion demand at each current speed; the first case resolves ties. Stale summaries are preserved outside the progress glob.",
+  "recovery": "A solver-version change requires a new output directory and a complete rerun. Preserve the previous output directory as evidence. A criteria-file change also requires a new output directory and a complete rerun.",
+  "approval_steps": [
+    "Re-pin ref to the merged commit.",
+    "Replace every SOLVER_REPO_DIR placeholder, including progress.glob; copy the manifest under the campaign-id filename generic-drilling-riser-r1.json.",
+    "Supply the external criteria file and replace CRITERIA_FILE; retain its digest with the results.",
+    "Run runner validation against the resolved approval copy.",
+    "Add its new digest to approvals.tsv only after approval."
+  ],
+  "screen_comparison_boundary": "The analytical screen uses constant assumed top tension and uniform drag with pinned ends. Both joint-angle comparisons are omitted because constant tension can introduce an error of about a factor of two. Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. Stress remains approximate. Attached members, pressure stress and nonlinear tensioners are omitted. Geometric extension is not a mechanical stroke prediction.",
+  "release_boundary": "External sharing of results and method remains conditional on maintainer acceptance of the derivative basis and redistribution terms.",
+  "tension_acceptance_basis": "8,345.7 kN is the legacy screen reading, not graded. ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed against a held edition before report use. Check A: sum(F_link,z) - W_r >= T_SRmin, sum of Riser/Choke/Kill End B effective tensions >= (fwt - 1)*Ws, and every member minimum >= 0. Check B: (N-n)/N*sum(F_link,z) - W_r >= T_SRmin. Both checks are binding. Builder margins are hand estimates only; native qualification is pending. Mechanical/hydraulic efficiency is assumed 1, a known limit. Production stays held. No operating window is established.",
+  "statics_method": "At the specified vessel offset, solve zero-current statics, then ramp current through 25%, 50%, 75% and 100% of the specified speed, retaining calculated positions before each current change. No vessel-offset continuation is applied. Zero-current cases solve once. Every stage must reach InStaticState before dynamics. Pre-flight statics converged in all 24 cases (72 of 72 current steps at the old setting; new setting statics pending). Source: src/digitalmodel/drilling_riser/campaign.py::CURRENT_RAMP; _statics_path current ramp; scripts/orcaflex/run_generic_drilling_riser_campaign.py::calculate_staged_statics; docs/domains/orcaflex/reference/general-data-statics.md:16; https://www.orcina.com/webhelp/OrcaFlex/Content/html/Generaldata,Statics.htm (accessed 2026-10-17)",
+  "preflight_requirements": [
+    "Record the reviewed source revision and model digests; re-review before native execution.",
+    "Load every case and record errors, warnings, draught and P-y readback.",
+    "Validate each includes/*.yml with the production YAML validator.",
+    "Use calculate_staged_statics for every case; record stage outcomes, elapsed time, iteration evidence, top and bottom effective tensions and ring and drill-string positions.",
+    "Record per-case contact forces and confirm Relationship1 through Relationship4 are present and enabled.",
+    "Repeat the specified short dynamics after staged statics; record durations, normal stop and retained-channel readback against the approved QA criteria.",
+    "Resolve the shielding warning and minimum-tension criterion with the maintainer before production; a timeout or cancelled solve is not equilibrium."
+  ],
+  "retry_limitations": "Runner retries may repeat deterministic statics failures and configuration failures. A retry or longer timeout is not evidence of convergence.",
+  "tension_basis": {
+    "ws_kn": 4889.232532101141,
+    "internal_area_m2": 0.30326499172653004,
+    "tsrmin_kn": 8760.255203118819,
+    "carried_weight_kn": 49.40489369239872,
+    "effective_weight_kn": 8515.79357651376,
+    "stiffness_kn_m": 14836.365715723194,
+    "required_vertical_kn": 11746.213462414957,
+    "spring_table_factor": 1.215,
+    "fleet_cosine": 0.8489830028137563,
+    "system_factor": 1.3333333333333333,
+    "fleet_adjusted_system_factor": 1.570506510630143,
+    "mechanical_hydraulic_efficiency": 1,
+    "point_z_m": -1000,
+    "n_units": 4,
+    "n_fail": 1,
+    "fwt": 1.05,
+    "buoyancy_kn": 0,
+    "mud_density_te_m3": 2.2,
+    "member_basis": [
+      {
+        "ws_kn": 3362.162892050631,
+        "internal_area_m2": 0.2827433388230814,
+        "head_kn": 3381.155115548548,
+        "length_m": 1020.0,
+        "ea_kn": 10406525.665016199
+      },
+      {
+        "ws_kn": 763.5348200252549,
+        "internal_area_m2": 0.01026082645172433,
+        "head_kn": 122.70296443203573,
+        "length_m": 1020.0,
+        "ea_kn": 2363283.6825107294
+      },
+      {
+        "ws_kn": 763.5348200252549,
+        "internal_area_m2": 0.01026082645172433,
+        "head_kn": 122.70296443203573,
+        "length_m": 1020.0,
+        "ea_kn": 2363283.6825107294
+      }
+    ],
+    "source": "ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3, Subsection 3, item iii), Eqs (3.1)-(3.2); API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition (2017); clause text to be confirmed against a held edition before report use",
+    "carried_weight_basis": "hand estimate: ring plus half dry slip-joint and contents weight; native uses End B global reaction"
+  }
+}

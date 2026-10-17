@@ -625,6 +625,12 @@ def router(cfg: dict[str, Any]) -> dict[str, Any]:
 
     summary = {
         "calculation": "pore_pressure",
+        "not_covered": [
+            "collapse (shear failure)",
+            "weak bedding planes",
+            "natural fractures",
+            "chemical or time-dependent effects",
+        ],
         "inputs": dict(inputs),
         "result": result,
     }

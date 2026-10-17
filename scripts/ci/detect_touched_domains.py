@@ -38,6 +38,7 @@ FULL_MATRIX_PATHS = {
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("data/bha_database/", ("subsea",)),
+    ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),
     ("docs/bha_database.md", ("subsea",)),
     # Domain records bind retained inputs and outputs checked by contracts tests.
@@ -53,6 +54,8 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("cathodic-protection",),
     ),
     ("src/digitalmodel/orcaflex/", ("orcaflex",)),
+    ("src/digitalmodel/orcaflex/installation_analysis.py",
+     ("orcaflex", "marine-ops-other", "workflows")),
     ("src/digitalmodel/visualization/agent_dashboard.py", ("workflows",)),
     ("src/digitalmodel/workflows/", ("workflows",)),
     # The capabilities census SSOT and its builder live outside src/ and tests/,

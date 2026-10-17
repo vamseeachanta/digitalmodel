@@ -1,0 +1,1052 @@
+{
+  "qualification": "hand operating points only; native statics decide; production held",
+  "source": "https://github.com/vamseeachanta/digitalmodel/pull/2684",
+  "spring_table_factor": 1.215,
+  "cases": [
+    {
+      "case_id": "o0-c0",
+      "old_hand": {
+        "vertical_kn": 9823.908403611254,
+        "link_lengths_m": [
+          5.409247361126766,
+          5.409247361126769,
+          5.409247361126768,
+          5.409247361126768
+        ],
+        "ring_z_m": 20.371830057802878,
+        "check_a_margin_kn": 1014.2483068000365,
+        "check_b_margin_kn": -1441.728794102777,
+        "bottom_margin_kn": 1014.2483068000372,
+        "check_a_pass": true,
+        "check_b_pass": false,
+        "member_min_kn": 418.39082176406066,
+        "qualification": "hand estimate only; native checks pending"
+      },
+      "raised_hand": {
+        "vertical_kn": 11816.594584590053,
+        "link_lengths_m": [
+          5.2947869417546825,
+          5.294786941754684,
+          5.294786941754684,
+          5.294786941754684
+        ],
+        "ring_z_m": 20.506140994804586,
+        "check_a_margin_kn": 3006.9344877788353,
+        "check_b_margin_kn": 52.78584163132109,
+        "bottom_margin_kn": 3006.9344877788362,
+        "check_a_pass": true,
+        "check_b_pass": true,
+        "member_min_kn": 729.5818470570637,
+        "qualification": "hand estimate only; native checks pending"
+      },
+      "recorded_native_old_vertical_kn": 9801.7,
+      "hand_minus_native_kn": 22.208403611253743
+    },
+    {
+      "case_id": "o5-c3",
+      "old_hand": {
+        "vertical_kn": 11242.695261425404,
+        "link_lengths_m": [
+          8.004431616151818,
+          8.00443161615182,
+          8.00443161615182,
+          8.00443161615182
+        ],
+        "ring_z_m": 17.501271741311676,
+        "check_a_margin_kn": 2433.035164614186,
+        "check_b_margin_kn": -377.6386507421648,
+        "bottom_margin_kn": 2433.035164614187,
+        "check_a_pass": true,
+        "check_b_pass": false,
+        "member_min_kn": 639.9579411478835,
+        "qualification": "hand estimate only; native checks pending"
+      },
+      "raised_hand": {
+        "vertical_kn": 13277.557959686153,
+        "link_lengths_m": [
+          7.24431486416665,
+          7.244314864166652,
+          7.244314864166651,
+          7.244314864166651
+        ],
+        "ring_z_m": 18.318675441861405,
+        "check_a_margin_kn": 4467.8978628749355,
+        "check_b_margin_kn": 1148.508372953398,
+        "bottom_margin_kn": 4467.897862874936,
+        "check_a_pass": true,
+        "check_b_pass": true,
+        "member_min_kn": 957.7355297349679,
+        "qualification": "hand estimate only; native checks pending"
+      },
+      "recorded_native_old_vertical_kn": 11684.9,
+      "hand_minus_native_kn": -442.20473857459547
+    }
+  ],
+  "links": [
+    {
+      "case_id": "o0-c0",
+      "link": "Tens_AFT",
+      "length_m": 5.2947869417546825,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.33092418385966765,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c0",
+      "link": "Tens_FWD",
+      "length_m": 5.294786941754684,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.33092418385966776,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c0",
+      "link": "Tens_STBD",
+      "length_m": 5.294786941754684,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.33092418385966776,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c0",
+      "link": "Tens_PORT",
+      "length_m": 5.294786941754684,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.33092418385966776,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c1",
+      "link": "Tens_AFT",
+      "length_m": 5.308980913632208,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.331811307102013,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c1",
+      "link": "Tens_FWD",
+      "length_m": 5.30898091363221,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3318113071020131,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c1",
+      "link": "Tens_STBD",
+      "length_m": 5.30898091363221,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3318113071020131,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c1",
+      "link": "Tens_PORT",
+      "length_m": 5.30898091363221,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3318113071020131,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c2",
+      "link": "Tens_AFT",
+      "length_m": 5.51195891788172,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3444974323676075,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c2",
+      "link": "Tens_FWD",
+      "length_m": 5.511958917881722,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3444974323676076,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c2",
+      "link": "Tens_STBD",
+      "length_m": 5.511958917881722,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3444974323676076,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c2",
+      "link": "Tens_PORT",
+      "length_m": 5.511958917881722,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3444974323676076,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c3",
+      "link": "Tens_AFT",
+      "length_m": 6.262451428377557,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3914032142735973,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c3",
+      "link": "Tens_FWD",
+      "length_m": 6.262451428377559,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3914032142735974,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c3",
+      "link": "Tens_STBD",
+      "length_m": 6.262451428377559,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3914032142735974,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o0-c3",
+      "link": "Tens_PORT",
+      "length_m": 6.262451428377559,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3914032142735974,
+      "master_sha256": "15ef0d7f5ad9b7b80be94143dc807ac2a93cb3f96d3e0e2deabe6bd0efbf891f",
+      "objects_sha256": "3a0e086eab9374cbe3e1141247327b0a3038c860185d5dc7092570bf1a3be7fc"
+    },
+    {
+      "case_id": "o1-c0",
+      "link": "Tens_AFT",
+      "length_m": 5.335650162605107,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3334781351628192,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c0",
+      "link": "Tens_FWD",
+      "length_m": 5.335650162605109,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3334781351628193,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c0",
+      "link": "Tens_STBD",
+      "length_m": 5.335650162605108,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.33347813516281927,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c0",
+      "link": "Tens_PORT",
+      "length_m": 5.335650162605108,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.33347813516281927,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c1",
+      "link": "Tens_AFT",
+      "length_m": 5.3497380838663675,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.33435863024164797,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c1",
+      "link": "Tens_FWD",
+      "length_m": 5.349738083866369,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3343586302416481,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c1",
+      "link": "Tens_STBD",
+      "length_m": 5.349738083866368,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.334358630241648,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c1",
+      "link": "Tens_PORT",
+      "length_m": 5.349738083866368,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.334358630241648,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c2",
+      "link": "Tens_AFT",
+      "length_m": 5.551476574158537,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.34696728588490855,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c2",
+      "link": "Tens_FWD",
+      "length_m": 5.5514765741585395,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3469672858849087,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c2",
+      "link": "Tens_STBD",
+      "length_m": 5.551476574158539,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.34696728588490866,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c2",
+      "link": "Tens_PORT",
+      "length_m": 5.551476574158539,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.34696728588490866,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c3",
+      "link": "Tens_AFT",
+      "length_m": 6.299820176989037,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3937387610618148,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c3",
+      "link": "Tens_FWD",
+      "length_m": 6.299820176989039,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.39373876106181493,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c3",
+      "link": "Tens_STBD",
+      "length_m": 6.299820176989039,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.39373876106181493,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o1-c3",
+      "link": "Tens_PORT",
+      "length_m": 6.299820176989039,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.39373876106181493,
+      "master_sha256": "d496aa6d16f45cf55be20875d2eb5107a3d60882970f73dd614ab3a218d9d287",
+      "objects_sha256": "77498dfa4d2c011b1f00f4c791cd8a0735e488fb3c88efeddf91fd02b2cb6285"
+    },
+    {
+      "case_id": "o2-c0",
+      "link": "Tens_AFT",
+      "length_m": 5.4591774036488685,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3411985877280543,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c0",
+      "link": "Tens_FWD",
+      "length_m": 5.45917740364887,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3411985877280544,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c0",
+      "link": "Tens_STBD",
+      "length_m": 5.45917740364887,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3411985877280544,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c0",
+      "link": "Tens_PORT",
+      "length_m": 5.45917740364887,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3411985877280544,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c1",
+      "link": "Tens_AFT",
+      "length_m": 5.472963433292149,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3420602145807593,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c1",
+      "link": "Tens_FWD",
+      "length_m": 5.472963433292151,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3420602145807594,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c1",
+      "link": "Tens_STBD",
+      "length_m": 5.472963433292151,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3420602145807594,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c1",
+      "link": "Tens_PORT",
+      "length_m": 5.472963433292151,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3420602145807594,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c2",
+      "link": "Tens_AFT",
+      "length_m": 5.671127050162474,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.35444544063515465,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c2",
+      "link": "Tens_FWD",
+      "length_m": 5.671127050162476,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.35444544063515476,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c2",
+      "link": "Tens_STBD",
+      "length_m": 5.671127050162476,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.35444544063515476,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c2",
+      "link": "Tens_PORT",
+      "length_m": 5.671127050162476,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.35444544063515476,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c3",
+      "link": "Tens_AFT",
+      "length_m": 6.413001437425633,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.40081258983910206,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c3",
+      "link": "Tens_FWD",
+      "length_m": 6.413001437425635,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4008125898391022,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c3",
+      "link": "Tens_STBD",
+      "length_m": 6.413001437425634,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4008125898391021,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o2-c3",
+      "link": "Tens_PORT",
+      "length_m": 6.413001437425634,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4008125898391021,
+      "master_sha256": "ea229d8475655e43104d146ebb796237976903ce6c599c112054e366ea190185",
+      "objects_sha256": "b656cc702537b8ebedb298863db8ed6f46593af4e07fb6951748c735707e3011"
+    },
+    {
+      "case_id": "o3-c0",
+      "link": "Tens_AFT",
+      "length_m": 5.667989218129871,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.35424932613311694,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c0",
+      "link": "Tens_FWD",
+      "length_m": 5.667989218129873,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.35424932613311705,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c0",
+      "link": "Tens_STBD",
+      "length_m": 5.667989218129872,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.354249326133117,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c0",
+      "link": "Tens_PORT",
+      "length_m": 5.667989218129872,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.354249326133117,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c1",
+      "link": "Tens_AFT",
+      "length_m": 5.6813198345733165,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3550824896608323,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c1",
+      "link": "Tens_FWD",
+      "length_m": 5.681319834573318,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3550824896608324,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c1",
+      "link": "Tens_STBD",
+      "length_m": 5.681319834573317,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.35508248966083233,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c1",
+      "link": "Tens_PORT",
+      "length_m": 5.681319834573317,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.35508248966083233,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c2",
+      "link": "Tens_AFT",
+      "length_m": 5.873962140589002,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.36712263378681265,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c2",
+      "link": "Tens_FWD",
+      "length_m": 5.873962140589004,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.36712263378681276,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c2",
+      "link": "Tens_STBD",
+      "length_m": 5.873962140589003,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3671226337868127,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c2",
+      "link": "Tens_PORT",
+      "length_m": 5.873962140589003,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3671226337868127,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c3",
+      "link": "Tens_AFT",
+      "length_m": 6.605035196400157,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4128146997750098,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c3",
+      "link": "Tens_FWD",
+      "length_m": 6.605035196400158,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4128146997750099,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c3",
+      "link": "Tens_STBD",
+      "length_m": 6.605035196400158,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4128146997750099,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o3-c3",
+      "link": "Tens_PORT",
+      "length_m": 6.605035196400158,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4128146997750099,
+      "master_sha256": "cccb36b7c9a34ff289ac5cee3f3471b6731e97000e4f7ea7a7417fef3aefa4b7",
+      "objects_sha256": "e2c8df19254668cc2750aa81a4e72820940df18a37c66acbee88694638c4ee50"
+    },
+    {
+      "case_id": "o4-c0",
+      "link": "Tens_AFT",
+      "length_m": 5.965869208423501,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3728668255264688,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c0",
+      "link": "Tens_FWD",
+      "length_m": 5.965869208423503,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.37286682552646894,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c0",
+      "link": "Tens_STBD",
+      "length_m": 5.965869208423503,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.37286682552646894,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c0",
+      "link": "Tens_PORT",
+      "length_m": 5.965869208423503,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.37286682552646894,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c1",
+      "link": "Tens_AFT",
+      "length_m": 5.978644154805886,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3736652596753679,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c1",
+      "link": "Tens_FWD",
+      "length_m": 5.978644154805888,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.373665259675368,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c1",
+      "link": "Tens_STBD",
+      "length_m": 5.978644154805888,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.373665259675368,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c1",
+      "link": "Tens_PORT",
+      "length_m": 5.978644154805888,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.373665259675368,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c2",
+      "link": "Tens_AFT",
+      "length_m": 6.164345363052293,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3852715851907683,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c2",
+      "link": "Tens_FWD",
+      "length_m": 6.164345363052295,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.38527158519076843,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c2",
+      "link": "Tens_STBD",
+      "length_m": 6.164345363052294,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3852715851907684,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c2",
+      "link": "Tens_PORT",
+      "length_m": 6.164345363052294,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3852715851907684,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c3",
+      "link": "Tens_AFT",
+      "length_m": 6.880408006624088,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4300255004140055,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c3",
+      "link": "Tens_FWD",
+      "length_m": 6.88040800662409,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4300255004140056,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c3",
+      "link": "Tens_STBD",
+      "length_m": 6.880408006624089,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.43002550041400556,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o4-c3",
+      "link": "Tens_PORT",
+      "length_m": 6.880408006624089,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.43002550041400556,
+      "master_sha256": "132cf911248522d02568debbe8fa65b13f41ccbc5d3966b86e84c4ec1bc66c5b",
+      "objects_sha256": "940dfb499a201034911e73b75d67ebb3604f5bc5261645e6b984c4f31f6be793"
+    },
+    {
+      "case_id": "o5-c0",
+      "link": "Tens_AFT",
+      "length_m": 6.3570689967936,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3973168122996,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c0",
+      "link": "Tens_FWD",
+      "length_m": 6.3570689967936005,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.39731681229960003,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c0",
+      "link": "Tens_STBD",
+      "length_m": 6.3570689967936005,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.39731681229960003,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c0",
+      "link": "Tens_PORT",
+      "length_m": 6.3570689967936005,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.39731681229960003,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c1",
+      "link": "Tens_AFT",
+      "length_m": 6.369237277461867,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3980773298413667,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c1",
+      "link": "Tens_FWD",
+      "length_m": 6.369237277461869,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3980773298413668,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c1",
+      "link": "Tens_STBD",
+      "length_m": 6.369237277461869,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3980773298413668,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c1",
+      "link": "Tens_PORT",
+      "length_m": 6.369237277461869,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.3980773298413668,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c2",
+      "link": "Tens_AFT",
+      "length_m": 6.547115419652467,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4091947137282792,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c2",
+      "link": "Tens_FWD",
+      "length_m": 6.547115419652469,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4091947137282793,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c2",
+      "link": "Tens_STBD",
+      "length_m": 6.547115419652468,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.40919471372827926,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c2",
+      "link": "Tens_PORT",
+      "length_m": 6.547115419652468,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.40919471372827926,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c3",
+      "link": "Tens_AFT",
+      "length_m": 7.24431486416665,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.45276967901041565,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c3",
+      "link": "Tens_FWD",
+      "length_m": 7.244314864166652,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.45276967901041576,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c3",
+      "link": "Tens_STBD",
+      "length_m": 7.244314864166651,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4527696790104157,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    },
+    {
+      "case_id": "o5-c3",
+      "link": "Tens_PORT",
+      "length_m": 7.244314864166651,
+      "table_min_m": 0,
+      "table_max_m": 16,
+      "table_fraction": 0.4527696790104157,
+      "master_sha256": "29567f4795c1c57e6b912f35e2bc8573af20a82b0cd80b5e126c3988d4fb9f03",
+      "objects_sha256": "542db5da0f0910e4397316a4c7279557b590318ac923564e829f33ef51b75a43"
+    }
+  ],
+  "largest_table_fraction": 0.45276967901041576,
+  "check_b_before_correction_kn": 52.78584163132109,
+  "vertical_correction_kn": -22.208403611253743,
+  "check_b_after_correction_kn": 36.12953892288078,
+  "check_b_after_ratio_calibration_kn": 32.750966681601795
+}
