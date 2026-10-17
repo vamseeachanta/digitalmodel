@@ -333,7 +333,7 @@ class TestWinchReferences:
 class TestDuplicateNames:
     """Tests for duplicate object name detection."""
 
-    def test_duplicate_vessel_name_warning(self, validator: PostGenerationValidator):
+    def test_duplicate_vessel_name_error(self, validator: PostGenerationValidator):
         files = {
             "06_vessels.yml": {
                 "Vessels": [
@@ -346,10 +346,10 @@ class TestDuplicateNames:
         dups = [w for w in warnings if w.category == "duplicate"]
         assert len(dups) == 1
         assert "Barge1" in dups[0].message
-        assert dups[0].level == "warning"
+        assert dups[0].level == "error"
 
-    def test_duplicate_across_files_warning(self, validator: PostGenerationValidator):
-        """Same vessel name in two different files should warn."""
+    def test_duplicate_across_files_error(self, validator: PostGenerationValidator):
+        """Same vessel name in two different files must produce an error."""
         files = {
             "06_vessels.yml": {
                 "Vessels": [{"Name": "Barge1"}],
@@ -363,8 +363,8 @@ class TestDuplicateNames:
         assert len(dups) == 1
         assert "Barge1" in dups[0].message
 
-    def test_no_duplicate_different_sections(self, validator: PostGenerationValidator):
-        """Same name in different section types is fine (e.g. Line and Vessel)."""
+    def test_duplicate_different_sections_error(self, validator: PostGenerationValidator):
+        """Object names share one namespace across section types."""
         files = {
             "06_vessels.yml": {
                 "Vessels": [{"Name": "Barge1"}],
@@ -375,7 +375,8 @@ class TestDuplicateNames:
         }
         warnings = validator.validate_data(files)
         dups = [w for w in warnings if w.category == "duplicate"]
-        assert dups == []
+        assert len(dups) == 1
+        assert dups[0].level == "error"
 
 
 class TestConnectionTargets:

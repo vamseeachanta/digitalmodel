@@ -61,7 +61,11 @@ def specification(case):
             },
             # Zero-height Airy matches the repository still-water form in
             # docs/domains/pipeline-installation/slay-campaign/models/
-            # d0-t0/includes/03_environment.yml. "No waves" is not a native enum.
+            # d0-t0/includes/03_environment.yml. The native load record in
+            # docs/domains/pipeline-installation/slay-campaign/
+            # native-qa-followup.html records all six S-lay models loading
+            # with this include form; it does not establish B3 statics clearance.
+            # "No waves" is not a native enum.
             "waves": {"trains": [{"type": "Airy", "height": 0, "period": 8}]},
             "current": {"speed": 0}, "wind": {"speed": 0},
         },

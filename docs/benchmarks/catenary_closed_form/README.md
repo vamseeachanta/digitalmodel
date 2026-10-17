@@ -17,6 +17,7 @@ distance from the top to touchdown. Each quantity must satisfy its own band.
 | 1 | 2026-10-15 | Initial closed-form references and generated statics inputs. |
 | 2 | 2026-10-15 | Added seabed support and penetration bounds; clarified angle exports and the finite-EA offset. |
 | 3 | 2026-10-15 | Added a checked public equation source and recorded normal stiffness in the reference inputs. |
+| 4 | 2026-10-16 | Cited the native still-water load record; added production validation regressions and LF checkout protection. |
 
 ## Inputs and units
 
@@ -26,6 +27,9 @@ z = -150 m. There is no current, wave or wind loading, vessel or other object.
 The inputs express still water as `WaveType: Airy`, `WaveHeight: 0` and
 `WavePeriod: 8`, following the repository form in
 `docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/03_environment.yml`.
+The [native load record](../../domains/pipeline-installation/slay-campaign/native-qa-followup.html)
+records all six S-lay models loading natively with this environment include form;
+that precedent establishes the accepted serialization, not B3 statics clearance.
 Each line retains its `catenary_c1` or `catenary_c2` name; its line type uses
 the distinct `_type` suffix, including the line section reference.
 These offline serialization checks do not establish native benchmark clearance;
