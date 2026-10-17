@@ -13,5 +13,3 @@ four_point_skew:
   tolerances:
     general_length_m: 0.01
     padeye_elevation_m: 0
-  code_minimum_skl: 1.25
-  code_minimum_source: Illustrative supplied minimum for this example; verify governing standard before engineering use

@@ -19,7 +19,7 @@ workflows:
     invocation: "uv run --no-sources python -m digitalmodel.marine_ops.installation.four_point_skew {input}"
     outputs:
       - examples/workflows/four-point-skew/results/skew_summary.json
-    test: tests/marine_ops/installation/test_four_point_skew.py::test_workflow_cli_and_registry
+    test: tests/workflows/test_four_point_skew_workflow.py::test_workflow_cli_and_registry
     runtime: standalone
   - id: catenary
     basename: catenary

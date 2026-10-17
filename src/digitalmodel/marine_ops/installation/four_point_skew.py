@@ -3,19 +3,37 @@
 """Four-point single-hook lift: linear axial springs and tension-only skew.
 
 SI units throughout. Nominal padeyes must be horizontal and in convex perimeter
-order. The hook is above the CoG at each envelope position. See the durable
-workflow README for derivation, tolerance definitions and qualification limits.
+order. A rigid rotation aligns hook-to-CoG with world vertical in each case.
+See the workflow README for derivation, tolerance definitions and limits.
 This module has a standalone CLI to avoid loading unrelated solver adapters.
 """
 
 from __future__ import annotations
 
 import argparse
+import ast
 from itertools import combinations, product
 import json
 from pathlib import Path
 
 import numpy as np
+
+
+def _screen_basis():
+    # Read only literal assignments: importing the OrcaFlex package initializer
+    # would load unrelated adapters. PR 2678 remains the single value source.
+    path = Path(__file__).resolve().parents[2] / "orcaflex" / "installation_analysis.py"
+    names = {"_SKL_BY_LEG_COUNT", "_SKL_REFERENCE"}
+    values = {
+        node.targets[0].id: ast.literal_eval(node.value)
+        for node in ast.parse(path.read_text(encoding="utf-8")).body
+        if isinstance(node, ast.Assign) and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name) and node.targets[0].id in names
+    }
+    return values["_SKL_BY_LEG_COUNT"][4], values["_SKL_REFERENCE"]
+
+
+FOUR_LEG_MINIMUM_SKL, FOUR_LEG_MINIMUM_SOURCE = _screen_basis()
 
 
 def _array(value, shape, name):
@@ -52,7 +70,8 @@ def _validate(settings):
     }
     if set(settings) - allowed:
         raise ValueError(f"Unknown settings: {sorted(set(settings) - allowed)}")
-    required = allowed - {"payload_warp_stiffness_N_per_m", "tolerances"}
+    required = allowed - {"payload_warp_stiffness_N_per_m", "tolerances",
+                          "code_minimum_skl", "code_minimum_source"}
     if required - set(settings):
         raise ValueError(f"Missing settings: {sorted(required - set(settings))}")
     points = _array(settings["lift_points_m"], (4, 3), "lift_points_m")
@@ -69,8 +88,12 @@ def _validate(settings):
     lengths = _array(settings["sling_length_m"], (4,), "sling_length_m")
     if np.any(ea <= 0) or np.any(lengths <= 0):
         raise ValueError("All sling EA and reference lengths must be positive")
-    _scalar(settings["code_minimum_skl"], "code_minimum_skl", 1, inclusive=True)
-    if not isinstance(settings["code_minimum_source"], str) or not settings["code_minimum_source"].strip():
+    _scalar(settings.get("code_minimum_skl", FOUR_LEG_MINIMUM_SKL),
+            "code_minimum_skl", FOUR_LEG_MINIMUM_SKL, inclusive=True)
+    if "code_minimum_source" in settings and "code_minimum_skl" not in settings:
+        raise ValueError("A supplied code_minimum_source requires code_minimum_skl")
+    source = settings.get("code_minimum_source", FOUR_LEG_MINIMUM_SOURCE)
+    if not isinstance(source, str) or not source.strip():
         raise ValueError("A code_minimum_source is required")
     cogs = np.asarray(settings["cog_envelope_xy_m"], dtype=float)
     if cogs.ndim != 2 or cogs.shape[1] != 2 or not len(cogs) or not np.isfinite(cogs).all():
@@ -88,8 +111,10 @@ def _validate(settings):
     names = {"general_length_m", "matched_pair_difference_m", "padeye_elevation_m"}
     if set(tolerances) - names:
         raise ValueError("Unknown tolerance setting")
-    general = _bounds(tolerances.get("general_length_m", 0), "general_length_m")
-    elevation = _bounds(tolerances.get("padeye_elevation_m", 0), "padeye_elevation_m")
+    general = _bounds(tolerances.get("general_length_m", 0.01), "general_length_m")
+    if np.any(general <= 0):
+        raise ValueError("general_length_m must be > 0 for every leg")
+    elevation = _bounds(tolerances.get("padeye_elevation_m", 0.001), "padeye_elevation_m")
     matched = tolerances.get("matched_pair_difference_m")
     if matched is not None:
         matched = _scalar(matched, "matched_pair_difference_m", inclusive=True)
@@ -98,13 +123,43 @@ def _validate(settings):
     return points, height, weight, ea, lengths, cogs, kw, general, elevation, matched
 
 
-def _system(points, height, weight, ea, lengths, cog, kw):
-    relative = points[:, :2] - cog
-    distances = np.sqrt(np.sum(relative**2, axis=1) + height**2)
-    cosine = height / distances
-    span = np.max(np.linalg.norm(points[:, :2] - points[:, :2].mean(axis=0), axis=1))
-    a = np.vstack([cosine, (relative / span).T * cosine])
-    b = np.array([weight, 0, 0])
+def _reference_misfit(points, height, lengths):
+    """Fit one hook in the payload frame, independent of the CoG corners."""
+    hook = np.r_[points[:, :2].mean(axis=0), points[0, 2] + height]
+    for _ in range(50):
+        arms = hook - points
+        distances = np.linalg.norm(arms, axis=1)
+        if np.any(distances <= 0):
+            raise ValueError("Reference hook coincides with a lift point")
+        step = np.linalg.lstsq(arms / distances[:, None], lengths - distances, rcond=None)[0]
+        hook += step
+        if np.linalg.norm(step) < 1e-11 * np.min(lengths):
+            break
+    else:
+        raise ValueError("Reference hook fit did not converge")
+    if abs(points[0, 2] + height - hook[2]) > 0.01 * np.min(lengths):
+        raise ValueError("Reference hook height mismatch exceeds 0.01 L")
+    return lengths - np.linalg.norm(hook - points, axis=1), hook
+
+
+def _tilt(cog, hook, eye_z):
+    tilt = float(np.degrees(np.arctan2(np.linalg.norm(cog - hook[:2]), hook[2] - eye_z)))
+    return {"tilt_deg": tilt, "tilt_exceeds_3_deg": tilt > 3.0}
+
+
+def _system(points, height, weight, ea, lengths, cog, kw, misfit, hook):
+    # Work in rigid payload axes. Rotating hook-to-CoG onto world vertical
+    # preserves every hook-to-eye distance, including at diagonal CoG offsets.
+    arms = hook - points
+    distances = np.linalg.norm(arms, axis=1)
+    directions = arms / distances[:, None]
+    vertical = hook - np.r_[cog, points[0, 2]]
+    vertical /= np.linalg.norm(vertical)
+    cosine = directions @ vertical
+    if np.any(cosine <= 0):
+        raise ValueError("All slings must rise towards the hook")
+    a = directions.T
+    b = weight * vertical
     _, _, vh = np.linalg.svd(a, full_matrices=True)
     mode = vh[-1] / np.max(np.abs(vh[-1]))
     particular = np.linalg.lstsq(a, b, rcond=None)[0]
@@ -126,7 +181,7 @@ def _system(points, height, weight, ea, lengths, cog, kw):
     if kw is not None:
         vertical_mode = cosine * mode
         compliance += np.outer(vertical_mode, vertical_mode) / (mode @ mode * kw)
-    return a, b, cosine, mode, particular, lower, upper, compliance, lengths-distances
+    return a, b, cosine, mode, particular, lower, upper, compliance, misfit
 
 
 def _solve(system, length_errors, elevation_errors):
@@ -137,12 +192,12 @@ def _solve(system, length_errors, elevation_errors):
     alpha = -(mode @ (compliance @ particular + error)) / (mode @ compliance @ mode)
     tension = particular + mode * np.clip(alpha, lower, upper)
     tension = np.maximum(tension, 0.0)
-    if not np.allclose(a @ tension, b, rtol=1e-9, atol=1e-8 * b[0]):
+    if not np.allclose(a @ tension, b, rtol=1e-9, atol=1e-8 * np.linalg.norm(b)):
         raise ValueError("Tension-only equilibrium residual exceeds tolerance")
     return {
         "tensions_N": tension.tolist(),
-        "vertical_load_share": (tension * cosine / b[0]).tolist(),
-        "slack": (tension <= 1e-9 * b[0]).tolist(),
+        "vertical_load_share": (tension * cosine / np.linalg.norm(b)).tolist(),
+        "slack": (tension <= 1e-9 * np.linalg.norm(b)).tolist(),
         "length_errors_m": length_errors.tolist(),
         "elevation_errors_m": elevation_errors.tolist(),
     }
@@ -154,16 +209,18 @@ def solve_case(settings, *, length_errors_m=(0, 0, 0, 0),
 
     Positive length error means a longer sling. Positive elevation error raises
     the padeye. Both reduce extension at fixed body position. Reference length
-    minus geometric length is also included as initial axial misfit.
+    minus fitted body-frame hook distance is included as initial axial misfit.
     """
     points, height, weight, ea, lengths, cogs, kw, *_ = _validate(settings)
     cog = cogs[0] if cog_xy_m is None else _array(cog_xy_m, (2,), "cog_xy_m")
     if kw is not None and not np.allclose(cog, points[:, :2].mean(axis=0), atol=1e-9, rtol=0):
         raise ValueError("Finite payload warp stiffness requires centred CoG")
-    system = _system(points, height, weight, ea, lengths, cog, kw)
+    misfit, hook = _reference_misfit(points, height, lengths)
+    system = _system(points, height, weight, ea, lengths, cog, kw, misfit, hook)
     result = _solve(system, _array(length_errors_m, (4,), "length_errors_m"),
                     _array(elevation_errors_m, (4,), "elevation_errors_m"))
     result["cog_xy_m"] = cog.tolist()
+    result.update(_tilt(cog, hook, points[0, 2]))
     return result
 
 
@@ -214,30 +271,42 @@ def calculate_skew(settings):
     points, height, weight, ea, lengths, cogs, kw, general, elevation, matched = _validate(settings)
     corners = _corners(general, elevation, matched)
     cases = []
+    nominals = []
+    misfit, hook = _reference_misfit(points, height, lengths)
     for cog in cogs:
-        system = _system(points, height, weight, ea, lengths, cog, kw)
+        system = _system(points, height, weight, ea, lengths, cog, kw, misfit, hook)
         nominal = _solve(system, np.zeros(4), np.zeros(4))
         if any(nominal["slack"]):
             raise ValueError("A nominal sling is slack; a multiplicative SKL is undefined")
+        nominals.append(nominal)
         for length_error, elevation_error in corners:
             case = _solve(system, np.array(length_error), np.array(elevation_error))
             case["cog_xy_m"] = cog.tolist()
+            case.update(_tilt(cog, hook, points[0, 2]))
             case["nominal_tensions_N"] = nominal["tensions_N"]
             case["effective_skl"] = max(1.0, float(np.max(
                 np.array(case["tensions_N"]) / nominal["tensions_N"])))
             cases.append(case)
     governing = max(range(len(cases)), key=lambda i: cases[i]["effective_skl"])
     effective = cases[governing]["effective_skl"]
+    minimum = float(settings.get("code_minimum_skl", FOUR_LEG_MINIMUM_SKL))
+    design = max(minimum, effective)
+    shares = [max(row["vertical_load_share"]) for row in nominals]
+    cog_governing = int(np.argmax(shares))
     return {
-        "schema_version": 1,
-        "method": "linear_axial_springs_single_self_stress_mode",
+        "schema_version": 2,
+        "method": "finite_rotation_pose_linear_axial_springs_single_self_stress_mode",
         "qa_status": "pending_family_clearance",
         "engineering_use_allowed": False,
         "inputs": settings,
         "effective_skl": effective,
-        "code_minimum_skl": float(settings["code_minimum_skl"]),
-        "code_minimum_source": settings["code_minimum_source"],
-        "design_skl": max(float(settings["code_minimum_skl"]), effective),
+        "code_minimum_skl": minimum,
+        "code_minimum_source": settings.get("code_minimum_source", FOUR_LEG_MINIMUM_SOURCE),
+        "design_skl": design,
+        "max_nominal_vertical_share": max(shares),
+        "governing_cog_xy_m": cogs[cog_governing].tolist(),
+        "design_leg_tensions_N": (np.max([row["tensions_N"] for row in nominals], axis=0) * design).tolist(),
+        "tilt_exceeds_3_deg": any(case["tilt_exceeds_3_deg"] for case in cases),
         "governing_case_index": governing,
         "cases": cases,
     }

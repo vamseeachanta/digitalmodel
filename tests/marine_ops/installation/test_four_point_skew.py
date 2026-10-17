@@ -2,17 +2,15 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Independent equilibrium, compatibility and workflow checks for #2667."""
 
-import json
 import math
-import subprocess
-import sys
 from pathlib import Path
 
 import numpy as np
 import pytest
-import yaml
 
 from digitalmodel.marine_ops.installation.four_point_skew import (
+    FOUR_LEG_MINIMUM_SKL,
+    FOUR_LEG_MINIMUM_SOURCE,
     calculate_skew,
     solve_case,
     tolerance_corners,
@@ -29,8 +27,7 @@ def symmetric():
         "sling_EA_N": [150e6] * 4,
         "sling_length_m": [10.0] * 4,
         "cog_envelope_xy_m": [[0, 0]],
-        "code_minimum_skl": 1.25,
-        "code_minimum_source": "Explicit illustrative input; not a standard default",
+        "tolerances": {"general_length_m": 0.01, "padeye_elevation_m": 0},
     }
 
 
@@ -81,14 +78,18 @@ def test_offset_cog_rejects_planted_equal_split():
     settings = symmetric()
     settings["cog_envelope_xy_m"] = [[0.7, 0]]
     result = solve_case(settings)
-    reactions = np.array(result["vertical_load_share"]) * settings["weight_N"]
-    x = np.array(settings["lift_points_m"])[:, 0]
-    # Hand moment balance: R_right/W = (a+0.7)/(2a), not 1/2.
-    a = 5 / math.sqrt(2)
-    assert sum(reactions[[1, 2]]) / settings["weight_N"] == pytest.approx((a + 0.7) / (2*a))
-    assert x @ reactions == pytest.approx(settings["weight_N"] * 0.7)
-    assert not np.allclose(reactions, [settings["weight_N"] / 4] * 4)
-    assert x @ np.full(4, settings["weight_N"] / 4) != pytest.approx(settings["weight_N"] * 0.7)
+    # Full body-frame moment equilibrium includes the horizontal weight
+    # component after finite rotation; a level-plane reaction shortcut does not.
+    points = np.array(settings["lift_points_m"])
+    hook = np.array([0, 0, settings["hook_height_m"]])
+    directions = hook - points
+    directions /= np.linalg.norm(directions, axis=1)[:, None]
+    cog = np.array([0.7, 0, 0])
+    vertical = (hook - cog) / np.linalg.norm(hook - cog)
+    tension = np.array(result["tensions_N"])
+    assert tension @ directions == pytest.approx(settings["weight_N"] * vertical, abs=1e-7)
+    assert np.cross(points - cog, tension[:, None] * directions).sum(axis=0) == pytest.approx([0, 0, 0], abs=1e-6)
+    assert result["vertical_load_share"] != pytest.approx([0.25] * 4)
 
 
 def test_raised_diagonal_padeyes_reduce_their_tension():
@@ -170,14 +171,14 @@ def test_corner_envelope_and_code_floor():
     result = calculate_skew(settings)
     assert len(result["cases"]) == 3 * 16 * 16
     assert {tuple(row["cog_xy_m"]) for row in result["cases"]} == {(0, 0), (0.5, 0), (-0.5, 0)}
-    assert result["design_skl"] == max(1.25, result["effective_skl"])
+    assert result["design_skl"] == max(FOUR_LEG_MINIMUM_SKL, result["effective_skl"])
     settings["code_minimum_skl"] = 3
     assert calculate_skew(settings)["design_skl"] == 3
 
 
 def test_matched_pair_difference_is_a_constraint_not_added_error():
     settings = symmetric()
-    settings["tolerances"] = {"general_length_m": 0.01, "matched_pair_difference_m": 0.002}
+    settings["tolerances"] = {"general_length_m": 0.01, "matched_pair_difference_m": 0.002, "padeye_elevation_m": 0}
     corners = tolerance_corners(settings)
     assert len(corners) == 36
     assert any(abs(e[0] - e[2]) == pytest.approx(0.002) for e, _ in corners)
@@ -190,13 +191,13 @@ def test_matched_pair_difference_is_a_constraint_not_added_error():
     assert calculate_skew(settings)["effective_skl"] > 1.5
 
 
-def test_zero_tolerance_nominal_is_per_cog():
+def test_nominal_is_per_cog():
     settings = symmetric()
     settings["cog_envelope_xy_m"] = [[0, 0], [0.7, 0.2]]
     result = calculate_skew(settings)
-    assert result["effective_skl"] == pytest.approx(1)
-    assert len(result["cases"]) == 2
-    assert result["cases"][1]["nominal_tensions_N"] != pytest.approx(result["cases"][0]["nominal_tensions_N"])
+    assert result["effective_skl"] > 1
+    assert len(result["cases"]) == 32
+    assert result["cases"][16]["nominal_tensions_N"] != pytest.approx(result["cases"][0]["nominal_tensions_N"])
 
 
 def test_translation_rotation_and_unequal_nominal_lengths():
@@ -280,22 +281,117 @@ def test_unsupported_geometry_and_flexibility_fail_closed():
             calculate_skew(settings)
 
 
-def test_workflow_cli_and_registry(tmp_path):
-    root = Path(__file__).resolve().parents[3]
-    registry = yaml.safe_load((root / "docs/registry/workflows.yaml").read_text())
-    row = next(row for row in registry["workflows"] if row["id"] == "four-point-skew")
-    fixture = yaml.safe_load((root / row["input"]).read_text())
-    input_path = tmp_path / "input.yml"
-    input_path.write_text(yaml.safe_dump(fixture))
-    completed = subprocess.run([
-        sys.executable, "-m", "digitalmodel.marine_ops.installation.four_point_skew",
-        str(input_path),
-    ], capture_output=True, text=True)
-    assert completed.returncode == 0, completed.stderr
-    summary = json.loads((tmp_path / "results/skew_summary.json").read_text())
-    assert summary["effective_skl"] == pytest.approx(1.529679, rel=0.001)
-    assert summary["design_skl"] >= fixture["four_point_skew"]["code_minimum_skl"]
-    assert summary["qa_status"] == "pending_family_clearance"
-    assert summary["engineering_use_allowed"] is False
-    assert len(summary["cases"]) == 16
+def finite_rotation_reference(settings, cog):
+    """Independent body-frame statics with exact stretched sling lengths.
 
+    The rigid payload rotates until hook-to-CoG is vertical. In body axes the
+    weight direction is therefore (H-CoG)/|H-CoG|. Solve three force equations
+    for H; Hooke's law supplies tensions without any self-stress projection.
+    """
+    from scipy.optimize import root
+
+    points = np.array(settings["lift_points_m"])
+    lengths = np.array(settings["sling_length_m"])
+    stiffness = np.array(settings["sling_EA_N"]) / lengths
+    centre = np.r_[cog, points[0, 2]]
+
+    def state(hook):
+        arms = hook - points
+        distances = np.linalg.norm(arms, axis=1)
+        tensions = np.maximum(stiffness * (distances - lengths), 0)
+        down = (hook - centre) / np.linalg.norm(hook - centre)
+        residual = tensions @ (arms / distances[:, None]) - settings["weight_N"] * down
+        return residual / settings["weight_N"], tensions
+
+    solved = root(lambda hook: state(hook)[0], [0, 0, settings["hook_height_m"] + 0.03], tol=1e-10)
+    assert solved.success, solved.message
+    residual, tensions = state(solved.x)
+    assert np.linalg.norm(residual) < 1e-9
+    return tensions
+
+
+@pytest.mark.parametrize("cog", [[0.5, 0.5], [0.7, 0.7]])
+def test_diagonal_cog_against_independent_finite_rotation(cog):
+    settings = symmetric()
+    reference = finite_rotation_reference(settings, cog)
+    if cog == [0.5, 0.5]:
+        # Rounded independent reference supplied by the review, kN.
+        assert reference / 1000 == pytest.approx([202.1, 282.1, 362.0, 282.1], abs=0.1)
+    actual = solve_case(settings, cog_xy_m=cog)
+    assert actual["tensions_N"] == pytest.approx(reference, rel=0.003)
+
+
+def test_axis_tilt_fixes_level_geometry_understatement():
+    settings = symmetric()
+    result = solve_case(settings, cog_xy_m=[0.7, 0])
+    reference = finite_rotation_reference(settings, [0.7, 0])
+    assert result["tilt_deg"] == pytest.approx(4.621, abs=0.01)
+    assert result["tilt_exceeds_3_deg"] is True
+    assert max(reference) / 1000 == pytest.approx(338.0, abs=0.1)
+    assert result["tensions_N"] == pytest.approx(reference, rel=0.003)
+    settings["cog_envelope_xy_m"] = [[0, 0], [0.7, 0]]
+    assert calculate_skew(settings)["tilt_exceeds_3_deg"] is True
+
+
+def test_code_floor_reads_screen_value_without_importing_solver_package():
+    import ast
+
+    path = Path(__file__).resolve().parents[3] / "src/digitalmodel/orcaflex/installation_analysis.py"
+    assignments = {
+        node.targets[0].id: ast.literal_eval(node.value)
+        for node in ast.parse(path.read_text()).body
+        if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
+        and node.targets[0].id in {"_SKL_BY_LEG_COUNT", "_SKL_REFERENCE"}
+    }
+    assert FOUR_LEG_MINIMUM_SKL == assignments["_SKL_BY_LEG_COUNT"][4] == 1.33
+    assert FOUR_LEG_MINIMUM_SOURCE == assignments["_SKL_REFERENCE"]
+    settings = symmetric()
+    settings["tolerances"] = {"general_length_m": 0.0001, "padeye_elevation_m": 0}
+    assert calculate_skew(settings)["design_skl"] == FOUR_LEG_MINIMUM_SKL
+    settings = symmetric()
+    settings.pop("tolerances")
+    assert calculate_skew(settings)["effective_skl"] > 1
+    assert len(calculate_skew(settings)["cases"]) == 16 * 16
+
+
+@pytest.mark.parametrize("override", [
+    {"code_minimum_skl": 1.25},
+    {"code_minimum_source": "Free text without a value"},
+    {"tolerances": {"general_length_m": 0}},
+    {"tolerances": {"general_length_m": [0.01, 0, 0.01, 0.01]}},
+    {"sling_length_m": [11] * 4},
+])
+def test_new_safety_bounds(override):
+    settings = symmetric()
+    settings.update(override)
+    with pytest.raises(ValueError):
+        calculate_skew(settings)
+
+
+def test_matched_set_leg_to_leg_difference_conversion():
+    settings = symmetric()
+    delta = 0.02
+    settings["tolerances"] = {"general_length_m": delta / 2, "padeye_elevation_m": 0}
+    result = calculate_skew(settings)
+    nominal = 981000 / (4 * math.cos(math.pi / 6))
+    assert result["effective_skl"] == pytest.approx((nominal + 15e6 * delta / 2) / nominal)
+    # Matching opposite partners alone still permits this full between-pair gap.
+    settings["tolerances"]["matched_pair_difference_m"] = 0
+    assert calculate_skew(settings)["effective_skl"] == pytest.approx(result["effective_skl"])
+
+
+def test_design_outputs_retain_cog_share_and_per_leg_envelope():
+    settings = symmetric()
+    result = calculate_skew(settings)
+    assert result["max_nominal_vertical_share"] == pytest.approx(0.25)
+    assert result["governing_cog_xy_m"] == [0, 0]
+    assert result["design_leg_tensions_N"] == pytest.approx([433190.307] * 4)
+    settings["cog_envelope_xy_m"] = [[0, 0], [0.5, 0.5], [-0.7, 0]]
+    result = calculate_skew(settings)
+    nominals = [solve_case(settings, cog_xy_m=cog) for cog in settings["cog_envelope_xy_m"]]
+    shares = [max(row["vertical_load_share"]) for row in nominals]
+    assert result["max_nominal_vertical_share"] == pytest.approx(max(shares))
+    assert result["governing_cog_xy_m"] == settings["cog_envelope_xy_m"][np.argmax(shares)]
+    expected = np.max([row["tensions_N"] for row in nominals], axis=0) * result["design_skl"]
+    assert result["design_leg_tensions_N"] == pytest.approx(expected)
+    assert np.all(np.max([row["tensions_N"] for row in result["cases"]], axis=0) <= expected + 1e-7)
