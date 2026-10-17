@@ -13,6 +13,11 @@ import yaml
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
 from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder import LinesBuilder
+from digitalmodel.solvers.orcaflex.modular_generator.slay_readback import (
+    aligned_static_graphs as _aligned_static_graphs,
+    last_contact, material_node_indices, sag_bend_indices as _sag_bend_indices,
+    static_readback, support_readback,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 CAMPAIGN = ROOT / "docs/domains/pipeline-installation/slay-campaign"
@@ -240,7 +245,9 @@ def _pipe_seed_points(sections, spec):
     # These cases declare a level, unrotated hull and support coordinate system.
     assert vessel["InitialHeading"] == 0
     stinger = spec.equipment.stinger
-    offsets = [stinger.rollers[0].z_offset] * 12 + [roller.z_offset for roller in stinger.rollers]
+    firing_count = math.ceil(stinger.firing_line_length / stinger.firing_line_spacing)
+    offsets = [stinger.rollers[0].z_offset] * firing_count + [roller.z_offset for roller in stinger.rollers]
+    assert len(offsets) == len(vessel["Supports"])
     for index, (support, offset) in enumerate(zip(vessel["Supports"], offsets)):
         system = systems[support["SupportCoordinateSystem"]]
         assert system["SupportCoordinateSystemOrientation"] == [0, 0, 0]
@@ -278,69 +285,49 @@ def test_native_load_and_statics_of_every_generated_case(case_id, record_propert
     assert model.state == OrcFxAPI.ModelState.InStaticState
 
     from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import (
-        assert_static_acceptance, end_a_support_reaction)
+        evaluate_static_acceptance, end_a_support_reaction)
     spec = _case_spec(case_id)
     line = model[spec.pipeline.name]
     sections = _resolve_case(CAMPAIGN / "models" / case_id)
     vessel = model[spec.equipment.vessel.name]
-    support_extra = OrcFxAPI.oeSupport(SupportIndex=0)
-    # Discover the native resultant rather than assuming a component is normal force.
-    force_names = [name for name in vessel.vars(objectExtra=support_extra)
-                   if "support" in name.lower() and "force" in name.lower()
-                   and not {"x", "y", "z"}.intersection(name.lower().split())]
-    assert len(force_names) == 1, "A unique native support resultant is required"
-    forces = [vessel.StaticResult(force_names[0], OrcFxAPI.oeSupport(SupportIndex=index))
-              for index in range(len(sections["Vessels"][0]["Supports"]))]
+    forces, contact_arcs = support_readback(
+        vessel, OrcFxAPI.oeSupport, len(sections["Vessels"][0]["Supports"]),
+        spec.pipeline.name)
     firing_count = math.ceil(spec.equipment.stinger.firing_line_length /
                              spec.equipment.stinger.firing_line_spacing)
-    active = [roller.arc_length for roller, force in zip(
-        spec.equipment.stinger.rollers, forces[firing_count:]) if force > 0]
-    assert active, "Stinger contact readback is required"
-    lift_off = max(active)
-    arcs, (x, z, moments, tensions) = _aligned_static_graphs(
-        line.RangeGraph("X"), line.RangeGraph("Z"),
-        line.RangeGraph("Bend Moment"), line.RangeGraph("Effective Tension"))
+    rollers = spec.equipment.stinger.rollers
+    last_active, lift_off = last_contact(
+        [roller.arc_length for roller in rollers], forces, firing_count)
+    contact_station = contact_arcs[last_active]
     od = spec.pipeline.dimensions.outer_diameter
     wall = spec.pipeline.dimensions.wall_thickness
     section = sections["LineTypes"][0]
     ei = section["E"] * math.pi / 64 * (od**4 - (od - 2 * wall)**4)
-    strains = [abs(moment) / ei * od / 2 for moment in moments]
     coated_radius = od / 2 + spec.pipeline.coatings.corrosion.thickness
     coated_radius += sum(coating.thickness for coating in spec.pipeline.coatings.weight)
-    # Supports remain at the declared pose in these statics cases. End A
-    # travel changes the material station at each physical support contact.
+    # The measured contact arc locates pipe material after End A travel.
+    # Geometry stays on position nodes; forces retain their own native grid.
     assert vessel.IncludedInStatics == "None"
-    support_index = firing_count + next(
-        i for i, roller in enumerate(spec.equipment.stinger.rollers)
-        if roller.arc_length == lift_off)
-    contact = _pipe_seed_points(sections, spec)[f"roller {support_index}"]
-    lift_index = _contact_node_index(x, z, contact)
-    grounded = [i for i, height in enumerate(z)
-                if i > lift_index and height <= -spec.environment.water.depth + coated_radius]
-    assert grounded, "Grounded pipe readback is required"
-    touchdown = grounded[0]
-    assert 0 < lift_index < touchdown
-    departure = math.degrees(math.atan2(z[lift_index - 1] - z[lift_index + 1],
-                                       abs(x[lift_index + 1] - x[lift_index - 1])))
-    sag_indices = set(_sag_bend_indices(x, z, lift_index, touchdown))
-    # Include overbend beyond the last support, excluding measured sag curvature.
-    overbend = [value for i, value in enumerate(strains[:touchdown + 1])
-                if i not in sag_indices]
-    sag_bend = [strains[i] for i in sag_indices]
-    assert overbend and sag_bend
+    readback = static_readback(
+        line.RangeGraph("X"), line.RangeGraph("Z"),
+        line.RangeGraph("Bend Moment"), line.RangeGraph("Effective Tension"),
+        contact_station=contact_station,
+        seabed_z=-spec.environment.water.depth + coated_radius)
     reference = next(row["stiff_reference"] for row in TABLE["cases"] if row["id"] == case_id)
     reference = {key: reference[key] for key in
                  ("lift_off_arc", "departure_angle", "touchdown_x", "sag_bend_strain")}
     points = _pipe_seed_points(sections, spec)
     support_x = [points[f"roller {i}"][0] for i in range(len(forces))]
-    result = assert_static_acceptance(
+    result = evaluate_static_acceptance(
         reference=reference,
         wire_length=model[spec.equipment.tensioner.name].StaticResult("Length"),
-        end_a_reaction=end_a_support_reaction(x[0], support_x, forces),
+        end_a_reaction=end_a_support_reaction(readback["end_a_x"], support_x, forces),
         last_support_force=forces[-1],
-        grounded_tension=[tensions[i] for i in grounded], overbend_strain=max(overbend),
-        lift_off_arc=lift_off, departure_angle=departure,
-        touchdown_x=x[touchdown], sag_bend_strain=max(sag_bend),
+        grounded_tension=readback["grounded_tension"],
+        overbend_strain=readback["overbend_moment"] / ei * od / 2,
+        lift_off_arc=lift_off, departure_angle=readback["departure_angle"],
+        touchdown_x=readback["touchdown_x"],
+        sag_bend_strain=readback["sag_bend_moment"] / ei * od / 2,
         diameter=od, radius=spec.equipment.stinger.radius)
     import json
     record_property("static_qa", json.dumps(result, allow_nan=False))
@@ -354,20 +341,10 @@ def test_sag_bend_excludes_the_positive_curvature_at_lift_off():
                              [0, -1, -3, -6, -7, -7.5], 1, 5) == [3, 4]
 
 
-def _sag_bend_indices(x, z, lift_off, touchdown):
-    """Select decreasing departure slope, excluding residual overbend curvature."""
-    slopes = [math.atan2(z[i] - z[i + 1], abs(x[i + 1] - x[i]))
-              for i in range(len(x) - 1)]
-    return [i for i in range(max(1, lift_off + 1), touchdown)
-            if slopes[i] < slopes[i - 1]]
-
-
 def test_lift_off_uses_physical_contact_after_end_a_travel():
     # End travel shifts the pipe material stations relative to fixed supports.
     arcs = [0, 5, 110, 115, 120, 125]
-    x = [-26.1, -31.1, -135, -140, -144.9, -150]
-    z = [0, 0, -8, -9, -10, -12]
-    index = _contact_node_index(x, z, [-144.9, 0, -10])
+    index = material_node_indices(arcs, [120.25])[0]
     assert index == 4
     assert arcs[index] != 60 + 55
 
@@ -377,26 +354,7 @@ def test_static_graphs_require_common_material_stations():
     position = SimpleNamespace(X=[0, 5, 10], Mean=[0, -5, -10])
     shifted = SimpleNamespace(X=[0, 4, 10], Mean=[1, 2, 3])
     with pytest.raises(ValueError, match="stations"):
-        _aligned_static_graphs(position, shifted)
+        _aligned_static_graphs(position, shifted, position, position)
     aligned = SimpleNamespace(X=[0, 5, 10], Mean=[1, 2, 3])
-    assert _aligned_static_graphs(position, aligned) == (
-        [0, 5, 10], [[0, -5, -10], [1, 2, 3]])
-
-
-def _contact_node_index(x, z, contact):
-    """Locate the line node nearest a fixed support's pipe-axis contact."""
-    return min(range(len(x)), key=lambda i: (x[i] - contact[0])**2 + (z[i] - contact[2])**2)
-
-
-def _aligned_static_graphs(*graphs):
-    """Reject combining readbacks evaluated at different material stations."""
-    arcs = list(graphs[0].X)
-    values = []
-    for graph in graphs:
-        stations, readings = list(graph.X), list(graph.Mean)
-        if (len(stations) != len(arcs) or len(readings) != len(arcs)
-                or any(not math.isclose(a, b, abs_tol=1e-9, rel_tol=0)
-                       for a, b in zip(arcs, stations))):
-            raise ValueError("Static graphs must use common material stations")
-        values.append(readings)
-    return arcs, values
+    assert _aligned_static_graphs(position, aligned, aligned, aligned) == (
+        [0, 5, 10], [[0, -5, -10], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
