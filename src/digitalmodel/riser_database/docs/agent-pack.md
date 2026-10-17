@@ -4,12 +4,12 @@
 |---|---|
 | Module / repository | `riser_database` / `digitalmodel` |
 | Package | `src/digitalmodel/riser_database` |
-| Pack revision | 0, 2026-10-16 |
+| Pack revision | 1, 2026-10-17 |
 | Code revision | `1dba289c5dc1bc8dc82d72e4bfe02f8dcfc22c23` |
 | Analysis family | Reference-data calculations supporting OrcaFlex riser and mooring; routing family `EC` |
-| Quality role | Riser and mooring quality manager; independent provider required |
+| Quality role | Engineering calculations quality manager; independent provider required |
 | Status | DRAFT; second-provider clearance pending |
-| Implementation-map ref | `codex/implmap-work`, commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; map data revision `270c8759c374b67a7f032953e7fcdb14e0224461` |
+| Implementation-map ref | `1dba289c5dc1bc8dc82d72e4bfe02f8dcfc22c23` (pack code pin); map data revision `270c8759c374b67a7f032953e7fcdb14e0224461` |
 
 ## 1. Purpose and scope
 
@@ -96,14 +96,14 @@ The documentation's worked loader and getter snippets map to the catalogue and c
 
 ## 5. QA gates
 
-AQG r0, sections 4–10, supplies the family gate requirements; `EC` records the package's reference-data calculation role, while the downstream OrcaFlex riser and mooring gate obligations remain explicit below.
+AQG r0, sections 4–10, supplies the family gate requirements; `EC` records the package's reference-data calculation role, while downstream OrcaFlex riser and mooring obligations are recorded separately in section 9. The module inventory groups this package with OrcaFlex riser/mooring by consuming domain, as recorded in the [quality-manager review](https://github.com/vamseeachanta/digitalmodel/pull/2633#issuecomment-6233074070). This pack deliberately retains `qa_family: EC` for the loader, scalar lookups and conversion-output checks; it does not qualify a consuming solver model. The review's EC option is applied consistently to the quality role and G1/G3 rows. [src/digitalmodel/riser_database/loader.py:L162-L168] [src/digitalmodel/riser_database/loader.py:L267-L289]
 
 | Gate | Applicability / observed status | Check IDs and boundary |
 |---|---|---|
 | G0 inputs | Applicable; package checks offline | RDB-01–RDB-07: table integrity, lookup coverage, conversion conventions, citation failure behavior and publication boundaries |
-| G1 load | Applicable to consuming models; NOT_RUN, no target model/version supplied | RDB-08: target-version OrcaFlex `LoadData` route on an authorized installation; Python import alone is not a load result; issue pending (4) |
-| G2 statics | Applicable to consuming models; NOT_RUN, solver output absent | RDB-09: consumer's zero-load reference and offset sweep; issue pending (4) |
-| G3 short dynamics | Applicable to consuming models; NOT_RUN, solver output absent | RDB-10: consumer's short-run response evidence; issue pending (4) |
+| G1 imports/tests | Applicable; PASS in recorded code-pin module suite | RDB-08: 83 passed, 0 failed, 0 skipped; package imports and tests, no solver load |
+| G2 hand calculation | Applicable; PASS offline at the code pin on 2026-10-17 | RDB-09: compare `RiserDatabase.config` output with exact SI unit conversions |
+| G3 short dynamics | NOT_APPLICABLE under EC | No package time-domain solver or dynamic response output; consumer obligations are in section 9. [src/digitalmodel/riser_database/loader.py:L60-L141] |
 | G4 diffraction | NOT_APPLICABLE to catalogue-only outputs; conditional when a consumer introduces newly computed vessel data | No vessel/mesh/RAO fields in these row types. [src/digitalmodel/riser_database/loader.py:L60-L141] |
 | G5 evidence appendix | Applicable; offline pack evidence only, downstream signed appendix absent | RDB-11: examples and failures must retain their outcomes; issue pending (4) for analysis appendix |
 
@@ -116,12 +116,12 @@ AQG r0, sections 4–10, supplies the family gate requirements; `EC` records the
 | RDB-05 | `test_code_editions.py` and `test_material_refs.py` | Edition-label discrepancies 0 in tested surfaces; unresolved curve/getter references 0 records | Pytest outcomes; no claim of licensed-text validation; G0. [tests/riser_database/test_code_editions.py:L48-L76] [tests/riser_database/test_code_editions.py:L99-L136] [tests/riser_database/test_material_refs.py:L22-L38] |
 | RDB-06 | `test_layer_a_public_rows_structurally_clean`, schema no-value-column test, stack-up de-identification tests | Structural findings 0; bare numeric cells in standards-reference tables 0; exact unit-bearing stack-up disclosures 0 (counts) | Shipped pytest checks; G0. [tests/riser_database/test_leak_gate.py:L48-L60] [tests/riser_database/test_schema.py:L112-L132] [tests/riser_database/test_stackup_rig.py:L179-L216] |
 | RDB-07 | Private registry reconciliation and provenance tests, when authorized reference data are present | Unmatched handle sets 0 records; provenance matches 0 findings | Availability-dependent; missing private data gives NOT_RUN, never PASS; G0. [tests/riser_database/test_stackup_rig.py:L237-L260] [tests/riser_database/test_provenance_tripwire.py:L241-L305] |
-| RDB-08 | Proposed consuming-model check: retain chosen `RiserDatabase.config` key and table digests; load the resulting model in its declared target OrcaFlex version through `LoadData` | Load errors 0, load warnings 0, referenced database keys absent 0 (counts) | NOT_RUN; no package model writer or existing detection check; issue pending (4); G1. [src/digitalmodel/riser_database/loader.py:L267-L289] |
-| RDB-09 | Proposed consumer hand calculation: compare low-load top tension and angle to the consuming model, then check offsets | Tension difference ≤5.0 %; angle difference ≤1.0 degree; ≥6 offset steps; unconverged cases 0 | NOT_RUN; no package equilibrium solver or existing detection check; issue pending (4); G2. AQG r0, section 6, statics QA. |
-| RDB-10 | Proposed consumer transient check with table-root digest, selected keys and getter criteria recorded | Stop time 1.0 s; nonfinite outputs 0; warnings 0; tension departure from statics ≤25.0 % | NOT_RUN; no package dynamics runner or existing detection check; issue pending (4); G3. AQG r0, section 7, short dynamics. |
+| RDB-08 | Import the package through the existing `tests/riser_database` module suite | 83 tests passed; failures 0, skips 0 (counts), at the code pin | PASS in the recorded BASE and AFTER evidence in section 10; G1. [tests/riser_database/test_loader.py:L16-L24] [tests/riser_database/test_loader.py:L54-L185] |
+| RDB-09 | Hand check `RiserDatabase.load().config("pipe_py_21OD_0875in_5000ft_upper_riser")`; existing node `tests/riser_database/test_loader.py::test_config_row_pipe_filename_derivation` asserts all three outputs | 5000 ft × 0.3048 = 1524.0 m; 21 in × 25.4 = 533.4 mm; 0.875 in × 25.4 = 22.225 mm. Require relative error ≤1e-6 for each output (dimensionless); the existing test also has an absolute floor of 1e-12 in each output unit | PASS: 1 passed, 0 failed, 0 skipped on 2026-10-17 at the code pin with Git-exact table bytes; G2. This checks returned converted data, not conversion arithmetic inside the loader; extraction is external. [tests/riser_database/test_loader.py:L78-L85] [src/digitalmodel/riser_database/loader.py:L267-L271] [scripts/riser_database/build_tables.py:L119-L145] |
+| RDB-10 | Package dynamics applicability audit | Dynamic response outputs 0; time-domain solve routes 0 (counts) | NOT_APPLICABLE under EC; consumer dynamics procedure moved to section 9. [src/digitalmodel/riser_database/loader.py:L60-L141] |
 | RDB-11 | Hand audit: match section-4 node IDs and statuses to the offline log and retain named exclusions | Missing case outcomes 0; missing citations 0; unlabelled skipped cases 0 (counts) | Pack self-check; downstream appendix/signatures NOT_RUN; G5. AQG r0, section 9, QA appendix. |
 
-RDB-08–RDB-10 are proposed integration acceptance procedures, not shipped detection checks; package-only test success cannot clear a consuming analysis under AQG r0, sections 5–9.
+RDB-08 and RDB-09 qualify the package import/test and conversion-output boundaries; RDB-10 records EC dynamics non-applicability. Package-only test success cannot clear a consuming analysis under AQG r0, sections 5–9; the proposed consumer procedures are retained in section 9.
 
 ## 6. Known failure modes and pitfalls
 
@@ -187,9 +187,9 @@ Append-only record; no earlier entries are asserted.
 | 2026-10-16 | Initial pack | Treat standalone degradation and configured-wiki errors separately; the current helper catches both. [src/digitalmodel/riser_database/getters.py:L377-L395] | S01 and RDB-04 limit the fail-closed claim | #2166 |
 | 2026-10-16 | Initial pack | An optional numeric cell is unknown, not zero, and a table hash does not validate physical input domains. [src/digitalmodel/riser_database/loader.py:L49-L57] [src/digitalmodel/riser_database/loader.py:L183-L214] | S02–S04, S12–S24 | issue pending (1) |
 
-## 8. Ownership
+## 8. Maintainer
 
-Required producing role: module contributor. Required family review: riser and mooring quality manager on a different provider; calculation/data checks feed that review. Proposed deputy: calculation quality manager. Classification disagreements about further implementations are resolved by the family quality manager; merge clearance remains with the maintainer. Escalate a check unresolved after two attempts, ambiguous clauses, missing or contradictory inputs, and proposed tolerance/edition changes to the family quality manager; cross-family conflicts and rights, budget or outward-contact decisions go to the maintainer (Module agent lifecycle, revision 0, section 4, Escalation).
+Required producing role: module contributor. Required family review: engineering calculations quality manager on a different provider. Proposed deputy: riser and mooring quality manager for downstream consumer obligations. Classification disagreements about further implementations are resolved by the family quality manager; merge clearance remains with the maintainer. Escalate a check unresolved after two attempts, ambiguous clauses, missing or contradictory inputs, and proposed tolerance/edition changes to the family quality manager; cross-family conflicts and rights, budget or outward-contact decisions go to the maintainer (Module agent lifecycle, revision 0, section 4, Escalation).
 
 UNVERIFIED: a named deputy assignment and a prior clearance record are not established by the module's registry entry; issue pending (4). [docs/registry/module-routing.yaml:L484-L489]
 
@@ -206,9 +206,20 @@ UNVERIFIED: a named deputy assignment and a prior clearance record are not estab
 | OrcaFlex references in module documentation | Citation-surface follow-up; downstream code-check and weather-window references; synthetic dynamic-tier stub and future licensed replacement. [docs/riser_database.md:L105-L110] [docs/riser_database.md:L202-L216] [docs/riser_database.md:L237-L268] |
 | Private stack-up registry | Handle reconciliation and provenance tests need external reference data; the private data repository was not read for this pack. [tests/riser_database/test_stackup_rig.py:L237-L260] [tests/riser_database/test_provenance_tripwire.py:L241-L284] |
 
+
+### Consuming-model obligations (outside package EC acceptance)
+
+These proposed checks remain NOT_RUN; no target model or licensed solver output is supplied. They do not change the package EC gate results.
+
+| Consumer check | Proposed route | Numeric criterion and unit | Evidence / status |
+|---|---|---|---|
+| Consumer load | Proposed consuming-model check: retain chosen `RiserDatabase.config` key and table digests; load the resulting model in its declared target OrcaFlex version through `LoadData` | Load errors 0, load warnings 0, referenced database keys absent 0 (counts) | NOT_RUN; no package model writer or existing detection check; issue pending (4); consuming-model G1. [src/digitalmodel/riser_database/loader.py:L267-L289] |
+| Consumer statics | Proposed consumer hand calculation: compare low-load top tension and angle to the consuming model, then check offsets | Tension difference ≤5.0 %; angle difference ≤1.0 degree; ≥6 offset steps; unconverged cases 0 | NOT_RUN; no package equilibrium solver or existing detection check; issue pending (4); consuming-model G2. AQG r0, section 6, statics QA. |
+| Consumer dynamics | Proposed consumer transient check with table-root digest, selected keys and getter criteria recorded | Stop time 1.0 s; nonfinite outputs 0; warnings 0; tension departure from statics ≤25.0 % | NOT_RUN; no package dynamics runner or existing detection check; issue pending (4); consuming-model G3. AQG r0, section 7, short dynamics. |
+
 ### Implementation-map inventory and follow-up
 
-The named implementation-map branch and BASE have byte-identical map blobs; the map's data revision is the one recorded in the header. [docs/registry/implementation-map.yaml:L1-L6]
+The implementation map is read at the pack code pin; its data revision is the one recorded in the header. [docs/registry/implementation-map.yaml:L1-L6]
 
 In-package implementation inventory: **empty**. No family has an `implementations` row under `src/digitalmodel/riser_database/`; `loader.py` instead appears in rejected candidates and `get_buoyancy_tension_factor` appears in needs-review candidates, neither of which is an implementation row. [docs/registry/implementation-map.yaml:L30483-L30486] [docs/registry/implementation-map.yaml:L52325-L52331]
 
@@ -230,6 +241,9 @@ At the code pin, the offline module suite records **83 run, 83 passed, 0 failed,
 
 The command form is `PYTHONPATH=src uv run --no-sources --extra test python -m pytest <module, consumer and contracts-domain paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`; the prescribed absolute executable was used, with unchanged repository addopts, one worker and the same project environment. The initial provisioning launch returned exit 141 after installing dependencies and supplied no pytest session; the completed BASE command above supplies the recorded results.
 
+
+The 2026-10-17 RDB-09 rerun at the code pin returned **1 passed, 0 failed, 0 skipped** using Python 3.12.13 / pytest 8.4.2 and the existing node named above. The initial checkout-byte run failed before lookup because CRLF conversion changed the CSV fingerprints. Restoring the six table/manifest files in a disposable test copy to their exact code-pin Git blobs, without changing source, tests or manifest values, restored digest equality and the test passed. Preserve Git-exact table bytes when reproducing this check. Arguments: `tests/riser_database/test_loader.py::test_config_row_pipe_filename_derivation -q -p no:cacheprovider -p pytest_asyncio.plugin --basetemp=<scratch>`; plugin autoload was disabled and licensed-interface module entries were blocked before collection. The broader BASE/AFTER counts above are retained prior evidence, not a fresh full-suite run. [src/digitalmodel/riser_database/loader.py:L183-L194] [tests/riser_database/test_loader.py:L78-L85]
+
 The 61 baseline skips comprise one unimplemented migration module, one unavailable catenary compatibility import and 59 obsolete layout/compatibility tests associated with #949; they are outside this package. [tests/test_apistd2rd_migration.py:L18-L26] [tests/compat/test_group_compat.py:L108-L119] [tests/test_module_reorganization.py:L1-L20] [tests/test_restructure_compat.py:L15-L30]
 
 | Open item | Disposition / responsible review | Issue |
@@ -238,7 +252,7 @@ The 61 baseline skips comprise one unimplemented migration module, one unavailab
 | Numeric completeness, finite/physical domains, mixed units, unverified elevation datum/sign, YAML criteria/category shape and flattening loss, S03–S04/S12–S27/S29–S37 | Maintainer validation work; no module code changed here | issue pending (1) |
 | API RP 16Q placeholder crosswalk, historical docs and standards-basis uncertainty | Maintainer metadata/documentation reconciliation; licensed clause text remains unchecked | issue pending (2) |
 | Empty in-package map inventory | Maintainer map update/classification for the section-3 methods | issue pending (3) |
-| No independent validated engineering example, no target model/version or G1–G3/G5 signed analysis evidence | Family quality review; proposed checks remain NOT_RUN | issue pending (4) |
+| No independent response-analysis benchmark, target model/version or consuming-model G1–G3/G5 signed evidence | Riser/mooring consumer review; section-9 consumer checks remain NOT_RUN; package G1/G2 evidence is separate | issue pending (4) |
 | Deputy assignment and prior clearance (section 8) | Maintainer assignment and second-provider clearance | issue pending (4) |
 | Private-reference reproducibility | Tests discover current private files without requiring a reference revision or digest; retain those fingerprints for reproducible qualification. [tests/riser_database/test_crosswalk.py:L23-L37] [tests/riser_database/test_stackup_rig.py:L237-L250] | issue pending (4) |
 | New OrcaFlex riser citation surface remains outside this package | Existing extension issue; not treated as an implemented getter | #1247 |
