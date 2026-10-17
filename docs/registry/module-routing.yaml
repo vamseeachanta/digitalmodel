@@ -157,6 +157,9 @@ modules:
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
     submodules:
+      hydrodynamics:
+        agent_pack: src/digitalmodel/hydrodynamics/docs/agent-pack.md
+        qa_family: EC
       hull_library:
         agent_pack: src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md
         qa_family: DF
