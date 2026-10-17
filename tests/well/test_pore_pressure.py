@@ -6,6 +6,7 @@ config-driven ``router`` (the engine basename wiring is applied by the
 integrator, so the router is exercised directly).
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -282,6 +283,20 @@ def test_router_runs_example_and_writes_summary(tmp_path):
 
     summary_json = Path(out["pore_pressure"]["summary"]["summary_json"])
     assert summary_json.is_file()
+
+
+def test_router_summary_lists_drilling_window_exclusions(tmp_path):
+    out = router(_example_cfg(tmp_path))
+    summary = out["pore_pressure"]["summary"]
+    written_summary = json.loads(Path(summary["summary_json"]).read_text())
+
+    assert written_summary["not_covered"] == [
+        "collapse (shear failure)",
+        "weak bedding planes",
+        "natural fractures",
+        "chemical or time-dependent effects",
+    ]
+    assert summary["not_covered"] == written_summary["not_covered"]
 
 
 def test_router_without_fracture_skips_window(tmp_path):
