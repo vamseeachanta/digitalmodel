@@ -497,6 +497,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#bha_database
   - module: riser_database
     entry_point: src/digitalmodel/riser_database/
+    submodules:
+      riser_database:
+        agent_pack: src/digitalmodel/riser_database/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/riser_database/]
