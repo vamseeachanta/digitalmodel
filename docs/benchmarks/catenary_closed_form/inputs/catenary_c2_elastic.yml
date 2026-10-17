@@ -68,12 +68,14 @@ Environment:
   SeabedShearStiffness: 0
   WaveTrains:
   - Name: Wave 1
-    WaveType: No waves
+    WaveType: Airy
     WaveOrigin:
     - 0
     - 0
     WaveTimeOrigin: 0
     WaveDirection: 0
+    WaveHeight: 0.0
+    WavePeriod: 8.0
   RefCurrentSpeed: 0.0
   RefCurrentDirection: 0
   CurrentDepth, CurrentFactor, CurrentRotation:
@@ -86,7 +88,7 @@ Environment:
   WindSpeed: 0.0
   WindDirection: 0
 LineTypes:
-- Name: catenary_c2
+- Name: catenary_c2_type
   Category: General
   SeabedLateralFrictionCoefficient: 0
   SeabedAxialFrictionCoefficient: 0
@@ -115,7 +117,7 @@ Lines:
   - - 0
     - ~
   LineType, Length, TargetSegmentLength:
-  - - catenary_c2
+  - - catenary_c2_type
     - 600
     - 1
   ContentsMethod: Uniform
