@@ -463,6 +463,10 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/pipelay/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#pipelay
+    submodules:
+      pipelay:
+        agent_pack: src/digitalmodel/pipelay/docs/agent-pack.md
+        qa_family: IN
   - module: rao_spectral_fatigue
     entry_point: src/digitalmodel/rao_spectral_fatigue/
     maturity: development
