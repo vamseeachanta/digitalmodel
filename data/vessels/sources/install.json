@@ -51,7 +51,7 @@
       "format": "HTML + per-vessel equipment-sheet PDFs",
       "freshness": "Current",
       "reliability": "high",
-      "notes": "Bokalift 1 (https://boskalis.com/media/5rbfb1cp/bokalift_1_03.pdf) and Bokalift 2 (https://boskalis.com/media/cafdcmsf/bokalift-2.pdf) equipment sheets: dims, draft, crane capacity vs radius (e.g. 4000t @ 28m), lift height, deck area + deck loading (t/m2), accommodation, DP. Among the better public sources for deck-loading data."
+      "notes": "HLV-A 1 (https://boskalis.com/media/5rbfb1cp/HLV-A_1_03.pdf) and HLV-A 2 (https://boskalis.com/media/cafdcmsf/HLV-A-2.pdf) equipment sheets: dims, draft, crane capacity vs radius (e.g. 4000t @ 28m), lift height, deck area + deck loading (t/m2), accommodation, DP. Among the better public sources for deck-loading data."
     },
     {
       "name": "Subsea7 \u2014 Vessel datasheets",

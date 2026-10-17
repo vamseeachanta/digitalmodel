@@ -316,7 +316,7 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
             f'<div class="meter"><span style="width:{pct}%"></span></div>\n'
             f"<table><tr><th>Task</th><th>Analysis</th><th>Status</th><th>Basis</th><th>Licensed run</th></tr>{rows}</table>\n"
             '<div style="font-size:11px;color:#7fa0b8;margin-top:7px">Auto-upgrades as licensed runs land: <b>PENDING</b> &rarr; <b>PROXY</b> &rarr; <b>SHIP-PROXY</b> &rarr; <b>ACTUAL</b>.\n'
-            "Next upgrade: a vessel-specific BokaLift mesh diffraction (T3&rarr;ACTUAL) and per-structure OrcaFlex splash-zone runs (T5).</div></div>"
+            "Next upgrade: a vessel-specific HLV-A mesh diffraction (T3&rarr;ACTUAL) and per-structure OrcaFlex splash-zone runs (T5).</div></div>"
         )
 
     def cause_bars(rows):
@@ -450,7 +450,7 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         )
 
     envelope_note_tail = (
-        "These are still parametric — the vessel-specific BokaLift mesh diffraction (when that licensed run completes) replaces them and is expected to widen the limits further."
+        "These are still parametric — the vessel-specific HLV-A mesh diffraction (when that licensed run completes) replaces them and is expected to widen the limits further."
         if d["rao_provenance"] != "actual"
         else "Computed from the vessel-specific OrcaWave RAO solve."
     )

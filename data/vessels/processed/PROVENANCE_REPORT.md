@@ -54,9 +54,9 @@ Gyradii are rarely public; these were filled from documented relations (see `gyr
 - Saipem 7000: kyy <- estimated:kyy=0.25*length_bp
 - Saipem 7000: kzz <- estimated:kzz=0.26*length_bp
 - Pioneering Spirit: kxx <- estimated:kxx=0.35*beam
-- Bokalift 2: kxx <- estimated:kxx=0.35*beam
-- Bokalift 2: kyy <- estimated:kyy=0.25*length_bp
-- Bokalift 2: kzz <- estimated:kzz=0.26*length_bp
+- HLV-A 2: kxx <- estimated:kxx=0.35*beam
+- HLV-A 2: kyy <- estimated:kyy=0.25*length_bp
+- HLV-A 2: kzz <- estimated:kzz=0.26*length_bp
 - Seven Borealis: kxx <- estimated:kxx=0.35*beam
 - Seven Borealis: kyy <- estimated:kyy=0.25*length_bp
 - Seven Borealis: kzz <- estimated:kzz=0.26*length_bp

@@ -147,7 +147,7 @@ sections:
       - "../installation/installation-heading-explorer.html"
       - "pdf/sec-installation.pdf"
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/installation/installation_pamphlet"
-      - "pdf/installation-bokalift.pdf"
+      - "pdf/installation-HLV-A.pdf"
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels"
       - "pdf/vessel-suitability.pdf"
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization"

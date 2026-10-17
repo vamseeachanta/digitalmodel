@@ -112,7 +112,7 @@ def router(cfg: dict) -> dict:
 def _resolve_vessel(settings: dict[str, Any]) -> dict[str, Any]:
     from digitalmodel.marine_ops.vessel_db.loader import installation_vessels
 
-    match = str(settings.get("vessel", "BokaLift")).lower()
+    match = str(settings.get("vessel", "HLV-A")).lower()
     vlib = installation_vessels()
 
     def disp(key, info):

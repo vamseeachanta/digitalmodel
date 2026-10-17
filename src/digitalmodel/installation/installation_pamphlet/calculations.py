@@ -49,7 +49,7 @@ BASIS_LABEL = {
         "completed FPSO diffraction run lr_acma_8de9c018adbd"
     ),
     "fpso": "Ship-shaped (FPSO 250 m) parametric RAO — adapted basis",
-    "vessel": "Vessel-specific BokaLift 2 RAO (OrcaWave diffraction)",
+    "vessel": "Vessel-specific HLV-A 2 RAO (OrcaWave diffraction)",
 }
 BASIS_HUMAN = {
     "barge": "100 m barge proxy (pessimistic)",
@@ -95,7 +95,7 @@ DEFAULT_OPERATIONS = ["transit", "dp_station_keeping", "heavy_lift"]
 DEFAULT_TP_GRID_S = [6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
 
 # ----------------------------------------------------------------------------
-# Roll-damping sensitivity band (#1538 follow-up). BokaLift 2 diffraction was run
+# Roll-damping sensitivity band (#1538 follow-up). HLV-A 2 diffraction was run
 # at two external roll-damping (B44) levels: zeta = 5% critical -> roll RAO peak
 # 23.5 deg/m; zeta = 10% (bilge keels / appendages) -> roll peak 19.2 deg/m,
 # heave 7.17. Roll is strongly damping-controlled at resonance, so the operation
@@ -104,7 +104,7 @@ DEFAULT_TP_GRID_S = [6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
 # ----------------------------------------------------------------------------
 DAMPING_BAND_NOTE = (
     "Roll-damping sensitivity band: operation envelopes span the zeta = 5-10% "
-    "critical roll-damping range (BokaLift 2 external_damping B44: zeta = 5% -> "
+    "critical roll-damping range (HLV-A 2 external_damping B44: zeta = 5% -> "
     "roll RAO peak 23.5 deg/m; zeta = 10% -> 19.2 deg/m, heave 7.17). Roll is "
     "strongly damping-controlled at resonance, so the limiting Hs at each Tp is "
     "presented as a range rather than a single value: the lower bound uses the "
@@ -232,7 +232,7 @@ def resolve_rao_artifact(
 
     Only the ``"vessel"`` basis ingests a real artifact. An explicit config path
     (``rao_artifact``) wins; otherwise the path is taken from a ``completed_runs``
-    entry carrying a ``rao_artifact`` field — preferring the BokaLift run that
+    entry carrying a ``rao_artifact`` field — preferring the HLV-A run that
     flipped the basis to ``"vessel"``.
     """
     if rao_basis != "vessel":
@@ -241,7 +241,7 @@ def resolve_rao_artifact(
         return str(rao_artifact)
     runs = list(completed_runs or [])
     for r in runs:
-        if "bokalift" in (r.get("input") or "").lower() and r.get("rao_artifact"):
+        if "HLV-A".lower() in (r.get("input") or "").lower() and r.get("rao_artifact"):
             return str(r["rao_artifact"])
     for r in runs:
         if r.get("rao_artifact"):
@@ -619,14 +619,14 @@ def select_rao_basis(completed_runs: list[dict[str, Any]]) -> str:
     """Pure RAO-basis selection from a list of completed-run dicts.
 
     Rules (ported from the prototype adapt.py):
-      * any run input contains "bokalift"                       -> "vessel"
+      * any run input contains "HLV-A"                       -> "vessel"
       * a diffraction/orcawave run input contains "fpso"/"ship" -> "drillship"
       * any diffraction/orcawave run exists                     -> "drillship"
       * otherwise                                               -> "barge"
     """
     runs = list(completed_runs or [])
     diffraction = [r for r in runs if _is_diffraction(r)]
-    if any("bokalift" in (r.get("input") or "").lower() for r in runs):
+    if any("HLV-A".lower() in (r.get("input") or "").lower() for r in runs):
         return "vessel"
     if any(
         ("fpso" in (r.get("input") or "").lower() or "ship" in (r.get("input") or "").lower())
@@ -647,7 +647,7 @@ def select_basis_run_id(
     diffraction = [r for r in runs if _is_diffraction(r)]
     if rao_basis == "vessel":
         for r in runs:
-            if "bokalift" in (r.get("input") or "").lower():
+            if "HLV-A".lower() in (r.get("input") or "").lower():
                 return r.get("run_id")
         return None
     if rao_basis in ("drillship", "fpso"):
@@ -664,7 +664,7 @@ def select_basis_run_id(
 def build_provenance(
     completed_runs: list[dict[str, Any]],
     rao_basis: str,
-    vessel_name: str = "BokaLift 2",
+    vessel_name: str = "HLV-A 2",
     structure_catalog_used: bool = False,
     splashzone_computed: bool = False,
     rao_from_artifact: bool = False,

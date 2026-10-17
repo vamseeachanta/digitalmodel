@@ -294,7 +294,7 @@ def _specification_ids(script, label: str) -> set[str]:
 
 
 def _literal_specification_id(entry, label: str, index: int) -> str:
-    """Require lowercase alphanumeric groups separated by single hyphens."""
+    """Require lowercase slugs, with the exact HLV-A confidentiality codename."""
     import ast
     import re
 
@@ -308,7 +308,10 @@ def _literal_specification_id(entry, label: str, index: int) -> str:
     value = values[0]
     if not isinstance(value, ast.Constant):
         raise ValueError(f"{expected}; found {type(value).__name__}")
-    if not isinstance(value.value, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", value.value):
+    if not isinstance(value.value, str) or (
+        value.value != "installation-HLV-A"
+        and not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", value.value)
+    ):
         if not isinstance(value.value, str):
             found = f"{type(value.value).__name__} {value.value!r}"
         else:
