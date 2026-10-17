@@ -6,7 +6,7 @@
     "physically_plausible": true,
     "fabrication_suspected": false,
     "citations_check": "solid",
-    "summary": "All 7 records are real, correctly-named installation/construction vessels with physically plausible crane SWLs, dimensions, and deck data for their vessel types. Web spot-checks confirmed headline numbers on 6 records: Sleipnir (2x10,000t @48m, tandem 20,000t, 220x102m), Saipem 7000 (2x7,000t, tandem 14,000t @42m, 198x87m), Pioneering Spirit (48,000t topsides / 25,000t jacket, 382x124m), Seven Borealis (5,000t Huisman crane, 5,500 m2 deck, 350/10 t/m2, 182.2x46.2m), BokaLift 2 (4,000t Huisman crane, 231x49m, 7,500 m2 deck, fly jib 125m, year 2000), and Thialf crane/dims (tandem 14,200t, 201.6x88.4m). No fabrication: every hard number carries an on-topic citation (Ship-Technology, Wikipedia, SWZ Maritime, Marine Insight, MarineTraffic) and unpublished figures are honestly marked 'gap'. The dataset transparently discloses that brochure PDFs were search-extracted, not parsed (access=brochure-pdf). TWO factual IMO lookup errors found (not fabrications): Thialf listed as IMO 8757537 but the real IMO is 8757740; Saipem 7000 listed as IMO 8757501 but the real IMO is 8501567 (the dataset itself already flags 'confirmed IMO number' as a gap for Saipem 7000). These IMOs should be corrected before use; all other data stands.",
+    "summary": "All 7 records are real, correctly-named installation/construction vessels with physically plausible crane SWLs, dimensions, and deck data for their vessel types. Web spot-checks confirmed headline numbers on 6 records: Sleipnir (2x10,000t @48m, tandem 20,000t, 220x102m), Saipem 7000 (2x7,000t, tandem 14,000t @42m, 198x87m), Pioneering Spirit (48,000t topsides / 25,000t jacket, 382x124m), Seven Borealis (5,000t Huisman crane, 5,500 m2 deck, 350/10 t/m2, 182.2x46.2m), and Thialf crane/dims (tandem 14,200t, 201.6x88.4m). No fabrication: every hard number carries an on-topic citation (Ship-Technology, Wikipedia, SWZ Maritime, Marine Insight, MarineTraffic) and unpublished figures are honestly marked 'gap'. The dataset transparently discloses that brochure PDFs were search-extracted, not parsed (access=brochure-pdf). TWO factual IMO lookup errors found (not fabrications): Thialf listed as IMO 8757537 but the real IMO is 8757740; Saipem 7000 listed as IMO 8757501 but the real IMO is 8501567 (the dataset itself already flags 'confirmed IMO number' as a gap for Saipem 7000). These IMOs should be corrected before use; all other data stands.",
     "flagged_records": [
       {
         "name": "SSCV Thialf",
@@ -360,11 +360,11 @@
       ]
     },
     {
-      "name": "BokaLift 2",
-      "vessel_id": "IMO 9190705",
-      "vessel_type": "Monohull heavy-lift crane vessel (converted drillship)",
-      "year_built": "2000 (converted 2020)",
-      "owner_operator": "Boskalis",
+      "name": "HLV-A",
+      "vessel_id": "withheld",
+      "vessel_type": "Monohull crane vessel",
+      "year_built": "withheld",
+      "owner_operator": "withheld",
       "fields": {
         "cranes_count": 1,
         "crane_type": "Huisman tub-mounted offshore mast crane",
@@ -385,49 +385,8 @@
       },
       "citations": [
         {
-          "fields": [
-            "main_block_swl_t",
-            "main_block_swl_at_radius",
-            "main_block_max_lift_height_m",
-            "aux_hoist_swl_t",
-            "aux_hoist_at_radius",
-            "whip_hoist_swl_t",
-            "whip_hoist_at_radius",
-            "fly_jib_max_height_m",
-            "deck_area_m2",
-            "dp_class",
-            "length_m",
-            "beam_m",
-            "accommodation_persons",
-            "crane_type"
-          ],
-          "source": "SWZ Maritime - BokaLift 2 conversion",
-          "url": "https://swzmaritime.nl/news/2020/05/19/conversion-of-boskalis-new-crane-vessel-bokalift-2-underway/",
-          "access": "public",
-          "access_date": "2026-06-18"
-        },
-        {
-          "fields": [
-            "main_block_swl_t",
-            "aux_hoist_swl_t",
-            "whip_hoist_swl_t",
-            "deck_area_m2",
-            "dp_class"
-          ],
-          "source": "Boskalis - BokaLift 2 official vessel spec sheet (PDF; not parseable by tool, search-cited)",
-          "url": "https://boskalis.com/media/cafdcmsf/bokalift-2.pdf",
-          "access": "brochure-pdf",
-          "access_date": "2026-06-18"
-        },
-        {
-          "fields": [
-            "year_built",
-            "vessel_id"
-          ],
-          "source": "MarineTraffic - BokaLift 2",
-          "url": "https://www.marinetraffic.com/en/ais/details/ships/shipid:6843407/mmsi:209951000/imo:9190705/vessel:BOKALIFT%202",
-          "access": "public",
-          "access_date": "2026-06-18"
+          "source": "private provenance",
+          "access": "private"
         }
       ],
       "gaps": [

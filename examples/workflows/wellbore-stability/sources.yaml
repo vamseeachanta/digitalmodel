@@ -1,0 +1,82 @@
+schema_version: 1
+validation_status: NOT_VALIDATED
+scope: Two published vertical Mohr-Coulomb scalar comparisons; no general-path qualification.
+textbook:
+  title: Introduction to Energy Geomechanics
+  institution: University of Texas at Austin, Department of Petroleum and Geosystems Engineering
+  edition: August 28, 2024; copyright 2021
+  pagination: Numbered HTML pages, not printed page numbers
+  title_page:
+    url: https://dnicolasespinoza.github.io/IPG.html
+    http_status: 200
+    retrieved_utc: '2026-10-17T13:18:42Z'
+    response_sha256: 9939ffa022fc2f9f03a2be826c0fea3fc968eca9db4f6167b1de5da7f624ea17
+completion_assumptions:
+  sv_psi: 7000
+  poisson_ratio: 0.25
+  biot_coefficient: 1
+  inclination_deg: 0
+  allowed_breakout_width_deg: 0
+  thermal_stress_psi: 0
+  note: Sv and Poisson ratio omitted by the published 2D problems; explicit completion
+    preserves the published collapse-sector ordering and minimum hoop stress at tensile
+    initiation.
+worked_examples:
+- id: collapse-problem-6.1
+  citation: Introduction to Energy Geomechanics, edition August 28, 2024, section 6.3, HTML
+    page node46, Problem 6.1, equation 6.9
+  source:
+    url: https://dnicolasespinoza.github.io/node46.html
+    http_status: 200
+    retrieved_utc: '2026-10-17T13:16:05Z'
+    response_sha256: 206f1515fa97a09be05ee5af8b6c9a0ba435552ab1846cbfd58593266d7a727e
+  bound: collapse
+  published_pressure_psi: 4279
+  absolute_tolerance_psi: 2
+  rounding: Published q rounded to 3.12; implementation retains full precision.
+  test: tests/well/drilling/test_wellbore_stability.py::test_textbook_problem_6_1_collapse
+- id: tensile-problem-6.3
+  citation: Introduction to Energy Geomechanics, edition August 28, 2024, section 6.4, HTML
+    page node47, Problem 6.3, equation 6.18, zero thermal stress
+  source:
+    url: https://dnicolasespinoza.github.io/node47.html
+    http_status: 200
+    retrieved_utc: '2026-10-17T13:16:11Z'
+    response_sha256: bf1e4cb8524492974c123cf68708b5700d7849b69f6ca5e94d4387f6954d1b33
+  bound: fracture_initiation
+  published_pressure_psi: 4320
+  absolute_tolerance_psi: 0.01
+  test: tests/well/drilling/test_wellbore_stability.py::test_textbook_problem_6_3_fracture
+shared_published_inputs:
+  tvd_ft: 7000
+  shmax_psi: 6300
+  shmin_psi: 4300
+  pore_pressure_psi: 3080
+  ucs_psi: 3500
+  internal_friction_coefficient: 0.6
+  tensile_strength_psi: 800
+  dependence: Separate worked problems sharing one input set; not independent datasets.
+method_sources:
+- citation: Introduction to Energy Geomechanics, same edition, section 6.6.2, HTML page node49,
+    equations 6.19-6.21 and Figure 6.22
+  source:
+    url: https://dnicolasespinoza.github.io/node49.html
+    http_status: 200
+    retrieved_utc: '2026-10-17T13:16:30Z'
+    response_sha256: d70a56885cb4f49e4b56f7ab84509082cac773de03155a3a981a21181faf8461
+  limitation: Method reference only; no published deviated-well validation case.
+- title: An analytical solution to wellbore stability using Mogi-Coulomb failure criterion
+  doi: 10.1016/j.jrmge.2019.03.004
+  doi_response:
+    url: https://linkinghub.elsevier.com/retrieve/pii/S1674775519304949
+    http_status: 200
+    retrieved_utc: '2026-10-17T13:16:50Z'
+    response_sha256: 1b4874bc7f0ebeadd767c71f7a73665d2dcd08fbaa888f9c9ba12faaad517a92
+  publisher_response:
+    url: https://www.sciencedirect.com/science/article/pii/S1674775519304949
+    http_status: 403
+    retrieved_utc: '2026-10-17T13:19:08Z'
+    response_sha256: 728a3676ca0d4d537095c7b53d7b61d8918028c8692534aafa7fd882c4cb8063
+  validation_status: NOT_VALIDATED
+  limitation: Title confirmed by DOI redirect metadata only. Publisher HTTP 403; equations
+    and worked examples not checked.

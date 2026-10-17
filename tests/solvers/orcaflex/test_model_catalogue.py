@@ -59,6 +59,10 @@ class TestModelCatalogue(unittest.TestCase):
         self.assertIn("seabed", card)
         self.assertIn('y1="-100.000"', card)  # surface (0) minus depth (100)
 
+    def test_specification_py_model_count(self):
+        card = self.card("generic:\n  py_models:\n  - Name: synthetic soil\n")
+        self.assertIn("generic.py_models: 1", card)
+
     def test_specification_without_geometry(self):
         card = self.card(fixture("specification"))
         self.assertIn("geometry cannot be drawn without the solver", card)

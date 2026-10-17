@@ -14,7 +14,8 @@ Two "top tension" answers coexist in this package by design:
 
 Provenance discipline: this module carries NO standards-derived numeric
 defaults — ``efficiency`` and ``fleet_angle_factor`` are required kwargs
-supplied by the caller/rig data. The 16Q §3.3 tension factors f_wt/f_bt that
+supplied by the caller/rig data. The API RP 16Q, second edition (2017),
+tension factors f_wt/f_bt (clause text pending held-edition confirmation) that
 compose ``t_srmin_kn`` upstream now resolve as cited values via
 ``riser_database.getters.get_tension_weight_factor`` /
 ``get_buoyancy_tension_factor`` (#1246). Illustrative docstring numbers are
@@ -189,7 +190,10 @@ def tensioner_system_factor(
     """N / (Rf * (N - n)): the tensioner-system allowance for ``n_fail``
     sudden unit/wire failures at mechanical efficiency ``Rf``.
 
-    Note on the 16Q mapping (§3.3.2): API RP 16Q folds the mechanical
+    ABS Guidance Notes on Drilling Riser Analysis (2017), Section 3,
+    Subsection 3, item iii), Eq. (3.1); API RP 16Q, Design, Selection, Operation
+    and Maintenance of Marine Drilling Riser Systems, second edition (2017),
+    clause text pending held-edition confirmation. The equation folds the mechanical
     efficiency and the fleet-angle allowance into a single reduction factor
     Rf. This implementation splits them — ``efficiency`` here (the Rf in this
     N/(Rf(N-n)) expression) and ``fleet_angle_factor`` in
