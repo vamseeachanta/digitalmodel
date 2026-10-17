@@ -386,6 +386,9 @@ modules:
   - module: well
     entry_point: src/digitalmodel/well/
     submodules:
+      drilling:
+        agent_pack: src/digitalmodel/well/drilling/docs/agent-pack.md
+        qa_family: EC
       well:
         agent_pack: src/digitalmodel/well/docs/agent-pack.md
         qa_family: EC
@@ -393,10 +396,6 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/well/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#well
-    submodules:
-      drilling:
-        agent_pack: src/digitalmodel/well/drilling/docs/agent-pack.md
-        qa_family: EC
   - module: workflows
     entry_point: src/digitalmodel/workflows/
     maturity: beta
