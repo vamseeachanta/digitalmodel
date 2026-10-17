@@ -22,7 +22,6 @@ source_history:
   - "promoted from tests/hydrodynamics/diffraction/fixtures/spec_fpso_turret.yml under #2458"
 meshes_referenced:
   - "tests/hydrodynamics/bemrosetta/fixtures/sample_box.gdf"
-  - "tests/hydrodynamics/bemrosetta/fixtures/sample_box.dat"
 related_issues:
   promotion: 2458
   delivered_foundations: [1605, 1592, 1768, 1638]

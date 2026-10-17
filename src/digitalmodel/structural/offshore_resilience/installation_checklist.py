@@ -31,7 +31,7 @@ from typing import Dict, List, Optional
 class ChecklistStatus(str, Enum):
     """Status of a single checklist parameter."""
     PENDING = "pending"
-    PASS = "pass"
+    PASS = "pass"  # nosec B105 # Public checklist outcome label, not a credential.
     FAIL = "fail"
 
 

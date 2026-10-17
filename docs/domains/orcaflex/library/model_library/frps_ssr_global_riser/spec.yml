@@ -2,8 +2,8 @@
 # FrPS / SSR Free-Standing Riser - GLOBAL DYNAMIC MODEL (INPUT SCAFFOLD)
 #
 # Model Type:   Free-standing (dry-tree) riser on a Surface SSR / wellhead landing
-# Source basis: FDAS riser-buckling screening campaign
-#               (github.com/vamseeachanta/llm-wiki-fdas issues #2-#7;
+# Source basis: private-data-repository riser-buckling screening campaign
+#               (private-data-repository issues #2-#7;
 #                global-model scope = issue #2)
 # Status:       INPUT SCAFFOLD ONLY - not solved. See README.md.
 # Version:      0.1 (scaffold)

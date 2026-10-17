@@ -13,7 +13,7 @@ Test classes called out in the issue: `TestBarePipe (9)`, `TestConnectorClamp (4
 
 ## Plan
 
-1. **Diff existing vs source.** Run `diff -u tests/marine_ops/installation/test_jumper_lift.py client_projects/engineering_workbooks/gom_tieback/jumper_manifold_to_plet/claude_excel_addin/test_jumper_lift.py` (when ws014 is reachable, or fetch the source from the parent excel-conversion issue's attached snapshot). Categorize gaps: missing tests, unittest leftovers, broken imports.
+1. **Diff existing vs source.** Run `diff -u tests/marine_ops/installation/test_jumper_lift.py client_projects/engineering_workbooks/gom_tieback/jumper_manifold_to_plet/claude_excel_addin/test_jumper_lift.py` (when ace-win-2 is reachable, or fetch the source from the parent excel-conversion issue's attached snapshot). Categorize gaps: missing tests, unittest leftovers, broken imports.
 
 2. **Fix imports.** Confirm every `from digitalmodel.marine_ops.installation.jumper_lift import ...` symbol exists. Cross-check against the actual exports in `src/digitalmodel/marine_ops/installation/jumper_lift.py` — currently provides `INCH_TO_M`, `LB_TO_KG`, `BarePipeProperties`, `BuoyancyModuleProperties`, `ClampProperties`, `ConnectorProperties`, `CraneConfig`, `PipeSectionLengths`, `RiggingProperties` (and 24 functions). Any test-side import of a missing symbol → either add the symbol (small public surface) or rewrite the test to use the existing API.
 
@@ -38,7 +38,7 @@ Test classes called out in the issue: `TestBarePipe (9)`, `TestConnectorClamp (4
        assert out.go_no_go is not None
    ```
 
-7. **Smoke check.** `uv run python -m pytest tests/marine_ops/installation/test_jumper_lift.py -v` — must report 81+ collected, 0 errors, 0 unintended failures (xfail/skip permitted only for ws014-only tests, marker `pytest.mark.windows_only`).
+7. **Smoke check.** `uv run python -m pytest tests/marine_ops/installation/test_jumper_lift.py -v` — must report 81+ collected, 0 errors, 0 unintended failures (xfail/skip permitted only for ace-win-2-only tests, marker `pytest.mark.windows_only`).
 
 ## Acceptance Criteria
 

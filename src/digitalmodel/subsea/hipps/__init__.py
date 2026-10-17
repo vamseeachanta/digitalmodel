@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """digitalmodel.subsea.hipps — HIPPS (High Integrity Pressure Protection System).
 
 HIPPS is the SIS (Safety Instrumented System) that protects a subsea/topside
@@ -14,9 +17,14 @@ Function (SIF). This package implements the deterministic, public-standard core:
                          (valve stroke + transmitter delay) before the protected
                          segment reaches its design pressure during a surge.
 
-Deferred (integration / requires solver or proprietary data): transient method-of-
-characteristics surge solver, detailed valve Cv flow sizing, FMEDA failure-mode
-roll-up, and OrcaFlex / pipeline-pressure workflow wiring.
+- ``pressure_surge`` — frictionless single-reach liquid characteristics solver;
+  sampled pressure-rise rate with explicit time-grid limitations.
+- ``valve_sizing`` — caller-coefficient liquid/gas sizing, stroke-time and
+  idealized conductance closure laws. Standard compliance remains unqualified.
+
+The pipeline pressure-sizing workflow accepts an optional HIPPS setpoint screen
+without wall-sizing credit. Deferred: FMEDA failure-mode roll-up, coupled
+multiphase transients, standards qualification and licensed solver integration.
 """
 
 from digitalmodel.subsea.hipps.sil_analysis import (
@@ -31,6 +39,11 @@ from digitalmodel.subsea.hipps.overpressure import (
     OverpressureResult,
     overpressure_envelope,
 )
+from .pressure_surge import SurgeResult, wave_speed, joukowsky_rise, simulate_surge
+from .valve_sizing import (
+    ValveCapacity, liquid_capacity, required_liquid_coefficient,
+    gas_mass_capacity, stroke_time, closure_fraction,
+)
 
 __all__ = [
     "SIL",
@@ -41,4 +54,14 @@ __all__ = [
     "risk_reduction_factor",
     "OverpressureResult",
     "overpressure_envelope",
+    "SurgeResult",
+    "wave_speed",
+    "joukowsky_rise",
+    "simulate_surge",
+    "ValveCapacity",
+    "liquid_capacity",
+    "required_liquid_coefficient",
+    "gas_mass_capacity",
+    "stroke_time",
+    "closure_fraction",
 ]

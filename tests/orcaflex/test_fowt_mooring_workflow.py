@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline smoke test for the FOWT watch-circle vs dynamic-cable workflow.
 
 Dispatches the committed ``examples/workflows/fowt-mooring/input.yml`` through
@@ -6,6 +9,7 @@ Closed-form / solver-free: no OrcaFlex licence required.
 """
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -27,12 +31,26 @@ SUMMARY_JSON = (
 def test_fowt_mooring_workflow_offline(tmp_path, monkeypatch):
     assert INPUT_YML.exists(), f"missing example input: {INPUT_YML}"
 
+    page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
+    # Detach and close file streams before the engine replaces its handlers.
+    for handler in list(logging.root.handlers):
+        if isinstance(handler, logging.FileHandler):
+            logging.root.removeHandler(handler)
+            handler.close()
     cfg = engine(inputfile=str(INPUT_YML))
 
     assert isinstance(cfg, dict)
     assert cfg["basename"] == "fowt_mooring"
 
     result = cfg["fowt_mooring"]["result"]
+    assert len(result["citations"]) == 1
+    assert result["citations"][0]["code_id"] == "DNV-RP-0360"
     # Healthy feasibility screen: governing bend radius well above the MBR limit.
     assert result["passes"] is True
     assert result["governing_bend_radius_m"] == pytest.approx(136.554, abs=1e-2)

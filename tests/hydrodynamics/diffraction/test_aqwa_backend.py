@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for the AQWA backend that generates .dat files from DiffractionSpec.
 
 WRK-058: TDD tests define the expected behavior of the AQWABackend class.
@@ -340,21 +343,44 @@ class TestFrequencyMapping:
 class TestHeadingMapping:
     """Test conversion of wave headings from spec to AQWA DIRN cards."""
 
-    def test_explicit_headings_to_dirn(self, tmp_path: Path):
-        """Explicit heading values appear as DIRN cards in deck 6."""
+    @pytest.mark.parametrize("mesh_available", [True, False])
+    def test_explicit_headings_to_dirn(self, tmp_path: Path, mesh_available: bool):
+        """Five half-deck headings require a verified mirrored full mesh."""
         from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+        from tests.hydrodynamics.diffraction.test_aqwa_half_deck import _spec
 
-        spec = _load_ship_spec()
+        spec = _spec(tmp_path)
+        if not mesh_available:
+            spec.vessel.geometry.mesh_file = str(tmp_path / "missing.gdf")
         backend = AQWABackend()
+        if not mesh_available:
+            with pytest.raises(ValueError, match="xz.*verified"):
+                backend.generate_single(spec, tmp_path)
+            return
         result_path = backend.generate_single(spec, tmp_path)
         content = result_path.read_text()
 
         dirn_lines = [
             line for line in content.splitlines() if "DIRN" in line
         ]
-        # Ship spec has 5 explicit headings: 0, 45, 90, 135, 180
-        # AQWA requires -180..+180 range, so expanded to 9: -180,-135,-90,-45,0,45,90,135,180
-        assert len(dirn_lines) == 9
+        # The xz-symmetric half keeps its five headings in 0..180 degrees.
+        assert len(dirn_lines) == 5
+        assert [float(line.split()[-1]) for line in dirn_lines] == [0, 45, 90, 135, 180]
+        assert "could not be loaded" not in content
+        assert "SYMX" in content
+
+    def test_full_body_explicit_headings_to_dirn(self, tmp_path: Path):
+        """The offset-box fixture retains the full nine-heading range."""
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        backend = AQWABackend()
+        content = backend.generate_single(
+            _load_ship_spec(), tmp_path, spec_dir=FIXTURES_DIR
+        ).read_text()
+        headings = [float(line.split()[-1]) for line in content.splitlines() if "DIRN" in line]
+        assert headings == [-180, -135, -90, -45, 0, 45, 90, 135, 180]
+        assert "SYMX" not in content
+        assert "could not be loaded" not in content
 
     def test_heading_range_to_dirn(self, tmp_path: Path):
         """Heading range generates correct DIRN card count."""
@@ -613,6 +639,8 @@ class TestGDFPanelValidation:
         )
 
         spec = _load_ship_spec()
+        # A single synthetic panel tests card connectivity, not body symmetry.
+        spec.vessel.geometry.symmetry = "none"
         mesh_file = spec.get_bodies()[0].vessel.geometry.mesh_file
         backend = AQWABackend()
         backend._mesh_cache[mesh_file] = ParsedMesh(
@@ -636,6 +664,8 @@ class TestGDFPanelValidation:
         )
 
         spec = _load_ship_spec()
+        # This synthetic panel is a full, asymmetric mesh.
+        spec.vessel.geometry.symmetry = "none"
         mesh_file = spec.get_bodies()[0].vessel.geometry.mesh_file
         backend = AQWABackend()
         backend._mesh_cache[mesh_file] = ParsedMesh(

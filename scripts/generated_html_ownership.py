@@ -27,7 +27,17 @@ Nothing here changes what this census does. It records what it does *not* do,
 so the next reader does not mistake its scope for coverage.
 """
 
+from pathlib import Path
+
+
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/cfd/build_calm_water_study.py": (
+        "writes native records and docs/domains HTML, not docs/api pages"
+    ),
+    "scripts/reporting/build_reference_jacket_analysis.py": (
+        "renders the reference-jacket analysis under docs/domains, not docs/api; "
+        "dedicated reporting tests verify byte reproduction"
+    ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
     ),
@@ -64,6 +74,9 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/debug_html_report.py": (
         "debugs an existing docs/reports HTML file; it does not target docs/api"
     ),
+    "scripts/generate_implementation_map.py": (
+        "writes a YAML implementation inventory, not committed docs/api HTML pages"
+    ),
     "scripts/generated_html_ownership.py": (
         "contains this ownership census; it does not write HTML"
     ),
@@ -93,6 +106,9 @@ DISCOVERY_FALSE_POSITIVES = {
 
 # Active generators which cannot run from repository-owned deterministic inputs.
 EXCLUDED_GENERATORS = {
+    "scripts/cfd/generate-kcs-verification.py": (
+        "requires a caller-supplied solved OpenFOAM case"
+    ),
     "docs/api/cfd/report_build/build_dam_break.py": (
         "requires a caller-supplied solved OpenFOAM case"
     ),
@@ -190,6 +206,10 @@ PAGE_EXCLUSIONS = {
 # than source-text heuristics alone, prevents new docs/api output from silently
 # bypassing ownership.
 MANUAL_PAGES = {
+    "docs/api/cfd/kcs-calm-water-resistance-verification.html": (
+        "emitted from a solved case by scripts/cfd/generate-kcs-verification.py; "
+        "the solve output is not in the repo, so CI cannot regenerate it"
+    ),
     "docs/api/buckling/ship-panel-buckling.html": (
         "hand-maintained interactive report; no scripts producer found"
     ),
@@ -239,7 +259,7 @@ def _specification_ids(script, label: str) -> set[str]:
     """Read literal specification ids and explain unsupported source forms."""
     import ast
 
-    tree = ast.parse(script.read_text(encoding="utf-8"))
+    tree = ast.parse(script.read_text(encoding="utf-8"), filename=label)
     spec_node = next(
         (node for node in tree.body
          if isinstance(node, ast.AnnAssign)
@@ -257,18 +277,26 @@ def _specification_ids(script, label: str) -> set[str]:
             f"{label}: expected SPECS to be a literal list; "
             f"found {type(specs).__name__}"
         )
-    ids = {_literal_specification_id(entry, label, index)
-           for index, entry in enumerate(specs.elts)}
+    ids: dict[str, int] = {}
+    for index, entry in enumerate(specs.elts):
+        spec_id = _literal_specification_id(entry, label, index)
+        if spec_id in ids:
+            raise ValueError(
+                f"{label}: duplicate specification id {spec_id!r} at "
+                f"SPECS[{ids[spec_id]}] and SPECS[{index}]"
+            )
+        ids[spec_id] = index
     if not ids:
         raise ValueError(
             f"{label}: expected at least one specification id; found empty list"
         )
-    return ids
+    return set(ids)
 
 
 def _literal_specification_id(entry, label: str, index: int) -> str:
-    """Require each list element to declare a literal nonempty string id."""
+    """Require lowercase alphanumeric groups separated by single hyphens."""
     import ast
+    import re
 
     expected = f"{label}: expected dict(...) call with a literal id at SPECS[{index}]"
     if not (isinstance(entry, ast.Call) and isinstance(entry.func, ast.Name)
@@ -280,17 +308,17 @@ def _literal_specification_id(entry, label: str, index: int) -> str:
     value = values[0]
     if not isinstance(value, ast.Constant):
         raise ValueError(f"{expected}; found {type(value).__name__}")
-    if not isinstance(value.value, str) or not value.value:
-        found = "empty string" if value.value == "" else type(value.value).__name__
-        raise ValueError(f"{expected}; found {found}")
+    if not isinstance(value.value, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", value.value):
+        if not isinstance(value.value, str):
+            found = f"{type(value.value).__name__} {value.value!r}"
+        else:
+            found = "empty string ''" if value.value == "" else repr(value.value)
+        raise ValueError(f"{expected} matching [a-z0-9]+(?:-[a-z0-9]+)*; found {found}")
     return value.value
 
 
-def build_output_pages() -> set[str]:
-    """Enumerate registered print-source paths from ids, without a folder glob."""
-    from pathlib import Path
-
-    repo = Path(__file__).resolve().parents[1]
+def build_output_pages(repo: Path) -> set[str]:
+    """Enumerate registered print-source paths within the supplied repository."""
     pages = set()
     for script, entry in BUILD_OUTPUT_GENERATORS.items():
         ids = _specification_ids(repo / script, script)

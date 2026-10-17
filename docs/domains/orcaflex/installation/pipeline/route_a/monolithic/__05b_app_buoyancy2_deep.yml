@@ -1,10 +1,10 @@
-﻿%YAML 1.1
+%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
 # File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/__05b_app_buoyancy2_deep.yml
 # Created: 1:26 PM on 9/19/2023
-# User: 
-# Machine: 
+# User:
+# Machine:
 ---
 BaseFile: __05a_app_buoyancy1_deep.yml
 6DBuoys:
@@ -83,7 +83,7 @@ BaseFile: __05a_app_buoyancy1_deep.yml
       - [2, 6, ~]
       - [3, 7, ~]
       - [4, 8, ~]
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored

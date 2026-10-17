@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Standard report contract — the typed spec every domain report is built from.
 
 ABOUTME: Pydantic v2 models for the standard HTML/PDF reporting engine (#2212).
@@ -298,6 +301,7 @@ class ReportSpec(BaseModel):
     input_echo: dict[str, Any] = Field(default_factory=dict)
     appendices: list[Section] = Field(default_factory=list)
     tool_version: str = Field(default_factory=_tool_version)
+    verification_presentation: bool = Field(default=False, exclude=True)
 
     @field_validator("citations", mode="before")
     @classmethod

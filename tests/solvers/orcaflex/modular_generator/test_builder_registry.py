@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for BuilderRegistry decorator-based registration."""
 
 from __future__ import annotations
@@ -81,8 +84,8 @@ class TestBuilderRegistry:
             "05_line_types.yml",
             "05_riser_line_types.yml",
             "06_riser_vessels.yml",
-            "06_vessels.yml",
             "13_supports.yml",
+            "06_vessels.yml",
             "14_morison.yml",
             "09_shapes.yml",
             "08_buoys.yml",

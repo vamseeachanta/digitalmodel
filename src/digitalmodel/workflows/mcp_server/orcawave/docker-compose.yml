@@ -14,6 +14,7 @@ services:
       - "8765:8765"  # WebSocket
     environment:
       - LOG_LEVEL=INFO
+      - ORCAWAVE_WEBSOCKET_HOST=0.0.0.0
       - ORCAWAVE_LICENSE_SERVER=${ORCAWAVE_LICENSE_SERVER:-localhost:5053}
       - REDIS_URL=redis://redis:6379/0
       - POSTGRES_URL=postgresql://orcawave:password@postgres:5432/orcawave
@@ -36,6 +37,7 @@ services:
 
   # Dashboard Server
   dashboard:
+    command: ["python", "/app/client/serve_dashboard.py", "--host", "0.0.0.0"]
     build:
       context: ../../..
       dockerfile: src/mcp/orcawave/Dockerfile.dashboard

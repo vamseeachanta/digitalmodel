@@ -1,0 +1,17 @@
+[
+  "atlases/fowt_mooring/0af02c3aaf14/grid.parquet",
+  "atlases/fowt_mooring/0af02c3aaf14/manifest.yaml",
+  "atlases/fowt_mooring/0af02c3aaf14/surrogate.json",
+  "atlases/fowt_mooring/0af02c3aaf14/validation.json",
+  "atlases/fowt_mooring/b4046a89d219/grid.parquet",
+  "atlases/fowt_mooring/b4046a89d219/manifest.yaml",
+  "atlases/fowt_mooring/b4046a89d219/surrogate.json",
+  "atlases/fowt_mooring/b4046a89d219/validation.json",
+  "atlases/fowt_mooring/default.txt",
+  "src/digitalmodel/orcaflex/mooring_design.py",
+  "src/digitalmodel/orcaflex/mooring_design_fowt.py",
+  "tests/orcaflex/test_fowt_citation_resolution.py",
+  "tests/orcaflex/test_fowt_mooring_workflow.py",
+  "tests/orcaflex/test_mooring_design_fowt.py",
+  "tests/workflows/test_durable_workflows.py"
+]

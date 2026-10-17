@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 from __future__ import annotations
 
 import importlib.util
@@ -314,3 +317,127 @@ def test_dispatch_cli_rejects_nonfixed_load_threshold() -> None:
 
     with pytest.raises(SystemExit):
         dispatcher.build_parser().parse_args(["--max-load-per-core", "0"])
+
+
+# --------------------------------------------------------------------------- #
+#  --poll: the out-of-band budget enforcement point for detached runs (#1173)
+# --------------------------------------------------------------------------- #
+
+def test_poll_exit_code_contract(tmp_path, capsys) -> None:
+    """0 while healthy, 2 when the budget was exceeded and the group was killed.
+
+    The exit status is the operational contract: a cron entry on the execution
+    host acts on it without parsing output, which matters because the poller
+    has to work from a session that never saw the launch.
+    """
+    import os
+    import subprocess as sp
+    import sys as _sys
+    import time as _time
+
+    dispatcher = load_dispatcher()
+    case = tmp_path / "case"
+    case.mkdir()
+
+    proc = sp.Popen(
+        [_sys.executable, "-c", "import time\nprint('Time = 1', flush=True)\ntime.sleep(60)"],
+        cwd=str(case), stdout=(case / "log.solver").open("w"),
+        stderr=sp.STDOUT, stdin=sp.DEVNULL, start_new_session=True,
+    )
+    try:
+        # Healthy: generous budget.
+        (case / "detached_run.json").write_text(json.dumps({
+            "pid": proc.pid, "pgid": proc.pid, "argv": ["solver"],
+            "started_epoch": _time.time(), "wallclock_budget_hours": 10.0,
+            "log_file": "log.solver",
+        }))
+        assert dispatcher.poll_case(str(case)) == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["running"] is True
+        assert payload["terminated"] is False
+
+        # Over budget: must terminate and report 2.
+        (case / "detached_run.json").write_text(json.dumps({
+            "pid": proc.pid, "pgid": proc.pid, "argv": ["solver"],
+            "started_epoch": _time.time() - 3600, "wallclock_budget_hours": 0.1,
+            "log_file": "log.solver",
+        }))
+        assert dispatcher.poll_case(str(case)) == 2
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["over_budget"] is True
+        assert payload["terminated"] is True
+        proc.wait(timeout=5)
+    finally:
+        try:
+            os.killpg(os.getpgid(proc.pid), 9)
+        except (ProcessLookupError, PermissionError):
+            pass
+
+
+def test_poll_can_report_without_terminating(tmp_path, capsys) -> None:
+    """--no-terminate is for observing a run you do not own."""
+    import os
+    import subprocess as sp
+    import sys as _sys
+    import time as _time
+
+    dispatcher = load_dispatcher()
+    case = tmp_path / "case"
+    case.mkdir()
+    proc = sp.Popen(
+        [_sys.executable, "-c", "import time; time.sleep(60)"],
+        cwd=str(case), stdout=sp.DEVNULL, stderr=sp.DEVNULL,
+        stdin=sp.DEVNULL, start_new_session=True,
+    )
+    try:
+        (case / "detached_run.json").write_text(json.dumps({
+            "pid": proc.pid, "pgid": proc.pid, "argv": ["solver"],
+            "started_epoch": _time.time() - 3600, "wallclock_budget_hours": 0.1,
+            "log_file": "log.solver",
+        }))
+        assert dispatcher.poll_case(str(case), terminate=False) == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["over_budget"] is True
+        assert payload["terminated"] is False
+        assert os.kill(proc.pid, 0) is None  # still alive
+    finally:
+        os.killpg(os.getpgid(proc.pid), 9)
+
+
+@pytest.mark.parametrize("configured_root", [None, "data/configured-cfd"])
+def test_compute_collector_default_root_is_portable(monkeypatch, configured_root) -> None:
+    script = SCRIPT.parents[1] / "cfd" / "collect_compute_stats.py"
+    spec = importlib.util.spec_from_file_location("collect_compute_stats", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.delenv("DM_CFD_WORK_DIR", raising=False)
+    if configured_root is not None:
+        monkeypatch.setenv("DM_CFD_WORK_DIR", configured_root)
+    observed = []
+
+    def capture_glob(pattern):
+        observed.append(pattern)
+        raise StopIteration("input lookup captured")
+
+    monkeypatch.setattr(module.glob, "glob", capture_glob)
+    with pytest.raises(StopIteration, match="input lookup captured"):
+        module.main([])
+    expected = Path(configured_root or "data/sloshing_cfd_work")
+    assert observed == [str(expected / "*" / "_result.json")]
+
+def test_default_dedicated_manifest_is_tracked(monkeypatch) -> None:
+    """The default dedicated host retains a readable repository manifest."""
+    dispatcher = load_dispatcher()
+    monkeypatch.delenv("CFD_GPU_BENCHMARK", raising=False)
+    host = next(host for host in dispatcher.default_hosts() if host.dedicated)
+    relative = host.manifest.relative_to(dispatcher.REPO_ROOT)
+    subprocess.run(
+        ["git", "ls-files", "--error-unmatch", str(relative)],
+        cwd=dispatcher.REPO_ROOT, capture_output=True, check=True,
+    )
+    probe = dispatcher.HostProbe(host.name, True, host.name, 8, 0.0, "assumed")
+    candidate = dispatcher.evaluate_host(
+        host, probe, dispatcher.load_benchmark(host.manifest),
+        requested_ranks=None, max_load_per_core=1.5,
+    )
+    assert candidate.eligible, candidate.reason

@@ -10,7 +10,7 @@ vessel:
   type: ship
   geometry:
     mesh_file: source_data/aqwa/aqwa_001_ship_raos_rev2.dat
-    mesh_format: dat
+    mesh_format: aqwa_dat
     symmetry: none
     reference_point: [0.0, 0.0, 0.5]  # BodyMeshPosition z-offset
     waterline_z: 0.0

@@ -1,4 +1,4 @@
-﻿BaseFile: __03b_add_dz_10k_production_mudmat.yml
+BaseFile: __03b_add_dz_10k_production_mudmat.yml
 
 6DBuoys:
   New:
@@ -124,7 +124,7 @@
     SeabedFrictionCoefficient: 0
     ShadedDrawingCullingMode: No culling
     ShadedDrawingDrawSize: '~'
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
     ShadedDrawingMirrorInPlane: Not mirrored
     ShadedDrawingOrientation:
     - 0

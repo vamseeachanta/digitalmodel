@@ -52,6 +52,7 @@ _EXTENSION_TO_FORMAT_STR: dict[str, str] = {
 _FORMAT_TYPE_VALUE_TO_FORMAT_STR: dict[str, str] = {
     "gdf": "gdf",
     "dat": "dat",
+    "aqwa_dat": "dat",
     "stl": "stl",
 }
 

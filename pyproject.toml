@@ -101,7 +101,43 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+fowt = [
+    "capytaine==3.0.0",
+    "moorpy==1.3.0",
+    # Preserve the panel-radius criterion and retained report image bytes.
+    "shapely==2.1.2",
+    "matplotlib==3.10.9",
+]
 drawings = ["ezdxf>=1.3,<2"]
+cad = [
+    # Optional CAD readers for client geometry ingestion (#2023).
+    #
+    # NOT a runtime dependency: the core package must import and run with this
+    # absent, so `naval_architecture.hull_ingest` imports rhino3dm lazily inside
+    # a function and raises a MissingCadDependencyError naming this extra.
+    #
+    # rhino3dm is a file reader, not a geometry kernel -- it returns the render
+    # meshes Rhino cached in the .3dm and cannot tessellate NURBS. That is a
+    # property of the format's ecosystem, not a version constraint to relax.
+    "rhino3dm>=8.0.0,<9.0.0",
+    #
+    # cadquery-ocp IS the geometry kernel: OpenCASCADE 7.9 as binary wheels,
+    # imported as `OCP`. naval_architecture.brep_tessellate uses it to rebuild
+    # a .3dm's trimmed NURBS Breps and mesh them, for files that carry no
+    # cached render meshes at all.
+    #
+    # Also lazily imported, also not a runtime dependency -- and deliberately
+    # not automatic: hull_ingest only reaches for it when the caller passes
+    # tessellate_breps=True, because tessellating a Brep is an approximation
+    # whose trim fidelity has to be inspected rather than assumed.
+    #
+    # cadquery-ocp rather than pythonocc-core: same OpenCASCADE kernel, but
+    # pythonocc is distributed conda-first with no reliable pip path AND spells
+    # its Python API differently (topods.Edge vs TopoDS.Edge_s), so it is not a
+    # drop-in substitute here -- swapping it in needs a tested shim, not a
+    # different install line.
+    "cadquery-ocp>=7.7,<8.0",
+]
 gis-imagery = [
     # Optional Earth Engine support for the gis.imagery timelapse pipeline.
     # Not required: the pipeline falls back to public Planetary Computer STAC.
@@ -245,11 +281,14 @@ digitalmodel = [
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
     "data_systems/data/*.yml",
+    "data_systems/data/steel_shapes*.json",
+    "data_systems/data/steel_shapes_provenance.yaml",
     "foam_system/data/*.yml",
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
     "naval_architecture/data/*.yml",
     "field_development/data/*.yml",
+    "solvers/openfoam/data/*.yml",
     "motion_forecast/*.yml",
     "usecase_registry/*.yaml",
     "marine_ops/artificial_lift/reference_data/**/*.csv",
@@ -258,6 +297,10 @@ digitalmodel = [
     "reporting/assets/*.j2",
     "reporting/assets/*.css",
     "asset_integrity/data/*.yml",
+    # Frozen OpenFOAM case templates ported verbatim from the shipped
+    # tutorials. These have no file extension by OpenFOAM convention
+    # (system/controlDict, 0.orig/U, ...), so they are listed by directory.
+    "solvers/openfoam/templates/**/*",
 ]
 
 [tool.ruff]
@@ -292,6 +335,7 @@ addopts = [
     "--strict-config",
 ]
 markers = [
+    "store_data: marks tests requiring manifest-listed content-store data",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",

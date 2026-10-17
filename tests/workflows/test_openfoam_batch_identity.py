@@ -1,5 +1,10 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 from __future__ import annotations
 
+import base64
+import hashlib
 from pathlib import Path
 import subprocess
 
@@ -11,7 +16,34 @@ from digitalmodel.workflows.openfoam_batch_identity import (
 )
 
 
-def test_identity_is_stable_and_changes_with_input_tool_and_capacity(tmp_path: Path) -> None:
+@pytest.fixture(autouse=True)
+def isolate_git_environment(monkeypatch):
+    """Keep fixture probes and Git writes bound to their temporary roots."""
+    for binding in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        monkeypatch.delenv(binding, raising=False)
+
+
+@pytest.fixture
+def verified_package_source(tmp_path: Path) -> Path:
+    """Provide a package whose installed bytes are verified through RECORD."""
+    install = tmp_path / "installed"
+    package = install / "digitalmodel"
+    record_dir = install / "digitalmodel-1.0.dist-info"
+    package.mkdir(parents=True)
+    record_dir.mkdir()
+    content = b"VALUE = 1\n"
+    (package / "module.py").write_bytes(content)
+    encoded = base64.urlsafe_b64encode(hashlib.sha256(content).digest()).rstrip(b"=").decode()
+    (record_dir / "RECORD").write_text(
+        f"digitalmodel/module.py,sha256={encoded},{len(content)}\n"
+        "digitalmodel-1.0.dist-info/RECORD,,\n"
+    )
+    return package
+
+
+def test_identity_is_stable_and_changes_with_input_tool_and_capacity(
+    tmp_path: Path, verified_package_source: Path,
+) -> None:
     source = tmp_path / "input.yml"
     tool = tmp_path / "solver"
     source.write_text("a: 1\n")
@@ -22,9 +54,10 @@ def test_identity_is_stable_and_changes_with_input_tool_and_capacity(tmp_path: P
         selected_executables=[("solver", tool)],
         visible_rank_count=8,
         dispatcher_rank_limit=7,
-        package_root=Path(__file__).resolve().parents[2] / "src" / "digitalmodel",
+        package_root=verified_package_source,
     )
     first = build_run_identity(**kwargs)
+    assert first.source["wheel_record_verified"] is True
     assert first == build_run_identity(**kwargs)
     assert len(first.identity_sha256) == 64
     assert first.selected_executables[0]["basename"] == "solver"
@@ -64,6 +97,11 @@ def test_dirty_git_package_source_is_rejected(tmp_path: Path) -> None:
     subprocess.run(["git", "-C", str(tmp_path), "add", "pkg/module.py"], check=True)
     subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=Test",
                     "-c", "user.email=test@example.invalid", "commit", "-qm", "init"], check=True)
+    clean = build_run_identity(
+        effective_config={}, referenced_inputs=[], selected_executables=[],
+        visible_rank_count=1, dispatcher_rank_limit=1, package_root=package,
+    )
+    assert clean.source["tracked_tree_clean"] is True
     source.write_text("VALUE = 2\n")
     with pytest.raises(ValueError, match="dirty"):
         build_run_identity(effective_config={}, referenced_inputs=[], selected_executables=[],

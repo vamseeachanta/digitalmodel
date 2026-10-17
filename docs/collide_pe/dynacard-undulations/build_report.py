@@ -25,6 +25,11 @@ HERE = Path(__file__).resolve().parent
 OUT_HTML = HERE / "dynacard-rod-pump-report.html"
 OUT_PDF = HERE / "AceEngineer-dynacard-rod-pump-report.pdf"
 
+STUDY_VALUES_NOTE = (
+    "Values in this study are entered by hand from the cited source; "
+    "they are not computed by this repository"
+)
+
 FRAC = '<span class="frac"><span class="n">{n}</span><span class="d">{d}</span></span>'
 
 
@@ -39,6 +44,7 @@ report = CalcReport(
     revision="A",
     preliminary=True,
     lede=(
+        STUDY_VALUES_NOTE + '</p>\n    <p class="lede">' +
         "Why a 4,200 ft rod string produces load undulations on the surface card, "
         "what the card confirms about the well, and what is required to progress to "
         "a downhole pump diagnosis. <strong>Preliminary results</strong> &mdash; "

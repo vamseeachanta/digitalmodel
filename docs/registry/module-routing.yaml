@@ -4,11 +4,19 @@ canonical_operator_map: docs/maps/digitalmodel-operator-map.md
 modules:
   - module: ansys
     entry_point: src/digitalmodel/ansys/
+    submodules:
+      ansys:
+        agent_pack: src/digitalmodel/ansys/docs/agent-pack.md
+        qa_family: FE
     maturity: beta
     owner_wiki: docs/domains/ansys/
     key_tests: [tests/ansys/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#ansys
   - module: asset_integrity
+    submodules:
+      asset_integrity:
+        agent_pack: src/digitalmodel/asset_integrity/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/asset_integrity/
     maturity: stable
     owner_wiki: docs/domains/README.md
@@ -52,6 +60,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#benchmarks
   - module: cathodic_protection
     entry_point: src/digitalmodel/cathodic_protection/
+    submodules:
+      cathodic_protection:
+        agent_pack: src/digitalmodel/cathodic_protection/docs/agent-pack.md
+        qa_family: EC
     engine_entry: src/digitalmodel/cathodic_protection/engine_adapter.py  # basename cathodic_protection (#2210)
     calculation_types: [DNV_RP_B401_offshore, DNV_RP_F103, ABS_gn_ships_2018, ABS_gn_offshore_2018]
     deprecated_calculation_types: [DNV_RP_F103_2010, DNV_RP_B401_offshore_legacy, DNV_RP_F103_2010_legacy]  # DeprecationWarning; DNV_RP_F103_2010 = DNV_RP_F103 pinned to edition 2010, *_legacy = legacy solver
@@ -90,8 +102,22 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/drilling_riser/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#drilling_riser
+    submodules:
+      drilling_riser:
+        agent_pack: src/digitalmodel/drilling_riser/docs/agent-pack.md
+        qa_family: MR
+      global_model:
+        agent_pack: src/digitalmodel/drilling_riser/global_model/docs/agent-pack.md
+        qa_family: MR
+      postprocess:
+        agent_pack: src/digitalmodel/drilling_riser/postprocess/docs/agent-pack.md
+        qa_family: MR
   - module: fatigue
     entry_point: src/digitalmodel/fatigue/
+    submodules:
+      fatigue:
+        agent_pack: src/digitalmodel/fatigue/docs/agent-pack.md
+        qa_family: EC
     maturity: production
     owner_wiki: docs/domains/fatigue/
     key_tests: [tests/fatigue/]
@@ -120,6 +146,13 @@ modules:
     owner_wiki: docs/domains/hydrodynamics/
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
+    submodules:
+      hull_library:
+        agent_pack: src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md
+        qa_family: DF
+      diffraction:
+        agent_pack: src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md
+        qa_family: DF
   - module: infrastructure
     entry_point: src/digitalmodel/infrastructure/
     maturity: beta
@@ -132,6 +165,13 @@ modules:
     owner_wiki: docs/domains/marine_ops/
     key_tests: [tests/marine_ops/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#marine_ops
+    submodules:
+      installation:
+        agent_pack: src/digitalmodel/marine_ops/installation/docs/agent-pack.md
+        qa_family: IN
+      marine_analysis:
+        agent_pack: src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md
+        qa_family: MR
   - module: floating_wind
     entry_point: src/digitalmodel/floating_wind/
     maturity: beta
@@ -170,6 +210,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#motion_forecast
   - module: naval_architecture
     entry_point: src/digitalmodel/naval_architecture/
+    submodules:
+      naval_architecture:
+        agent_pack: src/digitalmodel/naval_architecture/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/naval_architecture/]
@@ -194,6 +238,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#nde
   - module: orcaflex
     entry_point: src/digitalmodel/orcaflex/
+    submodules:
+      orcaflex:
+        agent_pack: src/digitalmodel/orcaflex/docs/agent-pack.md
+        qa_family: MR
     maturity: production
     owner_wiki: docs/domains/orcaflex/
     key_tests: [tests/orcaflex/]
@@ -254,10 +302,27 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#signal_processing
   - module: solvers
     entry_point: src/digitalmodel/solvers/
+    submodules:
+      openfoam:
+        agent_pack: src/digitalmodel/solvers/openfoam/docs/agent-pack.md
+        qa_family: CF
     maturity: beta
     owner_wiki: docs/domains/solvers/
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
+    submodules:
+      orcaflex/results_analysis:
+        agent_pack: src/digitalmodel/solvers/orcaflex/results_analysis/docs/agent-pack.md
+        qa_family: MR
+      orcaflex/modular_generator:
+        agent_pack: src/digitalmodel/solvers/orcaflex/modular_generator/docs/agent-pack.md
+        qa_family: MR
+      orcaflex/modular_input_validation:
+        agent_pack: src/digitalmodel/solvers/orcaflex/modular_input_validation/docs/agent-pack.md
+        qa_family: MR
+      orcaflex:
+        agent_pack: src/digitalmodel/solvers/orcaflex/docs/agent-pack.md
+        qa_family: MR
   - module: specialized
     entry_point: src/digitalmodel/specialized/
     maturity: stub
@@ -276,12 +341,26 @@ modules:
     owner_wiki: docs/domains/structural/
     key_tests: [tests/structural/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
+    submodules:
+      fatigue:
+        agent_pack: src/digitalmodel/structural/fatigue/docs/agent-pack.md
+        qa_family: EC
+      analysis:
+        agent_pack: src/digitalmodel/structural/analysis/docs/agent-pack.md
+        qa_family: EC
   - module: subsea
     entry_point: src/digitalmodel/subsea/
     maturity: stable
     owner_wiki: docs/domains/subsea/
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
+    submodules:
+      pipeline:
+        agent_pack: src/digitalmodel/subsea/pipeline/docs/agent-pack.md
+        qa_family: EC
+      mooring_analysis:
+        agent_pack: src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md
+        qa_family: MR
   - module: visualization
     entry_point: src/digitalmodel/visualization/
     maturity: beta
@@ -390,6 +469,18 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#rao_spectral_fatigue
+  - module: riser_configuration_screen
+    entry_point: src/digitalmodel/riser_configuration_screen/
+    maturity: development
+    owner_wiki: examples/workflows/riser-configuration-screen/
+    key_tests: [tests/riser_configuration_screen/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_configuration_screen
+  - module: bha_database
+    entry_point: src/digitalmodel/bha_database/
+    maturity: development
+    owner_wiki: docs/bha_database.md
+    key_tests: [tests/bha_database/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#bha_database
   - module: riser_database
     entry_point: src/digitalmodel/riser_database/
     maturity: development
