@@ -11,7 +11,7 @@
 | Quality review role | Engineering calculations quality manager |
 | Status | DRAFT; independent review pending |
 
-Evidence convention: repository citations resolve at the code pin, except the implementation-map citations in section 9, which resolve at the explicitly named map pin.
+Evidence convention: all repository citations, including the implementation-map citations in section 9, resolve at the header code pin.
 Numerical checks below specify this pack's checks; they do not establish compliance with a licensed standard.
 
 ## 1. Purpose and scope
@@ -19,7 +19,7 @@ Numerical checks below specify this pack's checks; they do not establish complia
 The F109 surface computes hydrodynamic force, lift, submerged weight and absolute/generalized lateral utilisation; the package exposes both canonical and simplified APIs, with simplified signatures winning overlapping package exports. [src/digitalmodel/subsea/on_bottom_stability/__init__.py:L1-L22]
 The simplified lateral surface delegates to generalized stability with passive resistance fixed to zero; the separate vertical check uses the weight-to-uplift criterion. [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L291-L360] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L398-L429]
 The E305 surface builds layered weights, evaluates simultaneous regular-wave/current demand, integrates a diameter-averaged current profile and bisects a caller's concrete-thickness bracket. [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L85-L108] [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L194-L241] [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L244-L257] [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L309-L346]
-The workflow requires two distinct case roles per segment and labels its result unqualified; edition-specific equivalence, the OS-F101 comparator and private-workbook reproduction remain unestablished. [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L28-L35] [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L130-L152]
+The workflow requires two distinct case roles per segment and labels its result unqualified; edition-specific equivalence, the DNV-OS-F101 comparator (*Submarine pipeline systems*; edition not established) and private-workbook reproduction remain unestablished. [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L28-L35] [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L130-L152]
 The existing routing registry marks the parent subsea domain stable; it does not separately assess this calculation package's maturity. [docs/registry/module-routing.yaml:L351-L363]
 No lateral-displacement time history is computed by the listed force/ratio APIs or the E305 case result. [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L18-L33] [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L154-L180]
 
@@ -71,15 +71,16 @@ No coefficient or safety-factor value attributed to a licensed table is reproduc
 | E305 `_annulus`, `weight_build_up` | Geometry closed form and explicit layer assumptions, including length-weighted buoyancy and maximum active local diameter; no claim of licensed geometry calibration. [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L81-L108] |
 | E305 `dimensionless_ratios`, `_phase_demand`, `evaluate_case` | DNV RP E305, *On-Bottom Stability Design of Submarine Pipelines*, 1988, clause “Simplified Static Stability Analysis” is named by the workflow README; demand maximizes simultaneous component demand at sampled phases, then applies target safety factor; gamma_st is recorded only. [examples/workflows/on-bottom-stability-e305/README.md:L9-L14] [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L183-L241] |
 | E305 `diameter_averaged_current`, `wave_from_sea_state` | Shifted-log profile integrated over diameter; equivalence to the named E305 Appendix A remains unestablished; spectral kinematics delegate to the free-span helper with its fixed gravity. [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L244-L277] |
-| E305 `_forward_margin`, `inverse_concrete_thickness` | Rebuild geometry and both roles per trial, bisect bracket, retain feasible endpoint; no global minimum guarantee and no OS-F101 qualification. [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L280-L346] |
+| E305 `_forward_margin`, `inverse_concrete_thickness` | Rebuild geometry and both roles per trial, bisect bracket, retain feasible endpoint; no global minimum guarantee and no DNV-OS-F101 qualification. [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L280-L346] |
 | E305 table `_number`, `_axis`, `_flatten`, `_table`, `_bracket`, `TableSet.lookup`, `load_tables` | Numeric/schema validation, one/two-dimensional linear interpolation, no extrapolation; E305 1988 `Citation` metadata resolves at load and lookup; interpolation suitability depends on external data basis. [src/digitalmodel/subsea/on_bottom_stability/e305_tables.py:L4-L8] [src/digitalmodel/subsea/on_bottom_stability/e305_tables.py:L30-L175] |
 | Workflow `_cases`, `_make_case`, `_segment`, `_json_bytes`, `_csv_bytes`, `_write_outputs`, `router` | Construct/route cases, table lookups, serialize results and digest outputs; no alternate demand equation in these helpers. [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L28-L164] |
 | Fixture `_object`, `_reject_constant`, `_read_json`, `_expected_case`, `validate_fixture`, `load_fixture`, `_read_tree`, `_outside_repository`, `convert_workbook`, `compare_fixture` | Validate/copy cached external data, bind read-byte digests and compute comparison errors; no solver launch or recalculation of workbook formulas. [src/digitalmodel/subsea/on_bottom_stability/e305_fixture.py:L23-L178] |
 
 Edition conflict: code names October 2021, older design lists name 2010-10, while the standards inventory records 2021-05 amended 2025-09; these are conflicting recorded editions, not reconciled standard requirements; tracked by #1813. [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L1-L10] [docs/domains/pipelines/_design.md:L10-L10] [docs/domains/pipelines/_subsea_pipelines.md:L41-L41] [docs/standards/subsea-pipelines-inventory.yaml:L643-L678]
+DNV-OS-F101 is listed as the former designation of DNV-ST-F101, *Submarine pipeline systems*; the edition applicable to the unestablished comparator is not established. [docs/standards/subsea-pipelines-inventory.yaml:L250-L266]
 The F109 manifest carries clause numbers without clause titles and the canonical/simplified numeric routines return no `Citation` sidecar; the external E305 tables enforce one, while typed parity permits an empty tuple; provenance follow-up is #1201. [src/digitalmodel/subsea/on_bottom_stability/manifest.yaml:L1-L90] [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L218-L250] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L356-L360] [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L208-L240] [src/digitalmodel/subsea/on_bottom_stability/e305_tables.py:L102-L110]
 UNVERIFIED: U1 — E305 edition-specific demand/profile equivalence and external interpolation suitability; the repository itself records these limits; issue pending (1). [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L4-L13] [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L244-L250] [src/digitalmodel/subsea/on_bottom_stability/e305_tables.py:L4-L8]
-UNVERIFIED: U2 — OS-F101 comparison basis and private-workbook reproduction; the workflow records both as unestablished; issue pending (1). [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L144-L149]
+UNVERIFIED: U2 — DNV-OS-F101 (*Submarine pipeline systems*; edition not established) comparison basis and private-workbook reproduction; the workflow records both as unestablished; issue pending (1). [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L144-L149]
 
 ## 4. Validated worked examples and regression examples
 
@@ -118,8 +119,8 @@ For test-based checks, execute the referenced node with the section-10 command f
 
 | ID | Gate | Executable check / numeric pass criterion and unit | Evidence / observed status |
 |---|---|---|---|
-| C01 | G0 | `test_parity_rejects_invalid_inputs`: seven parameter changes yield seven ValueError outcomes; zero accepted invalid cases, count | Seven PASS nodes. [tests/subsea/on_bottom_stability/test_e305_parity.py:L85-L90] |
-| C02 | G1 | Focused imports/tests: zero unexpected failures, count; all 93 solver-free executable cases pass; private fixture reported separately | Focused BASE/AFTER logs; package imports and direct batch exercise. [tests/subsea/on_bottom_stability/test_dnv_rp_f109.py:L12-L24] [tests/subsea/on_bottom_stability/test_e305_workflow.py:L31-L69] |
+| C01 | G0 | `Case.__post_init__`: seven parameter changes yield seven ValueError outcomes; zero accepted invalid cases, count | Seven PASS nodes. [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L132-L151] [tests/subsea/on_bottom_stability/test_e305_parity.py:L85-L90] |
+| C02 | G1 | Package `__all__` export probe: 0 import errors, 0 missing exported names, count; all 26 declared names resolve; `e305_workflow.router` also runs through registered basename `on_bottom_stability_e305` | Export probe and both registered workflow nodes PASS at BASE and AFTER; the shared engine asserts the basename and result contract. [src/digitalmodel/subsea/on_bottom_stability/__init__.py:L25-L91] [tests/workflows/test_durable_workflows.py:L57-L90] [tests/workflows/test_durable_workflows.py:L793-L822] |
 | C03 | G2 | V1 `evaluate_case`: expected 120.0 / 480.0 N/m, error at most 0.001 N/m | V1 PASS; explicit pack arithmetic probe PASS. [tests/subsea/on_bottom_stability/test_e305_parity.py:L29-L38] |
 | C04 | G2 | V2 `diameter_averaged_current`: closed-form integral error at most 1e-6 m/s | V2 PASS; explicit pack arithmetic probe PASS. [tests/subsea/on_bottom_stability/test_e305_kinematics.py:L11-L21] |
 | C05 | G2 | V3 `weight_build_up`: component mass and buoyancy/submerged-force ledger error at most 1e-6 N/m after force conversion | V3 PASS; explicit pack arithmetic probe PASS. [tests/subsea/on_bottom_stability/test_e305_weight.py:L11-L39] |
@@ -142,7 +143,7 @@ This count covers 50 reviewed behavior/default/unit/error-path sites, including 
 The seven package Python files were searched with these exact commands, followed by reading every definition and its input/output assumptions:
 
 ```sh
-rg -n --glob '*.py' -e 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?|1970|float\(|int\(|units|default|cache' src/digitalmodel/subsea/on_bottom_stability
+rg -n --glob '*.py' -e 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|float\(|int\(|units|default|cache' src/digitalmodel/subsea/on_bottom_stability
 rg -n --glob '*.py' -e 'default|= None|= \(\)|= False|= 0|else None|else 0|except|continue|return None|return \[\]|return \{\}|float\(|int\(' src/digitalmodel/subsea/on_bottom_stability
 ```
 
@@ -209,7 +210,7 @@ The standard-edition discrepancy is tracked by #1813; inline parameter provenanc
 | Legacy pipeline test imports an absent module and is normally ignored; explicit BASE/AFTER invocation produces `ModuleNotFoundError: No module named 'digitalmodel.subsea.pipeline.on_bottom_stability'` | Explicit test-file collection; no runtime detection check exists; #1923. [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L32] [tests/conftest.py:L52-L59] |
 | F109 code/older docs/standards inventory record different editions | Read and compare the three cited metadata entries; no automated detection check exists; #1813. [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L1-L10] [docs/domains/pipelines/_design.md:L10-L10] [docs/standards/subsea-pipelines-inventory.yaml:L643-L678] |
 | Signed horizontal load can produce a negative utilization reported stable by scalar stability checks | No detection check exists in the shipped tests; issue pending (2); preserve the signed-load caveat until a physical-direction contract is established. [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L236-L249] [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L298-L315] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L337-L359] |
-| E305 standard equivalence, OS-F101 comparator and private reference remain unestablished | C10 can detect private parity once data exists; no edition-equivalence/comparator detection check exists; issue pending (1). [examples/workflows/on-bottom-stability-e305/README.md:L3-L14] [tests/subsea/on_bottom_stability/test_e305_fixture.py:L101-L113] |
+| E305 standard equivalence, DNV-OS-F101 comparator and private reference remain unestablished | C10 can detect private parity once data exists; no edition-equivalence/comparator detection check exists; issue pending (1). [examples/workflows/on-bottom-stability-e305/README.md:L3-L14] [tests/subsea/on_bottom_stability/test_e305_fixture.py:L101-L113] |
 
 ## 7. Lessons log
 
@@ -233,8 +234,8 @@ The downstream F109 pipeline workflow delegates weight, force and stability to t
 The E305 direct batch route writes JSON/CSV/manifest evidence; neither that route nor the scalar APIs require a solver version in their input/result contracts. [src/digitalmodel/subsea/on_bottom_stability/e305_workflow.py:L130-L164] [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L53-L60] [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L187-L193]
 Inventory-row IDs for these dependency modules are not asserted; source paths above are the dependency identifiers used by this pack; inventory reconciliation remains #1818.
 
-Implementation-map pin: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` on `codex/implmap-work`; embedded data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`. [docs/registry/implementation-map.yaml:L1-L5]
-All map citations in this section resolve at that map pin, independently of the code pin in the header.
+Implementation-map pin: the header code pin `7aad603be1c6136106dbb2381ce5096b050654f8`; embedded data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`. [docs/registry/implementation-map.yaml:L1-L5]
+The code-pin map is byte-identical to the previously cited map; its data revision, inventory rows and citation ranges are unchanged.
 The inventory below reproduces all 165 implementation rows of the two families with rows inside the package, including external implementations and helper/example rows; it records map classification rather than newly validating external implementations. [docs/registry/implementation-map.yaml:L1-L5]
 
 Counted-family order is `dnv-rp-e305-on-bottom-stability` (23 in-package rows), then `wind-and-current-force-routes` (9); there are only two applicable map families.
@@ -255,14 +256,13 @@ The JSON below records the exact map patterns as JSON strings; decode the string
       {
         "search": "constants_or_keys",
         "pattern": "lateral_resistance|submerged_weight|passive_resistance|soil_friction|stability_parameter"
-      }
-    ],
-    "excluded_path_matches": [
+      },
       {
         "search": "algorithm",
         "pattern": "E305|e305|on_bottom_stability|weight_build_up|hydrodynamic_loads|lateral_stability|vertical_stability|submerged_weight|passive_resistance|soil_resistance|stability_parameter|weight_demand|WeightResult|WeightDemand|demand|lateral|hydrodynamic|buoyancy|force|_annulus|weight_build_up|math\\.pi|wave_velocity_m_s|reference_current_m_s|evaluate_case|weight_build_up"
       }
-    ]
+    ],
+    "excluded_path_matches": []
   },
   {
     "family": "wind-and-current-force-routes",
@@ -285,13 +285,14 @@ The JSON below records the exact map patterns as JSON strings; decode the string
 ]
 ```
 
-| Counted family | Excluded path-matching signals | Hit lines / distinct definitions | Classification / further second implementations |
+| Counted family | Signals searched, case-sensitive | Hit lines / distinct definitions | Classification / further second implementations |
 |---|---|---|---|
-| dnv-rp-e305-on-bottom-stability | The full algorithm signal matches `subsea/on_bottom_stability` case-insensitively and is omitted | 48 / 14 | Ten named compute/wrapper definitions already inventoried or listed in section 3; WeightResult is a data holder, and three module definitions are exports/constants/docstrings; 0 further second implementations. [src/digitalmodel/subsea/on_bottom_stability/__init__.py:L1-L91] [src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py:L1-L50] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L1-L64] [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L68-L78] |
-| wind-and-current-force-routes | None | 24 / 9 | Seven functions already inventoried or listed in section 3; two module definitions are exports/docstrings/constants; 0 further second implementations. [src/digitalmodel/subsea/on_bottom_stability/__init__.py:L1-L91] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L1-L64] |
+| dnv-rp-e305-on-bottom-stability | Every family signal, including the complete algorithm pattern | 231 / 42 | Compute/wrapper definitions are already inventoried or listed in section 3; additional validation/data holders include `Case.__post_init__`, `CaseResult` and `SubmergedWeightResult`; 0 further second implementations. [src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py:L111-L180] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L67-L118] |
+| wind-and-current-force-routes | Every family signal | 24 / 9 | Seven functions already inventoried or listed in section 3; two module definitions are exports/docstrings/constants; 0 further second implementations. [src/digitalmodel/subsea/on_bottom_stability/__init__.py:L1-L91] [src/digitalmodel/subsea/on_bottom_stability/simplified.py:L1-L64] |
 
-The E305 named hit definitions are `absolute_stability_check`, `generalized_stability_check`, `hydrodynamic_force_per_meter`, `submerged_weight_per_meter`, `_forward_margin`, `_segment`, `check_lateral_stability`, `check_vertical_stability`, `lateral_stability_check`, and `submerged_weight`; their implementations are cited in section 3.
+The narrower vocabulary/key search alone yields 48 hit lines and 14 definitions. Its E305 named hit definitions are `absolute_stability_check`, `generalized_stability_check`, `hydrodynamic_force_per_meter`, `submerged_weight_per_meter`, `_forward_margin`, `_segment`, `check_lateral_stability`, `check_vertical_stability`, `lateral_stability_check`, and `submerged_weight`; their implementations are cited in section 3.
 The wind/current named hits are canonical lift, `_phase_demand`, simplified lateral/check-lateral, drag, combined hydrodynamic loads and simplified lift; their implementations are cited in section 3.
+The full-signal search includes class/module declarations and validation, serialization and table helpers already described in sections 2, 3 and 9; these matches introduce no additional calculation implementation.
 A8 result: PASS — complete inventory and zero additional in-package second implementations after accounting for sections 3 and 9.
 
 Repository-wide follow-up search, including `scripts/`:
@@ -501,7 +502,7 @@ The E305 example README and input/run route were read as supporting workflow evi
 | docs/domains/pipelines/_design.md; docs/domains/pipelines/_subsea_pipelines.md | Older recorded edition, not a reconciled basis. [docs/domains/pipelines/_design.md:L10-L10] [docs/domains/pipelines/_subsea_pipelines.md:L41-L41] |
 | docs/field-development/subsea-production-systems-mapping.md | Module-to-standard mapping. [docs/field-development/subsea-production-systems-mapping.md:L83-L83] |
 | docs/maps/digitalmodel-operator-map.md; docs/registry/module-routing.yaml | Parent-domain scope and maturity. [docs/maps/digitalmodel-operator-map.md:L69-L69] [docs/registry/module-routing.yaml:L351-L363] |
-| docs/registry/implementation-map.yaml; docs/registry/implementation-map.md | Separate map pin and full family inventories in section 9; the prose map lists the same family names. [docs/registry/implementation-map.md:L23-L28] |
+| docs/registry/implementation-map.yaml; docs/registry/implementation-map.md | Code-pin map and full family inventories in section 9; the prose map lists the same family names. [docs/registry/implementation-map.md:L23-L28] |
 | docs/registry/workflows.yaml | F109 and E305 workflow registration; no identifying example values reproduced. [docs/registry/workflows.yaml:L476-L482] [docs/registry/workflows.yaml:L1325-L1339] |
 | docs/research/subsea-pipelines-academic-references.md | Bibliographic leads only, not independent expected-value evidence read for this pack. [docs/research/subsea-pipelines-academic-references.md:L430-L480] |
 | docs/research/subsea-pipelines-industry-practice.md; its .sources.yaml companion | Industry-method leads, not a qualification basis. [docs/research/subsea-pipelines-industry-practice.md:L22-L23] [docs/research/subsea-pipelines-industry-practice.sources.yaml:L51-L54] |
@@ -516,7 +517,8 @@ The calculation-citation contract was readable: this pack adds no calculation co
 ### Test commands and results
 
 All results below use the header code pin; AFTER uses the uncommitted documentation tree with unchanged calculation/test code.
-The common form was `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>/bt-<run>`; the contracts/routing command additionally used the declared `--extra test` extra.
+The common form is `PYTHONPATH=src uv run --no-sources --extra test python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>/bt-<run>`; offline reruns use `uv run --no-sync` after installing the declared test extra into a scratch environment.
+The registered workflow tests write outputs and are rerun in a disposable copy of the tracked inputs/tests, using the unchanged source at the header code pin; no solver or licence is required.
 No `addopts` override, test deselection or test changes were used.
 
 | Selection | BASE | AFTER | Limits / issue |
@@ -524,7 +526,9 @@ No `addopts` override, test deselection or test changes were used.
 | `tests/subsea/on_bottom_stability tests/test_on_bottom_stability.py tests/geotechnical/test_geotechnical.py` | 94 collected; 93 passed; 0 failed; 1 skipped | 94 collected; 93 passed; 0 failed; 1 skipped | Private fixture skipped, recorded NOT_RUN; issue pending (1). [tests/subsea/on_bottom_stability/test_e305_fixture.py:L101-L113] |
 | `tests/contracts tests/docs/test_digitalmodel_routing_contract.py` | 494 passed; 0 failed; 0 skipped | 494 passed; 0 failed; 0 skipped | Contract suite plus routing checks, including unchanged top-level domains. [tests/docs/test_digitalmodel_routing_contract.py:L94-L112] |
 | `tests/subsea/pipeline/test_on_bottom_stability.py` | 0 run; 1 collection error; 16 statically defined nodes NOT_RUN | 0 run; 1 identical collection error; 16 nodes NOT_RUN | Missing post-move import path; #1923. [tests/subsea/pipeline/test_on_bottom_stability.py:L17-L32] |
-| `tests/workflows/test_durable_workflows.py::test_workflow_registry[on-bottom-stability-f109]` and `[on-bottom-stability-e305]` | 0 run; 2 NOT_RUN | 0 run; 2 NOT_RUN | Shared engine eagerly imports licensed program interfaces, so this route was not imported; direct E305 batch is R4; #711. [tests/workflows/test_durable_workflows.py:L13-L13] [src/digitalmodel/engine.py:L28-L35] |
+| `tests/workflows/test_durable_workflows.py::test_workflow_registry[on-bottom-stability-f109]` and `tests/workflows/test_durable_workflows.py::test_workflow_registry[on-bottom-stability-e305]` | 2 passed; 0 failed; 0 skipped | 2 passed; 0 failed; 0 skipped | Both registered basenames run offline through the shared engine; no solver binary or licence required. [tests/workflows/test_durable_workflows.py:L57-L90] [tests/workflows/test_durable_workflows.py:L793-L822] |
+
+C02 export probe: `PYTHONPATH=src uv run --no-sync python -c 'import digitalmodel.subsea.on_bottom_stability as p; missing = [n for n in p.__all__ if not hasattr(p, n)]; print(len(p.__all__), len(missing)); assert len(p.__all__) == 26 and not missing'`. BASE and AFTER each report 26 exported names, 0 missing; import completes without error. [src/digitalmodel/subsea/on_bottom_stability/__init__.py:L25-L91]
 
 Focused node results below match between BASE and AFTER; the private fixture remains NOT_RUN in both.
 
@@ -633,14 +637,14 @@ A7 remains conditional on issue creation for the numbered drafts; these referenc
 | Item | Scope / disposition | Tracking |
 |---|---|---|
 | U1 | Establish licensed E305 edition/profile/demand equivalence and external interpolation suitability | issue pending (1) |
-| U2 | Establish OS-F101 comparator edition/basis and independent private-workbook parity; sidecar entry: to be created; no private data read or reproduced | issue pending (1) |
+| U2 | Establish the DNV-OS-F101 (*Submarine pipeline systems*; edition not established) comparator basis and independent private-workbook parity; sidecar entry: to be created; no private data read or reproduced | issue pending (1) |
 | U3 | Appoint review/deputy assignments and shared-log references | issue pending (4) |
 | U4 | Codename the two withheld discovery-document paths before adding public references | issue pending (3) |
 | Edition/clauses | Reconcile F109 editions and clause titles before using the pack as a design-standard reference | #1813 |
 | Provenance | Version and cite inline F109 coefficients/factors and their output sidecars | #1201 |
 | Input/sweep coverage | Resolve section-6 unchecked domains, direction, defaults, sentinel branches and numerical-resolution coverage | issue pending (2) |
 | Test migration | Migrate the 16 uncollectable legacy nodes to the current API | #1923 |
-| Engine route | Exercise F109/E305 registry routes only where licensed-interface imports are authorized | #711 |
+| Engine route | F109/E305 registered basenames both PASS offline; no solver or licence prerequisite applies to these two nodes | Resolved by the section-10 BASE/AFTER runs |
 | Physical scope | Distinguish scalar stability checks from dynamic lateral displacement and physically derived soil response | #1812, #1835, #1838 |
 | Inventory follow-up | Reconcile dependency inventory-row IDs, external duplicates and additional method families named in section 9 | #1817, #1818 |
 | Independent standards case | Add a traceable licensed-standard or published benchmark case; the three validated cases here establish synthetic closed-form arithmetic only | #242 |
