@@ -44,6 +44,7 @@ def specification(case):
     """
     inputs = case["inputs"]
     name = f"catenary_{case['case'].lower()}"
+    type_name = f"{name}_type"
     return ProjectInputSpec(
         metadata={
             "name": name, "description": case["description"],
@@ -58,13 +59,16 @@ def specification(case):
                 },
                 "friction_coefficient": 0,
             },
-            "waves": {"trains": [{"type": "No waves", "height": 0}]},
+            # Zero-height Airy matches the repository still-water form in
+            # docs/domains/pipeline-installation/slay-campaign/models/
+            # d0-t0/includes/03_environment.yml. "No waves" is not a native enum.
+            "waves": {"trains": [{"type": "Airy", "height": 0, "period": 8}]},
             "current": {"speed": 0}, "wind": {"speed": 0},
         },
         generic=GenericModel(
             general_properties={"UnitsSystem": "SI", "g": 9.80665},
             line_types=[GenericLineType(
-                name=name, category="General",
+                name=type_name, category="General",
                 outer_diameter=inputs["outer_diameter_m"], inner_diameter=0,
                 mass_per_length=inputs["mass_te_per_m"],
                 axial_stiffness=inputs["EA_kN"], bending_stiffness=0,
@@ -73,7 +77,7 @@ def specification(case):
                     "SeabedAxialFrictionCoefficient": 0,
                 },
             )],
-            lines=[GenericLine(name=name, line_type_refs=[name], properties={
+            lines=[GenericLine(name=name, line_type_refs=[type_name], properties={
                 "IncludeTorsion": "No",
                 "TopEnd": "End B",
                 "LengthAndEndOrientations": "Explicit",
@@ -81,7 +85,7 @@ def specification(case):
                 "EndAConnection": "Fixed", "EndAX": 0, "EndAY": 0, "EndAZ": -150,
                 "EndBConnection": "Fixed", "EndBX": inputs["X_m"], "EndBY": 0, "EndBZ": 0,
                 "ConnectionxBendingStiffness, ConnectionyBendingStiffness": [[0, None], [0, None]],
-                "LineType, Length, TargetSegmentLength": [[name, 600, 1]],
+                "LineType, Length, TargetSegmentLength": [[type_name, 600, 1]],
                 "ContentsMethod": "Uniform", "ContentsDensity": 0,
                 "IncludedInStatics": "Yes", "StaticsStep1": "Catenary",
                 "StaticsStep2": "Full statics",
