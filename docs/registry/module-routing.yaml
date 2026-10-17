@@ -175,6 +175,10 @@ modules:
     owner_wiki: docs/domains/infrastructure/
     key_tests: [tests/infrastructure/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#infrastructure
+    submodules:
+      base_solvers:
+        agent_pack: src/digitalmodel/infrastructure/base_solvers/docs/agent-pack.md
+        qa_family: EC
   - module: marine_ops
     entry_point: src/digitalmodel/marine_ops/
     maturity: beta
