@@ -171,14 +171,6 @@ with TemporaryDirectory(dir=os.environ['TMPDIR']) as folder:
     assert {'internal', 'external'} <= {pd.read_csv(file)['marker'][0] for file in files}
 ```
 
-### Review-fix verification
-
-The source package is byte-identical to the code pin. The new C5 reproduction records 6 writes, 5 distinct CSV files and 1 overwrite, so the G5 acceptance criterion fails on the existing implementation. The exact example above is executable and fails its acceptance assertion; the failure is retained rather than waived. The writer-name search finds 1 definition and 0 callers in the pinned package.
-
-The focused rerun on Python 3.12 reports 134 passed and 5 failed across seven collectable files; adding the two collection-blocked files aborts with 2 collection errors. The five failures and both collection errors reach the unchanged invalid escape in `data.py`; the same source is present on the base branch. The initial two-file attempt at BASE reported 42 passed and 1 failed because `pint` was absent; installing the declared dependency resolves that environment failure. No source test, warning policy or assertion was changed. Routing and pack test-node checks report 11 passed. Citation ranges, engineering register and repository structure checks pass.
-
-The repeated textual sweep produces 322 matching lines; the existing 213-site inventory is retained. An AST cross-check finds all 118 exception, continue, empty-return, numeric-conversion and stub candidates represented by inventory rows. Numeric constants are also inspected: plot positions, indices and decorative bar widths are not engineering defaults. The pack-lint executable is not present in the available repository or shared tooling; no new `pack_lint: clean` result is claimed.
-
 ## 6. Known failure modes and pitfalls
 
 sweep: 213 found
@@ -444,6 +436,16 @@ The text sweep found no `continue`, explicit `return None`, explicit empty-list 
 | --- | --- | --- | --- | --- |
 | 2026-10-16 | Initial draft | Separate the legacy grid's closing row from the canonical fracture curve, and distinguish shared-code regression checks from independent qualification | [src/digitalmodel/asset_integrity/common/fad.py:L24-L55] [tests/asset_integrity/test_fad_curves.py:L159-L206] | issue pending (6) |
 | 2026-10-16 | Initial draft | Retain the import failure and all silent-error candidates explicitly, with missing detection checks | [src/digitalmodel/asset_integrity/common/data.py:L214-L217] [src/digitalmodel/asset_integrity/common/ymlInput.py:L13-L24] | issue pending (6) |
+
+### Review-fix verification
+
+The source package is byte-identical to the code pin. The new C5 reproduction records 6 writes, 5 distinct CSV files and 1 overwrite, so the G5 acceptance criterion fails on the existing implementation. The exact example above is executable and fails its acceptance assertion; the failure is retained rather than waived. The writer-name search finds 1 definition and 0 callers in the pinned package.
+
+The focused rerun on Python 3.12 reports 134 passed and 5 failed across seven collectable files. It omits the fixture-only discovery test file with an identifying name listed in section 10 (1 passed in the original eight-file selection); 134 + 1 = 135 passes and 139 + 1 = 140 executed cases reconcile the two selections. The seven files are `test_fad.py`, `test_fad_curves.py`, `test_math_solvers.py`, `test_update_deep.py`, `test_update_deep_additional.py`, `test_calculations.py` and `test_crack_fad.py`, all under `tests/asset_integrity/`. Adding the two collection-blocked files aborts with 2 collection errors. The five failures and both collection errors reach the unchanged invalid escape in `data.py`; the same source is present on the base branch. The initial two-file attempt at BASE reported 42 passed and 1 failed because `pint` was absent; installing the declared dependency resolves that environment failure. No source test, warning policy or assertion was changed. Routing and pack test-node checks report 11 passed. Citation ranges, engineering register and repository structure checks pass.
+
+The ledger reconciliation rerun on Python 3.12 reproduces 134 passed and 5 failed in the seven named files; the omitted fixture-only discovery test passes separately (1 passed). The combined selection therefore has 135 passed and 5 failed, matching the original ledger. Local contracts plus routing report 492 passed, 1 failed and 1 skipped; the skip requires installed distribution metadata. The contract failure still reaches the unchanged invalid escape in `data.py`. Pack-node checks report 3 passed, repository structure and the changed-line engineering register pass. Hosted contracts and mergeability remain unverified; no base-branch integration is performed here.
+
+The repeated textual sweep produces 322 matching lines; the existing 213-site inventory is retained. An AST cross-check finds all 118 exception, continue, empty-return, numeric-conversion and stub candidates represented by inventory rows. Numeric constants are also inspected: plot positions, indices and decorative bar widths are not engineering defaults. The pack-lint executable is not present in the available repository or shared tooling; no new `pack_lint: clean` result is claimed.
 
 ## 8. Ownership
 

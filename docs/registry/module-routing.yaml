@@ -17,6 +17,9 @@ modules:
       asset_integrity:
         agent_pack: src/digitalmodel/asset_integrity/docs/agent-pack.md
         qa_family: EC
+      assessment:
+        agent_pack: src/digitalmodel/asset_integrity/assessment/docs/agent-pack.md
+        qa_family: EC
       common:
         agent_pack: src/digitalmodel/asset_integrity/common/docs/agent-pack.md
         qa_family: EC
