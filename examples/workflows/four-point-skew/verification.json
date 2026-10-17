@@ -8,7 +8,7 @@
     "1_symmetric_closed_form": "PASS: rigid diagonal and series-compliance hand checks",
     "2_centred_quarters": "PASS: share 0.25 and design leg tension 433190.307 N",
     "3_offset_cog": "PASS: independent exact stretched-length body statics at both diagonal offsets and axis offset; every leg within 0.3 percent",
-    "4_code_minimum_floor": "PASS: default and floor 1.33 read from the merged screen module; equality regression; source-only and sub-floor inputs rejected; nonzero tolerance defaults",
+    "4_code_minimum_floor": "PASS: default and floor 1.33 read from the merged screen module; equality regression; source-only and sub-floor inputs rejected; nonzero tolerance defaults; custom minima require their own explicit source",
     "5_review_and_family_qa": "NOT_CLEARED: corrections await maintainer review; formal installation-family QA remains open"
   },
   "review": {
@@ -28,16 +28,28 @@
     "open": [
       "maintainer review of corrections",
       "formal installation-family QA clearance"
-    ]
+    ],
+    "follow_up_review": {
+      "basis_revision": "b942066b0595411e609a75064a93ec0e344a17f9",
+      "original_verdict": "CHANGES-REQUESTED",
+      "correction_status": "IMPLEMENTED; no new external review claimed",
+      "disposition": {
+        "N1": "Shared basis edits select orcaflex, marine-ops-other and workflows. Detector regression covers the shared file and an unrelated adapter. Plain and annotated literals are accepted; invalid basis literals raise a named error.",
+        "N2": "Any supplied minimum differing from the shared minimum requires an explicit source. Default and explicit shared minima retain the shared citation.",
+        "Next_revision": "Perimeter validation uses the scalar determinant instead of the removed two-dimensional cross-product operation. Both perimeter orientations are tested."
+      }
+    }
   },
   "artifact_sha256": {
-    "src/digitalmodel/marine_ops/installation/four_point_skew.py": "f39ff6396884ee3ac9850ca4e402469a97b983f1ed1efb0df9bab863ebdfaa33",
-    "tests/marine_ops/installation/test_four_point_skew.py": "989068d267144e74de21cd17c3bb5b106a7dbef9cdc600fd0e01cf4078e73e6a",
+    "src/digitalmodel/marine_ops/installation/four_point_skew.py": "733224201f1ea1a4c2d54530055fa35f178cbe0fce4878a5bd4493a41ec15281",
+    "tests/marine_ops/installation/test_four_point_skew.py": "34b3f8d8216fbe907e73d17d64ae4f9568ff8dbfb782de2e9d7b7b5841346a2f",
     "tests/workflows/test_four_point_skew_workflow.py": "9da2e92e17087d0a5c05d712003cd9bd8dba271c733fbbdd8e6bc56495eccf06",
     "examples/workflows/four-point-skew/input.yml": "d92a375f47321d783791b0c531525cc8761bb015a54f4200885a81e17670d433",
-    "examples/workflows/four-point-skew/README.md": "001a1513d72fde7dcf60799b11026d112474114f20d055166cdf3aa9b99dcfae",
+    "examples/workflows/four-point-skew/README.md": "ed97580f4096f1b1c5f57372805a4c2f2d5e2895bc9845696dd4a4ea70931ab7",
     "docs/registry/workflows.yaml": "7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896",
-    "src/digitalmodel/orcaflex/installation_analysis.py": "3d05875569135b1b1d6e981ab93abc68173abc4a127e39c1dea390d98c4f7112"
+    "src/digitalmodel/orcaflex/installation_analysis.py": "3d05875569135b1b1d6e981ab93abc68173abc4a127e39c1dea390d98c4f7112",
+    "scripts/ci/detect_touched_domains.py": "6f6d89a32ea4dd730c115b937a374df95cf1b316e98d68297fdc0d24c8076016",
+    "tests/scripts/test_detect_touched_domains.py": "a3ddf33166d109a746d598a713fec834c674ee6ac485d97523e6575527825efe"
   },
   "tests": {
     "touched_module_and_registry": {
@@ -66,11 +78,75 @@
         "tests/workflows/test_ci_triggers.py"
       ]
     },
-    "command_form": "PYTHONPATH=src uv run --no-sources --with-editable '.[test]' python -m pytest <paths> -q -p no:cacheprovider --basetemp=<scratch>",
+    "command_form": "uv run --no-project --python python3 --with 'pytest<9' --with 'numpy<2' --with pyyaml --with scipy --with 'pydantic>=2.7,<3' --with 'pytest-asyncio==0.21.1' python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>",
     "addopts_override": false,
-    "ruff": "PASS",
+    "ruff": "NOT_RUN: tool unavailable",
     "diff_check": "PASS",
-    "standalone_cli_json_readback": "PASS"
+    "standalone_cli_json_readback": "PASS",
+    "review_follow_up": {
+      "basis_revision": "b942066b0595411e609a75064a93ec0e344a17f9",
+      "base": {
+        "passed": 295,
+        "failed": 0,
+        "skipped": 0,
+        "note": "292 passed initially; the three reference tests passed after adding the missing SciPy dependency."
+      },
+      "red": {
+        "passed": 2,
+        "failed": 10,
+        "deselected": 116
+      },
+      "focused_green": {
+        "passed": 12,
+        "failed": 0,
+        "deselected": 116
+      },
+      "after": {
+        "passed": 308,
+        "failed": 0,
+        "skipped": 0,
+        "note": "252 detector and CI harness tests passed; final skew and workflow run passed all 56 tests after the numeric shared-minimum regression."
+      },
+      "paths": [
+        "tests/scripts/test_detect_touched_domains.py",
+        "tests/scripts/test_ci_baseline.py",
+        "tests/scripts/test_run_shard.py",
+        "tests/workflows/test_ci_triggers.py",
+        "tests/marine_ops/installation/test_four_point_skew.py",
+        "tests/workflows/test_four_point_skew_workflow.py"
+      ],
+      "command_form": "uv run --no-project --python python3 --with 'pytest<9' --with 'numpy<2' --with pyyaml --with scipy --with 'pydantic>=2.7,<3' --with 'pytest-asyncio==0.21.1' python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>",
+      "addopts_override": false,
+      "hosted_checks": "Not queried; local checks use the uncommitted tree.",
+      "red_numeric_shared_minimum": {
+        "passed": 1,
+        "failed": 1
+      },
+      "final_skew_and_workflow": {
+        "passed": 56,
+        "failed": 0,
+        "skipped": 0
+      },
+      "file_checks": {
+        "repository_structure": "PASS",
+        "no_windows_path_directories": "PASS",
+        "engineering_register": "PASS: one Markdown file, zero findings",
+        "syntax_json_whitespace_size": "PASS",
+        "diff_check": "PASS",
+        "ruff": "NOT_RUN: command not found",
+        "mypy": "NOT_RUN: command not found",
+        "bandit": "NOT_RUN: command not found",
+        "pydocstyle": "NOT_RUN: command not found",
+        "gitleaks": "NOT_RUN: command not found",
+        "hook_framework": "NOT_RUN: unavailable; enabled hooks run during publication",
+        "prettier": "NOT_RUN: command not found",
+        "markdown-link-check": "NOT_RUN: command not found",
+        "radon": "NOT_RUN: command not found",
+        "vulture": "NOT_RUN: command not found",
+        "lfs_attributes": "PASS: nine affected paths; none use LFS"
+      }
+    },
+    "historical_counts_note": "The touched_module_and_registry and ci_harness counts are retained from the prior artifact; current counts appear under review_follow_up."
   },
   "finite_rotation_reference": {
     "method": "Independent three-equation body-frame force balance: T_i=(EA_i/L_i) max(|H-P_i|-L_i,0); sum(T_i u_i)=W (H-CoG)/|H-CoG|. No self-stress projection; force residual/W below 1e-9.",

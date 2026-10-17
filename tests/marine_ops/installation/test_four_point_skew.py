@@ -173,6 +173,7 @@ def test_corner_envelope_and_code_floor():
     assert {tuple(row["cog_xy_m"]) for row in result["cases"]} == {(0, 0), (0.5, 0), (-0.5, 0)}
     assert result["design_skl"] == max(FOUR_LEG_MINIMUM_SKL, result["effective_skl"])
     settings["code_minimum_skl"] = 3
+    settings["code_minimum_source"] = "Specified design requirement"
     assert calculate_skew(settings)["design_skl"] == 3
 
 
@@ -352,6 +353,64 @@ def test_code_floor_reads_screen_value_without_importing_solver_package():
     settings.pop("tolerances")
     assert calculate_skew(settings)["effective_skl"] > 1
     assert len(calculate_skew(settings)["cases"]) == 16 * 16
+
+
+@pytest.mark.parametrize("minimum", [FOUR_LEG_MINIMUM_SKL + 0.01, 3])
+def test_custom_minimum_requires_its_own_source(minimum):
+    settings = symmetric()
+    settings["code_minimum_skl"] = minimum
+    with pytest.raises(ValueError, match="code_minimum_source"):
+        calculate_skew(settings)
+    settings["code_minimum_source"] = "Specified design requirement"
+    result = calculate_skew(settings)
+    assert result["code_minimum_source"] == settings["code_minimum_source"]
+    assert result["design_skl"] == max(minimum, result["effective_skl"])
+
+
+@pytest.mark.parametrize("minimum", [FOUR_LEG_MINIMUM_SKL, str(FOUR_LEG_MINIMUM_SKL)])
+def test_explicit_shared_minimum_retains_shared_source(minimum):
+    settings = symmetric()
+    settings["code_minimum_skl"] = minimum
+    assert calculate_skew(settings)["code_minimum_source"] == FOUR_LEG_MINIMUM_SOURCE
+
+
+@pytest.mark.parametrize("annotation", ["", ": dict[int, float]"])
+def test_screen_basis_accepts_literal_assignments(monkeypatch, annotation):
+    from digitalmodel.marine_ops.installation import four_point_skew as skew
+
+    source = (f"_SKL_BY_LEG_COUNT{annotation} = {{4: {FOUR_LEG_MINIMUM_SKL!r}}}\n"
+              "_SKL_REFERENCE: str = 'Shared test reference'\n")
+    monkeypatch.setattr(Path, "read_text", lambda *args, **kwargs: source)
+    assert skew._screen_basis() == (FOUR_LEG_MINIMUM_SKL, "Shared test reference")
+
+
+@pytest.mark.parametrize("source", [
+    "_SKL_BY_LEG_COUNT = {}\n_SKL_REFERENCE = 'Shared test reference'\n",
+    "_SKL_BY_LEG_COUNT = make_values()\n",
+    "_SKL_BY_LEG_COUNT =\n",
+])
+def test_screen_basis_invalid_literals_have_named_error(monkeypatch, source):
+    from digitalmodel.marine_ops.installation import four_point_skew as skew
+
+    monkeypatch.setattr(Path, "read_text", lambda *args, **kwargs: source)
+    with pytest.raises(ValueError, match="four-leg minimum basis"):
+        skew._screen_basis()
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_perimeter_validation_without_two_dimensional_cross(monkeypatch, reverse):
+    cross = np.cross
+
+    def three_dimensional_cross(a, b, *args, **kwargs):
+        if np.shape(a)[-1] == 2 or np.shape(b)[-1] == 2:
+            raise ValueError("Cross products require three-dimensional vectors")
+        return cross(a, b, *args, **kwargs)
+
+    monkeypatch.setattr(np, "cross", three_dimensional_cross)
+    settings = symmetric()
+    if reverse:
+        settings["lift_points_m"].reverse()
+    assert solve_case(settings)["vertical_load_share"] == pytest.approx([0.25] * 4)
 
 
 @pytest.mark.parametrize("override", [

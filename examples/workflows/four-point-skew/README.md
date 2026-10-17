@@ -59,9 +59,10 @@ uses 100,000 kg multiplied by 9.81 m/s², matching the issue's illustration.
   Its citation is DNVGL-ST-E273, *2.7-3 Portable offshore units*, Edition April
   2016, §3.5.5 (skew effects §3.5.4), pp. 34–35. The cited minimum assumes a
   four-leg matched set without spreaders in that standard's scope; this floor
-  does not establish applicability to every lift. Higher minima may be supplied
-  with `code_minimum_source`; a source supplied without a value is rejected.
-  Literal assignments are read without importing the solver package initializer.
+  does not establish applicability to every lift. Higher minima require an explicit
+  `code_minimum_source`; a source supplied without a value is rejected.
+  Plain and annotated literal assignments are read without importing the solver
+  package initializer. Missing or invalid basis literals raise a named error.
 
 The model uses finite rigid-body rotation for the nominal pose and linear axial
 spring compatibility about that pose. Sling extension, tolerance displacements,
@@ -173,7 +174,7 @@ The following independent checks are executable in `tests/marine_ops/installatio
 | Offset CoG x=0.7 m | Full body-frame force and moment equilibrium; max tension ≈338.0 kN | Balance to roundoff; finite-rotation reference within 0.3% |
 | Diagonal CoG (0.5,0.5) and (0.7,0.7) m | Independent exact stretched-length body statics (three force equations, no nullspace method) | Every leg within 0.3%; review reference at (0.5,0.5): [202.1,282.1,362.0,282.1] kN |
 | Published two-supporting-leg limit, 10,000 lbf, 60° from horizontal | 5,775 lbf per supporting leg, as rounded in the catalog | Within 0.1%; other diagonal slack |
-| Code floor | Default/floor 1.33 equals the screen module value; supplied 3 governs | Exact max rule; source-only input rejected |
+| Code floor | Default/floor equals the screen module value; supplied higher minimum governs | Exact max rule; source-only input and custom minimum without a source rejected |
 
 The generated ±10 mm example has 16 length corners and effective/design SKL
 1.529679; the short diagonal carries about 76.484% of the weight. The hand case
@@ -221,7 +222,7 @@ section 5 distinguishes unit-test success from engineering clearance; independen
 hook/per-sling balance receipts and traceable clearance receipts remain open.
 
 [verification.json](verification.json) records numerical results, current artifact
-hashes, and the disposition of the second-provider review at `7c4b713f`.
+hashes, and the dispositions of the second-provider reviews, including `b942066b`.
 Maintainer review of these corrections and formal family clearance remain open.
 No licensed solver execution is included. Issue acceptance criterion 5 remains
 open despite numerical checks for criteria 1–4.

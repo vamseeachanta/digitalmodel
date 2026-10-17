@@ -24,13 +24,20 @@ def _screen_basis():
     # would load unrelated adapters. PR 2678 remains the single value source.
     path = Path(__file__).resolve().parents[2] / "orcaflex" / "installation_analysis.py"
     names = {"_SKL_BY_LEG_COUNT", "_SKL_REFERENCE"}
-    values = {
-        node.targets[0].id: ast.literal_eval(node.value)
-        for node in ast.parse(path.read_text(encoding="utf-8")).body
-        if isinstance(node, ast.Assign) and len(node.targets) == 1
-        and isinstance(node.targets[0], ast.Name) and node.targets[0].id in names
-    }
-    return values["_SKL_BY_LEG_COUNT"][4], values["_SKL_REFERENCE"]
+    values = {}
+    try:
+        for node in ast.parse(path.read_text(encoding="utf-8")).body:
+            if isinstance(node, ast.Assign) and len(node.targets) == 1:
+                target = node.targets[0]
+            elif isinstance(node, ast.AnnAssign):
+                target = node.target
+            else:
+                continue
+            if isinstance(target, ast.Name) and target.id in names:
+                values[target.id] = ast.literal_eval(node.value)
+        return values["_SKL_BY_LEG_COUNT"][4], values["_SKL_REFERENCE"]
+    except (OSError, SyntaxError, ValueError, TypeError, KeyError) as exc:
+        raise ValueError("Cannot read four-leg minimum basis from installation_analysis.py") from exc
 
 
 FOUR_LEG_MINIMUM_SKL, FOUR_LEG_MINIMUM_SOURCE = _screen_basis()
@@ -78,7 +85,8 @@ def _validate(settings):
     if np.ptp(points[:, 2]) > 1e-9:
         raise ValueError("Nominal lift points must be horizontal and coplanar")
     edges = np.roll(points[:, :2], -1, axis=0) - points[:, :2]
-    turns = np.cross(edges, np.roll(edges, -1, axis=0))
+    following = np.roll(edges, -1, axis=0)
+    turns = edges[:, 0] * following[:, 1] - edges[:, 1] * following[:, 0]
     if not (np.all(turns > 1e-12) or np.all(turns < -1e-12)):
         raise ValueError("Lift points must form a convex quadrilateral in perimeter order")
     hook_z = float(_array(settings["hook_height_m"], (), "hook_height_m"))
@@ -88,10 +96,14 @@ def _validate(settings):
     lengths = _array(settings["sling_length_m"], (4,), "sling_length_m")
     if np.any(ea <= 0) or np.any(lengths <= 0):
         raise ValueError("All sling EA and reference lengths must be positive")
-    _scalar(settings.get("code_minimum_skl", FOUR_LEG_MINIMUM_SKL),
-            "code_minimum_skl", FOUR_LEG_MINIMUM_SKL, inclusive=True)
+    minimum = _scalar(settings.get("code_minimum_skl", FOUR_LEG_MINIMUM_SKL),
+                      "code_minimum_skl", FOUR_LEG_MINIMUM_SKL, inclusive=True)
     if "code_minimum_source" in settings and "code_minimum_skl" not in settings:
         raise ValueError("A supplied code_minimum_source requires code_minimum_skl")
+    if ("code_minimum_skl" in settings
+            and minimum != FOUR_LEG_MINIMUM_SKL
+            and "code_minimum_source" not in settings):
+        raise ValueError("A custom code_minimum_skl requires code_minimum_source")
     source = settings.get("code_minimum_source", FOUR_LEG_MINIMUM_SOURCE)
     if not isinstance(source, str) or not source.strip():
         raise ValueError("A code_minimum_source is required")
