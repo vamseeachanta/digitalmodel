@@ -1,6 +1,6 @@
 {
   "schema": "slay-criteria-1",
-  "revision": "execution-2",
+  "revision": "execution-3",
   "qualification": "Repository workflow criteria; no licensed allowable is reproduced or inferred.",
   "criteria": {
     "source_qualification": {
@@ -90,7 +90,7 @@
     }
   },
   "static_qa": {
-    "revision_note": "The existing execution-2 revision changed End A to positive resultant at the support nearest measured End A X. This is contact presence only; a minimum contact force and numerical residual tolerance are not established. S1 retains exact zero last-support force. The numerical bands are unchanged; see slay_probe.evaluate_static_acceptance.",
+    "revision_note": "Execution-3 versions the explanatory note added after execution-2; no acceptance criterion or band changes. The execution-2 revision changed End A to positive resultant at the support nearest measured End A X. This is contact presence only; a minimum contact force and numerical residual tolerance are not established. S1 retains exact zero last-support force. The numerical bands are unchanged; see slay_probe.evaluate_static_acceptance.",
     "touchdown_x": {
       "status": "NOT_EVALUATED",
       "reason": "published reference pending, #2608"
