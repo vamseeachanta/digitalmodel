@@ -86,15 +86,17 @@ Code pin for all calculation sources: `bb18c1a346b31b4ce975befa41fc84d9a5ff29e5`
 
 | Command scope | Run | Passed | Failed | Skipped | NOT_RUN | Result / limitation |
 | --- | --- | --- | --- | --- | --- | --- |
-| Five pipe-capacity test files, pre-edit launch | 0 | 0 | 0 | 0 | 232 | Process exited 141 after environment installation, before pytest output; no baseline node outcomes exist; issue pending (9) |
-| Same five files, after documentation edits | 232 | 232 | 0 | 0 | 0 | PASS; package tests: 103 common, 108 custom, 9 F201; adjacent infrastructure tests: 7 code and 5 DNV |
+| Five pipe-capacity test files, original pre-edit launch (aborted) | 0 | 0 | 0 | 0 | — | Process exited 141 before pytest output; no node outcomes were produced, rather than 232 NOT_RUN |
+| Five pipe-capacity test files, fix-up BASE at the code pin | 232 | 232 | 0 | 0 | 0 | PASS; src and tests match bb18c1a3 byte-for-byte except this pack; pre-edit fix-up run |
+| Same five files, historical after documentation edits | 232 | 232 | 0 | 0 | 0 | PASS; package tests: 103 common, 108 custom, 9 F201; adjacent infrastructure tests: 7 code and 5 DNV |
+| Five pipe-capacity test files, matched fix-up AFTER | 232 | 232 | 0 | 0 | 0 | PASS; exact JUnit node comparison with fix-up BASE: 0 changed outcomes; PC-14 PASS for the 232-node scope |
 | E01, first isolated pinned-code execution | 1 | 1 | 0 | 0 | 0 | PASS; performed after documentation editing began |
 | E01, second isolated pinned-code execution | 1 | 1 | 0 | 0 | 0 | PASS; identical node outcome |
 | Contracts domain, 13 registered test paths | 1115 | 1054 | 0 | 61 | 0 | Reported pytest outcomes; pre-existing migration/compatibility skips remain unchanged |
 
-Reproduction uses `PYTHONPATH=src uv run --no-sources --extra test python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`, with the full configured executable path and external scratch directory used for actual execution; no addopts override, test deselection or solver call is used. The five paths are the three `tests/structural/pipe_capacity/test_*.py` files and the two infrastructure pipe-capacity test files in the coverage table. The workflow node is run from a temporary copy containing its test, registry and example files, so generated YAML/logs remain outside the checkout. [docs/registry/workflows.yaml:L20-L27] [tests/workflows/test_durable_workflows.py:L52-L108]
+Reproduction uses `PYTHONPATH=src uv run --no-sources --extra test python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`, with the full configured executable path and external scratch directory used for actual execution; no addopts override, test deselection or solver call is used. Fix-up execution uses `PYTHONPATH=src:<dependency-src>` and `uv run --no-project` with pytest, pytest-cov, pytest-timeout, pytest-mock, pytest-randomly, numpy, pandas, scipy, pint, plotly and jsonschema; `--randomly-seed=0` and `--junitxml=<scratch>` are added, preserving repository addopts and warning policy. An initial dependency-incomplete attempt produced 3 collection errors (missing plotly); the matched runs use the completed environment. The five paths are the three `tests/structural/pipe_capacity/test_*.py` files and the two infrastructure pipe-capacity test files in the coverage table. The workflow node is run from a temporary copy containing its test, registry and example files, so generated YAML/logs remain outside the checkout. [docs/registry/workflows.yaml:L20-L27] [tests/workflows/test_durable_workflows.py:L52-L108]
 
-The pre-edit launch gap prevents a claim of identical before/after calculation-test outcomes; the successful after run establishes the offline outcomes at the unchanged calculation-code pin. No independent validation is inferred from these regression passes; issue pending (9).
+The fix-up BASE run supplies the missing 232-node baseline at the code pin; no source or test difference from that pin is present apart from this pack. PC-14 compares these 232 nodes with the matched fix-up AFTER run. E01 retains its two historical pinned-code passes and is not repeated: its shared test module imports solver integration routes, outside this fix-up execution scope. No independent engineering validation is inferred.
 
 
 The contracts domain completed with 1054 passed and 61 skipped; the reported skips cover an incomplete API STD 2RD migration, retired module-layout assertions and an unavailable legacy catenary alias. These skip paths already exist at the code pin; no skip was introduced. [tests/test_apistd2rd_migration.py:L18-L26] [tests/test_restructure_compat.py:L16-L21] [tests/test_module_reorganization.py:L11-L16] [tests/compat/test_group_compat.py:L109-L119]
@@ -110,7 +112,7 @@ The gate allocation follows AQG r0, section 10, Python calculations, with G5 fro
 | G2 | Applicable: algebraic checks of pressure/thickness, collapse-target residual and propagation inverse; these are consistency checks pending independent source qualification | PC-08–PC-10 and PC-12; [tests/structural/pipe_capacity/test_pipe_capacity_custom.py:L370-L378] [tests/structural/pipe_capacity/test_pipe_capacity_custom.py:L441-L451] [tests/structural/pipe_capacity/test_pipe_capacity_common.py:L526-L541] |
 | G3 | NOT_APPLICABLE: no time-domain dynamics route in the pressure routing | [src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:L280-L313] |
 | G4 | NOT_APPLICABLE: no diffraction mesh or hydrodynamic-coefficient output in the result writer | [src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:L444-L494] |
-| G5 | Applicable: preserve input fingerprint, code pin, commands, node outcomes, deviations and source limitations; clearance remains separate | PC-15, PC-17; (AQG r0, “G5 QA appendix”.) |
+| G5 | NOT_APPLICABLE: no calculation QA appendix is generated by this package; pack and registry counts are documentation evidence | PC-15, PC-17; (AQG r0, “G5 QA appendix”.) |
 
 Criteria below are regression criteria unless explicitly described as a documentary completeness check; a passing default-preservation test does not qualify that default for a design. [tests/structural/pipe_capacity/test_pipe_capacity_custom.py:L39-L91] [tests/structural/pipe_capacity/test_pipe_capacity_common.py:L843-L850]
 
@@ -129,10 +131,10 @@ Criteria below are regression criteria unless explicitly described as a document
 | PC-11 | G1 | All tests in `tests/structural/pipe_capacity/test_dnv_os_f201_lrfd_wsd.py`; comparison-spreadsheet regressions | 0 unexpected test outcomes (count); asserted numerical comparisons use 0.1 % relative tolerance | [tests/structural/pipe_capacity/test_dnv_os_f201_lrfd_wsd.py:L33-L35] [tests/structural/pipe_capacity/test_dnv_os_f201_lrfd_wsd.py:L48-L174] |
 | PC-12 | G2 | `tests/structural/pipe_capacity/test_pipe_capacity_common.py::TestASMEB31BurstPressure::test_thin_wall_formula_d_over_t_above_transition`; separate arithmetic of test's pressure formula | Absolute pressure error < 1.0e-2 psi against the closed-form expression in the test | [tests/structural/pipe_capacity/test_pipe_capacity_common.py:L526-L541] |
 | PC-13 | G1 | `tests/structural/pipe_capacity/test_pipe_capacity_common.py::TestAPISTD2RDCollapseMinThickness::test_returns_placeholder` exposes the incomplete inverse | 0 unexpected test outcomes (count); the asserted placeholder is never accepted as a calculated wall thickness | [tests/structural/pipe_capacity/test_pipe_capacity_common.py:L843-L850] |
-| PC-14 | G1 | Run all three package test files, both infrastructure pipe-capacity files and E01 node before/after documentation edits | 0 newly failed nodes; 0 changed node outcomes (count) | [tests/infrastructure/unit/test_pipe_capacity_codes.py:L1-L43] [tests/infrastructure/unit/test_pipe_capacity_dnv.py:L1-L43] [docs/registry/workflows.yaml:L20-L27] |
-| PC-15 | G5 | Resolve every section-4 node against source and recorded result; retain code pin, input digest and test command counts | 0 unresolved example nodes; 0 missing records (count) | [docs/registry/workflows.yaml:L20-L27] [tests/workflows/test_durable_workflows.py:L98-L108] |
+| PC-14 | G1 | Run all three package test files and both infrastructure pipe-capacity files before/after documentation edits (232 nodes); retain E01 historical regression separately | 0 newly failed nodes; 0 changed node outcomes (count) | [tests/infrastructure/unit/test_pipe_capacity_codes.py:L1-L43] [tests/infrastructure/unit/test_pipe_capacity_dnv.py:L1-L43] [docs/registry/workflows.yaml:L20-L27] |
+| PC-15 | `NOT_APPLICABLE`: the package does not generate a QA appendix; pack-node and digest counts do not qualify PipeCapacity result outputs. | No package-output acceptance is claimed by this check. |
 | PC-16 | G0 | Resolve every bracketed repository citation at the code pin, with map citations also checked against the map pin | 0 missing files; 0 out-of-range citations; 0 support mismatches in ten manual samples (count) | [docs/registry/implementation-map.yaml:L1-L4] |
-| PC-17 | G5 | Compare parsed routing YAML before/after with only the new pipe_capacity child removed; run routing/contracts tests | 0 changed other entries; 0 new contract failures (count) | [tests/docs/test_digitalmodel_routing_contract.py:L101-L118] |
+| PC-17 | `NOT_APPLICABLE`: routing-registry equality is documentation evidence, not a PipeCapacity output or a calculation gate. | No package-output acceptance is claimed by this check. |
 
 ## 6. Known failure modes and pitfalls
 
@@ -339,7 +341,7 @@ The routed input depends on `assetutilities` dictionary merging and unit quantit
 
 ### Implementation-map inventory and counted family
 
-Map ref: `codex/implmap-work`, map commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; map data revision `270c8759c374b67a7f032953e7fcdb14e0224461`; the map bytes also match the code pin. [docs/registry/implementation-map.yaml:L1-L4]
+Map ref: `codex/implmap-work`, map commit `bb18c1a346b31b4ce975befa41fc84d9a5ff29e5`; map data revision `270c8759c374b67a7f032953e7fcdb14e0224461`; the map bytes also match the code pin. [docs/registry/implementation-map.yaml:L1-L4]
 
 Only `effective-tension-riser-stack-up` has in-package implementation rows: 3 in-package rows, 264 family rows overall; it is therefore the only counted family. No subpackage is excluded. [docs/registry/implementation-map.yaml:L4150-L4179] [docs/registry/implementation-map.md:L18-L18]
 
