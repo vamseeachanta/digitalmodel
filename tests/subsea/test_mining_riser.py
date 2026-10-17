@@ -70,6 +70,7 @@ def test_slurry_profile_uses_local_inventory_and_cumulative_coordinates():
     )
     assert [(c.top_m, c.bottom_m) for c in result] == [(0.0, 2.0), (2.0, 5.0)]
     assert [c.density_kg_m3 for c in result] == [1.0, 2.0]
+    # c=1 is a mathematical endpoint only, outside slurry validity (S1).
     assert (
         slurry_density_profile([SlurryLayer(1.0, 1.0, 5.0, 1.0)])[0].density_kg_m3
         == 5.0
@@ -283,6 +284,14 @@ def test_invalid_modal_inputs_rejected(overrides):
         modes([section()], **overrides)
 
 
+@pytest.mark.parametrize("integer_type", [int, np.int32, np.int64])
+def test_integral_mesh_controls_match_reference(integer_type):
+    result = modes(
+        [section()], elements_per_section=integer_type(32), mode_count=integer_type(3)
+    )
+    assert result.frequencies_hz == pytest.approx(modes([section()]).frequencies_hz)
+
+
 def test_empty_profiles_and_strings_rejected():
     with pytest.raises(ValueError):
         slurry_density_profile([])
@@ -297,7 +306,7 @@ def test_public_synthetic_example_runs_through_density_static_and_modes():
         Path(__file__).resolve().parents[2]
         / "examples/mining_lift_riser/synthetic.json"
     )
-    example = json.loads(path.read_text())
+    example = json.loads(path.read_text(encoding="utf-8"))
     layers = [SlurryLayer(**row) for row in example["slurry_layers"]]
     profile = slurry_density_profile(layers)
     sections = [
@@ -316,5 +325,24 @@ def test_public_synthetic_example_runs_through_density_static_and_modes():
     result = free_hanging_screen(sections, **example["static_inputs"])
     eigen = axial_modes(sections, **example["static_inputs"], **example["modal_inputs"])
     assert not result.has_compression
+    # S1 + D1/D2: EA=600*pi; mu=(6.25*pi, 6.5*pi); w=(52.5*pi, 55*pi).
+    assert result.coordinates_m == (0.0, 2.0, 5.0)
+    assert result.effective_tension_n == pytest.approx((270 * pi, 165 * pi, 0))
+    assert result.extension_m == pytest.approx(
+        ((270 + 165) * 2 + 165 * 3) / (2 * 600)
+    )
+    # D7: independent continuum root uses hand-derived constants, not API mass/EA.
+    travel_top = 2 * sqrt(6.25 / 600)
+    travel_bottom = 3 * sqrt(6.5 / 600)
+    impedance_ratio = sqrt(6.5 / 6.25)
+    omega = brentq(
+        lambda w: (
+            cos(w * travel_top) * cos(w * travel_bottom)
+            - impedance_ratio * sin(w * travel_top) * sin(w * travel_bottom)
+        ),
+        0.0,
+        pi / (2 * max(travel_top, travel_bottom)),
+    )
+    assert eigen.frequencies_hz[0] == pytest.approx(omega / (2 * pi), rel=0.0001)
     assert len(eigen.frequencies_hz) == example["modal_inputs"]["mode_count"]
     assert all(f > 0 for f in eigen.frequencies_hz)

@@ -16,6 +16,6 @@ def test_lift_class_is_loadable_and_has_a_public_basis():
     assert row.wt_mm is None
     assert row.material_grade == ""
     root = Path(__file__).resolve().parents[2]
-    basis = (root / row.source_path).read_text()
+    basis = (root / row.source_path).read_text(encoding="utf-8")
     assert "https://www.jstage.jst.go.jp/" in basis
     assert "https://repository.tudelft.nl/" in basis

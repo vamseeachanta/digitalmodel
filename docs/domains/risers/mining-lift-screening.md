@@ -18,7 +18,7 @@ and modelling distinctions are used; no source text, figures or tables are copie
 
 | ID | Public primary reference | Locator and use |
 | --- | --- | --- |
-| R1 | [Vertical Hydraulic Transport for Deep Sea Mining: A Study into Flow Assurance, TU Delft, 2016](https://repository.tudelft.nl/file/File_99e939f3-b109-48e8-beea-ac33884b0001?preview=1) | Section 6.2.1, printed pp. 88–89, equations (6.2)–(6.3): local solids inventory and mixture density. |
+| R1 | [Vertical Hydraulic Transport for Deep Sea Mining: A Study into Flow Assurance, TU Delft, 2016](https://repository.tudelft.nl/file/File_99e939f3-b109-48e8-beea-ac33884b0001?preview=1) | Section 6.2.1, printed pp. 88–89, equations (6.2)–(6.3): local solids inventory and mixture density; p. 89 immediately after equation (6.3): particle packing limits. |
 | R2 | [The Axial Resonance on 4,000m-class Riser System For Deep Sea Mining, conference proceedings 39, 2024](https://www.jstage.jst.go.jp/article/conf/39/0/39_459/_pdf/-char/ja) | Section 2.2, printed pp. 461–462: auxiliary-line mass is retained while unlatched axial connections exclude auxiliary EA; fixed upper and free lower boundary. Sections 3.1–3.2 identify the need to examine axial response and compression. |
 | R3 | [Free longitudinal vibrations of functionally graded tapered axial bars by pseudospectral method, 2018](https://www.extrica.com/article/19373) | Section 3, equation (5) and boundary condition (6b): longitudinal rod equation and fixed-free boundary. The finite-element discretization below is an independent derivation, not this paper's numerical method. |
 | R4 | [University Physics Volume 1, OpenStax, 2016](https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy) | Section 14.4, “Buoyant Force” and the displayed principle: displaced-fluid weight determines buoyancy. No textbook examples or numerical data are adopted. |
@@ -60,7 +60,10 @@ to the equivalent string is assumed; local connection response is not resolved.
 Zero lower effective force gives a free lower end. A suspended lower assembly
 requires its inertial mass and its net downward effective force as separate
 inputs; immersion/buoyancy can make these different. No bottom spring or seabed
-contact is included. Lower force may be negative for diagnostic balance. Any
+contact is included. A positive lower force with zero lower mass represents an
+externally imposed massless force, not a suspended weight. Omitting an assembly's
+inertial mass overestimates its frequency relative to the model with that mass
+(D6); supply both inputs when representing a suspended assembly. Lower force may be negative for diagnostic balance. Any
 negative boundary effective tension sets `has_compression`; because each section
 has linear tension this covers the minimum in every section. The modal function
 rejects such a string. Zero at a free end is permitted.
@@ -90,6 +93,16 @@ elements per section and mode count to `axial_modes`. The integration test in
 `tests/subsea/test_mining_riser.py` executes this complete path from
 `examples/mining_lift_riser/synthetic.json`.
 
+The algebraic density API accepts `0 <= c <= 1`; that is not a slurry validity
+range. R1 (2016), section 6.2.1, printed p. 89 immediately after equation (6.3),
+gives approximate maximum packing fractions of `0.74` for equal spheres and
+`0.6` for irregular narrow-graded sediments, and explains that smaller particles
+can fill pores in polydisperse mixtures. These are shape/grading-dependent
+examples, not universal operating limits. The caller must establish the
+applicable packing limit and remain below it for slurry use. At packing the
+mixture becomes soil-like; packed beds are outside this screen. `c=1` is only a
+mathematical endpoint used to verify the density identity.
+
 Modal shapes include the fixed zero top node, are normalized to maximum absolute
 amplitude one and have a deterministic sign. Frequencies are returned in
 ascending order. The dense generalized symmetric eigensystem uses NumPy and
@@ -111,14 +124,14 @@ There are no class acceptance criteria or qualification claims.
 S1 is an authored manufactured verification basis. Every number in
 `examples/mining_lift_riser/synthetic.json` and the new numerical test fixtures
 is either an S1 assumption listed below, an invalid-input probe, or a result
-derived by D1–D6. These are intentionally scaled mathematical quantities, not
+derived by D1–D7. These are intentionally scaled mathematical quantities, not
 published material properties, measured conditions or recommended defaults.
 
 | Inputs and units | S1 assumed values and purpose |
 | --- | --- |
 | Tube OD, wall thickness (m) | `2`, `0.5`; integer-ratio areas for hand calculations. |
 | Wall density (kg/m³), modulus (Pa) | `8`, `800`; artificial material giving a simple EA/mass ratio. Twice the base modulus supplies a nonuniform-section interface check. |
-| Liquid and solid density (kg/m³), local volume fraction | `1`, `5`, and `0`, `0.25`, `1`; pure-phase endpoints and an intermediate inventory. Uniform contents density `2` is the mixture result at fraction `0.25`. |
+| Liquid and solid density (kg/m³), local volume fraction | `1`, `5`, and `0`, `0.25`, `1`; liquid endpoint, mathematical-only solid endpoint `c=1` (not a slurry), and an intermediate inventory. Uniform contents density `2` is the mixture result at fraction `0.25`. |
 | Section/layer lengths (m) | `1`, `2`, `3`, `5`, `10`; short snapshots, section-order and segment-splitting checks. |
 | External density (kg/m³), gravity (m/s²) | `1`, `10`; artificial immersion and gravity for transparent force arithmetic. |
 | Additional mass (kg/m), displacement (m²) | Zero unless varied by `pi` or `6*pi` to test buoyancy, internal compression and section-order integration. |

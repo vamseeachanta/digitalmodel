@@ -2,7 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Public-source mining lift-riser screening, in SI units.
 
-Formula IDs R1 and D1-D6 refer to ``docs/domains/risers/mining-lift-screening.md``.
+Formula IDs R1 and D1-D7 refer to ``docs/domains/risers/mining-lift-screening.md``.
 Inputs describe a fully immersed vertical string, ordered from top to bottom.
 These linear reference calculations do not establish strength or operability.
 """
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite, pi
-from numbers import Real
+from numbers import Integral, Real
 from typing import Sequence
 
 import numpy as np
@@ -35,7 +35,13 @@ def _fraction(name: str, value: float) -> None:
 
 @dataclass(frozen=True)
 class SlurryLayer:
-    """A piecewise-constant local inventory, with no gas phase (R1 Eq. 6.3)."""
+    """A piecewise-constant local inventory, with no gas phase (R1 Eq. 6.3).
+
+    The accepted range [0, 1] is algebraic, not a slurry validity range. Callers
+    must establish the packing limit for their particle shape and grading and
+    remain below it for slurry use (R1, 2016, section 6.2.1, p. 89, after Eq.
+    6.3). The c=1 endpoint is mathematical only; packed beds are outside scope.
+    """
 
     length_m: float
     liquid_density_kg_m3: float
@@ -294,6 +300,11 @@ def axial_modes(
     The top displacement is fixed; the bottom has an optional inertial mass and
     no spring. Supply its effective static force separately. Reject compression
     before modal screening. Mesh refinement is the caller's responsibility.
+
+    A positive lower force with zero lower mass represents an externally imposed
+    massless force, not a suspended weight. If that force represents a suspended
+    assembly, supply its inertial mass separately: omitting it overestimates the
+    frequency relative to the same assembly with positive inertia (D6).
     """
     sections = tuple(sections)
     static = free_hanging_screen(
@@ -306,7 +317,7 @@ def axial_modes(
         ("elements_per_section", elements_per_section),
         ("mode_count", mode_count),
     ):
-        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        if isinstance(value, bool) or not isinstance(value, Integral) or value < 1:
             raise ValueError(f"{name} must be a positive integer")
     element_count = len(sections) * elements_per_section
     if mode_count > element_count:
