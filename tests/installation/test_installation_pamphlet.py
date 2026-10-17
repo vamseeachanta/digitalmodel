@@ -655,7 +655,7 @@ def test_resolve_rao_artifact_precedence(tmp_path):
 
 
 # ---------------------------------------------------------------- roll-damping sensitivity band (#1538 follow-up)
-# HLV-A 2 was run at two external roll-damping (B44) levels: zeta = 5% critical
+# HLV-A was run at two external roll-damping (B44) levels: zeta = 5% critical
 # (roll RAO peak 23.5 deg/m) and zeta = 10% with bilge keels (roll peak 19.2 deg/m).
 # Roll is damping-controlled at resonance, so the operation envelopes are presented
 # as an uncertainty BAND. These tests use SYNTHETIC two-case fixtures (NOT the real

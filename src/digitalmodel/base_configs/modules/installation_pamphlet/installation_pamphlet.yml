@@ -4,6 +4,8 @@ installation_pamphlet:
   # Vessel resolved by case-insensitive substring of the display name in the
   # vessel database (marine_ops.vessel_db.loader.installation_vessels).
   vessel: HLV-A
+  # Private configurations may add historical queue aliases.
+  vessel_run_tokens: [hlv-a]
 
   # Ordered lift items. Each item either carries an explicit mass_air_te, or
   # references a catalog (source: mudmat|jumper) + id resolved from the catalogs

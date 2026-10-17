@@ -160,6 +160,11 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
     }
     DPCLASS = v["dp_class"]
 
+    owner = v.get("owner")
+    show_owner = owner and str(owner).strip().lower() != "withheld"
+    owner_suffix = f" &middot; {owner}" if show_owner else ""
+    owner_row = f"<tr><td>Owner / operator</td><td>{owner}</td></tr>" if show_owner else ""
+
     def prov_badge(status):
         lab, cls = PROV.get(status, ("?", "pv-prox"))
         return f'<span class="pv {cls}">{lab}</span>'
@@ -575,7 +580,7 @@ small{{color:var(--mut)}}
 
 <header>
 <h1>Installation Vessel Pamphlet</h1>
-<div class="s"><b>{v['name']}</b> &middot; {v['type']} &middot; {v['owner']}</div>
+<div class="s"><b>{v['name']}</b> &middot; {v['type']}{owner_suffix}</div>
 <span class="tag">Desktop screening + live weather-window monitor &middot; {GEN}</span>
 </header>
 
@@ -591,7 +596,7 @@ confirm against vessel RAO, MWS approval and the bridge/DP &amp; mooring teams b
 <div class="grid">
 <div class="card"><h3>Particulars</h3><table class="kv">
 <tr><td>Vessel type</td><td>{v['type']}</td></tr>
-<tr><td>Owner / operator</td><td>{v['owner']}</td></tr>
+{owner_row}
 <tr><td>Max hook load</td><td>{v['max_hook_te']:,.0f} te</td></tr>
 <tr><td>Free deck area</td><td>{v['deck_area_m2']:,.0f} m&sup2;</td></tr>
 <tr><td>Deck strength</td><td>{v['deck_strength_t_per_m2'] or '— (TBC)'}</td></tr>

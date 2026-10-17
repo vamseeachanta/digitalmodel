@@ -41,9 +41,13 @@ def router(cfg: dict) -> dict:
     ]
     completed_runs = _resolve_completed_runs(cfg, settings)
 
+    tokens = settings.get("vessel_run_tokens", ("hlv-a",))
+    if not isinstance(tokens, (list, tuple)) or any(not isinstance(t, str) for t in tokens):
+        raise ValueError("vessel_run_tokens must be a list of strings")
+    vessel_run_tokens = tuple(t.strip() for t in tokens if t.strip())
     rao_basis = str(settings.get("rao_basis", "auto"))
     if rao_basis == "auto":
-        rao_basis = calc.select_rao_basis(completed_runs)
+        rao_basis = calc.select_rao_basis(completed_runs, vessel_run_tokens)
     generated_label = settings.get("generated_label") or DEFAULT_GENERATED_LABEL
 
     # Explicit config artifact path (resolved like catalog refs). Explicit config
@@ -77,6 +81,7 @@ def router(cfg: dict) -> dict:
         rao_artifact=rao_artifact,
         rao_artifact_low=rao_artifact_low,
         rao_artifact_high=rao_artifact_high,
+        vessel_run_tokens=vessel_run_tokens,
     )
     html = render_pamphlet_html(result, generated_label)
 

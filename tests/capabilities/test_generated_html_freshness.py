@@ -418,15 +418,3 @@ def test_registry_reports_registered_script_syntax_error(
         f"  x {errors[0]}\n"
     )
     assert "Traceback" not in text
-
-
-def test_hlv_a_codename_is_an_exact_specification_id_exception():
-    import ast
-    from scripts.generated_html_ownership import _literal_specification_id
-
-    entry = ast.parse('dict(id="installation-HLV-A")', mode="eval").body
-    assert _literal_specification_id(entry, "HLV-A", 0) == "installation-HLV-A"
-    for value in ("installation-HLV-B", "Installation-HLV-A", "../installation-HLV-A"):
-        entry = ast.parse(f"dict(id={value!r})", mode="eval").body
-        with pytest.raises(ValueError):
-            _literal_specification_id(entry, "HLV-A", 0)

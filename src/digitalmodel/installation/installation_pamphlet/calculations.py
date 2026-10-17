@@ -49,7 +49,7 @@ BASIS_LABEL = {
         "completed FPSO diffraction run lr_acma_8de9c018adbd"
     ),
     "fpso": "Ship-shaped (FPSO 250 m) parametric RAO — adapted basis",
-    "vessel": "Vessel-specific HLV-A 2 RAO (OrcaWave diffraction)",
+    "vessel": "Vessel-specific HLV-A RAO (OrcaWave diffraction)",
 }
 BASIS_HUMAN = {
     "barge": "100 m barge proxy (pessimistic)",
@@ -95,7 +95,7 @@ DEFAULT_OPERATIONS = ["transit", "dp_station_keeping", "heavy_lift"]
 DEFAULT_TP_GRID_S = [6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
 
 # ----------------------------------------------------------------------------
-# Roll-damping sensitivity band (#1538 follow-up). HLV-A 2 diffraction was run
+# Roll-damping sensitivity band (#1538 follow-up). HLV-A diffraction was run
 # at two external roll-damping (B44) levels: zeta = 5% critical -> roll RAO peak
 # 23.5 deg/m; zeta = 10% (bilge keels / appendages) -> roll peak 19.2 deg/m,
 # heave 7.17. Roll is strongly damping-controlled at resonance, so the operation
@@ -104,7 +104,7 @@ DEFAULT_TP_GRID_S = [6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
 # ----------------------------------------------------------------------------
 DAMPING_BAND_NOTE = (
     "Roll-damping sensitivity band: operation envelopes span the zeta = 5-10% "
-    "critical roll-damping range (HLV-A 2 external_damping B44: zeta = 5% -> "
+    "critical roll-damping range (HLV-A external_damping B44: zeta = 5% -> "
     "roll RAO peak 23.5 deg/m; zeta = 10% -> 19.2 deg/m, heave 7.17). Roll is "
     "strongly damping-controlled at resonance, so the limiting Hs at each Tp is "
     "presented as a range rather than a single value: the lower bound uses the "
@@ -223,10 +223,17 @@ def load_rao_set_from_artifact(path: str | Path):
         ) from exc
 
 
+def _is_vessel_run(run: dict[str, Any], vessel_run_tokens: tuple[str, ...]) -> bool:
+    """Match non-empty configured aliases case-insensitively against the input path."""
+    inp = str(run.get("input") or "").lower()
+    return any(token.strip().lower() in inp for token in vessel_run_tokens if token.strip())
+
+
 def resolve_rao_artifact(
     rao_basis: str,
     completed_runs: list[dict[str, Any]] | None,
     rao_artifact: str | Path | None = None,
+    vessel_run_tokens: tuple[str, ...] = ("hlv-a",),
 ) -> str | None:
     """Resolve the vessel RAO artifact path, or ``None`` if none is available.
 
@@ -241,7 +248,7 @@ def resolve_rao_artifact(
         return str(rao_artifact)
     runs = list(completed_runs or [])
     for r in runs:
-        if "HLV-A".lower() in (r.get("input") or "").lower() and r.get("rao_artifact"):
+        if _is_vessel_run(r, vessel_run_tokens) and r.get("rao_artifact"):
             return str(r["rao_artifact"])
     for r in runs:
         if r.get("rao_artifact"):
@@ -615,18 +622,21 @@ def _is_diffraction(run: dict[str, Any]) -> bool:
     )
 
 
-def select_rao_basis(completed_runs: list[dict[str, Any]]) -> str:
+def select_rao_basis(
+    completed_runs: list[dict[str, Any]],
+    vessel_run_tokens: tuple[str, ...] = ("hlv-a",),
+) -> str:
     """Pure RAO-basis selection from a list of completed-run dicts.
 
     Rules (ported from the prototype adapt.py):
-      * any run input contains "HLV-A"                       -> "vessel"
+      * any run input matches a configured vessel token                       -> "vessel"
       * a diffraction/orcawave run input contains "fpso"/"ship" -> "drillship"
       * any diffraction/orcawave run exists                     -> "drillship"
       * otherwise                                               -> "barge"
     """
     runs = list(completed_runs or [])
     diffraction = [r for r in runs if _is_diffraction(r)]
-    if any("HLV-A".lower() in (r.get("input") or "").lower() for r in runs):
+    if any(_is_vessel_run(r, vessel_run_tokens) for r in runs):
         return "vessel"
     if any(
         ("fpso" in (r.get("input") or "").lower() or "ship" in (r.get("input") or "").lower())
@@ -641,13 +651,14 @@ def select_rao_basis(completed_runs: list[dict[str, Any]]) -> str:
 def select_basis_run_id(
     completed_runs: list[dict[str, Any]],
     rao_basis: str,
+    vessel_run_tokens: tuple[str, ...] = ("hlv-a",),
 ) -> str | None:
     """Run id that justifies the selected basis (None for the barge default)."""
     runs = list(completed_runs or [])
     diffraction = [r for r in runs if _is_diffraction(r)]
     if rao_basis == "vessel":
         for r in runs:
-            if "HLV-A".lower() in (r.get("input") or "").lower():
+            if _is_vessel_run(r, vessel_run_tokens):
                 return r.get("run_id")
         return None
     if rao_basis in ("drillship", "fpso"):
@@ -664,11 +675,12 @@ def select_basis_run_id(
 def build_provenance(
     completed_runs: list[dict[str, Any]],
     rao_basis: str,
-    vessel_name: str = "HLV-A 2",
+    vessel_name: str = "HLV-A",
     structure_catalog_used: bool = False,
     splashzone_computed: bool = False,
     rao_from_artifact: bool = False,
     damping_band: bool = False,
+    vessel_run_tokens: tuple[str, ...] = ("hlv-a",),
 ) -> dict[str, Any]:
     """Run-state provenance manifest (T1..T8). Pure.
 
@@ -697,7 +709,7 @@ def build_provenance(
     """
     runs = list(completed_runs or [])
     prov = _effective_provenance(rao_basis, rao_from_artifact)
-    basis_run_id = select_basis_run_id(runs, rao_basis)
+    basis_run_id = select_basis_run_id(runs, rao_basis, vessel_run_tokens)
     basis_note = _effective_human(rao_basis, rao_from_artifact)
     rao_source = "OrcaWave diffraction" if prov == "actual" else "parametric ship RAO"
 
@@ -794,6 +806,7 @@ def assemble_result(
     rao_artifact: str | Path | None = None,
     rao_artifact_low: str | Path | None = None,
     rao_artifact_high: str | Path | None = None,
+    vessel_run_tokens: tuple[str, ...] = ("hlv-a",),
 ) -> dict[str, Any]:
     """Compose the full deterministic pamphlet ``result`` payload (pure).
 
@@ -822,7 +835,7 @@ def assemble_result(
     EXACTLY as before: no ``envelope_band``/``damping_note`` keys, ``damping_band``
     defaults false, and the single ``rao_artifact`` path is fully intact.
     """
-    artifact_path = resolve_rao_artifact(rao_basis, completed_runs, rao_artifact)
+    artifact_path = resolve_rao_artifact(rao_basis, completed_runs, rao_artifact, vessel_run_tokens)
     band_active = bool(
         rao_basis == "vessel" and rao_artifact_low and rao_artifact_high
     )
@@ -859,6 +872,7 @@ def assemble_result(
         splashzone_computed=bool(splashzone),
         rao_from_artifact=rao_from_artifact,
         damping_band=band_active,
+        vessel_run_tokens=vessel_run_tokens,
     )
     result: dict[str, Any] = {
         "vessel": vessel_info,

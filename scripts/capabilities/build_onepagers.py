@@ -240,7 +240,7 @@ SPECS: list[dict] = [
                "with envelope geometry.",
          figures=[], bullets=["Layer-by-layer cross-section schematics",
                               "Envelope geometry from a layer specification"]),
-    dict(id="installation-HLV-A", kind="work", title="Installation vessel pamphlet — HLV-A 2",
+    dict(id="installation-hlv-a", kind="work", title="Installation vessel pamphlet — HLV-A",
          std="DNV-RP-H103 · DNV-ST-N001 · IMCA · HSE RR444",
          path="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/"
               "installation/installation_pamphlet",
