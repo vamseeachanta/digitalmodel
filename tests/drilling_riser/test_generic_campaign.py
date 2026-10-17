@@ -37,7 +37,8 @@ class GenericCampaignTests(unittest.TestCase):
 
     def test_prepared_method_and_digests_match_sources(self):
         public = ROOT / campaign.DEST
-        table = yaml.safe_load((public / 'case-table.yml').read_text(encoding='utf-8'))
+        committed_text = (public / 'case-table.yml').read_text(encoding='utf-8')
+        table = yaml.safe_load(committed_text)
         expected_table = campaign.case_table(ROOT)
         method = expected_table['statics_method']
         self.assertIn('25%, 50%, 75% and 100%', method['value'])
@@ -47,10 +48,10 @@ class GenericCampaignTests(unittest.TestCase):
         self.assertIn('25%, 50%, 75% and 100%', preparation['statics_method'])
         self.assertIn('No vessel-offset continuation', preparation['statics_method'])
         basis = json.loads((public / 'screens/basis.json').read_text(encoding='utf-8'))
-        # Hash generated LF bytes, independent of the checkout's line endings.
-        generated = yaml.safe_dump(expected_table, sort_keys=False, allow_unicode=True)
-        self.assertEqual((public / 'case-table.yml').read_text(encoding='utf-8'), generated)
-        self.assertEqual(basis['case_table_sha256'], hashlib.sha256(generated.encode('utf-8')).hexdigest())
+        # Compare YAML data independently of process-wide dumper alias settings.
+        self.assertEqual(table, expected_table)
+        # read_text normalizes checkout line endings to LF before hashing.
+        self.assertEqual(basis['case_table_sha256'], hashlib.sha256(committed_text.encode('utf-8')).hexdigest())
         self.assertEqual(basis['calculation_fingerprints'], campaign.calculation_fingerprints())
 
     def test_derived_criterion_rejects_underflow(self):
@@ -163,7 +164,13 @@ class GenericCampaignTests(unittest.TestCase):
                 return {p.relative_to(folder).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                         for p in folder.rglob('*.yml')}
             self.assertEqual(hashes(root / 'first'), hashes(root / 'second'))
-            self.assertEqual(hashes(root / 'first'), hashes(ROOT / campaign.DEST / 'models'))
+            # Legacy imports can suppress aliases without changing model data.
+            committed = ROOT / campaign.DEST / 'models'
+            self.assertEqual(set(hashes(root / 'first')), set(hashes(committed)))
+            for relative in hashes(committed):
+                self.assertEqual(
+                    yaml.safe_load((root / 'first' / relative).read_text(encoding='utf-8')),
+                    yaml.safe_load((committed / relative).read_text(encoding='utf-8')))
             for case in table['cases']:
                 folder = root / 'first' / case['id']
                 data = yaml.safe_load((folder / 'includes/20_generic_objects.yml').read_text(encoding='utf-8'))
