@@ -1,4 +1,4 @@
-"""Geometry evidence for pmxp2; no native solution or acceptance is implied."""
+"""Lay-azimuth warnings: geometry and clearance; no acceptance is implied."""
 from pathlib import Path
 import unittest
 
@@ -14,8 +14,8 @@ class LayAzimuthGeometryTests(unittest.TestCase):
         for case in ('o0-c1', 'o0-c2', 'o0-c3'):
             with self.subTest(case=case):
                 folder = CAMPAIGN / 'models' / case / 'includes'
-                objects = yaml.safe_load((folder / '20_generic_objects.yml').read_text())
-                env = yaml.safe_load((folder / '03_environment.yml').read_text())['Environment']
+                objects = yaml.safe_load((folder / '20_generic_objects.yml').read_text(encoding='utf-8'))
+                env = yaml.safe_load((folder / '03_environment.yml').read_text(encoding='utf-8'))['Environment']
                 self.assertEqual(env['SeabedType'], 'Flat')
                 self.assertEqual(env['SeabedSlope'], 0)
                 seabed_z = env['WaterSurfaceZ'] - env['SeabedOriginDepth']

@@ -22,10 +22,11 @@ class GenericCampaignTests(unittest.TestCase):
         table = campaign.case_table(ROOT)
         note = table['tension_acceptance_basis']
         self.assertNotIn('hand estimate', note)
-        self.assertIn('numerical reconciliation remains pending', note)
-        self.assertIn('case by case', note)
-        self.assertIn('pre-flight statics', note)
-        self.assertIn('reported on #2469', note)
+        self.assertIn('6,923.1–8,261.7 kN', note)
+        self.assertIn('all 24 cases by 84.0–1,422.7 kN', note)
+        self.assertIn('Pre-flight statics', note)
+        self.assertIn('No operating window is established.', note)
+        self.assertIn('96 of 96 current steps', table['statics_method']['value'])
         self.assertIn('calculated positions', table['statics_method']['value'])
         self.assertTrue(table['statics_method']['source'])
         public = ROOT / campaign.DEST
@@ -34,6 +35,15 @@ class GenericCampaignTests(unittest.TestCase):
             self.assertEqual(data['tension_acceptance_basis'], note)
         preparation = json.loads((public / 'preparation.json').read_text(encoding='utf-8'))
         self.assertEqual(preparation['tension_acceptance_basis'], note)
+
+    def test_shielding_basis_distinguishes_submerged_protrusion(self):
+        table = campaign.case_table(ROOT)
+        note = table['drill_string_current_basis']['value']
+        for phrase in ('shielded', '34.9996 m', '14.60 m', '18.86 m',
+                       '3.836 m above', '0.356 m below', 'submerged',
+                       '0.74 kN', 'maintainer'):
+            self.assertIn(phrase, note)
+        self.assertIn('general-data-statics.md:16', table['statics_method']['source'])
 
     def test_prepared_method_and_digests_match_sources(self):
         public = ROOT / campaign.DEST

@@ -1,31 +1,32 @@
-# Lay-azimuth review (pmxp2)
+# Lay-azimuth warnings: geometry and clearance
 
 Decision: retain `LayAzimuth: 180` for now. It is compatible with the
 vertical reset geometry but is not a uniquely determined bearing. The twelve
-warnings have a plausible benign explanation (no intended seabed contact),
-not a demonstrated native disposition. Maintainer acceptance remains open;
+warnings occur with positive native seabed clearance at every warning event.
+Acceptance by the maintainer remains open;
 do not treat convergence as warning clearance or this note as model acceptance.
 
-Base and scope follow the CODE-JOB: PR 2469 branch `codex/cxl-rg1b`, at
-`caecc66db3d44ccf513349286c130ff7fad6f6bd` (merged PR 2648). This is a consolidated
-solver-free investigation of the named lines in o0-c1/c2/c3. No criterion,
+This solver-free assessment covers the named lines in o0-c1/c2/c3 in
+[PR 2469](https://github.com/vamseeachanta/digitalmodel/pull/2469).
+No criterion,
 geometry, damping, tolerance, friction policy, or model input is changed.
-R23 remains with the product manager. Git LFS content is frozen.
+The minimum-tension decision remains with the maintainer.
 
 ## Native evidence boundary
 
-The supplied CODE-JOB dated 2026-10-17 05:25:04Z reports 24/24 statics
-convergence and twelve warnings:
+The pre-flight QA dated 2026-10-17 reports 24/24 staged-statics
+convergence (96 of 96 current steps) and twelve warnings:
 
 | Cases | Line | Current stage | Count |
 | --- | --- | --- | --- |
 | o0-c1/c2/c3 | Flex Joint Rigid Piece | 25% | 3 |
 | o0-c1/c2/c3 | Drill String | 50%, 75%, 100% | 9 |
 
-The referenced solver-loop QA appendix was not available in this checkout.
-These counts are the supplied native summary, not independently inspected
-native results. No native run was attempted here. No vendor binary was
-inspected or reverse-engineered.
+The native minimum seabed clearance at all twelve warning events is 19.425 m
+for Flex Joint Rigid Piece and 19.58–21.83 m for Drill String. These values
+establish separation from the seabed at the warning events; acceptance of the
+warnings remains a decision for the maintainer. Counts and clearances are
+the supplied pre-flight QA summary; the native solution is not rerun here.
 
 ## Vendor basis
 
@@ -78,12 +79,14 @@ bottom-to-top horizontal bearing at a warning stage may therefore differ from
 reset and from other stages. Its value cannot be recovered from warning text
 or current direction alone. There is insufficient native position evidence to
 say 180 is correct at all twelve warning events, or to justify a replacement
-number. Disabling friction simply to remove the warning is not justified.
+number. The native clearances of 19.425 m and 19.58–21.83 m establish no seabed
+contact at the twelve warning events. Disabling friction simply to remove the
+warning is not justified.
 
 ## Native confirmation and explicit disposition still required
 
-At the draft PR head, the solver loop should retain stage-specific warnings
-and collect the two lines' global A/B positions, designated top ends, minimum
+The pre-flight QA should retain stage-specific warnings
+and the two lines' global A/B positions, designated top ends, minimum
 node z/seabed clearance (including line radius), and seabed contact/reaction
 readback at zero current and every current stage for all three cases. Record
 whether step 1 is run or calculated positions are reused at each stage. Keep
@@ -95,7 +98,34 @@ vendor basis. Record that decision with the native evidence. If contact is
 present, review the physical as-laid history and stage endpoint bearings before
 changing the owning template and regenerating affected inputs. Re-run the
 24-case convergence check after any input change; the twelve warning events
-alone do not define the regression scope. R23 requires its separate decision.
+alone do not define the regression scope. The minimum-tension criterion
+requires a separate decision from the maintainer.
+
+## Known limits and retained native read-back
+
+The retained o0-c0 and o5-c3 results were read back on 2026-10-17. The
+read-back applies to the unchanged models and driver at revision `6440cd33`.
+
+- **Shielding:** both cases record one warning that the drill string inside
+  the riser is treated as shielded because the outer line is not free-flooding.
+  The o5-c3 warning also names Drill String Below BOP inside Casing. The upper
+  free end is at z = 34.9996 m, 14.60 m above the ring at o0-c0 and 18.86 m
+  above it at o5-c3; these elevations are above water. For relationship 4,
+  Drill String Connection is 0.356 m below the casing top at o0-c0 and
+  3.836 m above it at o5-c3. The casing top is at z = -1000 m, so the latter
+  protrusion is submerged but shielded, omitting about 0.74 kN of drag at
+  1.5 m/s. The above-water observation does not apply to this protrusion.
+  Warning disposition remains with the maintainer.
+- **Stress:** at o5-c3, maximum von Mises stress is 307.25 MPa at riser End B,
+  arc length 1020 m and z = -1000.005 m. The coincident bending moment is
+  1858.2 kN m and wall tension is 4431.0 kN. The hand calculation gives
+  307.25 MPa at that section; the location and section-load reconciliation
+  are established, but acceptance still requires the external stress criterion.
+- **Minimum tension:** pre-flight statics give 6,923.1–8,261.7 kN against the
+  stored assumed minimum of 8,345.7 kN. No operating window is established;
+  the criterion decision remains with the maintainer.
+- **Path dependence:** no comparison tolerance is set for the reported
+  difference of at most 1.5 kN between the two statics methods.
 
 Solver-free evidence: `tests/drilling_riser/test_generic_lay_azimuth_geometry.py`
 checks the reset positions, top-end sense, seabed and unstretched clearance

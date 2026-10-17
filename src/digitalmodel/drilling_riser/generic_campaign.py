@@ -186,32 +186,40 @@ def case_table(root: Path) -> dict:
         'template_digest_basis': 'UTF-8 source text normalized to LF',
         'line_contact_source': 'In-repository program example specification: '
             'docs/domains/orcaflex/library/model_library/b01_drilling_riser/spec.yml; '
-            'generic.line_contact_data copied unchanged; native statics not established',
+            'generic.line_contact_data copied unchanged; pre-flight statics converged in all 24 cases',
         'basis': {key: source[key] for key in ('environment', 'simulation', 'generic')},
         'wave_basis_note': 'Specification wave data are retained for provenance only; no wave is applied.',
         'profile_description': 'Uniform current from surface to seabed; assumed, based on previous experience',
         'tension_acceptance_basis': (
-            'The stored minimum top tension is retained as an assumed criterion. '
-            f"The minimum remains {basis['min_tension_kn']:,.1f} kN. "
-            'Native pre-flight statics on the earlier models, reported on #2469, give the main-riser '
-            'top effective tension below this criterion in every converged case; '
-            'numerical reconciliation remains pending access to the diagnostic records. '
+            f"The stored minimum top tension, {basis['min_tension_kn']:,.1f} kN, "
+            'is retained as an assumed criterion. Pre-flight statics of these models give the '
+            'main-riser top effective tension 6,923.1–8,261.7 kN, below this criterion '
+            'in all 24 cases by 84.0–1,422.7 kN. '
             'The four links share their vertical load between the riser, choke and kill lines '
             'and the slip joint; total tensioner force is not main-riser top effective tension. '
-            'No operating window is established. Requalify the staged method case by case '
-            'before production; the prior pre-flight does not qualify the changed method.'),
+            'No operating window is established.'),
         'statics_method': tagged(
             'At the specified vessel offset, solve zero-current statics, then ramp current through '
             '25%, 50%, 75% and 100% of the specified speed, retaining calculated positions '
             'before each current change. No vessel-offset continuation is applied. '
             'Zero-current cases solve once. Every stage must reach InStaticState before dynamics. '
-            'Native convergence remains unverified.',
+            'Pre-flight statics converged in all 24 cases (96 of 96 current steps).',
             'src/digitalmodel/drilling_riser/campaign.py::CURRENT_RAMP; _statics_path current ramp; '
-            'scripts/orcaflex/run_generic_drilling_riser_campaign.py::calculate_staged_statics'),
+            'scripts/orcaflex/run_generic_drilling_riser_campaign.py::calculate_staged_statics; '
+            'docs/domains/orcaflex/reference/general-data-statics.md:16; '
+            'https://www.orcina.com/webhelp/OrcaFlex/Content/html/Generaldata,Statics.htm '
+            '(accessed 2026-10-17)'),
         'drill_string_current_basis': tagged(
-            'Normal drag is retained from the source specification. Shielding by the containing riser '
-            'has not been established by native readback; no drag reduction is applied. '
-            'The contribution to contact loads and angles requires qualification.',
+            'Native read-back records the drill string inside the riser and the drill string '
+            'below the BOP inside the casing as shielded from the environment because the '
+            'outer lines are not free-flooding. The upper free end is at z = 34.9996 m, '
+            '14.60 m above the ring at o0-c0 and 18.86 m above it at o5-c3, all above water. '
+            'For relationship 4, Drill String Connection is 0.356 m below the casing top '
+            'at o0-c0 and 3.836 m above it at o5-c3. The casing top is at z = -1000 m; '
+            'the latter protrusion is submerged but shielded, omitting about 0.74 kN of '
+            'drag at 1.5 m/s. Pre-flight dynamics record one shielding warning per case; '
+            'its disposition remains with the maintainer.',
+            'Native pre-flight read-back, 2026-10-17; lay-azimuth-disposition.md; '
             f'{SPEC.as_posix()}; generic.line_types and generic.line_contact_data'),
         'criteria': {
             'mean_angle_deg': tagged(None, 'runtime criteria file; ' + REFERENCES['16Q'], 'degrees'),

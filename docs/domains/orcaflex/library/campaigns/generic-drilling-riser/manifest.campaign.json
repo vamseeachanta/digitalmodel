@@ -17,8 +17,8 @@
   "env": {
     "SOURCE_SHA256": "298fa98a2c3065d55b5c05bc67f36106a9bbafda4faa74644a288a7861ec7629"
   },
-  "expected_hours": 6,
-  "max_hours": 18,
+  "expected_hours": 0.25,
+  "max_hours": 0.75,
   "progress": {
     "glob": "<SOLVER_REPO_DIR>/results/generic-drilling-riser/*.summary.json",
     "total": 24
