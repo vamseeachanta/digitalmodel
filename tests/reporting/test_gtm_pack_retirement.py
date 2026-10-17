@@ -61,12 +61,14 @@ def test_wave_period_relationship_is_qualified_in_source_and_reports():
         lines = [line for line in text.splitlines() if re.search(r"Tp = .*sqrt\(Hs\)", line)]
         assert lines, path
         assert any("screening simplification" in line.lower() for line in lines), path
+        assert "superseded by " + "R10" not in text, path
 
 
 def test_retired_pack_links_only_in_register_or_historical_archive_maps():
     names = (b"client_pdf_pack_" + b"2026-05-07", b"pipeline_company_pack_" + b"2026-05-07")
-    # Dated archive inventories are immutable snapshots. The acceptance exception
-    # is restricted to these three files; the retirement record is authoritative.
+    # Maintainer-approved on 2026-10-17 and recorded in the retirement register:
+    # historical inventories/maps may retain retired paths because they are history.
+    # Preserve exactly these three snapshots; the retirement record is authoritative.
     allowed = {
         "config/generated_retirements.yml",
         "docs/archive/archive-blob-map-2026-10-08.csv",
@@ -107,7 +109,7 @@ def test_reference_boundary_rejects_paths_outside_demo_tree(tmp_path, monkeypatc
         "docs/archive/archive-candidates-2026-10-08.csv",
         "docs/archive/archive-candidates-2026-10-08.summary.json",
     )
-    for relative in (*allowed, path):
+    for relative in allowed:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(name, encoding="utf-8")
@@ -116,5 +118,12 @@ def test_reference_boundary_rejects_paths_outside_demo_tree(tmp_path, monkeypatc
     for arguments in (("init", "-q"), ("add", ".")):
         subprocess.run(["git", *arguments], cwd=tmp_path, env=env, check=True,
                        capture_output=True)
-    with pytest.raises(AssertionError):
+    # Positive control: the same temporary repository must pass before mutation.
+    test_retired_pack_links_only_in_register_or_historical_archive_maps()
+    target = tmp_path / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(name, encoding="utf-8")
+    subprocess.run(["git", "add", "--", path], cwd=tmp_path, env=env, check=True,
+                   capture_output=True)
+    with pytest.raises(AssertionError, match=re.escape(path)):
         test_retired_pack_links_only_in_register_or_historical_archive_maps()

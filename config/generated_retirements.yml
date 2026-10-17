@@ -1,4 +1,12 @@
 # Cold-store dataset_path values are relative to /mnt/ace/.
+# Maintainer-approved exception, 2026-10-17, for the May pack retirement:
+# https://github.com/vamseeachanta/digitalmodel/issues/2688
+# Historical archive inventories and maps may retain retired pack paths because
+# they record history. Preserve exactly these three snapshots unchanged:
+# - docs/archive/archive-blob-map-2026-10-08.csv
+# - docs/archive/archive-candidates-2026-10-08.csv
+# - docs/archive/archive-candidates-2026-10-08.summary.json
+# Outside this register and those snapshots, retired pack references are forbidden.
 retirements:
 - path: docs/api/capabilities/pdf/buckling-panel.pdf
   sha256: 34f2fe427e344a729ccdabcca4be976baf14d26b69d55b1200f7afd3e355c110
