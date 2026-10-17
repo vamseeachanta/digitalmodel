@@ -9,6 +9,18 @@
 schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
+  - id: four-point-skew
+    basename: four_point_skew
+    title: Four-point single-hook axial-spring skew screening
+    version: 1
+    status: experimental
+    latest: false
+    input: examples/workflows/four-point-skew/input.yml
+    invocation: "uv run --no-sources python -m digitalmodel.marine_ops.installation.four_point_skew {input}"
+    outputs:
+      - examples/workflows/four-point-skew/results/skew_summary.json
+    test: tests/marine_ops/installation/test_four_point_skew.py::test_workflow_cli_and_registry
+    runtime: standalone
   - id: catenary
     basename: catenary
     title: Angle-based catenary geometry

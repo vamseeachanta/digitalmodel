@@ -1,0 +1,198 @@
+{
+  "issue": 2667,
+  "date": "2026-10-17",
+  "base_revision": "7c3d4dd7d",
+  "acceptance_status": "NOT_CLEARED",
+  "engineering_use_allowed": false,
+  "criteria": {
+    "1_symmetric_closed_form": "PASS: relative error below 0.1 percent",
+    "2_centred_quarters": "PASS",
+    "3_offset_cog_equal_split_defect": "PASS: independent moment balance rejects equal split",
+    "4_code_minimum_floor": "PASS",
+    "5_review_and_family_qa": "NOT_CLEARED: second-agent review passes; second-provider review and formal family QA remain open"
+  },
+  "review": {
+    "kind": "independent_second_agent",
+    "verdict": "PASS for documented static screening scope",
+    "blocking_findings": [],
+    "hash_verification": "matched before and after read-only review",
+    "reviewed_sha256": {
+      "src/digitalmodel/marine_ops/installation/four_point_skew.py": "42e165b3fad9f3ee957651f2cf9fc082c5e18487c54c5a25d3e5067201305c9c",
+      "tests/marine_ops/installation/test_four_point_skew.py": "0c548ca97cb427ed1d0a36b740597123b0e2d0d0126a44d30e790346d4a8f96d",
+      "examples/workflows/four-point-skew/input.yml": "142654545cb705a1715cf1d757f804914399dd44897eeb4fb428decb1dc4369c",
+      "examples/workflows/four-point-skew/README.md": "013e7233639e1d87a239362ecce484e4f74878bb661b4be28ddc8e926a83ac4c",
+      "docs/registry/workflows.yaml": "8d27f8d4579be210ba20f09514343d209123903e64d29e37acfcd62a1fef1557"
+    },
+    "basis": "Read-only mechanics, code, tests, example and workflow review; no independent test execution or publisher fetch",
+    "findings_disposed": [
+      "Oblique offset-CoG displacement solution and full 3D force/moment balance regression",
+      "Single-slack-leg determinate equilibrium and inactive gap inequality regression"
+    ],
+    "open": [
+      "second-provider review",
+      "formal installation-family QA clearance"
+    ]
+  },
+  "tests": {
+    "command_form": "PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<job-scratch>/bt-<run>",
+    "executable": "Prescribed full-path uv executable",
+    "addopts_override": false,
+    "base_installation": {
+      "passed": 229,
+      "failed": 0
+    },
+    "tests_first": "EXPECTED_RED: collection fails with ModuleNotFoundError before calculator implementation",
+    "after_installation": {
+      "passed": 263,
+      "failed": 0
+    },
+    "final": {
+      "passed": 265,
+      "failed": 0,
+      "skipped": 0,
+      "paths": [
+        "tests/marine_ops/installation",
+        "tests/workflows/test_registry_versioning.py"
+      ],
+      "new_calculator_tests": 34
+    },
+    "ruff": "PASS",
+    "workflow_cli": "PASS",
+    "workflow_json_readback": "PASS",
+    "cli_test_output_semantic_agreement": "PASS"
+  },
+  "independent_hand_calculations": {
+    "rigid": {
+      "nominal_tension_N": 283190.30703751143,
+      "cases": [
+        {
+          "tau_mm": 5,
+          "expected_tensions_N": [
+            358190.30703751143,
+            208190.30703751143,
+            358190.30703751143,
+            208190.30703751143
+          ],
+          "actual_tensions_N": [
+            358190.3070375114,
+            208190.30703751126,
+            358190.30703751143,
+            208190.30703751126
+          ],
+          "max_error_over_nominal": 6.166276825190618e-16
+        },
+        {
+          "tau_mm": 10,
+          "expected_tensions_N": [
+            433190.30703751143,
+            133190.30703751143,
+            433190.30703751143,
+            133190.30703751143
+          ],
+          "actual_tensions_N": [
+            433190.3070375113,
+            133190.30703751126,
+            433190.30703751143,
+            133190.30703751126
+          ],
+          "max_error_over_nominal": 6.166276825190618e-16
+        },
+        {
+          "tau_mm": 15,
+          "expected_tensions_N": [
+            508190.30703751143,
+            58190.30703751143,
+            508190.30703751143,
+            58190.30703751143
+          ],
+          "actual_tensions_N": [
+            508190.30703751126,
+            58190.30703751123,
+            508190.3070375115,
+            58190.30703751123
+          ],
+          "max_error_over_nominal": 7.1939896293890535e-16
+        },
+        {
+          "tau_mm": 19,
+          "expected_tensions_N": [
+            566380.6140750229,
+            0.0,
+            566380.6140750229,
+            0.0
+          ],
+          "actual_tensions_N": [
+            566380.6140750225,
+            0.0,
+            566380.6140750227,
+            0.0
+          ],
+          "max_error_over_nominal": 1.2332553650381236e-15
+        },
+        {
+          "tau_mm": 25,
+          "expected_tensions_N": [
+            566380.6140750229,
+            0.0,
+            566380.6140750229,
+            0.0
+          ],
+          "actual_tensions_N": [
+            566380.6140750225,
+            0.0,
+            566380.6140750227,
+            0.0
+          ],
+          "max_error_over_nominal": 1.2332553650381236e-15
+        }
+      ]
+    },
+    "flexible": {
+      "tau_m": 0.01,
+      "normalized_warp_stiffness_N_per_m": 15000000.0,
+      "expected_delta_N": 85714.28571428571,
+      "actual_delta_N": 85714.28571428562
+    }
+  },
+  "sample": {
+    "cases": 16,
+    "effective_skl": 1.5296791460455286,
+    "design_skl": 1.5296791460455286,
+    "summary_sha256": "5c62006a293062a652d70a1b652aee885a634f6dbdb572ce3dae2bbc1e5d0dfe"
+  },
+  "sources": [
+    {
+      "id": "catalog_worked_example",
+      "citation": "SLP Sling Catalog, undated online edition, printed page 93, web page 99; Sling Considerations: Effects of Sling Angles; Example of the effect of Sling Angle on Tension",
+      "url": "https://www.sharrowlifting.com/wp-content/themes/sharrowliftingproducts/assets/flipbook/files/simple/99.html",
+      "http_status": "200",
+      "observed_at": "2026-10-17T13:12:12Z",
+      "sha256": "eeaed29b569d60709d5e9a81992d270490922a61316ad8825372fb32a4137af9",
+      "raw_committed": false
+    },
+    {
+      "id": "journal_context",
+      "citation": "AISC Engineering Journal 26(3), third quarter 1989, pages 96-101, Variation of Lift Load Distribution Due to Sling Length Tolerance; Computer Model and Analyses; Design Methods; Figure 3",
+      "url": "https://ej.aisc.org/index.php/engj/article/download/524/523",
+      "http_status": "200",
+      "observed_at": "2026-10-17T13:12:23Z",
+      "sha256": "2874b13e434be16fdba2ed8481857d812a6c785c1faf5eb9d036a38537685e31",
+      "raw_committed": false
+    }
+  ],
+  "family_qa": {
+    "status": "NOT_CLEARED",
+    "audited_register": "src/digitalmodel/marine_ops/installation/docs/agent-pack.md, section 5",
+    "basis": "Unit success is separate from engineering clearance; G2 independent engineering hook/per-sling receipts and G5 clearance receipts are missing. Solver-dependent family gates are outside this authorized static calculator job.",
+    "base_comparison": "The same uncleared family register exists at base and is unchanged by this job.",
+    "licensed_execution": "NOT_RUN: explicitly prohibited by task"
+  },
+  "evidence_limits": [
+    "Only supplied CoG corners are evaluated, not a continuous-envelope maximum",
+    "Small-displacement horizontal convex reference geometry only; payload warp limited to centred rectangles",
+    "Published catalog example validates inclined two-leg equilibrium only, not indeterminate skew or flexible-frame response",
+    "Code minimum is explicit illustrative input; no standards-derived default or diameter table supplied",
+    "Shared source catalogs were unavailable at the known metadata locations; publisher URLs and response hashes identify the fetched sources",
+    "No physical experimental validation, licensed solver execution, or formal engineering clearance"
+  ]
+}
