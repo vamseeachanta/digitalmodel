@@ -1266,15 +1266,15 @@ Links:
   LinearSpring: false
   SpringLength, SpringTension:
   - - 0
-    - 2300
+    - 2794.5
   - - 4
-    - 2800
+    - 3402.0
   - - 8
-    - 3000
+    - 3645.0000000000005
   - - 12
-    - 3200
+    - 3888.0000000000005
   - - 16
-    - 3600
+    - 4374.0
   LinearDamper: true
   DampingConstant: 5
 - Name: Tens_FWD
@@ -1291,15 +1291,15 @@ Links:
   LinearSpring: false
   SpringLength, SpringTension:
   - - 0
-    - 2300
+    - 2794.5
   - - 4
-    - 2800
+    - 3402.0
   - - 8
-    - 3000
+    - 3645.0000000000005
   - - 12
-    - 3200
+    - 3888.0000000000005
   - - 16
-    - 3600
+    - 4374.0
   LinearDamper: true
   DampingConstant: 5
 - Name: Tens_STBD
@@ -1316,15 +1316,15 @@ Links:
   LinearSpring: false
   SpringLength, SpringTension:
   - - 0
-    - 2300
+    - 2794.5
   - - 4
-    - 2800
+    - 3402.0
   - - 8
-    - 3000
+    - 3645.0000000000005
   - - 12
-    - 3200
+    - 3888.0000000000005
   - - 16
-    - 3600
+    - 4374.0
   LinearDamper: true
   DampingConstant: 5
 - Name: Tens_PORT
@@ -1341,15 +1341,15 @@ Links:
   LinearSpring: false
   SpringLength, SpringTension:
   - - 0
-    - 2300
+    - 2794.5
   - - 4
-    - 2800
+    - 3402.0
   - - 8
-    - 3000
+    - 3645.0000000000005
   - - 12
-    - 3200
+    - 3888.0000000000005
   - - 16
-    - 3600
+    - 4374.0
   LinearDamper: true
   DampingConstant: 5
 Winches:

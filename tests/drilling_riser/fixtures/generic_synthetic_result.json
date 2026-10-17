@@ -11,5 +11,10 @@
   "stress_max_mpa": 100.0,
   "solver_version": "synthetic",
   "native_state": "SimulationStopped",
-  "wall_seconds": 2.0
+  "wall_seconds": 2.0,
+  "support_intact_min_kn": 12000,
+  "support_loss_min_kn": 9000,
+  "bottom_sum_min_kn": 300,
+  "member_min_kn": 1,
+  "table_clearance_min_m": 1
 }

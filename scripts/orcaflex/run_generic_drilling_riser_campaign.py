@@ -20,10 +20,11 @@ import time
 from typing import Any, Callable
 
 import yaml
+from digitalmodel.drilling_riser.generic_tension_channels import FIELDS, extract
 
 METRICS = ('lower_mean_deg', 'lower_max_deg', 'upper_mean_deg', 'upper_max_deg',
-           'top_min_kn', 'top_max_kn', 'stroke_min_m', 'stroke_max_m', 'stress_max_mpa')
-EXTRACTION_VERSION = 'connection-angles-vertical-ring-1'
+           'top_min_kn', 'top_max_kn', 'stroke_min_m', 'stroke_max_m', 'stress_max_mpa', *FIELDS)
+EXTRACTION_VERSION = 'connection-angles-tension-ab-2'
 LICENCE_EXIT = 12
 CONFIGURATION_EXIT = 13
 # Current ramp from drilling_riser/campaign.py::CURRENT_RAMP / _statics_path.
@@ -49,12 +50,14 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 def input_digest(campaign: Path, case_id: str) -> str:
     """Bind model components, criteria and extraction implementation."""
     files = [campaign / 'case-table.yml', Path(__file__)]
+    folder = Path(__file__).resolve().parents[2] / 'src/digitalmodel/drilling_riser'
+    files.extend(folder / name for name in ('generic_tension_channels.py', 'generic_tension.py'))
     files.extend(sorted((campaign / 'models' / case_id).rglob('*.yml')))
     if len(files) < 5:
         raise ValueError('Incomplete generated model')
     identity = hashlib.sha256(EXTRACTION_VERSION.encode('ascii'))
     for path in files:
-        label = path.name if path == Path(__file__) else path.relative_to(campaign).as_posix()
+        label = path.relative_to(campaign).as_posix() if path.is_relative_to(campaign) else path.name
         identity.update(label.encode('utf-8') + b'\0' + path.read_bytes() + b'\0')
     return identity.hexdigest()
 
@@ -78,7 +81,7 @@ def validate_result(result: dict[str, Any]) -> None:
 def criterion_rows(result: dict[str, Any], criteria: dict[str, Any]) -> list[tuple]:
     """Criterion, component, demand, limit, unit, utilization; all checks active."""
     limit = {key: entry['value'] for key, entry in criteria.items()}
-    for key in ('mean_angle_deg', 'max_angle_deg', 'min_top_tension_kn', 'stress_limit_mpa'):
+    for key in ('mean_angle_deg', 'max_angle_deg', 'tsrmin_kn', 'ws_kn', 'stress_limit_mpa'):
         if isinstance(limit[key], bool) or not isinstance(limit[key], (int, float)) or not math.isfinite(limit[key]) or limit[key] <= 0:
             raise ValueError('Criteria must be finite and positive')
     if not (not isinstance(limit['stroke_min_m'], bool) and not isinstance(limit['stroke_max_m'], bool)
@@ -92,9 +95,16 @@ def criterion_rows(result: dict[str, Any], criteria: dict[str, Any]) -> list[tup
             demand = result[f'{joint}_{stat}_deg']
             bound = limit[f'{stat}_angle_deg']
             rows.append((f'{stat} angle', joint + ' flex joint', demand, bound, 'degrees', demand / bound))
-    tension = result['top_min_kn']
-    rows.append(('minimum tension', 'riser top', tension, limit['min_top_tension_kn'], 'kN',
-                 limit['min_top_tension_kn'] / tension if tension > 0 else math.inf))
+    for label, metric, bound in (
+            ('check A intact', 'support_intact_min_kn', limit['tsrmin_kn']),
+            ('check B one link lost', 'support_loss_min_kn', limit['tsrmin_kn']),
+            ('check A bottom', 'bottom_sum_min_kn', (limit['fwt']-1)*limit['ws_kn']),
+            ('check A member nonnegative', 'member_min_kn', 0.0),
+            ('spring table containment', 'table_clearance_min_m', 0.0)):
+        demand = result[metric]
+        ratio = (bound/demand if demand > 0 else math.inf) if bound > 0 else (1-demand/(abs(demand)+1))
+        rows.append((label, 'connected riser assembly', demand, bound,
+                     'm' if metric.endswith('_m') else 'kN', ratio))
     for stat in ('min', 'max'):
         demand, bound = result[f'stroke_{stat}_m'], limit[f'stroke_{stat}_m']
         ratio = demand / bound
@@ -160,9 +170,12 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     except Exception as exc:
         raise ConfigurationError(f'Solver interface not importable ({type(exc).__name__})') from exc
     reference_z = ring_reference_z(model_path)
+    basis = yaml.safe_load((model_path.parents[2] / 'case-table.yml').read_text(
+        encoding='utf-8'))['tension_basis']
     try:
         model = OrcFxAPI.Model(str(model_path))
         calculate_staged_statics(model)
+        static_tension = extract(model, None, OrcFxAPI.oeEndB, static=True, basis=basis)
         model.RunSimulation()
         if getattr(model.state, 'name', '') != 'SimulationStopped':
             raise ValueError('Dynamics did not complete normally')
@@ -185,8 +198,10 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
         stress = [float(v) / 1000 for v in model['Riser'].RangeGraph('Max von Mises stress', period).Max]
         if not stress or not all(math.isfinite(v) for v in stress):
             raise ValueError('Empty or nonfinite stress channel')
-        result = {'lower_mean_deg': sum(lower) / len(lower), 'lower_max_deg': max(lower),
-            'upper_mean_deg': sum(upper) / len(upper), 'upper_max_deg': max(upper),
+        dynamic_tension = extract(model, period, OrcFxAPI.oeEndB, basis=basis)
+        tension_evidence = {key: min(static_tension[key], dynamic_tension[key]) for key in FIELDS}
+        result = {**tension_evidence, 'lower_mean_deg': math.fsum(lower) / len(lower), 'lower_max_deg': max(lower),
+            'upper_mean_deg': math.fsum(upper) / len(upper), 'upper_max_deg': max(upper),
             'top_min_kn': min(tension), 'top_max_kn': max(tension),
             'stroke_min_m': min(stroke), 'stroke_max_m': max(stroke), 'stress_max_mpa': max(stress),
             'solver_version': str(OrcFxAPI.DLLVersion()), 'native_state': 'SimulationStopped',
