@@ -112,6 +112,9 @@ modules:
       postprocess:
         agent_pack: src/digitalmodel/drilling_riser/postprocess/docs/agent-pack.md
         qa_family: MR
+      stackup_drawing:
+        agent_pack: src/digitalmodel/drilling_riser/stackup_drawing/docs/agent-pack.md
+        qa_family: MR
   - module: fatigue
     entry_point: src/digitalmodel/fatigue/
     submodules:
