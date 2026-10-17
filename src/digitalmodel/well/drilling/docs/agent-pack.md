@@ -5,7 +5,7 @@
 | Module | well/drilling |
 | Repository | digitalmodel |
 | Package path | src/digitalmodel/well/drilling |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | bb18c1a346b31b4ce975befa41fc84d9a5ff29e5 |
 | Analysis family | Engineering calculations (EC); AQG r0 Python calculations |
 | Quality manager role | Engineering calculations quality manager |
@@ -68,7 +68,7 @@ There is no spatial coordinate or phase input in the steady hydraulics interface
 | Dysfunction flags | Torque coefficient of variation, ROP jump, relative MSE, joint torque/weight jump, flow/pit increase | Threshold classifier, not a calibrated incident probability model; `DysfunctionDetector` [src/digitalmodel/well/drilling/dysfunction_detector.py:L196-L258] [src/digitalmodel/well/drilling/dysfunction_detector.py:L260-L495] |
 | Pore pressure | Eaton log-ratio relation; Bowers loading-curve inversion; between-method scatter combined with assumed model spread; optional calibration | Code names Eaton (1975), SPE 5544; Bowers (1995), SPE 27488; `eaton_pore_pressure`, `bowers_pore_pressure`, `combine_methods`, `calibrate` [src/digitalmodel/well/drilling/pore_pressure.py:L1-L2] [src/digitalmodel/well/drilling/pore_pressure.py:L281-L298] [src/digitalmodel/well/drilling/pore_pressure.py:L333-L434] |
 | Drilling window | Pore P90 plus kick margin to fracture P10 minus loss margin; dynamic ceiling reduced by ECD increment | `safe_drilling_window`; interval feasibility requires positive width, rather than a general operational qualification [src/digitalmodel/well/drilling/pore_pressure.py:L195-L217] [src/digitalmodel/well/drilling/pore_pressure.py:L437-L490] |
-| Dual gradient | Single column versus two density columns; algebraic MW bounds, sampled interval intersection, greedy casing seats, riser-loss EMW | API RP 92 is named without suffix, edition or clause; `DualGradientScreen.bhp_dual_gradient`, `mud_weight_bounds`, `casing_design`, `riser_margin` [src/digitalmodel/well/drilling/dual_gradient.py:L1-L2] [src/digitalmodel/well/drilling/dual_gradient.py:L289-L350] [src/digitalmodel/well/drilling/dual_gradient.py:L368-L458] |
+| Dual gradient | Single column versus two density columns; algebraic MW bounds, sampled interval intersection, greedy casing seats, riser-loss EMW | API RP 92 is named without suffix, edition or clause; SPE/IADC 79880 and an author-attributed paper are also code-named, unverified references; `DualGradientScreen.bhp_dual_gradient`, `mud_weight_bounds`, `casing_design`, `riser_margin` [src/digitalmodel/well/drilling/dual_gradient.py:L1-L2] [src/digitalmodel/well/drilling/dual_gradient.py:L289-L350] [src/digitalmodel/well/drilling/dual_gradient.py:L368-L458] |
 | Bore design | Fixed casing/cost/production/risk tables; linear water-depth cost multiplier and objective decision matrix | `WellDesign`; code attributes casing data to #1958, whose current issue topic does not establish casing-data provenance; issue pending (1) [src/digitalmodel/well/drilling/well_bore_design.py:L8-L22] [src/digitalmodel/well/drilling/well_bore_design.py:L77-L157] [src/digitalmodel/well/drilling/well_bore_design.py:L208-L296] |
 
 UNVERIFIED: API RP 13D and API RP 92 titles, editions and clause/table identifiers are not established by the package references; clause text not checked against the licensed copy; no edition conflict can be resolved from these references; issue pending (1). [src/digitalmodel/well/drilling/hydraulics.py:L1-L2] [src/digitalmodel/well/drilling/swab_surge.py:L1-L2] [src/digitalmodel/well/drilling/dual_gradient.py:L1-L2]
@@ -76,7 +76,7 @@ UNVERIFIED: Standards compliance and independent calibration of the friction, RO
 
 ## 4. Validated worked examples and regression examples
 
-Offline results are recorded against the code pin; the command form is `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`, without an addopts override. BASE and AFTER each passed all 182 nodes at the header code pin; the after run used byte-identical test/input copies outside the checkout, retaining the package source pin. The isolated swab/surge baseline additionally passed all 10 nodes.
+Calculation sources remain byte-identical to the header code pin. The seven-file command in EC1 passed all 182 nodes at BASE and AFTER, with 0 failures and 0 skips, without an addopts override. Both runs used test and input copies outside the checkout, checked against their respective source trees; AFTER includes the strengthened EC11 assertions. The swab/surge workflow is included in both runs.
 The closed-form identity below qualifies only its limiting case; repeated implementation formulas and synthetic threshold examples remain regression evidence.
 
 | Case | Category and source | Inputs / expected quantity and tolerance | Existing test node ID | Offline result |
@@ -92,7 +92,7 @@ The closed-form identity below qualifies only its limiting case; repeated implem
 
 ## 5. QA gates
 
-The following are pack requirements under AQG r0, Python calculations; the criteria preserve the existing test assertions and do not qualify undocumented empirical parameters.
+AQG r0 (Python calculations) is maintained outside this repository; its source is unavailable in this checkout. The following pack criteria retain the numerical regression assertions and add a package-output count and field-completeness check; they do not qualify undocumented empirical parameters.
 
 | Gate | Applicability | Module-specific check IDs and route |
 |---|---|---|
@@ -101,12 +101,12 @@ The following are pack requirements under AQG r0, Python calculations; the crite
 | G2 | Applicable: hand or published check | EC2 limiting-case identity; EC3–EC10 additionally retain regression checks |
 | G3 | NOT_APPLICABLE: steady algebra and threshold classification do not perform short dynamics | No dynamic solver is used by the package methods |
 | G4 | NOT_APPLICABLE: no diffraction body, radiation coefficients or panel mesh | No diffraction interface in this pack |
-| G5 | NOT_APPLICABLE: no QA appendix is generated by these pressure-calculation routes | EC11; pack-record counts are documentation evidence only |
+| G5 | Applicable: package-output count and unit-bearing field completeness | EC11; each pressure router writes one JSON summary with the expected unit-bearing result fields |
 
 | Check | Definition, numeric pass criterion and unit | Executable evidence | Gate |
 |---|---|---|---|
 | EC0 | Hydraulics invalid hole geometry shall raise ValueError; 0 accepted invalid cases (count) | `tests/well/drilling/test_hydraulics.py::TestWellboreHydraulicsConstruction::test_hole_must_be_larger_than_pipe_od` [tests/well/drilling/test_hydraulics.py:L67-L78] | G0 |
-| EC1 | All 182 listed module test functions shall collect; 0 unexpected failures (count) | `tests/well/drilling and the three tests/well/test_* files listed in section 10` [tests/well/test_dual_gradient.py:L1-L18] | G1 |
+| EC1 | All 182 listed module test functions shall collect; 0 unexpected failures (count) | `PYTHONPATH=src python -m pytest tests/well/drilling/test_hydraulics.py tests/well/drilling/test_rop_models.py tests/well/drilling/test_well_bore_design.py tests/well/drilling/test_dysfunction_detector.py tests/well/test_pore_pressure.py tests/well/test_swab_surge.py tests/well/test_dual_gradient.py -q -rA -p no:cacheprovider --basetemp="$TMPDIR/drilling-tests"` [tests/well/test_dual_gradient.py:L1-L18] | G1 |
 | EC2 | Eaton ratio-one pressure shall equal 8.6 ppg with relative error ≤ 1e-6 (dimensionless); limiting case only | `tests/well/test_pore_pressure.py::test_eaton_resistivity_normal_trend_gives_normal_pressure` [tests/well/test_pore_pressure.py:L33-L41] | G2 |
 | EC3 | Annular velocity shall match the R1 expression within relative error 1e-6 (dimensionless) | `tests/well/drilling/test_hydraulics.py::TestAnnularVelocity::test_formula_correctness` [tests/well/drilling/test_hydraulics.py:L147-L160] | G2 |
 | EC4 | ECD shall match the R2 expression within relative error 1e-6 (dimensionless) | `tests/well/drilling/test_hydraulics.py::TestECD::test_ecd_equals_mud_weight_plus_friction_component` [tests/well/drilling/test_hydraulics.py:L271-L276] | G2 |
@@ -116,7 +116,9 @@ The following are pack requirements under AQG r0, Python calculations; the crite
 | EC8 | Balanced-flow test shall return 0 kick events (count); this does not test invalid telemetry | `tests/well/drilling/test_dysfunction_detector.py::TestKickDetection::test_kick_false_positive_balanced_flow` [tests/well/drilling/test_dysfunction_detector.py:L442-L449] | G2 |
 | EC9 | Big-hole lookup shall return exactly 4 casing strings (count); this does not qualify physical or commercial assumptions | `tests/well/drilling/test_well_bore_design.py::TestCasingProgram::test_big_hole_casing_count` [tests/well/drilling/test_well_bore_design.py:L72-L74] | G2 |
 | EC10 | Closed pore/fracture window shall report dynamic infeasibility and 0 recommended weights (count; None sentinel) | `tests/well/test_pore_pressure.py::test_infeasible_window_when_pore_exceeds_fracture` [tests/well/test_pore_pressure.py:L241-L246] | G2 |
-| EC11 | `NOT_APPLICABLE`: these calculation routes do not generate a QA appendix; node, pin and registry counts do not qualify their pressure outputs. | No package-output acceptance is claimed by this check. | G5 |
+| EC11 | Each pore-pressure and dual-gradient router run shall write exactly 1 JSON summary (count), with 0 missing unit-bearing fields (count) in the expected result groups; parsed results shall equal returned results. | `PYTHONPATH=src python -m pytest tests/well/test_pore_pressure.py::test_router_runs_example_and_writes_summary tests/well/test_dual_gradient.py::test_router_runs_and_writes_summary -q -rA -p no:cacheprovider --basetemp="$TMPDIR/drilling-summaries"` [src/digitalmodel/well/drilling/pore_pressure.py:L568-L581] [src/digitalmodel/well/drilling/dual_gradient.py:L484-L493] | G5 |
+
+EC11 uses the two router tests strengthened with this pack revision, rather than claiming those assertions existed at the code pin. The pore-pressure test checks both distributions and the drilling window; the dual-gradient test checks geometry, casing arrays, minimum windows, riser margin and every pressure-profile point. Each runs in an empty temporary directory. Presence and non-null values establish output completeness for these fixtures, not physical validity or standards compliance. Run the seven-file command in a temporary copy of the tests and example inputs because the swab/surge workflow writes output beside its input.
 
 ## 6. Known failure modes and pitfalls
 
@@ -124,8 +126,8 @@ The sweep includes intentional boundary behaviour and internal numeric conversio
 The reproducible searches are:
 
 ```bash
-rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|float\(|int\(' src/digitalmodel/well/drilling
-rg -n '\.get\(|or \{\}|max\(|min\(|unit|Units|ft|ppg|psi|gal|inch|cp' src/digitalmodel/well/drilling --glob '*.py'
+git grep -n -E 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|float\(|int\(' bb18c1a346b31b4ce975befa41fc84d9a5ff29e5 -- 'src/digitalmodel/well/drilling/*.py'
+git grep -n -E '\.get\(|or \{\}|max\(|min\(|unit|Units|ft|ppg|psi|gal|inch|cp' bb18c1a346b31b4ce975befa41fc84d9a5ff29e5 -- 'src/digitalmodel/well/drilling/*.py'
 ```
 
 The first table inventories every AST exception handler, continue, empty/None/literal-zero return and `float`/`int` call; the second records defaults, clamps, unit conventions and related summary paths.
@@ -141,11 +143,11 @@ No cache API or empty-result cache write is present in these eight files; summar
 | S006: numeric conversion | Numeric argument/result coercion; no locale normalization or explicit finiteness guard at this site. [src/digitalmodel/well/drilling/dual_gradient.py:L278-L278] | no detection check exists for non-finite arguments; issue pending (2). |
 | S007: numeric conversion | Numeric argument/result coercion; no locale normalization or explicit finiteness guard at this site. [src/digitalmodel/well/drilling/dual_gradient.py:L280-L280] | no detection check exists for non-finite arguments; issue pending (2). |
 | S008: numeric conversion | Numeric argument/result coercion; no locale normalization or explicit finiteness guard at this site. [src/digitalmodel/well/drilling/dual_gradient.py:L281-L281] | no detection check exists for non-finite arguments; issue pending (2). |
-| S009: numeric conversion | Internal negative infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L346-L346] | No input parsing at this site; bounds audit: issue pending (4). |
-| S010: numeric conversion | Internal positive infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L346-L346] | No input parsing at this site; bounds audit: issue pending (4). |
-| S011: numeric conversion | Internal infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L361-L361] | No input parsing at this site; bounds audit: issue pending (4). |
-| S012: numeric conversion | Internal infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L391-L391] | No input parsing at this site; bounds audit: issue pending (4). |
-| S013: numeric conversion | Internal infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L392-L392] | No input parsing at this site; bounds audit: issue pending (4). |
+| S009: numeric conversion | Internal negative infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L346-L346] | no detection check exists for bound-sentinel consumption; issue pending (4). |
+| S010: numeric conversion | Internal positive infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L346-L346] | no detection check exists for bound-sentinel consumption; issue pending (4). |
+| S011: numeric conversion | Internal infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L361-L361] | no detection check exists for bound-sentinel consumption; issue pending (4). |
+| S012: numeric conversion | Internal infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L391-L391] | no detection check exists for bound-sentinel consumption; issue pending (4). |
+| S013: numeric conversion | Internal infinite bound sentinel; not an external-text parser. [src/digitalmodel/well/drilling/dual_gradient.py:L392-L392] | no detection check exists for bound-sentinel consumption; issue pending (4). |
 | S014: numeric conversion | Numeric coercion of config/telemetry or derived statistics; locale separators and non-finite telemetry are not explicitly normalized here. [src/digitalmodel/well/drilling/dual_gradient.py:L469-L469] | no detection check exists for locale/non-finite input; issue pending (2). |
 | S015: numeric conversion | Numeric coercion of config/telemetry or derived statistics; locale separators and non-finite telemetry are not explicitly normalized here. [src/digitalmodel/well/drilling/dual_gradient.py:L470-L470] | no detection check exists for locale/non-finite input; issue pending (2). |
 | S016: numeric conversion | Numeric coercion of config/telemetry or derived statistics; locale separators and non-finite telemetry are not explicitly normalized here. [src/digitalmodel/well/drilling/dual_gradient.py:L471-L471] | no detection check exists for locale/non-finite input; issue pending (2). |
@@ -326,8 +328,9 @@ No cache API or empty-result cache write is present in these eight files; summar
 | U058 | Swab/surge assumes field-unit geometry, rheology, velocity and pressure without dimensional input tags. [src/digitalmodel/well/drilling/swab_surge.py:L36-L37] | no detection check exists for unit mismatch; issue pending (2). |
 | U059 | Bore design mixes geometry in inches, depths in metres and commercial outputs in USD; no unit-bearing input schema. [src/digitalmodel/well/drilling/well_bore_design.py:L30-L74] | no detection check exists for unit mismatch; issue pending (2). |
 | U060 | Severity labels use fixed coefficient-of-variation multipliers rather than measurement uncertainty. [src/digitalmodel/well/drilling/dysfunction_detector.py:L524-L531] | EC1 tests severity labels only; independent qualification: issue pending (1). |
+| U061 | Negative pore/fracture margins are clamped to zero pressure allowance before trip-speed inversion. [src/digitalmodel/well/drilling/swab_surge.py:L222-L231] | EC5 checks an ordinary positive window; no detection check exists for negative-margin status; issue pending (3). |
 
-sweep: 190 found (130 AST sites and 60 assumption/fallback groups).
+sweep: 191 found (130 AST sites and 61 assumption/fallback groups).
 
 The feature-origin issues #1034, #1036 and #1037 are retained as context rather than confirmed incident reports; EC10, EC5 and EC6 respectively exercise their window, trip-speed and pressure routes. [tests/well/test_pore_pressure.py:L241-L246] [tests/well/test_swab_surge.py:L81-L94] [tests/well/test_dual_gradient.py:L69-L76]
 Confirmed reference defect: the bore-design source comment points at #1958; the issue content inspected for that number concerns test coverage configuration rather than a casing-data source; no detection check exists; issue pending (1). [src/digitalmodel/well/drilling/well_bore_design.py:L8-L22]
@@ -357,7 +360,7 @@ The pore-pressure, dual-gradient and swab/surge example inputs are consumed by t
 
 ### Implementation-map inventory and acceptance
 
-Map ref: `codex/implmap-work`, commit `bb18c1a346b31b4ce975befa41fc84d9a5ff29e5`; map data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`; the inspected map bytes equal the map at the pack code pin. [docs/registry/implementation-map.yaml:L1-L3]
+Map: `docs/registry/implementation-map.yaml` at code pin `bb18c1a3` (byte-identical to `codex/implmap-work` at `3256bab9`); data revision `270c8759`. [docs/registry/implementation-map.yaml:L1-L3]
 The inventory of implementations for package map families is empty: no family has an `implementations` row under this package, across the map's thirteen families; rejected candidates are not implementation rows. [docs/registry/implementation-map.yaml:L345-L365] [docs/registry/implementation-map.yaml:L44737-L44743] [docs/registry/implementation-map.yaml:L50855-L50861] [docs/registry/implementation-map.yaml:L53214-L53220]
 Counted families: 0; counted-family grep: NOT_APPLICABLE because no map family has in-package implementation rows; further counted second implementations: 0; A8 inventory passes with that reason.
 The exact inventory operation is:
@@ -372,7 +375,7 @@ module_families = [f for f in families if any(
 Repository-wide further discovery includes scripts and uses:
 
 ```bash
-git grep -n -E 'annular_velocity|239400|eaton_pore_pressure|bowers_pore_pressure|BourgoineYoungROP|WarrenROP|DualGradientScreen|DysfunctionDetector|class SwabSurge|class WellDesign' HEAD -- .
+git grep -n -E 'annular_velocity|239400|eaton_pore_pressure|bowers_pore_pressure|BourgoineYoungROP|WarrenROP|DualGradientScreen|DysfunctionDetector|class SwabSurge|class WellDesign' bb18c1a346b31b4ce975befa41fc84d9a5ff29e5 -- .
 ```
 
 Map follow-up: annular hydraulics/ECD/transport, swab/surge, ROP prediction/fitting, dysfunction classification, pore-pressure ensembles/windows, dual-gradient/casing screening and bore-design lookups shall be added before these families become counted; issue pending (5).
