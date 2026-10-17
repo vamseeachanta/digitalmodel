@@ -402,6 +402,9 @@ modules:
       drilling:
         agent_pack: src/digitalmodel/well/drilling/docs/agent-pack.md
         qa_family: EC
+      tubulars:
+        agent_pack: src/digitalmodel/well/tubulars/docs/agent-pack.md
+        qa_family: EC
       well:
         agent_pack: src/digitalmodel/well/docs/agent-pack.md
         qa_family: EC
