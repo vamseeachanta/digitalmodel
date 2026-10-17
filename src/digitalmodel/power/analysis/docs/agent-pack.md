@@ -5,7 +5,7 @@
 | Module | power/analysis |
 | Repository | digitalmodel |
 | Path | src/digitalmodel/power/analysis |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | 0f7510691e577765c3cd754970b398a4531f367c |
 | Analysis family | Engineering calculations (EC) |
 | QM role | Engineering calculations quality manager |
@@ -71,20 +71,20 @@ The closed-form matrix cases are local algebra checks, not a published network b
 
 ## 5. QA gates
 
-AQG r0, section 10, Python calculations supplies G0 inputs/units/citations, G1 imports/tests and G2 hand or published check; G3 and G4 are NOT_APPLICABLE, and G5 applies to evidence packaging (AQG r0, sections 9–10).
+AQG r0, section 10, Python calculations supplies G0 inputs/units/citations, G1 imports/tests and G2 hand or published check; G3 and G4 are NOT_APPLICABLE, and G5 applies to the solver output used in a report (AQG r0, sections 9–10).
 
 | Gate | Check ID | Executable check and numerical pass criterion | Evidence |
 | --- | --- | --- | --- |
-| G0 | C0 | TestBus.test_bus_defaults: voltage=1.0 pu, angle=0.0 rad, each power default=0.0 pu and limits=0.9/1.1 pu, 0 failed assertions | tests/power/analysis/test_load_flow.py::TestBus::test_bus_defaults [tests/power/analysis/test_load_flow.py:L45-L55] |
-| G0 | C1 | TestBranch.test_branch_defaults: b=0.0 pu, tap=1.0 ratio, 0 failed assertions | tests/power/analysis/test_load_flow.py::TestBranch::test_branch_defaults [tests/power/analysis/test_load_flow.py:L83-L87] |
-| G0 | C2 | Invalid voltage minimum/range, zero impedance, negative tap, missing/multiple slack and duplicate IDs each raise ValueError; 7 cases, 0 missing exceptions (count) | TestBus, TestBranch, TestNetwork validation tests [tests/power/analysis/test_load_flow.py:L71-L77] [tests/power/analysis/test_load_flow.py:L93-L142] |
+| G0 | C0 | Bus constructor, TestBus.test_bus_defaults: voltage=1.0 pu, angle=0.0 rad, each power default=0.0 pu and limits=0.9/1.1 pu, 0 failed assertions | tests/power/analysis/test_load_flow.py::TestBus::test_bus_defaults [tests/power/analysis/test_load_flow.py:L45-L55] |
+| G0 | C1 | Branch constructor, TestBranch.test_branch_defaults: b=0.0 pu, tap=1.0 ratio, 0 failed assertions | tests/power/analysis/test_load_flow.py::TestBranch::test_branch_defaults [tests/power/analysis/test_load_flow.py:L83-L87] |
+| G0 | C2 | Bus, Branch and Network constructors: invalid voltage minimum/range, zero impedance, negative tap, missing/multiple slack and duplicate IDs each raise ValueError; 7 cases, 0 missing exceptions (count) | TestBus, TestBranch, TestNetwork validation tests [tests/power/analysis/test_load_flow.py:L71-L77] [tests/power/analysis/test_load_flow.py:L93-L142] |
 | G1 | C3 | Import digitalmodel.power.analysis.load_flow through tests/power/analysis/test_load_flow.py; 32 passed, 0 failed, 0 skipped (tests); no target-program load route is needed for this in-memory Python API | [tests/power/analysis/test_load_flow.py:L18-L26] [tests/power/analysis/test_load_flow.py:L32-L386] |
 | G2 | C4 | build_ybus row sums=0 pu admittance to decimal=10; off-diagonal reciprocal and shunt checks use NumPy default decimal=7, with missing edge <1e-12 pu | Three validated test nodes in section 4 [tests/power/analysis/test_load_flow.py:L178-L212] |
 | G2 | C5 | solve_power_flow three-bus active balance absolute error <=1e-4 pu; slack voltage/angle absolute tolerance 1e-8 pu/degree; PV voltage tolerance 1e-6 pu | tests/power/analysis/test_load_flow.py::TestSolverConvergence::test_3bus_power_balance and fixed-voltage tests [tests/power/analysis/test_load_flow.py:L225-L255] |
 | G2 | C6 | max_iter=1 yields converged=False and iterations=1 (count); three/five-bus convergence <20 iterations; five-bus losses >=-1e-10 pu | tests/power/analysis/test_load_flow.py::TestSolverNonConvergence::test_max_iterations_exceeded and convergence/loss tests [tests/power/analysis/test_load_flow.py:L219-L223] [tests/power/analysis/test_load_flow.py:L258-L264] [tests/power/analysis/test_load_flow.py:L291-L315] |
 | G3 | NOT_APPLICABLE | No time-domain integration in the solve; 0 dynamic states are advanced by the Newton updates | [src/digitalmodel/power/analysis/load_flow.py:L367-L374] |
 | G4 | NOT_APPLICABLE | Electrical bus/branch API has no diffraction mesh; 0 mesh inputs | [src/digitalmodel/power/analysis/load_flow.py:L130-L146] |
-| G5 | C7 | Record code pin, all 5 section-4 results and all 8 applicable check IDs C0–C7; 0 missing records (count); second-provider clearance required before use as cleared guidance | Section 4 and this table; AQG r0 sections 9–11 |
+| G5 | C7 | For solve_power_flow output used in a report, require PowerFlowResult.converged is True, len(bus_results) equals the number of input buses and len(branch_results) equals the number of input branches (0 missing records, count); every bus record contains v_pu, angle_deg, p_net_pu and q_net_pu, and every branch record contains p_loss_pu (0 missing keys, count). Record the supplied tol (pu mismatch) and returned iterations (count) with the result and code pin; second-provider clearance is required before use as cleared guidance | tests/power/analysis/test_load_flow.py::TestResultFormat::test_bus_result_keys; tests/power/analysis/test_load_flow.py::TestResultFormat::test_branch_result_keys; tests/power/analysis/test_load_flow.py::TestResultFormat::test_result_bus_count; tests/power/analysis/test_load_flow.py::TestFiveBusSystem::test_5bus_branch_results_count; convergence is checked by C6 [tests/power/analysis/test_load_flow.py:L291-L307] [tests/power/analysis/test_load_flow.py:L361-L386] |
 
 ## 6. Known failure modes and pitfalls
 
@@ -93,8 +93,8 @@ sweep: 21 found
 The sweep covers both package Python files; the rows count distinct defaults, unit assumptions, conversion sites and return-path risks, rather than raw grep lines. [src/digitalmodel/power/analysis/load_flow.py:L69-L89] [src/digitalmodel/power/analysis/load_flow.py:L112-L126] [src/digitalmodel/power/analysis/load_flow.py:L219-L440]
 
 ```sh
-rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|int\(|float\(|cache|unit' src/digitalmodel/power/analysis
-rg -n 'default|zeros|base_mva|tol|max_iter|v_min|v_max|tap' src/digitalmodel/power/analysis
+rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|int\(|float\(|cache|unit' src/digitalmodel/power/analysis --glob '*.py'
+rg -n 'default|zeros|base_mva|tol|max_iter|v_min|v_max|tap' src/digitalmodel/power/analysis --glob '*.py'
 ```
 
 | Site at code pin | Symptom / interpretation | Detection check or gap | Tracking |
@@ -141,7 +141,7 @@ Status remains DRAFT pending independent-provider review (AQG r0, section 11).
 Runtime dependencies are Python standard-library math/dataclasses/enum/typing and NumPy; module tests additionally import pytest. [src/digitalmodel/power/analysis/load_flow.py:L13-L20] [tests/power/analysis/test_load_flow.py:L13-L16]
 The tested caller route imports Bus, Branch, Network, build_ybus and solve_power_flow directly; no upstream dataset or licensed solver version is specified by this API. [tests/power/analysis/test_load_flow.py:L18-L26] [src/digitalmodel/power/analysis/load_flow.py:L130-L146] [src/digitalmodel/power/analysis/load_flow.py:L219-L242]
 
-Implementation-map revision: 3256bab95f84da3d9fadce8d5dcf8458d66d1eb4; map data revision: 270c8759c374b67a7f032953e7fcdb14e0224461; source: docs/registry/implementation-map.yaml on codex/implmap-work.
+Implementation-map revision: 3256bab95f84da3d9fadce8d5dcf8458d66d1eb4; map data revision: 270c8759c374b67a7f032953e7fcdb14e0224461; source: docs/registry/implementation-map.yaml; the map blob is identical at the code pin.
 Inventory: 0 confirmed implementation rows inside this package; no map family qualifies for ranking; counted-family grep: NOT_APPLICABLE because there are no in-package implementation rows.
 The map instead places solve_power_flow under rejected candidates with disposition needs_review for external-solver-batch-run-stacks; that candidate is not an implementation row.
 Map follow-up: add explicit admittance assembly, AC power injection, Newton load-flow and branch-flow families with in-package rows; issue pending (4).
@@ -157,7 +157,7 @@ The 32 test functions cover enum/dataclass construction, validation, Y-bus assem
 | --- | --- |
 | UNVERIFIED publication correspondence; no clause, edition for IEEE reference, benchmark network or Citation sidecar basis | issue pending (1); obtain precise public references and a separately sourced solved network before claiming published validation [src/digitalmodel/power/analysis/load_flow.py:L6-L10] [src/digitalmodel/power/analysis/load_flow.py:L161-L182] |
 | Input validation and output qualification: finite inputs, positive base/tolerance/iteration count, connectivity, endpoint validity, voltage-limit and reactive-limit treatment | issue pending (2); current validation is limited to voltage bounds, branch impedance/tap and bus-ID/slack checks [src/digitalmodel/power/analysis/load_flow.py:L80-L89] [src/digitalmodel/power/analysis/load_flow.py:L119-L126] [src/digitalmodel/power/analysis/load_flow.py:L148-L158] |
-| Transformer tap and charging balance reference case | issue pending (3); compare terminal powers with Y-bus injections for a non-unity tap [src/digitalmodel/power/analysis/load_flow.py:L210-L214] [src/digitalmodel/power/analysis/load_flow.py:L415-L424] |
+| Transformer tap and charging balance reference case | issue pending (3); compare terminal powers with Y-bus injections for a non-unity tap with nonzero charging; resolve the sending-shunt expression mismatch as the acceptance case [src/digitalmodel/power/analysis/load_flow.py:L210-L214] [src/digitalmodel/power/analysis/load_flow.py:L415-L424] |
 | Map family coverage and rejected-candidate classification | issue pending (4); add the section-3 method families to the map before applying counted-family grep |
 | Discovery document with identifying names | issue pending (5); neutralize names before linking publicly |
 | Independent-provider clearance and shared lesson entry | issue pending (1); pack remains DRAFT |
