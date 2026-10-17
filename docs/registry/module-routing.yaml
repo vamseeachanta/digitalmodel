@@ -153,6 +153,9 @@ modules:
       diffraction:
         agent_pack: src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md
         qa_family: DF
+      aqwa:
+        agent_pack: src/digitalmodel/hydrodynamics/aqwa/docs/agent-pack.md
+        qa_family: DF
   - module: infrastructure
     entry_point: src/digitalmodel/infrastructure/
     maturity: beta
