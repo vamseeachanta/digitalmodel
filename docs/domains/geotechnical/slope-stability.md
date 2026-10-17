@@ -152,4 +152,4 @@ boundary conditions. See the upstream
 
 xslope is Apache-2.0; gmsh is GPL and is not vendored. Workbooks retain the
 upstream Apache-2.0 licence and notice. See
-[third-party notices](../../../THIRD_PARTY_NOTICES.md).
+[third-party notices](THIRD_PARTY_NOTICES.md).
