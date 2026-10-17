@@ -41,6 +41,9 @@ def read_contract(campaign: Path, expected_hours: float, max_hours: float) -> di
         raise ValueError("Criteria revisions must agree")
     if not isinstance(criteria.get("static_qa"), dict):
         raise ValueError("A static_qa section is required before queue preparation")
+    revision_note = criteria["static_qa"].get("revision_note")
+    if not isinstance(revision_note, str) or not revision_note.strip():
+        raise ValueError("A static_qa revision note is required before queue preparation")
     required = {"source_qualification", "geometry", "force_balance", "native_convergence",
                 "mesh_convergence", "catenary_relative_tolerance", "overbend_strain_limit",
                 "installation_acceptance", "stinger_conformity"}
