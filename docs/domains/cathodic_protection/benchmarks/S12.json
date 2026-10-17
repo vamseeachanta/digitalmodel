@@ -1,0 +1,254 @@
+{
+  "case_id": "S12",
+  "title": "Cathodic protection verification: generic historical bracelet-anode riser",
+  "status": "specification_only",
+  "executable": false,
+  "scope": "Independent generic installed-arrangement verification; sprayed-aluminium and bare zones. Numerical inputs remain undeclared.",
+  "interpretation": "Step 1 takes the narrower reading: source and required-input specification only. It does not register a runnable case or admit a new edition.",
+  "proposed_route": {
+    "calculation_type": "DNV_RP_B401_offshore",
+    "edition": "1993",
+    "initial_modes": [
+      "components",
+      "anode_families"
+    ],
+    "current_support": "unsupported; the existing edition API rejects 1993",
+    "deferred": [
+      "flat and phased modes",
+      "reinforcement",
+      "F103 companion mapping and attenuation",
+      "unqualified geometry or temperature combinations"
+    ]
+  },
+  "source_document": {
+    "document": "DNV RP B401, Cathodic Protection Design",
+    "edition": "1993",
+    "publisher": "Det Norske Veritas",
+    "url": "https://rules.dnv.com/docs/pdf/dnvpm/codes/docs/1993-00/RP-B401.pdf",
+    "catalogue_url": "https://rules.dnv.com/servicedocuments/dnvpm",
+    "sha256": "6e3b0008e41dc030f1a353d3d8d3c18bbb894712ed6992442809e762d2e9f13a",
+    "pdf_pages": 46,
+    "page_convention": "pdf_page is one-based; use the printed page independently of other scans",
+    "verification": "Source located publicly. Table-page images inspected; cell-by-cell transcription and computational qualification remain pending.",
+    "retention": "Reference only; no PDF, page image, standard prose or numerical table is included in this change."
+  },
+  "citations": {
+    "life": {
+      "locator": "6.2.1",
+      "printed_page": 13,
+      "pdf_page": 14
+    },
+    "bare_initial_final": {
+      "locator": "Table 6.3.1",
+      "printed_page": 14,
+      "pdf_page": 15
+    },
+    "bare_mean": {
+      "locator": "Table 6.3.2",
+      "printed_page": 15,
+      "pdf_page": 16
+    },
+    "tsa": {
+      "locator": "6.3.16-6.3.17",
+      "printed_page": 16,
+      "pdf_page": 17
+    },
+    "paint_context": {
+      "locator": "Table 6.4.1",
+      "printed_page": 19,
+      "pdf_page": 20
+    },
+    "capacity": {
+      "locator": "Table 6.6.1; 6.6.2",
+      "printed_page": 20,
+      "pdf_page": 21
+    },
+    "potential": {
+      "locator": "Table 6.6.2; 6.6.5",
+      "printed_page": 21,
+      "pdf_page": 22
+    },
+    "resistance": {
+      "locator": "Table 6.7.1",
+      "printed_page": 22,
+      "pdf_page": 23
+    },
+    "depletion": {
+      "locator": "6.7.2-6.7.7",
+      "printed_page": 23,
+      "pdf_page": 24
+    },
+    "resistivity": {
+      "locator": "6.8; Figure 6.8",
+      "printed_page": 24,
+      "pdf_page": 25
+    },
+    "utilisation": {
+      "locator": "Table 6.9.1",
+      "printed_page": 25,
+      "pdf_page": 26
+    },
+    "scope_area": {
+      "locator": "7.2-7.3",
+      "printed_page": 26,
+      "pdf_page": 27
+    },
+    "demand_drain": {
+      "locator": "7.4-7.5",
+      "printed_page": 27,
+      "pdf_page": 28
+    },
+    "mass_output": {
+      "locator": "7.7-7.8",
+      "printed_page": 28,
+      "pdf_page": 29
+    },
+    "detail": {
+      "locator": "7.9",
+      "printed_page": 29,
+      "pdf_page": 30
+    },
+    "continuity": {
+      "locator": "7.10-7.11",
+      "printed_page": 30,
+      "pdf_page": 31
+    },
+    "reporting": {
+      "locator": "7.12",
+      "printed_page": 31,
+      "pdf_page": 32
+    }
+  },
+  "citation_contract": "Each future standard-derived value records this document and edition, exact table or clause, row/column, unit and page; no later-edition fallback.",
+  "zones": [
+    {
+      "basis": "bare_steel",
+      "citations": [
+        "bare_initial_final",
+        "bare_mean"
+      ]
+    },
+    {
+      "basis": "thermally_sprayed_aluminium",
+      "citations": [
+        "tsa"
+      ]
+    }
+  ],
+  "required_inputs": [
+    {
+      "group": "scope",
+      "fields": [
+        "component type",
+        "design life (years)",
+        "zone area (m2)",
+        "zone depth (m)"
+      ],
+      "citations": [
+        "life",
+        "scope_area"
+      ]
+    },
+    {
+      "group": "environment",
+      "fields": [
+        "seawater temperature (degC)",
+        "metal/electrolyte interface temperature (degC)",
+        "anode temperature (degC)",
+        "electrolyte resistivity (ohm m)",
+        "exposure"
+      ],
+      "citations": [
+        "bare_initial_final",
+        "bare_mean",
+        "tsa",
+        "capacity",
+        "resistivity"
+      ]
+    },
+    {
+      "group": "surface",
+      "fields": [
+        "separate bare and sprayed-aluminium areas (m2)",
+        "sprayed-aluminium thickness (um)",
+        "coating applicability evidence"
+      ],
+      "citations": [
+        "tsa",
+        "scope_area"
+      ]
+    },
+    {
+      "group": "installed_family",
+      "fields": [
+        "alloy",
+        "bracelet subtype",
+        "installed integer count",
+        "individual net metal mass excluding inserts (kg)",
+        "initial dimensions (m)",
+        "exposed area (m2)",
+        "insert volume (m3)",
+        "end/gap and mounting basis"
+      ],
+      "citations": [
+        "capacity",
+        "potential",
+        "resistance",
+        "depletion",
+        "utilisation",
+        "detail"
+      ]
+    },
+    {
+      "group": "depletion",
+      "fields": [
+        "density (kg/m3)",
+        "residual mass basis (kg)",
+        "final exposed geometry and area (m, m2)",
+        "qualified depletion rule"
+      ],
+      "citations": [
+        "depletion",
+        "utilisation"
+      ]
+    },
+    {
+      "group": "connected_scope",
+      "fields": [
+        "allocation fractions (dimensionless)",
+        "electrical continuity duration (years)",
+        "connected current drain (A)"
+      ],
+      "citations": [
+        "demand_drain",
+        "continuity"
+      ]
+    }
+  ],
+  "input_provenance": "Future geometry/count/environment choices must be independently declared generic inputs, with their declaration and derivation cited. This spec contains no numerical case vector.",
+  "numerical_inputs": null,
+  "expected_results": null,
+  "acceptance": [
+    "Step 1: the specification loads offline and every input citation resolves; existing S01-S11 artifacts remain unchanged.",
+    "Before implementation: qualify source cells, equations, applicability, units and proposed input-field names.",
+    "Before numerical acceptance: freeze independent generic inputs and a cited hand calculation; define scalar tolerances and exact integer-count comparison.",
+    "Verification must assess the declared installed arrangement against capacity and initial/final output; unresolved criteria remain not evaluated.",
+    "Any non-passing result must carry a corrective option; spatial protection and engineering acceptance require separate evidence."
+  ],
+  "missing": [
+    "Qualified machine-readable 1993 cells and equation/applicability transcription, including bracelet subtype and depletion details.",
+    "Independent generic numerical vector, installed count and self-consistent initial/final geometry.",
+    "Agreed schema fields for sprayed-aluminium basis, interface temperature and bracelet installation/depletion evidence.",
+    "1993 component/family implementation, independent reference results and numerical tolerances.",
+    "Pack registration, citation resolution, candidate verification and release review; outside step 1."
+  ],
+  "repository_context": {
+    "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2281",
+    "revision": "6d177f01c1c3d7605ffd954b44d0216ebcbb43b5",
+    "case_registry": "scripts/reporting/build_cp_review_portfolio.py:CASES",
+    "existing_inputs": "tests/fixtures/cathodic_protection/workflow_inputs/",
+    "existing_packs": "docs/domains/cathodic_protection/reports/cases/S01 through S11",
+    "edition_api": "src/digitalmodel/cathodic_protection/_edition.py",
+    "table_api": "src/digitalmodel/cathodic_protection/b401_tables.py"
+  }
+}
