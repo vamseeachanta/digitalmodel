@@ -396,6 +396,9 @@ modules:
   - module: well
     entry_point: src/digitalmodel/well/
     submodules:
+      drilling:
+        agent_pack: src/digitalmodel/well/drilling/docs/agent-pack.md
+        qa_family: EC
       well:
         agent_pack: src/digitalmodel/well/docs/agent-pack.md
         qa_family: EC

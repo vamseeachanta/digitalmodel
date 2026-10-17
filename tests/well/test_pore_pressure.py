@@ -6,6 +6,7 @@ config-driven ``router`` (the engine basename wiring is applied by the
 integrator, so the router is exercised directly).
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -282,6 +283,27 @@ def test_router_runs_example_and_writes_summary(tmp_path):
 
     summary_json = Path(out["pore_pressure"]["summary"]["summary_json"])
     assert summary_json.is_file()
+    assert list(tmp_path.rglob("*.json")) == [summary_json]
+    saved = json.loads(summary_json.read_text(encoding="utf-8"))
+    assert saved["calculation"] == "pore_pressure"
+    assert saved["result"] == result
+
+    distribution_fields = {
+        "p10_emw_ppg", "p50_emw_ppg", "p90_emw_ppg", "sigma_ppg",
+        "between_method_sigma_ppg", "model_sigma_ppg",
+    }
+    for name in ("pore_pressure", "fracture"):
+        assert distribution_fields <= saved["result"][name].keys()
+        assert all(saved["result"][name][key] is not None for key in distribution_fields)
+    window_fields = {
+        "static_low_emw_ppg", "static_high_emw_ppg", "static_width_ppg",
+        "dynamic_low_emw_ppg", "dynamic_high_emw_ppg", "dynamic_width_ppg",
+        "nominal_low_emw_ppg", "nominal_high_emw_ppg", "ecd_delta_ppg",
+        "kick_margin_ppg", "loss_margin_ppg", "recommended_mud_weight_ppg",
+    }
+    saved_window = saved["result"]["drilling_window"]
+    assert window_fields <= saved_window.keys()
+    assert all(saved_window[key] is not None for key in window_fields)
 
 
 def test_router_without_fracture_skips_window(tmp_path):
