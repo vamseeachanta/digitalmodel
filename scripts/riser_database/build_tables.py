@@ -166,6 +166,8 @@ def main() -> int:
 
     config_rows = [_riser_input_row(rel, conv) for rel in spec["riser_input_files"]]
     config_rows += [_pipe_row(rel, rules, conv) for rel in spec["config_pipe_files"]]
+    # References to screening methods carry no inferred physical dimensions.
+    config_rows += spec.get("reference_config_rows", [])
     config_rows.sort(key=lambda r: r["config_id"])
 
     crosswalk_rows = sorted(spec["crosswalk_rows"], key=lambda r: r["code_id"])
