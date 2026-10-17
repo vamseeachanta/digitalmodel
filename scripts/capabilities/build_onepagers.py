@@ -631,7 +631,8 @@ def build_cards() -> list[dict]:
     for spec in SPECS:
         path = spec["path"]
         if path.startswith("capabilities/#"):
-            link = _CANONICAL + path.removeprefix("capabilities/")
+            # Declared section fragments are not published on the public page.
+            link = _CANONICAL
         elif path.startswith("https://"):
             link = path
         else:

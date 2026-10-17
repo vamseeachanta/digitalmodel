@@ -15552,16 +15552,16 @@ families:
     symbol:
     line: 3
     kind: script
-    what: &a7ae0a82610 Projects authored capability metadata into deterministic JSON index cards.
+    what: Projects authored capability metadata into deterministic JSON index cards.
     signals: *ac7e985efc8
     relation: independent
     module: scripts
-    file_sha256: 25c6daed9f0cb57e5b702331f338dc5d04080db6d2182cf928ebde2d6efeb693
+    file_sha256: c57ae6050c92ec1574651c90e583af76c0cf1d9a76c4c0fd54a6a12cd32399e2
   - path: &ae8921bb332 scripts/python/digitalmodel/legacy/extract_ocimf_database.py
     symbol:
     line: 25
     kind: script
-    what: *a7ae0a82610
+    what: &a7ae0a82610 Evaluates wind or current loading inputs and forces.
     signals: *ac7e985efc8
     relation: independent
     module: scripts
@@ -17151,7 +17151,7 @@ families:
     signals: *a3c15e3ae40
     relation: independent
     module: scripts
-    file_sha256: 25c6daed9f0cb57e5b702331f338dc5d04080db6d2182cf928ebde2d6efeb693
+    file_sha256: c57ae6050c92ec1574651c90e583af76c0cf1d9a76c4c0fd54a6a12cd32399e2
   - path: *a63ad6eec82
     symbol:
     line: 3

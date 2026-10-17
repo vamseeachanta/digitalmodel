@@ -44,26 +44,41 @@ def test_committed_cards_are_fresh():
     assert json.loads(builder._OUT.read_text(encoding="utf-8")) == builder.build_cards()
 
 
-def test_section_cards_keep_their_declared_fragments():
+def test_section_cards_link_to_the_published_capabilities_page():
     cards = {card["id"]: card for card in builder.build_cards()}
     for spec in builder.SPECS:
         if spec["path"].startswith("capabilities/#"):
-            assert cards[spec["id"]]["link"] == (
-                builder._CANONICAL + spec["path"].removeprefix("capabilities/")
-            )
+            assert cards[spec["id"]]["link"] == builder._CANONICAL
 
 
 def test_every_card_link_is_local_or_uses_an_approved_prefix():
     for card in builder.build_cards():
         link = card["link"]
-        if urlsplit(link).scheme:
+        url = urlsplit(link)
+        path = link
+        if url.scheme:
             assert link.startswith((builder._CANONICAL,
                                     "https://github.com/vamseeachanta/digitalmodel/"))
+            if url.netloc != "github.com":
+                continue
+            prefix = "/vamseeachanta/digitalmodel/"
+            kind, ref, path = url.path.removeprefix(prefix).split("/", 2)
+            assert kind in {"blob", "tree"} and ref == "main", card
+            assert ((ROOT / path).is_file() if kind == "blob"
+                    else (ROOT / path).is_dir()), card
         else:
-            assert (ROOT / link).is_file(), card
-            assert subprocess.check_output(
-                ["git", "ls-files", "--", link], cwd=ROOT, text=True,
-            ).strip(), card
+            assert (ROOT / path).is_file(), card
+        assert subprocess.check_output(
+            ["git", "ls-files", "--", path], cwd=ROOT, text=True,
+        ).strip(), card
+
+
+def test_offline_github_link_check_rejects_an_untracked_file(monkeypatch):
+    card = {"link": "https://github.com/vamseeachanta/digitalmodel/blob/main/AGENTS.md"}
+    monkeypatch.setattr(builder, "build_cards", lambda: [card])
+    monkeypatch.setattr(subprocess, "check_output", lambda *args, **kwargs: "")
+    with pytest.raises(AssertionError):
+        test_every_card_link_is_local_or_uses_an_approved_prefix()
 
 
 @pytest.mark.network

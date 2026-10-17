@@ -87,18 +87,20 @@ def test_explorer_html_has_no_external_reference():
     assert re.search(r'(?:src|href)\s*=\s*["\']?//', html) is None, "protocol-relative reference"
 
 
-# 4. one-pager governance (host-allowlisted) ---------------------------------
+# 4. card governance (host-allowlisted) ---------------------------------
 _SAFE_HOSTS = ("vamseeachanta.github.io", "w3.org")
 
 
-def _onepager(spec_id: str) -> tuple[str, str]:
-    """(rendered one-pager HTML, its live report URL) straight from build_onepagers SPECS."""
+def _card(spec_id: str) -> dict:
+    """Return the generated card and require the committed output to match."""
     path = REPO / "scripts" / "capabilities" / "build_onepagers.py"
     spec = importlib.util.spec_from_file_location("build_onepagers_gov", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    entry = next(s for s in mod.SPECS if s["id"] == spec_id)
-    return mod._render_html(entry), mod._report_url(entry)
+    card = next(card for card in mod.build_cards() if card["id"] == spec_id)
+    committed = json.loads(mod._OUT.read_text(encoding="utf-8"))
+    assert next(item for item in committed if item["id"] == spec_id) == card
+    return card
 
 
 def _strip_safe(text: str) -> str:
@@ -108,10 +110,11 @@ def _strip_safe(text: str) -> str:
     return text.replace("https://", "").replace("http://", "")
 
 
-def test_onepager_is_governance_clean():
-    html, report_url = _onepager("drilling-riser-operability")
-    assert not _structural_hits(_strip_safe(html))
-    assert report_url.startswith("https://vamseeachanta.github.io/"), report_url
+def test_card_is_governance_clean():
+    card = _card("drilling-riser-operability")
+    assert not _structural_hits(_strip_safe(json.dumps(card, ensure_ascii=False)))
+    assert card["link"] == "docs/api/" + build.SITE_PATH
+    assert (REPO / card["link"]).is_file()
 
 
 # 5. results.json exclude-list + generic tokens ------------------------------
