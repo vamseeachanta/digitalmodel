@@ -351,6 +351,9 @@ modules:
       orcaflex:
         agent_pack: src/digitalmodel/solvers/orcaflex/docs/agent-pack.md
         qa_family: MR
+      orcaflex/format_converter:
+        agent_pack: src/digitalmodel/solvers/orcaflex/format_converter/docs/agent-pack.md
+        qa_family: MR
       orcaflex/modular_generator:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_generator/docs/agent-pack.md
         qa_family: MR
