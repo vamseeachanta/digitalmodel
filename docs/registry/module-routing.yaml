@@ -482,6 +482,10 @@ modules:
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#mooring_fatigue
   - module: parametric
+    submodules:
+      parametric:
+        agent_pack: src/digitalmodel/parametric/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/parametric/
     maturity: beta
     owner_wiki: docs/domains/README.md
