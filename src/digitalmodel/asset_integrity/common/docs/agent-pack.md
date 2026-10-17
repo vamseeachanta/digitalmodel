@@ -11,7 +11,7 @@
 | Quality role | Engineering calculations quality manager |
 | Status | DRAFT |
 
-Code citations resolve at the code revision above; implementation-map citations in section 9 resolve at that section's separate map pin.
+Code citations resolve at the code revision above; implementation-map citations in section 9 resolve at the same code pin.
 
 ## 1. Purpose and scope
 
@@ -89,7 +89,7 @@ The form used is `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q
 
 | Command group | Paths | BASE results | AFTER results |
 | --- | --- | --- | --- |
-| Complete direct-common selection | The ten worktree test files listed in section 10 | 140 collected, 2 collection errors; 0 executed; 140 NOT_RUN in this aborted command, subsequently rerun below | Identical: 140 collected, 2 collection errors, 0 executed |
+| Complete direct-common selection | The ten worktree test files listed in section 10 | 140 collected, 2 collection errors; 0 executed; 140 without outcomes in this aborted command, subsequently rerun below | Identical: 140 collected, 2 collection errors, 0 executed |
 | Independently collectable selection | Same selection without the two files that failed collection; no node deselection or filter change | 140 executed: 135 passed, 5 failed, 0 skipped | Identical: 135 passed, 5 failed, 0 skipped |
 | Legacy engine plus standalone arithmetic, temporary test copy | `test_pyintegrity_gml_lml_api579.py` and `test_api579_calculations_standalone.py` under `tests/asset_integrity/` | 1 collection error; 0 executed | Identical: 1 collection error, 0 executed |
 
@@ -99,11 +99,11 @@ The blocked collection modules are `tests/asset_integrity/test_bs7910_legacy_mod
 
 Supplementary execution of `tests/asset_integrity/test_api579_calculations_standalone.py` alone produced 17 passed, 0 failed and 0 skipped; these tests evaluate arithmetic in the test bodies rather than importing the legacy implementation. [tests/asset_integrity/test_api579_calculations_standalone.py:L1-L8] [tests/asset_integrity/test_api579_calculations_standalone.py:L11-L43]
 After the documentation edits, `tests/contracts` plus `tests/docs/test_digitalmodel_routing_contract.py` produced 493 passed, 1 failed and 0 skipped; every routing test passed. The one contract failure asserts discovery of the xlsxwriter site in data.py, whose invalid escape prevents AST parsing under the warning policy. This test and source are identical at the code pin. [tests/contracts/test_string_addressed_dependencies.py:L620-L635] [src/digitalmodel/asset_integrity/common/data.py:L214-L217]
-Static AST enumeration of the 3 collection-blocked modules finds 42 NOT_RUN cases: 16 legacy BS helper cases, 23 YAML utility cases and 3 engine cases; literal parametrisation lists are expanded without importing source. Together with the 140 executed cases, this gives 182 discovered module-related cases; the 17 standalone arithmetic cases are separate. Runtime collection IDs for the blocked modules remain unavailable; the abort was not a solver or licence failure. No missing-package skip was accepted and no warning filter, assertion or collection guard was changed.
+Static AST enumeration of the 3 collection-blocked modules finds 42 FAIL cases (collection error under the configured warning policy), tracked by issue pending (1): 16 legacy BS helper cases, 23 YAML utility cases and 3 engine cases; literal parametrisation lists are expanded without importing source. Together with the 140 executed cases, this gives 182 discovered module-related cases; the 17 standalone arithmetic cases are separate. Runtime collection IDs for the blocked modules remain unavailable; the abort was not a solver or licence failure. No missing-package skip was accepted and no warning filter, assertion or collection guard was changed.
 
 ## 5. QA gates
 
-AQG r0, section 10, Python calculations: G0 inputs/units/citations, G1 imports/tests, G2 hand or published check, G3 and G4 NOT_APPLICABLE, and G5 evidence. The checks below are pack-specific executable criteria; a listed criterion does not assert that the current module satisfies it.
+AQG r0, section 10, Python calculations: G0 inputs/units/citations, G1 imports/tests, G2 hand or published check, G3 and G4 NOT_APPLICABLE, and G5 QA-appendix generation NOT_APPLICABLE as scoped below. The checks below are pack-specific executable criteria; a listed criterion does not assert that the current module satisfies it.
 
 | Gate | Applicability | Module-specific checks / numeric pass criterion and unit | Evidence and current result |
 | --- | --- | --- | --- |
@@ -112,7 +112,9 @@ AQG r0, section 10, Python calculations: G0 inputs/units/citations, G1 imports/t
 | G2 | Applicable | C2: `Polynomial.solve_by_coefficients` cubic roots differ from 1, 2, 3 by at most 1e-8 (dimensionless absolute error); execute V1 | PASS at BASE and AFTER; applies to algebra only, not the fracture/metal-loss methods. [tests/asset_integrity/test_math_solvers.py:L49-L54] |
 | G3 | NOT_APPLICABLE | No dynamic-solver response is computed by the FAD builder or the histogram-cycle update; this is the Python-calculation gate set | Text-only scope assessment. [src/digitalmodel/asset_integrity/common/fad.py:L24-L55] [src/digitalmodel/asset_integrity/common/BS7910_critical_flaw_limits.py:L1111-L1122] |
 | G4 | NOT_APPLICABLE | No panel mesh or hydrodynamic coefficient comparison in the FAD build path; this is the Python-calculation gate set | Text-only scope assessment. [src/digitalmodel/asset_integrity/common/fad.py:L24-L55] |
-| G5 | Applicable | C5: exactly 1 pinned offline result for each section-4 example, 0 missing sweep-site rows and 0 unmatched issue-draft markers (counts) | Example ledger, citation/sweep resolver, issue drafts and pack lint |
+| G5 | NOT_APPLICABLE | C5: no package QA appendix output is established; pack-record counts do not test result-table preservation. Output overwrite qualification remains open under the existing failure disposition. | No package-output acceptance is claimed by this check. |
+
+`SaveData.WriteOrcaFlexYMLFile` G1 native-load gate is `NOT_APPLICABLE`: this generic text writer supplies no native loader or solver schema contract; text serialisation is not native-model qualification. No writer output is claimed load-qualified. [src/digitalmodel/asset_integrity/common/data.py:L614-L624]
 
 Additional executable regression checks:
 
@@ -120,9 +122,10 @@ Additional executable regression checks:
 | --- | --- | --- | --- |
 | C1P | G1 | FAD option-2 placeholder equals None: 1 matching sentinel (count) | R1 [tests/asset_integrity/test_fad.py:L111-L141] |
 | C1B | G1 | FAD final `K_r` closing row equals 0 (dimensionless), using the existing pytest.approx assertion | R2 [tests/asset_integrity/test_fad.py:L151-L186] |
+| C2F | G2 | `FAD.get_plastic_collapse_load_ratio_limit`: for SMYS = 448e6 Pa and SMUS = 531e6 Pa, compare L_r,max to the hand expression (448 + 531)/(2 * 448) = 1.0926339285714286, relative tolerance 1e-8 (dimensionless) | `tests/asset_integrity/test_fad.py::TestPlasticCollapseLoadRatioLimit::test_lr_max_formula`; PASS in the fix-up offline run (1 passed, 0 failed). [tests/asset_integrity/test_fad.py:L70-L77] |
 | C2R | G2 | Wrapper/canonical `K_r` differences at most 1e-12 (dimensionless absolute error) at 201 rows per material set; this is a regression-only comparison | FAIL at import; issue pending (1). [tests/asset_integrity/test_fad_curves.py:L159-L206] |
 
-Counts: G0 has 2 checks, G1 has 3 checks, G2 has 2 checks, G3/G4 have 0 applicable checks, and G5 has 1 check; total 8.
+Counts: G0 has 2 checks, G1 has 3 checks, G2 has 3 checks, G3/G4 have 0 applicable checks, and G5 has 0 applicable checks; total 8 including the added FAD hand check.
 
 ## 6. Known failure modes and pitfalls
 
@@ -415,14 +418,14 @@ NumPy, pandas, SciPy, plotting, workbook and YAML dependencies are direct import
 | --- | --- | --- |
 | SHEAR7 | One sample ASCII-reader path | Example text only; no binary/interface executed [src/digitalmodel/asset_integrity/common/data.py:L187-L206] |
 | OrcaFlex | ASCII-reader examples: lines 215-217, 230-231, 233, 239 and 271-275 | Text file samples; no version qualification [src/digitalmodel/asset_integrity/common/data.py:L214-L243] [src/digitalmodel/asset_integrity/common/data.py:L270-L275] |
-| OrcaFlex | `SaveData.WriteOrcaFlexYMLFile`, line 614 | Concatenates file text or YAML-serialises objects; requires oyaml, no native load route [src/digitalmodel/asset_integrity/common/data.py:L614-L624] |
+| OrcaFlex | `SaveData.WriteOrcaFlexYMLFile`, line 614 | Concatenates file text or YAML-serialises objects; requires oyaml; G1 NOT_APPLICABLE for native load because this helper only serialises or concatenates text and provides no native loader; schema/load qualification remains unestablished [src/digitalmodel/asset_integrity/common/data.py:L614-L624] |
 | OrcaFlex | `Visualization.orcaflex_range_plot`, line 521 | Plots supplied range arrays; no solver launch [src/digitalmodel/asset_integrity/common/visualizations.py:L521-L559] |
 
 Search used: `rg -n -i 'orcaflex|shear7' src/digitalmodel/asset_integrity/common -g '*.py'`. No solver version or native-load certification is inferred from a text writer.
 
 ### Implementation-map pin, family ranking and complete inventory
 
-Map content commit: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; named data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`. The read-only branch is `codex/implmap-work`; citations to `docs/registry/implementation-map.yaml` resolve at the map content commit.
+Map content commit: `bb18c1a346b31b4ce975befa41fc84d9a5ff29e5`; named data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`. The map is read at the code pin; citations to `docs/registry/implementation-map.yaml` resolve at the map content commit.
 
 Only `orcaflex-text-model-writers` has rows inside this package: 3 in-package rows and 440 family implementations in map order; it is therefore the only counted family. [docs/registry/implementation-map.md:L19-L19]
 The inventory below lists every implementation by its stable ordered map-row identity, with its complete path/symbol definition in the cited source row; this avoids copying identifying out-of-package discovery filenames into the pack.
