@@ -17,6 +17,9 @@ modules:
       asset_integrity:
         agent_pack: src/digitalmodel/asset_integrity/docs/agent-pack.md
         qa_family: EC
+      common:
+        agent_pack: src/digitalmodel/asset_integrity/common/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/asset_integrity/
     maturity: stable
     owner_wiki: docs/domains/README.md
