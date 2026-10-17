@@ -433,6 +433,10 @@ modules:
     owner_wiki: docs/domains/installation/
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#installation
+    submodules:
+      pipelay:
+        agent_pack: src/digitalmodel/installation/pipelay/docs/agent-pack.md
+        qa_family: IN
   - module: lifting_lug
     entry_point: src/digitalmodel/lifting_lug/
     maturity: development
