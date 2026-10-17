@@ -201,10 +201,12 @@ def case_table(root: Path) -> dict:
             'No operating window is established. Requalify the staged method case by case '
             'before production; the prior pre-flight does not qualify the changed method.'),
         'statics_method': tagged(
-            'At the specified vessel offset, solve zero-current statics, retain calculated positions, '
-            'then solve at the specified current. Zero-current cases solve once. '
-            'Both stages must reach InStaticState before dynamics. Native convergence remains unverified.',
-            'src/digitalmodel/drilling_riser/campaign.py::_statics_path; '
+            'At the specified vessel offset, solve zero-current statics, then ramp current through '
+            '25%, 50%, 75% and 100% of the specified speed, retaining calculated positions '
+            'before each current change. No vessel-offset continuation is applied. '
+            'Zero-current cases solve once. Every stage must reach InStaticState before dynamics. '
+            'Native convergence remains unverified.',
+            'src/digitalmodel/drilling_riser/campaign.py::CURRENT_RAMP; _statics_path current ramp; '
             'scripts/orcaflex/run_generic_drilling_riser_campaign.py::calculate_staged_statics'),
         'drill_string_current_basis': tagged(
             'Normal drag is retained from the source specification. Shielding by the containing riser '

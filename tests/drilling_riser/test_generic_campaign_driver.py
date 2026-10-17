@@ -266,12 +266,18 @@ class StagedModel:
 
 
 def test_staged_statics_seeds_before_current_change():
-    model = StagedModel()
-    load_driver().calculate_staged_statics(model)
-    assert model.calls == [('current', 0.0), ('solve', 0.0), ('seed', 0.0),
-                           ('current', 1.0), ('solve', 1.0)]
-    assert model.state.name == 'InStaticState'
-    assert model.RefCurrentSpeed == 1.0
+    for speed in (0.5, 1.0, 1.5):
+        model = StagedModel(speed=speed)
+        load_driver().calculate_staged_statics(model)
+        expected = [('current', 0.0), ('solve', 0.0)]
+        previous = 0.0
+        for fraction in (0.25, 0.5, 0.75, 1.0):
+            current = fraction * speed
+            expected.extend([('seed', previous), ('current', current), ('solve', current)])
+            previous = current
+        assert model.calls == expected
+        assert model.state.name == 'InStaticState'
+        assert model.RefCurrentSpeed == speed
 
 
 def test_zero_current_solves_once():
@@ -299,7 +305,7 @@ def test_staged_failure_never_reaches_dynamics():
     import pytest
     from types import SimpleNamespace
     driver = load_driver()
-    for stage in (0.0, 1.0):
+    for stage in (0.0, 0.25, 0.5, 0.75, 1.0):
         for bad_state in (False, True):
             model = StagedModel(fail_stage=stage, bad_state=bad_state)
             with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
@@ -308,6 +314,8 @@ def test_staged_failure_never_reaches_dynamics():
                         driver.run_case(Path('unused'), Path('unused'))
             assert not any(call[0] == 'dynamics' for call in model.calls)
             assert model.RefCurrentSpeed == 1.0
+            solves = [call[1] for call in model.calls if call[0] == 'solve']
+            assert solves == [value for value in (0.0, 0.25, 0.5, 0.75, 1.0) if value <= stage]
             if stage == 0.0:
                 assert not any(call[0] == 'seed' for call in model.calls)
 
@@ -339,6 +347,64 @@ def test_failure_message_is_bounded(tmp_path):
         record = json.loads(path.read_text(encoding='utf-8'))
         assert record['message'] == message[:500]
         assert record['error_type'] == 'RuntimeError'
+
+
+
+def test_ramp_matches_repository_precedent_without_importing_it():
+    source = ROOT / 'src/digitalmodel/drilling_riser/campaign.py'
+    tree = ast.parse(source.read_text(encoding='utf-8'))
+    assignment = next(node for node in tree.body if isinstance(node, ast.Assign)
+                      and any(isinstance(target, ast.Name) and target.id == 'CURRENT_RAMP'
+                              for target in node.targets))
+    assert load_driver().CURRENT_RAMP == ast.literal_eval(assignment.value)
+
+
+def test_position_retention_failure_restores_current_and_stops():
+    import sys
+    import pytest
+    from types import SimpleNamespace
+    driver = load_driver()
+    for stage in (0.0, 0.25, 0.5, 0.75):
+        model = StagedModel()
+        retain = model.UseCalculatedPositions
+
+        def fail_retention(enabled):
+            if model.speed == stage:
+                raise RuntimeError('synthetic position retention failure')
+            retain(enabled)
+
+        model.UseCalculatedPositions = fail_retention
+        with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
+            with patch.object(driver, 'ring_reference_z', return_value=37):
+                with pytest.raises(RuntimeError, match='position retention failure'):
+                    driver.run_case(Path('unused'), Path('unused'))
+        assert model.RefCurrentSpeed == 1.0
+        assert not any(call[0] == 'dynamics' for call in model.calls)
+        assert [call[1] for call in model.calls if call[0] == 'solve'] == [
+            value for value in (0.0, 0.25, 0.5, 0.75) if value <= stage]
+
+
+def test_restore_failure_preserves_original_error_and_blocks_dynamics():
+    import sys
+    import pytest
+    from types import SimpleNamespace
+
+    class RestoreFailureModel(StagedModel):
+        @StagedModel.RefCurrentSpeed.setter
+        def RefCurrentSpeed(self, value):
+            if value == 1.0:
+                raise OSError('synthetic restoration failure')
+            StagedModel.RefCurrentSpeed.fset(self, value)
+
+    driver = load_driver()
+    model = RestoreFailureModel(fail_stage=0.25)
+    with patch.dict(sys.modules, {'OrcFxAPI': SimpleNamespace(Model=lambda _: model)}):
+        with patch.object(driver, 'ring_reference_z', return_value=37):
+            with pytest.raises(OSError, match='restoration failure') as caught:
+                driver.run_case(Path('unused'), Path('unused'))
+    assert isinstance(caught.value.__context__, RuntimeError)
+    assert str(caught.value.__context__) == 'synthetic non-convergence'
+    assert not any(call[0] == 'dynamics' for call in model.calls)
 
 
 if __name__ == '__main__':

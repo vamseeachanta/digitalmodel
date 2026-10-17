@@ -1,10 +1,10 @@
 {
   "template_sha256": "298fa98a2c3065d55b5c05bc67f36106a9bbafda4faa74644a288a7861ec7629",
   "limitations": "Approximate riser-column screen; constant assumed top tension, uniform drag, pinned ends; lower joint angle is not established because effective tension varies along the column. Both joint-angle comparisons are omitted: constant tension can introduce an error of about a factor of two. Weight treats the above-water 20 m as submerged, underestimating column weight by about 1.0 %. Stress retains the constant-tension approximation. Screen tension is an assumed criterion value, not the modelled tension. attached members, nonlinear tensioner response, pressure stress and wave loading omitted. Geometric extension is not mechanical tensioner stroke. No assembly acceptance is established.",
-  "case_table_sha256": "07b0cb319f6bd0645180cd1d9fb2cdf5a110628e5b2e1a56f1f3b1434dd8c97a",
+  "case_table_sha256": "22c10080274682968956bd3f4bd824842bca204646fe127e6f6dd913ea1c0a25",
   "screen_csv_sha256": "8a81c1d56c91bfd2708e0171f51d694fa1eb7f32b5bc9af61a227123d7a63bab",
   "calculation_fingerprints": {
-    "generic_campaign.py": "ebfb3989be1bfbda5efc65e094009d66eb6daedcd13e50b35519ec9b38697ea3",
+    "generic_campaign.py": "fb6b9d820fd379dc8bafd26e9b018bf9c6383cf3f1135effc40588e1ea0fbf68",
     "operability.py": "08a7a80df8ceb4104fe19709bda3df89d6b71528a34c6271f4844347b2391c5b",
     "riser_response.py": "444dbd62bcc1923515a98dece2de62aed14c373516c2d916604fff3782886f1f",
     "section.py": "b7b8c7436c86d1bf72a0d9b9fbf3e113a31c6ed0ebf2205b48e2f721b006178b",
