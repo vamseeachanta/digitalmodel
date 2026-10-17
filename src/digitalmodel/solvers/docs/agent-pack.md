@@ -88,7 +88,7 @@ The recorded offline executions use code revision `32fe066f387c13a66fd234eca2850
 
 ## 5. QA gates
 
-Gate applicability follows AQG r0, sections 8–10: G0, G1, G4 and G5 apply to both downstream diffraction programs; G2 and G3 are `NOT_APPLICABLE` because the diffraction family has no statics or short-dynamics gate. (AQG r0, revision 0, sections 8–10, OrcaWave and AQWA rows.)
+Gate applicability follows AQG r0, sections 8–10: G0, G4 and G5 describe generated-specification criteria; G1 native loading is NOT_APPLICABLE for this package and remains a downstream diffraction-backend gate; G2 and G3 are `NOT_APPLICABLE` because the diffraction family has no statics or short-dynamics gate. (AQG r0, revision 0, sections 8–10, OrcaWave and AQWA rows.)
 
 The following are acceptance instructions; PASS of a schema check shall not be substituted for a native-load or physical gate record.
 
@@ -100,8 +100,8 @@ The following are acceptance instructions; PASS of a schema check shall not be s
 | G0 / C04 | Run both `TestHullParameterSweep` tests: 3 masses match [500, 1000, 2000] kg with 0 kg difference; 2-schema-object case has mass > 0 kg. | Regression node results [tests/solver/test_parametric_spec_generator.py:L197-L216] |
 | G0 / C05 | Run `test_generated_specs_round_trip_yaml`: 2 specs reload with 0 synthetic-name differences (count). | Regression node results; other fields and mesh existence are not asserted [tests/solver/test_parametric_spec_generator.py:L237-L244] |
 | G0 / C06 | Run `test_metadata_includes_sweep_info`: 0 generated specs without a sweep-related tag (count). | Regression node results; this does not identify every swept dimension [tests/solver/test_parametric_spec_generator.py:L246-L253] |
-| G1 / C07 | After backend generation, open every `OrcaWaveBackend.generate_single` output in the recorded target OrcaWave version through its native load and validation route; require 0 load errors, 0 validation errors and 0 load warnings (count). | NOT_RUN: native program and licensed interface excluded; record version, deck digest and messages before acceptance. Backend output boundary [src/digitalmodel/hydrodynamics/diffraction/orcawave_backend.py:L787-L812]; criterion: AQG r0 §5 and §10. |
-| G1 / C08 | After `AQWABackend.generate_single`, use a short licensed AQWA run to hydrostatics; require 0 fatal deck or mesh errors (count), and 1 completed hydrostatics record per generated model (record/model). | NOT_RUN: licensed solver excluded; retain deck digest, target version and hydrostatics record. Backend output boundary [src/digitalmodel/hydrodynamics/diffraction/aqwa_backend.py:L177-L202]; criterion: AQG r0 §10. |
+| G1 / C07 | `NOT_APPLICABLE`: ParametricSpecGenerator.generate_to_yaml writes canonical specifications only; native OrcaWave loading belongs to the diffraction backend gate. | No package-output acceptance is claimed by this check. |
+| G1 / C08 | `NOT_APPLICABLE`: ParametricSpecGenerator.generate_to_yaml writes canonical specifications only; native AQWA loading belongs to the diffraction backend gate. | No package-output acceptance is claimed by this check. |
 | G2 | `NOT_APPLICABLE`: diffraction family has no statics gate. | AQG r0 §10. |
 | G3 | `NOT_APPLICABLE`: diffraction family has no short-dynamics gate. | AQG r0 §10. |
 | G4 / C09 | For each free-floating generated body, compare `spec.environment.water_density × independently integrated mesh volume` against the declared mass, or the native displaced mass where free-floating mode derives it; require absolute mass difference / governing mass ≤ 1.0% (percent). State gravity consistently when comparing forces. | NOT_RUN: fixture has no mesh or native hydrostatics; do not use a changed schema mass as proof of changed OrcaWave free-floating mass. Units and mode [src/digitalmodel/hydrodynamics/diffraction/input_schemas.py:L182-L215] [tests/solver/test_parametric_spec_generator.py:L49-L65]; criterion: AQG r0 §8 G4.1. |
@@ -112,6 +112,8 @@ The following are acceptance instructions; PASS of a schema check shall not be s
 G0 C01–C06 are narrow regression checks; duplicate-key refusal, mesh resolution, checksums and native selector ordering are not established by them, and G4 additionally requires the remaining balance, centres, normals, irregular-frequency and response checks of AQG r0 before analysis acceptance. [tests/solver/test_parametric_spec_generator.py:L81-L253] (AQG r0, revision 0, §§4 and 8; issue pending (3).)
 
 ## 6. Known failure modes and pitfalls
+
+First-priority selection defect: `tests/solver/conftest.py` marks all 14 offline generator regression nodes `solver`, despite their schema/Python-only operations. Any `-m "not solver"` invocation silently deselects all 14; it supplies no offline regression evidence for this package. The conftest docstring claiming a licensed dependency does not describe these nodes. The section-4 results apply only to the explicit run without that exclusion. Detection criterion: the offline selection shall retain 14 of 14 generator nodes (count); current `-m "not solver"` selection fails that criterion (0 retained). Marker repair remains issue pending (6); no marker or collection policy is changed by this pack. [tests/solver/conftest.py:L1-L13] [tests/solver/test_parametric_spec_generator.py:L81-L253]
 
 sweep: 17 found
 
@@ -180,7 +182,7 @@ Escalate ambiguous units, missing reference data, failed gates and changes to to
 
 Excluded scopes for this pack: `benchmark/`, `blender_automation/`, `calculix/`, `fea_model/`, `ghs/`, `gmsh_meshing/`, `mystran/`, `openfoam/`, `orcaflex/`, `orcawave/`, `smoke/`; review their implementations under their own package scopes, rather than including recursive rows in the top-level inventory.
 
-Implementation-map pin: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; map data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`; the map bytes at the code pin match the requested map revision. [docs/registry/implementation-map.yaml:L1-L3]
+Implementation-map pin: `32fe066f387c13a66fd234eca2850a00c16e104a`; map data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`; the map bytes at the code pin match the requested map revision. [docs/registry/implementation-map.yaml:L1-L3]
 
 A8 inventory, computed over all implementation rows in that map: **0 top-level in-package rows, 0 module map families, empty section-9 implementation inventory**; subpackage rows are excluded. A8 counted-family ranking is empty; counted regex search is **NOT_APPLICABLE**, because no family has a row within this pack's direct-file scope. [docs/registry/implementation-map.yaml:L1-L3] [src/digitalmodel/solvers/parametric_spec_generator.py:L1-L191]
 
@@ -190,7 +192,7 @@ Reproduce the inventory at the map pin; for a nonempty result, rank by descendin
 import subprocess
 import yaml
 
-map_pin = "3256bab95f84da3d9fadce8d5dcf8458d66d1eb4"
+map_pin = "32fe066f387c13a66fd234eca2850a00c16e104a"
 raw = subprocess.check_output([
     "git", "show", f"{map_pin}:docs/registry/implementation-map.yaml"
 ])
@@ -237,8 +239,10 @@ No independent physical worked example is established by the direct suite; no cl
 | Sweep input representations, numerical floors, precision and target validation | Negative tests for empty or reversed dimensions, period/range bases, invalid paths and repeated paths; reconcile the band comment with its expression. [src/digitalmodel/solvers/parametric_spec_generator.py:L54-L66] [src/digitalmodel/solvers/parametric_spec_generator.py:L141-L191] | Module maintainer | issue pending (1) |
 | Bounded generation, CLI and output naming | Product-size guard and naming/CLI tests; current implementation has neither a guard nor command-line dispatch. [src/digitalmodel/solvers/parametric_spec_generator.py:L127-L191] | Module maintainer | #1711 |
 | Mesh-location and variant provenance | Full-field round-trip, mesh digest and relocation checks; output collision policy and pre-validation filesystem checks. [src/digitalmodel/solvers/parametric_spec_generator.py:L119-L137] [src/digitalmodel/hydrodynamics/diffraction/input_schemas.py:L1066-L1084] | Module maintainer | issue pending (2) |
-| Qualified example, native gates, conventions and appendix | Independently sourced reference and evidence for C07–C12; full AQG G0/G4 coverage. This includes the UNVERIFIED coordinate-frame, origin, heading-sign and phase contract from section 2. [tests/solver/test_parametric_spec_generator.py:L40-L253] | Diffraction quality manager | issue pending (3) |
+| Qualified example, downstream native gates, conventions and appendix | Independently sourced reference and evidence for C09–C12; C07/C08 remain the downstream backend responsibility; full AQG G0/G4 coverage. This includes the UNVERIFIED coordinate-frame, origin, heading-sign and phase contract from section 2. [tests/solver/test_parametric_spec_generator.py:L40-L253] | Diffraction quality manager | issue pending (3) |
 | Map coverage and source issue references | Add method families and reconcile the external bridge and ambiguous source/test issue references. [src/digitalmodel/solvers/parametric_spec_generator.py:L21-L21] [tests/solver/test_parametric_spec_generator.py:L6-L6] [src/digitalmodel/hydrodynamics/diffraction/parametric_spec_generator.py:L243-L280] | Module maintainer | issue pending (4) |
+| Offline regression selection | Retain all 14 generator nodes in offline selections; replace the blanket solver classification for these Python-only regressions, with a collection-count check. [tests/solver/conftest.py:L1-L13] | Module maintainer | issue pending (6) |
+| Excluded subpackage coverage | Establish registered packs for `benchmark`, `blender_automation`, `calculix`, `fea_model`, `ghs`, `gmsh_meshing`, `mystran`, `orcawave` and `smoke`; `benchmark`, `fea_model`, `orcawave` and `smoke` contain 23 implementation-map rows in total and remain outside this direct-file pack. [docs/registry/implementation-map.yaml:L1-L3] | Repository maintainer | issue pending (7) |
 | Registry duplication and discovery pointers | Duplicate-key-rejecting contract and complete test/doc routing; preserve all existing submodule entries in the eventual repair. [docs/registry/module-routing.yaml:L303-L325] | Repository maintainer | issue pending (5) |
 
 All pending references above denote numbered issue drafts rather than published issues; replace them with issue numbers before independent A7 clearance. No clearance or independent-provider verdict is recorded by this draft.
