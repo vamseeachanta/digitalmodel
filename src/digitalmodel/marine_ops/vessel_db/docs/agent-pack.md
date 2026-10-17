@@ -5,10 +5,10 @@
 | Module | `marine_ops/vessel_db` |
 | Repository | `digitalmodel` |
 | Package path | `src/digitalmodel/marine_ops/vessel_db` |
-| Pack revision | 1 |
+| Pack revision | 2 |
 | Code revision | `6cf35f466e5c1b730951af045d8cfe0065af073f` |
 | Analysis family | diffraction data preparation; registry family EC |
-| Quality role | diffraction quality manager |
+| Quality role | EC engineering Python calculations quality manager |
 | Status | DRAFT |
 
 ## 1. Purpose and scope
@@ -25,6 +25,7 @@ The worldenergydata adapter reads CSV files; the RAO adapter reads separately co
 | --- | --- | --- |
 | 0 | 2026-10-16 | Initial knowledge pack with pinned source inventory and qualification limits |
 | 1 | 2026-10-17 | Align EC gates, qualify standards attribution, pin the map reference and state the portability detection gap |
+| 2 | 2026-10-17 | Include the denominator clamp in its source citation and align review roles with the EC family |
 
 ## 2. Inputs and outputs
 
@@ -217,7 +218,7 @@ sweep: 101 found
 | [src/digitalmodel/marine_ops/vessel_db/audit.py:L33-L39] | Relative numeric conflict thresholds are fixed heuristics; identifier comparison exact | C14 covers one tolerance fixture; issue pending (5) |
 | [src/digitalmodel/marine_ops/vessel_db/audit.py:L77-L83] | Any adapter exception becomes an empty index; audit cannot distinguish unavailable store | no detection check exists; issue pending (5) |
 | [src/digitalmodel/marine_ops/vessel_db/audit.py:L87-L88] | Missing comparison value returns no conflict | C14 explicitly records this behaviour; issue pending (5) |
-| [src/digitalmodel/marine_ops/vessel_db/audit.py:L94-L94] | Near-zero denominator is clamped to a small positive value | no detection check exists; issue pending (5) |
+| [src/digitalmodel/marine_ops/vessel_db/audit.py:L93-L94] | Near-zero denominator is clamped to a small positive value | no detection check exists; issue pending (5) |
 | [src/digitalmodel/marine_ops/vessel_db/audit.py:L120-L128] | Missing identifiers become None; only selected fields searched | no detection check exists; issue pending (5) |
 | [src/digitalmodel/marine_ops/vessel_db/audit.py:L140-L141] | Absent canonical fields are not counted as confidence gaps | no detection check exists; issue pending (5) |
 | [src/digitalmodel/marine_ops/vessel_db/audit.py:L176-L178] | Only first twenty uncited examples are printed; total count retained | C15 does not assert truncation; issue pending (5) |
@@ -249,7 +250,7 @@ The map attaches #2107 as not checked to these package rows; this parser handles
 
 ## 8. Ownership
 
-Review roles: diffraction family quality manager; deputy: diffraction deputy quality manager; producing discipline: marine data preparation. Escalation for reference, tolerance or datum ambiguity: family quality manager, then the maintainer. These are review assignments for this draft, not a completed approval.
+Review roles: EC engineering Python calculations quality manager; deputy: EC deputy quality manager; producing discipline: marine data preparation. Escalation for reference, tolerance or datum ambiguity: family quality manager, then the maintainer. These are review assignments for this draft, not a completed approval.
 
 ## 9. Dependencies and implementation inventory
 
