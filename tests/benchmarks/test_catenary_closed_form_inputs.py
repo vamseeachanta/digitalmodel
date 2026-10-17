@@ -2,6 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Offline contracts for the closed-form catenary inputs."""
 
+from copy import deepcopy
 import hashlib
 import json
 import math
@@ -185,7 +186,8 @@ def test_model_settings():
         assert env["SeabedSlope"] == 0
         assert env["SeabedNormalStiffness"] == inputs["seabed_normal_stiffness_kN_per_m_per_m2"] == 10000
         assert env["RefCurrentSpeed"] == env["WindSpeed"] == 0
-        assert all(w["WaveType"] == "No waves" for w in env["WaveTrains"])
+        assert all(w["WaveType"] == "Airy" and w["WaveHeight"] == 0
+                   and w["WavePeriod"] > 0 for w in env["WaveTrains"])
         assert line["EndAConnection"] == line["EndBConnection"] == "Fixed"
         assert [line[f"EndA{a}"] for a in "XYZ"] == [0, 0, -150]
         assert [line[f"EndB{a}"] for a in "XYZ"] == [inputs["X_m"], 0, 0]
@@ -280,3 +282,59 @@ def test_benchmark_file_sizes():
     files = [p for p in DATA.rglob("*") if p.is_file()]
     assert files
     assert all(p.stat().st_size <= 1_000_000 for p in files)
+
+
+def assert_load_contract(data):
+    """Check the two retained load-error causes without a native API."""
+    for wave in data["Environment"]["WaveTrains"]:
+        assert wave["WaveType"] == "Airy", "unsupported still-water wave type"
+        assert wave["WaveHeight"] == 0
+        assert wave["WavePeriod"] > 0
+    assert_unique_object_names(data)
+    types = {obj["Name"] for obj in data["LineTypes"]}
+    for line in data["Lines"]:
+        assert all(row[0] in types
+                   for row in line["LineType, Length, TargetSegmentLength"])
+
+
+def assert_unique_object_names(data):
+    """Object names share a namespace across line types and lines."""
+    names = [obj["Name"] for section in ("LineTypes", "Lines")
+             for obj in data[section]]
+    assert len(names) == len(set(names)), "duplicate object name"
+
+
+@pytest.mark.parametrize("case_index", [0, 1])
+def test_native_load_error_contract_and_negative_controls(case_index):
+    """Reject each original defect independently of reference validation."""
+    _, _, data = list(models())[case_index]
+    assert_load_contract(data)
+    bad_wave = deepcopy(data)
+    bad_wave["Environment"]["WaveTrains"][0]["WaveType"] = "No waves"
+    with pytest.raises(AssertionError, match="unsupported still-water"):
+        assert_load_contract(bad_wave)
+    duplicate = deepcopy(data)
+    duplicate["Lines"][0]["Name"] = duplicate["LineTypes"][0]["Name"]
+    with pytest.raises(AssertionError, match="duplicate object name"):
+        assert_load_contract(duplicate)
+
+
+def test_builder_reproduces_committed_inputs(tmp_path):
+    """Exercise specification, generation, merge and manifest without a solver."""
+    build = runpy.run_path(
+        str(ROOT / "scripts/benchmark/build_catenary_closed_form_inputs.py")
+    )["build"]
+    output = tmp_path / "inputs"
+    build(output, tmp_path / "scratch")
+    for path in (DATA / "inputs").iterdir():
+        assert (output / path.name).read_bytes() == path.read_bytes()
+    for case in benchmark()["cases"]:
+        data, _ = orcaflex_load(output / Path(case["model_file"]).name)
+        assert_load_contract(data)
+
+
+@pytest.mark.parametrize("case_index", [0, 1])
+def test_object_names_are_unique(case_index):
+    """Expose duplicate names even when the wave selector is also invalid."""
+    _, _, data = list(models())[case_index]
+    assert_unique_object_names(data)

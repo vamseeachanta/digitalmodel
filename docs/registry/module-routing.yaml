@@ -17,6 +17,9 @@ modules:
       asset_integrity:
         agent_pack: src/digitalmodel/asset_integrity/docs/agent-pack.md
         qa_family: EC
+      assessment:
+        agent_pack: src/digitalmodel/asset_integrity/assessment/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/asset_integrity/
     maturity: stable
     owner_wiki: docs/domains/README.md
@@ -112,6 +115,9 @@ modules:
       postprocess:
         agent_pack: src/digitalmodel/drilling_riser/postprocess/docs/agent-pack.md
         qa_family: MR
+      stackup_drawing:
+        agent_pack: src/digitalmodel/drilling_riser/stackup_drawing/docs/agent-pack.md
+        qa_family: MR
   - module: fatigue
     entry_point: src/digitalmodel/fatigue/
     submodules:
@@ -130,6 +136,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#field_development
   - module: geotechnical
     entry_point: src/digitalmodel/geotechnical/
+    submodules:
+      geotechnical:
+        agent_pack: src/digitalmodel/geotechnical/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/geotechnical/]
@@ -378,6 +388,9 @@ modules:
     submodules:
       tubulars:
         agent_pack: src/digitalmodel/well/tubulars/docs/agent-pack.md
+        qa_family: EC
+      well:
+        agent_pack: src/digitalmodel/well/docs/agent-pack.md
         qa_family: EC
     maturity: stable
     owner_wiki: docs/domains/README.md

@@ -253,3 +253,22 @@ def test_missing_static_qa_refuses_queue_before_writing(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="static_qa"):
         driver.main()
     assert not output.exists()
+
+
+@pytest.mark.parametrize("note", [None, "", "   ", 12])
+def test_static_qa_revision_note_is_required_before_preparation(tmp_path, note):
+    """Retained criteria must identify the End A contact requirement revision."""
+    import shutil
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_execution import read_contract
+
+    for name in ("case-table.yml", "manifest.template.json", "criteria.json", "first-timed-case.json"):
+        shutil.copyfile(CAMPAIGN / name, tmp_path / name)
+    path = tmp_path / "criteria.json"
+    criteria = json.loads(path.read_text(encoding="utf-8"))
+    if note is None:
+        criteria["static_qa"].pop("revision_note", None)
+    else:
+        criteria["static_qa"]["revision_note"] = note
+    path.write_text(json.dumps(criteria), encoding="utf-8")
+    with pytest.raises(ValueError, match="static_qa.*revision note"):
+        read_contract(tmp_path, 1, 2)

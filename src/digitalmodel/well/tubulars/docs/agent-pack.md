@@ -239,7 +239,7 @@ The `well` workflow adapter is a downstream caller/exporter, and the explorer ge
 
 ### Map inventory and counted family
 
-Map ref `origin/codex/implmap-work` was read at `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; its data revision is `270c8759c374b67a7f032953e7fcdb14e0224461`, and its map bytes equal the map at this pack's code pin. [docs/registry/implementation-map.yaml:L1-L3]
+Map at the code pin was read at `32fe066f387c13a66fd234eca2850a00c16e104a`; its data revision is `270c8759c374b67a7f032953e7fcdb14e0224461`, and its map bytes equal the map at this pack's code pin. [docs/registry/implementation-map.yaml:L1-L3]
 
 The sole family with in-package implementation rows is `api-5ct-5l-grade-tables`: 1 in-package row and 39 total inventory rows; it is therefore the only counted family, with no ranking tie. [docs/registry/implementation-map.md:L26-L26] [docs/registry/implementation-map.yaml:L24471-L24479]
 
