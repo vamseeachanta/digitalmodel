@@ -248,6 +248,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#orcaflex
   - module: orcawave
     entry_point: src/digitalmodel/orcawave/
+    submodules:
+      orcawave:
+        agent_pack: src/digitalmodel/orcawave/docs/agent-pack.md
+        qa_family: DF
     maturity: beta
     owner_wiki: docs/domains/orcawave/
     key_tests: [tests/orcawave/]
