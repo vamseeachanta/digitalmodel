@@ -5,13 +5,13 @@
 | Module | installation/pipelay |
 | Repository | digitalmodel |
 | Package | `src/digitalmodel/installation/pipelay` |
-| Pack revision | 0; 2026-10-16 |
+| Pack revision | 1; 2026-10-17 |
 | Code revision | `6cf35f466e5c1b730951af045d8cfe0065af073f` |
 | Analysis family | OrcaFlex installation; analytical screening subset |
 | Quality manager | Installation quality manager; independent provider |
 | Status | DRAFT; second-provider clearance pending |
 
-Source citations resolve at the code revision above; implementation-map evidence in section 9 has its own explicit revision.
+Source citations, including the implementation-map evidence in section 9, resolve at the code revision above.
 
 ## 1. Purpose and scope
 
@@ -104,17 +104,52 @@ Gate dispositions refer to this package only; they do not clear downstream progr
 
 | Gate | Applicability and module-specific check | Numeric pass criterion / unit | Evidence and present disposition |
 |---|---|---|---|
-| G0 | C01: run both dedicated test files and check section-2 inputs against the chosen consistent unit basis; C02: resolve every source citation and input revision | 0 unexpected failed tests (count); 0 broken citations (count); 0 mixed-unit additions (count) | Test log and citation readback; unit validation is manual, with remaining gaps in section 6. [tests/installation/test_pipelay_stress.py:L24-L44] [src/digitalmodel/installation/pipelay/stress.py:L146-L160] |
+| G0 | C01: `smys_stress_check` raises `ValueError` for nonzero `axial_force` without `steel_area`, zero `allowable_fraction`, and zero `smys`; run both dedicated test files. C02: check SI buoyancy with `displaced_weight_per_length` and resolve source citations/input revisions | C01: 3 of 3 invalid calls rejected; 0 unexpected failed tests (counts). C02: diameter 0.5 m, density 1025 kg/m³ → 1973.67 N/m within 0.5 N/m; 0 broken citations (count) | Existing guard and buoyancy assertions plus executable check below; this does not detect mixed-unit callers (S04/S05). [tests/installation/test_pipelay_stress.py:L103-L122] [tests/installation/test_pipelay_integrity.py:L163-L168] |
 | G1 | NOT_APPLICABLE to the scalar API: no OrcaFlex data file or program loader is produced; downstream C03 will open each consuming installation model in its target OrcaFlex version through the matching demo route or licensed `LoadData` route | Downstream criterion: 0 load errors, 0 warnings and 0 object-count differences (counts) | NOT_RUN downstream: licensed program and model/version evidence are absent; #2431. AQG r0 §5; local exports are calculation functions. [src/digitalmodel/installation/pipelay/__init__.py:L13-L53] |
-| G2 | C04: compare `horizontal_lay_tension` and `top_lay_tension` with V7/V8; downstream each lowering stage will require hook/sling hand loads, convergence, component table and configuration images | C04: H=300000 and Ttop=400000 force units, absolute arithmetic difference ≤ 0.000001 force units; downstream hook load difference ≤ 2.0% | C04 synthetic arithmetic check; full lowering-stage QA NOT_RUN; #2431. AQG r0 §6 and §10. [tests/installation/test_pipelay_integrity.py:L178-L185] |
+| G2 | C04: compare `horizontal_lay_tension` and `top_lay_tension` with V7/V8; downstream each lowering stage will require hook/sling hand loads, convergence, component table and configuration images | C04: H=300000 and Ttop=400000 force units, `pytest.approx` default relative 1e-6 or absolute 1e-12, whichever is larger: 0.3 and 0.4 force units respectively; downstream hook load difference ≤ 2.0% | C04 synthetic arithmetic check; full lowering-stage QA NOT_RUN; #2431. AQG r0 §6 and §10. [tests/installation/test_pipelay_integrity.py:L178-L185] |
 | G3 | NOT_APPLICABLE to a time-independent scalar API; downstream C05 will compare transient stage stress via `smys_stress_check` and compare dynamic tension with static `top_lay_tension` at splash zone and deepest stage | Downstream: 1 s completed, 0 errors/warnings (counts); tension difference ≤ 25.0%; stress utilisation ≤ 1 dimensionless with qualified input limits | NOT_RUN downstream: no time history or licensed model execution; #2431. AQG r0 §7 and §10. [src/digitalmodel/installation/pipelay/stress.py:L153-L161] [src/digitalmodel/installation/pipelay/integrity.py:L340-L363] |
 | G4 | NOT_APPLICABLE: these scalar functions consume neither vessel hydrodynamics nor diffraction meshes; downstream new vessel data will require the diffraction record | Downstream record: 0 missing required G4 records (count) | No diffraction clearance is claimed. AQG r0 §8 and §10. [src/digitalmodel/installation/pipelay/stress.py:L102-L109] [src/digitalmodel/installation/pipelay/integrity.py:L340-L363] |
-| G5 | C06: retain the code pin, full test node IDs/results, citation resolution and unresolved-item references in this pack; a consuming report will generate its own signed QA appendix | 0 missing section-4 result/node pairs (count); 0 unresolved items without an issue/draft reference (count); 0 altered cited source files (count) | Pack self-check and source digests; report appendix/signature NOT_RUN, #2431. AQG r0 §9. [tests/installation/test_pipelay_stress.py:L24-L39] [tests/installation/test_pipelay_integrity.py:L178-L190] |
+| G5 | C06: `smys_stress_check` returns `SmysCheck` with `longitudinal_stress`, `allowable_stress`, `utilisation`, `percent_smys` and `passes`; assert the output identities below and retain pin, node/results, citations and issue/draft references | 0 missing or inconsistent fields (count); utilisation = longitudinal_stress/allowable_stress and percent_smys = 100·longitudinal_stress/SMYS within rel 1e-9; 0 missing result/node pairs, untracked open items or altered cited sources (counts) | Executable output check below supplements the existing pure-bending assertions; report appendix/signature NOT_RUN, #2431. AQG r0 §9. [src/digitalmodel/installation/pipelay/stress.py:L91-L99] [src/digitalmodel/installation/pipelay/stress.py:L153-L161] [tests/installation/test_pipelay_stress.py:L50-L67] |
 
 Table 6. Six gates and six check IDs: G0 has C01/C02, G1 C03 downstream, G2 C04, G3 C05 downstream, G4 conditional record only, and G5 C06.
 
 C04 uses independently supplied synthetic inputs from V7/V8; it is not a reference for weld repair or the disputed standard-attributed fractions. [tests/installation/test_pipelay_integrity.py:L178-L185]
-C01 does not test rejected non-finite/negative inputs comprehensively, and C02 checks traceability rather than the truth of licensed-clause attribution. [tests/installation/test_pipelay_stress.py:L115-L122] [tests/installation/test_pipelay_integrity.py:L127-L157]
+C01 does not test rejected non-finite/negative inputs comprehensively; C02 checks SI buoyancy arithmetic and traceability, rather than mixed-unit detection or the truth of licensed-clause attribution. [tests/installation/test_pipelay_stress.py:L115-L122] [tests/installation/test_pipelay_integrity.py:L127-L157]
+
+The following executable C01/C02/C06 check will be run with `PYTHONPATH=src python` from the repository root; all inputs are synthetic and use a consistent unit basis. C06 checks one pure-bending result, not every possible load case.
+
+```python
+from dataclasses import asdict
+from math import isclose
+from digitalmodel.installation.pipelay import (
+    SmysCheck, displaced_weight_per_length, smys_stress_check,
+)
+
+inputs = dict(outer_diameter=0.5, bend_radius=250.0,
+              youngs_modulus=200000.0, smys=450.0, allowable_fraction=0.8)
+rejected = 0
+for invalid in ({"axial_force": 1.0}, {"allowable_fraction": 0.0}, {"smys": 0.0}):
+    try:
+        smys_stress_check(**(inputs | invalid))
+    except ValueError:
+        rejected += 1
+assert rejected == 3
+buoyancy = displaced_weight_per_length(0.5, 1025.0)
+assert abs(buoyancy - 1973.67) <= 0.5
+result = smys_stress_check(**inputs)
+assert isinstance(result, SmysCheck)
+assert set(asdict(result)) == {
+    "longitudinal_stress", "allowable_stress", "utilisation", "percent_smys", "passes",
+}
+assert isclose(result.longitudinal_stress, 200.0, rel_tol=1e-9)
+assert isclose(result.allowable_stress, 360.0, rel_tol=1e-9)
+assert isclose(result.utilisation,
+               result.longitudinal_stress / result.allowable_stress, rel_tol=1e-9)
+assert isclose(result.percent_smys,
+               100.0 * result.longitudinal_stress / inputs["smys"], rel_tol=1e-9)
+assert result.passes is (result.longitudinal_stress <= result.allowable_stress)
+print("C01: 3/3 rejected; C02: SI buoyancy passed; C06: 0 missing or inconsistent fields")
+```
 
 ## 6. Known failure modes and pitfalls
 
@@ -186,7 +221,7 @@ The adjacent analytical module explicitly describes OrcaFlex pre-processing with
 
 ### Map pin and counted families
 
-Implementation-map document: `docs/registry/implementation-map.yaml`, data revision `270c8759c374b67a7f032953e7fcdb14e0224461`, read from map commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` on `codex/implmap-work`; source-code pin remains the header revision. [docs/registry/implementation-map.yaml:L1-L4]
+Implementation-map document: `docs/registry/implementation-map.yaml`, data revision `270c8759c374b67a7f032953e7fcdb14e0224461`, read from the map at the header code revision `6cf35f466e5c1b730951af045d8cfe0065af073f`. [docs/registry/implementation-map.yaml:L1-L4]
 The inventory was computed from all 13 families’ `implementations` rows with a path strictly inside the header package, excluding the map’s `rejected_candidates` collection; its empty result is reproduced by the procedure below.
 
 | Accepted in-package family inventory | In-package rows | Counted-family grep |
