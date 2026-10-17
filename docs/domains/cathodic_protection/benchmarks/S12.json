@@ -17,7 +17,8 @@
       "flat and phased modes",
       "reinforcement",
       "F103 companion mapping and attenuation",
-      "unqualified geometry or temperature combinations"
+      "unqualified geometry or temperature combinations",
+      "Al-base anodes above 25 degC: defer pending separate qualification of clauses 6.6.3-6.6.4 and Figure 6.6.1, including applicability beyond heated buried pipelines; no automatic temperature-rule transfer to a riser."
     ]
   },
   "source_document": {
@@ -39,7 +40,7 @@
       "pdf_page": 14
     },
     "bare_initial_final": {
-      "locator": "Table 6.3.1",
+      "locator": "Table 6.3.1; clause 6.3.8",
       "printed_page": 14,
       "pdf_page": 15
     },
@@ -53,18 +54,15 @@
       "printed_page": 16,
       "pdf_page": 17
     },
-    "paint_context": {
-      "locator": "Table 6.4.1",
-      "printed_page": 19,
-      "pdf_page": 20
-    },
     "capacity": {
-      "locator": "Table 6.6.1; 6.6.2",
+      "locator": "Table 6.6.1; clauses 6.6.2-6.6.4; Figure 6.6.1",
       "printed_page": 20,
-      "pdf_page": 21
+      "pdf_page": 21,
+      "printed_page_end": 21,
+      "pdf_page_end": 22
     },
     "potential": {
-      "locator": "Table 6.6.2; 6.6.5",
+      "locator": "Table 6.6.2; clause 6.6.5",
       "printed_page": 21,
       "pdf_page": 22
     },
@@ -95,13 +93,17 @@
     },
     "demand_drain": {
       "locator": "7.4-7.5",
-      "printed_page": 27,
-      "pdf_page": 28
+      "printed_page": 26,
+      "pdf_page": 27,
+      "printed_page_end": 27,
+      "pdf_page_end": 28
     },
     "mass_output": {
       "locator": "7.7-7.8",
       "printed_page": 28,
-      "pdf_page": 29
+      "pdf_page": 29,
+      "printed_page_end": 29,
+      "pdf_page_end": 30
     },
     "detail": {
       "locator": "7.9",
@@ -111,7 +113,9 @@
     "continuity": {
       "locator": "7.10-7.11",
       "printed_page": 30,
-      "pdf_page": 31
+      "pdf_page": 31,
+      "printed_page_end": 31,
+      "pdf_page_end": 32
     },
     "reporting": {
       "locator": "7.12",
@@ -132,7 +136,8 @@
       "basis": "thermally_sprayed_aluminium",
       "citations": [
         "tsa"
-      ]
+      ],
+      "applicability": "DNV RP B401 (1993), clause 6.3.16, printed p. 16: qualify the 200 um nominal thermally sprayed aluminium thickness basis. This clause provides average demand only; the initial/final densities defined in clauses 6.3.1-6.3.4 do not apply. Initial/final treatment for this zone is unresolved and remains not evaluated; neither zero nor later-edition values may be substituted."
     }
   ],
   "required_inputs": [
@@ -152,7 +157,8 @@
     {
       "group": "environment",
       "fields": [
-        "seawater temperature (degC)",
+        "yearly average surface-water temperature for climatic region (degC)",
+        "local seawater temperature for resistivity (degC)",
         "metal/electrolyte interface temperature (degC)",
         "anode temperature (degC)",
         "electrolyte resistivity (ohm m)",
@@ -196,7 +202,8 @@
         "resistance",
         "depletion",
         "utilisation",
-        "detail"
+        "detail",
+        "mass_output"
       ]
     },
     {
@@ -205,12 +212,13 @@
         "density (kg/m3)",
         "residual mass basis (kg)",
         "final exposed geometry and area (m, m2)",
-        "qualified depletion rule"
+        "qualified depletion rule: decide clause 6.7.6 versus 6.7.7 using bracelet subtype and mounting evidence"
       ],
       "citations": [
         "depletion",
         "utilisation"
-      ]
+      ],
+      "applicability": "DNV RP B401 (1993), clauses 6.7.6-6.7.7, printed p. 23: clause 6.7.6 concerns pipeline half-shells flush with concrete weight coating with mastic-filled gaps; a riser bracelet is not assumed to meet that basis. Qualify the applicable rule before selecting final exposed geometry."
     },
     {
       "group": "connected_scope",
@@ -229,26 +237,33 @@
   "numerical_inputs": null,
   "expected_results": null,
   "acceptance": [
-    "Step 1: the specification loads offline and every input citation resolves; existing S01-S11 artifacts remain unchanged.",
+    "Step 1: the specification loads offline and every input/acceptance citation resolves; the edition API rejects 1993 and S12 is absent from the executable case registry.",
     "Before implementation: qualify source cells, equations, applicability, units and proposed input-field names.",
     "Before numerical acceptance: freeze independent generic inputs and a cited hand calculation; define scalar tolerances and exact integer-count comparison.",
-    "Verification must assess the declared installed arrangement against capacity and initial/final output; unresolved criteria remain not evaluated.",
+    "Verification must assess the declared installed arrangement against capacity and applicable initial/final output under clauses 7.7-7.8. The TSA zone requires a separate initial/final applicability decision under clause 6.3.16; unresolved criteria remain not evaluated, with no zero-demand or later-edition substitution.",
     "Any non-passing result must carry a corrective option; spatial protection and engineering acceptance require separate evidence."
   ],
   "missing": [
     "Qualified machine-readable 1993 cells and equation/applicability transcription, including bracelet subtype and depletion details.",
+    "Decision on TSA-zone initial/final treatment under clause 6.3.16, including qualification of the 200 um nominal-thickness applicability basis; unresolved treatment remains not evaluated.",
+    "Qualified depletion-rule decision: clause 6.7.6 versus 6.7.7, supported by bracelet subtype, flush mounting, coating/gap and final-geometry evidence.",
     "Independent generic numerical vector, installed count and self-consistent initial/final geometry.",
     "Agreed schema fields for sprayed-aluminium basis, interface temperature and bracelet installation/depletion evidence.",
     "1993 component/family implementation, independent reference results and numerical tolerances.",
     "Pack registration, citation resolution, candidate verification and release review; outside step 1."
   ],
   "repository_context": {
-    "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2281",
+    "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2697",
     "revision": "6d177f01c1c3d7605ffd954b44d0216ebcbb43b5",
     "case_registry": "scripts/reporting/build_cp_review_portfolio.py:CASES",
     "existing_inputs": "tests/fixtures/cathodic_protection/workflow_inputs/",
     "existing_packs": "docs/domains/cathodic_protection/reports/cases/S01 through S11",
     "edition_api": "src/digitalmodel/cathodic_protection/_edition.py",
-    "table_api": "src/digitalmodel/cathodic_protection/b401_tables.py"
-  }
+    "table_api": "src/digitalmodel/cathodic_protection/b401_tables.py",
+    "historical_portfolio_issue": "https://github.com/vamseeachanta/digitalmodel/issues/2281"
+  },
+  "acceptance_citations": [
+    "mass_output",
+    "reporting"
+  ]
 }
