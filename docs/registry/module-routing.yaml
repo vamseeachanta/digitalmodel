@@ -500,6 +500,10 @@ modules:
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#spectral_fatigue
   - module: synthetic_rope_mooring_fatigue
+    submodules:
+      synthetic_rope_mooring_fatigue:
+        agent_pack: src/digitalmodel/synthetic_rope_mooring_fatigue/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/synthetic_rope_mooring_fatigue/
     maturity: development
     owner_wiki: docs/domains/README.md
