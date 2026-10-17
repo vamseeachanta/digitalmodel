@@ -157,6 +157,9 @@ modules:
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
     submodules:
+      hydrodynamics:
+        agent_pack: src/digitalmodel/hydrodynamics/docs/agent-pack.md
+        qa_family: EC
       hull_library:
         agent_pack: src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md
         qa_family: DF
@@ -182,12 +185,19 @@ modules:
       marine_analysis:
         agent_pack: src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md
         qa_family: MR
+      marine_engineering:
+        agent_pack: src/digitalmodel/marine_ops/marine_engineering/docs/agent-pack.md
+        qa_family: EC
   - module: floating_wind
     entry_point: src/digitalmodel/floating_wind/
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/floating_wind/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#floating_wind
+    submodules:
+      floating_wind:
+        agent_pack: src/digitalmodel/floating_wind/docs/agent-pack.md
+        qa_family: EC
   - module: hydrostatics
     entry_point: src/digitalmodel/hydrostatics/
     maturity: beta
@@ -321,6 +331,9 @@ modules:
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
     submodules:
+      top_level:
+        agent_pack: src/digitalmodel/solvers/docs/agent-pack.md
+        qa_family: DF
       orcaflex/results_analysis:
         agent_pack: src/digitalmodel/solvers/orcaflex/results_analysis/docs/agent-pack.md
         qa_family: MR
@@ -386,6 +399,9 @@ modules:
   - module: well
     entry_point: src/digitalmodel/well/
     submodules:
+      drilling:
+        agent_pack: src/digitalmodel/well/drilling/docs/agent-pack.md
+        qa_family: EC
       tubulars:
         agent_pack: src/digitalmodel/well/tubulars/docs/agent-pack.md
         qa_family: EC
@@ -500,12 +516,20 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#bha_database
   - module: riser_database
     entry_point: src/digitalmodel/riser_database/
+    submodules:
+      riser_database:
+        agent_pack: src/digitalmodel/riser_database/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/riser_database/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_database
   - module: riser_fatigue
     entry_point: src/digitalmodel/riser_fatigue/
+    submodules:
+      riser_fatigue:
+        agent_pack: src/digitalmodel/riser_fatigue/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/riser_fatigue/]
