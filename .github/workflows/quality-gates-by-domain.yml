@@ -173,7 +173,7 @@ jobs:
           enable-cache: true
 
       - name: Install Gmsh runtime libraries
-        if: matrix.domain == 'solver-smoke'
+        if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
         run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
 
       - name: Create reports directory
@@ -217,6 +217,13 @@ jobs:
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
+
+      - name: Run geotechnical solver benchmarks
+        if: matrix.domain == 'specialized'
+        run: >-
+          PYTHONPATH=src uv run --no-sources --with-editable '.[test]'
+          --with 'xslope==1.0.3' --with 'gmsh>=4.15'
+          python -m pytest tests/geotechnical -q -rA -p no:cacheprovider
 
       - name: Extract shard result
         if: always()
