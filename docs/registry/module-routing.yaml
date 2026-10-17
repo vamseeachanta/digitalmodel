@@ -576,6 +576,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#contract_validation
   - module: materials
     entry_point: src/digitalmodel/materials/
+    submodules:
+      materials:
+        agent_pack: src/digitalmodel/materials/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/materials/]
