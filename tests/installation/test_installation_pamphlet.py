@@ -44,7 +44,7 @@ def vessel_info():
     def disp(k, i):
         return i.get("_display") or k
 
-    key, info = next((k, i) for k, i in vlib.items() if "bokalift" in disp(k, i).lower())
+    key, info = next((k, i) for k, i in vlib.items() if "HLV-A".lower() in disp(k, i).lower())
     cc = info["crane_curve"]
     return {
         "name": disp(key, info),
@@ -94,8 +94,8 @@ def test_select_rao_basis_fpso_diffraction_is_drillship():
     assert calc.select_rao_basis(runs) == "drillship"
 
 
-def test_select_rao_basis_bokalift_is_vessel():
-    runs = [{"run_id": "r1", "workflow": "anything", "input": "x/bokalift2-mesh/in.yml"}]
+def test_select_rao_basis_hlv_a_is_vessel():
+    runs = [{"run_id": "r1", "workflow": "anything", "input": "x/HLV-A-mesh/in.yml"}]
     assert calc.select_rao_basis(runs) == "vessel"
 
 
@@ -356,11 +356,11 @@ def test_scan_derives_rao_artifact_from_returned_files(tmp_path):
                 "returncode": 0,
                 "audit": {
                     "workflow": "orcawave-diffraction-solve",
-                    "input_relpath": "cases/orcawave-diffraction-bokalift/input.yml",
+                    "input_relpath": "cases/orcawave-diffraction-HLV-A/input.yml",
                 },
                 "summary": {
                     "returned_files": [
-                        "results/lr_v/results/Bokalift2_validation.json",
+                        "results/lr_v/results/HLV-A_validation.json",
                         artifact_rel,
                     ]
                 },
@@ -454,8 +454,8 @@ def test_router_is_deterministic_on_base_config(tmp_path):
 # ---------------------------------------------------------------- real-RAO artifact ingestion (T3)
 # Advances #1111: a vessel-specific OrcaWave RAO artifact drives the operation
 # envelopes for the "vessel" basis. Tested here with a SYNTHETIC fixture RAOSet
-# (clearly NOT real vessel data) — the real BokaLift mesh + licensed solve remain.
-BOKALIFT_RUN = {"run_id": "lr_bl", "input": "acma/bokalift2-mesh/input.yml"}
+# (clearly NOT real vessel data) — the real HLV-A mesh + licensed solve remain.
+HLV_A_RUN = {"run_id": "lr_bl", "input": "acma/HLV-A-mesh/input.yml"}
 HS_LIMITS = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
 
 
@@ -579,7 +579,7 @@ def test_vessel_artifact_drives_envelopes_and_is_actual(vessel_info, lifts, tmp_
         vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
         rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
         tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
-        completed_runs=[BOKALIFT_RUN], rao_artifact=str(path),
+        completed_runs=[HLV_A_RUN], rao_artifact=str(path),
     )
 
     # the REAL ingested artifact drove the envelopes ...
@@ -604,7 +604,7 @@ def test_vessel_artifact_path_from_completed_run(vessel_info, lifts, tmp_path):
     """The artifact path may ride on the completed-run entry that flipped basis."""
     fixture = _synthetic_rao_set()
     path = _write_rao_artifact(tmp_path, fixture)
-    run = {**BOKALIFT_RUN, "rao_artifact": str(path)}
+    run = {**HLV_A_RUN, "rao_artifact": str(path)}
 
     res = calc.assemble_result(
         vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
@@ -624,7 +624,7 @@ def test_vessel_without_artifact_is_honest_proxy(vessel_info, lifts):
         vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
         rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
         tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
-        completed_runs=[BOKALIFT_RUN],  # basis is "vessel" but no rao_artifact
+        completed_runs=[HLV_A_RUN],  # basis is "vessel" but no rao_artifact
     )
     assert res["rao_from_artifact"] is False
     assert res["rao_artifact"] is None
@@ -643,7 +643,7 @@ def test_vessel_without_artifact_is_honest_proxy(vessel_info, lifts):
 
 
 def test_resolve_rao_artifact_precedence(tmp_path):
-    run = {**BOKALIFT_RUN, "rao_artifact": "/from/run.json"}
+    run = {**HLV_A_RUN, "rao_artifact": "/from/run.json"}
     # explicit config path wins over the completed-run-carried path
     assert calc.resolve_rao_artifact("vessel", [run], "/explicit.json") == "/explicit.json"
     # else the run-carried path is used
@@ -651,11 +651,11 @@ def test_resolve_rao_artifact_precedence(tmp_path):
     # non-vessel basis never ingests an artifact
     assert calc.resolve_rao_artifact("drillship", [run], "/explicit.json") is None
     # vessel basis with nothing available -> None
-    assert calc.resolve_rao_artifact("vessel", [BOKALIFT_RUN], None) is None
+    assert calc.resolve_rao_artifact("vessel", [HLV_A_RUN], None) is None
 
 
 # ---------------------------------------------------------------- roll-damping sensitivity band (#1538 follow-up)
-# BokaLift 2 was run at two external roll-damping (B44) levels: zeta = 5% critical
+# HLV-A was run at two external roll-damping (B44) levels: zeta = 5% critical
 # (roll RAO peak 23.5 deg/m) and zeta = 10% with bilge keels (roll peak 19.2 deg/m).
 # Roll is damping-controlled at resonance, so the operation envelopes are presented
 # as an uncertainty BAND. These tests use SYNTHETIC two-case fixtures (NOT the real
@@ -809,7 +809,7 @@ def test_assemble_result_wires_envelope_band(vessel_info, lifts, tmp_path):
         vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
         rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
         tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
-        completed_runs=[BOKALIFT_RUN],
+        completed_runs=[HLV_A_RUN],
         rao_artifact_low=str(low_path), rao_artifact_high=str(high_path),
     )
 
@@ -857,7 +857,7 @@ def test_assemble_result_without_band_is_backward_compatible(vessel_info, lifts,
         vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
         rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
         tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
-        completed_runs=[BOKALIFT_RUN],
+        completed_runs=[HLV_A_RUN],
     )
     assert "envelope_band" not in base
     assert "damping_note" not in base
@@ -866,7 +866,7 @@ def test_assemble_result_without_band_is_backward_compatible(vessel_info, lifts,
     assert "Roll-damping sensitivity band" not in html_base
 
     # exactly as the pre-band call with the same inputs (byte-identical HTML)
-    prior = _assemble(vessel_info, lifts, "vessel", runs=[BOKALIFT_RUN])
+    prior = _assemble(vessel_info, lifts, "vessel", runs=[HLV_A_RUN])
     assert render_pamphlet_html(prior, "LBL") == html_base
 
     # only ONE artifact supplied -> band requires BOTH, so no band
@@ -874,7 +874,7 @@ def test_assemble_result_without_band_is_backward_compatible(vessel_info, lifts,
         vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
         rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
         tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
-        completed_runs=[BOKALIFT_RUN], rao_artifact_low=str(low_path),
+        completed_runs=[HLV_A_RUN], rao_artifact_low=str(low_path),
     )
     assert "envelope_band" not in one
 
