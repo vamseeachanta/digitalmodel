@@ -96,7 +96,7 @@ IMPERIAL_SUFFIXES = (
 #: percentage of break strength, not a load. This class is intentionally narrow:
 #: it names the dimensionless-ness, which is the same discipline the unit
 #: suffixes enforce, rather than permitting a bare unqualified name.
-DIMENSIONLESS_SUFFIXES = ("percent", "pct", "ratio", "frac", "fraction", "factor")
+DIMENSIONLESS_SUFFIXES = ("percent", "pct", "ratio", "frac", "fraction", "factor", "share")
 
 UNIT_SUFFIX_RE = re.compile(
     "_(?:"
@@ -308,6 +308,7 @@ ACCEPTED_BY_CLASS: dict[str, tuple[str, ...]] = {
         "pretension_percent",         # dynmoor TI -- percent of BRKM
         "mean_load_factor",
         "utilisation_load_ratio",
+        "most_loaded_share",
     ),
 }
 
@@ -334,6 +335,7 @@ def test_suffix_vocabulary_accepts_each_unit_class(unit_class: str, name: str):
         "pretension_lb",
         "yaw_moment_100kt_kip_ft",
         "pretension_percent",
+        "most_loaded_share",
     ],
 )
 def test_scanner_accepts_imperial_and_dimensionless_names(name: str):
@@ -635,9 +637,10 @@ def test_mooring_check_mbl_plausibility_seam():
 
 def test_sling_tension_kn_seam():
     """``installation_analysis.SlingConfig.calculate_sling_tension(hook_load_kN)``
-    -- same-class kN seam. Hand-calc with defaults (n=4, 60 deg, SKF=1.25,
+    -- same-class kN seam. Hand-calc with defaults (n=4, 60 deg, SKF=1.33,
     tilt=1.05):
-        T = W*SKF*tilt/(n*sin60) = 5000*1.25*1.05/(4*0.8660254) = 1894.5 kN
+        T = W*SKF*tilt/(n*sin60) = 5000*1.33*1.05/(4*0.8660254) = 2015.7 kN
+    SKF: DNVGL-ST-E273, 2.7-3 Portable offshore units, April 2016, §3.5.5.
     """
     from digitalmodel.orcaflex.installation_analysis import SlingConfig
 
@@ -646,7 +649,7 @@ def test_sling_tension_kn_seam():
     out = cfg.calculate_sling_tension(hook_load_kN)
 
     sin60 = math.sin(math.radians(60.0))
-    expected_t = round(5000.0 * 1.25 * 1.05 / (4.0 * sin60), 1)  # 1894.5
+    expected_t = round(5000.0 * 1.33 * 1.05 / (4.0 * sin60), 1)  # 2015.7
     assert out["sling_tension_per_leg_kN"] == expected_t
     assert _in_window("sling_tension_kn", out["sling_tension_per_leg_kN"])
     assert _in_window("mooring_mbl_kn", cfg.sling_mbl_kN)  # 2000 kN sling MBL

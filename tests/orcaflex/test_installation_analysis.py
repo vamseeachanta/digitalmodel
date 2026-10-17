@@ -97,9 +97,110 @@ class TestSlingConfig:
         """Sling tension should account for angle and number of slings."""
         sling = SlingConfig(num_slings=4, sling_angle_deg=60.0, sling_mbl_kN=2000.0)
         result = sling.calculate_sling_tension(hook_load_kN=1000.0)
-        assert result["sling_tension_per_leg_kN"] > 0
-        # 4 slings at 60 deg: T ≈ 1000 * 1.25 * 1.05 / (4 * sin(60)) ≈ 379 kN
-        assert result["sling_tension_per_leg_kN"] < 500
+        # DNVGL-ST-E273, 2.7-3 Portable offshore units, April 2016, §3.5.5:
+        # matched four-leg SKL=1.33; T=1000*0.25*1.33*1.05/sin(60)=403.1 kN.
+        assert result["sling_tension_per_leg_kN"] == pytest.approx(403.1)
+        assert result["most_loaded_share"] == 0.25
+        assert "equal split assumed" in result["load_share_basis"]
+
+    @pytest.mark.parametrize("legs, skl", [(1, 1.0), (2, 1.1), (3, 1.1), (4, 1.33)])
+    def test_default_skl_by_leg_count(self, legs, skl):
+        sling = SlingConfig(num_slings=legs)
+        result = sling.calculate_sling_tension(1000.0)
+        assert sling.skew_load_factor == skl
+        assert result["skew_load_factor"] == skl
+        if legs > 1:
+            assert "DNVGL-ST-E273" in result["skew_load_factor_source"]
+            assert "April 2016" in result["skew_load_factor_source"]
+            citation = result["citations"][0]
+            assert citation["section"] == "3.5.5"
+            assert citation["revision"] == "2016-04"
+            assert citation["title"] == "2.7-3 Portable offshore units"
+
+    def test_offset_cog_exceeds_equal_split(self):
+        # 2 points at x=-2,+2 m; extreme CoG x=+1 m. Moment balance:
+        # R_right*4 = W*3 => shares 0.25,0.75 (SKL excludes this effect).
+        sling = SlingConfig(
+            num_slings=2, lift_points_m=[(-2.0, 0.0), (2.0, 0.0)],
+            cog_offset_m=(1.0, 0.0),
+        )
+        result = sling.calculate_sling_tension(1000.0)
+        equal = SlingConfig(num_slings=2).calculate_sling_tension(1000.0)
+        assert result["sling_tension_per_leg_kN"] > equal["sling_tension_per_leg_kN"]
+        assert result["most_loaded_share"] == pytest.approx(0.75)
+        assert result["sling_tension_per_leg_kN"] == pytest.approx(1000.3)
+        assert "statics" in result["load_share_basis"]
+
+    def test_three_leg_hand_calculation(self):
+        # Triangle (0,0),(6,0),(0,3), centroid (2,1), CoG (3,0.75).
+        # Sum R=W; 6*R2=3*W; 3*R3=0.75*W => (0.25,0.5,0.25).
+        sling = SlingConfig(
+            num_slings=3, lift_points_m=[(0, 0), (6, 0), (0, 3)],
+            cog_offset_m=(1.0, -0.25), sling_angle_deg=30, tilt_factor=1.0,
+            sling_mbl_kN=3000,
+        )
+        result = sling.calculate_sling_tension(1000)
+        assert result["most_loaded_share"] == pytest.approx(0.5)
+        assert result["sling_tension_per_leg_kN"] == pytest.approx(1100.0)
+        assert result["sling_utilisation"] == pytest.approx(0.3667)
+        assert result["achieved_safety_factor"] == pytest.approx(2.73)
+        assert result["pass"] is False
+
+    def test_four_leg_extreme_cog_share_hand_calculation(self):
+        # Independently supplied PL=40% at extreme CoG, not another SKL.
+        sling = SlingConfig(
+            num_slings=4, most_loaded_share=0.4, sling_angle_deg=30,
+            tilt_factor=1.0,
+        )
+        result = sling.calculate_sling_tension(1000)
+        assert result["sling_tension_per_leg_kN"] == pytest.approx(1064.0)
+        assert result["most_loaded_share"] == 0.4
+        assert "extreme CoG" in result["load_share_basis"]
+
+    def test_explicit_skl_override_is_reported(self):
+        result = SlingConfig(skew_load_factor=1.2).calculate_sling_tension(1000)
+        assert result["skew_load_factor"] == 1.2
+        assert "explicit override" in result["skew_load_factor_source"]
+        assert result["skew_load_factor_below_minimum"] is True
+
+    def test_revalidation_preserves_default_provenance(self):
+        sling = SlingConfig()
+        before = sling.calculate_sling_tension(1000)
+        after = SlingConfig.model_validate(sling).calculate_sling_tension(1000)
+        assert after["skew_load_factor_source"] == before["skew_load_factor_source"]
+
+    @pytest.mark.parametrize("share", [0, 0.24, 1.01, float("nan"), float("inf")])
+    def test_invalid_most_loaded_share(self, share):
+        with pytest.raises(ValueError):
+            SlingConfig(most_loaded_share=share).calculate_sling_tension(1000)
+
+    @pytest.mark.parametrize("kwargs", [
+        {"cog_offset_m": (1, 0)},
+        {"num_slings": 2, "lift_points_m": [(0, 0), (0, 0)], "cog_offset_m": (0, 0)},
+        {"num_slings": 2, "lift_points_m": [(-2, 0), (2, 0)], "cog_offset_m": (0, 1)},
+        {"num_slings": 2, "lift_points_m": [(-2, 0), (2, 0)], "cog_offset_m": (3, 0)},
+        {"num_slings": 3, "lift_points_m": [(0, 0), (1, 0), (2, 0)], "cog_offset_m": (0, 0)},
+        {"num_slings": 3, "lift_points_m": [(0, 0), (6, 0), (0, 3)], "cog_offset_m": (5, 5)},
+        {"num_slings": 2, "lift_points_m": [(-2, 0)], "cog_offset_m": (0, 0)},
+        {"num_slings": 2, "lift_points_m": [(-2, 0), (2, 0)]},
+        {"num_slings": 2, "lift_points_m": [(-2, 0), (2, 0)], "cog_offset_m": (float("nan"), 0)},
+        {"num_slings": 2, "lift_points_m": [(-2, 0), (2, 0)], "cog_offset_m": (0, 0), "most_loaded_share": 0.6},
+        {"num_slings": 4, "lift_points_m": [(-1, -1), (1, -1), (1, 1), (-1, 1)], "cog_offset_m": (0, 0)},
+        {"num_slings": 5},
+    ])
+    def test_unsupported_or_inconsistent_geometry(self, kwargs):
+        with pytest.raises(ValueError):
+            SlingConfig(**kwargs).calculate_sling_tension(1000)
+
+    def test_more_than_four_legs_requires_explicit_skl(self):
+        result = SlingConfig(num_slings=5, skew_load_factor=1.5).calculate_sling_tension(1000)
+        assert result["skew_load_factor"] == 1.5
+        assert "explicit override" in result["skew_load_factor_source"]
+
+    @pytest.mark.parametrize("load", [-1, float("nan"), float("inf")])
+    def test_invalid_hook_load(self, load):
+        with pytest.raises(ValueError):
+            SlingConfig().calculate_sling_tension(load)
 
     def test_steeper_angle_lower_tension(self):
         """Steeper sling angle should give lower sling tension."""
