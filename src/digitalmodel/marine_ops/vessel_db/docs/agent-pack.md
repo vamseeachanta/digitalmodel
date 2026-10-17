@@ -5,7 +5,7 @@
 | Module | `marine_ops/vessel_db` |
 | Repository | `digitalmodel` |
 | Package path | `src/digitalmodel/marine_ops/vessel_db` |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | `6cf35f466e5c1b730951af045d8cfe0065af073f` |
 | Analysis family | diffraction data preparation; registry family EC |
 | Quality role | diffraction quality manager |
@@ -18,6 +18,13 @@ The containing `marine_ops` domain has beta maturity; this is a domain classific
 `MassProperties.orcawave_body_block` emits a body mass dictionary; meshes, complete decks and licensed runs belong to downstream consumers. [src/digitalmodel/marine_ops/vessel_db/mass_properties.py:L37-L55] [src/digitalmodel/hydrodynamics/diffraction/vessel_deck_builder.py:L304-L353]
 No geometry, depth, load or target-version qualification follows from a mass dictionary: its only represented tensor is diagonal about the centre of mass. [src/digitalmodel/marine_ops/vessel_db/mass_properties.py:L37-L55]
 The worldenergydata adapter reads CSV files; the RAO adapter reads separately configured workbooks rather than shipping a reference library. [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L105-L140] [src/digitalmodel/marine_ops/vessel_db/hulls_adapter.py:L38-L72]
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 0 | 2026-10-16 | Initial knowledge pack with pinned source inventory and qualification limits |
+| 1 | 2026-10-17 | Align EC gates, qualify standards attribution, pin the map reference and state the portability detection gap |
 
 ## 2. Inputs and outputs
 
@@ -56,7 +63,7 @@ The RAO adapter does not convert or validate phase units, rotational amplitude u
 | `promote`, `_write_csv` | Record-table serialisation and provenance summary, not another RAO numerical parser | [src/digitalmodel/marine_ops/vessel_db/promote.py:L130-L152] [src/digitalmodel/marine_ops/vessel_db/promote.py:L167-L205] |
 
 UNVERIFIED: DNV-RP-H103 edition, clause, table and publication title supporting the gyradii attribution are absent from the cited source; clause text not checked against the licensed copy (issue pending (1)). [src/digitalmodel/marine_ops/vessel_db/gyradii.py:L10-L14]
-The installation demonstration names DNV-RP-H103 Sections 5.4.1 and 5.4.2 for static and dynamic crane criteria, without identifying an edition; no tabulated limit is reproduced here. [examples/demos/installation/go_no_go_crane_curves.py:L82-L91]
+UNVERIFIED: The installation demonstration attributes static and dynamic crane criteria to DNV-RP-H103 without a verified publication title, edition or clause title; the attribution requires qualification (issue pending (1)); no tabulated limit is reproduced here. [examples/demos/installation/go_no_go_crane_curves.py:L82-L91]
 UNVERIFIED: OCIMF publication, edition and clause/table are unspecified: package references describe adapter precedence, while the schema calls its coefficient source an annex reference (issue pending (1)). [src/digitalmodel/marine_ops/vessel_db/hulls_adapter.py:L3-L10] [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L11-L21] [data/vessels/SCHEMA.yaml:L68-L72]
 No inconsistent edition pair can be resolved from these unspecified editions; standards attribution remains an open item rather than an inferred standard check. [src/digitalmodel/marine_ops/vessel_db/gyradii.py:L10-L14] [examples/demos/installation/go_no_go_crane_curves.py:L82-L91]
 The estimate carries a basis string, but the estimate and mass-property return types have no calculation `Citation` sidecar field (issue pending (1)). [src/digitalmodel/marine_ops/vessel_db/gyradii.py:L49-L59] [src/digitalmodel/marine_ops/vessel_db/mass_properties.py:L25-L35]
@@ -77,16 +84,15 @@ Classification: 0 independently validated examples; the cases below are regressi
 
 ## 5. QA gates
 
-Gate applicability uses AQG r0, sections 3, 8, 9 and 10 (OrcaWave and AQWA rows); data preparation evidence alone does not clear a downstream diffraction model. (AQG r0, revision 0, Gate summary; G4 diffraction QA; G5 QA appendix; Family mapping.)
+Gate applicability uses the EC Python-calculations row: G0, G1 imports/tests, G2 hand or published check, and G5 apply; G3 and G4 do not apply to this data-preparation package. Downstream diffraction qualification remains separate. (AQG r0, revision 0, Gate summary; Family mapping.)
 
 | Gate | Applicability and route | Module-specific checks / evidence |
 | --- | --- | --- |
-| G0 | Applicable to curated data and mass inputs; mesh/deck validation belongs downstream | C01–C04 and C17–C19, test results and record provenance; downstream input fingerprints still required [src/digitalmodel/marine_ops/vessel_db/loader.py:L75-L106] [src/digitalmodel/marine_ops/vessel_db/loader.py:L255-L285] |
-| G1 | Applicable to OrcaWave body export after assembly into a complete model | C05 checks dictionary shape only; C06 requires the target OrcaWave version to load the assembled deck and return validation errors 0; NOT_RUN, licensed program absent [src/digitalmodel/marine_ops/vessel_db/mass_properties.py:L37-L55] |
-| G1 AQWA route | NOT_APPLICABLE to this package: no AQWA writer or deck is emitted by its sole solver block method | An AQWA consumer requires a separate short licensed run to hydrostatics before its gate clears; this pack records no such result [src/digitalmodel/marine_ops/vessel_db/mass_properties.py:L37-L55] |
-| G2 | NOT_APPLICABLE to the OrcaWave/AQWA family rows | No statics gate in those rows (AQG r0, revision 0, Family mapping.) |
-| G3 | NOT_APPLICABLE to the OrcaWave/AQWA family rows | No short-dynamics gate in those rows (AQG r0, revision 0, Family mapping.) |
-| G4 | Applicable to mass preparation; physical mesh and solver checks remain downstream | C07–C10 check algebra, datum defaults and RAO ingestion; C11 records required physical qualification, NOT_RUN without mesh/hydrostatics evidence [src/digitalmodel/marine_ops/vessel_db/mass_properties.py:L69-L123] [src/digitalmodel/marine_ops/vessel_db/hulls_adapter.py:L127-L152] |
+| G0 | Applicable to curated data and mass inputs | C01–C04 and C17–C19 check parsing, provenance, discovery and missing inputs [src/digitalmodel/marine_ops/vessel_db/loader.py:L75-L106] [src/digitalmodel/marine_ops/vessel_db/loader.py:L255-L285] |
+| G1 | Applicable through module imports and solver-free tests | C05 and C08–C10 check export shape, coordinate defaults and RAO ingestion; section 10 records the executable module test path [tests/marine_ops/vessel_db/test_mass_properties.py:L42-L96] [tests/marine_ops/vessel_db/test_hulls_adapter.py:L23-L59] |
+| G2 | Applicable through the closed-form rigid-body check | C07 checks all three diagonal inertias against independently expressed `mass * radius²` expectations; regression identity only, not a hydrodynamic benchmark [tests/marine_ops/vessel_db/test_mass_properties.py:L20-L29] |
+| G3 | NOT_APPLICABLE to the EC Python-calculations row | No time-domain solver or short-dynamics run is implemented in this package [src/digitalmodel/marine_ops/vessel_db/mass_properties.py:L37-L55] |
+| G4 | NOT_APPLICABLE to the EC Python-calculations row | No mesh or diffraction solve is implemented here; C06 and C11 retain downstream qualification requirements without claiming an EC gate result [src/digitalmodel/marine_ops/vessel_db/mass_properties.py:L37-L55] |
 | G5 | Applicable to every result used in a report | C12–C15 provide table/basis, confidence and audit evidence; C16 requires a complete signed fingerprint-linked record, NOT_RUN because this package emits no such record [src/digitalmodel/marine_ops/vessel_db/promote.py:L179-L237] [src/digitalmodel/marine_ops/vessel_db/audit.py:L153-L200] |
 
 The checks below are execution recipes using existing tests unless explicitly identified as downstream qualification; counts and physical units are stated for each criterion. [tests/marine_ops/vessel_db/test_loader.py:L20-L101] [tests/marine_ops/vessel_db/test_mass_properties.py:L20-L96]
@@ -98,12 +104,12 @@ The checks below are execution recipes using existing tests unless explicitly id
 | C03 | G0 | `datasets`, `iter_records` | More than 0 records per discovered dataset; 0 empty/placeholder names, count | `tests/marine_ops/vessel_db/test_loader.py::test_every_dataset_loads` [tests/marine_ops/vessel_db/test_loader.py:L79-L84] |
 | C04 | G0 | `resolve_wed_curated_dir` | 0 precedence mismatches across fixture layouts; missing configuration emits at least 1 warning, count | `tests/marine_ops/vessel_db/test_wed_adapter.py::test_resolution_order_env_then_legacy_then_package`; `tests/marine_ops/vessel_db/test_wed_adapter.py::test_missing_curated_dir_warns_but_returns_none` [tests/marine_ops/vessel_db/test_wed_adapter.py:L62-L110] |
 | C05 | G1 | `orcawave_body_block` | 0 missing required keys, count; tested off-diagonal entries exactly 0.0 te·m² | `tests/marine_ops/vessel_db/test_mass_properties.py::test_orcawave_body_block_shape` [tests/marine_ops/vessel_db/test_mass_properties.py:L64-L75] |
-| C06 | G1 | Complete downstream model containing exported body | Target version load errors 0 and load warnings 0, count; record version and mesh fingerprint | NOT_RUN: licensed program required; future execution through the target program's documented load/validation route (AQG r0, revision 0, G1 load; Family mapping.) |
-| C07 | G4 | `from_record` diagonal inertia | 3 axis equalities; relative tolerance 1e-6 or absolute 1e-12 te·m² | R1 node, section 4 [tests/marine_ops/vessel_db/test_mass_properties.py:L20-L29] |
-| C08 | G4 | `from_record` missing mass, CoG defaults and explicit CoG | 0 accepted missing/zero masses, count; 0.0 m error for default coordinates; explicit coordinates match pytest approximation | `tests/marine_ops/vessel_db/test_mass_properties.py::test_no_mass_returns_none`; `tests/marine_ops/vessel_db/test_mass_properties.py::test_cog_defaults_flagged_when_missing`; `tests/marine_ops/vessel_db/test_mass_properties.py::test_cog_uses_cited_vcg` [tests/marine_ops/vessel_db/test_mass_properties.py:L42-L61] |
-| C09 | G4 | `parse_heading_block_rao` synthetic amplitudes / layout | 1e-6 absolute dimensionless amplitude error; 0 accepted unrecognised layouts, count | R2 node; `tests/marine_ops/vessel_db/test_hulls_adapter.py::test_unrecognised_layout_returns_none` [tests/marine_ops/vessel_db/test_hulls_adapter.py:L38-L59] |
-| C10 | G4 | RAO angular-frequency conversion | Relative error at most 1e-6, dimensionless; output rad/s | R3 node [tests/marine_ops/vessel_db/test_hulls_adapter.py:L49-L52] |
-| C11 | G4 | Downstream body/mesh physical qualification | Weight/buoyancy error at most 1.0 %, independent volume difference at most 0.5 %, waterline error at most 1 mm; full centres, normals, panel-size and irregular-frequency evidence required | NOT_RUN: no qualified body/mesh dataset or licensed hydrostatics; mesh-test dependency build also failed (AQG r0, revision 0, G4 diffraction QA.) |
+| C06 | Downstream G1 | Complete downstream model containing exported body | Target version load errors 0 and load warnings 0, count; record version and mesh fingerprint | NOT_RUN: licensed program required; future execution through the version-matched OrcaWave licensed load-and-validate route for the assembled deck (AQG r0, revision 0, G1 load; Family mapping.) |
+| C07 | G2 | `from_record` diagonal inertia | 3 axis equalities; relative tolerance 1e-6 or absolute 1e-12 te·m² | R1 node, section 4 [tests/marine_ops/vessel_db/test_mass_properties.py:L20-L29] |
+| C08 | G1 | `from_record` missing mass, CoG defaults and explicit CoG | 0 accepted missing/zero masses, count; 0.0 m error for default coordinates; explicit coordinates match pytest approximation | `tests/marine_ops/vessel_db/test_mass_properties.py::test_no_mass_returns_none`; `tests/marine_ops/vessel_db/test_mass_properties.py::test_cog_defaults_flagged_when_missing`; `tests/marine_ops/vessel_db/test_mass_properties.py::test_cog_uses_cited_vcg` [tests/marine_ops/vessel_db/test_mass_properties.py:L42-L61] |
+| C09 | G1 | `parse_heading_block_rao` synthetic amplitudes / layout | 1e-6 absolute dimensionless amplitude error; 0 accepted unrecognised layouts, count | R2 node; `tests/marine_ops/vessel_db/test_hulls_adapter.py::test_unrecognised_layout_returns_none` [tests/marine_ops/vessel_db/test_hulls_adapter.py:L38-L59] |
+| C10 | G1 | RAO angular-frequency conversion | Relative error at most 1e-6, dimensionless; output rad/s | R3 node [tests/marine_ops/vessel_db/test_hulls_adapter.py:L49-L52] |
+| C11 | Downstream G4 | Downstream body/mesh physical qualification | Weight/buoyancy error at most 1.0 %, independent volume difference at most 0.5 %, waterline error at most 1 mm; full centres, normals, panel-size and irregular-frequency evidence required | NOT_RUN: no qualified body/mesh dataset or licensed hydrostatics; mesh-test dependency build also failed (AQG r0, revision 0, G4 diffraction QA.) |
 | C12 | G5 | `promote` outputs and basis strings | 5 expected files, 0 provenance violations and 0 populated gyradii without a basis, count | R5 node; `tests/marine_ops/vessel_db/test_promote.py::test_promote_provenance_clean`; `tests/marine_ops/vessel_db/test_promote.py::test_no_bare_gyradius_without_basis` [tests/marine_ops/vessel_db/test_promote.py:L27-L59] |
 | C13 | G5 | `capability_score`, confidence gaps | 0 defensible outputs for the gap/shortfall fixture, count; gap score exactly 0.0 dimensionless | `tests/marine_ops/vessel_db/test_confidence.py::test_capability_score_not_defensible_on_gap_or_shortfall`; `tests/marine_ops/vessel_db/test_confidence.py::test_tier_score_order` [tests/marine_ops/vessel_db/test_confidence.py:L23-L29] [tests/marine_ops/vessel_db/test_confidence.py:L98-L106] |
 | C14 | G5 | `_conflict` missing values / tolerance | 0 conflicts with an absent side; 1 conflict in the beyond-tolerance fixture, count | `tests/marine_ops/vessel_db/test_audit.py::test_conflict_numeric_tolerance`; `tests/marine_ops/vessel_db/test_audit.py::test_conflict_ignores_missing_values` [tests/marine_ops/vessel_db/test_audit.py:L14-L29] |
@@ -124,7 +130,7 @@ rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?|1970' src/
 rg -n 'int\(|float\(|zeros|interp|default|unit|\.get\(|or 1\.0|0\.05|0\.10|write|cache' src/digitalmodel/marine_ops/vessel_db --glob '*.py'
 ```
 
-sweep: 100 found
+sweep: 101 found
 
 | Site | Symptom / classification | Detection and follow-up |
 | --- | --- | --- |
@@ -188,6 +194,7 @@ sweep: 100 found
 | [src/digitalmodel/marine_ops/vessel_db/hulls_adapter.py:L175-L176] | Absent library returns an empty dataset mapping | C19; issue pending (3) |
 | [src/digitalmodel/marine_ops/vessel_db/hulls_adapter.py:L180-L182] | Failed and single-frequency workbooks are omitted; equal dataset keys overwrite | no detection check exists; issue pending (3) |
 | [src/digitalmodel/marine_ops/vessel_db/hulls_adapter.py:L187-L191] | Unset library summary reports zero; configured but all-rejected library also counts zero | no detection check exists; issue pending (3) |
+| [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L44-L56] | Fixed local discovery fallback remains environment-dependent | no detection check exists for fallback removal; #1002; issue pending (5) |
 | [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L95-L102] | Missing record collection resolution warns then returns None | C04; #1297; issue pending (5) |
 | [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L111-L132] | Missing source metadata is blanket-cited; empty CSV cells are omitted | no detection check exists; issue pending (5) |
 | [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L137-L140] | Absent construction dataset returns empty list | C18; issue pending (5) |
@@ -231,7 +238,7 @@ sweep: 100 found
 
 All exception handlers, skip-record branches and empty error/sentinel returns are included above; no year-epoch fallback or empty-result cache writer was found in the package inspection. The zero-valued dataclass counts and accumulators initialise bookkeeping rather than replacing failed engineering quantities. [src/digitalmodel/marine_ops/vessel_db/audit.py:L51-L58] [src/digitalmodel/marine_ops/vessel_db/confidence.py:L103-L125] [src/digitalmodel/marine_ops/vessel_db/confidence.py:L157-L181]
 Issue #1297 describes absent record collection discovery; the current resolver includes both layouts and warning tests C04, while exception swallowing remains separate. [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L35-L102] [tests/marine_ops/vessel_db/test_wed_adapter.py:L62-L110]
-Issue #1002 concerns a fixed local discovery fallback; the source still has that fallback with an explicit allowlist comment, so this pack does not claim the underlying portability concern is removed. [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L44-L56]
+Issue #1002 concerns a fixed local discovery fallback; the source still has that fallback with an explicit allowlist comment, so this pack does not claim the underlying portability concern is removed; no detection check exists for removal of the fixed fallback (issue pending (5)). [src/digitalmodel/marine_ops/vessel_db/wed_adapter.py:L44-L56]
 The map attaches #2107 as not checked to these package rows; this parser handles workbook rows, not fixed-byte LIS windows, so no package occurrence of that exact truncation mechanism was identified. [src/digitalmodel/marine_ops/vessel_db/hulls_adapter.py:L52-L72] [src/digitalmodel/marine_ops/vessel_db/hulls_adapter.py:L92-L152] [docs/registry/implementation-map.yaml:L12478-L12515]
 
 ## 7. Lessons log
@@ -263,7 +270,7 @@ These are all case-sensitive OrcaWave/AQWA source mentions in the package; no so
 
 ### Counted map family and exact search
 
-Map ref `origin/codex/implmap-work`, map artifact commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, declared data revision `270c8759c374b67a7f032953e7fcdb14e0224461`; the map artifact is byte-identical at the code pin. [docs/registry/implementation-map.yaml:L1-L3]
+Map artifact commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, declared data revision `270c8759c374b67a7f032953e7fcdb14e0224461`; the map artifact is byte-identical at the code pin. [docs/registry/implementation-map.yaml:L1-L3]
 One family has package rows: `rao-readers-and-orcaflex-converters`, with 3 in-package rows and 295 total rows; it is the only counted family. [docs/registry/implementation-map.md:L20-L20] [docs/registry/implementation-map.yaml:L12478-L12515]
 The in-package mapped rows are `hulls_adapter.read_rao_workbook`, `hulls_adapter.real_rao_datasets` and `promote.promote`; the inventory below includes all outside-package entries as well. [docs/registry/implementation-map.yaml:L12478-L12515]
 
@@ -677,6 +684,8 @@ The exact module-name search in `docs/` found the implementation-map summary; a 
 The `Citation` contract was readable; no private data repository was read and no client-derived value or private sidecar content is included. There is no supplied private lesson identifier requiring a sidecar entry in this draft.
 
 ### Offline execution record
+
+Revision 1 focused comparison: the BASE archive and the edited tree each collected 86 module cases, with 80 passed, 0 failed and 6 external-data skips; all 86 status entries agree. The archive retains the source and test bytes at the PR base. The command uses `uv run --no-project` with pytest, NumPy, pandas, PyYAML, openpyxl, xlrd, SciPy, pytest-asyncio and pydantic, then `python -m pytest tests/marine_ops/vessel_db -q -rA -p no:cacheprovider --basetemp=<scratch>`, with `PYTHONPATH=src`. This focused comparison does not repeat the historical extended runs below.
 
 Initial module-only run at the code pin: 86 collected, 80 passed, 0 failed, 6 skipped; no solver was imported. The six skipped cases are recorded as data-dependent NOT_RUN qualifications below, while retaining pytest's raw SKIP status.
 
