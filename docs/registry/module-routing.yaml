@@ -342,6 +342,9 @@ modules:
     key_tests: [tests/structural/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
     submodules:
+      pipe_capacity:
+        agent_pack: src/digitalmodel/structural/pipe_capacity/docs/agent-pack.md
+        qa_family: EC
       fatigue:
         agent_pack: src/digitalmodel/structural/fatigue/docs/agent-pack.md
         qa_family: EC
