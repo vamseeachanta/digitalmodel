@@ -1315,7 +1315,7 @@ def build_report(
         "(a derated radius, not the most favourable maximum-capacity position)",
         f"DAF lift-off = {daf_liftoff}, DAF splash zone = {daf_splash} per DNV-ST-N001",
         f"Tp = {tp_coefficient:g} * sqrt(Hs) is a screening simplification, "
-        "not a measured or scatter-derived period; the mudmat case is superseded by R10",
+        "not a measured or scatter-derived period",
         "Slamming coefficient Cs = 5.0 for flat-bottom structures per DNV-RP-H103 Table 4-1",
         "Added mass coefficient Ca = 1.0, drag coefficient Cd = 2.0 for flat plate geometry",
         f"Wire rope MBL safety factor = {wire_mbl_sf} (max tension / MBL)",

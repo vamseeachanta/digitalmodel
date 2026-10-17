@@ -1,6 +1,6 @@
 # GTM Demo Suite -- Parametric Engineering Reports
 
-Outputs are **internal screening, not for clients**. The May 2026 packs are retired from outward use (O177).
+Outputs are **internal screening, not for clients**. The May 2026 packs are retired from outward use ([#2688](https://github.com/vamseeachanta/digitalmodel/issues/2688)).
 
 > 5 demos | 1,292 cases | Overnight engineering screening for marine installation contractors
 
