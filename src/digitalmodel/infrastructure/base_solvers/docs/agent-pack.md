@@ -59,7 +59,6 @@ UNVERIFIED: The legacy fatigue stress/CSV unit agreement, an explicit plate inpu
 | ABS Guidance Notes on Cathodic Protection of Ships | December 2017; legacy route key retains a different year | Legacy key is documented as misnamed; delegation does not establish a different edition. Clause text not checked against the licensed copy. [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cathodic_protection.py:L17-L29] [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cathodic_protection.py:L1309-L1327] [docs/domains/cathodic_protection/examples/example-02-ship-hull-abs-gn-ships-2017.md:L8-L15] |
 | DNV-RP-C203 | Configuration schema names this label, without edition/clause; the fatigue defaults separately select a 2005-labelled curve | No inference of equivalence is made between the schema label and the curve label, issue pending (4). Clause text not checked against the licensed copy. [src/digitalmodel/infrastructure/base_solvers/config/solver_config.py:L60-L73] [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L192-L210] |
 | DNV-RP-C201 | Plate router and method docstring name the code without edition/clause | No citation sidecar is assembled in the result mapping, issue pending (4). Clause text not checked against the licensed copy. [src/digitalmodel/infrastructure/base_solvers/structural/plate_buckling.py:L9-L36] [src/digitalmodel/infrastructure/base_solvers/structural/plate_buckling.py:L122-L130] |
-
 | ASTM G80, Standard Test Method for Specific Cathodic Disbonding of Pipeline Coatings | 1998; Sections 10.1 and 10.2 as named by the code | Licensed-source applicability UNVERIFIED. [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cp_astm_g80.py:L1-L20] |
 | ASTM G42, Standard Test Method for Cathodic Disbonding of Pipeline Coatings Subjected to Elevated Temperatures | 1996; Sections 10 and 11 as named by the code | Licensed-source applicability UNVERIFIED. [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cp_astm_g42.py:L1-L24] |
 | DNV-RP-H103, modelling label | Edition, title and clause not established here; 6D-buoy save_model writers are mapped | Licensed-source reconciliation remains issue pending (4); no edition is inferred. [docs/registry/implementation-map.yaml:L6384-L6423] |
@@ -79,13 +78,13 @@ Validation below applies only to each named function and synthetic/closed-form c
 | Regression: cached-result isolation | Inline test solver result; mutating retrieved results must preserve the stored output | Exactly 0 unintended cache changes (count), checked by equality | `tests/infrastructure/unit/test_base_solvers_base.py::TestBaseSolver::test_results_isolation`; PASS at BASE and AFTER [tests/infrastructure/unit/test_base_solvers_base.py:L133-L141] |
 | Regression: fatigue default schema | Default config exposes the expected dispatch keys; no numerical damage criterion | 0 missing required keys (count) | `tests/specialized/ship_design/test_ship_fatigue_analysis_import.py::test_default_sn_cfg_shape`; PASS at BASE and AFTER [tests/specialized/ship_design/test_ship_fatigue_analysis_import.py:L91-L97] |
 | Regression: durable fatigue route | Workflow input `examples/workflows/fatigue-analysis/input.yml`; the test pins damage to a stored numerical expectation | `pytest.approx` of the stored expectation, plus positive damage bound; no independent source established | `tests/workflows/test_durable_workflows.py::test_workflow_registry[fatigue-analysis]`; PASS at BASE and AFTER [docs/registry/workflows.yaml:L28-L35] [tests/workflows/test_durable_workflows.py:L109-L112] |
-| Regression: durable plate route | Workflow input `examples/workflows/plate-buckling/input.yml`; stored directional/combined utilization expectations | `pytest.approx` of stored expectations, plus equivalent utilization `<1` (dimensionless) | `tests/workflows/test_durable_workflows.py::test_workflow_registry[plate-buckling]`; PASS at BASE and AFTER [docs/registry/workflows.yaml:L468-L475] [tests/workflows/test_durable_workflows.py:L784-L792] |
+| Regression: durable plate route | Workflow input `examples/workflows/plate-buckling/input.yml`; stored directional/combined utilization expectations; this regression pins rounded values and does not validate unrounded resistances | `pytest.approx` of stored expectations, plus equivalent utilization `<1` (dimensionless) | `tests/workflows/test_durable_workflows.py::test_workflow_registry[plate-buckling]`; PASS at BASE and AFTER [docs/registry/workflows.yaml:L468-L475] [tests/workflows/test_durable_workflows.py:L784-L792] |
 
-UNVERIFIED: Independent end-to-end qualification of the legacy plate utilization and default fatigue-curve lookup is not established by the worked examples; issue pending (6), with missing ship fixtures tracked in #785. [tests/specialized/ship_design/test_ship_fatigue_analysis_import.py:L19-L25]
+UNVERIFIED: The plate route has a known rounding defect: geometry ratios are rounded before resistance calculations; correction remains issue pending (2). Independent end-to-end qualification of the legacy plate utilization and default fatigue-curve lookup is not established by the worked examples; issue pending (6), with missing ship fixtures tracked in #785. [tests/specialized/ship_design/test_ship_fatigue_analysis_import.py:L19-L25]
 
 ## 5. QA gates and executable checks
 
-The applicable AQG r0 Python-calculations set is G0 input/units/citations, G1 imports/tests, G2 independent calculation; G5 QA-appendix generation is NOT_APPLICABLE as scoped below; G3 dynamics and G4 diffraction are `NOT_APPLICABLE` for these Python calculation routes (AQG r0, section 10, Python calculations; section 9, QA appendix).
+The applicable AQG r0 Python-calculations set is G0 input/units/citations, G1 imports/tests, G2 independent calculation; G5 QA-appendix generation is applicable through the package-output metadata count C8; G3 dynamics and G4 diffraction are `NOT_APPLICABLE` for these Python calculation routes (AQG r0, section 10, Python calculations; section 9, QA appendix).
 
 | Gate / check | Module-specific execution and numeric acceptance criterion | Evidence / status |
 | --- | --- | --- |
@@ -100,7 +99,26 @@ The applicable AQG r0 Python-calculations set is G0 input/units/citations, G1 im
 | G2 / C7 | `disbonding_area` versus independent annular geometry; absolute error `<1e-6` mm² | Section-4 annular-area node; PASS at BASE and AFTER [tests/specialized/cathodic_protection/test_astm_g80.py:L23-L29] |
 | G3 | `NOT_APPLICABLE`: these routes produce fatigue damage and plate utilization, not time-domain dynamics | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L52-L139] [src/digitalmodel/infrastructure/base_solvers/structural/plate_buckling.py:L122-L130] |
 | G4 | `NOT_APPLICABLE`: these routes do not solve diffraction | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L52-L139] [src/digitalmodel/infrastructure/base_solvers/structural/plate_buckling.py:L122-L130] |
-| G5 / C8 | `NOT_APPLICABLE`: these calculation routes do not generate a calculation QA appendix; pack-record counts do not qualify a package output. Output provenance and independent sign-off remain issue pending (6). | No package-output acceptance is claimed by this check. |
+| G5 / C8 | Execute the B401 facade and count results missing any of `standard`, `edition`, `provenance` and `citations`; require exactly 0 incomplete results (count). This checks package-output metadata, not independent numerical qualification. | Executable check below: PASS, 1 result and 0 incomplete results; independent sign-off remains issue pending (6). |
+
+C8 package-output check (run with `PYTHONPATH=src` and pytest plus the declared calculation dependencies, from the repository root):
+
+```python
+from runpy import run_path
+
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cp_DNV_RP_B401_2021 import (
+    _b401_offshore_platform,
+)
+
+fixture = run_path(
+    "tests/specialized/cathodic_protection/test_cathodic_protection_b401.py"
+)["b401_base_config"]
+results = [_b401_offshore_platform(fixture.__wrapped__())["results"]]
+required = {"standard", "edition", "provenance", "citations"}
+missing = sum(not required.issubset(result) for result in results)
+assert missing == 0, f"{missing} results lack required metadata"
+print(f"C8: {len(results)} result, {missing} incomplete results")
+```
 
 The marine exporter and the DNV-RP-H103 6D-buoy `save_model` writers write OrcaFlex text; its program-specific G1 route would use the free demo at the target version where the trial permits the model, otherwise the licensed `LoadData` route, with 0 warnings/errors (count), and SHEAR7 input would require its target-version parser with 0 load errors (count). Both are `NOT_RUN`: the dependency inventory is read as text and neither interface is executed; version-qualified export acceptance remains issue pending (6). [src/digitalmodel/infrastructure/base_solvers/marine/orcaflex_model_components.py:L791-L857] [src/digitalmodel/infrastructure/base_solvers/viv/shear7_model_components.py:L230-L238]
 
@@ -249,7 +267,7 @@ The narrow screen returns 55 matching lines and the broad screen 404; the AST ex
 | Enhanced attenuation subtracts unity from an upstream final coating factor clamped at unity | no detection check exists; issue pending (2) | [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cathodic_protection.py:L293-L295] [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cathodic_protection.py:L685-L698] |
 | Initial potential check is unconditional PASS; final potential check follows current margin rather than a calculated potential | no detection check exists; issue pending (2) | [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cathodic_protection.py:L1728-L1737] [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/cathodic_protection.py:L1812-L1824] |
 | Zero throughput bypasses the truthiness-guarded minimum; absent report metrics become zero | no detection check exists; issue pending (3) | [src/digitalmodel/infrastructure/base_solvers/benchmarks/benchmark_suite.py:L85-L95] [src/digitalmodel/infrastructure/base_solvers/benchmarks/report_generator.py:L121-L133] |
-| Legacy plate geometry and ratios are rounded before resistance calculations | no detection check exists for a precision error bound; issue pending (2) | [src/digitalmodel/infrastructure/base_solvers/structural/plate_buckling.py:L132-L165] |
+| Legacy plate geometry and ratios are rounded before resistance calculations | Known result defect: the registered example has unrounded `t/s = 0.0150`, stored as `0.01`; the squared-ratio multiplier is 44.4 % of the unrounded value, understating the ratio-squared elastic resistances by approximately 55.6 %. No detection check exists for an unrounded resistance bound; code correction remains issue pending (2) | [src/digitalmodel/infrastructure/base_solvers/structural/plate_buckling.py:L132-L165] |
 | Rectangular buoy inertia reference is unresolved before exported-model reuse (#2135) | no detection check exists; the inertia origin shift and separately exported centre require reconciliation | [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/code_dnvrph103_hydrodynamics_rectangular.py:L401-L430] [src/digitalmodel/infrastructure/base_solvers/hydrodynamics/code_dnvrph103_hydrodynamics_rectangular.py:L122-L138] |
 | Unsupported fatigue calculation types return the configuration unchanged; default thickness is not consumed by the S-N accumulation shown here | no detection check exists for the silent dispatch; issue pending (1); thickness-basis qualification is issue pending (4) | [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L37-L70] [src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py:L192-L210] |
 | Historical wrong fatigue-class import (#776) is covered by binding and real arithmetic checks; end-to-end missing fixtures remain #785 | C3 catches binding regression; C4 checks synthetic damage, not missing fixtures; no detection check exists for full fixture readiness | [tests/specialized/ship_design/test_ship_fatigue_analysis_import.py:L1-L25] [tests/specialized/ship_design/test_ship_fatigue_analysis_import.py:L41-L80] |
