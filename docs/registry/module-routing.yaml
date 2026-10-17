@@ -296,6 +296,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#seismic
   - module: signal_processing
     entry_point: src/digitalmodel/signal_processing/
+    submodules:
+      signal_analysis:
+        agent_pack: src/digitalmodel/signal_processing/signal_analysis/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/signal_processing/
     key_tests: [tests/signal_processing/]
