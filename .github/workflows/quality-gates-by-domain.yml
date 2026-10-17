@@ -137,6 +137,8 @@ jobs:
         run: |
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
+            tests/docs/test_implementation_map.py \
+            tests/docs/test_implementation_map_search.py \
             tests/scripts/test_ci_baseline.py \
             tests/scripts/test_run_shard.py \
             tests/contracts/test_flaky_register_schema.py \
@@ -144,6 +146,9 @@ jobs:
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
             -q --tb=line
+
+      - name: Report implementation map staleness
+        run: uv run --no-sources python scripts/generate_implementation_map.py
 
   domain-tests:
     name: tests-${{ matrix.domain }}

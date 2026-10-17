@@ -164,6 +164,7 @@ Each row defines a check; proposed thresholds are acceptance proposals, not valu
 G1 for the direct examples means MAPDL, and journal loading means Workbench; the AQWA workflow's pressure transfer and global/submodel route is a separate unvalidated workflow, not satisfied by either example load check. [src/digitalmodel/ansys/runner.py:L156-L175] [src/digitalmodel/ansys/wbjn_reader.py:L8-L16] [docs/domains/ansys/workflows/aqwa-to-structural-submodel.md:L9-L11] [docs/domains/ansys/workflows/aqwa-to-structural-submodel.md:L19-L31]
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom / cause | Detection or missing check | Incident / disposition |
 | --- | --- | --- |

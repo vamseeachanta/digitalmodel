@@ -52,7 +52,10 @@ class WinchBuilder(BaseBuilder):
         winch_name = tensioner.name
 
         # Tensioner position on vessel (default to stern area)
-        origin = self.spec.equipment.stinger.origin_position if self.spec.equipment.stinger else [0, 0, 0]
+        stinger = self.spec.equipment.stinger
+        origin = list(stinger.origin_position) if stinger else [0, 0, 0]
+        if stinger:
+            origin[0] += stinger.firing_line_length
         # Reuse the previous 10 m initial wire length as the forward lead.
         position = tensioner.position_on_vessel or [origin[0] + 10, origin[1], origin[2]]
         if position == origin:

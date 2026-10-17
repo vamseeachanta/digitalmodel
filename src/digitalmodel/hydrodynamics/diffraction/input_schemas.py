@@ -57,6 +57,7 @@ class MeshFormatType(str, Enum):
 
     GDF = "gdf"
     DAT = "dat"
+    AQWA_DAT = "aqwa_dat"
     STL = "stl"
     MSH = "msh"
     OBJ = "obj"
@@ -868,9 +869,11 @@ class ControlSurfaceSpec(BaseModel):
     mesh_format: Optional[str] = Field(
         None,
         description=(
-            "Control surface mesh format ('csf', 'gdf', 'dat', 'stl'). "
+            "Control surface mesh format ('csf', 'gdf', 'aqwa_dat'). "
             "None = auto-detect from the mesh_file extension. Native "
-            "OrcaWave pairs .gdf with 'Wamit gdf' and .csf with 'Wamit csf'."
+            "OrcaWave pairs .gdf with 'Wamit gdf' and .csf with 'Wamit csf'. "
+            "The writer accepts explicit 'aqwa_dat'; native acceptance of "
+            "'Aqwa dat' control surfaces remains unverified."
         ),
     )
     panel_size: Optional[float] = Field(

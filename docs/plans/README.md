@@ -5,6 +5,7 @@ this directory predate this index and are not backfilled here.
 
 | Issue # | Title / Slug | Plan File | Date | Status | Complexity | Notes |
 |---|---|---|---|---|---|---|
+| [#2617](https://github.com/vamseeachanta/digitalmodel/issues/2617) | QTF force variance | [plan](issue-2617-qtf-variance.html) | 2026-10-16 | draft; reviews recorded in scripts/review/results/2617 | T2 | Synthetic Monte Carlo reproduction before implementation. |
 | [#2241 item 2](https://github.com/vamseeachanta/digitalmodel/issues/2241) | Boundary-preserving BRep study | [proposal](2026-10-02-issue-2241-brep-boundary-study.html) | 2026-10-02 | revised plan; cross-provider review pending | T2 | Codex approved for consideration; Claude/Gemini unavailable. No implementation authorized. |
 | [#2241 item 2](https://github.com/vamseeachanta/digitalmodel/issues/2241) | Opt-in BRep validity investigation | [plan](2026-10-01-issue-2241-brep-validity.html) | 2026-10-01 | bounded experiment executed; candidate rejected | T2 | Owner continuation authorized the published r3 scope. Geometry counterexamples prevent qualification; item 2 remains open. |
 | [#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281) | CP benchmark evidence research | [research plan](2026-10-06-issue-2281-cp-benchmark-evidence-research.html) | 2026-10-06 | reviewed research draft | T2 | Shared generic methods and private A-E ledgers; no new calculations; 11/16 incomplete. |

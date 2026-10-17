@@ -1,53 +1,108 @@
 {
   "schema": "slay-criteria-1",
-  "revision": "execution-1",
+  "revision": "execution-3",
   "qualification": "Repository workflow criteria; no licensed allowable is reproduced or inferred.",
   "criteria": {
     "source_qualification": {
       "status": "defined",
       "requirement": "Every input retains its declared source or its assumed, based on previous experience qualification; a generic assumption does not qualify an installation design.",
-      "source": {"title": "Generic S-lay case table", "locator": "case-table.yml#provenance"}
+      "source": {
+        "title": "Generic S-lay case table",
+        "locator": "case-table.yml#provenance"
+      }
     },
     "geometry": {
       "status": "defined",
       "requirement": "Read back both endpoint positions, contact order, exit angle, curvature and every roller reaction. Reconcile them with the generated separated endpoints and attached supports before comparison.",
       "numeric_tolerance": null,
       "numeric_tolerance_status": "not established",
-      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#acceptance-assessment"}
+      "source": {
+        "title": "S-lay installation analysis",
+        "locator": "analysis.html#acceptance-assessment"
+      }
     },
     "force_balance": {
       "status": "not established",
       "requirement": "Retain endpoint forces, submerged weight and all support reactions in a common global frame; report the resultant force residual and its normalization. A native acceptance tolerance is not established.",
       "numeric_tolerance": null,
-      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#native-results"}
+      "source": {
+        "title": "S-lay installation analysis",
+        "locator": "analysis.html#native-results"
+      }
     },
     "native_convergence": {
       "status": "defined",
       "requirement": "Retain convergence diagnostics and saved native state, reopen it and read back the required quantities. A process exit or a preparation result alone is insufficient.",
-      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#driver-retention"}
+      "source": {
+        "title": "S-lay installation analysis",
+        "locator": "analysis.html#driver-retention"
+      }
     },
     "mesh_convergence": {
       "status": "not established",
       "requirement": "Compare tension, bending moment, curvature, touchdown and roller reactions across refined meshes before acceptance; refinement levels and allowable changes are not established.",
       "numeric_tolerance": null,
-      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#acceptance-assessment"}
+      "source": {
+        "title": "S-lay installation analysis",
+        "locator": "analysis.html#acceptance-assessment"
+      }
     },
     "catenary_relative_tolerance": {
       "status": "not established",
       "requirement": "Use measured stinger-exit height and effective tension at the same endpoint for the independent free-span comparator. Report residuals; native agreement tolerance is not established.",
       "numeric_tolerance": null,
-      "source": {"title": "Independent weight-only catenary", "locator": "scripts/orcaflex/prepare_slay_campaign.py::catenary"}
+      "source": {
+        "title": "Independent weight-only catenary",
+        "locator": "scripts/orcaflex/prepare_slay_campaign.py::catenary"
+      }
     },
     "overbend_strain_limit": {
       "status": "not established",
       "requirement": "D/(2R) is a circular bending-strain screen, not an allowable. No sourced design strain limit is available in this preparation basis.",
       "numeric_limit": null,
-      "source": {"title": "Independent analytical method", "locator": "analysis.html#analytical-method"}
+      "source": {
+        "title": "Independent analytical method",
+        "locator": "analysis.html#analytical-method"
+      },
+      "basis": {
+        "title": "DNV-ST-F101, simplified laying criteria",
+        "concrete_crushing": "Concrete coating crushing requires a qualified coating strength and support contact-pressure basis; these inputs are not established.",
+        "qualification": "S2 installation design acceptance remains not established; no licensed allowable is reproduced."
+      }
     },
     "installation_acceptance": {
       "status": "not established",
       "requirement": "Acceptance requires versioned allowables, comparator tolerances, mesh convergence and reconciliation of every applicable case. Null tolerances and generic assumptions cannot produce an accepted design.",
-      "source": {"title": "S-lay installation analysis", "locator": "analysis.html#acceptance-assessment"}
+      "source": {
+        "title": "S-lay installation analysis",
+        "locator": "analysis.html#acceptance-assessment"
+      }
+    },
+    "stinger_conformity": {
+      "status": "defined",
+      "requirement": "S1: maximum overbend strain <= 1.10*D/(2R) and zero static force on the last stinger support. D/(2R) is a screen.",
+      "numeric_limit": 0.002794,
+      "last_support_force_kn": 0,
+      "source": {
+        "title": "Stiff hand estimate, Table B of the design basis for #2546",
+        "locator": "case-table.yml#cases"
+      }
     }
+  },
+  "static_qa": {
+    "revision_note": "Execution-3 versions the explanatory note added after execution-2; no acceptance criterion or band changes. The execution-2 revision changed End A to positive resultant at the support nearest measured End A X. This is contact presence only; a minimum contact force and numerical residual tolerance are not established. S1 retains exact zero last-support force. The numerical bands are unchanged; see slay_probe.evaluate_static_acceptance.",
+    "touchdown_x": {
+      "status": "NOT_EVALUATED",
+      "reason": "published reference pending, #2608"
+    },
+    "sag_bend_strain": {
+      "status": "NOT_EVALUATED",
+      "reason": "published reference pending, #2608"
+    },
+    "stiff_closure": {
+      "status": "NOT_EVALUATED",
+      "reason": "published reference pending, #2608"
+    },
+    "reporting": "Count passed, failed and not-evaluated separately; pending rows cannot establish full acceptance."
   }
 }

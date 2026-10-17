@@ -186,6 +186,7 @@ The gate mapping below applies the riser/mooring family to this offline utility 
 C01–C12 define review criteria; a PASS for documentation completeness is not gate clearance for an analysis, and the unresolved elastic comparison is retained as a failure disposition under #2050. [tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py:L215-L247]
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom / cause | Detection | Incident / date / pinned disposition |
 | --- | --- | --- |
@@ -206,7 +207,6 @@ Dates above refer to the pinned inspection record, 2026-10-15, rather than assum
 | --- | --- | --- | --- | --- |
 | 2026-10-15 | Initial pack revision | Separate numerical convergence, shared-lineage parity and independent physical qualification; the existing strict elastic XFAIL demonstrates why. [tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py:L215-L247] | Initial equation comparison and example classification | Pending maintainer entry; issue pending (3) |
 | 2026-10-15 | Pack revision 1 | Elastic residual direction must be checked independently; script implementations belong in the inventory; routing metadata belongs under the existing domain. [src/digitalmodel/marine_ops/marine_analysis/catenary/solver.py:L193-L201] [scripts/python/digitalmodel/analysis/catenary_solver.py:L16-L50] [tests/docs/test_digitalmodel_routing_contract.py:L97-L101] | Elastic bias, script comparisons and nested routing metadata | Pending maintainer entry; issue pending (3) |
-
 | 2026-10-15 | Pack revision 2 | Log-form inverse hyperbolic equations require implementation-map and caller inspection; table agreement needs explicit unit conversion and a stated geometry tolerance. [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L156-L158] [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L591-L614] | Added complete family register and DYNMOOR/pipelay comparison limits | Pending maintainer entry; issue pending (3) |
 
 ## 8. Ownership

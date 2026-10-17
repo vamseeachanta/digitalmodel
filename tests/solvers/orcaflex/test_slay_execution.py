@@ -68,6 +68,7 @@ def test_dry_run_writes_pinned_queue_canary_and_keeps_acceptance_open(prepared_q
     for relative, digest in run["input_byte_sha256"].items():
         assert hashlib.sha256((output / relative).read_bytes()).hexdigest() == digest
     assert run["criteria"]["installation_acceptance"]["status"] == "not established"
+    assert run["static_qa"] == contract["criteria"]["static_qa"]
     assert run["first_timed_case"]["case_id"] == "d0-t0"
     assert queue["id"] == queue_path.stem
     assert len(queue["ref"]) == 40
@@ -106,7 +107,7 @@ def test_missing_criteria_source_leaves_output_untouched(tmp_path):
     assert not output.exists()
 
 
-@pytest.mark.parametrize("fault", ["model_path", "threads", "missing_criterion", "missing_readback"])
+@pytest.mark.parametrize("fault", ["model_path", "threads", "missing_criterion", "missing_readback", "missing_static_qa"])
 def test_incomplete_or_changed_canary_contract_leaves_output_untouched(tmp_path, fault):
     import shutil
     source = tmp_path / "source"
@@ -124,7 +125,10 @@ def test_incomplete_or_changed_canary_contract_leaves_output_untouched(tmp_path,
     else:
         path = source / "criteria.json"
         criteria = json.loads(path.read_text(encoding="utf-8"))
-        del criteria["criteria"]["installation_acceptance"]
+        if fault == "missing_static_qa":
+            del criteria["static_qa"]
+        else:
+            del criteria["criteria"]["installation_acceptance"]
         path.write_text(json.dumps(criteria), encoding="utf-8")
     first_path.write_text(json.dumps(first), encoding="utf-8")
     output = tmp_path / "prepared"
@@ -220,3 +224,51 @@ def test_clean_checkout_cli_writes_queue(prepared_queue_inputs, monkeypatch):
     assert queue["ref"] == record["input_revision"] == "a" * 40
     assert queue["driver"][:3] == [sys.executable, "-m", "digitalmodel"]
     assert record["launch_enabled"] is False
+
+
+def test_missing_static_qa_refuses_queue_before_writing(tmp_path, monkeypatch):
+    """A clean checkout shall reject the missing QA section before generation."""
+    import importlib.util
+    import shutil
+    source = tmp_path / "source"
+    source.mkdir()
+    for name in ("case-table.yml", "manifest.template.json", "criteria.json", "first-timed-case.json"):
+        shutil.copyfile(CAMPAIGN / name, source / name)
+    path = source / "criteria.json"
+    criteria = json.loads(path.read_text())
+    del criteria["static_qa"]
+    path.write_text(json.dumps(criteria))
+    module_spec = importlib.util.spec_from_file_location("preparation_qa", SCRIPT)
+    driver = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(driver)
+    output = tmp_path / "prepared"
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), "--campaign", str(source),
+        "--output", str(output), "--dry-run", "--queue", "--expected-hours", "1", "--max-hours", "2"])
+
+    def clean_git(command, **kwargs):
+        value = "" if command[-2:] == ["status", "--porcelain"] else "a" * 40 + "\n"
+        return subprocess.CompletedProcess(command, 0, value, "")
+
+    monkeypatch.setattr(driver.subprocess, "run", clean_git)
+    with pytest.raises(ValueError, match="static_qa"):
+        driver.main()
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("note", [None, "", "   ", 12])
+def test_static_qa_revision_note_is_required_before_preparation(tmp_path, note):
+    """Retained criteria must identify the End A contact requirement revision."""
+    import shutil
+    from digitalmodel.solvers.orcaflex.modular_generator.slay_execution import read_contract
+
+    for name in ("case-table.yml", "manifest.template.json", "criteria.json", "first-timed-case.json"):
+        shutil.copyfile(CAMPAIGN / name, tmp_path / name)
+    path = tmp_path / "criteria.json"
+    criteria = json.loads(path.read_text(encoding="utf-8"))
+    if note is None:
+        criteria["static_qa"].pop("revision_note", None)
+    else:
+        criteria["static_qa"]["revision_note"] = note
+    path.write_text(json.dumps(criteria), encoding="utf-8")
+    with pytest.raises(ValueError, match="static_qa.*revision note"):
+        read_contract(tmp_path, 1, 2)

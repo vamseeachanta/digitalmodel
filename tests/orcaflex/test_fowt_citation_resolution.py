@@ -47,20 +47,55 @@ def test_emitted_citation_resolves(tmp_path: Path, layout: str) -> None:
     validate_citation(citation, repo_root=tmp_path)
 
 
-def test_missing_page_warns_once_and_returns_empty_sidecar(tmp_path: Path) -> None:
-    """Keep the geometric check available until the standards page exists."""
-    (tmp_path / "wikis").mkdir()
-    with pytest.warns(RuntimeWarning, match="Watch-circle check proceeds") as caught:
-        result = check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
-    assert len(caught) == 1
-    assert str(tmp_path / WIKI_PATH) in str(caught[0].message)
+@pytest.mark.parametrize("layout", ["", "knowledge"])
+def test_missing_page_fails_at_call_site(tmp_path: Path, layout: str) -> None:
+    """Reject a configured wiki without the page on every calculation."""
+    (tmp_path / layout / "wikis").mkdir(parents=True)
+    for _ in range(2):
+        with pytest.raises(CitationResolutionError) as caught:
+            check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+        assert caught.value.code_id == "DNV-RP-0360"
+        assert caught.value.wiki_path == WIKI_PATH
+        assert caught.value.reason == "page_missing"
+
+
+def test_unconfigured_wiki_warns_once_and_returns_empty_sidecar(monkeypatch) -> None:
+    """Keep standalone screening distinguishable from a missing configured page."""
+    from digitalmodel.citations import resolver
+    from digitalmodel.orcaflex import mooring_design_fowt
+
+    def unconfigured(**kwargs):
+        raise CitationResolutionError(
+            code_id="<resolver>", wiki_path="<base>", reason="resolver_unconfigured: test"
+        )
+
+    monkeypatch.setattr(resolver, "resolve_wiki_base", unconfigured)
+    monkeypatch.setattr(mooring_design_fowt, "_CITATION_EMITTED_CACHE", {})
+    with pytest.warns(RuntimeWarning, match="no wiki tree found"):
+        result = check_watch_circle_vs_cable(20.0, cable())
     assert result.passes
     assert result.citations == []
     with warnings.catch_warnings(record=True) as repeated:
         warnings.simplefilter("always")
-        result = check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+        result = check_watch_circle_vs_cable(20.0, cable())
     assert repeated == []
     assert result.citations == []
+
+
+@pytest.mark.parametrize("layout", ["", "knowledge"])
+def test_removed_page_fails_after_success(tmp_path: Path, layout: str) -> None:
+    """Revalidate the sidecar rather than caching a previous successful lookup."""
+    page = tmp_path / layout / WIKI_PATH
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        encoding="utf-8",
+    )
+    assert check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path).citations
+    page.unlink()
+    with pytest.raises(CitationResolutionError) as caught:
+        check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+    assert caught.value.reason == "page_missing"
 
 
 def test_invalid_wiki_base_fails_at_call_site(tmp_path: Path) -> None:

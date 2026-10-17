@@ -247,8 +247,8 @@ gates:
     order: 1
     description: "Domain tests for marine-engineering"
     domain: "marine-engineering"
-    test_roots: ["tests/marine_ops/marine_engineering/"]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/marine_ops/marine_engineering/ -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    test_roots: ["tests/marine_ops/marine_engineering/", "tests/marine_ops/fowt_quasi_static/"]
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test,fowt]' python -m pytest tests/marine_ops/marine_engineering/ tests/marine_ops/fowt_quasi_static/ -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
@@ -408,6 +408,7 @@ gates:
     test_roots:
       [
         "tests/subsea/",
+        "tests/bha_database/",
         "tests/drilling_riser/",
         "tests/check_catenary_geometry.py",
         "tests/solve_catenary_correct.py",
@@ -419,7 +420,7 @@ gates:
         "tests/test_on_bottom_stability.py",
         "tests/riser_configuration_screen/",
       ]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/riser_configuration_screen/ tests/subsea/ tests/drilling_riser/ tests/check_catenary_geometry.py tests/solve_catenary_correct.py tests/solve_general_catenary.py tests/test_catenary_module.py tests/test_catenary_riser_summary.py tests/test_lazy_wave_catenary.py tests/test_lazy_wave_legacy_comparison.py tests/test_on_bottom_stability.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/riser_configuration_screen/ tests/subsea/ tests/drilling_riser/ tests/bha_database/ tests/check_catenary_geometry.py tests/solve_catenary_correct.py tests/solve_general_catenary.py tests/test_catenary_module.py tests/test_catenary_riser_summary.py tests/test_lazy_wave_catenary.py tests/test_lazy_wave_legacy_comparison.py tests/test_on_bottom_stability.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 

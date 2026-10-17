@@ -746,12 +746,23 @@ class TestControlSurfaceEmission:
         body = self._body(spec, tmp_path)
         assert body["BodyControlSurfaceMeshFormat"] == "Wamit csf"
 
-    def test_explicit_mesh_format_wins_over_extension(self, tmp_path: Path):
+    def test_explicit_dat_dialect_control_surface(self, tmp_path: Path):
         spec = self._spec_with_cs(
-            {"type": "mesh", "mesh_file": "cs.dat", "mesh_format": "dat"}
+            {"type": "mesh", "mesh_file": "cs.dat", "mesh_format": "aqwa_dat"}
         )
         body = self._body(spec, tmp_path)
-        assert body["BodyControlSurfaceMeshFormat"] == "Wamit dat"
+        assert body["BodyControlSurfaceMeshFormat"] == "Aqwa dat"
+
+    @pytest.mark.parametrize("mesh_file, mesh_format", [
+        ("cs.dat", "dat"), ("cs.dat", None), ("cs.stl", "stl"),
+        ("cs.obj", "gdf"),
+    ])
+    def test_ambiguous_control_surface_refused(self, tmp_path, mesh_file, mesh_format):
+        spec = self._spec_with_cs(
+            {"type": "mesh", "mesh_file": mesh_file, "mesh_format": mesh_format}
+        )
+        with pytest.raises(ValueError, match="control surface mesh format"):
+            self._body(spec, tmp_path)
 
     def test_unknown_control_surface_format_fails_loud(self, tmp_path: Path):
         spec = self._spec_with_cs({"type": "mesh", "mesh_file": "cs.xyz"})

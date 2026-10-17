@@ -10,7 +10,7 @@ vessel:
   type: spar
   geometry:
     mesh_file: source_data/aqwa/simple.dat
-    mesh_format: dat
+    mesh_format: aqwa_dat
     symmetry: none
     reference_point: [0.0, 0.0, 0.0]
     waterline_z: 0.0
