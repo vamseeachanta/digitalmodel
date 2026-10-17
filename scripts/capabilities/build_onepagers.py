@@ -631,7 +631,7 @@ def build_cards() -> list[dict]:
     for spec in SPECS:
         path = spec["path"]
         if path.startswith("capabilities/#"):
-            link = _CANONICAL
+            link = _CANONICAL + path.removeprefix("capabilities/")
         elif path.startswith("https://"):
             link = path
         else:
