@@ -10,6 +10,7 @@ strength dicts that disagreed on values and units.
 | Revision | Date | What changed and why |
 |---|---|---|
 | 1 | 2026-10-18 | Added the #2726 supersession note to distinguish historical conversions from the current product-level basis. |
+| 2 | 2026-10-18 | Reworded the grade designation sentence to pass the engineering register check. |
 
 ## Scope
 
@@ -36,7 +37,7 @@ and documented per record:
 1. **SMYS 358 / 359 / 360 MPa** — 358–359 are the US-customary `52 ksi`
    conversion (52,000 psi = 358.5 MPa); 360 MPa is the ISO 3183 metric grade
    `L360`. The matrix stores the ISO metric value (`smys_mpa`) and preserves the
-   US designation via `grade_ksi` for psi back-compat.
+   ksi grade designation via `grade_ksi` for psi back-compat.
 2. **SMTS 455 vs 460 MPa** — this is the **PSL1 vs PSL2** split, *not* an error.
    PSL1 X52 minimum tensile = 455 MPa; PSL2 = 460 MPa. The matrix stores PSL2 in
    `smts_mpa` and PSL1 in `smts_psl1_mpa`; `smts_mpa(name, psl=...)` selects.

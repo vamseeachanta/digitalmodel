@@ -1,6 +1,7 @@
 """Offline database contracts; strength fixtures remain in test_grade_matrix.py."""
 from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -80,6 +81,19 @@ def test_provenance_pins_the_repository_source(database):
         assert provenance.retrieved_on_utc
         assert provenance.repository_terms == "MIT License"
         assert provenance.original_source_terms == "not re-verified in this job"
+
+
+def test_pinned_revision_matches_source_digest(database):
+    """A revision pin must identify the exact normalized source bytes."""
+    provenance = database.lookup("X52").provenance
+    if provenance.repository_revision is not None:
+        source = subprocess.run(
+            ["git", "show", f"{provenance.repository_revision}:{provenance.repository_path}"],
+            cwd=Path(__file__).resolve().parents[2],
+            check=True,
+            capture_output=True,
+        ).stdout
+        assert database_module.normalised_source_digest(source) == provenance.sha256
 
 
 def test_edition_metadata_is_not_inferred(database):
