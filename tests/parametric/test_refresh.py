@@ -100,7 +100,8 @@ def _copy_basis(workflow_id: str, dst):
     import shutil
 
     row = refresh._row(workflow_id)
-    rels = [row["input"], *refresh.SOURCE_FILES[row["basename"]]]
+    rels = [row["input"], *refresh.SOURCE_FILES[row["basename"]],
+            "src/digitalmodel/parametric/generate.py"]
     for rel in rels:
         target = dst / rel
         target.parent.mkdir(parents=True, exist_ok=True)

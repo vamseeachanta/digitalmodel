@@ -11,7 +11,6 @@ parametric_query:
     dynamic_fluid_level_m: 1400.0
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:

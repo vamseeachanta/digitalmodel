@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import yaml
 
 from digitalmodel.parametric import refresh
 from digitalmodel.parametric.atlas import Atlas, Axis
 from digitalmodel.parametric.generate import generate_atlas_adaptive
+from digitalmodel.parametric.validation import validation_passes
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = REPO_ROOT / "docs" / "registry" / "workflows.yaml"
@@ -58,5 +60,12 @@ def build_atlas_from_registry(
         workflow_id=workflow_id,
         content_fingerprint=refresh.content_fingerprint(workflow_id, repo_root),
     )
-    atlas.save(atlas_root or (repo_root / "atlases"))
+    if not validation_passes(atlas):
+        return atlas
+    root = Path(atlas_root or (repo_root / "atlases"))
+    root.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(dir=root, prefix=".build-") as name:
+        temporary = Path(name)
+        atlas.save(temporary / "build")
+        refresh._swap_atlas(temporary / "build" / basename, root / basename, temporary)
     return atlas

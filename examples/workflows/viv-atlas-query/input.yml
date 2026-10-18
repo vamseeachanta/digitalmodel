@@ -7,7 +7,6 @@ parametric_query:
     current_speed_in_s: 36.0
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:

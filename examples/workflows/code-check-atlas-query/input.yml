@@ -10,7 +10,6 @@ parametric_query:
     bending_moment_kNm: 180.0
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:

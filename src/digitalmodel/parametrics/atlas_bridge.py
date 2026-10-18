@@ -28,6 +28,7 @@ def atlas_from_summary(
     atlas_id: str,
     physics: str = "linear",
     scales: Optional[dict[str, str]] = None,
+    workflow_id: str | None = None,
 ) -> Atlas:
     """Build a ``parametric.Atlas`` from a swept study + its results.
 
@@ -68,13 +69,29 @@ def atlas_from_summary(
         )
 
     grid = df[axis_names + [response]].reset_index(drop=True)
-    return Atlas(
+    atlas = Atlas(
         basename=basename,
         atlas_id=atlas_id,
         physics=physics,
         response=response,
         axes=axes,
         grid=grid,
-        validation={"max_rel_error": 0.0},
+        validation={"max_rel_error": None, "passes": False},
         provenance={"source": "parametrics_sweep", "study": study.name},
     )
+    if workflow_id is not None:
+        from digitalmodel.parametric import refresh
+        from digitalmodel.parametric.generate import RESPONSE_FUNCS
+        from digitalmodel.parametric.validation import validate_atlas
+
+        row = refresh._row(workflow_id)
+        if row["basename"] != basename:
+            raise ValueError("workflow_id does not match atlas basename")
+        block = row["parametric"]
+        kwargs = block.get("response_kwargs", {})
+        validate_atlas(atlas, lambda p: RESPONSE_FUNCS[basename](p, **kwargs),
+                       float(block["tolerance"]["threshold"]))
+        atlas.provenance.update({"workflow_id": workflow_id,
+                                 "content_fingerprint": refresh.content_fingerprint(workflow_id),
+                                 "response_kwargs": kwargs})
+    return atlas

@@ -15,6 +15,7 @@ from typing import Any, Callable
 import yaml
 
 from digitalmodel.parametric.atlas import Atlas
+from digitalmodel.parametric.validation import validation_passes
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ATLAS_ROOT = REPO_ROOT / "atlases"
@@ -36,6 +37,8 @@ def router(cfg: dict) -> dict:
         raise ValueError("parametric_query.atlas (workflow basename) is required")
     point = settings.get("point") or {}
     policy = settings.get("policy") or {}
+    if set(policy) - {"on_out_of_range"}:
+        raise ValueError(f"unknown policy keys: {sorted(set(policy) - {'on_out_of_range'})}")
     on_out_of_range = policy.get("on_out_of_range", "escalate")
     if on_out_of_range not in {"escalate", "error"}:
         raise ValueError(
@@ -49,12 +52,18 @@ def router(cfg: dict) -> dict:
 
     atlas_root = Path(settings.get("atlas_root", DEFAULT_ATLAS_ROOT))
     atlas = Atlas.load(atlas_root, basename)
+    _validate_point_keys(atlas, point, handler)
 
     stale_reason = _staleness(atlas)
     if stale_reason is not None:
         result = {**_escalation(atlas, stale_reason), "stale": True}
+    elif atlas.provenance.get("kind") != "library" and not validation_passes(atlas):
+        result = _escalation(atlas, "computed atlas has not passed validation")
     else:
-        result = handler(atlas, point)
+        try:
+            result = handler(atlas, point)
+        except (ValueError, TypeError, KeyError, ZeroDivisionError) as exc:
+            result = _escalation(atlas, f"query evidence not established: {exc}")
     if not result["in_range"] and on_out_of_range == "error":
         raise ValueError(f"parametric_query out of range: {result.get('reason')}")
 
@@ -74,8 +83,8 @@ def _staleness(atlas: Atlas) -> str | None:
     if atlas.provenance.get("kind") == "library":
         try:
             reasons = refresh.library_drift(atlas)  # checks THIS atlas, no re-load
-        except Exception:
-            return None
+        except Exception as exc:
+            return f"library staleness unverified: {type(exc).__name__}: {exc}"
         if reasons:
             return f"library stale: {'; '.join(reasons)} — licensed run required"
         return None
@@ -83,12 +92,12 @@ def _staleness(atlas: Atlas) -> str | None:
     workflow_id = atlas.provenance.get("workflow_id")
     stored = atlas.provenance.get("content_fingerprint")
     if not workflow_id or not stored:
-        return None  # atlas predates fingerprinting; nothing to check against
+        return "atlas staleness unverified: missing workflow_id or content_fingerprint"
 
     try:
         current = refresh.content_fingerprint(workflow_id)
-    except Exception:
-        return None  # cannot recompute (e.g. registry absent) -> do not false-alarm
+    except Exception as exc:
+        return f"atlas staleness unverified: {type(exc).__name__}: {exc}"
     if current != stored:
         return (
             "atlas stale: build basis (spec / template / source / standard) "
@@ -102,6 +111,7 @@ def _provenance(atlas: Atlas) -> dict[str, Any]:
         "atlas_id": atlas.atlas_id,
         "code_version": atlas.provenance.get("code_version"),
         "standards": atlas.provenance.get("standards"),
+        "response_kwargs": atlas.provenance.get("response_kwargs", {}),
     }
     # Licensed-solver libraries (#831/#1346): surface the solver block so a
     # STUB self-identifies at the query-result surface — a synthetic placeholder
@@ -120,7 +130,7 @@ def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
         "reason": reason,
         "action": "escalate",
         "disclaimer": ESCALATE_DISCLAIMER,
-        "provenance": {"atlas_id": atlas.atlas_id},
+        "provenance": _provenance(atlas),
     }
 
 
@@ -130,6 +140,27 @@ def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
 _FATIGUE_CONTROL_KEYS = {
     "tension_range_bins", "design_life_years", "dff", "tension_range_kN", "n_cycles",
 }
+
+
+def _validate_point_keys(atlas: Atlas, point: dict, handler: Callable) -> None:
+    allowed = {ax.name for ax in atlas.axes}
+    for ax in atlas.axes:
+        if ax.derived:
+            allowed.update(ax.derived["inputs"])
+    controls = {
+        _handle_fatigue_bins: _FATIGUE_CONTROL_KEYS,
+        _handle_annual_damage: {"design_life_years", "dff"},
+        _handle_capacity_demand: {"demand_kN", "factor_of_safety"},
+        _handle_rao: {"period_s"},
+    }
+    allowed.update(controls.get(handler, set()))
+    unknown = set(point) - allowed
+    if unknown:
+        raise ValueError(f"unknown point keys: {sorted(unknown)}")
+    for item in point.get("tension_range_bins", []):
+        unknown = set(item) - {"tension_range_kN", "n_cycles"}
+        if unknown:
+            raise ValueError(f"unknown fatigue bin keys: {sorted(unknown)}")
 
 
 def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
@@ -142,6 +173,9 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     if bins is None:
         bins = [{"tension_range_kN": point["tension_range_kN"],
                  "n_cycles": point["n_cycles"]}]
+    if not bins or any(not math.isfinite(float(b.get("n_cycles", 0)))
+                       or float(b.get("n_cycles", 0)) <= 0 for b in bins):
+        return _escalation(atlas, "non-empty fatigue bins with finite positive cycles required")
 
     total_damage = 0.0
     for b in bins:
@@ -222,12 +256,17 @@ def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
     if capacity <= 0:
         return _escalation(atlas, "non-positive capacity")
     demand = float(point["demand_kN"])
-    fos = float(point.get("factor_of_safety", 1.0))
+    if "factor_of_safety" not in point:
+        return _escalation(atlas, "factor_of_safety is required")
+    fos = float(point["factor_of_safety"])
+    if not math.isfinite(fos) or fos <= 0 or not math.isfinite(demand) or demand < 0:
+        return _escalation(atlas, "finite positive factor_of_safety and nonnegative demand required")
     e = atlas.local_error(point)
     u = demand * fos / capacity
     # capacity carries +/- e error, so utilisation carries -/+ e (inverse)
     band = [demand * fos / (capacity * (1 + e)), demand * fos / (capacity * (1 - e))]
     result = _utilisation_result(atlas, u, band, e)
+    result["factor_of_safety"] = fos
     if result["in_range"]:
         result["capacity_kN"] = capacity
     return result
@@ -244,8 +283,8 @@ def _handle_value(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     return {
         "response": atlas.response,
         "value": v,
-        "confidence": {"band": [v * (1 - e), v * (1 + e)],
-                       "basis": f"local interp error = {e:.4f}"},
+        "confidence": {"band": None if e is None else [v * (1 - e), v * (1 + e)],
+                       "basis": "not established" if e is None else f"local interp error = {e:.4f}"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,

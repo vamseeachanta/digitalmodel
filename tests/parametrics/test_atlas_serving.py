@@ -35,6 +35,7 @@ def _save_fowt_atlas(atlas_root: Path) -> None:
         "max_utilisation",
         basename="fowt_mooring",
         atlas_id="fowt-mbr-uc-test",
+        workflow_id="fowt-mooring",
     )
     atlas.save(atlas_root)
 

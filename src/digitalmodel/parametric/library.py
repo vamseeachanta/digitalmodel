@@ -52,6 +52,9 @@ def build_library_atlas(
     """
     axes = [Axis(name=key_axis, values=list(key_values)), *continuous_axes]
     grid = pd.DataFrame(records)
+    from digitalmodel.parametric.grid_validation import validate_grid
+
+    validate_grid(axes, grid, response)
 
     coverage = {
         "key_axis": key_axis,

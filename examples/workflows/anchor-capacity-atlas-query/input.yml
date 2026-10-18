@@ -10,7 +10,6 @@ parametric_query:
     factor_of_safety: 1.5
   policy:
     on_out_of_range: escalate
-    confidence: required
   output_dir: results
 
 default:
