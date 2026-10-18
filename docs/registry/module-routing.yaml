@@ -352,6 +352,9 @@ modules:
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
     submodules:
+      mystran:
+        agent_pack: src/digitalmodel/solvers/mystran/docs/agent-pack.md
+        qa_family: FE
       openfoam:
         agent_pack: src/digitalmodel/solvers/openfoam/docs/agent-pack.md
         qa_family: CF
