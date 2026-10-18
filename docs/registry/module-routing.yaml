@@ -532,6 +532,10 @@ modules:
     key_tests: [tests/hydrodynamics/test_wang_passing_ship.py, tests/hydrodynamics/test_passing_ship_forces_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#passing_ship_forces
   - module: hull_girder_screening
+    submodules:
+      hull_girder_screening:
+        agent_pack: src/digitalmodel/hull_girder_screening/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/hull_girder_screening/
     maturity: development
     owner_wiki: docs/domains/ship-design/hull-girder-strength-screening.md
