@@ -54,7 +54,7 @@ class AqwaEFServer:
         #  from the Aqwa program. It will then use the first function UF1 for that particular Aqwa run.
         #  The process will then repeat for two more Aqwa runs, using UF2 and UF3.
         #
-        if au is None or fm is None:
+        if au is None or fm is None or not _HAS_AQWA_SERVER:
             raise RuntimeError("External-force dependencies unavailable")
         cfg = fm.router(cfg)
         self.cfg = cfg
@@ -85,9 +85,18 @@ class AqwaEFServer:
             process = au.run_aqwa_analysis_as_subprocess(
                 cfg, InputFileName, process="launch-only"
             )
-            self.define_result_df(cfg)
-            Server.Run(run_function, closing_function)
-            if process.wait() != 0:
+            completed = False
+            try:
+                self.define_result_df(cfg)
+                Server.Run(run_function, closing_function)
+                returncode = process.wait()
+                completed = True
+            finally:
+                if not completed:
+                    if process.poll() is None:
+                        process.terminate()
+                    process.wait()
+            if returncode != 0:
                 raise RuntimeError("External-force solver exited unsuccessfully")
 
             print("Now saving result for: {0}".format(InputFileName))
@@ -106,7 +115,8 @@ class AqwaEFServer:
         output_file_basename = basename.split(".")[0]
         def_pos_cfg = cfg["analysis_settings"]["ef_input"]["def_pos"]
         for def_pos_idx in range(0, len(def_pos_cfg)):
-            df = self.result_df_array[def_pos_idx]
+            df = self.result_df_array[def_pos_idx].copy()
+            df["aq_04_decision"] = "NOT_RUN"
 
             aqwa_client_directory = cfg["Analysis"]["result_folder"]
             filename = output_file_basename + "_" + str(def_pos_idx) + "_py_inputs.csv"

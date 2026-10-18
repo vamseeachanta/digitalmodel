@@ -41,8 +41,9 @@ def validate_external_gate(gate, evidence, *, expected_inputs=None):
         raise ValueError(f"{gate}: external evidence digest mismatch")
     signed_evidence = {key: value for key, value in evidence.items() if key != "signature"}
     signed_evidence["artifact"] = path.name
-    validate_signature(gate, evidence.get("signature"), evidence["input_sha256"], signed_evidence)
-    return dict(evidence, artifact=path.name, verification="manual attestation; no package solver execution")
+    signature = validate_signature(gate, evidence.get("signature"), evidence["input_sha256"], signed_evidence)
+    return dict(evidence, signature=signature, artifact=path.name,
+                verification="manual attestation; no package solver execution")
 
 
 def validate_input_binding(gate, evidence, expected_inputs):
@@ -84,7 +85,7 @@ def evidence_digest(value: Any) -> str:
                                      allow_nan=False).encode("utf-8")).hexdigest()
 
 
-def validate_signature(gate: str, signature: Any, manifest: Any, gates: Any) -> None:
+def validate_signature(gate: str, signature: Any, manifest: Any, gates: Any) -> dict[str, Any]:
     """Validate a dated identity attestation and its content bindings.
 
     This record is a manual attestation, not cryptographic identity verification.
@@ -94,7 +95,8 @@ def validate_signature(gate: str, signature: Any, manifest: Any, gates: Any) -> 
         raise ValueError(f"{gate}: identity/date/digest signature record required")
     identity = signature.get("identity")
     try:
-        signed_at = datetime.fromisoformat(signature.get("signed_at", "").replace("Z", "+00:00"))
+        value = signature.get("signed_at", "")
+        signed_at = value if isinstance(value, datetime) else datetime.fromisoformat(value.replace("Z", "+00:00"))
     except (TypeError, ValueError, AttributeError) as exc:
         raise ValueError(f"{gate}: signature date must be an ISO timestamp") from exc
     if (not isinstance(identity, str) or not identity.strip() or identity.strip() == "maintainer"
@@ -104,6 +106,7 @@ def validate_signature(gate: str, signature: Any, manifest: Any, gates: Any) -> 
             or signature.get("manifest_sha256") != evidence_digest(manifest)
             or signature.get("gates_sha256") != evidence_digest(gates)):
         raise ValueError(f"{gate}: signature identity, date or digest binding invalid")
+    return dict(signature, signed_at=signed_at.isoformat())
 
 
 def validate_report_gates(
@@ -112,12 +115,12 @@ def validate_report_gates(
     required = {f"AQ-{n:02}" for n in range(1, 11)}
     if any(gates.get(key, {}).get("decision") != "PASS" for key in required):
         raise ValueError("AQ-11: applicable gate evidence and maintainer quality signature required")
-    validate_signature("AQ-11", signature, manifest, gates)
+    signature = validate_signature("AQ-11", signature, manifest, gates)
     return {"decision": "PASS", "quality_signature": signature}
 
 
 LOCAL_CHECKS = {
-    "AQ-01": ("ldrg_present", "configured_cog_matches"),
+    "AQ-01": ("ldrg_present", "expected_cog_matches"),
     "AQ-02": ("radiation_grid_matches", "added_mass_grid_matches"),
     "AQ-03": ("required_inertia_present", "required_restoring_present", "resonance_solved"),
 }

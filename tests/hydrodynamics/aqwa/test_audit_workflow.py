@@ -75,6 +75,16 @@ def test_configured_cog_is_passed(tmp_path):
     assert record["inspection"].deck_one.cog_element == 97000
 
 
+@pytest.mark.parametrize("configured", [False, True])
+def test_cog_evidence_distinguishes_configuration_from_default(tmp_path, configured):
+    module, dataset, config = case(tmp_path)
+    if not configured:
+        del config["context"]["cog_element"]
+    gate = module._process_case(dataset, config)["records"][0]["qa_gates"]["AQ-01"]
+    assert gate["evidence"]["cog_source"] == ("configured" if configured else "default")
+    assert gate["checks"]["expected_cog_matches"] is True
+
+
 def test_lis_pages_and_units():
     path = Path(__file__).resolve().parents[3] / "docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS"
     result = AQWAEnhancedParser().parse_lis_file(str(path))

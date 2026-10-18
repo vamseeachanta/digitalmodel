@@ -1,19 +1,30 @@
 <!doctype html>
-<html lang="en"><meta charset="utf-8"><title>AQWA audit verification</title>
+<html lang="en"><meta charset="utf-8"><title>AQWA audit analysis</title>
 <style>body{font:16px/1.5 system-ui;max-width:960px;margin:3rem auto;padding:0 1rem;color:#162535}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;border:1px solid #ccd5df;text-align:left}code{font-size:.9em}</style>
-<h1>AQWA audit verification</h1>
-<p>2026-10-18. Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2743">issue 2743</a>, sections 1–14. All fourteen sections are addressed by offline code, documentation and regression changes. Native solver qualification remains NOT_RUN.</p>
-<table><tr><th>Verification</th><th>Result</th></tr>
-<tr><td>AQWA module and router suite</td><td>104 passed; 10 existing solver-required skips; zero failures</td></tr>
-<tr><td>Repository structure, routing and AQWA pack node checks</td><td>65 passed; zero failures</td></tr>
-<tr><td>Engineering red baseline</td><td>20 failed and 4 passed before kernel/parser corrections</td></tr>
-<tr><td>Deck writer mutation</td><td>Changing frequency from 1/T to 2/T causes the actual writer test to fail; source digest matches after restoration</td></tr>
-<tr><td>Package distribution</td><td>Built wheel contains damping-basis.md with bytes matching the source</td></tr>
-<tr><td>Scope constraints</td><td>No LFS-tracked change; no other assistant or commercial solver invoked</td></tr></table>
-<p>Table 1. Offline verification; test success does not establish native qualification.</p>
-<p>The heave result is 2175.118 N s/m and symmetric roll is 435023.511 N m s/rad under <a href="damping-basis.md">E1–E3</a>. Under E4–E5, configured inertia gives natural frequency 0.40824829 rad/s, period 15.39059796 s and damping ratio 0.0102062073. The committed LIS regression asserts 72 displacement rows and first-row values.</p>
-<p>The narrower interpretation uses a motion-only harmonic model with explicit peak wave amplitude and rotational RAO units. The legacy method name remains, but stochastic response is not inferred. Frequency-dependent added mass is interpolated linearly and the resonance equation is solved within the supplied grid. Missing, outside-grid or multiple roots raise; no extrapolated result is issued.</p>
-<p>External mesh and hydrostatic gates are manual checks performed with AQWA Workbench hydrostatics and mesh inspection. The package validates criterion attestations, tool/version, retained artifact digest and current DAT/LIS input binding. It does not calculate the external mesh metrics. Missing evidence is NOT_RUN; calling the gate validator without evidence raises. Native execution is disabled unless explicitly enabled in configuration. Tests substitute a process result and do not launch a solver.</p>
-<p>Eleven mock-only smoke tests and their PASS records were withdrawn. The deck test now asserts package-written frequency text; restoring tests exercise actual DAT validation. Plan and code review were performed in this conversation under the task restriction on other assistants. No multi-provider consensus is claimed.</p>
-<p>Review findings corrected: missing wheel inclusion of the citation basis, missing manual-evidence input binding, stale path-only LIS caching and ambiguous grid-ratio CSV labels. Reports retain the declared amplitude, derivation citation, input digests and gate appendix. Maintainer review and external native qualification remain separate from these offline checks.</p>
+<h1>AQWA audit analysis</h1>
+<p>2026-10-18. Scope: issue #2743, sections 1–14. Offline damping, DAT/LIS parsing and evidence checks are corrected. Solver-free regression success does not establish native qualification; native execution and external mesh/hydrostatic qualification remain NOT_RUN.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>1</td><td>2026-10-18</td><td>Initial record of offline damping and parser corrections.</td></tr>
+<tr><td>2</td><td>2026-10-18</td><td>Update checks and interface limits to cover launch-only execution, structure grids, signatures and subsequent regressions; remove stale references.</td></tr></table>
+<p>Table 1. Issued revisions.</p>
+<h2>Verification</h2>
+<table><tr><th>Check</th><th>Starting head</th><th>Revised tree</th></tr>
+<tr><td>AQWA and marine analysis suites, unified RAO reader and route checks</td><td>120 passed; 12 skipped</td><td>128 passed; 12 skipped</td></tr>
+<tr><td>Hydrodynamic RAO integration, isolated output directories</td><td>8 passed</td><td>8 passed</td></tr>
+<tr><td>Combined solver-free checks</td><td>128 passed; 12 skipped</td><td>136 passed; 12 skipped</td></tr>
+<tr><td>Implementation-map references</td><td>Failed on three removed references</td><td>Passed after removal of those entries</td></tr>
+<tr><td>New behaviour regressions and map check before correction</td><td>9 failed; 22 passed</td><td>Corrected behaviours pass</td></tr>
+<tr><td>YAML signature serialization before normalization</td><td>7 failed</td><td>External and final signature records serialize to JSON</td></tr></table>
+<p>Table 2. Offline checks. Ten skips require the licensed solver; two require missing reference data. Tests replace process execution and do not launch a solver.</p>
+<p>The heave result is 2175.1 N s/m and symmetric roll is 435023.5 N m s/rad under <a href="damping-basis.md">the calculation basis, revision 3, E1–E3</a>. The committed single-body displacement regression asserts 72 rows. Both committed multibody displacement examples retain 25 headings per selected body.</p>
+<h2>Corrected interfaces</h2>
+<p>External-force execution requires explicit opt-in and the optional server dependency. Launch-only mode returns the process handle before callbacks are served. A callback failure terminates and waits for that process. Saved external-force CSVs carry <code>aq_04_decision=NOT_RUN</code>; exit code zero alone does not qualify completion.</p>
+<p>Each FDRn block retains its own frequency and direction grid. FILE, CSTR and CPDB references do not become inline grids. All 50 committed deck-6 examples parse; the validators accept zero examples for LDRG and 49 for the default CoG. A validator may reject a malformed CoG during shared inspection before its own criterion is checked.</p>
+<p>AQ-01 through AQ-03 retain per-gate evidence and input digests. AQ-01 distinguishes configured and defaulted CoG nodes. Native completion evidence includes DAT and fresh LIS digests and the observed body count; the heading scan tolerates non-UTF-8 listing bytes while the digest covers the original bytes.</p>
+<p>AQ-05 through AQ-11 use identity, timezone-aware date and digest-bound signature records. YAML datetime values are normalized to ISO text for retained JSON records. These are manual attestations, not identity authentication; reviewer authority requires independent confirmation.</p>
+<h2>Limits and way forward</h2>
+<p>The model uses motion-only harmonic linearisation, declared peak wave amplitude and rotational RAO units. Resonance must be unique and inside the supplied grid. No stochastic sea-state result or extrapolated resonance is inferred.</p>
+<p>Multibody displacement reads require an explicit structure selector; omitted selectors now raise. The damping workflow remains single-body because its matrix and hydrostatic readers do not select a body. Configured searches preserve continuation rows and reject empty extractions.</p>
+<p>Native qualification and manual hydrostatic/mesh checks remain required before engineering use. Missing external evidence remains NOT_RUN. Maintainer review and a second-provider review of the revised change remain pending.</p>
 </html>

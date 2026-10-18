@@ -1,4 +1,4 @@
-# AQWA offline damping basis, revision 2
+# AQWA offline damping basis, revision 3
 
 This calculation is a single-mode, motion-only, harmonic approximation. It does
 not reproduce the solver's correlated two-dimensional stochastic drag model.
@@ -13,6 +13,7 @@ oriented tube coupling and relative fluid velocity require a separate model.
 | --- | --- | --- |
 | 1 | Not recorded | Initial offline calculation basis. |
 | 2 | 2026-10-17 | Correct E2/E3 rounding and document structure selection and evidence bindings. |
+| 3 | 2026-10-18 | State single-body workflow scope, defaulted CoG evidence and external-force completion limits. |
 
 ## E1. Drag force and energy equivalence
 
@@ -80,6 +81,9 @@ an inline grid. The LIS displacement parser requires `structure=n` when multiple
 bodies are present. The configured-search reader uses the selected keyword range
 and extraction settings, carries period/frequency across RAO continuation rows,
 and rejects an extraction with no rows.
+The damping workflow supports single-body listings only; its matrix and
+hydrostatic readers do not select a body. Multibody displacement selection does
+not qualify a multibody damping calculation.
 
 AQ-01 through AQ-03 retain individual checks, measured evidence and input digests.
 Native completion evidence includes the input DAT digest, the fresh LIS digest,
@@ -87,10 +91,15 @@ and the observed body count from hydrodynamic structure headings. The expected
 count is declared in `execution.expected_body_count`. Missing or stale listing
 output cannot satisfy AQ-04. Launch-only execution requires `execution.allow_solver`
 and returns a process handle; it supplies no completion qualification.
+External-force CSV results therefore carry `aq_04_decision=NOT_RUN` even after
+exit code zero. Callback failures terminate and wait for the launched process.
+AQ-01 records `cog_source` as `configured` or `default`, with the expected and
+observed node values. Its `expected_cog_matches` check also applies to the default.
 
 AQ-05 through AQ-10 require a `signature` mapping with `identity`, `role`,
 `signed_at`, `manifest_sha256` and `gates_sha256`. The role is `maintainer` and
-the date is an ISO timestamp with a timezone. SHA-256 binds canonical JSON
+the date is an ISO timestamp with a timezone or a timezone-aware YAML datetime.
+SHA-256 binds canonical JSON
 (sorted keys, compact separators, UTF-8, no nonfinite values). The manifest
 binding covers `input_sha256`; the gate binding covers the evidence record
 without `signature`, with the artifact represented by its basename.

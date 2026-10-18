@@ -26,6 +26,9 @@ def test_external_gate_requires_qualified_evidence(gate, tmp_path):
     record["signature"] = signature_record(
         record["input_sha256"], dict(record, artifact=evidence.name))
     assert qa_gates.validate_external_gate(gate, record)["decision"] == "PASS"
+    import yaml
+    record["signature"].update(yaml.safe_load("signed_at: 2026-10-01T12:00:00+00:00"))
+    assert json.loads(json.dumps(qa_gates.validate_external_gate(gate, record)))["decision"] == "PASS"
     for key, value in (("identity", ""), ("signed_at", "invalid"),
                        ("manifest_sha256", "b"*64), ("gates_sha256", "c"*64)):
         changed = dict(record, signature=dict(record["signature"], **{key: value}))
@@ -130,6 +133,7 @@ def test_ef_router_launches_before_serving_and_propagates_errors(monkeypatch, tm
             raise ValueError("execution disabled")
         return SimpleNamespace(wait=lambda: events.append("wait") or 0)
     monkeypatch.setattr(module, "fm", SimpleNamespace(router=lambda value: value))
+    monkeypatch.setattr(module, "_HAS_AQWA_SERVER", True)
     monkeypatch.setattr(module, "au", SimpleNamespace(run_aqwa_analysis_as_subprocess=launch))
     monkeypatch.setattr(module, "AqwaUserForceServer", lambda **kwargs: SimpleNamespace(
         Run=lambda *args: events.append("serve")), raising=False)
@@ -143,6 +147,80 @@ def test_ef_router_launches_before_serving_and_propagates_errors(monkeypatch, tm
     else:
         router.ef_server_router(cfg)
         assert events == ["launch", "define", "serve", "wait", "save"]
+
+
+def test_ef_router_requires_optional_server(monkeypatch):
+    from digitalmodel.hydrodynamics.aqwa import aqwa_analysis_ef_server as module
+    monkeypatch.setattr(module, "_HAS_AQWA_SERVER", False)
+    with pytest.raises(RuntimeError, match="dependencies unavailable"):
+        module.AqwaEFServer().ef_server_router({})
+
+
+@pytest.mark.parametrize("failure", ["define", "serve"])
+def test_ef_router_reaps_solver_on_callback_failure(monkeypatch, tmp_path, failure):
+    from digitalmodel.hydrodynamics.aqwa import aqwa_analysis_ef_server as module
+    events = []
+    cfg = {"Analysis": {"file_management_input_directory": str(tmp_path)},
+           "file_management": {"input_files": {"DAT": ["input.dat"]}},
+           "analysis_settings": {"ef_input": {"number_of_runs": 1,
+               "run_function": "UF1", "closing_function": None}}}
+    handle = SimpleNamespace(poll=lambda: None,
+        terminate=lambda: events.append("terminate"), wait=lambda: events.append("wait"))
+    def callback(stage):
+        if stage == failure:
+            raise RuntimeError("callback failed")
+    monkeypatch.setattr(module, "_HAS_AQWA_SERVER", True)
+    monkeypatch.setattr(module, "fm", SimpleNamespace(router=lambda value: value))
+    monkeypatch.setattr(module, "au", SimpleNamespace(run_aqwa_analysis_as_subprocess=lambda *a, **k: handle))
+    monkeypatch.setattr(module, "AqwaUserForceServer", lambda **kwargs: SimpleNamespace(
+        Run=lambda *args: callback("serve")), raising=False)
+    router = module.AqwaEFServer()
+    monkeypatch.setattr(router, "define_result_df", lambda cfg: callback("define"))
+    monkeypatch.setattr(router, "save_result_df", lambda *args: events.append("save"))
+    with pytest.raises(RuntimeError, match="callback failed"):
+        router.ef_server_router(cfg)
+    assert events == ["terminate", "wait"]
+
+
+def test_saved_external_force_results_disclose_unqualified_completion(tmp_path):
+    import pandas as pd
+    from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_ef_server import AqwaEFServer
+    router = AqwaEFServer()
+    router.result_df_array = [pd.DataFrame({"time": [0.0]})]
+    cfg = {"Analysis": {"result_folder": str(tmp_path)},
+           "analysis_settings": {"ef_input": {"def_pos": [{}]}}}
+    router.save_result_df(cfg, "input.dat")
+    saved = pd.read_csv(tmp_path / "input_0_py_inputs.csv")
+    assert saved["aq_04_decision"].tolist() == ["NOT_RUN"]
+
+
+def test_signature_accepts_yaml_datetime_and_rejects_naive_dates():
+    import yaml
+    gates = {f"AQ-{n:02}": {"decision": "PASS"} for n in range(1, 11)}
+    manifest = {"dat": {"sha256": "a" * 64}}
+    signature = signature_record(manifest, gates)
+    signature.update(yaml.safe_load("signed_at: 2026-10-01T12:00:00+00:00"))
+    result = qa_gates.validate_report_gates(gates, signature, manifest=manifest)
+    assert json.loads(json.dumps(result))["decision"] == "PASS"
+    signature.update(yaml.safe_load("signed_at: 2026-10-01T12:00:00"))
+    with pytest.raises(ValueError, match="signature"):
+        qa_gates.validate_report_gates(gates, signature, manifest=manifest)
+
+
+def test_native_heading_scan_accepts_non_utf8_listing(monkeypatch, tmp_path):
+    utility = AqwaUtilities()
+    monkeypatch.setattr(utility, "get_aqwa_exe", lambda cfg: "unused")
+    source = tmp_path / "input.dat"
+    source.write_text("synthetic")
+    def run(*args, **kwargs):
+        source.with_suffix(".MES").write_text("Completed successfully")
+        source.with_suffix(".LIS").write_bytes(b"\xff\nHYDRODYNAMIC PARAMETERS FOR STRUCTURE 1\n")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+    monkeypatch.setattr("digitalmodel.hydrodynamics.aqwa.aqwa_utilities.subprocess.run", run)
+    result = utility.run_aqwa_analysis_as_subprocess(
+        {"execution": {"allow_solver": True, "expected_body_count": 1}}, source)
+    assert qa_gates.validate_native_result(result)["decision"] == "PASS"
+    assert result["input_sha256"]["lis"] == hashlib.sha256(source.with_suffix(".LIS").read_bytes()).hexdigest()
 
 
 def signature_record(manifest, gates):

@@ -283,8 +283,9 @@ class ViscousDampingDetermination(AqwaRAOs):
             bindings = {key: value["sha256"] for key, value in source_manifest.items()}
             local_gates = {
                 "AQ-01": {"decision": "PASS", "input_sha256": bindings,
-                          "checks": {"ldrg_present": True, "configured_cog_matches": True},
+                          "checks": {"ldrg_present": True, "expected_cog_matches": True},
                           "evidence": {"ldrg": inspection.options["LDRG"],
+                                       "cog_source": "configured" if "cog_element" in config.get("context", {}) else "default",
                                        "expected_cog": expected_cog,
                                        "observed_cog": inspection.deck_one.cog_element}},
                 "AQ-02": {"decision": "PASS", "input_sha256": bindings,

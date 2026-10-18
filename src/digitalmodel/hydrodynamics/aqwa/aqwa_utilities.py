@@ -108,7 +108,7 @@ class AqwaUtilities:
         input_sha256 = {"dat": source_digest}
         body_ids = set()
         if lis_path.exists() and lis_path.stat().st_mtime_ns != lis_before:
-            content = lis_path.read_text(encoding="utf-8", errors="strict")
+            content = lis_path.read_text(encoding="utf-8", errors="replace")
             for line in content.splitlines():
                 match = re.search(r"HYDRODYNAMICPARAMETERSFORSTRUCTURE(\d+)",
                                   re.sub(r"\s+", "", line.upper()))

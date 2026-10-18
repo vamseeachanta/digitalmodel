@@ -83,6 +83,7 @@ def test_committed_deck6_examples_and_validators():
     parser = AqwaDATFiles()
     paths = subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True).splitlines()
     count = 0
+    accepted = {"LDRG": 0, "CoG": 0}
     for relative in paths:
         path = ROOT / relative
         if path.suffix.lower() != ".dat" or "aqwa" not in relative:
@@ -94,9 +95,14 @@ def test_committed_deck6_examples_and_validators():
         grid = parser._parse_deck6(decks[6])
         assert all(value > 0 for value in grid.frequencies)
         # These validators must not fail on unrelated deck-6 syntax.
-        for validate in (parser.validate_ldrg_option, parser.validate_cog_element):
+        for label, validate in (("LDRG", parser.validate_ldrg_option),
+                                ("CoG", parser.validate_cog_element)):
             try:
                 validate(str(path))
             except ValueError as exc:
+                # Both validators inspect deck 1 before checking their criterion.
                 assert "LDRG" in str(exc) or "CoG" in str(exc)
+            else:
+                accepted[label] += 1
     assert count == 50
+    assert accepted == {"LDRG": 0, "CoG": 49}
