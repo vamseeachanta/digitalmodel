@@ -343,6 +343,26 @@ searched:
   exclusion_rules: [Binary files, Files over one MiB, Lock files, Generated output folders listed below]
   python_ast_parse_failures: 8
 families:
+- id: second-order-slow-drift-response
+  title: Second-order slow-drift force and scalar surge response
+  status: partial
+  scope: Scalar offline response; Naess finite-duration extreme criterion remains unmet.
+  search_signals:
+  - {search: algorithm, pattern: 'full_qtf_force_spectrum|low_frequency_surge_response|surge_response_kernel|naess_expected_extreme|full_qtf_slowly_varying|newman_approximation|get_mean_drift_forces'}
+  implementations:
+  - {path: src/digitalmodel/orcawave/drift_forces.py, symbol: compute_mean_drift_force, relation: independent}
+  - {path: src/digitalmodel/orcawave/drift_forces.py, symbol: newman_approximation, relation: independent}
+  - {path: src/digitalmodel/orcawave/drift_forces.py, symbol: full_qtf_slowly_varying, relation: independent}
+  - {path: src/digitalmodel/orcawave/slow_drift_response.py, symbol: full_qtf_force_spectrum, relation: independent}
+  - {path: src/digitalmodel/orcawave/slow_drift_response.py, symbol: low_frequency_surge_response, relation: independent}
+  - {path: src/digitalmodel/orcawave/slow_drift_response.py, symbol: surge_response_kernel, relation: independent}
+  - {path: src/digitalmodel/orcawave/slow_drift_response.py, symbol: naess_expected_extreme, relation: independent}
+  - {path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py, symbol: QTFData, relation: data-model}
+  - {path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py, symbol: QTFData.get_mean_drift_forces, relation: independent}
+  validation:
+  - {path: tests/orcawave/test_slow_drift_response.py, symbol: test_complex_pair_force_spectrum_and_quadratic_kernel_moments}
+  - {path: tests/orcawave/test_slow_drift_monte_carlo.py, symbol: test_broadband_force_and_surge_match_random_phase_ensemble}
+  - {path: tests/orcawave/test_slow_drift_monte_carlo.py, symbol: test_naess_three_hour_mean_maximum_within_ten_percent, status: expected-failure}
 - id: &a60c0aff48e catenary-mooring-line-statics
   title: Catenary and mooring line statics
   search_signals:

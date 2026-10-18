@@ -1,5 +1,10 @@
 # OrcaWave top-level module knowledge pack
 
+Incremental method note: [low-frequency surge and experimental Naess extreme](slow-drift-surge.md).
+The note records the new offline APIs, synthetic validation and the unmet
+three-hour extreme criterion; the historical code pin and counts below remain
+the scope of the original pack audit.
+
 | Header | Value |
 | --- | --- |
 | Module | orcawave, top-level |

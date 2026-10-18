@@ -4,10 +4,19 @@ Implements Newman's approximation for QTF, full QTF double-sum integration,
 mean drift force coefficient handling, and wind/current drift estimation.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field
+
+from digitalmodel.orcawave.slow_drift_response import (
+    SurgeKernel as SurgeKernel,
+    SurgeResponse as SurgeResponse,
+    full_qtf_force_spectrum as full_qtf_force_spectrum,
+    low_frequency_surge_response as low_frequency_surge_response,
+    naess_expected_extreme as naess_expected_extreme,
+    surge_response_kernel as surge_response_kernel,
+)
 
 
 # ---------------------------------------------------------------------------

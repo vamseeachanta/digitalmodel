@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<title>Low-frequency surge: artifact review and validation</title>
+<h1>Low-frequency surge: artifact review and validation</h1>
+<p>2026-10-18. Verdict: NEEDS-REVIEW for the experimental extreme; draft publication only.
+The review is performed inline on a frozen hash-pinned packet. External models
+are excluded by the task constraint; independent provider consensus is not established.</p>
+<h2>Unresolved findings</h2>
+<p>MAJOR: the three-hour maximum criterion in test_slow_drift_monte_carlo.py
+is unmet. The estimate is 6.834629 m versus 8.501601 m from 256 synthetic
+random-phase records, 19.6% low against a 10% criterion. A strict expected
+failure preserves the criterion. The asymptotic approximation and its
+quadrature normalization require further primary-source review before design use.</p>
+<p>The published Table 4 extremes are not reproduced: the complete complex
+QTF and calibrated model inputs are unverified for reuse. Table 1 damping
+and frequency pairs are tested as inputs to synthetic resonance cases only.</p>
+<h2>Checks and resolved findings</h2>
+<p>The test-first resonance check covers mass conversion, damping and mean offset.
+Pair counting, DC exclusion and full endpoint weights are checked against
+closed-form complex two-wave forcing and the existing Newman calculation.
+Signed receptance and phase invariance are checked independently. Kernel
+variance agrees with the force-filtered spectrum. Malformed imaginary arrays
+previously broadcast silently during development; both matrix parts now have
+explicit shape checks, verified by a refusal test.</p>
+<p>Unique touched drift tests: 69 passed, 1 strict expected failure.
+Structure and implementation-map tests: 94 passed. Repository structure check:
+PASS. Ruff: PASS for all four touched Python files. Bandit: no findings in the
+new calculation module. The source functions and new test functions remain
+below 50 lines; new Python files remain below 400 lines.</p>
+<h2>Public disclosure review</h2>
+<p>Destination: public digitalmodel repository and draft PR. The bundle below
+contains authored code, synthetic tests, numerical comparisons and citations.
+No private note text, restricted identifiers, source PDF, article figures or
+licensed solver outputs are included. Source attribution retains the cited
+authors and publication details. Detect-secrets reports zero candidates on
+changed lines; its 2989 full-file entropy candidates occur in unchanged
+implementation-map content. The new method note passes the engineering
+register check. No LFS filters apply to any changed file.</p>
+<p>The disclosure verdict is verified for these bytes; engineering acceptance of
+the extreme remains unresolved. The task request authorizes commit, push and
+draft PR publication. Merge is outside the authorized action.</p>
+<table><tr><th>Reviewed artifact</th><th>SHA-256</th></tr><tr><td>docs/plans/2026-10-18-issue-1154-lf-surge.html</td><td><code>7f9411d811f80937dae5ecc502ee805107eaab58679030cbaf8950162f74bc70</code></td></tr>
+<tr><td>docs/registry/implementation-map.md</td><td><code>bb634b227332d0e0d87f7d1982a01baa8865d9f2b8078d85d2c9080df9e22e98</code></td></tr>
+<tr><td>docs/registry/implementation-map.yaml</td><td><code>4d7b9b0d1faf595e86873c9b712aaacf0d54fffc182729bb81f9d8022aeb7ee8</code></td></tr>
+<tr><td>src/digitalmodel/orcawave/docs/agent-pack.md</td><td><code>3bcd4ab3a685eba91303b1a3b872fe50b4e4904b099e92921430730dbd6a62be</code></td></tr>
+<tr><td>src/digitalmodel/orcawave/docs/slow-drift-surge.md</td><td><code>93861315bea0b1ca74e6144b4da1a5a2751084721477c2ae830070a3b0a2ef0a</code></td></tr>
+<tr><td>src/digitalmodel/orcawave/drift_forces.py</td><td><code>def0020712a7cfa72d10352bd6cafd1c411f9adb46a886f4685dc1619df48a11</code></td></tr>
+<tr><td>src/digitalmodel/orcawave/slow_drift_response.py</td><td><code>c1aa69bd973e2d34c8925929deff3c621ebeb5fbe7b6e101e443bf4e77738491</code></td></tr>
+<tr><td>tests/orcawave/test_slow_drift_monte_carlo.py</td><td><code>0d82a95007d5826788116ee4b1e38c12edbf2f0541b65fdd028576476fe5358a</code></td></tr>
+<tr><td>tests/orcawave/test_slow_drift_response.py</td><td><code>093ae6f7bf2c84ea1b769e3bce4842f69765d2bba43731dd13225317f1e7d20b</code></td></tr>
+</table><p>Table 1. Frozen outgoing artifact set, excluding this review record itself.</p>
+</html>
