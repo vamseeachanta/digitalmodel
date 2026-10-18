@@ -214,7 +214,9 @@ class BuoyancyModule:
     outer_coating_thickness: Optional[float] = None  # m
     outer_coating_density: Optional[float] = None  # kg/m³
 
-    def buoyancy_force_per_length(self, external_fluid: FluidProperties) -> float:
+    def buoyancy_force_per_length(
+        self, external_fluid: FluidProperties, riser_outer_diameter: float,
+    ) -> float:
         """
         Net buoyancy force per unit length (N/m).
 
@@ -225,16 +227,23 @@ class BuoyancyModule:
         - Negative = upward force (buoyancy exceeds module weight)
         - Positive = downward force (module weight exceeds buoyancy)
         """
+        # Governing annular Archimedes balance: engineering-basis.md E4.
+        # The required inner diameter includes the riser coating; its displaced
+        # area is already included in the bare riser effective weight.
+        if not (np.isfinite(riser_outer_diameter) and
+                np.isfinite(self.outer_diameter) and
+                0 < riser_outer_diameter < self.outer_diameter):
+            raise ValueError("module diameter must exceed the positive coated riser diameter")
         # Volume displaced
         if self.outer_coating_thickness:
             D_outer = self.outer_diameter + 2 * self.outer_coating_thickness
         else:
             D_outer = self.outer_diameter
 
-        V_displaced = np.pi / 4 * D_outer**2
+        V_displaced = np.pi / 4 * (D_outer**2 - riser_outer_diameter**2)
 
         # Weight of buoyancy material
-        V_buoy = np.pi / 4 * self.outer_diameter**2
+        V_buoy = np.pi / 4 * (self.outer_diameter**2 - riser_outer_diameter**2)
         w_buoy = V_buoy * self.buoyancy_material_density * 9.81
 
         # Weight of outer coating
@@ -286,7 +295,10 @@ class LazyWaveConfiguration:
         # For each buoyancy module, calculate net effect
         for module in self.buoyancy_modules:
             # Buoyancy adds upward force
-            buoy_force = module.buoyancy_force_per_length(self.riser.external_fluid)
+            buoy_force = module.buoyancy_force_per_length(
+                self.riser.external_fluid,
+                self.riser.outer_diameter + 2 * (self.riser.coating_thickness or 0.0),
+            )
             # Net weight in buoyancy section
             section_weight = bare_weight + buoy_force  # buoy_force is negative (upward)
 
@@ -329,6 +341,9 @@ class CatenaryRiserResult:
     # Maximum values
     max_tension: float  # N
     max_curvature: Optional[float] = None  # 1/m
+
+    # True only for a solved span that fits the available length.
+    converged: bool = False
 
     # Utilization
     tension_utilization: Optional[float] = None  # fraction of capacity

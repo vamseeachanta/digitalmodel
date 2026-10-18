@@ -1312,3 +1312,11 @@ Discovery command: `rg -l -i 'hydrodynamics|propeller.rudder' docs --glob '*.md'
 | 158 | `docs/domains/orcaflex/library/model_library/frps_ssr_global_riser/README.md` |
 
 1 discovery files with identifying names are omitted from the path list; issue pending (6). Map-row inventory separately retains redacted row locators so no implementation row is dropped.
+
+## Depth-classification update (#1704)
+
+Parametric hull analysis uses the cited PIANC 3.0/1.5/1.2 bands, with equality
+assigned to the shallower class locally. Bank-clearance x1.2/x1.5 depth
+multipliers remain uncited engineering assumptions. See the module
+[depth-screening note](../parametric_hull_analysis/README.md) for source
+locators, changed behaviour and published turning-diameter trend values.

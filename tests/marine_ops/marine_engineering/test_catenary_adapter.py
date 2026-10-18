@@ -68,9 +68,8 @@ class TestCatenaryEquationForceMethod:
         assert result["w"] == data["w"]
         assert result["d"] == data["d"]
 
-    def test_force_method_exact_legacy_match(self):
-        """Test that results exactly match legacy implementation."""
-        # These expected values come from running original catenaryMethods.py
+    def test_force_method_exact_closed_form_match(self):
+        """Verify the E1-E2 vertex-catenary geometry and force equilibrium."""
         data = {
             "F": 50000.0,
             "w": 250.0,
@@ -83,21 +82,23 @@ class TestCatenaryEquationForceMethod:
             warnings.simplefilter("ignore")
             result = catenaryEquation(data)
 
-        # Calculate expected values using legacy formulas
+        # Independent E1-E2 closed form, with F in N and w in N/m.
         F = data["F"]
         w = data["w"]
         d = data["d"]
 
-        expected_S = d * (2 * F / w - d)
-        expected_X = ((F/w) - d) * math.log((expected_S + (F/w)) / ((F/w) - d))
+        expected_S = math.sqrt(d * (2 * F / w - d))
+        expected_THorizontal = F - w * d
+        a = expected_THorizontal / w
+        expected_X = a * math.acosh(1 + d / a)
         expected_W = w * expected_S
-        expected_THorizontal = F * expected_X / math.sqrt(expected_S**2 + expected_X**2)
 
         # Check exact match (within floating point precision)
         assert abs(result["S"] - expected_S) < 1e-9
         assert abs(result["X"] - expected_X) < 1e-9
         assert abs(result["W"] - expected_W) < 1e-9
         assert abs(result["THorizontal"] - expected_THorizontal) < 1e-9
+        assert math.hypot(result["THorizontal"], result["W"]) == pytest.approx(F, rel=0, abs=1e-9)
 
     def test_force_method_multiple_scenarios(self):
         """Test force method with various parameter combinations."""
@@ -123,21 +124,21 @@ class TestCatenaryEquationForceMethod:
     def test_force_method_invalid_inputs(self):
         """Test that invalid inputs raise appropriate errors."""
         # F/w <= d should fail
-        with pytest.raises(ValueError, match="F/w.*must be > d"):
+        with pytest.raises(ValueError, match=r"F must exceed w\*d"):
             data = {"F": 100.0, "w": 50.0, "d": 100.0, "X": None, "q": None}
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 catenaryEquation(data)
 
         # Negative F
-        with pytest.raises(ValueError, match="Force F must be positive"):
+        with pytest.raises(ValueError, match="F, w and d must be finite and positive"):
             data = {"F": -100.0, "w": 50.0, "d": 50.0, "X": None, "q": None}
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 catenaryEquation(data)
 
         # Zero w
-        with pytest.raises(ValueError, match="Weight per length w must be positive"):
+        with pytest.raises(ValueError, match="F, w and d must be finite and positive"):
             data = {"F": 1000.0, "w": 0.0, "d": 50.0, "X": None, "q": None}
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
