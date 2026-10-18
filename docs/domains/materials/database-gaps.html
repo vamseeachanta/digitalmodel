@@ -15,9 +15,12 @@ keys. <code>database.py</code> supplies <code>load_database()</code>,
 <code>record.key</code>. Keys comprise specification, edition, designation and
 product level; unknown edition and inapplicable level use explicit key tokens.</p>
 <p>Product-level selection follows <code>grades.smts_mpa</code>: stored PSL1
-minima receive separate records. A PSL1 request without a stored PSL1 minimum
-returns the PSL2 record, retaining the repository helper's value fallback.
-This does not establish PSL1 product qualification. Non-API product levels are
+minima receive separate records. API 5L 46th-edition 9.3.1/Table 6 SI minima
+apply through X70. A PSL1 request without a stored PSL1 minimum, or an unknown
+API product-level token, raises <code>ValueError</code>. Licensed-text
+verification by the maintainer remains required before
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2726">#2726</a>
+closure; this correction does not establish product qualification. Non-API product levels are
 null. Aliases, including the distinct API and hull Grade A names, follow
 <code>grades.get</code>.</p>
 <p>Each record retains its existing citation and the inspected source revision,
@@ -27,8 +30,8 @@ refresh of the provenance constants. API edition metadata is extracted from the
 existing citation; editions not recorded there remain null. Repository
 <a href="../../../LICENSE">LICENSE</a> states <q>MIT License</q> for software.
 That licence does not establish original standards reuse rights. The source was
-inspected on 2026-10-11 UTC at revision
-<code>f21a12af5349c1656137a7b9daa091ec8f968738</code>; no original standard was fetched.</p>
+inspected on 2026-10-18 UTC at revision
+<code>8036237f20d2bc62e4e8dd3178fc2036b9ed4f40</code>; no original standard was fetched.</p>
 <table>
 <thead><tr><th>Gap</th><th>Evidence and required next input</th></tr></thead>
 <tbody>

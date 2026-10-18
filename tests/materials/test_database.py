@@ -32,14 +32,16 @@ def test_all_reconciled_grades_are_loaded_once_per_stored_level(database):
 )
 @pytest.mark.parametrize("psl", ["PSL1", "PSL2", "psl1", "unknown"])
 def test_psl_selection_matches_existing_reconciliation(database, name, psl):
+    g = grades.get(name)
+    if psl == "unknown" or (psl.upper() == "PSL1" and g.smts_psl1_mpa is None):
+        for query in (database.lookup, grades.smts_mpa):
+            with pytest.raises(ValueError, match="PSL"):
+                query(name, psl=psl)
+        return
     record = database.lookup(name, psl=psl)
     assert record.strengths.smys_mpa == grades.smys_mpa(name)
     assert record.strengths.smts_mpa == grades.smts_mpa(name, psl=psl)
-    g = grades.get(name)
-    expected_level = (
-        "PSL1" if psl.upper() == "PSL1" and g.smts_psl1_mpa is not None else "PSL2"
-    )
-    assert record.product_level == expected_level
+    assert record.product_level == psl.upper()
 
 
 @pytest.mark.parametrize(

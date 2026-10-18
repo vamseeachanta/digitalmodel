@@ -400,9 +400,11 @@ class TrueStressStrainCurve:
         n: strain-hardening exponent, ``0 < n < 1`` (user input).
         temperature_degc: temperature the properties apply at (recorded; no
             derating is applied here).
-        ultimate_true_strain: true strain at the ultimate; default ``n``, the
-            Considere criterion for power-law hardening (Dieter, Mechanical
-            Metallurgy, Ch. 8).
+        ultimate_true_strain: required uniform true strain at the ultimate,
+            supplied from a tensile test or an independently qualified input.
+            The Considere condition ``d(sigma)/d(eps) = sigma`` does not imply
+            ``eps = n`` for the offset plastic-strain law above. No necking
+            strain is inferred from ``n`` (issue 2731).
         sigma_u_is_true: ``sigma_u_mpa`` is already a true stress.
         name: free label for the deck.
 
@@ -431,9 +433,11 @@ class TrueStressStrainCurve:
             raise ValueError("E_mpa, sigma_y_mpa and sigma_u_mpa must be positive.")
         if not 0.0 < self.n < 1.0:
             raise ValueError(f"hardening exponent n must be in (0, 1), got {self.n}")
-        eps_u = (self.n if self.ultimate_true_strain is None
-                 else _magnitude(self.ultimate_true_strain, "dimensionless",
-                                 "ultimate_true_strain"))
+        if self.ultimate_true_strain is None:
+            raise ValueError("ultimate_true_strain is required; the offset hardening "
+                             "law does not determine uniform strain from n.")
+        eps_u = _magnitude(self.ultimate_true_strain, "dimensionless",
+                           "ultimate_true_strain")
         set_(self, "ultimate_true_strain", eps_u)
         if eps_u <= self.yield_strain:
             raise ValueError(
@@ -593,7 +597,8 @@ class FFSMaterialInputs:
                                  ) -> TrueStressStrainCurve:
         """Build the :class:`TrueStressStrainCurve` for this material.
 
-        ``n`` (or ``hardening_exponent`` on the record) is required; any other
+        ``n`` (or ``hardening_exponent`` on the record) and explicit
+        ``ultimate_true_strain`` are required; any other
         :class:`TrueStressStrainCurve` keyword overrides the record.
         """
         exponent = self.hardening_exponent if n is None else n

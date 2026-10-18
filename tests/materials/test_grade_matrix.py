@@ -17,16 +17,16 @@ from digitalmodel.materials import (
 )
 
 
-# --- Golden: API 5L / ISO 3183 (SMYS = ISO L-grade; SMTS = PSL2 min) ----------
+# API 5L 46th ed., 9.3.1 Table 6 (PSL1) / 9.3.2 Table 7 (PSL2), SI.
 @pytest.mark.parametrize(
     "name, smys, smts_psl2, smts_psl1",
     [
         ("A25", 175.0, 310.0, 310.0),
-        ("X42", 290.0, 415.0, 414.0),
-        ("X52", 360.0, 460.0, 455.0),   # PSL1 455 vs PSL2 460 -> legacy split
-        ("X65", 450.0, 535.0, 530.0),
-        ("X70", 485.0, 570.0, 565.0),
-        ("X80", 555.0, 625.0, 620.0),
+        ("X42", 290.0, 415.0, 415.0),
+        ("X52", 360.0, 460.0, 460.0),
+        ("X65", 450.0, 535.0, 535.0),
+        ("X70", 485.0, 570.0, 570.0),
+        ("X80", 555.0, 625.0, None),
         ("X90", 625.0, 695.0, None),    # PSL2 only
         ("X100", 690.0, 760.0, None),
         ("X120", 830.0, 915.0, None),
@@ -39,7 +39,7 @@ def test_api_5l_published_values(name, smys, smts_psl2, smts_psl1):
     assert g.smts_mpa == smts_psl2
     assert g.smts_psl1_mpa == smts_psl1
     assert g.E_mpa == 207_000.0
-    # PSL helper returns PSL1 value where it differs, else PSL2.
+    # A PSL1 request requires a Table 6 entry.
     if smts_psl1 is not None:
         assert smts_mpa(name, psl="PSL1") == smts_psl1
     assert smts_mpa(name, psl="PSL2") == smts_psl2

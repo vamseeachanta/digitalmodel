@@ -13,9 +13,8 @@ Published anchors used below (numbers hand-entered, sources named inline):
   ``T = RT_NDT`` the K_Ic curve gives 33.2 + 20.734 = 53.93 ksi*sqrt(in) and
   the K_Ia/K_IR curve gives 26.78 + 1.223 exp(0.0145 x 160) = 39.22
   ksi*sqrt(in); 1 ksi*sqrt(in) = 1.0988 MPa*sqrt(m).
-* Considere criterion (Dieter, Mechanical Metallurgy, 3rd ed., Ch. 8): for
-  power-law hardening the true strain at the engineering ultimate equals the
-  hardening exponent ``n``, and true ultimate = engineering ultimate x exp(n).
+* Uniform uniaxial conversion: true ultimate = engineering ultimate x
+  exp(explicit uniform true strain); the offset law does not imply strain = n.
 """
 from __future__ import annotations
 
@@ -234,7 +233,8 @@ def test_toughness_tagged_quantities_are_converted():
 @pytest.fixture
 def x65_curve() -> TrueStressStrainCurve:
     return TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0,
-                                 n=0.12, temperature_degc=20.0)
+                                 n=0.12, ultimate_true_strain=0.12,
+                                 temperature_degc=20.0)
 
 
 def test_curve_passes_through_yield(x65_curve):
@@ -247,7 +247,7 @@ def test_curve_passes_through_yield(x65_curve):
 
 
 def test_curve_reaches_true_ultimate_and_is_flat_beyond(x65_curve):
-    """Considere: true strain at ultimate = n; true ultimate = sigma_u exp(n)."""
+    """Prescribed synthetic strain: true ultimate = sigma_u exp(eps_u)."""
     eps_u = 0.12
     sigma_u_true = 535.0 * math.exp(0.12)
     assert math.isclose(x65_curve.ultimate_true_strain, eps_u, rel_tol=1e-12)
@@ -289,6 +289,7 @@ def test_curve_table_for_solver_decks(x65_curve):
     assert strains[-1] > x65_curve.ultimate_true_strain  # plateau point included
 
     plastic = x65_curve.plastic_table(n_points=10)
+    assert len(plastic) == 10
     assert plastic[0][0] == pytest.approx(450.0)
     assert plastic[0][1] == 0.0
     assert all(b[1] > a[1] for a, b in zip(plastic, plastic[1:]))
@@ -296,16 +297,20 @@ def test_curve_table_for_solver_decks(x65_curve):
 
 
 def test_curve_rejects_bad_inputs():
-    with pytest.raises(ValueError):
-        TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=600.0, sigma_u_mpa=535.0, n=0.1)
-    with pytest.raises(ValueError):
-        TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0, n=1.5)
-    with pytest.raises(ValueError):
-        TrueStressStrainCurve(E_mpa=-1.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0, n=0.1)
+    with pytest.raises(ValueError, match="true ultimate.*must exceed yield"):
+        TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=600.0, sigma_u_mpa=535.0,
+                             n=0.1, ultimate_true_strain=0.1)
+    with pytest.raises(ValueError, match="hardening exponent n"):
+        TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0,
+                             n=1.5, ultimate_true_strain=0.1)
+    with pytest.raises(ValueError, match="must be positive"):
+        TrueStressStrainCurve(E_mpa=-1.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0,
+                             n=0.1, ultimate_true_strain=0.1)
     with pytest.raises(ValueError):
         TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0, n=0.1,
                               ultimate_true_strain=0.001)  # below yield strain
-    c = TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0, n=0.1)
+    c = TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0,
+                             n=0.1, ultimate_true_strain=0.1)
     with pytest.raises(ValueError):
         c.stress(-0.01)
     with pytest.raises(ValueError):
@@ -323,6 +328,7 @@ def test_curve_untagged_positional_rejected_and_units_converted():
                               sigma_u_mpa=535.0, n=0.12)
     c = TrueStressStrainCurve(E_mpa=Q_(207.0, "GPa"), sigma_y_mpa=Q_(450.0, "MPa"),
                               sigma_u_mpa=Q_(535e6, "Pa"), n=0.12,
+                              ultimate_true_strain=Q_(0.12, "dimensionless"),
                               temperature_degc=Q_(68.0, "degF"))
     assert math.isclose(c.E_mpa, 207_000.0)
     assert math.isclose(c.sigma_u_mpa, 535.0)
@@ -342,7 +348,7 @@ def test_lookup_carbon_steel_grade():
     assert m.material_class == "ferritic"
     assert m.temperature_degc == 20.0
     assert m.hardening_exponent is None  # user input, no public grade-wise default
-    curve = m.true_stress_strain_curve(n=0.12)
+    curve = m.true_stress_strain_curve(n=0.12, ultimate_true_strain=0.12)
     assert math.isclose(curve.stress(curve.yield_strain), 450.0, rel_tol=1e-9)
     est = m.lower_bound_toughness(cvn_j=40.0, thickness_mm=20.0)
     assert est.method == "charpy"
@@ -358,7 +364,7 @@ def test_lookup_stainless_grade():
     with pytest.raises(ValueError, match="ferritic"):
         m.lower_bound_toughness(cvn_j=100.0)
     # The stress-strain curve does not care about the class.
-    curve = m.true_stress_strain_curve(n=0.3)
+    curve = m.true_stress_strain_curve(n=0.3, ultimate_true_strain=0.3)
     assert math.isclose(curve.stress(curve.yield_strain), 170.0, rel_tol=1e-9)
     # Alias forms.
     assert lookup_grade("316L").sigma_y_mpa == 170.0

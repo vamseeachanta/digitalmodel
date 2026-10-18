@@ -17,11 +17,11 @@ from . import grades
 from .database_schema import MaterialRecord, RepositoryProvenance, Strengths
 
 # Inspected source text, not a standards-derived numerical dataset.
-_SOURCE_REVISION = "f21a12af5349c1656137a7b9daa091ec8f968738"
+_SOURCE_REVISION = "8036237f20d2bc62e4e8dd3178fc2036b9ed4f40"
 # SHA-256 of UTF-8-decoded grade text, CRLF and lone CR replaced by LF,
 # then encoded as UTF-8.
-_SOURCE_SHA256 = "3cc745f599faefdb3c6b08218c383026445662796faa23fba0806691de4017ab"
-_RETRIEVED_ON_UTC = "2026-10-11"
+_SOURCE_SHA256 = "184ea635cbed6ff811500e79114db4df3ffaa6fb275f799a7b40084f2663553f"
+_RETRIEVED_ON_UTC = "2026-10-18"
 _SOURCE_PATH = "src/digitalmodel/materials/grades.py"
 _LINK_FIELDS = ("sn_curve_ids", "standards_registry_id", "structural_shape_id")
 
@@ -76,16 +76,12 @@ class MaterialDatabase(Mapping[str, MaterialRecord]):
         return len(self._records)
 
     def lookup(self, name: str, *, psl: str = "PSL2") -> MaterialRecord:
-        """Match grades.smts_mpa selection, including its PSL1 fallback.
-
-        Missing PSL1 data returns the stored PSL2 record, without asserting
-        PSL1 product qualification. Other PSL strings select the canonical
-        value, exactly as grades.smts_mpa does. Non-API levels remain None.
-        """
+        """Match grades.smts_mpa, rejecting unsupported API product levels."""
         grade = grades.get(name)
         level = None
         if grade.standard == "API 5L":
-            level = "PSL1" if psl.upper() == "PSL1" and grade.smts_psl1_mpa is not None else "PSL2"
+            grades.smts_mpa(grade.name, psl=psl)  # Validate against the cited table.
+            level = psl.upper()
         return self._by_grade[(grade.name, level)]
 
 
