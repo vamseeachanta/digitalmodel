@@ -269,11 +269,17 @@ def pianc_bank_clearance_width(
     water_depth: float,
     speed_knots: float,
     slope: BankSlopeType,
-) -> float:
-    """PIANC 121 minimum bank clearance width.
+    *,
+    return_metadata: bool = False,
+) -> float | dict:
+    """Bank clearance screening width with uncited depth multipliers.
 
     Returns the additional channel width required for bank effects,
     as a function of vessel beam, speed, and bank slope type.
+    The depth multipliers x1.2 (shallow) and x1.5 (very shallow) are uncited
+    engineering assumptions retained for screening, not PIANC requirements.
+    Pass return_metadata=True to obtain width_m, depth_class, multiplier and
+    multiplier_source; the default preserves the scalar width API.
 
     Parameters
     ----------
@@ -290,8 +296,8 @@ def pianc_bank_clearance_width(
 
     Returns
     -------
-    float
-        Required bank clearance width [m].
+    float or dict
+        Screening bank clearance width [m], or width and assumption metadata.
 
     References
     ----------
@@ -307,14 +313,24 @@ def pianc_bank_clearance_width(
 
     fraction = _BANK_CLEARANCE_TABLE.get((slope, speed_cat), 0.5)
 
-    # Shallow water amplification: increase clearance for very shallow water
+    # Uncited engineering assumptions; these are not PIANC table factors.
     depth_class = classify_depth(water_depth, draft)
     if depth_class == DepthClassification.VERY_SHALLOW:
-        fraction *= 1.5
+        multiplier = 1.5
     elif depth_class == DepthClassification.SHALLOW:
-        fraction *= 1.2
+        multiplier = 1.2
+    else:
+        multiplier = 1.0
 
-    return fraction * beam
+    width = fraction * multiplier * beam
+    if return_metadata:
+        return {
+            "width_m": width,
+            "depth_class": depth_class.value,
+            "multiplier": multiplier,
+            "multiplier_source": "uncited engineering assumption",
+        }
+    return width
 
 
 __all__ = [

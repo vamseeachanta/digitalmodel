@@ -17,6 +17,8 @@ from typing import Any, Iterable
 
 import yaml
 
+from digitalmodel.naval_architecture.depth_validity import turning_depth_warning
+
 from digitalmodel.naval_architecture.turning_circle_artifacts import (
     METRICS_HEADERS as METRICS_HEADERS,
     REQUIRED_CHARTS,
@@ -86,8 +88,18 @@ def simulate_nomoto_turning_circle(
     duration_s: float,
     dt_s: float,
     case_id: str = "direct_nomoto_turning_circle",
+    water_depth_m: float | None = None,
+    draft_m: float | None = None,
 ) -> dict[str, Any]:
-    """Simulate a constant-rudder first-order Nomoto turning circle."""
+    """Estimate a constant-rudder turn; refuse known h/T <= 4.
+
+    The depth screen follows IMO MSC/Circ.1053 (2002), Annex 2.1.2,
+    conservatively; it does not validate these Nomoto coefficients.
+    Omitted depth produces a warning in the result. No shallow-water scaling
+    is applied (Rzeszutko et al., 2026, Applied Ocean Research 176, 105289,
+    https://doi.org/10.1016/j.apor.2026.105289, section 4).
+    """
+    depth_warning = turning_depth_warning(water_depth_m, draft_m)
 
     speed_m_s = _positive("speed_m_s", speed_m_s)
     rudder_angle_deg = _finite("rudder_angle_deg", rudder_angle_deg)
@@ -102,6 +114,9 @@ def simulate_nomoto_turning_circle(
         case_id, speed_m_s, rudder_angle_deg, K_per_s, T_s, duration_s, dt_s
     )
     metrics, warnings = _turning_metrics(rows, rudder_angle_deg)
+    if depth_warning:
+        warnings.append(depth_warning)
+        metrics["metric_status"] = "warning"
     return {
         "metadata": {
             "case_id": case_id,
@@ -109,6 +124,9 @@ def simulate_nomoto_turning_circle(
             "speed_kn": speed_m_s * M_PER_S_TO_KNOT,
             "rudder_angle_deg": rudder_angle_deg,
             "nomoto": {"K_per_s": K_per_s, "T_s": T_s},
+            "water_depth_m": water_depth_m,
+            "draft_m": draft_m,
+            "depth_applicability": "unverified" if depth_warning else "screen_passed",
             "duration_s": duration_s,
             "dt_s": dt_s,
             "equation": "r_dot = (K * delta - r) / T",
@@ -313,6 +331,10 @@ def validate_turning_circle_input(payload: dict[str, Any]) -> TurningCircleInput
     if not rudder_angles_deg:
         raise ValueError("sweep.rudder_angles_deg must contain at least one value")
 
+    turning_depth_warning(
+        payload.get("environment", {}).get("water_depth_m"),
+        payload.get("vessel", {}).get("draft_m"),
+    )
     return TurningCircleInput(
         case_id=str(payload["case"]["id"]),
         case_description=str(payload["case"].get("description", "")),
@@ -348,6 +370,10 @@ def _validate_formats(values: Iterable[str], supported: set[str], label: str) ->
 def run_turning_circle_sweep(config: TurningCircleInput) -> dict[str, Any]:
     """Run every speed/rudder-angle combination and return rows + metadata."""
 
+    depth_warning = turning_depth_warning(
+        config.raw.get("environment", {}).get("water_depth_m"),
+        config.vessel.get("draft_m"),
+    )
     cases: list[dict[str, Any]] = []
     metrics: list[dict[str, Any]] = []
     time_history: list[dict[str, Any]] = []
@@ -362,6 +388,8 @@ def run_turning_circle_sweep(config: TurningCircleInput) -> dict[str, Any]:
                 duration_s=config.duration_s,
                 dt_s=config.dt_s,
                 case_id=case_id,
+                water_depth_m=config.raw.get("environment", {}).get("water_depth_m"),
+                draft_m=config.vessel.get("draft_m"),
             )
             cases.append(result["metadata"])
             metrics.append(result["metrics"])
@@ -377,6 +405,7 @@ def run_turning_circle_sweep(config: TurningCircleInput) -> dict[str, Any]:
                 "artifact_manifest": config.artifact_manifest_filename,
             },
         },
+        "warnings": [depth_warning] if depth_warning else [],
         "provenance": provenance_metadata(),
         "cases": cases,
         "metrics": metrics,

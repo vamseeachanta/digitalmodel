@@ -19,12 +19,15 @@ from pydantic import BaseModel, Field
 
 
 class DepthClassification(str, Enum):
-    """Shallow water classification per DNV-RP-C205 / PIANC 121."""
+    """PIANC (1992) bands, reported by Rzeszutko et al. (2026), section 1.
+
+    Exact boundaries are assigned to the shallower class by convention here.
+    """
 
     DEEP = "deep"                  # h/T > 3.0
-    MEDIUM = "medium"              # 2.0 < h/T <= 3.0
-    SHALLOW = "shallow"            # 1.5 < h/T <= 2.0
-    VERY_SHALLOW = "very_shallow"  # h/T <= 1.5
+    MEDIUM = "medium"              # 1.5 < h/T <= 3.0
+    SHALLOW = "shallow"            # 1.2 < h/T <= 1.5
+    VERY_SHALLOW = "very_shallow"  # h/T <= 1.2
 
 
 class BankSlopeType(str, Enum):
@@ -149,7 +152,17 @@ class BankEffectResult:
 
 
 def classify_depth(water_depth: float, draft: float) -> DepthClassification:
-    """Classify water depth ratio per DNV-RP-C205 convention.
+    """Classify h/T using the PIANC (1992) bands.
+
+    Source: Rzeszutko, Zentari, Stachel and el Moctar (2026), Applied Ocean
+    Research 176, 105289, section 1, doi:10.1016/j.apor.2026.105289.
+    Independently reported in ITTC (2002), 23rd ITTC proceedings, volume I,
+    Appendix A.1, p. 201: https://www.vliz.be/imisdocs/publications/139636.pdf.
+    Both sources attribute the bands to PIANC (1992); no clause in PIANC 121
+    or DNV-RP-C205 is asserted. Equalities are a local conservative convention:
+    deep > 3; medium 1.5 < h/T <= 3; shallow 1.2 < h/T <= 1.5;
+    very shallow <= 1.2. MEDIUM retains its API name for medium-deep water.
+    Classification alone does not establish navigability or under-keel clearance.
 
     Parameters
     ----------
@@ -162,14 +175,18 @@ def classify_depth(water_depth: float, draft: float) -> DepthClassification:
     -------
     DepthClassification
     """
-    if not np.isfinite(water_depth):
+    if not np.isfinite(draft) or draft <= 0:
+        raise ValueError("draft must be finite and > 0")
+    if np.isnan(water_depth) or water_depth <= 0:
+        raise ValueError("water_depth must be positive (or +inf)")
+    if water_depth == float("inf"):
         return DepthClassification.DEEP
     ratio = water_depth / draft
     if ratio > 3.0:
         return DepthClassification.DEEP
-    elif ratio > 2.0:
-        return DepthClassification.MEDIUM
     elif ratio > 1.5:
+        return DepthClassification.MEDIUM
+    elif ratio > 1.2:
         return DepthClassification.SHALLOW
     else:
         return DepthClassification.VERY_SHALLOW
