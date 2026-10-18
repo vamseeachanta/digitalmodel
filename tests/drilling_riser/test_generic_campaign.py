@@ -217,3 +217,13 @@ class GenericCampaignTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_prepared_text_identity_normalizes_crlf(tmp_path):
+    path = tmp_path / 'screen.csv'
+    path.write_bytes(b'case_id,force\no0-c0,10\n')
+    identity = campaign.digest(path)
+    path.write_bytes(b'case_id,force\r\no0-c0,10\r\n')
+    assert campaign.digest(path) == identity
+    path.write_bytes(b'case_id,force\r\no0-c0,11\r\n')
+    assert campaign.digest(path) != identity

@@ -9,6 +9,13 @@ https://www.orcina.com/webhelp/OrcaFlex/Content/html/Links,Results.htm
 import math
 from .generic_tension import G, LINKS, MEMBERS, surviving_share
 
+# Newton's vertical balance on the ring: links - weight - slip End B
+# - member End A = 0. Force channels are forces applied by parent to line;
+# their reactions on the ring have the opposite sign (OrcaFlex End loads).
+# 0.1% is an explicit numerical screening tolerance, not a code allowance.
+EQUILIBRIUM_TOLERANCE = 0.001
+EQUILIBRIUM_FIELDS = ('ring_equilibrium_max_abs_kn', 'ring_equilibrium_max_fraction')
+
 FIELDS = ('support_intact_min_kn', 'support_loss_min_kn', 'bottom_sum_min_kn',
           'member_min_kn', 'table_clearance_min_m')
 
@@ -25,7 +32,7 @@ def summarize_samples(rows: list[dict], *, basis: dict) -> dict:
         min(r['table_clearance_m'] for r in rows))))
 
 
-def extract(model, period, end_b, *, static: bool = False, basis: dict) -> dict:
+def extract(model, period, end_b, *, end_a, static: bool = False, basis: dict) -> dict:
     """Extract static or main-stage evidence without starting a solver."""
     def series(name, variable, end=None):
         obj = model[name]
@@ -43,10 +50,11 @@ def extract(model, period, end_b, *, static: bool = False, basis: dict) -> dict:
         if len({len(v) for v in (force, length, az, bz)}) != 1 or min(length) <= 0:
             raise ValueError('Mismatched link channels')
         table_length = [float(v) for v in model[name].SpringLength]
-        vertical.append([f*(a-b)/l for f, a, b, l in zip(force, az, bz, length)])
-        clearances.append([min(l-min(table_length), max(table_length)-l) for l in length])
+        vertical.append([f*(a-b)/span for f, a, b, span in zip(force, az, bz, length)])
+        clearances.append([min(span-min(table_length), max(table_length)-span) for span in length])
     carried = [G*float(model['Tensioner Ring'].Mass)+v
                for v in series('Riser Slip Joint', 'End GZ force', end_b)]
+    top_forces = [series(name, 'End GZ force', end_a) for name in MEMBERS]
     bottom = [series(name, 'Effective tension', end_b) for name in MEMBERS]
     minima = []
     for name in MEMBERS:
@@ -56,9 +64,20 @@ def extract(model, period, end_b, *, static: bool = False, basis: dict) -> dict:
         if not profile or not all(math.isfinite(v) for v in profile):
             raise ValueError('Empty or nonfinite member profile')
         minima.append(min(profile))
-    arrays = vertical + clearances + bottom + [carried]
+    arrays = vertical + clearances + bottom + top_forces + [carried]
     if len({len(v) for v in arrays}) != 1:
         raise ValueError('Mismatched simultaneous tension channels')
-    return summarize_samples([dict(vertical_kn=math.fsum(v[i] for v in vertical), carried_kn=carried[i],
+    residuals, fractions = [], []
+    for i in range(len(carried)):
+        support = math.fsum(v[i] for v in vertical)
+        residual = support - carried[i] - math.fsum(v[i] for v in top_forces)
+        if support <= 0 or abs(residual) > EQUILIBRIUM_TOLERANCE * abs(support):
+            raise ValueError(f'Ring vertical equilibrium failed at sample {i}: '
+                             f'residual={residual:.6g} kN; tolerance=0.1% of link support')
+        residuals.append(abs(residual))
+        fractions.append(abs(residual)/abs(support))
+    return dict(ring_equilibrium_max_abs_kn=max(residuals),
+                ring_equilibrium_max_fraction=max(fractions),
+                **summarize_samples([dict(vertical_kn=math.fsum(v[i] for v in vertical), carried_kn=carried[i],
         bottom_kn=math.fsum(v[i] for v in bottom), member_min_kn=min(minima),
-        table_clearance_m=min(v[i] for v in clearances)) for i in range(len(carried))], basis=basis)
+        table_clearance_m=min(v[i] for v in clearances)) for i in range(len(carried))], basis=basis))
