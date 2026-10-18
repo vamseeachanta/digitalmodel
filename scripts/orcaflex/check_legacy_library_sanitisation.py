@@ -19,6 +19,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 LIBRARY_GROUPS = ("jumper", "mooring", "installation", "training")
+PUBLICATION_ROOTS = tuple(Path("docs/domains/orcaflex/mooring") / name
+                          for name in ("buoy", "buoy_converted"))
+PERSON_FIELD = re.compile(
+    r"^[ \t]*(?:#[ \t]*)?[\"']?(?:prepared|verified|checked)[ \t]*by[\"']?[ \t]*:[ \t]*([^\r\n]*)$",
+    re.IGNORECASE | re.MULTILINE,
+)
 GATE_PATH = ROOT / "scripts/legal/check_identifiers.py"
 _spec = importlib.util.spec_from_file_location("legacy_identifier_gate", GATE_PATH)
 gate = importlib.util.module_from_spec(_spec)
@@ -76,6 +82,10 @@ def inspect_model(path: Path, relative: str, rules: dict) -> dict:
         rule_ids.add("content-not-inspected")
     if scanned != 1 and not rule_ids:
         rule_ids.add("content-not-inspected")
+    if scanned == 1:
+        text = path.read_text(encoding="utf-8-sig")
+        if any(match.group(1).strip(" \t\"'") for match in PERSON_FIELD.finditer(text)):
+            rule_ids.add("person-field")
     path_withheld = any(":path:" in finding for finding in findings)
     return {
         "path": "[identifier in path]" if path_withheld else relative,
@@ -91,31 +101,46 @@ def rule_provenance(rules: dict) -> dict:
     Authenticated denotes loaded private names or patterns; an empty private
     file provides no additional authority beyond the public rules.
     """
+    private = {"names": sorted(rules.get("_private_names") or []),
+               "patterns": sorted((getattr(p, "pattern", str(p)), getattr(p, "flags", 0))
+                                  for p in rules.get("_private_patterns") or [])}
+    authenticated = bool(private["names"] or private["patterns"])
     return {
         "identifier_gate_sha256": sha256(GATE_PATH.read_bytes()).hexdigest(),
         "public_rules_sha256": sha256(Path(gate.RULES).read_bytes()).hexdigest(),
-        "rule_authority": ("authenticated" if rules.get("_private_names") or
-                           rules.get("_private_patterns") else "public-rules-only"),
+        "rule_authority": "authenticated" if authenticated else "public-rules-only",
+        "private_rules_sha256": (sha256(json.dumps(private, sort_keys=True).encode()).hexdigest()
+                                 if authenticated else None),
+        "inspection_sha256": sha256(Path(__file__).read_bytes()).hexdigest(),
+        "publication_policy": "authenticated" if authenticated else "generic-trees-only",
     }
 
 
 def audit(root: Path = ROOT) -> dict:
     """Produce deterministic per-file evidence and a fail-closed summary."""
     rules = gate.load_rules()
+    provenance = rule_provenance(rules)
     models = []
     for item in inventory(root):
         path = root / item["path"]
         inspection = inspect_model(path, item["path"], rules)
+        if provenance["publication_policy"] == "generic-trees-only" and not any(
+            Path(item["path"]).is_relative_to(folder) for folder in PUBLICATION_ROOTS
+        ):
+            inspection["status"] = "fail"
+            inspection["rules"] = sorted(set(inspection["rules"]) | {"publication-withheld"})
         if sha256(path.read_bytes()).hexdigest() != item["sha256"]:
             raise ValueError("source bytes changed during inspection")
-        models.append({**item, **inspection})
+        # The external audit retains source locators for dependency resolution.
+        # Publication below emits only retained inputs and exclusion counts.
+        models.append({**inspection, **item})
     passed = sum(item["status"] == "pass" for item in models)
     failed = len(models) - passed
     return {
         "schema": "legacy-library-sanitisation-1",
         "criterion": "Every model input is inspected with no identifier findings.",
         "identifier_gate": "scripts/legal/check_identifiers.py",
-        **rule_provenance(rules),
+        **provenance,
         "binary_baseline_accepted": False,
         "native_solver_used": False,
         "publication_ready": bool(models) and failed == 0,
@@ -136,6 +161,7 @@ def publication_records(report: dict, root: Path = ROOT) -> dict:
 
     items = {item["path"]: item for item in report["models"]}
     dependencies = {}
+    unknown = set()
     for relative, item in items.items():
         path = root / relative
         if sha256(path.read_bytes()).hexdigest() != item["sha256"]:
@@ -164,8 +190,7 @@ def publication_records(report: dict, root: Path = ROOT) -> dict:
                 visit(yaml.load(path.read_text(encoding="utf-8-sig"),
                                 Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader)))
             except (yaml.YAMLError, UnicodeError, RecursionError):
-                # Parse failures receive validator records, never a parse pass.
-                pass
+                unknown.add(relative)
         if item["model_type"] == "modular_master":
             references.update(
                 name for name in items
@@ -185,16 +210,18 @@ def publication_records(report: dict, root: Path = ROOT) -> dict:
         return found
 
     models, retained, excluded = [], set(), 0
-    failed_models, missing_models = 0, 0
+    failed_models, missing_models, unknown_models = 0, 0, 0
     for relative, item in items.items():
         if item["model_type"] in ("include_fragment", "parameters"):
             continue
         inputs = closure(relative)
         failed = any(name in items and items[name]["status"] != "pass" for name in inputs)
         missing = bool(inputs - items.keys())
+        dependencies_unknown = bool(inputs & unknown)
         failed_models += int(failed)
         missing_models += int(missing)
-        if failed or missing:
+        unknown_models += int(dependencies_unknown)
+        if failed or missing or dependencies_unknown:
             excluded += 1
             continue
         recorded = sorted(inputs & items.keys())
@@ -205,7 +232,8 @@ def publication_records(report: dict, root: Path = ROOT) -> dict:
     return {
         "schema": "legacy-library-publication-1",
         **{key: report[key] for key in (
-            "identifier_gate_sha256", "public_rules_sha256", "rule_authority")},
+            "identifier_gate_sha256", "public_rules_sha256", "rule_authority",
+            "private_rules_sha256", "inspection_sha256", "publication_policy")},
         "native_solver_used": False,
         "counts": {
             "library_inputs": len(items), "published_inputs": len(retained),
@@ -214,6 +242,7 @@ def publication_records(report: dict, root: Path = ROOT) -> dict:
             "excluded_models": excluded, "published_models": len(models),
             "models_with_failed_inputs": failed_models,
             "models_with_missing_inputs": missing_models,
+            "models_with_unknown_dependencies": unknown_models,
         },
         "inputs": [items[name] for name in sorted(retained)],
         "models": models,

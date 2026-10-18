@@ -1,1 +1,0 @@
-{"atol":1e-10,"comparator":"scripts/semantic_validate.py","comparator_sha256":"3ea4c14fad066254842f62d81e8f2d9036f40f4ea51bf1dd7e8ea0f525703f17","criterion":"Zero sections with significant differences under the existing semantic comparator; a single-case preparation check only.","recorded_utc":"2026-10-15T03:16:02.198213+00:00","rtol":1e-06}

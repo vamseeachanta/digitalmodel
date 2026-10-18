@@ -9,7 +9,7 @@ import csv
 import importlib.util
 import json
 from hashlib import sha256
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -47,8 +47,10 @@ def verify_inputs(inventory: dict, root: Path) -> None:
             raise ValueError("recorded input file role mismatch")
         if Path(item["path"]).is_absolute() or not path.resolve().is_relative_to(root.resolve()) or path.is_symlink():
             raise ValueError("recorded input locator invalid")
+        if not path.is_file():
+            raise ValueError("recorded input absent; regenerate legacy-round-trip records")
         if sha256(path.read_bytes()).hexdigest() != item["sha256"]:
-            raise ValueError("source digest mismatch")
+            raise ValueError("source digest mismatch; regenerate legacy-round-trip records")
 
 
 def verify_reused_inventory(inventory: dict, root: Path) -> None:
@@ -67,6 +69,9 @@ def verify_reused_inventory(inventory: dict, root: Path) -> None:
     rebuilt = inspection.publication_records({**provenance, "models": records, "summary": {"fail": 0}}, root)
     if rebuilt["models"] != inventory["models"] or len(rebuilt["inputs"]) != len(records):
         raise ValueError("recorded model dependency mismatch")
+    current = inspection.publication_records(inspection.audit(root), root)
+    if current["counts"] != inventory.get("counts") or current["models"] != inventory["models"]:
+        raise ValueError("library evidence changed; regenerate legacy-round-trip records")
 
 
 def inventory_files(record: dict) -> dict[str, bytes]:
@@ -89,7 +94,7 @@ def validation_cache_path(cache_dir: Path, item: dict) -> Path:
 
 
 def cache_validation(cache_dir: Path, item: dict, result: dict) -> None:
-    """Keep each completed input check outside the source tree for resumption."""
+    """Cache externally; a self-digest detects corruption, not deliberate editing."""
     cache_dir.mkdir(parents=True, exist_ok=True)
     validation_cache_path(cache_dir, item).write_bytes(encode({
         "result": result, "result_sha256": sha256(encode(result)).hexdigest()}))
@@ -215,100 +220,16 @@ def verify_criterion_order(criterion: bytes, run: dict) -> None:
 
 
 def build_jumper_skill(inventory: dict, root: Path) -> dict[str, bytes]:
-    """Describe the four inspected specifications without inferring missing geometry."""
-    import yaml
-
+    """Describe inspected specifications without inferring missing geometry."""
     verify_inputs(inventory, root)
-    sources = {item["path"]: item for item in inventory["inputs"]}
-    qualified = {item["path"] for item in inventory["models"]}
-    groups = []
-    for group in ("manifold_to_plet", "plet_to_plem", "sut_mm", "sut_mm/resonance"):
-        relative = f"docs/domains/orcaflex/jumper/{group}/spec.yml"
-        if relative not in qualified:
-            raise ValueError("jumper specification is not in the inspected model set")
-        item = sources[relative]
-        spec = yaml.load((root / relative).read_bytes(), Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader))
-        env = spec.get("environment", {})
-        raw = env.get("raw_properties", {})
-        waves = env.get("waves", {})
-        generic = spec.get("generic", {})
-        lines = generic.get("lines", [])
-        line_types = generic.get("line_types", [])
-        if lines:
-            configuration = (f"Installation rig with {len(lines)} line objects and {len(line_types)} line types; "
-                             "the source includes crane wires, slings, connectors and a finite element jumper.")
-        elif generic:
-            configuration = (f"Vessel and buoy specification with {len(line_types)} line types and no line objects; "
-                             "jumper geometry is not established by this specification.")
-        else:
-            configuration = "Parameter override with no object geometry; a standalone jumper configuration is not established."
-        groups.append({"group": group, "source": relative, "source_sha256": item["sha256"],
-                       "source_url": item["source_url"], "retrieval_date": item["retrieval_date"],
-                       "record_count": 1, "configuration": configuration,
-                       "water_depth_m": env.get("water", {}).get("depth"),
-                       "wave_height_m": waves.get("height", raw.get("WaveHs")),
-                       "wave_height_kind": "Hs" if "WaveHs" in raw and not waves else "height",
-                       "wave_period_s": waves.get("period", raw.get("WaveTp")),
-                       "wave_direction_deg": waves.get("direction", raw.get("WaveDirection")),
-                       "current_speed_m_s": env.get("current", {}).get("speed"),
-                       "wind_speed_m_s": env.get("wind", {}).get("speed"),
-                       "stages_s": spec.get("simulation", {}).get("stages"),
-                       "time_step_s": spec.get("simulation", {}).get("time_step")})
-    revision = {"revision": "1", "date": groups[0]["retrieval_date"],
-                "change": "Initial source-bound library preparation document and execution limits."}
-    record = {"source_ref": inventory["source_ref"], "groups": groups, "revisions": [revision]}
-    text = ["---", "name: orcaflex-jumper-analysis",
-            "description: Prepare inspected jumper-library inputs with the existing format converter; native execution requires separate qualification.",
-            "---", "# Jumper library preparation", "",
-            "Prepare solver-free inputs from the recorded specifications and retain validator failures and absent comparators. "
-            "The specifications do not establish an M-shape, lazy-S or steep-S classification or a verified operational envelope.",
-            "", "## Revision history", "", "| Revision | Date | Change and reason |", "| --- | --- | --- |",
-            f"| {revision['revision']} | {revision['date']} | {revision['change']} |", "",
-            f"Declared revision: {revision['revision']}.", "", "## Specification groups", "",
-            "Values below are declared in each specification, not demonstrated response limits or ranges across every override. "
-            "Units follow the repository environment schema. Unrecorded values remain unrecorded.", ""]
-
-    def shown(value):
-        if value is None:
-            return "not recorded"
-        if isinstance(value, list):
-            return ", ".join(shown(item) for item in value)
-        return str(value)
-
-    for row in groups:
-        text.extend([f"### {row['group']}", "", row["configuration"], "",
-                     f"Source: `{row['source']}`; digest in `jumper-groups.json`.", "",
-                     f"Water depth {shown(row['water_depth_m'])} m; wave {row['wave_height_kind']} "
-                     f"{shown(row['wave_height_m'])} m, period {shown(row['wave_period_s'])} s, "
-                     f"direction {shown(row['wave_direction_deg'])} degrees. "
-                     f"Current {shown(row['current_speed_m_s'])} m/s; wind {shown(row['wind_speed_m_s'])} m/s. "
-                     f"Simulation stages {shown(row['stages_s'])} s; time step {shown(row['time_step_s'])} s.", ""])
-    text.extend(["## Worked preparation", "",
-                 "Set `OUTPUT_DIR` to a writable directory outside the repository. This converts one named model without a solver:",
-                 "", "```sh",
-                 "PYTHONPATH=src uv run --no-sources python -m digitalmodel.solvers.orcaflex.format_converter single2modular docs/domains/orcaflex/jumper/manifold_to_plet/monolithic/DZ_AHCoff.yml -o \"$OUTPUT_DIR/modular\"",
-                 "PYTHONPATH=src uv run --no-sources python -m digitalmodel.solvers.orcaflex.format_converter modular2single \"$OUTPUT_DIR/modular/master.yml\" -o \"$OUTPUT_DIR/roundtrip.yml\"",
-                 "```", "",
-                 "For parametric preparation, edit a copy of a group's `spec.yml`, retain its source digest, "
-                 "validate it against `ProjectInputSpec`, then use the same CLI's `spec2modular` command. "
-                 "The two specifications without jumper line geometry require that missing basis before a jumper model can be generated.", "",
-                 "Use `validators.json` to identify structural failures and `comparators.json` for stored-result availability. "
-                 "A conversion exit code does not establish semantic fidelity: the existing semantic-diff taxonomy and converter "
-                 "remain the basis for the outstanding conversion campaign (#2014).", "",
-                 "## Resonance and execution limits", "",
-                 "The `sut_mm/resonance` group records a separate simulation specification. "
-                 "The group name alone does not establish a resonant frequency, dynamic amplification or response criterion. "
-                 "Those results require qualified native dynamics and read-back against an explicit comparator (#2014). "
-                 "No native result is claimed here. The native manifest template keeps load, statics and comparison refused "
-                 "until a qualified execution adapter and an approved manifest digest exist.", "",
-                 "The document is retained here as a skill draft; installation at the requested skill location and a complete "
-                 "group-wide operating envelope remain open (#2015).", ""])
-    return {"jumper-groups.json": encode(record),
-            "orcaflex-jumper-analysis/SKILL.md": "\n".join(text).encode()}
+    spec = importlib.util.spec_from_file_location("legacy_skill", CHECKER.with_name("legacy_library_skill.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.build_skill(inventory, root, encode)
 
 
-def main() -> int:
-    """Write deterministic inventory; this entry point never launches a solver."""
+def parse_args():
+    """Read preparation options without importing an execution interface."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--source-ref", required=True)
@@ -321,10 +242,15 @@ def main() -> int:
     parser.add_argument("--skill", action="store_true")
     parser.add_argument("--timed-preparation", type=Path)
     parser.add_argument("--launch", action="store_true")
-    args = parser.parse_args()
+    parser.add_argument("--started-utc", help="Recorded preparation start for deterministic replay")
+    return parser.parse_args()
+
+
+def load_inventory(args):
+    """Load a complete inventory, rederiving counts when evidence is reused."""
     if args.launch:
         request_launch({})
-    record = (json.loads(args.inventory.read_text()) if args.inventory else
+    record = (json.loads(args.inventory.read_text(encoding="utf-8")) if args.inventory else
               build_inventory(ROOT, args.source_ref, args.retrieved, args.repository_id))
     if args.inventory and "models" not in record:
         model_bytes = (args.inventory.parent / record["models_file"]).read_bytes()
@@ -336,43 +262,57 @@ def main() -> int:
     verify_inputs(record, ROOT)
     if args.inventory:
         verify_reused_inventory(record, ROOT)
-    args.output.mkdir(parents=True, exist_ok=True)
+    return record
+
+
+def preparation_files(args, record, files):
+    """Bind judged records to criteria that precede preparation."""
+    if args.criterion is None:
+        raise ValueError("preparation requires a recorded criterion")
+    if args.validation_cache is None:
+        raise ValueError("preparation requires an external validation cache")
+    criterion = args.criterion.read_bytes()
+    started = args.started_utc or datetime.now(timezone.utc).isoformat()
+    if datetime.fromisoformat(started) > datetime.now(timezone.utc):
+        raise ValueError("preparation start cannot be in the future")
+    binding = {"criterion_sha256": sha256(criterion).hexdigest(), "started_utc": started}
+    verify_criterion_order(criterion, binding)
+    files.update({"criterion.json": criterion,
+                  "validators.json": encode({**validate_models(record, ROOT, args.validation_cache), **binding}),
+                  "comparators.json": encode({**extract_comparators(record, ROOT), **binding})})
+    passed = {item["path"] for item in json.loads(files["validators.json"])["models"]
+              if item["status"] == "pass"}
+    timed_case = next((item["path"] for item in record["models"]
+                       if item["model_type"] == "yaml_model" and item["path"] in passed), "")
+    if args.timed_preparation is not None:
+        timing = args.timed_preparation.read_bytes()
+        timed_case = json.loads(timing)["path"]
+        source = next((item for item in record["inputs"] if item["path"] == timed_case), None)
+        if source is None or json.loads(timing)["source_sha256"] != source["sha256"] or timed_case not in passed:
+            raise ValueError("timed case must have matching inspected bytes and pass validation")
+        files["timed-preparation.json"] = timing
+        roundtrip_criterion = args.timed_preparation.with_name("roundtrip-criterion.json").read_bytes()
+        verify_criterion_order(roundtrip_criterion, json.loads(timing))
+        files["roundtrip-criterion.json"] = roundtrip_criterion
+    return timed_case
+
+
+def main() -> int:
+    """Write complete deterministic records; this entry point never launches a solver."""
+    args = parse_args()
+    record = load_inventory(args)
     files = inventory_files(record)
-    for name, content in files.items():
-        (args.output / name).write_bytes(content)
-    if args.prepare:
-        if args.criterion is None:
-            raise ValueError("preparation requires a recorded criterion")
-        if args.validation_cache is None:
-            raise ValueError("preparation requires an external validation cache")
-        criterion = args.criterion.read_bytes()
-        files.update({"validators.json": encode(validate_models(record, ROOT, args.validation_cache)),
-                      "comparators.json": encode(extract_comparators(record, ROOT))})
-        passed = {item["path"] for item in json.loads(files["validators.json"])["models"]
-                  if item["status"] == "pass"}
-        timed_case = next((item["path"] for item in record["models"]
-                           if item["model_type"] == "yaml_model" and item["path"] in passed), "")
-        files["criterion.json"] = criterion
-        if args.timed_preparation is not None:
-            timing = args.timed_preparation.read_bytes()
-            timed_case = json.loads(timing)["path"]
-            source = next(item for item in record["inputs"] if item["path"] == timed_case)
-            if json.loads(timing)["source_sha256"] != source["sha256"] or timed_case not in passed:
-                raise ValueError("timed case must have matching inspected bytes and pass validation")
-            files["timed-preparation.json"] = timing
-            roundtrip_criterion = args.timed_preparation.with_name("roundtrip-criterion.json").read_bytes()
-            verify_criterion_order(roundtrip_criterion, json.loads(timing))
-            files["roundtrip-criterion.json"] = roundtrip_criterion
-        manifest = manifest_template(files, timed_case)
-        manifest["criterion_recorded_utc"] = json.loads(criterion)["recorded_utc"]
-        files["native-manifest.template.json"] = encode(manifest)
-        for name, content in files.items():
-            (args.output / name).write_bytes(content)
+    timed_case = preparation_files(args, record, files) if args.prepare else ""
     if args.skill:
-        for name, content in build_jumper_skill(record, ROOT).items():
-            target = args.output / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(content)
+        files.update(build_jumper_skill(record, ROOT))
+    if args.prepare:
+        manifest = manifest_template(files, timed_case)
+        manifest["criterion_recorded_utc"] = json.loads(files["criterion.json"])["recorded_utc"]
+        files["native-manifest.template.json"] = encode(manifest)
+    for name, content in files.items():
+        target = args.output / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
     print(json.dumps(record["counts"], sort_keys=True))
     return 0
 

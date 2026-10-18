@@ -26,15 +26,15 @@ def implementation():
 
 def test_inventory_is_sorted_and_records_source_bytes(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/jumper"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     for name in ("b.yml", "a.dat"):
         (library / name).write_bytes(b"General: {}\n")
     (library / "notes.md").write_text("Not a model.\n")
     records = module.inventory(tmp_path)
     assert [r["path"] for r in records] == [
-        "docs/domains/orcaflex/jumper/a.dat",
-        "docs/domains/orcaflex/jumper/b.yml",
+        "docs/domains/orcaflex/mooring/buoy/a.dat",
+        "docs/domains/orcaflex/mooring/buoy/b.yml",
     ]
     assert all(r["sha256"] == sha256(b"General: {}\n").hexdigest() for r in records)
     assert all(r["size_bytes"] == len(b"General: {}\n") for r in records)
@@ -90,7 +90,7 @@ def test_findings_are_reported_as_rules_without_quoting_content(tmp_path):
 
 def test_report_is_deterministic_and_has_one_record_per_model(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/training"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "text.yml").write_text("General: {}\n")
     (library / "opaque.dat").write_bytes(b"\x00\x01\x02")
@@ -125,7 +125,7 @@ def test_diagnostics_never_import_the_native_solver():
 
 def fixture_publication(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/jumper"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "hidden.dat").write_bytes(b"\x00private-fixture\x01")
     (library / "dependent.yml").write_text("BaseFile: hidden.dat\n")
@@ -142,7 +142,7 @@ def test_publication_omits_failed_input_and_all_dependent_models(tmp_path):
     for withheld in (failed["path"], "hidden.dat", failed["sha256"], "private-fixture"):
         assert withheld not in encoded
     assert [item["path"] for item in published["models"]] == [
-        "docs/domains/orcaflex/jumper/clean.yml"
+        "docs/domains/orcaflex/mooring/buoy/clean.yml"
     ]
     # Passing overrides of an excluded model must not leak dependency names.
     assert "dependent.yml" not in encoded
@@ -156,6 +156,7 @@ def test_publication_counts_account_for_entire_library(tmp_path):
         "library_inputs": 4, "published_inputs": 1, "excluded_inputs": 3,
         "failed_inspections": 1, "excluded_models": 3, "published_models": 1,
         "models_with_failed_inputs": 3, "models_with_missing_inputs": 0,
+        "models_with_unknown_dependencies": 0,
     }
     assert counts["published_inputs"] + counts["excluded_inputs"] == len(report["models"])
 
@@ -172,14 +173,14 @@ def test_every_recorded_input_passes_a_fresh_inspection(tmp_path):
 
 def test_publication_refuses_source_digest_mismatch(tmp_path):
     module, report = fixture_publication(tmp_path)
-    (tmp_path / "docs/domains/orcaflex/jumper/clean.yml").write_text("General: null\n")
+    (tmp_path / "docs/domains/orcaflex/mooring/buoy/clean.yml").write_text("General: null\n")
     with pytest.raises(ValueError, match="digest mismatch"):
         module.publication_records(report, tmp_path)
 
 
 def test_publication_checks_sibling_inputs_of_modular_model(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/jumper/case"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy/case"
     (library / "includes").mkdir(parents=True)
     (library / "master.yml").write_text("- includefile: includes/section.yml\n")
     (library / "includes/section.yml").write_bytes(b"\x00\x01")
@@ -191,7 +192,7 @@ def test_publication_checks_sibling_inputs_of_modular_model(tmp_path):
 
 def test_publication_omits_models_with_absent_inputs(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/training"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "override.yml").write_text("BaseFile: absent.dat\n")
     published = module.publication_records(module.audit(tmp_path), tmp_path)
@@ -204,7 +205,7 @@ def test_publication_omits_models_with_absent_inputs(tmp_path):
 def test_reference_outside_library_is_not_silently_accepted(tmp_path):
     module = implementation()
     root = tmp_path / "source"
-    library = root / "docs/domains/orcaflex/training"
+    library = root / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "model.yml").write_text("BaseFile: ../../../../../external.dat\n")
     report = module.audit(root)

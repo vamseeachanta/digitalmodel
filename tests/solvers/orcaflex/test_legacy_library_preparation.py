@@ -22,7 +22,7 @@ def implementation():
 
 def test_inventory_build_is_reproducible_and_records_provenance(tmp_path):
     module = implementation()
-    library = tmp_path / "source/docs/domains/orcaflex/training"
+    library = tmp_path / "source/docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "model.yml").write_text("General: {}\n")
     root = tmp_path / "source"
@@ -39,10 +39,10 @@ def test_inventory_build_is_reproducible_and_records_provenance(tmp_path):
 
 def test_validator_records_invalid_models_without_emitting_source_content(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/training"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "good.yml").write_text("General: {}\nEnvironment: {}\n")
-    (library / "bad.yml").write_text("General: [\n")
+    (library / "bad.yml").write_text("General:\n  ImplicitVariableMaxTimeStep: -1\nEnvironment: {}\n")
     inventory = module.build_inventory(tmp_path, "a" * 40, "2026-10-15", 123)
     results = module.validate_models(inventory, tmp_path)
     assert len(results["models"]) == 2
@@ -50,12 +50,12 @@ def test_validator_records_invalid_models_without_emitting_source_content(tmp_pa
     assert by_name["bad.yml"]["status"] == "fail"
     assert by_name["bad.yml"]["errors"] > 0
     assert by_name["good.yml"]["status"] == "pass"
-    assert "General: [" not in json.dumps(results)
+    assert "ImplicitVariableMaxTimeStep" not in json.dumps(results)
 
 
 def test_comparator_preserves_stored_values_and_explains_missing_results(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/training"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     for name in ("stored", "missing"):
         (library / f"{name}.yml").write_text("General: {}\n")
@@ -123,7 +123,7 @@ def test_criterion_digest_and_time_precede_the_run():
 def test_resume_cache_is_bound_to_input_bytes(tmp_path):
     module = implementation()
     root = tmp_path / "source"
-    library = root / "docs/domains/orcaflex/training"
+    library = root / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     path = library / "model.yml"
     path.write_text("General: {}\nEnvironment: {}\n")
@@ -133,7 +133,7 @@ def test_resume_cache_is_bound_to_input_bytes(tmp_path):
     times = {p.name: p.stat().st_mtime_ns for p in cache.iterdir()}
     assert first == module.validate_models(inventory, root, cache_dir=cache)
     assert times == {p.name: p.stat().st_mtime_ns for p in cache.iterdir()}
-    path.write_text("General: [\n")
+    path.write_text("General:\n  ImplicitVariableMaxTimeStep: -1\nEnvironment: {}\n")
     changed = module.build_inventory(root, "a" * 40, "2026-10-15", 123)
     assert module.validate_models(changed, root, cache_dir=cache)["models"][0]["status"] == "fail"
     assert len(list(cache.iterdir())) == 2
@@ -154,24 +154,55 @@ def test_committed_records_cover_models_and_match_manifest_digests():
     inputs = {item["path"] for item in inventory["inputs"]}
     assert all(set(model["inputs"]) <= inputs for model in models)
     assert inventory["counts"]["published_inputs"] + inventory["counts"]["excluded_inputs"] == inventory["counts"]["library_inputs"]
-    assert inventory["counts"]["published_models"] == len(models)
+    message = "regenerate legacy-round-trip records"
+    library_input_count = len(module.inspection.inventory(ROOT))
+    assert library_input_count == inventory["counts"]["library_inputs"], message
+    assert inventory["counts"]["published_models"] == len(models), message
     assert sha256((output / "models.json").read_bytes()).hexdigest() == inventory["models_sha256"]
     for name, digest in manifest["files"].items():
         assert sha256((output / name).read_bytes()).hexdigest() == digest
+    verify_committed_sources(module, inventory, models, inputs, output, message)
+    for run in (validators, comparators):
+        module.verify_criterion_order((output / "criterion.json").read_bytes(), run)
+    generated = {p.relative_to(output).as_posix() for p in output.rglob("*") if p.is_file()}
+    assert generated == set(manifest["files"]) | {"native-manifest.template.json"}, message
+    assert not any(name in generated for name in (
+        "jumper-groups.json", "timed-preparation.json", "roundtrip-criterion.json",
+        "orcaflex-jumper-analysis/SKILL.md")), message
+
+
+def verify_committed_sources(module, inventory, models, inputs, output, message):
+    """Check source freshness without putting withheld locators in errors."""
     import yaml
     rules = yaml.safe_load(Path(module.inspection.gate.RULES).read_bytes())
-    assert inventory["rule_authority"] == "public-rules-only"
-    assert inventory["identifier_gate_sha256"] == sha256(module.inspection.GATE_PATH.read_bytes()).hexdigest()
-    assert inventory["public_rules_sha256"] == sha256(Path(module.inspection.gate.RULES).read_bytes()).hexdigest()
+    assert inventory["rule_authority"] == "public-rules-only", message
+    assert inventory["publication_policy"] == "generic-trees-only", message
+    assert inventory["private_rules_sha256"] is None, message
+    assert inventory["inspection_sha256"] == sha256(module.CHECKER.read_bytes()).hexdigest(), message
+    assert inventory["identifier_gate_sha256"] == sha256(module.inspection.GATE_PATH.read_bytes()).hexdigest(), message
+    assert inventory["public_rules_sha256"] == sha256(Path(module.inspection.gate.RULES).read_bytes()).hexdigest(), message
     criterion = json.loads((output / "criterion.json").read_bytes())
     assert inventory["rule_authority"] in criterion["publication"]
+    module.inspection.gate.load_rules = lambda: rules
+    current = module.inspection.publication_records(module.inspection.audit(ROOT), ROOT)
+    assert current["counts"] == inventory["counts"], message
+    assert current["models"] == models, message
+    assert {item["path"] for item in current["inputs"]} == inputs, message
+    # Production verification raises a locator-free regeneration error.
+    module.verify_inputs(inventory, ROOT)
     for item in inventory["inputs"]:
-        assert sha256((ROOT / item["path"]).read_bytes()).hexdigest() == item["sha256"]
-        assert module.inspection.inspect_model(ROOT / item["path"], item["path"], rules)["status"] == "pass"
+        path = ROOT / item["path"]
+        assert item["status"] == "pass", message
+        assert any(Path(item["path"]).is_relative_to(folder)
+                   for folder in module.inspection.PUBLICATION_ROOTS), message
+        assert module.inspection.inspect_model(path, item["path"], rules)["status"] == "pass", message
 
 
-def test_skill_document_is_built_from_all_four_inspected_specifications(tmp_path):
+def test_skill_document_is_built_from_all_four_inspected_specifications(tmp_path, monkeypatch):
     module = implementation()
+    rules = module.inspection.gate.load_rules()
+    rules["_private_names"] = ["synthetic-denied-token"]
+    monkeypatch.setattr(module.inspection.gate, "load_rules", lambda: rules)
     for group in ("manifold_to_plet", "plet_to_plem", "sut_mm", "sut_mm/resonance"):
         path = tmp_path / "docs/domains/orcaflex/jumper" / group / "spec.yml"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -199,7 +230,7 @@ def test_skill_document_is_built_from_all_four_inspected_specifications(tmp_path
 
 def test_reused_inventory_cannot_relabel_a_failed_inspection(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/training"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "opaque.dat").write_bytes(b"\x00\x01")
     inventory = {"inputs": [{**item, "status": "pass"} for item in module.inspection.inventory(tmp_path)],
@@ -212,7 +243,7 @@ def test_reused_inventory_cannot_relabel_a_failed_inspection(tmp_path):
 
 def test_reused_inventory_cannot_omit_a_model_dependency(tmp_path):
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/training"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "model.yml").write_text("BaseFile: missing.dat\n")
     inputs = [{**item, "status": "pass"} for item in module.inspection.inventory(tmp_path)]
@@ -227,9 +258,9 @@ def test_reused_inventory_cannot_omit_a_model_dependency(tmp_path):
 def test_resume_rejects_reclassified_input_even_with_matching_bytes(tmp_path):
     module = implementation()
     root = tmp_path / "source"
-    library = root / "docs/domains/orcaflex/training"
+    library = root / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
-    (library / "model.yml").write_text("General: [\n")
+    (library / "model.yml").write_text("General:\n  ImplicitVariableMaxTimeStep: -1\nEnvironment: {}\n")
     inventory = module.build_inventory(root, "a" * 40, "2026-10-15", 123)
     assert module.validate_models(inventory, root, cache_dir=tmp_path / "cache")["models"][0]["status"] == "fail"
     inventory["inputs"][0]["model_type"] = "specification"
@@ -242,7 +273,7 @@ def test_inventory_records_rule_provenance_and_rejects_stale_reuse(tmp_path):
     import pytest
 
     module = implementation()
-    library = tmp_path / "docs/domains/orcaflex/training"
+    library = tmp_path / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
     (library / "model.yml").write_text("General: {}\n")
     inventory = module.build_inventory(tmp_path, "a" * 40, "2026-10-15", 123)
