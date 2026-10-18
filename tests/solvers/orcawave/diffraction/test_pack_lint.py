@@ -18,9 +18,18 @@ CITATION = re.compile(r"\[([^\]\n]+):L(\d+)-L(\d+)\]")
 
 @lru_cache(maxsize=None)
 def source_at(revision, path):
-    return subprocess.check_output(
-        ["git", "show", f"{revision}:{path}"], cwd=ROOT, text=True,
-    )
+    try:
+        return subprocess.check_output(
+            ["git", "show", f"{revision}:{path}"], cwd=ROOT, text=True,
+            stderr=subprocess.PIPE,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pytest.fail(
+            f"Citation source unavailable: {path} at {revision}. "
+            "Fetch the pinned Git history before running citation checks; "
+            "source archives require a Git checkout with that history.",
+            pytrace=False,
+        )
 
 
 def read_pinned_source(pack, reference):
@@ -165,3 +174,24 @@ def test_g0_control_stale_reason_is_rejected():
     records["S001"]["reason"] = "Outdated explanation."
     with pytest.raises(AssertionError, match="stale reason: S001"):
         check_dispositions(pack, records)
+
+
+@pytest.mark.parametrize("workflow,job", [
+    ("quality-gates-by-domain.yml", "domain-tests"),
+    ("full-matrix-sweep.yml", "sweep-tests"),
+])
+def test_citation_checks_fetch_pinned_history(workflow, job):
+    import yaml
+
+    config = yaml.safe_load((ROOT / ".github/workflows" / workflow).read_text())
+    checkout, = [step for step in config["jobs"][job]["steps"]
+                 if step.get("uses", "").startswith("actions/checkout@")]
+    assert checkout.get("with", {}).get("fetch-depth") == 0, (
+        "Citation checks need the pinned source history, including map revisions"
+    )
+
+
+def test_missing_citation_history_reports_recovery(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys.modules[__name__], "ROOT", tmp_path)
+    with pytest.raises(pytest.fail.Exception, match="Fetch.*history.*source archives"):
+        source_at("0" * 40, "pyproject.toml")
