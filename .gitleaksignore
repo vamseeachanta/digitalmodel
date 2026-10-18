@@ -22,6 +22,7 @@ scripts/python/digitalmodel/analysis/APIRP2RD_equationFunctionFile.py:generic-ap
 src/digitalmodel/cathodic_protection/engine_adapter.py:generic-api-key:1126
 # Mooring material lookup identifier in a segment constructor.
 src/digitalmodel/orcaflex/mooring_design.py:generic-api-key:375
-# phrases with spaces in label/number data fields; maintainer-approved 2026-10-18
+# Entry key identifier in hull-girder result data; the same field is unflagged in the sibling entries.
 docs/domains/ship-design/hull-girder-report/results.json:generic-api-key:64
+# Entry key identifier in hull-girder allowable-basis data; the same field is unflagged in the sibling entries.
 examples/workflows/hull-girder-report-pack/allowable-basis.json:generic-api-key:44
