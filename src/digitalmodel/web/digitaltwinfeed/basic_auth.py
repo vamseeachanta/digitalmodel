@@ -6,6 +6,7 @@ DIGITALTWINFEED_BASIC_AUTH_USER and DIGITALTWINFEED_BASIC_AUTH_PASSWORD have
 no defaults. Missing or blank variables close authentication for every request.
 """
 
+import hmac
 import logging
 import os
 
@@ -30,7 +31,8 @@ def basic_auth_password_for(username):
     value = basic_auth_password()
     if configured is None or value is None or not username:
         return None
-    return value if username == configured else None
+    matches = hmac.compare_digest(username.encode('utf-8'), configured.encode('utf-8'))
+    return value if matches else None
 
 
 def warn_if_basic_auth_closed():

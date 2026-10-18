@@ -23,6 +23,7 @@ def _basic_auth_password_for(username):
     Missing or blank variables refuse every authentication request.
     """
     # Keep this import local so tests can compile the function on its own.
+    import hmac
     import os
 
     configured = os.environ.get('TEMPLATE_CODE_BASIC_AUTH_USER')
@@ -30,7 +31,8 @@ def _basic_auth_password_for(username):
     if (configured is None or value is None or not configured.strip()
             or not value.strip() or not username):
         return None
-    return value if username == configured else None
+    matches = hmac.compare_digest(username.encode('utf-8'), configured.encode('utf-8'))
+    return value if matches else None
 
 
 @auth.get_password
