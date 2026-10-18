@@ -435,6 +435,9 @@ modules:
       mooring_analysis:
         agent_pack: src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md
         qa_family: MR
+      viv_analysis:
+        agent_pack: src/digitalmodel/subsea/viv_analysis/docs/agent-pack.md
+        qa_family: EC
   - module: visualization
     entry_point: src/digitalmodel/visualization/
     maturity: beta
