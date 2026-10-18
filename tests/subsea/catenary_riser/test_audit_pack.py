@@ -56,19 +56,26 @@ def test_pack_has_real_trackers_and_corrected_conventions():
     assert "atan2(H, w×s)" in readme
 
 
+@pytest.mark.parametrize("riser_type", ["SCR", "SLWR"])
 @pytest.mark.parametrize("analysis", ["Extreme", "Fatigue"])
-def test_export_build_fails_for_missing_type_data(monkeypatch, tmp_path, analysis):
+def test_export_build_fails_for_missing_type_data(monkeypatch, tmp_path, analysis, riser_type):
     # Test the package's actual resource-loading route, without native loading.
     module = importlib.import_module("digitalmodel.subsea.catenary_riser.legacy.orcaflexModel")
     monkeypatch.setattr(module, "orcaflexModel", lambda *args: ({}, {}))
     cfg = {
-        "default": {"Analysis": {"SLWR": False, "SCR": True, analysis: True}},
+        "default": {"Analysis": {"SLWR": riser_type == "SLWR", "SCR": riser_type == "SCR", analysis: True}},
         "EnvironmentLoad": {analysis: [{"Wave": {"WaveTrains": [{"Name": "generic"}]}}]},
         "Analysis": {"fe_folder": str(tmp_path) + "/", "file_name": "generic"},
     }
     with pytest.raises(FileNotFoundError, match=f"VesselTypes_{analysis}"):
         module.build_model(analysis, cfg)
-    assert not list(tmp_path.iterdir())
+    outputs = list(tmp_path.iterdir())
+    if riser_type == "SCR":
+        assert not outputs
+    else:
+        # The legacy writer opens the destination before reading type data.
+        assert len(outputs) == 1
+        assert outputs[0].read_text() == "{}\n"
 
 
 def test_cli_vertical_angle_and_convergence_output(tmp_path):
@@ -95,3 +102,27 @@ def test_cli_vertical_angle_and_convergence_output(tmp_path):
     assert result.exit_code != 0
     assert "exceeds available length" in result.output
     assert not output.exists()
+
+
+def test_pack_line_anchors_resolve_at_head():
+    import re
+
+    pack = (PACKAGE / "docs/agent-pack.md").read_text()
+    anchors = re.findall(r"\[([^\]\s]+):L(\d+)(?:-L(\d+))?\]", pack)
+    assert anchors
+    invalid = []
+    for path, first, last in anchors:
+        source = ROOT / path
+        if not source.is_file():
+            invalid.append(f"{path}: missing")
+            continue
+        count = len(source.read_text().splitlines())
+        if not 1 <= int(first) <= int(last or first) <= count:
+            invalid.append(f"{path}:L{first}-L{last or first} exceeds {count}")
+    assert not invalid, "\n".join(invalid)
+
+
+def test_simple_cli_help_defines_offset():
+    result = CliRunner().invoke(cli, ["simple", "--help"], terminal_width=120)
+    assert result.exit_code == 0
+    assert "suspended span from the horizontal-tangent vertex" in " ".join(result.output.split())

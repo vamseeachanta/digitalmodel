@@ -66,7 +66,11 @@ PROVENANCE_LABELS = {
 
 def _status_of(util: Optional[float], allowable: float = 1.0,
                marginal_frac: float = 0.9) -> str:
-    """Classify a utilisation ratio as PASS / MARGINAL / FAIL."""
+    """Classify a utilisation ratio as PASS / MARGINAL / FAIL.
+
+    Zero is treated as unqualified and displayed as N/A, matching the report
+    input convention; it does not establish a completed zero-load check.
+    """
     if (util is None or not math.isfinite(util) or util <= 0
             or not math.isfinite(allowable) or allowable <= 0
             or not math.isfinite(marginal_frac) or not 0 < marginal_frac <= 1):
@@ -197,10 +201,9 @@ class RiserReportData:
     def max_strength_utilisation(self) -> Optional[float]:
         if not self.strength_results:
             return None
-        values = [r.utilisation for r in self.strength_results
-                  if r.utilisation is not None and math.isfinite(r.utilisation)
-                  and r.utilisation > 0]
-        return max(values) if values else None
+        if any(r.status == "N/A" for r in self.strength_results):
+            return None
+        return max(r.utilisation for r in self.strength_results)
 
     @property
     def min_fatigue_life_years(self) -> Optional[float]:
@@ -373,10 +376,21 @@ def _try_import_builder():
     return None
 
 
+def _positive_text(value: Optional[float], precision: int) -> str:
+    """Render positive finite inputs at the requested display precision."""
+    return ("N/A" if value is None or not math.isfinite(value) or value <= 0
+            else f"{value:.{precision}f}")
+
+
 def _ratio_text(value: Optional[float]) -> str:
     """Render absent or invalid ratios without implying an engineering value."""
-    return ("N/A" if value is None or not math.isfinite(value) or value <= 0
-            else f"{value:.2f}")
+    return _positive_text(value, 2)
+
+
+def _strength_kpi_text(data: RiserReportData) -> str:
+    if data.strength_results and data.max_strength_utilisation is None:
+        return "N/A (incomplete)"
+    return _ratio_text(data.max_strength_utilisation)
 
 
 def _esc(text: Any) -> str:
@@ -427,13 +441,13 @@ def _fatigue_table_html(rows: list[FatigueResult]) -> str:
     body = ""
     for r in rows:
         life = r.fatigue_life_years
-        life_s = "N/A" if life is None else f"{life:.1f}"
+        life_s = _positive_text(life, 1)
         body += (
             f"<tr><td>{_esc(r.location)}</td><td>{r.arc_length_m:.1f}</td>"
             f"<td>{_esc(r.sn_curve)}</td><td>{r.scf:.2f}</td>"
-            f"<td>{r.damage_per_year}</td><td>{life_s}</td>"
-            f"<td>{r.design_life_years}</td>"
-            f"<td>{r.design_fatigue_factor}</td><td>{_esc(r.design_fatigue_factor_basis)}</td>"
+            f"<td>{_positive_text(r.damage_per_year, 4)}</td><td>{life_s}</td>"
+            f"<td>{_positive_text(r.design_life_years, 0)}</td>"
+            f"<td>{_positive_text(r.design_fatigue_factor, 2)}</td><td>{_esc(r.design_fatigue_factor_basis)}</td>"
             f"<td>{_status_span(r.status)}</td></tr>"
         )
     return f'<table class="data-table"><thead>{head}</thead><tbody>{body}</tbody></table>'
@@ -498,10 +512,7 @@ def _build_sections(d: RiserReportData) -> list[tuple[str, str]]:
         "Type": d.riser_type,
         "Water depth": f"{d.water_depth_m:.0f} m",
         "Overall status": _status_span(d.overall_status),
-        "Max strength utilisation": (
-            f"{d.max_strength_utilisation:.2f}"
-            if d.max_strength_utilisation is not None else "—"
-        ),
+        "Max strength utilisation": _strength_kpi_text(d),
         "Min fatigue life": (
             f"{d.min_fatigue_life_years:.1f} yr"
             if d.min_fatigue_life_years is not None else "—"
@@ -645,8 +656,7 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
     lines.append(f"- **Riser:** {d.riser_name} ({d.riser_type})")
     lines.append(f"- **Water depth:** {d.water_depth_m:.0f} m")
     lines.append(f"- **Overall status:** {d.overall_status}")
-    if d.max_strength_utilisation is not None:
-        lines.append(f"- **Max strength utilisation:** {d.max_strength_utilisation:.2f}")
+    lines.append(f"- **Max strength utilisation:** {_strength_kpi_text(d)}")
     if d.min_fatigue_life_years is not None:
         lines.append(f"- **Min fatigue life:** {d.min_fatigue_life_years:.1f} yr")
     lines.append(f"- **Classification:** {d.provenance.mode_label}")
@@ -702,11 +712,11 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
         lines.append("|---|---|---|---|---|---|---|---|---|---|")
         for r in d.fatigue_results:
             life = r.fatigue_life_years
-            life_s = "N/A" if life is None else f"{life:.1f}"
+            life_s = _positive_text(life, 1)
             lines.append(
                 f"| {r.location} | {r.arc_length_m:.1f} | {r.sn_curve} | {r.scf:.2f} "
-                f"| {r.damage_per_year} | {life_s} | {r.design_life_years} "
-                f"| {r.design_fatigue_factor} | {r.design_fatigue_factor_basis} "
+                f"| {_positive_text(r.damage_per_year, 4)} | {life_s} | {_positive_text(r.design_life_years, 0)} "
+                f"| {_positive_text(r.design_fatigue_factor, 2)} | {r.design_fatigue_factor_basis} "
                 f"| {r.status} |"
             )
     else:

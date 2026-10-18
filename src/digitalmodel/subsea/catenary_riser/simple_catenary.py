@@ -60,7 +60,7 @@ class SimpleCatenaryAnalyzer:
             horizontal_tension: Horizontal tension (N)
             top_tension: Top tension (N)
             water_depth: Water depth (m)
-            horizontal_offset: Horizontal offset at surface (m)
+            horizontal_offset: Suspended span from the horizontal-tangent vertex (m)
 
         Returns:
             CatenaryRiserResult with geometry and forces
@@ -101,6 +101,14 @@ class SimpleCatenaryAnalyzer:
             # Solve for H given geometry
             H, converged = self._solve_H_from_geometry(water_depth, horizontal_offset, riser.length, w)
             result = self._solve_catenary_from_H(riser, H, water_depth, w)
+
+        if (horizontal_tension is not None or top_tension is not None) and not np.isclose(
+            result.horizontal_offset, horizontal_offset, rtol=1e-6, atol=1e-6
+        ):
+            logger.warning(
+                "Force solution suspended span differs from the supplied offset; "
+                "the force solution governs geometry."
+            )
 
         result.converged = bool(converged and result.arc_length <= riser.length)
         return result

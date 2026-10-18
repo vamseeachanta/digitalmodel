@@ -33,7 +33,7 @@ def cli():
 @click.option('--thickness', type=float, required=True, help='Wall thickness (m)')
 @click.option('--length', type=float, required=True, help='Total riser length (m)')
 @click.option('--water-depth', type=float, required=True, help='Water depth (m)')
-@click.option('--offset', type=float, required=True, help='Horizontal offset (m)')
+@click.option('--offset', type=float, required=True, help='Horizontal suspended span from the horizontal-tangent vertex (m)')
 @click.option('--material', type=str, default='x65', help='Material (x65, x70)')
 @click.option('--internal-fluid', type=str, default='oil', help='Internal fluid (oil, water, mud, air)')
 @click.option('--top-tension', type=float, help='Top tension (N) - alternative to offset')

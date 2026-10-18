@@ -27,13 +27,18 @@ This is an annular volume balance, not an empirical coefficient.
 For `D_module=1 m`, `D_riser_coated=0.3 m`, foam 500 kg/m³,
 water 1025 kg/m³ and g=9.81 m/s², the added force is -3680.94717 N/m.
 
-E5. [DNVGL-RP-C203, April 2016, §2.2, equation (2.2.1), pp. 15–16](https://fenix.tecnico.ulisboa.pt/downloadFile/1126518382266636/DNVGL-RP-C203_2016-Fatgiue.pdf)
+E5. [DNVGL-RP-C203, April 2016, §2.2, equation (2.2.1), pp. 15–16](https://www.dnv.com/energy/standards-guidelines/dnv-rp-c203-fatigue-design-of-offshore-steel-structures/)
+uses the historical edition for the criterion below; the publisher page lists the
+current edition and access route, rather than a third-party copy. It
 requires accumulated damage `D <= eta`, with `eta=1/DFF`.
 For annual damage d and design life Y the report checks `d*Y*DFF <= 1`.
 DFF and its selection basis must be supplied; no safety class is inferred.
 The sample's DFF=2 is illustrative, not a prescribed factor. Invalid or absent
 positive finite damage, utilisation, design life or cited DFF gives N/A. A report
-containing N/A cannot roll up to PASS. The existing strength marginal band is a
+containing N/A cannot roll up to PASS. A true zero utilisation is treated as
+unqualified and displayed as N/A under this input convention; it does not
+establish a completed zero-load check. A strength KPI with any unqualified row
+is labelled N/A (incomplete). The existing strength marginal band is a
 reporting convention, not a code acceptance factor; fatigue has no marginal band.
 
 Hand worksheet for the unit riser (OD .508 m, ID .458 m):

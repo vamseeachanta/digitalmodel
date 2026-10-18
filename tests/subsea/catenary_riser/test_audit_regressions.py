@@ -113,3 +113,60 @@ def test_fatigue_factor_is_a_cited_input():
                      render_markdown(RiserReportData("generic", "generic", "SCR", 1000, fatigue_results=[r]))):
         assert "DFF" in rendered
         assert r.design_fatigue_factor_basis in rendered
+
+
+@pytest.mark.parametrize("field,index,value,expected", [
+    (field, index, value, expected)
+    for field, index, precision, valid in (
+        ("damage_per_year", 4, 4, 1 / 41),
+        ("design_life_years", 6, 0, 25.0),
+        ("design_fatigue_factor", 7, 2, 2.0),
+    )
+    for value, expected in (
+        (None, "N/A"), (0, "N/A"), (-1, "N/A"),
+        (float("nan"), "N/A"), (float("inf"), "N/A"),
+        (-float("inf"), "N/A"), (valid, f"{valid:.{precision}f}"),
+    )
+])
+def test_fatigue_numeric_cells(field, index, value, expected):
+    import re
+
+    fatigue = FatigueResult("fatigue probe", 0, .02, 25,
+                            design_fatigue_factor=2,
+                            design_fatigue_factor_basis="illustrative input")
+    setattr(fatigue, field, value)
+    report = RiserReportData("generic", "generic", "SCR", 1000,
+                             fatigue_results=[fatigue])
+    html_row = next(row for row in render_html(report).split("<tr>")
+                    if row.startswith("<td>fatigue probe</td>"))
+    assert re.findall(r"<td>(.*?)</td>", html_row)[index] == expected
+    md_row = next(row for row in render_markdown(report).splitlines()
+                  if row.startswith("| fatigue probe |"))
+    assert md_row.split("|")[index + 1].strip() == expected
+
+
+@pytest.mark.parametrize("value", [None, 0, -1, float("nan"), float("inf")])
+def test_strength_kpi_is_incomplete_with_invalid_rows(value):
+    valid = StrengthResult("valid", 0, 1, 1, 1, .5)
+    invalid = replace(valid, location="invalid", utilisation=value)
+    report = RiserReportData("generic", "generic", "SCR", 1000,
+                             strength_results=[valid, invalid])
+    assert report.max_strength_utilisation is None
+    assert "<strong>Max strength utilisation</strong></td><td>N/A (incomplete)</td>" in render_html(report)
+    assert "**Max strength utilisation:** N/A (incomplete)" in render_markdown(report)
+
+
+@pytest.mark.parametrize("force", [{"horizontal_tension": 500000},
+                                    {"top_tension": 2757021.971932033}])
+def test_force_solution_warns_on_offset_mismatch(riser, force, caplog):
+    result = SimpleCatenaryAnalyzer().analyze_riser(riser, **force)
+    assert "suspended span differs from the supplied offset" in caplog.text
+    assert result.horizontal_offset == pytest.approx(529.928323, abs=1e-6)
+
+
+@pytest.mark.parametrize("force", [{"horizontal_tension": 500000},
+                                    {"top_tension": 2757021.971932033}])
+def test_force_solution_matching_offset_has_no_warning(riser, force, caplog):
+    SimpleCatenaryAnalyzer().analyze_riser(
+        riser, horizontal_offset=529.9283232381666, **force)
+    assert not caplog.records
