@@ -1,7 +1,9 @@
 """Offline database contracts; strength fixtures remain in test_grade_matrix.py."""
 from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
+import re
 import subprocess
+from unittest.mock import Mock
 
 import pytest
 
@@ -77,9 +79,8 @@ def test_provenance_pins_the_repository_source(database):
         provenance = record.provenance
         assert provenance.repository_path == "src/digitalmodel/materials/grades.py"
         assert provenance.sha256 == digest
-        # A revision will be assigned after merge; the digest is mandatory now.
-        if provenance.repository_revision is None:
-            assert provenance.sha256 == digest
+        if provenance.repository_revision is not None:
+            assert re.fullmatch(r"[a-f0-9]{40}", provenance.repository_revision)
         assert provenance.retrieved_on_utc
         assert provenance.repository_terms == "MIT License"
         assert provenance.original_source_terms == "not re-verified in this job"
@@ -115,6 +116,76 @@ def test_pinned_revision_matches_source_digest(database):
             capture_output=True,
         ).stdout
     assert database_module.normalised_source_digest(source) == provenance.sha256
+
+
+@pytest.fixture
+def configured_revision_database(monkeypatch):
+    monkeypatch.setattr(database_module, "_SOURCE_REVISION", "a" * 40)
+    database = load_database()
+    test_provenance_pins_the_repository_source(database)
+    return database
+
+
+def assert_configured_git_show(run):
+    run.assert_called_once_with(
+        ["git", "show", f"{'a' * 40}:src/digitalmodel/materials/grades.py"],
+        cwd=Path(__file__).resolve().parents[2],
+        check=True,
+        capture_output=True,
+    )
+
+
+@pytest.mark.parametrize("line_ending", ["\n", "\r\n", "\r"])
+def test_configured_revision_accepts_matching_source(
+    monkeypatch, configured_revision_database, line_ending,
+):
+    source = Path(grades.__file__).read_text(encoding="utf-8")
+    source = source.replace("\n", line_ending).encode("utf-8")
+    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout=source))
+    monkeypatch.setattr(subprocess, "run", run)
+    test_pinned_revision_matches_source_digest(configured_revision_database)
+    assert_configured_git_show(run)
+
+
+def test_configured_revision_rejects_altered_source(
+    monkeypatch, configured_revision_database,
+):
+    source = Path(grades.__file__).read_bytes() + b"\n# altered source\n"
+    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout=source))
+    monkeypatch.setattr(subprocess, "run", run)
+    with pytest.raises(AssertionError):
+        test_pinned_revision_matches_source_digest(configured_revision_database)
+    assert_configured_git_show(run)
+
+
+def test_configured_revision_missing_history_fails(
+    monkeypatch, configured_revision_database,
+):
+    error = subprocess.CalledProcessError(128, ["git", "show"])
+    run = Mock(side_effect=error)
+    monkeypatch.setattr(subprocess, "run", run)
+    with pytest.raises(subprocess.CalledProcessError) as caught:
+        test_pinned_revision_matches_source_digest(configured_revision_database)
+    assert caught.value is error
+    assert_configured_git_show(run)
+
+
+@pytest.mark.parametrize("path", [
+    "docs/domains/materials/database-gaps.html",
+    "src/digitalmodel/materials/docs/agent-pack.md",
+])
+def test_shipped_docs_match_source_provenance(database, path):
+    root = Path(__file__).resolve().parents[2]
+    document = (root / path).read_text(encoding="utf-8")
+    provenance = database.lookup("X52").provenance
+    assert provenance.sha256 in document
+    if provenance.repository_revision is None:
+        assert "digest-only" in document
+        assert "assigned after merge" in document
+        assert not re.search(r"\b[a-f0-9]{40}\b", document)
+        assert "https://github.com/vamseeachanta/digitalmodel/issues/2778" in document
+    else:
+        assert provenance.repository_revision in document
 
 
 def test_edition_metadata_is_not_inferred(database):

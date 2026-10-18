@@ -21,7 +21,7 @@ from .database_schema import MaterialRecord, RepositoryProvenance, Strengths
 _SOURCE_REVISION = None
 # SHA-256 of UTF-8-decoded grade text, CRLF and lone CR replaced by LF,
 # then encoded as UTF-8.
-_SOURCE_SHA256 = "8e5623d320dc3648da5f20093dfc0a9dbe9383fad8ea212954c371c5005273af"
+_SOURCE_SHA256 = "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90"
 _RETRIEVED_ON_UTC = "2026-10-18"
 _SOURCE_PATH = "src/digitalmodel/materials/grades.py"
 _LINK_FIELDS = ("sn_curve_ids", "standards_registry_id", "structural_shape_id")

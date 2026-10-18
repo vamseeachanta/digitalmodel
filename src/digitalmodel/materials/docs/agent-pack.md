@@ -4,11 +4,21 @@
 | --- | --- |
 | Module / repository | materials / digitalmodel |
 | Package | `src/digitalmodel/materials` |
-| Pack revision / date | 1 / 2026-10-18 |
-| Code revision | `e5ffb19af787769ef89ca7749392eebc9c4b51cb` |
+| Pack revision / date | 2 / 2026-10-18 |
+| Code revision | assigned after merge; digest-only provenance until then |
+| Normalized grades.py SHA-256 | `4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90` |
 | Analysis family | Engineering calculations (EC), AQG r0 Python calculations |
 | Review role | Engineering calculations quality manager |
 | Status | DRAFT; independent review pending |
+
+The source revision is null until a matching commit is reachable from main.
+The digest above hashes UTF-8 text after replacing CRLF and lone CR with LF.
+Line citations below are provisional repository-relative locators, pending
+re-anchoring to the reachable revision in [#2778](https://github.com/vamseeachanta/digitalmodel/issues/2778).
+That follow-up must update the header, verify all citation ranges and replace
+the unassigned-revision test in the same commit that assigns the revision.
+Any assigned revision must match the digest; unavailable history remains a
+test failure.
 
 ## 1. Purpose and scope
 
@@ -33,7 +43,7 @@ The line-pipe factory returns geometry and a reference string, with no product-s
 | `lower_bound_toughness` | J, °C, mm, MPa; Pint quantities converted | Method defaults to auto, class to ferritic; reference routes require temperature and yield; method-specific reference thickness, fractile, cap and scope constants remain in source | [src/digitalmodel/materials/ffs_material_library.py:L84-L114] [src/digitalmodel/materials/ffs_material_library.py:L216-L230] [src/digitalmodel/materials/ffs_material_library.py:L267-L368] |
 | `TrueStressStrainCurve` | MPa, °C; true/plastic strain dimensionless | Positive moduli/strengths; exponent strictly between 0 and 1; explicit uniform ultimate true strain required; temperature default is recorded only | [src/digitalmodel/materials/ffs_material_library.py:L395-L452] |
 | Curve evaluation / tables | Tensile strain positive; stress MPa | Negative strain rejected; total/plastic tables default to 20 rows; plateau strain defaults to twice ultimate; minimum row counts 4/3 respectively | [src/digitalmodel/materials/ffs_material_library.py:L473-L556] |
-| `Strengths`, `MaterialRecord`, `RepositoryProvenance` | MPa and repository metadata | Finite positive strengths, tensile at least yield; nonempty identities; full revision/digest and ISO date; unestablished links remain null | [src/digitalmodel/materials/database_schema.py:L20-L37] [src/digitalmodel/materials/database_schema.py:L50-L73] [src/digitalmodel/materials/database_schema.py:L86-L113] |
+| `Strengths`, `MaterialRecord`, `RepositoryProvenance` | MPa and repository metadata | Finite positive strengths, tensile at least yield; nonempty identities; mandatory digest and ISO date; revision null until assigned, then a full commit hash; unestablished links remain null | [src/digitalmodel/materials/database_schema.py:L20-L37] [src/digitalmodel/materials/database_schema.py:L50-L73] [src/digitalmodel/materials/database_schema.py:L86-L113] |
 
 ### Outputs
 
@@ -110,7 +120,7 @@ Gate applicability follows AQG r0, section 10, Python calculations, with G5 requ
 | C07 | G1 | Import and execute `grades`, `load_database`, `line_pipe`, `lower_bound_toughness` and `TrueStressStrainCurve` through all collected materials nodes: 0 collection errors and 0 failed nodes, count | `python -m pytest tests/materials/ -q -rA -p no:cacheprovider`; imports are the actual Python load route. [tests/materials/test_database.py:L7-L10] [tests/materials/test_ffs_material_library.py:L25-L35] |
 | C08 | G2 | `TrueStressStrainCurve.stress_from_plastic_strain` and `stress` return 450 MPa at V2 inputs within 1e-8 MPa; `lower_bound_toughness().k_mat_mpa_sqrt_m` meets V3–V6 anchors within 1% | V2–V6 test nodes in section 4; hardening-removal mutation fails both true/engineering-input cases. V1 remains an endpoint regression. [#2730](https://github.com/vamseeachanta/digitalmodel/issues/2730) |
 | C09 | G5 | `normalised_source_digest` equals pinned provenance and load flag is true: 0 digest mismatches, count | `tests/materials/test_database.py::test_provenance_pins_the_repository_source`, `tests/materials/test_database.py::test_source_drift_requires_refreshed_provenance`; line-ending and deliberate-drift tests exercise detection. [tests/materials/test_database.py:L68-L77] [tests/materials/test_database.py:L153-L184] |
-| C10 | G5 | `load_database` outputs match `grades.get` strengths/citations; PSL1 output provenance names 46th edition, 9.3.1 and Table 6: 0 mismatches | `tests/materials/test_database.py::test_values_and_citations_equal_the_source_records`; `tests/materials/test_audit_regressions.py::test_psl1_si_minima_and_table_provenance`. Pack citation ranges and section-4 nodes are checked separately at the code pin; no licensed qualification is inferred. |
+| C10 | G5 | `load_database` outputs match `grades.get` strengths/citations; PSL1 output provenance names 46th edition, clause 9.3.1: 0 mismatches | `tests/materials/test_database.py::test_values_and_citations_equal_the_source_records`; `tests/materials/test_audit_regressions.py::test_psl1_si_minima_and_table_provenance`. Pack citation ranges and section-4 nodes require rechecking when the code revision is assigned under #2778; no licensed qualification is inferred. |
 | C11 | G1 | `TrueStressStrainCurve.table(n_points=25)` and `plastic_table(n_points=10)` have exactly 25/10 rows and no descending stress/strain pairs | `tests/materials/test_ffs_material_library.py::test_curve_table_for_solver_decks`; a missing interior plastic row fails `len(plastic) == 10`. [#2729](https://github.com/vamseeachanta/digitalmodel/issues/2729) |
 | C12 | G0 | `lower_bound_toughness` auto method route and tagged-unit equivalence: 0 method mismatches; relative toughness difference ≤ 1e-6, dimensionless | `tests/materials/test_ffs_material_library.py::test_toughness_auto_method_selection`, `tests/materials/test_ffs_material_library.py::test_toughness_tagged_quantities_are_converted`. [tests/materials/test_ffs_material_library.py:L192-L227] |
 | C13 | G1 | `LinePipe.weight_kg_m` and `weight_lb_ft` fixed-density conversion consistency: relative differences ≤ 1e-12 and ≤ 1e-6, dimensionless; kg/m and lb/ft quantities | R1. [tests/materials/test_line_pipe.py:L56-L61] |
@@ -197,7 +207,7 @@ Downstream grade-table consumers are documented in the migration matrix; legacy-
 
 ### Map basis and counted family
 
-Map ref: `codex/implmap-work`, commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; map's embedded source revision: `270c8759c374b67a7f032953e7fcdb14e0224461`; code search pin is the header code revision. The map bytes at that map ref equal the map bytes at the header pin, so the inventory citations below resolve at the code pin. [docs/registry/implementation-map.yaml:L1-L4]
+Map source: the repository-relative implementation map. Its embedded historical revision does not pin the current materials source. Inventory citations and code-search results below require rechecking against the reachable revision under #2778 before they can serve as permanent evidence. [docs/registry/implementation-map.yaml:L1-L4]
 
 Only `api-5ct-5l-grade-tables` has an implementation row inside this package: 1 in-package row and 39 rows overall, making it the sole counted family; no subpackage is excluded. [docs/registry/implementation-map.yaml:L24099-L24105] [docs/registry/implementation-map.yaml:L24252-L24261]
 
@@ -249,7 +259,7 @@ The following list preserves every map implementation row, including entries out
 
 ### Exact package grep and definition classification
 
-Search semantics: Python `re.search`, case-sensitive, over the package's pinned `.py` text, with hits assigned to the smallest enclosing function/class and module-level statements grouped once per file; no signal matches the package-relative path `materials` under case-insensitive comparison, so none is excluded. The three patterns are preserved exactly, including the doubled backslashes in the final pattern; they are not repaired into a different regex. [docs/registry/implementation-map.yaml:L24101-L24104]
+Historical search semantics: Python `re.search`, case-sensitive, over the inspected package `.py` text, with hits assigned to the smallest enclosing function/class and module-level statements grouped once per file; no signal matches the package-relative path `materials` under case-insensitive comparison, so none is excluded. The three patterns are preserved exactly, including the doubled backslashes in the final pattern; they are not repaired into a different regex. Re-run this inventory when assigning the reachable revision under #2778. [docs/registry/implementation-map.yaml:L24101-L24104]
 
 ```python
 signals = [
@@ -314,7 +324,7 @@ Map follow-up: pipe dimensions and section properties, IACS/EN/ASTM registry fam
 
 ### Read coverage
 
-All six Python files in `src/digitalmodel/materials` were read: `__init__.py`, `grades.py`, `line_pipe.py`, `ffs_material_library.py`, `database_schema.py` and `database.py`; the package has no nested Python subpackage at the pin. [src/digitalmodel/materials/__init__.py:L15-L48] [src/digitalmodel/materials/grades.py:L1-L17] [src/digitalmodel/materials/line_pipe.py:L1-L18] [src/digitalmodel/materials/ffs_material_library.py:L1-L53] [src/digitalmodel/materials/database_schema.py:L1-L5] [src/digitalmodel/materials/database.py:L1-L7]
+All six Python files in `src/digitalmodel/materials` were read: `__init__.py`, `grades.py`, `line_pipe.py`, `ffs_material_library.py`, `database_schema.py` and `database.py`; the inspected package has no nested Python subpackage. [src/digitalmodel/materials/__init__.py:L15-L48] [src/digitalmodel/materials/grades.py:L1-L17] [src/digitalmodel/materials/line_pipe.py:L1-L18] [src/digitalmodel/materials/ffs_material_library.py:L1-L53] [src/digitalmodel/materials/database_schema.py:L1-L5] [src/digitalmodel/materials/database.py:L1-L7]
 
 Documentation found by searching for `digitalmodel.materials`, `src/digitalmodel/materials`, `materials/grades` and `material.grade matrix` in repository Markdown/HTML, with routing/map discovery added: the operator map, module-routing registry, implementation map and its Markdown index, codes register, grade-table migration record, the two materials validation records, materials database gaps page and the FFS offering plan. No package README was found in the package-file enumeration. [docs/maps/digitalmodel-operator-map.md:L79-L79] [docs/registry/module-routing.yaml:L577-L582] [docs/registry/implementation-map.md:L26-L26] [docs/domains/codes-register.md:L109-L121] [docs/domains/grade-table-migration-2026-06-28.md:L1-L21] [docs/domains/materials/grade-matrix-validation-2026-06-28.md:L1-L18] [docs/domains/materials/line-pipe-validation-2026-06-28.md:L1-L20] [docs/domains/materials/database-gaps.html:L6-L23] [docs/plans/2026-09-25-issue-1057-ffs-offering-program.md:L168-L180]
 
@@ -322,12 +332,15 @@ The five materials test files were read and selected in full, including all para
 
 Historical revision-0 offline receipt (not the current code pin): `PYTHONPATH=src uv run --no-sources python -m pytest tests/materials/ -q -rA -p no:cacheprovider --basetemp=<scratch>` was used before and after documentation edits, with the same test configuration and no addopts override. Each completed run collected 179 nodes: 179 passed, 0 failed, 0 skipped, 0 NOT_RUN; the passing node sets match exactly. By file: database 78, FFS 33, grades 29 and line pipe 39. The initial environment installation completed, but that first invocation exited 141 before collection; it is not counted as a test run. [tests/materials/test_database.py:L18-L26] [tests/materials/test_ffs_material_library.py:L1-L18] [tests/materials/test_grade_matrix.py:L20-L48] [tests/materials/test_line_pipe.py:L18-L53]
 
-Current revision-1 receipt: `python -m pytest tests/materials -q -rA -p no:cacheprovider` passes 212 nodes, with 0 failures/skips. Structure tests pass 54 nodes; the structure validator passes 18053 paths. Before production changes, the new audit regressions plus the existing duplicate-key test produced 23 failures and 11 passes. Three isolated in-memory mutations were detected: duplicate acceptance, missing plastic row and removed hardening (four expected assertion failures). No commercial solver or other assistant was invoked. Licensed API verification and independent review remain pending.
+Historical revision-1 receipt: 212 materials tests passed, with 0 failures/skips. That count predates the provenance revisions and is not the current result. Its audit regressions plus the existing duplicate-key test produced 23 failures and 11 passes before implementation; mutations of duplicate acceptance, plastic-row construction and hardening produced four expected assertion failures.
+
+Current revision-2 receipt: `python -m pytest tests/materials -q -p no:cacheprovider` passes 245 nodes, with 0 failures/skips. The starting materials suite passed 238 nodes. Before documentation corrections, the database suite produced 2 expected failures and 93 passes. Configured-revision tests cover matching normalized bytes, altered bytes and missing Git history. Materials plus structure tests pass 299 nodes; the structure validator passes 18,053 paths. Licensed API verification and independent review remain pending.
 
 ### Open items
 
 | Item | Scope / evidence needed | Tracking / responsible role |
 | --- | --- | --- |
+| Reachable provenance revision | Assign the matching revision after merge, re-anchor every pack citation, re-run the inventory, replace the temporary unassigned-revision assertion and ensure CI contains the assigned history. | [#2778](https://github.com/vamseeachanta/digitalmodel/issues/2778); materials maintainer |
 | U1 | UNVERIFIED: original qualification of grade values, dimensions and physical defaults; publisher sources and editions have not been checked here; existing values stay referenced rather than reproduced. [docs/domains/materials/database-gaps.html:L33-L52] | #1204 and issue pending (3); materials maintainer |
 | U2 | UNVERIFIED: correspondence of toughness coefficients and published-anchor tests to the named original publications; only the repository statements were inspected. [src/digitalmodel/materials/ffs_material_library.py:L123-L165] [tests/materials/test_ffs_material_library.py:L5-L17] | issue pending (3); engineering calculations quality manager |
 | U3 | UNVERIFIED: calibrated, independent end-to-end FFS material assessment example; V1 covers a synthetic boundary; V2–V6 are formula anchors, not calibrated end-to-end assessments. [tests/materials/test_ffs_material_library.py:L268-L296] | issue pending (3); engineering calculations quality manager |

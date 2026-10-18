@@ -82,7 +82,11 @@ class MaterialGrade:
 
     @property
     def smys_psi(self) -> float:
-        """Yield strength in psi (MPa -> psi)."""
+        """Convert the canonical SI yield minimum to psi.
+
+        For API grades, legacy_smys_psi_dict instead uses the ksi designation;
+        the two views deliberately differ (see the API registry basis note).
+        """
         return self.smys_mpa * PSI_PER_MPA
 
     @property

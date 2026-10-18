@@ -23,15 +23,24 @@ verification by the maintainer remains required before
 closure; this correction does not establish product qualification. Non-API product levels are
 null. Aliases, including the distinct API and hull Grade A names, follow
 <code>grades.get</code>.</p>
-<p>Each record retains its existing citation and the inspected source revision,
-repository-relative locator, SHA-256 and UTC retrieval date. The pinned source
-digest is checked at load time; a changed grade module requires inspection and
-refresh of the provenance constants. API edition metadata is extracted from the
+<p>Each record retains its existing citation, repository-relative locator,
+normalized SHA-256 and UTC retrieval date. Provenance is digest-only:
+<code>repository_revision</code> is null, with a reachable revision
+assigned after merge. The normalized digest is
+<code>4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90</code>.
+Normalization decodes UTF-8, replaces CRLF and lone CR with LF, and encodes UTF-8
+before hashing. The loader reports digest drift through
+<code>source_digest_matches</code>; the provenance tests require a match.
+A changed grade module requires inspection and refresh of the provenance
+constants and documentation. API edition metadata is extracted from the
 existing citation; editions not recorded there remain null. Repository
 <a href="../../../LICENSE">LICENSE</a> states <q>MIT License</q> for software.
 That licence does not establish original standards reuse rights. The source was
-inspected on 2026-10-18 UTC at revision
-<code>8036237f20d2bc62e4e8dd3178fc2036b9ed4f40</code>; no original standard was fetched.</p>
+inspected on 2026-10-18 UTC; no original standard was fetched.
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2778">#2778</a>
+tracks assigning the reachable revision and re-anchoring the knowledge-pack
+citations after merge. Any assigned revision must identify bytes matching the
+digest, and missing Git history must fail the check.</p>
 <table>
 <thead><tr><th>Gap</th><th>Evidence and required next input</th></tr></thead>
 <tbody>
