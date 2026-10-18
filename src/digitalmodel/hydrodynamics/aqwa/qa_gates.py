@@ -7,6 +7,8 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from datetime import datetime, timezone
+from typing import Any
 
 
 EXTERNAL_TOOLS = {f"AQ-{n:02}": "AQWA Workbench hydrostatics and mesh inspection" for n in range(5, 11)}
@@ -37,6 +39,9 @@ def validate_external_gate(gate, evidence, *, expected_inputs=None):
     path = Path(evidence.get("artifact", ""))
     if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != evidence.get("sha256"):
         raise ValueError(f"{gate}: external evidence digest mismatch")
+    signed_evidence = {key: value for key, value in evidence.items() if key != "signature"}
+    signed_evidence["artifact"] = path.name
+    validate_signature(gate, evidence.get("signature"), evidence["input_sha256"], signed_evidence)
     return dict(evidence, artifact=path.name, verification="manual attestation; no package solver execution")
 
 
@@ -73,17 +78,67 @@ def verify_manifest(manifest, paths):
         raise ValueError("AQ-11: input digest mismatch")
 
 
-def validate_report_gates(gates, signature=None):
+def evidence_digest(value: Any) -> str:
+    """Canonical JSON digest used by the retained attestation record."""
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
+                                     allow_nan=False).encode("utf-8")).hexdigest()
+
+
+def validate_signature(gate: str, signature: Any, manifest: Any, gates: Any) -> None:
+    """Validate a dated identity attestation and its content bindings.
+
+    This record is a manual attestation, not cryptographic identity verification.
+    The maintainers must establish the reviewer's authority separately.
+    """
+    if not isinstance(signature, dict):
+        raise ValueError(f"{gate}: identity/date/digest signature record required")
+    identity = signature.get("identity")
+    try:
+        signed_at = datetime.fromisoformat(signature.get("signed_at", "").replace("Z", "+00:00"))
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise ValueError(f"{gate}: signature date must be an ISO timestamp") from exc
+    if (not isinstance(identity, str) or not identity.strip() or identity.strip() == "maintainer"
+            or signature.get("role") != "maintainer" or signed_at.tzinfo is None
+            or signed_at > datetime.now(timezone.utc)
+            or not isinstance(manifest, dict) or not manifest
+            or signature.get("manifest_sha256") != evidence_digest(manifest)
+            or signature.get("gates_sha256") != evidence_digest(gates)):
+        raise ValueError(f"{gate}: signature identity, date or digest binding invalid")
+
+
+def validate_report_gates(
+    gates: dict[str, Any], signature: Any = None, *, manifest: Any = None,
+) -> dict[str, Any]:
     required = {f"AQ-{n:02}" for n in range(1, 11)}
-    if signature != "maintainer" or any(gates.get(key, {}).get("decision") != "PASS" for key in required):
+    if any(gates.get(key, {}).get("decision") != "PASS" for key in required):
         raise ValueError("AQ-11: applicable gate evidence and maintainer quality signature required")
+    validate_signature("AQ-11", signature, manifest, gates)
     return {"decision": "PASS", "quality_signature": signature}
 
 
-def record_gates(external=None, *, expected_inputs=None):
+LOCAL_CHECKS = {
+    "AQ-01": ("ldrg_present", "configured_cog_matches"),
+    "AQ-02": ("radiation_grid_matches", "added_mass_grid_matches"),
+    "AQ-03": ("required_inertia_present", "required_restoring_present", "resonance_solved"),
+}
+
+
+def record_gates(
+    external: Any = None, *, expected_inputs: Any = None, local: Any = None,
+) -> dict[str, Any]:
     """Called only after DAT, grid and hydrostatic coefficient validation."""
     external = external or {}
-    gates = {f"AQ-{n:02}": {"decision": "PASS", "basis": "DAT/grid/coefficient validation"} for n in (1, 2, 3)}
+    gates = {}
+    for key, required in LOCAL_CHECKS.items():
+        evidence = (local or {}).get(key)
+        if evidence is None:
+            gates[key] = {"decision": "NOT_RUN", "reason": "per-gate validation evidence required"}
+            continue
+        if (evidence.get("decision") != "PASS" or not evidence.get("evidence")
+                or any(evidence.get("checks", {}).get(check) is not True for check in required)):
+            raise ValueError(f"{key}: per-gate validation evidence invalid")
+        validate_input_binding(key, evidence, expected_inputs)
+        gates[key] = evidence
     for number in range(4, 11):
         key = f"AQ-{number:02}"
         if key not in external:
@@ -99,7 +154,8 @@ def write_report_evidence(record, data_dir):
     verify_manifest(record["input_manifest"], record["input_paths"])
     gates = dict(record["qa_gates"])
     try:
-        gates["AQ-11"] = validate_report_gates(gates, record.get("quality_signature"))
+        gates["AQ-11"] = validate_report_gates(
+            gates, record.get("quality_signature"), manifest=record["input_manifest"])
     except ValueError as exc:
         gates["AQ-11"] = {"decision": "NOT_RUN", "reason": str(exc)}
     payload = {"criteria_revision": "AQG-r0", "inputs": record["input_manifest"],

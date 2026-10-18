@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import os
 import subprocess
@@ -73,9 +74,18 @@ class AqwaUtilities:
         """Return captured exit/MES evidence; execution requires explicit opt-in."""
         if cfg.get("execution", {}).get("allow_solver") is not True:
             raise ValueError("Native execution is disabled; provide qualified external evidence")
+        if process == "launch-only":
+            return subprocess.Popen(
+                [self.get_aqwa_exe(cfg), "/nowind", str(input_file)],
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
         if process != "subprocess":
             raise ValueError("Detached execution cannot establish completion evidence")
-        mes_path = Path(input_file).with_suffix(".MES")
+        source = Path(input_file)
+        source_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        lis_path = source.with_suffix(".LIS")
+        lis_before = lis_path.stat().st_mtime_ns if lis_path.exists() else None
+        mes_path = source.with_suffix(".MES")
         before = mes_path.stat().st_mtime_ns if mes_path.exists() else None
         result = subprocess.run(
             [self.get_aqwa_exe(cfg), "/nowind", str(input_file)],
@@ -93,6 +103,22 @@ class AqwaUtilities:
                 status = "EMPTY"
             if before == mes_path.stat().st_mtime_ns:
                 status = "STALE"
-        return {"returncode": result.returncode, "stdout": result.stdout,
+        if hashlib.sha256(source.read_bytes()).hexdigest() != source_digest:
+            raise ValueError("AQ-04: input digest changed during native execution")
+        input_sha256 = {"dat": source_digest}
+        body_ids = set()
+        if lis_path.exists() and lis_path.stat().st_mtime_ns != lis_before:
+            content = lis_path.read_text(encoding="utf-8", errors="strict")
+            for line in content.splitlines():
+                match = re.search(r"HYDRODYNAMICPARAMETERSFORSTRUCTURE(\d+)",
+                                  re.sub(r"\s+", "", line.upper()))
+                if match:
+                    body_ids.add(int(match[1]))
+            input_sha256["lis"] = hashlib.sha256(lis_path.read_bytes()).hexdigest()
+        body_count = len(body_ids) if body_ids and body_ids == set(range(1, max(body_ids)+1)) else None
+        return {"body_count": body_count,
+                "expected_body_count": cfg.get("execution", {}).get("expected_body_count"),
+                "input_sha256": input_sha256,
+                "returncode": result.returncode, "stdout": result.stdout,
                 "stderr": result.stderr, "mes_status": status,
                 "errors": errors, "warnings": warnings}

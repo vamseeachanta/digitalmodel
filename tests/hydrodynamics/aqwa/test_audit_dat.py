@@ -62,3 +62,41 @@ def test_roll_and_pitch_arms_include_vertical_offset():
         [{"centroid": (3, 4, 12), "cd_normal": 1., "area": 10}], inspection)
     assert result["roll"][0]["lever_arm"] == pytest.approx(np.sqrt(160))
     assert result["pitch"][0]["lever_arm"] == pytest.approx(np.sqrt(153))
+
+
+def test_deck6_keeps_structure_grids_separate():
+    parser = AqwaDATFiles()
+    lines = ["FDR1", "      FREQ    1    2       0.2       0.4",
+             "      DIRN    1    1     -90.0", "END", "FDR2",
+             "      FREQ    1    1       0.7", "      DIRN    1    1      45.0", "END"]
+    assert parser._parse_deck6(lines).frequencies == [0.2, 0.4]
+    assert parser._parse_deck6(lines, structure=2).frequencies == [0.7]
+    assert parser._parse_deck6(lines, structure=2).directions_deg == [45.0]
+    with pytest.raises(ValueError, match="structure"):
+        parser._parse_deck6(lines, structure=3)
+
+
+def test_committed_deck6_examples_and_validators():
+    import re
+    import subprocess
+
+    parser = AqwaDATFiles()
+    paths = subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True).splitlines()
+    count = 0
+    for relative in paths:
+        path = ROOT / relative
+        if path.suffix.lower() != ".dat" or "aqwa" not in relative:
+            continue
+        if not re.search(r"DECK\s+6\b", path.read_text(errors="replace"), re.I):
+            continue
+        count += 1
+        decks = parser._read_decks_from_file(str(path))
+        grid = parser._parse_deck6(decks[6])
+        assert all(value > 0 for value in grid.frequencies)
+        # These validators must not fail on unrelated deck-6 syntax.
+        for validate in (parser.validate_ldrg_option, parser.validate_cog_element):
+            try:
+                validate(str(path))
+            except ValueError as exc:
+                assert "LDRG" in str(exc) or "CoG" in str(exc)
+    assert count == 50

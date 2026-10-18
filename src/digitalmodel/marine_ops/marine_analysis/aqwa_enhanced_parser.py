@@ -43,10 +43,26 @@ class AQWAEnhancedParser:
         # Each value is approximately 9 characters wide
         self.value_width = 9
     
-    def parse_lis_file(self, file_path: str) -> Dict[str, Any]:
+    def parse_lis_file(self, file_path: str, structure: Optional[int] = None) -> Dict[str, Any]:
         """Parse AQWA .lis file and extract RAO data with data interpretation."""
         content = self._read_file_content(file_path)
         
+        # Structure headings repeat on listing pages; retain only the selected body.
+        headings_pattern = re.compile(
+            r"(?m)^.*H Y D R O D Y N A M I C\s+P A R A M E T E R S\s+F O R\s+S T R U C T U R E\s+(\d+).*$")
+        markers = list(headings_pattern.finditer(content))
+        structures = {int(marker[1]) for marker in markers}
+        if structure is None:
+            if len(structures) > 1:
+                raise AQWAFileError("Multiple RAO structures; select a structure explicitly")
+            structure = next(iter(structures), 1)
+        if structure not in (structures or {1}):
+            raise AQWAFileError("Requested RAO structure is absent")
+        if markers:
+            content = "\n".join(
+                content[marker.start():markers[i+1].start() if i+1 < len(markers) else len(content)]
+                for i, marker in enumerate(markers) if int(marker[1]) == structure)
+
         # Find all displacement RAO sections
         sections = self._find_displacement_rao_sections(content)
         if not sections:
@@ -104,6 +120,7 @@ class AQWAEnhancedParser:
             'frequencies': np.array(frequencies),
             'headings': np.array(headings),
             'raos': raos,
+            'structure': structure,
             'units_rows': units_rows
         }
 

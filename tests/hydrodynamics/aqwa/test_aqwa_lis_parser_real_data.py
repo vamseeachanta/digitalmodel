@@ -311,3 +311,42 @@ class TestAqwaLISFilesEdgeCases:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+def configured_table():
+    return {"search_cfg": {
+        "start": {"key_words": ["R.A.O.S-VARIATION WITH WAVE DIRECTION"], "occurrence": 1},
+        "end": {"key_words": ["VEL R.A.O.S-VARIATION WITH WAVE DIRECTION"], "occurrence": 1},
+        "data_extraction": {
+            "key_words": ["(SECS)", "(RAD/S)", "(DEGREES)"],
+            "header": {"columns": ["period", "frequency", "direction"] +
+                       [item for dof in ("surge", "sway", "heave", "roll", "pitch", "yaw")
+                        for item in (dof, dof + "_phase")]},
+            "data": {"transform": {"scale": 1, "shift": 3}},
+        }}}
+
+
+def test_configured_search_extracts_rows_and_honours_configuration():
+    cfg = {"file_management": {"input_files": {"LIS": [str(TEST_LIS_FILE)]}}}
+    parser = AqwaLISFiles()
+    table, _ = parser.get_data(cfg, configured_table())
+    assert len(table) == 72
+    assert table.iloc[0]["frequency"] == pytest.approx(0.1)
+    assert table.iloc[0]["heave"] == pytest.approx(0.9973)
+    assert table.iloc[1]["frequency"] == pytest.approx(0.1)
+    assert table.iloc[1]["direction"] == -135.0
+    changed = configured_table()
+    changed["search_cfg"]["data_extraction"]["key_words"] = ["absent table"]
+    with pytest.raises(ValueError, match="no rows"):
+        parser.get_data(cfg, changed)
+
+
+def test_configured_search_rejects_empty_extraction(tmp_path):
+    source = tmp_path / "input.lis"
+    source.write_text("START\nHEADER\nEND\n")
+    table = configured_table()
+    table["search_cfg"]["start"]["key_words"] = ["START"]
+    table["search_cfg"]["end"]["key_words"] = ["END"]
+    cfg = {"file_management": {"input_files": {"LIS": [str(source)]}}}
+    with pytest.raises(ValueError, match="no rows"):
+        AqwaLISFiles().get_data(cfg, table)

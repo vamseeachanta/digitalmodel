@@ -82,3 +82,23 @@ def test_lis_pages_and_units():
     assert result["raos"]["heave"]["amplitude"][0, 0] == pytest.approx(0.9973)
     assert result["raos"]["roll"]["unit"] is None
     assert "(RAD/S)" in result["units_rows"][0]
+
+
+def test_multibody_lis_requires_and_honours_structure_selector():
+    from digitalmodel.marine_ops.marine_analysis.aqwa_enhanced_parser import AQWAFileError
+    root = Path(__file__).resolve().parents[3]
+    fixtures = sorted((root / "docs/domains/orcaflex/aqwa/to_orcaflex").rglob("*.LIS"))
+    assert len(fixtures) == 2
+    for path in fixtures:
+        parser = AQWAEnhancedParser()
+        with pytest.raises(AQWAFileError, match="structure"):
+            parser.parse_lis_file(str(path))
+        first = parser.parse_lis_file(str(path), structure=1)
+        second = parser.parse_lis_file(str(path), structure=2)
+        for sid, payload in ((1, first), (2, second)):
+            assert payload["structure"] == sid
+            assert payload["headings"].tolist() == list(range(-180, 181, 15))
+            assert all(np.isfinite(entry["amplitude"]).all() for entry in payload["raos"].values())
+        assert not np.array_equal(first["raos"]["heave"]["amplitude"], second["raos"]["heave"]["amplitude"])
+        with pytest.raises(AQWAFileError, match="structure"):
+            parser.parse_lis_file(str(path), structure=3)

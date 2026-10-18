@@ -280,15 +280,37 @@ class ViscousDampingDetermination(AqwaRAOs):
                 use_frequency_dependent=True,
             )
 
+            bindings = {key: value["sha256"] for key, value in source_manifest.items()}
+            local_gates = {
+                "AQ-01": {"decision": "PASS", "input_sha256": bindings,
+                          "checks": {"ldrg_present": True, "configured_cog_matches": True},
+                          "evidence": {"ldrg": inspection.options["LDRG"],
+                                       "expected_cog": expected_cog,
+                                       "observed_cog": inspection.deck_one.cog_element}},
+                "AQ-02": {"decision": "PASS", "input_sha256": bindings,
+                          "checks": {"radiation_grid_matches": True, "added_mass_grid_matches": True},
+                          "evidence": {"rao_rad_s": frequencies.tolist(),
+                                       "radiation_rad_s": radiation_section["frequencies"].tolist(),
+                                       "added_mass_rad_s": added_mass_section["frequencies"].tolist()}},
+                "AQ-03": {"decision": "PASS", "input_sha256": bindings,
+                          "checks": {"required_inertia_present": True,
+                                     "required_restoring_present": True, "resonance_solved": True},
+                          "evidence": {"inertia": inertia, "restoring": restoring,
+                                       "natural_frequency_rad_s": {
+                                           dof: value["natural_frequency_rad_s"]
+                                           for dof, value in ratios_inf.items()}}},
+            }
+
             record_result = {
                 "record_id": record["id"],
                 "input_paths": source_paths,
                 "input_manifest": source_manifest,
                 "qa_gates": record_gates(
                     config.get("qa_gates", {}).get(record["id"]),
-                    expected_inputs={key: value["sha256"] for key, value in source_manifest.items()},
+                    expected_inputs=bindings, local=local_gates,
                 ),
-                "quality_signature": config.get("quality_signature"),
+                "quality_signature": config.get("quality_signatures", {}).get(
+                    record["id"], config.get("quality_signature")),
                 "vessel": record.get("vessel"),
                 "draft": record.get("draft"),
                 "frequencies": frequencies,

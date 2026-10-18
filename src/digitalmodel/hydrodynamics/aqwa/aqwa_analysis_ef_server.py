@@ -54,6 +54,8 @@ class AqwaEFServer:
         #  from the Aqwa program. It will then use the first function UF1 for that particular Aqwa run.
         #  The process will then repeat for two more Aqwa runs, using UF2 and UF3.
         #
+        if au is None or fm is None:
+            raise RuntimeError("External-force dependencies unavailable")
         cfg = fm.router(cfg)
         self.cfg = cfg
 
@@ -78,19 +80,15 @@ class AqwaEFServer:
             closing_function = getattr(self, closing_function)
 
         for run_idx in range(0, number_of_client_runs):
-            try:
-                print("Now running user function {0}".format(run_function_name))
-                InputFileName = self.cfg["file_management"]["input_files"]["DAT"][
-                    run_idx
-                ]
-                au.run_aqwa_analysis_as_subprocess(
-                    cfg, InputFileName, process="detached"
-                )
-                self.define_result_df(cfg)
-                Server.Run(run_function, closing_function)
-            except Exception as E:  # If an error occurred, we print it but continue
-                print("Caught error : ", E)
-                print("Skipping to next case")
+            print("Now running user function {0}".format(run_function_name))
+            InputFileName = self.cfg["file_management"]["input_files"]["DAT"][run_idx]
+            process = au.run_aqwa_analysis_as_subprocess(
+                cfg, InputFileName, process="launch-only"
+            )
+            self.define_result_df(cfg)
+            Server.Run(run_function, closing_function)
+            if process.wait() != 0:
+                raise RuntimeError("External-force solver exited unsuccessfully")
 
             print("Now saving result for: {0}".format(InputFileName))
             self.save_result_df(cfg, InputFileName)

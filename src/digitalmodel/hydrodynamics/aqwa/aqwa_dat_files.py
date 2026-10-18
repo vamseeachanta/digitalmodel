@@ -4,7 +4,7 @@ import logging
 import math
 import os
 import re
-from .dat_frequency import parse_frequency_records
+from .dat_frequency import parse_frequency_records, parse_frequency_grids
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -76,6 +76,7 @@ class DATInspectionResult:
     mass: float = 0.0
     inertia: Dict[str, float] = field(default_factory=dict)
     restoring: Dict[str, float] = field(default_factory=dict)
+    frequency_grids: Dict[int, DATFrequencyGrid] = field(default_factory=dict)
 
 
 class AqwaDATFiles:
@@ -537,6 +538,10 @@ class AqwaDATFiles:
             decks=decks,
             options=options,
             frequency_grid=frequency_grid,
+            frequency_grids={key: DATFrequencyGrid(
+                frequencies=values[0], periods=[2*math.pi / w for w in values[0]],
+                directions_deg=values[1])
+                for key, values in parse_frequency_grids(decks.get(6, [])).items()},
             drag_matrix=drag_matrix,
             deck_one=deck_one,
             mass=total_mass,
@@ -601,8 +606,8 @@ class AqwaDATFiles:
                         options[token] = True
         return options
 
-    def _parse_deck6(self, deck_lines: Iterable[str]) -> DATFrequencyGrid:
-        frequencies, directions = parse_frequency_records(deck_lines)
+    def _parse_deck6(self, deck_lines: Iterable[str], structure: int = 1) -> DATFrequencyGrid:
+        frequencies, directions = parse_frequency_records(deck_lines, structure=structure)
         return DATFrequencyGrid(frequencies=frequencies,
                                 periods=[2*math.pi / w for w in frequencies],
                                 directions_deg=directions)
