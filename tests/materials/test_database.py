@@ -17,7 +17,8 @@ def database():
 
 def test_all_reconciled_grades_are_loaded_once_per_stored_level(database):
     expected = sum(
-        2 if g.standard == "API 5L" and g.smts_psl1_mpa is not None else 1
+        (int(g.smts_psl1_mpa is not None) + int(g.smts_mpa is not None))
+        if g.standard == "API 5L" else 1
         for g in grades.all_grades()
     )
     assert len(database) == expected
@@ -28,12 +29,14 @@ def test_all_reconciled_grades_are_loaded_once_per_stored_level(database):
 
 # Names and product levels are pinned to test_grade_matrix.py's API cases.
 @pytest.mark.parametrize(
-    "name", ["A25", "X42", "X52", "X65", "X70", "X80", "X90", "X100", "X120"]
+    "name", ["A25", "A", "X42", "X52", "X65", "X70", "X80", "X90", "X100", "X120"]
 )
 @pytest.mark.parametrize("psl", ["PSL1", "PSL2", "psl1", "unknown"])
 def test_psl_selection_matches_existing_reconciliation(database, name, psl):
     g = grades.get(name)
-    if psl == "unknown" or (psl.upper() == "PSL1" and g.smts_psl1_mpa is None):
+    if (psl == "unknown"
+            or (psl.upper() == "PSL1" and g.smts_psl1_mpa is None)
+            or (psl.upper() == "PSL2" and g.smts_mpa is None)):
         for query in (database.lookup, grades.smts_mpa):
             with pytest.raises(ValueError, match="PSL"):
                 query(name, psl=psl)
@@ -48,8 +51,9 @@ def test_psl_selection_matches_existing_reconciliation(database, name, psl):
     "name", ["L360", "l485", "x52", "ah36", "Grade A", "A", "316L", "2205"]
 )
 def test_aliases_and_distinct_grade_a_are_preserved(database, name):
-    assert database.lookup(name).designation == grades.get(name).name
-    assert database.lookup("A").key != database.lookup("Grade A").key
+    level = "PSL1" if grades.get(name).name == "A" else "PSL2"
+    assert database.lookup(name, psl=level).designation == grades.get(name).name
+    assert database.lookup("A", psl="PSL1").key != database.lookup("Grade A").key
 
 
 def test_values_and_citations_equal_the_source_records(database):
@@ -61,7 +65,8 @@ def test_values_and_citations_equal_the_source_records(database):
         assert record.strengths.smts_mpa == grades.smts_mpa(
             source.name, psl=record.product_level or "PSL2"
         )
-        assert record.provenance.citation == source.source
+        citation = source.source_psl1 if record.product_level == "PSL1" else source.source
+        assert record.provenance.citation == citation
         assert record.notes == source.notes
 
 

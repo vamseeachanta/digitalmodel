@@ -417,7 +417,7 @@ class TrueStressStrainCurve:
     sigma_u_mpa: float
     n: float
     temperature_degc: float = 20.0
-    ultimate_true_strain: Optional[float] = None
+    ultimate_true_strain: float
     sigma_u_is_true: bool = False
     name: str = ""
 
@@ -640,6 +640,7 @@ def lookup_grade(
 
     Raises:
         KeyError: unknown grade.
+        ValueError: API 5L grade has no PSL2 strength; use the PSL1 grade query.
     """
     g = _grades.get(name)
     return FFSMaterialInputs(
@@ -647,7 +648,7 @@ def lookup_grade(
         standard=g.standard,
         E_mpa=g.E_mpa,
         sigma_y_mpa=g.smys_mpa,
-        sigma_u_mpa=g.smts_mpa,
+        sigma_u_mpa=_grades.smts_mpa(g.name),
         nu=g.nu,
         rho_kg_m3=g.rho_kg_m3,
         material_class=g.material_class,

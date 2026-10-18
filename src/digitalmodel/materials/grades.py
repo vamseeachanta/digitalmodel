@@ -45,7 +45,8 @@ class MaterialGrade:
         standard: Governing standard (``"API 5L"`` / ``"IACS UR W11"`` /
             ``"EN 10025-2"``).
         smys_mpa: Specified minimum yield strength (MPa).
-        smts_mpa: Specified minimum tensile strength (MPa); PSL2 for API 5L.
+        smts_mpa: Specified minimum tensile strength (MPa); PSL2 for API 5L,
+            or ``None`` when that product level is absent.
         E_mpa: Young's modulus (MPa).
         nu: Poisson's ratio.
         rho_kg_m3: Density (kg/m^3).
@@ -55,7 +56,8 @@ class MaterialGrade:
             (``A`` 20C / ``B`` 0C / ``D`` -20C / ``E`` -40C / ``F`` -60C).
         smts_psl1_mpa: API 5L Table 6 SI minimum tensile strength (MPa);
             ``None`` for non-API or PSL2-only grades.
-        source: Citation for the strength values.
+        source: Citation for the canonical strength (PSL1 for PSL1-only grades).
+        source_psl1: Citation for API 5L PSL1 strengths, empty if absent.
         notes: Free-form reconciliation notes.
         material_class: Metallurgical class used by the FFS material library
             to gate toughness correlations: ``"ferritic"`` (carbon, C-Mn and
@@ -65,7 +67,7 @@ class MaterialGrade:
     name: str
     standard: str
     smys_mpa: float
-    smts_mpa: float
+    smts_mpa: Optional[float]
     E_mpa: float = _E_LINE_PIPE
     nu: float = _NU
     rho_kg_m3: float = _RHO
@@ -76,6 +78,7 @@ class MaterialGrade:
     source: str = ""
     notes: str = ""
     material_class: str = "ferritic"
+    source_psl1: str = ""
 
     @property
     def smys_psi(self) -> float:
@@ -85,15 +88,16 @@ class MaterialGrade:
     @property
     def smts_psi(self) -> float:
         """Tensile strength in psi (MPa -> psi)."""
+        if self.smts_mpa is None:
+            raise ValueError(f"{self.name}: PSL2 is not listed in API 5L 46th ed. Table 7")
         return self.smts_mpa * PSI_PER_MPA
 
 
 # ---------------------------------------------------------------------------
 # Registry construction
 # ---------------------------------------------------------------------------
-_API_5L_SRC = (
-    "API 5L (46th ed.), 9.3.1 Table 6 (PSL1) / 9.3.2 Table 7 (PSL2), SI"
-)
+_API_5L_PSL1_SRC = "API 5L (46th ed.), 9.3.1 Table 6 (PSL1), SI"
+_API_5L_PSL2_SRC = "API 5L (46th ed.), 9.3.2 Table 7 (PSL2), SI"
 _IACS_SRC = "IACS UR W11, Normal & Higher-Strength Hull Structural Steels"
 _EN_SRC = "EN 10025-2, structural steel (t <= 16 mm)"
 
@@ -102,7 +106,9 @@ def _api5l(name, ksi, smys, smts2, smts1, iso, *, note=""):
     return MaterialGrade(
         name=name, standard="API 5L", smys_mpa=smys, smts_mpa=smts2,
         E_mpa=_E_LINE_PIPE, designation=iso, grade_ksi=ksi,
-        smts_psl1_mpa=smts1, source=_API_5L_SRC, notes=note)
+        smts_psl1_mpa=smts1,
+        source=_API_5L_PSL2_SRC if smts2 is not None else _API_5L_PSL1_SRC,
+        source_psl1=_API_5L_PSL1_SRC if smts1 is not None else "", notes=note)
 
 
 def _hull(name, smys, smts, tough, *, note=""):
@@ -140,9 +146,10 @@ def _duplex(name, ksi_y, smys, smts, uns, *, note=""):
 # US-customary (ksi) SMYS values differ by ~1-2% on the low grades; the grade
 # number (grade_ksi) preserves that designation for psi back-compat.
 _API_5L = [
-    _api5l("A25", 25, 175.0, 310.0, 310.0, "L175",
+    _api5l("A25", 25, 175.0, None, 310.0, "L175",
            note="PSL1 only; D <= 141.3 mm. US 25 ksi = 172 MPa."),
-    _api5l("A", 30, 210.0, 335.0, 335.0, "L210", note="US 30 ksi = 207 MPa."),
+    _api5l("A", 30, 210.0, None, 335.0, "L210",
+           note="PSL1 only. US 30 ksi = 207 MPa."),
     _api5l("B", 35, 245.0, 415.0, 415.0, "L245", note="US 35 ksi = 241 MPa."),
     _api5l("X42", 42, 290.0, 415.0, 415.0, "L290"),
     _api5l("X46", 46, 320.0, 435.0, 435.0, "L320"),
@@ -272,7 +279,7 @@ def smts_mpa(name: str, *, psl: str = "PSL2") -> float:
     """Specified minimum tensile strength (MPa).
 
     API 5L 46th ed., 9.3.1/Table 6 supplies PSL1; 9.3.2/Table 7 supplies
-    PSL2. Reject unknown levels and absent PSL1 entries rather than substituting
+    PSL2. Reject unknown levels and absent entries rather than substituting
     another product level. Non-API grades retain their canonical strength.
     """
     g = get(name)
@@ -283,6 +290,8 @@ def smts_mpa(name: str, *, psl: str = "PSL2") -> float:
             if g.smts_psl1_mpa is None:
                 raise ValueError(f"{g.name}: PSL1 is not listed in API 5L 46th ed. Table 6")
             return g.smts_psl1_mpa
+    if g.smts_mpa is None:
+        raise ValueError(f"{g.name}: PSL2 is not listed in API 5L 46th ed. Table 7")
     return g.smts_mpa
 
 

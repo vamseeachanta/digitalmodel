@@ -5,6 +5,12 @@ The matrix is the single source of truth that the line-pipe (#1087), casing
 (#1090), rod (#1091) and structural modules consume, replacing 8+ scattered
 strength dicts that disagreed on values and units.
 
+## Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 1 | 2026-10-18 | Added the #2726 supersession note to distinguish historical conversions from the current product-level basis. |
+
 ## Scope
 
 | Standard | Grades | Count |
@@ -16,6 +22,13 @@ strength dicts that disagreed on values and units.
 Stored in **MPa** (SI); psi properties and back-compat adapters provided.
 
 ## Reconciliation of the prior disagreement
+
+**Superseded by #2726:** the reconciliation and golden-value table below
+record the historical interpretation. Converted legacy tensile strengths are
+not the current API 5L 46th-edition SI minima. Current PSL1 entries use
+9.3.1 Table 6; X80 has no PSL1 entry. A25 and A have no PSL2 entry under
+9.3.2 Table 7. Consult `materials.grades` for supported product levels;
+licensed-text verification by the maintainer remains required before #2726 closes.
 
 The scattered tables disagreed on X52 in two distinct ways, both now resolved
 and documented per record:

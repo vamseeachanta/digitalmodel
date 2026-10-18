@@ -231,38 +231,39 @@ def test_toughness_tagged_quantities_are_converted():
 # True stress-strain curve
 # ---------------------------------------------------------------------------
 @pytest.fixture
-def x65_curve() -> TrueStressStrainCurve:
+def synthetic_curve() -> TrueStressStrainCurve:
+    """Prescribed strain for interpolation tests; no qualified grade property."""
     return TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=450.0, sigma_u_mpa=535.0,
                                  n=0.12, ultimate_true_strain=0.12,
                                  temperature_degc=20.0)
 
 
-def test_curve_passes_through_yield(x65_curve):
+def test_curve_passes_through_yield(synthetic_curve):
     eps_y = 450.0 / 207_000.0
-    assert math.isclose(x65_curve.yield_strain, eps_y, rel_tol=1e-12)
-    assert math.isclose(x65_curve.stress(eps_y), 450.0, rel_tol=1e-9)
+    assert math.isclose(synthetic_curve.yield_strain, eps_y, rel_tol=1e-12)
+    assert math.isclose(synthetic_curve.stress(eps_y), 450.0, rel_tol=1e-9)
     # Elastic below yield.
-    assert math.isclose(x65_curve.stress(0.5 * eps_y), 225.0, rel_tol=1e-9)
-    assert x65_curve.stress(0.0) == 0.0
+    assert math.isclose(synthetic_curve.stress(0.5 * eps_y), 225.0, rel_tol=1e-9)
+    assert synthetic_curve.stress(0.0) == 0.0
 
 
-def test_curve_reaches_true_ultimate_and_is_flat_beyond(x65_curve):
+def test_curve_reaches_true_ultimate_and_is_flat_beyond(synthetic_curve):
     """Prescribed synthetic strain: true ultimate = sigma_u exp(eps_u)."""
     eps_u = 0.12
     sigma_u_true = 535.0 * math.exp(0.12)
-    assert math.isclose(x65_curve.ultimate_true_strain, eps_u, rel_tol=1e-12)
-    assert math.isclose(x65_curve.sigma_u_true_mpa, sigma_u_true, rel_tol=1e-9)
-    assert math.isclose(x65_curve.stress(eps_u), sigma_u_true, rel_tol=1e-9)
+    assert math.isclose(synthetic_curve.ultimate_true_strain, eps_u, rel_tol=1e-12)
+    assert math.isclose(synthetic_curve.sigma_u_true_mpa, sigma_u_true, rel_tol=1e-9)
+    assert math.isclose(synthetic_curve.stress(eps_u), sigma_u_true, rel_tol=1e-9)
     for eps in (0.13, 0.2, 0.5, 1.0):
-        assert math.isclose(x65_curve.stress(eps), sigma_u_true, rel_tol=1e-12)
+        assert math.isclose(synthetic_curve.stress(eps), sigma_u_true, rel_tol=1e-12)
 
 
-def test_curve_hardening_branch_is_monotonic_and_bounded(x65_curve):
-    eps = [x65_curve.yield_strain + k * (0.12 - x65_curve.yield_strain) / 50
+def test_curve_hardening_branch_is_monotonic_and_bounded(synthetic_curve):
+    eps = [synthetic_curve.yield_strain + k * (0.12 - synthetic_curve.yield_strain) / 50
            for k in range(51)]
-    s = [x65_curve.stress(e) for e in eps]
+    s = [synthetic_curve.stress(e) for e in eps]
     assert all(b >= a for a, b in zip(s, s[1:]))
-    assert all(450.0 - 1e-9 <= v <= x65_curve.sigma_u_true_mpa + 1e-9 for v in s)
+    assert all(450.0 - 1e-9 <= v <= synthetic_curve.sigma_u_true_mpa + 1e-9 for v in s)
 
 
 def test_curve_explicit_ultimate_strain_and_true_ultimate_input():
@@ -273,8 +274,8 @@ def test_curve_explicit_ultimate_strain_and_true_ultimate_input():
     assert math.isclose(c.stress(0.3), 600.0, rel_tol=1e-12)
 
 
-def test_curve_table_for_solver_decks(x65_curve):
-    tbl = x65_curve.table(n_points=25)
+def test_curve_table_for_solver_decks(synthetic_curve):
+    tbl = synthetic_curve.table(n_points=25)
     assert len(tbl) == 25
     strains = [p[0] for p in tbl]
     stresses = [p[1] for p in tbl]
@@ -282,13 +283,13 @@ def test_curve_table_for_solver_decks(x65_curve):
     assert all(b > a for a, b in zip(strains, strains[1:]))
     assert all(b >= a for a, b in zip(stresses, stresses[1:]))
     # Yield and ultimate points are present exactly.
-    assert any(math.isclose(e, x65_curve.yield_strain, rel_tol=1e-12) for e in strains)
-    assert any(math.isclose(e, x65_curve.ultimate_true_strain, rel_tol=1e-12)
+    assert any(math.isclose(e, synthetic_curve.yield_strain, rel_tol=1e-12) for e in strains)
+    assert any(math.isclose(e, synthetic_curve.ultimate_true_strain, rel_tol=1e-12)
                for e in strains)
-    assert math.isclose(stresses[-1], x65_curve.sigma_u_true_mpa, rel_tol=1e-12)
-    assert strains[-1] > x65_curve.ultimate_true_strain  # plateau point included
+    assert math.isclose(stresses[-1], synthetic_curve.sigma_u_true_mpa, rel_tol=1e-12)
+    assert strains[-1] > synthetic_curve.ultimate_true_strain  # plateau point included
 
-    plastic = x65_curve.plastic_table(n_points=10)
+    plastic = synthetic_curve.plastic_table(n_points=10)
     assert len(plastic) == 10
     assert plastic[0][0] == pytest.approx(450.0)
     assert plastic[0][1] == 0.0
@@ -322,10 +323,10 @@ def test_curve_untagged_positional_rejected_and_units_converted():
         TrueStressStrainCurve(207_000.0, 450.0, 535.0, 0.12)  # type: ignore[misc]
     with pytest.raises(ValueError, match="sigma_y_mpa"):
         TrueStressStrainCurve(E_mpa=207_000.0, sigma_y_mpa=Q_(450.0, "mm"),
-                              sigma_u_mpa=535.0, n=0.12)
+                              sigma_u_mpa=535.0, n=0.12, ultimate_true_strain=0.12)
     with pytest.raises(TypeError, match="E_mpa"):
         TrueStressStrainCurve(E_mpa="207 GPa", sigma_y_mpa=450.0,  # type: ignore[arg-type]
-                              sigma_u_mpa=535.0, n=0.12)
+                              sigma_u_mpa=535.0, n=0.12, ultimate_true_strain=0.12)
     c = TrueStressStrainCurve(E_mpa=Q_(207.0, "GPa"), sigma_y_mpa=Q_(450.0, "MPa"),
                               sigma_u_mpa=Q_(535e6, "Pa"), n=0.12,
                               ultimate_true_strain=Q_(0.12, "dimensionless"),

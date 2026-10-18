@@ -21,7 +21,7 @@ from digitalmodel.materials import (
 @pytest.mark.parametrize(
     "name, smys, smts_psl2, smts_psl1",
     [
-        ("A25", 175.0, 310.0, 310.0),
+        ("A25", 175.0, None, 310.0),
         ("X42", 290.0, 415.0, 415.0),
         ("X52", 360.0, 460.0, 460.0),
         ("X65", 450.0, 535.0, 535.0),
@@ -42,7 +42,11 @@ def test_api_5l_published_values(name, smys, smts_psl2, smts_psl1):
     # A PSL1 request requires a Table 6 entry.
     if smts_psl1 is not None:
         assert smts_mpa(name, psl="PSL1") == smts_psl1
-    assert smts_mpa(name, psl="PSL2") == smts_psl2
+    if smts_psl2 is None:
+        with pytest.raises(ValueError, match="PSL2"):
+            smts_mpa(name, psl="PSL2")
+    else:
+        assert smts_mpa(name, psl="PSL2") == smts_psl2
 
 
 # --- Golden: IACS UR W11 hull steel -------------------------------------------

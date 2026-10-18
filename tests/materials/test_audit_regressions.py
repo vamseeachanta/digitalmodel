@@ -36,6 +36,40 @@ def test_psl1_unlisted_grades_raise(name):
             query(name, psl="PSL1")
 
 
+@pytest.mark.parametrize("name", ["A25", "A", "L175", "l210"])
+def test_psl1_only_grades_reject_psl2(name):
+    """A25/L175 and A/L210 have no Table 7 product level."""
+    grade = grades.get(name)
+    database = load_database()
+    assert grade.smts_mpa is None
+    assert "Table 7" not in grade.source
+    assert database.lookup(name, psl="PSL1").strengths.smts_mpa == grade.smts_psl1_mpa
+    assert {r.product_level for r in database.values()
+            if r.designation == grade.name} == {"PSL1"}
+    for query in (grades.smts_mpa, grades.smts_psi, grades.smts_pa,
+                  grades.smts_kn_m2, database.lookup):
+        with pytest.raises(ValueError, match="PSL2"):
+            query(name, psl="psl2")
+        with pytest.raises(ValueError, match="PSL2"):
+            query(name)
+    with pytest.raises(ValueError, match="PSL2"):
+        _ = grade.smts_psi
+    with pytest.raises(ValueError, match="PSL2"):
+        lookup_grade(name)
+
+
+@pytest.mark.parametrize("name", [
+    "B", "X42", "X46", "X52", "X56", "X60", "X65", "X70",
+    "X80", "X90", "X100", "X120",
+])
+def test_psl2_provenance_excludes_psl1_table(name):
+    record = load_database().lookup(name, psl="PSL2")
+    assert "9.3.2" in record.provenance.citation
+    assert "Table 7" in record.provenance.citation
+    assert "9.3.1" not in record.provenance.citation
+    assert "Table 6" not in record.provenance.citation
+
+
 @pytest.mark.parametrize("psl", ["unknown", "PSL3", ""])
 def test_unknown_api_product_level_raises(psl):
     for query in (grades.smts_mpa, load_database().lookup):
@@ -65,13 +99,15 @@ def test_exact_grade_aliases_remain_available(name, canonical):
     assert grades.get(name).name == canonical
 
 
-@pytest.mark.parametrize("extra", [{}, {"ultimate_true_strain": None}])
-def test_curve_requires_explicit_uniform_strain(extra):
+@pytest.mark.parametrize("extra,error", [
+    ({}, TypeError), ({"ultimate_true_strain": None}, ValueError),
+])
+def test_curve_requires_explicit_uniform_strain(extra, error):
     """The offset law does not imply eps_u=n; issue 2731 requires input."""
-    with pytest.raises(ValueError, match="ultimate_true_strain.*required"):
+    with pytest.raises(error, match="ultimate_true_strain"):
         TrueStressStrainCurve(E_mpa=207000, sigma_y_mpa=450,
                              sigma_u_mpa=535, n=0.12, **extra)
-    with pytest.raises(ValueError, match="ultimate_true_strain.*required"):
+    with pytest.raises(error, match="ultimate_true_strain"):
         lookup_grade("X65").true_stress_strain_curve(n=0.12, **extra)
 
 
