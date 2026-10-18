@@ -341,6 +341,55 @@ def test_committed_study_evidence_and_report_are_reproducible():
     page = verifier.render_retained(REPO, manifest)
     assert "indicative" in page.lower()
     assert "No numerical experimental comparison is emitted" in page
+    assert (
+        "<tr><td>3</td><td>2026-10-18</td><td>Retitled as indicative; "
+        "withdrawn unopened-fixture comparison and component offsets; "
+        "added committed-evidence checker.</td></tr>"
+    ) in page
+
+
+def test_gravity_conventions_are_disclosed_from_their_sources():
+    builder = load_builder()
+    manifest = json.loads((REPO / "data/cfd/calm_water_study/manifest.json").read_text())
+    basis = manifest["model_basis"]
+    ledger = builder.report_design_data(manifest)
+    assert f"Case g = {basis['case_gravity_m_per_s2']:g} m/s²" in ledger
+    assert f"executed Fr = {basis['executed_froude']:.5f}" in ledger
+    source = "src/digitalmodel/solvers/openfoam/validation/ship_resistance.py"
+    assert "GRAVITY = 9.80665" in (REPO / source).read_text()
+    assert "basis module g = 9.80665 m/s²" in ledger
+    assert "href='#ref-i9'" in ledger
+    assert source in builder.report_references(manifest)
+
+
+def test_experimental_limit_does_not_claim_unverified_archive_access():
+    builder = load_builder()
+    manifest = json.loads((REPO / "data/cfd/calm_water_study/manifest.json").read_text())
+    page = builder.render_report(manifest)
+    assert (
+        'No opened, matched experimental table is retained <a href="#ref-e1">[E1]</a>; '
+        "experimental comparison is not available."
+    ) in page
+    assert "could not be opened" not in page
+
+
+@pytest.mark.parametrize("factor", [-1, 0.5])
+def test_verifier_force_reduction_is_independent_of_builder(monkeypatch, factor):
+    verifier = load_verifier()
+    builder = verifier.load_builder(REPO)
+    original = builder.coefficient_history
+
+    def incorrect_reduction(*args, **kwargs):
+        lines = original(*args, **kwargs).splitlines()
+        return lines[0] + "\n" + "\n".join(
+            row.split(",")[0] + "," + ",".join(
+                f"{factor * float(value):.12g}" for value in row.split(",")[1:]
+            ) for row in lines[1:]
+        ) + "\n"
+
+    monkeypatch.setattr(builder, "coefficient_history", incorrect_reduction)
+    monkeypatch.setattr(verifier, "load_builder", lambda repo: builder)
+    assert verifier.verify_retained(REPO)["qualified_results"] == 0
 
 
 @pytest.mark.parametrize("field,value", [

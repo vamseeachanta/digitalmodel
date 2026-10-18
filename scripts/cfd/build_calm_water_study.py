@@ -386,11 +386,19 @@ def report_design_data(manifest: dict) -> str:
     fields = [("Length between perpendiculars", "lpp_m", "m"), ("Nominal full beam", "beam_m", "m"), ("Nominal draft", "draft_m", "m"), ("Reference wetted area", "area_m2", "m²"), ("Executed inlet speed", "speed_m_per_s", "m/s"), ("Water density", "density_kg_per_m3", "kg/m³"), ("Water kinematic viscosity", "kinematic_viscosity_m2_per_s", "m²/s"), ("Air density", "air_density_kg_per_m3", "kg/m³"), ("Air kinematic viscosity", "air_kinematic_viscosity_m2_per_s", "m²/s"), ("Surface tension", "surface_tension_n_per_m", "N/m"), ("Case gravity", "case_gravity_m_per_s2", "m/s²"), ("Nominal Froude number", "nominal_froude", "1"), ("Executed Reynolds number", "executed_reynolds", "1")]
     rows = [[label, report_number(b.get(key)), unit, '<a href="#ref-i1">[I1]</a>'] for label, key, unit in fields]
     inputs = report_table(["Quantity", "Value", "Unit", "Basis"], rows, "Table 3.1. Defined model and normalization inputs; source qualification is recorded in the assumption ledger.", "table-3-1")
+    executed_fr = b.get("executed_froude")
+    gravity_basis = (
+        f"Case g = {report_number(b.get('case_gravity_m_per_s2'))} m/s² and "
+        f"executed Fr = {format(executed_fr, '.5f') if executed_fr is not None else 'not established'} "
+        "from manifest model_basis <a href='#ref-i1'>[I1]</a>; "
+        "basis module g = 9.80665 m/s² <a href='#ref-i9'>[I9]</a>. "
+        "Primary input qualification remains open."
+    )
     ledger = report_table(["Assumption", "Basis and confirmation", "Affected result and sensitivity"], [
         ["Geometry and model particulars", "ASSUMED - to be confirmed: assumed, based on previous experience; retained geometry and configuration. Confirm against an opened primary geometry source.", "Resistance and physical model identity; source-error sensitivity is not bounded."],
         ["Fluid properties and normalization", "ASSUMED - to be confirmed: assumed, based on previous experience; existing case configuration. Confirm the intended experimental condition and reference area.", "Absolute coefficients and any future experimental error; property sensitivity was not calculated."],
         ["Comparison and uncertainty targets", "Assumed, based on previous experience; predeclared targets in <a href='#ref-i2'>[I2]</a>, without a claimed standard clause.", "Acceptance thresholds; no empirical acceptance is inferred without a matched reference."],
-        ["Gravity convention", "Executed gravity and Froude number are retained in the manifest model_basis; primary input qualification remains open.", "The reported executed speed is used for normalization; this difference is retained, not silently matched."],
+        ["Gravity convention", gravity_basis, "The reported executed speed is used for normalization; the case and basis module gravity difference is retained, not silently matched."],
         ["Inherited domain placement", "The executed extents are retained; a domain-size sensitivity investigation is required.", "Domain-truncation influence is not bounded."],
     ], "Table 3.2. Assumption ledger and affected conclusions.", "table-3-2")
     c = manifest.get("criteria", {})
@@ -431,7 +439,7 @@ def report_results(manifest: dict, history_figure: str) -> str:
     plot = history_figure or "<p>The final-window figure is not available until a completed force history is retained.</p>"
     return f'''<h2 id="results">5 Detailed Results</h2><p>The final-window force coefficients are summarized in <a href="#table-5-1">Table 5.1</a>. Native completion and descriptive averages do not establish experimental agreement.</p>{table}
 <p>{mesh_difference_text(full)}</p><figure id="figure-5-1">{plot}<figcaption>Figure 5.1. Total coefficient against iteration in the final declared window; lines show bin means and shading preserves bin minima and maxima. No acceptance band is drawn because an opened experimental target is unavailable.</figcaption></figure>
-<p>Validation is planned against publicly tabulated towing-tank resistance at nominal Froude number 0.26 for the benchmark geometry, with attitude, appendage, Reynolds-number and reference-area matching required by <a href="#table-3-3">Table 3.3</a>. The institution archive addresses <a href="#ref-e1">[E1]</a> could not be opened; experimental comparison is not available. Grid uncertainty is not established because three completed full meshes are required.</p><p>{referent_reading()}</p>{component_reading(manifest)}'''
+<p>Validation is planned against publicly tabulated towing-tank resistance at nominal Froude number 0.26 for the benchmark geometry, with attitude, appendage, Reynolds-number and reference-area matching required by <a href="#table-3-3">Table 3.3</a>. No opened, matched experimental table is retained <a href="#ref-e1">[E1]</a>; experimental comparison is not available. Grid uncertainty is not established because three completed full meshes are required.</p><p>{referent_reading()}</p>{component_reading(manifest)}'''
 
 
 def referent_reading() -> str:
@@ -466,7 +474,8 @@ def report_references(manifest: dict | None = None) -> str:
 <li id="ref-i5">[I5] Reduction and report: scripts/cfd/build_calm_water_study.py. Independent committed-evidence check and regeneration: scripts/cfd/verify_calm_water_study.py. Grid method: src/digitalmodel/solvers/openfoam/grid_convergence.py; no uncertainty result is calculated.</li>
 <li id="ref-i6">[I6] Historical published-reference candidates are not adopted as numeric evidence.</li>
 <li id="ref-i7">[I7] The experimental fixture does not satisfy the opened-source, table and page criterion. No fixture number is promoted into this report.</li>
-<li id="ref-i8">[I8] Descriptive means and dispersions: manifest full_runs statistics, independently recomputed from each retained final-window force and coefficient pair. A two-mesh descriptive difference is not numerical uncertainty.</li></ul>'''
+<li id="ref-i8">[I8] Descriptive means and dispersions: manifest full_runs statistics, independently recomputed from each retained final-window force and coefficient pair. A two-mesh descriptive difference is not numerical uncertainty.</li>
+<li id="ref-i9">[I9] Basis module gravity convention: src/digitalmodel/solvers/openfoam/validation/ship_resistance.py, GRAVITY = 9.80665 m/s². The executed case gravity and Froude number are recorded separately in manifest model_basis [I1].</li></ul>'''
 
 
 def report_appendix(manifest: dict) -> str:
@@ -503,6 +512,7 @@ def render_report(manifest: dict, history_figure: str = "") -> str:
         revision_rows.append(["1", "2026-10-15", "Native continuation outcomes are added to distinguish completion from resistance qualification."])
     if manifest.get("store"):
         revision_rows.append(["2", "2026-10-15", "Case inputs and native logs become retrievable; averaging windows replace split histories, and the referent and component limitations are identified."])
+    revision_rows.append(["3", "2026-10-18", "Retitled as indicative; withdrawn unopened-fixture comparison and component offsets; added committed-evidence checker."])
     revisions = report_table(["Revision", "Date", "Change and reason"], revision_rows, "Table 0.1. Revision history.", "revision-table")
     sections = [("summary", "1 Executive Summary"), ("introduction", "2 Introduction"), ("design-data", "3 Design Data"), ("methodology", "4 Analysis Methodology"), ("results", "5 Detailed Results"), ("findings", "6 Key Findings"), ("limitations", "7 Limitations"), ("recommendations", "8 Recommendations"), ("references", "9 References"), ("symbols", "10 Acronyms and Symbols"), ("appendix-a", "Appendix A – Native execution and model detail"), ("appendix-b", "Appendix B – Interpretation and missing evidence")]
     contents = "".join(f'<li><a href="#{identity}">{title}</a></li>' for identity, title in sections)

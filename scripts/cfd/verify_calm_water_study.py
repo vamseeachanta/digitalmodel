@@ -58,26 +58,45 @@ def verify_files(repo: Path, manifest: dict) -> None:
             raise ValueError("retained digest or size mismatch")
 
 
-def verify_history(repo: Path, run: dict, builder, *, full: bool = False) -> list:
-    """Recompute coefficients from the retained signed native forces."""
+def verify_history(repo: Path, run: dict, *, full: bool = False) -> list:
+    """Independently reduce signed forces; require exact retained text precision."""
     stem = run["mesh"] + ("-full-window" if full else "")
     force = (repo / BASE / "raw" / f"{stem}-force.dat").read_text()
     csv = (repo / BASE / "raw" / f"{stem}-coefficients.csv").read_text()
     norm = run["normalisation"]
     if norm["half_domain"] is not True or norm["full_hull_force_multiplier"] != 2:
         raise ValueError("unqualified force normalisation")
-    reduced = builder.coefficient_history(
-        force, norm["density_kg_per_m3"], norm["area_m2"],
-        norm["speed_m_per_s"], half_domain=True,
-    )
+    inputs = [norm[key] for key in ("density_kg_per_m3", "area_m2", "speed_m_per_s")]
+    if not all(math.isfinite(value) and value > 0 for value in inputs):
+        raise ValueError("positive finite normalisation inputs are required")
+    density, area, speed = inputs
+    denominator = 0.5 * density * area * speed**2
+    reduced_rows = ["iteration,ct,cp,cv"]
+    previous = -math.inf
+    for line in force.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        values = [float(value) for value in line.split()]
+        if len(values) != 10 or not all(math.isfinite(value) for value in values):
+            raise ValueError("native force row must contain ten finite values")
+        if values[0] <= previous:
+            raise ValueError("native iterations must increase strictly")
+        previous = values[0]
+        # R = -2 Fx,half for each component. The committed CSV has 12
+        # significant digits; retain the exact byte check at that precision.
+        ct, cp, cv = (-2 * values[index] / denominator for index in (1, 4, 7))
+        reduced_rows.append(f"{values[0]:g},{ct:.12g},{cp:.12g},{cv:.12g}")
+    if len(reduced_rows) == 1:
+        raise ValueError("native force history is empty")
+    reduced = "\n".join(reduced_rows) + "\n"
     if reduced != csv:
         raise ValueError("coefficient reduction mismatch")
     return [[float(value) for value in line.split(",")] for line in csv.splitlines()[1:]]
 
 
-def verify_full_window(repo: Path, run: dict, builder, criteria: dict) -> None:
+def verify_full_window(repo: Path, run: dict, criteria: dict) -> None:
     """Check descriptive statistics without certifying temporal convergence."""
-    rows = verify_history(repo, run, builder, full=True)
+    rows = verify_history(repo, run, full=True)
     last, count = criteria["full_iterations"], criteria["averaging_iterations"]
     if run["status"] != "complete" or run["return_code"] != 0:
         raise ValueError("unexpected full-run outcome")
@@ -118,7 +137,7 @@ def verify_retained(repo: Path, manifest: dict | None = None) -> dict:
         raise ValueError("duplicate full-run mesh")
     for run in manifest["runs"]:
         builder.verify_criterion(run, criteria_bytes)
-        rows = verify_history(repo, run, builder)
+        rows = verify_history(repo, run)
         count = criteria["timed_start_iterations"]
         if run["return_code"] != 0 or run["completed_iterations"] != count:
             raise ValueError("incomplete timed start")
@@ -132,7 +151,7 @@ def verify_retained(repo: Path, manifest: dict | None = None) -> dict:
             raise ValueError("face-resolution record mismatch")
     for run in manifest["full_runs"]:
         builder.verify_criterion(run, criteria_bytes)
-        verify_full_window(repo, run, builder, criteria)
+        verify_full_window(repo, run, criteria)
     if builder.render_run_log(manifest) != (repo / BASE / "run-log.jsonl").read_text():
         raise ValueError("run-log readback mismatch")
     return manifest
