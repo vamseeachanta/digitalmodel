@@ -10,12 +10,13 @@ import io
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
+
 
 class RAOEntry(BaseModel):
     """Single RAO value at a given period and heading."""
@@ -46,6 +47,8 @@ class RAOTable(BaseModel):
 class RAOComparisonResult(BaseModel):
     """Result of comparing two RAO tables."""
 
+    model_config = ConfigDict(allow_inf_nan=False)
+
     dof: str
     max_amplitude_diff: float
     mean_amplitude_diff: float
@@ -58,6 +61,7 @@ class RAOComparisonResult(BaseModel):
 # ---------------------------------------------------------------------------
 # Core functions
 # ---------------------------------------------------------------------------
+
 
 def amplitude_phase_to_complex(
     amplitude: np.ndarray,
@@ -167,7 +171,7 @@ def interpolate_rao(
     """
     periods = np.array(table.periods)
     headings = np.array(table.headings_deg)
-    amp = np.array(table.amplitudes)   # [n_headings, n_periods]
+    amp = np.array(table.amplitudes)  # [n_headings, n_periods]
     pha = np.array(table.phases_deg)
 
     # Convert to complex for smooth interpolation across phase wrapping
@@ -181,13 +185,17 @@ def interpolate_rao(
     ip = np.searchsorted(np.sort(periods), tp) - 1
     ip = np.clip(ip, 0, len(periods) - 2)
     sorted_periods = np.sort(periods)
-    t_frac = (tp - sorted_periods[ip]) / max(sorted_periods[ip + 1] - sorted_periods[ip], 1e-12)
+    t_frac = (tp - sorted_periods[ip]) / max(
+        sorted_periods[ip + 1] - sorted_periods[ip], 1e-12
+    )
 
     # Find bracketing indices for heading
     sorted_headings = np.sort(headings)
     ih = np.searchsorted(sorted_headings, th) - 1
     ih = np.clip(ih, 0, len(headings) - 2)
-    h_frac = (th - sorted_headings[ih]) / max(sorted_headings[ih + 1] - sorted_headings[ih], 1e-12)
+    h_frac = (th - sorted_headings[ih]) / max(
+        sorted_headings[ih + 1] - sorted_headings[ih], 1e-12
+    )
 
     # Sort z to match sorted axes
     period_order = np.argsort(periods)
@@ -269,15 +277,7 @@ def compare_raos(
     common_headings = sorted(set(table_a.headings_deg) & set(table_b.headings_deg))
 
     if not common_periods or not common_headings:
-        return RAOComparisonResult(
-            dof=table_a.dof,
-            max_amplitude_diff=float("nan"),
-            mean_amplitude_diff=float("nan"),
-            rms_amplitude_diff=float("nan"),
-            max_phase_diff_deg=float("nan"),
-            common_periods=common_periods,
-            common_headings_deg=common_headings,
-        )
+        raise ValueError("RAO tables have no common period/heading overlap")
 
     amp_a = np.array(table_a.amplitudes)
     amp_b = np.array(table_b.amplitudes)
@@ -331,7 +331,7 @@ def rao_table_to_csv(table: RAOTable) -> str:
     header = "Period\\Heading," + ",".join(str(h) for h in table.headings_deg)
     lines.append(header)
 
-    amp = np.array(table.amplitudes)   # [n_headings, n_periods]
+    amp = np.array(table.amplitudes)  # [n_headings, n_periods]
     pha = np.array(table.phases_deg)
 
     for pi, period in enumerate(table.periods):

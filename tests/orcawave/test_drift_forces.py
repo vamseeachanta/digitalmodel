@@ -22,6 +22,7 @@ def _make_drift_coeffs() -> MeanDriftCoefficients:
     sway = [8 * f**2 for f in freqs]
     yaw = [50 * f**2 for f in freqs]
     return MeanDriftCoefficients(
+        frame="x_forward_y_port_z_up", heading_convention="from_clockwise_bow",
         heading_deg=0.0,
         frequencies_rad_s=freqs,
         surge_kn_m2=surge,

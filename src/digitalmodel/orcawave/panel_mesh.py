@@ -6,7 +6,7 @@ displaced volume, and automatic refinement suggestions.
 """
 
 import io
-from typing import Dict, List, Optional, Tuple
+from typing import Literal, Dict, List, Optional, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
+
 
 class PanelQuad(BaseModel):
     """A single quadrilateral panel defined by 4 vertices."""
@@ -65,14 +66,15 @@ class GDFMesh(BaseModel):
     header: str = Field(default="OrcaWave GDF mesh")
     ulen: float = Field(default=1.0, description="Characteristic length scale")
     gravity: float = Field(default=9.81)
-    isx: int = Field(default=1, description="X-symmetry flag (0 or 1)")
-    isy: int = Field(default=1, description="Y-symmetry flag (0 or 1)")
+    isx: Literal[0, 1] = Field(default=0, description="X-symmetry flag (0 or 1)")
+    isy: Literal[0, 1] = Field(default=0, description="Y-symmetry flag (0 or 1)")
     panels: List[PanelQuad] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
 # GDF I/O
 # ---------------------------------------------------------------------------
+
 
 def read_gdf(text: str) -> GDFMesh:
     """Parse a WAMIT GDF panel-model file.
@@ -93,6 +95,8 @@ def read_gdf(text: str) -> GDFMesh:
         Parsed GDFMesh.
     """
     lines = [l.strip() for l in text.strip().splitlines() if l.strip()]
+    if len(lines) < 4:
+        raise ValueError("GDF requires four header records")
     header = lines[0]
 
     parts1 = lines[1].split()
@@ -105,20 +109,20 @@ def read_gdf(text: str) -> GDFMesh:
 
     npan = int(lines[3])
 
-    panels: List[PanelQuad] = []
-    for i in range(4, 4 + npan):
-        if i >= len(lines):
-            break
-        coords = [float(x) for x in lines[i].split()]
-        # 12 values: 4 vertices x 3 coords
-        if len(coords) >= 12:
-            verts = [
-                coords[0:3],
-                coords[3:6],
-                coords[6:9],
-                coords[9:12],
-            ]
-            panels.append(PanelQuad(vertices=verts))
+    if npan < 0:
+        raise ValueError("NPAN must be nonnegative")
+    # WAMIT 7.5 manual section 6.1: free-format vertex coordinates.
+    coords = [
+        float(x.replace("D", "E").replace("d", "e"))
+        for line in lines[4:]
+        for x in line.split()
+    ]
+    if len(coords) != 12 * npan or not np.all(np.isfinite(coords)):
+        raise ValueError("GDF body must contain exactly 12 * NPAN finite coordinates")
+    panels = [
+        PanelQuad(vertices=np.array(coords[i : i + 12]).reshape(4, 3).tolist())
+        for i in range(0, len(coords), 12)
+    ]
 
     return GDFMesh(
         header=header,
@@ -157,6 +161,7 @@ def write_gdf(mesh: GDFMesh) -> str:
 # Geometry helpers
 # ---------------------------------------------------------------------------
 
+
 def _triangle_area_and_normal(
     p0: np.ndarray,
     p1: np.ndarray,
@@ -187,7 +192,7 @@ def compute_panel_quality(panel: PanelQuad, panel_index: int = 0) -> MeshQuality
     a1, n1 = _triangle_area_and_normal(v[0], v[1], v[2])
     a2, n2 = _triangle_area_and_normal(v[0], v[2], v[3])
     area = a1 + a2
-    normal = (n1 * a1 + n2 * a2)
+    normal = n1 * a1 + n2 * a2
     norm_len = np.linalg.norm(normal)
     normal = normal / max(norm_len, 1e-30)
 
@@ -235,9 +240,7 @@ def compute_mesh_summary(mesh: GDFMesh) -> MeshSummary:
     Returns:
         MeshSummary with overall statistics and refinement suggestions.
     """
-    metrics = [
-        compute_panel_quality(p, i) for i, p in enumerate(mesh.panels)
-    ]
+    metrics = [compute_panel_quality(p, i) for i, p in enumerate(mesh.panels)]
 
     if not metrics:
         return MeshSummary(
@@ -250,29 +253,31 @@ def compute_mesh_summary(mesh: GDFMesh) -> MeshSummary:
             mean_skewness=0.0,
             max_skewness=0.0,
             n_inconsistent_normals=0,
+            refinement_suggestions=["Nonpositive signed volume: empty mesh"],
         )
 
     areas = np.array([m.area for m in metrics])
     aspect_ratios = np.array([m.aspect_ratio for m in metrics])
     skewnesses = np.array([m.skewness for m in metrics])
 
-    # Waterplane area: panels near z=0
-    wp_area = 0.0
-    for i, panel in enumerate(mesh.panels):
-        verts = np.array(panel.vertices)
-        if np.all(np.abs(verts[:, 2]) < 0.05):
-            wp_area += metrics[i].area
-
-    # Displaced volume via divergence theorem:
-    # V = (1/3) * sum_panels( panel_area * centroid_z * nz )
-    # For submerged panels (z < 0)
+    # Divergence theorem with F=(0,0,z): div(F)=1, V=integral(z*nz dS).
+    # Integrate triangles exactly; retain the sign to expose reversed normals.
     vol = 0.0
-    for i, panel in enumerate(mesh.panels):
-        verts = np.array(panel.vertices)
-        centroid = verts.mean(axis=0)
-        nz = metrics[i].normal[2]
-        vol += metrics[i].area * centroid[2] * nz
-    displaced_volume = abs(vol / 3.0)
+    waterline_integral = 0.0
+    for panel in mesh.panels:
+        verts = np.asarray(panel.vertices, dtype=float)
+        for ids in ((0, 1, 2), (0, 2, 3)):
+            tri = verts[list(ids)]
+            area_vector = 0.5 * np.cross(tri[1] - tri[0], tri[2] - tri[0])
+            vol += tri[:, 2].mean() * area_vector[2]
+        # Green's area theorem: the hull top boundary runs opposite the lid.
+        # Exclude lids to avoid double counting. Axis closure edges contribute 0.
+        if not np.all(np.isclose(verts[:, 2], 0.0, atol=1e-9, rtol=0)):
+            for v0, v1 in zip(verts, np.roll(verts, -1, axis=0)):
+                if np.all(np.isclose([v0[2], v1[2]], 0.0, atol=1e-9, rtol=0)):
+                    waterline_integral -= 0.5 * (v0[0] * v1[1] - v1[0] * v0[1])
+    wp_area = abs(waterline_integral)
+    displaced_volume = float(vol)
 
     # Account for symmetry
     sym_factor = 1
@@ -287,6 +292,10 @@ def compute_mesh_summary(mesh: GDFMesh) -> MeshSummary:
 
     # Refinement suggestions
     suggestions: List[str] = []
+    if displaced_volume <= 0:
+        suggestions.append(
+            "Nonpositive signed volume: check outward normals and hull closure"
+        )
     if float(aspect_ratios.max()) > 5.0:
         bad = [m.panel_index for m in metrics if m.aspect_ratio > 5.0]
         suggestions.append(
@@ -325,7 +334,7 @@ def compute_mesh_summary(mesh: GDFMesh) -> MeshSummary:
 
 
 def compute_waterplane_area(mesh: GDFMesh) -> float:
-    """Calculate the waterplane area from panels at z ~ 0.
+    """Calculate waterplane area from oriented waterline edges.
 
     Args:
         mesh: Panel mesh.

@@ -8,11 +8,11 @@ from digitalmodel.orcawave.hydro_coefficients import (
     HydroCoefficients,
     HydroMatrix6x6,
     create_hydrostatic_restoring,
-    from_wamit_added_mass,
+    from_native_added_mass,
     interpolate_excitation_at_frequency,
     interpolate_matrix_at_frequency,
-    to_wamit_added_mass,
-    to_wamit_damping,
+    to_native_added_mass,
+    to_native_damping,
 )
 
 
@@ -103,8 +103,8 @@ class TestWAMITFormat:
 
     def test_wamit_roundtrip(self):
         coeffs = _make_coefficients()
-        text = to_wamit_added_mass(coeffs)
-        matrices = from_wamit_added_mass(text)
+        text = to_native_added_mass(coeffs)
+        matrices = from_native_added_mass(text)
         assert len(matrices) == len(coeffs.added_mass)
         # Check first matrix diagonal
         orig = coeffs.added_mass[0].to_numpy()
@@ -113,7 +113,7 @@ class TestWAMITFormat:
 
     def test_wamit_damping_export(self):
         coeffs = _make_coefficients()
-        text = to_wamit_damping(coeffs)
+        text = to_native_damping(coeffs)
         lines = [l for l in text.strip().splitlines() if l.strip()]
         assert len(lines) > 0
 

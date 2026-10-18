@@ -49,7 +49,7 @@ def _make_box_mesh() -> GDFMesh:
         gravity=9.81,
         isx=0,
         isy=0,
-        panels=panels,
+        panels=[PanelQuad(vertices=p.vertices[::-1]) for p in panels],
     )
 
 

@@ -33,6 +33,7 @@ def _qtf(omega, values):
 
 def _coefficients(omega, values):
     return MeanDriftCoefficients(
+        frame="x_forward_y_port_z_up", heading_convention="from_clockwise_bow",
         heading_deg=0.0, frequencies_rad_s=omega.tolist(),
         surge_kn_m2=np.asarray(values).tolist(),
         sway_kn_m2=np.zeros(len(omega)).tolist(),

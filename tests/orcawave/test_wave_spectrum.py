@@ -12,7 +12,7 @@ from digitalmodel.orcawave.wave_spectrum import (
     jonswap,
     pierson_moskowitz,
     spectral_periods,
-    torsethaugen,
+    heuristic_two_peak,
 )
 
 
@@ -84,7 +84,7 @@ class TestOtherSpectra:
 
     def test_torsethaugen_hs_preservation(self):
         omega = np.linspace(0.05, 3.0, 500)
-        s = torsethaugen(omega, hs=4.0, tp=12.0)
+        s = heuristic_two_peak(omega, hs=4.0, tp=12.0)
         m0 = np.trapz(s, omega)
         hs_computed = 4.0 * np.sqrt(m0)
         np.testing.assert_allclose(hs_computed, 4.0, rtol=0.1)

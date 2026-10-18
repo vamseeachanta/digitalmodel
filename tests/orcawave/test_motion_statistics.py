@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+import pytest
 
 from digitalmodel.orcawave.motion_statistics import (
     MSIResult,
@@ -98,8 +99,8 @@ class TestRayleigh:
         np.testing.assert_allclose(amp_back, amplitude, rtol=1e-6)
 
     def test_quantile_zero_probability(self):
-        result = rayleigh_quantile(0.0, 1.0)
-        assert result == 0.0
+        with pytest.raises(ValueError):
+            rayleigh_quantile(0.0, 1.0)
 
 
 class TestMSI:
