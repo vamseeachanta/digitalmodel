@@ -357,7 +357,7 @@ families:
   - {path: src/digitalmodel/orcawave/slow_drift_response.py, symbol: low_frequency_surge_response, relation: independent}
   - {path: src/digitalmodel/orcawave/slow_drift_response.py, symbol: surge_response_kernel, relation: independent}
   - {path: src/digitalmodel/orcawave/slow_drift_response.py, symbol: naess_expected_extreme, relation: independent}
-  - {path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py, symbol: QTFData, relation: data-model}
+  - {path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py, symbol: QTFData, relation: related-model-not-accepted}
   - {path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py, symbol: QTFData.get_mean_drift_forces, relation: independent}
   validation:
   - {path: tests/orcawave/test_slow_drift_response.py, symbol: test_complex_pair_force_spectrum_and_quadratic_kernel_moments}

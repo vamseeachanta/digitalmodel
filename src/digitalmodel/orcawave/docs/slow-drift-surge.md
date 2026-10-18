@@ -5,16 +5,26 @@ The Naess asymptote **does not meet the 10% three-hour maximum criterion** in
 the broadband reference. It remains experimental; design acceptance is not
 established. The strict expected-failure test retains that unresolved criterion.
 
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 0 | 2026-10-18 | Recorded equations, synthetic checks and reproduction limits. |
+| 1 | 2026-10-18 | Isolated the experimental extreme and distinguished identity checks from independent evidence. |
+
 ## API and conventions
 
-The public entry points are re-exported from `digitalmodel.orcawave.drift_forces`:
+The force spectrum, surge spectrum and kernel are re-exported from
+`digitalmodel.orcawave.drift_forces`. The unqualified experimental extreme is
+available only from `digitalmodel.orcawave.slow_drift_response`:
 
 ```python
 import numpy as np
 from digitalmodel.orcawave.drift_forces import (
     full_qtf_force_spectrum, low_frequency_surge_response,
-    surge_response_kernel, naess_expected_extreme,
+    surge_response_kernel,
 )
+from digitalmodel.orcawave.slow_drift_response import naess_expected_extreme
 
 # qtf is a complete Hermitian surge QTF in kN/m²; S is m² s/rad.
 force_psd = full_qtf_force_spectrum(qtf, S, omega)
@@ -31,6 +41,7 @@ maximum = naess_expected_extreme(
 ```
 
 Frequency grids are nonnegative, uniform and increasing. The new QTF functions
+accept `drift_forces.QTFMatrix`, not `bemrosetta.models.qtf_data.QTFData`. They
 require the spectrum and matrix to share the same grid; they do not interpolate,
 extrapolate or complete a matrix triangle. The response PSD starts at zero
 difference frequency and its DC bin must be zero. Variance is `sum(PSD)*dmu`,
@@ -94,19 +105,19 @@ random-phase records of 10800 s, 16384 samples per record, and seed 206. Force
 is calculated independently as `10*abs(wave_envelope)**2`; an FFT solution of
 the scalar oscillator supplies the stationary response with DC removed.
 
-| Quantity | Analytical result | Independent ensemble | Criterion / disposition |
+| Quantity | Analytical result | Reference value | Criterion / disposition |
 | --- | ---: | ---: | --- |
-| Force variance (kN²) | 2022.073 | 2019.516 | Within 5% |
-| Surge standard deviation (m) | 2.310230 | 2.292395 | Within 5% |
-| Kernel variance (m²) | 5.337164 | Spectrum: 5.337164 | Within 1% |
-| Mean offset (m) | 1.139895 | 1.139895 | Within 1% |
-| Expected dynamic maximum (m) | 6.834629 | 8.501601 | 19.6% low; 10% criterion unmet |
+| Force variance (kN²) | 2022.1 | Ensemble: 2019.5 | Within 5% |
+| Surge standard deviation (m) | 2.3 | Ensemble: 2.3 | Within 5% |
+| Kernel variance (m²) | 5.3 | Spectrum: 5.3 | Identity check, relative tolerance 1e-10 |
+| Mean offset (m) | 1.1 | Shared-input mean: 1.1 | Identity check, relative tolerance 1e-10 |
+| Expected dynamic maximum (m) | 6.8 | Ensemble: 8.5 | 19.6% low; 10% criterion unmet |
 
 Table 1. Synthetic numerical checks; these are not published benchmark data.
 
 The observed upcrossing rate is 0.00978877 Hz. The approximate 95% sampling
-halfwidth of the ensemble mean maximum is 0.183393 m. Sampling uncertainty does
-not account for the 1.667 m discrepancy. No tuning factor is applied. The
+halfwidth of the ensemble mean maximum is 0.2 m. Sampling uncertainty does
+not account for the 1.7 m discrepancy. Comparisons use unrounded values. No tuning factor is applied. The
 closed-form tests independently check bichromatic resonance, complex QTF phase,
 full endpoint weights, signed tails and a high-precision evaluation of Eq. 21.
 

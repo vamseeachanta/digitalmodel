@@ -14,9 +14,9 @@ from digitalmodel.orcawave.drift_forces import (
     QTFMatrix,
     full_qtf_force_spectrum,
     low_frequency_surge_response,
-    naess_expected_extreme,
     surge_response_kernel,
 )
+from digitalmodel.orcawave.slow_drift_response import naess_expected_extreme
 from digitalmodel.orcawave.wave_spectrum import jonswap
 
 
@@ -82,8 +82,9 @@ def test_broadband_force_and_surge_match_random_phase_ensemble():
     data = ensemble_reference()
     assert data["force_variance_kn2"] == pytest.approx(data["mc_force_variance_kn2"], rel=.05)
     assert data["spectral_std_m"] == pytest.approx(data["mc_std_m"], rel=.05)
-    assert data["kernel_variance_m2"] == pytest.approx(data["spectral_std_m"]**2, rel=.01)
-    assert data["mean_offset_m"] == pytest.approx(data["mc_mean_offset_m"], rel=.01)
+    # Identity checks of the shared inputs, not independent ensemble evidence.
+    assert data["kernel_variance_m2"] == pytest.approx(data["spectral_std_m"]**2, rel=1e-10)
+    assert data["mean_offset_m"] == pytest.approx(data["mc_mean_offset_m"], rel=1e-10)
 
 
 @pytest.mark.slow

@@ -179,7 +179,15 @@ def surge_response_kernel(
 def naess_expected_extreme(
     eigenvalues_m, upcrossing_rate_hz, duration_s, *, mean_offset_m=0., tail="upper",
 ):
-    """Naess asymptotic expected signed excursion, in m, plus static offset.
+    """Experimental Naess expected signed excursion, in m, plus static offset.
+
+    Not qualified for design use. In the seeded broadband reference in
+    test_slow_drift_monte_carlo.py (256 three-hour JONSWAP records, Hs=6 m,
+    Tp=10 s, 100 s natural period, 5% damping), the upper dynamic estimate
+    is 6.8 m versus an ensemble mean maximum of 8.5 m: 19.6% low, failing
+    the 10% criterion. Near-equal response eigenvalues can invalidate the
+    largest-eigenvalue-only asymptote. This function is available only from
+    slow_drift_response; it is not re-exported by drift_forces.
 
     Lande-Sudall and Stansby (2026), Eq. 21:
     E[max X] ~ lambda1*(q + log(q) + 2*EulerGamma*(1-q**(-1/2))),

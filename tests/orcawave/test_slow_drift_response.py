@@ -3,16 +3,21 @@
 import numpy as np
 import pytest
 
+from digitalmodel.orcawave import drift_forces
 from digitalmodel.orcawave.drift_forces import (
     MeanDriftCoefficients,
     QTFMatrix,
     full_qtf_force_spectrum,
     full_qtf_slowly_varying,
     low_frequency_surge_response,
-    naess_expected_extreme,
     newman_approximation,
     surge_response_kernel,
 )
+from digitalmodel.orcawave.slow_drift_response import naess_expected_extreme
+
+
+def test_unqualified_naess_extreme_is_not_reexported():
+    assert not hasattr(drift_forces, "naess_expected_extreme")
 
 
 def make_qtf(omega, values):
@@ -205,6 +210,22 @@ def test_kernel_refuses_invalid_qtf(kind):
         surge_response_kernel(
             qtf, spectrum, omega, mass_kg=1e7, stiffness_kn_m=100., damping_ratio=.05,
         )
+
+
+@pytest.mark.parametrize("kind", ["nonuniform", "imag_shape", "negative_spectrum"])
+def test_force_spectrum_refuses_invalid_inputs(kind):
+    omega = np.array([.5, .6, .7])
+    spectrum = np.ones(3)
+    qtf = make_qtf(omega, np.ones((3, 3)))
+    if kind == "nonuniform":
+        omega[-1] = .71
+        qtf.frequencies_rad_s = omega.tolist()
+    elif kind == "imag_shape":
+        qtf.imag_part = [[0.], [0.], [0.]]
+    else:
+        spectrum[0] = -1.
+    with pytest.raises(ValueError):
+        full_qtf_force_spectrum(qtf, spectrum, omega)
 
 
 @pytest.mark.parametrize("change", [

@@ -14,7 +14,6 @@ from digitalmodel.orcawave.slow_drift_response import (
     SurgeResponse as SurgeResponse,
     full_qtf_force_spectrum as full_qtf_force_spectrum,
     low_frequency_surge_response as low_frequency_surge_response,
-    naess_expected_extreme as naess_expected_extreme,
     surge_response_kernel as surge_response_kernel,
 )
 
