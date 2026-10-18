@@ -6,11 +6,24 @@ from digitalmodel.parametric import refresh
 
 
 def test_viv_code_locator_reproduces_recorded_fingerprint(tmp_path):
-    """The recorded revision must contain the response basis used at build time."""
+    """Reconstruct file inputs from a revision retained in main history.
+
+    Registry spec and axes, STANDARDS and RESPONSE_FUNCS use the working tree.
+    This check requires Git history; it does not qualify a source archive.
+    """
     from digitalmodel.parametric.atlas import Atlas
 
     atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "viv_analysis")
     revision = atlas.provenance["code_version"]
+    for reference in ("HEAD", "origin/main"):
+        ancestry = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", revision, reference],
+            cwd=refresh.REPO_ROOT, capture_output=True, text=True,
+        )
+        assert ancestry.returncode == 0, (
+            f"recorded code revision must be an ancestor of {reference}; "
+            "use a revision retained in main history and fetch its history"
+        )
     row = refresh._row("viv-analysis")
     paths = [row["input"], *refresh.SOURCE_FILES[atlas.basename],
              "src/digitalmodel/parametric/generate.py"]
