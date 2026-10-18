@@ -286,7 +286,7 @@ Docs discovered by package/class-name search and inspected as context are listed
 
 ### Open-item register
 
-Numbered follow-up drafts are tracked in `ISSUES_DRAFT.md` in the scratch output supplied to the maintainers. They are not repository issues yet; the maintainers need to retain the drafts and replace the markers with issue numbers before merge.
+Follow-up issues are to be opened; markers (1)–(6) group the open items below.
 
 | Item | Evidence / scope | Tracking and responsible discipline |
 | --- | --- | --- |
