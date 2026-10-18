@@ -148,10 +148,47 @@ class TestMeshSummary:
 
 def test_missing_waterline_is_flagged_at_summary_and_scalar_producer():
     mesh = _make_box_mesh()
+    mesh.panels.pop()  # An open surface with an offset rim has a missing waterline.
     for panel in mesh.panels:
         panel.vertices = [[x, y, z - 1e-7] for x, y, z in panel.vertices]
     summary = compute_mesh_summary(mesh)
     assert any("waterline" in s.lower() for s in summary.refinement_suggestions)
+    with pytest.raises(ValueError, match="waterline"):
+        compute_waterplane_area(mesh)
+
+
+@pytest.mark.parametrize("depth", [1e-7, 1.0, 10.0])
+def test_closed_submerged_mesh_has_established_zero_waterplane(depth):
+    from tests.orcawave.test_audit_p1 import box
+
+    mesh = box()
+    for panel in mesh.panels:
+        panel.vertices = [[x, y, z - depth] for x, y, z in panel.vertices]
+    summary = compute_mesh_summary(mesh)
+    assert summary.waterplane_area == 0
+    assert not any("waterline" in s.lower() for s in summary.refinement_suggestions)
+    assert compute_waterplane_area(mesh) == 0
+    assert compute_displaced_volume(mesh) == pytest.approx(8, rel=1e-12)
+
+
+def test_open_submerged_mesh_still_rejects_missing_waterline():
+    from tests.orcawave.test_audit_p1 import box
+
+    mesh = box(lid=False)
+    for panel in mesh.panels:
+        panel.vertices = [[x, y, z - 1] for x, y, z in panel.vertices]
+    assert any("waterline" in s.lower()
+               for s in compute_mesh_summary(mesh).refinement_suggestions)
+    with pytest.raises(ValueError, match="waterline"):
+        compute_waterplane_area(mesh)
+
+
+def test_closed_above_water_mesh_does_not_establish_zero_waterplane():
+    from tests.orcawave.test_audit_p1 import box
+
+    mesh = box()
+    for panel in mesh.panels:
+        panel.vertices = [[x, y, z + 3] for x, y, z in panel.vertices]
     with pytest.raises(ValueError, match="waterline"):
         compute_waterplane_area(mesh)
 

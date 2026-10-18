@@ -182,12 +182,21 @@ def check_hydrodynamics(coefficients, heave_raos):
 
     Heave evidence must be a Heave RAOTable in m/m; every heading is checked.
     Passing the supplied longest period does not establish the asymptotic limit.
+    Reciprocity uses |Mij-Mji| / max(sqrt(|Mii*Mjj|), |Mij|, |Mji|).
+    The pairwise fallback also checks couplings whose diagonal scale is zero.
     """
     for matrix in coefficients.added_mass + coefficients.radiation_damping:
         values = matrix.to_numpy()
-        if not np.all(np.isfinite(values)) or not np.allclose(
-            values, values.T, rtol=0.02, atol=1e-12
-        ):
+        if not np.all(np.isfinite(values)):
+            raise ValueError("Nonfinite radiation matrix")
+        diagonal_scale = np.sqrt(np.abs(np.diag(values)))
+        scale = np.maximum(
+            np.outer(diagonal_scale, diagonal_scale),
+            np.maximum(np.abs(values), np.abs(values.T)),
+        )
+        # Divide before subtracting to avoid overflow for large finite entries.
+        normalized = np.divide(values, scale, out=np.zeros_like(values), where=scale > 0)
+        if np.any(np.abs(normalized - normalized.T) > 0.02):
             raise ValueError("Radiation matrix asymmetry exceeds 2 percent")
     for matrix in coefficients.radiation_damping:
         if not np.all(np.isfinite(matrix.to_numpy())) or np.any(

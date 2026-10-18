@@ -210,7 +210,9 @@ def test_17_rotation_at_25_seconds(kind, roll_damping, pitch_damping):
     ]:
         ratio = natural[mode] / 25
         amplification = 1 / np.hypot(1 - ratio**2, 2 * damping * ratio)
-        assert values[heading][index] == pytest.approx(slope * amplification, rel=1e-12)
+        # T=25 s is still on the short-period side when Tn=50 s.
+        excitation = min(slope, 4 * np.pi**2 / (9.81 * natural[mode]**2) * 180 / np.pi)
+        assert values[heading][index] == pytest.approx(excitation * amplification, rel=1e-12)
 
 
 def test_17_roll_resonance_is_not_capped_at_wave_slope():
@@ -218,6 +220,22 @@ def test_17_roll_resonance_is_not_capped_at_wave_slope():
     index = result.periods.index(14)
     slope = (2 * np.pi / 14) ** 2 / 9.81 * 180 / np.pi
     assert result.roll_rao[2][index] == pytest.approx(slope / (2 * 0.05))
+
+
+@pytest.mark.parametrize(
+    "kind", ["FPSO", "SemiSubmersible", "Drillship", "Barge", "LNGC"],
+    ids=["entry1", "entry2", "entry3", "entry4", "entry5"],
+)
+@pytest.mark.parametrize("mode,field,heading", [
+    ("roll_s", "roll_rao", 2), ("pitch_s", "pitch_rao", 0),
+])
+def test_17_short_period_rotations_decay(kind, mode, field, heading):
+    result = get_representative_raos(kind)
+    natural_period = get_vessels_by_type(kind)[0].natural_periods[mode]
+    # At T=3 s all entries are well above the natural frequency. A decaying
+    # envelope must be below 30% of the slope at Tn, rather than plateau there.
+    slope_at_natural_period = 4 * np.pi**2 / (9.81 * natural_period**2) * 180 / np.pi
+    assert getattr(result, field)[heading][0] < 0.3 * slope_at_natural_period
 
 
 def test_17_pitch_resonance_and_long_wave_limit(monkeypatch):

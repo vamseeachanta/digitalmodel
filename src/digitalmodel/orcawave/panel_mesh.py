@@ -5,8 +5,7 @@ Read/write WAMIT GDF panel format, compute mesh quality metrics
 displaced volume, and automatic refinement suggestions.
 """
 
-import io
-from typing import Literal, Dict, List, Optional, Tuple
+from typing import Literal, List, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -94,7 +93,7 @@ def read_gdf(text: str) -> GDFMesh:
     Returns:
         Parsed GDFMesh.
     """
-    lines = [l.strip() for l in text.strip().splitlines() if l.strip()]
+    lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
     if len(lines) < 4:
         raise ValueError("GDF requires four header records")
     header = lines[0]
@@ -231,6 +230,30 @@ def compute_panel_quality(panel: PanelQuad, panel_index: int = 0) -> MeshQuality
     )
 
 
+def _is_closed_submerged(mesh: GDFMesh) -> bool:
+    """Establish zero waterplane only for a closed surface wholly below z=0.
+
+    Exact shared vertices and opposite directed edges are required. Unmatched
+    edges remain unqualified; no coordinate snapping hides gaps in a mesh.
+    """
+    if not mesh.panels or any(
+        v[2] >= -1e-9 for panel in mesh.panels for v in panel.vertices
+    ):
+        return False
+    edges = {}
+    for panel in mesh.panels:
+        if compute_panel_quality(panel).area <= 0:
+            return False
+        vertices = [tuple(v) for v in panel.vertices]
+        for a, b in zip(vertices, vertices[1:] + vertices[:1]):
+            if a != b:  # Triangles may repeat their final vertex in GDF.
+                edges[(a, b)] = edges.get((a, b), 0) + 1
+    return bool(edges) and all(
+        count == 1 and edges.get((b, a), 0) == 1
+        for (a, b), count in edges.items()
+    )
+
+
 def compute_mesh_summary(mesh: GDFMesh) -> MeshSummary:
     """Compute summary quality metrics for an entire mesh.
 
@@ -292,7 +315,7 @@ def compute_mesh_summary(mesh: GDFMesh) -> MeshSummary:
 
     # Refinement suggestions
     suggestions: List[str] = []
-    if wp_area <= 0:
+    if wp_area <= 0 and not _is_closed_submerged(mesh):
         suggestions.append(
             "No waterline boundary at z=0: waterplane area is not established"
         )
@@ -344,10 +367,11 @@ def compute_waterplane_area(mesh: GDFMesh) -> float:
         mesh: Panel mesh.
 
     Returns:
-        Waterplane area in m^2 (accounting for symmetry).
+        Waterplane area in m^2 (accounting for symmetry). A closed surface
+        wholly below z=0 has zero area; an unavailable waterline raises.
     """
     summary = compute_mesh_summary(mesh)
-    if summary.waterplane_area <= 0:
+    if summary.waterplane_area <= 0 and not _is_closed_submerged(mesh):
         raise ValueError("Positive waterplane area requires a waterline boundary at z=0")
     return summary.waterplane_area
 

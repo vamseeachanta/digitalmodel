@@ -160,10 +160,24 @@ package producer map; wider historical discovery is retained as snapshot data.
 | C4-WATERLINE | qa_gates.check_waterline | closed lidless boundary and 4 m2 area, draft=2 m; reject missing edge or >.01 m draft error | offline |
 | C4-NORMALS | qa_gates.check_normals | positive 8 m3 volume, nonzero area, opposite shared edges; reject reversed or inconsistent orientation | offline; full closed mesh only |
 | C4-IRREGULAR | qa_gates.native_gate_record / require_native_gate | status NOT_RUN; require_native_gate raises for missing native lid/pressure/spike evidence | native NOT_RUN |
-| C4-HYDRO | qa_gates.check_hydrodynamics | added-mass reciprocity<=2%, nonnegative damping, free-floating heave=1±2%; reject negative damping/bad heave | offline |
+| C4-HYDRO | qa_gates.check_hydrodynamics | added-mass and radiation-damping reciprocity<=2% using diagonal/coupling normalization, nonnegative damping, longest supplied-period heave=1±2% across all headings; reject excessive asymmetry/negative damping/bad heave | offline |
 | C4-WIND | drift_forces.compute_wind_current_drift | beam wind588 kN, current922.5 kN, yaw37762.5 kN m within rel1e-9 | offline |
 | C4-HULL | vessel_database.generate_parametric_hull | rectangular midsection half breadth=15 m within1% | offline |
-| C5-TRACE | qa_gates.build_trace | SHA256, quantity producer/value/unit, gate/disposition/maintainer signature present; supplied-quantity coverage=100%; missing gate rejected | offline; native/report qualification NOT_RUN |
+| C5-TRACE | qa_gates.build_trace | SHA256, quantity producer/value/unit, gate/disposition/maintainer signature present; required-quantity coverage=100%; incomplete coverage or missing gate rejected | offline; native/report qualification NOT_RUN |
+
+The canonical offline pack-report required set is `offline_pack_report_v1`:
+`displaced_volume_m3`, `waterplane_area_m2`, `centre_of_buoyancy_m`, `gm_t_m`,
+`gm_l_m`, `longest_period_heave_m_per_m`, `wind_force_sway_kn`,
+`current_force_sway_kn`, and `total_yaw_knm`. Pass this entire set as
+`required_quantities` to `build_trace` for a pack report; extra traced quantities
+cannot replace any required quantity. The smaller C5-TRACE volume fixture tests
+one producer and is not a complete pack report. Native/report qualification
+remains NOT_RUN.
+
+C4-HYDRO uses `abs(Mij-Mji) / max(sqrt(abs(Mii*Mjj)), abs(Mij), abs(Mji))`
+for both matrix families, with a 2% limit. A zero denominator denotes a zero
+pair with zero error. This scale admits small opposite-sign numerical noise
+beside large diagonals while retaining the 1% pass and 3% rejection cases.
 
 ## 6. Known failure modes and pitfalls
 

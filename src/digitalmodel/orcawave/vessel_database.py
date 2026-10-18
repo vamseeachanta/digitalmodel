@@ -6,7 +6,7 @@ and LNGC vessel types.  Includes parametric hull generation for
 quick feasibility checks.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -310,11 +310,14 @@ def get_representative_raos(vessel_type: str) -> VesselRAOSet:
 
         # Deep-water slope excites a damped rotational oscillator; see sidecar R4.
         # The gain tends to one for T >> Tn and retains resonant amplification.
+        # Below Tn, hold excitation at the Tn slope so rotations decay as T^2
+        # instead of approaching a constant as T -> 0 (synthetic envelope).
         slope = (2 * np.pi / periods) ** 2 / 9.81 * 180 / np.pi
         roll_ratio = t_roll / periods
         r_rao = slope / np.hypot(
             1 - roll_ratio**2, 2 * damping["roll"] * roll_ratio
         )
+        r_rao *= np.minimum(1.0, (periods / t_roll) ** 2)
         r_rao *= heading_scale_roll[hi]
         roll_raos.append(r_rao.tolist())
 
@@ -322,6 +325,7 @@ def get_representative_raos(vessel_type: str) -> VesselRAOSet:
         p_rao = slope / np.hypot(
             1 - pitch_ratio**2, 2 * damping["pitch"] * pitch_ratio
         )
+        p_rao *= np.minimum(1.0, (periods / t_pitch) ** 2)
         p_rao *= heading_scale_pitch[hi]
         pitch_raos.append(p_rao.tolist())
 

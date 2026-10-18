@@ -231,6 +231,37 @@ def test_hydrodynamics_applies_gate_reciprocity_tolerance(asymmetry, passes, fam
             check_hydrodynamics(coeffs, _heave_table())
 
 
+@pytest.mark.parametrize("family", ["added_mass", "radiation_damping"])
+@pytest.mark.parametrize("diagonal", [1.0, 1e8])
+@pytest.mark.parametrize("relative_noise,passes", [(1e-11, True), (0.015, False)])
+def test_hydrodynamics_normalizes_opposite_sign_noise(
+    family, diagonal, relative_noise, passes
+):
+    values = np.eye(6) * diagonal
+    # At diagonal=1e8 the small case is precisely the review's +/-1e-3 pair.
+    values[0, 1], values[1, 0] = diagonal * relative_noise, -diagonal * relative_noise
+    symmetric = HydroMatrix6x6(frequency_rad_s=1, values=(np.eye(6) * diagonal).tolist())
+    coeffs = HydroCoefficients(added_mass=[symmetric], radiation_damping=[symmetric])
+    setattr(coeffs, family, [HydroMatrix6x6(frequency_rad_s=1, values=values.tolist())])
+    if passes:
+        assert check_hydrodynamics(coeffs, _heave_table())["status"] == "PASS"
+    else:
+        with pytest.raises(ValueError, match="asymmetry"):
+            check_hydrodynamics(coeffs, _heave_table())
+
+
+@pytest.mark.parametrize("family", ["added_mass", "radiation_damping"])
+def test_hydrodynamics_zero_diagonal_cannot_hide_asymmetry(family):
+    symmetric = HydroMatrix6x6(frequency_rad_s=1, values=np.zeros((6, 6)).tolist())
+    coeffs = HydroCoefficients(added_mass=[symmetric], radiation_damping=[symmetric])
+    assert check_hydrodynamics(coeffs, _heave_table())["status"] == "PASS"
+    values = np.zeros((6, 6))
+    values[0, 1] = 1
+    setattr(coeffs, family, [HydroMatrix6x6(frequency_rad_s=1, values=values.tolist())])
+    with pytest.raises(ValueError, match="asymmetry"):
+        check_hydrodynamics(coeffs, _heave_table())
+
+
 def test_hydrodynamics_derives_long_wave_heave_from_all_headings():
     matrix = HydroMatrix6x6(frequency_rad_s=1, values=np.eye(6).tolist())
     coeffs = HydroCoefficients(added_mass=[matrix], radiation_damping=[matrix])
