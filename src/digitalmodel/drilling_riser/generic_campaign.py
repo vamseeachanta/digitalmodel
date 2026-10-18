@@ -91,13 +91,13 @@ def load_criteria(path: Path | None, table: dict) -> tuple[dict, str]:
 
 
 def digest(path: Path) -> str:
-    """Hash the exact bytes of an artifact."""
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    """Hash UTF-8 text with universal newlines normalized to LF."""
+    return hashlib.sha256(path.read_text(encoding='utf-8').encode('utf-8')).hexdigest()
 
 
 def source_digest(path: Path) -> str:
     """Hash canonical UTF-8/LF source text, independent of checkout CRLF."""
-    return hashlib.sha256(path.read_text(encoding='utf-8').encode('utf-8')).hexdigest()
+    return digest(path)
 
 
 def calculation_fingerprints(directory: Path | None = None) -> dict[str, str]:

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import glob
+import html
+import json
 import logging
 import shutil
 from pathlib import Path
@@ -19,6 +21,8 @@ from digitalmodel.hydrodynamics.aqwa.aqwa_analysis_raos import AqwaRAOs
 from digitalmodel.hydrodynamics.aqwa.aqwa_dat_files import AqwaDATFiles, DATInspectionResult
 from digitalmodel.marine_ops.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
 
+
+from .qa_gates import input_manifest, record_gates, verify_manifest, write_report_evidence
 
 LOGGER = logging.getLogger(__name__)
 DEFAULT_RESULTS_DIR = Path(
@@ -193,12 +197,23 @@ class ViscousDampingDetermination(AqwaRAOs):
             dat_path: Path = record["dat"]
             lis_path: Path = record["lis"]
 
+            source_paths = {"dat": dat_path, "lis": lis_path}
+            source_manifest = input_manifest(source_paths)
             inspection = self.dat_parser.inspect_dat_file(str(dat_path))
             self.dat_parser.validate_ldrg_option(str(dat_path))
-            self.dat_parser.validate_cog_element(str(dat_path))
+            expected_cog = config.get("context", {}).get("cog_element", 98000)
+            metadata = self.dat_parser.validate_cog_element(str(dat_path), expected_element=expected_cog)
+            if metadata is not None:
+                inspection.deck_one = metadata
 
             lis_basic = self.lis_parser.parse_lis_file(str(lis_path))
             frequencies = lis_basic["frequencies"]
+            declared_units = config.get("context", {}).get("rao_units", {})
+            for dof, entry in lis_basic["raos"].items():
+                if dof in declared_units:
+                    if entry.get("unit") and entry["unit"] != declared_units[dof]:
+                        raise ValueError(f"{dof}: configured RAO unit conflicts with LIS")
+                    entry["unit"] = declared_units[dof]
 
             radiation_section = self.lis_parser.extract_damping_matrices(str(lis_path))
             added_mass_section = self.lis_parser.extract_added_mass_matrices(str(lis_path))
@@ -222,6 +237,7 @@ class ViscousDampingDetermination(AqwaRAOs):
                 lis_basic["raos"],
                 drag_properties,
                 fluid_density=density,
+                wave_amplitude=config.get("context", {}).get("wave_amplitude"),
             )
 
             external_damping = self._broadcast_external_damping(
@@ -236,15 +252,13 @@ class ViscousDampingDetermination(AqwaRAOs):
                 external_damping,
             )
 
-            inertia = dict(inspection.inertia) if inspection.inertia else {}
-            if not inertia:
-                inertia = self._resolve_hydro_property(inertia_defaults, record, required=True)
-            elif inspection.mass and "I33" not in inertia:
+            inertia = dict(inspection.inertia)
+            if inspection.mass and not inertia.get("I33"):
                 inertia["I33"] = inspection.mass
-
-            restoring = restoring_from_lis or dict(inspection.restoring)
-            if not restoring:
-                restoring = self._resolve_hydro_property(restoring_defaults, record, required=True)
+            inertia = self._complete_hydro_property(inertia, inertia_defaults, record, "I")
+            restoring = dict(inspection.restoring)
+            restoring.update(restoring_from_lis)
+            restoring = self._complete_hydro_property(restoring, restoring_defaults, record, "C")
 
             ratios_inf = self.damping_analyzer.compute_critical_damping_ratios(
                 frequencies,
@@ -266,8 +280,38 @@ class ViscousDampingDetermination(AqwaRAOs):
                 use_frequency_dependent=True,
             )
 
+            bindings = {key: value["sha256"] for key, value in source_manifest.items()}
+            local_gates = {
+                "AQ-01": {"decision": "PASS", "input_sha256": bindings,
+                          "checks": {"ldrg_present": True, "expected_cog_matches": True},
+                          "evidence": {"ldrg": inspection.options["LDRG"],
+                                       "cog_source": "configured" if "cog_element" in config.get("context", {}) else "default",
+                                       "expected_cog": expected_cog,
+                                       "observed_cog": inspection.deck_one.cog_element}},
+                "AQ-02": {"decision": "PASS", "input_sha256": bindings,
+                          "checks": {"radiation_grid_matches": True, "added_mass_grid_matches": True},
+                          "evidence": {"rao_rad_s": frequencies.tolist(),
+                                       "radiation_rad_s": radiation_section["frequencies"].tolist(),
+                                       "added_mass_rad_s": added_mass_section["frequencies"].tolist()}},
+                "AQ-03": {"decision": "PASS", "input_sha256": bindings,
+                          "checks": {"required_inertia_present": True,
+                                     "required_restoring_present": True, "resonance_solved": True},
+                          "evidence": {"inertia": inertia, "restoring": restoring,
+                                       "natural_frequency_rad_s": {
+                                           dof: value["natural_frequency_rad_s"]
+                                           for dof, value in ratios_inf.items()}}},
+            }
+
             record_result = {
                 "record_id": record["id"],
+                "input_paths": source_paths,
+                "input_manifest": source_manifest,
+                "qa_gates": record_gates(
+                    config.get("qa_gates", {}).get(record["id"]),
+                    expected_inputs=bindings, local=local_gates,
+                ),
+                "quality_signature": config.get("quality_signatures", {}).get(
+                    record["id"], config.get("quality_signature")),
                 "vessel": record.get("vessel"),
                 "draft": record.get("draft"),
                 "frequencies": frequencies,
@@ -289,6 +333,7 @@ class ViscousDampingDetermination(AqwaRAOs):
                 "restoring": restoring,
             }
 
+            verify_manifest(source_manifest, source_paths)
             case_results["records"].append(record_result)
 
         return case_results
@@ -313,11 +358,26 @@ class ViscousDampingDetermination(AqwaRAOs):
             return dict(property_cfg[record_key])
         if vessel_key and vessel_key in property_cfg:
             return dict(property_cfg[vessel_key])
+        if any(isinstance(value, dict) for value in property_cfg.values()):
+            raise ValueError("No matching hydrostatic configuration key for record")
+        if not all(key in {"I33", "I44", "I55", "I66", "C33", "C44", "C55"} for key in property_cfg):
+            raise ValueError("Invalid flat hydrostatic coefficient schema")
         return dict(property_cfg)
 
+    def _complete_hydro_property(self, values, defaults, record, prefix):
+        required = [prefix + suffix for suffix in ("33", "44", "55")]
+        missing = [key for key in required if key not in values or (prefix == "I" and values[key] == 0)]
+        if missing:
+            fallback = self._resolve_hydro_property(defaults, record)
+            for key in missing:
+                if key not in fallback:
+                    raise ValueError(f"Missing required hydrostatic coefficient {key}")
+                values[key] = fallback[key]
+        return values
+
     def _validate_frequency_alignment(self, base: np.ndarray, other: np.ndarray) -> None:
-        if other.size == 0:
-            return
+        if base.size == 0 or other.size == 0 or not np.all(np.isfinite(base)) or not np.all(np.isfinite(other)):
+            raise ValueError("Frequency grids must be nonempty and finite")
         if base.shape != other.shape or not np.allclose(base, other, rtol=1e-5, atol=1e-8):
             raise ValueError("Frequency grids between DAT/LIS data are inconsistent")
 
@@ -349,10 +409,11 @@ class ViscousDampingDetermination(AqwaRAOs):
             centroid = entry.get("centroid") or (0.0, 0.0, 0.0)
             lever_x = centroid[0] - cog[0]
             lever_y = centroid[1] - cog[1]
+            lever_z = centroid[2] - cog[2]
 
             properties["heave"].append({"cd": cd_normal, "area": area, "lever_arm": 0.0})
-            properties["roll"].append({"cd": cd_normal, "area": area, "lever_arm": lever_y})
-            properties["pitch"].append({"cd": cd_normal, "area": area, "lever_arm": lever_x})
+            properties["roll"].append({"cd": cd_normal, "area": area, "lever_arm": float(np.hypot(lever_y, lever_z))})
+            properties["pitch"].append({"cd": cd_normal, "area": area, "lever_arm": float(np.hypot(lever_x, lever_z))})
 
         return properties
 
@@ -405,8 +466,10 @@ class ViscousDampingDetermination(AqwaRAOs):
 
         figures: List[go.Figure] = []
         damping_tables: List[pd.DataFrame] = []
+        evidence = []
 
         for record in case_results["records"]:
+            evidence.append(write_report_evidence(record, data_dir))
             df_damping = self._build_damping_dataframe(record)
             df_percentages = self._build_percentage_dataframe(record)
             df_critical = self._build_critical_dataframe(record)
@@ -423,7 +486,9 @@ class ViscousDampingDetermination(AqwaRAOs):
         figures.append(self._build_sensitivity_chart(case_results))
 
         html_output = case_dir / f"{case_id}_viscous_damping.html"
-        html_output.write_text(self._compose_html_page(case_id, figures, damping_tables), encoding="utf-8")
+        page = self._compose_html_page(case_id, figures, damping_tables)
+        appendix = "<h2>QA gate appendix</h2><pre>" + html.escape(json.dumps(evidence, indent=2)) + "</pre>"
+        html_output.write_text(page.replace("</body>", appendix + "</body>"), encoding="utf-8")
 
     def _build_damping_dataframe(self, record: Dict[str, Any]) -> pd.DataFrame:
         freq = record["frequencies"]
@@ -468,21 +533,14 @@ class ViscousDampingDetermination(AqwaRAOs):
         )
 
     def _build_critical_dataframe(self, record: Dict[str, Any]) -> pd.DataFrame:
-        freq = record["frequencies"]
-        ratios_inf = record["critical"]["infinite_frequency"]
-        ratios_freq = record["critical"]["frequency_dependent"]
-
-        return pd.DataFrame(
-            {
-                "frequency": freq,
-                "zeta_heave_inf": ratios_inf["heave"]["critical_damping_ratio"],
-                "zeta_roll_inf": ratios_inf["roll"]["critical_damping_ratio"],
-                "zeta_pitch_inf": ratios_inf["pitch"]["critical_damping_ratio"],
-                "zeta_heave_freq": ratios_freq["heave"]["critical_damping_ratio"],
-                "zeta_roll_freq": ratios_freq["roll"]["critical_damping_ratio"],
-                "zeta_pitch_freq": ratios_freq["pitch"]["critical_damping_ratio"],
-            }
-        )
+        columns = {"frequency_rad_s": record["frequencies"]}
+        for method, suffix in (("infinite_frequency", "inf"), ("frequency_dependent", "freq")):
+            for dof, result in record["critical"][method].items():
+                columns[f"diagnostic_grid_zeta_{dof}_{suffix}"] = result["critical_damping_ratio"]
+                columns[f"zeta_{dof}_at_natural_frequency_{suffix}"] = result["zeta_at_natural_frequency"]
+                columns[f"natural_frequency_{dof}_{suffix}_rad_s"] = result["natural_frequency_rad_s"]
+                columns[f"natural_period_{dof}_{suffix}_s"] = result["natural_period_s"]
+        return pd.DataFrame(columns)
 
     def _build_damping_vs_frequency_figures(self, case_results: Dict[str, Any]) -> List[go.Figure]:
         figures: List[go.Figure] = []
@@ -557,7 +615,7 @@ class ViscousDampingDetermination(AqwaRAOs):
             fig.add_trace(go.Bar(x=record_names, y=ratios, name=dof.capitalize()))
 
         fig.update_layout(
-            title="Critical damping ratios (A_inf method)",
+            title="Critical damping ratios at natural frequency (A_inf method)",
             barmode="group",
             yaxis_title="Critical damping ratio ζ",
         )
@@ -594,8 +652,7 @@ class ViscousDampingDetermination(AqwaRAOs):
         return fig
 
     def _characteristic_ratio(self, ratios: Dict[str, Any], dof: str) -> float:
-        values = ratios[dof]["critical_damping_ratio"]
-        return float(np.nanmax(values)) if values.size else 0.0
+        return float(ratios[dof]["zeta_at_natural_frequency"])
 
     def _compose_html_page(
         self,
@@ -630,9 +687,9 @@ class ViscousDampingDetermination(AqwaRAOs):
                         "record_id": record["record_id"],
                         "vessel": record.get("vessel"),
                         "draft": record.get("draft"),
-                        "max_zeta_heave": self._characteristic_ratio(record["critical"]["infinite_frequency"], "heave"),
-                        "max_zeta_roll": self._characteristic_ratio(record["critical"]["infinite_frequency"], "roll"),
-                        "max_zeta_pitch": self._characteristic_ratio(record["critical"]["infinite_frequency"], "pitch"),
+                        "zeta_heave_at_natural_frequency": self._characteristic_ratio(record["critical"]["infinite_frequency"], "heave"),
+                        "zeta_roll_at_natural_frequency": self._characteristic_ratio(record["critical"]["infinite_frequency"], "roll"),
+                        "zeta_pitch_at_natural_frequency": self._characteristic_ratio(record["critical"]["infinite_frequency"], "pitch"),
                     }
                 )
 

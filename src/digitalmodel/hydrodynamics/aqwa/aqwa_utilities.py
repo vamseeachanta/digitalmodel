@@ -1,17 +1,14 @@
+import hashlib
 import logging
 import os
 import subprocess
+import re
+from pathlib import Path
 
 from assetutilities.common.data import SaveData
 
 
 save_data = SaveData()
-
-try:
-    # Third party imports
-    import OrcFxAPI
-except:
-    logging.debug("OrcFxAPI not available")
 
 # Third party imports
 from assetutilities.common.file_management import FileManagement
@@ -26,6 +23,8 @@ class AqwaUtilities:
     def is_license_available(self):
         # TODO
         try:
+            import OrcFxAPI
+
             model = OrcFxAPI.Model()
             print("Orcaflex license is available")
             return True
@@ -72,26 +71,54 @@ class AqwaUtilities:
         return aqwa_exe
 
     def run_aqwa_analysis_as_subprocess(self, cfg, input_file, process="subprocess"):
-        aqwa_exe = self.get_aqwa_exe(cfg)
-        # Currently the time to startup client is sufficent for socket to be ready.
-        # possibly write out a temp.bat and send that to detached subprocess.
-        # args = ['ping 127.0.0.1 -n 1', '&&', aqwa_exe, '/nowind', input_file]
-        # args = ['timeout', '5', '&&', aqwa_exe, '/nowind', input_file]
-        args = [aqwa_exe, "/nowind", input_file]
-        logging.info(f"AQWA process running for {input_file} ... START")
-
-        if process == "detached":
-            DETACHED_PROCESS = 0x00000008
-            aqwa_process = subprocess.Popen(
-                args,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                creationflags=DETACHED_PROCESS,
+        """Return captured exit/MES evidence; execution requires explicit opt-in."""
+        if cfg.get("execution", {}).get("allow_solver") is not True:
+            raise ValueError("Native execution is disabled; provide qualified external evidence")
+        if process == "launch-only":
+            return subprocess.Popen(
+                [self.get_aqwa_exe(cfg), "/nowind", str(input_file)],
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
-        elif process == "subprocess":
-            aqwa_process = subprocess.Popen(
-                args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-            aqwa_out, err = aqwa_process.communicate()
-
-        logging.info(f"AQWA process running for {input_file} ... ... ... ... COMPLETE")
+        if process != "subprocess":
+            raise ValueError("Detached execution cannot establish completion evidence")
+        source = Path(input_file)
+        source_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        lis_path = source.with_suffix(".LIS")
+        lis_before = lis_path.stat().st_mtime_ns if lis_path.exists() else None
+        mes_path = source.with_suffix(".MES")
+        before = mes_path.stat().st_mtime_ns if mes_path.exists() else None
+        result = subprocess.run(
+            [self.get_aqwa_exe(cfg), "/nowind", str(input_file)],
+            capture_output=True, text=True, check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        errors, warnings = [], []
+        status = "MISSING"
+        if mes_path.exists():
+            content = mes_path.read_text(encoding="utf-8", errors="strict")
+            errors = [line for line in content.splitlines() if re.search(r"\b(ERROR|FATAL)\b", line, re.I)]
+            warnings = [line for line in content.splitlines() if re.search(r"\bWARNING\b", line, re.I)]
+            status = "FAIL" if errors or warnings else "PASS"
+            if not content.strip():
+                status = "EMPTY"
+            if before == mes_path.stat().st_mtime_ns:
+                status = "STALE"
+        if hashlib.sha256(source.read_bytes()).hexdigest() != source_digest:
+            raise ValueError("AQ-04: input digest changed during native execution")
+        input_sha256 = {"dat": source_digest}
+        body_ids = set()
+        if lis_path.exists() and lis_path.stat().st_mtime_ns != lis_before:
+            content = lis_path.read_text(encoding="utf-8", errors="replace")
+            for line in content.splitlines():
+                match = re.search(r"HYDRODYNAMICPARAMETERSFORSTRUCTURE(\d+)",
+                                  re.sub(r"\s+", "", line.upper()))
+                if match:
+                    body_ids.add(int(match[1]))
+            input_sha256["lis"] = hashlib.sha256(lis_path.read_bytes()).hexdigest()
+        body_count = len(body_ids) if body_ids and body_ids == set(range(1, max(body_ids)+1)) else None
+        return {"body_count": body_count,
+                "expected_body_count": cfg.get("execution", {}).get("expected_body_count"),
+                "input_sha256": input_sha256,
+                "returncode": result.returncode, "stdout": result.stdout,
+                "stderr": result.stderr, "mes_status": status,
+                "errors": errors, "warnings": warnings}

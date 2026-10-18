@@ -1,3 +1,6 @@
+# Generation audit #2711: BLOCKED (pre-existing strict-format findings).
+# The YAML-strict validator reports five misplaced draught-property fields.
+# This is separate from post-validation; resolve before engineering use.
 # OrcaFlex Modular Model Generator - Template Specification
 # CALM Buoy Moored - Discretised CALM Buoy with Supply Vessel
 #

@@ -43,21 +43,50 @@ class AQWAEnhancedParser:
         # Each value is approximately 9 characters wide
         self.value_width = 9
     
-    def parse_lis_file(self, file_path: str) -> Dict[str, Any]:
+    def parse_lis_file(self, file_path: str, structure: Optional[int] = None) -> Dict[str, Any]:
         """Parse AQWA .lis file and extract RAO data with data interpretation."""
         content = self._read_file_content(file_path)
         
+        # Structure headings repeat on listing pages; retain only the selected body.
+        headings_pattern = re.compile(
+            r"(?m)^.*H Y D R O D Y N A M I C\s+P A R A M E T E R S\s+F O R\s+S T R U C T U R E\s+(\d+).*$")
+        markers = list(headings_pattern.finditer(content))
+        structures = {int(marker[1]) for marker in markers}
+        if structure is None:
+            if len(structures) > 1:
+                raise AQWAFileError("Multiple RAO structures; select a structure explicitly")
+            structure = next(iter(structures), 1)
+        if structure not in (structures or {1}):
+            raise AQWAFileError("Requested RAO structure is absent")
+        if markers:
+            content = "\n".join(
+                content[marker.start():markers[i+1].start() if i+1 < len(markers) else len(content)]
+                for i, marker in enumerate(markers) if int(marker[1]) == structure)
+
         # Find all displacement RAO sections
         sections = self._find_displacement_rao_sections(content)
         if not sections:
             raise AQWAFileError("No displacement RAO sections found in the AQWA file")
         
-        # Use the last section
-        last_section = sections[-1]
-        
-        # Parse the RAO data with enhanced interpretation
-        rao_data = self._parse_rao_section_enhanced(last_section)
-        
+        rao_data = {}
+        units_rows = []
+        rotation_units = set()
+        for section in sections:
+            units_rows.extend(line.strip() for line in section.splitlines() if "(RAD/S)" in line)
+            for unit in re.findall(r"(?i)\b(?:DEG|RAD)/M\b", section):
+                rotation_units.add(unit.lower())
+            for frequency, headings_data in self._parse_rao_section_enhanced(section).items():
+                target = rao_data.setdefault(frequency, {})
+                for heading, values in headings_data.items():
+                    if heading in target and target[heading] != values:
+                        raise AQWAFileError("Conflicting RAO blocks; select one structure/result")
+                    target[heading] = values
+        if not rao_data:
+            raise AQWAFileError("Displacement RAO table contains no data")
+        if len(rotation_units) > 1:
+            raise AQWAFileError("Conflicting rotational RAO units")
+        rotation_unit = next(iter(rotation_units), None)
+
         # Convert to required format
         frequencies = sorted(list(rao_data.keys()))
         all_headings = set()
@@ -71,8 +100,9 @@ class AQWAEnhancedParser:
         
         raos = {
             dof: {
-                'amplitude': np.zeros((n_freq, n_head)),
-                'phase': np.zeros((n_freq, n_head))
+                'amplitude': np.full((n_freq, n_head), np.nan),
+                'phase': np.full((n_freq, n_head), np.nan),
+                'unit': 'm/m' if dof in ('surge', 'sway', 'heave') else rotation_unit
             }
             for dof in ['surge', 'sway', 'heave', 'roll', 'pitch', 'yaw']
         }
@@ -89,59 +119,32 @@ class AQWAEnhancedParser:
         return {
             'frequencies': np.array(frequencies),
             'headings': np.array(headings),
-            'raos': raos
+            'raos': raos,
+            'structure': structure,
+            'units_rows': units_rows
         }
 
     def _read_file_content(self, file_path: str) -> str:
+        """Read current bytes; a path-only cache cannot qualify input digests."""
         path = Path(file_path)
-        cache_key = str(path.resolve())
-        if cache_key not in self._content_cache:
-            try:
-                self._content_cache[cache_key] = path.read_text(
-                    encoding='utf-8', errors='ignore'
-                )
-            except Exception as exc:  # pragma: no cover - direct IO
-                raise AQWAFileError(f"Failed to read file {file_path}: {exc}")
-        return self._content_cache[cache_key]
+        try:
+            return path.read_text(encoding='utf-8', errors='strict')
+        except (OSError, UnicodeError) as exc:
+            raise AQWAFileError(f"Failed to read file {file_path}: {exc}") from exc
     
     def _find_displacement_rao_sections(self, content: str) -> List[str]:
-        """Find all displacement RAO sections in the content."""
+        """Collect displacement pages only; stop before velocity/acceleration."""
+        matches = list(re.finditer(
+            r"(?m)^ *R\.A\.O\.S-VARIATION\s+WITH\s+WAVE\s+DIRECTION", content))
         sections = []
-        
-        # Find all matches
-        matches = list(self.rao_section_pattern.finditer(content))
-        
-        for i, match in enumerate(matches):
-            start_pos = match.start()
-            
-            # Find the end of this section
-            if i < len(matches) - 1:
-                # End at the next RAO section
-                end_pos = matches[i + 1].start()
-            else:
-                # This is the last section, find a good end point
-                end_pos = len(content)
-                
-                # Look for common section endings
-                section_content = content[start_pos:]
-                end_patterns = [
-                    r'\n\s*\*{10,}',  # Line of asterisks
-                    r'\n\s*H Y D R O D Y N A M I C',  # Next major section
-                    r'\n\s*WAVE DRIFT',
-                    r'\n\s*END OF'
-                ]
-                
-                for pattern in end_patterns:
-                    match_end = re.search(pattern, section_content)
-                    if match_end:
-                        end_pos = start_pos + match_end.start()
-                        break
-            
-            section = content[start_pos:end_pos]
-            sections.append(section)
-        
+        for match in matches:
+            tail = content[match.end():]
+            boundary = re.search(
+                r"(?m)^.*(?:R\.A\.O\.S-VARIATION|H Y D R O D Y N A M I C|WAVE DRIFT|END OF)", tail)
+            end = match.end() + boundary.start() if boundary else len(content)
+            sections.append(content[match.start():end])
         return sections
-    
+
     def _parse_rao_section_enhanced(self, section: str) -> Dict[float, Dict[float, Dict[str, Dict[str, float]]]]:
         """Parse RAO section with enhanced data interpretation.
         
@@ -149,83 +152,29 @@ class AQWAEnhancedParser:
         expanded with the period and frequency from the first row, as specified
         in the requirements.
         """
-        lines = section.split('\n')
-        
-        # Find the header line
-        header_idx = -1
-        for i, line in enumerate(lines):
-            if self.header_pattern.search(line):
-                header_idx = i
-                break
-        
-        if header_idx == -1:
-            raise AQWAFileError("Could not find data header in RAO section")
-        
-        # Skip to the actual data (skip header, separator, units, separator)
-        data_start = header_idx + 4
-        
-        rao_data = {}
-        current_freq = None
-        current_period = None
-        
-        for line_idx in range(data_start, len(lines)):
-            line = lines[line_idx]
-            
-            # Skip empty lines and separators
-            if not line or line.strip().startswith('-'):
+        data = {}
+        frequency = None
+        for line in section.splitlines():
+            tokens = line.split()
+            if len(tokens) not in (13, 15):
                 continue
-            
-            # Stop at major section boundary
-            if '*' in line and len(line.replace('*', '').replace(' ', '').replace('\t', '')) < 5:
-                break
-            
-            # Check if line is long enough
-            if len(line) < 27:
-                continue
-            
             try:
-                # Check if this is a full line or continuation
-                period_str = line[self.full_line_format['period'][0]:self.full_line_format['period'][1]].strip()
-                freq_str = line[self.full_line_format['freq'][0]:self.full_line_format['freq'][1]].strip()
-                
-                if period_str and freq_str:
-                    # This is a full line with period and frequency
-                    period = float(period_str)
-                    freq = float(freq_str)
-                    direction_str = line[self.full_line_format['direction'][0]:self.full_line_format['direction'][1]].strip()
-                    direction = float(direction_str)
-                    
-                    current_freq = freq
-                    current_period = period
-                    
-                    # Extract DOF values
-                    dof_values = self._extract_dof_values_fixed(line, self.full_line_format['data_start'])
-                    
-                    if dof_values:
-                        if freq not in rao_data:
-                            rao_data[freq] = {}
-                        rao_data[freq][direction] = dof_values
-                    
-                else:
-                    # This is a continuation line - apply data interpretation
-                    if current_freq is not None and current_period is not None:
-                        # Parse the continuation line and expand it with current period/freq
-                        expanded_data = self._interpret_continuation_line(
-                            line, current_period, current_freq
-                        )
-                        
-                        if expanded_data:
-                            direction, dof_values = expanded_data
-                            if current_freq not in rao_data:
-                                rao_data[current_freq] = {}
-                            rao_data[current_freq][direction] = dof_values
-                
-            except (ValueError, IndexError):
-                # Skip lines that can't be parsed
+                numbers = [float(token) for token in tokens]
+            except ValueError:
                 continue
-        
-        return rao_data
-    
+            if len(numbers) == 15:
+                _, frequency, heading, *values = numbers
+            else:
+                heading, *values = numbers
+            if frequency is None:
+                raise AQWAFileError("RAO continuation before frequency")
+            if not all(np.isfinite(numbers)):
+                raise AQWAFileError("Nonfinite RAO row")
+            data.setdefault(frequency, {})[heading] = {
+                dof: {"amplitude": values[2*i], "phase": values[2*i+1]}
+                for i, dof in enumerate(DEFAULT_DOF_LABELS)}
+        return data
+
     def _interpret_continuation_line(self, line: str, period: float, freq: float) -> Optional[Tuple[float, Dict[str, Dict[str, float]]]]:
         """Interpret a continuation line by expanding it with period/freq data.
         

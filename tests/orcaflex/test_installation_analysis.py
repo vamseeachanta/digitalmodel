@@ -188,14 +188,17 @@ class TestSlingConfig:
         assert result["pass"] is False
 
     @pytest.mark.parametrize("factor", [None, 1.33, 1.5])
-    def test_revalidation_preserves_default_provenance(self, factor):
-        sling = SlingConfig(skew_load_factor=factor)
+    @pytest.mark.parametrize("opt_in", [False, True])
+    def test_revalidation_preserves_default_provenance(self, factor, opt_in):
+        sling = SlingConfig(skew_load_factor=factor, allow_equal_load_share=opt_in)
         before = sling.calculate_sling_tension(1000)
         restored = SlingConfig.model_validate(sling.model_dump())
         assert restored is not sling
         assert restored.skew_load_factor == factor
         assert restored.calculate_sling_tension(1000) == before
-        assert before["pass"] is True
+        assert before["pass"] is opt_in
+        assert before["load_share_assumed"] is True
+        assert restored.allow_equal_load_share is opt_in
 
     @pytest.mark.parametrize("share", [0, 0.24, 1.01, float("nan"), float("inf")])
     def test_invalid_most_loaded_share(self, share):
@@ -279,7 +282,7 @@ class TestSlingConfig:
 
     def test_safety_factor_check(self):
         """Should pass with low load, fail with high load."""
-        sling = SlingConfig(sling_mbl_kN=2000.0, safety_factor=3.0)
+        sling = SlingConfig(sling_mbl_kN=2000.0, safety_factor=3.0, most_loaded_share=0.25)
         result_low = sling.calculate_sling_tension(200.0)
         result_high = sling.calculate_sling_tension(5000.0)
         assert result_low["pass"] is True
@@ -394,3 +397,25 @@ class TestWeightManagement:
         summary = wm.generate_summary()
         assert len(summary) >= 2  # items + totals
         assert summary[-1]["description"].startswith("TOTAL")
+
+
+@pytest.mark.parametrize("opt_in", [False, True])
+def test_equal_share_requires_explicit_acceptance(opt_in):
+    # DNVGL-ST-E273 (April 2016), §3.5.5: PL includes the extreme CoG;
+    # the matched four-leg SKL=1.33 covers length tolerances only.
+    result = SlingConfig(allow_equal_load_share=opt_in).calculate_sling_tension(1000)
+    assert result["load_share_assumed"] is True
+    assert result["allow_equal_load_share"] is opt_in
+    assert result["pass"] is opt_in
+
+
+def test_supplied_share_needs_no_equal_split_opt_in():
+    result = SlingConfig(most_loaded_share=0.3).calculate_sling_tension(1000)
+    assert result["load_share_assumed"] is False
+    assert result["pass"] is True
+
+
+def test_equal_share_opt_in_cannot_bypass_skew_floor():
+    result = SlingConfig(allow_equal_load_share=True, skew_load_factor=1.1).calculate_sling_tension(10)
+    assert result["skew_load_factor_below_minimum"] is True
+    assert result["pass"] is False

@@ -5,15 +5,15 @@
 | Module | hydrodynamics/aqwa |
 | Repository | digitalmodel |
 | Package path | `src/digitalmodel/hydrodynamics/aqwa` |
-| Pack revision | 0, 2026-10-16 |
-| Code revision | `6cf35f466e5c1b730951af045d8cfe0065af073f` |
+| Pack revision | 1, 2026-10-18; audit repairs |
+| Code revision | Current checkout for sections 4–5; historical inventory pin `6cf35f466e5c1b730951af045d8cfe0065af073f` |
 | Analysis family | diffraction; registry family DF |
 | Quality role | diffraction quality manager |
-| Status | DRAFT; second-provider clearance pending |
+| Status | DRAFT; offline regressions verified; native qualification NOT_RUN |
 | Implementation-map revision | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
 | Map embedded data revision | `270c8759c374b67a7f032953e7fcdb14e0224461` |
 
-Code citations resolve at the code revision; `docs/registry/implementation-map.yaml` citations resolve at the separate implementation-map revision, whose inventory describes its embedded data revision.
+Sections 4–5 define current executable behaviour. Sections 6–10 retain the historical audit inventory and are not current acceptance evidence. Historical line citations resolve at the inventory pin; `docs/registry/implementation-map.yaml` citations resolve at the separate implementation-map revision, whose inventory describes its embedded data revision. The repair PR records current test counts and limitations.
 
 ## 1. Purpose and scope
 
@@ -64,7 +64,7 @@ These are descriptions of implemented algorithms, not independent validation ref
 | Method | Implementing definition / governing basis |
 | --- | --- |
 | Deck construction | `get_dc_data` combines library header, dynamically selected body and footer; node coordinates use three decimal places. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L93-L102][src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L145-L163] |
-| Deck metadata parsing | `inspect_dat_file` groups decks and parses options, frequency, drag, CoG, mass, inertia and restoring; frequency parsing uses reciprocal period. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L515-L539][src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L564-L615] |
+| Deck metadata parsing | `inspect_dat_file` groups decks and parses options, frequency, drag, CoG, mass, inertia and restoring; frequency cards are explicitly converted to rad/s and s; DIRN is separate. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L515-L539][src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L564-L615] |
 | LIS block parsing | `get_data`, `get_refine_data_using_cfg`, `get_data_for_refine_data_line_number` find configured keyword spans and coerce numeric rows, including continuation-row metadata. [src/digitalmodel/hydrodynamics/aqwa/aqwa_lis_files.py:L41-L150] |
 | Response transforms | `transform_by_data_key` multiplies displacement by frequency or frequency squared and rounds the result; an angular-frequency input is needed for the velocity/acceleration interpretation. [src/digitalmodel/hydrodynamics/aqwa/aqwa_lis_files.py:L189-L216] |
 | Equilibrium parsing, supplemental inventory | `AqwaReader.process_equilibrium_result` separates stdout on comma/colon, extracts labels and float-converts a fixed row slice. [src/digitalmodel/hydrodynamics/aqwa/aqwa_reader.py:L290-L313] |
@@ -74,51 +74,53 @@ These are descriptions of implemented algorithms, not independent validation ref
 | Heading aggregation | `compute_heading_rms` uses square root of the NaN-aware mean of squared amplitudes. [src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis_damping.py:L61-L69] |
 | Viscous linearization | `derive_viscous_damping_statistical` and `_aggregate_viscous_force` combine density, member drag, area, frequency, heading RMS and rotational lever arm. [src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis_damping.py:L71-L155] |
 | Damping combination | `combine_damping` sums radiation, viscous and external arrays; zero totals yield zero component percentages. [src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis_damping.py:L157-L200] |
-| Critical ratio | `compute_critical_damping_ratios` uses inertia plus added mass, square-root stiffness/mass frequency and damping divided by twice mass times natural frequency; nonpositive denominators yield zero ratio. [src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis_damping.py:L202-L260] |
-| Hydrostatic precedence | `_process_case` prefers LIS restoring, then DAT restoring, then configured properties; frequency alignment is checked only for nonempty comparator grids. [src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L196-L267][src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L318-L322] |
+| Critical ratio | `compute_critical_damping_ratios` uses inertia plus added mass, square-root stiffness/mass frequency and damping divided by twice mass times natural frequency; nonpositive mass or restoring raises; one in-grid resonance is required, and damping is interpolated there. [src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis_damping.py:L202-L260] |
+| Hydrostatic precedence | `_process_case` prefers LIS restoring, then DAT restoring, then configured properties; frequency alignment requires nonempty finite comparator grids. [src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L196-L267][src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L318-L322] |
 | Force rotation and moment | `RotationMatrix.Apply` rotates vectors; `ForceTorque` computes the offset cross force; the default rotation constructor has an unresolved failure listed in section 6. [src/digitalmodel/hydrodynamics/aqwa/ef_server/AqwaServerMgr.py:L244-L304] |
 | External-force coupling | `ef_server_router` starts native AQWA and exchanges callback state; callback functions produce force/added-mass arrays and save histories. [src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis_ef_server.py:L48-L116][src/digitalmodel/hydrodynamics/aqwa/ef_server/AqwaServerMgr.py:L390-L473] |
 
-UNVERIFIED: U2 — the numerical kernels do not establish a governing standard edition or emitted calculation Citation sidecar; no licensed clause text has been checked, and the implemented viscous model is not an independent hand-check reference (section 10).
+Engineering basis: [damping-basis.md](damping-basis.md), E1–E5; output includes a hash-bound derivation Citation sidecar. Solver-equivalence qualification is not established.
 
 ## 4. Validated worked examples
 
-Validated examples: **0**; no independent expected hydrodynamic benchmark is established by the two synthetic precedence tests below, which replace both parsers. [tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L17-L99]
+The offline harmonic approximation is independently derived in [damping-basis.md](damping-basis.md), E1–E5. Solver qualification is not established. The method name `derive_viscous_damping_statistical` is retained for compatibility but the method is harmonic. `context.wave_amplitude: {value: 1.0, unit: m}` is required; all grid-zeta CSV columns are labelled `diagnostic_grid_*`, while resonance values and periods are separate columns; rotational RAOs require `rad/m` or `deg/m`. When the LIS has no rotational unit, declare `context.rao_units: {roll: deg/m, pitch: deg/m}` from a verified source. Direction degrees do not establish rotation units.
 
-Regression examples: **2**; expected values are synthetic test literals, with no established physical coefficient unit; these check source precedence only, not hydrodynamic accuracy. [tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L102-L151]
-
-| Case / source | Input and expected value | Tolerance / test node | Offline result |
-| --- | --- | --- | --- |
-| Restoring source precedence; synthetic revision at code pin | Fake DAT/LIS objects; LIS C33/C44/C55 = 1111/2222/3333 synthetic coefficient units | `pytest.approx` defaults; `tests/hydrodynamics/aqwa/test_viscous_damping_determination.py::test_restoring_prioritizes_lis_values` | PASS at baseline and AFTER. [tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L102-L138] |
-| Whole-missing LIS restoring; synthetic revision at code pin | Fake DAT/LIS objects; DAT C33/C44/C55 = 101/202/303 synthetic coefficient units | `pytest.approx` defaults; `tests/hydrodynamics/aqwa/test_viscous_damping_determination.py::test_restoring_falls_back_to_dat_when_lis_missing` | PASS at baseline and AFTER. [tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L141-L151] |
-
-No physical meaning is assigned to the synthetic coefficient numbers; U1 covers the missing dimensional contract.
+| Calculation / package function | Expected result | Executable test |
+| --- | --- | --- |
+| `AqwaDamping.derive_viscous_damping_statistical`, E1–E3 | Heave 2175.1176 N s/m; symmetric roll 435023.511 N m s/rad, relative tolerance 0.1% | `tests/hydrodynamics/aqwa/test_audit_damping.py::test_harmonic_heave_and_symmetric_roll` |
+| `AqwaDamping.compute_critical_damping_ratios`, E4–E5 | omega_n 0.40824829 rad/s; T_n 15.39059796 s; zeta 0.0102062073 | `tests/hydrodynamics/aqwa/test_audit_damping.py::test_natural_frequency_zeta_and_period` |
+| `ViscousDampingDetermination._characteristic_ratio` | zeta at 0.5 rad/s, independent of off-resonance peak | `tests/hydrodynamics/aqwa/test_audit_damping.py::test_summary_uses_resonance_not_grid_peak` |
+| `AqwaDATFiles._parse_deck6` | 50 angular frequencies, first 0.1000 rad/s; 9 separate directions | `tests/hydrodynamics/aqwa/test_audit_dat.py::test_deck6_template` |
+| `AqwaLISFiles.get_data`, category `displacement_raos` | 72 rows; first frequency 0.1 rad/s, heading -180 degrees, heave 0.9973 m/m | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_get_data_from_lis_file` |
+| `ViscousDampingDetermination._process_case` | LIS restoring takes precedence over DAT; missing LIS falls back per coefficient | `tests/hydrodynamics/aqwa/test_viscous_damping_determination.py::test_restoring_prioritizes_lis_values`; `tests/hydrodynamics/aqwa/test_viscous_damping_determination.py::test_restoring_falls_back_to_dat_when_lis_missing` |
 
 ## 5. QA gates
 
-The required family gates are G0, G1, G4 and G5; G2 and G3 are NOT_APPLICABLE for diffraction preparation under AQG r0, section 10, AQWA row. The outputs here are AQWA decks and reader/report products; the OrcaWave load route is NOT_APPLICABLE because this package has no OrcaWave output writer. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L104-L144][src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis.py:L12-L39]
+Every check below names a package function or output and an executable regression. G1 and G4 require external evidence; offline test success is not native qualification. `qa_gates.validate_external_gate` validates the current DAT/LIS input binding, retained artifact digest and maintainer's manual criterion assertions, not the underlying mesh calculation. Its required tool is **AQWA Workbench hydrostatics and mesh inspection**, with a retained version and AQG-r0 criteria. Each supplied gate record requires an `input_sha256` mapping matching the current DAT and LIS bytes. A solver is not launched by any gate validator. `run_aqwa_analysis_as_subprocess` fails before executable discovery unless `execution.allow_solver: true` is explicitly supplied; detached completion is rejected.
 
-Checks below define executable acceptance procedures; a definition does not claim that its gate has passed. Numerical gate tolerances are from AQG r0, sections 4–10, rather than a licensed standard. Native checks remain NOT_RUN; no solver or licensed interface was started for this pack.
+The G4 tolerances below remain the original AQG r0 sections 5, 8 and 9 criteria; they are not newly claimed licensed-standard limits. Missing evidence is `NOT_RUN`, a supplied violation raises, and publication qualification requires every applicable gate plus a maintainer quality signature. `_generate_case_reports` writes a QA appendix and a per-record digest manifest even when qualification is incomplete.
 
-| Gate / check | Module-specific procedure | Numeric pass criterion and unit | Evidence / current disposition |
-| --- | --- | --- | --- |
-| G0 / AQ-01 | Run `validate_ldrg_option` and `validate_cog_element` on each damping DAT, compare selected CoG element with configured expectation | 0 missing LDRG flags; 0 mismatching element IDs, count | Exceptions and DAT inspection metadata; NOT_RUN without qualified decks. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L541-L558] |
-| G0 / AQ-02 | Call `_validate_frequency_alignment` on extracted LIS RAO and radiation/added-mass grids, first require both nonempty | 0 missing frequencies, count; equal shapes and all differences ≤ `1e-8 + 1e-5*abs(other)` rad/s after unit reconciliation | Grid arrays and mismatch exceptions; NOT_RUN; empty-grid blind spot in section 6. [src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L200-L212][src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L318-L322] |
-| G0 / AQ-03 | Run the two section-4 restoring tests against `_process_case` | 0 incorrect coefficient selections, count; test `pytest.approx` criterion | Test-node outcomes in section 4; precedence only. [tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L127-L151] |
-| G0 / AQ-12 | Run `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesEdgeCases::test_csv_save_disabled` on `AqwaLISFiles.save_to_csv` | 0 non-None returned filenames when save is disabled, count | PASS at baseline; regression of an option, not an error-path test. [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L309-L343] |
-| G0 / AQ-13 | Run the LIS parser velocity and acceleration transformation tests on `transform_by_data_key` | Absolute errors < 0.001 in the synthetic output units; 0 failed assertions, count | PASS at baseline; frequency-unit correctness remains unqualified. [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L178-L248] |
-| G1 / AQ-04 | For every deck written by `write_dc_data`, use the target AQWA executable with the deck, run only through hydrostatics, then read native LIS and MES; compare body count with manifest | Exit status 0, 0 native errors, 0 load warnings, 0 count differences, count | Native version, stage, message text, input fingerprint and output digests; NOT_RUN: licensed AQWA required. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L104-L112][src/digitalmodel/hydrodynamics/aqwa/aqwa_utilities.py:L59-L97][src/digitalmodel/hydrodynamics/aqwa/mes_files.py:L16-L52] AQG r0, sections 5 and 10. |
-| G2 | NOT_APPLICABLE | No statics QA gate for this diffraction family | AQG r0, section 10, AQWA row. |
-| G3 | NOT_APPLICABLE | No short-dynamics QA gate for this diffraction family | AQG r0, section 10, AQWA row. |
-| G4 / AQ-05 | Compare `inspect_dat_file.mass` and independent mesh displaced volume against native hydrostatics, with one declared density/gravity and any declared preload | Weight residual ≤ 1.0% of weight; volume residual ≤ 0.5%, % | Balance and independent integration tables; NOT_RUN: independent mesh/hydrostatics not in hand. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L518-L539] AQG r0, section 8, G4.1–G4.2. |
-| G4 / AQ-06 | Compare independent CoB, mass-model CoG and GM with the deck/hydrostatics for each body; the parser's fixed CoG ID alone is insufficient | CoB horizontal residual ≤ 0.5% length, vertical ≤ 1.0% draft; GM > 0 m and difference ≤ 2.0% | Centres/GM table; NOT_RUN: hydrostatics required. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L550-L558][src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L704-L731] AQG r0, section 8, G4.3. |
-| G4 / AQ-07 | Independently inspect mesh used with the generated deck; compare panel count with target-version limit and shortest-wave panel size | 0 panels above version limit, count; aspect ratio ≤ 3, unit 1; maximum dimension ≤ shortest wavelength/6, m | Mesh metrics, memory estimate and version limit source; NOT_RUN: no mesh qualification. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L93-L112] AQG r0, section 8, G4.4. |
-| G4 / AQ-08 | Independently inspect waterline, draft, normals, signed volume, gaps and symmetry declarations of that mesh | Waterline z residual ≤ 1 mm; draft residual ≤ 0.01 m; 0 reversed normals, 0 zero-area panels, 0 duplicate symmetry declarations; signed volume > 0 m³ | Mesh images and closure metrics; NOT_RUN. [src/digitalmodel/hydrodynamics/aqwa/aqwa_dat_files.py:L145-L163] AQG r0, section 8, G4.5–G4.6. |
-| G4 / AQ-09 | Compare LIS analysed frequencies with an independently estimated first irregular frequency, record interior lid where needed | If maximum analysed frequency ≥ 0.9 times estimated irregular frequency, 0 missing lids, count | Frequency/lid record; NOT_RUN: geometry and qualified frequency convention required. [src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L200-L212] AQG r0, section 8, G4.7. |
-| G4 / AQ-10 | Review extracted heave RAO, radiation damping, added-mass matrices and mesh views for each body | Long-period heave within 2.0% of 1 m/m; diagonal damping ≥ 0 in declared damping units; added-mass asymmetry ≤ 2.0%; 0 unexplained spikes in ±5.0% irregular-frequency interval | Extracted arrays and independent review; NOT_RUN: qualified native result needed. [src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L200-L215] AQG r0, section 8, G4.8. |
-| G5 / AQ-11 | Compare `_generate_case_reports` CSV/HTML output with gate records and recomputed input SHA-256 manifest | 0 missing applicable gate records, 0 fingerprint mismatches and 0 unsigned decisions, count | QA appendix, versions, digests, dispositions and quality signature; NOT_RUN: current report writer lacks this appendix. [src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L399-L426][src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L600-L641] AQG r0, section 9. |
+| Gate / check | Package function or output and criterion | Executable seeded-violation test |
+| --- | --- | --- |
+| G0 / AQ-01 | `AqwaDATFiles.validate_ldrg_option`, `validate_cog_element`: LDRG present, configured CoG matches | `tests/hydrodynamics/aqwa/test_audit_dat.py::test_writer_cog_roundtrip_and_validators`; `tests/hydrodynamics/aqwa/test_audit_workflow.py::test_configured_cog_is_passed` |
+| G0 / AQ-02 | `ViscousDampingDetermination._validate_frequency_alignment`: nonempty finite arrays, equal shape and differences <= 1e-8 + 1e-5 abs(other) rad/s | `tests/hydrodynamics/aqwa/test_audit_damping.py::test_frequency_mismatch` |
+| G0 / AQ-03 | `_process_case`: required per-DOF coefficients, configured absent inertia fallback, LIS/DAT/config restoring precedence | `tests/hydrodynamics/aqwa/test_audit_workflow.py::test_config_inertia_fills_missing_deck4`; `tests/hydrodynamics/aqwa/test_audit_workflow.py::test_missing_inertia_raises` |
+| G1 / AQ-04 | `AqwaUtilities.run_aqwa_analysis_as_subprocess` returns exit/stdout/stderr/MES; `qa_gates.validate_native_result` requires exit 0, clean MES, matching positive body count. External native evidence required | `tests/hydrodynamics/aqwa/test_audit_gates.py::test_native_gate_rejects_exit_messages_and_missing_evidence`; `tests/hydrodynamics/aqwa/test_audit_gates.py::test_runner_returns_exit_and_mes_without_solver` |
+| G2 | NOT_APPLICABLE: no statics gate for diffraction preparation | AQG r0 section 10 |
+| G3 | NOT_APPLICABLE: no short-dynamics gate for diffraction preparation | AQG r0 section 10 |
+| G4 / AQ-05 | `qa_gates.validate_external_gate`: manual weight residual <= 1%; volume residual <= 0.5% | `tests/hydrodynamics/aqwa/test_audit_gates.py::test_external_gate_requires_qualified_evidence[AQ-05]` |
+| G4 / AQ-06 | `qa_gates.validate_external_gate`: manual CoB horizontal <= 0.5% length, vertical <= 1% draft; GM positive and difference <= 2% | `tests/hydrodynamics/aqwa/test_audit_gates.py::test_external_gate_requires_qualified_evidence[AQ-06]` |
+| G4 / AQ-07 | `qa_gates.validate_external_gate`: manual cited version panel limit, aspect ratio <= 3, size <= wavelength/6 | `tests/hydrodynamics/aqwa/test_audit_gates.py::test_external_gate_requires_qualified_evidence[AQ-07]` |
+| G4 / AQ-08 | `qa_gates.validate_external_gate`: manual waterline <= 1 mm, draft <= 0.01 m, zero reversed normals/zero-area panels/duplicate symmetry, positive signed volume | `tests/hydrodynamics/aqwa/test_audit_gates.py::test_external_gate_requires_qualified_evidence[AQ-08]` |
+| G4 / AQ-09 | `qa_gates.validate_external_gate`: retained irregular-frequency estimate; lid required if max frequency >= 0.9 times that estimate | `tests/hydrodynamics/aqwa/test_audit_gates.py::test_external_gate_requires_qualified_evidence[AQ-09]` |
+| G4 / AQ-10 | `qa_gates.validate_external_gate`: manual heave within 2% of 1 m/m at long period, damping >= 0, added-mass asymmetry <= 2%, no unexplained spikes within +/-5% irregular-frequency interval | `tests/hydrodynamics/aqwa/test_audit_gates.py::test_external_gate_requires_qualified_evidence[AQ-10]` |
+| G5 / AQ-11 | `qa_gates.verify_manifest`, `validate_report_gates`, `write_report_evidence`; `_generate_case_reports` output: no input-digest mismatch, missing applicable gate or unsigned decision | `tests/hydrodynamics/aqwa/test_audit_gates.py::test_gate_appendix_and_digest_manifest`; `tests/hydrodynamics/aqwa/test_audit_gates.py::test_report_writes_gate_appendix_and_manifest` |
+| G0 / AQ-12 | `AqwaLISFiles.save_to_csv`: disabled save returns None | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesEdgeCases::test_csv_save_disabled` |
+| G0 / AQ-13 | `AqwaLISFiles.transform_by_data_key`: displacement times angular frequency and its square, error < 0.001 in declared units | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_velocity_transformation`; `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_acceleration_transformation` |
 
-## 6. Known failure modes and pitfalls
+## 6. Historical failure-mode inventory
+
+This inventory records the earlier source pin, not current acceptance. Sections 4–5 and [issue 2743](https://github.com/vamseeachanta/digitalmodel/issues/2743) supersede the damping, DAT, extraction and gate observations. Eleven mock-only smoke tests and their PASS records have been withdrawn. The prior aggregate baseline is invalid as evidence of those behaviours; use the repair PR's measured test counts.
 
 sweep: 82 found
 
@@ -875,7 +877,6 @@ Every item below is assigned to the hydrodynamics maintainer for issue filing an
 | Codenaming / restricted interpretation | Identifying discovery names and specialized callback provenance are not copied; sidecar entry: to be created; no private repository was read. [src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis_ef_server.py:L473-L519] | issue pending (5) |
 | Benchmark and evidence closure | No independent worked example or signed QA appendix; report writer outputs tables and figures without gate evidence. [src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L399-L426][src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L600-L641] | issue pending (6); #51 for physics checks |
 | Map and documentation breadth | Supplementary methods and uncounted families require map updates; wider documentation is discovery-only beyond the core readings named below. [src/digitalmodel/hydrodynamics/diffraction/aqwa_ah1_parser.py:L452-L485] | issue pending (7) |
-| Offline execution limits | Baseline: 60 passed, 12 skipped, 0 failed; one of the skips is a module-collection NOT_RUN for unavailable OrcFxAPI. Ten CLI skips are existing blanket markers; one extraction assertion is converted into a skip. Post-edit execution is identical: 60 passed, 12 skipped and 0 failed. | issue pending (4) |
 
 ### Source and test coverage
 
@@ -903,34 +904,23 @@ All 19 package Python files were examined as text, including both subfolders; no
 | `mes_files.py` | [src/digitalmodel/hydrodynamics/aqwa/mes_files.py:L1-L230] |
 | `viscous_damping_determination.py` | [src/digitalmodel/hydrodynamics/aqwa/viscous_damping_determination.py:L1-L641] |
 
-The module test-directory search plus `tests/test_aqwa.py` identifies 65 test functions, including 10 CLI functions, 10 LIS parser functions, 2 restoring-precedence functions, 11 other test-directory smoke functions and 32 router functions; these are source counts, not executed-pass counts.
 
 | Test node at code pin | Definition citation / offline record |
 | --- | --- |
-| `tests/hydrodynamics/aqwa/test_aqwa_ef_server.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_ef_server.py:L22-L32]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_aqr_raos.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_aqr_raos.py:L22-L32]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_anl_raos.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_anl_raos.py:L24-L34]; BASE NOT_RUN: guarded OrcFxAPI collection import unavailable, no licence probe; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_preproces_deck_10.py::test_run_process` | [tests/hydrodynamics/aqwa/test_preproces_deck_10.py:L23-L32]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_damping.py::test_run_process` | [tests/hydrodynamics/aqwa/test_damping.py:L22-L32]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_aqr.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_aqr.py:L23-L35]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_mes_files.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_mes_files.py:L22-L33]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_lis.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_lis.py:L22-L33]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_no_mes_files.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_no_mes_files.py:L22-L33]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIBasic::test_cli_help` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L28-L37]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIBasic::test_list_methods` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L39-L49]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIRAOExtraction::test_rao_method_with_folder` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L59-L81]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIErrorHandling::test_missing_method` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L87-L99]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIErrorHandling::test_invalid_method` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L101-L114]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIErrorHandling::test_missing_required_folder` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L116-L127]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIConfigFile::test_config_file_loading` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L152-L166]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIConfigFile::test_missing_config_file` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L168-L180]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIDampingAnalysis::test_damping_method` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L190-L205]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIVerboseMode::test_verbose_flag` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L215-L233]; BASE SKIP: existing blanket AQWA solver marker; AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_preproces_deck.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_preproces_deck.py:L23-L32]; BASE PASS (1 expanded case); AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIBasic::test_cli_help` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L28-L37]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIBasic::test_list_methods` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L39-L49]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIRAOExtraction::test_rao_method_with_folder` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L59-L81]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIErrorHandling::test_missing_method` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L87-L99]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIErrorHandling::test_invalid_method` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L101-L114]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIErrorHandling::test_missing_required_folder` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L116-L127]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIConfigFile::test_config_file_loading` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L152-L166]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIConfigFile::test_missing_config_file` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L168-L180]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIDampingAnalysis::test_damping_method` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L190-L205]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py::TestAQWACLIVerboseMode::test_verbose_flag` | [tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L215-L233]; WITHDRAWN historical skip: existing blanket AQWA solver marker; AFTER identical to BASE |
 | `tests/hydrodynamics/aqwa/test_viscous_damping_determination.py::test_restoring_prioritizes_lis_values` | [tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L132-L140]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/hydrodynamics/aqwa/test_viscous_damping_determination.py::test_restoring_falls_back_to_dat_when_lis_missing` | [tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L143-L151]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_parser_initialization` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L86-L89]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_get_data_from_lis_file` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L95-L116]; BASE SKIP: empty dataframe assertion caught by the test (0 rows); AFTER identical to BASE |
+| `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_get_data_from_lis_file` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L95-L116]; WITHDRAWN historical skip: empty dataframe assertion caught by the test (0 rows); AFTER identical to BASE |
 | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_header_column_extraction` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L122-L142]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_dataframe_sorting` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L148-L172]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_velocity_transformation` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L178-L210]; BASE PASS (1 expanded case); AFTER identical to BASE |
@@ -939,7 +929,6 @@ The module test-directory search plus `tests/test_aqwa.py` identifies 65 test fu
 | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesEdgeCases::test_sorting_without_sort_config` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L293-L305]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesEdgeCases::test_header_columns_from_config` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L307-L319]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesEdgeCases::test_csv_save_disabled` | [tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L321-L343]; BASE PASS (1 expanded case); AFTER identical to BASE |
-| `tests/hydrodynamics/aqwa/test_aqwa_dat.py::test_run_process` | [tests/hydrodynamics/aqwa/test_aqwa_dat.py:L23-L32]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/test_aqwa.py::TestAqwaClass::test_aqwa_initialization` | [tests/test_aqwa.py:L26-L29]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/test_aqwa.py::TestAqwaClass::test_aqwa_multiple_instances` | [tests/test_aqwa.py:L31-L37]; BASE PASS (1 expanded case); AFTER identical to BASE |
 | `tests/test_aqwa.py::TestAqwaRouter::test_router_no_processing` | [tests/test_aqwa.py:L62-L74]; BASE PASS (1 expanded case); AFTER identical to BASE |
@@ -1197,7 +1186,6 @@ Discovery paths withheld for identifying-name review: 2; issue pending (5).
 
 ### Offline execution record
 
-At code revision `6cf35f466e5c1b730951af045d8cfe0065af073f`, the baseline module command reported 60 passed, 12 skipped and 0 failed; NOT_RUN is 1 guarded module import, included in the skipped total rather than added to it. The source count is 65 functions; parameterization and module-collection reporting account for the different outcome count. [tests/test_aqwa.py:L1-L20][tests/hydrodynamics/aqwa/test_aqwa_anl_raos.py:L6-L11][tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py:L19-L22][tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L96-L116]
 
 Generic commands, run sequentially with the supplied full executable path and isolated environment:
 
