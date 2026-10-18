@@ -15,6 +15,7 @@ import pytest
 
 from digitalmodel.drilling_riser import operability_atlas as oa
 from digitalmodel.drilling_riser.operability_screening import screen_operability
+from digitalmodel.parametric.atlas import Atlas
 from tests.riser_database.test_leak_gate import STRUCTURAL_PATTERNS
 
 REPO = Path(__file__).resolve().parents[2]
@@ -142,9 +143,22 @@ def test_results_json_is_a_strict_allowlist():
 # 6. honest ESCALATE: no fake node; channel wired; boundary really escalates --
 def test_escalate_is_honest_and_wired():
     d = _committed_json()
-    # (a) no node is fabricated as escalate — this grid's boundary falls BETWEEN knots
+    # (a) the refined grid includes nodes whose measured error band straddles
+    # unity. Every displayed escalation must have that evidence.
     lights = {l for g in d["configs"].values() for row in g["light"] for l in row}
-    assert lights == {"OPERABLE", "INOPERABLE"}
+    assert lights == {"OPERABLE", "INOPERABLE", "ESCALATE"}
+    atlas = Atlas.load(_ATLAS_ROOT, oa.BASENAME)
+    for token, grid in d["configs"].items():
+        for i, off in enumerate(d["offset_pct"]):
+            for j, cur in enumerate(d["current_speed_mps"]):
+                if grid["light"][i][j] != "ESCALATE":
+                    continue
+                point = {"config": token, "offset_pct": off, "current_speed_mps": cur}
+                prediction = atlas.predict(point)
+                assert prediction.in_range
+                error = atlas.local_error(point)
+                assert error is not None and error > 0
+                assert prediction.value * (1 - error) <= 1.0 <= prediction.value * (1 + error)
     # (b) the explorer renders ESCALATE via its own visual channel + legend
     html = build._HTML.read_text()
     assert "ESCALATE" in html
