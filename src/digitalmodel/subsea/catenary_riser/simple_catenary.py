@@ -52,7 +52,7 @@ class SimpleCatenaryAnalyzer:
 
         Can solve for configuration given either:
         - horizontal_tension (most direct)
-        - top_tension (iterative solution)
+        - top_tension (closed-form solution)
         - Both water_depth and horizontal_offset (iterative solution)
 
         Args:
@@ -77,12 +77,16 @@ class SimpleCatenaryAnalyzer:
         # Effective weight
         w = riser.effective_weight_per_length
 
-        if w <= 0:
+        if not np.isfinite(w) or w <= 0:
             raise ValueError(
                 f"Riser has negative or zero effective weight ({w:.2f} N/m). "
                 "Check buoyancy - riser may float. Consider adding weight coating."
             )
 
+        if not np.isfinite(water_depth) or water_depth <= 0:
+            raise ValueError("water_depth must be finite and positive")
+
+        converged = True
         # Solve for catenary
         if horizontal_tension is not None:
             # Direct solution
@@ -95,9 +99,10 @@ class SimpleCatenaryAnalyzer:
             result = self._solve_catenary_from_H(riser, H, water_depth, w)
         else:
             # Solve for H given geometry
-            H = self._solve_H_from_geometry(water_depth, horizontal_offset, riser.length, w)
+            H, converged = self._solve_H_from_geometry(water_depth, horizontal_offset, riser.length, w)
             result = self._solve_catenary_from_H(riser, H, water_depth, w)
 
+        result.converged = bool(converged and result.arc_length <= riser.length)
         return result
 
     def _solve_catenary_from_H(
@@ -110,39 +115,21 @@ class SimpleCatenaryAnalyzer:
         """
         Solve catenary given horizontal tension.
 
-        Catenary equations:
-        - a = H / w  (catenary parameter)
-        - s = a * sinh(z / a)  (arc length)
-        - x = a * (cosh(z / a) - 1)  (horizontal distance)
-        - T = sqrt(H² + (w*s)²)  (tension)
-
-        Args:
-            riser: Riser configuration
-            H: Horizontal tension (N)
-            z: Vertical height (m)
-            w: Effective weight per length (N/m)
-
-        Returns:
-            CatenaryRiserResult
+        Governing equations: docs/engineering-basis.md E1-E3 (vertex origin).
+        z is height, x is horizontal distance, w is weight in N/m.
         """
-        # Catenary parameter
+        if not np.isfinite(H) or H <= 0:
+            raise ValueError("horizontal_tension must be finite and positive")
         a = H / w
-
-        # Arc length (suspended)
-        if abs(z / a) < 20:
-            s = a * np.sinh(z / a)
-            x = a * (np.cosh(z / a) - 1)
-        else:
-            # Approximation for large z/a
-            s = a * np.exp(z / a) / 2
-            x = a * np.exp(z / a) / 2
-
-        # Tensions
-        T_top = np.sqrt(H**2 + (w * s)**2)
+        # E1: eliminate the hyperbolic parameter using cosh² - sinh² = 1.
+        s = np.sqrt(z * (z + 2 * a))
+        x = a * np.arccosh(1 + z / a)
+        # E2: T = w*(a+z), monotonic in H.
+        T_top = H + w * z
         T_td = H  # At touchdown, vertical component = 0
 
         # Angles
-        angle_top = np.degrees(np.arctan2(w * s, H))  # from vertical
+        angle_top = np.degrees(np.arctan2(H, w * s))  # E3: from vertical
         angle_td = 0.0  # At touchdown, angle = 0 from horizontal
 
         # Grounded length
@@ -171,175 +158,38 @@ class SimpleCatenaryAnalyzer:
             max_curvature=curvature_td,
         )
 
-    def _solve_H_from_top_tension(
-        self,
-        T_top: float,
-        z: float,
-        w: float,
-        tol: float = 1e-6,
-        max_iter: int = 100
-    ) -> float:
-        """
-        Solve for horizontal tension given top tension.
-
-        T_top² = H² + (w*s)²
-        where s = (H/w) * sinh(z*w/H)
-
-        Uses bisection method for robustness.
-
-        Args:
-            T_top: Top tension (N)
-            z: Vertical height (m)
-            w: Effective weight per length (N/m)
-            tol: Tolerance for convergence
-            max_iter: Maximum iterations
-
-        Returns:
-            Horizontal tension H (N)
-        """
-        def calc_top_tension(H: float) -> float:
-            """Calculate top tension for given H"""
-            a = H / w
-            ratio = z / a
-
-            # Protect against overflow - sinh overflows around ratio > 710
-            # Use approximation for large ratios
-            if ratio > 10:
-                # For large ratio: sinh(x) ≈ exp(x)/2
-                # s = a * sinh(ratio) ≈ a * exp(ratio) / 2
-                # But exp(ratio) overflows for ratio > ~700
-                # Instead, compute log of s and T
-                log_s = ratio + np.log(a / 2)
-                log_ws = np.log(w) + log_s
-                # T = sqrt(H² + (ws)²)
-                # For large ws >> H: T ≈ ws
-                return w * np.exp(log_s)
-            else:
-                s = a * np.sinh(ratio)
-                return np.sqrt(H**2 + (w * s)**2)
-
-        # For a catenary, T_top has a MINIMUM at some optimal H
-        # - At very low H: T is very large (long arc, deep sag)
-        # - At optimal H: T is at minimum
-        # - At very high H: T increases again (nearly straight riser)
-        #
-        # We want the high-H solution (more practical, nearly straight riser)
-
-        # Find the optimal H that gives minimum T (using scipy if available, else estimate)
-        # For now, estimate optimal H ≈ 0.83 * w * z (empirical)
-        H_optimal = 0.83 * w * z
-        T_min = calc_top_tension(H_optimal)
-
-        if T_top < T_min * 0.99:
-            logger.warning(
-                f"Requested top tension {T_top:.0f} N is less than minimum "
-                f"achievable {T_min:.0f} N for {z:.0f}m depth."
-            )
-            return H_optimal  # Return H at minimum as best approximation
-
-        # Search for H on the high-H side (H > H_optimal)
-        # In this region, T increases as H increases
-
-        # Upper bound: H < T_top (horizontal can't exceed total)
-        H_max = T_top * 0.999
-
-        # Lower bound: start just above optimal point
-        H_min = H_optimal * 1.05
-
-        # Verify bounds
-        T_at_min = calc_top_tension(H_min)
-        T_at_max = calc_top_tension(H_max)
-
-        # Adjust bounds if needed
-        while T_at_min > T_top and H_min > H_optimal:
-            H_min = (H_min + H_optimal) / 2
-            T_at_min = calc_top_tension(H_min)
-
-        if T_at_max < T_top:
-            logger.warning(f"Cannot achieve T_top={T_top:.0f}N with H < {H_max:.0f}N")
-            return H_max
-
-        # Bisection: on high-H side, T increases with H
-        for i in range(max_iter):
-            H_mid = (H_min + H_max) / 2
-            T_mid = calc_top_tension(H_mid)
-
-            if abs(T_mid - T_top) < tol * T_top:
-                logger.debug(f"Bisection converged in {i+1} iterations: H = {H_mid:.2f} N")
-                return H_mid
-
-            if T_mid < T_top:
-                H_min = H_mid  # T too low, need larger H
-            else:
-                H_max = H_mid  # T too high, need smaller H
-
-        # Return best estimate
-        return (H_min + H_max) / 2
+    def _solve_H_from_top_tension(self, T_top: float, z: float, w: float) -> float:
+        """E2 in docs/engineering-basis.md: H = T_top - w*z > 0."""
+        if not np.isfinite(T_top) or T_top <= w * z:
+            raise ValueError("top_tension must be finite and greater than w*depth")
+        return T_top - w * z
 
     def _solve_H_from_geometry(
-        self,
-        z: float,
-        x: float,
-        L: float,
-        w: float,
-        tol: float = 1e-6,
-        max_iter: int = 100
-    ) -> float:
+        self, z: float, x: float, L: float, w: float,
+        tol: float = 1e-6, max_iter: int = 100,
+    ) -> Tuple[float, bool]:
+        """Bisect E1 on the available-length interval; return convergence.
+
+        Narrow interpretation: x is the suspended span from the vertex,
+        consistent with the explicit-H result. See engineering-basis.md E1.
         """
-        Solve for horizontal tension given geometry.
-
-        Given:
-        - z: vertical height
-        - x: horizontal offset
-        - L: total riser length
-        - w: effective weight
-
-        Find H such that:
-        - s = a * sinh(z / a) ≤ L  (suspended length)
-        - x = a * (cosh(z / a) - 1)  (horizontal offset)
-
-        Args:
-            z: Vertical height (m)
-            x: Horizontal offset (m)
-            L: Total riser length (m)
-            w: Effective weight per length (N/m)
-            tol: Tolerance
-            max_iter: Maximum iterations
-
-        Returns:
-            Horizontal tension H (N)
-        """
-        # Initial guess based on straight line
-        H = w * z * x / (2 * z)
-
-        for i in range(max_iter):
-            a = H / w
-
-            # Suspended length
-            s = a * np.sinh(z / a)
-
-            # Horizontal offset from catenary
-            x_calc = a * (np.cosh(z / a) - 1)
-
-            # Residual
-            residual = x_calc - x
-
-            if abs(residual) < tol * x and s <= L:
-                logger.debug(f"Converged in {i+1} iterations: H = {H:.2f} N")
-                return H
-
-            # Derivative dx/dH
-            dx_dH = (np.cosh(z / a) - 1) / w - (z / a) * np.sinh(z / a) / w
-
-            # Update
-            H = H - residual / dx_dH
-
-            # Keep H positive and reasonable
-            H = max(H, 100.0)
-            H = min(H, w * L * 10)  # Upper bound
-
-        logger.warning(f"Did not converge in {max_iter} iterations")
-        return H
+        if not all(np.isfinite(v) and v > 0 for v in (x, L, tol)) or L <= z:
+            raise ValueError("geometry requires finite positive offset and length > depth")
+        # E1 gives the maximum a that fits the available suspended length.
+        low, high = 0.0, (L * L - z * z) / (2 * z)
+        if x > high * np.arccosh(1 + z / high):
+            raise ValueError("requested suspended span exceeds available riser length")
+        a = high
+        for _ in range(max_iter):
+            a = (low + high) / 2
+            residual = a * np.arccosh(1 + z / a) - x
+            if abs(residual) <= tol * x:
+                return a * w, True
+            if residual < 0:
+                low = a
+            else:
+                high = a
+        return a * w, False
 
     def calculate_tension_along_riser(
         self,

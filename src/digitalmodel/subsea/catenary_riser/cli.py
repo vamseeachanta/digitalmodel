@@ -70,6 +70,9 @@ def simple_catenary(diameter, thickness, length, water_depth, offset, material,
             result = analyzer.analyze_riser(riser, water_depth=water_depth,
                                           horizontal_offset=offset)
 
+        if not result.converged:
+            raise ValueError("catenary did not converge or exceeds available length")
+
         # Output
         output_data = {
             'configuration': {
@@ -81,6 +84,7 @@ def simple_catenary(diameter, thickness, length, water_depth, offset, material,
                 'internal_fluid': internal_fluid,
             },
             'results': {
+                'converged': result.converged,
                 'horizontal_tension_N': round(result.horizontal_tension, 2),
                 'top_tension_N': round(result.top_tension, 2),
                 'touchdown_tension_N': round(result.touchdown_tension, 2),
