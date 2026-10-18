@@ -207,6 +207,9 @@ modules:
       vessel_db:
         agent_pack: src/digitalmodel/marine_ops/vessel_db/docs/agent-pack.md
         qa_family: EC
+      reservoir:
+        agent_pack: src/digitalmodel/marine_ops/reservoir/docs/agent-pack.md
+        qa_family: EC
   - module: floating_wind
     entry_point: src/digitalmodel/floating_wind/
     maturity: beta
