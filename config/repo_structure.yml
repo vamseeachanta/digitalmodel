@@ -91,3 +91,8 @@ required_metadata_for_exceptions:
   - reviewed_on
 forbidden_patterns:
   - src/**/tests/**
+
+# Retirement coverage does not grant permission to add generated output.
+generated_retirement_patterns:
+  - docs/api/capabilities/pdf/**
+  - examples/demos/gtm/output/**

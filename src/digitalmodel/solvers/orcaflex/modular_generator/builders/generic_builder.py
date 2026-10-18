@@ -62,7 +62,7 @@ _SECTION_ORDER: list[str] = [
     "SupportTypes",
     "MorisonElementTypes",
     # Object instances
-    "PyModels",
+    "P-yModels",
     "WakeModels",
     "Vessels",
     "Lines",

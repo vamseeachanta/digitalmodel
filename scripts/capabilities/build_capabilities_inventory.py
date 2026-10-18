@@ -65,6 +65,7 @@ def load_sections(repo: Path | str = REPO_DEFAULT) -> list[dict]:
             "id": s["id"],
             "title": s.get("title", ""),
             "hrefs": list(s.get("hrefs") or []),
+            "card_id": s.get("card_id"),
         }
         for s in (doc.get("sections") or [])
     ]
@@ -139,19 +140,15 @@ def registered_site_paths(repo: Path | str = REPO_DEFAULT) -> set[str]:
     return out
 
 
-def load_pdf_specs(repo: Path) -> dict[str, str]:
-    """section id -> pdf relpath, from build_onepagers SPECS (importlib on the
-    real path — the module builds dict()s, so AST parsing will not work)."""
-    script = repo / "scripts" / "capabilities" / "build_onepagers.py"
-    spec = importlib.util.spec_from_file_location("build_onepagers_ro", script)
+def load_card_specs(repo: Path) -> dict[str, str]:
+    """Join declared section card IDs to the authored specification list."""
+    script = repo / "scripts/capabilities/build_onepagers.py"
+    spec = importlib.util.spec_from_file_location("capability_cards_ro", script)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    out = {}
-    for entry in mod.SPECS:
-        if entry.get("kind") == "section" and entry["id"].startswith("sec-"):
-            sec = entry["id"][len("sec-") :]
-            out[sec] = f"docs/api/capabilities/pdf/{entry['id']}.pdf"
-    return out
+    ids = {entry["id"] for entry in mod.SPECS if entry["kind"] == "section"}
+    return {section["id"]: section["card_id"] for section in load_sections(repo)
+            if section["card_id"] in ids}
 
 
 def load_clusters(repo: Path) -> dict:
@@ -177,7 +174,7 @@ def build_inventory(repo: Path | str = REPO_DEFAULT) -> dict:
 
     explorers = discover_explorers(repo)
     aliases = clusters_doc.get("explorer_aliases", {})  # explorer relpath -> section id
-    pdf_by_section = load_pdf_specs(repo)
+    cards_by_section = load_card_specs(repo)
     added = added_doc.get("sections", {})
 
     # explorer -> section: in-section href match first, then alias map
@@ -208,7 +205,7 @@ def build_inventory(repo: Path | str = REPO_DEFAULT) -> dict:
                 "title": s["title"],
                 "cluster": cluster_of[sid],
                 "explorers": sorted(e for e, o in owner.items() if o == sid),
-                "pdf": pdf_by_section.get(sid),
+                "card_id": cards_by_section.get(sid),
                 "added": added.get(sid, "unknown"),
             }
         )
@@ -235,7 +232,7 @@ def build_inventory(repo: Path | str = REPO_DEFAULT) -> dict:
             {k: c[k] for k in ("key", "label", "value_statement", "sections")}
             for c in clusters_doc["clusters"]
         ],
-        "pdf_gaps": [s["id"] for s in inv_sections if s["pdf"] is None],
+        "card_gaps": [s["id"] for s in inv_sections if s["card_id"] is None],
         "unlinked_explorers": sorted(set(explorers) - set(owner)),
         "recent": [
             {"id": s["id"], "date": s["added"]["date"], "pr": s["added"]["pr"]}
@@ -277,8 +274,8 @@ def render_spec(inv: dict) -> str:
         "describes the IA, and does not edit the rendered surface.",
         "",
         f"Sections declared: **{len(inv['sections'])}** · clusters: "
-        f"**{len(inv['clusters'])}** · PDF coverage gaps: "
-        f"**{len(inv['pdf_gaps'])}** · unlinked explorers: "
+        f"**{len(inv['clusters'])}** · Card coverage gaps: "
+        f"**{len(inv['card_gaps'])}** · unlinked explorers: "
         f"**{len(inv['unlinked_explorers'])}**",
         "",
         "## Cluster taxonomy",
@@ -296,24 +293,24 @@ def render_spec(inv: dict) -> str:
     lines += [
         "## Reference index (citable front doors)",
         "",
-        "| Section | Cluster | Live explorer(s) | 1-pager PDF | Added |",
+        "| Section | Cluster | Live explorer(s) | Card id | Added |",
         "|---|---|---|---|---|",
     ]
     for s in inv["sections"]:
         exp = "<br>".join(f"`{e}`" for e in s["explorers"]) or "*gap*"
-        pdf = f"`{s['pdf']}`" if s["pdf"] else "*gap*"
+        card = f"`{s['card_id']}`" if s["card_id"] else "*gap*"
         if isinstance(s["added"], dict):
             added = f"{s['added']['date']} (#{s['added']['pr']})"
         else:
             added = "unknown"
         lines.append(
             f"| [`#{s['id']}`]({CANONICAL_SURFACE}#{s['id']}) "
-            f"| {s['cluster']} | {exp} | {pdf} | {added} |"
+            f"| {s['cluster']} | {exp} | {card} | {added} |"
         )
     lines += [
         "",
-        f"**PDF gap set ({len(inv['pdf_gaps'])}):** "
-        + ", ".join(f"`{g}`" for g in inv["pdf_gaps"]),
+        f"**Card gap set ({len(inv['card_gaps'])}):** "
+        + (", ".join(f"`{g}`" for g in inv["card_gaps"]) or "none"),
         "",
         "**Unlinked explorers:** "
         + (", ".join(f"`{e}`" for e in inv["unlinked_explorers"]) or "none"),
@@ -360,7 +357,7 @@ def main() -> int:
     (repo / CAP_MAP / "capabilities-ia-spec-1444.md").write_text(render_spec(inv))
     print(
         f"  wrote capabilities-inventory.json ({len(inv['sections'])} sections, "
-        f"{len(inv['pdf_gaps'])} pdf gaps, "
+        f"{len(inv['card_gaps'])} card gaps, "
         f"{len(inv['unlinked_explorers'])} unlinked explorers)"
     )
     print("  wrote capabilities-ia-spec-1444.md")

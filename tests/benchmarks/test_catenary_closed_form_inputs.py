@@ -338,3 +338,58 @@ def test_object_names_are_unique(case_index):
     """Expose duplicate names even when the wave selector is also invalid."""
     _, _, data = list(models())[case_index]
     assert_unique_object_names(data)
+
+
+@pytest.mark.parametrize("case_index", [0, 1])
+@pytest.mark.parametrize("defect,category", [
+    ("wave", "wave_type"), ("duplicate", "duplicate"),
+])
+@pytest.mark.parametrize("entry_point", ["data", "directory"])
+def test_production_validator_rejects_native_load_defects(
+    tmp_path, case_index, defect, category, entry_point,
+):
+    """Both validator entry points must reject each original B3 defect."""
+    _, _, data = list(models())[case_index]
+    data = deepcopy(data)
+    if defect == "wave":
+        data["Environment"]["WaveTrains"][0]["WaveType"] = "No waves"
+    else:
+        data["Lines"][0]["Name"] = data["LineTypes"][0]["Name"]
+    validator = PostGenerationValidator()
+    if entry_point == "data":
+        findings = validator.validate_data({"model.yml": data})
+    else:
+        (tmp_path / "model.yml").write_text(yaml.safe_dump(data))
+        findings = validator.validate_directory(tmp_path)
+    assert any(f.level == "error" and f.category == category for f in findings)
+
+
+def test_manifest_digests_survive_autocrlf_checkout(tmp_path):
+    """The manifest must still bind input bytes with core.autocrlf=true."""
+    import shutil
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    env = {k: v for k, v in os.environ.items()
+           if not k.startswith("GIT_")}
+
+    def git(*args):
+        return subprocess.run(
+            ["git", "-c", "core.autocrlf=true", *args], cwd=repo,
+            env=env, check=True, capture_output=True,
+        )
+
+    git("init")
+    shutil.copyfile(ROOT / ".gitattributes", repo / ".gitattributes")
+    relative = Path("docs/benchmarks/catenary_closed_form/inputs")
+    target = repo / relative
+    shutil.copytree(DATA / "inputs", target)
+    git("add", ".gitattributes", str(relative))
+    shutil.rmtree(target)
+    git("checkout-index", "--all", "--force")
+    manifest = json.loads((target / "MANIFEST.json").read_text())
+    for entry in manifest["files"]:
+        payload = (target / Path(entry["path"]).name).read_bytes()
+        assert b"\r\n" not in payload
+        assert len(payload) == entry["bytes"]
+        assert hashlib.sha256(payload).hexdigest() == entry["sha256"]

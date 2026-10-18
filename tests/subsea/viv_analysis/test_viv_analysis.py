@@ -1,49 +1,26 @@
-# Standard library imports
-import os
-import sys
+"""Real offline tubular routing input with numerical output readback."""
+import json
+from pathlib import Path
 
-# Third party imports
-import pytest  # noqa
+import pandas as pd
+import pytest
+import yaml
 
-# Reader imports
-from digitalmodel.engine import engine
-from unittest.mock import patch, MagicMock
-
-
-def run_process(input_file, expected_result={}):
-    with patch('digitalmodel.engine.engine') as mock_engine:
-        mock_engine.return_value = {
-            'status': 'completed', 
-            'basename': 'viv_analysis',
-            'viv_analysis': {
-                'current_velocity': 1.2,
-                'reduced_velocity': 6.5,
-                'strouhal_number': 0.2,
-                'response_amplitude': 0.8,
-                'fatigue_damage': {
-                    'cf_inline': 2.3e-4,
-                    'cf_crossflow': 4.7e-4,
-                    'total_damage': 7.0e-4
-                },
-                'max_stress': 125.5
-            }
-        }
-        
-        from digitalmodel.engine import engine
-        if input_file is not None and not os.path.isfile(input_file):
-            input_file = os.path.join(os.path.dirname(__file__), input_file)
-        cfg = engine(input_file)
+from digitalmodel.subsea.viv_analysis.viv_analysis import VIVAnalysis
 
 
-def test_run_process():
-    input_file = 'viv_analysis.yml'
-    # pytest_output_file = 'results/pytest_viv_analysis.yml'
-    # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
-    # expected_result = ymlInput(pytest_output_file, updateYml=None)
-
-    if len(sys.argv) > 1:
-        sys.argv.pop()
-
-    run_process(input_file, expected_result={})
-
-# Removed module-level execution of test_run_process()
+def test_run_process(tmp_path):
+    root = Path(__file__).resolve().parents[3]
+    cfg = yaml.safe_load((root / 'examples/workflows/viv-analysis/input.yml').read_text())
+    cfg['Analysis'].update(result_folder=str(tmp_path), file_name='offline_viv')
+    result = VIVAnalysis().router(cfg)
+    natural = pd.read_csv(tmp_path / 'offline_viv_natural_frequencies.csv')
+    shedding = pd.read_csv(tmp_path / 'offline_viv_vs_frequencies.csv')
+    safety = pd.read_csv(tmp_path / 'offline_viv_safety_factors.csv')
+    # C205 (2010) added mass and excitation; derivation in test_legacy_audit.py.
+    assert natural.loc[0, 'mode 1'] == pytest.approx(1.9290322268, abs=1e-9)
+    assert shedding.loc[0, 'shredding_frequency_inline'] == pytest.approx(1.1294117647)
+    assert safety.loc[0, 'safety_factor_inline'] == pytest.approx(1.7079972842)
+    assert json.loads(result['viv']['natural_frequencies'])['mode 1']['0'] == pytest.approx(
+        1.9290322268, abs=1e-9,
+    )

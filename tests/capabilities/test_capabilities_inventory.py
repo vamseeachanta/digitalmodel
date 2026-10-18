@@ -68,7 +68,7 @@ def test_census_does_not_read_rendered_html():
     # reads, so a substring search would flag its own rationale. Only string
     # literals the code could open count — docstrings are excluded by skipping
     # bare-expression strings.
-    tree = ast.parse(SCRIPT.read_text())
+    tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
     docstrings = {
         id(n.value)
         for n in ast.walk(tree)
@@ -113,7 +113,7 @@ def test_census_failure_fixtures():
 
 
 def test_cluster_mapping_total_disjoint_and_schema():
-    doc = yaml.safe_load(CLUSTERS.read_text())
+    doc = yaml.safe_load(CLUSTERS.read_text(encoding="utf-8"))
     assert doc["schema_version"]
     assigned = []
     for c in doc["clusters"]:
@@ -152,9 +152,9 @@ def test_joins_one_to_one_with_gaps_and_unlinked():
     for s in inv["sections"]:
         assert s["cluster"]
         assert isinstance(s["explorers"], list)
-        assert s["pdf"] is None or s["pdf"].startswith("sec-") is False
-    gaps = [s["id"] for s in inv["sections"] if s["pdf"] is None]
-    assert gaps == inv["pdf_gaps"]
+        assert s["card_id"] is None or s["card_id"].startswith("sec-")
+    gaps = [s["id"] for s in inv["sections"] if s["card_id"] is None]
+    assert gaps == inv["card_gaps"]
     # every discovered explorer either linked to exactly one section or listed
     linked = [e for s in inv["sections"] for e in s["explorers"]]
     assert len(linked) == len(set(linked)), "explorer joined to two sections"
@@ -169,10 +169,10 @@ def test_joins_one_to_one_with_gaps_and_unlinked():
 def test_recency_from_metadata_only():
     # guard: no git INVOCATION mechanism (prose mentions of git are fine —
     # the docstring explains why git-derived dating is invalid here)
-    src = SCRIPT.read_text()
+    src = SCRIPT.read_text(encoding="utf-8")
     for needle in ("subprocess", "os.system", "os.popen", "from git", "import git"):
         assert needle not in src, f"extractor must not shell out / use git: {needle}"
-    added = yaml.safe_load(ADDED.read_text())
+    added = yaml.safe_load(ADDED.read_text(encoding="utf-8"))
     inv = ci.build_inventory(REPO)
     for s in inv["sections"]:
         assert "added" in s
@@ -190,7 +190,7 @@ def test_check_mode_fails_on_drift(tmp_path):
     out = tmp_path / "inv.json"
     ci.write_inventory(ci.build_inventory(REPO), out)
     assert ci.check(REPO, out) == 0
-    doc = json.loads(out.read_text())
+    doc = json.loads(out.read_text(encoding="utf-8"))
     doc["sections"][0]["cluster"] = "tampered"
     out.write_text(json.dumps(doc, indent=2, sort_keys=True))
     assert ci.check(REPO, out) != 0
@@ -204,7 +204,7 @@ def test_md_tables_match_inventory_json(tmp_path):
     md = ci.render_spec(inv)
     for s in inv["sections"]:
         assert f"#{s['id']}" in md, f"section {s['id']} missing from spec tables"
-    for gap in inv["pdf_gaps"]:
+    for gap in inv["card_gaps"]:
         assert gap in md
     assert str(len(inv["sections"])) in md
 
@@ -225,8 +225,8 @@ def test_committed_inventory_is_fresh():
 # One-pager coverage ratchet + standards grounding (issue #1456).
 #
 # After #1456 closes, total coverage IS the contract: every live section
-# carries a kind="section" SPECS entry AND its committed PDF. A future section
-# without its one-pager fails CI here — that is the point (plan:
+# carries a kind="section" SPECS entry AND its committed JSON card. A future section
+# without its card fails CI here — that is the point (plan:
 # workspace-hub docs/plans/2026-07-06-issue-dm-1456-section-onepager-gaps.md).
 # Escape hatch: list a section id under `onepager_exempt:` in
 # capabilities-clusters.yml (empty today; adding to it is a reviewable diff,
@@ -246,7 +246,7 @@ _BINARY_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico"}
 
 
 def _onepager_exempt() -> set:
-    return set(yaml.safe_load(CLUSTERS.read_text()).get("onepager_exempt", []))
+    return set(yaml.safe_load(CLUSTERS.read_text(encoding="utf-8")).get("onepager_exempt", []))
 
 
 def _norm(s: str) -> str:
@@ -277,33 +277,42 @@ def _section_linked_files(section: dict) -> list:
 
 def test_specs_section_ids_biject_live_sections():
     exempt = _onepager_exempt()
-    live = {s["id"] for s in ci.load_sections(REPO)}
-    covered = set(ci.load_pdf_specs(REPO))  # anchors with a sec-* SPECS entry
+    sections = ci.load_sections(REPO)
+    live = {section["id"] for section in sections}
     assert exempt <= live, f"stale onepager_exempt entries: {sorted(exempt - live)}"
-    orphans = covered - live
-    assert not orphans, (
-        f"sec-* SPECS entries with no live section: {sorted(orphans)}"
-    )
-    missing = live - covered - exempt
-    assert not missing, (
-        f"live sections without a kind='section' SPECS entry: {sorted(missing)} "
-        "— author the entry in scripts/capabilities/build_onepagers.py or add "
-        "the id to onepager_exempt in capabilities-clusters.yml (reviewed diff)"
-    )
+    from scripts.capabilities.build_onepagers import SPECS
+    declared = [entry["id"] for entry in SPECS if entry["kind"] == "section"]
+    card_ids = [section["card_id"] for section in sections if section["id"] not in exempt]
+    assert len(card_ids) == len(set(card_ids)), "duplicate section card_id values"
+    assert len(declared) == len(set(declared)), "duplicate section SPECS ids"
+    assert set(declared) == set(card_ids), "section SPECS and YAML card ids differ"
 
 
-# 11 — ratchet (b): every section one-pager PDF is committed (pdf_gaps == []
-# in the inventory is a SPECS-presence signal only; THIS closes the disk hole)
+@pytest.mark.parametrize("defect", ["orphan", "duplicate"])
+def test_section_bijection_rejects_orphans_and_shared_card_ids(monkeypatch, defect):
+    from scripts.capabilities import build_onepagers
+    if defect == "orphan":
+        monkeypatch.setattr(build_onepagers, "SPECS", [
+            *build_onepagers.SPECS, {"id": "sec-orphan", "kind": "section"},
+        ])
+    else:
+        sections = ci.load_sections(REPO)
+        sections[1]["card_id"] = sections[0]["card_id"]
+        monkeypatch.setattr(ci, "load_sections", lambda repo: sections)
+    with pytest.raises(AssertionError):
+        test_specs_section_ids_biject_live_sections()
 
 
-def test_every_section_pdf_committed():
-    pdf_by_section = ci.load_pdf_specs(REPO)
-    assert pdf_by_section, "no section-kind SPECS entries found"
-    for sec, rel in sorted(pdf_by_section.items()):
-        p = REPO / rel
-        assert p.exists(), f"one-pager PDF for #{sec} not committed: {rel}"
-        size = p.stat().st_size
-        assert 0 < size < 2_000_000, f"{rel} size {size} outside (0, 2MB)"
+# 11 — ratchet (b): every declared section card is committed in the JSON index
+
+
+def test_every_section_card_committed():
+    cards = json.loads((REPO / "docs/capability-map/capability-cards.json").read_text(encoding="utf-8"))
+    card_ids = {card["id"] for card in cards}
+    by_section = ci.load_card_specs(REPO)
+    assert by_section, "no section card declarations found"
+    for card_id in by_section.values():
+        assert card_id in card_ids
 
 
 # 12 — standards grounding (#1391 lesson): every standards token in a

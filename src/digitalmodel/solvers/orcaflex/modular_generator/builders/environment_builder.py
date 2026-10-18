@@ -259,7 +259,7 @@ class EnvironmentBuilder(BaseBuilder):
 
         - Deterministic (Dean stream, Airy, etc.): WaveHeight + WavePeriod
         - Spectral (JONSWAP, Pierson-Moskowitz, etc.): WaveHs + WaveTz
-        - Other (User defined, No waves, etc.): no height/period emitted
+        - Other (User defined, User specified components, etc.): no height/period emitted
 
         When raw_properties contain WaveTrains, raw train entries are used
         as the base layer (matched by index) to preserve all original
@@ -340,7 +340,7 @@ class EnvironmentBuilder(BaseBuilder):
                         if "gamma" in explicitly_set or "WaveGamma" not in wave_train:
                             wave_train["WaveGamma"] = train.gamma
             # For other wave types (User defined, User specified components,
-            # No waves, etc.), omit height/period — OrcaFlex uses type-specific
+            # etc.), omit height/period — OrcaFlex uses type-specific
             # parameters that pass through via generic properties.
 
             # Add wave-type specific defaults, preserving any values already

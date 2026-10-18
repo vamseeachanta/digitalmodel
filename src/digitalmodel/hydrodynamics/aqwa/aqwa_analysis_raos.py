@@ -19,7 +19,6 @@ try:  # pragma: no cover - compatibility shim for environments without custom pa
     from digitalmodel.hydrodynamics.aqwa.aqwa_utilities import AqwaUtilities  # noqa: F401
 except ModuleNotFoundError:  # pragma: no cover
     from digitalmodel.hydrodynamics.aqwa.aqwa_utilities import AqwaUtilities  # type: ignore
-from digitalmodel.engine import engine as dm_engine  # noqa
 from scipy import interpolate
 
 viz_templates = VisualizationTemplates()
@@ -28,6 +27,13 @@ wwy = WorkingWithYAML()
 
 au = AqwaUtilities()
 fm = FileManagement()
+
+
+def dm_engine(*args, **kwargs):
+    """Load the general workflow engine only when a workflow requests it."""
+    from digitalmodel.engine import engine
+
+    return engine(*args, **kwargs)
 
 
 class AqwaRAOs:
@@ -483,6 +489,9 @@ class AqwaRAOs:
         return cfg
 
     def prepare_damping_decks(self, cfg, additional_damping_values):
+        for value in additional_damping_values.values():
+            if not math.isfinite(float(value)) or value < 0:
+                raise ValueError("Additional damping must be finite and nonnegative")
         self.create_decks_directory(cfg)
 
         deck_input = cfg["analysis_settings"]["damping"]["additional_damping"]
@@ -616,18 +625,10 @@ class AqwaRAOs:
             peak_omega_key
         ]
 
-        if current_critical_damping > 0:
-            additional_damping = self.get_additional_damping(
-                current_critical_damping,
-                current_absolute_damping,
-                target_critical_damping,
-            )
-        elif current_critical_damping == 0:
-            additional_damping = current_absolute_damping
-        else:
-            raise NotImplementedError(
-                "Current critical damping is negative. No Logic implemented for negative damping."
-            )
+        additional_damping = self.get_additional_damping(
+            current_critical_damping, current_absolute_damping, target_critical_damping,
+            percent_unit=cfg["analysis_settings"]["damping"].get("target_damping_unit"),
+        )
 
         damping_output = {
             "current_critical_damping": current_critical_damping,
@@ -646,19 +647,21 @@ class AqwaRAOs:
         return additional_damping
 
     def get_additional_damping(
-        self,
-        current_critical_damping,
-        current_absolute_damping,
-        target_critical_damping,
+        self, current_critical_damping, current_absolute_damping,
+        target_critical_damping, *, percent_unit=None,
     ):
-        additional_damping = (
-            target_critical_damping
-            / current_critical_damping
-            * current_absolute_damping
-            - current_absolute_damping
-        )
-        additional_damping = round(additional_damping, 1)
-        return additional_damping
+        """Nonnegative addition under damping-basis.md E5, inputs in percent."""
+        current, absolute, target = map(float, (
+            current_critical_damping, current_absolute_damping, target_critical_damping))
+        if percent_unit not in (None, "percent"):
+            raise ValueError("Critical damping ratios must use percent")
+        if not all(math.isfinite(v) for v in (current, absolute, target)):
+            raise ValueError("Damping inputs must be finite")
+        if current <= 0 or absolute < 0 or target < 0:
+            raise ValueError("Current percent must be positive and damping/target nonnegative")
+        if percent_unit is None and 0 < target < 1:
+            raise ValueError("Ambiguous target: declare percent explicitly for sub-percent values")
+        return round(max(0.0, absolute * (target / current - 1.0)), 1)
 
     def get_raos(self, cfg):
         rao_plot_cfg = {}

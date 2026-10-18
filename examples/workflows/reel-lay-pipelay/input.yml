@@ -24,6 +24,7 @@ pipelay:
   pipe:
     outer_diameter: 0.2731                   # 10.75 in (reelable size)
     wall_thickness: 0.0191
+    steel_density: 7850.0         # explicit existing input assumption; E1, not a standard allowable
     youngs_modulus: 207.0e9
     smys: 448.0e6
     coating_thickness: 0.0                   # reeled pipe: no concrete coating

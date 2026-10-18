@@ -48,6 +48,18 @@ def load_detector_module():
     return module
 
 
+@pytest.mark.parametrize(("path", "expected"), [
+    ("src/digitalmodel/orcaflex/installation_analysis.py",
+     {"orcaflex", "marine-ops-other", "workflows"}),
+    ("src/digitalmodel/orcaflex/source.py", {"orcaflex"}),
+])
+def test_shared_skew_basis_routes(path: str, expected: set[str]) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    assert selected == expected
+
+
 def run_detector(
     repo: Path, domains_file: Path, *args: str
 ) -> subprocess.CompletedProcess[str]:

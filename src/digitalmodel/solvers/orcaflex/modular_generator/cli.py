@@ -25,8 +25,7 @@ import yaml
 from pydantic import ValidationError
 
 from .schema import ProjectInputSpec
-from . import ModularModelGenerator, _NoAliasDumper
-from .builders.registry import BuilderRegistry
+from . import ModularModelGenerator
 
 
 def print_error(message: str) -> None:
@@ -196,95 +195,17 @@ def cmd_generate(args: argparse.Namespace) -> int:
     print_success(f"Validated: {spec.metadata.name}")
     print()
 
-    # Create output directory
-    print("Step 2: Creating output directory structure...")
-    try:
-        output_dir.mkdir(parents=True, exist_ok=True)
-        includes_dir = output_dir / 'includes'
-        inputs_dir = output_dir / 'inputs'
-        includes_dir.mkdir(exist_ok=True)
-        inputs_dir.mkdir(exist_ok=True)
-        print_success(f"Created: {output_dir}/")
-        print_progress(f"includes/")
-        print_progress(f"inputs/")
-    except Exception as e:
-        print_error(f"Failed to create output directory: {e}")
-        return 1
-
-    print()
-
-    # Generate model
-    print("Step 3: Running builders...")
-    print()
-
+    print("Step 2: Building and validating model inputs...")
     try:
         generator = ModularModelGenerator(input_path)
-
-        from .builders.context import BuilderContext
-        from .builders.registry import BuilderRegistry
-
-        context = BuilderContext()
-        written_files: list[str] = []
-
-        for file_name, builder_class in BuilderRegistry.get_ordered_builders():
-            builder_name = builder_class.__name__
-            print_progress(f"Running {builder_name}...")
-
-            builder = builder_class(spec, context)
-
-            if not builder.should_generate():
-                print_progress(f"Skipped {file_name} (no data)")
-                continue
-
-            data = builder.build()
-            context.update_from_dict(builder.get_generated_entities())
-
-            file_path = includes_dir / file_name
-            with open(file_path, 'w', encoding='utf-8') as f:
-                yaml.dump(data, f, Dumper=_NoAliasDumper, default_flow_style=False, allow_unicode=True, sort_keys=False)
-
-            written_files.append(file_name)
-            print_success(f"Generated: includes/{file_name}")
-
-        # Generate parameters.yml
-        print_progress("Writing parameters...")
-        params = {
-            'water_depth': spec.environment.water.depth,
-            'water_density': spec.environment.water.density,
-            'current_speed': spec.environment.current.speed,
-            'current_direction': spec.environment.current.direction,
-            'wind_speed': spec.environment.wind.speed,
-            'hs': spec.environment.waves.height,
-            'tp': spec.environment.waves.period,
-            'wave_direction': spec.environment.waves.direction,
-            'stage_durations': spec.simulation.stages,
-            'time_step': spec.simulation.time_step,
-        }
-        params_path = inputs_dir / 'parameters.yml'
-        with open(params_path, 'w', encoding='utf-8') as f:
-            yaml.dump(params, f, default_flow_style=False)
-        print_success("Generated: inputs/parameters.yml")
-
-        # Generate master.yml
-        print_progress("Writing master file...")
-        master_lines = [
-            '%YAML 1.1',
-            '# Type: Model',
-            f'# Generated from: {input_path.name}',
-            f'# Model: {spec.metadata.name}',
-            '',
-            '---',
+        generator.generate(output_dir)
+        # Report only files referenced by the successfully published master.
+        master_text = (output_dir / "master.yml").read_text(encoding="utf-8")
+        written_files = [
+            line.split("includes/", 1)[1]
+            for line in master_text.splitlines()
+            if line.startswith("- includefile: includes/")
         ]
-        # Only reference include files actually written — skipped builders
-        # produce no file and a dangling includefile fails OrcFxAPI load.
-        for file_name in written_files:
-            master_lines.append(f'- includefile: includes/{file_name}')
-
-        master_path = output_dir / 'master.yml'
-        with open(master_path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(master_lines))
-        print_success("Generated: master.yml")
-
     except Exception as e:
         print_error(f"Generation failed: {e}")
         import traceback

@@ -4,6 +4,7 @@ Provides authenticated API endpoints for coupled buoy system data
 within the digitaltwinfeed application.
 """
 
+from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_password_for
 import os
 
 from flask import Blueprint, abort, jsonify, make_response, request, url_for
@@ -28,9 +29,7 @@ def get_password(username):
     Returns:
         The password string if username is valid, None otherwise.
     """
-    if username == 'dtf_beta':
-        return 'dtf_gamma'
-    return None
+    return basic_auth_password_for(username)
 
 
 @auth.error_handler

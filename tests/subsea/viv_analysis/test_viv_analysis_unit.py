@@ -418,13 +418,17 @@ class TestVIVScreening:
 
     def test_recommendation_lock_in(self, basic_riser, viv_screening):
         """Test recommendation when in lock-in"""
-        # Tune parameters to force lock-in
-        result = viv_screening.screen_member(basic_riser, current_velocity=0.5, mode=1)
+        result = viv_screening.screen_member(basic_riser, current_velocity=1.5, mode=1)
+        assert result.lock_in_status == "lock-in"
+        assert result.is_susceptible is True
+        assert "REQUIRED" in result.recommendation
+        assert "suppression" in result.recommendation.lower()
 
-        if result.is_susceptible:
-            assert "suppression" in result.recommendation.lower() or \
-                   "mitigation" in result.recommendation.lower() or \
-                   "strakes" in result.recommendation.lower()
+    def test_recommendation_safe(self, basic_riser, viv_screening):
+        result = viv_screening.screen_member(basic_riser, current_velocity=0.5, mode=1)
+        assert result.lock_in_status == "safe"
+        assert result.is_susceptible is False
+        assert "REQUIRED" not in result.recommendation
 
 
 # ============================================================================
