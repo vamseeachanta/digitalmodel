@@ -157,3 +157,30 @@ def test_prebuilt_mode_does_not_write_blockmesh(tmp_path: Path) -> None:
     decompose = (tmp_path / "case" / "system" / "decomposeParDict").read_text()
     assert "numberOfSubdomains 8;" in decompose
     assert "method scotch;" in decompose
+
+
+@pytest.mark.parametrize("rotation,vector", [("roll", "(0 0 4)"), ("pitch", "(4 0 0)")])
+def test_comparison_options_preserve_direction_and_numerics(tmp_path, rotation, vector):
+    from digitalmodel.solvers.openfoam.validation import sloshing_2d_dicts as d2
+
+    cfg = Sloshing3DConfig(
+        cpb=60, end_time=6, delta_t=0.001, length=1.35,
+        rotation=rotation, period=1.7, max_co=0.5,
+        function_objects=True, use_2d_settings=True,
+    )
+    case = tmp_path / rotation
+    assert write_sloshing_case(case, cfg) == 324000
+    motion = (case / "constant/dynamicMeshDict").read_text()
+    assert f"amplitude   {vector}" in motion
+    import math
+    assert f"omega       {2 * math.pi / 1.7:.10g};" in motion
+    assert "origin      (0.45 0 0.675);" in motion
+    control = (case / "system/controlDict").read_text()
+    assert "maxCo           0.5;" in control
+    assert "maxDeltaT       0.001;" in control
+    assert control.count("type            interfaceHeight;") == 6
+    assert "type            forces;" in control
+    assert "frontWall backWall" in control
+    assert "CofR            (0.45 0 0.675);" in control
+    assert (case / "system/fvSchemes").read_text().endswith(d2._FVSCHEMES)
+    assert (case / "system/fvSolution").read_text().endswith(d2._FVSOLUTION)

@@ -144,7 +144,7 @@ OPERATING_RADIUS_M = 40.0
 GO_MARGINAL_THRESHOLD = 0.85
 NOGO_UTILISATION = 1.0
 
-# JONSWAP peak period coefficient: Tp = TP_COEFFICIENT * sqrt(Hs).
+# Screening simplification: Tp = TP_COEFFICIENT * sqrt(Hs).
 TP_COEFFICIENT = 4.0
 
 # Phase names (display). B2: these EXACT display strings (hyphens included) are what the two
@@ -170,7 +170,7 @@ FROZEN_RESULT_KEYS = (
 
 
 def tp_from_hs(hs: float, config: Optional[Any] = None) -> float:
-    """JONSWAP peak period approximation: Tp = coeff * sqrt(Hs).
+    """Screening simplification: Tp = coeff * sqrt(Hs).
 
     When *config* is supplied the coefficient comes from it; otherwise the module default.
     """
@@ -1314,7 +1314,8 @@ def build_report(
         f"Crane SWL evaluated at the {operating_radius_m:g} m overboard operating radius "
         "(a derated radius, not the most favourable maximum-capacity position)",
         f"DAF lift-off = {daf_liftoff}, DAF splash zone = {daf_splash} per DNV-ST-N001",
-        f"JONSWAP peak period approximation: Tp = {tp_coefficient:g} * sqrt(Hs)",
+        f"Tp = {tp_coefficient:g} * sqrt(Hs) is a screening simplification, "
+        "not a measured or scatter-derived period",
         "Slamming coefficient Cs = 5.0 for flat-bottom structures per DNV-RP-H103 Table 4-1",
         "Added mass coefficient Ca = 1.0, drag coefficient Cd = 2.0 for flat plate geometry",
         f"Wire rope MBL safety factor = {wire_mbl_sf} (max tension / MBL)",

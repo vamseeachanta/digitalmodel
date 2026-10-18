@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Builder for the SupportTypes section of OrcaFlex models."""
 
 from typing import Any
@@ -6,7 +9,7 @@ from .base import BaseBuilder
 from .registry import BuilderRegistry
 
 
-@BuilderRegistry.register("13_supports.yml", order=50)
+@BuilderRegistry.register("13_supports.yml", order=44)
 class SupportsBuilder(BaseBuilder):
     """Builds the SupportTypes section of the OrcaFlex model.
 

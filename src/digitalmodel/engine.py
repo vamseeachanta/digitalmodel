@@ -1,3 +1,8 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Route configuration inputs to engineering workflows."""
+
 import inspect
 import os
 import sys
@@ -57,8 +62,7 @@ app_manager = ConfigureApplicationInputs()
 
 
 def _configure_accepts_root_folder() -> bool:
-    """Whether assetutilities' ``ConfigureApplicationInputs.configure`` accepts
-    ``root_folder``.
+    """Check whether application configuration accepts a root folder.
 
     The embed-port (#1136 / workspace-hub#3307) passes ``root_folder`` to
     ``configure``; assetutilities releases that predate that change raise
@@ -581,6 +585,10 @@ def engine(
 
         dm = DigitalMarketing()
         cfg_base = dm.router(cfg_base)
+    elif basename == "on_bottom_stability_e305":
+        from digitalmodel.subsea.on_bottom_stability.e305_workflow import router as run_e305
+
+        cfg_base = run_e305(cfg_base)
     elif basename == "on_bottom_stability":
         from digitalmodel.subsea.pipeline.integrity_workflows import (
             run_on_bottom_stability,
@@ -704,6 +712,10 @@ def engine(
 
         mudmat = MudmatBearingCapacityWorkflow()
         cfg_base = mudmat.router(cfg_base)
+    elif basename == "slope_stability":
+        from digitalmodel.geotechnical.slope_workflow import SlopeStabilityWorkflow
+
+        cfg_base = SlopeStabilityWorkflow().router(cfg_base)
     elif basename == "liquefaction":
         from digitalmodel.geotechnical.cfg_workflows import LiquefactionWorkflow
 

@@ -1,0 +1,22 @@
+{
+  "mean_angle_deg": {
+    "value": null,
+    "unit": "degrees",
+    "source": "Supply a qualified source at run time; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, April 2017"
+  },
+  "max_angle_deg": {
+    "value": null,
+    "unit": "degrees",
+    "source": "Supply a qualified source at run time; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, April 2017"
+  },
+  "yield_strength_mpa": {
+    "value": null,
+    "unit": "MPa",
+    "source": "Supply a qualified source at run time; API Spec 5L, Line Pipe, 46th edition, April 2018"
+  },
+  "stress_design_factor": {
+    "value": null,
+    "unit": "1",
+    "source": "Supply a qualified source at run time; API RP 16Q, Design, Selection, Operation and Maintenance of Marine Drilling Riser Systems, second edition, April 2017"
+  }
+}

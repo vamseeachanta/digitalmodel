@@ -1,0 +1,98 @@
+version: 1
+root_allowlist:
+  files:
+    - .coveragerc
+    - .editorconfig
+    - .env.template
+    - .gitattributes
+    - .gitignore
+    - .gitleaks.toml
+    - .gitleaksignore
+    - .gitmodules
+    - .legal-deny-list.yaml
+    - .legal-uninspectable-baseline.txt
+    - .license-header.txt
+    - .mutmut_config
+    - .pre-commit-config.yaml
+    - .radon.cfg
+    - AGENTS.md
+    - CHANGELOG.md
+    - CODEOWNERS
+    - LICENSE
+    - MANIFEST.in
+    - Makefile
+    - README.md
+    - ROADMAP.md
+    - conftest.py
+    - mkdocs.yml
+    - pyproject.toml
+    - pytest.ini
+    - uv.lock
+    - uv.toml
+    - vulture_whitelist.py
+  directories:
+    - .claude
+    - .codex
+    - .gemini
+    - .githooks
+    - .github
+    - .planning
+    - assets
+    - atlases
+    - config
+    - data
+    - docs
+    - examples
+    - knowledge
+    - notebooks
+    - references
+    - scripts
+    - src
+    - tests
+allowed_tracked_notebooks:
+  - docs/domains/wind/uswtdbApiMapVizExamples.ipynb
+  - docs/notebooks/fatigue-sn-library-demo.ipynb
+  - docs/notebooks/freespan-viv-demo.ipynb
+  - examples/domains/fpso/fpso_mooring_analysis.ipynb
+  - examples/domains/hydrodynamics/hydro_coefficients_example.ipynb
+  - examples/domains/ocimf/ocimf_visualization_example.ipynb
+  - examples/domains/tutorials/01_getting_started.ipynb
+  - examples/domains/tutorials/02_catenary_deep_dive.ipynb
+  - notebooks/gis/GIS_2013-12-16-UTM_conv.ipynb
+generated_patterns:
+  - outputs/**
+  - build/**
+  - dist/**
+  - site/**
+  - cache/**
+  - logs/**
+  - results/**
+  - benchmark_output/**
+  - test_output_ss/**
+  - coverage.xml
+  - coverage.json
+  - htmlcov/**
+  - .pytest_cache/**
+  - .mypy_cache/**
+  - .ruff_cache/**
+  - .hypothesis/**
+ci_artifact_patterns:
+  - reports/quality_gates_results.json
+  - reports/quality-gates-pytest-full.log
+  - coverage.xml
+  - coverage.json
+  - dist/**
+durable_exceptions: []
+required_metadata_for_exceptions:
+  - maintainer
+  - reason
+  - category
+  - follow_up_issue_or_permanent_justification
+  - reviewed_on
+forbidden_patterns:
+  - src/**/tests/**
+
+# Retirement coverage does not grant permission to add generated output.
+generated_retirement_patterns:
+  - docs/api/capabilities/pdf/**
+  - examples/demos/gtm/output/**

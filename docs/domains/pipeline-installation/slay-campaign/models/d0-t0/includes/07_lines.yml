@@ -1,6 +1,6 @@
 Lines:
 - Name: Generic pipe
-  IncludeTorsion: 'Yes'
+  IncludeTorsion: 'No'
   TopEnd: End A
   LengthAndEndOrientations: Explicit
   Representation: Finite element
@@ -12,29 +12,25 @@ Lines:
   WaveCalculationMethod: Specified by environment
   ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
     ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
-  : - - Generic lay hull
-      - 0
-      - 0
-      - 0
-      - 0
+  : - - Free
+      - -31.099999999999994
+      - 0.0
+      - 0.0
+      - 180
       - 90
       - 0
       - ~
     - - Anchored
-      - 0
-      - 0
-      - 0
-      - 0
+      - -2024.8
+      - 0.0
+      - 0.485
+      - 180
       - 90.0
       - 0
       - ~
-  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
-  - - Infinity
-    - ~
-    - Infinity
-  - - Infinity
-    - ~
-    - Infinity
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - []
+  - [0, ~]
   ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
     ConnectionApplyRamp, ConnectionUseSmoothGrowth
   : - - ~

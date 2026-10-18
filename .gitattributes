@@ -100,3 +100,10 @@ scripts/orcaflex/check_legacy_library_sanitisation.py text eol=lf
 scripts/legal/check_identifiers.py text eol=lf
 .legal-deny-list.yaml text eol=lf
 docs/domains/orcaflex/library/legacy-round-trip/** text eol=lf
+
+# BHA manifest hashes pin exact YAML bytes on every checkout.
+data/bha_database/*.yml -text
+data/bha_database/*.yaml -text
+
+# B3 benchmark inputs are bound by raw-byte MANIFEST digests.
+docs/benchmarks/catenary_closed_form/inputs/* text eol=lf

@@ -168,7 +168,7 @@ def _field_to_section_name(field_name: str) -> str | None:
         "attached_buoys": "AttachedBuoys",
         "variable_data_sources": "VariableData",
         "expansion_tables": "ExpansionTables",
-        "py_models": "PyModels",
+        "py_models": "P-yModels",
         "wake_models": "WakeModels",
         "multibody_groups": "MultibodyGroups",
         "browser_groups": "BrowserGroups",

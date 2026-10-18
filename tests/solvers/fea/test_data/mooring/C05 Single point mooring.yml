@@ -79,19 +79,19 @@ Environment:
   WaveTrains:
     - Name: Wave1
       WaveDirection: 180
-      WaveGamma: 3.3
-      WaveHs: 10
-      WaveJONSWAPParameters: Partially specified
-      WaveNumberOfComponents: 100
-      WaveNumberOfSpectralDirections: 1
       WaveOrigin:
         - 0
         - 0
+      WaveTimeOrigin: 0
+      WaveType: JONSWAP
+      WaveHs: 10
+      WaveJONSWAPParameters: Partially specified
+      WaveGamma: 3.3
+      WaveNumberOfComponents: 100
+      WaveNumberOfSpectralDirections: 1
       WaveSpectrumMaxComponentFrequencyRange: 0.05
       WaveSpectrumMaxRelFrequency: 10
       WaveSpectrumMinRelFrequency: 0.5
-      WaveTimeOrigin: 0
-      WaveType: JONSWAP
       WaveTz: 13
   WindDirection: 210
   WindSeed: 436212347

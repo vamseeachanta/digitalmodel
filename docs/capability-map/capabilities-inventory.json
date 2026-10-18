@@ -1,4 +1,5 @@
 {
+  "card_gaps": [],
   "clusters": [
     {
       "key": "structures-ffs",
@@ -72,7 +73,6 @@
       "value_statement": "Getting hardware to the seabed safely — installability screening, lifting/lowering dynamics and weather-windowed marine operations."
     }
   ],
-  "pdf_gaps": [],
   "recent": [
     {
       "date": "2026-09-26",
@@ -122,20 +122,20 @@
         "date": "2026-09-26",
         "pr": 2204
       },
+      "card_id": "sec-ffs",
       "cluster": "structures-ffs",
       "explorers": [
         "docs/api/ffs/riser-joint-acceptance-explorer.html"
       ],
       "id": "ffs",
-      "pdf": "docs/api/capabilities/pdf/sec-ffs.pdf",
       "title": "Fitness-for-service"
     },
     {
       "added": "unknown",
+      "card_id": "sec-structural",
       "cluster": "structures-ffs",
       "explorers": [],
       "id": "structural",
-      "pdf": "docs/api/capabilities/pdf/sec-structural.pdf",
       "title": "Ship structural strength"
     },
     {
@@ -143,20 +143,20 @@
         "date": "2026-07-04",
         "pr": 1396
       },
+      "card_id": "sec-fatigue",
       "cluster": "structures-ffs",
       "explorers": [],
       "id": "fatigue",
-      "pdf": "docs/api/capabilities/pdf/sec-fatigue.pdf",
       "title": "Fatigue & fracture — S-N life and crack growth"
     },
     {
       "added": "unknown",
+      "card_id": "sec-hydro",
       "cluster": "hydro-naval",
       "explorers": [
         "docs/api/hydro/ocimf-coefficient-explorer.html"
       ],
       "id": "hydro",
-      "pdf": "docs/api/capabilities/pdf/sec-hydro.pdf",
       "title": "Hydrodynamics & diffraction"
     },
     {
@@ -164,22 +164,22 @@
         "date": "2026-07-06",
         "pr": 1442
       },
+      "card_id": "sec-cfd",
       "cluster": "hydro-naval",
       "explorers": [
         "docs/api/structural/sloshing-explorer.html"
       ],
       "id": "cfd",
-      "pdf": "docs/api/capabilities/pdf/sec-cfd.pdf",
       "title": "Computational fluid dynamics (CFD)"
     },
     {
       "added": "unknown",
+      "card_id": "sec-risers",
       "cluster": "pipelines-risers",
       "explorers": [
         "docs/api/drilling/drilling-riser-operability-explorer.html"
       ],
       "id": "risers",
-      "pdf": "docs/api/capabilities/pdf/sec-risers.pdf",
       "title": "Risers & pipelines"
     },
     {
@@ -187,20 +187,20 @@
         "date": "2026-07-04",
         "pr": 1389
       },
+      "card_id": "sec-wall-thickness",
       "cluster": "pipelines-risers",
       "explorers": [
         "docs/api/structural/wall-thickness-explorer.html"
       ],
       "id": "wall-thickness",
-      "pdf": "docs/api/capabilities/pdf/sec-wall-thickness.pdf",
       "title": "Wall thickness — sizing & code checks"
     },
     {
       "added": "unknown",
+      "card_id": "sec-subsea",
       "cluster": "moorings-stationkeeping",
       "explorers": [],
       "id": "subsea",
-      "pdf": "docs/api/capabilities/pdf/sec-subsea.pdf",
       "title": "Subsea"
     },
     {
@@ -208,28 +208,30 @@
         "date": "2026-07-04",
         "pr": 1396
       },
+      "card_id": "sec-viv",
       "cluster": "pipelines-risers",
       "explorers": [
         "docs/api/structural/viv-explorer.html"
       ],
       "id": "viv",
-      "pdf": "docs/api/capabilities/pdf/sec-viv.pdf",
       "title": "Vortex-induced vibration — screening, frequency & fatigue"
     },
     {
       "added": "unknown",
+      "card_id": "sec-installation",
       "cluster": "installation-ops",
-      "explorers": [],
+      "explorers": [
+        "docs/api/installation/installation-heading-explorer.html"
+      ],
       "id": "installation",
-      "pdf": "docs/api/capabilities/pdf/sec-installation.pdf",
       "title": "Installation"
     },
     {
       "added": "unknown",
+      "card_id": "sec-wind",
       "cluster": "field-dev-economics",
       "explorers": [],
       "id": "wind",
-      "pdf": "docs/api/capabilities/pdf/sec-wind.pdf",
       "title": "Floating wind"
     },
     {
@@ -237,22 +239,22 @@
         "date": "2026-07-04",
         "pr": 1396
       },
+      "card_id": "sec-field-development",
       "cluster": "field-dev-economics",
       "explorers": [
         "docs/api/structural/field-economics-explorer.html"
       ],
       "id": "field-development",
-      "pdf": "docs/api/capabilities/pdf/sec-field-development.pdf",
       "title": "Field development — concept screening, cost & economics"
     },
     {
       "added": "unknown",
+      "card_id": "sec-manoeuvring",
       "cluster": "hydro-naval",
       "explorers": [
         "docs/api/hydro/rudder-maneuvering-explorer.html"
       ],
       "id": "manoeuvring",
-      "pdf": "docs/api/capabilities/pdf/sec-manoeuvring.pdf",
       "title": "Manoeuvring & station-keeping"
     },
     {
@@ -260,12 +262,12 @@
         "date": "2026-07-04",
         "pr": 1394
       },
+      "card_id": "sec-naval-architecture",
       "cluster": "hydro-naval",
       "explorers": [
         "docs/api/structural/ship-resistance-explorer.html"
       ],
       "id": "naval-architecture",
-      "pdf": "docs/api/capabilities/pdf/sec-naval-architecture.pdf",
       "title": "Naval architecture — stability, resistance & hull strength"
     },
     {
@@ -273,20 +275,20 @@
         "date": "2026-07-04",
         "pr": 1394
       },
+      "card_id": "sec-geotechnical",
       "cluster": "moorings-stationkeeping",
       "explorers": [
         "docs/api/structural/anchor-holding-explorer.html"
       ],
       "id": "geotechnical",
-      "pdf": "docs/api/capabilities/pdf/sec-geotechnical.pdf",
       "title": "Geotechnical — pile, anchor & foundation capacity"
     },
     {
       "added": "unknown",
+      "card_id": "sec-artificial-lift",
       "cluster": "wells-drilling-production",
       "explorers": [],
       "id": "artificial-lift",
-      "pdf": "docs/api/capabilities/pdf/sec-artificial-lift.pdf",
       "title": "Artificial lift — rod-pump diagnostics"
     },
     {
@@ -294,22 +296,22 @@
         "date": "2026-07-04",
         "pr": 1396
       },
+      "card_id": "sec-production-engineering",
       "cluster": "wells-drilling-production",
       "explorers": [
         "docs/api/structural/ipr-explorer.html"
       ],
       "id": "production-engineering",
-      "pdf": "docs/api/capabilities/pdf/sec-production-engineering.pdf",
       "title": "Production engineering — nodal analysis & well deliverability"
     },
     {
       "added": "unknown",
+      "card_id": "sec-well",
       "cluster": "wells-drilling-production",
       "explorers": [
         "docs/api/well/casing-design-explorer.html"
       ],
       "id": "well",
-      "pdf": "docs/api/capabilities/pdf/sec-well.pdf",
       "title": "Well construction — casing & tubulars"
     },
     {
@@ -317,12 +319,12 @@
         "date": "2026-07-04",
         "pr": 1396
       },
+      "card_id": "sec-drilling-engineering",
       "cluster": "wells-drilling-production",
       "explorers": [
         "docs/api/structural/pore-pressure-explorer.html"
       ],
       "id": "drilling-engineering",
-      "pdf": "docs/api/capabilities/pdf/sec-drilling-engineering.pdf",
       "title": "Drilling engineering — pore pressure, hydraulics & well control"
     },
     {
@@ -330,31 +332,31 @@
         "date": "2026-07-04",
         "pr": 1389
       },
+      "card_id": "sec-cathodic",
       "cluster": "structures-ffs",
       "explorers": [
         "docs/api/structural/cathodic-protection-explorer.html"
       ],
       "id": "cathodic",
-      "pdf": "docs/api/capabilities/pdf/sec-cathodic.pdf",
       "title": "Cathodic protection"
     },
     {
       "added": "unknown",
+      "card_id": "sec-corrosion-production",
       "cluster": "wells-drilling-production",
       "explorers": [
         "docs/api/corrosion/galvanic-compatibility-explorer.html",
         "docs/api/production/scale-si-explorer.html"
       ],
       "id": "corrosion-production",
-      "pdf": "docs/api/capabilities/pdf/sec-corrosion-production.pdf",
       "title": "Corrosion & production chemistry"
     },
     {
       "added": "unknown",
+      "card_id": "sec-validation",
       "cluster": "structures-ffs",
       "explorers": [],
       "id": "validation",
-      "pdf": "docs/api/capabilities/pdf/sec-validation.pdf",
       "title": "Validated against published references"
     }
   ],

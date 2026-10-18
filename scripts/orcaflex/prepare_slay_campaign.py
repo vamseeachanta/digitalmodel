@@ -9,9 +9,10 @@ import argparse
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import re
-import time
+import subprocess
 from typing import Any
 
 import yaml
@@ -19,6 +20,8 @@ import yaml
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.post_validator import PostGenerationValidator
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+from digitalmodel.solvers.orcaflex.modular_generator.slay_execution import read_contract, write_queue
+from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import stinger_layout_for_depth
 
 
 def catenary(weight_kn_m: float, depth_m: float, tension_kn: float) -> dict[str, float]:
@@ -73,6 +76,15 @@ def case_spec(basis: dict[str, Any], case: dict[str, Any]) -> ProjectInputSpec:
             "pipeline": basis["pipeline"], "equipment": equipment}
     data = json.loads(json.dumps(data))
     data["equipment"]["tensioner"]["tension_value"] = case["top_tension_kn"]
+    layout = stinger_layout_for_depth(basis, case["depth_m"])
+    if layout:
+        stinger = data["equipment"]["stinger"]
+        stinger["sections"] = [{"length": layout["length_m"], "bend_radius": stinger["radius"]}]
+        roller = stinger["rollers"][0]
+        stinger["rollers"] = [dict(roller, arc_length=station)
+                              for station in range(0, layout["length_m"] + 1, 5)]
+    if "end_b_x_m" in case:
+        data["equipment"]["slay_end_b_x"] = case["end_b_x_m"]
     return ProjectInputSpec.model_validate(data)
 
 
@@ -86,7 +98,6 @@ def model_digest(path: Path) -> str:
 
 def prepare_case(basis: dict[str, Any], case: dict[str, Any], output: Path) -> dict[str, Any]:
     """Generate one model, reject validator errors and bind every output by digest."""
-    started = time.perf_counter()
     folder = output / "models" / case["id"]
     if folder.exists():
         raise ValueError("Use a new output directory; existing models are preserved")
@@ -103,15 +114,16 @@ def prepare_case(basis: dict[str, Any], case: dict[str, Any], output: Path) -> d
     screen = catenary(weight, case["depth_m"], case["top_tension_kn"])
     screen["overbend_strain"] = (basis["pipeline"]["dimensions"]["outer_diameter"] /
                                   (2 * basis["equipment"]["stinger"]["radius"]))
+    screen["overbend_strain_basis"] = "D/(2R) screen"
     screen["submerged_weight_kn_m"] = weight
     return {"id": case["id"], "files": files, "validator_errors": 0,
             "validator_warnings": [f.category for f in findings], "screen": screen,
-            "preparation_wall_seconds": time.perf_counter() - started,
+            "preparation_wall_seconds": None,
             "native_wall_seconds": None, "native_status": "not_run"}
 
 
 def prepare(campaign: Path, output: Path) -> dict[str, Any]:
-    """Prepare all declared cases; record preparation timing separately from solves."""
+    """Prepare all declared cases with reproducible manifests and no native solves."""
     source = campaign / "case-table.yml"
     table = yaml.safe_load(source.read_text(encoding="utf-8"))
     identities = [case["id"] for case in table["cases"]]
@@ -139,13 +151,34 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--campaign", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--queue", action="store_true", help="Write queue inputs without execution")
+    parser.add_argument("--expected-hours", type=float, help="Queue scheduling estimate, not measured time")
+    parser.add_argument("--max-hours", type=float, help="Queue scheduling ceiling")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--launch", action="store_true")
     args = parser.parse_args()
     if args.launch:
-        parser.error("A qualified execution adapter is required in a later solver job")
+        parser.error("The execution adapter only writes queue inputs; native launch requires digest-bound queue approval")
+    contract = None
+    if args.queue:
+        if args.expected_hours is None or args.max_hours is None:
+            parser.error("Queue scheduling budgets must be explicitly supplied")
+        contract = read_contract(args.campaign, args.expected_hours, args.max_hours)
+    if contract is not None:
+        repo = Path(__file__).resolve().parents[2]
+        env = dict(os.environ)
+        for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+            env.pop(name, None)
+        status = subprocess.run(["git", "-C", str(repo), "status", "--porcelain"],
+                                capture_output=True, text=True, check=True, env=env).stdout
+        if status:
+            parser.error("Queue preparation requires a clean working tree; commit-pinned inputs cannot record uncommitted changes")
+        revision = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                                  capture_output=True, text=True, check=True, env=env).stdout.strip()
     prepare(args.campaign, args.output)
+    if contract is not None:
+        write_queue(args.campaign, args.output, repo, revision, contract)
     return 0
 
 

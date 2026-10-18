@@ -11,6 +11,7 @@ import pytest
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignFactors, DesignLoads, PipeGeometry, PipeMaterial,
 )
+from digitalmodel.structural.analysis.wall_thickness_codes.api_rp_1111 import ApiRp1111Strategy
 from digitalmodel.structural.analysis.wall_thickness_codes.api_rp_2rd import (
     ApiRp2rdStrategy,
 )
@@ -35,7 +36,8 @@ def reference_input():
     }
 
 
-def test_builder_matches_module_reference_cases():
+@pytest.mark.parametrize("reference", ["riser", "pipeline"])
+def test_builder_matches_module_reference_cases(reference):
     """Keep the pressure-test references and legacy-validated Method 1 loads.
 
     Reference tests: test_burst_utilisation_reasonable,
@@ -45,11 +47,21 @@ def test_builder_matches_module_reference_cases():
     test_combined_matches_legacy_method1 in test_riser_case_screening.py.
     """
     builder = import_module("scripts.reporting.build_riser_pipe_comparison")
-    model = builder.evaluate(reference_input())
-    geometry = PipeGeometry(0.27305, 0.02144)
-    material = PipeMaterial("X65", 448e6, 531e6)
-    loads = DesignLoads(20e6, 10e6, 250e3, 1500e3)
-    for code, strategy in [("API RP 2RD", ApiRp2rdStrategy()),
+    config = reference_input()
+    if reference == "pipeline":
+        # Geometry and loads from test_api_rp_1111.test_burst_10mpa_thin_wall.
+        config["pipe"].update(outer_diameter_mm=273.1, wall_thickness_mm=12.7,
+                              smys=358.5e6, smts=455.1e6)
+        config["cases"][0].update(internal_pressure_pa=10e6, external_pressure_pa=0,
+                                  bending_moment_nm=0, effective_tension_n=0)
+    model = builder.evaluate(config)
+    pipe, case = config["pipe"], config["cases"][0]
+    geometry = PipeGeometry(pipe["outer_diameter_mm"] / 1000, pipe["wall_thickness_mm"] / 1000)
+    material = PipeMaterial(pipe["grade"], pipe["smys"], pipe["smts"])
+    loads = DesignLoads(case["internal_pressure_pa"], case["external_pressure_pa"],
+                        case["bending_moment_nm"], case["effective_tension_n"])
+    for code, strategy in [("API RP 1111", ApiRp1111Strategy()),
+                           ("API RP 2RD", ApiRp2rdStrategy()),
                            ("API STD 2RD", ApiStd2rdStrategy())]:
         expected = strategy.run_checks(geometry, material, loads, DesignFactors())
         actual = model["results"][code]
@@ -145,11 +157,12 @@ def test_page_is_self_contained_and_gaps_are_not_zero(tmp_path):
     assert not re.search(r'<(?:script|link|img|iframe|source|object|embed)\b', page, re.I)
     assert "@import" not in page and "url(" not in page
     assert "<svg" in page
-    assert "API RP 1111 is not compared" in page
+    assert "API RP 1111 module edition metadata is unqualified" in page
+    assert "Not compared: edition defect" not in page
     assert "Not Evaluated: the legacy module returns no combined-load check (tracked in #377)" in page
     assert "Not Evaluated: legacy edition and clause locators are not established" in page
     assert "NOT DONE" not in page
-    assert all(f'id="{state}"' in page for state in ("burst", "collapse", "hoop", "combined"))
+    assert all(f'id="{state}"' in page for state in ("burst", "collapse", "propagation", "hoop", "combined"))
     assert "assumed, based on previous experience" in page
 
 
@@ -251,3 +264,172 @@ def test_input_pipe_has_assumed_generic_properties(tmp_path):
     assert "ASTM A106" not in page
     for key in ("od", "wall", "smys", "smts"):
         assert re.search(rf'data-number="{key}">[^<]+</span></td><td>Assumed</td>', page)
+
+
+@pytest.mark.parametrize("depth,pressure,external", [(50, 20e6, 0.5e6), (1500, 35e6, 15e6)])
+def test_three_codes_for_shallow_and_deep_reference_configurations(depth, pressure, external):
+    """Compare the existing comparison tests' two pipe configurations."""
+    builder, _ = builder_and_input()
+    config = reference_input()
+    deep = depth == 1500
+    config["pipe"].update(outer_diameter_mm=219.1 if deep else 273.1,
+                          wall_thickness_mm=18.3 if deep else 21.4)
+    config["water_depth_m"] = depth
+    config["cases"][0].update(internal_pressure_pa=pressure, external_pressure_pa=external,
+                               bending_moment_nm=0, effective_tension_n=0)
+    model = builder.evaluate(config)
+    assert set(model["results"]) == {"API RP 1111", "API RP 2RD", "API STD 2RD"}
+    geometry, material = builder._pipe_objects(config)
+    loads = DesignLoads(pressure, external)
+    for code, enum in builder.CODES.items():
+        native = builder.CODE_REGISTRY[enum]().run_checks(geometry, material, loads, DesignFactors())
+        assert {state: result["utilisation"] for state, result in model["results"][code].items()} == {
+            state: result[0] for state, result in native.items()}
+
+
+def test_minimum_wall_passes_and_previous_grid_point_fails():
+    """The reported wall is the first passing grid point for every supplied case."""
+    builder, _ = builder_and_input()
+    config = reference_input()
+    config["cases"].append({"name": "pressure", "internal_pressure_pa": 45e6,
+                             "external_pressure_pa": 2e6, "bending_moment_nm": 0,
+                             "effective_tension_n": 0})
+    model = builder.evaluate(config)
+    for code, minimum in model["minimum_wall"].items():
+        assert minimum["status"] == "found"
+        assert minimum["state"] in model["results"][code]
+        assert minimum["case"] in {case["name"] for case in config["cases"]}
+        for offset, expected in [(0, True), (-0.1, False)]:
+            from copy import deepcopy
+            changed = deepcopy(config)
+            changed["pipe"]["wall_thickness_mm"] = minimum["wall_mm"] + offset
+            geometry, material = builder._pipe_objects(changed)
+            checks = [builder.CODE_REGISTRY[builder.CODES[code]]().run_checks(
+                geometry, material, DesignLoads(case["internal_pressure_pa"], case["external_pressure_pa"],
+                                                case["bending_moment_nm"], case["effective_tension_n"]),
+                DesignFactors()) for case in config["cases"]]
+            assert all(utilisation <= 1 for result in checks for utilisation, _ in result.values()) == expected
+
+
+def test_unreachable_minimum_is_explicit():
+    builder, _ = builder_and_input()
+    config = reference_input()
+    config["cases"][0]["effective_tension_n"] = 1e15
+    minimum = builder.evaluate(config)["minimum_wall"]["API STD 2RD"]
+    assert minimum == {"status": "not found on search grid"}
+
+
+def test_three_code_artifacts_and_minimum_wall_readback(tmp_path):
+    builder, source = builder_and_input()
+    manifest = builder.build(source, tmp_path)
+    assert set(manifest["results"]) == {"API RP 1111", "API RP 2RD", "API STD 2RD"}
+    parser = Numbers()
+    page = (tmp_path / "riser-pipe-comparison.html").read_text()
+    parser.feed(page)
+    for code, minimum in manifest["minimum_wall"].items():
+        assert parser.values[f"minimum-{builder._code_key(code)}"] == f'{minimum["wall_mm"]:.1f}'
+    sidecar = json.loads((tmp_path / "riser-pipe-comparison.citations.json").read_text())
+    rp = [entry for entry in sidecar["citations"] if entry["code"] == "API RP 1111"]
+    assert {entry["constant"] for entry in rp} == {
+        "_check_burst.p_b coefficients and branch threshold", "EDITION_FACTORS.f_d",
+        "EDITION_FACTORS.f_c", "EDITION_FACTORS.f_p", "_check_collapse.p_el coefficient",
+        "_check_collapse.p_y coefficient", "_check_propagation.p_pr coefficient and exponent"}
+    assert all("unqualified" in entry["qualification"] for entry in rp)
+    assert "Minimum passing nominal wall" in page
+    assert "0.1 mm grid" in page
+    assert "2015" in page
+
+
+def test_case_envelopes_keep_independent_governing_cases():
+    builder, _ = builder_and_input()
+    config = reference_input()
+    config["cases"] = [
+        {"name": "burst demand", "internal_pressure_pa": 40e6, "external_pressure_pa": 0,
+         "bending_moment_nm": 0, "effective_tension_n": 0},
+        {"name": "external demand", "internal_pressure_pa": 15e6, "external_pressure_pa": 15e6,
+         "bending_moment_nm": 250e3, "effective_tension_n": 1500e3}]
+    model = builder.evaluate(config)
+    for code, states in model["results"].items():
+        assert states["burst"]["case"] == "burst demand"
+        assert states["collapse"]["case"] == "external demand"
+        assert model["governing"][code]["utilisation"] == max(r["utilisation"] for r in states.values())
+    assert model["results"]["API RP 1111"]["propagation"]["case"] == "external demand"
+
+
+@pytest.mark.parametrize("returned", [{}, {"burst": (float("nan"), {})}, {"burst": (-1, {})}])
+def test_invalid_native_results_fail_before_writing(tmp_path, monkeypatch, returned):
+    builder, source = builder_and_input()
+    strategy = builder.CODE_REGISTRY[builder.CODES["API RP 2RD"]]
+    monkeypatch.setattr(strategy, "run_checks", lambda *args: returned)
+    with pytest.raises(ValueError, match="module result"):
+        builder.build(source, tmp_path / "out")
+    assert not (tmp_path / "out").exists()
+
+
+def test_optional_deductions_are_zero_and_external_input_path_is_portable(tmp_path):
+    builder, source = builder_and_input()
+    config = yaml.safe_load(source.read_text())
+    del config["pipe"]["corrosion_allowance_mm"]
+    del config["pipe"]["fabrication_tolerance"]
+    geometry, _ = builder._pipe_objects(config)
+    assert geometry.corrosion_allowance == geometry.fabrication_tolerance == 0
+    changed = tmp_path / "external-input.yml"
+    changed.write_text(yaml.safe_dump(config))
+    manifest = builder.build(changed, tmp_path / "out")
+    assert "external-input.yml" in manifest["inputs"]
+    assert not any(Path(name).is_absolute() for name in manifest["inputs"])
+
+
+def test_rp1111_factor_basis_is_visible(tmp_path):
+    """Expose native factors without qualifying them as riser-code factors."""
+    builder, source = builder_and_input()
+    builder.build(source, tmp_path)
+    page = (tmp_path / "riser-pipe-comparison.html").read_text()
+    native = builder.evaluate(yaml.safe_load(source.read_text()))["results"]["API RP 1111"]
+    assert "pipeline burst factor; collapse factor unqualified" in page
+    for state, symbol in (("burst", "f_d"), ("collapse", "f_c"), ("propagation", "f_p")):
+        assert f'{symbol} = {native[state]["details"][symbol]:.2f}' in page
+    assert "pipeline burst basis, not a riser burst basis" in page
+    assert "Collapse and propagation factors are unqualified implementation values" in page
+    assert "All three strategies ignore the DesignFactors argument" in page
+
+
+def test_empty_pipe_screen_and_distinct_wall_criteria_are_disclosed(tmp_path):
+    """Keep external-only demand and arrestor interpretation beside the results."""
+    builder, source = builder_and_input()
+    builder.build(source, tmp_path)
+    page = (tmp_path / "riser-pipe-comparison.html").read_text()
+    summary = page.split("<h2>Revision history</h2>")[0]
+    wall = page.split("<h2>Minimum passing nominal wall</h2>")[1].split('<h2 id="burst">')[0]
+    propagation = page.split('<h2 id="propagation">')[1].split('<h2 id="hoop">')[0]
+    for section in (summary, wall, propagation):
+        assert "empty-pipe screen" in section
+        assert "external pressure with no internal-pressure credit" in section
+        assert "buckle-arrestor criterion, not a wall requirement" in section
+    assert "RP 1111 includes propagation; RP 2RD omits combined loads; STD 2RD includes combined loads" in wall
+    assert "not directly comparable design minima" in wall
+    assert "p_o - p_i" in propagation
+    assert "non-positive for every case accepted by this builder" in propagation
+
+
+def test_displayed_inputs_retain_supplied_precision(tmp_path):
+    """Read back dimensions, material properties and loads without rounding."""
+    builder, source = builder_and_input()
+    config = yaml.safe_load(source.read_text())
+    config["pipe"].update(outer_diameter_mm=273.05, wall_thickness_mm=21.44,
+                          smys=240.125, smts=415.375, youngs_modulus_pa=207125000000,
+                          poissons_ratio=0.2995)
+    config["water_depth_m"] = 1500.125
+    config["cases"][0].update(internal_pressure_pa=20123456, external_pressure_pa=10123456,
+                               bending_moment_nm=250125, effective_tension_n=1500125)
+    changed = tmp_path / "precise.yml"
+    changed.write_text(yaml.safe_dump(config))
+    builder.build(changed, tmp_path / "out")
+    parser = Numbers()
+    parser.feed((tmp_path / "out/riser-pipe-comparison.html").read_text())
+    expected = {"od": "273.05", "wall": "21.44", "smys": "240.125", "smts": "415.375",
+                "elastic": "207.125", "poisson": "0.2995", "depth": "1500.125",
+                "case-0-internal_pressure_pa": "20.123456",
+                "case-0-external_pressure_pa": "10.123456",
+                "case-0-bending_moment_nm": "250.125", "case-0-effective_tension_n": "1500.125"}
+    assert {key: parser.values[key] for key in expected} == expected

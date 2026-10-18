@@ -1,4 +1,4 @@
-FileName: FDAS
+FileName: pipe_wall_thickness
 LoadingConditionResults:
 - BendingMoment:
   - 216

@@ -5,6 +5,7 @@ wider window, fewer casing strings, riser margin) plus a direct ``router(cfg)``
 test that does NOT go through engine.py.
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -221,6 +222,35 @@ def test_router_runs_and_writes_summary(tmp_path):
     summary_path = Path(out["dual_gradient"]["summary_json"])
     assert summary_path.exists()
     assert summary_path.name == "dual_gradient_summary.json"
+    assert list(tmp_path.rglob("*.json")) == [summary_path]
+    saved = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert saved["calculation"] == "dual_gradient"
+    assert saved["result"] == result
+    saved_result = saved["result"]
+    for key in ("mud_line_depth_ft", "td_ft", "operating_mud_weight_ppg"):
+        assert key in saved_result and saved_result[key] is not None
+    for mode in ("conventional", "dual_gradient"):
+        casing = saved_result["casing_design"][mode]
+        for key in ("seat_depths_ft", "section_mud_weights_ppg"):
+            assert key in casing and len(casing[key]) == casing["n_strings"]
+            assert all(value is not None for value in casing[key])
+        assert saved_result["min_window_ppg"][mode] is not None
+    margin_fields = {
+        "depth_ft", "mud_weight_ppg", "pore_emw_ppg",
+        "emw_after_riser_loss_ppg", "margin_ppg",
+    }
+    margin = saved_result["riser_margin"]["conventional"]
+    assert margin_fields <= margin.keys()
+    assert all(margin[key] is not None for key in margin_fields)
+    profile_fields = {
+        "depth_ft", "pore_emw_ppg", "fracture_emw_ppg",
+        "emw_conventional_ppg", "emw_dual_gradient_ppg",
+        "bhp_conventional_psi", "bhp_dual_gradient_psi",
+    }
+    assert saved_result["pressure_profile"]
+    for point in saved_result["pressure_profile"]:
+        assert profile_fields <= point.keys()
+        assert all(point[key] is not None for key in profile_fields)
 
 
 def test_router_accepts_linear_gradient_block(tmp_path):
