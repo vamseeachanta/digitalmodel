@@ -13,6 +13,7 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | 2 | 2026-10-18 | Require an explicit positive-gradient datum; use and report multi-seed grid search. |
 | 3 | 2026-10-18 | Isolate seed refinements to prevent cache sharing; preserve thin user-circle mechanisms; disclose group minima, the coarse filter and per-search unsolved counts; require explicit search mode in result records. |
 | 4 | 2026-10-18 | Distinguish isolated search metadata; run preflight before the sweep to preserve input diagnostics; clarify thin grid-seeded mechanisms and search cost. |
+| 5 | 2026-10-18 | Document the unimplemented datum-below-layer warning and retain its open reference in #2704. |
 
 ## Basis and boundaries
 
@@ -86,6 +87,11 @@ This is the governing cp equation in xslope 1.0.3, `xslope/slice.py`
 (strength at the slice base). A positive gradient without an explicit
 reference_elevation_m is rejected before importing the solver. Constant strength
 (gradient zero) may omit the datum because the equation is independent of it.
+An explicit datum below the layer bottom leaves a positive gradient inert
+throughout that layer and currently produces no warning. Check the datum against
+the layer elevations before relying on the gradient. The datum-below-layer
+warning remains an open part of #2704; rejecting an omitted datum does not
+resolve that behaviour.
 For example, su_kpa=5, gradient=1.5 and reference=-100 m give Su=20 kPa at
 z=-110 m; the same relative geometry at a +100 m datum gives the same strength.
 Undrained layers use total stress; drained layers use the piezometric line when
