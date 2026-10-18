@@ -27,6 +27,18 @@ scour:
     rock_density_kg_m3: 2650.0
     water_density_kg_m3: 1025.0
     rock_d50_m: 0.3
+  # Synthetic laboratory-scale example of the Yang et al. (2026) fit.
+  # https://doi.org/10.1016/j.apor.2026.105302
+  riprap:
+    pile_diameter_m: 0.1
+    water_depth_m: 0.3
+    current_velocity_ms: 0.4
+    sediment_d50_m: 0.0003
+    rock_d50_m: 0.005
+    sediment_density_kg_m3: 2650.0
+    rock_density_kg_m3: 2250.0
+    water_density_kg_m3: 1000.0
+    kinematic_viscosity_m2_s: 1.01e-6
   outputs:
     directory: results/scour
     summary_json: scour_summary.json

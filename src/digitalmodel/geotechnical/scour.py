@@ -1,16 +1,20 @@
-# ABOUTME: Scour depth prediction per DNV-RP-F107.
-# ABOUTME: Pipeline scour, monopile scour, and rock armour scour protection.
-"""Scour depth prediction — DNV-RP-F107.
+# ABOUTME: Scour depth screening for pipelines, monopiles and riprap.
+# ABOUTME: Includes the Yang et al. (2026) residual-scour screening method.
+"""Scour depth screening.
 
 Implements:
 - pipeline_scour_depth: equilibrium scour for pipelines (Sec 5)
 - monopile_scour_depth: equilibrium scour for monopiles (Breusers/Sumer)
 - rock_armour_thickness: minimum rock armour protection layer
+- riprap_residual_scour_depth: guarded steady-current fit (Yang et al., 2026)
 
 References:
     DNV-RP-F107 "Risk Assessment of Pipeline Protection" (2019)
     Sumer & Fredsoe "The Mechanics of Scour in the Marine Environment" (2002)
+    Yang X., Qin Y., Yang S., Zhang M., Yu G. (2026), Applied Ocean Research
+    176, 105302, https://doi.org/10.1016/j.apor.2026.105302
 """
+
 from dataclasses import dataclass
 import math
 
@@ -143,13 +147,9 @@ def monopile_scour_depth(
         MonopileScourResult with scour depth and ratio.
     """
     if pile_diameter_m <= 0:
-        raise ValueError(
-            f"pile_diameter_m must be positive, got {pile_diameter_m}"
-        )
+        raise ValueError(f"pile_diameter_m must be positive, got {pile_diameter_m}")
     if water_depth_m <= 0:
-        raise ValueError(
-            f"water_depth_m must be positive, got {water_depth_m}"
-        )
+        raise ValueError(f"water_depth_m must be positive, got {water_depth_m}")
 
     if current_velocity_ms == 0.0:
         return MonopileScourResult(
@@ -211,9 +211,7 @@ def rock_armour_thickness(
     delta = (rock_density_kg_m3 / water_density_kg_m3) - 1.0
 
     # Stability number: Ns = U / sqrt(g * d50 * delta)
-    stability_number = current_velocity_ms / math.sqrt(
-        GRAVITY * rock_d50_m * delta
-    )
+    stability_number = current_velocity_ms / math.sqrt(GRAVITY * rock_d50_m * delta)
 
     # Minimum armour thickness: 2 stone layers
     thickness = 2.0 * rock_d50_m
@@ -221,4 +219,262 @@ def rock_armour_thickness(
     return RockArmourResult(
         thickness_m=thickness,
         stability_number=stability_number,
+    )
+
+
+RIPRAP_SOURCE = "https://doi.org/10.1016/j.apor.2026.105302"
+
+
+@dataclass(frozen=True)
+class RiprapScourEstimate:
+    """Stage-two estimate; unavailable depths are represented by None."""
+
+    scour_to_diameter_ratio: float | None
+    in_calibration_range: bool
+    out_of_range_inputs: tuple[str, ...]
+    limitation: str
+
+
+@dataclass(frozen=True)
+class RiprapResidualScourResult:
+    """Physical-input estimate with SI shear stresses and dimensionless groups."""
+
+    scour_depth_m: float | None
+    scour_to_diameter_ratio: float | None
+    pile_diameter_m: float
+    chezy_coefficient_m_half_s: float
+    approach_shear_pa: float
+    shear_amplification: float
+    peak_shear_pa: float
+    critical_shear_pa: float
+    excess_shear: float
+    sediment_d_star: float
+    rock_d_star: float
+    pile_depth_ratio: float
+    in_calibration_range: bool
+    out_of_range_inputs: tuple[str, ...]
+    limitation: str
+    source: str = RIPRAP_SOURCE
+
+
+def _riprap_number(name: str, value: float, *, positive: bool = True) -> None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a finite number")
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be finite")
+    if positive and value <= 0:
+        raise ValueError(f"{name} must be positive")
+
+
+def grain_chezy_coefficient(water_depth_m: float, sediment_d90_m: float) -> float:
+    """Return grain-related Chezy C in m**0.5/s (Yang et al., 2026).
+
+    C = 5.75 sqrt(g) log10(12 h / (3 d90)); all lengths are metres.
+    The roughness relation requires a strictly positive logarithm.
+    """
+    _riprap_number("water_depth_m", water_depth_m)
+    _riprap_number("sediment_d90_m", sediment_d90_m)
+    roughness_ratio = 4 * water_depth_m / sediment_d90_m
+    if roughness_ratio <= 1:
+        raise ValueError("water_depth_m must exceed sediment_d90_m / 4")
+    return 5.75 * math.sqrt(GRAVITY) * math.log10(roughness_ratio)
+
+
+def approach_bed_shear_stress(
+    current_velocity_ms: float,
+    water_depth_m: float,
+    sediment_d50_m: float,
+    water_density_kg_m3: float,
+    *,
+    sediment_d90_m: float | None = None,
+) -> float:
+    """Return approach-bed shear in Pa, rho*g*(V/C)**2; d90 defaults to 2*d50."""
+    _riprap_number("current_velocity_ms", current_velocity_ms, positive=False)
+    if current_velocity_ms < 0:
+        raise ValueError("current_velocity_ms must be nonnegative")
+    _riprap_number("sediment_d50_m", sediment_d50_m)
+    _riprap_number("water_density_kg_m3", water_density_kg_m3)
+    d90 = 2 * sediment_d50_m if sediment_d90_m is None else sediment_d90_m
+    chezy = grain_chezy_coefficient(water_depth_m, d90)
+    return water_density_kg_m3 * GRAVITY * (current_velocity_ms / chezy) ** 2
+
+
+def critical_shear_stress(
+    grain_diameter_m: float,
+    particle_density_kg_m3: float,
+    water_density_kg_m3: float,
+    critical_shields: float = 0.045,
+) -> float:
+    """Return theta_c*(rho_p-rho_w)*g*d in Pa; default theta_c is for riprap."""
+    _riprap_number("grain_diameter_m", grain_diameter_m)
+    _riprap_number("particle_density_kg_m3", particle_density_kg_m3)
+    _riprap_number("water_density_kg_m3", water_density_kg_m3)
+    _riprap_number("critical_shields", critical_shields)
+    if particle_density_kg_m3 <= water_density_kg_m3:
+        raise ValueError("particle_density_kg_m3 must exceed water_density_kg_m3")
+    return (
+        critical_shields
+        * (particle_density_kg_m3 - water_density_kg_m3)
+        * GRAVITY
+        * grain_diameter_m
+    )
+
+
+def dimensionless_grain_size(
+    grain_diameter_m: float,
+    particle_density_kg_m3: float,
+    water_density_kg_m3: float,
+    kinematic_viscosity_m2_s: float,
+) -> float:
+    """Return D* = d*[g*(rho_p/rho_w-1)/nu**2]**(1/3)."""
+    _riprap_number("grain_diameter_m", grain_diameter_m)
+    _riprap_number("particle_density_kg_m3", particle_density_kg_m3)
+    _riprap_number("water_density_kg_m3", water_density_kg_m3)
+    _riprap_number("kinematic_viscosity_m2_s", kinematic_viscosity_m2_s)
+    if particle_density_kg_m3 <= water_density_kg_m3:
+        raise ValueError("particle_density_kg_m3 must exceed water_density_kg_m3")
+    return grain_diameter_m * (
+        GRAVITY
+        * (particle_density_kg_m3 / water_density_kg_m3 - 1)
+        / kinematic_viscosity_m2_s**2
+    ) ** (1 / 3)
+
+
+def riprap_scour_from_dimensionless(
+    excess_shear: float,
+    sediment_d_star: float,
+    rock_d_star: float,
+    pile_depth_ratio: float,
+) -> RiprapScourEstimate:
+    """Apply the published stage-two fit to dimensionless inputs without refitting.
+
+    Yang X., Qin Y., Yang S., Zhang M., Yu G. (2026), Applied Ocean Research
+    176, 105302, https://doi.org/10.1016/j.apor.2026.105302.
+    hs/D = 0.16*tau'**0.36*D*s**1.43*D*r**(-0.53)*(D/h)**(-0.39).
+    This entry point permits checking the printed dimensionless tables separately
+    from inconsistent physical-density statements in the source. It does not
+    extrapolate outside the published calibration envelope.
+    """
+    _riprap_number("excess_shear", excess_shear, positive=False)
+    bounds = (
+        ("excess_shear", excess_shear, 0.04, 3.60),
+        ("sediment_d_star", sediment_d_star, 3.77, 23.87),
+        ("rock_d_star", rock_d_star, 35.87, 1339.64),
+        ("pile_depth_ratio", pile_depth_ratio, 0.15, 0.80),
+    )
+    for name, value, _, _ in bounds[1:]:
+        _riprap_number(name, value)
+    outside = tuple(
+        name for name, value, low, high in bounds if not low <= value <= high
+    )
+    if outside:
+        limitation = "outside the published calibration envelope; no prediction"
+        if excess_shear <= 0:
+            limitation = "below incipient motion of the armour; model not calibrated"
+        return RiprapScourEstimate(None, False, outside, limitation)
+    ratio = (
+        0.16
+        * excess_shear**0.36
+        * sediment_d_star**1.43
+        * rock_d_star**-0.53
+        * pile_depth_ratio**-0.39
+    )
+    return RiprapScourEstimate(
+        ratio, True, (), "lab-scale steady-current screening; not a design criterion"
+    )
+
+
+def riprap_residual_scour_depth(
+    pile_diameter_m: float,
+    water_depth_m: float,
+    current_velocity_ms: float,
+    sediment_d50_m: float,
+    rock_d50_m: float,
+    sediment_density_kg_m3: float,
+    rock_density_kg_m3: float,
+    water_density_kg_m3: float,
+    kinematic_viscosity_m2_s: float,
+    *,
+    sediment_d90_m: float | None = None,
+) -> RiprapResidualScourResult:
+    """Estimate residual scour inside riprap using Yang et al. (2026).
+
+    Source: Yang X., Qin Y., Yang S., Zhang M., Yu G., Applied Ocean Research
+    176 (2026), 105302, https://doi.org/10.1016/j.apor.2026.105302.
+    SI inputs; densities and viscosity must be supplied for the actual fluid and
+    grains. K = 1 + 3.17*(dr/d50)**0.35*(D/h)**(-0.02), tau_max = K*tau_a,
+    tau' = (tau_max-tau_c)/tau_c, with riprap theta_c = 0.045.
+
+    Scope: steady current, an intact 10*dr layer extending over diameter 5*D,
+    lab-scale 24-hour tests (equilibrium not established). A screening and
+    inspection-planning aid, not a design criterion. Outside the calibration
+    envelope the depths are None, with intermediate values and explicit flags.
+    The source's physical densities do not consistently reconstruct its printed
+    dimensionless tables; use riprap_scour_from_dimensionless to audit those.
+    """
+    for name, value in (
+        ("pile_diameter_m", pile_diameter_m),
+        ("water_depth_m", water_depth_m),
+        ("sediment_d50_m", sediment_d50_m),
+        ("rock_d50_m", rock_d50_m),
+        ("sediment_density_kg_m3", sediment_density_kg_m3),
+        ("rock_density_kg_m3", rock_density_kg_m3),
+        ("water_density_kg_m3", water_density_kg_m3),
+        ("kinematic_viscosity_m2_s", kinematic_viscosity_m2_s),
+    ):
+        _riprap_number(name, value)
+    if rock_density_kg_m3 <= water_density_kg_m3:
+        raise ValueError("rock_density_kg_m3 must exceed water_density_kg_m3")
+    if sediment_density_kg_m3 <= water_density_kg_m3:
+        raise ValueError("sediment_density_kg_m3 must exceed water_density_kg_m3")
+    d90 = 2 * sediment_d50_m if sediment_d90_m is None else sediment_d90_m
+    chezy = grain_chezy_coefficient(water_depth_m, d90)
+    approach = approach_bed_shear_stress(
+        current_velocity_ms,
+        water_depth_m,
+        sediment_d50_m,
+        water_density_kg_m3,
+        sediment_d90_m=d90,
+    )
+    diameter_depth = pile_diameter_m / water_depth_m
+    amplification = (
+        1 + 3.17 * (rock_d50_m / sediment_d50_m) ** 0.35 * diameter_depth**-0.02
+    )
+    peak = amplification * approach
+    critical = critical_shear_stress(
+        rock_d50_m, rock_density_kg_m3, water_density_kg_m3
+    )
+    excess = (peak - critical) / critical
+    sand_star = dimensionless_grain_size(
+        sediment_d50_m,
+        sediment_density_kg_m3,
+        water_density_kg_m3,
+        kinematic_viscosity_m2_s,
+    )
+    rock_star = dimensionless_grain_size(
+        rock_d50_m, rock_density_kg_m3, water_density_kg_m3, kinematic_viscosity_m2_s
+    )
+    estimate = riprap_scour_from_dimensionless(
+        excess, sand_star, rock_star, diameter_depth
+    )
+    return RiprapResidualScourResult(
+        scour_depth_m=(
+            None
+            if estimate.scour_to_diameter_ratio is None
+            else estimate.scour_to_diameter_ratio * pile_diameter_m
+        ),
+        scour_to_diameter_ratio=estimate.scour_to_diameter_ratio,
+        pile_diameter_m=pile_diameter_m,
+        chezy_coefficient_m_half_s=chezy,
+        approach_shear_pa=approach,
+        shear_amplification=amplification,
+        peak_shear_pa=peak,
+        critical_shear_pa=critical,
+        excess_shear=excess,
+        sediment_d_star=sand_star,
+        rock_d_star=rock_star,
+        pile_depth_ratio=diameter_depth,
+        in_calibration_range=estimate.in_calibration_range,
+        out_of_range_inputs=estimate.out_of_range_inputs,
+        limitation=estimate.limitation,
     )
