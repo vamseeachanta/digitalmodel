@@ -121,6 +121,12 @@ class OrcaFlexConverter:
         """Load results from CSV files"""
         
         logger.info(f"Loading from CSV directory: {csv_dir}")
+
+        # agent-pack section 5, G0-COMPONENTS; issue 2723: absence is not zero.
+        if not any(path.is_file() for path in csv_dir.glob("*.csv")):
+            raise FileNotFoundError(
+                f"No CSV results in {csv_dir}; conversion refused before export"
+            )
         
         # Load frequency and direction data
         freq_file = csv_dir / "frequencies.csv"
