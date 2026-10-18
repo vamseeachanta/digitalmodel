@@ -146,6 +146,7 @@ def _write_json_table(result: dict[str, Any], output_path: Path) -> Path:
     payload = {
         "metadata": result["metadata"],
         "provenance": result["provenance"],
+        "warnings": result.get("warnings", []),
         "cases": result["cases"],
         "metrics": result["metrics"],
         "time_history": result["time_history"],
