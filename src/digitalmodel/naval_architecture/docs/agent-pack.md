@@ -626,3 +626,12 @@ Local interpreter/platform: CPython 3.12.3, Linux aarch64; NumPy 1.26.4. The con
 | `tests/naval_architecture/test_en400_worked_examples.py::TestEN400Ch3Hydrostatics::test_example_3_1_displacement_from_curves_of_form` | Existing XFAIL: curves-of-form needs ship hydrostatic data tables | #1751 [tests/naval_architecture/test_en400_worked_examples.py:L115-L125] |
 
 No solver run, licensed-copy comparison, private-sidecar value or external data transfer is included in this evidence record. The DTIC open catalogue was consulted for report title metadata only.
+
+## Turning depth applicability (#1704)
+
+The Nomoto estimator and IMO turning screen now refuse supplied h/T <= 4,
+using IMO MSC/Circ.1053 (2002), Annex 2.1.2. Missing depth is explicitly
+unverified; a depth-screen pass does not validate Nomoto coefficients.
+Both YAML workflows propagate `environment.water_depth_m` and configured
+draft. See the [source and benchmark note](../../hydrodynamics/parametric_hull_analysis/README.md)
+for the published 3.57-fold tactical-diameter increase and full references.

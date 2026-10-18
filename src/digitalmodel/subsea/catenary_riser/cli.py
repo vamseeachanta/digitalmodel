@@ -33,7 +33,7 @@ def cli():
 @click.option('--thickness', type=float, required=True, help='Wall thickness (m)')
 @click.option('--length', type=float, required=True, help='Total riser length (m)')
 @click.option('--water-depth', type=float, required=True, help='Water depth (m)')
-@click.option('--offset', type=float, required=True, help='Horizontal offset (m)')
+@click.option('--offset', type=float, required=True, help='Horizontal suspended span from the horizontal-tangent vertex (m)')
 @click.option('--material', type=str, default='x65', help='Material (x65, x70)')
 @click.option('--internal-fluid', type=str, default='oil', help='Internal fluid (oil, water, mud, air)')
 @click.option('--top-tension', type=float, help='Top tension (N) - alternative to offset')
@@ -70,6 +70,9 @@ def simple_catenary(diameter, thickness, length, water_depth, offset, material,
             result = analyzer.analyze_riser(riser, water_depth=water_depth,
                                           horizontal_offset=offset)
 
+        if not result.converged:
+            raise ValueError("catenary did not converge or exceeds available length")
+
         # Output
         output_data = {
             'configuration': {
@@ -81,6 +84,7 @@ def simple_catenary(diameter, thickness, length, water_depth, offset, material,
                 'internal_fluid': internal_fluid,
             },
             'results': {
+                'converged': result.converged,
                 'horizontal_tension_N': round(result.horizontal_tension, 2),
                 'top_tension_N': round(result.top_tension, 2),
                 'touchdown_tension_N': round(result.touchdown_tension, 2),

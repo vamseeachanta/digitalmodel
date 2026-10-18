@@ -4,206 +4,165 @@
 |---|---|
 | Module / repository | `pipelay` / `digitalmodel` |
 | Package | `src/digitalmodel/pipelay` |
-| Pack revision | 0, 2026-10-16 |
-| Code revision | `7aad603be1c6136106dbb2381ce5096b050654f8` |
-| Analysis family / registry code | OrcaFlex installation / IN |
-| Quality role | OrcaFlex installation quality manager |
+| Pack revision | 1, 2026-10-18; audit [2745](https://github.com/vamseeachanta/digitalmodel/issues/2745) |
+| Code scope | Source and tests in the same Git revision as this pack |
 | Status | DRAFT; independent clearance pending |
 
-All repository citations below resolve at the code revision; implementation-map rows are also byte-identical at map revision `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, whose recorded data revision is `270c8759c374b67a7f032953e7fcdb14e0224461`. [docs/registry/implementation-map.yaml:L1-L3]
+Table 1. Pack identification. Current source citations name symbols; the historical map inventory below retains its original revision and line citations.
 
 ## 1. Purpose and scope
 
-`router` dispatches analytical J-lay or reel-lay screening, writes a JSON summary, and merges the result into the supplied configuration; the registry records development maturity. [src/digitalmodel/pipelay/workflow.py:L164-L203] [docs/registry/module-routing.yaml:L460-L465]
-
-J-lay uses `JLayConfig.calculate_sagbend`; reel-lay computes core bending strain, residual curvature and out-of-straightness directly; optional operability delegates to `LayOperability`. [src/digitalmodel/pipelay/workflow.py:L49-L93] [src/digitalmodel/pipelay/workflow.py:L96-L161]
-
-The scope is the two package Python files, without sub-packages; the workflow emits screening JSON rather than a native solver model, lowering-stage solution, cyclic-plasticity solution or ovalisation result, despite the introductory ovalisation wording. [src/digitalmodel/pipelay/__init__.py:L1-L10] [src/digitalmodel/pipelay/workflow.py:L15-L19] [src/digitalmodel/pipelay/workflow.py:L79-L93] [src/digitalmodel/pipelay/workflow.py:L143-L203]
+`digitalmodel.pipelay.workflow.router` dispatches analytical J-lay or reel-lay
+screening, writes strict JSON, and merges the output into the supplied configuration.
+`run_jlay` delegates geometry to `JLayConfig.calculate_sagbend`;
+`run_reel_lay` reports core strain, residual curvature and out-of-straightness.
+The package also contains `validation.py`, which validates inputs and records defaults.
+No native model, dynamics, cyclic-plasticity or ovalisation solution is produced.
+Source: [workflow.py](../workflow.py), [validation.py](../validation.py).
 
 ## 2. Inputs and outputs
 
-Input quantities are scalar screening inputs; the tower angle is measured from vertical, and no spatial origin, coordinate transform or phase convention is defined by this router. [src/digitalmodel/orcaflex/pipelay_analysis.py:L211-L220] [src/digitalmodel/pipelay/workflow.py:L62-L193]
+All lengths use metres, forces use kN at the workflow boundary, densities use
+kg/m³ and strains use dimensionless fractions. Angle is measured from vertical.
+Unknown keys in the pipelay settings and its pipe/config/operability/output/case
+blocks raise ValueError. Missing design-basis fields raise before output.
 
 | Input | Unit | Allowed range / handling | Default | Source |
 |---|---|---|---|---|
-| `basename`, `pipelay.method` | text | J-lay aliases or reel-lay aliases; other methods raise | method J-Lay | [src/digitalmodel/pipelay/workflow.py:L164-L177] |
-| `config.water_depth_m` | m | greater than zero in delegated model | 1500.0 | [src/digitalmodel/pipelay/workflow.py:L67-L72] [src/digitalmodel/orcaflex/pipelay_analysis.py:L216-L220] |
-| `config.tower_angle_deg` | degree from vertical | 0 to 15 inclusive | 0.0 | [src/digitalmodel/pipelay/workflow.py:L67-L72] [src/digitalmodel/orcaflex/pipelay_analysis.py:L218-L220] |
-| `config.top_tension_kN` | kN | greater than zero | 800.0 | [src/digitalmodel/pipelay/workflow.py:L67-L72] [src/digitalmodel/orcaflex/pipelay_analysis.py:L220-L220] |
-| `config.allowable_sagbend_strain` | strain, dimensionless | positive required for finite utilisation; otherwise infinity | 0.002 | [src/digitalmodel/pipelay/workflow.py:L75-L77] |
-| `config.reel_core_radius_m` | m | positive; otherwise ValueError | 8.0 | [src/digitalmodel/pipelay/workflow.py:L111-L113] |
-| `config.allowable_reeling_strain` | strain, dimensionless | positive required for finite utilisation; otherwise infinity | 0.02 | [src/digitalmodel/pipelay/workflow.py:L114-L127] |
-| `config.straightener_efficiency` | fraction, dimensionless | 0 to 1 inclusive | 0.95 | [src/digitalmodel/pipelay/workflow.py:L115-L117] |
-| `config.residual_out_of_straightness_span_m` | m | float conversion only, no sign check | 12.0 | [src/digitalmodel/pipelay/workflow.py:L118-L141] |
-| `config.allowable_overbend_strain` | strain, dimensionless | float conversion, then division in helper; no positivity guard | 0.002 | [src/digitalmodel/pipelay/workflow.py:L179-L186] [src/digitalmodel/orcaflex/pipelay_analysis.py:L307-L324] |
-| `pipe.outer_diameter`, `pipe.wall_thickness` | m | positive individually; no thickness-to-diameter constraint | 0.3238, 0.0206 | [src/digitalmodel/orcaflex/pipelay_analysis.py:L49-L61] |
-| `pipe.steel_density`, `pipe.seawater_density` | kg/m³ | positive | 7850.0, 1025.0 | [src/digitalmodel/orcaflex/pipelay_analysis.py:L51-L57] |
-| `pipe.youngs_modulus`, `pipe.smys` | Pa | positive | 207e9, 448e6 | [src/digitalmodel/orcaflex/pipelay_analysis.py:L52-L53] |
-| `pipe.poissons_ratio` | dimensionless | positive; no upper bound | 0.3 | [src/digitalmodel/orcaflex/pipelay_analysis.py:L54-L54] |
-| `pipe.coating_thickness`, `pipe.coating_density` | m, kg/m³ | non-negative | 0.06, 2400.0 | [src/digitalmodel/orcaflex/pipelay_analysis.py:L55-L56] |
-| `operability.max_hs_lay`, `max_hs_welding`, `max_hs_aband_recovery` | m | positive; supplied only when operability requested | model defaults at cited lines; no standard allowable asserted | [src/digitalmodel/pipelay/workflow.py:L49-L59] [src/digitalmodel/orcaflex/pipelay_analysis.py:L272-L275] |
-| `operability.lay_rate_calm`, `lay_rate_degradation` | km/day, km/day/m | positive rate, non-negative degradation | 4.0, 0.5 | [src/digitalmodel/orcaflex/pipelay_analysis.py:L276-L278] |
-| `outputs.directory`, `outputs.summary_json` | path text | relative directory uses configuration directory, else current directory | `results/pipelay`, `pipelay_summary.json` | [src/digitalmodel/pipelay/workflow.py:L196-L203] |
+| `pipelay.method` | text | J-lay/reel-lay aliases; unsupported methods raise | J-Lay, recorded when applied | `workflow.router` |
+| `config.water_depth_m` | m | finite positive; required | none | `validation.validate_settings` |
+| `config.tower_angle_deg` | degree | finite, greater than zero, at most 15; required | none | `JLayConfig` |
+| `config.top_tension_kN` | kN | required; exceeds w*h; relative closure error at most 0.001 | none | `JLayConfig.calculate_sagbend` |
+| `config.allowable_sagbend_strain` | fraction | finite, strictly between zero and 0.01 | code default at the cited line; no standard allowable asserted | `validation.JLAY_DEFAULTS` [src/digitalmodel/pipelay/validation.py:L10] |
+| `config.reel_core_radius_m` | m | finite positive; required | none | `validation.validate_settings` |
+| `config.allowable_reeling_strain` | fraction | finite, strictly between zero and 0.05 | code default at the cited line; no standard allowable asserted | `validation.REEL_DEFAULTS` |
+| `config.straightener_efficiency` | fraction | finite, zero to one inclusive | 0.95 | `validation.REEL_DEFAULTS` |
+| `config.residual_out_of_straightness_span_m` | m | finite positive | 12.0 | `validation.REEL_DEFAULTS` |
+| `config.allowable_overbend_strain` | fraction | finite, strictly between zero and one | code default at the cited line; no standard allowable asserted | `validation.COMMON_DEFAULTS` [src/digitalmodel/pipelay/validation.py:L9]; `calculate_stinger_radius` |
+| `pipe.outer_diameter`, `pipe.wall_thickness` | m | required; finite, 0<t<D/2 | none | `PipelayPipeProperties.validate_annulus` |
+| `pipe.steel_density`, `pipe.seawater_density` | kg/m³ | required; finite positive | none | `validation.PIPE_REQUIRED`; `PipelayPipeProperties` |
+| `pipe.coating_thickness`, `pipe.coating_density` | m, kg/m³ | required; finite non-negative | none | `validation.PIPE_REQUIRED`; `PipelayPipeProperties` |
+| `pipe.youngs_modulus` | Pa | finite positive | code default at the cited line; no standard allowable asserted | `PipelayPipeProperties` |
+| `pipe.smys` | Pa | finite positive | code default at the cited line; no standard allowable asserted | `PipelayPipeProperties` [src/digitalmodel/orcaflex/pipelay_analysis.py:L54] |
+| `pipe.poissons_ratio` | fraction | finite positive; unused by this screening formula | code default at the cited line; no standard allowable asserted | `PipelayPipeProperties` |
+| `operability` | m, km/day, km/day/m | optional; finite field constraints; unknown keys rejected | code default at the cited line; no standard allowable asserted | `LayOperability` |
+| `outputs.directory`, `outputs.summary_json` | path | explicit output paths or recorded defaults | `results/pipelay`, `pipelay_summary.json` | `validation.OUTPUT_DEFAULTS`; `workflow._write_summary` |
 
-Table 1. Workflow and delegated-model inputs; defaults describe code behaviour, without qualification as design-basis values.
+Table 2. Validated workflow inputs. Defaults are implementation assumptions, never qualified design allowables. Direct analytical model defaults do not replace workflow completeness checks.
 
-| Output | Unit / representation | Meaning and precision | Source |
-|---|---|---|---|
-| `sagbend` | m, strain, MPa | parameter, radius, offset and suspended length rounded to 0.1 m; strain to six decimals; stress to 0.1 MPa | [src/digitalmodel/orcaflex/pipelay_analysis.py:L253-L260] |
-| `sagbend_strain_utilisation`, `screening_status` | dimensionless, text | utilisation rounded to four decimals; status uses unrounded utilisation at most 1.0 | [src/digitalmodel/pipelay/workflow.py:L75-L90] |
-| reel strain / utilisation | dimensionless | six / four decimal places; status uses unrounded utilisation | [src/digitalmodel/pipelay/workflow.py:L148-L157] |
-| residual curvature / radius / offset | 1/m, m, m | eight decimals / 0.1 m / five decimals | [src/digitalmodel/pipelay/workflow.py:L151-L156] |
-| pipe submerged weight | N/m | rounded to three decimals | [src/digitalmodel/pipelay/workflow.py:L84-L85] [src/digitalmodel/pipelay/workflow.py:L146-L147] |
-| `min_stinger_radius_m` | m | helper output rounded to 0.1 m | [src/digitalmodel/pipelay/workflow.py:L179-L186] |
-| operability | m, km/day | maximum wave heights plus half-metre-step rate table; zero above lay limit | [src/digitalmodel/pipelay/workflow.py:L49-L59] [src/digitalmodel/orcaflex/pipelay_analysis.py:L280-L304] |
-| `summary_json`, returned configuration | UTF-8 JSON, dictionary | summary written before adding its path; `cfg.pipelay` and root `screening_status` updated | [src/digitalmodel/pipelay/workflow.py:L188-L203] |
+`applied_defaults` lists omitted optional pipe/config/method fields; `router`
+also records output defaults. `top_tension_kN` is derived, while
+`supplied_top_tension_kN` preserves the consistency-check input. `sagbend`
+includes closure error/tolerance, horizontal tension, radius, strain, stress
+proxy, offset and arc length. Radius and strain retain full calculation
+precision so a rounded value cannot determine acceptance. Offset/length are
+rounded to 0.1 m, stress to 0.1 MPa and reported utilisation to four decimals.
+Reel strain retains six displayed decimals; status uses the unrounded ratio.
+For perfect straightening, `residual_radius_m` is null and
+`residual_radius_status` is `unbounded_zero_curvature`; residual strain is zero.
+J-lay operability reports `lay_and_welding`; reel screening reports `lay_only`.
+Source: `run_jlay`, `run_reel_lay`, `_operability`, `_write_summary`.
 
-Table 2. Output units and precision.
+## 3. Method and governing references
 
-## 3. Method and governing standards
+[screening-basis.md](screening-basis.md), E1–E7, derives every changed formula
+from static force balance and geometry and identifies the reel and lay-rate
+assumptions. V1–V4 define the input checks. The tension consistency tolerance
+and strain plausibility bounds are audit-selected validation criteria.
+No standard-tabulated allowable is reproduced or newly introduced.
 
-| Method | Implementation and basis | Qualification |
+The inherited source references name DNV-OS-F101 Sections 5 and 11 but omit
+edition qualification. Those references do not establish compliance. No new
+standards-derived constant is introduced and no standard Citation sidecar is
+claimed. Edition/clause and output provenance qualification remain open under
+[1817](https://github.com/vamseeachanta/digitalmodel/issues/1817).
+
+## 4. Worked screening examples
+
+Independent arithmetic anchors are documented in screening-basis.md; these
+qualify the regression formulas, not a native installation model.
+
+| Example | Executable node ID | Assertions |
 |---|---|---|
-| J-lay | `run_jlay` delegates sagbend geometry; the delegate forms horizontal tension from tower angle, uses a small horizontal component at zero angle, divides by submerged weight, and uses hyperbolic geometry for span | Code reference: Bai and Bai (2014), *Subsea Pipeline Design, Analysis and Installation*, Chapter 5; the external text is not checked. [src/digitalmodel/pipelay/workflow.py:L62-L93] [src/digitalmodel/orcaflex/pipelay_analysis.py:L211-L260] |
-| Reel-lay | `run_reel_lay`: strain `D/(2R)`; residual curvature `(1-efficiency)/R`; sagitta `curvature*span²/8` | Simplified screening, without cyclic material history or ovalisation output; code reference: Bai and Bai (2014), Chapter 6; the external text is not checked. [src/digitalmodel/pipelay/workflow.py:L96-L161] |
-| Stinger radius | `calculate_stinger_radius`: `D/(2*allowable strain)` | Code names DNV-OS-F101, *Submarine Pipeline Systems*, Section 11; edition absent; clause text not checked against the licensed copy. [src/digitalmodel/orcaflex/pipelay_analysis.py:L307-L324] |
-| Pipe section and submerged weight | `PipelayPipeProperties` uses circular-section area and displaced coated area, with steel and coating masses | Code names DNV-OS-F101, *Submarine Pipeline Systems*, Section 5; edition absent; clause text not checked against the licensed copy. [src/digitalmodel/orcaflex/pipelay_analysis.py:L44-L91] |
-| Operability | `LayOperability.lay_rate_at_hs` subtracts linear degradation, clamps non-negative and returns zero above the lay wave-height limit | Code names DNV-OS-F101, *Submarine Pipeline Systems*, Section 11; edition absent; clause text not checked against the licensed copy. [src/digitalmodel/orcaflex/pipelay_analysis.py:L267-L304] |
+| J-lay template | `tests/pipelay/test_pipelay_workflow.py::test_jlay_template_runs_offline` | w=1658.33 N/m, a=82.8394 m, strain=0.00195438, T=2624.9 kN, offset=301.7453 m, length=1580.6702 m; relative tolerance 0.001 |
+| Reel template | `tests/pipelay/test_pipelay_workflow.py::test_reel_lay_template_runs_offline` | core strain=0.017069, residual curvature=0.00625 1/m, radius=160 m, strain=0.000853, offset=0.1125 m; relative tolerance 0.001; core formula uses input values |
+| Tight core | `tests/pipelay/test_pipelay_workflow.py::test_reeling_strain_exceeding_limit_fails` | `run_reel_lay` utilisation exceeds one and status is fail |
+| Unsupported method | `tests/pipelay/test_pipelay_workflow.py::test_router_rejects_unknown_method` | `router` raises ValueError |
+| Feasible higher tension | `tests/pipelay/test_pipelay_workflow.py::test_jlay_higher_tension_reduces_sagbend_strain` | consistent angle changes with tension; `run_jlay` strain decreases |
 
-Table 3. Algorithms and source attribution; no standard-tabulated allowable is reproduced.
+Table 3. Retained workflow checks with added independent numerical anchors.
 
-The workflow docstring calls Section 11 “installation”; the coverage document also records missing edition and clause title, so a complete edition-to-clause mapping is not established. [src/digitalmodel/pipelay/workflow.py:L21-L24] [docs/domains/pipeline-installation/coverage-2026-10.md:L171-L179]
+## 5. Executable QA gates
 
-The result dictionaries contain no `Citation` sidecar; provenance qualification is an open item rather than an assertion of standard compliance. [src/digitalmodel/pipelay/workflow.py:L79-L93] [src/digitalmodel/pipelay/workflow.py:L143-L161] [src/digitalmodel/pipelay/workflow.py:L188-L203]
+Every applicable check names the package function/output and a committed test.
+No manual procedure is counted as an executed gate. C02 establishes input
+schema/ranges, not provenance or automatic unit inference. C07 verifies test
+artifact readback, not a signed issued-report appendix.
 
-## 4. Validated worked examples
-
-No independently sourced installation benchmark is established by the five workflow tests: they check self-consistency, ordering, dispatch and status, rather than an external expected solution; the validated-example count is zero. [tests/pipelay/test_pipelay_workflow.py:L29-L122]
-
-The following five cases are regression examples, including the algebraic reel-strain check; a repeated expression from the implementation is not an independent benchmark. [tests/pipelay/test_pipelay_workflow.py:L67-L83] [src/digitalmodel/pipelay/workflow.py:L122-L127]
-
-| Regression case / input | Existing test node ID | Expected result, tolerance and basis | Offline result |
-|---|---|---|---|
-| J-lay template; `examples/workflows/jlay-pipelay/input.yml` | `tests/pipelay/test_pipelay_workflow.py::test_jlay_template_runs_offline` | positive finite radius, suspended length above depth in m; utilisation at most 1.0 and consistent to relative 0.1 %; zero final rate in km/day, non-increasing in-band rate; JSON method/status match; test-defined criteria | PASS at BASE and AFTER [tests/pipelay/test_pipelay_workflow.py:L29-L64] |
-| Reel-lay template; `examples/workflows/reel-lay-pipelay/input.yml` | `tests/pipelay/test_pipelay_workflow.py::test_reel_lay_template_runs_offline` | strain equals `D/(2R)` to relative 0.01 %; utilisation consistent to relative 0.1 % and at most 1.0; positive residual strain below reeling strain; positive offset in m; JSON method/status match | PASS at BASE and AFTER [tests/pipelay/test_pipelay_workflow.py:L67-L92] |
-| Tight-core inline configuration | `tests/pipelay/test_pipelay_workflow.py::test_reeling_strain_exceeding_limit_fails` | utilisation greater than 1.0, dimensionless; status fail | PASS at BASE and AFTER [tests/pipelay/test_pipelay_workflow.py:L95-L107] |
-| Unsupported-method inline configuration | `tests/pipelay/test_pipelay_workflow.py::test_router_rejects_unknown_method` | exactly one ValueError with unknown-method message | PASS at BASE and AFTER [tests/pipelay/test_pipelay_workflow.py:L110-L112] |
-| Increased-tension inline configurations | `tests/pipelay/test_pipelay_workflow.py::test_jlay_higher_tension_reduces_sagbend_strain` | strain at the larger specified tension strictly lower, dimensionless | PASS at BASE and AFTER [tests/pipelay/test_pipelay_workflow.py:L115-L122] |
-
-Table 4. Existing regression examples; tolerances reproduce the test assertions, without a claim of engineering validation.
-
-Execution at the code pin, both BASE and AFTER: 22 collected, 21 passed, 0 failed, 0 ordinary skips, 1 existing expected failure, 0 NOT_RUN; all five workflow cases passed in each run. Command form: `PYTHONPATH=src uv run --no-sources python -m pytest <temporary-copy workflow test> tests/orcaflex/test_pipelay_analysis.py -q -rA -p no:cacheprovider --basetemp=<external scratch>`. The host-required absolute uv executable was used, without an addopts override. The two file-writing template tests used byte-identical tests and example inputs in an external temporary copy; calculation sources remained those at the code pin. No native solver was executed. [tests/pipelay/test_pipelay_workflow.py:L14-L19] [tests/orcaflex/test_pipelay_analysis.py:L69-L78]
-
-## 5. QA gates
-
-AQG r0, Sections 3–10, assigns G0–G5 to the installation family; the scope dispositions below distinguish an offline JSON screen from a future native installation model. The proposed check criteria are requirements for this pack, rather than a record of native clearance.
-
-| Gate | Applicability to this package | Module-specific executable check and numeric criterion | Evidence / current disposition |
-|---|---|---|---|
-| G0 inputs | Applicable | C01: run unsupported-method regression; 1 ValueError, 0 silently accepted unknown methods. C02: for each supplied input, compare its key against the fields in section 2 and require 0 unknown keys, 0 omitted required design-basis quantities, 0 non-finite scalars and 0 unit mismatches and 0 destination mismatches; compare pipe wall thickness to radius, requiring `0 < wall_thickness < outer_diameter/2`, m | C01 existing test; C02 hand audit against section 2, not a shipped validator. Filtering and defaults are detailed in section 6. [tests/pipelay/test_pipelay_workflow.py:L110-L112] [src/digitalmodel/pipelay/workflow.py:L42-L53] [src/digitalmodel/orcaflex/pipelay_analysis.py:L49-L61] |
-| G1 load | NOT_APPLICABLE to screening JSON | 0 native models are written by `_write_summary`. If this output feeds a native OrcaFlex model, G1 will require that model to open in the recorded target version with 0 load errors and 0 warnings, using the matching-version demo route if supported, otherwise licensed `LoadData`; that route is outside this offline package | No native input or solver version emitted; future native load remains NOT_RUN, rather than inferred from JSON parsing. [src/digitalmodel/pipelay/workflow.py:L196-L203] AQG r0, Section 5. |
-| G2 statics / hand checks | Applicable to analytical screening; lowering-stage hook/sling checks NOT_APPLICABLE because no lowering-stage, hook or sling input/output is present | C03: J-lay template radius finite and greater than 0 m, suspended length above depth in m, utilisation at most 1.0 and self-consistency within relative 0.1 %. C04: reel template strain equals `D/(2R)` within relative 0.01 %, utilisation at most 1.0; tight-core utilisation greater than 1.0. C05: larger J-lay tension gives strictly lower sagbend strain, dimensionless | Existing regression tests only; these are not independent native statics hand references. Every future lowering-stage hook/sling balance will need separate evidence before native clearance. [tests/pipelay/test_pipelay_workflow.py:L29-L51] [tests/pipelay/test_pipelay_workflow.py:L67-L107] [tests/pipelay/test_pipelay_workflow.py:L115-L122] [src/digitalmodel/pipelay/workflow.py:L62-L161] |
-| G3 short dynamics | NOT_APPLICABLE to this analytical screen | 0 time-history / splash-zone / deepest-stage simulations are produced; a future native workflow will need stage-specific dynamics evidence before using this screen for installation clearance | No stage-dependent simulation result in the returned payload. [src/digitalmodel/pipelay/workflow.py:L79-L93] [src/digitalmodel/pipelay/workflow.py:L143-L161] AQG r0, Sections 7 and 10. |
-| G4 diffraction | NOT_APPLICABLE to this package | 0 meshes, vessel types, RAOs or diffraction result inputs appear in `run_jlay` or `run_reel_lay`; a downstream native model importing diffraction data will require the separate G4 evidence | This disposition is limited to the current package interface. [src/digitalmodel/pipelay/workflow.py:L62-L161] AQG r0, Sections 8 and 10. |
-| G5 evidence appendix | Applicable to screening evidence; a complete issued-report appendix is not implemented here | C06: each template summary parses, with 0 mismatches in method/status versus the expected values. C07: for each generated summary, parse with non-finite constants rejected and require 0 rejected tokens; record input and output SHA-256, with 0 digest mismatches on readback | C06 exists in the two template tests. C07 is an executable strict-JSON/readback procedure; full signed gate appendix remains an open item. [tests/pipelay/test_pipelay_workflow.py:L22-L26] [tests/pipelay/test_pipelay_workflow.py:L62-L64] [tests/pipelay/test_pipelay_workflow.py:L90-L92] [src/digitalmodel/pipelay/workflow.py:L196-L203] |
-
-Table 5. Seven checks: G0 two, G2 three, G5 two; the remaining gates have scope-specific reasons.
-
-C02 is performed by listing supplied dictionary keys, checking finite scalar values and confirming units and the geometry inequality against the source fields; C07 is performed with `json.loads(text, parse_constant=reject)` where `reject` raises ValueError, then SHA-256 readback. These are explicit manual/script procedures; their definition does not imply an automated production guard.
-
-Check record at the code pin: C01 and C03–C06 passed in the cited BASE and AFTER tests; C07 passed for both templates in both runs, with zero rejected constants and zero digest mismatches. C02 completeness fails against the zero-omission criterion: each template omits two pipe scalars, steel density and Poisson ratio, which use model defaults; this is existing input behaviour, tracked in issue pending (1), rather than a change to the calculations. [tests/pipelay/test_pipelay_workflow.py:L29-L122] [examples/workflows/jlay-pipelay/input.yml:L21-L29] [examples/workflows/reel-lay-pipelay/input.yml:L23-L31] [src/digitalmodel/orcaflex/pipelay_analysis.py:L49-L57]
-
-## 6. Known failure modes and pitfalls
-
-sweep: 27 found
-
-The sweep scope is every Python file under `src/digitalmodel/pipelay`; the following commands will reproduce the textual candidates, followed by manual review of defaults, units, external conversions and output writes:
-
-```sh
-rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|float\(|int\(|\.get\(' src/digitalmodel/pipelay --glob '*.py'
-rg -n 'filtered|or \{\}|else 0|inf|round|write|json|unit|_m|_kN|_deg' src/digitalmodel/pipelay --glob '*.py'
-```
-
-No swallowing `except`, skipped-record `continue`, error `return None`, error empty-list/dictionary return or empty-result cache write is present in the package; the rows count 27 distinct reviewed fallback, conversion, unit-assumption or serialization sites, not 27 demonstrated wrong numerical results. [src/digitalmodel/pipelay/__init__.py:L1-L10] [src/digitalmodel/pipelay/workflow.py:L27-L203]
-
-| Site at pin | Symptom / cause | Detection in section 5 | Tracking / date |
-|---|---|---|---|
-| S01 `workflow.py:45` | Unknown pipe fields discarded; falsey pipe mapping becomes empty and model defaults are used | C02; no shipped rejection test | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L42-L46] |
-| S02 `workflow.py:52` | Unknown operability fields discarded; falsey mapping uses defaults | C02; no shipped rejection test | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L49-L58] |
-| S03 `workflow.py:64` | Missing J-lay pipe block uses default pipe | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L64-L64] |
-| S04 `workflow.py:65` | Missing J-lay config becomes empty, enabling defaults below | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L65-L65] |
-| S05 `workflow.py:68` | Missing water depth silently defaults; bare float conversion assumes m and decimal-dot text | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L67-L72] |
-| S06 `workflow.py:70` | Missing tower angle becomes zero degrees from vertical; bare float text conversion | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L67-L72] |
-| S07 `workflow.py:71` | Missing top tension defaults; bare float conversion assumes kN, not N | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L67-L72] |
-| S08 `workflow.py:75` | Default strain criterion and bare float conversion; no finite-positive guard | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L75-L77] |
-| S09 `workflow.py:77` | Non-positive limit becomes infinite utilisation rather than input error | C02, C07 | issue pending (2); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L75-L89] |
-| S10 `workflow.py:108` | Missing reel-lay pipe block uses default pipe | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L108-L109] |
-| S11 `workflow.py:109` | Missing reel-lay config enables defaults | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L108-L111] |
-| S12 `workflow.py:111` | Default core radius and float conversion assume m; positivity comparison does not establish finiteness | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L111-L113] |
-| S13 `workflow.py:114` | Default reeling limit; float conversion, no finite-positive guard | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L114-L127] |
-| S14 `workflow.py:115` | Default straightener fraction is assumed if omitted; float conversion | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L115-L117] |
-| S15 `workflow.py:118` | Span defaults; float conversion assumes m, no sign or finiteness guard | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L118-L141] |
-| S16 `workflow.py:127` | Non-positive reeling limit becomes infinite utilisation | C02, C07 | issue pending (2); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L124-L128] |
-| S17 `workflow.py:135` | Perfect straightening generates infinite radius; strict JSON compatibility is not ensured | C07 | issue pending (2); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L130-L137] |
-| S18 `workflow.py:137` | Conditional zero residual strain is a fallback branch, not an independent zero-curvature verification | C02, C07 | issue pending (2); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L130-L137] |
-| S19 `workflow.py:166` | Missing or falsey pipelay block silently becomes an empty dictionary | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L164-L167] |
-| S20 `workflow.py:167` | Omitted method defaults to J-lay; coercion to text can hide wrong input type | C01 catches unsupported value; C02 catches omission/type | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L166-L177] |
-| S21 `workflow.py:183` | Overbend strain defaults; float conversion; zero can divide by zero, negative can return negative radius | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L179-L186] [src/digitalmodel/orcaflex/pipelay_analysis.py:L307-L324] |
-| S22 `workflow.py:188` | Missing outputs block falls back to default destination | C02 manual destination audit | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L188-L189] |
-| S23 `workflow.py:197` | Missing directory uses `results/pipelay` | C02 manual destination audit | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L196-L199] |
-| S24 `workflow.py:199` | Missing configuration-directory context uses process working directory | C02 manual destination audit | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L197-L200] |
-| S25 `workflow.py:201` | Missing summary filename uses the same default filename; existing output can be overwritten | C02 manual destination audit | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L201-L202] |
-| S26 `workflow.py:202` | Default JSON encoding does not reject infinity or NaN; file can be readable by Python yet invalid for strict consumers | C07 | issue pending (2); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L202-L202] |
-| S27 `workflow.py:123-141` | Diameter, radius and span are assumed in metres; the curvature/offset formula has no separate unit metadata | C02 | issue pending (1); 2026-10-16 [src/digitalmodel/pipelay/workflow.py:L120-L141] |
-
-Table 6. Exhaustive package sweep ledger; the counts include intended defaults so that omission cannot silently become a qualified design basis.
-
-| Additional pitfall | Detection | Tracking / evidence |
+| Gate / check | Function or output asserted | Executable test and criterion |
 |---|---|---|
-| Introductory docstring promises residual ovalisation but reel payload does not contain it | no detection check exists | issue pending (3). [src/digitalmodel/pipelay/workflow.py:L15-L19] [src/digitalmodel/pipelay/workflow.py:L143-L161] |
-| Standard edition, clause title and calculation-output provenance unresolved | no detection check exists | #1817; source-side evidence is the incomplete reference and result dictionaries. [src/digitalmodel/pipelay/workflow.py:L21-L24] [src/digitalmodel/pipelay/workflow.py:L79-L93] [src/digitalmodel/pipelay/workflow.py:L143-L161] |
-| J-lay zero-angle horizontal component is an imposed fallback, while non-positive submerged weight becomes infinite catenary parameter | no detection check exists for physical force/geometry closure; C03 is only positivity/self-consistency | issue pending (3); upstream method is not designated an independent hand reference. [src/digitalmodel/orcaflex/pipelay_analysis.py:L231-L259] |
-| Upstream S-lay depth table repeats its angle without using loop depth in the angle calculation | existing strict expected-failure test, outside counted package scope | #1817. [src/digitalmodel/orcaflex/pipelay_analysis.py:L180-L202] [tests/orcaflex/test_pipelay_analysis.py:L69-L78] |
+| G0 / C01 | `workflow.router` | `tests/pipelay/test_pack_gates.py::test_c01_router_rejects_unsupported_method`: unsupported method raises ValueError |
+| G0 / C02 | `workflow.router` | `tests/pipelay/test_pack_gates.py::test_c02_router_rejects_unknown_key`: wrong diameter key raises ValueError; zero output files. Missing/finite/geometry boundaries are parameterized in `test_audit_regressions.py` |
+| G2 / C03 | `workflow.run_jlay` sagbend and derived tension | `tests/pipelay/test_pack_gates.py::test_c03_jlay_hand_check`: a=82.8394 m, strain=0.00195438, T=2624.872 kN, relative tolerance 0.001 |
+| G2 / C04 | `workflow.run_reel_lay` residual outputs and status | `tests/pipelay/test_pack_gates.py::test_c04_reel_residual_hand_check`: curvature=0.00625 1/m, radius=160 m, strain=0.000853, offset=0.1125 m, relative tolerance 0.001; tight core fails |
+| G2 / C05 | `workflow.run_jlay` strain and closure error | `tests/pipelay/test_pack_gates.py::test_c05_feasible_tension_trend`: strain decreases; closure error at most 0.001 |
+| G5 / C06 | `workflow.router` and `_write_summary` output | `tests/pipelay/test_pack_gates.py::test_c06_summary_matches_router`: both methods/statuses match; no native-model/time-history output |
+| G5 / C07 | `workflow.router` summary bytes | `tests/pipelay/test_audit_regressions.py::test_c07_summary_digest_readback`: both templates parse with non-finite tokens rejected; input and output SHA-256 match rereads; payload equals returned fields |
 
-Table 7. Confirmed source limitations; no incident issue was specified for this package, and the closed template issue is provenance rather than evidence of numerical validation. [tests/pipelay/test_pipelay_workflow.py:L1-L5]
+Table 4. Seven executable checks. G1 native load, G3 dynamics and G4 diffraction
+are outside this analytical interface; C06 asserts the absence of native output.
+No native gate is claimed passed. Exact test counts and execution evidence are
+recorded in the audit repair PR.
+
+## 6. Failure modes and limits
+
+`run_jlay` rejects missing fields, inconsistent/insufficient tension, zero angle
+and non-positive submerged weight before forming a result. Both workflow
+functions reject unknown keys and non-finite or implausible numerical limits.
+`router` rejects invalid overbend strain before output and `_write_summary`
+serializes with `allow_nan=False` before directory creation. Existing output
+files are not erased when a later invalid request is rejected.
+
+Tests exercise these branches in `tests/pipelay/test_audit_regressions.py`.
+The legacy 27-item default/fallback inventory is superseded by the validated
+input contract and its executable tests. Applied defaults remain assumptions;
+unit/provenance/destination confirmation is tracked in
+[2763](https://github.com/vamseeachanta/digitalmodel/issues/2763).
+The S-lay depth-table strict expected failure remains unchanged and outside
+this J-lay/reel-lay repair.
 
 ## 7. Lessons log
 
-| Date | Change reference | Lesson / pack change | Evidence | Shared-log entry |
-|---|---|---|---|---|
-| 2026-10-16 | pack revision 0 | Separate screening regression from independent installation validation; inventory defaults and non-finite summaries | [tests/pipelay/test_pipelay_workflow.py:L29-L122] [src/digitalmodel/pipelay/workflow.py:L124-L157] | Not assigned; issue pending (5) |
+| Date | Reference | Finding and prevention | Evidence |
+|---|---|---|---|
+| 2026-10-16 | initial pack | Screening regression is distinct from installation qualification | initial pack revision |
+| 2026-10-18 | [2745](https://github.com/vamseeachanta/digitalmodel/issues/2745) | Formula invariants can pass incorrect physics; use independent anchors, force closure and fail-before-output checks | `test_audit_regressions.py`, `test_pack_gates.py`, screening-basis.md |
 
-Table 8. Initial lesson entry; subsequent lessons will append rows.
+Table 5. Shared lesson indexing remains tracked by [2767](https://github.com/vamseeachanta/digitalmodel/issues/2767).
 
-## 8. Ownership
+## 8. Maintenance and review
 
-Review assignment for this draft: OrcaFlex installation quality manager, using a different provider from the producer; escalation for ambiguous method criteria or classification will remain with that family quality manager, and the maintainer will resolve cross-family scope.
+The maintainer will resolve design-basis scope and review responsibility.
+Independent clearance and an alternate-review assignment are not established;
+[2767](https://github.com/vamseeachanta/digitalmodel/issues/2767) tracks them.
+This draft does not grant installation clearance.
 
-UNVERIFIED: a named deputy and a durable shared-log/index entry are not established in the inspected module; assignment is required before clearance, issue pending (5). [src/digitalmodel/pipelay/__init__.py:L1-L10] [docs/registry/module-routing.yaml:L460-L465]
+## 9. Dependencies and historical map inventory
 
-## 9. Dependencies
+The live analytical dependencies are `JLayConfig`, `PipelayPipeProperties`,
+`LayOperability` and `calculate_stinger_radius` from
+`digitalmodel.orcaflex.pipelay_analysis`; the workflow tests also exercise
+`digitalmodel.engine`. No commercial solver is needed by these calculations.
 
-| Dependency / consumer | Role / version boundary | Evidence |
-|---|---|---|
-| `digitalmodel.orcaflex.pipelay_analysis` | Analytical upstream models: `JLayConfig`, `LayMethod`, `LayOperability`, `PipelayPipeProperties`, stinger helper; no solver version selected | [src/digitalmodel/pipelay/workflow.py:L33-L39] |
-| `digitalmodel.engine` | Engine-facing router and input examples exercised by workflow tests | [tests/pipelay/test_pipelay_workflow.py:L14-L19] [src/digitalmodel/pipelay/workflow.py:L164-L193] |
-| JSON and filesystem | UTF-8 summary serialization and output-directory creation | [src/digitalmodel/pipelay/workflow.py:L196-L203] |
+### Historical implementation-map inventory
 
-Table 9. Dependencies at the package boundary; companion inventories are discovery metadata, not qualified solver evidence.
+The following inventory is retained at map revision
+`3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` (data revision
+`270c8759c374b67a7f032953e7fcdb14e0224461`). Its package line citations and
+search counts refer to code revision `7aad603be1c6136106dbb2381ce5096b050654f8`,
+not this repaired implementation. Reconciliation is tracked in
+[2766](https://github.com/vamseeachanta/digitalmodel/issues/2766).
 
-Every source mention of OrcaFlex or its interface, including case-insensitive package paths, is listed below; these are textual references or analytical imports, not native calls. [src/digitalmodel/pipelay/__init__.py:L1-L10] [src/digitalmodel/pipelay/workflow.py:L1-L39]
-
-| Source location | Dependency interpretation | Evidence |
-|---|---|---|
-| Initializer line 4 | Analytical upstream path and explicit interface/license wording | [src/digitalmodel/pipelay/__init__.py:L3-L5] |
-| Workflow line 4 | Analytical upstream module in docstring | [src/digitalmodel/pipelay/workflow.py:L3-L6] |
-| Workflow line 6 | Docstring explicitly states no interface call or license requirement | [src/digitalmodel/pipelay/workflow.py:L5-L6] |
-| Workflow line 11 | J-lay analytical configuration class reference | [src/digitalmodel/pipelay/workflow.py:L10-L14] |
-| Workflow line 33 | Python import of analytical configuration classes and stinger helper | [src/digitalmodel/pipelay/workflow.py:L33-L39] |
-
-Table 10. Complete source-level solver-name inventory for the package.
-
-### Implementation-map inventory and counted-family search
 
 The map family with an in-package row is `effective-tension-riser-stack-up`: one row, `run_jlay`; this is therefore the sole counted family and ranks first, with no tie. The map calls it independent, while source inspection shows delegation for sagbend geometry plus a local utilisation criterion. [docs/registry/implementation-map.yaml:L3698-L3708] [src/digitalmodel/pipelay/workflow.py:L62-L93]
 
@@ -221,7 +180,7 @@ None of these signals matches `pipelay` when tested against the package-relative
 
 A whole-repository search of tracked Python and shell sources, including `scripts/`, also covers `calculate_sagbend`, `run_jlay`, `run_reel_lay`, `residual_curvature`, `reeling_strain` and `calculate_stinger_radius`; upstream implementations are map follow-up rather than additional in-package misses. In particular the actual J-lay hyperbolic geometry and stinger formula are outside the package. [src/digitalmodel/orcaflex/pipelay_analysis.py:L222-L260] [src/digitalmodel/orcaflex/pipelay_analysis.py:L307-L324]
 
-Map follow-up: catenary geometry has map rows upstream but no row inside this package; reel bending/residual-curvature screening, pipe-section/stinger bending and lay-rate operability need package-aware family classification before counting. These non-counted families do not change the result above; issue pending (4). [docs/registry/implementation-map.yaml:L1019-L1029] [src/digitalmodel/pipelay/workflow.py:L49-L59] [src/digitalmodel/pipelay/workflow.py:L96-L161] [src/digitalmodel/pipelay/workflow.py:L179-L186]
+Map follow-up: catenary geometry has map rows upstream but no row inside this package; reel bending/residual-curvature screening, pipe-section/stinger bending and lay-rate operability need package-aware family classification before counting. These non-counted families do not change the result above; [#2766](https://github.com/vamseeachanta/digitalmodel/issues/2766). [docs/registry/implementation-map.yaml:L1019-L1029] [src/digitalmodel/pipelay/workflow.py:L49-L59] [src/digitalmodel/pipelay/workflow.py:L96-L161] [src/digitalmodel/pipelay/workflow.py:L179-L186]
 
 | Map row | Implementation path | Symbol (module-level if empty) | Recorded relation | Map evidence |
 |---|---|---|---|---|
@@ -492,23 +451,18 @@ Map follow-up: catenary geometry has map rows upstream but no row inside this pa
 
 Table 11. All implementation-map rows of the sole counted family, in map order; a map row is not a verified solver result.
 
+
 ## 10. Coverage and open items
 
-Read scope: both package Python files in full; upstream `orcaflex/pipelay_analysis.py`; both J-lay/reel-lay example inputs; the complete five-test workflow file and upstream test file; routing metadata; and the module-specific coverage section. [src/digitalmodel/pipelay/__init__.py:L1-L10] [src/digitalmodel/pipelay/workflow.py:L1-L203] [src/digitalmodel/orcaflex/pipelay_analysis.py:L1-L324] [tests/pipelay/test_pipelay_workflow.py:L1-L122] [tests/orcaflex/test_pipelay_analysis.py:L1-L148] [examples/workflows/jlay-pipelay/input.yml:L1-L38] [examples/workflows/reel-lay-pipelay/input.yml:L1-L40]
+| Tracking | Remaining scope |
+|---|---|
+| [2763](https://github.com/vamseeachanta/digitalmodel/issues/2763) | Explicit units, destination confirmation and design-basis provenance beyond schema checks |
+| [2764](https://github.com/vamseeachanta/digitalmodel/issues/2764) | Durable issued input/output digest manifest beyond C07 tests |
+| [2765](https://github.com/vamseeachanta/digitalmodel/issues/2765) | Independent physical benchmarks beyond analytical hand anchors |
+| [2766](https://github.com/vamseeachanta/digitalmodel/issues/2766) | Canonical family-map reconciliation |
+| [2767](https://github.com/vamseeachanta/digitalmodel/issues/2767) | Review responsibilities, shared lesson and clearance index |
+| [1817](https://github.com/vamseeachanta/digitalmodel/issues/1817) | Exact standard edition/clause and standards-output provenance qualification; S-lay expected failure |
+| [2431](https://github.com/vamseeachanta/digitalmodel/issues/2431) | Native installation stages, dynamics and issued-report qualification |
 
-Documentation discovery read includes `docs/maps/digitalmodel-operator-map.md`, `docs/registry/module-routing.yaml`, `docs/registry/implementation-map.md`, `docs/registry/implementation-map.yaml`, and `docs/domains/pipeline-installation/coverage-2026-10.md`; generic pipelay discussion also occurs in the migration catalog and research overview, without establishing independent results for this workflow. [docs/maps/digitalmodel-operator-map.md:L94-L94] [docs/registry/module-routing.yaml:L460-L465] [docs/registry/implementation-map.md:L1-L49] [docs/domains/pipeline-installation/coverage-2026-10.md:L171-L181] [docs/migration/legacy-engineering-flow-catalog.md:L27-L27]
-
-| Open item / assigned role | Evidence / limitation | Tracking |
-|---|---|---|
-| Input validation and design-basis completeness / package maintainer | Silent key filtering, defaults, bare text conversion and absent finite/unit/geometry checks; S01–S08, S10–S15, S19–S25, S27 | issue pending (1) [src/digitalmodel/pipelay/workflow.py:L42-L77] [src/digitalmodel/pipelay/workflow.py:L108-L118] [src/digitalmodel/pipelay/workflow.py:L164-L203] |
-| Strict finite JSON / package maintainer | Infinite utilisation/radius and permissive serializer; S09, S16–S18, S26 | issue pending (2) [src/digitalmodel/pipelay/workflow.py:L124-L157] [src/digitalmodel/pipelay/workflow.py:L202-L202] |
-| UNVERIFIED: independent J-lay/reel-lay physical accuracy / installation quality manager | Zero independent workflow benchmarks; unsupported ovalisation wording; upstream near-vertical fallback and force/geometry closure need qualification | issue pending (3) [tests/pipelay/test_pipelay_workflow.py:L29-L122] [src/digitalmodel/pipelay/workflow.py:L15-L19] [src/digitalmodel/orcaflex/pipelay_analysis.py:L231-L259] |
-| UNVERIFIED: exact governing standard edition/clause and output provenance / installation quality manager | DNV-OS-F101 edition absent; clause text not checked against the licensed copy; no emitted Citation sidecar | #1817 [src/digitalmodel/pipelay/workflow.py:L21-L24] [src/digitalmodel/pipelay/workflow.py:L143-L161] |
-| Native stages, hook/sling loads, dynamics and signed report appendix / installation quality manager | JSON screen does not supply native installation qualification; future model/load route and gate evidence remain outside this package | #2431 [src/digitalmodel/pipelay/workflow.py:L164-L203] |
-| Family-map reconciliation / map maintainer | One in-package counted row; local reel/residual and operability coverage remains a follow-up | issue pending (4) [docs/registry/implementation-map.yaml:L3698-L3708] [src/digitalmodel/pipelay/workflow.py:L49-L59] [src/digitalmodel/pipelay/workflow.py:L96-L161] |
-| UNVERIFIED: deputy, shared-log and clearance index / maintainer | No module-local assignment or lesson index is established; section 8 records the required disposition | issue pending (5) [src/digitalmodel/pipelay/__init__.py:L1-L10] [docs/registry/module-routing.yaml:L460-L465] |
-| Upstream expected failure / upstream maintainer | S-lay depth sweep expected failure, not a regression of this package | #1817 [tests/orcaflex/test_pipelay_analysis.py:L69-L78] |
-
-Table 12. Open items; numbered draft references require issue creation and substitution before independent acceptance of issue coverage.
-
-The private sidecar is outside this pack's read/write scope; no private dataset or client-derived value is included. The calculation-citation contract was read for the provenance assessment; no formula, source module, standard value or package-data rule is changed by this documentation.
+Table 7. Filed tracking replaces the five unfiled drafts. These broader
+qualification items are distinct from the 13 bounded repair sections in audit 2745.

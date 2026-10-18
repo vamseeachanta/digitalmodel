@@ -74,7 +74,10 @@ class EffectiveWeightCalculator:
         base_result = self.calculate(riser)
 
         # Buoyancy module adds upward force
-        buoy_force = buoyancy_module.buoyancy_force_per_length(riser.external_fluid)
+        buoy_force = buoyancy_module.buoyancy_force_per_length(
+            riser.external_fluid,
+            riser.outer_diameter + 2 * (riser.coating_thickness or 0.0),
+        )
 
         # Net effective weight in buoyancy section
         w_eff_buoy = base_result.effective_weight + buoy_force

@@ -1,3 +1,6 @@
+# Generation audit #2711: BLOCKED (pre-existing).
+# Input generation cannot verify GDF mesh symmetry from available files.
+# Restore and verify the referenced mesh before use; no check is waived.
 version: "1.0"
 analysis_type: full_qtf
 

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Correct PIANC depth bands to 3.0/1.5/1.2; h/T=1.8 is medium-deep and
+  h/T=1.4 is shallow. Document exact boundaries and uncited x1.2/x1.5 bank
+  multipliers. Turning estimates and IMO turning checks refuse supplied h/T
+  <= 4 and flag missing depth as unverified (#1704).
+
 - cathodic_protection: title published, reference and illustrative jacket reports as analyses; state computed recommended quantities, distinguish public sources from declared inputs, use one-decimal comparison differences, and remove citation residue. Existing calculation results and released reports are unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).
 
 - cathodic_protection: complete the openly licensed reference-jacket member schedule, scaled elevation, zone-area derivation and draft analysis; disclose the structural mass discrepancy and unresolved splash division. A dimension-consistent mass-only anode arrangement passes the aggregate checks; existing results and protected reports remain unchanged ([#2445](https://github.com/vamseeachanta/digitalmodel/issues/2445)).

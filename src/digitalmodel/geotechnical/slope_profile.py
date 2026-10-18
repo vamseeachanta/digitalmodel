@@ -65,6 +65,11 @@ def _strength(layer: dict[str, Any]) -> None:
         layer["su_gradient_kpa_per_m"] = _number(
             layer.get("su_gradient_kpa_per_m", 0), "su_gradient_kpa_per_m", 0
         )
+        # xslope 1.0.3 slice.py, cp rule:
+        # Su(y) = Su_ref + gradient * max(0, reference_elevation - y).
+        # A positive gradient therefore requires an explicit elevation datum.
+        if layer["su_gradient_kpa_per_m"] > 0 and "reference_elevation_m" not in layer:
+            raise ValueError("positive strength gradient requires reference_elevation_m")
         layer["reference_elevation_m"] = _number(
             layer.get("reference_elevation_m", 0), "reference_elevation_m"
         )

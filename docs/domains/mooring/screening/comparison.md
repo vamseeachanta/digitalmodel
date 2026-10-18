@@ -10,6 +10,7 @@ no original figure is promoted to an engineering result.
 | --- | --- | --- |
 | R1 | 2026-10-14 | Static catenary lines and a traceable run record are added; unsupported illustrative response values are removed. |
 | R2 | 2026-10-15 | The pinned source digest of the mooring design module is updated because merged change #2481 added a licence header and one module-docstring sentence. No numerical result changed. Python 3.11.14 replaces 3.11.15 as patch-version run metadata only. |
+| R3 | 2026-10-18 | The citation-registry source pin is refreshed after a depth-band reference getter is added. The run-record link is made relative and the website export includes the linked record archive. Static solutions and acceptance criteria remain unchanged. |
 
 | Source row or quantity | Original illustrative value | Computed replacement or removal | Reason |
 | --- | --- | --- | --- |
