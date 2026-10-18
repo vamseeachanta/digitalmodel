@@ -13,6 +13,7 @@ import json
 import math
 from pathlib import Path
 import re
+from typing import Any
 
 from digitalmodel.marine_ops.installation.shore_approach import RouteSegment, pull_in
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
@@ -295,6 +296,33 @@ def pin_surface_seed(table: dict, folder: Path) -> None:
     path.write_text(yaml.dump(data, Dumper=PreparationDumper, sort_keys=False), encoding="utf-8")
 
 
+def selector_first(value: Any) -> Any:
+    """Normalize nested mappings with mode selectors before dependent fields.
+
+    Each object uses the same fixed ordering regardless of the input schema's
+    insertion order. Names identify objects before their properties are set;
+    units and mode selectors precede values interpreted under those modes.
+    """
+    selectors = (
+        "Name", "UnitsSystem", "LengthUnits", "MassUnits", "ForceUnits", "g",
+        "Category", "Representation", "Geometry", "VesselType", "Connection",
+        "PrimaryMotion", "SuperimposedMotion", "IncludedInStatics",
+        "DynamicsSolutionMethod", "ImplicitUseVariableTimeStep",
+        "VerticalDensityVariation", "SeabedType", "SeabedModel",
+        "MultipleCurrentDataCanBeDefined", "CurrentModel",
+        "VerticalCurrentVariationMethod", "WindType", "WaveType",
+        "WaveCalculationMethod", "WinchType", "WinchControlType",
+        "LengthAndEndOrientations", "IncludeTorsion", "PreBendSpecifiedBy",
+    )
+    if isinstance(value, list):
+        return [selector_first(child) for child in value]
+    if not isinstance(value, dict):
+        return value
+    order = [key for key in selectors if key in value]
+    order.extend(sorted(key for key in value if key not in selectors))
+    return {key: selector_first(value[key]) for key in order}
+
+
 def canonicalize_surface_components(folder: Path, spec: ProjectInputSpec) -> None:
     """Retain one preparation format across the reviewed generator variants.
 
@@ -340,7 +368,7 @@ def canonicalize_surface_components(folder: Path, spec: ProjectInputSpec) -> Non
                                       for _ in range(stage_rows)],
         })
     for path in paths:
-        path.write_text(yaml.dump(components[path.name], Dumper=PreparationDumper, sort_keys=True), encoding="utf-8")
+        path.write_text(yaml.dump(selector_first(components[path.name]), Dumper=PreparationDumper, sort_keys=False), encoding="utf-8")
     # Supports precede vessels; groups follow every entity they reference.
     order = ("01_general.yml", "02_var_data.yml", "03_environment.yml", "04_vessel_types.yml",
              "05_line_types.yml", "13_supports.yml", "06_vessels.yml", "14_morison.yml",
@@ -350,7 +378,7 @@ def canonicalize_surface_components(folder: Path, spec: ProjectInputSpec) -> Non
     includes = yaml.safe_load(body)
     rank = {name: index for index, name in enumerate(order)}
     includes.sort(key=lambda item: (rank.get(Path(item["includefile"]).name, len(rank)), item["includefile"]))
-    master.write_text(header + "---\n" + yaml.dump(includes, Dumper=PreparationDumper, sort_keys=True), encoding="utf-8")
+    master.write_text(header + "---\n" + yaml.dump(includes, Dumper=PreparationDumper, sort_keys=False), encoding="utf-8")
 
 
 def write_deliverables(campaign: Path, output: Path, table: dict, criteria: dict,

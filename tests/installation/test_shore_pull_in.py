@@ -349,3 +349,36 @@ def test_preparation_reproduces_across_shared_generator_schema_variants(tmp_path
     d.prepare(CAMPAIGN, tmp_path / "updated")
     for name in d.DELIVERABLES:
         assert (tmp_path / "original" / name).read_bytes() == (tmp_path / "updated" / name).read_bytes()
+
+
+@pytest.mark.parametrize("selector, dependents", [
+    ("Name", None),
+    ("UnitsSystem", None),
+    ("Category", None),
+    ("SeabedType", ("SeabedSlope", "SeabedOriginDepth")),
+    ("WaveType", ("WaveHeight", "WavePeriod")),
+    ("WinchType", ("WinchControlType", "StageMode, StageValue")),
+    ("WinchControlType", ("StageMode, StageValue",)),
+    ("IncludeTorsion", ("ConnectionxBendingStiffness, ConnectionyBendingStiffness",)),
+])
+def test_prepared_models_write_selectors_before_dependents(tmp_path, selector, dependents):
+    import yaml
+    output = tmp_path / "output"
+    driver().prepare(CAMPAIGN, output)
+    bundle = json.loads((output / "models.json").read_text())
+
+    def check(value):
+        found = 0
+        if isinstance(value, dict):
+            if selector in value:
+                keys = list(value)
+                targets = dependents or tuple(key for key in keys if key not in {"Name", selector})
+                assert all(keys.index(selector) < keys.index(key) for key in targets)
+                found += 1
+            found += sum(check(child) for child in value.values())
+        elif isinstance(value, list):
+            found += sum(check(child) for child in value)
+        return found
+
+    for files in bundle["cases"].values():
+        assert sum(check(yaml.safe_load(text)) for text in files.values()) > 0
