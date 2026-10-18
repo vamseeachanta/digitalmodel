@@ -5,11 +5,12 @@
 
 Report mode preserves the first exit code. Enforce mode requires register
 evidence for every recovered ID. Both attempts inherit console output.
-Atlas uses a separate opt-in signal retry outside the pytest pilot.
+Signal retries are diagnostic and preserve the first exit code in both modes.
 """
 
 import argparse
 import html
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -17,8 +18,13 @@ import re
 import subprocess
 import sys
 import time
-from typing import Any
+from typing import Any, cast
 import xml.etree.ElementTree as ET
+
+_SPEC = importlib.util.spec_from_file_location("ci_baseline", Path(__file__).with_name("ci_baseline.py"))
+assert _SPEC is not None and _SPEC.loader is not None
+baseline_tools = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(baseline_tools)
 
 NO_RETRY_SHARDS = frozenset({"contracts"})
 TIMEOUT_CODES = {124, 137, 143, 130}
@@ -52,24 +58,7 @@ def decision(ids: list[str], code: int, maximum: int, collected: bool,
 
 def node_id(case: ET.Element) -> str:
     """Recover the node ID from pytest xunit1 or xunit2 testcase attributes."""
-    name = case.get("name", "")
-    classname = case.get("classname", "").split(".")
-    file = case.get("file")
-    if file:
-        parts = Path(file).with_suffix("").parts
-        classes = classname[len(parts):]
-    else:
-        for end in range(len(classname), 0, -1):
-            candidate = Path(*classname[:end]).with_suffix(".py")
-            if candidate.is_file():
-                file = candidate.as_posix()
-                classes = classname[end:]
-                break
-        else:
-            raise ValueError("testcase path cannot be established")
-    if not name or not Path(file).is_file():
-        raise ValueError("testcase identity cannot be established")
-    return "::".join([file, *classes, name])
+    return cast(str, baseline_tools.junit_id(case))
 
 
 def read_cases(path: Path) -> list[ET.Element]:
@@ -164,38 +153,17 @@ def observation() -> dict:
             "run_id": os.environ.get("GITHUB_RUN_ID", "unknown"), "runner_cpu": cpu}
 
 
-def record(path: Path, ids: list[str], message: str, kind: str) -> None:
-    """Record the scoped whole-command signal retry."""
+def record(path: Path, code: int, retry_code: int) -> None:
+    """Record both signal attempts without clearing the original failure."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = dict(observation(), ids=ids, first_failure_message=message[:500], kind=kind)
+    payload = dict(observation(), kind="signal-exit", first_attempt_exit_code=code,
+                   retry_exit_code=retry_code, exit_code=code)
     path.write_text(json.dumps(payload, indent=2) + "\n")
-    for test_id in ids:
-        escaped = test_id.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-        print(f"::warning::flaky, passed on retry: {escaped}", flush=True)
-
-
-def register_decisions(path: Path, ids: list[str]) -> dict[str, str]:
-    """Require an open entry with a nonempty list of substantive evidence."""
-    try:
-        import yaml
-        rows = yaml.safe_load(path.read_text(encoding="utf-8"))
-        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
-            raise ValueError("invalid register")
-        entries = {row["id"]: row for row in rows}
-        if len(entries) != len(rows):
-            raise ValueError("duplicate register ids")
-    except (OSError, ValueError, KeyError, TypeError, ImportError):
-        return {node: "register unreadable" for node in ids}
-    except yaml.YAMLError:
-        return {node: "register unreadable" for node in ids}
-    decisions = {}
-    for node in ids:
-        row = entries.get(node, {})
-        evidence = row.get("evidence")
-        approved = (row.get("status") == "open" and isinstance(evidence, list)
-                    and bool(evidence) and all(isinstance(item, str) and item.strip() for item in evidence))
-        decisions[node] = "registered with evidence" if approved else "missing open entry with evidence"
-    return decisions
+    message = f"signal exit {code}; retry exit: {retry_code}; returned {code}"
+    print(f"::warning::{message}", flush=True)
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as handle:
+            handle.write(f"### Signal retry\n\n{message}\n")
 
 
 def first_failures(path: Path) -> tuple[dict[str, str], list[dict[str, str]]]:
@@ -230,6 +198,7 @@ def test_evidence(args: argparse.Namespace, payload: dict) -> None:
                       f"<pre>{html.escape(message)}</pre>"])
         escaped = node.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
         print(f"::warning::flaky, {outcome}: {escaped}; {choice}", flush=True)
+    lines.append(f"{len(payload['unidentified_failures'])} failing cases without an established ID")
     for case in payload["unidentified_failures"]:
         lines.append(f"- Unidentified failure: classname=<code>{html.escape(case['classname'])}</code>; "
                      f"name=<code>{html.escape(case['name'])}</code>; test ID could not be established.")
@@ -251,7 +220,7 @@ def retry_tests(args: argparse.Namespace, command: list[str], code: int, started
             pass
     if args.shard in NO_RETRY_SHARDS:
         result.update(retry=False, reason="no-retry-shard")
-    choices = register_decisions(args.register, list(failures))
+    choices = baseline_tools.register_decisions(args.register, list(failures), args.shard)
     payload = dict(observation(), ids=[], recovered=[], first_attempt_failed=failures,
                    unidentified_failures=unidentified,
                    first_attempt_exit_code=code, mode=args.mode, register=choices,
@@ -317,9 +286,8 @@ def main() -> int:
         if code < 128 or code in TIMEOUT_CODES:
             return code
         retry_code = execute(command)
-        record(args.junit.parent / f"flaky-{args.shard}.json", [args.shard] if retry_code == 0 else [],
-               f"signal exit {code}", "signal-exit")
-        return retry_code
+        record(args.junit.parent / f"flaky-{args.shard}.json", code, retry_code)
+        return code
     return retry_tests(args, command, code, started)
 
 

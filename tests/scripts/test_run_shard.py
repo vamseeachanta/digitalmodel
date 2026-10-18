@@ -15,6 +15,29 @@ import pytest
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/run_shard.py"
 
 
+EVIDENCE_URL = "https://github.com/example/repository/actions/runs/99"
+
+
+@pytest.fixture(autouse=True)
+def evidence_metadata(tmp_path, monkeypatch):
+    """Serve authenticated metadata locally; never query hosted evidence in tests."""
+    bin_path = tmp_path / "bin"
+    bin_path.mkdir()
+    gh = bin_path / "gh"
+    gh.write_text(
+        f"#!{sys.executable}\nimport json,sys\n"
+        "endpoint = sys.argv[-1]\n"
+        "run = dict(id=99, event='push', head_branch='main', status='completed', head_sha='mainsha', "
+        "head_repository=dict(full_name='example/repository'))\n"
+        "jobs = [dict(name='tests-' + shard, run_id=99, head_sha='mainsha', status='completed', "
+        "conclusion='failure') for shard in ('sample', 'real')]\n"
+        "print(json.dumps(dict(jobs=jobs) if '/jobs?' in endpoint else run))\n"
+    )
+    gh.chmod(0o755)
+    monkeypatch.setenv("PATH", str(bin_path) + os.pathsep + os.environ["PATH"])
+    monkeypatch.setenv("GITHUB_REPOSITORY", "example/repository")
+
+
 def module():
     spec = importlib.util.spec_from_file_location("run_shard", SCRIPT)
     loaded = importlib.util.module_from_spec(spec)
@@ -86,7 +109,7 @@ def history(tmp_path):
 def register(tmp_path, evidence=None, status="open"):
     path = tmp_path / "register.yml"
     path.write_text(json.dumps([dict(id="tests/test_fake.py::test_case_0",
-                                    status=status, evidence=["observed run"] if evidence is None else evidence)]))
+                                    status=status, evidence=[EVIDENCE_URL] if evidence is None else evidence)]))
     return ("--mode", "enforce", "--register", str(path))
 
 
@@ -135,7 +158,7 @@ def test_unproven_or_excess_failures_never_retry(tmp_path, count, mode):
 
 def test_signal_abort_then_pass(tmp_path):
     result = invoke(tmp_path, fake_gate(tmp_path, first=134), signal=True)
-    assert result.returncode == 0
+    assert result.returncode == 134
     assert len(history(tmp_path)) == 2
     assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["kind"] == "signal-exit"
 
@@ -174,14 +197,16 @@ def test_unidentified_failure_is_reported(tmp_path):
     assert result.returncode == 1
     assert len(history(tmp_path)) == 1
     text = summary.read_text()
+    assert "1 failing cases without an established ID" in text
     assert "Unidentified failure" in text
     assert "missing.module" in text and "test_case_0" in text
 
 
-def test_atlas_uses_explicit_signal_retry():
+def test_atlas_keeps_direct_gate():
     workflow = SCRIPT.parents[2] / ".github/workflows/parametric-atlas-drift.yml"
-    assert "run_shard.py --shard parametric.refresh" in workflow.read_text()
-    assert "--signal-retry -- python -m digitalmodel.parametric.refresh" in workflow.read_text()
+    assert "run_shard.py" not in workflow.read_text()
+    assert "run: python -m digitalmodel.parametric.refresh" in workflow.read_text()
+    assert "atlas-retry-evidence" not in workflow.read_text()
 
 
 def test_retry_contains_only_failed_ids_and_original_flags(tmp_path):
@@ -240,7 +265,7 @@ def test_n4_marker_file_stays_red_with_xunit2_parameter_ids(tmp_path, monkeypatc
     options = [] if mode == "report" else ["--mode", mode]
     if registered:
         path = tmp_path / "register.yml"
-        path.write_text(json.dumps([dict(id=node, status="open", evidence=["observed run"])
+        path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])
                                     for node in expected_ids]))
         options.extend(["--register", str(path)])
     result = subprocess.run(
@@ -362,7 +387,7 @@ def test_recovery_extract_compare_publish_roundtrip(tmp_path, monkeypatch, regis
     gate = fake_gate(tmp_path)
     source = tmp_path / ".github/ci/flaky-register.yml"
     source.parent.mkdir(parents=True)
-    entry = dict(id="tests/test_fake.py::test_case_0", status="open", evidence=["main run"])
+    entry = dict(id="tests/test_fake.py::test_case_0", status="open", evidence=[EVIDENCE_URL])
     source.write_text(json.dumps([entry]))
     spec = importlib.util.spec_from_file_location("ci", SCRIPT.with_name("ci_baseline.py"))
     selector = importlib.util.module_from_spec(spec)
@@ -383,16 +408,21 @@ def test_recovery_extract_compare_publish_roundtrip(tmp_path, monkeypatch, regis
         assert command == ["git", "show", "a" * 40 + ":.github/ci/flaky-register.yml"]
         return json.dumps([entry] if registered else [])
 
+    original_check_output = subprocess.check_output
     monkeypatch.setattr(selector.subprocess, "check_output", base_output)
     selected = tmp_path / "register.yml"
     selector.select_register(selected)
     assert calls[0] == ["git", "fetch", "--no-tags", "origin", "refs/heads/main"]
+    monkeypatch.setattr(subprocess, "check_output", original_check_output)
+    monkeypatch.delenv("GITHUB_EVENT_NAME")
     options = ("--mode", "enforce", "--register", str(selected))
     outcome = invoke(tmp_path, gate, options=options)
     assert outcome.returncode == (0 if registered else 1)
     spec = importlib.util.spec_from_file_location("ci", SCRIPT.with_name("ci_baseline.py"))
     ci = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(ci)
+    monkeypatch.setattr(ci, "gh_json", lambda endpoint: json.loads(
+        subprocess.check_output(["gh", "api", endpoint], text=True)))
     reports = tmp_path / "reports"
     output = reports / "result-sample.json"
     ci.main(["extract", "--junit", str(reports / "junit-sample.xml"), "--shard", "sample",
@@ -413,3 +443,37 @@ def test_recovery_extract_compare_publish_roundtrip(tmp_path, monkeypatch, regis
     assert json.loads(verdict.read_text())["shards"][0]["ids"][node] == ("FLAKY" if registered else "NEW")
     ci.publish(reports, "none", base)
     assert json.loads(base.read_text())["tests"] == {}
+
+
+def test_signal_retry_summary_preserves_both_exits(tmp_path):
+    summary = tmp_path / "summary.md"
+    result = invoke(tmp_path, fake_gate(tmp_path, first=139), signal=True, summary=summary)
+    assert result.returncode == 139
+    text = summary.read_text()
+    assert "signal exit 139" in text and "retry exit: 0" in text and "returned 139" in text
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    assert record["first_attempt_exit_code"] == 139 and record["retry_exit_code"] == 0
+
+
+def test_wrapper_and_extractor_share_identity(tmp_path, monkeypatch):
+    from xml.etree.ElementTree import fromstring
+    monkeypatch.chdir(tmp_path)
+    # Explicit file identity need not exist in the extraction workspace.
+    case = fromstring('<testcase file="tests/test_outer/test_inner.py" '
+                     'classname="tests.test_outer.test_inner.TestCase" name="test_value[a.b]"/>')
+    assert module().node_id(case) == "tests/test_outer/test_inner.py::TestCase::test_value[a.b]"
+
+
+def test_pr_added_register_cannot_clear_wrapper(tmp_path, monkeypatch):
+    options = register(tmp_path)
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    # There is no fetched base in this isolated directory. Never trust the PR file.
+    assert invoke(tmp_path, fake_gate(tmp_path), options=options).returncode == 1
+
+
+def test_pr_run_evidence_cannot_clear_wrapper(tmp_path):
+    gate = fake_gate(tmp_path)
+    gh = tmp_path / "bin/gh"
+    gh.write_text(gh.read_text().replace("event='push'", "event='pull_request'"))
+    assert invoke(tmp_path, gate, options=register(tmp_path)).returncode == 1
