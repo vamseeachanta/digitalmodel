@@ -11,6 +11,7 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | 0 | 2026-10-14 | Add the SI profile interface and public benchmark reproductions for slope screening. |
 | 2 | 2026-10-18 | Require an explicit positive-gradient datum; use and report multi-seed grid search. |
 | 1 | 2026-10-15 | Add the Bishop search benchmark, seepage handoff and example tests, and hosted solver execution; clarify validation limits. |
+| 3 | 2026-10-18 | Isolate seed refinements to prevent cache sharing; preserve thin user-circle mechanisms; disclose group minima, the coarse filter and per-search unsolved counts; require explicit search mode in result records. |
 
 ## Basis and boundaries
 
@@ -116,23 +117,36 @@ convergence and relative mass-balance error. No design report is generated.
 A failed seepage convergence stops calculation. A non-converged search is
 labelled not_converged; a converged search is screening_only. Geometry bounds
 and soil properties require engineering review. Each method searches independently.
-The fixed adapter policy is `seed="grid"`, recorded as search_mode="grid";
-fixed-circle evaluations record "fixed_circle". The governing search rule is
-xslope 1.0.3 `circular_search` and `_grid_seed_circles` in
-[xslope/search.py](https://github.com/njones61/xslope/blob/v1.0.3/xslope/search.py):
-a geometry-based grid-and-tangent sweep supplies competing families, user circles
-remain extra seeds, and up to four starts within 15% of the best coarse FS are
-refined. The upstream grid mode also excludes surfaces thinner than 5% of the
-ground elevation range. Convergence describes the selected refinement, and does
-not certify a global minimum; grid bounds, retained families, the thin-surface
-filter and unsolved trials can omit mechanisms. Screening still requires review
-of shallow mechanisms and sensitivity to geometry and soil properties.
+The adapter records search_mode="grid" for its combined search and
+"fixed_circle" for a direct evaluation. The search uses xslope 1.0.3
+`_grid_seed_circles` to retain coarse tangent families, then calls
+`circular_search(seed="circles")` separately for every retained seed and every
+user circle. Each refinement has its own cache, including when two seeds share a
+centre but have different depths. The lowest solved FS is reported. The upstream
+coarse sweep retains at most four families within 25% of its coarse minimum;
+it can discard a family whose refined minimum would govern.
+
+The coarse sweep excludes surfaces thinner than 5% of the slope height
+(maximum minus minimum ground elevation in `_grid_seed_circles`). Refinement applies no thin-surface filter, preserving thin mechanisms
+from user circles. JSON records `grid_thin_surface_filter="coarse_only_5_percent"`
+and `search_factors_of_safety` with separate `grid` and `user_circles` minima;
+a null minimum means that group produced no solved surface. Unsolved counts
+include the sweep and all refinements, with their individual records retained.
+Convergence describes the selected refinement and does not certify a global
+minimum. Geometry bounds, coarse family retention and unsolved trials can omit
+mechanisms. Screening requires sensitivity checks and engineering review.
+The governing upstream implementation is `xslope/search.py` in version 1.0.3;
+its seed helper defaults to `keep=4`. Profile construction and searches of
+workbook-loaded models reject other xslope versions. Direct workbook
+fixed-circle evaluation records the installed version without this guard.
+A rejected solver result in a nonempty seed cache stops the method rather than
+reporting another seed as if that rejection had not occurred.
 
 ## Benchmarks and limits
 
-Tests reproduce README Bishop FS = 1.279 at 20 slices, its circular-search minimum
-FS = 1.214733 with explicit grid multi-seed mode at 40 slices (still rounding
-to the published 1.215), and
+Tests reproduce README Bishop FS = 1.279 at 20 slices and pin the adapter search
+re-baseline FS = 1.214733 at 40 slices to 0.01% relative tolerance (still rounding
+to the published 1.215). Tests also reproduce
 [SEEP-1](https://xslope.org/en/latest/tutorials/seep01_sheetpile/) discharge
 40.111 m³/yr per m on a 0.5 m linear-triangle mesh. A 1% relative tolerance
 allows mesh/platform variation and printed-value rounding. The equivalent SI
@@ -143,9 +157,12 @@ no published Spencer benchmark is established here. Fixture provenance,
 digests and upstream licence notices accompany the workbooks.
 
 The synthetic two-family regression uses a shallow fill above a stiff crust
-and a weak undrained foundation. A shallow seed alone returns FS=1.158; grid
-multi-seed search finds FS=0.689, checked against an independently evaluated
-deep trial circle within 1%. These synthetic values are test bounds only.
+and a weak undrained foundation. The search is bounded above by a directly
+re-evaluated deep circle (FS=0.689, with 1% search tolerance) obtained from an
+earlier xslope 1.0.3 grid search. This is a repeatability check, not an
+independent minimum: the circle is tangent to the model floor
+and exits near the domain edge. Domain expansion remains necessary to assess
+boundary sensitivity. These synthetic values are test bounds only.
 Stability tests run without Gmsh; only seepage solves skip when it is absent.
 
 The SI profile-driven seepage test checks metre/second units and the drained

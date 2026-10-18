@@ -109,7 +109,7 @@ def test_unsupported_layer_fields_rejected():
 
 
 @pytest.mark.parametrize("datum", [-100, 100])
-def test_positive_strength_gradient_requires_explicit_datum(datum):
+def test_positive_strength_gradient_requires_explicit_datum(datum, tmp_path):
     data = profile()
     data["ground_surface_m"] = [[x, y + datum] for x, y in data["ground_surface_m"]]
     data["bottom_elevation_m"] += datum
@@ -117,12 +117,23 @@ def test_positive_strength_gradient_requires_explicit_datum(datum):
                        "su_gradient_kpa_per_m": 1.5}]
     with pytest.raises(ValueError, match="reference_elevation_m"):
         validate_profile(data)
-    data["layers"][0]["reference_elevation_m"] = datum
+    data["layers"][0]["reference_elevation_m"] = datum + 20
     layer = validate_profile(data)["layers"][0]
-    # xslope cp equation at 10 m below the chosen reference: 5 + 1.5*10.
-    assert layer["su_kpa"] + layer["su_gradient_kpa_per_m"] * max(
-        0, layer["reference_elevation_m"] - (datum - 10)
-    ) == 20
+    assert layer["reference_elevation_m"] == datum + 20
+    pytest.importorskip("xslope")
+    from digitalmodel.geotechnical.slope_stability import build_slope_model
+    from xslope.slice import generate_slices
+
+    data["circles"][0]["y_m"] += datum
+    model = build_slope_model(data, tmp_path)
+    assert model["materials"][0]["r_elev"] == datum + 20
+    success, generated = generate_slices(model, circle=model["circles"][0], num_slices=20)
+    assert success
+    slices, _ = generated
+    inside = slices[(slices["y_cb"] > datum) & (slices["y_cb"] < datum + 20)]
+    assert not inside.empty
+    for _, row in inside.iterrows():
+        assert row["c"] == pytest.approx(5 + 1.5 * (datum + 20 - row["y_cb"]))
 
 
 def test_constant_undrained_strength_needs_no_datum():

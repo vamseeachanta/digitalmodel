@@ -22,7 +22,9 @@ class MethodResult:
     search_converged: bool | None
     critical_circle: dict[str, float] | None
     unsolved_trials: dict[str, Any] = field(default_factory=dict)
-    search_mode: str = "grid"
+    search_mode: str = field(kw_only=True)
+    search_factors_of_safety: dict[str, float | None] = field(default_factory=dict)
+    grid_thin_surface_filter: str | None = None
 
 
 @dataclass(frozen=True)
@@ -152,24 +154,59 @@ def run_seepage(model: dict[str, Any], element_size: float) -> SeepageResult:
                          model.get("time_unit") or "unspecified", True, closure)
 
 
+def _search_surfaces(model: dict[str, Any], method: str, slices: int):
+    """Refine retained grid seeds and user circles with separate upstream caches."""
+    if version("xslope") != "1.0.3":
+        raise ValueError("adapter requires benchmarked xslope version 1.0.3")
+    from xslope.search import (
+        UnsolvedTrials, _grid_seed_circles, _with_water_loads_once, circular_search,
+        file_search_window,
+    )
+
+    prepared = _with_water_loads_once(model)
+    window = file_search_window(prepared)
+    tally = UnsolvedTrials(method)
+    seeds = _grid_seed_circles(prepared, method, num_slices=slices, tally=tally, **window)
+    records = []
+    minima: dict[str, float | None] = {"grid": None, "user_circles": None}
+    trials: dict[str, Any] = {"grid_sweep": tally.as_dict(), "refinements": []}
+    for family, circles in (("grid", seeds), ("user_circles", model.get("circles", []))):
+        for seed in circles:
+            unsolved: dict[str, Any] = {}
+            cache, converged, _, _ = circular_search(
+                dict(prepared, circles=[dict(seed)]), method, num_slices=slices,
+                seed="circles", unsolved_out=unsolved, **window,
+            )
+            trials["refinements"].append({"family": family, **unsolved})
+            if not cache:
+                continue
+            best = cache[0]
+            if not isinstance(best.get("solver_result"), dict):
+                raise RuntimeError(f"{method} search found no solved surface")
+            if best["FS"] != best["solver_result"].get("FS"):
+                raise RuntimeError(f"{method} search returned a rejected surface")
+            fs = _number(float(best["FS"]), "factor_of_safety", 0)
+            if minima[family] is None or fs < minima[family]:
+                minima[family] = fs
+            records.append((best, converged))
+    if not records:
+        raise RuntimeError(f"{method} search found no solved surface")
+    counts = [trials["grid_sweep"], *trials["refinements"]]
+    for key in ("attempted", "unsolved"):
+        trials[key] = sum(record.get(key, 0) for record in counts)
+    best, converged = min(records, key=lambda record: record[0]["FS"])
+    return best, converged, trials, minima
+
+
 def _solve_method(model: dict[str, Any], method: str, search: bool, slices: int) -> MethodResult:
-    from xslope.search import circular_search
     from xslope.slice import generate_slices
     from xslope.solve import solve_selected
 
     unsolved: dict[str, Any] = {}
+    minima: dict[str, float | None] = {}
     if search:
-        cache, converged, _, _ = circular_search(
-            # xslope 1.0.3 circular_search: grid seeds competing tangent
-            # families and refines up to four starts within 15% of the best.
-            model, method, num_slices=slices, seed="grid", unsolved_out=unsolved
-        )
-        if not cache or not isinstance(cache[0].get("solver_result"), dict):
-            raise RuntimeError(f"{method} search found no solved surface")
-        best = cache[0]
+        best, converged, unsolved, minima = _search_surfaces(model, method, slices)
         solved = best["solver_result"]
-        if best["FS"] != solved.get("FS"):
-            raise RuntimeError(f"{method} search returned a rejected surface")
         circle = {key: float(best[key]) for key in ("Xo", "Yo", "Depth")}
         circle["R"] = circle["Yo"] - circle["Depth"]
     else:
@@ -183,7 +220,9 @@ def _solve_method(model: dict[str, Any], method: str, search: bool, slices: int)
         raise RuntimeError(f"{method} did not produce a solution")
     fs = _number(float(solved["FS"]), "factor_of_safety", 0)
     return MethodResult(fs, None if converged is None else bool(converged), circle, unsolved,
-                        "grid" if search else "fixed_circle")
+                        search_mode="grid" if search else "fixed_circle",
+                        search_factors_of_safety=minima,
+                        grid_thin_surface_filter="coarse_only_5_percent" if search else None)
 
 
 def analyze_model(

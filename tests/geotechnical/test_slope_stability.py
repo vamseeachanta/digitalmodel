@@ -68,13 +68,13 @@ def test_readme_bishop_and_equivalent_si_profile(tmp_path):
 
 
 def test_seep_one_discharge():
-    pytest.importorskip("gmsh")
     """SEEP-1 prints total discharge 40.111 m³/yr per m at tri3 size 0.5 m.
 
     https://xslope.org/en/latest/tutorials/seep01_sheetpile/ read 2026-10-14.
     Relative tolerance 1% accommodates mesh-generator/platform variation and
     rounding; the mesh size and element order are held at the tutorial settings.
     """
+    pytest.importorskip("gmsh")
     model = load_slope_data(FIXTURES / "xslope_clay_blanket.xlsx")
     result = run_seepage(model, element_size=0.5)
     assert result.discharge_per_width == pytest.approx(40.111, rel=0.01)
@@ -133,7 +133,7 @@ def test_readme_bishop_search_minimum(source, tmp_path):
     model = (load_slope_data(FIXTURES / "xslope_simple1.xlsx")
              if source == "workbook" else build_slope_model(equivalent_profile(), tmp_path))
     result = analyze_model(model, methods=("bishop",), num_slices=40)
-    assert result.methods["bishop"].factor_of_safety == pytest.approx(1.215, rel=0.01)
+    assert result.methods["bishop"].factor_of_safety == pytest.approx(1.214733, rel=1e-4)
     assert result.methods["bishop"].search_converged is True
 
 
@@ -235,7 +235,7 @@ def test_seepage_boundary_mapping(tmp_path):
     assert heads[0]["coords"] == [(0, 0), (20, 20)]
 
 
-def test_rejected_search_surface_is_not_reported(monkeypatch):
+def test_rejected_search_surface_is_not_reported(monkeypatch, tmp_path):
     from xslope import search
 
     def rejected(*args, **kwargs):
@@ -244,15 +244,15 @@ def test_rejected_search_surface_is_not_reported(monkeypatch):
 
     monkeypatch.setattr(search, "circular_search", rejected)
     with pytest.raises(RuntimeError, match="rejected"):
-        analyze_model({"unit_system": "si"}, methods=("bishop",))
+        analyze_model(build_slope_model(equivalent_profile(), tmp_path), methods=("bishop",))
 
 
 def test_grid_search_resolves_lower_foundation_family(tmp_path):
     """Synthetic fill over a stiff crust and weak undrained foundation.
 
     xslope 1.0.3 circular_search's grid rule retains competing tangent families.
-    A shallow user seed alone refines to FS=1.158. The independent deep trial
-    below has FS=0.689; the search must find a surface at least that low within
+    The deep trial below is a prior xslope 1.0.3 grid-search output with
+    FS=0.689; the search must find a surface at least that low within
     1% numerical search tolerance. These values are regression bounds, not a
     design acceptance threshold or a proof of a global minimum.
     """
@@ -271,7 +271,8 @@ def test_grid_search_resolves_lower_foundation_family(tmp_path):
     }
     model = build_slope_model(data, tmp_path)
     result = analyze_model(model, methods=("bishop",), num_slices=20).methods["bishop"]
-    # Evaluate a deep competitor directly, without any search.
+    # Re-evaluate a prior search output, tangent to the floor and near the edge.
+    # This checks repeatability within this domain, not an independent minimum.
     model["circles"] = [{"Xo": 13.365017361111114, "Yo": 89.921875,
                          "Depth": -20, "R": 109.921875}]
     deep = analyze_model(model, methods=("bishop",), search=False,
@@ -281,3 +282,85 @@ def test_grid_search_resolves_lower_foundation_family(tmp_path):
     assert result.critical_circle["Depth"] < -5
     assert result.search_converged is True
     assert result.search_mode == "grid"
+
+
+def test_search_mode_is_required():
+    from digitalmodel.geotechnical.slope_stability import MethodResult
+
+    with pytest.raises(TypeError, match="search_mode"):
+        MethodResult(1.0, True, None)
+
+
+def test_search_isolates_seeds_and_preserves_thin_user_surface(tmp_path, monkeypatch):
+    """A worse coarse family may refine lower; centres must not share a cache."""
+    from xslope import search
+
+    model = build_slope_model(equivalent_profile(), tmp_path)
+    user = dict(model["circles"][0])
+    first = dict(user, Depth=user["Depth"] + 1.0)
+    second = dict(user, Depth=user["Depth"] - 1.0)
+    # Coarse ordering is deliberately opposite to the refined ordering.
+    monkeypatch.setattr(search, "_grid_seed_circles", lambda *a, **k: [first, second])
+    calls = []
+
+    def refine(data, method, **kwargs):
+        calls.append((list(data["circles"]), kwargs["seed"]))
+        if kwargs["seed"] != "circles" or len(data["circles"]) != 1:
+            fs = 1.3  # The shared-cache path stays in the first basin.
+        else:
+            circle = data["circles"][0]
+            fs = 1.2 if circle == first else 0.9 if circle == second else 0.8
+        kwargs["unsolved_out"].update(attempted=1, unsolved=0)
+        return ([dict(FS=fs, solver_result={"FS": fs}, Xo=0, Yo=2, Depth=0)],
+                True, [], [])
+
+    monkeypatch.setattr(search, "circular_search", refine)
+    result = analyze_model(model, methods=("bishop",)).methods["bishop"]
+    assert result.factor_of_safety == 0.8
+    assert result.search_factors_of_safety == {"grid": 0.9, "user_circles": 0.8}
+    assert result.grid_thin_surface_filter == "coarse_only_5_percent"
+    assert calls == [([first], "circles"), ([second], "circles"), ([user], "circles")]
+    assert model["circles"] == [user]
+    payload = json.loads(json.dumps(asdict(result)))
+    assert payload["search_factors_of_safety"]["user_circles"] == 0.8
+
+
+def test_workbook_search_requires_benchmarked_version(monkeypatch):
+    from digitalmodel.geotechnical import slope_stability
+
+    monkeypatch.setattr(slope_stability, "version", lambda _: "0.0")
+    with pytest.raises(ValueError, match="requires benchmarked xslope version"):
+        analyze_model({"unit_system": "si"}, methods=("bishop",))
+
+
+def test_real_refinement_does_not_filter_thin_user_trials(tmp_path, monkeypatch):
+    from math import hypot
+    from xslope import search
+    from xslope.slice import generate_slices
+
+    data = equivalent_profile()
+    (x0, y0), (x1, y1) = data["ground_surface_m"][:2]
+    dx, dy = x1 - x0, y1 - y0
+    length = hypot(dx, dy)
+    radius = length / 2 + abs(dy) * 0.001
+    data["circles"] = [{"x_m": (x0 + x1 - dy) / 2,
+                        "y_m": (y0 + y1 + dx) / 2, "radius_m": radius}]
+    model = build_slope_model(data, tmp_path)
+    success, generated = generate_slices(model, circle=model["circles"][0], num_slices=20)
+    assert success
+    assert search._too_thin(generated[0], abs(dy), 0.05)
+    real_filter = search._too_thin
+    observed = []
+
+    def inspect_filter(slices, height, fraction):
+        observed.append((fraction, real_filter(slices, height, 0.05)))
+        return real_filter(slices, height, fraction)
+
+    monkeypatch.setattr(search, "_too_thin", inspect_filter)
+    assert search.MIN_THICKNESS_FRAC == 0.05
+    # Exercise the real pinned solver, including its filter, without a sweep.
+    cache, _, _, _ = search.circular_search(model, "bishop", seed="circles", num_slices=20)
+    assert cache
+    assert observed
+    assert {fraction for fraction, _ in observed} == {0.0}
+    assert any(thin for _, thin in observed)
