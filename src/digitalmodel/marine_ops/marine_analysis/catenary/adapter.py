@@ -1,19 +1,19 @@
 """
 Backward compatibility adapter for legacy catenary API.
 
-Provides dict-based interface matching legacy catenaryMethods.py
-while using modern solvers internally.
+Provides the dict-based interface matching legacy catenaryMethods.py.
+Force calculations delegate to CatenaryCalculator in
+digitalmodel.subsea.catenary_riser.legacy.catenary_equation (E1-E2).
 
-This module bridges the gap between:
-  - Legacy: digitalmodel.subsea.catenary.catenaryMethods (dict-based)
-  - Modern: marine_engineering.catenary solvers (dataclass-based)
+Angle and force-component calculations retain the legacy formulas.
+The dict inputs and output keys remain compatible with the legacy API.
 
 Usage:
     from digitalmodel.marine_ops.marine_analysis.catenary.adapter import catenaryEquation
 
     # Force-based method (legacy API)
     result = catenaryEquation({
-        "F": 10000.0,      # Force [N]
+        "F": 100000.0,     # Force [N]
         "w": 500.0,        # Weight per length [N/m]
         "d": 100.0,        # Vertical distance [m]
         "X": None,
@@ -54,7 +54,7 @@ def catenaryEquation(data: Dict[str, Any]) -> Dict[str, Any]:
     Matches signature of digitalmodel.subsea.catenary.catenaryMethods.catenaryEquation()
 
     This function provides backward compatibility with the legacy dict-based API
-    while using modern solver implementations internally.
+    while delegating force calculations to the shared CatenaryCalculator.
 
     Input (dict):
         - F: Force [N] (optional, for force-based method)
@@ -76,7 +76,7 @@ def catenaryEquation(data: Dict[str, Any]) -> Dict[str, Any]:
 
     Examples:
         >>> # Force-based method
-        >>> result = catenaryEquation({"F": 10000, "w": 500, "d": 100, "X": None, "q": None})
+        >>> result = catenaryEquation({"F": 100000, "w": 500, "d": 100, "X": None, "q": None})
         >>> print(f"Arc length: {result['S']:.2f}m")
 
         >>> # Angle-based method

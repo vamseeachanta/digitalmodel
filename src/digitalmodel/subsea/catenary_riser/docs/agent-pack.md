@@ -160,7 +160,7 @@ Audit corrections (#2751); current function names supersede historical line entr
 | `report.py:233`: Missing code_checks becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L233-L236] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
 | `report.py:343`: Any report-builder import failure is swallowed [src/digitalmodel/subsea/catenary_riser/report.py:L343-L344] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
 | `report.py:354`: Fallback import failure or absent builder returns None [src/digitalmodel/subsea/catenary_riser/report.py:L354-L356] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py:598`: Any builder incompatibility silently selects fallback HTML [src/digitalmodel/subsea/catenary_riser/report.py:L598-L601] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:610` (`render_html`): Any builder incompatibility silently selects fallback HTML; the exception handler is at L635-L638 [src/digitalmodel/subsea/catenary_riser/report.py:L610-L638] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
 
 sweep: 88 found
 
@@ -219,7 +219,7 @@ Additional branch and placeholder sweep:
 | `legacy/orcaflexModel.py:1203` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1203-L1204] | Winch helper is an unimplemented pass returning None; no detection check exists; #2753. |
 | `legacy/orcaflexModel.py:1207` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1207-L1208] | Group helper is an unimplemented pass returning None; no detection check exists; #2753. |
 | `report.py:153` [src/digitalmodel/subsea/catenary_riser/report.py:L153-L155] | Unrecognized provenance mode falls back to uppercase input; no detection check exists; #2753. |
-| `report.py:436` [src/digitalmodel/subsea/catenary_riser/report.py:L436-L440] | Unrecognized status has empty styling; no detection check exists; #2753. |
+| `report.py:475` (`_status_span`) [src/digitalmodel/subsea/catenary_riser/report.py:L475-L481] | Unrecognized status has empty styling; no detection check exists; #2753. |
 | `legacy/orcaflexModel.py:1222` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1222-L1288] | Empty load lists or disabled analysis flags produce no model files; no detection check exists; #2753. |
 | `legacy/catenary_riser.py:32` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L32-L167] | Disabled riser analysis branches omit their computations; no detection check exists; #2753. |
 
@@ -1346,7 +1346,7 @@ The core interfaces, quarantine, independent static checks, legacy calculator an
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L1-L185].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/saveData.py:L1-L47].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/models.py:L1-L460].
-- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/report.py:L1-L788].
+- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/report.py:L1-L825].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L1-L286].
 
 The main-path documentation includes the package README, domain README, durable workflow registry, generic static coverage note and canonicalization handoff.

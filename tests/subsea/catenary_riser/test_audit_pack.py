@@ -1,5 +1,6 @@
 """Knowledge-pack audit: named package checks and explicit missing prerequisites."""
 import importlib
+import re
 from pathlib import Path
 
 import pytest
@@ -105,8 +106,6 @@ def test_cli_vertical_angle_and_convergence_output(tmp_path):
 
 
 def test_pack_line_anchors_resolve_at_head():
-    import re
-
     pack = (PACKAGE / "docs/agent-pack.md").read_text()
     anchors = re.findall(r"\[([^\]\s]+):L(\d+)(?:-L(\d+))?\]", pack)
     assert anchors
@@ -120,6 +119,34 @@ def test_pack_line_anchors_resolve_at_head():
         if not 1 <= int(first) <= int(last or first) <= count:
             invalid.append(f"{path}:L{first}-L{last or first} exceeds {count}")
     assert not invalid, "\n".join(invalid)
+
+
+@pytest.mark.parametrize("symptom,symbol", [
+    ("Unrecognized status has empty styling", "_status_span"),
+    ("Any builder incompatibility silently selects fallback HTML", "render_html"),
+])
+def test_report_behavior_anchors_start_at_named_function(symptom, symbol):
+    pack = (PACKAGE / "docs/agent-pack.md").read_text()
+    row = next(row for row in pack.splitlines() if symptom in row)
+    anchor = re.search(r"\[([^\]\s]+):L(\d+)-L(\d+)\]", row)
+    assert anchor is not None
+    path, first, last = anchor.groups()
+    lines = (ROOT / path).read_text().splitlines()
+    cited = lines[int(first) - 1:int(last)]
+    assert cited[0].startswith(f"def {symbol}("), cited[0]
+    assert f"`{symbol}`" in row
+    if symbol == "render_html":
+        assert "        except Exception:" in cited
+        assert "    return _render_fallback_html(d, sections, timestamp)" in cited
+
+
+def test_report_source_discovery_covers_whole_file():
+    pack = (PACKAGE / "docs/agent-pack.md").read_text()
+    row = next(row for row in pack.splitlines()
+               if row.startswith("- Package source/discovery:") and "/report.py:" in row)
+    last = re.search(r"report.py:L1-L(\d+)\]", row)
+    assert last is not None
+    assert int(last.group(1)) == len((PACKAGE / "report.py").read_text().splitlines())
 
 
 def test_simple_cli_help_defines_offset():
