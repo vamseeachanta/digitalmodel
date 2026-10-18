@@ -82,14 +82,19 @@ def inventory_files(record: dict) -> dict[str, bytes]:
     return {"inventory.json": encode(index), "models.json": models}
 
 
+def validator_source_digests() -> dict[str, str]:
+    """Identify the validator implementation used for records and cache keys."""
+    source = ROOT / "src/digitalmodel/solvers/orcaflex"
+    return {name: sha256((source / name).read_bytes()).hexdigest()
+            for name in ("yaml_validator.py", "yaml_timestep_validation.py")}
+
+
 def validation_cache_path(cache_dir: Path, item: dict) -> Path:
     """Bind resumable checks to input bytes and both validator source modules."""
     import yaml
 
-    source = ROOT / "src/digitalmodel/solvers/orcaflex"
     key = {"path": item["path"], "sha256": item["sha256"], "yaml_version": yaml.__version__,
-           "validators": {name: sha256((source / name).read_bytes()).hexdigest()
-                          for name in ("yaml_validator.py", "yaml_timestep_validation.py")}}
+           "validators": validator_source_digests()}
     return cache_dir / (sha256(encode(key)).hexdigest() + ".json")
 
 
@@ -144,6 +149,7 @@ def validate_models(inventory: dict, root: Path, cache_dir: Path | None = None) 
                        "warnings": sum(item["warnings"] for item in records),
                        "inputs": [{"path": name, **inputs[name]} for name in model["inputs"]]})
     return {"validator": "digitalmodel.solvers.orcaflex.yaml_validator.OrcaFlexYAMLValidator",
+            "validator_sources_sha256": validator_source_digests(),
             "native_solver_used": False, "models": models}
 
 

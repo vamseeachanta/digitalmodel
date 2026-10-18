@@ -202,14 +202,21 @@ def test_publication_omits_models_with_absent_inputs(tmp_path):
     assert "absent.dat" not in json.dumps(published)
 
 
-def test_reference_outside_library_is_not_silently_accepted(tmp_path):
+@pytest.mark.parametrize("levels", [5, 6], ids=["inside-repository", "outside-repository"])
+def test_reference_outside_library_is_not_silently_accepted(tmp_path, levels):
     module = implementation()
     root = tmp_path / "source"
     library = root / "docs/domains/orcaflex/mooring/buoy"
     library.mkdir(parents=True)
-    (library / "model.yml").write_text("BaseFile: ../../../../../external.dat\n")
+    reference = "../" * levels + "external.dat"
+    external = (library / reference).resolve()
+    assert external.is_relative_to(root.resolve()) == (levels == 5)
+    external.write_text("General: {}\n")
+    (library / "model.yml").write_text(f"BaseFile: {reference}\n")
     report = module.audit(root)
     assert report["summary"]["pass"] == 1
     result = module.publication_records(report, root)
     assert result["models"] == []
+    assert result["inputs"] == []
+    assert result["counts"]["excluded_models"] == 1
     assert result["counts"]["models_with_missing_inputs"] == 1

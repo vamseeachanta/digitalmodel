@@ -45,6 +45,10 @@ def test_validator_records_invalid_models_without_emitting_source_content(tmp_pa
     (library / "bad.yml").write_text("General:\n  ImplicitVariableMaxTimeStep: -1\nEnvironment: {}\n")
     inventory = module.build_inventory(tmp_path, "a" * 40, "2026-10-15", 123)
     results = module.validate_models(inventory, tmp_path)
+    assert results["validator_sources_sha256"] == {
+        name: sha256((ROOT / "src/digitalmodel/solvers/orcaflex" / name).read_bytes()).hexdigest()
+        for name in ("yaml_validator.py", "yaml_timestep_validation.py")
+    }
     assert len(results["models"]) == 2
     by_name = {Path(item["path"]).name: item for item in results["models"]}
     assert by_name["bad.yml"]["status"] == "fail"
@@ -155,6 +159,10 @@ def test_committed_records_cover_models_and_match_manifest_digests():
     assert all(set(model["inputs"]) <= inputs for model in models)
     assert inventory["counts"]["published_inputs"] + inventory["counts"]["excluded_inputs"] == inventory["counts"]["library_inputs"]
     message = "regenerate legacy-round-trip records"
+    assert validators["validator_sources_sha256"] == {
+        name: sha256((ROOT / "src/digitalmodel/solvers/orcaflex" / name).read_bytes()).hexdigest()
+        for name in ("yaml_validator.py", "yaml_timestep_validation.py")
+    }, message
     library_input_count = len(module.inspection.inventory(ROOT))
     assert library_input_count == inventory["counts"]["library_inputs"], message
     assert inventory["counts"]["published_models"] == len(models), message
