@@ -221,9 +221,9 @@ def test_checked_in_example(tmp_path):
 def test_explicit_roughness_is_required():
     physical = inputs()
     physical.pop("sediment_d90_m")
-    with pytest.raises(ValueError, match="sediment_d90_m must be supplied"):
+    with pytest.raises(TypeError, match="sediment_d90_m"):
         riprap_residual_scour_depth(**physical)
-    with pytest.raises(ValueError, match="sediment_d90_m must be supplied"):
+    with pytest.raises(TypeError, match="sediment_d90_m"):
         approach_bed_shear_stress(0.4, 0.3, 0.0003, 1000)
 
 
@@ -236,3 +236,13 @@ def test_roughness_and_shields_are_recorded(d90):
     assert result.approach_shear_pa == pytest.approx(
         approach_bed_shear_stress(0.4, 0.3, 0.0003, 1000, sediment_d90_m=d90)
     )
+
+
+@pytest.mark.parametrize("function", [approach_bed_shear_stress, riprap_residual_scour_depth])
+def test_d90_signature_requires_keyword(function):
+    import inspect
+
+    parameter = inspect.signature(function).parameters["sediment_d90_m"]
+    assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+    assert parameter.default is inspect.Parameter.empty
+    assert parameter.annotation in (float, "float")

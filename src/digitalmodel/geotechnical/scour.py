@@ -295,7 +295,7 @@ def approach_bed_shear_stress(
     sediment_d50_m: float,
     water_density_kg_m3: float,
     *,
-    sediment_d90_m: float | None = None,
+    sediment_d90_m: float,
 ) -> float:
     """Return approach-bed shear in Pa, rho*g*(V/C)**2.
 
@@ -414,7 +414,7 @@ def riprap_residual_scour_depth(
     water_density_kg_m3: float,
     kinematic_viscosity_m2_s: float,
     *,
-    sediment_d90_m: float | None = None,
+    sediment_d90_m: float,
 ) -> RiprapResidualScourResult:
     """Estimate residual scour inside riprap using Yang et al. (2026).
 
@@ -423,7 +423,8 @@ def riprap_residual_scour_depth(
     SI inputs; d90 is required explicitly because no d90/d50 ratio is sourced.
     Densities and viscosity must be supplied for the actual fluid and
     grains. K = 1 + 3.17*(dr/d50)**0.35*(D/h)**(-0.02), tau_max = K*tau_a,
-    tau' = (tau_max-tau_c)/tau_c, with riprap theta_c = 0.045.
+    tau' = (tau_max-tau_c)/tau_c, with theta_c = 0.045
+    (unverified screening assumption).
 
     Scope: steady current, an intact 10*dr layer extending over diameter 5*D,
     lab-scale 24-hour tests (equilibrium not established). A screening and
