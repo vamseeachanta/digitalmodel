@@ -467,6 +467,8 @@ water density, both grain densities and viscosity are explicit. The optional
 `scour.riprap` workflow block writes the intermediate values to the summary.
 `riprap_scour_from_dimensionless` exposes the second stage separately for checking
 printed dimensionless tables.
+Both physical-input functions require the keyword argument `sediment_d90_m`;
+theta_c = 0.045 remains an unverified screening assumption.
 
 Reference: Yang X., Qin Y., Yang S., Zhang M., Yu G. (2026),
 “A semi-empirical prediction model for scour depth around riprap-protected
