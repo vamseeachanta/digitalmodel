@@ -41,6 +41,7 @@ def test_geometry_inverse_and_exhaustion(riser):
     with pytest.raises(ValueError, match="available"):
         analyzer.analyze_riser(riser, horizontal_offset=10000)
     too_long = analyzer.analyze_riser(riser, top_tension=5e6)
+    assert too_long.top_tension == pytest.approx(5e6, abs=1e-6)
     assert not too_long.converged
 
 
@@ -107,6 +108,7 @@ def test_fatigue_factor_is_a_cited_input():
     assert replace(r, design_fatigue_factor=3).status == "FAIL"  # 1.5
     assert replace(r, design_fatigue_factor=float("nan")).status == "N/A"
     assert replace(r, design_life_years=0).status == "N/A"
+    assert replace(r, design_fatigue_factor_basis=None).status == "N/A"
     for rendered in (render_html(RiserReportData("generic", "generic", "SCR", 1000, fatigue_results=[r])),
                      render_markdown(RiserReportData("generic", "generic", "SCR", 1000, fatigue_results=[r]))):
         assert "DFF" in rendered

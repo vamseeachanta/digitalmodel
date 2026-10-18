@@ -140,6 +140,7 @@ class FatigueResult:
                 or self.design_life_years is None
                 or not math.isfinite(self.design_life_years) or self.design_life_years <= 0
                 or factor is None or not math.isfinite(factor) or factor < 1
+                or not isinstance(self.design_fatigue_factor_basis, str)
                 or not self.design_fatigue_factor_basis.strip()):
             return "N/A"
         # DNVGL-RP-C203 (April 2016) §2.2, eq. (2.2.1): D <= 1/DFF.
@@ -272,9 +273,10 @@ def sample_riser_report_data() -> RiserReportData:
             "The 12-inch water-injection steel catenary riser was screened for "
             "strength and fatigue in 1500 m water depth. The governing strength "
             "utilisation of 0.82 occurs at the hang-off, and the minimum fatigue "
-            "life of 41 years at the touchdown point exceeds the 25-year design "
-            "life with a design fatigue factor of 1.6. The configuration is "
-            "feasible at screening level and is recommended for certified analysis."
+            "life of 41 years at the touchdown point is below the 50-year required "
+            "life for the illustrative design fatigue factor of 2.0 and 25-year "
+            "design life (basis E5). Fatigue fails this illustrative requirement; "
+            "further analysis is required before design use."
         ),
         inputs={
             "Outer diameter": "12.75 in (323.9 mm)",
@@ -311,9 +313,9 @@ def sample_riser_report_data() -> RiserReportData:
         ],
         fatigue_results=[
             FatigueResult("Hang-off", 0.0, 1.0 / 120.0, 25.0, "DNV-RP-C203 F1", 1.15, 2.0,
-                          "Illustrative input only; engineering-basis.md E5"),
+                          "Illustrative DFF=2 input; DNVGL-RP-C203:2016 §2.2 eq (2.2.1); basis E5"),
             FatigueResult("Touchdown point", 1610.0, 1.0 / 41.0, 25.0, "DNV-RP-C203 F3", 1.30, 2.0,
-                          "Illustrative input only; engineering-basis.md E5"),
+                          "Illustrative DFF=2 input; DNVGL-RP-C203:2016 §2.2 eq (2.2.1); basis E5"),
         ],
         code_checks=[
             CodeCheck("Combined loading (LRFD)", "DNV-OS-F201:2010",
@@ -330,15 +332,15 @@ def sample_riser_report_data() -> RiserReportData:
             "by the F3 weld detail and seabed interaction.",
         ],
         conclusions=[
-            "All screened code checks pass with margin; no check exceeds 0.82 of allowable.",
-            "The configuration is feasible at screening level (atlas).",
+            "All screened strength checks pass; no strength check exceeds 0.82 of allowable.",
+            "Fatigue FAIL: 41-year life is below the illustrative 50-year requirement (basis E5).",
             "Certified custom analysis with vessel-specific RAOs is recommended "
             "before the deliverable is issued for design.",
         ],
         provenance=Provenance(
             workflow="riser-strength-fatigue-screening",
             workflow_version="0.3.0",
-            standard_revision="DNV-OS-F201:2010 / DNV-RP-C203:2021",
+            standard_revision="DNV-OS-F201:2010 / DNVGL-RP-C203:2016 §2.2 eq (2.2.1)",
             mode="atlas",
             run_id="screen-0001",
             generated_utc="",  # filled at render time if blank

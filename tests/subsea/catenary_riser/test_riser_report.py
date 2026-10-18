@@ -38,7 +38,9 @@ def test_sample_data_shape():
     # Roll-ups computed from the sample numbers.
     assert d.max_strength_utilisation == pytest.approx(0.82)
     assert d.min_fatigue_life_years == pytest.approx(41.0)
-    assert d.overall_status in {"PASS", "MARGINAL", "FAIL"}
+    assert d.overall_status == "FAIL"
+    assert "50-year" in d.executive_summary
+    assert "Fatigue FAIL" in " ".join(d.conclusions)
 
 
 def test_status_classification():
