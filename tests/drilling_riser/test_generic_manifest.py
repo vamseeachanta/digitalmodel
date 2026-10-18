@@ -4,12 +4,42 @@
 """Offline field contract from the pinned public runner specification."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / 'docs/domains/orcaflex/library/campaigns/generic-drilling-riser'
+SPEC_PATH = 'docs/domains/orcaflex/library/templates/drilling_riser/spec.yml'
+
+
+def pinned_source_sha256(root: Path, ref: str) -> str:
+    """Issue 2732: resolve a commit and hash its raw spec blob, never checkout text.
+
+    Git cat-file documentation, <type> <object> form, specifies raw object
+    contents; <ref>^{commit} requires a commit (gitrevisions, ^{<type>}).
+    https://git-scm.com/docs/git-cat-file
+    https://git-scm.com/docs/gitrevisions
+    """
+    if not (root / '.git').exists():
+        raise unittest.SkipTest('Git metadata unavailable; pinned blob cannot be checked')
+    env = {key: value for key, value in os.environ.items()
+           if key not in {'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR'}}
+
+    def git(*args):
+        try:
+            return subprocess.run(['git', '-C', str(root), *args], env=env,
+                                  capture_output=True, check=False)
+        except FileNotFoundError as exc:
+            raise unittest.SkipTest('Git metadata unavailable; git executable missing') from exc
+
+    commit = git('cat-file', '-e', f'{ref}^{{commit}}')
+    assert commit.returncode == 0, f'Pinned ref does not resolve to a commit: {ref}'
+    blob = git('cat-file', 'blob', f'{ref}:{SPEC_PATH}')
+    assert blob.returncode == 0, f'Pinned specification blob unavailable at commit {ref}'
+    return hashlib.sha256(blob.stdout).hexdigest()
 
 
 class ManifestTests(unittest.TestCase):
@@ -27,9 +57,9 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(data['max_hours'], 3 * data['expected_hours'])
         for name in data['env']:
             self.assertIsNone(re.search('TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|KEY', name, re.I))
-        spec = ROOT / 'docs/domains/orcaflex/library/templates/drilling_riser/spec.yml'
-        self.assertEqual(data['env']['SOURCE_SHA256'], hashlib.sha256(
-            spec.read_text(encoding='utf-8').encode('utf-8')).hexdigest())
+        self.assertEqual(data['env']['SOURCE_SHA256'],
+                         pinned_source_sha256(ROOT, data['ref']),
+                         'SOURCE_SHA256 differs from the pinned specification blob')
 
 
 if __name__ == '__main__':
