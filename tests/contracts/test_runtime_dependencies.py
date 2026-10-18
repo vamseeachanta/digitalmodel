@@ -134,8 +134,8 @@ KNOWN_UNDECLARED: frozenset[str] = frozenset({
     "logs", "pilot-dashboard", "plotraodirection", "results", "scrapers",
     "services", "xlsx-to-dataframe",
     # (b) real packages, legacy corners only
-    "bokeh", "exchangelib", "flask-cors", "flask-flatpages", "flask-httpauth",
-    "finvizfinance", "flask-restful", "flask-wtf", "markitdown", "oyaml",
+    "bokeh", "exchangelib", "flask-cors", "flask-flatpages",
+    "finvizfinance", "flask-wtf", "markitdown", "oyaml",
     "pandas-datareader",
     "pdfplumber", "pygame", "sec-edgar-downloader", "webdriver-manager",
     "wtforms", "yahoo-fin", "yfinance",
@@ -277,6 +277,11 @@ def test_known_undeclared_list_has_no_stale_entries():
         f"KNOWN_UNDECLARED entries that are no longer imported ({len(stale)}): "
         f"{stale}\nDelete them from the list — it is a shrinking ratchet (#1632)."
     )
+
+
+def test_known_undeclared_list_excludes_declared_dependencies():
+    """Declaring a dependency also retires its undeclared-debt exemption."""
+    assert not KNOWN_UNDECLARED.intersection(declared_runtime())
 
 
 def test_dashboard_stack_is_not_a_runtime_dependency():

@@ -463,9 +463,15 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         shedding = pd.read_csv(result_dir / "input_vs_frequencies.csv")
         safety = pd.read_csv(result_dir / "input_safety_factors.csv")
 
-        assert natural.loc[0, "mode 1"] == pytest.approx(2.623697)
-        assert shedding.loc[0, "shredding_frequency_inline"] == pytest.approx(0.564706)
-        assert safety.loc[0, "safety_factor_inline"] == pytest.approx(4.646130)
+        # Hand calculation: E=30e6 psi, I=361.5439319 in^4, L=720 in,
+        # w=5.589872732 lb/in, w_a=.03721*pi*12.75^2/4=4.750834711 lb/in.
+        # C205 (2010) effective mass / App. D; f=pi/(2 L^2)*sqrt(EIg/(w+w_a)).
+        assert natural.loc[0, "mode 1"] == pytest.approx(1.9290322268, abs=1e-9)
+        assert shedding.loc[0, "shredding_frequency_inline"] == pytest.approx(1.1294117647, abs=1e-9)
+        assert shedding.loc[0, "shredding_frequency_crossflow"] == pytest.approx(.56470588235, abs=1e-9)
+        assert pd.isna(shedding.loc[0, "KC"])
+        assert safety.loc[0, "safety_factor_inline"] == pytest.approx(1.70799728415, abs=1e-9)
+        assert safety.loc[0, "safety_factor_crossflow"] == pytest.approx(3.4159945683, abs=1e-9)
     elif workflow["id"] == "viv-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(

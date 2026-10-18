@@ -16,6 +16,8 @@ from .models import (
     STROUHAL_NUMBERS
 )
 
+from .validation import require_positive, require_nonnegative
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,12 +56,12 @@ class VortexSheddingAnalyzer:
         Returns:
             Shedding frequency (Hz)
         """
-        if diameter <= 0:
-            raise ValueError("Diameter must be positive")
-        if velocity < 0:
-            raise ValueError("Velocity cannot be negative")
+        require_positive("Diameter", diameter)
+        require_nonnegative("Velocity", velocity)
+        require_positive("Strouhal number", strouhal_number)
 
         f_s = strouhal_number * velocity / diameter
+        require_nonnegative("Shedding frequency", f_s)
         return f_s
 
     def reynolds_number(
@@ -79,6 +81,9 @@ class VortexSheddingAnalyzer:
         Returns:
             Reynolds number (dimensionless)
         """
+        require_positive("Diameter", diameter)
+        require_nonnegative("Velocity", velocity)
+        require_positive("Kinematic viscosity", self.fluid.kinematic_viscosity)
         Re = velocity * diameter / self.fluid.kinematic_viscosity
         return Re
 

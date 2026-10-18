@@ -168,9 +168,12 @@ def test_retained_case_method_and_report_limits():
         if mesh != "fine":
             assert any("OPENFOAM=2312" in line for line in evidence["solver_version_banner"])
     page = (ROOT / "docs/domains/openfoam/calm-water-resistance-study.html").read_text()
-    for text in ("kcs_t2005_case_1_1_fixed_bare", "SHIP_RESISTANCE_CT_TOLERANCE",
-                 "offsetting components", "read from the retained case", "9.80665"):
+    for text in ("read from the retained case", "9.80665",
+                 "study (indicative)", "No numerical experimental comparison is emitted",
+                 "archived native logs are not independently opened", "Grid uncertainty is not established"):
         assert text in page
+    assert "medium Ct differs from the fixture" not in page
+
 
 
 def test_license_comparison_rejects_source_changes(tmp_path):

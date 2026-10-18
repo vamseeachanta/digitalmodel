@@ -45,6 +45,11 @@ class AqwaLISFiles:
         for input_file in input_files:
             filename_pattern = Path(input_file).stem
 
+            if cfg_lis.get("category") == "displacement_raos":
+                df = self._get_displacement_raos(input_file, structure=cfg_lis.get("structure"))
+                df["input_file"] = filename_pattern
+                df_master = pd.concat([df_master, df], ignore_index=True)
+                continue
             try:
                 cfg_file = {"io": input_file, "basename": os.path.basename(input_file)}
                 cfg_lis_search_cfg = cfg_lis["search_cfg"]["start"]
@@ -90,9 +95,29 @@ class AqwaLISFiles:
                 df["input_file"] = Path(input_file).stem
                 df_master = pd.concat([df_master, df], axis=0)
             except Exception as e:
-                logging.error(f"Error in processing {input_file}: {e}")
+                raise ValueError(f"LIS extraction failed for {Path(input_file).name}: {e}") from e
 
+        if df_master.empty:
+            raise ValueError("LIS extraction produced no rows")
         return df_master, filename_pattern
+
+    def _get_displacement_raos(
+        self, input_file: str, structure: int | None = None,
+    ) -> pd.DataFrame:
+        from digitalmodel.marine_ops.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
+
+        payload = AQWAEnhancedParser().parse_lis_file(input_file, structure=structure)
+        rows = []
+        for i, frequency in enumerate(payload["frequencies"]):
+            for j, heading in enumerate(payload["headings"]):
+                row = {"frequency": frequency, "direction": heading}
+                for dof, data in payload["raos"].items():
+                    row[dof] = data["amplitude"][i, j]
+                    row[dof + "_phase"] = data["phase"][i, j]
+                rows.append(row)
+        if not rows:
+            raise ValueError("Displacement RAO extraction produced no rows")
+        return pd.DataFrame(rows)
 
     def get_refine_data_using_cfg(self, data, cfg_refine, cfg_lis_search_cfg):
         refine_data_line_numbers = rd.get_array_rows_containing_keywords(
@@ -105,6 +130,8 @@ class AqwaLISFiles:
             )
             df_data = pd.concat([df_data, df_refine], axis=0)
 
+        if df_data.empty:
+            raise ValueError("Configured LIS extraction produced no rows")
         return df_data
 
     def get_data_for_refine_data_line_number(
@@ -130,16 +157,13 @@ class AqwaLISFiles:
                     data_row = data_row[0:2] + [df.iloc[-1, 2]] + data_row[2:]
                     df.loc[len(df)] = [float(item) for item in data_row]
             elif len(data_row) == len(columns) - 2:
-                if (
-                    "P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D"
-                    in cfg_lis_search_cfg["key_words"]
-                ):
-                    try:
-                        float(data_row[0])
-                        data_row = [df.iloc[-1, 0]] + [df.iloc[-1, 1]] + data_row
-                        df.loc[len(df)] = [float(item) for item in data_row]
-                    except ValueError:
-                        pass
+                is_rao = any("R.A.O." in keyword or "R . A . O ." in keyword
+                             for keyword in cfg_lis_search_cfg["key_words"])
+                if is_rao:
+                    if df.empty:
+                        raise ValueError("RAO continuation has no period/frequency row")
+                    data_row = list(df.iloc[-1, :2]) + [float(item) for item in data_row]
+                    df.loc[len(df)] = data_row
             elif len(data_row) == 0:
                 if (
                     "P O S I T I O N   R . A . O . S   A T   U S E R - R E Q U E S T E D"

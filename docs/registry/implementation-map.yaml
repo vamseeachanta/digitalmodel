@@ -12719,30 +12719,6 @@ families:
     file_sha256: f95365b6740a060de5685ad470e6a7de68b7abe02fef3690f644996ddea4b38a
     defects:
     - {issue: 2107, affected: not_checked, evidence: 'tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L18-L347'}
-  - path: &a2b28b1cae6 tests/hydrodynamics/aqwa/test_viscous_damping_determination.py
-    symbol: _FakeLISParser.parse_lis_file
-    line: 49
-    kind: reader
-    what: *a7503bcdb06
-    signals: *a721041d87f
-    relation: test_helper
-    module: tests
-    file_sha256: 50a0a6a165b3c09ebae133993528f7ddacd229c2d16e7a8efd48a885c19519f7
-    defects:
-    - {issue: 2107, affected: not_checked, evidence: 'tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L49-L63'}
-    body_sha256: aa681eb96722495195e17dc9f24f3edb62ac66662f64deb8fc89b47d02298212
-  - path: *a2b28b1cae6
-    symbol: _run_case
-    line: 99
-    kind: reader
-    what: *a7503bcdb06
-    signals: *aa78a02b006
-    relation: test_helper
-    module: tests
-    file_sha256: 50a0a6a165b3c09ebae133993528f7ddacd229c2d16e7a8efd48a885c19519f7
-    defects:
-    - {issue: 2107, affected: not_checked, evidence: 'tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L99-L129'}
-    body_sha256: 33383af404ee6b3db881f7701f29f395467a7aed92e94f4fe332a39f9a979158
   - path: &adec05e854f tests/hydrodynamics/bemrosetta/conftest.py
     symbol: sample_aqwa_file
     line: 20
@@ -15550,18 +15526,18 @@ families:
     body_sha256: 6b0e14ce9297e0888146ba625023b51daff41bfce722237472b309374827b204
   - path: &a46141f3b4e scripts/capabilities/build_onepagers.py
     symbol:
-    line: 36
+    line: 3
     kind: script
-    what: &a7ae0a82610 Evaluates wind or current loading inputs and forces.
+    what: Projects authored capability metadata into deterministic JSON index cards.
     signals: *ac7e985efc8
     relation: independent
     module: scripts
-    file_sha256: 8d849561bfc979bf71cf5ad50666fef7a0a8a9840690ab2f2b767146971a985d
+    file_sha256: c57ae6050c92ec1574651c90e583af76c0cf1d9a76c4c0fd54a6a12cd32399e2
   - path: &ae8921bb332 scripts/python/digitalmodel/legacy/extract_ocimf_database.py
     symbol:
     line: 25
     kind: script
-    what: *a7ae0a82610
+    what: &a7ae0a82610 Evaluates wind or current loading inputs and forces.
     signals: *ac7e985efc8
     relation: independent
     module: scripts
@@ -17145,13 +17121,13 @@ families:
     body_sha256: a507d33cf30bdbd6dff0f8abcd66d26177bddf5d6bf2ac451fb656ea0e53279d
   - path: *a46141f3b4e
     symbol:
-    line: 36
+    line: 3
     kind: script
-    what: *a0b83b0ff16
+    what: Projects authored capability metadata into deterministic JSON index cards.
     signals: *a3c15e3ae40
     relation: independent
     module: scripts
-    file_sha256: 8d849561bfc979bf71cf5ad50666fef7a0a8a9840690ab2f2b767146971a985d
+    file_sha256: c57ae6050c92ec1574651c90e583af76c0cf1d9a76c4c0fd54a6a12cd32399e2
   - path: *a63ad6eec82
     symbol:
     line: 3
@@ -33171,10 +33147,6 @@ rejected_candidates:
   line: 21
   reason: *a0957e52299
   families: [*ada1ca9f368, *a453a1f09d6]
-- path: tests/hydrodynamics/aqwa/test_aqwa_anl_raos.py
-  symbol:
-  families: [*a4a6997f7bf]
-  reason: *aba6a311013
 - path: &a472208ab0e tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py
   symbol: TestAQWACLIBasic
   line: 25
@@ -39046,13 +39018,6 @@ rejected_candidates:
 - path: scripts/capabilities/build_installation_heading_explorer.py
   symbol: validate_data
   line: 45
-  families:
-  - irregular-frequency-treatment
-  disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: scripts/capabilities/build_onepagers.py
-  symbol: _validate_brand_css
-  line: 718
   families:
   - irregular-frequency-treatment
   disposition: needs_review
