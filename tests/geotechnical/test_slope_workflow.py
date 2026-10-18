@@ -14,10 +14,10 @@ def test_workflow_writes_versioned_json(tmp_path, monkeypatch):
     from digitalmodel.geotechnical import slope_stability
 
     result = SlopeResult("1.0.3", "si", 20, {
-        "bishop": MethodResult(1.2, True, None, search_mode="grid",
+        "bishop": MethodResult(1.2, True, None, search_mode="grid_seeds_isolated",
                                search_factors_of_safety={"grid": 1.3, "user_circles": 1.2},
                                grid_thin_surface_filter="coarse_only_5_percent"),
-        "spencer": MethodResult(1.3, False, None, search_mode="grid"),
+        "spencer": MethodResult(1.3, False, None, search_mode="grid_seeds_isolated"),
     })
     calls = []
 
@@ -32,7 +32,7 @@ def test_workflow_writes_versioned_json(tmp_path, monkeypatch):
     summary = json.loads((tmp_path / "slope_stability_summary.json").read_text())
     assert summary["result"]["xslope_version"] == "1.0.3"
     bishop = summary["result"]["methods"]["bishop"]
-    assert bishop["search_mode"] == "grid"
+    assert bishop["search_mode"] == "grid_seeds_isolated"
     assert bishop["search_factors_of_safety"] == {"grid": 1.3, "user_circles": 1.2}
     assert bishop["grid_thin_surface_filter"] == "coarse_only_5_percent"
     assert summary["result"]["methods"]["spencer"]["search_converged"] is False

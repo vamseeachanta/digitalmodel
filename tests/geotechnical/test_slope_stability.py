@@ -119,7 +119,7 @@ def test_both_circular_searches(tmp_path):
     result = analyze_model(model, num_slices=20)
     assert set(result.methods) == {"bishop", "spencer"}
     for method in result.methods.values():
-        assert method.search_mode == "grid"
+        assert method.search_mode == "grid_seeds_isolated"
         assert method.factor_of_safety > 0
         assert method.search_converged is True
         assert method.critical_circle is not None
@@ -173,7 +173,7 @@ def test_profile_seepage_then_both_methods(tmp_path, monkeypatch):
     assert result.seepage.converged
     assert set(result.methods) == {"bishop", "spencer"}
     for method in result.methods.values():
-        assert method.search_mode == "grid"
+        assert method.search_mode == "grid_seeds_isolated"
         assert method.factor_of_safety > 0
         assert method.search_converged is True
         assert method.critical_circle is not None
@@ -281,7 +281,7 @@ def test_grid_search_resolves_lower_foundation_family(tmp_path):
     assert result.factor_of_safety <= deep.factor_of_safety * 1.01
     assert result.critical_circle["Depth"] < -5
     assert result.search_converged is True
-    assert result.search_mode == "grid"
+    assert result.search_mode == "grid_seeds_isolated"
 
 
 def test_search_mode_is_required():
@@ -316,6 +316,7 @@ def test_search_isolates_seeds_and_preserves_thin_user_surface(tmp_path, monkeyp
 
     monkeypatch.setattr(search, "circular_search", refine)
     result = analyze_model(model, methods=("bishop",)).methods["bishop"]
+    assert result.search_mode == "grid_seeds_isolated"
     assert result.factor_of_safety == 0.8
     assert result.search_factors_of_safety == {"grid": 0.9, "user_circles": 0.8}
     assert result.grid_thin_surface_filter == "coarse_only_5_percent"
@@ -364,3 +365,25 @@ def test_real_refinement_does_not_filter_thin_user_trials(tmp_path, monkeypatch)
     assert observed
     assert {fraction for fraction, _ in observed} == {0.0}
     assert any(thin for _, thin in observed)
+
+
+@pytest.mark.parametrize("with_user_circle", [False, True])
+def test_search_preflight_precedes_empty_sweep(tmp_path, monkeypatch, with_user_circle):
+    """A missing stability input must retain its preflight diagnostic."""
+    from xslope import search
+    from xslope.preflight import PreflightError
+
+    model = build_slope_model(equivalent_profile(), tmp_path)
+    model["k_seismic"] = None
+    if not with_user_circle:
+        model["circles"] = []
+    sweeps = []
+
+    def empty_sweep(*args, **kwargs):
+        sweeps.append(True)
+        return []
+
+    monkeypatch.setattr(search, "_grid_seed_circles", empty_sweep)
+    with pytest.raises(PreflightError, match="main.seismic_missing"):
+        analyze_model(model, methods=("bishop",))
+    assert sweeps == []

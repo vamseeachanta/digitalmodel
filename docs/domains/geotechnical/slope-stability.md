@@ -9,9 +9,10 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | Revision | Date | Change and purpose |
 | --- | --- | --- |
 | 0 | 2026-10-14 | Add the SI profile interface and public benchmark reproductions for slope screening. |
-| 2 | 2026-10-18 | Require an explicit positive-gradient datum; use and report multi-seed grid search. |
 | 1 | 2026-10-15 | Add the Bishop search benchmark, seepage handoff and example tests, and hosted solver execution; clarify validation limits. |
+| 2 | 2026-10-18 | Require an explicit positive-gradient datum; use and report multi-seed grid search. |
 | 3 | 2026-10-18 | Isolate seed refinements to prevent cache sharing; preserve thin user-circle mechanisms; disclose group minima, the coarse filter and per-search unsolved counts; require explicit search mode in result records. |
+| 4 | 2026-10-18 | Distinguish isolated search metadata; run preflight before the sweep to preserve input diagnostics; clarify thin grid-seeded mechanisms and search cost. |
 
 ## Basis and boundaries
 
@@ -44,8 +45,9 @@ pip install "xslope==1.0.3" "gmsh>=4.15" "numpy>=1.24.0,<2.0.0"
 ~~~
 
 Install and import were exercised on Linux x86-64 with Python 3.11 and 3.12.
-Windows x64 and Linux Arm are not tested; the adoption issue records no gmsh
-Linux aarch64 wheel. Python 3.13 is not established by this work. Linux gmsh
+Stability execution is also exercised on Linux Arm with Python 3.11; Gmsh
+installation there is unavailable because no compatible wheel exists.
+Windows x64 is not tested. Python 3.13 is not established by this work. Linux gmsh
 requires the system OpenGL libraries noted in the
 [xslope README](https://github.com/njones61/xslope/blob/main/README.md).
 
@@ -117,8 +119,12 @@ convergence and relative mass-balance error. No design report is generated.
 A failed seepage convergence stops calculation. A non-converged search is
 labelled not_converged; a converged search is screening_only. Geometry bounds
 and soil properties require engineering review. Each method searches independently.
-The adapter records search_mode="grid" for its combined search and
-"fixed_circle" for a direct evaluation. The search uses xslope 1.0.3
+The adapter records search_mode="grid_seeds_isolated" for its combined search and
+"fixed_circle" for a direct evaluation. This distinguishes the adapter from
+upstream `circular_search(seed="grid")`, which shares a refinement cache and
+applies its thin-surface filter during refinement. Preflight checks the model
+and method before the adapter starts its coarse sweep, so missing inputs retain
+their diagnostic instead of appearing as an empty search. The search uses xslope 1.0.3
 `_grid_seed_circles` to retain coarse tangent families, then calls
 `circular_search(seed="circles")` separately for every retained seed and every
 user circle. Each refinement has its own cache, including when two seeds share a
@@ -128,7 +134,11 @@ it can discard a family whose refined minimum would govern.
 
 The coarse sweep excludes surfaces thinner than 5% of the slope height
 (maximum minus minimum ground elevation in `_grid_seed_circles`). Refinement applies no thin-surface filter, preserving thin mechanisms
-from user circles. JSON records `grid_thin_surface_filter="coarse_only_5_percent"`
+from user circles. Grid-seed refinements can also converge to a surficial sliver
+on a cohesionless face after the coarse seed passes the filter. Such a surface
+is retained and can govern, unlike upstream grid mode. Assess whether that
+mechanism belongs in the calculation and check sensitivity to the search bounds
+and slice count. JSON records `grid_thin_surface_filter="coarse_only_5_percent"`
 and `search_factors_of_safety` with separate `grid` and `user_circles` minima;
 a null minimum means that group produced no solved surface. Unsolved counts
 include the sweep and all refinements, with their individual records retained.
@@ -141,6 +151,22 @@ workbook-loaded models reject other xslope versions. Direct workbook
 fixed-circle evaluation records the installed version without this guard.
 A rejected solver result in a nonempty seed cache stops the method rather than
 reporting another seed as if that rejection had not occurred.
+
+## Search cost
+
+A single paired timing of the README workbook's 40-slice Bishop search with one
+user circle took 6.3 s for the adapter (three grid seeds plus one user-circle
+refinement) and 5.9 s for one upstream `circular_search(seed="grid")` call:
+1.1 times the upstream duration (7.6 % longer). Both reached the pinned README
+minimum. Timing excludes workbook loading and uses xslope 1.0.3, Python 3.11,
+NumPy 1.26.4 and Linux Arm with one process and one numerical thread. This is
+one observation, without repeated samples or an uncertainty estimate.
+
+The adapter performs one sweep and up to four grid-seed refinements plus one
+refinement per user circle, for each requested method. A ten-circle profile can
+therefore launch up to fourteen independent refinements per method. Geometry,
+method, trial failures and convergence affect cost; the measured ratio for one
+circle does not predict the ten-circle case or Spencer duration.
 
 ## Benchmarks and limits
 

@@ -160,9 +160,12 @@ def _search_surfaces(model: dict[str, Any], method: str, slices: int):
         raise ValueError("adapter requires benchmarked xslope version 1.0.3")
     from xslope.search import (
         UnsolvedTrials, _grid_seed_circles, _with_water_loads_once, circular_search,
-        file_search_window,
+        file_search_window, preflight,
     )
 
+    preflight(model, "lem", {
+        "surface": "circular", "search": True, "method": method,
+    }).raise_for_errors()
     prepared = _with_water_loads_once(model)
     window = file_search_window(prepared)
     tally = UnsolvedTrials(method)
@@ -220,7 +223,7 @@ def _solve_method(model: dict[str, Any], method: str, search: bool, slices: int)
         raise RuntimeError(f"{method} did not produce a solution")
     fs = _number(float(solved["FS"]), "factor_of_safety", 0)
     return MethodResult(fs, None if converged is None else bool(converged), circle, unsolved,
-                        search_mode="grid" if search else "fixed_circle",
+                        search_mode="grid_seeds_isolated" if search else "fixed_circle",
                         search_factors_of_safety=minima,
                         grid_thin_surface_filter="coarse_only_5_percent" if search else None)
 
