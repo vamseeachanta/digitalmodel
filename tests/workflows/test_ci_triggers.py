@@ -146,6 +146,21 @@ def test_full_sweep_keeps_nightly_schedule() -> None:
     assert "workflow_dispatch" in triggers
 
 
+@pytest.mark.parametrize("filename,job_id", (
+    ("quality-gates-by-domain.yml", "domain-tests"),
+    ("full-matrix-sweep.yml", "sweep-tests"),
+    ("publish.yml", "publish"),
+))
+def test_subsea_checkout_includes_pinned_manifest_history(filename: str, job_id: str) -> None:
+    """Every execution of the manifest contract needs older commit objects."""
+    steps = load_workflow(filename)["jobs"][job_id]["steps"]
+    checkout = next(step for step in steps if step.get("uses", "").startswith("actions/checkout@"))
+    depth = checkout.get("with", {}).get("fetch-depth", 1)
+    if isinstance(depth, str) and depth.startswith("${{"):
+        depth = evaluate_expression(depth[3:-2], {"matrix.domain": "subsea"})
+    assert int(depth) == 0, "Subsea must fetch history to verify the pinned manifest commit"
+
+
 @pytest.mark.parametrize("event", ("push", "schedule", "workflow_dispatch"))
 def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
     """Every sweep keeps its own group and cannot cancel another sweep."""
@@ -176,3 +191,14 @@ def test_full_sweep_bounds_each_shard() -> None:
     shard = load_workflow("full-matrix-sweep.yml")["jobs"]["sweep-tests"]
     assert shard["timeout-minutes"] == 40
     assert shard["strategy"]["fail-fast"] is False
+
+
+def test_manifest_history_requirement_matches_domain_mapping() -> None:
+    """Keep the manifest tests in the shard that fetches their pinned history."""
+    domains = (WORKFLOWS.parents[1] / "tests" / "DOMAINS.md").read_text(encoding="utf-8")
+    owners = [
+        row.split("|")[1].strip()
+        for row in domains.splitlines()
+        if "`tests/drilling_riser/`" in row
+    ]
+    assert owners == ["subsea"]

@@ -5,8 +5,8 @@
 | Module | subsea/viv_analysis |
 | Repository | digitalmodel |
 | Package | src/digitalmodel/subsea/viv_analysis |
-| Pack revision | 0, 2026-10-17 |
-| Code revision | 97dc074bad7e464d4b26ccd04bb83796ef4d0060 |
+| Pack revision | 1, 2026-10-18; [audit correction](https://github.com/vamseeachanta/digitalmodel/issues/2752) |
+| Code revision | Historical inventory: 97dc074bad7e464d4b26ccd04bb83796ef4d0060; corrected calculations and gates: revision 1, symbols below |
 | Analysis family | Engineering calculations (EC); AQG r0, Python calculations |
 | Quality role | Engineering calculations quality manager; deputy: engineering calculations deputy quality manager |
 | Status | DRAFT; independent review pending |
@@ -33,10 +33,10 @@ Inputs to the newer API use the following declarations; “unrestricted” means
 | Fluid density, viscosity, added-mass coefficient | kg/m³; m²/s; dimensionless | Built-in fluid defaults; unrestricted | [src/digitalmodel/subsea/viv_analysis/models.py:L95-L101] |
 | Profile depth, velocity | m positive downward from surface; m/s | Uniform, power-law, linear or custom; reference depth and gradient default to zero | [src/digitalmodel/subsea/viv_analysis/models.py:L104-L150] |
 | Mode / number of modes | count | Individual mode 1–6; list methods do not prevalidate count | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L59-L92] [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L220-L246] |
-| Shedding diameter, velocity, Strouhal input | m; m/s; dimensionless | Diameter positive, velocity nonnegative in shedding function; Strouhal default in code | [src/digitalmodel/subsea/viv_analysis/vortex_shedding.py:L38-L63] |
-| Screening natural frequency, diameter, velocity | Hz; m; m/s | Frequency and diameter positive; velocity not checked | [src/digitalmodel/subsea/viv_analysis/screening.py:L51-L76] |
+| Shedding diameter, velocity, Strouhal input | m; m/s; dimensionless | Finite diameter and Strouhal positive; finite velocity nonnegative; zero flow retained | [src/digitalmodel/subsea/viv_analysis/vortex_shedding.py:L38-L63] |
+| Screening natural frequency, diameter, velocity | Hz; m; m/s | Frequency and diameter finite and positive; velocity finite and nonnegative | [src/digitalmodel/subsea/viv_analysis/screening.py:L51-L76] |
 | Amplitude, stress range, fatigue frequency, duration | Ambiguous m or A/D at stress function; MPa; Hz; s (wrapper accepts h) | Amplitude interpreted by magnitude; defaults and curve selection in code | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L50-L106] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L108-L165] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L247] |
-| Legacy tubular configuration | Span supplied in ft and multiplied to inches; section properties supplied upstream; current conversion mixes conventions | Required dictionary keys; plotting enabled unless disabled | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L64-L96] [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L271-L312] |
+| Legacy tubular configuration | Span ft; section geometry in; E psi; weight lb/in; external density lb/in³; current in/s by default, explicit m/s supported; nominal OD used hydrodynamically | Required dictionary keys; plotting enabled unless disabled | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L64-L96] [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L271-L312] |
 | Legacy modal/current/wave files | Modal header integer counts, whitespace columns; spreadsheet data routed through external reader | Required column/key names; no schema validation in these readers | [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L9-L109] [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L234-L243] [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L453-L462] |
 
 Outputs are dataclasses for frequency (Hz, s, rad/s, m and mass ratio), shedding (Hz and Reynolds number), screening (dimensionless velocity, margin/status and factor), and fatigue (MPa, Hz, s, cycles, damage and years). [src/digitalmodel/subsea/viv_analysis/models.py:L153-L212]
@@ -68,77 +68,76 @@ The following is an implementation description, not a standards-compliance attes
 | VIVScreening.screen_with_current_profile / critical_current_velocity | Sampled maximum or RMS current delegated into screening; target reduced velocity multiplied by frequency and diameter | [src/digitalmodel/subsea/viv_analysis/screening.py:L278-L339] |
 | VIVFatigueCalculator.calculate_stress_range | First-mode curvature, outer-fibre bending range and Pa-to-MPa conversion; amplitude units guessed | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L50-L106] |
 | VIVFatigueCalculator.calculate_damage / calculate_fatigue_life | Logarithmic S-N evaluation, frequency-duration cycle count and Miner ratio; life to target damage converted from seconds to years | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L108-L207] |
-| VIVFatigueCalculator.analyze_viv_fatigue / cumulative_damage | Wrapper applies thickness correction only to damage; sum of zipped condition lists | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L300] |
+| VIVFatigueCalculator.analyze_viv_fatigue / cumulative_damage | Wrapper applies identical curve-specific thickness correction to damage and life; sum of zipped condition lists | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L300] |
 | VIVTubularMembers.get_simply_supported_modes / get_clamped_modes / get_free_free_modes | Separate imperial beam-frequency implementations; free-free loop repeats its first-mode expression for every mode | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L134-L269] |
-| VIVTubularMembers.get_vs_frequencies / get_safety_factors | Separate shedding, Reynolds and KC expressions and natural/shedding frequency ratios | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L271-L364] |
+| VIVTubularMembers.get_vs_frequencies / get_safety_factors | Cross-flow St U/D, in-line 2 St U/D, Reynolds ratio and natural/excitation ratios; added mass included; KC null for steady current | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L271-L364] |
 | VIVAnalysisComponents.modal_analysis | Header parsing, modal frequency conversion, optional strict node-window selection and per-mode maxima | [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L9-L109] |
 | VIVAnalysisComponents.plot_current_non_exceedance / plot_current_exceedance / plot_wave_exceedance | Sort probabilities and form cumulative columns; names/settings are interchanged for current plots | [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L245-L401] [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L501-L560] |
 
 | Standard named by code or documentation | Edition and locator recorded by repository; limits |
 |---|---|
-| DNV-RP-C205, Environmental Conditions and Environmental Loads | Documentation names 2019, Section 7, Vortex-induced vibrations; code names the standard without edition or exact clause; clause text not checked against the licensed copy. [docs/domains/viv/VIV_ANALYSIS_IMPLEMENTATION.md:L634-L637] [src/digitalmodel/subsea/viv_analysis/screening.py:L26-L32] |
+| DNV-RP-C205, Environmental Conditions and Environmental Loads | The corrected legacy mass and excitation formulas use October 2010 Sections 9.1.3, 9.1.11, 9.3.3.2, 9.7.1.3 and Appendix D. Historical summary documentation names 2019; equivalence is not established. |
 | DNV-RP-F105, Free Spanning Pipelines | Documentation names 2006 and method topics without a numbered locator; code names the standard without edition; clause text not checked against the licensed copy. [docs/domains/viv/VIV_ANALYSIS_IMPLEMENTATION.md:L639-L642] [src/digitalmodel/subsea/viv_analysis/screening.py:L26-L32] |
-| DNV-RP-C203, Fatigue Design of Offshore Steel Structures | Documentation names 2016, S-N curve parameters and thickness correction; code supplies neither edition nor checked clause; clause text not checked against the licensed copy. [docs/domains/viv/VIV_ANALYSIS_IMPLEMENTATION.md:L644-L650] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L27-L44] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L138-L147] |
+| DNV-RP-C203, Fatigue Design of Offshore Steel Structures | The VIV adapter now uses October 2011 Table 2-1 and Eqs. (2.4.1), (2.4.3), with canonical values from `digitalmodel.fatigue.c203_sn_tables`; historical summary documentation names 2016 and is not its governing basis. |
 | API RP 2A, Planning, Designing and Constructing Fixed Offshore Platforms | Documentation names 22nd edition and Vortex shedding; enum and screening docstring name the code, while calculations do not branch on design_code; clause text not checked against the licensed copy. [docs/domains/viv/VIV_ANALYSIS_IMPLEMENTATION.md:L652-L654] [src/digitalmodel/subsea/viv_analysis/models.py:L31-L36] [src/digitalmodel/subsea/viv_analysis/screening.py:L34-L49] [src/digitalmodel/subsea/viv_analysis/screening.py:L160-L244] |
 | ISO 13819-2, Petroleum and natural gas industries — Offshore structures — Part 2: Fixed steel structures | Documentation names 1995 and VIV requirements without clause locator; enum lists the code without an implemented code-specific branch; clause text not checked against the licensed copy. [docs/domains/viv/VIV_ANALYSIS_IMPLEMENTATION.md:L656-L657] [src/digitalmodel/subsea/viv_analysis/models.py:L31-L36] [src/digitalmodel/subsea/viv_analysis/screening.py:L160-L244] |
 
 UNVERIFIED: U3 — correspondence of these formulas, coefficients and criteria to the named licensed editions, and any conflicting editions, remains unresolved; code omissions do not establish an edition conflict; issue pending (6). [docs/domains/viv/VIV_ANALYSIS_IMPLEMENTATION.md:L634-L657] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L27-L44]
 
-UNVERIFIED: U4 — independent provenance of the S-N implementation and its reference-stress normalization is not established; it is excluded as a hand-check reference; issue pending (2). [src/digitalmodel/subsea/viv_analysis/fatigue.py:L133-L165]
+The fatigue adapter now consumes the existing `digitalmodel.fatigue.c203_sn_tables` verified-value source, **DNV-RP-C203 October 2011 Table 2-1**, Section 2.4, Eqs. (2.4.1), (2.4.3), and Miner damage Eq. (2.2.1). Stress is in MPa without reference-stress normalization; the second slope applies beyond the 1e7-cycle knee. This is an **in-air plated welded-detail** model; the tubular-joint T curve and seawater environments are outside this adapter. Rounded tabulated intercepts allow a small knee discontinuity, bounded by 0.2% in the regression. The m2 branch is continued for damage without a constant-amplitude endurance cutoff. [src/digitalmodel/subsea/viv_analysis/sn_parameters.py] [src/digitalmodel/subsea/viv_analysis/fatigue.py]
 
-The result schemas and the calculations above emit no Citation sidecar; provenance needs implementation work separately from this documentation change, issue pending (6). [src/digitalmodel/subsea/viv_analysis/models.py:L153-L212] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L108-L165]
+`VIVFatigueCalculator.citations` contains the curve-table `Citation`; `VIVFatigueResult.citations` emits its serialized sidecar. Every endurance calculation validates the **2011-10** resolver target `wikis/engineering-standards/wiki/standards/dnv-rp-c203-2011.md`. Its frontmatter shall match `code_id: DNV-RP-C203`, `publisher: DNV`, `revision: 2011-10`. Missing or mismatched metadata raises `CitationResolutionError`; the existing 2021 resolver page is not substituted. Offline tests provision metadata only, without a standards copy. Deployment of that metadata in the generic wiki is a maintainer prerequisite outside this repository change. U4's reference-stress defect is corrected; later-edition equivalence remains unestablished.
+
+The legacy route uses **DNV-RP-C205 October 2010**, Section 9.1.3 (shedding), Section 9.3.3.2 (lift/drag excitation frequencies), Section 9.1.11 and Appendix D (effective/added mass), and Section 9.7.1.3 (KC). Nominal OD remains the hydrodynamic diameter; coatings contribute structural weight. Current defaults to in/s, preserving the registered fixture interpretation; `viv.current_speed_unit: m/s` explicitly converts before evaluation. No wave period is supplied, so KC is null rather than inferred from shedding. These narrower choices do not qualify coated-cylinder hydrodynamics. [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py]
+
+Publisher references: [C203](https://www.dnv.com/energy/standards-guidelines/dnv-rp-c203-fatigue-design-of-offshore-steel-structures/), [C205](https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/). Edition-specific locators above govern this change; the publisher's current editions are not asserted equivalent.
 
 ## 4. Validated worked examples
 
-Validated examples: 0; the cases below are regression or algebraic consistency examples, because their tests do not establish independently sourced engineering reference values. [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L165-L190] [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L302-L325] [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519] [tests/workflows/test_durable_workflows.py:L460-L469]
+The following independent arithmetic checks exercise package outputs. Their scope is the stated fixture and criterion; a signed engineering qualification is not established. The existing geometry, shedding, reduced-velocity and cumulative-damage identities remain supplementary regression checks.
 
-| Case / type | Input and expected result; tolerance basis | Existing test node ID | Last offline result |
-|---|---|---|---|
-| R1 annular geometry; regression | Fixture diameter and thickness; inner diameter 0.45 m, absolute error < 1e-9 m; test assertion | `tests/subsea/viv_analysis/test_viv_analysis_unit.py::TestTubularMember::test_inner_diameter` | PASS at BASE and AFTER; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L151-L154] |
-| R2 shedding identity; regression | Explicit test Strouhal, velocity and diameter; expected product/ratio, error < 1e-9 Hz | `tests/subsea/viv_analysis/test_viv_analysis_unit.py::TestVortexSheddingAnalyzer::test_shedding_frequency_basic` | PASS at BASE and AFTER; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L278-L287] |
-| R3 reduced velocity identity; regression | Test velocity, natural frequency and diameter; expected ratio, error < 1e-9 dimensionless | `tests/subsea/viv_analysis/test_viv_analysis_unit.py::TestVIVScreening::test_reduced_velocity_calculation` | PASS at BASE and AFTER; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L349-L358] |
-| R4 cumulative damage; regression | Three test conditions; equals sum of the same implementation's individual damages, absolute error < 1e-9 damage fraction | `tests/subsea/viv_analysis/test_viv_analysis_unit.py::TestVIVFatigueCalculator::test_cumulative_damage` | PASS at BASE and AFTER; not independent fatigue validation; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519] |
-| R5 durable tubular workflow; regression | `examples/workflows/viv-analysis/input.yml`; expected frequency Hz, shedding Hz and ratio are the scalar assertions in the workflow test; pytest.approx default tolerance, not explicitly justified by the test | `tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-analysis]` | PASS at BASE and AFTER in separate scratch copies; [examples/workflows/viv-analysis/input.yml:L1-L80] [tests/workflows/test_durable_workflows.py:L460-L469] |
+Let `A = tests/subsea/viv_analysis/test_audit_regressions.py`, `L = tests/subsea/viv_analysis/test_legacy_audit.py`, and `U = tests/subsea/viv_analysis/test_viv_analysis_unit.py`.
 
-The workflow registry declares the durable example offline and names its output files and exact test node; this does not independently validate the legacy units or formula. [docs/registry/workflows.yaml:L227-L236] [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L271-L312]
+| Case | Package output and independent expected value | Executable test |
+|---|---|---|
+| R1 pinned beam | `FrequencyCalculator.calculate_natural_frequency`: L=50 m, OD=0.5 m, t=0.025 m, E=207 GPa, steel density 7850 kg/m³, fluid density 1025 kg/m³, Ca=1. Annular I=0.001055092 m⁴, effective mass=494.113620 kg/m; Euler–Bernoulli f=π/(2L²)√(EI/m)=0.41773 Hz ±1e-4 Hz | `A::test_independent_pinned_frequency` |
+| R2 D curve in air | `VIVFatigueCalculator.calculate_allowable_cycles(100)`: N=1.46e6 cycles ±1%; D at 0.5 Hz for 86400 s=0.029613091382755; life=0.09245406876793 years, relative tolerance 1e-9 | `A::test_d_air_endurance_and_damage` |
+| R3 knee and long life | `calculate_allowable_cycles`: knee=1e7 cycles ±0.2% near 52.642115454 MPa; N(30 MPa)=166109215.213006 cycles; `calculate_fatigue_life(30,0.3)`=17.54561132796 years, relative tolerance 1e-9 | `A::test_d_air_knee_and_second_slope` |
+| R4 thickness | `calculate_damage`: 50/25 mm damage ratio=2^(m1*k) ±1e-9; D curve k=.20, C=.15, F=.25, B1=0; `analyze_viv_fatigue`: damage × life equals exposure years | `A::test_thickness_ratio`, `A::test_thick_member_life_matches_damage` |
+| R5 legacy route | `VIVAnalysis.router` and saved CSV/JSON: L=720 in, OD=12.75 in, E=30e6 psi, I=361.5439319 in⁴, structural weight 5.589872732 lb/in, added weight 4.750834711 lb/in. Wet f=1.9290322268 Hz, cross-flow=.56470588235 Hz, in-line=1.1294117647 Hz; ratios 3.41599456830 and 1.70799728415; absolute tolerance 1e-9 | `L::test_legacy_wet_frequencies_and_excitation`; `tests/subsea/viv_analysis/test_viv_analysis.py::test_run_process`; durable workflow below |
 
-Offline record, code pin from the header: `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`; the executable was invoked by its installed full path, with the shared cache and bytecode disabled; no addopts override was used. Package-local BASE/AFTER: 63/63 passed, 0 failed, 0 skipped, 0 NOT_RUN; durable example BASE/AFTER: 1/1 passed, 0 failed, 0 skipped, 0 NOT_RUN; specialized CLI BASE/AFTER: 0 collected, 1 collection skip, 0 failed, 0 NOT_RUN, because `tests.cli.conftest` is absent. [tests/subsea/viv_analysis/test_viv_analysis.py:L13-L47] [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L1-L615] [tests/subsea/viv_analysis/test_viv_analysis_cli.py:L1-L371] [tests/specialized/cli/test_viv_analysis_cli.py:L11-L16] [tests/workflows/test_durable_workflows.py:L460-L469]
+Historical C04 asserted **2.623697 Hz, 0.564706 Hz, 4.646130**, using `pytest.approx` defaults (relative 1e-6, absolute 1e-12). Those air-mass/in-line baselines are superseded by R5. The issue's approximate 1.944 Hz API comparison omits the coating weight retained in R5; it is not used as the legacy reference.
+
+Current offline verification: the package suite exercises actual package calculations, not a mocked engine. The PR records final pass counts; counts alone are not numerical gates. Durable node: `tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-analysis]`. No commercial solver result is required or claimed.
 
 ## 5. QA gates
 
-The gate applicability below uses AQG r0, section 10, Python calculations; G5 applies to every family. A gate check passing verifies its stated criterion, not the engineering qualification of every method. (AQG r0, sections 9–11.)
+G0 applies to input checks, G1 to executable offline routes, G2 to independent numerical checks, and G5 to citation/output traceability. G3/G4 are not applicable: these routes perform no time-domain or diffraction solve. Every gate below binds an asserted package function or output to a criterion.
 
-| Gate | Applicability | Check IDs |
+| ID | Executable check and asserted package result | Gate |
 |---|---|---|
-| G0 | Applicable: input declarations, units and evidence boundaries | C01, C02 |
-| G1 | Applicable: Python import and test route; this package writes no solver deck on the inspected main paths | C03, C04; [src/digitalmodel/subsea/viv_analysis/cli.py:L41-L150] [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L36-L62] |
-| G2 | Applicable: algebraic hand checks; published engineering benchmark remains open | C05, C06, C07, C08 |
-| G3 | NOT_APPLICABLE: no time-domain simulation in these calculation routes | [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L59-L92] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L268] |
-| G4 | NOT_APPLICABLE: no diffraction mesh or hydrodynamic solve produced by these routes | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L22-L62] |
-| G5 | Applicable: traceable result and citation record; signed qualification appendix remains outside this draft | C09, C10 |
+| C01 | `U::TestMaterialProperties::test_get_material_invalid_name` asserts `get_material` raises ValueError for an unknown material | G0 |
+| C02 | `tests/subsea/viv_analysis/test_viv_analysis_cli.py::TestNaturalFrequencyCommand::test_natural_freq_invalid_material` asserts `cli.natural_frequency` returns nonzero exit and an error for an invalid material | G0 |
+| C03 | `U::TestVIVScreening::test_recommendation_lock_in` asserts `VIVScreening.screen_member` returns lock-in, susceptible=True and REQUIRED at 1.5 m/s; `test_recommendation_safe` asserts safe at 0.5 m/s | G1 |
+| C04 | `tests/subsea/viv_analysis/test_viv_analysis.py::test_run_process` and durable node R5 assert `VIVAnalysis.router` CSV/JSON frequency=1.9290322268 Hz, in-line=1.1294117647 Hz and in-line ratio=1.70799728415, absolute tolerance 1e-9 | G1 |
+| C05 | `A::test_independent_pinned_frequency` asserts `FrequencyCalculator.calculate_natural_frequency`=0.41773 Hz ±1e-4 Hz for R1 | G2 |
+| C06 | `A::test_d_air_endurance_and_damage` and `test_d_air_knee_and_second_slope` assert `VIVFatigueCalculator.calculate_allowable_cycles`=1.46e6 ±1% at 100 MPa and the 1e7-cycle knee ±0.2% | G2 |
+| C07 | `A::test_d_air_endurance_and_damage` asserts `VIVFatigueCalculator.calculate_damage`=0.029613091382755 and `calculate_fatigue_life`=0.09245406876793 years for R2, relative tolerance 1e-9 | G2 |
+| C08 | `A::test_thickness_ratio` asserts `VIVFatigueCalculator.calculate_damage` 50/25 mm ratio=2^(m1*k) ±1e-9 for four classes; `test_thick_member_life_matches_damage` asserts `analyze_viv_fatigue` damage/life reciprocity, relative tolerance 1e-12 | G2 |
+| C09 | `A::test_curve_citation_sidecar` asserts `VIVFatigueResult.citations` serializes the Citation with revision 2011-10, Table 2-1 and generic source; `test_missing_citation_fails_closed` asserts `calculate_damage` raises CitationResolutionError for a missing target | G5 |
+| C10 | `A::test_nan_velocity_fails_without_status` and `test_tension_screening_fails_without_status` assert `VIVScreening.screen_member` raises ValueError for NaN current and negative/zero/nonfinite tension | G0/G5 |
 
-| ID | Executable check and numeric pass criterion / unit | Evidence and gate |
-|---|---|---|
-| C01 | Run `tests/subsea/viv_analysis/test_viv_analysis_unit.py::TestMaterialProperties::test_get_material_invalid_name`; 1 ValueError for the unknown material, 0 accepted unknown names (count) | G0, PASS; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L136-L139] |
-| C02 | Run `tests/subsea/viv_analysis/test_viv_analysis_cli.py::TestNaturalFrequencyCommand::test_natural_freq_invalid_material`; exit code nonzero and 1 error indication (count) | G0, PASS; [tests/subsea/viv_analysis/test_viv_analysis_cli.py:L146-L157] |
-| C03 | Run package-local tests with the form in section 4; 63 passed and 0 failures (test count) | G1, PASS; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L1-L615] [tests/subsea/viv_analysis/test_viv_analysis_cli.py:L1-L371] [tests/subsea/viv_analysis/test_viv_analysis.py:L13-L47] |
-| C04 | Run R5 in a scratch copy; 1 pass, 0 failures (test count), required workflow outputs present | G1, PASS; [tests/workflows/test_durable_workflows.py:L56-L100] [tests/workflows/test_durable_workflows.py:L460-L469] |
-| C05 | Run R1; inner_diameter differs from outer_diameter minus twice wall_thickness by < 1e-9 m | G2, PASS; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L151-L154] |
-| C06 | Run R2; shedding_frequency differs from the explicitly supplied Strouhal product/ratio by < 1e-9 Hz | G2, PASS; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L278-L287] |
-| C07 | Run R3; reduced_velocity differs from V/(fD) by < 1e-9 dimensionless | G2, PASS; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L349-L358] |
-| C08 | Run R4; cumulative_damage differs from the sum of individual calculate_damage outputs by < 1e-9 damage fraction; equal-length inputs only | G2, PASS; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519] |
-| C09 | Resolve every bracketed repository citation with `git show <code-pin>:<path>`; 0 missing files and 0 invalid ranges (count); manually compare 10 selected claims | G5, PASS; pin and citation locators are the record inputs |
-| C10 | Resolve the 5 section-4 node IDs against the BASE/AFTER logs and pinned definitions; 5 pairs of PASS, 0 changed results (case count) | G5, PASS; [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L151-L154] [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L278-L287] [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L349-L358] [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519] [tests/workflows/test_durable_workflows.py:L460-L469] |
+A4 — identity checks: the original C05–C08 were geometry, shedding, reduced-velocity and summation identities, not independent frequency or fatigue validation. They remain supplementary regressions and cannot establish the absolute numerical criteria now covered by R1–R5. The former assertion-free mocked-engine test contributes no historical engineering evidence.
 
-UNVERIFIED: U5 — an independent frequency/fatigue benchmark and a signed calculation evidence appendix are not supplied by these regression checks; issue pending (6). [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L218-L295] [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L435-L559]
+UNVERIFIED: U5 — a signed calculation qualification appendix remains absent; the bounded arithmetic checks above do not establish qualification for arbitrary geometry, environment or boundary conditions.
 
 ## 6. Known failure modes and pitfalls
 
-sweep: 42 found
+sweep: 44 recorded (42 historical sites plus two confirmed audit defects)
 
 The count is source-audit sites requiring an explicit interpretation, including defaults and unit assumptions; it is not a count of independently reproduced defects. All rows were examined at the header pin; source-audit date: 2026-10-17.
 
-Exact package sweeps (text only; no solver imports):
+The remaining line-range locators in the historical inventory below refer to the original code pin. Corrected rows use current symbols. Exact package sweeps (text only; no solver imports):
 
 ```bash
 rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|int\(|float\(|unit|assum|default|interp|zip\(' src/digitalmodel/subsea/viv_analysis --glob '*.py'
@@ -159,20 +158,20 @@ rg -n 'except|continue|return|0\.0|1970|0\.05|int\(|float\(|\.get\(|linspace|den
 | S10 | Unknown surface condition silently falls back to a base Strouhal constant | no detection check exists; issue pending (1) | [src/digitalmodel/subsea/viv_analysis/vortex_shedding.py:L85-L113] |
 | S11 | Reynolds dependence is described but only a low-Re warning and unchanged surface lookup are implemented | no detection check exists; issue pending (1) | [src/digitalmodel/subsea/viv_analysis/vortex_shedding.py:L97-L113] |
 | S12 | Profile sample count zero returns an empty result; vertical geometry is assumed | no detection check exists; issue pending (1) | [src/digitalmodel/subsea/viv_analysis/vortex_shedding.py:L160-L194] |
-| S13 | Nonpositive reduced velocity returns zero safety factor rather than a distinct invalid or no-flow result | no detection check exists; issue pending (1) | [src/digitalmodel/subsea/viv_analysis/screening.py:L147-L148] |
+| S13 | Finite, nonnegative reduced velocity is required; no-flow zero retains zero factor | Rejection covered by `test_screening_helpers_reject_invalid_reduced_velocity`; no-flow by `test_zero_flow_remains_valid` | `VIVScreening.calculate_safety_factor` |
 | S14 | Frequency-ratio detail substitutes zero when frequency is nonpositive | no detection check exists; issue pending (1) | [src/digitalmodel/subsea/viv_analysis/screening.py:L233-L243] |
 | S15 | Fixed screening defaults are used even when another design_code enum is selected | no detection check exists; issue pending (6) | [src/digitalmodel/subsea/viv_analysis/screening.py:L34-L49] [src/digitalmodel/subsea/viv_analysis/screening.py:L160-L244] |
 | S16 | Empty requested mode list is returned by screening without validating count | no detection check exists; issue pending (1) | [src/digitalmodel/subsea/viv_analysis/screening.py:L246-L276] |
 | S17 | Profile screening uses a fixed sample count and maximum or RMS; a localized current peak may be missed | no detection check exists; issue pending (1) | [src/digitalmodel/subsea/viv_analysis/screening.py:L298-L308] |
 | S18 | Amplitude is interpreted as A/D or metres according to its magnitude | no detection check exists; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L73-L80] |
 | S19 | Any non-crown location is treated as springline with the same fibre radius | no detection check exists; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L87-L91] |
-| S20 | Thickness correction request without thickness silently takes the uncorrected path | no detection check exists; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L138-L147] |
-| S21 | Nonpositive stress gives infinite allowable cycles and zero damage; invalid input is not distinguished from no loading | no detection check exists; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L151-L165] |
-| S22 | Nonpositive allowable-cycle fallback returns zero damage | no detection check exists; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L159-L163] |
-| S23 | Nonpositive stress returns infinite fatigue life; frequency sign/zero is not validated | no detection check exists; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L190-L202] |
-| S24 | Cumulative damage starts at zero; zip truncates unequal lists and empty input returns zero | C08 covers equal-length sums only; no detection check exists for truncation; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L289-L300] |
+| S20 | Corrected: thickness multiplies stress by max(1,t/25)^k with the Table 2-1 class exponent; missing/nonpositive/nonfinite requested thickness raises ValueError | `test_thickness_ratio`, `test_thickness_requested_without_value_fails` | `VIVFatigueCalculator._corrected_stress` |
+| S21 | Zero stress gives infinite endurance; negative/nonfinite stress raises ValueError | `calculate_allowable_cycles` input guard; zero is a true no-loading input | `VIVFatigueCalculator.calculate_allowable_cycles` |
+| S22 | Removed: no nonpositive-endurance fallback silently returns zero damage | Endurance evaluated directly, C06/C07 | `VIVFatigueCalculator.calculate_damage` |
+| S23 | Corrected: zero stress gives infinite life; nonpositive/nonfinite frequency raises ValueError | Shared endurance and frequency validation | `VIVFatigueCalculator.calculate_fatigue_life` |
+| S24 | Cumulative damage starts at zero; zip truncates unequal lists and empty input returns zero | `test_cumulative_damage` covers equal-length sums only; no detection check exists for truncation; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L289-L300] |
 | S25 | Hours-to-seconds, thickness-to-mm and fixed year duration are assumed by the wrappers | no detection check exists; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L204-L207] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L239-L247] |
-| S26 | Damage is thickness-corrected while returned fatigue life is not corrected | no detection check exists; issue pending (2) | [src/digitalmodel/subsea/viv_analysis/fatigue.py:L239-L258] |
+| S26 | Corrected: damage and life use the same corrected stress; reported stress remains the physical uncorrected range | `test_thick_member_life_matches_damage` | `VIVFatigueCalculator.analyze_viv_fatigue` |
 | S27 | Header int conversions require whitespace counts without schema or separator normalization | no detection check exists; issue pending (3) | [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L19-L22] |
 | S28 | Modal frequency and coordinate unit assumptions, strict node-window endpoints, and signed maxima can hide peak magnitudes | no detection check exists; issue pending (3) | [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L43-L109] |
 | S29 | Current non-exceedance plot skips missing probabilities with a print; no structured failure result | no detection check exists; issue pending (3) | [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L262-L314] |
@@ -184,21 +183,23 @@ rg -n 'except|continue|return|0\.0|1970|0\.05|int\(|float\(|\.get\(|linspace|den
 | S35 | Zero-initialized current non-exceedance accumulation assumes nonempty, normalized probabilities and reuses opposite plot settings | no detection check exists; issue pending (3) | [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L330-L378] |
 | S36 | Zero-initialized wave probability accumulation assumes nonempty, normalized probabilities | no detection check exists; issue pending (3) | [src/digitalmodel/subsea/viv_analysis/viv_analysis_components.py:L521-L535] |
 | S37 | Legacy plotting replaces actual depth array with fixed endpoint depths, omitting other depths from plots | no detection check exists; issue pending (4) | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L460-L466] |
-| S38 | Legacy shedding mixes current conversion, OD and viscosity conventions; plot axis labels do not resolve the input units | no detection check exists; issue pending (4) | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L271-L312] |
-| S39 | Legacy natural-frequency route assumes imperial span/property conventions and fixed gravity conversion | no detection check exists; issue pending (4) | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L15-L16] |
+| S38 | Corrected: declared in/s or m/s; cross-flow St U/D, in-line 2 St U/D; KC null without imposed wave period | `test_legacy_wet_frequencies_and_excitation`, `test_legacy_speed_units` | `VIVTubularMembers.get_vs_frequencies` |
+| S39 | Corrected: imperial beam frequencies include added mass with Ca=1 by default; nominal hydrodynamic diameter and coating structural weight retained | `test_legacy_wet_frequencies_and_excitation`, `test_legacy_added_mass_coefficient` | `VIVTubularMembers.get_natural_frequencies` |
 | S40 | Missing plot switch defaults to enabled, requiring visualization outputs and dependencies | no detection check exists; issue pending (4) | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L64-L69] |
 | S41 | Free-free mode loop ignores mode number, repeating the same frequency | no detection check exists; issue pending (4) | [src/digitalmodel/subsea/viv_analysis/viv_tubular_members.py:L145-L177] |
 | S42 | No configuration variations returns an empty list, with no count validation or explicit no-work status | no detection check exists; issue pending (5) | [src/digitalmodel/subsea/viv_analysis/viv_analysis_legacy.py:L30-L49] |
+| S43 | Corrected: reference-stress normalization inflated endurance by about 6.4e8; in-air dimensional S-N branches now use the canonical table | Absolute N, damage, life and knee checks C06/C07 | `VIVFatigueCalculator.calculate_allowable_cycles` |
+| S44 | Corrected: NaN current and invalid tension could reach a `safe` status; finite input checks now raise ValueError before status selection | C10 and parameterized helper/Strouhal/frequency regressions | `VIVScreening.screen_member`, `FrequencyCalculator.calculate_natural_frequency`, `VortexSheddingAnalyzer.shedding_frequency` |
 
 The two broad CLI exception handlers emit the error and exit with status 1, and the material lookup converts KeyError to ValueError; they do not swallow errors. JSON float conversions operate on computed results, not external text. No `continue`, `return None`, error-path empty-dictionary return, epoch default or empty-result cache write was found in the inspected Python definitions. [src/digitalmodel/subsea/viv_analysis/cli.py:L90-L92] [src/digitalmodel/subsea/viv_analysis/cli.py:L125-L150] [src/digitalmodel/subsea/viv_analysis/models.py:L248-L264]
 
 | Additional confirmed source limitation | Detection / incident scope | Evidence |
 |---|---|---|
 | Legacy fallback calls a function as a no-argument constructor and then expects an analyze method | no detection check exists; issue pending (5) | [src/digitalmodel/subsea/viv_analysis/viv_analysis.py:L27-L29] [src/digitalmodel/subsea/viv_analysis/viv_analysis_legacy.py:L52-L59] |
-| Mocked engine test has no result assertion and does not establish calculation correctness | C03 counts it as a regression pass only; no detection check exists for wrong numerical output; issue pending (7) | [tests/subsea/viv_analysis/test_viv_analysis.py:L13-L47] |
+| Former mocked engine test is replaced by a real offline tubular-router calculation with CSV/JSON readback | C04 asserts absolute frequency and excitation ratios | [tests/subsea/viv_analysis/test_viv_analysis.py:L13-L47] |
 | Specialized CLI suite skips at collection because its legacy helper import is absent | no detection check exists in section 5; collection skip is recorded in section 4; issue pending (7) | [tests/specialized/cli/test_viv_analysis_cli.py:L11-L16] |
 | Implementation-summary profile example uses an unsupported constructor keyword and a field absent from VortexSheddingResult; fatigue example divides hour-based durations again before the hour-accepting wrapper | no detection check exists; issue pending (6) | [docs/domains/viv/VIV_ANALYSIS_IMPLEMENTATION.md:L295-L310] [src/digitalmodel/subsea/viv_analysis/models.py:L104-L118] [src/digitalmodel/subsea/viv_analysis/models.py:L168-L175] [docs/domains/viv/VIV_ANALYSIS_IMPLEMENTATION.md:L328-L339] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L209-L247] |
-| Standards-derived constants lack edition-specific output provenance | C09 checks pack locators, not runtime provenance; no detection check exists; issue pending (6) | [src/digitalmodel/subsea/viv_analysis/models.py:L267-L289] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L27-L44] |
+| Fatigue curve provenance now emits a validated 2011-10 sidecar; other pre-existing constants remain outside that citation coverage | C09 asserts fatigue runtime provenance only; broader provenance remains issue pending (6) | [src/digitalmodel/subsea/viv_analysis/models.py:L267-L289] [src/digitalmodel/subsea/viv_analysis/fatigue.py:L27-L44] |
 
 Issue #1837 describes a broader VIV/fatigue failure chain and #1642 a separate result-parser port; neither establishes an incident in these specific calculation definitions, so no unconfirmed incident is attributed to them. The relevant source boundaries are the unvalidated fatigue path and delegated legacy result processing. [src/digitalmodel/subsea/viv_analysis/fatigue.py:L108-L165] [src/digitalmodel/subsea/viv_analysis/viv_analysis_legacy.py:L66-L71]
 
@@ -210,7 +211,7 @@ The implementation summary gives a different safety-factor expression from the p
 |---|---|---|---|---|---|
 | 2026-10-17 | Initial source audit | Treat the API and engine tubular workflow as separate numerical implementations; passing one does not qualify the other | [src/digitalmodel/subsea/viv_analysis/viv_analysis.py:L21-L37] [src/digitalmodel/subsea/viv_analysis/frequency_calculator.py:L94-L162] | Sections 3–6 distinguish regression checks from qualification | Not assigned; issue pending (6) |
 
-## 8. Ownership
+## 8. Maintenance responsibility
 
 Proposed review responsibility: engineering calculations quality manager; deputy responsibility: engineering calculations deputy quality manager; producing discipline: subsea engineering calculations. Method classification and tolerance questions go to the family quality manager; cross-family changes go to the maintainers.
 
@@ -1134,15 +1135,15 @@ Documentation discovery used `rg -n -i 'viv_analysis|viv-analysis|viv analysis' 
 | U1 package qualification; maintainer | README readiness assertions are not current engineering qualification | issue pending (6) |
 | U2 legacy frames and file units; maintainer | Explicit modal-data contract and any required private sidecar entry remain to be created | issue pending (3); #1642 is related parser work |
 | U3 standards editions, clause correspondence and output citations; maintainer | Licensed clause text not checked; documentation expression drift also needs correction | issue pending (6) |
-| U4 fatigue equation qualification; maintainer | Independent reference needed; no standard table values copied | issue pending (2); related #1837 |
-| U5 independent worked benchmark and signed evidence record; maintainer | 0 validated examples; regression evidence only | issue pending (6) |
+| U4 normalization defect corrected; maintainer | Independent Table 2-1 endurance, damage and life checks now apply; wider method qualification remains outside scope | issue pending (2); related #1837 |
+| U5 signed evidence record; maintainer | Bounded independent arithmetic examples R1–R5 now apply; signed qualification remains absent | issue pending (6) |
 | U6 maintained quality-role assignment; maintainer | Proposed role responsibilities in section 8 require assignment | issue pending (6) |
 | Input, default and profile sites S01–S17; maintainer | Numeric range, no-flow and sampling detection gaps | issue pending (1); S15 provenance belongs to issue pending (6) |
-| Fatigue sites S18–S26; maintainer | Unit guessing, correction consistency, invalid values and list truncation | issue pending (2) |
+| Fatigue sites S18–S26; maintainer | Unit guessing and list truncation remain; S20–S23 and S26 are corrected as recorded above | issue pending (2) |
 | Legacy modal/probability sites S27–S36; maintainer | Record omission, schemas and cumulative-probability semantics | issue pending (3) |
-| Legacy tubular sites S37–S41; maintainer | Frequency, units and plotting depth coverage | issue pending (4) |
+| Legacy tubular sites S37–S41; maintainer | S38/S39 frequency and units corrected; plotting depth and free-free mode repetition remain outside this audit scope | issue pending (4) |
 | Legacy dispatch and S42; maintainer | Function/object mismatch and no-work status | issue pending (5) |
-| Specialized CLI collection and mocked test assertions; maintainer | Existing normal-input passes do not replace missing numerical assertions | issue pending (7) |
+| Specialized CLI collection; maintainer | Mocked engine replaced by C04 numeric router assertions; specialized CLI helper remains outside scope | issue pending (7) |
 | Map families, repository analogues and broader documentation/issue-history review; maintainer | Section 9 follow-up, discovery codenaming, remaining binary documents and historical issue bodies | issue pending (8) |
 
 UNVERIFIED register: U1–U6 above, each with a draft reference; no additional engineering qualification is implied by the passing offline regressions. [tests/subsea/viv_analysis/test_viv_analysis_unit.py:L502-L519] [tests/workflows/test_durable_workflows.py:L460-L469]

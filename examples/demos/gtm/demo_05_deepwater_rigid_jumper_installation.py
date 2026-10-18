@@ -206,9 +206,9 @@ def load_jumper_data(path: Optional[Path] = None) -> Tuple[Dict[str, Any], List[
 # ---------------------------------------------------------------------------
 
 def hs_to_tp(hs: float, config: Optional[Any] = None) -> float:
-    """Approximate peak spectral period from Hs using Tp ≈ coeff × sqrt(Hs).
+    """Screening simplification for peak period: Tp ≈ coeff × sqrt(Hs).
 
-    This is a simplified relationship from typical JONSWAP spectra. The coefficient is the
+    This is a screening simplification, not a site wave scatter. The coefficient is the
     threaded config's ``tp_coefficient`` (baseline 4.0).
     """
     coeff = _cfg(config, "tp_coefficient", 4.0)
@@ -1431,7 +1431,8 @@ def build_report(
         "Wire rope submerged weight = 50 N/m — representative of 96-128 mm diameter wire",
         f"Deepwater current velocity = {v_cur:g} m/s for tie-in deflection check",
         f"Tie-in connector-mating tolerance = +/-{tol_mm:.0f} mm (API 17R subsea connector basis)",
-        "Tp estimated from Hs via Tp = 4.0 x sqrt(Hs) — simplified JONSWAP relationship",
+        "Tp = 4.0 x sqrt(Hs) is a screening simplification, "
+        "not a measured or scatter-derived period",
         "Vessel RAOs are simplified single-peak values, not full frequency-dependent transfer functions",
         "No wave-current interaction or VIV effects during lowering",
         "No seabed slope or landing zone geotechnical effects considered",

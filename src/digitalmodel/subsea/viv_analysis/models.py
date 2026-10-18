@@ -210,6 +210,7 @@ class VIVFatigueResult:
     fatigue_damage: float             # Miner's sum
     fatigue_life_years: float
     sn_curve: str
+    citations: List[Dict] = field(default_factory=list)
 
 
 # Pre-defined materials

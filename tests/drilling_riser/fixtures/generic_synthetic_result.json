@@ -16,5 +16,7 @@
   "support_loss_min_kn": 9000,
   "bottom_sum_min_kn": 300,
   "member_min_kn": 1,
-  "table_clearance_min_m": 1
+  "table_clearance_min_m": 1,
+  "ring_equilibrium_max_abs_kn": 0.0,
+  "ring_equilibrium_max_fraction": 0.0
 }

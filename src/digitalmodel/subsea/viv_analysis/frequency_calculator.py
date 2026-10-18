@@ -15,6 +15,8 @@ from .models import (
     BoundaryCondition
 )
 
+from .validation import require_positive, require_nonnegative
+
 logger = logging.getLogger(__name__)
 
 
@@ -82,10 +84,23 @@ class FrequencyCalculator:
         if mode < 1 or mode > 6:
             raise ValueError("Mode number must be between 1 and 6")
 
+        require_positive("Length", member.length)
+        require_positive("Diameter", member.outer_diameter)
+        require_positive("Wall thickness", member.wall_thickness)
+        if member.wall_thickness >= member.outer_diameter / 2:
+            raise ValueError("Wall thickness must be less than the radius")
+        require_positive("Young's modulus", member.material.youngs_modulus)
+        require_positive("Material density", member.material.density)
+        require_positive("Effective length factor", member.effective_length_factor)
+        if include_added_mass:
+            require_positive("Fluid density", self.fluid.density)
+            require_nonnegative("Added mass coefficient", self.fluid.added_mass_coefficient)
+
         # Tension-controlled (riser with axial tension)
         if member.boundary_condition == BoundaryCondition.TENSION_CONTROLLED:
             if member.top_tension is None:
                 raise ValueError("top_tension must be specified for tension-controlled member")
+            require_positive("top_tension", member.top_tension)
             return self._frequency_tension_controlled(member, mode, include_added_mass)
 
         # Standard beam vibration
@@ -143,6 +158,7 @@ class FrequencyCalculator:
         omega_n = (lambda_n / L_eff)**2 * np.sqrt(E * I / m_total)
         f_n = omega_n / (2 * np.pi)
 
+        require_positive("Natural frequency", f_n)
         # Period
         T_n = 1 / f_n
 
@@ -199,6 +215,7 @@ class FrequencyCalculator:
         # Angular frequency
         omega_n = 2 * np.pi * f_n
 
+        require_positive("Natural frequency", f_n)
         # Period
         T_n = 1 / f_n
 

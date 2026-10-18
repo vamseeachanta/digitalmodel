@@ -521,6 +521,9 @@ modules:
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#installation
     submodules:
+      installation_pamphlet:
+        agent_pack: src/digitalmodel/installation/installation_pamphlet/docs/agent-pack.md
+        qa_family: IN
       pipelay:
         agent_pack: src/digitalmodel/installation/pipelay/docs/agent-pack.md
         qa_family: IN

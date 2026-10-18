@@ -90,7 +90,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # Citation checks read source and map revisions recorded in packs.
+          # Citation checks read source and map revisions recorded in packs;
+          # subsea also verifies a manifest pinned to an older commit.
           fetch-depth: 0
 
       - name: Set up Python

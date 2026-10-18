@@ -81,3 +81,18 @@ def test_gate_collection_requires_opt_in(tmp_path: Path, capsys) -> None:
                     "`tests/test_example.py::test_missing`\n## 6. Pitfalls\n")
     collect_pack(pack, tmp_path, tmp_path / "collection")
     assert "agent-pack.md: 0 ids" in capsys.readouterr().out
+
+
+def test_power_pack_has_five_collectable_examples(tmp_path, capsys):
+    """Issue 2735: the documented five examples must reach collection."""
+    pack = ROOT / "src/digitalmodel/power/analysis/docs/agent-pack.md"
+    collect_pack(pack, ROOT, tmp_path / "collection")
+    assert "power/analysis/docs/agent-pack.md: 5 ids" in capsys.readouterr().out
+
+
+def test_power_gate_distinguishes_structural_and_solved_checks():
+    text = (ROOT / "src/digitalmodel/power/analysis/docs/agent-pack.md").read_text()
+    for check in ("C5", "C6"):
+        assert f"| G1 | {check} |" in text
+    assert "test_independently_derived_solved_network" in text
+    assert "test_reference_criteria_reject_one_iteration" in text
