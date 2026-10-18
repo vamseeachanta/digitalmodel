@@ -40,6 +40,7 @@ const ENV = __ENV_JS__;
 const TPGRID = __TP_JS__;
 // interpolate limiting Hs at a given Tp for an operation
 function hsLimitAt(op, tp){
+  if(!ENV[op] || !Number.isFinite(tp)) return NaN;
   const e = ENV[op].hs_by_tp, status = ENV[op].status_by_tp; const ks = TPGRID;
   const at = t => { const k=t.toFixed(1);
     return e[k] != null && (!status || status[k]==='evaluated') ? e[k] : NaN; };
@@ -72,7 +73,9 @@ function moorRisk(hs, wind){ let l='low', n='Line tensions low; watch-circle nom
   else if(hs>=1.2||wind>=10){l='mod';n='Tension build-up; monitor watch-circle.';}
   return {l,n};
 }
-function verdict(hs, lim){ if(hs<=lim) return 'GO'; if(hs<=lim*1.25) return 'MARGINAL'; return 'NOGO'; }
+function verdict(hs, lim){
+  if(!Number.isFinite(hs) || !Number.isFinite(lim)) return 'UNAVAILABLE';
+  if(hs<=lim) return 'GO'; if(hs<=lim*1.25) return 'MARGINAL'; return 'NOGO'; }
 function nearestIdx(times){ const now=Date.now(); let bi=0,bd=1e18;
   times.forEach((t,i)=>{const dd=Math.abs(new Date(t).getTime()-now); if(dd<bd){bd=dd;bi=i;}}); return bi; }
 
@@ -89,23 +92,28 @@ function render(cur){ // cur = {hs,tp,wind,cur,times?,series?}
     dp_station_keeping:+document.getElementById('limDP').value, transit:+document.getElementById('limTR').value };
   const hs=cur.hs, tp=cur.tp, wind=cur.wind, ccur=cur.cur||0.4;
   document.getElementById('now').innerHTML = [
-    ['Wave Hs',hs.toFixed(2),'m'],['Peak Tp',tp.toFixed(1),'s'],['Wind (10 m)',wind.toFixed(1),'m/s'],['Current*',ccur.toFixed(2),'m/s']
+    ['Wave Hs',hs.toFixed(2),'m'],['Peak Tp',Number.isFinite(tp)?tp.toFixed(1):'unavailable','s'],['Wind (10 m)',wind.toFixed(1),'m/s'],['Current*',ccur.toFixed(2),'m/s']
   ].map(x=>`<div class="m"><div class="k">${x[0]}</div><div class="vv">${x[1]}</div><div class="u">${x[2]}</div></div>`).join('');
   const ops=[['Heavy lift','heavy_lift'],['DP station-keep','dp_station_keeping'],['Transit','transit']];
   document.getElementById('golist').innerHTML = ops.map(([nm,op])=>{
-    const lim=lims[op]; const vd=verdict(hs,lim);
+    const lim=Math.min(lims[op],hsLimitAt(op,tp)); const vd=verdict(hs,lim);
+    const limitText=Number.isFinite(lim)?`limit ${lim.toFixed(2)} m`:'limit unavailable';
     return `<div class="go ${vd}"><div class="t">${nm}</div>
       <div class="verdict v${vd}">${vd==='NOGO'?'NO-GO':vd}</div>
-      <div class="lim">Hs ${hs.toFixed(2)} vs limit ${lim.toFixed(2)} m</div></div>`;
+      <div class="lim">Hs ${hs.toFixed(2)} vs ${limitText}</div></div>`;
   }).join('');
   // next window vs heavy-lift limit (from forecast series if available)
   let winHtml='';
   if(cur.series){ const lim=lims.heavy_lift; const s=cur.series;
     let i0=nearestIdx(cur.times); let start=-1,len=0,best=0,bestStart=-1;
-    for(let i=i0;i<s.hs.length;i++){ if(s.hs[i]<=lim){ if(start<0)start=i; len++; if(len>best){best=len;bestStart=start;} } else {start=-1;len=0;} }
+    for(let i=i0;i<s.hs.length;i++){
+      const limit=Math.min(lim,hsLimitAt('heavy_lift',s.tp?.[i]));
+      if(Number.isFinite(s.hs[i]) && Number.isFinite(limit) && s.hs[i]<=limit){
+        if(start<0)start=i; len++; if(len>best){best=len;bestStart=start;}
+      } else {start=-1;len=0;} }
     if(best>0){ const hrs=best; const startsIn=Math.max(0,bestStart-i0);
-      winHtml=`<b>Next heavy-lift window</b> (Hs &le; ${lim.toFixed(2)} m): ~${hrs} h long, starting in ~${startsIn} h.`; }
-    else winHtml=`<b>No heavy-lift window</b> in forecast horizon at Hs &le; ${lim.toFixed(2)} m — raise the limit with vessel-specific RAO.`;
+      winHtml=`<b>Next heavy-lift window</b> (Hs within the evaluated limit at each forecast Tp; manual ceiling ${lim.toFixed(2)} m): ~${hrs} h long, starting in ~${startsIn} h.`; }
+    else winHtml='<b>No heavy-lift window</b> within evaluated forecast limits and the manual ceiling. Unavailable periods break the window.';
   } else { winHtml='<span class="mut2">Load live or demo data to compute the next weather window.</span>'; }
   document.getElementById('win').innerHTML = winHtml;
   // risk panels
@@ -122,7 +130,7 @@ async function refresh(){
   const lat=document.getElementById('lat').value, lon=document.getElementById('lon').value;
   document.getElementById('stamp').textContent='loading…';
   try{ const f=await fetchLive(lat,lon); const i=nearestIdx(f.times);
-    render({hs:f.hs[i],tp:f.tp[i]||9,wind:f.wind[i],cur:0.4,times:f.times,series:{hs:f.hs}});
+    render({hs:f.hs[i],tp:f.tp[i],wind:f.wind[i],cur:0.4,times:f.times,series:{hs:f.hs,tp:f.tp}});
     document.getElementById('stamp').textContent='live · '+new Date(f.times[i]).toUTCString().slice(5,22)+' UTC';
   }catch(e){ document.getElementById('stamp').textContent='live feed unavailable — using demo data';
     useSample(); }
@@ -130,7 +138,7 @@ async function refresh(){
 function useSample(){
   const i=12; // calm point
   const times=SAMPLE.hours.map(h=>new Date(Date.now()+(h-6)*3600e3).toISOString());
-  render({hs:SAMPLE.hs[i],tp:SAMPLE.tp[i],wind:SAMPLE.wind[i],cur:0.4,times,series:{hs:SAMPLE.hs}});
+  render({hs:SAMPLE.hs[i],tp:SAMPLE.tp[i],wind:SAMPLE.wind[i],cur:0.4,times,series:{hs:SAMPLE.hs,tp:SAMPLE.tp}});
   document.getElementById('stamp').textContent='demo data';
 }
 refresh(); setInterval(refresh, 600000); // auto-refresh every 10 min

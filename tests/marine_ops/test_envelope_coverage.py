@@ -176,6 +176,62 @@ def test_browser_lookup_cannot_interpolate_gaps_or_caps():
     assert json.loads(output) == [None, None, 5.4, None, None, 8.]
 
 
+def _render_monitor(current_tp, series_tp, *, manual_limit=10., series_hs=None):
+    """Execute the live rendering path with a DOM stub and no network calls."""
+    from digitalmodel.installation.installation_pamphlet.render import LIVE_WEATHER_MONITOR_WIDGET
+    envelope = {'hs_by_tp': {'4.0': None, '12.0': 5.4, '20.0': 20., '24.0': 8.},
+                'status_by_tp': {'4.0': 'insufficient_coverage', '12.0': 'evaluated',
+                                 '20.0': 'capped', '24.0': 'evaluated'}}
+    widget = (LIVE_WEATHER_MONITOR_WIDGET.removeprefix('<script>')
+              .split('refresh(); setInterval', 1)[0]
+              .replace('__ENV_JS__', json.dumps(dict.fromkeys(
+                  ['transit', 'heavy_lift', 'dp_station_keeping'], envelope)))
+              .replace('__TP_JS__', '[4,12,20,24]'))
+    script = ("const elements={}; const document={getElementById(id){"
+              f"return elements[id] ||= {{value:{manual_limit},innerHTML:''}};" + '}};\n'
+              + widget + '\nnearestIdx=()=>0;\n'
+              + 'render(' + json.dumps({'hs': 6., 'tp': current_tp, 'wind': 5.,
+                                       'times': ['synthetic'] * len(series_tp),
+                                       'series': {'hs': series_hs if series_hs is not None else [1.] * len(series_tp),
+                                                  'tp': series_tp}})
+              + '); console.log(JSON.stringify(elements));')
+    return json.loads(subprocess.check_output(['node', '-e', script], text=True))
+
+
+@pytest.mark.parametrize('tp', [4., 8., 16., 20., None])
+def test_browser_render_marks_gaps_and_caps_unavailable(tp):
+    elements = _render_monitor(tp, [12., tp, 12.])
+    assert elements['golist']['innerHTML'].count('>UNAVAILABLE</div>') == 3
+    assert 'limit unavailable' in elements['golist']['innerHTML']
+    assert 'NaN' not in elements['golist']['innerHTML']
+    # An unavailable forecast hour must break an otherwise calm window.
+    assert '~1 h long' in elements['win']['innerHTML']
+
+
+@pytest.mark.parametrize('manual, expected_limit, expected_verdict', [
+    (10., '5.40', 'MARGINAL'), (4., '4.00', 'NO-GO'),
+])
+def test_browser_render_uses_forecast_limit_and_manual_ceiling(manual, expected_limit, expected_verdict):
+    elements = _render_monitor(12., [12., 12.], manual_limit=manual)
+    assert f'limit {expected_limit} m' in elements['golist']['innerHTML']
+    assert elements['golist']['innerHTML'].count(f'>{expected_verdict}</div>') == 3
+    assert '~2 h long' in elements['win']['innerHTML']
+
+
+@pytest.mark.parametrize('tp', [4., 20.])
+def test_browser_render_has_no_window_for_unavailable_forecast(tp):
+    elements = _render_monitor(12., [tp, tp])
+    assert 'No heavy-lift window' in elements['win']['innerHTML']
+
+
+def test_browser_window_uses_each_forecast_period_limit():
+    # 6 m passes the editable ceiling and the 24 s limit, but exceeds the 12 s
+    # limit. Using either the editable ceiling or the current period gives 3 h.
+    elements = _render_monitor(24., [24., 12., 24.], series_hs=[6., 6., 6.])
+    assert '~1 h long' in elements['win']['innerHTML']
+    assert 'limit 8.00 m' in elements['golist']['innerHTML']
+
+
 def test_incomplete_damping_band_never_publishes_one_sided_bound(monkeypatch):
     from digitalmodel.installation.installation_pamphlet import calculations
     monkeypatch.setattr(calculations, '_build_rao_set', lambda *a: (band_rao(), False))
