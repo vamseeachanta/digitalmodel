@@ -116,8 +116,13 @@ def test_rebuild_is_byte_identical(tmp_path):
 # -- escalation contract -------------------------------------------------------
 
 
-@pytest.mark.parametrize("evidence", ["failed", "contradictory", "stale", "missing"])
-def test_unqualified_cache_escalates(monkeypatch, evidence):
+@pytest.mark.parametrize("evidence, expected_reason", [
+    ("failed", "atlas validation is not established — recompute exact"),
+    ("contradictory", "atlas validation is not established — recompute exact"),
+    ("stale", "atlas fingerprint is stale or missing — recompute exact"),
+    ("missing", "atlas fingerprint is stale or missing — recompute exact"),
+])
+def test_unqualified_cache_escalates(monkeypatch, evidence, expected_reason):
     from digitalmodel.drilling_riser import operability_screening as screening
 
     atlas = _atlas()
@@ -135,7 +140,7 @@ def test_unqualified_cache_escalates(monkeypatch, evidence):
     result = screen_operability("rsu_a__drilling", 0.0, 0.0)
     assert result.light == ESCALATE
     assert result.governing_utilisation is None
-    assert "validation" in result.reason or "fingerprint" in result.reason
+    assert result.reason == expected_reason
 
 
 def test_out_of_range_escalates_never_clamps():
