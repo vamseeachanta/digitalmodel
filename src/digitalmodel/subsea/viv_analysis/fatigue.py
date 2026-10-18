@@ -4,6 +4,9 @@ ABOUTME: VIV-induced fatigue damage calculator using stress ranges from VIV
 amplitudes and S-N curve methodology per DNV standards.
 """
 
+from dataclasses import asdict
+import math
+
 import numpy as np
 from typing import Optional
 import logging
@@ -12,6 +15,10 @@ from .models import (
     TubularMember,
     VIVFatigueResult
 )
+
+from digitalmodel.citations import validate_citation
+from digitalmodel.fatigue.c203_sn_tables import T_REF_WELDED_MM
+from .sn_parameters import SN_CITATION, SN_CURVES
 
 logger = logging.getLogger(__name__)
 
@@ -24,28 +31,42 @@ class VIVFatigueCalculator:
     but specific to VIV-induced cyclic stresses.
     """
 
-    # S-N curve parameters (DNV-RP-C203)
-    # log(N) = log(a) - m * log(S)
-    SN_CURVES = {
-        # Curve: (log_a, m, S_ref)
-        'DNV-B1': (15.117, 4.0, 106.97),  # Welded connections
-        'DNV-C': (14.832, 3.5, 106.97),
-        'DNV-C1': (14.477, 3.0, 106.97),
-        'DNV-C2': (13.957, 3.0, 106.97),
-        'DNV-D': (14.885, 3.0, 106.97),    # Tubular joints
-        'DNV-E': (14.265, 3.0, 106.97),
-        'DNV-F': (13.635, 3.0, 106.97),
-        'DNV-F1': (13.195, 3.0, 106.97),
-        'DNV-F3': (12.476, 3.0, 106.97),
-        'DNV-G': (13.845, 3.0, 106.97),
-        'DNV-W1': (13.617, 3.0, 106.97),   # Offshore wind
-        'DNV-W2': (13.155, 3.0, 106.97),
-        'DNV-W3': (12.436, 3.0, 106.97),
-    }
+    # In-air curves only: DNV-RP-C203 October 2011, Table 2-1.
+    SN_CURVES = SN_CURVES
 
     def __init__(self):
-        """Initialize VIV fatigue calculator."""
-        pass
+        self.citations = (SN_CITATION,)
+
+    def calculate_allowable_cycles(self, stress_range: float, sn_curve: str = "DNV-D") -> float:
+        """Endurance in cycles, with stress range in MPa (C203 Eq. 2.4.1).
+
+        Use the tabulated second branch below the 10^7-cycle knee. The rounded
+        intercepts produce a small discontinuity at the knee (under 0.2%).
+        No constant-amplitude endurance cutoff is applied to VIV damage.
+        """
+        if sn_curve not in self.SN_CURVES:
+            raise ValueError(f"Unknown S-N curve: {sn_curve}")
+        validate_citation(SN_CITATION)
+        if not math.isfinite(stress_range) or stress_range < 0:
+            raise ValueError("stress_range must be finite and nonnegative")
+        if stress_range == 0:
+            return math.inf
+        curve = self.SN_CURVES[sn_curve]
+        log_n = curve.log_a1 - curve.m1 * math.log10(stress_range)
+        if log_n > math.log10(curve.knee):
+            log_n = curve.log_a2 - curve.m2 * math.log10(stress_range)
+        return 10 ** log_n
+
+    def _corrected_stress(self, stress_range, sn_curve, apply, thickness):
+        """C203 (2011) Eq. (2.4.3), Table 2-1: S_eff=S*(t/t_ref)^k."""
+        if sn_curve not in self.SN_CURVES:
+            raise ValueError(f"Unknown S-N curve: {sn_curve}")
+        if not apply:
+            return stress_range
+        if thickness is None or not math.isfinite(thickness) or thickness <= 0:
+            raise ValueError("thickness must be finite and positive when correction is requested")
+        factor = max(1.0, thickness / T_REF_WELDED_MM) ** self.SN_CURVES[sn_curve].k
+        return stress_range * factor
 
     def calculate_stress_range(
         self,
@@ -130,46 +151,25 @@ class VIVFatigueCalculator:
         Returns:
             Fatigue damage (Miner's sum)
         """
-        if sn_curve not in self.SN_CURVES:
-            raise ValueError(f"Unknown S-N curve: {sn_curve}")
-
-        log_a, m, S_ref = self.SN_CURVES[sn_curve]
-
-        # Thickness correction factor (DNV-RP-C203)
-        if thickness_correction and thickness is not None:
-            # t_eff correction
-            t_ref = 25.0  # mm
-            if thickness > t_ref:
-                k_t = (t_ref / thickness) ** 0.25
-            else:
-                k_t = 1.0
-            stress_range = stress_range * k_t
-
-        # Number of cycles
-        n = frequency * duration
-
-        # Allowable cycles from S-N curve
-        # N = 10^(log_a - m * log(S/S_ref))
-        if stress_range > 0:
-            log_N = log_a - m * np.log10(stress_range / S_ref)
-            N = 10 ** log_N
-        else:
-            N = float('inf')
-
-        # Damage
-        if N > 0:
-            damage = n / N
-        else:
-            damage = 0.0
-
-        return damage
+        stress_range = self._corrected_stress(
+            stress_range, sn_curve, thickness_correction, thickness,
+        )
+        if not math.isfinite(frequency) or frequency <= 0:
+            raise ValueError("frequency must be finite and positive")
+        if not math.isfinite(duration) or duration < 0:
+            raise ValueError("duration must be finite and nonnegative")
+        allowable_cycles = self.calculate_allowable_cycles(stress_range, sn_curve)
+        # C203 (2011) Eq. (2.2.1): Palmgren-Miner D = n/N.
+        return frequency * duration / allowable_cycles
 
     def calculate_fatigue_life(
         self,
         stress_range: float,
         frequency: float,
         sn_curve: str = "DNV-D",
-        target_damage: float = 1.0
+        target_damage: float = 1.0,
+        thickness_correction: bool = False,
+        thickness: Optional[float] = None
     ) -> float:
         """
         Calculate fatigue life until target damage is reached.
@@ -183,28 +183,16 @@ class VIVFatigueCalculator:
         Returns:
             Fatigue life (years)
         """
-        if sn_curve not in self.SN_CURVES:
-            raise ValueError(f"Unknown S-N curve: {sn_curve}")
-
-        log_a, m, S_ref = self.SN_CURVES[sn_curve]
-
-        # Allowable cycles
-        if stress_range > 0:
-            log_N = log_a - m * np.log10(stress_range / S_ref)
-            N_allow = 10 ** log_N
-        else:
-            return float('inf')
-
-        # Time to reach target damage
-        # D = n / N_allow = f * t / N_allow
-        # t = D * N_allow / f
-        t_seconds = target_damage * N_allow / frequency
-
-        # Convert to years
-        seconds_per_year = 365.25 * 24 * 3600
-        t_years = t_seconds / seconds_per_year
-
-        return t_years
+        stress_range = self._corrected_stress(
+            stress_range, sn_curve, thickness_correction, thickness,
+        )
+        if not math.isfinite(frequency) or frequency <= 0:
+            raise ValueError("frequency must be finite and positive")
+        if not math.isfinite(target_damage) or target_damage <= 0:
+            raise ValueError("target_damage must be finite and positive")
+        allowable_cycles = self.calculate_allowable_cycles(stress_range, sn_curve)
+        # C203 (2011) Eq. (2.2.1), rearranged: t = D*N/f.
+        return target_damage * allowable_cycles / frequency / (365.25 * 24 * 3600)
 
     def analyze_viv_fatigue(
         self,
@@ -254,7 +242,9 @@ class VIVFatigueCalculator:
         life_years = self.calculate_fatigue_life(
             stress_range,
             viv_frequency,
-            sn_curve=sn_curve
+            sn_curve=sn_curve,
+            thickness_correction=True,
+            thickness=member.wall_thickness * 1000,
         )
 
         return VIVFatigueResult(
@@ -264,7 +254,8 @@ class VIVFatigueCalculator:
             num_cycles=num_cycles,
             fatigue_damage=damage,
             fatigue_life_years=life_years,
-            sn_curve=sn_curve
+            sn_curve=sn_curve,
+            citations=[asdict(citation) for citation in self.citations],
         )
 
     def cumulative_damage(

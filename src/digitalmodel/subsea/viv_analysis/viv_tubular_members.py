@@ -83,6 +83,26 @@ class VIVTubularMembers:
             "with_internal_fluid"
         ]
 
+        # DNV-RP-C205 (October 2010), §9.1.11 and Appendix D:
+        # effective inertia includes Ca*rho*pi*D²/4. Imperial mass fields
+        # are weights per inch; the existing frequency equations divide by g.
+        # Retain nominal OD as the declared hydrodynamic diameter; coatings
+        # contribute structural weight but no diameter growth in this route.
+        ca = cfg["viv"].get("added_mass_coefficient", 1.0)
+        if not math.isfinite(ca) or ca < 0:
+            raise ValueError("added_mass_coefficient must be finite and nonnegative")
+        added_weight = 0.0
+        for section in cfg["pipeline"]["crossection"]:
+            fluid = section["external_fluid"]
+            if fluid["unit"] != "lb/inch^3":
+                raise ValueError("external fluid density unit must be lb/inch^3")
+            rho, diameter = fluid["density"], section["Nominal_OD"]
+            if not math.isfinite(rho) or rho <= 0 or not math.isfinite(diameter) or diameter <= 0:
+                raise ValueError("External density and diameter must be finite and positive")
+            added_weight += ca * rho * math.pi * diameter**2 / 4
+        mass_without_internal_fluid += added_weight
+        mass_with_internal_fluid += added_weight
+
         span_length_array = cfg["pipeline"]["span_length"]
         span_length_array = [item * 12 for item in span_length_array]
 
@@ -270,6 +290,11 @@ class VIVTubularMembers:
 
     def get_vs_frequencies(self, cfg):
         st = cfg["viv"]["st"]
+        if not math.isfinite(st) or st <= 0:
+            raise ValueError("Strouhal number must be finite and positive")
+        speed_unit = cfg["viv"].get("current_speed_unit", "in/s")
+        if speed_unit not in ("in/s", "m/s"):
+            raise ValueError("current speed unit must be in/s or m/s")
         external_fluid_cfg = cfg["pipeline"]["crossection"][0]["external_fluid"]
         kinematic_viscosity = (
             external_fluid_cfg["kinematic_viscosity"] * (1 / 0.0254) ** 2
@@ -293,11 +318,16 @@ class VIVTubularMembers:
             for depth_item in current_item["data"]:
                 current_depth = depth_item["depth"]
                 current_speed = depth_item["speed"]
-                current_speed_in_inch_per_s = current_speed / 0.0254
-                Re = (current_speed * OD) / kinematic_viscosity
-                shredding_frequency_inline = st * current_speed / OD
-                KC = current_speed_in_inch_per_s / shredding_frequency_inline / OD
-                shredding_frequency_crossflow = shredding_frequency_inline / 2
+                if not math.isfinite(current_speed) or current_speed < 0:
+                    raise ValueError("Current speed must be finite and nonnegative")
+                speed_in_s = current_speed if speed_unit == "in/s" else current_speed / 0.0254
+                Re = (speed_in_s * OD) / kinematic_viscosity
+                # C205 (2010) §9.1.3, §9.3.3.2: f_CF=St*U/D; f_IL=2*f_CF.
+                shredding_frequency_crossflow = st * speed_in_s / OD
+                shredding_frequency_inline = 2 * shredding_frequency_crossflow
+                # C205 §9.7.1.3: KC=U*T/D requires an imposed oscillation period.
+                # Steady current supplies no such T; retain the column as null.
+                KC = None
 
                 viv_frequencies_df.loc[len(viv_frequencies_df)] = [
                     current_label,
@@ -441,7 +471,7 @@ class VIVTubularMembers:
         settings = {
             "file_name": cfg["Analysis"]["file_name_for_overwrite"] + "_vs_frequencies",
             "title": "VIV Frequency",
-            "xlabel": "Current Speed (m/s)",
+            "xlabel": "Current Speed (" + cfg["viv"].get("current_speed_unit", "in/s") + ")",
             "ylabel": "VIV Frequency (Hz)",
         }
         plot_yml["settings"].update(settings)
