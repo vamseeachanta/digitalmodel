@@ -134,6 +134,8 @@ def validate_maneuvering_envelope_input(payload: dict[str, Any]) -> ManeuveringE
     rudder = payload["rudder"]
     prop = payload["propulsion"]
     env = payload["environment"]
+    if not isinstance(env, dict):
+        raise ValueError("environment must be a YAML mapping")
     imo = payload.get("imo", {})
     outputs = payload["outputs"]
 
@@ -243,7 +245,7 @@ def run_maneuvering_envelope_sweep(config: ManeuveringEnvelopeInput) -> dict[str
     td_over_l = me.tactical_diameter_over_L(config.K_prime, config.imo_rudder_angle_deg)
     imo_verdict = me.imo_turning_compliance(
         config.imo_advance_m, td_over_l * config.lbp_m, config.lbp_m,
-        water_depth_m=config.raw.get("environment", {}).get("water_depth_m"),
+        water_depth_m=(config.raw.get("environment") or {}).get("water_depth_m"),
         draft_m=ref.draft_m,
     )
 

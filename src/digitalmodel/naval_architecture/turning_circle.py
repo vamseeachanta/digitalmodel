@@ -93,8 +93,8 @@ def simulate_nomoto_turning_circle(
 ) -> dict[str, Any]:
     """Estimate a constant-rudder turn; refuse known h/T <= 4.
 
-    The depth screen follows IMO MSC/Circ.1053 (2002), Annex 2.1.2,
-    conservatively; it does not validate these Nomoto coefficients.
+    The applicability screen applies the trial-depth limit in
+    IMO MSC/Circ.1053 (2002), Annex 2.1.2; it does not validate these coefficients.
     Omitted depth produces a warning in the result. No shallow-water scaling
     is applied (Rzeszutko et al., 2026, Applied Ocean Research 176, 105289,
     https://doi.org/10.1016/j.apor.2026.105289, section 4).
@@ -332,7 +332,7 @@ def validate_turning_circle_input(payload: dict[str, Any]) -> TurningCircleInput
         raise ValueError("sweep.rudder_angles_deg must contain at least one value")
 
     turning_depth_warning(
-        payload.get("environment", {}).get("water_depth_m"),
+        (payload.get("environment") or {}).get("water_depth_m"),
         payload.get("vessel", {}).get("draft_m"),
     )
     return TurningCircleInput(
@@ -371,7 +371,7 @@ def run_turning_circle_sweep(config: TurningCircleInput) -> dict[str, Any]:
     """Run every speed/rudder-angle combination and return rows + metadata."""
 
     depth_warning = turning_depth_warning(
-        config.raw.get("environment", {}).get("water_depth_m"),
+        (config.raw.get("environment") or {}).get("water_depth_m"),
         config.vessel.get("draft_m"),
     )
     cases: list[dict[str, Any]] = []
@@ -388,7 +388,7 @@ def run_turning_circle_sweep(config: TurningCircleInput) -> dict[str, Any]:
                 duration_s=config.duration_s,
                 dt_s=config.dt_s,
                 case_id=case_id,
-                water_depth_m=config.raw.get("environment", {}).get("water_depth_m"),
+                water_depth_m=(config.raw.get("environment") or {}).get("water_depth_m"),
                 draft_m=config.vessel.get("draft_m"),
             )
             cases.append(result["metadata"])

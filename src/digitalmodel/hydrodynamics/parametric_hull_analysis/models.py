@@ -159,7 +159,7 @@ def classify_depth(water_depth: float, draft: float) -> DepthClassification:
     Independently reported in ITTC (2002), 23rd ITTC proceedings, volume I,
     Appendix A.1, p. 201: https://www.vliz.be/imisdocs/publications/139636.pdf.
     Both sources attribute the bands to PIANC (1992); no clause in PIANC 121
-    or DNV-RP-C205 is asserted. Equalities are a local conservative convention:
+    or DNV-RP-C205 is asserted. Equalities are assigned to the shallower class by local convention:
     deep > 3; medium 1.5 < h/T <= 3; shallow 1.2 < h/T <= 1.5;
     very shallow <= 1.2. MEDIUM retains its API name for medium-deep water.
     Classification alone does not establish navigability or under-keel clearance.

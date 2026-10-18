@@ -80,3 +80,14 @@ def test_bem_sweep_propagates_pianc_bands_with_stubbed_solver(monkeypatch, tmp_p
     )
     assert entries[0].depth_class.value == expected
     assert sweep.sweep_to_dataframe(entries).iloc[0]["depth_class"] == expected
+
+
+@pytest.mark.parametrize("slope, source", [
+    (BankSlopeType.MODERATE, "table"), ("unlisted", "default 0.5"),
+])
+def test_bank_fraction_source_is_exposed(slope, source):
+    args = dict(beam=30, draft=10, water_depth=18, speed_knots=10, slope=slope)
+    result = pianc_bank_clearance_width(**args, return_metadata=True)
+    assert result["fraction"] == 0.5
+    assert result["fraction_source"] == source
+    assert result["width_m"] == pianc_bank_clearance_width(**args)

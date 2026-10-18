@@ -89,7 +89,51 @@ def test_sweep_retains_unknown_depth_warning():
 
 def test_imo_workflow_does_not_drop_depth_guard():
     # Synthetic dimensions; no LFS data or proprietary inputs required.
-    config = validate_maneuvering_envelope_input({
+    config = validate_maneuvering_envelope_input(envelope_payload())
+    with pytest.raises(ValueError, match="h/T > 4"):
+        run_maneuvering_envelope_sweep(config)
+
+
+@pytest.mark.parametrize("calculate", [estimate, check_imo])
+@pytest.mark.parametrize("depth", ["1", "not-a-depth", {}])
+def test_external_depth_refusal_uses_value_error(calculate, depth):
+    with pytest.raises(ValueError):
+        calculate(water_depth_m=depth, draft_m=1)
+
+
+@pytest.mark.parametrize("calculate", [estimate, check_imo])
+def test_numeric_text_depth_above_screen(calculate):
+    result = calculate(water_depth_m="5", draft_m="1")
+    if calculate is estimate:
+        assert result["metadata"]["depth_applicability"] == "screen_passed"
+    else:
+        assert result.depth_applicability == "screen_passed"
+
+
+def test_null_turning_environment_retains_unknown_depth_warning():
+    payload = deepcopy(load_packaged_turning_circle_yaml().raw)
+    payload["environment"] = None
+    config = validate_turning_circle_input(payload)
+    result = run_turning_circle_sweep(config)
+    assert any("applicability is unverified" in w for w in result["warnings"])
+
+
+def test_null_envelope_environment_is_refused_as_value_error():
+    payload = envelope_payload()
+    payload["environment"] = None
+    with pytest.raises(ValueError, match="environment"):
+        validate_maneuvering_envelope_input(payload)
+
+
+def test_null_raw_envelope_environment_retains_unknown_depth_warning():
+    config = validate_maneuvering_envelope_input(envelope_payload())
+    config.raw["environment"] = None
+    with pytest.warns(UserWarning, match="applicability is unverified"):
+        run_maneuvering_envelope_sweep(config)
+
+
+def envelope_payload():
+    return {
         "case": {"id": "synthetic"},
         "ship": {"lbp_m": 100, "beam_m": 20, "K_prime": 1},
         "rudder": {"area_m2": 20, "span_m": 5, "aspect_ratio": 1.25,
@@ -104,6 +148,4 @@ def test_imo_workflow_does_not_drop_depth_guard():
                                 "windage_area_m2": 500}],
         "sweep": {"current_speeds": {"units": "kn", "values": [1]}},
         "outputs": {},
-    })
-    with pytest.raises(ValueError, match="h/T > 4"):
-        run_maneuvering_envelope_sweep(config)
+    }

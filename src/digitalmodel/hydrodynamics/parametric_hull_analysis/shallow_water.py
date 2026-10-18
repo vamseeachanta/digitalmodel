@@ -278,8 +278,9 @@ def pianc_bank_clearance_width(
     as a function of vessel beam, speed, and bank slope type.
     The depth multipliers x1.2 (shallow) and x1.5 (very shallow) are uncited
     engineering assumptions retained for screening, not PIANC requirements.
-    Pass return_metadata=True to obtain width_m, depth_class, multiplier and
-    multiplier_source; the default preserves the scalar width API.
+    Pass return_metadata=True to obtain width_m, depth_class, multiplier,
+    multiplier_source, fraction and fraction_source; the default preserves
+    the scalar width API.
 
     Parameters
     ----------
@@ -311,7 +312,8 @@ def pianc_bank_clearance_width(
     else:
         speed_cat = "fast"
 
-    fraction = _BANK_CLEARANCE_TABLE.get((slope, speed_cat), 0.5)
+    fraction_key = (slope, speed_cat)
+    fraction = _BANK_CLEARANCE_TABLE.get(fraction_key, 0.5)
 
     # Uncited engineering assumptions; these are not PIANC table factors.
     depth_class = classify_depth(water_depth, draft)
@@ -326,6 +328,8 @@ def pianc_bank_clearance_width(
     if return_metadata:
         return {
             "width_m": width,
+            "fraction": fraction,
+            "fraction_source": "table" if fraction_key in _BANK_CLEARANCE_TABLE else "default 0.5",
             "depth_class": depth_class.value,
             "multiplier": multiplier,
             "multiplier_source": "uncited engineering assumption",

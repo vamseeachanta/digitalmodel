@@ -31,8 +31,8 @@ are retained.
 
 The preliminary Nomoto estimator and IMO turning check take optional
 `water_depth_m` and `draft_m`. Supplied h/T <= 4 raises `ValueError`, following
-[3, Annex 2.1.2]; for Nomoto this is a conservative applicability screen,
-not a validated coefficient range. Missing depth leaves an explicit warning
+[3, Annex 2.1.2]; for Nomoto, the IMO trial-depth limit is applied as an
+applicability screen, not a validated coefficient range. Missing depth leaves an explicit warning
 and `depth_applicability="unverified"`. Numerical IMO pass flags with unknown
 depth do not establish compliance. Passing the depth screen does not check
 bank confinement or the remaining trial conditions. Both YAML workflows read
