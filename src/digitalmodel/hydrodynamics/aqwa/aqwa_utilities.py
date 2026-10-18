@@ -1,17 +1,13 @@
 import logging
 import os
 import subprocess
+import re
+from pathlib import Path
 
 from assetutilities.common.data import SaveData
 
 
 save_data = SaveData()
-
-try:
-    # Third party imports
-    import OrcFxAPI
-except:
-    logging.debug("OrcFxAPI not available")
 
 # Third party imports
 from assetutilities.common.file_management import FileManagement
@@ -26,6 +22,8 @@ class AqwaUtilities:
     def is_license_available(self):
         # TODO
         try:
+            import OrcFxAPI
+
             model = OrcFxAPI.Model()
             print("Orcaflex license is available")
             return True
@@ -72,26 +70,29 @@ class AqwaUtilities:
         return aqwa_exe
 
     def run_aqwa_analysis_as_subprocess(self, cfg, input_file, process="subprocess"):
-        aqwa_exe = self.get_aqwa_exe(cfg)
-        # Currently the time to startup client is sufficent for socket to be ready.
-        # possibly write out a temp.bat and send that to detached subprocess.
-        # args = ['ping 127.0.0.1 -n 1', '&&', aqwa_exe, '/nowind', input_file]
-        # args = ['timeout', '5', '&&', aqwa_exe, '/nowind', input_file]
-        args = [aqwa_exe, "/nowind", input_file]
-        logging.info(f"AQWA process running for {input_file} ... START")
-
-        if process == "detached":
-            DETACHED_PROCESS = 0x00000008
-            aqwa_process = subprocess.Popen(
-                args,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                creationflags=DETACHED_PROCESS,
-            )
-        elif process == "subprocess":
-            aqwa_process = subprocess.Popen(
-                args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-            aqwa_out, err = aqwa_process.communicate()
-
-        logging.info(f"AQWA process running for {input_file} ... ... ... ... COMPLETE")
+        """Return captured exit/MES evidence; execution requires explicit opt-in."""
+        if cfg.get("execution", {}).get("allow_solver") is not True:
+            raise ValueError("Native execution is disabled; provide qualified external evidence")
+        if process != "subprocess":
+            raise ValueError("Detached execution cannot establish completion evidence")
+        mes_path = Path(input_file).with_suffix(".MES")
+        before = mes_path.stat().st_mtime_ns if mes_path.exists() else None
+        result = subprocess.run(
+            [self.get_aqwa_exe(cfg), "/nowind", str(input_file)],
+            capture_output=True, text=True, check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        errors, warnings = [], []
+        status = "MISSING"
+        if mes_path.exists():
+            content = mes_path.read_text(encoding="utf-8", errors="strict")
+            errors = [line for line in content.splitlines() if re.search(r"\b(ERROR|FATAL)\b", line, re.I)]
+            warnings = [line for line in content.splitlines() if re.search(r"\bWARNING\b", line, re.I)]
+            status = "FAIL" if errors or warnings else "PASS"
+            if not content.strip():
+                status = "EMPTY"
+            if before == mes_path.stat().st_mtime_ns:
+                status = "STALE"
+        return {"returncode": result.returncode, "stdout": result.stdout,
+                "stderr": result.stderr, "mes_status": status,
+                "errors": errors, "warnings": warnings}

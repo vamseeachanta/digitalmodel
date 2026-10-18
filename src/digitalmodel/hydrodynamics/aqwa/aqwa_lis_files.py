@@ -45,6 +45,11 @@ class AqwaLISFiles:
         for input_file in input_files:
             filename_pattern = Path(input_file).stem
 
+            if cfg_lis.get("category") == "displacement_raos":
+                df = self._get_displacement_raos(input_file)
+                df["input_file"] = filename_pattern
+                df_master = pd.concat([df_master, df], ignore_index=True)
+                continue
             try:
                 cfg_file = {"io": input_file, "basename": os.path.basename(input_file)}
                 cfg_lis_search_cfg = cfg_lis["search_cfg"]["start"]
@@ -90,9 +95,25 @@ class AqwaLISFiles:
                 df["input_file"] = Path(input_file).stem
                 df_master = pd.concat([df_master, df], axis=0)
             except Exception as e:
-                logging.error(f"Error in processing {input_file}: {e}")
+                raise ValueError(f"LIS extraction failed for {Path(input_file).name}: {e}") from e
 
         return df_master, filename_pattern
+
+    def _get_displacement_raos(self, input_file):
+        from digitalmodel.marine_ops.marine_analysis.aqwa_enhanced_parser import AQWAEnhancedParser
+
+        payload = AQWAEnhancedParser().parse_lis_file(input_file)
+        rows = []
+        for i, frequency in enumerate(payload["frequencies"]):
+            for j, heading in enumerate(payload["headings"]):
+                row = {"frequency": frequency, "direction": heading}
+                for dof, data in payload["raos"].items():
+                    row[dof] = data["amplitude"][i, j]
+                    row[dof + "_phase"] = data["phase"][i, j]
+                rows.append(row)
+        if not rows:
+            raise ValueError("Displacement RAO extraction produced no rows")
+        return pd.DataFrame(rows)
 
     def get_refine_data_using_cfg(self, data, cfg_refine, cfg_lis_search_cfg):
         refine_data_line_numbers = rd.get_array_rows_containing_keywords(

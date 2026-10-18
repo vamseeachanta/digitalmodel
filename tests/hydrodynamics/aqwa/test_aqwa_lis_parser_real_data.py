@@ -15,7 +15,7 @@ from digitalmodel.hydrodynamics.aqwa.aqwa_lis_files import AqwaLISFiles
 
 
 # Test data path
-TEST_DATA_DIR = Path("docs/domains/aqwa/examples/03_dat/001_ship_raos")
+TEST_DATA_DIR = Path(__file__).resolve().parents[3] / "docs/domains/aqwa/examples/03_dat/001_ship_raos"
 TEST_LIS_FILE = TEST_DATA_DIR / "001_SHIP_RAOS.LIS"
 
 
@@ -44,7 +44,7 @@ class TestAqwaLISFilesRealData:
             "result": [
                 {
                     "label": "RAOs",
-                    "category": "raos",
+                    "category": "displacement_raos",
                     "save_csv": True,
                     "search_cfg": {
                         "start": {
@@ -79,19 +79,11 @@ class TestAqwaLISFilesRealData:
             ]
         }
 
-    @pytest.mark.skipif(
-        not TEST_LIS_FILE.exists(),
-        reason="Test data not available"
-    )
     def test_parser_initialization(self, parser):
         """Test parser initializes correctly"""
         assert parser is not None
         assert isinstance(parser, AqwaLISFiles)
 
-    @pytest.mark.skipif(
-        not TEST_LIS_FILE.exists(),
-        reason="Test data not available"
-    )
     def test_get_data_from_lis_file(self, parser, sample_config, tmp_path):
         """Test data extraction from LIS file"""
         # Setup output directory
@@ -99,26 +91,16 @@ class TestAqwaLISFilesRealData:
 
         result_item = sample_config["result"][0]
 
-        try:
-            df, filename_pattern = parser.get_data(sample_config, result_item)
+        df, filename_pattern = parser.get_data(sample_config, result_item)
+        assert isinstance(df, pd.DataFrame)
+        assert len(df) == 72
+        assert filename_pattern == "001_SHIP_RAOS"
+        assert df.iloc[0]["frequency"] == pytest.approx(0.1)
+        assert df.iloc[0]["direction"] == -180.0
+        assert df.iloc[0]["surge"] == pytest.approx(1.5204)
+        assert df.iloc[0]["heave"] == pytest.approx(0.9973)
+        assert df.iloc[0]["pitch"] == pytest.approx(0.0894)
 
-            # Check we got a dataframe
-            assert isinstance(df, pd.DataFrame)
-            assert len(df) > 0
-
-            # Check filename pattern extracted
-            assert filename_pattern == "001_SHIP_RAOS"
-
-            # Check for expected columns (frequency/period data)
-            assert len(df.columns) > 0
-
-        except Exception as e:
-            pytest.skip(f"Data extraction failed: {e}")
-
-    @pytest.mark.skipif(
-        not TEST_LIS_FILE.exists(),
-        reason="Test data not available"
-    )
     def test_header_column_extraction(self, parser):
         """Test header column extraction"""
         data = [
@@ -141,10 +123,6 @@ class TestAqwaLISFilesRealData:
 
         assert "FREQ" in columns or "PERIOD" in columns
 
-    @pytest.mark.skipif(
-        not TEST_LIS_FILE.exists(),
-        reason="Test data not available"
-    )
     def test_dataframe_sorting(self, parser):
         """Test dataframe sorting functionality"""
         # Create sample dataframe
@@ -171,10 +149,6 @@ class TestAqwaLISFilesRealData:
         assert sorted_df.iloc[1]['freq'] == 0.3
         assert sorted_df.iloc[2]['freq'] == 0.5
 
-    @pytest.mark.skipif(
-        not TEST_LIS_FILE.exists(),
-        reason="Test data not available"
-    )
     def test_velocity_transformation(self, parser):
         """Test RAO velocity transformation"""
         df = pd.DataFrame({
@@ -209,10 +183,6 @@ class TestAqwaLISFilesRealData:
         assert abs(result_df.iloc[0]['surge_vel'] - 1.0) < 0.001  # 1.0 * 1.0
         assert abs(result_df.iloc[1]['surge_vel'] - 1.0) < 0.001  # 0.5 * 2.0
 
-    @pytest.mark.skipif(
-        not TEST_LIS_FILE.exists(),
-        reason="Test data not available"
-    )
     def test_acceleration_transformation(self, parser):
         """Test RAO acceleration transformation"""
         df = pd.DataFrame({
@@ -247,10 +217,6 @@ class TestAqwaLISFilesRealData:
         assert abs(result_df.iloc[0]['surge_acc'] - 1.0) < 0.001  # 1.0 * 1.0^2
         assert abs(result_df.iloc[1]['surge_acc'] - 2.0) < 0.001  # 0.5 * 2.0^2
 
-    @pytest.mark.skipif(
-        not TEST_LIS_FILE.exists(),
-        reason="Test data not available"
-    )
     def test_csv_save(self, parser, tmp_path):
         """Test CSV file saving"""
         df = pd.DataFrame({
