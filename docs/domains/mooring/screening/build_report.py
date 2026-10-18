@@ -283,17 +283,26 @@ def build(output_dir: Path, source: Path | None = None, website_out: Path | None
     if source is not None:
         if digest(source) != basis["website_source_sha256"]:
             raise ValueError("Website source digest mismatch")
-        prepared = website_page(source.read_text(encoding="utf-8"), content, result["revision"])
-        validate_page(prepared, result, basis, revisions)
+        website_basis = {**basis, "run_record_url": "mooring-screening/README.md"}
+        website_content = sections(result, website_basis, revisions)
+        prepared = website_page(source.read_text(encoding="utf-8"), website_content, result["revision"])
+        validate_page(prepared, result, website_basis, revisions)
         destination = website_out / "content/demos"
         destination.mkdir(parents=True, exist_ok=True)
         (destination / "mooring.html").write_text(prepared, encoding="utf-8")
+        bundle = destination / "mooring-screening"
+        bundle.mkdir(exist_ok=True)
+        for name in [*files, "manifest.json"]:
+            (bundle / name).write_bytes((output_dir / name).read_bytes())
+        for name in manifest["record_inputs"]:
+            (bundle / name).write_bytes((RECORD / name).read_bytes())
         (website_out / "SOURCE.txt").write_text(basis["website_commit"] + "\n", encoding="utf-8")
         (website_out / "CHANGES.md").write_text((output_dir / "comparison.md").read_text(encoding="utf-8"), encoding="utf-8")
         write_json(website_out / "manifest.json", {"source_commit": basis["website_commit"],
                    "source_sha256": basis["website_source_sha256"], "numeric_bindings": bindings,
                    "files": {str(p.relative_to(website_out)): {"sha256": digest(p), "bytes": p.stat().st_size}
-                             for p in [destination / "mooring.html", website_out / "SOURCE.txt", website_out / "CHANGES.md"]}})
+                             for p in [destination / "mooring.html", website_out / "SOURCE.txt",
+                                       website_out / "CHANGES.md", *sorted(bundle.iterdir())]}})
     return manifest
 
 
