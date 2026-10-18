@@ -117,7 +117,7 @@ simulation:
 generic:
 
   vessel_types:
-  - name: "SSR Platform"                        # Surface platform / SSR providing motions
+  - name: "SSR Platform Type"                   # Surface platform / SSR providing motions
     properties:
       # RAOs + hydrodynamics to be sourced from digitalmodel OrcaWave /
       # diffraction capability for the actual hull. PLACEHOLDER vessel type:
@@ -132,7 +132,7 @@ generic:
 
   vessels:
   - name: "SSR Platform"
-    vessel_type: "SSR Platform"
+    vessel_type: "SSR Platform Type"
     connection: Free
     initial_position: [0, 0, 0]
     properties:

@@ -16,12 +16,13 @@ pipelay:
   config:
     water_depth_m: 1500.0
     tower_angle_deg: 3.0           # tower angle from vertical (deg)
-    top_tension_kN: 3000.0         # top tension at the J-lay tower
+    top_tension_kN: 2624.9         # screening-basis.md E2-E3: w*h/(1-sin(3 deg))
     allowable_sagbend_strain: 0.003
     allowable_overbend_strain: 0.002
   pipe:
     outer_diameter: 0.3238         # 12.75 in
     wall_thickness: 0.0206
+    steel_density: 7850.0         # explicit existing input assumption; E1, not a standard allowable
     youngs_modulus: 207.0e9
     smys: 448.0e6
     coating_thickness: 0.06

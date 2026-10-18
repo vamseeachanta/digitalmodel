@@ -19,7 +19,7 @@ from loguru import logger
 class GateStatus(Enum):
     """Gate execution status."""
 
-    PASS = "pass"
+    PASS = "pass"  # nosec B105 # Public gate outcome label, not a credential.
     WARNING = "warning"
     FAILURE = "failure"
     SKIPPED = "skipped"

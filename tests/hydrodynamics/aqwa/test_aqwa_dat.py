@@ -1,35 +1,21 @@
-# Standard library imports
-import os
-import sys
+"""Assert actual package deck text; no engine mock or solver execution."""
+import pytest
 
-# Third party imports
-import pytest  # noqa
-
-# Reader imports
-from digitalmodel.engine import engine
-from unittest.mock import patch, MagicMock
+from digitalmodel.hydrodynamics.aqwa.aqwa_dat_files import AqwaDATFiles
 
 
-def run_process(input_file, expected_result={}):
-    with patch('digitalmodel.engine.engine') as mock_engine:
-        mock_engine.return_value = {'status': 'completed', 'basename': 'aqwa_dat'}
-        
-        from digitalmodel.engine import engine
-        if input_file is not None and not os.path.isfile(input_file):
-            input_file = os.path.join(os.path.dirname(__file__), input_file)
-        cfg = engine(input_file)
+def test_deck6_written_frequency():
+    # AQWA Reference Manual 2025 R1 10.3: HRTZ=1/T, FREQ=2*pi/T.
+    parser = AqwaDATFiles()
+    lines = parser.get_dc_06_body({}, {"data": {"element_type": "HRTZ", "raw": {"period": [20., 10.]}}})
+    assert len(lines) == 2
+    assert lines[0][6:10] == "HRTZ"
+    assert float(lines[0][20:30]) == pytest.approx(0.05)
+    assert float(lines[1][20:30]) == pytest.approx(0.1)
+    assert parser._parse_deck6(lines).periods == pytest.approx([20., 10.])
 
 
-def test_run_process():
-    input_file = 'aqwa_dat.yml'
-    pytest_output_file = None
-    # pytest_output_file = get_valid_pytest_output_file(pytest_output_file)
-    # expected_result = ymlInput(pytest_output_file, updateYml=None)
-
-    if len(sys.argv) > 1:
-        sys.argv.pop()
-
-    run_process(input_file, expected_result={})
-
-
-# Removed module-level execution of test_run_process()
+def test_negative_damping_deck_rejected():
+    with pytest.raises(ValueError, match="nonnegative"):
+        AqwaDATFiles().get_dc_07_body({}, {"data": {"element_type": "ADMP", "raw": {
+            "added_damping": {"rxx": -1., "ryy": 0.}}}})

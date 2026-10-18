@@ -1,8 +1,6 @@
 Groups:
   Structure:
     Generic pipe: Model
-    Ramp inclined: Model
-    Ramp-curve: Model
     Generic lay hull: Model
     Tensioner: Model
   State:

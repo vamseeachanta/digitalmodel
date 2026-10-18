@@ -10,6 +10,8 @@ on:
       - 'src/**'
       - 'scripts/**'
       - 'docs/api/**'
+      - 'docs/standards/**'
+      - 'docs/domains/**'
       - 'assets/logo/**'
       - 'atlases/**'
       - 'data/**'
@@ -22,6 +24,8 @@ on:
       - 'src/**'
       - 'scripts/**'
       - 'docs/api/**'
+      - 'docs/standards/**'
+      - 'docs/domains/**'
       - 'assets/logo/**'
       - 'atlases/**'
       - 'data/**'
@@ -50,6 +54,12 @@ jobs:
 
       - name: Brand token guard
         run: python scripts/brand_guard.py
+
+      - name: Validate docs routing
+        run: >-
+          uv run --no-project --with pytest --with pytest-asyncio --with pyyaml
+          python -m pytest tests/docs/test_digitalmodel_routing_contract.py
+          -q -p no:cacheprovider --basetemp="$RUNNER_TEMP/docs-routing-tests"
 
       # Runs inside the project environment, not the bare interpreter: the
       # generators import numpy, scipy, pandas, matplotlib, pydantic and yaml

@@ -53,6 +53,8 @@ pipeline:
 
 viv:
   st: 0.2
+  current_speed_unit: in/s
+  added_mass_coefficient: 1.0
 
 environment:
   current:

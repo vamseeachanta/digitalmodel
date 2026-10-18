@@ -18,6 +18,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+import yaml
 
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
@@ -295,10 +296,23 @@ class TestOrcaWaveRunnerPrepare:
 
     def test_prepare_multibody_copies_all_meshes(self, fpso_turret_spec_path, tmp_path):
         spec = _load_spec(fpso_turret_spec_path)
-        config = RunConfig(output_dir=tmp_path, dry_run=True, copy_mesh_files=True)
-        runner = OrcaWaveRunner(config)
+        sources = []
+        for index, body in enumerate(spec.get_bodies()):
+            source = fpso_turret_spec_path.parent / body.vessel.geometry.mesh_file
+            distinct = tmp_path / f"body_{index}.gdf"
+            distinct.write_bytes(source.read_bytes())
+            body.vessel.geometry.mesh_file = str(distinct)
+            sources.append(distinct)
+        runner = OrcaWaveRunner(RunConfig(
+            output_dir=tmp_path / "packaged", dry_run=True, copy_mesh_files=True,
+        ))
         result = runner.prepare(spec, spec_path=fpso_turret_spec_path)
-        assert len(result.mesh_files) >= 2
+        expected = {source.name for source in sources}
+        assert {mesh.name for mesh in result.mesh_files} == expected
+        for source in sources:
+            assert (result.output_dir / source.name).read_bytes() == source.read_bytes()
+        generated = yaml.safe_load(result.input_file.read_text(encoding="utf-8"))
+        assert {body["BodyMeshFileName"] for body in generated["Bodies"]} == expected
 
     def test_prepare_validates_mesh_references(self, ship_raos_spec_path, tmp_path):
         spec = _load_spec(ship_raos_spec_path)

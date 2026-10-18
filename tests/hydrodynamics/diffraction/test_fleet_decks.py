@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Bulk fleet diffraction-deck generation (digitalmodel #929)."""
 
 from __future__ import annotations
@@ -53,8 +56,8 @@ def test_generate_fleet_decks_builds_and_skips(tmp_path: Path, fleet):
     result = fleet_decks.generate_fleet_decks(tmp_path, target_panels=120)
 
     assert result.n_built == 3
-    assert result.n_placeholder == 1  # the semisub
-    assert result.n_parametric == 2
+    assert result.n_placeholder == 0
+    assert result.n_parametric == 3
     assert [name for name, _ in result.skipped] == ["No Draft Barge"]
 
     # Each built deck wrote its dir with a spec .yml + manifest.
@@ -73,10 +76,10 @@ def test_emit_batch_config_excludes_placeholder_and_parses(tmp_path: Path, fleet
     cfg_path = fleet_decks.emit_orcawave_batch_config(result, tmp_path / "batch.yml")
 
     raw = yaml.safe_load(cfg_path.read_text())
-    # Placeholder (semisub) excluded by default -> 2 jobs from 3 decks.
-    assert len(raw["jobs"]) == 2
+    # The drilling semi-submersible now has a parametric mesh and is included.
+    assert len(raw["jobs"]) == 3
     job_names = {j["job_name"] for j in raw["jobs"]}
-    assert not any("semi" in n.lower() for n in job_names)
+    assert any("semi" in n.lower() for n in job_names)
     for job in raw["jobs"]:
         assert Path(job["spec_path"]).name.endswith(".yml")
         assert "output_dir" in job
@@ -84,7 +87,7 @@ def test_emit_batch_config_excludes_placeholder_and_parses(tmp_path: Path, fleet
     # The emitted YAML must parse back through the real batch-runner schema
     # (proves dispatch-readiness, not just a hand-rolled dict).
     parsed = OrcaWaveBatchConfig.from_yaml(cfg_path)
-    assert len(parsed.jobs) == 2
+    assert len(parsed.jobs) == 3
     assert str(parsed.execution_mode.value) == "parallel"
 
     # Every job's spec_path must round-trip through DiffractionSpec.from_yaml —

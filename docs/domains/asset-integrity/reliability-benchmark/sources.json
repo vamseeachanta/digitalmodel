@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/openturns/openturns/v1.26/python/test/t_FORM_std.py",
+      "retrieved_at": "2026-10-14T17:05:35Z",
+      "http_status": 200,
+      "sha256": "216bbadf5d76cb30fd7ad9606311e9bcc9dd219c2caccf624fb7e0cb40613777",
+      "size_bytes": 3435
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openturns/openturns/v1.26/python/test/t_FORM_std.expout",
+      "retrieved_at": "2026-10-14T17:05:42Z",
+      "http_status": 200,
+      "sha256": "5c3256b358f900431576df84dc4a33dea1fbc9556f75cb285c4a93ec5c8cdfba",
+      "size_bytes": 4278
+    },
+    {
+      "url": "https://api.github.com/repos/openturns/openturns/releases/latest",
+      "retrieved_at": "2026-10-14T17:04:55Z",
+      "http_status": 200,
+      "sha256": "b6c482aff75c29905aedbeb47d2be13cf0103578b6e5370daf78d61655c360fa",
+      "size_bytes": 1958
+    }
+  ],
+  "reference_version": "v1.26",
+  "ownership": "Public numerical reference observations; source responses retained outside the repository.",
+  "readiness": "Qualified for the declared numerical benchmark only."
+}

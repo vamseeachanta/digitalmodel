@@ -43,6 +43,11 @@ def model_files():
         path = ROOT / name
         if path.is_symlink():
             continue
+        # These diagnostics are deliberately retired before the deletion is committed.
+        retired = {f"docs/domains/pipeline-installation/slay-campaign/probes/{case}-anchor-span.yml"
+                   for case in ("d0-t0", "d1-t0")}
+        if name in retired and not path.exists():
+            continue
         raw = path.read_bytes()
         encoding = "utf-16" if raw.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8-sig"
         try:
@@ -106,7 +111,7 @@ def test_null_detection_recognizes_only_values(text, count):
     assert len(list(null_values(text))) == count
 
 
-# Canonical parsed-value fingerprints generated from the immutable BASE inputs.
+# Canonical parsed-value fingerprints include the explicit JONSWAP selectors.
 # Numeric settings remain covered when the checkout has no parent Git objects.
 BASE_MODEL_VALUES = {
     'docs/domains/orcaflex/installation/manifold/region_a/monolithic/__03c_add_dz_10k_production_manifold.yml':
@@ -164,19 +169,19 @@ BASE_MODEL_VALUES = {
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/03_environment.yml':
-        'c3f25cd66680857d159ef728f09e1daa074da25d970330838d5218fd948afb86',
+        'b7015949ad33ee193e7425968841fc9530253feef4bbede4e82c2c4ce60e0f0a',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/05_riser_line_types.yml':
         '8bc87b7014ad08f758c05fe589d8b4fc558e4dabb8050ecfc82ff781be498934',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/07_riser_lines.yml':
-        '34283a9928bf8ed545da24f5f082fab1e24dac86a1e67c42ed127cc988873b5e',
+        '8ab8e18ca6f6126cb082ff6c1a6d0ce604dc1491d8cd709a05479a3b5f5c8a61',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/03_environment.yml':
-        'c3f25cd66680857d159ef728f09e1daa074da25d970330838d5218fd948afb86',
+        'b7015949ad33ee193e7425968841fc9530253feef4bbede4e82c2c4ce60e0f0a',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/05_riser_line_types.yml':
         '2f02775371a8b28f77c079550c7bb920240aeac4362686ffb352c241db852096',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/07_riser_lines.yml':
-        '4c6d648f97ecf79dfcdc039c570bf89c0a763782d7d6c3029c69b89ce7170264',
+        'e84265106d695cf2117546fd586f60c03e592eb2b2c53ecb1c15a7b20fa6437e',
     'docs/domains/orcaflex/subsea/jumper/installation/generated/jumper-a/includes/01_general.yml':
         'c978c65da7cb5feb872ae8b668b26b7c348bfe00261d5d522b5fa16677e33c5c',
     'docs/domains/orcaflex/subsea/jumper/installation/generated/jumper-a/includes/03_environment.yml':
@@ -193,72 +198,108 @@ BASE_MODEL_VALUES = {
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/03_environment.yml':
         'fb34b102bc139f5486a733861843a14af4493507bd4b9e924391d58985762e6a',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/04_vessel_types.yml':
+        '7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/07_lines.yml':
-        '01e54a0b1a418ec6492a1cac8dbc6733f5c5b24ff7c762ac3913f37dd3caa364',
+        '5e0e9f995b4ac45172528dba816c40c1d0a45f6c725d74c8cb9833fbcee98101',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/09_shapes.yml':
+        '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/10_groups.yml':
+        'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/11_winches.yml':
-        'd8d5b5a3ee55973d63346bd5b7ac13f56e6850d372bdad838e0f58269b69323a',
+        '94e103080e663bd1f9286109e9f7bb0662f1e77c7a365aaabdff6f15cef2956d',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t0/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/03_environment.yml':
         'fb34b102bc139f5486a733861843a14af4493507bd4b9e924391d58985762e6a',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/04_vessel_types.yml':
+        '7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/07_lines.yml':
-        '01e54a0b1a418ec6492a1cac8dbc6733f5c5b24ff7c762ac3913f37dd3caa364',
+        '7e82a4dbb74d006ed22485c944fb0e5d408880cfd2bad2e7c7b5e2a6a8e5d3bd',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/09_shapes.yml':
+        '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/10_groups.yml':
+        'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/11_winches.yml':
-        '7ca1e7baabf6537ed1502b70e2ae4cf6298abd67748a0c88df765a119885ce66',
+        '1ac9a46df577a304dcc4ec7199d8780dadf4e6be0bd57539982c56fa9aa66864',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t1/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/03_environment.yml':
         'fb34b102bc139f5486a733861843a14af4493507bd4b9e924391d58985762e6a',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/04_vessel_types.yml':
+        '7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/07_lines.yml':
-        '01e54a0b1a418ec6492a1cac8dbc6733f5c5b24ff7c762ac3913f37dd3caa364',
+        '71fc4540fec5bcff2db4c541c543b8c17e208d37acc3c003d33074970155295f',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/09_shapes.yml':
+        '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
+    'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/10_groups.yml':
+        'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/11_winches.yml':
-        '56b6f21da9113605f28e3339b6082868d8a81b89bb926a0d3d3d7990c502424e',
+        '57a0d14d640f5b293a691c58afd4e5b5289eef28f17343266f1be046a92b5ba4',
     'docs/domains/pipeline-installation/slay-campaign/models/d0-t2/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/03_environment.yml':
         'a2f66b740f9664d53f428efc8ecac0e76403a0059e775506d0adf36cdf15e87c',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/04_vessel_types.yml':
+        '7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/07_lines.yml':
-        '01e54a0b1a418ec6492a1cac8dbc6733f5c5b24ff7c762ac3913f37dd3caa364',
+        '520912559cce9cca0320dd7eafa9c82d34cfc3a039275dcc7845a66bbf7ee8fb',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/09_shapes.yml':
+        '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/10_groups.yml':
+        'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/11_winches.yml':
-        '56b6f21da9113605f28e3339b6082868d8a81b89bb926a0d3d3d7990c502424e',
+        '57a0d14d640f5b293a691c58afd4e5b5289eef28f17343266f1be046a92b5ba4',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t0/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/03_environment.yml':
         'a2f66b740f9664d53f428efc8ecac0e76403a0059e775506d0adf36cdf15e87c',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/04_vessel_types.yml':
+        '7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/07_lines.yml':
-        '01e54a0b1a418ec6492a1cac8dbc6733f5c5b24ff7c762ac3913f37dd3caa364',
+        '2258cd02ca8f638edb038c76e6cc57a6179e4edc43251783e1d0e9376f860d39',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/09_shapes.yml':
+        '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/10_groups.yml':
+        'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/11_winches.yml':
-        '3b1dcb929c44915f3619db04e2fa1ca3d5cddf677e63a6aeb6b19b2aa33d6248',
+        '7f68e10d9ebf0b925af7f47242a2659d37d565e92a7b22f9f86555cdb1f3a0f3',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t1/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/03_environment.yml':
         'a2f66b740f9664d53f428efc8ecac0e76403a0059e775506d0adf36cdf15e87c',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/04_vessel_types.yml':
+        '7ae0679c7371789677dfe487bd4e004b9a8751009fb7b6df55d7c0dba02d0865',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/05_line_types.yml':
         'a570c24601aeee708f5c5c3ca3ac9bfcab387d05d6a539bc91965fc0f2834025',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/07_lines.yml':
-        '01e54a0b1a418ec6492a1cac8dbc6733f5c5b24ff7c762ac3913f37dd3caa364',
+        '814931b3033924e3d39f786e40bb3d6a51fcb69935702ee7def5e724aaf459aa',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/09_shapes.yml':
+        '1e9781e2d05ded907687757027ac598823faa7b0902400cc1b44cd90e8b9ddfe',
+    'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/10_groups.yml':
+        'e66d021d8f667b44a6befec778417f687c4182b007f28667e6518ef6c5b0f5f5',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/11_winches.yml':
-        'fdde80f54a0d9e21709af7887ed471cd9b089260bb0b3a46ea6b8e12b96ec52c',
+        '5289ec75618dbfafdf83bdeb72304610af12f37cf2638437eed3176378e07bea',
     'docs/domains/pipeline-installation/slay-campaign/models/d1-t2/includes/14_morison.yml':
         'a38d46191070bf8393dea2dd359b92bd5248ec161e5c42a30c183c58d2bb42b5',
     'tests/solvers/fea/test_data/mooring/C05 Single point mooring.yml':
@@ -329,3 +370,107 @@ def test_model_discovery_uses_program_header(tmp_path, monkeypatch, header, expe
     monkeypatch.setitem(globals(), "ROOT", tmp_path)
     monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
     assert bool(list(model_files())) == expected
+
+
+def environment_mappings(text):
+    """Read native Environment blocks without parsing unrelated model objects."""
+    for start in re.finditer(r"^Environment:", text, re.MULTILINE):
+        end = re.search(r"^[^\s#]", text[start.end():], re.MULTILINE)
+        stop = start.end() + end.start() if end else len(text)
+        pending = [yaml.compose(text[start.start():stop])]
+        while pending:
+            node = pending.pop()
+            if isinstance(node, yaml.MappingNode):
+                yield node
+                pending.extend(value for _, value in node.value)
+            elif isinstance(node, yaml.SequenceNode):
+                pending.extend(node.value)
+
+
+def wave_order_findings(text):
+    """Find selector inversions within each native wave-train mapping.
+
+    The builder defines deterministic and spectral wave parameters and states
+    that WaveGamma depends on WaveJONSWAPParameters. Native exports place
+    WaveType before the other wave properties of each train. JONSWAP gamma
+    requires an explicit parameter selector and must be set before Tp.
+    """
+    findings = []
+    for node in environment_mappings(text):
+        keys = [key.value for key, _ in node.value]
+        if "WaveType" not in keys:
+            continue
+        for key in keys[:keys.index("WaveType")]:
+            if key.startswith("Wave") and key not in {
+                "WaveDirection", "WaveOrigin", "WaveTimeOrigin",
+            }:
+                findings.append(("WaveType", key))
+        if "WaveJONSWAPParameters" in keys and "WaveGamma" in keys:
+            if keys.index("WaveGamma") < keys.index("WaveJONSWAPParameters"):
+                findings.append(("WaveJONSWAPParameters", "WaveGamma"))
+        if "WaveGamma" in keys:
+            if "WaveTp" in keys and keys.index("WaveTp") < keys.index("WaveGamma"):
+                findings.append(("WaveGamma", "WaveTp"))
+            wave_type = next(value.value for key, value in node.value
+                             if key.value == "WaveType")
+            if wave_type == "JONSWAP" and "WaveJONSWAPParameters" not in keys:
+                findings.append(("WaveJONSWAPParameters", "WaveGamma"))
+    return findings
+
+
+def test_committed_models_have_selector_first_wave_keys():
+    """Every tracked executable model and include shall apply wave modes first."""
+    scanned = []
+    findings = []
+    for path, text in model_files():
+        scanned.append(path)
+        findings.extend(
+            f"{path.relative_to(ROOT)}: {dependent} precedes {selector}"
+            for selector, dependent in wave_order_findings(text)
+        )
+    assert scanned, "No executable model text was discovered"
+    assert not findings, "\n".join(findings)
+
+
+@pytest.mark.parametrize("train,expected", [
+    ("WaveTp: 12.9\n    WaveType: JONSWAP", [("WaveType", "WaveTp")]),
+    ("WaveHs: 11.2\n    WaveType: JONSWAP", [("WaveType", "WaveHs")]),
+    ("WaveGamma: 3.3\n    WaveType: JONSWAP",
+     [("WaveType", "WaveGamma"), ("WaveJONSWAPParameters", "WaveGamma")]),
+    ("WaveType: JONSWAP\n    WaveTp: 12.9", []),
+    ("WaveType: JONSWAP\n    WaveGamma: 3.3\n    WaveJONSWAPParameters: Fully specified",
+     [("WaveJONSWAPParameters", "WaveGamma")]),
+    ("WaveType: JONSWAP\n    WaveJONSWAPParameters: Partially specified\n"
+     "    WaveTp: 12.9\n    WaveGamma: 3.3", [("WaveGamma", "WaveTp")]),
+    ("WaveType: JONSWAP\n    WaveGamma: 3.3",
+     [("WaveJONSWAPParameters", "WaveGamma")]),
+    ("WaveType: JONSWAP\n    WaveJONSWAPParameters: Partially specified\n"
+     "    WaveGamma: 3.3\n    WaveTp: 12.9", []),
+    ("WaveType: JONSWAP\n    WaveJONSWAPParameters: Partially specified\n"
+     "    WaveGamma: 3.3\n    WaveTz: 12.9", []),
+])
+def test_wave_order_detection(train, expected):
+    """Check each train independently of preceding trains and other sections."""
+    text = (
+        "Environment:\n  WaveTrains:\n  - WaveType: Airy\n    WavePeriod: 8\n"
+        f"  - {train}\nLines:\n  WaveTp: 1\n"
+    )
+    assert wave_order_findings(text) == expected
+
+
+def test_model_discovery_handles_uncommitted_probe_retirement(tmp_path, monkeypatch):
+    relative = "docs/domains/pipeline-installation/slay-campaign/probes/d0-t0-anchor-span.yml"
+    removed = tmp_path / relative
+    removed.parent.mkdir(parents=True)
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
+    assert list(model_files()) == []
+
+
+
+def test_model_discovery_still_rejects_other_missing_tracked_inputs(tmp_path, monkeypatch):
+    relative = "docs/domains/orcaflex/templates/modular/includes/missing.yml"
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    monkeypatch.setitem(globals(), "git_output", lambda *args: relative.encode())
+    with pytest.raises(FileNotFoundError):
+        list(model_files())
