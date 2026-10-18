@@ -35,6 +35,7 @@ def evidence_metadata(tmp_path, monkeypatch):
     )
     gh.chmod(0o755)
     monkeypatch.setenv("PATH", str(bin_path) + os.pathsep + os.environ["PATH"])
+    monkeypatch.delenv("GITHUB_EVENT_NAME", raising=False)
     monkeypatch.setenv("GITHUB_REPOSITORY", "example/repository")
 
 

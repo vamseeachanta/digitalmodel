@@ -34,6 +34,7 @@ def evidence_response(endpoint, **changes):
 
 @pytest.fixture(autouse=True)
 def evidence_metadata(monkeypatch):
+    monkeypatch.delenv("GITHUB_EVENT_NAME", raising=False)
     monkeypatch.setenv("GITHUB_REPOSITORY", "example/repository")
     monkeypatch.setattr(ci, "gh_json", evidence_response)
 
