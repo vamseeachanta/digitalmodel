@@ -156,6 +156,12 @@ class TestSimpleCatenary:
         assert result.top_tension > result.horizontal_tension
         assert result.top_angle > 0
         assert result.arc_length > 0
+        # Independent worksheet: engineering-basis.md E1-E3; absolute tolerances.
+        assert result.arc_length == pytest.approx(1201.275032, abs=1e-6)
+        assert result.horizontal_offset == pytest.approx(529.928323, abs=1e-6)
+        assert result.top_tension == pytest.approx(2757021.972, abs=0.001)
+        assert result.top_angle == pytest.approx(10.448701, abs=1e-6)
+        assert result.converged
 
     def test_tension_increases_with_height(self, basic_riser, catenary_analyzer):
         """Test that tension increases along riser"""
@@ -200,17 +206,16 @@ class TestSimpleCatenary:
 
     def test_solve_from_top_tension(self, basic_riser, catenary_analyzer):
         """Test solving given top tension"""
-        # Note: For a catenary, there's a minimum achievable top tension
-        # For this riser (w ≈ 2257 N/m, z = 1000m), minimum T ≈ 3.41 MN
-        # Use a top tension well above this minimum for reliable convergence
+        # E2: T=H+wz has no interior minimum; this case fits the riser length.
         result = catenary_analyzer.analyze_riser(
             basic_riser,
-            top_tension=5_000_000,  # 5 MN (well above ~3.41 MN minimum)
+            top_tension=2_757_021.971932033,
             water_depth=1000.0
         )
 
-        assert result.top_tension == pytest.approx(5_000_000, rel=1e-3)
-        assert result.horizontal_tension > 0
+        assert result.top_tension == pytest.approx(2_757_021.971932033, abs=1e-6)
+        assert result.horizontal_tension == pytest.approx(500_000, abs=1e-6)
+        assert result.converged
 
     def test_catenary_parameter(self, basic_riser, catenary_analyzer):
         """Test catenary parameter calculation"""
@@ -248,6 +253,12 @@ class TestEffectiveWeight:
                    result.contents_weight - result.buoyancy)
 
         assert abs(result.effective_weight - expected) < 1e-6
+        # E4 and the independent circular-area worksheet in engineering-basis.md.
+        assert result.steel_weight == pytest.approx(2921.296755, abs=1e-6)
+        assert result.coating_weight == 0
+        assert result.contents_weight == pytest.approx(1373.753369, abs=1e-6)
+        assert result.buoyancy == pytest.approx(2038.028152, abs=1e-6)
+        assert result.effective_weight == pytest.approx(2257.021972, abs=1e-6)
 
     def test_empty_riser_floats(self, weight_calculator):
         """Test that empty riser without coating floats"""
@@ -293,7 +304,7 @@ class TestBuoyancyModule:
             start_length=300.0,
         )
 
-        force = module.buoyancy_force_per_length(SEAWATER)
+        force = module.buoyancy_force_per_length(SEAWATER, 0.508)
 
         # Should provide upward force (negative effective weight)
         assert force < 0  # Upward
@@ -316,8 +327,8 @@ class TestBuoyancyModule:
             start_length=300.0,
         )
 
-        light_force = light_foam.buoyancy_force_per_length(SEAWATER)
-        heavy_force = heavy_foam.buoyancy_force_per_length(SEAWATER)
+        light_force = light_foam.buoyancy_force_per_length(SEAWATER, 0.508)
+        heavy_force = heavy_foam.buoyancy_force_per_length(SEAWATER, 0.508)
 
         # Lighter foam provides more buoyancy
         assert light_force < heavy_force

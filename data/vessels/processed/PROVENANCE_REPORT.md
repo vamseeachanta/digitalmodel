@@ -5,11 +5,25 @@
 - RAO datasets: 26
 - metocean regions: 7
 - gyradii estimated: 108
-- provenance violations: 0
+- provenance violations: 11
 
 ## Provenance integrity
 
-✅ No un-cited hard numbers. Every numeric field is cited, `estimated:<basis>`, or `gap`.
+⚠️ Numeric fields lacking a citation (and not marked estimated/gap):
+
+| scope | layer | record | field | value |
+|---|---|---|---|---|
+| install | crane_deck | HLV-A | main_block_swl_t | 4000 |
+| install | crane_deck | HLV-A | aux_hoist_swl_t | 800 |
+| install | crane_deck | HLV-A | whip_hoist_swl_t | 200 |
+| install | crane_deck | HLV-A | fly_jib_max_height_m | 125 |
+| install | crane_deck | HLV-A | deck_area_m2 | 7500 |
+| install | crane_deck | HLV-A | length_m | 231 |
+| install | crane_deck | HLV-A | beam_m | 49 |
+| install | particulars | HLV-A | loa_m | 231 |
+| install | particulars | HLV-A | beam_m | 49 |
+| install | particulars | HLV-A | draft_summer_m | 11 |
+| install | particulars | HLV-A | deadweight_t | 54827 |
 
 ## Estimated radii of gyration
 
@@ -54,9 +68,9 @@ Gyradii are rarely public; these were filled from documented relations (see `gyr
 - Saipem 7000: kyy <- estimated:kyy=0.25*length_bp
 - Saipem 7000: kzz <- estimated:kzz=0.26*length_bp
 - Pioneering Spirit: kxx <- estimated:kxx=0.35*beam
-- Bokalift 2: kxx <- estimated:kxx=0.35*beam
-- Bokalift 2: kyy <- estimated:kyy=0.25*length_bp
-- Bokalift 2: kzz <- estimated:kzz=0.26*length_bp
+- HLV-A: kxx <- estimated:kxx=0.35*beam
+- HLV-A: kyy <- estimated:kyy=0.25*length_bp
+- HLV-A: kzz <- estimated:kzz=0.26*length_bp
 - Seven Borealis: kxx <- estimated:kxx=0.35*beam
 - Seven Borealis: kyy <- estimated:kyy=0.25*length_bp
 - Seven Borealis: kzz <- estimated:kzz=0.26*length_bp

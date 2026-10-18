@@ -38,7 +38,9 @@ def test_sample_data_shape():
     # Roll-ups computed from the sample numbers.
     assert d.max_strength_utilisation == pytest.approx(0.82)
     assert d.min_fatigue_life_years == pytest.approx(41.0)
-    assert d.overall_status in {"PASS", "MARGINAL", "FAIL"}
+    assert d.overall_status == "FAIL"
+    assert "50-year" in d.executive_summary
+    assert "Fatigue FAIL" in " ".join(d.conclusions)
 
 
 def test_status_classification():
@@ -49,9 +51,11 @@ def test_status_classification():
     # PASS: comfortably below.
     assert StrengthResult("x", 0, 1, 1, 1, 0.50).status == "PASS"
     # Fatigue: life < design life -> FAIL.
-    assert FatigueResult("x", 0, 1.0 / 10.0, 25.0).status == "FAIL"
+    assert FatigueResult("x", 0, 1.0 / 10.0, 25.0, design_fatigue_factor=2,
+                         design_fatigue_factor_basis="Test input; basis E5").status == "FAIL"
     # Fatigue: life >> design life -> PASS.
-    assert FatigueResult("x", 0, 1.0 / 100.0, 25.0).status == "PASS"
+    assert FatigueResult("x", 0, 1.0 / 100.0, 25.0, design_fatigue_factor=2,
+                         design_fatigue_factor_basis="Test input; basis E5").status == "PASS"
 
 
 # ---------------------------------------------------------------------------
@@ -164,15 +168,17 @@ def test_empty_results_handled(tmp_path):
     assert "_No strength results provided._" in md
 
 
-def test_zero_damage_fatigue_is_infinite_life():
+def test_zero_damage_fatigue_is_unavailable():
     r = FatigueResult("benign", 0.0, 0.0, 25.0)
     assert r.fatigue_life_years is None
-    assert r.status == "PASS"
+    assert r.status == "N/A"
     d = RiserReportData(
         project="P", riser_name="R", riser_type="SCR", water_depth_m=500.0,
         fatigue_results=[r],
     )
     html = render_html(d)
-    assert "&infin;" in html  # infinite life rendered in HTML table
+    assert "&infin;" not in html
+    assert d.overall_status == "N/A"
     md = render_markdown(d)
-    assert "| inf |" in md
+    assert "| inf |" not in md
+    assert "| N/A |" in md

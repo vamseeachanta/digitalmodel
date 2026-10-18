@@ -19,6 +19,11 @@ from pathlib import Path, PurePosixPath
 
 import yaml
 
+try:
+    from scripts.maintenance.generated_retirements import check_retirements
+except ModuleNotFoundError:
+    from generated_retirements import check_retirements
+
 FIELDS = ("maintainer", "reason", "category", "reviewed_on",
           "follow_up_issue_or_permanent_justification")
 PLACEHOLDER = re.compile(r"\b(todo|tbd|placeholder)\b", re.I)
@@ -50,6 +55,11 @@ def validate_config(config):
     if not isinstance(root, dict) or any(not isinstance(root.get(key), list)
                                          for key in ("files", "directories")):
         errors.append("config: root-allowlist")
+    retirement_patterns = config.get("generated_retirement_patterns", [])
+    if not isinstance(retirement_patterns, list) or any(
+        not valid_path(value) for value in retirement_patterns
+    ):
+        errors.append("config: generated-retirement-patterns")
     if errors:
         return errors
     for key in ("files", "directories"):
@@ -138,6 +148,8 @@ def main():
         config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         paths = git_paths(args.repo)
         errors = check_paths(paths, config)
+        if not validate_config(config):
+            errors += check_retirements(args.repo, config)
     except (OSError, subprocess.CalledProcessError, yaml.YAMLError):
         parser.exit(2, "structure: cannot read repository paths or contract\n")
     if errors:

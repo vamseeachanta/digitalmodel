@@ -127,6 +127,7 @@ This pack owns checks on `postprocess` functions. The sibling global-model pack 
 | PP17 / G3 | `evaluate_case`: with the pup-side station, coupling demand 76.0 MPa divided by returned allowable in MPa, FAIL expected; hot-spot `cr10_station` = coupling; without it demand 62.0 MPa divided by returned allowable, hot-spot classification absent; ratio relative error <= 1e-9 (1), 0 station/verdict mismatches (cases) | R9 and supplementary strict-ratio assertions, PASS; no licensed allowable value is reproduced; [tests/drilling_riser/postprocess/test_w510_significant_range.py:L622-L631] |
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom | Cause or boundary | Detection | Incident or evidence |
 | --- | --- | --- | --- |

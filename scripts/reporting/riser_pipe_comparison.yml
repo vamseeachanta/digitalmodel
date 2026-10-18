@@ -1,4 +1,4 @@
-basis_commit: cc36804fbdfe803b9bc272269dec3056aa48b009
+basis_commit: fcfff5631bd3535147af43f1afc9c8f6c0524ee8
 pipe:
   outer_diameter_mm: 273
   wall_thickness_mm: 21.4
@@ -28,6 +28,6 @@ assumptions:
   - Zero corrosion allowance and fabrication deduction are assumed.
   - Pressures are supplied as absolute values at the checked section.
   - Water depth is context; external pressure is supplied independently.
-  - Both strategies use nominal wall and credit no internal support in collapse.
+  - All three strategies use nominal wall and credit no internal support in collapse.
   - Dimensions and strengths are assumed generic properties, without a schedule or grade designation.
   - Material suitability and availability are not established.

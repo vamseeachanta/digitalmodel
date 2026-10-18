@@ -13,12 +13,18 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
+GATE_PACKS = {"src/digitalmodel/solvers/orcawave/docs/agent-pack.md"}
 PACKS = sorted((ROOT / "src/digitalmodel").glob("**/docs/agent-pack.md"))
 
 
-def collect_pack(pack: Path, root: Path, basetemp: Path) -> None:
+def collect_pack(
+    pack: Path, root: Path, basetemp: Path, *, include_gates: bool = False,
+) -> None:
+    """Collect examples and, for opted-in packs, section-5 gate citations."""
     text = pack.read_text(encoding="utf-8")
-    section = re.search(r"(?ms)^## 4\..*?(?=^## 5\.|\Z)", text)
+    pattern = (r"(?ms)^## [45]\..*?(?=^## 6\.|\Z)" if include_gates
+               else r"(?ms)^## 4\..*?(?=^## 5\.|\Z)")
+    section = re.search(pattern, text)
     ids = list(dict.fromkeys(re.findall(
         r"`(tests/[^`\n]+::[^`\n]+)`", section[0] if section else ""
     )))
@@ -45,13 +51,48 @@ def test_missing_citation_fails(tmp_path: Path) -> None:
         collect_pack(pack, tmp_path, tmp_path / "collection")
 
 
+def test_missing_gate_citation_fails(tmp_path: Path) -> None:
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "test_example.py").write_text("def test_exists():\n    pass\n")
+    pack = tmp_path / "agent-pack.md"
+    pack.write_text("## 4. Examples\nNone.\n## 5. Gates\n"
+                    "`tests/test_example.py::test_missing`\n## 6. Pitfalls\n")
+    with pytest.raises(AssertionError, match="test_missing"):
+        collect_pack(pack, tmp_path, tmp_path / "collection", include_gates=True)
+
+
 def test_pack_without_citations_passes(tmp_path: Path, capsys) -> None:
     pack = tmp_path / "agent-pack.md"
-    pack.write_text("## 4. Examples\nNone.\n## 5. Limits\n`tests/missing.py::test_no`\n")
+    pack.write_text("## 4. Examples\nNone.\n## 5. Limits\nNone.\n")
     collect_pack(pack, tmp_path, tmp_path / "collection")
     assert "agent-pack.md: 0 ids" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("pack", PACKS, ids=lambda path: path.relative_to(ROOT).as_posix())
 def test_agent_pack_node_ids(pack: Path, tmp_path: Path) -> None:
+    collect_pack(pack, ROOT, tmp_path / "collection",
+                 include_gates=pack.relative_to(ROOT).as_posix() in GATE_PACKS)
+
+
+def test_gate_collection_requires_opt_in(tmp_path: Path, capsys) -> None:
+    pack = tmp_path / "agent-pack.md"
+    pack.write_text("## 4. Examples\nNone.\n## 5. Gates\n"
+                    "`tests/test_example.py::test_missing`\n## 6. Pitfalls\n")
+    collect_pack(pack, tmp_path, tmp_path / "collection")
+    assert "agent-pack.md: 0 ids" in capsys.readouterr().out
+
+
+def test_power_pack_has_five_collectable_examples(tmp_path, capsys):
+    """Issue 2735: the documented five examples must reach collection."""
+    pack = ROOT / "src/digitalmodel/power/analysis/docs/agent-pack.md"
     collect_pack(pack, ROOT, tmp_path / "collection")
+    assert "power/analysis/docs/agent-pack.md: 5 ids" in capsys.readouterr().out
+
+
+def test_power_gate_distinguishes_structural_and_solved_checks():
+    text = (ROOT / "src/digitalmodel/power/analysis/docs/agent-pack.md").read_text()
+    for check in ("C5", "C6"):
+        assert f"| G1 | {check} |" in text
+    assert "test_independently_derived_solved_network" in text
+    assert "test_reference_criteria_reject_one_iteration" in text

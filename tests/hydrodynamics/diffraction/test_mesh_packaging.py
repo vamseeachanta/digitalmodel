@@ -60,6 +60,62 @@ def _multibody_spec_data(mesh_a: str, mesh_b: str) -> dict:
     }
 
 
+
+@pytest.mark.parametrize("route", ["runner", "converter", "programmatic"])
+@pytest.mark.parametrize("partial", [False, True])
+def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, partial):
+    """A decoy beside the spec must never replace the packaged mesh check."""
+    import yaml
+    from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
+    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import OrcaWaveRunner, RunConfig
+    from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
+
+    case = tmp_path / "case"
+    meshes = case / "meshes"
+    meshes.mkdir(parents=True)
+    source = Path(__file__).resolve().parents[3] / "examples/hydrodynamics/diffraction/unit_box_rao/unit_box.gdf"
+    lines = source.read_text(encoding="utf-8").splitlines()
+    for index in range(4, len(lines)):
+        x, y, z = map(float, lines[index].split())
+        lines[index] = f"{x:.6f} {y - 0.5:.6f} {z:.6f}"
+    assert {float(line.split()[1]) for line in lines[4:]} == {-0.5, 0.5}
+    if partial:
+        # Omit the panel on x = 0 so reflection does not duplicate an interior wall.
+        lines = lines[:-4]
+        lines[3] = "4"
+    lines[2] = "1 0" if partial else "0 0"
+    (meshes / "hull.gdf").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    lines[2] = "0 0" if partial else "1 1"
+    (case / "hull.gdf").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    data = _spec_data("meshes/hull.gdf")
+    data["vessel"]["geometry"]["symmetry"] = "xz"
+    spec_path = case / "spec.yml"
+    spec_path.write_text(yaml.safe_dump(data), encoding="utf-8")
+    output = tmp_path / "out"
+
+    def generate():
+        if route == "converter":
+            return SpecConverter(spec_path).convert(solver="orcawave", output_dir=output)
+        if route == "runner":
+            runner = OrcaWaveRunner(RunConfig(output_dir=output, generate_modular=True))
+            result = runner.prepare(DiffractionSpec.from_yaml(spec_path), spec_path=spec_path)
+            assert result.modular_files
+            return result.input_file
+        spec = DiffractionSpec.model_validate(data)
+        assert spec._source_dir is None
+        packaged, _, _ = package_spec_meshes(spec, output, spec_dir=case)
+        assert spec._source_dir is None
+        return OrcaWaveBackend().generate_single(packaged, output)
+
+    if partial:
+        with pytest.raises(ValueError, match="Partial GDF mesh"):
+            generate()
+    else:
+        emitted = yaml.safe_load(generate().read_text(encoding="utf-8"))
+        assert emitted["Bodies"][0]["BodyMeshSymmetry"] == "None"
+        assert emitted["Bodies"][0]["BodyMeshFileName"] == "hull.gdf"
+
+
 class TestCsfControlSurfacePassthrough:
     def test_csf_control_surface_packages_unchanged(self, tmp_path: Path):
         """A .csf control surface is a valid native OrcaWave input and must

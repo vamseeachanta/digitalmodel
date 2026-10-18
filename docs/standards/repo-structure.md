@@ -52,6 +52,47 @@ to grandfather. `durable_exceptions` therefore starts empty; no additional
 output path is authorized. The separate evidence-retention decision stays
 with #597.
 
-Local hook and mandatory CI wiring remain open under #2012. The checker and
-its regression tests are usable directly. They do not claim that enforcement
-has been installed or that branch protection has been verified.
+The `verify-repo-structure` pre-commit hook checks the complete repository on
+every commit, including commits with no matching filenames. Its isolated Python
+environment includes PyYAML. Install the repository's configured hooks before
+using local enforcement.
+
+The Repository Structure workflow runs the checker and its regression tests on
+every pull request and every push to `main`, without path filters or optional
+failure handling. Docs CI also covers `docs/standards/**` and `docs/domains/**`
+and runs the docs routing contract tests. These checks do not change source,
+move evidence, or regenerate skill pointers.
+
+Repository administrators must require the `Repository structure contract`
+status check in branch protection to prevent merging a failing check. Workflow
+wiring alone does not establish that this repository setting is enabled.
+
+## Generated-file retirement
+
+`config/generated_retirements.yml` records one entry per retired generated file.
+The schema and duplicate-key validation are ported from the reviewed retirement
+rule. Each entry requires exactly `path`, `sha256`, `date`, `reason`,
+`disposition` and `follow_up`. Paths are normalized repository-relative paths;
+SHA-256 identifies the last committed bytes. Reasons require at least 30
+characters and the follow-up identifies an issue or pull request in this repository.
+
+Cold-store dispositions contain `kind: cold-store`, a relative `dataset_path`
+and a relative `digest_list`. The storage root is documented in the register.
+The original basename is retained beneath the dataset path. Before removal,
+copy every file, read each copy back and compare its SHA-256 to the committed
+source, then retain a digest list. LFS-tracked files require a separate disposition
+and are left in the tree by this retirement.
+
+The structure check validates the register on every default run, including clean
+checkouts. Current generated deletions and rename sources require matching HEAD
+blob digests. Entries for still-present files, duplicate paths, malformed entries
+and remaining durable-exception classifications fail. Historical absent paths
+receive schema validation; store availability and stored digests require separate
+readback and are not established by a structure-check pass. A rename destination
+still undergoes the ordinary path rules.
+
+`generated_retirement_patterns` extends deletion coverage to nested generated
+surfaces without granting permission to add generated output. The existing
+`generated_patterns`, artifact patterns and addition rules remain in effect.
+Reproducible dispositions from the source rule are also recognized, but these
+retirements use cold-store copies exclusively.

@@ -331,6 +331,8 @@ class Stinger(BaseModel):
     """Stinger configuration for S-lay vessel."""
 
     radius: float = Field(..., gt=0, description="Stinger radius (m)")
+    firing_line_length: float = Field(default=0, ge=0, allow_inf_nan=False, description="Level firing line ahead of stinger (m)")
+    firing_line_spacing: float = Field(default=5, gt=0, allow_inf_nan=False, description="Firing-line support spacing (m)")
     sections: list[StingerSection] = Field(
         default_factory=list, description="Stinger sections"
     )
@@ -381,6 +383,9 @@ class Equipment(BaseModel):
     )
     vessel: Vessel | None = Field(default=None, description="Installation vessel")
     stinger: Stinger | None = Field(default=None, description="Stinger configuration")
+    slay_end_b_x: float | None = Field(
+        default=None, allow_inf_nan=False, description="Declared S-lay anchor x in vessel coordinates (m)"
+    )
     tensioner: Tensioner | None = Field(default=None, description="Tensioner configuration")
 
     @model_validator(mode="after")

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Direct column/pontoon panel unions. Metres; z=0 waterline, z upward.
 
 Faceted convex primitives are clipped at their intersections; no BRep kernel.
@@ -29,8 +32,10 @@ Solid = dict[str, Any]
 class ColumnPontoonParameters(BaseModel):
     """Regular column layout; optional centre column gets radial ring connectors.
 
-    Spacing is adjacent centre distance (four columns form a square). Plates
-    replace the keel portion; hard tanks replace the waterline portion.
+    Spacing is adjacent centre distance; four columns form a square unless
+    transverse_spacing sets a rectangular layout. In that layout, spacing is
+    longitudinal and transverse_spacing is transverse centre distance.
+    Plates replace the keel portion; hard tanks replace the waterline portion.
     Twin pontoons connect columns 0-1 and 2-3. A lid is geometric only.
     Target size controls axial/profile edges; clipped junctions require local refinement.
     """
@@ -39,6 +44,7 @@ class ColumnPontoonParameters(BaseModel):
     count: int = Field(default=1, ge=1, le=16)
     layout_radius: float | None = Field(default=None, gt=0)
     spacing: float | None = Field(default=None, gt=0)
+    transverse_spacing: float | None = Field(default=None, gt=0)
     diameter: float | None = Field(default=None, gt=0)
     square_side: float | None = Field(default=None, gt=0)
     corner_radius: float = Field(default=0, ge=0)
@@ -61,6 +67,7 @@ class ColumnPontoonParameters(BaseModel):
 
     @model_validator(mode="after")
     def validate_geometry(self) -> "ColumnPontoonParameters":
+        """Reject overlapping columns and incompatible section dimensions."""
         if (self.diameter is None) == (self.square_side is None):
             raise ValueError("supply exactly one of diameter and square_side")
         if self.corner_radius > (self.square_side or 0) / 2:
@@ -83,9 +90,18 @@ class ColumnPontoonParameters(BaseModel):
             raise ValueError("hard tank requires circular column and larger diameter")
         extent = max(self.diameter or (self.square_side or 0) * np.sqrt(2),
                      self.heave_plate_diameter or 0, self.hard_tank_diameter or 0)
-        if self.count > 1 and self.resolved_spacing <= extent:
+        if self.transverse_spacing is not None:
+            if self.count != 4:
+                raise ValueError("transverse_spacing requires four columns")
+            axis_extent = max(self.diameter or self.square_side or 0,
+                              self.heave_plate_diameter or 0, self.hard_tank_diameter or 0)
+            if min(self.resolved_spacing, self.transverse_spacing) <= axis_extent:
+                raise ValueError("columns/plates must not overlap in either direction")
+        elif self.count > 1 and self.resolved_spacing <= extent:
             raise ValueError("columns/plates must not overlap")
-        if self.center_diameter and self.radius <= (extent + self.center_diameter) / 2:
+        centre_distance = (np.hypot(self.resolved_spacing, self.transverse_spacing) / 2
+                           if self.transverse_spacing is not None else self.radius)
+        if self.center_diameter and centre_distance <= (extent + self.center_diameter) / 2:
             raise ValueError("centre column overlaps outer columns")
         self._validate_pontoons()
         return self
@@ -116,10 +132,12 @@ class ColumnPontoonParameters(BaseModel):
 
     @property
     def radius(self) -> float:
+        """Return the regular-layout radius used to resolve longitudinal spacing."""
         return self.layout_radius or (self.spacing or 0) / (2 * np.sin(pi / self.count))
 
     @property
     def resolved_spacing(self) -> float:
+        """Return adjacent spacing, or longitudinal spacing for a rectangle."""
         return self.spacing or 2 * self.radius * np.sin(pi / self.count)
 
 
