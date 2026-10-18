@@ -376,10 +376,11 @@
     "input_contract": "Required cog_z_m in the lift-point datum, common to the supplied xy corners. Schema 3 echoes full xyz in cases and governing share.",
     "family_clearance": "PENDING; engineering_use_allowed remains false",
     "tests": {
-      "passed": 375,
+      "passed": 404,
       "xfailed": 1,
       "structure_passed": 29,
-      "red_failures": 12
+      "red_failures": 12,
+      "atlas_query_red_failures": 1
     },
     "finite_rotation_cases": [
       {
@@ -467,6 +468,16 @@
         "tilt_deg": 8.542331097092964
       }
     ],
-    "reference_limit": "Required z=0,+2,-2 m cases meet 0.3% on all legs. Exploratory z=+4 m does not meet 0.3% on less-loaded legs; no arbitrary-geometry accuracy bound claimed."
+    "reference_limit": "Required z=0,+2,-2 m cases meet 0.3% on all legs. Exploratory z=+4 m does not meet 0.3% on less-loaded legs; no arbitrary-geometry accuracy bound claimed.",
+    "atlas_refresh": {
+      "id": "d807d703f351",
+      "grid_rows": 25,
+      "holdout_samples": 8,
+      "max_relative_interpolation_error": 0.02083333333333326,
+      "unchanged_interpolation_threshold": 0.1,
+      "passes": true,
+      "comparison": "Grid values, holdout validation and surrogate numbers match the previous version. Only basis metadata and the default pointer change.",
+      "licensed_execution": "NOT_RUN; pure analytical lug response only"
+    }
   }
 }

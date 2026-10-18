@@ -87,3 +87,15 @@ def test_unsupported_leg_count_fails_closed(tmp_path, legs):
     cfg["lifting_lug"]["load"]["num_slings"] = legs
     with pytest.raises(ValueError, match="num_slings"):
         router(cfg)
+
+
+def test_lifting_lug_atlas_query_has_current_basis(tmp_path):
+    from digitalmodel.parametric.query import router as query_router
+    example = Path(__file__).resolve().parents[2] / "examples/workflows/lifting-lug-atlas-query/input.yml"
+    cfg = yaml.safe_load(example.read_text())
+    cfg["parametric_query"]["output_dir"] = str(tmp_path)
+    result = query_router(cfg)["parametric_query"]["result"]
+    assert result["in_range"] is True
+    assert result["response"] == "utilisation"
+    assert result["screening_status"] == "pass"
+    assert 0 < result["value"] < 1
