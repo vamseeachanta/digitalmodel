@@ -467,3 +467,7 @@ docs/reports/abstracted-hulls/*
 # remediation was itself invisible to git. Negation must follow the pattern it
 # overrides, and the DIRECTORY must be re-included before git will descend.
 !scripts/cfd/lib/
+
+# Retain the small force histories used by the indicative calm-water study.
+!data/cfd/calm_water_study/raw/
+!data/cfd/calm_water_study/raw/*

@@ -31,6 +31,9 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/cfd/build_calm_water_study.py": (
+        "writes native records and docs/domains HTML, not docs/api pages"
+    ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
     ),

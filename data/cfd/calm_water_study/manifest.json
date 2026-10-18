@@ -1,0 +1,153 @@
+{
+  "criteria": {
+    "appendages": "none",
+    "averaging_iterations": 4000,
+    "basis": "src/digitalmodel/solvers/openfoam/validation/ship_resistance.py",
+    "body_condition": "fixed_even_keel",
+    "comparison": {
+      "missing_source_result": "not available",
+      "plot_digitisation": false,
+      "quantity": "total_resistance_coefficient",
+      "relative_tolerance_percent": 3.0,
+      "require_opened_source": true,
+      "require_table_and_page": true,
+      "tolerance_basis": "assumed, based on previous experience; existing resistance validation module"
+    },
+    "froude_number": 0.26,
+    "full_iterations": 25000,
+    "grid_uncertainty": {
+      "constant_refinement_ratio": 2.0,
+      "implementation": "src/digitalmodel/solvers/openfoam/grid_convergence.py",
+      "incomplete_result": "not established",
+      "medium_mesh_target_percent": 1.0,
+      "method": "three-mesh grid convergence index",
+      "required_completed_meshes": 3,
+      "target_basis": "assumed, based on previous experience; existing grid convergence module"
+    },
+    "mesh_scales": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "ranks": 8,
+    "resource_limits": {
+      "memory_reserve_gb": 6,
+      "minimum_disk_free_gb": 15,
+      "total_projected_solver_hours": 80
+    },
+    "retention": {
+      "committed": [
+        "force histories",
+        "coefficient histories",
+        "run log",
+        "digest manifest",
+        "report"
+      ],
+      "raw_header_redaction": "Only identifying header lines may be replaced; numerical results remain unchanged.",
+      "scratch": [
+        "case inputs",
+        "meshes",
+        "field data",
+        "native logs"
+      ]
+    },
+    "schema_version": 1,
+    "timed_start_iterations": 100
+  },
+  "files": {
+    "data/cfd/calm_water_study/raw/coarse-coefficients.csv": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "d9ca188b590723d82d76b16413cc58d57c33437b85a9e0b665594058eec4155b",
+      "size_bytes": 5328,
+      "source_force_sha256": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c"
+    },
+    "data/cfd/calm_water_study/raw/coarse-force.dat": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "1040ae6cbf473bfd6ad041abf800dfbf397b072b7d23a012eab77770cbeea711",
+      "size_bytes": 13860,
+      "source_force_sha256": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c"
+    },
+    "data/cfd/calm_water_study/raw/medium-coefficients.csv": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "2a46c029ac9c368e937b18eb3fe4be7a74047b5601ecf4fa852f19471c1e3815",
+      "size_bytes": 5368,
+      "source_force_sha256": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f"
+    },
+    "data/cfd/calm_water_study/raw/medium-force.dat": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "f8228e65181ecaf91e5928c2efbb7abf6c2254bb4971b2b9e500735e7ef49625",
+      "size_bytes": 13791,
+      "source_force_sha256": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f"
+    }
+  },
+  "intended_use": "Native start cost only; settled resistance is not established.",
+  "qualified_results": 0,
+  "readiness_status": "partial",
+  "runs": [
+    {
+      "available_memory_bytes_before": 59855802368,
+      "cells": 118364,
+      "completed_iterations": 100,
+      "criterion_recorded_at": "2026-10-14T11:20:20.599360+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 100,
+      "lateral_reference_divisions": 20,
+      "measured_wall_seconds": 20.841206282377243,
+      "memory_fits": true,
+      "mesh": "coarse",
+      "mesh_scale": 0.5,
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "peak_aggregate_rss_bytes": 893050880,
+      "projected_full_seconds": 5210.301570594311,
+      "ranks": 8,
+      "requested_velocity_m_per_s": 2.1966335492849054,
+      "return_code": 0,
+      "seconds_per_iteration": 0.20841206282377242,
+      "timed_start_started_at": "2026-10-14T11:20:20.599418+00:00",
+      "velocity_m_per_s": 2.19663
+    },
+    {
+      "available_memory_bytes_before": 59121741824,
+      "cells": 915357,
+      "completed_iterations": 100,
+      "criterion_recorded_at": "2026-10-14T11:27:06.812293+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 100,
+      "lateral_reference_divisions": 20,
+      "measured_wall_seconds": 232.68769888207316,
+      "memory_fits": true,
+      "mesh": "medium",
+      "mesh_scale": 1.0,
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "peak_aggregate_rss_bytes": 2691928064,
+      "projected_full_seconds": 58171.924720518284,
+      "ranks": 8,
+      "requested_velocity_m_per_s": 2.1966335492849054,
+      "return_code": 0,
+      "seconds_per_iteration": 2.3268769888207315,
+      "timed_start_started_at": "2026-10-14T11:27:06.812350+00:00",
+      "velocity_m_per_s": 2.19663
+    }
+  ],
+  "schema_version": 1
+}
