@@ -15,12 +15,13 @@ from . import test_generic_manifest as contract
 
 
 SPEC_PATH = 'docs/domains/orcaflex/library/templates/drilling_riser/spec.yml'
-MANIFEST = json.loads((contract.BASE / 'manifest.campaign.json').read_text())
+MANIFEST = json.loads((contract.BASE / 'manifest.campaign.json').read_text(encoding='utf-8'))
 
 
 def git(root, *args):
     env = {key: value for key, value in os.environ.items()
            if key not in {'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR'}}
+    env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
     return subprocess.check_output(['git', '-C', str(root), *args], env=env)
 
 
@@ -207,3 +208,16 @@ def test_missing_git_executable_explicitly_skips_verification(repository, monkey
     monkeypatch.setattr(contract.subprocess, 'run', missing_git)
     with pytest.raises(unittest.SkipTest, match='pinned blob NOT verified: git executable missing'):
         run_contract(root, data, monkeypatch)
+
+
+def test_git_helper_ignores_inherited_configuration(tmp_path, monkeypatch):
+    config = tmp_path / 'global.gitconfig'
+    config.write_text(
+        '[commit]\n    gpgsign = true\n[core]\n    hooksPath = inherited-hooks\n',
+        encoding='utf-8',
+    )
+    monkeypatch.setenv('GIT_CONFIG_GLOBAL', str(config))
+    monkeypatch.setenv('GIT_CONFIG_NOSYSTEM', '0')
+    settings = git(tmp_path, 'config', '--list').decode('utf-8')
+    assert 'commit.gpgsign=true' not in settings
+    assert 'core.hookspath=inherited-hooks' not in settings
