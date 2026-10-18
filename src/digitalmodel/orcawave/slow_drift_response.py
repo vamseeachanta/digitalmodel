@@ -184,7 +184,7 @@ def naess_expected_extreme(
     Not qualified for design use. In the seeded broadband reference in
     test_slow_drift_monte_carlo.py (256 three-hour JONSWAP records, Hs=6 m,
     Tp=10 s, 100 s natural period, 5% damping), the upper dynamic estimate
-    is 6.8 m versus an ensemble mean maximum of 8.5 m: 19.6% low, failing
+    is 6.8346 m versus an ensemble mean maximum of 8.5016 m: 19.6% low, failing
     the 10% criterion. Near-equal response eigenvalues can invalidate the
     largest-eigenvalue-only asymptote. This function is available only from
     slow_drift_response; it is not re-exported by drift_forces.

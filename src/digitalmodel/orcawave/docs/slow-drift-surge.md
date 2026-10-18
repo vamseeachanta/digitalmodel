@@ -108,15 +108,15 @@ the scalar oscillator supplies the stationary response with DC removed.
 | Quantity | Analytical result | Reference value | Criterion / disposition |
 | --- | ---: | ---: | --- |
 | Force variance (kN²) | 2022.1 | Ensemble: 2019.5 | Within 5% |
-| Surge standard deviation (m) | 2.3 | Ensemble: 2.3 | Within 5% |
-| Kernel variance (m²) | 5.3 | Spectrum: 5.3 | Identity check, relative tolerance 1e-10 |
-| Mean offset (m) | 1.1 | Shared-input mean: 1.1 | Identity check, relative tolerance 1e-10 |
-| Expected dynamic maximum (m) | 6.8 | Ensemble: 8.5 | 19.6% low; 10% criterion unmet |
+| Surge standard deviation (m) | 2.3102 | Ensemble: 2.2924 | 0.8% high; within 5% |
+| Kernel variance (m²) | 5.3372 | Spectrum: 5.3372 | Identity check, relative tolerance 1e-10 |
+| Mean offset (m) | 1.1399 | Shared-input mean: 1.1399 | Identity check, relative tolerance 1e-10 |
+| Expected dynamic maximum (m) | 6.8346 | Ensemble: 8.5016 | 19.6% low; 10% criterion unmet |
 
 Table 1. Synthetic numerical checks; these are not published benchmark data.
 
 The observed upcrossing rate is 0.00978877 Hz. The approximate 95% sampling
-halfwidth of the ensemble mean maximum is 0.2 m. Sampling uncertainty does
+halfwidth of the ensemble mean maximum is 0.1834 m. Sampling uncertainty does
 not account for the 1.7 m discrepancy. Comparisons use unrounded values. No tuning factor is applied. The
 closed-form tests independently check bichromatic resonance, complex QTF phase,
 full endpoint weights, signed tails and a high-precision evaluation of Eq. 21.
