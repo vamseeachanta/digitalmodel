@@ -593,6 +593,7 @@ def test_workflows_pilot_only_orcaflex_in_report_mode():
         gate = next(step for step in workflow["jobs"][job]["steps"]
                     if step["name"] == "Run domain gate")
         run = gate["run"]
+        assert gate["env"]["GH_TOKEN"] == "${{ github.token }}"
         assert run.count("scripts/ci/run_shard.py") == 1
         assert 'if [ "${{ matrix.domain }}" = "orcaflex" ]; then' in run
         assert "--mode report" in run and "--with pyyaml" in run

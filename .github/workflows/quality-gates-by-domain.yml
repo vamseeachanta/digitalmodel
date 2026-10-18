@@ -210,6 +210,8 @@ jobs:
 
       - name: Run domain gate
         id: domain-gate
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set +e
           if [ "${{ matrix.domain }}" = "orcaflex" ]; then
