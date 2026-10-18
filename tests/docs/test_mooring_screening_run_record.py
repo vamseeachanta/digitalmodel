@@ -221,3 +221,37 @@ def test_interpreter_patch_version_is_metadata_only(run, builder, inputs, tmp_pa
     computed_manifests = [{key: value for key, value in manifest.items() if key != "python_version"}
                           for manifest in manifests]
     assert computed_manifests[0] == computed_manifests[1]
+
+
+def test_website_export_includes_its_linked_run_record(run, builder, inputs, tmp_path, monkeypatch):
+    """The exported run-record link must resolve within the exported bundle."""
+    basis, criteria, _ = inputs
+    record = tmp_path / "record"
+    record.mkdir()
+    for original in RECORD.iterdir():
+        if original.is_file():
+            (record / original.name).write_bytes(original.read_bytes())
+    source = tmp_path / "source.html"
+    source.write_text("<html><head><title>Old</title></head><body>Old</body></html>")
+    basis["website_source_sha256"] = run.digest(source)
+    run.write_json(record / "basis.json", basis)
+    monkeypatch.setattr(builder, "RECORD", record)
+    output, website = tmp_path / "output", tmp_path / "website"
+    output.mkdir()
+    run.write_json(output / "results.json", run.compute_record(basis, criteria))
+    builder.build(output, source, website)
+    page = website / "content/demos/mooring.html"
+    relative = "mooring-screening/README.md"
+    assert f'href="{relative}"' in page.read_text()
+    bundle = page.parent / "mooring-screening"
+    assert (bundle / "README.md").read_bytes() == (output / "README.md").read_bytes()
+    assert (bundle / "manifest.json").read_bytes() == (output / "manifest.json").read_bytes()
+    native = json.loads((bundle / "manifest.json").read_text())
+    for name, expected in native["files"].items():
+        assert run.digest(bundle / name) == expected["sha256"]
+    for name, expected in native["record_inputs"].items():
+        assert run.digest(bundle / name) == expected
+    exported = json.loads((website / "manifest.json").read_text())
+    for path in bundle.iterdir():
+        relative = path.relative_to(website).as_posix()
+        assert exported["files"][relative]["sha256"] == run.digest(path)

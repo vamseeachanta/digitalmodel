@@ -139,6 +139,7 @@ def run_passing_ship_sweep(
                 )
                 peak_surge = peak_sway = peak_yaw = float("nan")
 
+            # PIANC bands and equality convention are centralized in classify_depth.
             depth_class = classify_depth(depth, profile.draft)
 
             results.append(PassingShipSweepEntry(

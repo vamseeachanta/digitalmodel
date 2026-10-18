@@ -45,6 +45,7 @@ Usage::
 from __future__ import annotations
 
 import html as _html
+import math
 import sys
 from dataclasses import dataclass, field, asdict, is_dataclass
 from datetime import datetime, timezone
@@ -65,8 +66,14 @@ PROVENANCE_LABELS = {
 
 def _status_of(util: Optional[float], allowable: float = 1.0,
                marginal_frac: float = 0.9) -> str:
-    """Classify a utilisation ratio as PASS / MARGINAL / FAIL."""
-    if util is None:
+    """Classify a utilisation ratio as PASS / MARGINAL / FAIL.
+
+    Zero is treated as unqualified and displayed as N/A, matching the report
+    input convention; it does not establish a completed zero-load check.
+    """
+    if (util is None or not math.isfinite(util) or util <= 0
+            or not math.isfinite(allowable) or allowable <= 0
+            or not math.isfinite(marginal_frac) or not 0 < marginal_frac <= 1):
         return "N/A"
     if util > allowable:
         return "FAIL"
@@ -119,24 +126,30 @@ class FatigueResult:
     design_life_years: float
     sn_curve: str = "DNV-RP-C203 F1"
     scf: float = 1.0
+    design_fatigue_factor: Optional[float] = None
+    design_fatigue_factor_basis: str = ""
 
     @property
     def fatigue_life_years(self) -> Optional[float]:
-        if self.damage_per_year <= 0:
+        if (self.damage_per_year is None or not math.isfinite(self.damage_per_year)
+                or self.damage_per_year <= 0):
             return None
         return 1.0 / self.damage_per_year
 
     @property
     def status(self) -> str:
         life = self.fatigue_life_years
-        if life is None:
-            return "PASS"
-        # design life must be covered with the design fatigue factor headroom
-        if life < self.design_life_years:
-            return "FAIL"
-        if life < 2.0 * self.design_life_years:
-            return "MARGINAL"
-        return "PASS"
+        factor = self.design_fatigue_factor
+        if (life is None or not math.isfinite(life)
+                or self.design_life_years is None
+                or not math.isfinite(self.design_life_years) or self.design_life_years <= 0
+                or factor is None or not math.isfinite(factor) or factor < 1
+                or not isinstance(self.design_fatigue_factor_basis, str)
+                or not self.design_fatigue_factor_basis.strip()):
+            return "N/A"
+        # DNVGL-RP-C203 (April 2016) §2.2, eq. (2.2.1): D <= 1/DFF.
+        # No inferred safety class or uncited fixed headroom; see basis E5.
+        return "FAIL" if self.damage_per_year * self.design_life_years * factor > 1 else "PASS"
 
 
 @dataclass
@@ -188,6 +201,8 @@ class RiserReportData:
     def max_strength_utilisation(self) -> Optional[float]:
         if not self.strength_results:
             return None
+        if any(r.status == "N/A" for r in self.strength_results):
+            return None
         return max(r.utilisation for r in self.strength_results)
 
     @property
@@ -206,6 +221,8 @@ class RiserReportData:
         )
         if any(s == "FAIL" for s in statuses):
             return "FAIL"
+        if any(s == "N/A" for s in statuses):
+            return "N/A"
         if any(s == "MARGINAL" for s in statuses):
             return "MARGINAL"
         if statuses:
@@ -259,9 +276,10 @@ def sample_riser_report_data() -> RiserReportData:
             "The 12-inch water-injection steel catenary riser was screened for "
             "strength and fatigue in 1500 m water depth. The governing strength "
             "utilisation of 0.82 occurs at the hang-off, and the minimum fatigue "
-            "life of 41 years at the touchdown point exceeds the 25-year design "
-            "life with a design fatigue factor of 1.6. The configuration is "
-            "feasible at screening level and is recommended for certified analysis."
+            "life of 41 years at the touchdown point is below the 50-year required "
+            "life for the illustrative design fatigue factor of 2.0 and 25-year "
+            "design life (basis E5). Fatigue fails this illustrative requirement; "
+            "further analysis is required before design use."
         ),
         inputs={
             "Outer diameter": "12.75 in (323.9 mm)",
@@ -297,8 +315,10 @@ def sample_riser_report_data() -> RiserReportData:
             StrengthResult("Touchdown point", 1610.0, 540.0, 156.0, 301.0, 0.60),
         ],
         fatigue_results=[
-            FatigueResult("Hang-off", 0.0, 1.0 / 120.0, 25.0, "DNV-RP-C203 F1", 1.15),
-            FatigueResult("Touchdown point", 1610.0, 1.0 / 41.0, 25.0, "DNV-RP-C203 F3", 1.30),
+            FatigueResult("Hang-off", 0.0, 1.0 / 120.0, 25.0, "DNV-RP-C203 F1", 1.15, 2.0,
+                          "Illustrative DFF=2 input; DNVGL-RP-C203:2016 §2.2 eq (2.2.1); basis E5"),
+            FatigueResult("Touchdown point", 1610.0, 1.0 / 41.0, 25.0, "DNV-RP-C203 F3", 1.30, 2.0,
+                          "Illustrative DFF=2 input; DNVGL-RP-C203:2016 §2.2 eq (2.2.1); basis E5"),
         ],
         code_checks=[
             CodeCheck("Combined loading (LRFD)", "DNV-OS-F201:2010",
@@ -315,15 +335,15 @@ def sample_riser_report_data() -> RiserReportData:
             "by the F3 weld detail and seabed interaction.",
         ],
         conclusions=[
-            "All screened code checks pass with margin; no check exceeds 0.82 of allowable.",
-            "The configuration is feasible at screening level (atlas).",
+            "All screened strength checks pass; no strength check exceeds 0.82 of allowable.",
+            "Fatigue FAIL: 41-year life is below the illustrative 50-year requirement (basis E5).",
             "Certified custom analysis with vessel-specific RAOs is recommended "
             "before the deliverable is issued for design.",
         ],
         provenance=Provenance(
             workflow="riser-strength-fatigue-screening",
             workflow_version="0.3.0",
-            standard_revision="DNV-OS-F201:2010 / DNV-RP-C203:2021",
+            standard_revision="DNV-OS-F201:2010 / DNVGL-RP-C203:2016 §2.2 eq (2.2.1)",
             mode="atlas",
             run_id="screen-0001",
             generated_utc="",  # filled at render time if blank
@@ -354,6 +374,25 @@ def _try_import_builder():
             except Exception:
                 return None
     return None
+
+
+def _positive_text(value: Optional[float], precision: int, scientific: bool = False) -> str:
+    """Render positive finite inputs without rounding small damage to zero."""
+    if value is None or not math.isfinite(value) or value <= 0:
+        return "N/A"
+    notation = "e" if scientific else "f"
+    return format(value, f".{precision}{notation}")
+
+
+def _ratio_text(value: Optional[float]) -> str:
+    """Render absent or invalid ratios without implying an engineering value."""
+    return _positive_text(value, 2)
+
+
+def _strength_kpi_text(data: RiserReportData) -> str:
+    if data.strength_results and data.max_strength_utilisation is None:
+        return "N/A (incomplete)"
+    return _ratio_text(data.max_strength_utilisation)
 
 
 def _esc(text: Any) -> str:
@@ -387,7 +426,7 @@ def _strength_table_html(rows: list[StrengthResult]) -> str:
         body += (
             f"<tr><td>{_esc(r.location)}</td><td>{r.arc_length_m:.1f}</td>"
             f"<td>{r.effective_tension_kN:.1f}</td><td>{r.bending_moment_kNm:.1f}</td>"
-            f"<td>{r.von_mises_stress_MPa:.1f}</td><td>{r.utilisation:.2f}</td>"
+            f"<td>{r.von_mises_stress_MPa:.1f}</td><td>{_ratio_text(r.utilisation)}</td>"
             f"<td>{_status_span(r.status)}</td></tr>"
         )
     return f'<table class="data-table"><thead>{head}</thead><tbody>{body}</tbody></table>'
@@ -399,17 +438,18 @@ def _fatigue_table_html(rows: list[FatigueResult]) -> str:
     head = (
         "<tr><th>Location</th><th>Arc length (m)</th><th>S-N curve</th>"
         "<th>SCF</th><th>Damage/yr</th><th>Fatigue life (yr)</th>"
-        "<th>Design life (yr)</th><th>Status</th></tr>"
+        "<th>Design life (yr)</th><th>DFF</th><th>DFF basis</th><th>Status</th></tr>"
     )
     body = ""
     for r in rows:
         life = r.fatigue_life_years
-        life_s = "&infin;" if life is None else f"{life:.1f}"
+        life_s = _positive_text(life, 1)
         body += (
             f"<tr><td>{_esc(r.location)}</td><td>{r.arc_length_m:.1f}</td>"
             f"<td>{_esc(r.sn_curve)}</td><td>{r.scf:.2f}</td>"
-            f"<td>{r.damage_per_year:.4f}</td><td>{life_s}</td>"
-            f"<td>{r.design_life_years:.0f}</td>"
+            f"<td>{_positive_text(r.damage_per_year, 3, scientific=True)}</td><td>{life_s}</td>"
+            f"<td>{_positive_text(r.design_life_years, 0)}</td>"
+            f"<td>{_positive_text(r.design_fatigue_factor, 2)}</td><td>{_esc(r.design_fatigue_factor_basis)}</td>"
             f"<td>{_status_span(r.status)}</td></tr>"
         )
     return f'<table class="data-table"><thead>{head}</thead><tbody>{body}</tbody></table>'
@@ -427,7 +467,7 @@ def _code_check_table_html(rows: list[CodeCheck]) -> str:
         body += (
             f"<tr><td>{_esc(c.name)}</td><td>{_esc(c.standard)}</td>"
             f"<td>{_esc(c.method)}</td><td>{_esc(c.location)}</td>"
-            f"<td>{c.utilisation:.2f}</td><td>{_status_span(c.status)}</td></tr>"
+            f"<td>{_ratio_text(c.utilisation)}</td><td>{_status_span(c.status)}</td></tr>"
         )
     return f'<table class="data-table"><thead>{head}</thead><tbody>{body}</tbody></table>'
 
@@ -474,10 +514,7 @@ def _build_sections(d: RiserReportData) -> list[tuple[str, str]]:
         "Type": d.riser_type,
         "Water depth": f"{d.water_depth_m:.0f} m",
         "Overall status": _status_span(d.overall_status),
-        "Max strength utilisation": (
-            f"{d.max_strength_utilisation:.2f}"
-            if d.max_strength_utilisation is not None else "—"
-        ),
+        "Max strength utilisation": _strength_kpi_text(d),
         "Min fatigue life": (
             f"{d.min_fatigue_life_years:.1f} yr"
             if d.min_fatigue_life_years is not None else "—"
@@ -621,8 +658,7 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
     lines.append(f"- **Riser:** {d.riser_name} ({d.riser_type})")
     lines.append(f"- **Water depth:** {d.water_depth_m:.0f} m")
     lines.append(f"- **Overall status:** {d.overall_status}")
-    if d.max_strength_utilisation is not None:
-        lines.append(f"- **Max strength utilisation:** {d.max_strength_utilisation:.2f}")
+    lines.append(f"- **Max strength utilisation:** {_strength_kpi_text(d)}")
     if d.min_fatigue_life_years is not None:
         lines.append(f"- **Min fatigue life:** {d.min_fatigue_life_years:.1f} yr")
     lines.append(f"- **Classification:** {d.provenance.mode_label}")
@@ -664,7 +700,7 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
             lines.append(
                 f"| {r.location} | {r.arc_length_m:.1f} | {r.effective_tension_kN:.1f} "
                 f"| {r.bending_moment_kNm:.1f} | {r.von_mises_stress_MPa:.1f} "
-                f"| {r.utilisation:.2f} | {r.status} |"
+                f"| {_ratio_text(r.utilisation)} | {r.status} |"
             )
     else:
         lines.append("_No strength results provided._")
@@ -674,14 +710,15 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
     lines.append("")
     if d.fatigue_results:
         lines.append("| Location | Arc (m) | S-N curve | SCF | Damage/yr | "
-                     "Fatigue life (yr) | Design life (yr) | Status |")
-        lines.append("|---|---|---|---|---|---|---|---|")
+                     "Fatigue life (yr) | Design life (yr) | DFF | DFF basis | Status |")
+        lines.append("|---|---|---|---|---|---|---|---|---|---|")
         for r in d.fatigue_results:
             life = r.fatigue_life_years
-            life_s = "inf" if life is None else f"{life:.1f}"
+            life_s = _positive_text(life, 1)
             lines.append(
                 f"| {r.location} | {r.arc_length_m:.1f} | {r.sn_curve} | {r.scf:.2f} "
-                f"| {r.damage_per_year:.4f} | {life_s} | {r.design_life_years:.0f} "
+                f"| {_positive_text(r.damage_per_year, 3, scientific=True)} | {life_s} | {_positive_text(r.design_life_years, 0)} "
+                f"| {_positive_text(r.design_fatigue_factor, 2)} | {r.design_fatigue_factor_basis} "
                 f"| {r.status} |"
             )
     else:
@@ -696,7 +733,7 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
         for c in d.code_checks:
             lines.append(
                 f"| {c.name} | {c.standard} | {c.method} | {c.location} "
-                f"| {c.utilisation:.2f} | {c.status} |"
+                f"| {_ratio_text(c.utilisation)} | {c.status} |"
             )
     else:
         lines.append("_No code checks provided._")
