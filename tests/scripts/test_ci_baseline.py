@@ -5,6 +5,7 @@
 
 import importlib.util
 import json
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -17,6 +18,97 @@ ci = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ci)
 SCR = "tests/orcaflex/test_generic_scr_slwr.py::test_analytical_reference_reproduces_from_basis"
 NOW = datetime(2026, 10, 15, 12, tzinfo=timezone.utc)
+
+
+def run_health_writer(body, *, active=True, existing=True):
+    """Execute the shipped health script with isolated GitHub and file doubles."""
+    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
+    step = next(s for s in workflow['jobs']['sweep-result']['steps']
+                if s.get('name') == 'Update main health')
+    harness = r'''
+    const input = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+    const calls = [], notices = [];
+    const baseline = {tests: input.active ? {'tests/example.py::test_case':
+      {shard: 'example', first_seen_run: 1, run_id: 10}} : {},
+      shards: {example: {parsed: true, conclusion: 'success'}}};
+    const fakeFs = {existsSync: () => false, readFileSync: () => JSON.stringify(baseline)};
+    const issue = {number: 1, title: 'main-health: example', body: input.body};
+    const github = {paginate: async (method) => method === 'issues' && input.existing ? [issue] : [],
+      rest: {issues: {listForRepo: 'issues', listLabelsForRepo: 'labels',
+        update: async value => calls.push({kind: 'update', ...value}),
+        create: async value => calls.push({kind: 'create', ...value}),
+        createLabel: async value => calls.push({kind: 'label', ...value})}}};
+    const context = {repo: {owner: 'example', repo: 'example'},
+      runNumber: 10, runId: 100, sha: 'abc123'};
+    const core = {notice: value => notices.push(value)};
+    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+    new AsyncFunction('require', 'github', 'context', 'core', input.script)(
+      name => {if (name !== 'fs') throw Error(name); return fakeFs;}, github, context, core
+    ).then(() => console.log(JSON.stringify({calls, notices})));
+    '''
+    completed = subprocess.run(
+        ['node', '-e', harness], input=json.dumps(dict(
+            script=step['with']['script'], body=body, active=active, existing=existing)),
+        text=True, capture_output=True, check=True, timeout=30)
+    return json.loads(completed.stdout)
+
+
+@pytest.mark.parametrize('active', [True, False])
+def test_health_older_sweep_never_updates_or_closes(active):
+    body = '<!-- main-health-order: run_number=11 run_id=101 sha=abc123 -->'
+    output = run_health_writer(body, active=active)
+    assert output['calls'] == []
+    assert len(output['notices']) == 1
+    assert '11' in output['notices'][0] and '10' in output['notices'][0]
+
+
+@pytest.mark.parametrize('body', [
+    '<!-- main-health-order: run_number=10 run_id=100 sha=abc123 -->',
+    '<!-- main-health-order: run_number=9 run_id=99 sha=abc123 -->',
+    'Legacy issue body',
+    '<!-- main-health-order: run_number=invalid run_id=101 sha=abc123 -->',
+    '<!-- main-health-order: run_number=11 run_id=invalid sha=abc123 -->',
+    None,
+])
+def test_health_equal_older_or_unparsed_marker_writes(body):
+    output = run_health_writer(body)
+    assert output['notices'] == []
+    assert len(output['calls']) == 1
+    update = output['calls'][0]
+    assert update['kind'] == 'update' and update['state'] == 'open'
+    assert '<!-- main-health-order: run_number=10 run_id=100 sha=abc123 -->' in update['body']
+    assert run_health_writer(update['body'])['calls'][0]['body'] == update['body']
+
+
+@pytest.mark.parametrize('active,existing,kinds', [
+    (False, True, ['update']), (True, False, ['label', 'create']), (False, False, []),
+])
+def test_health_preserves_close_and_create_rules(active, existing, kinds):
+    output = run_health_writer('', active=active, existing=existing)
+    assert [call['kind'] for call in output['calls']] == kinds
+    if existing:
+        assert output['calls'][0]['state'] == 'closed'
+    elif active:
+        assert output['calls'][-1]['labels'] == ['main-health']
+        assert 'main-health-order: run_number=10' in output['calls'][-1]['body']
+
+
+def test_health_workflow_names_and_soft_failure_are_preserved():
+    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
+    assert {key: job['name'] for key, job in workflow['jobs'].items()} == {
+        'full-matrix': 'Build full shard matrix',
+        'sweep-tests': 'sweep-tests-${{ matrix.domain }}',
+        'sweep-result': 'Full matrix sweep result',
+    }
+    steps = workflow['jobs']['sweep-result']['steps']
+    assert [step['name'] for step in steps] == [
+        'Summarize shard results', 'Checkout baseline tools', 'Download sweep results',
+        'Publish main baseline', 'Upload main baseline', 'Update main health',
+        'Enforce full sweep result',
+    ]
+    step = next(s for s in steps if s['name'] == 'Update main health')
+    assert step['continue-on-error'] is True
+    assert step['if'] == "github.ref == 'refs/heads/main'"
 
 
 def result(shard="example", ids=(SCR,), conclusion="failure", **updates):
@@ -558,3 +650,80 @@ def test_extract_mismatched_retry_record_fails_closed(tmp_path):
     xml = ('<testsuite tests="1" failures="1" errors="0">'
            '<testcase classname="tests.test_new" name="test_racy"><failure/></testcase></testsuite>')
     assert extract(tmp_path, xml)["parsed"] is False
+
+
+@pytest.mark.parametrize("content", ["[]\n", None, '[{"id": "base-id", "status": "open", "evidence": ["main run"]}]\n'])
+def test_pr_register_comes_from_fetched_base(tmp_path, monkeypatch, content):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    monkeypatch.chdir(tmp_path)
+    local = tmp_path / ".github/ci/flaky-register.yml"
+    local.parent.mkdir(parents=True)
+    local.write_text('[{"id": "self-certified"}]')
+    calls = []
+
+    def git_output(command, **kwargs):
+        calls.append(command)
+        if command[1] == "fetch":
+            return ""
+        if command[1] == "rev-parse":
+            return "a" * 40 + "\n"
+        if command[1] == "ls-tree":
+            return ".github/ci/flaky-register.yml\n" if content is not None else ""
+        assert command == ["git", "show", "a" * 40 + ":.github/ci/flaky-register.yml"]
+        return content
+
+    monkeypatch.setattr(ci.subprocess, "check_output", git_output)
+    output = tmp_path / "selected.yml"
+    assert ci.main(["register", "--out", str(output)]) == 0
+    assert output.read_text() == (content if content is not None else "[]\n")
+    assert calls[0] == ["git", "fetch", "--no-tags", "origin", "refs/heads/main"]
+    assert local.read_text() == '[{"id": "self-certified"}]'
+
+
+def test_non_pr_register_uses_checkout(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "push")
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / ".github/ci/flaky-register.yml"
+    source.parent.mkdir(parents=True)
+    source.write_text("[]\n")
+    output = tmp_path / "selected.yml"
+    assert ci.main(["register", "--out", str(output)]) == 0
+    assert output.read_bytes() == source.read_bytes()
+
+
+def test_workflow_register_is_selected_before_retry_and_comparison():
+    for name, job in (("quality-gates-by-domain.yml", "domain-tests"),
+                      ("full-matrix-sweep.yml", "sweep-tests")):
+        workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
+        steps = workflow["jobs"][job]["steps"]
+        select = next(s for s in steps if s["name"] == "Select trusted register")
+        gate = next(s for s in steps if s["name"] == "Run domain gate")
+        assert steps.index(select) < steps.index(gate)
+        assert "ci_baseline.py register" in select["run"]
+        assert select["env"]["GITHUB_BASE_REF"] == "${{ github.base_ref }}"
+        assert '--register "$RUNNER_TEMP/flaky-register.yml"' in gate["run"]
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    steps = workflow["jobs"]["domain-tests-required"]["steps"]
+    enforce = next(s for s in steps if s["name"] == "Enforce required domain result")
+    assert "ci_baseline.py register" in enforce["run"]
+    assert '--register "$RUNNER_TEMP/flaky-register.yml"' in enforce["run"]
+
+
+@pytest.mark.parametrize("failure", ["fetch", "show"])
+def test_register_transport_failure_never_falls_back(tmp_path, monkeypatch, failure):
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_BASE_REF", "main")
+    output = tmp_path / "selected.yml"
+
+    def git_output(command, **kwargs):
+        if command[1] == failure:
+            raise subprocess.CalledProcessError(1, command)
+        if command[1] == "rev-parse":
+            return "a" * 40
+        return ".github/ci/flaky-register.yml"
+
+    monkeypatch.setattr(ci.subprocess, "check_output", git_output)
+    with pytest.raises(subprocess.CalledProcessError):
+        ci.select_register(output)
+    assert not output.exists()

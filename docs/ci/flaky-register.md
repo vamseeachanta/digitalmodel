@@ -41,4 +41,13 @@ codes. Ordinary exits 1 to 127 propagate without retry. This path is independent
 of the pytest pilot mode. `--decide-only --from-log LOG` inspects cached hosted
 logs without executing their content. Neither an isolated pass nor a signal
 retry establishes a failure's cause; shared state and leftover files can also
-produce a retry pass. Register evidence remains a human decision.
+produce a retry pass. Failures whose test IDs cannot be established retain their
+raw classname and name in the retry record and job summary.
+Register evidence remains a human decision.
+
+On pull requests, register selection fetches the base branch tip at run time
+and reads its register with `git show` into a temporary file. The wrapper and
+comparator receive that file through `--register`. An absent base register
+means no registered IDs; fetch or object-read errors fail closed. Other events
+use the checked-out register. A pull request cannot certify its own failures
+by adding entries to its checkout.

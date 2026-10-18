@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Bridges the oilfield-unit DynacardAnalysisContext to the SI solver.
 # ABOUTME: Every unit crossing happens here and nowhere else.
 """Adapter between :class:`DynacardAnalysisContext` and the SI solver.
@@ -15,6 +18,7 @@ import numpy as np
 
 from ..constants import BUCKLING_DETECTION_LOAD_THRESHOLD_LBS
 from ..models import AnalysisResults, CardData, DynacardAnalysisContext
+from ..solver_guards import annotate_results
 from . import units as U
 from .solver import (
     DownholeCard,
@@ -215,7 +219,7 @@ class EverittJenningsContextSolver:
         self.results.minimum_polished_rod_load = float(np.min(surface_load))
         self.results.ctx = self.ctx
         self.results.solver_method = "everitt_jennings"
-        return self.results
+        return annotate_results(self.results, self.ctx, "everitt_jennings")
 
     def detect_buckling(self) -> bool:
         """Flag compression in the rod string at the pump.

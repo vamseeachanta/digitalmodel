@@ -144,6 +144,7 @@ G3 NOT_APPLICABLE: no transient solver job is part of these Python calculation c
 C5 does not establish an AQG-signed report appendix; retain per-case inputs, hashes, results, deviations and independent review evidence before using the outputs in a report. (AQG r0, sections 9 and 11.)
 
 ## 6. Known failure modes and pitfalls
+sweep: not run (legacy pack)
 
 | Symptom / cause | Detection | Incident or open record | Date / evidence |
 | --- | --- | --- | --- |

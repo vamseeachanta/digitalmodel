@@ -419,16 +419,16 @@ def read_aqwa_basis(
                     refuse()
                 cog_node = int(fields[0])
                 inertia = tuple(fields[1:7])
-        if token == "DPTH":
+        if token == "DPTH":  # nosec B105 # Input-deck grammar keyword, not authentication data.
             v = _floats(body)
             depth = v[0] if v else None
-        elif token == "DENS":
+        elif token == "DENS":  # nosec B105 # Input-deck grammar keyword, not authentication data.
             v = _floats(body)
             density = v[0] if v else None
-        elif token == "ACCG":
+        elif token == "ACCG":  # nosec B105 # Input-deck grammar keyword, not authentication data.
             v = _floats(body)
             gravity = v[0] if v else None
-        elif token == "ZLWL":
+        elif token == "ZLWL":  # nosec B105 # Input-deck grammar keyword, not authentication data.
             v = _floats(body)
             waterline = v[0] if v else None
         elif keyword in ("HRTZ", "DIRN") and mine:

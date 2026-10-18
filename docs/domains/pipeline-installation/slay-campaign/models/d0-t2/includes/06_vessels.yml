@@ -11,7 +11,6 @@ Vessels:
   PrimaryMotion: Calculated (6 DOF)
   SuperimposedMotion: None
   IncludedInStatics: None
-  WaveCalculationMethod: Specified by environment
   SupportGeometrySpecification: Explicit
   SupportCoordinateSystems:
   - SupportCoordinateSystemName: Stinger
@@ -26,6 +25,126 @@ Vessels:
   SupportedLine:
   - Generic pipe
   Supports:
+  - SupportType: Support type2
+    SupportPosition:
+    - -31.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -36.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -41.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -46.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -51.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -56.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -61.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -66.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -71.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -76.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -81.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -86.1
+    - 0.0
+    - -1.485
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
   - SupportType: Support type2
     SupportPosition:
     - -91.1
@@ -111,6 +230,46 @@ Vessels:
     - -130.628
     - 0
     - -6.787
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -135.428
+    - 0
+    - -8.185
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -140.179
+    - 0
+    - -9.741
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -144.876
+    - 0
+    - -11.456
+    SupportOrientation:
+    - 0
+    - 0
+    - 0
+    SupportCoordinateSystem: Stinger
+  - SupportType: Support type2
+    SupportPosition:
+    - -149.513
+    - 0
+    - -13.326
     SupportOrientation:
     - 0
     - 0

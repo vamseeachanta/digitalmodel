@@ -1,0 +1,483 @@
+{
+  "issue": 2667,
+  "date": "2026-10-17",
+  "base_revision": "6bcacbc68d534ee5cffa08768d1f3dced807bb20",
+  "acceptance_status": "NOT_CLEARED",
+  "engineering_use_allowed": false,
+  "criteria": {
+    "1_symmetric_closed_form": "PASS: rigid diagonal and series-compliance hand checks",
+    "2_centred_quarters": "PASS: share 0.25 and design leg tension 433190.307 N",
+    "3_offset_cog": "PASS: independent exact stretched-length body statics at both diagonal offsets and axis offset; every leg within 0.3 percent",
+    "4_code_minimum_floor": "PASS: default and floor 1.33 read from the merged screen module; equality regression; source-only and sub-floor inputs rejected; nonzero tolerance defaults; custom minima require their own explicit source",
+    "5_review_and_family_qa": "NOT_CLEARED: corrections await maintainer review; formal installation-family QA remains open"
+  },
+  "review": {
+    "basis_revision": "7c4b713f9b1077042004484f79645762fc443525",
+    "kind": "second_provider",
+    "original_verdict": "CHANGES-REQUESTED",
+    "correction_status": "IMPLEMENTED; no new external review claimed",
+    "disposition": {
+      "P1_diagonal_cog": "One fitted hook and CoG-independent misfit; rigid rotation aligns hook-to-CoG with vertical. Full body-frame force equilibrium replaces level-payload geometry. Reject fitted height error above 0.01 L.",
+      "P1_code_minimum": "Shared 1.33 and cited source read as literals from installation_analysis without importing its package initializer. Positive general-length bounds; defaults +/-10 mm length and +/-1 mm elevation.",
+      "P1_ci": "Registry executable test moved to tests/workflows and registry test identifier updated; no registry path in marine_ops test.",
+      "P2_design_outputs": "max_nominal_vertical_share, governing_cog_xy_m and per-leg design_leg_tensions_N over all supplied corners",
+      "P3_matched_set": "Documented and tested leg-to-leg Delta conversion to +/-Delta/2; opposite-pair matching alone does not reduce symmetric diagonal worst case.",
+      "P3_tilt": "Rigid rotation fixes former approximately 2 percent axis understatement; per-case tilt and >3 degree flags retained.",
+      "P3_housekeeping": "Merged main including PR 2678; README corrected; PR description replaced; current hashes regenerated."
+    },
+    "open": [
+      "maintainer review of corrections",
+      "formal installation-family QA clearance"
+    ],
+    "follow_up_review": {
+      "basis_revision": "b942066b0595411e609a75064a93ec0e344a17f9",
+      "original_verdict": "CHANGES-REQUESTED",
+      "correction_status": "IMPLEMENTED; no new external review claimed",
+      "disposition": {
+        "N1": "Shared basis edits select orcaflex, marine-ops-other and workflows. Detector regression covers the shared file and an unrelated adapter. Plain and annotated literals are accepted; invalid basis literals raise a named error.",
+        "N2": "Any supplied minimum differing from the shared minimum requires an explicit source. Default and explicit shared minima retain the shared citation.",
+        "Next_revision": "Perimeter validation uses the scalar determinant instead of the removed two-dimensional cross-product operation. Both perimeter orientations are tested."
+      }
+    }
+  },
+  "artifact_sha256": {
+    "src/digitalmodel/marine_ops/installation/four_point_skew.py": "127e9011caaf5bb1cf89a1b191158ad242b0cc36666de1dc6278660ec5fa5643",
+    "tests/marine_ops/installation/test_four_point_skew.py": "42f314ede1a76480925deb76a817384609ca6b2c9fa98ec8cfc72382cccc97c1",
+    "tests/workflows/test_four_point_skew_workflow.py": "9da2e92e17087d0a5c05d712003cd9bd8dba271c733fbbdd8e6bc56495eccf06",
+    "examples/workflows/four-point-skew/input.yml": "65e9803e6cad0e2ce4d959e98ff657b4bdb607f98315be0f8e54de1024da4c92",
+    "examples/workflows/four-point-skew/README.md": "8ba49eeea889ddf24ad7621697c8c2a052341a758a0558f0daf0afad9b6d47a6",
+    "docs/registry/workflows.yaml": "7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896",
+    "src/digitalmodel/orcaflex/installation_analysis.py": "ef64951f9b49c900468705e85eb12f183808b18135d32a2ca65581c58ba50364",
+    "scripts/ci/detect_touched_domains.py": "6f6d89a32ea4dd730c115b937a374df95cf1b316e98d68297fdc0d24c8076016",
+    "tests/scripts/test_detect_touched_domains.py": "a3ddf33166d109a746d598a713fec834c674ee6ac485d97523e6575527825efe"
+  },
+  "tests": {
+    "touched_module_and_registry": {
+      "passed": 276,
+      "failed": 0,
+      "skipped": 0,
+      "paths": [
+        "tests/marine_ops/installation",
+        "tests/workflows/test_four_point_skew_workflow.py",
+        "tests/workflows/test_registry_versioning.py"
+      ]
+    },
+    "ci_harness": {
+      "passed": 494,
+      "failed": 0,
+      "skipped": 4,
+      "paths": [
+        "tests/scripts/test_detect_touched_domains.py",
+        "tests/docs/test_implementation_map.py",
+        "tests/docs/test_implementation_map_search.py",
+        "tests/scripts/test_ci_baseline.py",
+        "tests/scripts/test_run_shard.py",
+        "tests/contracts/test_flaky_register_schema.py",
+        "tests/workflows/automation/test_quality_gates.py",
+        "tests/workflows/test_durable_workflows.py",
+        "tests/workflows/test_ci_triggers.py"
+      ]
+    },
+    "command_form": "uv run --no-project --python python3 --with 'pytest<9' --with 'numpy<2' --with pyyaml --with scipy --with 'pydantic>=2.7,<3' --with 'pytest-asyncio==0.21.1' python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>",
+    "addopts_override": false,
+    "ruff": "NOT_RUN: tool unavailable",
+    "diff_check": "PASS",
+    "standalone_cli_json_readback": "PASS",
+    "review_follow_up": {
+      "basis_revision": "b942066b0595411e609a75064a93ec0e344a17f9",
+      "base": {
+        "passed": 295,
+        "failed": 0,
+        "skipped": 0,
+        "note": "292 passed initially; the three reference tests passed after adding the missing SciPy dependency."
+      },
+      "red": {
+        "passed": 2,
+        "failed": 10,
+        "deselected": 116
+      },
+      "focused_green": {
+        "passed": 12,
+        "failed": 0,
+        "deselected": 116
+      },
+      "after": {
+        "passed": 308,
+        "failed": 0,
+        "skipped": 0,
+        "note": "252 detector and CI harness tests passed; final skew and workflow run passed all 56 tests after the numeric shared-minimum regression."
+      },
+      "paths": [
+        "tests/scripts/test_detect_touched_domains.py",
+        "tests/scripts/test_ci_baseline.py",
+        "tests/scripts/test_run_shard.py",
+        "tests/workflows/test_ci_triggers.py",
+        "tests/marine_ops/installation/test_four_point_skew.py",
+        "tests/workflows/test_four_point_skew_workflow.py"
+      ],
+      "command_form": "uv run --no-project --python python3 --with 'pytest<9' --with 'numpy<2' --with pyyaml --with scipy --with 'pydantic>=2.7,<3' --with 'pytest-asyncio==0.21.1' python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>",
+      "addopts_override": false,
+      "hosted_checks": "Not queried; local checks use the uncommitted tree.",
+      "red_numeric_shared_minimum": {
+        "passed": 1,
+        "failed": 1
+      },
+      "final_skew_and_workflow": {
+        "passed": 56,
+        "failed": 0,
+        "skipped": 0
+      },
+      "file_checks": {
+        "repository_structure": "PASS",
+        "no_windows_path_directories": "PASS",
+        "engineering_register": "PASS: one Markdown file, zero findings",
+        "syntax_json_whitespace_size": "PASS",
+        "diff_check": "PASS",
+        "ruff": "NOT_RUN: command not found",
+        "mypy": "NOT_RUN: command not found",
+        "bandit": "NOT_RUN: command not found",
+        "pydocstyle": "NOT_RUN: command not found",
+        "gitleaks": "NOT_RUN: command not found",
+        "hook_framework": "NOT_RUN: unavailable; enabled hooks run during publication",
+        "prettier": "NOT_RUN: command not found",
+        "markdown-link-check": "NOT_RUN: command not found",
+        "radon": "NOT_RUN: command not found",
+        "vulture": "NOT_RUN: command not found",
+        "lfs_attributes": "PASS: nine affected paths; none use LFS"
+      }
+    },
+    "historical_counts_note": "The touched_module_and_registry and ci_harness counts are retained from the prior artifact; current counts appear under review_follow_up."
+  },
+  "finite_rotation_reference": {
+    "method": "Independent three-equation body-frame force balance: T_i=(EA_i/L_i) max(|H-P_i|-L_i,0); sum(T_i u_i)=W (H-CoG)/|H-CoG|. No self-stress projection; force residual/W below 1e-9.",
+    "cases": [
+      {
+        "cog_xy_m": [
+          0.5,
+          0.5
+        ],
+        "reference_tensions_N": [
+          202135.7837862059,
+          282083.19033193873,
+          361988.08888084244,
+          282083.19033193873
+        ],
+        "actual_tensions_N": [
+          202418.38531110706,
+          282251.0331165577,
+          362083.68092200835,
+          282251.0331165577
+        ],
+        "max_relative_error": 0.0013980776664466177,
+        "tilt_deg": 4.66782623688463
+      },
+      {
+        "cog_xy_m": [
+          0.7,
+          0.7
+        ],
+        "reference_tensions_N": [
+          169624.8150522983,
+          281199.6004470263,
+          392691.60968302685,
+          281199.60044699966
+        ],
+        "actual_tensions_N": [
+          169945.9565496865,
+          281358.06689295097,
+          392770.17723621556,
+          281358.066892951
+        ],
+        "max_relative_error": 0.0018932459692833081,
+        "tilt_deg": 6.521148204819744
+      },
+      {
+        "cog_xy_m": [
+          0.7,
+          0
+        ],
+        "reference_tensions_N": [
+          226139.1498352161,
+          338043.39980535227,
+          338043.39980535227,
+          226139.14983524274
+        ],
+        "actual_tensions_N": [
+          226383.17241228148,
+          338156.2817777075,
+          338156.2817777075,
+          226383.17241228145
+        ],
+        "max_relative_error": 0.001079081517920244,
+        "tilt_deg": 4.621116430436898
+      }
+    ]
+  },
+  "independent_hand_calculations": {
+    "rigid": {
+      "nominal_tension_N": 283190.30703751143,
+      "cases": [
+        {
+          "tau_mm": 5,
+          "expected_tensions_N": [
+            358190.30703751143,
+            208190.30703751143,
+            358190.30703751143,
+            208190.30703751143
+          ],
+          "actual_tensions_N": [
+            358190.3070375114,
+            208190.30703751126,
+            358190.30703751143,
+            208190.30703751126
+          ],
+          "max_error_over_nominal": 6.166276825190618e-16
+        },
+        {
+          "tau_mm": 10,
+          "expected_tensions_N": [
+            433190.30703751143,
+            133190.30703751143,
+            433190.30703751143,
+            133190.30703751143
+          ],
+          "actual_tensions_N": [
+            433190.3070375113,
+            133190.30703751126,
+            433190.30703751143,
+            133190.30703751126
+          ],
+          "max_error_over_nominal": 6.166276825190618e-16
+        },
+        {
+          "tau_mm": 15,
+          "expected_tensions_N": [
+            508190.30703751143,
+            58190.30703751143,
+            508190.30703751143,
+            58190.30703751143
+          ],
+          "actual_tensions_N": [
+            508190.30703751126,
+            58190.30703751123,
+            508190.3070375115,
+            58190.30703751123
+          ],
+          "max_error_over_nominal": 7.1939896293890535e-16
+        },
+        {
+          "tau_mm": 19,
+          "expected_tensions_N": [
+            566380.6140750229,
+            0.0,
+            566380.6140750229,
+            0.0
+          ],
+          "actual_tensions_N": [
+            566380.6140750225,
+            0.0,
+            566380.6140750227,
+            0.0
+          ],
+          "max_error_over_nominal": 1.2332553650381236e-15
+        },
+        {
+          "tau_mm": 25,
+          "expected_tensions_N": [
+            566380.6140750229,
+            0.0,
+            566380.6140750229,
+            0.0
+          ],
+          "actual_tensions_N": [
+            566380.6140750225,
+            0.0,
+            566380.6140750227,
+            0.0
+          ],
+          "max_error_over_nominal": 1.2332553650381236e-15
+        }
+      ]
+    },
+    "flexible": {
+      "tau_m": 0.01,
+      "normalized_warp_stiffness_N_per_m": 15000000.0,
+      "expected_delta_N": 85714.28571428571,
+      "actual_delta_N": 85714.28571428562
+    }
+  },
+  "sample": {
+    "effective_skl": 1.5296791460455288,
+    "design_skl": 1.5296791460455288,
+    "code_minimum_skl": 1.33,
+    "max_nominal_vertical_share": 0.24999999999999997,
+    "governing_cog_xy_m": [
+      0.0,
+      0.0
+    ],
+    "design_leg_tensions_N": [
+      433190.3070375115,
+      433190.30703751143,
+      433190.30703751114,
+      433190.30703751126
+    ],
+    "cases": 16,
+    "summary_sha256": "1533ec1063bf5b9891c1d718eec99b8af841243fdc75a07a15df08827eccfedf",
+    "governing_cog_xyz_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "schema_version": 3
+  },
+  "sources": [
+    {
+      "id": "four_leg_minimum",
+      "citation": "DNVGL-ST-E273, 2.7-3 Portable offshore units, Edition April 2016, section 3.5.5, pages 34-35; skew effects section 3.5.4",
+      "url": "https://www.dnv.com/energy/standards-guidelines/dnv-st-e273-2-7-3-portable-offshore-units/",
+      "value_source": "src/digitalmodel/orcaflex/installation_analysis.py::_SKL_BY_LEG_COUNT[4]"
+    },
+    {
+      "id": "catalog_worked_example",
+      "citation": "SLP Sling Catalog, undated online edition, printed page 93, web page 99; Sling Considerations: Effects of Sling Angles; Example of the effect of Sling Angle on Tension",
+      "url": "https://www.sharrowlifting.com/wp-content/themes/sharrowliftingproducts/assets/flipbook/files/simple/99.html",
+      "http_status": "200",
+      "observed_at": "2026-10-17T13:12:12Z",
+      "sha256": "eeaed29b569d60709d5e9a81992d270490922a61316ad8825372fb32a4137af9",
+      "raw_committed": false
+    },
+    {
+      "id": "journal_context",
+      "citation": "AISC Engineering Journal 26(3), third quarter 1989, pages 96-101, Variation of Lift Load Distribution Due to Sling Length Tolerance; Computer Model and Analyses; Design Methods; Figure 3",
+      "url": "https://ej.aisc.org/index.php/engj/article/download/524/523",
+      "http_status": "200",
+      "observed_at": "2026-10-17T13:12:23Z",
+      "sha256": "2874b13e434be16fdba2ed8481857d812a6c785c1faf5eb9d036a38537685e31",
+      "raw_committed": false
+    }
+  ],
+  "family_qa": {
+    "status": "NOT_CLEARED",
+    "audited_register": "src/digitalmodel/marine_ops/installation/docs/agent-pack.md, section 5",
+    "basis": "Independent engineering hook/per-sling receipts and traceable clearance receipts remain open. Numerical tests do not supply formal engineering clearance.",
+    "licensed_execution": "NOT_RUN: prohibited by task"
+  },
+  "evidence_limits": [
+    "Only supplied CoG corners are evaluated, not a continuous-envelope maximum",
+    "Nominal rigid rotation with linear spring/tolerance displacements; directions are frozen about that pose, not updated for elastic stretch or errors",
+    "CoG z is explicit; payload warp limited to centred rectangles; tilts above 3 degrees flagged for separate assessment",
+    "Reference errors below 0.3 percent apply to the checked examples, not an arbitrary-geometry bound",
+    "Published catalog example validates inclined two-leg equilibrium only, not indeterminate skew or flexible-frame response",
+    "DNV four-leg minimum assumes a matched set without spreaders within the cited POU standard scope; applicability needs separate assessment",
+    "No physical experimental validation, licensed solver execution, or formal engineering clearance"
+  ],
+  "audit_corrections_2712_2713_2714": {
+    "basis": "Concurrent-force equilibrium: sum(T_i u_i)=Wg; g=(H-C)/|H-C|; full 3-D C. DNVGL-ST-E273 April 2016 section 3.5.5: extreme-CoG PL and tolerance SKL are separate.",
+    "input_contract": "Required cog_z_m in the lift-point datum, common to the supplied xy corners. Schema 3 echoes full xyz in cases and governing share.",
+    "family_clearance": "PENDING; engineering_use_allowed remains false",
+    "tests": {
+      "passed": 404,
+      "xfailed": 1,
+      "structure_passed": 29,
+      "red_failures": 12,
+      "atlas_query_red_failures": 1
+    },
+    "finite_rotation_cases": [
+      {
+        "cog_xyz_m": [
+          0.7,
+          0,
+          0.0
+        ],
+        "actual_tensions_N": [
+          226383.17241228148,
+          338156.2817777075,
+          338156.2817777075,
+          226383.17241228145
+        ],
+        "reference_tensions_N": [
+          226139.1498352161,
+          338043.39980535227,
+          338043.39980535227,
+          226139.14983524274
+        ],
+        "max_relative_error": 0.001079081517920244,
+        "tilt_deg": 4.621116430436898
+      },
+      {
+        "cog_xyz_m": [
+          0.7,
+          0,
+          2.0
+        ],
+        "actual_tensions_N": [
+          209132.75245413813,
+          354145.35316723597,
+          354145.35316723585,
+          209132.75245413795
+        ],
+        "reference_tensions_N": [
+          208590.13511597802,
+          354306.7133342514,
+          354306.7133342514,
+          208590.13511597802
+        ],
+        "max_relative_error": 0.00260135666463035,
+        "tilt_deg": 5.999822106900715
+      },
+      {
+        "cog_xyz_m": [
+          0.7,
+          0,
+          -2.0
+        ],
+        "actual_tensions_N": [
+          237130.03308552448,
+          328033.44901103846,
+          328033.4490110384,
+          237130.03308552442
+        ],
+        "reference_tensions_N": [
+          237006.75813880246,
+          327806.1525948228,
+          327806.1525948228,
+          237006.75813880246
+        ],
+        "max_relative_error": 0.0006933866689702306,
+        "tilt_deg": 3.7569038559763834
+      },
+      {
+        "cog_xyz_m": [
+          0.7,
+          0,
+          4.0
+        ],
+        "actual_tensions_N": [
+          177010.65166005012,
+          383086.7563946297,
+          383086.7563946295,
+          177010.65166004995
+        ],
+        "reference_tensions_N": [
+          175574.6286132265,
+          384029.17567514017,
+          384029.17567514017,
+          175574.62861319983
+        ],
+        "max_relative_error": 0.008178989516838042,
+        "tilt_deg": 8.542331097092964
+      }
+    ],
+    "reference_limit": "Required z=0,+2,-2 m cases meet 0.3% on all legs. Exploratory z=+4 m does not meet 0.3% on less-loaded legs; no arbitrary-geometry accuracy bound claimed.",
+    "atlas_refresh": {
+      "id": "d807d703f351",
+      "grid_rows": 25,
+      "holdout_samples": 8,
+      "max_relative_interpolation_error": 0.02083333333333326,
+      "unchanged_interpolation_threshold": 0.1,
+      "passes": true,
+      "comparison": "Grid values, holdout validation and surrogate numbers match the previous version. Only basis metadata and the default pointer change.",
+      "licensed_execution": "NOT_RUN; pure analytical lug response only"
+    }
+  }
+}

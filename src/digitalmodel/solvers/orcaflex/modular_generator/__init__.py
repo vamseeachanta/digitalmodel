@@ -4,8 +4,11 @@
 """OrcaFlex Modular Model Generator from Project Spec."""
 
 import logging
+import shutil
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, Dict
 
 import yaml
@@ -46,6 +49,30 @@ from .schema.generic import GenericModel
 logger = logging.getLogger(__name__)
 
 
+class ModelValidationError(ValueError):
+    """Generated inputs failed validation; all findings remain inspectable."""
+
+    def __init__(self, findings: list[ValidationWarning]):
+        self.findings = findings
+        errors = [w for w in findings if w.level == "error"]
+        details = "; ".join(f"{w.category}: {w.message}" for w in errors)
+        super().__init__(f"Post-generation validation failed ({len(errors)} errors): {details}")
+
+
+@contextmanager
+def _staged_output(output_dir: Path):
+    """Publish model files only after generation and validation succeed.
+
+    A validation or builder failure leaves even an existing output untouched.
+    Publication copies files after validation; it is not an atomic transaction
+    against I/O failures during the copy itself.
+    """
+    with TemporaryDirectory(prefix="modular-model-") as temporary:
+        staging = Path(temporary)
+        yield staging
+        shutil.copytree(staging, output_dir, dirs_exist_ok=True)
+
+
 class _NoAliasDumper(yaml.Dumper):
     """YAML Dumper that never emits anchors/aliases.
 
@@ -56,6 +83,20 @@ class _NoAliasDumper(yaml.Dumper):
 
     def ignore_aliases(self, data):
         return True
+
+    def represent_mapping(self, tag, mapping, flow_style=None):
+        """Keep free-end stiffness rows in the native save's compact form."""
+        node = super().represent_mapping(tag, mapping, flow_style)
+        stiffness_key = (
+            "ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
+            "ConnectionTwistingStiffness, ConnectionDamping"
+        )
+        for key, value in node.value:
+            if key.value in (stiffness_key,
+                             "ConnectionxBendingStiffness, ConnectionyBendingStiffness") and any(row == [] for row in mapping[key.value]):
+                for row in value.value:
+                    row.flow_style = True
+        return node
 
 
 # Pin defaults locally; prior imports shall not select PyYAML's null spelling.
@@ -151,8 +192,17 @@ class ModularModelGenerator:
             data = yaml.safe_load(f)
         return ProjectInputSpec(**data)
 
-    def generate(self, output_dir: Path) -> None:
-        """Write and validate the modular inputs in the selected directory."""
+    def generate(self, output_dir: Path, *, allow_validation_errors: bool = False) -> None:
+        """Validate then publish inputs; errors raise ModelValidationError.
+
+        Set allow_validation_errors=True only to write diagnostic inputs. Error
+        findings remain logged at ERROR level. Collection collisions still raise.
+        """
+        with _staged_output(Path(output_dir)) as staging:
+            self._generate(staging, allow_validation_errors=allow_validation_errors)
+
+    def _generate(self, output_dir: Path, *, allow_validation_errors: bool) -> None:
+        """Build into temporary storage; callers publish only after validation."""
         output_dir = Path(output_dir)
         includes_dir = output_dir / 'includes'
         inputs_dir = output_dir / 'inputs'
@@ -198,13 +248,19 @@ class ModularModelGenerator:
         check_collection_collisions(master_path, raise_on_collision=True)
 
         # Post-generation cross-builder validation
-        self._run_post_validation(includes_dir)
+        self._run_post_validation(includes_dir, allow_validation_errors=allow_validation_errors)
 
-    def _run_post_validation(self, includes_dir: Path) -> list[ValidationWarning]:
+    def _run_post_validation(
+        self, includes_dir: Path, *, allow_validation_errors: bool = False,
+    ) -> list[ValidationWarning]:
         """Run post-generation validation and log any findings.
 
         Validates cross-builder consistency of the generated YAML files.
-        Warnings are logged but do not block generation.
+        Warnings do not block generation. Every error blocks publication unless
+        the caller explicitly requests diagnostic output. Native unique-name
+        rules and known invalid wave selectors remain enforced by the validator:
+        https://www.orcina.com/webhelp/OrcaFlex/Content/html/Datafields.htm
+        https://www.orcina.com/webhelp/OrcaFlex/Content/html/Themodel.htm
 
         Args:
             includes_dir: Directory containing generated include files.
@@ -216,13 +272,15 @@ class ModularModelGenerator:
         findings = validator.validate_directory(includes_dir)
         for finding in findings:
             if finding.level == "error":
-                logger.warning(
+                logger.error(
                     "Post-validation %s: %s", finding.category, finding.message
                 )
             else:
                 logger.info(
                     "Post-validation %s: %s", finding.category, finding.message
                 )
+        if not allow_validation_errors and any(w.level == "error" for w in findings):
+            raise ModelValidationError(findings)
         return findings
 
     def _write_parameters(self, path: Path) -> None:
@@ -267,6 +325,33 @@ class ModularModelGenerator:
         sections: list | None = None,
         variables: dict[str, Any] | None = None,
         template_base_dir: Path | None = None,
+        *,
+        allow_validation_errors: bool = False,
+    ) -> GenerationResult:
+        """Validate overridden inputs before publishing, preserving result paths.
+
+        Error findings raise ModelValidationError by default. Explicit
+        allow_validation_errors=True writes diagnostic inputs and retains the
+        findings in GenerationResult.warnings and ERROR logs.
+        """
+        output_dir = Path(output_dir)
+        with _staged_output(output_dir) as staging:
+            result = self._generate_with_overrides(
+                staging, sections, variables, template_base_dir,
+                allow_validation_errors=allow_validation_errors,
+            )
+            result.master_file = output_dir / result.master_file.relative_to(staging)
+            result.include_files = [output_dir / p.relative_to(staging) for p in result.include_files]
+        return result
+
+    def _generate_with_overrides(
+        self,
+        output_dir: Path,
+        sections: list | None,
+        variables: dict[str, Any] | None,
+        template_base_dir: Path | None,
+        *,
+        allow_validation_errors: bool,
     ) -> GenerationResult:
         """Generate model with optional section overrides.
 
@@ -359,7 +444,7 @@ class ModularModelGenerator:
         check_collection_collisions(master_path, raise_on_collision=True)
 
         # Post-generation cross-builder validation
-        findings = self._run_post_validation(includes_dir)
+        findings = self._run_post_validation(includes_dir, allow_validation_errors=allow_validation_errors)
         for finding in findings:
             warnings.append(
                 f"[{finding.level}] {finding.category}: {finding.message}"

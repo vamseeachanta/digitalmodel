@@ -5,6 +5,7 @@
 
 from datetime import date
 from pathlib import Path
+import re
 
 import yaml
 
@@ -22,6 +23,9 @@ def test_flaky_register_schema():
         assert row["status"] in {"open", "fixed"}
         assert date.fromisoformat(str(row["first_seen"])) <= date.fromisoformat(str(row["last_seen"]))
         assert isinstance(row["evidence"], list) and row["evidence"]
-        assert all(url.startswith("https://github.com/") and "/actions/runs/" in url for url in row["evidence"])
+        assert all(re.fullmatch(
+            r"https://api\.github\.com/repositories/[0-9]+/actions/(?:runs|jobs)/[0-9]+",
+            url,
+        ) for url in row["evidence"])
         assert isinstance(row["cause"], str) and row["cause"]
         assert row["fix_issue"] == "pending" or (isinstance(row["fix_issue"], int) and row["fix_issue"] > 0)

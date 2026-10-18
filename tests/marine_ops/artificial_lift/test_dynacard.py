@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 import pytest
 import numpy as np
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
@@ -128,19 +131,27 @@ def test_router_with_solver_method_override(sample_context):
 
 
 def test_compare_solvers(sample_context):
-    """Call compare_solvers(), verify return has expected keys and stroke_diff_pct is reasonable."""
+    """Disagreement requires explicit opt-in and is measured against the default."""
+    from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import PhysicsError
+
     workflow = DynacardWorkflow(sample_context)
-    comparison = workflow.compare_solvers()
-    assert 'gibbs_results' in comparison
-    assert 'fd_results' in comparison
-    assert 'comparison' in comparison
-    comp = comparison['comparison']
-    assert 'gibbs_stroke' in comp
-    assert 'fd_stroke' in comp
-    assert 'stroke_diff_pct' in comp
-    assert 'load_rmse' in comp
-    assert 'load_rmse_pct' in comp
-    assert comp['stroke_diff_pct'] < 20.0
+    with pytest.raises(PhysicsError, match="solver disagreement") as caught:
+        workflow.compare_solvers()
+    comparison = workflow.compare_solvers(allow_divergence=True)
+    assert comparison['reference_solver'] == 'everitt_jennings'
+    assert comparison['reference_results'].downhole_card is not None
+    assert set(comparison['comparisons']) == {'gibbs', 'finite_difference'}
+    assert comparison['within_threshold'] is False
+    for metrics in comparison['comparisons'].values():
+        assert np.isfinite(metrics['stroke_error_pct'])
+        assert np.isfinite(metrics['load_nrmse_pct'])
+    assert comparison['threshold_load_nrmse_pct'] == pytest.approx(4.4)
+    assert comparison['comparisons']['gibbs']['stroke_error_pct'] < 20.0
+    gibbs = comparison['comparisons']['gibbs']
+    assert gibbs['load_nrmse_pct'] == pytest.approx(16.8, abs=0.05)
+    assert gibbs['load_nrmse_pct'] > comparison['threshold_load_nrmse_pct']
+    assert gibbs['within_threshold'] is False
+    assert caught.value.details['comparisons']['gibbs'] == gibbs
 
 
 def test_perform_well_troubleshooting(sample_context):

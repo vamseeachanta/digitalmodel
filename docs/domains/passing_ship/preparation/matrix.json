@@ -1,0 +1,17 @@
+{
+  "speed_knots": [
+    3,
+    5
+  ],
+  "separation_m": [
+    30,
+    40,
+    60
+  ],
+  "depth_to_draft": [
+    1.108,
+    1.324,
+    3.919
+  ],
+  "basis": "Separation and depth ratios: Park, Nam and Kim (2021), Table 2. Speed inputs: existing sample specification. Full Cartesian product is an assumed study, not a published test matrix."
+}

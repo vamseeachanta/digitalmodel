@@ -19,7 +19,7 @@ class ValidationLevel(Enum):
 
 class ValidationStatus(Enum):
     """Overall validation status."""
-    PASS = "pass"
+    PASS = "pass"  # nosec B105 # Public validation outcome label, not a credential.
     WARN = "warn"
     FAIL = "fail"
     UNKNOWN = "unknown"

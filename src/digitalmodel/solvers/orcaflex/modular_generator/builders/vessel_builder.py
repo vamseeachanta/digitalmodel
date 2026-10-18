@@ -58,7 +58,6 @@ class VesselBuilder(BaseBuilder):
             "PrimaryMotion": "Calculated (6 DOF)",
             "SuperimposedMotion": "None",
             "IncludedInStatics": "None",
-            "WaveCalculationMethod": "Specified by environment",
         }
 
         # Add stinger support path if stinger is defined
@@ -113,6 +112,16 @@ class VesselBuilder(BaseBuilder):
 
         # Build support positions from rollers if defined
         supports = []
+        if stinger.firing_line_length and stinger.rollers:
+            count = math.ceil(stinger.firing_line_length / stinger.firing_line_spacing)
+            for index in range(count):
+                station = stinger.firing_line_length - index * stinger.firing_line_spacing
+                supports.append({
+                    "SupportType": stinger.rollers[0].support_type,
+                    "SupportPosition": [round(origin[0] + station, 3), origin[1],
+                                        origin[2] + stinger.rollers[0].z_offset],
+                    "SupportOrientation": [0, 0, 0],
+                })
         if stinger.rollers:
             for roller in stinger.rollers:
                 theta = roller.arc_length / radius

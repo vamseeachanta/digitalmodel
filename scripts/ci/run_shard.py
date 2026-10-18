@@ -5,6 +5,7 @@
 
 Report mode preserves the first exit code. Enforce mode requires register
 evidence for every recovered ID. Both attempts inherit console output.
+Atlas uses a separate opt-in signal retry outside the pytest pilot.
 """
 
 import argparse
@@ -16,6 +17,7 @@ import re
 import subprocess
 import sys
 import time
+from typing import Any
 import xml.etree.ElementTree as ET
 
 NO_RETRY_SHARDS = frozenset({"contracts"})
@@ -196,19 +198,21 @@ def register_decisions(path: Path, ids: list[str]) -> dict[str, str]:
     return decisions
 
 
-def first_failures(path: Path) -> dict[str, str]:
-    """Keep one first-attempt message per established failed test identity."""
-    failures = {}
+def first_failures(path: Path) -> tuple[dict[str, str], list[dict[str, str]]]:
+    """Keep established failures and raw attributes of unidentified failures."""
+    failures: dict[str, str] = {}
+    unidentified: list[dict[str, str]] = []
     for case in read_cases(path):
         failure = next((child for child in case if child.tag in {"failure", "error"}), None)
         if failure is not None:
             try:
                 node = node_id(case)
             except ValueError:
+                unidentified.append({key: case.get(key, "") for key in ("classname", "name")})
                 continue
             message = (failure.get("message", "") + "\n" + (failure.text or "")).strip()
             failures.setdefault(node, message[:500])
-    return failures
+    return failures, unidentified
 
 
 def test_evidence(args: argparse.Namespace, payload: dict) -> None:
@@ -226,6 +230,9 @@ def test_evidence(args: argparse.Namespace, payload: dict) -> None:
                       f"<pre>{html.escape(message)}</pre>"])
         escaped = node.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
         print(f"::warning::flaky, {outcome}: {escaped}; {choice}", flush=True)
+    for case in payload["unidentified_failures"]:
+        lines.append(f"- Unidentified failure: classname=<code>{html.escape(case['classname'])}</code>; "
+                     f"name=<code>{html.escape(case['name'])}</code>; test ID could not be established.")
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as handle:
             handle.write("\n".join(lines) + "\n")
@@ -233,18 +240,20 @@ def test_evidence(args: argparse.Namespace, payload: dict) -> None:
 
 def retry_tests(args: argparse.Namespace, command: list[str], code: int, started: int) -> int:
     """Observe one diagnostic retry; only evidenced recovery may clear enforce."""
-    failures = {}
-    result = {"retry": False, "reason": "missing-or-stale-report", "ids": []}
+    failures: dict[str, str] = {}
+    unidentified: list[dict[str, str]] = []
+    result: dict[str, Any] = {"retry": False, "reason": "missing-or-stale-report", "ids": []}
     if fresh(args.junit, started):
         result = junit_decision(args.junit, code, args.max_retry_ids)
         try:
-            failures = first_failures(args.junit)
+            failures, unidentified = first_failures(args.junit)
         except (OSError, ET.ParseError, ValueError):
             pass
     if args.shard in NO_RETRY_SHARDS:
         result.update(retry=False, reason="no-retry-shard")
     choices = register_decisions(args.register, list(failures))
     payload = dict(observation(), ids=[], recovered=[], first_attempt_failed=failures,
+                   unidentified_failures=unidentified,
                    first_attempt_exit_code=code, mode=args.mode, register=choices,
                    kind="test-ids", reason=result["reason"])
     enforce_code = code
@@ -271,9 +280,10 @@ def retry_tests(args: argparse.Namespace, command: list[str], code: int, started
                     and all(choices.get(node) == "registered with evidence" for node in result["ids"])):
                 enforce_code = 0
     payload["enforce_exit_code"] = enforce_code
-    payload["exit_code"] = code if args.mode == "report" else enforce_code
+    exit_code = code if args.mode == "report" else enforce_code
+    payload["exit_code"] = exit_code
     test_evidence(args, payload)
-    return payload["exit_code"]
+    return exit_code
 
 
 def main() -> int:

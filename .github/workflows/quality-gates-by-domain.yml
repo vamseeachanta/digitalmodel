@@ -137,6 +137,8 @@ jobs:
         run: |
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
+            tests/docs/test_implementation_map.py \
+            tests/docs/test_implementation_map_search.py \
             tests/scripts/test_ci_baseline.py \
             tests/scripts/test_run_shard.py \
             tests/contracts/test_flaky_register_schema.py \
@@ -144,6 +146,9 @@ jobs:
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
             -q --tb=line
+
+      - name: Report implementation map staleness
+        run: uv run --no-sources python scripts/generate_implementation_map.py
 
   domain-tests:
     name: tests-${{ matrix.domain }}
@@ -156,6 +161,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # Subsea verifies a manifest pinned to an older commit.
+          fetch-depth: ${{ matrix.domain == 'subsea' && '0' || '1' }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -168,7 +176,7 @@ jobs:
           enable-cache: true
 
       - name: Install Gmsh runtime libraries
-        if: matrix.domain == 'solver-smoke'
+        if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
         run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
 
       - name: Create reports directory
@@ -194,18 +202,31 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Select trusted register
+        if: matrix.domain == 'orcaflex'
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: python scripts/ci/ci_baseline.py register --out "$RUNNER_TEMP/flaky-register.yml"
+
       - name: Run domain gate
         id: domain-gate
         run: |
           set +e
           if [ "${{ matrix.domain }}" = "orcaflex" ]; then
-            uv run --no-sources --with pyyaml python scripts/ci/run_shard.py --mode report --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+            uv run --no-sources --with pyyaml python scripts/ci/run_shard.py --register "$RUNNER_TEMP/flaky-register.yml" --mode report --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           else
             ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           fi
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
+
+      - name: Run geotechnical solver benchmarks
+        if: matrix.domain == 'specialized'
+        run: >-
+          PYTHONPATH=src uv run --no-sources --with-editable '.[test]'
+          --with 'xslope==1.0.3' --with 'gmsh>=4.15'
+          python -m pytest tests/geotechnical -q -rA -p no:cacheprovider
 
       - name: Extract shard result
         if: always()
@@ -296,6 +317,7 @@ jobs:
       - name: Enforce required domain result
         if: always()
         env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
           CI_BASELINE_MODE: report
           GH_TOKEN: ${{ github.token }}
           HAS_DOMAINS: ${{ needs.detect-domains.outputs.has-domains }}
@@ -315,6 +337,7 @@ jobs:
 
           if [ "$HAS_DOMAINS" = "true" ]; then
             if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+              python scripts/ci/ci_baseline.py register --out "$RUNNER_TEMP/flaky-register.yml"
               uv run --no-sources --with pyyaml python - <<'PYTHON'
           import os
           from pathlib import Path
@@ -332,6 +355,7 @@ jobs:
           PYTHON
               if uv run --no-sources --with pyyaml python scripts/ci/ci_baseline.py compare \
                 --baseline baseline.json --results baseline-results --max-age-hours 24 \
+                --register "$RUNNER_TEMP/flaky-register.yml" \
                 --summary baseline-summary.md --verdict baseline-verdict.json --now "$(cat baseline-time.txt)"; then
                 comparison=0
               else
