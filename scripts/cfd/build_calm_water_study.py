@@ -1,7 +1,10 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Retain native cost measurements and render an internal resistance record.
+"""Retain native cost measurements and render an indicative resistance record.
+
+This docs/domains report is outside the docs/api freshness census; its dedicated
+committed-evidence checker verifies the report and retained numerical histories.
 
 Restore large case files with scripts/data/fetch.py using an exact path or a
 quoted glob such as 'data/cfd/calm_water_study/cases/*/constant/triSurface/*'.
@@ -387,7 +390,7 @@ def report_design_data(manifest: dict) -> str:
         ["Geometry and model particulars", "ASSUMED - to be confirmed: assumed, based on previous experience; retained geometry and configuration. Confirm against an opened primary geometry source.", "Resistance and physical model identity; source-error sensitivity is not bounded."],
         ["Fluid properties and normalization", "ASSUMED - to be confirmed: assumed, based on previous experience; existing case configuration. Confirm the intended experimental condition and reference area.", "Absolute coefficients and any future experimental error; property sensitivity was not calculated."],
         ["Comparison and uncertainty targets", "Assumed, based on previous experience; predeclared targets in <a href='#ref-i2'>[I2]</a>, without a claimed standard clause.", "Acceptance thresholds; no empirical acceptance is inferred without a matched reference."],
-        ["Gravity convention", "The case uses g = 9.81 m/s²; the basis module and fixture use 9.80665 m/s². The executed Froude number is 0.25996.", "The reported executed speed is used for normalization; this difference is retained, not silently matched."],
+        ["Gravity convention", "Executed gravity and Froude number are retained in the manifest model_basis; primary input qualification remains open.", "The reported executed speed is used for normalization; this difference is retained, not silently matched."],
         ["Inherited domain placement", "The executed extents are retained; a domain-size sensitivity investigation is required.", "Domain-truncation influence is not bounded."],
     ], "Table 3.2. Assumption ledger and affected conclusions.", "table-3-2")
     c = manifest.get("criteria", {})
@@ -432,79 +435,38 @@ def report_results(manifest: dict, history_figure: str) -> str:
 
 
 def referent_reading() -> str:
-    """State the fixture's condition and the unchanged source-access criterion."""
-    return ("The in-repository row <code>kcs_t2005_case_1_1_fixed_bare</code> records "
-            "fixed even keel, no appendages, wetted surface 9.4379 m², Re = 1.4e7, "
-            "Fr = 0.26 and Lpp = 7.2786 m; Ct = 3.56e-3 is marked provenance: stated. "
-            "The fixture carries EFD uncertainty 1.0 % from the workshop page and notes "
-            "0.64 % in the table. Its workshop citation has no table or page locator, "
-            "and the archive addresses did not open. The predeclared rule requires an "
-            "opened source with a table and page; the result remains not available. "
-            "The criterion is unchanged after the results. "
-            "<a href='#ref-i7'>[I7]</a> identifies the fixture, citation and tolerance source.")
+    """Do not promote an unopened fixture into experimental evidence."""
+    return (
+        "The in-repository experimental fixture has no opened, matched table "
+        "and page retained with this study. No numerical experimental comparison is emitted. "
+        "The predeclared source criterion remains unchanged. "
+        "<a href='#ref-i7'>[I7]</a> records this evidence limit."
+    )
 
 
 def component_reading(manifest: dict) -> str:
-    """Compute descriptive offsets without applying undeclared acceptance gates."""
-    runs = {run["mesh"]: run["statistics"] for run in manifest.get("full_runs", [])
-            if "statistics" in run}
-    if not {"coarse", "medium"} <= runs.keys():
-        return ""
-    import yaml
-    root = Path(__file__).resolve().parents[2]
-    fixture = yaml.safe_load((root / "tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml").read_text())
-    row = next(row for row in fixture["reference_rows"]
-               if row["id"] == "kcs_t2005_case_1_1_fixed_bare")
-    target = row["values"]["ct"]["value"]
-    reynolds = manifest["model_basis"]["executed_reynolds"]
-    friction = 0.075 / (math.log10(reynolds) - 2)**2
-    residuary = target - friction
-    coarse, medium = runs["coarse"], runs["medium"]
-    delta = lambda value, reference: 100 * (value / reference - 1)
+    """Keep unavailable experimental and component comparisons explicit."""
     return (
-        "<h3>Known limit: offsetting components</h3><p>As a descriptive reading only, "
-        "unqualified and not a validation, medium Ct differs from the fixture by "
-        f"{delta(medium['mean_ct'], target):+.1f} % and coarse Ct by {delta(coarse['mean_ct'], target):+.1f} %. "
-        f"At the executed Re, ITTC-57 gives Cf = {friction:.4g}; medium Cv differs by "
-        f"{delta(medium['mean_cv'], friction):+.1f} % and coarse Cv by {delta(coarse['mean_cv'], friction):+.1f} %. "
-        f"The fixture-derived residuary Ct − Cf is {residuary:.4g}; medium Cp differs by "
-        f"{delta(medium['mean_cp'], residuary):+.1f} % and coarse Cp by {delta(coarse['mean_cp'], residuary):+.1f} %. "
-        f"Coarse Ct exceeds medium Ct by {delta(coarse['mean_ct'], medium['mean_ct']):.1f} %, "
-        "using medium as denominator. The offsets are computed from unrounded inputs "
-        "and are displayed to one decimal place. "
-        "The near-match of medium Ct comes from offsetting components and must not be read as agreement. "
-        "V2a (pressure against residuary), V2b (viscous against ITTC-57) and V3 "
-        "(two-level consistency) are not applied: the criteria fixed before results adopt "
-        "only V1 and the three-mesh grid convergence index. Inputs and their locators are "
-        "listed in <a href='#ref-i8'>[I8]</a>.</p>")
+        "<p>Experimental component offsets are not available: the reference is "
+        "unqualified under the recorded source criterion. Descriptive CFD means "
+        "remain traceable to retained force windows in <a href='#ref-i8'>[I8]</a>.</p>"
+    )
 
 
 def report_references(manifest: dict | None = None) -> str:
-    """Keep software versions and technical locators in the reference register."""
-    evidence = (manifest or {}).get("case_evidence", {})
-    banners = "; ".join(html.escape(" / ".join(value["solver_version_banner"]))
-                        for value in evidence.values() if value["solver_version_banner"])
-    locators = []
-    text = json.dumps(manifest or {}, indent=2, sort_keys=True).splitlines()
-    for key in ("executed_reynolds", "mean_ct", "mean_cp", "mean_cv"):
-        lines = ", ".join(str(index) for index, line in enumerate(text, 1)
-                          if line.strip().startswith('"' + key + '":'))
-        locators.append(key + " lines " + lines)
-    extra = ("<li id='ref-i7'>[I7] Referent: tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml, "
-             "lines 54–115 (condition and Ct), 129–135 (uncertainty), 30–38 (citation: CFD Workshop Tokyo 2005, "
-             "Test Case 1.1, NMRI archives cfdws05; reference data points to the Gothenburg 2000 Workshop EFD table). "
-             "The fixture citation supplies no table or page locator. REFERENT_ROW_ID is selected in "
-             "src/digitalmodel/solvers/openfoam/validation/ship_resistance.py, line 217. "
-             "The 3.0 % tolerance source is SHIP_RESISTANCE_CT_TOLERANCE = 0.0300, lines 63–64; "
-             "it is adopted as the study target, with no standard clause claimed.</li>"
-             "<li id='ref-i8'>[I8] Descriptive component inputs: data/cfd/calm_water_study/manifest.json, "
-             + "; ".join(locators) +
-             "; final-window means are independently recomputable from the window files. Fixture Ct: "
-             "tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml line 68; ITTC-57 formula: line 48. "
-             "V2a, V2b and V3: ship_resistance.py lines 66–84.</li>")
-    return '''<h2 id="references">9 References</h2><p>The published comparison sources and the internal computational basis are distinguished below.</p>
-<h3>9.1 Published references</h3><p>The public comparison records are listed with the limits of the inspected evidence.</p><ul><li id="ref-e1">[E1] Institution workshop archive addresses, https://www.nmri.go.jp/cfd/cfdws05/ and https://www.nmri.go.jp/institutes/fluid_performance/cfd_rd/cfdws05/. Both returned HTTP 404 on 2026-10-15; no experimental comparison value was extracted.</li><li id="ref-e2">[E2] Rapid Free Surface Simulation for Steady-State Hull Resistance with FVM using OpenFOAM, 30th Symposium on Naval Hydrodynamics, 2014, Table 1, page 3. The inspected table contains CFD coefficients and percentage experimental differences, not an experimental coefficient entry. No experimental number is inferred from it.</li></ul>
-<h3>9.2 Internal references</h3><p>The model inputs, numerical method and retained evidence are identified below.</p><ul><li id="ref-i1">[I1] Model/data basis: src/digitalmodel/solvers/openfoam/validation/ship_resistance.py and docs/api/cfd/cases/kcs_resistance/geometry/. Primary geometry-source access is not established; the adopted basis is assumed, based on previous experience.</li><li id="ref-i2">[I2] Comparison criteria: config/cfd/calm_water_study.json.</li><li id="ref-i3">[I3] Solver/program: read from the retained case. VERSION_BANNERS. The two-phase water/air declaration, kOmegaSST and localEuler are read from constant/transportProperties, constant/turbulenceProperties and system/fvSchemes; digests are in case_evidence. The generator revision is not recorded in the retained case.</li><li id="ref-i4">[I4] Model/data and execution evidence: data/cfd/calm_water_study/manifest.json, run-log.jsonl and raw/. Source and retained-byte digests, input geometry, native completion and units are recorded there. The store block indexes all 213 retained entries, including native logs and dictionaries. The 13 entries larger than 1 MiB are restored by scripts/data/fetch.py by path, glob or store id; 200 smaller entries are copied from ${ACE_DATA_ROOT}/data/digitalmodel/&lt;store_id&gt; and checked against their size and sha256. Only relative store identifiers are recorded. Full histories replace twelve split parts; the final 4000-iteration windows remain in Git. Meshes and field outputs are not stored: regeneration commands and configuration are in case_evidence; a complete launch sequence and generator revision are not recorded.</li><li id="ref-i5">[I5] Reduction and report method: scripts/cfd/build_calm_water_study.py; grid-uncertainty method: src/digitalmodel/solvers/openfoam/grid_convergence.py. The latter is not evaluated from fewer than three completed meshes.</li><li id="ref-i6">[I6] Published-reference copy: docs/domains/openfoam/references/jasak-2014-30th-SNH-naval-hydrodynamics-openfoam.pdf, Table 1, page 3.</li>'''.replace("VERSION_BANNERS", banners) + extra + "</ul>"
+    """Identify committed numeric evidence and state archive verification limits."""
+    return '''<h2 id="references">9 References</h2>
+<h3>9.1 Published references</h3><p id="ref-e1">[E1] No opened primary experimental table at a matched condition is retained. Experimental validation is not established. Earlier archive-access claims are not independently verified by the committed evidence checker.</p>
+<p id="ref-e2">[E2] No numerical experimental or standards-derived comparison is used in this indicative report.</p>
+<h3>9.2 Internal references</h3><ul>
+<li id="ref-i1">[I1] Model/data basis: <a href="../../../data/cfd/calm_water_study/manifest.json">retained manifest</a>, model_basis and runs. Geometry-source qualification and input sensitivity are not established.</li>
+<li id="ref-i2">[I2] <a href="../../../config/cfd/calm_water_study.json">Original study criteria</a>: policy values are assumed study choices, bound by each run's criterion digest.</li>
+<li id="ref-i3">[I3] Solver/program identity and method: manifest case_evidence includes recorded version banners, dictionary digests and method readback. These are retained records; archived native logs are not independently opened by this checker. Generator revision and a complete launch sequence are not recorded.</li>
+<li id="ref-i4">[I4] Execution evidence: <a href="../../../data/cfd/calm_water_study/run-log.jsonl">run log</a> and <a href="../../../data/cfd/calm_water_study/raw/">retained force and coefficient windows</a>. The manifest store block indexes archived inputs and native logs by relative identifiers and digests. Archived bytes are not checked here. Full histories, meshes and fields are not needed for this page's retained-window recomputation.</li>
+<li id="ref-i5">[I5] Reduction and report: scripts/cfd/build_calm_water_study.py. Independent committed-evidence check and regeneration: scripts/cfd/verify_calm_water_study.py. Grid method: src/digitalmodel/solvers/openfoam/grid_convergence.py; no uncertainty result is calculated.</li>
+<li id="ref-i6">[I6] Historical published-reference candidates are not adopted as numeric evidence.</li>
+<li id="ref-i7">[I7] The experimental fixture does not satisfy the opened-source, table and page criterion. No fixture number is promoted into this report.</li>
+<li id="ref-i8">[I8] Descriptive means and dispersions: manifest full_runs statistics, independently recomputed from each retained final-window force and coefficient pair. A two-mesh descriptive difference is not numerical uncertainty.</li></ul>'''
 
 
 def report_appendix(manifest: dict) -> str:
@@ -526,13 +488,15 @@ def report_appendix(manifest: dict) -> str:
             face_rows.append([html.escape(r["mesh"]), str(f["faces"]), report_number(1e6 * f["maximum_face_area_m2"]), f"{f['area_ratio_1']:.1f}", f"{f['limit_1']:.1f}"])
     face_table = report_table(["Mesh", "Hull faces", "Maximum face area (mm²)", "Area/target area (1)", "Limit (1)"], face_rows, "Table A.4. Retained static-mesh hull-face inspection; the area ratio is maximum face area divided by the squared target length. Meeting this geometric limit does not establish resistance convergence.", "table-a-4")
     return f'''<h2 id="appendix-a">Appendix A – Native execution and model detail</h2><p>The short-start measurements in <a href="#table-a-1">Table A.1</a> define the computation-cost projection, not resistance convergence.</p>{starts}<h3>Native continuation</h3><p>The completed or failed continuations are distinguished by their native outcomes and final iterations.</p>{full}{domain}{face_table}
-<p>Peak memory is sampled aggregate resident memory of the launcher and descendants at 0.2-second intervals. Shared pages may be counted repeatedly; unsampled transient peaks and kernel memory are excluded. The resource checks use a 6 GiB memory reserve and 15 GiB minimum free disk space. Full-run peak RSS was not sampled.</p>
-<p>The projection is measured short-start wall time per iteration multiplied by 25000. The finest projection exceeds the 80-hour total allowance; a full finest run is therefore excluded. A larger resource or duration allowance is required before a three-mesh result can be obtained. Native case data are retained without deleting mesh or field outputs.</p>
-<h2 id="appendix-b">Appendix B – Interpretation and missing evidence</h2><p>The following details explain the limitations that affect engineering use.</p><ul><li>Primary geometry-source access and a matched printed experimental table remain unavailable. Recalculation of the retained inputs does not establish original input qualification.</li><li>Final-window averages and dispersion describe the computed histories. No independent temporal-stationarity tolerance was predeclared; neither dispersion nor the two-mesh difference supplies a numerical uncertainty bound.</li><li>The nominal linear refinement ratio is two. The reference lateral division count was rounded upward from 19 to 20 before scaling, so the intended block division ratios remain constant. Surface clipping and local refinement mean that total cell-count ratios need not be exact cubes of two.</li><li>Domain placement is inherited and was not varied. Its influence on absolute resistance is not bounded by the available runs.</li><li>The history plot groups at most 200 bins in the final 4000-iteration window. Every value is used in the tabulated mean and dispersion; plotted shading preserves each bin's extrema. The half printed coefficient increment, 5 × 10⁻⁵, defines the near-zero display threshold for relative mesh differences, not an acceptance tolerance.</li></ul>'''
+<p>Peak memory is sampled aggregate resident memory of the launcher and descendants at a cadence not recorded in the retained manifest. Shared pages may be counted repeatedly; unsampled transient peaks and kernel memory are excluded. Memory reserve and minimum free disk are declared study policy in the criterion record; their runtime implementation is not independently checked here. Full-run peak RSS was not sampled.</p>
+<p>The projection is measured short-start wall time per iteration multiplied by 25000. The finest projection exceeds the 80-hour total allowance; a full finest run is therefore excluded. A larger resource or duration allowance is required before a three-mesh result can be obtained. The manifest identifies archived native case data; archive availability is not established by the committed-file checks.</p>
+<h2 id="appendix-b">Appendix B – Interpretation and missing evidence</h2><p>The following details explain the limitations that affect engineering use.</p><ul><li>Primary geometry-source access and a matched printed experimental table remain unavailable. Recalculation of the retained inputs does not establish original input qualification.</li><li>Final-window averages and dispersion describe the computed histories. No independent temporal-stationarity tolerance was predeclared; neither dispersion nor the two-mesh difference supplies a numerical uncertainty bound.</li><li>The nominal linear refinement ratio is two. The retained starts record the common lateral reference division count; intended block division ratios remain constant. Surface clipping and local refinement mean that total cell-count ratios need not be exact cubes of two.</li><li>Domain placement is inherited and was not varied. Its influence on absolute resistance is not bounded by the available runs.</li><li>The history plot groups at most 200 bins in the final 4000-iteration window. Every value is used in the tabulated mean and dispersion; plotted shading preserves each bin's extrema. The half printed coefficient increment, 5 × 10⁻⁵, defines the near-zero display threshold for relative mesh differences, not an acceptance tolerance.</li></ul>'''
 
 
 def render_report(manifest: dict, history_figure: str = "") -> str:
-    """Render a formal analysis without certifying missing validation evidence."""
+    """Render an indicative analysis without certifying missing evidence."""
+    if manifest["qualified_results"] != 0 or manifest.get("readiness_status", "partial") != "partial":
+        raise ValueError("retained histories do not establish qualified resistance")
     count = sum(r.get("status") == "complete" for r in manifest.get("full_runs", []))
     revision_rows = [["0", "2026-10-14", "Native start evidence and criteria are retained to distinguish computation cost from settled resistance."]]
     if manifest.get("full_runs"):
@@ -551,7 +515,7 @@ def render_report(manifest: dict, history_figure: str = "") -> str:
     symbols = report_table(["Symbol or acronym", "Meaning", "Unit"], [["Rₜ", "Full-hull total resistance", "N"], ["Fₓ,half", "Signed half-domain streamwise force", "N"], ["ρ", "Water density", "kg/m³"], ["S", "Reference wetted area", "m²"], ["U", "Inlet speed magnitude", "m/s"], ["Lpp", "Length between perpendiculars", "m"], ["g", "Gravity magnitude", "m/s²"], ["ν", "Water kinematic viscosity", "m²/s"], ["Ct, Cp, Cv", "Total, pressure and viscous resistance coefficients", "1"], ["Fr, Re", "Froude and Reynolds numbers", "1"], ["N", "Number of samples in the averaging window", "count"], ["r", "Nominal linear mesh-refinement ratio", "1"], ["σCt", "Population dispersion of Ct, not uncertainty", "1"], ["hₜ", "Declared hull-face target length; hₜ/Lpp is a defined geometric ratio", "m"], ["STL, SST", "Triangulated surface format; shear-stress transport", "not applicable"], ["CFD, GCI, RSS", "Computational fluid dynamics; grid convergence index; aggregate resident memory", "not applicable"]], "Table 10.1. Symbols and acronyms used in the analysis.", "table-10-1")
     style = 'body{font:16px/1.5 system-ui,sans-serif;max-width:1050px;margin:2rem auto;padding:1rem;color:#182f40}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #bbc;padding:.4rem;text-align:left;overflow-wrap:anywhere}h2{margin-top:2rem}p,li{font-weight:400}.caption,figcaption{font-size:.9em;text-align:left;margin:.4rem 0 1rem}.table-wrap{max-width:100%}figure{margin:1rem 0}svg{width:100%;height:auto}code{overflow-wrap:anywhere}.equation{text-align:center}@media print{body{font-size:10pt;margin:0;max-width:none}h2,h3{break-after:avoid}figure,.table-wrap{break-inside:avoid}}'
     body = summary + introduction + report_design_data(manifest) + method + report_results(manifest, history_figure) + findings + limitations + recommendations + report_references(manifest) + '<h2 id="symbols">10 Acronyms and Symbols</h2><p>The symbols and units used in the governing equations are defined below.</p>' + symbols + report_appendix(manifest)
-    return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Calm-water resistance analysis</title><style>' + style + '</style></head><body><h1>Calm-water resistance analysis</h1><p>Internal computational record</p>' + body + '\n</body></html>\n'
+    return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Calm-water resistance study (indicative)</title><style>' + style + '</style></head><body><h1>Calm-water resistance study (indicative)</h1><p>Indicative computational record</p>' + body + '\n</body></html>\n'
 
 
 def render_run_log(manifest: dict) -> str:

@@ -321,3 +321,50 @@ def test_full_record_mesh_name_cannot_overwrite_an_output_neighbor(tmp_path):
         print(json.dumps({"before": before, "tampered": tampered, "restored": restored}))
         assert restored == before
     assert tampered == before
+
+
+def load_verifier():
+    spec = importlib.util.spec_from_file_location(
+        "study_verifier", REPO / "scripts/cfd/verify_calm_water_study.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_committed_study_evidence_and_report_are_reproducible():
+    verifier = load_verifier()
+    manifest = verifier.verify_retained(REPO)
+    assert verifier.render_retained(REPO, manifest) == (
+        REPO / "docs/domains/openfoam/calm-water-resistance-study.html"
+    ).read_text()
+    page = verifier.render_retained(REPO, manifest)
+    assert "indicative" in page.lower()
+    assert "No numerical experimental comparison is emitted" in page
+
+
+@pytest.mark.parametrize("field,value", [
+    ("qualified_results", 1), ("readiness_status", "validated"),
+])
+def test_retained_evidence_rejects_qualification_claims(field, value):
+    verifier = load_verifier()
+    manifest = json.loads((REPO / "data/cfd/calm_water_study/manifest.json").read_text())
+    manifest[field] = value
+    with pytest.raises(ValueError):
+        verifier.verify_retained(REPO, manifest)
+
+
+@pytest.mark.parametrize("mutation", ["digest", "cost", "statistics", "path"])
+def test_retained_evidence_rejects_inconsistent_records(mutation):
+    verifier = load_verifier()
+    manifest = json.loads((REPO / "data/cfd/calm_water_study/manifest.json").read_text())
+    if mutation == "digest":
+        next(iter(manifest["files"].values()))["sha256"] = "0" * 64
+    elif mutation == "cost":
+        manifest["runs"][0]["projected_full_seconds"] *= 2
+    elif mutation == "statistics":
+        manifest["full_runs"][0]["statistics"]["mean_ct"] *= 2
+    else:
+        manifest["files"]["../outside"] = next(iter(manifest["files"].values()))
+    with pytest.raises(ValueError):
+        verifier.verify_retained(REPO, manifest)
