@@ -17,7 +17,8 @@ pins normalise CRLF to LF without rewriting the originals. Supplementary values
 needed by the six-method comparison are explicit assumptions; no grids are
 invented or adjusted. `assumptions.yml` records genuine assessment assumptions
 and method citations. Licensed factors, limits and equation constants are not
-reproduced in the workflow, report or companion manifest. The builder obtains
+reproduced in this workflow's own inputs, report and manifest. The existing
+referenced Section A source retains its numerical factors. The builder obtains
 the Section B factors from named numerical-method defaults at calculation time.
 
 Both grids are bounded local patches; general-loss averaging is not applied.
@@ -46,6 +47,9 @@ The uncorroded pressure rating is obtained by inverting the existing linear
 B31.8 pressure-wall relation, then `reduced_mawp` applies the strength reduction.
 The reduced rating participates in the decision. This correction does not
 establish complete edition-matched qualification of the simplified relation.
+The life-limit search still needs an applicable passing/failing bracket before
+bisection; follow-up [#2812](https://github.com/vamseeachanta/digitalmodel/issues/2812)
+tracks that qualification. It does not affect these two synthetic grids.
 
 The HTML contains inline vector figures and requires no network. Its companion
 manifest retains full-precision results and source/content digests, excluding
@@ -60,5 +64,6 @@ revision history labelled "Issued" when no explicit history is supplied.
 Provenance remains mandatory and is retained in the manifest. The generated-page
 registry owns both outputs and names their synthetic input dependencies.
 
-The numerical engines, original inputs, measured-data fixtures and other
-workflows are unchanged. No external engineering program is used.
+Numerical behavior, original inputs, measured-data fixtures and other workflows
+are unchanged. The pressure-wall documentation identifies Location Class 1,
+Division 2. No external engineering program is used.

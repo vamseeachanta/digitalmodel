@@ -24,6 +24,7 @@ from digitalmodel.asset_integrity.corroded_pipe import (
 )
 from digitalmodel.asset_integrity.assessment.ffs_coordinator import FFSComponent, assess_component
 from digitalmodel.asset_integrity.assessment.level2_engine import Level2Engine
+from digitalmodel.asset_integrity.assessment import measurement_sufficiency
 from digitalmodel.asset_integrity.assessment.measurement_sufficiency import MeasurementSufficiency
 from digitalmodel.asset_integrity.assessment.ffs_decision import (
     DecisionBands, decide, reduced_mawp, remaining_life,
@@ -64,16 +65,13 @@ CALCULATION_SOURCES = (
     "src/digitalmodel/reporting/engine.py",
     "src/digitalmodel/reporting/assets/assessment_report.html.j2",
 )
-REFERENCES = (
-    "ASME B31G, Manual for Determining the Remaining Strength of Corroded Pipelines, "
-    "2012. Edition-matched qualification of the legacy validation evidence is not established.",
-    "DNV-RP-F101, Corroded Pipelines, 2010-10.",
-    "API 579-1/ASME FFS-1, Fitness-For-Service, 2021; "
-    "Part 2, Fitness-For-Service Engineering Assessment Procedure; "
-    "Part 5, Assessment of Local Metal Loss. The local-loss relation is simplified; "
+REFERENCE_CAVEATS = (
+    "Edition-matched qualification of the legacy validation evidence is not established.",
+    "The numerical engine documents its constants against this edition and its successor. "
+    "Edition-matched qualification of the DNV validation evidence is not established.",
+    "The local-loss relation is simplified; "
     "this demonstration is not a complete qualification to the standard.",
-    "ASME B31.8, Gas Transmission and Distribution Piping Systems, 2022; "
-    "841, Steel Pipe. Edition qualification is required before application to an operating line.",
+    "Edition qualification is required before application to an operating line.",
 )
 
 
@@ -440,7 +438,7 @@ def result_blocks(section, key):
 
 
 def design_blocks(result):
-    blocks = [text("# 3.1 Site data\n\nNo site data are used. A generic onshore line in location Class 1, Division 1 is assumed for both sections; all inputs are synthetic, for demonstration."),
+    blocks = [text("# 3.1 Site data\n\nNo site data are used. A generic onshore line in Location Class 1, Division 2 is assumed for both sections; all inputs are synthetic, for demonstration."),
               text("# 3.2 Equipment data")]
     rows = []
     for s in result["sections"]:
@@ -448,7 +446,7 @@ def design_blocks(result):
         values = [("Outside diameter (in)", number(d["nominal_od_in"])),
                   ("Nominal wall (in)", number(d["nominal_wt_in"], thickness=True)),
                   ("Strength class", "X52-equivalent; assumed from yield strength"),
-                  ("Pressure design basis", "B31.8; assumed" if s is result["sections"][0] else "B31.8; supplied synthetic basis"),
+                  ("Pressure design basis", "B31.8 Location Class 1, Division 2; assumed"),
                   ("Yield / tensile strengths (psi)", number(d["smys_psi"]) + " / " + number(d["smts_psi"])),
                   ("Design pressure (psi [MPa])", number(d["design_pressure_psi"]) + " [" + number(Q_(d["design_pressure_psi"], "psi").to("MPa").magnitude) + "]"),
                   ("Axial membrane stress (psi [MPa])", number(d["axial_stress_psi"]) + " [" + number(Q_(d["axial_stress_psi"], "psi").to("MPa").magnitude) + "]"),
@@ -469,7 +467,11 @@ def design_blocks(result):
              f"The assessment defaults require at least {MeasurementSufficiency().min_readings} valid readings and a "
              f"minimum of {MeasurementSufficiency().min_lml_profile_cells} degraded cells resolving a local flaw. "
              "These are configurable engineering criteria informed by inspection practice, not code mandates. "
+             f"The replacement floor of RSF {measurement_sufficiency._SEVERE_RSF_FLOOR:.2f} is an "
+             "assessment default of the measurement-sufficiency evaluation; it is configurable, not a code mandate. "
              "A boundary minimum requires extended coverage. General-loss averaging is not applied to either bounded local patch. "
+             "The reported Level 2 remaining strength factor uses a simplified closed form evaluated at the point-minimum thickness; "
+             "it does not establish a complete Part 5 Level 2 evaluation. "
              "Section A life is projected to the wall at which its reduced local-loss rating reaches design pressure. "
              "The flaw length, background wall, bulging factor, material and loads are held fixed; lateral growth is not modelled. "
              "Applicability is checked along this projection. Other failure modes or six-method ratings may limit life earlier. "
@@ -586,6 +588,8 @@ class AssessmentDocumentMeta(DocumentMeta):
 def report_spec(root, result):
     summary, findings, recommendations, detailed, appendix = section_material(result)
     assumptions = load_yaml(root / WORKFLOW / "assumptions.yml")
+    references = [f"{source}. {caveat}" for source, caveat in
+                  zip(assumptions["method_sources"], REFERENCE_CAVEATS, strict=True)]
     config = load_yaml(root / WORKFLOW / "input.yml")
     revision_history = [RevisionRow(**row) for row in config["revision_history"]]
     latest_revision = revision_history[-1]
@@ -606,7 +610,7 @@ def report_spec(root, result):
                     "the bulging relation remains simplified. "
                     "A strength ratio above unity does not establish measurement adequacy or authorize operation. "
                     "Section B spacing and supplementary loads and material strength require confirmation for any physical application.")],
-              recommendations, [text("\n".join(f"{i}. {ref}" for i, ref in enumerate(REFERENCES, 1)))],
+              recommendations, [text("\n".join(f"{i}. {ref}" for i, ref in enumerate(references, 1)))],
               [table("Acronyms and symbols", ["Symbol", "Meaning"], [
                   ["FFS", "Fitness-for-service"], ["SMYS / SMTS", "Specified minimum yield / tensile strength"],
                   ["RSF / RSFₐ", "Remaining / allowable remaining strength factor"], ["MAWP", "Maximum allowable working pressure"],

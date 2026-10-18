@@ -28,12 +28,12 @@ assumptions:
   source: scripts/reporting/build_pipeline_ffs_report.py
   report_label: assumed for this assessment; not an API Level 1 criterion
 - parameter: Location class
-  value: Class 1, Division 1
+  value: Location Class 1, Division 2
   units: classification
   source: src/digitalmodel/asset_integrity/assessment/level1_screener.py
   report_label: assumed for both synthetic sections
 method_sources:
 - ASME B31G, Manual for Determining the Remaining Strength of Corroded Pipelines, 2012
-- DNV-RP-F101, Corroded Pipelines, 2010-10
+- DNV-RP-F101, Corroded Pipelines, January 2015
 - API 579-1/ASME FFS-1, Fitness-For-Service, 2021; Part 2, Fitness-For-Service Engineering Assessment Procedure; Part 5, Assessment of Local Metal Loss
 - ASME B31.8, Gas Transmission and Distribution Piping Systems, 2022; 841, Steel Pipe

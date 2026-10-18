@@ -743,15 +743,15 @@
       }
     ]
   },
-  "assumptions_sha256_lf": "a3149daeec132383752f45cdc9dd3b743a3752e6dd60495fd7a92d11a2d51f58",
-  "builder_sha256_lf": "611b46b0dffd154276f0d66334c7e549122db6b50f30da02071f33df2d23c742",
+  "assumptions_sha256_lf": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
+  "builder_sha256_lf": "ad81a13a40e4aebe4547c2ca5482d4294a2add2d0d72b011cd9ee11fc7638b4a",
   "calculation_sources_sha256_lf": {
     "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e40c309ae0a5a847b640973fb6e4e2a1ad2f43bdbcf77126e484c744a09bb239",
     "src/digitalmodel/asset_integrity/assessment/ffs_decision.py": "d81c744e993a5155eaa1c8bce4945a4a2c13c2ec1c32aeaee671c27a68a64d0b",
     "src/digitalmodel/asset_integrity/assessment/ffs_router.py": "68dc2e60c87e65799956e0c0fbcadcbfa115ad948e3493222d99d611972216b9",
     "src/digitalmodel/asset_integrity/assessment/grid_parser.py": "ef3c73a838a00e08980f67ca34d94791347efd9abf7ddb32f9481751bfc9f969",
-    "src/digitalmodel/asset_integrity/assessment/level1_screener.py": "017dc35b32db0521731943e932eba38201baf1e425f5233d94fbb7d75193a367",
+    "src/digitalmodel/asset_integrity/assessment/level1_screener.py": "84fb0b073f02ee9a0f1be532f977c4054dfb8ab44e6a699b3addd0de774d1d62",
     "src/digitalmodel/asset_integrity/assessment/level2_engine.py": "b4f89518bc99c54d16fde53346a086cddd5651b5c64e034ee4fa840de5babf78",
     "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py": "751138e77faf469a0024ea71d0e72689e7ed57dd262eb796de5de3806919f22e",
     "src/digitalmodel/asset_integrity/assessment/pitting.py": "6f83709c73fc060d2ace267ebb7750a7e443ed3d35d857ab186f77f7f64e24de",
@@ -776,6 +776,6 @@
   ],
   "figures": "inline vector figures; 680-unit width; no raster or external dependencies",
   "intended_use": "worked example; no actual operating asset qualification",
-  "report_sha256": "41a4ea2e367d4b1f5fa0d55fa4bf3984040c0a9e09879838d844d3a20b8cbcee",
+  "report_sha256": "479cd00c7a447ad5c56d4a6d214b4adb7da46d294cf970e8ac8b3f728355cb3c",
   "schema_version": 1
 }

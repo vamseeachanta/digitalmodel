@@ -547,3 +547,69 @@ def test_summary_and_findings_follow_governing_criteria(tmp_path):
     assert "strength alone does not resolve measurement adequacy" in undersampled
     history = page.split('<div id="revision-history">')[1].split('</div>')[0]
     assert history.index('<caption>') < history.index('<thead>')
+
+
+def test_dnv_reference_matches_documented_engine_basis(tmp_path):
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    assumptions = builder.load_yaml(ROOT / builder.WORKFLOW / "assumptions.yml")
+    citation = "DNV-RP-F101, Corroded Pipelines, January 2015"
+    assert citation in assumptions["method_sources"][1]
+    assert page.count(citation) == 1
+    assert "2010-10" not in page
+    references = page.split('<section id="section-9">')[1].split('</section>')[0]
+    assert "Edition-matched qualification of the DNV validation evidence is not established" in references
+
+
+def test_method_citations_are_read_from_assumptions(tmp_path, monkeypatch):
+    assumptions_path = ROOT / builder.WORKFLOW / "assumptions.yml"
+    load_yaml = builder.load_yaml
+    assumptions = load_yaml(assumptions_path)
+    assumptions["method_sources"][1] = "DNV citation fixture"
+    monkeypatch.setattr(builder, "load_yaml", lambda path: (
+        assumptions if path == assumptions_path else load_yaml(path)
+    ))
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    assert "DNV citation fixture" in page
+    assert "DNV-RP-F101, Corroded Pipelines," not in page
+
+
+@pytest.mark.parametrize("floor", [None, 0.45], ids=["default", "configured"])
+def test_replacement_floor_discloses_active_assessment_default(tmp_path, monkeypatch, floor):
+    from digitalmodel.asset_integrity.assessment import measurement_sufficiency
+
+    if floor is not None:
+        monkeypatch.setattr(measurement_sufficiency, "_SEVERE_RSF_FLOOR", floor)
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    criteria = page.split("<h3>3.5 Criteria</h3>")[1].split("<h3>")[0]
+    expected = measurement_sufficiency._SEVERE_RSF_FLOOR
+    assert f"replacement floor of RSF {expected:.2f}" in criteria
+    assert "assessment default of the measurement-sufficiency evaluation" in criteria
+    assert "configurable" in criteria
+    assert "not a code mandate" in criteria
+
+
+def test_location_class_matches_pressure_design_basis(tmp_path, result):
+    from digitalmodel.asset_integrity.assessment import level1_screener
+
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    assumptions = builder.load_yaml(ROOT / builder.WORKFLOW / "assumptions.yml")
+    location = next(row for row in assumptions["assumptions"] if row["parameter"] == "Location class")
+    assert location["value"] == "Location Class 1, Division 2"
+    assert "Class 1, Div 2" in level1_screener.__doc__
+    assert "Class 1, Div 1" not in level1_screener.__doc__
+    assert "Class 1, Division 1" not in page
+    rows = TableRows()
+    rows.feed(page)
+    bases = [row for row in rows.rows if len(row) == 4 and row[1] == "Pressure design basis"]
+    assert len(bases) == 2
+    assert all(row[2] == "B31.8 Location Class 1, Division 2; assumed" for row in bases)
+    assert [section["coordinator"]["t_min_in"] for section in result["sections"]] == pytest.approx(
+        [0.2564102564102564, 0.1702724358974359]
+    )
+
+
+def test_criteria_qualify_point_minimum_strength_relation(tmp_path):
+    page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
+    criteria = page.split("<h3>3.5 Criteria</h3>")[1].split("<h3>")[0]
+    assert "simplified closed form evaluated at the point-minimum thickness" in criteria
+    assert "complete Part 5 Level 2 evaluation" in criteria
