@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import shutil
+import shlex
 from typing import Any
 
 import pytest
@@ -296,7 +297,11 @@ def merge_fixture(root: Path, case: str) -> tuple[Path, Path, Path, str, str, st
 
 
 @pytest.mark.parametrize("filename", GATES)
-@pytest.mark.parametrize("case", ("stale-event", "conflict", "shallow", "fork-shallow", "full-history", "descendant", "no-api"))
+@pytest.mark.parametrize("case", (
+    "stale-event", "conflict", "shallow", "fork-shallow", "full-history",
+    "descendant", "no-api", "missing-parent", "wrong-base-parent",
+    "wrong-head-parent", "extra-parent",
+))
 def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
     """Run the shipped script against real shallow repositories and conflicts."""
     runner, origin, head_origin, event_base, tip, head = merge_fixture(tmp_path, case)
@@ -320,13 +325,47 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
                EVENT_BASE_SHA=event_base, GITHUB_OUTPUT=str(output))
     bash = shutil.which("bash")
     assert bash is not None
+    invalid_parents = {
+        "missing-parent": [tip],
+        "wrong-base-parent": [event_base, head],
+        "wrong-head-parent": [tip, event_base],
+        "extra-parent": [tip, head, event_base],
+    }.get(case)
+    if invalid_parents is not None:
+        # Replace only the merge result with a real malformed commit. All fetches
+        # and the shipped parent guard still execute against real Git objects.
+        real_git = shutil.which("git")
+        assert real_git is not None
+        quoted_git = shlex.quote(real_git)
+        parent_args = " ".join(f"-p {parent}" for parent in invalid_parents)
+        wrapper = tools / "git"
+        wrapper.unlink()
+        wrapper.write_text(
+            f"#!{bash}\nset -euo pipefail\n"
+            f'{quoted_git} "$@"\n'
+            'if [ "${1:-}" = merge ] && [ "${2:-}" = --no-ff ]; then\n'
+            f"  tree=$({quoted_git} rev-parse 'HEAD^{{tree}}')\n"
+            f'  malformed=$({quoted_git} commit-tree "$tree" {parent_args} '
+            '<<< "Malformed merge fixture")\n'
+            f'  {quoted_git} reset --hard "$malformed" >/dev/null\n'
+            'fi\n',
+            encoding="utf-8",
+        )
+        wrapper.chmod(0o755)
     result = subprocess.run([bash, "-x", str(script)], cwd=runner, env=env,
                             capture_output=True, text=True, timeout=60)
     if case == "full-history":
         assert "--unshallow" in result.stderr, result.stderr
     if case in ("shallow", "fork-shallow"):
         assert "--deepen=" in result.stderr
-    if case == "conflict":
+    if invalid_parents is not None:
+        assert result.returncode != 0, (result.stdout, result.stderr)
+        assert "::error::Local merge must have exactly" in result.stdout
+        assert "tested=" not in result.stdout
+        assert not output.exists()
+        assert git(runner, "status", "--porcelain") == ""
+        assert git(runner, "show", "-s", "--format=%P", "HEAD").split() == invalid_parents
+    elif case == "conflict":
         assert result.returncode != 0
         assert "::error::" in result.stdout
         assert not output.exists()
