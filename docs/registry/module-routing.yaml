@@ -166,6 +166,9 @@ modules:
       hull_library:
         agent_pack: src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md
         qa_family: DF
+      parametric_hull_analysis:
+        agent_pack: src/digitalmodel/hydrodynamics/parametric_hull_analysis/docs/agent-pack.md
+        qa_family: DF
       diffraction:
         agent_pack: src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md
         qa_family: DF
@@ -204,6 +207,9 @@ modules:
       vessel_db:
         agent_pack: src/digitalmodel/marine_ops/vessel_db/docs/agent-pack.md
         qa_family: EC
+      reservoir:
+        agent_pack: src/digitalmodel/marine_ops/reservoir/docs/agent-pack.md
+        qa_family: EC
   - module: floating_wind
     entry_point: src/digitalmodel/floating_wind/
     maturity: beta
@@ -240,6 +246,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#mooring_resilience
   - module: motion_forecast
     entry_point: src/digitalmodel/motion_forecast/
+    submodules:
+      motion_forecast:
+        agent_pack: src/digitalmodel/motion_forecast/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/motion_forecast/]
@@ -361,6 +371,9 @@ modules:
       calculix:
         agent_pack: src/digitalmodel/solvers/calculix/docs/agent-pack.md
         qa_family: FE
+      ghs:
+        agent_pack: src/digitalmodel/solvers/ghs/docs/agent-pack.md
+        qa_family: EC
       mystran:
         agent_pack: src/digitalmodel/solvers/mystran/docs/agent-pack.md
         qa_family: FE
@@ -418,6 +431,9 @@ modules:
         qa_family: EC
       fatigue_apps:
         agent_pack: src/digitalmodel/structural/fatigue_apps/docs/agent-pack.md
+        qa_family: EC
+      jacket_topside:
+        agent_pack: src/digitalmodel/structural/jacket_topside/docs/agent-pack.md
         qa_family: EC
   - module: subsea
     entry_point: src/digitalmodel/subsea/
@@ -483,6 +499,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#base_configs
   - module: code_checks
     entry_point: src/digitalmodel/code_checks/
+    submodules:
+      code_checks:
+        agent_pack: src/digitalmodel/code_checks/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/code_checks/]
