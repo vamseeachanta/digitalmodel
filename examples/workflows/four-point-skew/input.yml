@@ -9,6 +9,7 @@ four_point_skew:
   weight_N: 981000
   sling_EA_N: [150000000, 150000000, 150000000, 150000000]
   sling_length_m: [10, 10, 10, 10]
+  cog_z_m: 0.0  # absolute z in the lift-point datum; explicitly at eye plane
   cog_envelope_xy_m: [[0, 0]]
   tolerances:
     general_length_m: 0.01

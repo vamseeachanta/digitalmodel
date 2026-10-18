@@ -27,6 +27,7 @@ def symmetric():
         "sling_EA_N": [150e6] * 4,
         "sling_length_m": [10.0] * 4,
         "cog_envelope_xy_m": [[0, 0]],
+        "cog_z_m": 0.0,
         "tolerances": {"general_length_m": 0.01, "padeye_elevation_m": 0},
     }
 
@@ -294,7 +295,8 @@ def finite_rotation_reference(settings, cog):
     points = np.array(settings["lift_points_m"])
     lengths = np.array(settings["sling_length_m"])
     stiffness = np.array(settings["sling_EA_N"]) / lengths
-    centre = np.r_[cog, points[0, 2]]
+    centre = np.asarray(cog, dtype=float)
+    assert centre.shape == (3,)
 
     def state(hook):
         arms = hook - points
@@ -314,7 +316,7 @@ def finite_rotation_reference(settings, cog):
 @pytest.mark.parametrize("cog", [[0.5, 0.5], [0.7, 0.7]])
 def test_diagonal_cog_against_independent_finite_rotation(cog):
     settings = symmetric()
-    reference = finite_rotation_reference(settings, cog)
+    reference = finite_rotation_reference(settings, [*cog, 0.0])
     if cog == [0.5, 0.5]:
         # Rounded independent reference supplied by the review, kN.
         assert reference / 1000 == pytest.approx([202.1, 282.1, 362.0, 282.1], abs=0.1)
@@ -325,7 +327,7 @@ def test_diagonal_cog_against_independent_finite_rotation(cog):
 def test_axis_tilt_fixes_level_geometry_understatement():
     settings = symmetric()
     result = solve_case(settings, cog_xy_m=[0.7, 0])
-    reference = finite_rotation_reference(settings, [0.7, 0])
+    reference = finite_rotation_reference(settings, [0.7, 0, 0])
     assert result["tilt_deg"] == pytest.approx(4.621, abs=0.01)
     assert result["tilt_exceeds_3_deg"] is True
     assert max(reference) / 1000 == pytest.approx(338.0, abs=0.1)
@@ -454,3 +456,51 @@ def test_design_outputs_retain_cog_share_and_per_leg_envelope():
     expected = np.max([row["tensions_N"] for row in nominals], axis=0) * result["design_skl"]
     assert result["design_leg_tensions_N"] == pytest.approx(expected)
     assert np.all(np.max([row["tensions_N"] for row in result["cases"]], axis=0) <= expected + 1e-7)
+
+
+def test_cog_height_is_required():
+    settings = symmetric()
+    settings.pop("cog_z_m", None)
+    with pytest.raises(ValueError, match="Missing settings.*cog_z_m"):
+        calculate_skew(settings)
+
+
+@pytest.mark.parametrize("cog_z", [0.0, 2.0, -2.0])
+def test_3d_cog_against_independent_finite_rotation(cog_z):
+    settings = symmetric()
+    settings.update(cog_z_m=cog_z, cog_envelope_xy_m=[[0.7, 0]])
+    cog = np.array([0.7, 0.0, cog_z])
+    reference = finite_rotation_reference(settings, cog)
+    actual = solve_case(settings)
+    assert actual["tensions_N"] == pytest.approx(reference, rel=0.003)
+    # Concurrent-force equilibrium: g=(H-C)/|H-C|; tilt=atan2(|Hxy-Cxy|,Hz-Cz).
+    expected_tilt = math.degrees(math.atan2(0.7, settings["hook_height_m"] - cog_z))
+    assert actual["tilt_deg"] == pytest.approx(expected_tilt)
+    assert actual["cog_xyz_m"] == cog.tolist()
+    summary = calculate_skew(settings)
+    assert summary["inputs"]["cog_z_m"] == cog_z
+    assert summary["governing_cog_xyz_m"] == cog.tolist()
+    assert all(row["cog_xyz_m"] == cog.tolist() for row in summary["cases"])
+    assert summary["max_nominal_vertical_share"] == pytest.approx(max(actual["vertical_load_share"]))
+    assert summary["engineering_use_allowed"] is False
+
+
+@pytest.mark.parametrize("height", [float("nan"), float("inf"), [], [0], 9.0])
+def test_invalid_or_unsuspended_cog_height_fails_closed(height):
+    settings = symmetric()
+    settings["cog_z_m"] = height
+    with pytest.raises(ValueError, match="cog_z_m|CoG must be below"):
+        solve_case(settings)
+
+
+def test_vertical_datum_translation_preserves_3d_solution():
+    settings = symmetric()
+    settings.update(cog_z_m=2.0, cog_envelope_xy_m=[[0.7, 0.0]])
+    before = solve_case(settings)
+    for point in settings["lift_points_m"]:
+        point[2] += 100.0
+    settings["hook_height_m"] += 100.0
+    settings["cog_z_m"] += 100.0
+    after = solve_case(settings)
+    assert after["tensions_N"] == pytest.approx(before["tensions_N"])
+    assert after["tilt_deg"] == pytest.approx(before["tilt_deg"])

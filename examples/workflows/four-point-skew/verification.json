@@ -41,13 +41,13 @@
     }
   },
   "artifact_sha256": {
-    "src/digitalmodel/marine_ops/installation/four_point_skew.py": "733224201f1ea1a4c2d54530055fa35f178cbe0fce4878a5bd4493a41ec15281",
-    "tests/marine_ops/installation/test_four_point_skew.py": "34b3f8d8216fbe907e73d17d64ae4f9568ff8dbfb782de2e9d7b7b5841346a2f",
+    "src/digitalmodel/marine_ops/installation/four_point_skew.py": "127e9011caaf5bb1cf89a1b191158ad242b0cc36666de1dc6278660ec5fa5643",
+    "tests/marine_ops/installation/test_four_point_skew.py": "42f314ede1a76480925deb76a817384609ca6b2c9fa98ec8cfc72382cccc97c1",
     "tests/workflows/test_four_point_skew_workflow.py": "9da2e92e17087d0a5c05d712003cd9bd8dba271c733fbbdd8e6bc56495eccf06",
-    "examples/workflows/four-point-skew/input.yml": "d92a375f47321d783791b0c531525cc8761bb015a54f4200885a81e17670d433",
-    "examples/workflows/four-point-skew/README.md": "ed97580f4096f1b1c5f57372805a4c2f2d5e2895bc9845696dd4a4ea70931ab7",
+    "examples/workflows/four-point-skew/input.yml": "65e9803e6cad0e2ce4d959e98ff657b4bdb607f98315be0f8e54de1024da4c92",
+    "examples/workflows/four-point-skew/README.md": "8ba49eeea889ddf24ad7621697c8c2a052341a758a0558f0daf0afad9b6d47a6",
     "docs/registry/workflows.yaml": "7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896",
-    "src/digitalmodel/orcaflex/installation_analysis.py": "3d05875569135b1b1d6e981ab93abc68173abc4a127e39c1dea390d98c4f7112",
+    "src/digitalmodel/orcaflex/installation_analysis.py": "ef64951f9b49c900468705e85eb12f183808b18135d32a2ca65581c58ba50364",
     "scripts/ci/detect_touched_domains.py": "6f6d89a32ea4dd730c115b937a374df95cf1b316e98d68297fdc0d24c8076016",
     "tests/scripts/test_detect_touched_domains.py": "a3ddf33166d109a746d598a713fec834c674ee6ac485d97523e6575527825efe"
   },
@@ -322,7 +322,13 @@
       433190.30703751126
     ],
     "cases": 16,
-    "summary_sha256": "c6de7cd3b772c57b7168ff3b98516bee0e24554a8f0d7677da8251556d53ade7"
+    "summary_sha256": "1533ec1063bf5b9891c1d718eec99b8af841243fdc75a07a15df08827eccfedf",
+    "governing_cog_xyz_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "schema_version": 3
   },
   "sources": [
     {
@@ -359,10 +365,119 @@
   "evidence_limits": [
     "Only supplied CoG corners are evaluated, not a continuous-envelope maximum",
     "Nominal rigid rotation with linear spring/tolerance displacements; directions are frozen about that pose, not updated for elastic stretch or errors",
-    "CoG z equals the nominal eye plane; payload warp limited to centred rectangles; tilts above 3 degrees flagged for separate assessment",
+    "CoG z is explicit; payload warp limited to centred rectangles; tilts above 3 degrees flagged for separate assessment",
     "Reference errors below 0.3 percent apply to the checked examples, not an arbitrary-geometry bound",
     "Published catalog example validates inclined two-leg equilibrium only, not indeterminate skew or flexible-frame response",
     "DNV four-leg minimum assumes a matched set without spreaders within the cited POU standard scope; applicability needs separate assessment",
     "No physical experimental validation, licensed solver execution, or formal engineering clearance"
-  ]
+  ],
+  "audit_corrections_2712_2713_2714": {
+    "basis": "Concurrent-force equilibrium: sum(T_i u_i)=Wg; g=(H-C)/|H-C|; full 3-D C. DNVGL-ST-E273 April 2016 section 3.5.5: extreme-CoG PL and tolerance SKL are separate.",
+    "input_contract": "Required cog_z_m in the lift-point datum, common to the supplied xy corners. Schema 3 echoes full xyz in cases and governing share.",
+    "family_clearance": "PENDING; engineering_use_allowed remains false",
+    "tests": {
+      "passed": 404,
+      "xfailed": 1,
+      "structure_passed": 29,
+      "red_failures": 12,
+      "atlas_query_red_failures": 1
+    },
+    "finite_rotation_cases": [
+      {
+        "cog_xyz_m": [
+          0.7,
+          0,
+          0.0
+        ],
+        "actual_tensions_N": [
+          226383.17241228148,
+          338156.2817777075,
+          338156.2817777075,
+          226383.17241228145
+        ],
+        "reference_tensions_N": [
+          226139.1498352161,
+          338043.39980535227,
+          338043.39980535227,
+          226139.14983524274
+        ],
+        "max_relative_error": 0.001079081517920244,
+        "tilt_deg": 4.621116430436898
+      },
+      {
+        "cog_xyz_m": [
+          0.7,
+          0,
+          2.0
+        ],
+        "actual_tensions_N": [
+          209132.75245413813,
+          354145.35316723597,
+          354145.35316723585,
+          209132.75245413795
+        ],
+        "reference_tensions_N": [
+          208590.13511597802,
+          354306.7133342514,
+          354306.7133342514,
+          208590.13511597802
+        ],
+        "max_relative_error": 0.00260135666463035,
+        "tilt_deg": 5.999822106900715
+      },
+      {
+        "cog_xyz_m": [
+          0.7,
+          0,
+          -2.0
+        ],
+        "actual_tensions_N": [
+          237130.03308552448,
+          328033.44901103846,
+          328033.4490110384,
+          237130.03308552442
+        ],
+        "reference_tensions_N": [
+          237006.75813880246,
+          327806.1525948228,
+          327806.1525948228,
+          237006.75813880246
+        ],
+        "max_relative_error": 0.0006933866689702306,
+        "tilt_deg": 3.7569038559763834
+      },
+      {
+        "cog_xyz_m": [
+          0.7,
+          0,
+          4.0
+        ],
+        "actual_tensions_N": [
+          177010.65166005012,
+          383086.7563946297,
+          383086.7563946295,
+          177010.65166004995
+        ],
+        "reference_tensions_N": [
+          175574.6286132265,
+          384029.17567514017,
+          384029.17567514017,
+          175574.62861319983
+        ],
+        "max_relative_error": 0.008178989516838042,
+        "tilt_deg": 8.542331097092964
+      }
+    ],
+    "reference_limit": "Required z=0,+2,-2 m cases meet 0.3% on all legs. Exploratory z=+4 m does not meet 0.3% on less-loaded legs; no arbitrary-geometry accuracy bound claimed.",
+    "atlas_refresh": {
+      "id": "d807d703f351",
+      "grid_rows": 25,
+      "holdout_samples": 8,
+      "max_relative_interpolation_error": 0.02083333333333326,
+      "unchanged_interpolation_threshold": 0.1,
+      "passes": true,
+      "comparison": "Grid values, holdout validation and surrogate numbers match the previous version. Only basis metadata and the default pointer change.",
+      "licensed_execution": "NOT_RUN; pure analytical lug response only"
+    }
+  }
 }
