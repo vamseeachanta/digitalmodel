@@ -302,6 +302,9 @@ modules:
       analysis:
         agent_pack: src/digitalmodel/power/analysis/docs/agent-pack.md
         qa_family: EC
+      datacenter:
+        agent_pack: src/digitalmodel/power/datacenter/docs/agent-pack.md
+        qa_family: EC
   - module: process_diagrams
     entry_point: src/digitalmodel/process_diagrams/
     maturity: beta
