@@ -11,8 +11,8 @@ def test_gate_rows_name_asserted_package_outputs():
         "P2": ["Atlas.predict", 'RESPONSE_FUNCS["mooring_fatigue"]', "1e-6"],
         "P5a": ["refresh.refresh_status", "0 stale", "count"],
         "P5b": ["query._handle_value", "provenance", "0 absent", "count"],
-        "P5c": ["refresh.main", "2", "count"],
-        "P5d": ["Atlas.predict", "0", "count"],
+        "P5c": ["refresh.main", "exit status 2", "0 replaced failed atlases, unit=count"],
+        "P5d": ["Atlas.predict", "0 out-of-domain points accepted, unit=count"],
     }
     for check, needles in required.items():
         row = next(line for line in text.splitlines() if f"| {check} |" in line)

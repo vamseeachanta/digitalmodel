@@ -19,6 +19,8 @@ from typing import Optional
 
 from digitalmodel.parametric.atlas import Atlas
 from digitalmodel.parametric.query import DEFAULT_ATLAS_ROOT
+from digitalmodel.parametric.validation import validation_passes
+from digitalmodel.drilling_riser.operability_atlas import content_fingerprint
 
 BASENAME = "drilling_riser_operability"
 
@@ -38,7 +40,7 @@ class OperabilityScreen:
     config: str
     offset_pct: float
     current_speed_mps: float
-    governing_utilisation: Optional[float]  # None when out of range
+    governing_utilisation: Optional[float]  # None when out of range or evidence is unqualified
     in_range: bool
     light: str          # OPERABLE | INOPERABLE | ESCALATE
     reason: str
@@ -71,6 +73,22 @@ def screen_operability(
         return OperabilityScreen(
             config, offset_pct, current_speed_mps, None, False, ESCALATE,
             prediction.reason, provenance,
+        )
+    reason = ""
+    if not validation_passes(atlas):
+        reason = "atlas validation is not established — recompute exact"
+    else:
+        try:
+            current = content_fingerprint()
+        except (OSError, ValueError, KeyError):
+            reason = "atlas fingerprint cannot be verified — recompute exact"
+        else:
+            if atlas.provenance.get("content_fingerprint") != current:
+                reason = "atlas fingerprint is stale or missing — recompute exact"
+    if reason:
+        return OperabilityScreen(
+            config, offset_pct, current_speed_mps, None, True, ESCALATE,
+            reason, provenance,
         )
     uc = prediction.value
     eps = atlas.local_error(point)

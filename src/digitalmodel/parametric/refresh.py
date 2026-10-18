@@ -316,6 +316,7 @@ def _swap_atlas(staged: Path, destination: Path, temporary: Path) -> None:
 def _rebuild_atlas(workflow_id: str) -> bool:
     """Keep the live atlas untouched until a temporary build passes validation."""
     from digitalmodel.parametric.build import build_atlas_from_registry
+    from digitalmodel.parametric.validation import validation_passes
 
     DEFAULT_ATLAS_ROOT.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(dir=DEFAULT_ATLAS_ROOT, prefix=".refresh-") as name:
@@ -326,7 +327,7 @@ def _rebuild_atlas(workflow_id: str) -> bool:
             print(f"  WARNING: {workflow_id} {result.as_posix()} "
                   "missing key 'passes'; failed validation gate")
             return False
-        if not atlas.validation["passes"]:
+        if not validation_passes(atlas):
             print(f"  WARNING: {workflow_id} regenerated but failed validation gate")
             return False
         _swap_atlas(temporary / "build" / atlas.basename,

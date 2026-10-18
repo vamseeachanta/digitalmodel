@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from digitalmodel.parametric.query import router as parametric_query
 from digitalmodel.parametrics import ParameterSweep, ParametricStudy
 from digitalmodel.parametrics.atlas_bridge import atlas_from_summary
@@ -54,7 +56,7 @@ def _query(atlas_root: Path, point: dict, out_dir: Path) -> dict:
     return parametric_query(cfg)["parametric_query"]["result"]
 
 
-def test_in_range_query_serves_utilisation(tmp_path: Path):
+def test_in_range_query_serves_utilisation(tmp_path: Path, citation_tree):
     _save_fowt_atlas(tmp_path / "atlases")
     result = _query(
         tmp_path / "atlases",
@@ -67,7 +69,7 @@ def test_in_range_query_serves_utilisation(tmp_path: Path):
     assert result["value"] > 0.0
 
 
-def test_out_of_range_query_escalates(tmp_path: Path):
+def test_out_of_range_query_escalates(tmp_path: Path, citation_tree):
     _save_fowt_atlas(tmp_path / "atlases")
     result = _query(
         tmp_path / "atlases",
@@ -76,3 +78,14 @@ def test_out_of_range_query_escalates(tmp_path: Path):
     )
     assert result["in_range"] is False
     assert "watch_circle_radius" in str(result.get("reason", ""))
+
+
+def test_unfixtured_generation_fails_closed(tmp_path, monkeypatch, request):
+    from digitalmodel.citations.schema import CitationResolutionError
+    from digitalmodel.parametric.generate import _fowt_mbr_utilisation
+
+    assert "citation_tree" not in request.fixturenames
+    (tmp_path / "wikis/engineering-standards/wiki/standards").mkdir(parents=True)
+    monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
+    with pytest.raises(CitationResolutionError, match="page_missing"):
+        _fowt_mbr_utilisation({"watch_circle_radius": 20.0, "mbr_limit_m": 4.5})

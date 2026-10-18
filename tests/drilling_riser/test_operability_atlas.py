@@ -98,18 +98,44 @@ def test_all_nan_node_is_guarded():
 
 def test_rebuild_is_byte_identical(tmp_path):
     atlas = oa.build_atlas()
+    from digitalmodel.parametric.validation import validation_passes
+
+    assert validation_passes(atlas), atlas.validation["max_rel_error"]
     out = atlas.save(tmp_path)
     committed_id = (_ATLAS_ROOT / oa.BASENAME / "default.txt").read_text().strip()
     assert atlas.atlas_id == committed_id  # same content fingerprint
     committed = _ATLAS_ROOT / oa.BASENAME / committed_id
     for fname in ("grid.parquet", "surrogate.json"):
         assert (out / fname).read_bytes() == (committed / fname).read_bytes(), fname
+    assert atlas.validation == _atlas().validation
     # the recomputed fingerprint matches the committed provenance
     assert atlas.provenance["content_fingerprint"] == _atlas().provenance["content_fingerprint"]
     assert oa.content_fingerprint() == _atlas().provenance["content_fingerprint"]
 
 
 # -- escalation contract -------------------------------------------------------
+
+
+@pytest.mark.parametrize("evidence", ["failed", "contradictory", "stale", "missing"])
+def test_unqualified_cache_escalates(monkeypatch, evidence):
+    from digitalmodel.drilling_riser import operability_screening as screening
+
+    atlas = _atlas()
+    atlas.validation.update(passes=True, max_rel_error=0.01, threshold=0.1)
+    atlas.provenance["content_fingerprint"] = oa.content_fingerprint()
+    if evidence == "failed":
+        atlas.validation["passes"] = False
+    elif evidence == "contradictory":
+        atlas.validation["max_rel_error"] = 0.2
+    elif evidence == "stale":
+        atlas.provenance["content_fingerprint"] = "outdated"
+    else:
+        atlas.provenance.pop("content_fingerprint")
+    monkeypatch.setattr(screening, "_atlas", lambda root: atlas)
+    result = screen_operability("rsu_a__drilling", 0.0, 0.0)
+    assert result.light == ESCALATE
+    assert result.governing_utilisation is None
+    assert "validation" in result.reason or "fingerprint" in result.reason
 
 
 def test_out_of_range_escalates_never_clamps():
@@ -125,19 +151,18 @@ def test_boundary_point_escalates_within_local_error_band():
     """A point whose interpolated UC band straddles 1.0 escalates (never a smooth
     interpolated operable/inoperable call)."""
     atlas = _atlas()
-    cfg = oa.load_config()
-    # find an off-node point (an offset midpoint) whose true UC is nearest to 1.0
-    best = None
-    for off in [x + 0.5 for x in range(0, 10)]:
-        for cur in [0.25, 0.75, 1.25]:
-            uc = oa.governing_utilisation(
-                {"config": "rsu_a__drilling", "offset_pct": off, "current_speed_mps": cur}, cfg=cfg)
-            d = abs(uc - 1.0)
-            if uc < oa.UTILISATION_CEILING and (best is None or d < best[0]):
-                best = (d, off, cur)
-    _, off, cur = best
-    s = screen_operability("rsu_a__drilling", off, cur, atlas_root=_ATLAS_ROOT)
-    assert s.light == ESCALATE, f"near-boundary point off={off} cur={cur} should escalate, got {s}"
+    from scipy.optimize import brentq
+
+    point = {"config": "rsu_a__drilling", "current_speed_mps": 0.25}
+    off = brentq(lambda x: atlas.predict({**point, "offset_pct": x}).value - 1.0,
+                 0.0, 10.0)
+    point["offset_pct"] = off
+    assert atlas.predict(point).value == pytest.approx(1.0, abs=1e-9)
+    assert atlas.local_error(point) > 0
+    s = screen_operability(point["config"], off, point["current_speed_mps"],
+                           atlas_root=_ATLAS_ROOT)
+    assert s.light == ESCALATE
+    assert "straddles 1.0" in s.reason
 
 
 def test_consumer_grades_operable_to_inoperable():

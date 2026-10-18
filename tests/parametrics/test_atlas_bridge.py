@@ -34,14 +34,14 @@ def _fowt_atlas():
     return atlas, summary
 
 
-def test_atlas_builds_with_two_axes():
+def test_atlas_builds_with_two_axes(citation_tree):
     atlas, _ = _fowt_atlas()
     assert atlas.response == "max_utilisation"
     assert [ax.name for ax in atlas.axes] == ["watch_circle_radius", "mbr_limit_m"]
     assert len(atlas.grid) == 9  # 3 x 3 full factorial
 
 
-def test_predict_at_grid_node_matches_swept_value():
+def test_predict_at_grid_node_matches_swept_value(citation_tree):
     atlas, summary = _fowt_atlas()
     df = summary.to_dataframe()
     row = df[(df["watch_circle_radius"] == 25.0) & (df["mbr_limit_m"] == 5.0)].iloc[0]
@@ -50,7 +50,7 @@ def test_predict_at_grid_node_matches_swept_value():
     assert pred.value == pytest.approx(float(row["max_utilisation"]), rel=1e-6)
 
 
-def test_predict_interpolates_interior_point():
+def test_predict_interpolates_interior_point(citation_tree):
     atlas, _ = _fowt_atlas()
     pred = atlas.predict({"watch_circle_radius": 20.0, "mbr_limit_m": 4.5})
     assert pred.in_range
@@ -60,14 +60,14 @@ def test_predict_interpolates_interior_point():
     assert lo < pred.value < hi
 
 
-def test_predict_out_of_range_is_gated():
+def test_predict_out_of_range_is_gated(citation_tree):
     atlas, _ = _fowt_atlas()
     pred = atlas.predict({"watch_circle_radius": 80.0, "mbr_limit_m": 5.0})
     assert not pred.in_range
     assert "watch_circle_radius" in pred.reason
 
 
-def test_atlas_from_summary_rejects_unknown_response():
+def test_atlas_from_summary_rejects_unknown_response(citation_tree):
     atlas, summary = _fowt_atlas()
     from digitalmodel.parametrics import ParameterSweep, ParametricStudy
 

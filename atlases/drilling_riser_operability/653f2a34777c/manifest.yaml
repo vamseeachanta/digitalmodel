@@ -1,0 +1,111 @@
+atlas_id: 653f2a34777c
+basename: drilling_riser_operability
+physics: linear
+response: governing_utilisation
+axes:
+- name: config
+  values:
+  - rsu_a__drilling
+  - rsu_a__connected
+  - rsu_a__hang_off
+  - rsu_b__drilling
+  - rsu_b__connected
+  - rsu_b__hang_off
+- name: offset_pct
+  scale: linear
+  grid:
+  - 0.0
+  - 0.25
+  - 0.5
+  - 0.75
+  - 1.0
+  - 1.25
+  - 1.5
+  - 1.75
+  - 2.0
+  - 2.25
+  - 2.5
+  - 2.75
+  - 3.0
+  - 3.25
+  - 3.5
+  - 3.75
+  - 4.0
+  - 4.25
+  - 4.5
+  - 4.75
+  - 5.0
+  - 5.25
+  - 5.5
+  - 5.75
+  - 6.0
+  - 6.25
+  - 6.5
+  - 6.75
+  - 7.0
+  - 7.25
+  - 7.5
+  - 7.75
+  - 8.0
+  - 8.25
+  - 8.5
+  - 8.75
+  - 9.0
+  - 9.25
+  - 9.5
+  - 9.75
+  - 10.0
+- name: current_speed_mps
+  scale: linear
+  grid:
+  - 0.0
+  - 0.0625
+  - 0.125
+  - 0.1875
+  - 0.25
+  - 0.3125
+  - 0.375
+  - 0.4375
+  - 0.5
+  - 0.5625
+  - 0.625
+  - 0.6875
+  - 0.75
+  - 0.8125
+  - 0.875
+  - 0.9375
+  - 1.0
+  - 1.0625
+  - 1.125
+  - 1.1875
+  - 1.25
+  - 1.3125
+  - 1.375
+  - 1.4375
+  - 1.5
+  - 1.5625
+  - 1.625
+  - 1.6875
+  - 1.75
+  - 1.8125
+  - 1.875
+  - 1.9375
+  - 2.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.065339990451008
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: drilling_riser_operability
+  kind: computed
+  standards:
+  - id: API-RP-16Q
+    edition: '1993'
+  - id: API-STD-2RD
+    edition: 2e-2013
+  content_fingerprint: 653f2a34777c8dc8368914bf4c504b5543f7d89da4eede3a8aaee787040f4324
+  tier: analytical-static
+  disclaimer: "Static analytical operability surface (dynamic amplification, drift-off\
+    \ and VIV are the solver tier). Screening estimate \u2014 a full on-demand run\
+    \ remains the document of record."

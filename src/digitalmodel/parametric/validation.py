@@ -3,6 +3,15 @@ import math
 from typing import Any
 
 
+def _finite_evidence(value):
+    """Represent non-finite failed evidence as JSON null, retaining failures."""
+    if isinstance(value, dict):
+        return {key: _finite_evidence(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_finite_evidence(item) for item in value]
+    return None if isinstance(value, float) and not math.isfinite(value) else value
+
+
 def validation_passes(atlas):
     """A pass flag cannot override missing or contradictory numeric evidence."""
     error = atlas.max_rel_error
@@ -49,7 +58,7 @@ def validate_atlas(atlas, fn, tolerance):
                 index = _interval_index(ax.grid, point[ax.name])
                 per_axis[index] = max(per_axis[index], rel)
     worst_samples = sorted(samples, key=lambda s: -s["rel_error"])[:15]
-    atlas.validation = {
+    atlas.validation = _finite_evidence({
         "metric": "max_rel_error",
         "max_rel_error": worst,
         "threshold": tolerance,
@@ -58,5 +67,5 @@ def validate_atlas(atlas, fn, tolerance):
         "n_holdout": len(samples),
         "worst_samples": worst_samples,
         "local_error_map": local_error_map,
-    }
+    })
     return atlas.validation

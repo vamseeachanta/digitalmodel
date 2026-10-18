@@ -129,6 +129,8 @@ def test_riser_fatigue_fingerprint_tracks_touchdown(tmp_path):
 def stub_refresh_builds(monkeypatch, tmp_path):
     """Replace registry builds with validation records saved in temporary storage."""
     def configure(validations, stale_library=False):
+        validations = [{"max_rel_error": 0.01, "threshold": 0.1, **v}
+                       if "passes" in v else v for v in validations]
         ids = [f"workflow-{index}" for index in range(len(validations))]
         records = dict(zip(ids, validations))
         built = []
@@ -162,6 +164,7 @@ def stub_refresh_builds(monkeypatch, tmp_path):
             )
             (staged.parent / "default.txt").write_text("rebuilt")
             return SimpleNamespace(validation=records[workflow_id],
+                                   max_rel_error=records[workflow_id].get("max_rel_error"),
                                    basename=basename, atlas_id="rebuilt")
 
         monkeypatch.setattr(build, "build_atlas_from_registry", stub_build)
@@ -189,7 +192,8 @@ def test_apply_failed_validation_returns_distinct_status(
     assert built == ids
     assert "all atlases current" not in output
     for workflow_id, record in zip(ids, records):
-        assert json.loads((tmp_path / workflow_id / "validation.json").read_text()) == record
+        assert json.loads((tmp_path / workflow_id / "validation.json").read_text()) == {
+            "max_rel_error": 0.01, "threshold": 0.1, **record}
         if not record["passes"]:
             assert f"WARNING: {workflow_id} regenerated but failed validation gate" in output
 
@@ -240,6 +244,8 @@ def disk_refresh_builds(monkeypatch, tmp_path):
     status = refresh.refresh_status
 
     def configure(validations, same_id=False):
+        validations = [{"max_rel_error": 0.01, "threshold": 0.1, **v}
+                       if isinstance(v, dict) and "passes" in v else v for v in validations]
         ids = [f"workflow-{index}" for index in range(len(validations))]
         roots = []
         originals = {}

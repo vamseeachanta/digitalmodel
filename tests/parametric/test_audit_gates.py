@@ -20,6 +20,58 @@ def simple_atlas():
                              "response_kwargs": {"environment": "seawater_cp"}})
 
 
+@pytest.mark.parametrize("physics", ["linear", "log_log"])
+def test_refinement_selects_curved_coordinate(physics):
+    from digitalmodel.parametric.refinement import refinement_point
+
+    atlas = simple_atlas()
+    atlas.physics = physics
+    atlas.axes = [Axis("x", grid=[0, 2]), Axis("y", grid=[0, 2])]
+    response = lambda p: p["x"] + p["y"] ** 2
+    if physics == "log_log":
+        response = lambda p: 10 ** (p["x"] + p["y"] ** 2)
+    assert refinement_point(atlas, {"x": 0.5, "y": 0.5}, response) == {"x": 0, "y": 1}
+    assert refinement_point(atlas, {"x": 0, "y": 2}, response) == {"x": 0, "y": 2}
+
+
+@pytest.mark.parametrize("actual", [math.inf, math.nan, 0.0])
+def test_failed_holdouts_are_strict_json(actual):
+    from digitalmodel.parametric.validation import validate_atlas
+
+    atlas = simple_atlas()
+    validate_atlas(atlas, lambda point: actual, 0.1)
+    assert not atlas.validation["passes"]
+    json.dumps(atlas.validation, allow_nan=False)
+
+
+def test_cli_reports_unknown_error(monkeypatch, capsys):
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).parents[2] / "scripts/parametric/build_atlas.py"
+    spec = importlib.util.spec_from_file_location("atlas_cli", path)
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    atlas = simple_atlas()
+    atlas.validation.update(max_rel_error=None, passes=False, n_holdout=0)
+    monkeypatch.setattr(cli, "build_atlas_from_registry", lambda wid: atlas)
+    with pytest.raises(SystemExit, match="validation FAILED"):
+        cli.main("test")
+    assert "not established" in capsys.readouterr().out
+
+
+def test_refresh_rejects_contradictory_pass_flag(tmp_path, monkeypatch):
+    atlas = simple_atlas()
+    atlas.validation["max_rel_error"] = 0.2
+    root = tmp_path / "atlases"
+    atlas.save(root)
+    before = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    monkeypatch.setattr(refresh, "DEFAULT_ATLAS_ROOT", root)
+    monkeypatch.setattr(build, "build_atlas_from_registry", lambda *a, **kw: atlas)
+    assert not refresh._rebuild_atlas("test")
+    assert before == {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+
+
 @pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf])
 @pytest.mark.parametrize("at_grid", [True, False])
 def test_nonfinite_response_fails_gate(monkeypatch, bad, at_grid):

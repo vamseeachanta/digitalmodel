@@ -38,7 +38,7 @@ def test_orcawave_depth_sweep_prepares_validated_specs(tmp_path: Path):
         assert spec.is_file() and spec.name == "spec.yml"
 
 
-def test_orcaflex_fowt_sweep_returns_real_results(tmp_path: Path):
+def test_orcaflex_fowt_sweep_returns_real_results(tmp_path: Path, citation_tree):
     summary = orcaflex_fowt_watch_circle_sweep(watch_circle_radii_m=(15.0, 25.0, 35.0))
     assert len(summary.results) == 3
     assert all(r.status == "completed" for r in summary.results)

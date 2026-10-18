@@ -3,6 +3,8 @@ basename: parametric_query
 # Instant operability screen from the pre-computed drilling-riser operability
 # atlas (#1283). Exact node-cache of the analytical operating envelope; a marginal
 # (band straddles 1.0) or out-of-range point escalates to the exact run.
+# The generic router escalates this dedicated cache because it has no registered
+# workflow fingerprint. Use screen_operability for validation and freshness checks.
 parametric_query:
   atlas: drilling_riser_operability
   point:

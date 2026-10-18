@@ -2,7 +2,7 @@
 import pytest
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def citation_tree(tmp_path, monkeypatch):
     page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
     page.parent.mkdir(parents=True)
