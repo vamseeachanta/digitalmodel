@@ -150,7 +150,8 @@ def test_riser_fatigue_fingerprint_tracks_touchdown(tmp_path):
 def stub_refresh_builds(monkeypatch, tmp_path):
     """Replace registry builds with validation records saved in temporary storage."""
     def configure(validations, stale_library=False):
-        validations = [{"max_rel_error": 0.01, "threshold": 0.1, **v}
+        validations = [{"max_rel_error": 0.01 if v["passes"] else 0.2,
+                        "threshold": 0.1, **v}
                        if "passes" in v else v for v in validations]
         ids = [f"workflow-{index}" for index in range(len(validations))]
         records = dict(zip(ids, validations))
@@ -214,7 +215,8 @@ def test_apply_failed_validation_returns_distinct_status(
     assert "all atlases current" not in output
     for workflow_id, record in zip(ids, records):
         assert json.loads((tmp_path / workflow_id / "validation.json").read_text()) == {
-            "max_rel_error": 0.01, "threshold": 0.1, **record}
+            "max_rel_error": 0.01 if record["passes"] else 0.2,
+            "threshold": 0.1, **record}
         if not record["passes"]:
             assert f"WARNING: {workflow_id} regenerated but failed validation gate" in output
 
@@ -265,7 +267,8 @@ def disk_refresh_builds(monkeypatch, tmp_path):
     status = refresh.refresh_status
 
     def configure(validations, same_id=False):
-        validations = [{"max_rel_error": 0.01, "threshold": 0.1, **v}
+        validations = [{"max_rel_error": 0.01 if v["passes"] else 0.2,
+                        "threshold": 0.1, **v}
                        if isinstance(v, dict) and "passes" in v else v for v in validations]
         ids = [f"workflow-{index}" for index in range(len(validations))]
         roots = []
@@ -312,6 +315,24 @@ def test_failed_rebuild_keeps_previous_and_stale(disk_refresh_builds, capsys):
     assert _file_digests(root / ids[0]) == originals[ids[0]]
     assert refresh.main([]) == 1
     assert "[STALE] workflow-0" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("fixture_name", ["stub_refresh_builds", "disk_refresh_builds"])
+@pytest.mark.parametrize("passes", [False, True])
+def test_refresh_fixtures_supply_consistent_numeric_evidence(
+    request, tmp_path, fixture_name, passes,
+):
+    """Failure cases must exercise excess residual, rather than contradictory flags."""
+    from digitalmodel.parametric.validation import validation_passes
+
+    configure = request.getfixturevalue(fixture_name)
+    configure([{"passes": passes}])
+    atlas = build.build_atlas_from_registry("workflow-0", atlas_root=tmp_path / "probe")
+    error = atlas.validation["max_rel_error"]
+    threshold = atlas.validation["threshold"]
+    assert error == (0.01 if passes else 0.2)
+    assert (error <= threshold) is passes
+    assert validation_passes(atlas) is passes
 
 
 @pytest.mark.parametrize("passes", [[False, True], [True, False], [False, False]],

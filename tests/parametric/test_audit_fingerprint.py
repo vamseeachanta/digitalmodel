@@ -1,7 +1,28 @@
 """Section 9: wrapper source and referenced constants are part of the basis."""
 from pathlib import Path
+import subprocess
 
 from digitalmodel.parametric import refresh
+
+
+def test_viv_code_locator_reproduces_recorded_fingerprint(tmp_path):
+    """The recorded revision must contain the response basis used at build time."""
+    from digitalmodel.parametric.atlas import Atlas
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "viv_analysis")
+    revision = atlas.provenance["code_version"]
+    row = refresh._row("viv-analysis")
+    paths = [row["input"], *refresh.SOURCE_FILES[atlas.basename],
+             "src/digitalmodel/parametric/generate.py"]
+    for relative in paths:
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(subprocess.check_output(
+            ["git", "show", f"{revision}:{relative}"], cwd=refresh.REPO_ROOT,
+        ))
+    assert refresh.content_fingerprint("viv-analysis", tmp_path) == (
+        atlas.provenance["content_fingerprint"]
+    ), "recorded code revision does not reproduce the atlas response basis"
 
 
 def test_wrapper_edit_invalidates_only_its_atlas(tmp_path, monkeypatch):
