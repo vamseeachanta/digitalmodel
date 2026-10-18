@@ -144,3 +144,23 @@ class TestMeshSummary:
         mesh = GDFMesh(panels=[_make_unit_panel()])
         summary = compute_mesh_summary(mesh)
         assert any("fewer than 100" in s for s in summary.refinement_suggestions)
+
+
+def test_missing_waterline_is_flagged_at_summary_and_scalar_producer():
+    mesh = _make_box_mesh()
+    for panel in mesh.panels:
+        panel.vertices = [[x, y, z - 1e-7] for x, y, z in panel.vertices]
+    summary = compute_mesh_summary(mesh)
+    assert any("waterline" in s.lower() for s in summary.refinement_suggestions)
+    with pytest.raises(ValueError, match="waterline"):
+        compute_waterplane_area(mesh)
+
+
+@pytest.mark.parametrize("inward", [False, True])
+def test_nonpositive_volume_is_rejected_by_scalar_producer(inward):
+    mesh = _make_box_mesh() if inward else GDFMesh(panels=[])
+    if inward:
+        for panel in mesh.panels:
+            panel.vertices.reverse()
+    with pytest.raises(ValueError, match="Positive signed volume"):
+        compute_displaced_volume(mesh)

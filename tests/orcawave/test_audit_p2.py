@@ -32,6 +32,7 @@ from digitalmodel.orcawave.drift_forces import (
 from digitalmodel.orcawave.vessel_database import (
     list_vessels,
     get_vessel,
+    get_vessels_by_type,
     get_representative_raos,
     VesselParameters,
 )
@@ -165,11 +166,12 @@ def test_15_hydrostatic_values_and_assumptions():
     assert "centre of flotation" in create_hydrostatic_restoring.__doc__
 
 
-def test_15_asymmetry_rejected():
+def test_15_asymmetry_preserved_for_gate():
     m = np.eye(6)
     m[0, 1] = 1
-    with pytest.raises(ValidationError, match="symmetric"):
-        HydroMatrix6x6(frequency_rad_s=1, values=m.tolist())
+    result = HydroMatrix6x6(frequency_rad_s=1, values=m.tolist())
+    assert result.values[0][1] == 1
+    assert result.values[1][0] == 0
 
 
 @pytest.mark.parametrize(
@@ -187,17 +189,50 @@ def test_17_database_consistency(key, hand_checked):
 
 
 @pytest.mark.parametrize(
-    "kind",
-    sorted({get_vessel(k).vessel_type for k in list_vessels()}),
-    ids=lambda _: "type",
+    "kind,roll_damping,pitch_damping",
+    [
+        ("FPSO", 0.05, 0.08),
+        ("SemiSubmersible", 0.03, 0.12),
+        ("Drillship", 0.04, 0.08),
+        ("Barge", 0.06, 0.10),
+        ("LNGC", 0.04, 0.08),
+    ],
 )
-def test_17_rotation_long_wave_limits(kind):
+def test_17_rotation_at_25_seconds(kind, roll_damping, pitch_damping):
     result = get_representative_raos(kind)
+    natural = get_vessels_by_type(kind)[0].natural_periods
     index = result.periods.index(25)
-    slope = 0.36891583455  # (2pi/25)^2 / 9.81 * 180/pi, deg/m
+    slope = (2 * np.pi / 25) ** 2 / 9.81 * 180 / np.pi
     assert result.synthetic
-    assert result.pitch_rao[0][index] == pytest.approx(slope, rel=0.1)
-    assert np.max(np.asarray(result.roll_rao)[:, index]) <= 1.1 * slope
+    for mode, damping, values, heading in [
+        ("roll_s", roll_damping, result.roll_rao, 2),
+        ("pitch_s", pitch_damping, result.pitch_rao, 0),
+    ]:
+        ratio = natural[mode] / 25
+        amplification = 1 / np.hypot(1 - ratio**2, 2 * damping * ratio)
+        assert values[heading][index] == pytest.approx(slope * amplification, rel=1e-12)
+
+
+def test_17_roll_resonance_is_not_capped_at_wave_slope():
+    result = get_representative_raos("FPSO")
+    index = result.periods.index(14)
+    slope = (2 * np.pi / 14) ** 2 / 9.81 * 180 / np.pi
+    assert result.roll_rao[2][index] == pytest.approx(slope / (2 * 0.05))
+
+
+def test_17_pitch_resonance_and_long_wave_limit(monkeypatch):
+    vessel = get_vessels_by_type("FPSO")[0].model_copy(deep=True)
+    vessel.natural_periods.update(pitch_s=12, roll_s=0.25)
+    monkeypatch.setattr(
+        "digitalmodel.orcawave.vessel_database.get_vessels_by_type", lambda _: [vessel]
+    )
+    result = get_representative_raos("FPSO")
+    pitch_index = result.periods.index(12)
+    pitch_slope = (2 * np.pi / 12) ** 2 / 9.81 * 180 / np.pi
+    assert result.pitch_rao[0][pitch_index] == pytest.approx(pitch_slope / (2 * 0.08))
+    # T/Tn=100: amplification tends to one, so rotation tends to wave slope.
+    slope_25 = (2 * np.pi / 25) ** 2 / 9.81 * 180 / np.pi
+    assert result.roll_rao[2][-1] == pytest.approx(slope_25, rel=0.0002)
 
 
 @pytest.mark.parametrize("tp", [8, 16])

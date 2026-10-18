@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from .panel_mesh import compute_mesh_summary, compute_panel_quality
+from .rao_processing import RAOTable
 
 
 BODY_FRAME = "x_forward_y_port_z_up"
@@ -176,14 +177,18 @@ def check_normals(mesh):
     return {"signed_volume_m3": summary.displaced_volume, "inconsistent_edges": 0}
 
 
-def check_hydrodynamics(coefficients, longest_period_heave):
-    """Check reciprocity, nonnegative damping and free-floating heave limit."""
-    for matrix in coefficients.added_mass:
+def check_hydrodynamics(coefficients, heave_raos):
+    """Check radiation reciprocity, damping and longest supplied-period heave.
+
+    Heave evidence must be a Heave RAOTable in m/m; every heading is checked.
+    Passing the supplied longest period does not establish the asymptotic limit.
+    """
+    for matrix in coefficients.added_mass + coefficients.radiation_damping:
         values = matrix.to_numpy()
         if not np.all(np.isfinite(values)) or not np.allclose(
             values, values.T, rtol=0.02, atol=1e-12
         ):
-            raise ValueError("Added-mass asymmetry exceeds 2 percent")
+            raise ValueError("Radiation matrix asymmetry exceeds 2 percent")
     for matrix in coefficients.radiation_damping:
         if not np.all(np.isfinite(matrix.to_numpy())) or np.any(
             np.diag(matrix.to_numpy()) < 0
@@ -191,16 +196,58 @@ def check_hydrodynamics(coefficients, longest_period_heave):
             raise ValueError("Negative or nonfinite radiation damping")
     if not coefficients.added_mass or not coefficients.radiation_damping:
         raise ValueError("Missing radiation coefficients")
-    if not np.isfinite(longest_period_heave) or abs(longest_period_heave - 1) > 0.02:
+    if not isinstance(heave_raos, RAOTable) or (
+        heave_raos.dof.lower() != "heave" or heave_raos.unit != "m/m"
+    ):
+        raise ValueError("Long-wave heave requires a Heave RAOTable in m/m")
+    periods = np.asarray(heave_raos.periods)
+    headings = np.asarray(heave_raos.headings_deg)
+    try:
+        amplitudes = np.asarray(heave_raos.amplitudes)
+    except ValueError as exc:
+        raise ValueError("Long-wave heave requires complete amplitude rows") from exc
+    if (
+        not periods.size or not headings.size
+        or not np.all(np.isfinite(periods)) or np.any(periods <= 0)
+        or not np.all(np.isfinite(headings))
+        or amplitudes.shape != (headings.size, periods.size)
+        or not np.all(np.isfinite(amplitudes))
+    ):
+        raise ValueError("Long-wave heave requires finite complete RAO data")
+    longest_period = periods.max()
+    heave = amplitudes[:, periods == longest_period]
+    if np.any(abs(heave - 1) > 0.02):
         raise ValueError("Long-wave heave differs from unity by more than 2 percent")
-    return {"status": "PASS", "heave_m_per_m": longest_period_heave}
+    worst = heave.flat[np.argmax(abs(heave - 1))]
+    return {"status": "PASS", "heave_m_per_m": float(worst),
+            "heave_period_s": float(longest_period)}
 
 
-def build_trace(input_bytes, quantities, gates, disposition, maintainer_signature):
-    """Build a trace output for offline quantities; never certify a native run."""
+def build_trace(
+    input_bytes, quantities, gates, disposition, maintainer_signature, *, required_quantities
+):
+    """Require complete coverage of independently declared offline quantities.
+
+    Extra traced quantities cannot replace a missing required quantity.
+    This trace never certifies a native run.
+    """
     if not quantities or not gates or not disposition or not maintainer_signature:
         raise ValueError(
             "Missing trace quantities, gates, disposition or maintainer signature"
+        )
+    if (
+        isinstance(required_quantities, str) or not required_quantities
+        or any(not isinstance(name, str) or not name for name in required_quantities)
+    ):
+        raise ValueError("Explicit nonempty required quantities must be supplied")
+    required = set(required_quantities)
+    traced = required.intersection(quantities)
+    coverage = 100.0 * len(traced) / len(required)
+    missing = required.difference(traced)
+    if missing:
+        raise ValueError(
+            f"Trace coverage {coverage:.1f} percent; missing required quantities: "
+            + ", ".join(sorted(missing))
         )
     for value in quantities.values():
         if (
@@ -219,5 +266,6 @@ def build_trace(input_bytes, quantities, gates, disposition, maintainer_signatur
         "gates": gates,
         "disposition": disposition,
         "maintainer_signature": maintainer_signature,
-        "coverage_percent": 100.0,
+        "coverage_percent": coverage,
+        "required_quantities": sorted(required),
     }

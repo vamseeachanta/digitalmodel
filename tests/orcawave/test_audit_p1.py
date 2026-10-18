@@ -99,7 +99,7 @@ def test_02_single_cell_cycles():
         omega,
         lambda *args: np.array([2.0, 0.0]),
     )
-    assert result.extreme_response == pytest.approx(6.256365056, rel=0.001)
+    assert result.extreme_response == pytest.approx(6.2561826, rel=1e-6)
 
 
 def test_02_two_cell_cycle_mixture():

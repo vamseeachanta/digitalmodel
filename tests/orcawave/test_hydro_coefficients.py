@@ -134,3 +134,19 @@ class TestWAMITFormat:
         assert arr[4, 4] > 0
         # Surge restoring = 0
         assert arr[0, 0] == 0.0
+
+
+@pytest.mark.parametrize("row,reason", [
+    ("1 3 3", "four columns"), ("1 3 3 4 extra", "four columns"),
+    ("1 0 3 4", "indices"), ("1 3 7 4", "indices"),
+    ("1 bad 3 4", "numeric"), ("nan 3 3 4", "finite"), ("1 3 3 inf", "finite"),
+])
+def test_native_parser_rejects_invalid_row_with_line_context(row, reason):
+    with pytest.raises(ValueError, match=rf"line 3:.*{reason}"):
+        from_native_added_mass("1 3 3 4\n\n" + row + "\n")
+
+
+def test_native_parser_preserves_valid_rows_among_blank_lines():
+    matrices = from_native_added_mass("\n1 3 3 4\n\n")
+    assert len(matrices) == 1
+    assert matrices[0].values[2][2] == 4

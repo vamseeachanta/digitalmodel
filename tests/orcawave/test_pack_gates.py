@@ -9,7 +9,7 @@ from digitalmodel.orcawave.panel_mesh import (
     read_gdf,
     write_gdf,
 )
-from digitalmodel.orcawave.rao_processing import read_rao_csv
+from digitalmodel.orcawave.rao_processing import RAOTable, read_rao_csv
 from digitalmodel.orcawave.hydro_coefficients import (
     from_native_added_mass,
     HydroCoefficients,
@@ -166,13 +166,13 @@ def test_C4_HYDRO():
         return HydroMatrix6x6(frequency_rad_s=1, values=(np.eye(6) * value).tolist())
 
     coeffs = HydroCoefficients(added_mass=[matrix(1)], radiation_damping=[matrix(1)])
-    assert check_hydrodynamics(coeffs, 1)["status"] == "PASS"
+    assert check_hydrodynamics(coeffs, _heave_table())["status"] == "PASS"
     coeffs.radiation_damping = [matrix(-1)]
     with pytest.raises(ValueError, match="damping"):
-        check_hydrodynamics(coeffs, 1)
+        check_hydrodynamics(coeffs, _heave_table())
     coeffs.radiation_damping = [matrix(1)]
     with pytest.raises(ValueError, match="heave"):
-        check_hydrodynamics(coeffs, 0.9)
+        check_hydrodynamics(coeffs, _heave_table(0.9))
 
 
 def test_C4_WIND():
@@ -196,11 +196,84 @@ def test_C5_TRACE():
         }
     }
     result = build_trace(
-        b"fixture", quantities, {"C4-VOLUME": "PASS"}, "offline only", "maintainer"
+        b"fixture", quantities, {"C4-VOLUME": "PASS"}, "offline only", "maintainer",
+        required_quantities={"volume"}
     )
     assert result["input_sha256"] == sha256(b"fixture").hexdigest()
     assert result["coverage_percent"] == 100
     assert result["quantities"]["volume"]["value"] == 8
     assert result["maintainer_signature"] == "maintainer"
     with pytest.raises(ValueError, match="Missing trace"):
-        build_trace(b"fixture", quantities, {}, "offline only", "maintainer")
+        build_trace(b"fixture", quantities, {}, "offline only", "maintainer",
+                    required_quantities={"volume"})
+
+
+def _heave_table(longest=1.0):
+    return RAOTable(
+        dof="Heave", unit="m/m", periods=[30, 5, 15], headings_deg=[0, 90],
+        amplitudes=[[longest, 0.2, 0.8], [1.0, 0.3, 0.9]],
+        phases_deg=[[0, 0, 0], [0, 0, 0]],
+    )
+
+
+@pytest.mark.parametrize("family", ["added_mass", "radiation_damping"])
+@pytest.mark.parametrize("asymmetry,passes", [(0.01, True), (0.03, False)])
+def test_hydrodynamics_applies_gate_reciprocity_tolerance(asymmetry, passes, family):
+    values = np.eye(6)
+    values[0, 1], values[1, 0] = 1, 1 + asymmetry
+    symmetric = HydroMatrix6x6(frequency_rad_s=1, values=np.eye(6).tolist())
+    coeffs = HydroCoefficients(added_mass=[symmetric], radiation_damping=[symmetric])
+    setattr(coeffs, family, [HydroMatrix6x6(frequency_rad_s=1, values=values.tolist())])
+    if passes:
+        assert check_hydrodynamics(coeffs, _heave_table())["status"] == "PASS"
+    else:
+        with pytest.raises(ValueError, match="asymmetry"):
+            check_hydrodynamics(coeffs, _heave_table())
+
+
+def test_hydrodynamics_derives_long_wave_heave_from_all_headings():
+    matrix = HydroMatrix6x6(frequency_rad_s=1, values=np.eye(6).tolist())
+    coeffs = HydroCoefficients(added_mass=[matrix], radiation_damping=[matrix])
+    result = check_hydrodynamics(coeffs, _heave_table())
+    assert result["heave_period_s"] == 30
+    assert result["heave_m_per_m"] == 1
+    table = _heave_table()
+    table.amplitudes[1][0] = 0.9
+    with pytest.raises(ValueError, match="heave"):
+        check_hydrodynamics(coeffs, table)
+
+
+@pytest.mark.parametrize("invalid", ["scalar", "dof", "unit", "shape", "nonfinite"])
+def test_hydrodynamics_rejects_unqualified_heave_evidence(invalid):
+    matrix = HydroMatrix6x6(frequency_rad_s=1, values=np.eye(6).tolist())
+    coeffs = HydroCoefficients(added_mass=[matrix], radiation_damping=[matrix])
+    table = _heave_table()
+    if invalid == "scalar":
+        table = 1.0
+    elif invalid == "dof":
+        table.dof = "Roll"
+    elif invalid == "unit":
+        table.unit = "m"
+    elif invalid == "shape":
+        table.amplitudes[0].pop()
+    else:
+        table.amplitudes[0][0] = float("nan")
+    with pytest.raises(ValueError, match="heave"):
+        check_hydrodynamics(coeffs, table)
+
+
+def test_trace_rejects_incomplete_required_quantity_coverage():
+    quantities = {
+        "volume": {"producer": "panel_mesh.compute_displaced_volume", "value": 8, "unit": "m3"},
+        "extra": {"producer": "panel_mesh.compute_displaced_volume", "value": 8, "unit": "m3"},
+    }
+    with pytest.raises(ValueError, match="50.0 percent.*mass"):
+        build_trace(b"fixture", quantities, {"C4-VOLUME": "PASS"}, "offline only", "maintainer",
+                    required_quantities={"volume", "mass"})
+
+
+def test_trace_requires_independent_coverage_requirements():
+    quantity = {"volume": {"producer": "panel_mesh.compute_displaced_volume", "value": 8, "unit": "m3"}}
+    with pytest.raises(ValueError, match="required quantities"):
+        build_trace(b"fixture", quantity, {"C4-VOLUME": "PASS"}, "offline only", "maintainer",
+                    required_quantities=set())

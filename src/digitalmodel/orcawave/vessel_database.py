@@ -308,16 +308,20 @@ def get_representative_raos(vessel_type: str) -> VesselRAOSet:
         h_rao *= heading_scale_heave[hi]
         heave_raos.append(h_rao.tolist())
 
-        r_rao = _generate_ship_rao(periods, t_roll, 5.0, damping["roll"])
-        # Deep-water wave slope per amplitude k=omega**2/g, deg/m.
-        # Conservative synthetic cap for rotations; see sidecar R4.
+        # Deep-water slope excites a damped rotational oscillator; see sidecar R4.
+        # The gain tends to one for T >> Tn and retains resonant amplification.
         slope = (2 * np.pi / periods) ** 2 / 9.81 * 180 / np.pi
-        r_rao = np.minimum(r_rao, slope)
+        roll_ratio = t_roll / periods
+        r_rao = slope / np.hypot(
+            1 - roll_ratio**2, 2 * damping["roll"] * roll_ratio
+        )
         r_rao *= heading_scale_roll[hi]
         roll_raos.append(r_rao.tolist())
 
-        p_rao = _generate_ship_rao(periods, t_pitch, 3.0, damping["pitch"])
-        p_rao = np.minimum(p_rao, slope)
+        pitch_ratio = t_pitch / periods
+        p_rao = slope / np.hypot(
+            1 - pitch_ratio**2, 2 * damping["pitch"] * pitch_ratio
+        )
         p_rao *= heading_scale_pitch[hi]
         pitch_raos.append(p_rao.tolist())
 

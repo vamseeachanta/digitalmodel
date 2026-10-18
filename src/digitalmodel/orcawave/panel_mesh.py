@@ -292,6 +292,10 @@ def compute_mesh_summary(mesh: GDFMesh) -> MeshSummary:
 
     # Refinement suggestions
     suggestions: List[str] = []
+    if wp_area <= 0:
+        suggestions.append(
+            "No waterline boundary at z=0: waterplane area is not established"
+        )
     if displaced_volume <= 0:
         suggestions.append(
             "Nonpositive signed volume: check outward normals and hull closure"
@@ -343,6 +347,8 @@ def compute_waterplane_area(mesh: GDFMesh) -> float:
         Waterplane area in m^2 (accounting for symmetry).
     """
     summary = compute_mesh_summary(mesh)
+    if summary.waterplane_area <= 0:
+        raise ValueError("Positive waterplane area requires a waterline boundary at z=0")
     return summary.waterplane_area
 
 
@@ -356,4 +362,6 @@ def compute_displaced_volume(mesh: GDFMesh) -> float:
         Displaced volume in m^3 (accounting for symmetry).
     """
     summary = compute_mesh_summary(mesh)
+    if summary.displaced_volume <= 0:
+        raise ValueError("Positive signed volume requires outward normals and hull closure")
     return summary.displaced_volume

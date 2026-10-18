@@ -269,7 +269,7 @@ def long_term_extreme(
     omega: np.ndarray,
     spectrum_func,
     return_period_years: float = 100.0,
-    duration_per_cell_s: float = 10800.0,
+    duration_per_cell_s: Optional[float] = None,
 ) -> LongTermResult:
     """Compute long-term extreme response by integrating over a scatter diagram.
 
@@ -282,7 +282,8 @@ def long_term_extreme(
         omega: Frequency vector (rad/s).
         spectrum_func: Callable(omega, hs, tp) -> S(omega).
         return_period_years: Target return period.
-        duration_per_cell_s: Duration per sea state (s).
+        duration_per_cell_s: Deprecated, ignored duration per sea state (s).
+            Cycle rates are derived from each response zero-crossing period.
 
     Returns:
         LongTermResult with extreme response and per-cell contributions.
@@ -293,15 +294,16 @@ def long_term_extreme(
         raise ValueError(
             "Scatter probabilities must sum to 1 within absolute tolerance 1e-6"
         )
-    if (
-        not np.isfinite(return_period_years)
-        or return_period_years <= 0
-        or not np.isfinite(duration_per_cell_s)
-        or duration_per_cell_s <= 0
-    ):
-        raise ValueError(
-            "Return period and sea-state duration must be positive and finite"
+    if duration_per_cell_s is not None:
+        if not np.isfinite(duration_per_cell_s) or duration_per_cell_s <= 0:
+            raise ValueError("Sea-state duration must be positive and finite")
+        warnings.warn(
+            "duration_per_cell_s is deprecated and ignored; response cycle rates are used",
+            DeprecationWarning,
+            stacklevel=2,
         )
+    if not np.isfinite(return_period_years) or return_period_years <= 0:
+        raise ValueError("Return period must be positive and finite")
     # Expected exceedance count = years_in_seconds * sum(p_i/Tz_i * q_i).
     target_prob = 1.0 / (return_period_years * 365.25 * 24 * 3600)
 
@@ -384,7 +386,7 @@ def wf_weighting(frequency_hz: float) -> float:
 def motion_sickness_incidence(
     vertical_acc_rms: float,
     exposure_hours: float,
-    dominant_frequency_hz: float,
+    dominant_frequency_hz: Optional[float] = None,
     *,
     already_weighted: bool = False,
 ) -> MSIResult:
@@ -394,16 +396,19 @@ def motion_sickness_incidence(
     D.2: MSI percent = Km * MSDVz, Km=1/3 for the reference population.
     Input is either a single-frequency RMS or an explicitly Wf-weighted RMS.
     A dominant frequency alone cannot qualify a broadband acceleration.
+    A dominant frequency is required only for unweighted sinusoidal input.
     See docs/engineering-citations.md for applicability and source sidecar.
     """
-    if not np.all(
-        np.isfinite([vertical_acc_rms, exposure_hours, dominant_frequency_hz])
-    ):
+    if not np.all(np.isfinite([vertical_acc_rms, exposure_hours])):
         raise ValueError("MSI inputs must be finite")
-    if vertical_acc_rms < 0 or exposure_hours <= 0 or dominant_frequency_hz <= 0:
-        raise ValueError(
-            "Require nonnegative acceleration and positive exposure/frequency"
-        )
+    if vertical_acc_rms < 0 or exposure_hours <= 0:
+        raise ValueError("Require nonnegative acceleration and positive exposure")
+    if not already_weighted and (
+        dominant_frequency_hz is None
+        or not np.isfinite(dominant_frequency_hz)
+        or dominant_frequency_hz <= 0
+    ):
+        raise ValueError("Unweighted input requires a positive finite frequency")
     a_w = (
         vertical_acc_rms
         if already_weighted

@@ -29,14 +29,11 @@ class HydroMatrix6x6(BaseModel):
     model_config = ConfigDict(allow_inf_nan=False)
 
     @model_validator(mode="after")
-    def reciprocal_matrix(self):
+    def finite_matrix(self):
         values = np.asarray(self.values)
         if values.shape != (6, 6) or not np.all(np.isfinite(values)):
             raise ValueError("Require a finite 6 by 6 matrix")
-        if not np.allclose(values, values.T, rtol=1e-12, atol=1e-12):
-            raise ValueError(
-                "Zero-speed radiation matrices must be symmetric (reciprocity)"
-            )
+        # Preserve solver discretisation differences for the reciprocity gate.
         return self
 
     def to_numpy(self) -> np.ndarray:
@@ -217,18 +214,26 @@ def from_native_added_mass(text: str) -> List[HydroMatrix6x6]:
         List of HydroMatrix6x6 sorted by frequency.
     """
     data: Dict[float, np.ndarray] = {}
-    for line in text.strip().splitlines():
+    for line_number, line in enumerate(text.splitlines(), start=1):
         parts = line.split()
-        if len(parts) < 4:
+        if not parts:
             continue
-        omega = float(parts[0])
-        i = int(parts[1]) - 1
-        j = int(parts[2]) - 1
-        val = float(parts[3])
+        context = f"Native coefficient line {line_number}: "
+        if len(parts) != 4:
+            raise ValueError(context + "expected four columns: omega, i, j, value")
+        try:
+            omega = float(parts[0])
+            i, j = int(parts[1]) - 1, int(parts[2]) - 1
+            val = float(parts[3])
+        except ValueError as exc:
+            raise ValueError(context + "invalid numeric field") from exc
+        if not np.isfinite(omega) or omega < 0 or not np.isfinite(val):
+            raise ValueError(context + "finite nonnegative frequency and finite value required")
+        if not (0 <= i < 6 and 0 <= j < 6):
+            raise ValueError(context + "indices must be integers in 1..6")
         if omega not in data:
             data[omega] = np.zeros((6, 6))
-        if 0 <= i < 6 and 0 <= j < 6:
-            data[omega][i, j] = val
+        data[omega][i, j] = val
 
     matrices = []
     for omega in sorted(data.keys()):
