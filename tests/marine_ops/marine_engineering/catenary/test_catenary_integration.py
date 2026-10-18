@@ -89,7 +89,11 @@ class TestUnifiedModuleIntegration:
         assert result2['S'] > 0
         assert result2['X'] > 0
         assert result2['THorizontal'] > 0
-        assert result1.arc_length != pytest.approx(result2['S'], abs=1e-9)
+        assert result1.arc_length == pytest.approx(result2['S'], rel=0, abs=1e-9)
+        assert result1.horizontal_distance == pytest.approx(result2['X'], rel=0, abs=1e-9)
+        assert result1.horizontal_tension == pytest.approx(result2['THorizontal'], rel=0, abs=1e-9)
+        assert result2['S'] == pytest.approx(math.sqrt(100.0 * 300.0), rel=0, abs=1e-9)
+        assert result2['THorizontal'] == pytest.approx(5000.0, rel=0, abs=1e-9)
 
     def test_forces_calculation_consistency(self):
         """Verify force calculations match across APIs."""

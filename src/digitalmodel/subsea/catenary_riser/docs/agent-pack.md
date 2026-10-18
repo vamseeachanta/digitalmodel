@@ -5,17 +5,19 @@
 | Module | catenary_riser |
 | Repository | digitalmodel |
 | Package | src/digitalmodel/subsea/catenary_riser |
-| Pack revision | 0 |
-| Code revision | 97dc074bad7e464d4b26ccd04bb83796ef4d0060 |
+| Pack revision | 1 |
+| Historical code revision | 97dc074bad7e464d4b26ccd04bb83796ef4d0060 |
 | Analysis family | OrcaFlex riser and mooring (MR) |
 | Quality manager | Riser and mooring quality manager |
 | Status | DRAFT |
+
+Audit update: #2751 corrects the analytical and status routes on main `a84b677f080cb7cf35a5bb7297150bf090689fc2`. Historical line references below refer to the original pin; current corrected contracts use function names and [engineering-basis.md](engineering-basis.md). Status remains DRAFT pending native evidence and broader tracked qualification.
 
 ## 1. Purpose and scope
 
 The public API exports material/fluid/configuration models, effective-weight calculations, simple catenary analysis and a lazy-wave analyzer; the latter raises rather than returning its former fabricated geometry. [src/digitalmodel/subsea/catenary_riser/__init__.py:L11-L49] [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L57-L74]
 
-The simple analyzer assumes uniform weight, zero bending stiffness, static equilibrium and no current; the routing registry marks the containing subsea domain stable, which does not establish numerical validation of this analyzer. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L19-L31] [docs/registry/module-routing.yaml:L412-L417]
+Explicit-force solutions warn when their suspended span differs from the supplied offset; the force solution governs geometry. The simple analyzer assumes uniform weight, zero bending stiffness, static equilibrium and no current; the routing registry marks the containing subsea domain stable, which does not establish numerical validation of this analyzer. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L19-L31] [docs/registry/module-routing.yaml:L412-L417]
 
 The report generator consumes supplied results; it does not run a live analysis. [src/digitalmodel/subsea/catenary_riser/report.py:L1-L17]
 
@@ -25,32 +27,33 @@ The report generator consumes supplied results; it does not run a live analysis.
 | --- | --- | --- |
 | Outer diameter, wall thickness, length | m | Required dataclass fields; no constructor range checks are defined. [src/digitalmodel/subsea/catenary_riser/models.py:L105-L126] |
 | Material density; fluid density | kg/m³ | Required property fields; external fluid defaults to the seawater object. [src/digitalmodel/subsea/catenary_riser/models.py:L36-L53] [src/digitalmodel/subsea/catenary_riser/models.py:L105-L118] |
-| Elastic modulus; strengths | MPa | Material metadata, not an elastic correction in the simple solver. [src/digitalmodel/subsea/catenary_riser/models.py:L36-L44] [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L128-L171] |
+| Elastic modulus; strengths | MPa | Material metadata, not an elastic correction in the simple solver. [src/digitalmodel/subsea/catenary_riser/models.py:L36-L44] [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L116-L167] |
 | Water depth; horizontal offset | m | Optional configuration fields, but both must resolve before analysis, including the explicit-tension route. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L68-L75] |
 | Horizontal tension; top tension | N | Optional; explicit horizontal tension takes precedence over top tension, then geometry solving. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L86-L99] |
 | Coating thickness; density | m; kg/m³ | Optional; absent or false-valued coating inputs give zero coating weight. [src/digitalmodel/subsea/catenary_riser/models.py:L161-L169] |
-| Buoyancy module length, diameter, start length | m | Start length is measured from the bottom; negative module force denotes upward buoyancy. [src/digitalmodel/subsea/catenary_riser/models.py:L202-L226] |
+| Buoyancy module length, diameter, start length | m | Start length is measured from the bottom; negative module force denotes upward buoyancy. `buoyancy_force_per_length` requires `riser_outer_diameter` including riser coating. [src/digitalmodel/subsea/catenary_riser/models.py:L202-L226] |
 
 | Output | Unit and convention | Source |
 | --- | --- | --- |
 | Component and effective weights | N/m; positive sinks, negative floats | [src/digitalmodel/subsea/catenary_riser/models.py:L156-L195] |
-| Arc length, offset, grounded length | m; grounded length is clipped at zero | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L128-L171] |
-| Horizontal, top and touchdown tension | N; touchdown tension equals horizontal tension | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L140-L171] |
-| Top angle | degrees; implementation computes the angle from horizontal despite its comment saying vertical | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L144-L146] |
-| Tension/angle distributions | m, N, degrees from horizontal | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L344-L394] |
-| Reports | HTML and Markdown from supplied structures | [src/digitalmodel/subsea/catenary_riser/report.py:L1-L17] |
+| Arc length, offset, grounded length | m; grounded length is clipped at zero, but `converged=False` if the suspended length exceeds available length | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L116-L167] |
+| Horizontal, top and touchdown tension | N; touchdown tension equals horizontal tension | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L153-L167] |
+| Top angle | degrees from vertical; `SimpleCatenaryAnalyzer.analyze_riser().top_angle` follows E3 | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L140-L141] |
+| Tension/angle distributions | m, N, degrees from horizontal | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L202-L252] |
+| Convergence | `CatenaryRiserResult.converged`: true only when the span solve converges and suspended length fits; CLI refuses false | `SimpleCatenaryAnalyzer.analyze_riser` |
+| Reports | HTML and Markdown from supplied structures; invalid/missing positive finite utilisation or damage gives N/A; positive annual damage uses scientific notation; DFF and selection basis required for fatigue acceptance. The strength KPI is N/A with no strength results and N/A (incomplete) with unqualified rows; both formats always display it | [src/digitalmodel/subsea/catenary_riser/report.py:L1-L17] |
 
-UNVERIFIED: a common global axis, origin and phase convention across legacy exports and modern results is not established; issue pending (1).
+UNVERIFIED: a common global axis, origin and phase convention across legacy exports and modern results is not established; #2755.
 
 ## 3. Method and governing standards
 
 | Method | Implementation and basis |
 | --- | --- |
 | Effective weight | Steel, coating and contents weights minus displaced-fluid buoyancy; model properties supply the component values. [src/digitalmodel/subsea/catenary_riser/effective_weight.py:L33-L56] |
-| Simple geometry | `_solve_catenary_from_H` computes its own hyperbolic geometry, an exponential approximation, tension and curvature; it is not designated as an independent hand-check reference. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L128-L171] |
-| Top-tension inverse | `_solve_H_from_top_tension` uses an empirical minimum estimate, returns approximations on infeasibility, and returns a final midpoint without a convergence status. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L228-L277] |
-| Geometry inverse | `_solve_H_from_geometry` iterates the horizontal-span residual and returns the last estimate after warning on nonconvergence. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L315-L342] |
-| Legacy angle route | `CatenaryCalculator._calculate_from_angle` calculates bend radius, suspended length and horizontal span; the force route is a separate formula. [src/digitalmodel/subsea/catenary_riser/legacy/catenary_equation.py:L34-L81] |
+| Simple geometry | `_solve_catenary_from_H` uses E1–E3: `s=sqrt(z²+2az)`, `x=a acosh(1+z/a)`, `T=H+wz`, top angle from vertical. See [engineering-basis.md](engineering-basis.md). [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L116-L167] |
+| Top-tension inverse | `_solve_H_from_top_tension` uses E2: `H=T-wz`, rejecting non-finite or nonpositive H; no interior tension minimum exists. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L169-L173] |
+| Geometry inverse | `_solve_H_from_geometry` bisects the E1 span over the available-length interval and returns an explicit convergence flag; impossible geometry raises. Narrow reading: offset is the suspended span from the vertex, not a seabed endpoint distance. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L175-L200] |
+| Legacy angle route | `CatenaryCalculator._calculate_from_angle` calculates bend radius, suspended length and horizontal span; the force route is a separate formula. [src/digitalmodel/subsea/catenary_riser/legacy/catenary_equation.py:L34-L76] |
 | Lazy wave | `LazyWaveAnalyzer.analyze` is quarantined; the error directs callers to the separate five-segment `LazyWaveSolver`. [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L57-L74] |
 | Buoyancy estimate | `estimate_required_buoyancy` scales weight by arch-height/depth and a fixed multiplier; this is a simplified estimate. [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L174-L196] |
 
@@ -58,102 +61,106 @@ DNV-OS-F201, *Dynamic Risers*, and API RP 1111, *Design, Construction, Operation
 
 API 5L is named in material presets without a cited edition or table; preset strengths are not reproduced here, and clause text not checked against the licensed copy. [src/digitalmodel/subsea/catenary_riser/models.py:L56-L73]
 
-The report sample names DNV-OS-F201:2010 and DNV-RP-C203:2021, while its fatigue record defaults to the F1 curve label; this establishes sample labels, not a standards calculation or verified edition selection, and clause text not checked against the licensed copy. [src/digitalmodel/subsea/catenary_riser/report.py:L113-L127] [src/digitalmodel/subsea/catenary_riser/report.py:L323-L329]
+The updated report sample names DNV-OS-F201:2010 and DNVGL-RP-C203:2016 §2.2 equation (2.2.1). The latter is the cited accumulated-damage criterion in E5; the illustrative DFF=2 input is not a prescribed safety-class selection. Other sample code/curve labels do not establish verified applicability. The sample now reports fatigue FAIL because 41 years is less than the illustrative 50-year requirement. [src/digitalmodel/subsea/catenary_riser/report.py:L113-L127] [src/digitalmodel/subsea/catenary_riser/report.py:L323-L329]
 
-UNVERIFIED: governing editions, clauses, applicability and calculation Citation sidecars are not established for this package; issue pending (1).
+UNVERIFIED: governing editions, clauses, applicability and calculation Citation sidecars are not established for this package; #2755.
 
 ## 4. Validated worked examples
 
-The independent static checker integrates equilibrium using only the standard-library math module; these cases validate the separate canonical solver and its reconciliation with legacy geometry, not the package's simple analyzer. [tests/subsea/catenary_riser/independent_static_equilibrium.py:L1-L30] [tests/subsea/catenary_riser/test_static_reconciliation.py:L94-L161]
+The independent closure nodes are checker self-tests: they call only the test-side reference, so they do not validate any package route. Package validation uses the direct comparisons below. The canonical solver, design geometry, lazy-wave solver and legacy geometry are distinct from the simple analyzer.
 
-| Kind / case | Source and input | Expected quantity / tolerance | Existing test node / offline result at the code revision |
+| Kind / case | Package function/output asserted | Expected quantity / tolerance | Executable test node |
 | --- | --- | --- | --- |
-| Validated / SCR closed form | Independent static equilibrium and generic fixture, not a licensed dataset. [tests/subsea/catenary_riser/test_static_reconciliation.py:L30-L58] | Force identity relative error ≤ 1e-12; refinement difference ≤ 1e-9 (dimensionless); vertical closure ≤ 1e-6 m. [tests/subsea/catenary_riser/test_static_reconciliation.py:L106-L115] | `tests/subsea/catenary_riser/test_static_reconciliation.py::test_independent_geometry_closes_and_quadrature_converges[scr-deep]` — PASS |
-| Validated / SLWR closed form | Independent segment balance and quadrature, same versioned fixture. [tests/subsea/catenary_riser/test_static_reconciliation.py:L30-L58] | Same closure and refinement criteria as SCR. [tests/subsea/catenary_riser/test_static_reconciliation.py:L106-L115] | `tests/subsea/catenary_riser/test_static_reconciliation.py::test_independent_geometry_closes_and_quadrature_converges[slwr-deep]` — PASS |
-| Regression / simple tension route | Local fixture and qualitative assertions; no independent physical expected value. [tests/subsea/catenary_riser/test_catenary_riser_unit.py:L147-L158] | Horizontal tension equals the supplied value; positive arc length and angle. [tests/subsea/catenary_riser/test_catenary_riser_unit.py:L147-L158] | `tests/subsea/catenary_riser/test_catenary_riser_unit.py::TestSimpleCatenary::test_analyze_with_horizontal_tension` — PASS |
-| Regression / weight bookkeeping | Component sum identity, not an independent material-property validation. [tests/subsea/catenary_riser/test_catenary_riser_unit.py:L243-L250] | Component-sum discrepancy < 1e-6 N/m. [tests/subsea/catenary_riser/test_catenary_riser_unit.py:L243-L250] | `tests/subsea/catenary_riser/test_catenary_riser_unit.py::TestEffectiveWeight::test_weight_components_add_up` — PASS |
-| Regression / lazy-wave refusal | Existing quarantine contract. [tests/subsea/catenary_riser/test_lazy_wave_quarantine.py:L69-L83] | Exactly 1 expected exception; no result object. [tests/subsea/catenary_riser/test_lazy_wave_quarantine.py:L69-L83] | `tests/subsea/catenary_riser/test_lazy_wave_quarantine.py::test_analyzer_refuses_rather_than_fabricating` — PASS |
-| Regression / report rendering | Supplied sample results, not solver output. [tests/subsea/catenary_riser/test_riser_report.py:L61-L94] | HTML and Markdown exist; expected sections and supplied values appear. [tests/subsea/catenary_riser/test_riser_report.py:L61-L94] | `tests/subsea/catenary_riser/test_riser_report.py::test_html_contains_all_sections_and_numbers` — PASS |
-| Regression / durable catenary workflow | Versioned angle/depth input and registry route. [examples/workflows/catenary/input.yml:L1-L14] [docs/registry/workflows.yaml:L24-L31] | Suspended length 173.2 m, span 131.7 m, bend radius 100.0 m; underlying unrounded assertions use pytest.approx. [tests/workflows/test_durable_workflows.py:L94-L97] | `tests/workflows/test_durable_workflows.py::test_workflow_registry[catenary]` — PASS in a temporary copy |
+| Checker self-test / SCR and SLWR | None; reference closure only | Closure ≤ 1e-6 m, refinement ≤ 1e-9 relative; no package-validation claim | `test_static_reconciliation.py::test_independent_geometry_closes_and_quadrature_converges` |
+| Validated / SCR | `SCRDesignInput.calculate_geometry`; `CatenarySolver.solve` | Design length/span within 0.05 m; H within 50 N; solver converged; H and vertical force within 1e-8 relative; depth within 1e-6 m | `test_static_reconciliation.py::test_scr_design_and_general_solver_in_inextensible_limit` |
+| Validated / SLWR | `LazyWaveSolver.solve`; `lazyWaveCatenaryEquation` legacy geometry | Segment length/span/drop within 1e-9 relative; H/global vertical force within 1e-12 relative; legacy length within 1e-9 relative | `test_static_reconciliation.py::test_slwr_equilibrium_and_recorded_legacy_force_divergence` |
+| Regression / simple analyzer | `SimpleCatenaryAnalyzer.analyze_riser` geometry, tension, angle and convergence | E1–E3: s=1201.275032 m, x=529.928323 m (1e-6 m absolute); T=2757021.972 N (0.001 N absolute); vertical angle=10.448701° (1e-6° absolute); converged true | `test_catenary_riser_unit.py::TestSimpleCatenary::test_analyze_with_horizontal_tension`; `test_audit_regressions.py::test_unit_height_ratio`; `test_geometry_inverse_and_exhaustion` |
+| Regression / independent weight values | `EffectiveWeightCalculator.calculate` component and net weights | Steel=2921.296755, contents=1373.753369, buoyancy=2038.028152, net=2257.021972 N/m, each 1e-6 N/m absolute; coating=0 | `test_catenary_riser_unit.py::TestEffectiveWeight::test_weight_components_add_up` |
+| Regression / module annulus | `BuoyancyModule.buoyancy_force_per_length`; `EffectiveWeightCalculator.calculate_with_buoyancy_module`; `LazyWaveConfiguration.get_effective_weight_profile` | E4 module force=-3680.947171 N/m, 1e-6 N/m absolute; coated riser diameter passed by both callers | `test_audit_regressions.py::test_annular_module_and_both_callers` |
+| Regression / legacy force | `CatenaryCalculator.calculate`; `catenaryEquation` | E1–E2: s=1732.050807569 m, x=1316.957896925 m, 1e-9 m absolute; H=1000000 N, b=.001/m | `test_audit_regressions.py::test_legacy_force_closed_form` |
+| Regression / refusal | `LazyWaveAnalyzer.analyze` | Exactly 1 expected NotImplementedError; no fabricated result | `test_lazy_wave_quarantine.py::test_analyzer_refuses_rather_than_fabricating` |
+| Regression / report | `render_html`; `render_markdown`; `FatigueResult.status`; `RiserReportData.overall_status` | Expected sections and supplied values present; missing/nonpositive/non-finite damage/utilisation gives N/A; E5 cited DFF used | `test_riser_report.py::test_html_contains_all_sections_and_numbers`; `test_audit_regressions.py::test_invalid_report_values_never_pass`; `test_fatigue_factor_is_a_cited_input` |
 
-Offline execution record: the module-related command selected 184 cases: 182 PASS, 0 FAIL, 0 SKIP, 2 XFAIL, 0 NOT_RUN; the isolated durable-workflow command selected 1 case: 1 PASS, 0 FAIL, 0 SKIP, 0 NOT_RUN; both were run before and after the documentation change at the code pin, using `PYTHONPATH=src uv run --no-sources --extra test python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>` without an addopts override.
+All test nodes above are under `tests/subsea/catenary_riser/`. The independent worksheet and governing equation citations are in [engineering-basis.md](engineering-basis.md). The audit's rounded examples are replaced with the unrounded circular-area calculation and explicit absolute tolerances. Legacy lazy-wave force remains a separate strict XFAIL tracked in #2044; it is not cleared by the SLWR geometry check.
+
+Offline execution counts for this update are recorded in the fix PR. The historical pack run at the original pin selected 184 cases (182 PASS, 2 XFAIL); those counts are not evidence for this update.
 
 ## 5. QA gates
 
-The criteria below are checks to apply, not solver-clearance claims; G1–G3 remain NOT_RUN because program loading, statics and dynamics require the prohibited program interface or solver; AQG r0 §§3–7 and §10, OrcaFlex riser and mooring.
+Each gate names the package function or output it asserts. G1–G3 native checks remain NOT_RUN: commercial bindings and solver execution are prohibited for this audit. Missing prerequisites cannot be interpreted as PASS. AQG r0 §§3–7 and §10 are historical gate references, not supplied native evidence.
 
-| Gate / check | Applicability and executable check | Numeric pass criterion / evidence |
+| Gate / check | Applicability and package function/output asserted | Numeric pass criterion / evidence |
 | --- | --- | --- |
-| G0 / W1 | Applicable: run `tests/subsea/catenary_riser/test_catenary_riser_unit.py::TestEffectiveWeight::test_weight_components_add_up` from section 4. [tests/subsea/catenary_riser/test_catenary_riser_unit.py:L243-L250] | Sum residual < 1e-6 N/m; pytest result. |
-| G0 / W2 | Applicable: run the quarantine node in section 4 before any lazy-wave use. [tests/subsea/catenary_riser/test_lazy_wave_quarantine.py:L69-L83] | 1 expected NotImplementedError, 0 fabricated result objects (count); pytest result. |
-| G1 / L1 | Applicable to `legacy.orcaflexModel.WriteOrcaflexModel` exports: open each file in the exact target OrcaFlex version, using the same-version demo where available or the licensed LoadData route; record version and messages, NOT_RUN here. [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1211-L1219] | 0 load errors and 0 warnings (count); native load record, object count equal to manifest (0 count difference); AQG r0 §5. |
-| G2 / S1 | Applicable: run both closed-form nodes in section 4; independently check shape closure before comparing native statics. [tests/subsea/catenary_riser/test_static_reconciliation.py:L106-L115] | Depth residual ≤ 1e-6 m; equilibrium residual ≤ 1e-12 relative (dimensionless); pytest result. |
-| G2 / S2 | Applicable to generated risers: compare each native static top tension, angle and touchdown span against independent equilibrium, never the package simple analyzer; NOT_RUN here. [tests/subsea/catenary_riser/independent_static_equilibrium.py:L1-L30] | Tension and span differences ≤ 5.0 %, angle difference ≤ 1.0 degree; 0 unconverged models (count), static plan/elevation images; AQG r0 §6. |
-| G3 / D1 | Applicable to generated risers: run the required short native simulation and inspect motion/line warnings; NOT_RUN here. [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L360-L373] | At least 1.0 s simulated, 0 instability messages and 0 unreviewed warnings (count); time-history and image record; AQG r0 §7. |
-| G4 / Q1 | Conditional: cite a separate diffraction record if a generated model consumes newly calculated vessel diffraction data; no new diffraction input is introduced by this pack, so NOT_APPLICABLE for this documentation change. [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L518-L520] | 0 missing upstream records (count) when triggered; matching input digests and target revision; AQG r0 §§8,10. |
-| G5 / R1 | Applicable: run the section-4 HTML/Markdown rendering case, then audit the issued analysis appendix separately; successful rendering does not supply a signed QA record. [tests/subsea/catenary_riser/test_riser_report.py:L61-L94] | 0 missing expected report sections (count); for an issued report, 0 missing required gate records or signatures (count); AQG r0 §9. |
+| G0 / W1 | `EffectiveWeightCalculator.calculate`: run `test_catenary_riser_unit.py::TestEffectiveWeight::test_weight_components_add_up`; assert independent component and effective weights from E4, not only their sum | Steel 2921.296755, coating 0, contents 1373.753369, buoyancy 2038.028152, effective 2257.021972 N/m; each absolute error ≤ 1e-6 N/m; keep sum residual < 1e-6 N/m |
+| G0 / W2 | `LazyWaveAnalyzer.analyze`: run `test_lazy_wave_quarantine.py::test_analyzer_refuses_rather_than_fabricating`; assert refusal | Exactly 1 expected NotImplementedError, 0 fabricated result objects |
+| G1 / L1 | `WriteOrcaflexModel` output files: complete exports cannot be produced at the historical pin because the two type-data resources are absent (section 6). After restoring qualified data, assert each output loads in the exact target version; NOT_RUN, no binding imported here | 0 missing data resources, 0 native load errors/warnings; output object count equals manifest (difference 0); AQG r0 §5 |
+| G2 / S1 | `CatenarySolver.solve`, `SCRDesignInput.calculate_geometry`, `LazyWaveSolver.solve` and `lazyWaveCatenaryEquation`: run the two direct package-comparison nodes in section 4 and assert their stated outputs. Closure-only nodes are checker self-tests and do not detect divergent package routes | SCR: converged true, H/vertical force ≤ 1e-8 relative, depth ≤ 1e-6 m; design length/span ≤ 0.05 m and H ≤ 50 N. SLWR: segment geometry ≤ 1e-9 relative, H/global vertical force ≤ 1e-12 relative, legacy length ≤ 1e-9 relative |
+| G2 / S2 | `WriteOrcaflexModel` output static top tension, angle and touchdown span: assert each against independent equilibrium after prerequisites; NOT_RUN | Tension/span difference ≤ 5.0%, angle difference ≤ 1.0°; 0 unconverged models; static plan/elevation evidence; AQG r0 §6 |
+| G3 / D1 | `WriteOrcaflexModel` output motion/line histories: assert required duration and message counts after native simulation; NOT_RUN | Duration ≥ 1.0 s, 0 instability messages, 0 unreviewed warnings; history and image record; AQG r0 §7 |
+| G4 / Q1 | Conditional on each `WriteOrcaflexModel` output embedding displacement RAO datasets from `orcaflexModel`: assert a provenance record for every dataset, including inherited data. Never NOT_APPLICABLE merely because the pack is documentation; BLOCKED until resources and provenance exist | Provenance-record count equals embedded RAO-dataset count; 0 unmatched datasets and 0 missing source digest, units, axes/origin, phase, target revision or upstream qualification record; AQG r0 §§8,10 |
+| G5 / R1 | `render_html`, `render_markdown`, `FatigueResult.status` and `RiserReportData.overall_status`: run section-4 rendering/status tests; assert expected sections, N/A for invalid values and cited DFF acceptance; issued appendix audited separately | 0 missing expected report sections, 0 invalid values classified PASS; issued reports require 0 missing gate records/signatures; AQG r0 §9 |
 
 ## 6. Known failure modes and pitfalls
 
 Silent-failure and fallback sweep entries below identify source behavior, including intentional defaults; a listed default is not automatically a demonstrated defect.
 
+Audit corrections (#2751); current function names supersede historical line entries:
+
+| Function / symptom | Cause and disposition | Detection / tracking |
+| --- | --- | --- |
+| `SimpleCatenaryAnalyzer.analyze_riser`: incorrect height argument and uncited minimum removed | E1–E2 closed forms; inverse rejects T≤wz; span solver returns convergence; unavailable length sets false and CLI refuses | `test_analyze_with_horizontal_tension`, `test_unit_height_ratio`, `test_infeasible_top_tension_raises`, `test_geometry_inverse_and_exhaustion`; broader qualification #2756 |
+| `SimpleCatenaryAnalyzer.analyze_riser().top_angle`: convention corrected | E3 degrees from vertical; distribution angles remain from horizontal | `test_analyze_with_horizontal_tension`, `test_unit_height_ratio` |
+| `BuoyancyModule.buoyancy_force_per_length`: riser displaced area was counted twice | E4 annulus requires coated riser diameter; no disk fallback; both callers pass coating | `test_annular_module_and_both_callers` |
+| `CatenaryCalculator.calculate` and `catenaryEquation`: force route returned S in m², chord-based H and extra gravity | E1–E2 square root, H=F-wd, b=w/H with w in N/m; reject inadmissible force inputs | `test_legacy_force_closed_form`, `test_legacy_infeasible_force`; broader qualification #2756 |
+| `_status_of`, `FatigueResult.status`: invalid values formerly appeared PASS | Nonpositive/missing/non-finite values give N/A; E5 requires explicit DFF and selection basis; no fixed fatigue marginal multiple; incomplete roll-up is N/A; fatigue cells retain their specified precision; incomplete strength KPI is labelled | `test_invalid_report_values_never_pass`, `test_fatigue_factor_is_a_cited_input`, `test_fatigue_numeric_cells`, `test_strength_kpi_is_incomplete_with_invalid_rows`; remaining fallback scope #2754 |
+| `legacy.orcaflexModel.build_model` / `WriteOrcaflexModel`: missing type-data resources | `pkgutil.get_data` requests `tests/test_data/catenary_riser/VesselTypes_Extreme.yml` and `VesselTypes_Fatigue.yml`; neither exists at the historical pin or current base. Both SCR and SLWR raise FileNotFoundError. SCR fails during package resource lookup before writing; SLWR reads a relative source path after opening its destination and can leave a partial export, which is not a usable model; no substitute data or solver clearance is supplied | `test_audit_pack.py::test_export_build_fails_for_missing_type_data` asserts the `build_model` failure; G1 BLOCKED for exports; G4 requires RAO provenance counts; #2753 and #2429 |
+
+
 | Location / symptom | Cause and disposition | Detection / tracking |
 | --- | --- | --- |
-| `cli.py:108`: Simple CLI catches all exceptions, prints an error and exits; this is an explicit failure, not a silent success [src/digitalmodel/subsea/catenary_riser/cli.py:L108-L110] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `cli.py:165`: Weight CLI catches all exceptions and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L165-L167] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `cli.py:224`: Lazy-wave quarantine exception is converted to a CLI error [src/digitalmodel/subsea/catenary_riser/cli.py:L224-L225] | Review the stated default, fallback or error path before engineering use. | W2 covers analyzer refusal only; issue pending (2). |
-| `cli.py:251`: Outer lazy-wave CLI catches every exception and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L251-L253] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:159`: Steel-weight gravity is fixed inside a property [src/digitalmodel/subsea/catenary_riser/models.py:L159-L159] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:168`: Coating gravity is fixed; missing or false-valued inputs give zero coating weight [src/digitalmodel/subsea/catenary_riser/models.py:L168-L169] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:174`: Contents-weight gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L174-L174] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:179`: Displaced-fluid buoyancy gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L179-L179] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:238`: Buoyancy material gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L238-L238] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:243`: Buoyancy coating gravity is fixed; absent coating gives zero [src/digitalmodel/subsea/catenary_riser/models.py:L243-L245] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:248`: Displaced module-fluid gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L248-L248] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:293`: Duplicate module names overwrite profile entries; bare_riser overwrites a module with that name [src/digitalmodel/subsea/catenary_riser/models.py:L293-L295] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `models.py:433`: Water resolves to seawater and empty resolves to air [src/digitalmodel/subsea/catenary_riser/models.py:L433-L438] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `effective_weight.py:19`: Constructor gravity is stored, while calculate reads property weights with fixed gravity [src/digitalmodel/subsea/catenary_riser/effective_weight.py:L19-L21] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `simple_catenary.py:33`: Constructor gravity is stored; configuration properties supply weight [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L33-L40] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `simple_catenary.py:132`: Large geometry ratio uses an exponential approximation [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L132-L138] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:145`: Top angle calculation is from horizontal but the comment says vertical; touchdown angle is fixed zero [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L145-L146] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:149`: Negative grounded length is clipped to zero rather than rejecting an overlong suspended segment [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L149-L149] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:207`: Top-tension inverse uses an asymptotic force approximation [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L207-L219] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:230`: Empirical minimum and a relative slack allowance can return a tension without solving the requested case [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L230-L238] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:244`: Lower bound uses an empirical multiplier [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L244-L244] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:258`: Infeasible top tension returns the upper bound after warning [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L258-L260] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:276`: Iteration exhaustion returns midpoint without failure status [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L276-L277] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:335`: Geometry inverse clamps tension and returns final estimate on exhaustion [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L335-L342] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `simple_catenary.py:417`: False-valued limit arguments are omitted and an empty limit set passes [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L417-L426] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `lazy_wave.py:29`: Gravity constructor default is retained but analyze is quarantined [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L29-L32] | Review the stated default, fallback or error path before engineering use. | W2; issue pending (2). |
+| `cli.py:108`: Simple CLI catches all exceptions, prints an error and exits; this is an explicit failure, not a silent success [src/digitalmodel/subsea/catenary_riser/cli.py:L108-L110] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `cli.py:165`: Weight CLI catches all exceptions and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L165-L167] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `cli.py:224`: Lazy-wave quarantine exception is converted to a CLI error [src/digitalmodel/subsea/catenary_riser/cli.py:L224-L225] | Review the stated default, fallback or error path before engineering use. | W2 covers analyzer refusal only; #2753. |
+| `cli.py:251`: Outer lazy-wave CLI catches every exception and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L251-L253] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:159`: Steel-weight gravity is fixed inside a property [src/digitalmodel/subsea/catenary_riser/models.py:L159-L159] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:168`: Coating gravity is fixed; missing or false-valued inputs give zero coating weight [src/digitalmodel/subsea/catenary_riser/models.py:L168-L169] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:174`: Contents-weight gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L174-L174] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:179`: Displaced-fluid buoyancy gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L179-L179] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:238`: Buoyancy material gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L238-L238] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:243`: Buoyancy coating gravity is fixed; absent coating gives zero [src/digitalmodel/subsea/catenary_riser/models.py:L243-L245] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:248`: Displaced module-fluid gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L248-L248] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:293`: Duplicate module names overwrite profile entries; bare_riser overwrites a module with that name [src/digitalmodel/subsea/catenary_riser/models.py:L293-L295] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `models.py:433`: Water resolves to seawater and empty resolves to air [src/digitalmodel/subsea/catenary_riser/models.py:L433-L438] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `effective_weight.py:19`: Constructor gravity is stored, while calculate reads property weights with fixed gravity [src/digitalmodel/subsea/catenary_riser/effective_weight.py:L19-L21] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `simple_catenary.py:33`: Constructor gravity is stored; configuration properties supply weight [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L33-L40] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `simple_catenary.py:275`: False-valued limit arguments are omitted and an empty limit set passes [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L273-L286] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2756. |
+| `lazy_wave.py:29`: Gravity constructor default is retained but analyze is quarantined [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L29-L32] | Review the stated default, fallback or error path before engineering use. | W2; #2753. |
 | `lazy_wave.py:57`: Unreachable former implementation retains depth/offset defaults, tension fractions, bend angles and clipped utilization; no live solution reaches them [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L57-L171] | Review the stated default, fallback or error path before engineering use. | W2; #1947. |
-| `lazy_wave.py:193`: Buoyancy estimate has a fixed multiplier and divides by depth without a range check [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L193-L196] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenaryRiserSummary.py:39`: Missing update argument falls back to defaults [src/digitalmodel/subsea/catenary_riser/legacy/catenaryRiserSummary.py:L39-L43] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenaryRiserSummary.py:47`: Filename extraction failure falls back to the default filename [src/digitalmodel/subsea/catenary_riser/legacy/catenaryRiserSummary.py:L47-L50] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/getFatigueLoading.py:28`: Bin counter starts at zero and nonpositive sea-state cells are omitted [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L28-L32] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/getFatigueLoading.py:43`: External sea-state height is converted with float, without locale normalization [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L43-L45] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/getFatigueLoading.py:46`: Period is converted with float, without locale normalization [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L46-L48] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/getFatigueLoading.py:49`: Seed is converted with int [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L49-L51] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/getFatigueLoading.py:142`: Any argument-processing failure switches to defaults [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L142-L146] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/getFatigueLoading.py:150`: Any filename-processing failure switches to the default name [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L150-L153] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenary.py:26`: Missing or unsupported calculation returns the input configuration unchanged [src/digitalmodel/subsea/catenary_riser/legacy/catenary.py:L26-L37] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenaryMethods.py:46`: Force-route shape parameter applies a gravity multiplier [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L46-L46] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenaryMethods.py:209`: Plot coordinate shift starts at zero [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L209-L209] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenaryMethods.py:316`: Simple plot coordinate shift starts at zero [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L316-L316] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenaryMethods.py:389`: Buoyancy calculation converts weight using fixed gravity [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L389-L389] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenaryMethods.py:452`: External declination is truncated with int [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L452-L452] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `legacy/catenary_equation.py:40`: Force route mixes a length expression and gravity scaling without explicit dimensional validation [src/digitalmodel/subsea/catenary_riser/legacy/catenary_equation.py:L40-L46] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #1811. |
-| `legacy/pipeProperties.py:73`: Equivalent-pipe calculations apply inch-to-metre area conversion and configured gravity; input unit agreement is assumed [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L73-L181] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (2). |
-| `report.py:67`: Classification uses a fixed marginal-utilization fraction [src/digitalmodel/subsea/catenary_riser/report.py:L67-L79] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:120`: Fatigue defaults select a curve and unit SCF; nonpositive damage returns None then PASS [src/digitalmodel/subsea/catenary_riser/report.py:L120-L138] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:145`: Provenance defaults permit empty revision, run and timestamp fields [src/digitalmodel/subsea/catenary_riser/report.py:L145-L151] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:188`: Missing strength or fatigue results return None [src/digitalmodel/subsea/catenary_riser/report.py:L188-L197] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:211`: No result statuses produces N/A, not a numeric zero [src/digitalmodel/subsea/catenary_riser/report.py:L211-L213] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:225`: Missing strength_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L225-L228] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:229`: Missing fatigue_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L229-L232] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:233`: Missing code_checks becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L233-L236] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:343`: Any report-builder import failure is swallowed [src/digitalmodel/subsea/catenary_riser/report.py:L343-L344] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:354`: Fallback import failure or absent builder returns None [src/digitalmodel/subsea/catenary_riser/report.py:L354-L356] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
-| `report.py:598`: Any builder incompatibility silently selects fallback HTML [src/digitalmodel/subsea/catenary_riser/report.py:L598-L601] | Review the stated default, fallback or error path before engineering use. | no detection check exists; issue pending (3). |
+| `lazy_wave.py:193`: Buoyancy estimate has a fixed multiplier and divides by depth without a range check [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L193-L196] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/catenaryRiserSummary.py:39`: Missing update argument falls back to defaults [src/digitalmodel/subsea/catenary_riser/legacy/catenaryRiserSummary.py:L39-L43] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/catenaryRiserSummary.py:47`: Filename extraction failure falls back to the default filename [src/digitalmodel/subsea/catenary_riser/legacy/catenaryRiserSummary.py:L47-L50] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/getFatigueLoading.py:28`: Bin counter starts at zero and nonpositive sea-state cells are omitted [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L28-L32] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/getFatigueLoading.py:43`: External sea-state height is converted with float, without locale normalization [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L43-L45] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/getFatigueLoading.py:46`: Period is converted with float, without locale normalization [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L46-L48] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/getFatigueLoading.py:49`: Seed is converted with int [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L49-L51] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/getFatigueLoading.py:142`: Any argument-processing failure switches to defaults [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L142-L146] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/getFatigueLoading.py:150`: Any filename-processing failure switches to the default name [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L150-L153] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/catenary.py:26`: Missing or unsupported calculation returns the input configuration unchanged [src/digitalmodel/subsea/catenary_riser/legacy/catenary.py:L26-L37] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/catenaryMethods.py:209`: Plot coordinate shift starts at zero [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L209-L209] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/catenaryMethods.py:316`: Simple plot coordinate shift starts at zero [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L316-L316] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/catenaryMethods.py:389`: Buoyancy calculation converts weight using fixed gravity [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L389-L389] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/catenaryMethods.py:452`: External declination is truncated with int [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L452-L452] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `legacy/pipeProperties.py:73`: Equivalent-pipe calculations apply inch-to-metre area conversion and configured gravity; input unit agreement is assumed [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L73-L181] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2753. |
+| `report.py:67`: Classification uses a fixed marginal-utilization fraction [src/digitalmodel/subsea/catenary_riser/report.py:L67-L79] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:145`: Provenance defaults permit empty revision, run and timestamp fields [src/digitalmodel/subsea/catenary_riser/report.py:L145-L151] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:188`: Missing strength or fatigue results return None [src/digitalmodel/subsea/catenary_riser/report.py:L188-L197] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:211`: No result statuses produces N/A, not a numeric zero [src/digitalmodel/subsea/catenary_riser/report.py:L211-L213] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:225`: Missing strength_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L225-L228] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:229`: Missing fatigue_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L229-L232] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:233`: Missing code_checks becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L233-L236] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:343`: Any report-builder import failure is swallowed [src/digitalmodel/subsea/catenary_riser/report.py:L343-L344] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:354`: Fallback import failure or absent builder returns None [src/digitalmodel/subsea/catenary_riser/report.py:L354-L356] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
+| `report.py:610` (`render_html`): Any builder incompatibility silently selects fallback HTML; the exception handler is at L635-L638 [src/digitalmodel/subsea/catenary_riser/report.py:L610-L638] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
 
 sweep: 88 found
 
@@ -168,61 +175,61 @@ The sweep found no `continue` statement and no cache write of an empty result in
 
 | Confirmed defect / lesson | Detection and current scope |
 | --- | --- |
-| Legacy lazy-wave vertical force adds horizontal force, issue #2044. [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L161-L175] | S1; the direct legacy equilibrium check remains XFAIL for two configurations. [tests/subsea/catenary_riser/test_static_reconciliation.py:L154-L161] |
+| Legacy lazy-wave vertical force adds horizontal force, issue #2044. [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L161-L175] | Separate strict `test_legacy_lazy_wave_vertical_force_matches_equilibrium` remains XFAIL for two configurations; S1 covers legacy geometry only. [tests/subsea/catenary_riser/test_static_reconciliation.py:L154-L161] |
 | Conflicting historical reference answers, issue #2050. [tests/fixtures/test_vectors/mooring_risers/mooring_catenary_solver.yaml:L105-L140] | No detection check exists in section 5 for that separate elastic reference; do not use the superseded answers as a hand reference. |
-| Duplicate catenary paths are not interchangeable, issue #1811. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L128-L146] [src/digitalmodel/subsea/catenary_riser/legacy/catenary_equation.py:L63-L81] | S1 checks independent closure; no detection check exists for every divergent route. |
-| README presents a working lazy-wave example despite quarantine. [src/digitalmodel/subsea/catenary_riser/README.md:L117-L137] [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L57-L74] | W2; issue pending (1). |
+| Distinct catenary routes require broader qualification; #2756 (related #1811). | E1–E3 simple and legacy force regressions detect the corrected defects; S1 validates only its named canonical/design/lazy geometry outputs, not every route. |
+| README presents a working lazy-wave example despite quarantine. [src/digitalmodel/subsea/catenary_riser/README.md:L117-L137] [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L57-L74] | W2; #2755. |
 
 Additional literal-default inventory (normal initialization and prescribed configuration are retained as explicit audit entries rather than silently omitted):
 
 | Location | Behavior and detection |
 | --- | --- |
-| `legacy/catenary_riser.py:144` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L144-L144] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/catenary_riser.py:152` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L152-L152] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/catenary_riser.py:95` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L95-L95] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:13` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L13-L13] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:170` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L170-L170] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:228` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L228-L228] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:277` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L277-L277] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:279` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L279-L279] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:287` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L287-L287] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:389` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L389-L389] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:401` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L401-L401] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:402` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L402-L402] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:512` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L512-L512] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:513` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L513-L513] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:1125` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1125-L1125] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:1132` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1132-L1132] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:420` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L420-L420] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:573` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L573-L573] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:579` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L579-L579] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:620` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L620-L620] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:625` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L625-L625] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:626` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L626-L626] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
-| `legacy/orcaflexModel.py:431` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L431-L431] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; issue pending (2). |
+| `legacy/catenary_riser.py:144` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L144-L144] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/catenary_riser.py:152` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L152-L152] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/catenary_riser.py:95` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L95-L95] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:13` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L13-L13] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:170` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L170-L170] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:228` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L228-L228] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:277` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L277-L277] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:279` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L279-L279] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:287` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L287-L287] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:389` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L389-L389] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:401` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L401-L401] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:402` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L402-L402] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:512` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L512-L512] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:513` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L513-L513] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:1125` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1125-L1125] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:1132` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1132-L1132] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:420` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L420-L420] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:573` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L573-L573] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:579` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L579-L579] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:620` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L620-L620] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:625` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L625-L625] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:626` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L626-L626] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
+| `legacy/orcaflexModel.py:431` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L431-L431] | Explicit zero/default in an assignment, call or configuration dictionary; no detection check exists for alternative input states; #2753. |
 
 Additional branch and placeholder sweep:
 
 | Location | Symptom and detection |
 | --- | --- |
-| `legacy/catenaryMethods.py:65` [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L65-L68] | No selected force/angle/span branch falls through with implicit None; no detection check exists; issue pending (2). |
-| `legacy/pipeProperties.py:184` [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L184-L185] | Buoyancy factor helper is an unimplemented pass returning None; no detection check exists; issue pending (2). |
-| `legacy/orcaflexModel.py:518` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L518-L519] | Vessel-type helper is an unimplemented pass returning None; no detection check exists; issue pending (2). |
-| `legacy/orcaflexModel.py:522` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L522-L523] | Support-type helper is an unimplemented pass returning None; no detection check exists; issue pending (2). |
-| `legacy/orcaflexModel.py:1203` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1203-L1204] | Winch helper is an unimplemented pass returning None; no detection check exists; issue pending (2). |
-| `legacy/orcaflexModel.py:1207` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1207-L1208] | Group helper is an unimplemented pass returning None; no detection check exists; issue pending (2). |
-| `report.py:153` [src/digitalmodel/subsea/catenary_riser/report.py:L153-L155] | Unrecognized provenance mode falls back to uppercase input; no detection check exists; issue pending (2). |
-| `report.py:436` [src/digitalmodel/subsea/catenary_riser/report.py:L436-L440] | Unrecognized status has empty styling; no detection check exists; issue pending (2). |
-| `legacy/orcaflexModel.py:1222` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1222-L1288] | Empty load lists or disabled analysis flags produce no model files; no detection check exists; issue pending (2). |
-| `legacy/catenary_riser.py:32` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L32-L167] | Disabled riser analysis branches omit their computations; no detection check exists; issue pending (2). |
+| `legacy/catenaryMethods.py:65` [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L65-L68] | No selected force/angle/span branch falls through with implicit None; no detection check exists; #2753. |
+| `legacy/pipeProperties.py:184` [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L184-L185] | Buoyancy factor helper is an unimplemented pass returning None; no detection check exists; #2753. |
+| `legacy/orcaflexModel.py:518` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L518-L519] | Vessel-type helper is an unimplemented pass returning None; no detection check exists; #2753. |
+| `legacy/orcaflexModel.py:522` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L522-L523] | Support-type helper is an unimplemented pass returning None; no detection check exists; #2753. |
+| `legacy/orcaflexModel.py:1203` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1203-L1204] | Winch helper is an unimplemented pass returning None; no detection check exists; #2753. |
+| `legacy/orcaflexModel.py:1207` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1207-L1208] | Group helper is an unimplemented pass returning None; no detection check exists; #2753. |
+| `report.py:153` [src/digitalmodel/subsea/catenary_riser/report.py:L153-L155] | Unrecognized provenance mode falls back to uppercase input; no detection check exists; #2753. |
+| `report.py:475` (`_status_span`) [src/digitalmodel/subsea/catenary_riser/report.py:L475-L481] | Unrecognized status has empty styling; no detection check exists; #2753. |
+| `legacy/orcaflexModel.py:1222` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1222-L1288] | Empty load lists or disabled analysis flags produce no model files; no detection check exists; #2753. |
+| `legacy/catenary_riser.py:32` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L32-L167] | Disabled riser analysis branches omit their computations; no detection check exists; #2753. |
 
 ## 7. Lessons log
 
 | Date | Lesson | Evidence / change | Shared-log entry |
 | --- | --- | --- | --- |
-| 2026-10-17 | A quarantine must remain visible in the knowledge pack; successful rendering does not validate physics. | Sections 1, 4 and 6 separate refusal, regression and equilibrium checks. [tests/subsea/catenary_riser/test_lazy_wave_quarantine.py:L1-L20] [tests/subsea/catenary_riser/test_riser_report.py:L1-L8] | Not assigned; issue pending (1). |
+| 2026-10-17 | A quarantine must remain visible in the knowledge pack; successful rendering does not validate physics. | Sections 1, 4 and 6 separate refusal, regression and equilibrium checks. [tests/subsea/catenary_riser/test_lazy_wave_quarantine.py:L1-L20] [tests/subsea/catenary_riser/test_riser_report.py:L1-L8] | Not assigned; #2755. |
 
-## 8. Ownership
+## 8. Maintainers
 
 Review assignment: riser and mooring quality manager; deputy: independent riser and mooring reviewer; producing discipline: subsea calculations. Proposed criterion changes, ambiguous references and inconsistent data will be referred to the family quality manager; cross-family conflicts will be referred to the maintainers. These are review assignments for this draft, not recorded approvals.
 
@@ -230,7 +237,7 @@ Review assignment: riser and mooring quality manager; deputy: independent riser 
 
 The durable catenary workflow routes a versioned angle/depth input through the engine into the legacy calculator; its output is a YAML calculation record, not an OrcaFlex statics result. [docs/registry/workflows.yaml:L24-L31] [src/digitalmodel/subsea/catenary_riser/legacy/catenary.py:L26-L37] [examples/workflows/catenary/input.yml:L1-L14]
 
-NumPy supplies the modern weight and geometry calculations; the legacy orchestration calls pipe properties, plotting and model building. [src/digitalmodel/subsea/catenary_riser/models.py:L7-L10] [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L128-L155] [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L19-L29]
+NumPy supplies the modern weight and geometry calculations; the legacy orchestration calls pipe properties, plotting and model building. [src/digitalmodel/subsea/catenary_riser/models.py:L7-L10] [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L116-L167] [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L19-L29]
 
 No OrcaFlex version or native-load qualification is established by this pack; L1 remains NOT_RUN. The source's references to that program are inventoried below as text, including the legacy generator; they do not establish an installed dependency or licence.
 
@@ -257,16 +264,16 @@ The exact Python regular expressions stored in each counted family's `search_sig
 
 | Further hit group | Classification |
 | --- | --- |
-| Simple inverse methods and nested tension evaluator | Already listed in section 3; not a further implementation. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L174-L342] |
+| Simple inverse methods | The two inverse methods are listed in section 3; the former nested tension evaluator has been removed. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L169-L200] |
 | Effective-weight methods and properties | Weight bookkeeping rather than a second statics solver; buoyancy calculation and weight profile are helper inputs. [src/digitalmodel/subsea/catenary_riser/effective_weight.py:L33-L92] [src/digitalmodel/subsea/catenary_riser/models.py:L156-L195] [src/digitalmodel/subsea/catenary_riser/models.py:L275-L297] |
 | CLI functions, result/configuration classes, plots and report tables | Delegation, data holding or presentation; not further solvers. [src/digitalmodel/subsea/catenary_riser/cli.py:L60-L110] [src/digitalmodel/subsea/catenary_riser/models.py:L304-L407] [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L202-L342] |
 | Legacy extract/save/fatigue functions | Reading, serializing or preparing inputs for listed definitions. [src/digitalmodel/subsea/catenary_riser/legacy/extractData.py:L7-L81] [src/digitalmodel/subsea/catenary_riser/legacy/saveData.py:L14-L47] [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L25-L90] |
 | Legacy wave/current/wind helpers | Populate the listed model writer's data structures. [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L410-L516] |
 | Module-level source references | Imports, explanatory text or orchestration, not separate solver launches. [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L19-L29] [src/digitalmodel/subsea/catenary_riser/__init__.py:L1-L6] |
 
-Further counted-family implementations not listed in sections 3 or 9: 0; threshold: at most 1. Repository-wide implementations, including scripts, are enumerated below from the same map; this is an inventory, not validation of each algorithm. Unmapped method-family follow-up: effective-weight/buoyancy bookkeeping, input conditioning and report-status qualification; issue pending (2), issue pending (3). Noncounted map families remain listed and do not alter the counted-family result.
+Further counted-family implementations not listed in sections 3 or 9: 0; threshold: at most 1. Repository-wide implementations, including scripts, are enumerated below from the same map; this is an inventory, not validation of each algorithm. Unmapped method-family follow-up: effective-weight/buoyancy bookkeeping, input conditioning and report-status qualification; #2753, #2754. Noncounted map families remain listed and do not alter the counted-family result.
 
-Repository-wide text search covered 5679 tracked Python files, including scripts; family hit-file counts (not implementation counts): catenary-mooring-line-statics: 357 files, 42 in scripts; effective-tension-riser-stack-up: 396 files, 23 in scripts; orcaflex-text-model-writers: 2637 files, 442 in scripts; wave-spectra: 496 files, 60 in scripts; api-5ct-5l-grade-tables: 323 files, 20 in scripts. Outside-package hits remain map-follow-up candidates rather than A8 misses; classification beyond the mapped inventory remains #1811 and issue pending (1).
+Repository-wide text search covered 5679 tracked Python files, including scripts; family hit-file counts (not implementation counts): catenary-mooring-line-statics: 357 files, 42 in scripts; effective-tension-riser-stack-up: 396 files, 23 in scripts; orcaflex-text-model-writers: 2637 files, 442 in scripts; wave-spectra: 496 files, 60 in scripts; api-5ct-5l-grade-tables: 323 files, 20 in scripts. Outside-package hits remain map-follow-up candidates rather than A8 misses; classification beyond the mapped inventory remains #1811 and #2755.
 
 ### Complete map-row inventory
 
@@ -1303,17 +1310,17 @@ The core interfaces, quarantine, independent static checks, legacy calculator an
 
 | Open item / coverage limit | Responsible discipline / tracking |
 | --- | --- |
-| UNVERIFIED: shared global axes, origin and phase conventions across legacy exports and modern results. | Riser and mooring review; issue pending (1). |
-| UNVERIFIED: governing standard editions, clauses, applicability and calculation Citation sidecars. | Riser and mooring review; issue pending (1). |
+| UNVERIFIED: shared global axes, origin and phase conventions across legacy exports and modern results. | Riser and mooring review; #2755. |
+| UNVERIFIED: governing standard editions, clauses, applicability and calculation Citation sidecars. | Riser and mooring review; #2755. |
 | Native G1–G3 and conditional G4 evidence are not produced; target solver version is not established. | Riser and mooring review; #2429. |
-| Simple solver physical qualification and divergent formulas remain open; it is not a hand-check reference. | Numerical methods; #1811. |
+| Simple and legacy E1–E3 formula defects fixed; broader route qualification remains open. | Numerical methods; #2756 (related #1811). |
 | Historical elastic fixture and legacy force definitions require distinct treatment. | Numerical methods; #2050, #2044. |
-| Input defaults, conversions, unit assumptions and absent failure-state checks are enumerated in section 6. | Calculation maintainers; issue pending (2). |
-| Report fallback and incomplete-evidence status need explicit tests. | Reporting maintainers; issue pending (3). |
-| README claims of production readiness and coverage are unverified; the counted tests are not a coverage percentage. | Documentation maintainers; issue pending (1). [src/digitalmodel/subsea/catenary_riser/README.md:L219-L225] |
-| Broader docs naming this module were discovered; main-path review is recorded below, and full cross-document reconciliation remains open. | Documentation maintainers; issue pending (1). |
-| External implementation-map discoveries are indexed by map-row citations without copying identifying paths. | Registry maintainers; issue pending (1). |
-| Shared-log entry and second-provider clearance are not yet assigned. | Riser and mooring review; issue pending (1). |
+| Input defaults, conversions, unit assumptions and absent failure-state checks are enumerated in section 6. | Calculation maintainers; #2753. |
+| Invalid-value and cited-DFF status tests are supplied; broader report fallback and provenance completeness remain open. | Reporting maintainers; #2754. |
+| README claims of production readiness and coverage are unverified; the counted tests are not a coverage percentage. | Documentation maintainers; #2755. [src/digitalmodel/subsea/catenary_riser/README.md:L219-L225] |
+| Broader docs naming this module were discovered; main-path review is recorded below, and full cross-document reconciliation remains open. | Documentation maintainers; #2755. |
+| External implementation-map discoveries are indexed by map-row citations without copying identifying paths. | Registry maintainers; #2755. |
+| Shared-log entry and second-provider clearance are not yet assigned. | Riser and mooring review; #2755. |
 
 ### Source and test coverage
 
@@ -1326,9 +1333,9 @@ The core interfaces, quarantine, independent static checks, legacy calculator an
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/FEAmodel2.yml:L1-L177].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/__init__.py:L1-L3].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/catenary.py:L1-L37].
-- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L1-L508].
+- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L1-L497].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/catenaryRiserSummary.py:L1-L115].
-- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/catenary_equation.py:L1-L81].
+- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/catenary_equation.py:L1-L76].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L1-L167].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser_summary.py:L1-L117].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/environment.yml:L1-L14].
@@ -1339,8 +1346,8 @@ The core interfaces, quarantine, independent static checks, legacy calculator an
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L1-L185].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/saveData.py:L1-L47].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/models.py:L1-L460].
-- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/report.py:L1-L788].
-- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L1-L428].
+- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/report.py:L1-L825].
+- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L1-L286].
 
 The main-path documentation includes the package README, domain README, durable workflow registry, generic static coverage note and canonicalization handoff.
 
@@ -1372,7 +1379,7 @@ The offline test scope comprises the entire package test directory and the relat
 
 ### Broader documentation discovery
 
-The following documents were found by `rg -l -i "catenary.riser|catenary_riser" docs --glob "*.md"`; discovery does not qualify their historical claims, and detailed reconciliation remains issue pending (1).
+The following documents were found by `rg -l -i "catenary.riser|catenary_riser" docs --glob "*.md"`; discovery does not qualify their historical claims, and detailed reconciliation remains #2755.
 
 - [docs/registry/implementation-map.md:L1-L59].
 - [docs/domains/development/test_summary_with_validations.md:L1-L159].
@@ -1425,4 +1432,4 @@ The following documents were found by `rg -l -i "catenary.riser|catenary_riser" 
 - [docs/domains/orcaflex/examples/catalog/complete_catalog.md:L1-L278].
 - [docs/domains/orcaflex/examples/catalog/examples_catalog.md:L1-L44].
 
-Two discovery documents with potentially identifying names are not copied into this inventory; codenaming and reconciliation remain issue pending (1).
+Two discovery documents with potentially identifying names are not copied into this inventory; codenaming and reconciliation remain #2755.

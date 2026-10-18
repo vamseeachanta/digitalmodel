@@ -124,10 +124,10 @@ class TestClassifyDepth:
         assert classify_depth(25.0, 10.0) == DepthClassification.MEDIUM
 
     def test_shallow(self):
-        assert classify_depth(18.0, 10.0) == DepthClassification.SHALLOW
+        assert classify_depth(14.0, 10.0) == DepthClassification.SHALLOW
 
     def test_very_shallow(self):
-        assert classify_depth(14.0, 10.0) == DepthClassification.VERY_SHALLOW
+        assert classify_depth(11.0, 10.0) == DepthClassification.VERY_SHALLOW
 
     def test_infinite_depth(self):
         assert classify_depth(float("inf"), 10.0) == DepthClassification.DEEP
@@ -167,13 +167,13 @@ class TestValidateShallowWaterResults:
         bem = self._mock_bem_result(500.0)
         result = validate_shallow_water_results(bem, bem, draft=10.0, water_depth=20.0)
         assert "dnv_factor" in result
-        assert result["dnv_factor"] > 1.0  # h/T = 2.0 → shallow
+        assert result["dnv_factor"] > 1.0  # h/T = 2.0 → medium-deep
 
     def test_depth_class_included(self):
         """Result includes depth classification string."""
         bem = self._mock_bem_result(500.0)
         result = validate_shallow_water_results(bem, bem, draft=10.0, water_depth=20.0)
-        assert result["depth_class"] == "shallow"  # h/T = 2.0
+        assert result["depth_class"] == "medium"  # h/T = 2.0
 
     def test_none_added_mass_returns_nan(self):
         """None added mass produces NaN ratio."""
@@ -321,9 +321,9 @@ class TestPiancBankClearanceWidth:
 
     def test_very_shallow_amplifies_clearance(self):
         """Very shallow water multiplies clearance by 1.5."""
-        # h/T = 14/10 = 1.4 → very_shallow
+        # h/T = 11/10 = 1.1 → very_shallow
         w_vs = pianc_bank_clearance_width(
-            beam=30.0, draft=10.0, water_depth=14.0,
+            beam=30.0, draft=10.0, water_depth=11.0,
             speed_knots=10.0, slope=BankSlopeType.MODERATE,
         )
         # h/T = 50/10 = 5.0 → deep
@@ -335,9 +335,9 @@ class TestPiancBankClearanceWidth:
 
     def test_shallow_amplifies_clearance(self):
         """Shallow water multiplies clearance by 1.2."""
-        # h/T = 18/10 = 1.8 → shallow
+        # h/T = 14/10 = 1.4 → shallow
         w_shallow = pianc_bank_clearance_width(
-            beam=30.0, draft=10.0, water_depth=18.0,
+            beam=30.0, draft=10.0, water_depth=14.0,
             speed_knots=10.0, slope=BankSlopeType.MODERATE,
         )
         # deep

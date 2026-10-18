@@ -16,20 +16,20 @@
   },
   "files": {
     "README.md": {
-      "bytes": 4884,
-      "sha256": "3309f9e4e9185d3df80408dc3cfc06a33fa4d53aacd6f8c0ddb4bea7f45f0b9c"
+      "bytes": 5153,
+      "sha256": "b8a2dbca51cdfb60abd4346a53d909b1e03957fb8d811632f81af61d80c824e0"
     },
     "comparison.md": {
-      "bytes": 5261,
-      "sha256": "4c349a7f8e1a27ec5f944140765dba905ba3c2e66879e3eb750f84ed27748f50"
+      "bytes": 5530,
+      "sha256": "9fe1a4b11a7f44ba9adc46f2a41d3ae33d6c279fcfe5bd2bf90fbef531f09aa2"
     },
     "report.html": {
-      "bytes": 10338,
-      "sha256": "72f1ef651395a48af9607ff2e74221bed1e1d34a13212d10ea5fe00422488f5c"
+      "bytes": 10545,
+      "sha256": "f9ab42ae7223c4b9f0a748243d97ed49c5e2bdc197f8cd8a189195432515eeb9"
     },
     "results.json": {
       "bytes": 35790,
-      "sha256": "170124df462de46cec682fa81eb72eb97ff9f471dcc9022006e5dff0a8203e63"
+      "sha256": "6dba4568e08860bebd2a55a03b12827a0f4fc294d12cab51c5819f20a7fec004"
     }
   },
   "header_replacements": "none; native JSON contains no runtime paths or host headers",
@@ -38,17 +38,17 @@
   "python_version": "3.11.14",
   "record_inputs": {
     "README.template.md": "f584722f7ee82b6bdbeee81c0d133be0cfbc4aaf08380f99f8a68b8d7beb5f71",
-    "basis.json": "140511386ccbeb692fe78d72680ccc88dba0ae1467ee2902b6b59c6455d61bcd",
-    "build_report.py": "5e91834ae7f6b5a2b15bc3172e350b0d3010cf8568a3bad4bce57be0222b2157",
+    "basis.json": "4fc6cf3ec069b6f5d03fb6bf3a6e0a2a8935d46b388c45ef624e804081bb1be2",
+    "build_report.py": "8ae5a2a5fbcad566a5521c57a11f014e54ae676c32e73a0ced240560eb54d88c",
     "comparison.template.md": "612d73a19a672510480f7d018e33e4aa4d004ff9b400a115d65df3b82b70dece",
     "criteria.json": "2ee2eb574303125f0c0c23f611b225dc1adf8e156ee183af651fef7e2d06f5fb",
     "execution.json": "4fadfc090938bff4863f41dab1d02f323891036751c7641ccae0dc68a9bc9bb3",
-    "revisions.json": "85d01b9a8f3339ce6e15155974324dd619f04cef164d30939c99b449f41328f6",
+    "revisions.json": "e3e7e940329edf41ed64ba912abd9fcf043a24eb72f368ac9fb957fc6b6384b2",
     "run_screening.py": "1c933a38712b3f0ad9285676f1b6f65f7dd2e6ad02612a09e5b845099cc14937"
   },
-  "revision": "R2",
+  "revision": "R3",
   "source_files": {
-    "src/digitalmodel/citations/registry.py": "499c95fd0c5930d60a3ea2719cc12bbd9bb1ad2f2ced8dc2f500b12c4e5f5834",
+    "src/digitalmodel/citations/registry.py": "f0aa345fa6d9eaad1b97b3f18ec7682796c60b98e318d19da0537ce354da51ac",
     "src/digitalmodel/data/marine_engineering/mooring_components/provenance.json": "7325f2e47cee62c9d88614c62e46b2e826de92ecff50a1dd9516e35e1204a99b",
     "src/digitalmodel/data/marine_engineering/mooring_components/sources/moorpy_coefficients.json": "dc9ec64bafdaa0015847572e40f37e47cf804cead2f72c973b3857f1fb297cad",
     "src/digitalmodel/data/marine_engineering/mooring_components/wire_properties.csv": "d9f6e963f22d5ecdcd1aa1ba9177fc2e4b5799cb778cd550cc03d2970a99271e",
