@@ -376,10 +376,12 @@ def _try_import_builder():
     return None
 
 
-def _positive_text(value: Optional[float], precision: int) -> str:
-    """Render positive finite inputs at the requested display precision."""
-    return ("N/A" if value is None or not math.isfinite(value) or value <= 0
-            else f"{value:.{precision}f}")
+def _positive_text(value: Optional[float], precision: int, scientific: bool = False) -> str:
+    """Render positive finite inputs without rounding small damage to zero."""
+    if value is None or not math.isfinite(value) or value <= 0:
+        return "N/A"
+    notation = "e" if scientific else "f"
+    return format(value, f".{precision}{notation}")
 
 
 def _ratio_text(value: Optional[float]) -> str:
@@ -445,7 +447,7 @@ def _fatigue_table_html(rows: list[FatigueResult]) -> str:
         body += (
             f"<tr><td>{_esc(r.location)}</td><td>{r.arc_length_m:.1f}</td>"
             f"<td>{_esc(r.sn_curve)}</td><td>{r.scf:.2f}</td>"
-            f"<td>{_positive_text(r.damage_per_year, 4)}</td><td>{life_s}</td>"
+            f"<td>{_positive_text(r.damage_per_year, 3, scientific=True)}</td><td>{life_s}</td>"
             f"<td>{_positive_text(r.design_life_years, 0)}</td>"
             f"<td>{_positive_text(r.design_fatigue_factor, 2)}</td><td>{_esc(r.design_fatigue_factor_basis)}</td>"
             f"<td>{_status_span(r.status)}</td></tr>"
@@ -715,7 +717,7 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
             life_s = _positive_text(life, 1)
             lines.append(
                 f"| {r.location} | {r.arc_length_m:.1f} | {r.sn_curve} | {r.scf:.2f} "
-                f"| {_positive_text(r.damage_per_year, 4)} | {life_s} | {_positive_text(r.design_life_years, 0)} "
+                f"| {_positive_text(r.damage_per_year, 3, scientific=True)} | {life_s} | {_positive_text(r.design_life_years, 0)} "
                 f"| {_positive_text(r.design_fatigue_factor, 2)} | {r.design_fatigue_factor_basis} "
                 f"| {r.status} |"
             )

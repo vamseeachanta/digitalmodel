@@ -41,7 +41,7 @@ The report generator consumes supplied results; it does not run a live analysis.
 | Top angle | degrees from vertical; `SimpleCatenaryAnalyzer.analyze_riser().top_angle` follows E3 | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L140-L141] |
 | Tension/angle distributions | m, N, degrees from horizontal | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L202-L252] |
 | Convergence | `CatenaryRiserResult.converged`: true only when the span solve converges and suspended length fits; CLI refuses false | `SimpleCatenaryAnalyzer.analyze_riser` |
-| Reports | HTML and Markdown from supplied structures; invalid/missing positive finite utilisation or damage gives N/A; DFF and selection basis required for fatigue acceptance | [src/digitalmodel/subsea/catenary_riser/report.py:L1-L17] |
+| Reports | HTML and Markdown from supplied structures; invalid/missing positive finite utilisation or damage gives N/A; positive annual damage uses scientific notation; DFF and selection basis required for fatigue acceptance. The strength KPI is N/A with no strength results and N/A (incomplete) with unqualified rows; both formats always display it | [src/digitalmodel/subsea/catenary_riser/report.py:L1-L17] |
 
 UNVERIFIED: a common global axis, origin and phase convention across legacy exports and modern results is not established; #2755.
 

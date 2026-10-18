@@ -116,81 +116,13 @@ def catenaryEquation(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _force_based_method(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Force-based catenary calculation.
+    """Use the shared E1-E2 vertex-catenary force route, with w in N/m."""
+    from digitalmodel.subsea.catenary_riser.legacy.catenary_equation import (
+        CatenaryCalculator,
+    )
 
-    Replicates legacy catenaryMethods.py lines 10-27.
-
-    Given:
-      - F: Force at top [N]
-      - w: Weight per unit length [N/m]
-      - d: Vertical distance [m]
-
-    Calculates:
-      - S: Arc length [m]
-      - X: Horizontal distance [m]
-      - W: Total weight [N]
-      - THorizontal: Horizontal tension component [N]
-
-    Legacy formula (from original code):
-        S = d * (2*F/w - d)
-        X = ((F/w) - d) * ln((S + F/w) / ((F/w) - d))
-        W = w * S
-        THorizontal = F * X / sqrt(S^2 + X^2)
-    """
-    F = data["F"]
-    w = data["w"]
-    d = data["d"]
-
-    # Validate inputs
-    if F <= 0:
-        raise ValueError("Force F must be positive")
-    if w <= 0:
-        raise ValueError("Weight per length w must be positive")
-    if d <= 0:
-        raise ValueError("Vertical distance d must be positive")
-
-    # Check physical constraint: F/w must be > d
-    # (otherwise would get negative arc length)
-    if F/w <= d:
-        raise ValueError(
-            f"Invalid parameters: F/w ({F/w:.2f}) must be > d ({d:.2f}). "
-            f"Increase force or decrease weight."
-        )
-
-    # Arc length (legacy formula)
-    S = d * (2 * F / w - d)
-
-    # Horizontal distance (legacy formula)
-    ratio_top = S + (F / w)
-    ratio_bottom = (F / w) - d
-
-    if ratio_bottom <= 0:
-        raise ValueError("Invalid geometry: (F/w) - d must be positive")
-
-    X = ratio_bottom * math.log(ratio_top / ratio_bottom)
-
-    # Weight of suspended chain
-    W = w * S
-
-    # Normalized horizontal tension component
-    THorizontal = F * X / math.sqrt(S**2 + X**2)
-
-    # Catenary shape parameter (for reference, not returned in legacy)
-    # b = w * 9.81 / THorizontal  # Legacy line 24
-
-    # Return dict matching legacy output
-    result = {
-        "S": S,
-        "X": X,
-        "W": W,
-        "THorizontal": THorizontal,
-        # Preserve original input fields (legacy behavior)
-        "F": F,
-        "w": w,
-        "d": d
-    }
-
+    result = CatenaryCalculator().calculate(data.copy())
+    result["W"] = result["w"] * result["S"]
     return result
 
 

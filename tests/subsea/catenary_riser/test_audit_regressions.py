@@ -8,6 +8,7 @@ from digitalmodel.subsea.catenary_riser import (
     RiserConfiguration, SEAWATER, PRODUCTION_OIL, STEEL_API_5L_X65,
     SimpleCatenaryAnalyzer,
 )
+from digitalmodel.marine_ops.marine_analysis.catenary.adapter import catenaryEquation as adapter_equation
 from digitalmodel.subsea.catenary_riser.legacy.catenary_equation import CatenaryCalculator
 from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import catenaryEquation
 from digitalmodel.subsea.catenary_riser.report import (
@@ -51,7 +52,7 @@ def test_infeasible_top_tension_raises(riser, tension):
         SimpleCatenaryAnalyzer().analyze_riser(riser, top_tension=tension)
 
 
-@pytest.mark.parametrize("route", [CatenaryCalculator().calculate, catenaryEquation])
+@pytest.mark.parametrize("route", [CatenaryCalculator().calculate, catenaryEquation, adapter_equation])
 def test_legacy_force_closed_form(route):
     # E1-E2, F=2 MN, w=1000 N/m, d=1000 m, a=1000 m.
     r = route({"F": 2e6, "w": 1000, "d": 1000})
@@ -117,17 +118,17 @@ def test_fatigue_factor_is_a_cited_input():
 
 @pytest.mark.parametrize("field,index,value,expected", [
     (field, index, value, expected)
-    for field, index, precision, valid in (
-        ("damage_per_year", 4, 4, 1 / 41),
-        ("design_life_years", 6, 0, 25.0),
-        ("design_fatigue_factor", 7, 2, 2.0),
+    for field, index, format_spec, valid in (
+        ("damage_per_year", 4, ".3e", 1 / 41),
+        ("design_life_years", 6, ".0f", 25.0),
+        ("design_fatigue_factor", 7, ".2f", 2.0),
     )
     for value, expected in (
         (None, "N/A"), (0, "N/A"), (-1, "N/A"),
         (float("nan"), "N/A"), (float("inf"), "N/A"),
-        (-float("inf"), "N/A"), (valid, f"{valid:.{precision}f}"),
+        (-float("inf"), "N/A"), (valid, format(valid, format_spec)),
     )
-])
+] + [("damage_per_year", 4, 1e-6, "1.000e-06")])
 def test_fatigue_numeric_cells(field, index, value, expected):
     import re
 
