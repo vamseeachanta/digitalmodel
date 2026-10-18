@@ -165,10 +165,42 @@ def test_assumptions_markdown_handles_empty_provenance() -> None:
 
 
 def test_generate_model_via_modular_generator(tmp_path: Path) -> None:
+    import yaml
+
+    from digitalmodel.solvers.orcaflex.modular_generator.post_validator import (
+        PostGenerationValidator,
+    )
+    from digitalmodel.solvers.orcaflex.modular_generator.schema.equipment import Vessel
+
     result = author_spec(ProjectBundle(), "mooring", author=StubAuthor(_full_intent()))
+    # The resolver supplies fairlead references, not their parent definition.
+    # OrcaFlex Winches: Data, "Connect to object and position":
+    # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Winches,Data.htm
+    # Reuse existing fixture properties; no engineering values are invented.
+    fixture = Path(__file__).resolve().parents[3] / (
+        "docs/domains/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml"
+    )
+    properties = yaml.safe_load(fixture.read_text())["equipment"]["vessel"]["properties"]
+    result.spec.equipment.vessel = Vessel(
+        name=result.spec.mooring.lines[0].fairlead.vessel,
+        properties=properties,
+    )
     out = result.generate_model(tmp_path / "model")
     assert (out / "master.yml").exists()
     assert any(out.rglob("*.yml"))
+    findings = PostGenerationValidator().validate_directory(out / "includes")
+    assert not [finding for finding in findings if finding.level == "error"]
+
+
+def test_generate_model_rejects_missing_connection_parent(tmp_path: Path) -> None:
+    result = author_spec(ProjectBundle(), "mooring", author=StubAuthor(_full_intent()))
+    out = tmp_path / "model"
+    with pytest.raises(ValueError, match="Post-generation validation failed") as caught:
+        result.generate_model(out)
+    errors = [finding for finding in caught.value.findings if finding.level == "error"]
+    assert len(errors) == len(result.spec.mooring.lines)
+    assert all(finding.category == "reference" for finding in errors)
+    assert not out.exists()
 
 
 def test_system_prompt_lists_all_outcomes() -> None:
