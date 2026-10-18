@@ -166,6 +166,9 @@ modules:
       hull_library:
         agent_pack: src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md
         qa_family: DF
+      parametric_hull_analysis:
+        agent_pack: src/digitalmodel/hydrodynamics/parametric_hull_analysis/docs/agent-pack.md
+        qa_family: DF
       diffraction:
         agent_pack: src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md
         qa_family: DF
