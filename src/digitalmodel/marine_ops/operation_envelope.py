@@ -18,8 +18,8 @@ Hs limit for a criterion ``C`` at a given Tp/heading/DOF is closed-form:
 The envelope at each Tp is the minimum Hs_limit over all headings and all
 criteria DOFs (the governing combination).
 
-Criteria are **indicative screening values** grounded in DNV-RP-H103 (marine
-operations) / DNV-ST-N001; tune per project. They are vessel-level significant
+Criteria are **unverified screening values**, with no established DNV clause
+or table provenance; tune per project. They are vessel-level significant
 single-amplitude motions — crane-tip / relative-motion refinements (which need
 lift geometry or a second body) are a later layer.
 """
@@ -38,6 +38,10 @@ from digitalmodel.hydrodynamics.seakeeping import (
     spectral_moments,
 )
 from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
+from .envelope_numerics import (
+    extrapolated_fraction, finite_grid, heading_column, positive, spectrum,
+    validate_component, validate_operation,
+)
 
 DEFAULT_TP_RANGE_S = [round(4.0 + 0.5 * i, 1) for i in range(33)]  # 4.0 .. 20.0 s
 _HS_CAP_M = 20.0  # cap an "unlimited" DOF so a non-responding axis never governs
@@ -63,7 +67,7 @@ class Operation:
     basis: str
 
 
-# Indicative screening criteria (DNV-RP-H103 / DNV-ST-N001 basis). Project-tune.
+# Unverified screening criteria; no standards qualification. Basis table B6.
 OPERATIONS: dict[str, Operation] = {
     "transit": Operation(
         key="transit",
@@ -74,7 +78,7 @@ OPERATIONS: dict[str, Operation] = {
             MotionLimit("pitch", 2.5, "deg"),
         ),
         alpha=0.90,
-        basis="indicative seakeeping/comfort + green-water screening (DNV-ST-N001)",
+        basis="unverified seakeeping/comfort + green-water screening",
     ),
     "dp_station_keeping": Operation(
         key="dp_station_keeping",
@@ -85,7 +89,7 @@ OPERATIONS: dict[str, Operation] = {
             MotionLimit("pitch", 2.0, "deg"),
         ),
         alpha=0.90,
-        basis="indicative station-keeping motion screening (DNV-ST-N001)",
+        basis="unverified station-keeping motion screening",
     ),
     "heavy_lift": Operation(
         key="heavy_lift",
@@ -96,7 +100,7 @@ OPERATIONS: dict[str, Operation] = {
             MotionLimit("pitch", 1.5, "deg"),
         ),
         alpha=0.85,
-        basis="indicative lifting motion limits (DNV-RP-H103); crane-tip refinement later",
+        basis="unverified lifting motion limits; crane-tip refinement later",
     ),
     "offloading": Operation(
         key="offloading",
@@ -107,7 +111,7 @@ OPERATIONS: dict[str, Operation] = {
             MotionLimit("pitch", 2.0, "deg"),
         ),
         alpha=0.90,
-        basis="indicative relative-motion proxy (DNV-ST-N001); two-body refinement later",
+        basis="unverified relative-motion proxy; two-body refinement later",
     ),
 }
 
@@ -132,7 +136,16 @@ class EnvelopePoint:
     tp_s: float
     hs_limit_m: float
     governing_dof: str
-    governing_heading_deg: float
+    governing_heading_deg: Optional[float]
+    evaluated: bool = False
+    status: str = "unevaluated"
+    extrapolated_energy_fraction: float = 0.0
+    captured_variance_fraction: float = 0.0
+
+    @property
+    def hs_forecast_limit_m(self):
+        """Explicit forecast criterion; hs_limit_m is the compatibility alias."""
+        return self.hs_limit_m
 
 
 @dataclass
@@ -141,22 +154,42 @@ class EnvelopeResult:
     operation: str
     alpha: float
     points: list[EnvelopePoint] = field(default_factory=list)
+    criterion_type: str = "forecast_limit"
+    alpha_source: dict = field(default_factory=dict)
+    citation_sidecar: dict = field(default_factory=dict)
+
+    def require_evaluated(self):
+        if not self.points or any(not p.evaluated or p.status not in ('evaluated', 'capped')
+                                  for p in self.points):
+            raise ValueError('envelope contains unevaluated points')
+        if any(not np.isfinite(p.hs_limit_m) or p.hs_limit_m <= 0 for p in self.points):
+            raise ValueError('envelope contains invalid forecast limits')
 
     def hs_limit_at(self, tp_s: float) -> Optional[float]:
+        self.require_evaluated()
         for p in self.points:
             if abs(p.tp_s - tp_s) < 1e-9:
                 return p.hs_limit_m
         return None
 
     def to_dict(self) -> dict:
+        self.require_evaluated()
         return {
             "vessel": self.vessel,
             "operation": self.operation,
             "alpha": self.alpha,
+            "criterion_type": self.criterion_type,
+            "alpha_source": self.alpha_source,
+            "citation_sidecar": self.citation_sidecar,
             "points": [
                 {
                     "tp_s": p.tp_s,
                     "hs_limit_m": p.hs_limit_m,
+                    "hs_forecast_limit_m": p.hs_forecast_limit_m,
+                    "evaluated": p.evaluated,
+                    "status": p.status,
+                    "extrapolated_energy_fraction": p.extrapolated_energy_fraction,
+                    "captured_variance_fraction": p.captured_variance_fraction,
                     "governing_dof": p.governing_dof,
                     "governing_heading_deg": p.governing_heading_deg,
                 }
@@ -182,39 +215,48 @@ def operation_envelope(
     (default: all RAO headings) and the operation's criteria DOFs.
     """
     op = resolve_operation(operation)
-    tps = tp_range_s or DEFAULT_TP_RANGE_S
+    validate_operation(op)
+    tps = finite_grid(DEFAULT_TP_RANGE_S if tp_range_s is None else tp_range_s,
+                      'Tp', positive_values=True)
+    for value, name in ((hs_ref, 'Hs_ref'), (hs_cap_m, 'Hs cap'), (gamma, 'gamma')):
+        positive(value, name)
+    if gamma < 1:
+        raise ValueError('gamma must be >= 1')
+    if headings is not None:
+        headings = finite_grid(headings, 'headings')
+    for limit in op.limits:
+        validate_component(_component_for(rao_set, limit.dof), limit.dof)
     spectra = WaveSpectra()
-
-    points: list[EnvelopePoint] = []
-    for tp in tps:
-        omega, s_wave = spectra.jonswap(hs_ref, tp, gamma=gamma, n_points=200)
-        best_hs = hs_cap_m
-        gov_dof = "none"
-        gov_hdg = float("nan")
-        for limit in op.limits:
-            component = _component_for(rao_set, limit.dof)
-            if component is None:
-                continue
-            for hdg, rao_at_hdg in _rao_by_heading(component, omega, headings):
-                s_ref = _significant_response(rao_at_hdg, omega, s_wave)
-                if s_ref <= 0:
-                    continue  # this DOF does not respond -> does not limit
-                hs_allow = op.alpha * hs_ref * limit.max_significant / s_ref
-                if hs_allow < best_hs:
-                    best_hs = hs_allow
-                    gov_dof = limit.dof
-                    gov_hdg = hdg
-        points.append(
-            EnvelopePoint(
-                tp_s=float(tp),
-                hs_limit_m=round(float(best_hs), 4),
-                governing_dof=gov_dof,
-                governing_heading_deg=float(gov_hdg),
-            )
-        )
+    points = [_evaluate_point(rao_set, op, tp, headings, hs_ref, gamma, hs_cap_m, spectra)
+              for tp in tps]
     return EnvelopeResult(
-        vessel=rao_set.vessel_name, operation=op.key, alpha=op.alpha, points=points
+        vessel=rao_set.vessel_name, operation=op.key, alpha=op.alpha, points=points,
+        alpha_source={'status': 'unverified_screening', 'table_reference': None,
+                      'basis': op.basis, 'value': op.alpha},
+        citation_sidecar={'source_sibling': 'generic', 'limits_status': 'unverified_screening',
+                         'reference': 'docs/envelope-basis.md',
+                         'equations': ['B1', 'B2', 'B3', 'B4', 'B5'],
+                         'catalogue_table': 'B6', 'standard_clause': None},
     )
+
+
+def _evaluate_point(rao_set, op, tp, headings, hs_ref, gamma, hs_cap_m, spectra):
+    omega, s_wave, captured = spectrum(spectra, hs_ref, tp, gamma)
+    best_hs, gov_dof, gov_hdg, excluded = hs_cap_m, 'cap', None, 0.
+    for limit in op.limits:
+        component = _component_for(rao_set, limit.dof)
+        excluded = max(excluded, extrapolated_fraction(component, omega, s_wave))
+        for hdg, rao_at_hdg in _rao_by_heading(component, omega, headings):
+            s_ref = _significant_response(rao_at_hdg, omega, s_wave)
+            if s_ref == 0:
+                continue  # Evaluated zero response is distinct from absent input.
+            hs_allow = op.alpha * hs_ref * limit.max_significant / s_ref  # Basis B2.
+            if not np.isfinite(hs_allow) or hs_allow <= 0:
+                raise ValueError('invalid forecast limit from response')
+            if hs_allow < best_hs:
+                best_hs, gov_dof, gov_hdg = hs_allow, limit.dof, hdg
+    return EnvelopePoint(float(tp), float(best_hs), gov_dof, gov_hdg, True,
+                         'capped' if gov_dof == 'cap' else 'evaluated', excluded, captured)
 
 
 def envelope_for_operations(
@@ -234,6 +276,8 @@ def envelope_for_operations(
 def plot_envelopes(results: dict[str, EnvelopeResult], out_path) -> Optional[object]:
     """Plot Hs limit vs Tp, one curve per operation. Returns the path, or None
     if matplotlib is unavailable (plotting is a convenience, not a contract)."""
+    for result in results.values():
+        result.require_evaluated()
     try:
         import matplotlib
 
@@ -253,7 +297,7 @@ def plot_envelopes(results: dict[str, EnvelopeResult], out_path) -> Optional[obj
         hs = [p.hs_limit_m for p in env.points]
         ax.plot(tps, hs, marker="o", markersize=3, label=label)
     ax.set_xlabel("Peak period Tp (s)")
-    ax.set_ylabel("Limiting Hs (m)")
+    ax.set_ylabel("Forecast Hs limit (m)")
     ax.set_title(f"{vessel} — operability envelope by operation")
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize="small")
@@ -274,15 +318,17 @@ def _rao_by_heading(component, omega, headings):
     freqs_sorted = freqs[order]
     targets = avail if headings is None else np.asarray(headings, dtype=float)
     for hdg in targets:
-        col = int(np.argmin(np.abs(avail - hdg)))
+        col = heading_column(avail, hdg)
         mag = np.asarray(component.magnitude, dtype=float)[:, col][order]
-        # np.interp clamps to endpoint RAO outside the data band (screening).
+        # Endpoint extrapolation is permitted only after the <=1% energy gate (B4).
         yield float(avail[col]), np.interp(omega, freqs_sorted, mag)
 
 
 def _significant_response(rao_on_omega, omega, s_wave) -> float:
     response = compute_response_spectrum(rao_on_omega, s_wave)
     m0 = spectral_moments(omega, response, [0])[0]
+    if not np.isfinite(m0) or m0 < 0:
+        raise ValueError('response moment must be finite and non-negative')
     if m0 <= 0:
         return 0.0
     return significant_amplitude(m0)

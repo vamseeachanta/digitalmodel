@@ -4,124 +4,117 @@
 |---|---|
 | Module / repository | `marine_ops` / `digitalmodel` |
 | Package path | `src/digitalmodel/marine_ops/` |
-| Scope | Direct `.py` files only; sub-packages have separate scope |
-| Pack revision / status | 0 / DRAFT |
-| Code revision | `7aad603be1c6136106dbb2381ce5096b050654f8` |
-| Implementation-map revision | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
-| Map data revision (`revision` field) | `270c8759c374b67a7f032953e7fcdb14e0224461` |
-| Analysis family / routing code | Engineering calculations / EC |
-| Required reviewer | Engineering calculations family quality manager |
-| Deputy | Nomination pending; issue pending (4) |
-
-Code citations use the code revision; citations to `docs/registry/implementation-map.yaml` use the separate implementation-map revision above.
+| Scope | Direct Python files; sub-packages retain separate qualification |
+| Pack revision / status | 1 / DRAFT — unverified screening inputs |
+| Current code reference | Functions in the same Git revision as this pack |
+| Prior discovery code pin | `7aad603be1c6136106dbb2381ce5096b050654f8` |
+| Prior implementation-map pin | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
+| Analysis family | Engineering calculations |
+| Required reviewer | Independent engineering calculations quality manager |
+| Deputy and shared registration | [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771) |
 
 ## 1. Purpose and scope
 
-`operation_envelope` computes limiting significant wave height against peak period, taking the minimum over operation criteria and selected wave headings, with a contingency factor; `envelope_for_operations` repeats that calculation for several operations. [src/digitalmodel/marine_ops/operation_envelope.py:L168-L231]
-
-The catalogue exposes transit, station keeping, heavy lift and offloading; the criteria are described as indicative screening, with crane-tip and two-body refinements outside this calculation. [src/digitalmodel/marine_ops/operation_envelope.py:L21-L24] [src/digitalmodel/marine_ops/operation_envelope.py:L66-L112]
-
-The analysis assumes linear, narrow-band frequency-domain response; it computes no time trace, crane-tip lever-arm response, or relative-body motion in this path. [src/digitalmodel/marine_ops/operation_envelope.py:L8-L24] [src/digitalmodel/marine_ops/operation_envelope.py:L184-L217]
-
-Registry maturity is beta; the package initializer contains only its descriptive docstring. [docs/registry/module-routing.yaml:L162-L167] [src/digitalmodel/marine_ops/__init__.py:L1-L1]
+`operation_envelope()` returns alpha-reduced **forecast Hs limits** for linear
+spectral screening, taking the minimum across every requested motion criterion
+and heading. `envelope_for_operations()` applies that calculation to each key.
+The catalogue is unverified screening input, not a standards-derived design
+allowable. The [calculation basis](envelope-basis.md) defines equations B1–B5 and
+table B6. Audit disposition: [2747](https://github.com/vamseeachanta/digitalmodel/issues/2747).
 
 ## 2. Inputs and outputs
 
-### Inputs
+`operation_envelope()` validates at calculation entry, including custom
+`Operation` objects. Unknown DOFs, missing required components, empty grids,
+non-finite arrays, negative magnitudes and inconsistent shapes raise `ValueError`.
+Magnitude shape is frequency by heading; ambiguous square grids are rejected.
+Frequency units shall be rad/s; magnitude units shall be m/m for translations
+and deg/m for rotations; criterion units shall be m or deg respectively.
+Declared units survive `RAOSet.from_dict()` and are rejected rather than converted.
 
-| Input | Unit / shape | Range and default | Source / enforcement |
-|---|---|---|---|
-| `rao_set` | Magnitude: translation m/m, rotation deg/m; frequency-by-heading arrays | Required; no local shape or finiteness validation | [src/digitalmodel/hydrodynamics/diffraction/output_schemas.py:L116-L147] [src/digitalmodel/marine_ops/operation_envelope.py:L269-L280] |
-| `operation` | Catalogue key or `Operation` | Four keys; unknown key raises `KeyError`; supplied objects pass through | [src/digitalmodel/marine_ops/operation_envelope.py:L67-L127] |
-| `MotionLimit` | DOF string; `max_significant` in m or deg; `unit` string | No dataclass range or DOF validation | [src/digitalmodel/marine_ops/operation_envelope.py:L46-L63] |
-| `alpha` | Dimensionless | Comment says at most 1; no runtime bound check | [src/digitalmodel/marine_ops/operation_envelope.py:L55-L63] [src/digitalmodel/marine_ops/operation_envelope.py:L202-L206] |
-| `tp_range_s` | s | Default grid: 4 to 20 s inclusive in 0.5 s steps; empty list also selects default | [src/digitalmodel/marine_ops/operation_envelope.py:L42-L43] [src/digitalmodel/marine_ops/operation_envelope.py:L184-L190] |
-| `headings` | deg | `None`: all available; supplied headings choose nearest available column | [src/digitalmodel/marine_ops/operation_envelope.py:L269-L280] |
-| `hs_ref` | m | 1.0; passed to spectrum generator | [src/digitalmodel/marine_ops/operation_envelope.py:L168-L190] |
-| `gamma` | Dimensionless | 3.3; passed to spectrum generator | [src/digitalmodel/marine_ops/operation_envelope.py:L168-L190] |
-| `hs_cap_m` | m | 20.0; initialized as the best limit, also returned when no criterion governs | [src/digitalmodel/marine_ops/operation_envelope.py:L42-L43] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L214] |
-| `operations` | List of keys or `Operation` | `None`: all catalogue entries; empty list: empty result mapping | [src/digitalmodel/marine_ops/operation_envelope.py:L220-L231] |
+Alpha shall be in `(0,1]`; limits, Tp, reference Hs and cap shall be finite and
+positive; gamma shall be finite and at least 1. `None` selects default Tp or
+headings, but an empty supplied grid raises. The default Tp grid remains
+4–20 s in 0.5 s steps, reference Hs 1 m, gamma 3.3 and cap 20 m.
+These are numerical screening defaults, not a qualification envelope.
 
-Frequencies are consumed as rad/s and headings as degrees; component metadata supplies units, while the envelope uses magnitude arrays without converting them or reading phase. [src/digitalmodel/hydrodynamics/diffraction/output_schemas.py:L80-L131] [src/digitalmodel/marine_ops/operation_envelope.py:L269-L288]
+`EnvelopePoint` carries `evaluated`, `status`, `extrapolated_energy_fraction`
+and `captured_variance_fraction`. An evaluated cap is labelled `capped`, with
+DOF `cap` and null heading. `hs_forecast_limit_m` names the criterion explicitly;
+`hs_limit_m` remains a compatibility alias. `EnvelopeResult` carries
+`criterion_type`, `alpha_source` and `citation_sidecar`. Both catalogue and
+custom inputs remain `unverified_screening`; no table or clause is invented.
 
-UNVERIFIED: U1 — physical origin, wave-heading reference direction, heading sign, phase sign and common RAO origin are not established by the top-level interface; qualification requires an explicit upstream convention record, issue pending (1). [src/digitalmodel/marine_ops/operation_envelope.py:L178-L183] [src/digitalmodel/marine_ops/operation_envelope.py:L269-L280]
+`EnvelopeResult.require_evaluated()`, `to_dict()`, `hs_limit_at()`,
+`plot_envelopes()` and the installation pamphlet `compute_envelopes()` reject
+unevaluated results. Lookup at an absent period returns `None` for valid results.
+No rounding is applied to the calculation result; presentation controls rounding.
 
-### Outputs
+## 3. Method and governing basis
 
-| Output | Unit / representation | Behaviour |
-|---|---|---|
-| `EnvelopePoint` | `tp_s`: s; `hs_limit_m`: m; heading: deg; DOF: string | Limit rounded to four decimals; sentinel DOF `none` and NaN heading can survive when no candidate beats the cap | [src/digitalmodel/marine_ops/operation_envelope.py:L130-L143] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L217] |
-| `EnvelopeResult` | Metadata and point list | `hs_limit_at` returns the stored limit only within a strict period difference of 1e-9 s, otherwise `None` | [src/digitalmodel/marine_ops/operation_envelope.py:L138-L149] |
-| `to_dict()` | Python mapping and list | Serializes metadata and points; no input fingerprint, standard revision or QA signature field | [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165] |
-| `plot_envelopes` | Image at caller path; returned path or `None` | Agg backend; Hs–Tp curves; import exceptions return `None`; save errors propagate | [src/digitalmodel/marine_ops/operation_envelope.py:L234-L262] |
+Equations B1 and B2 define response integration and linear forecast scaling.
+`envelope_numerics.spectrum()` uses a peak-scaled `.01–8 omega_peak` grid and
+records the pre-normalization variance fraction (B3), which shall exceed 99%.
+`extrapolated_fraction()` integrates boundary cells and rejects RAOs covering
+less than 99% of retained wave energy (B4). The maximum missing fraction over
+required DOFs is reported; endpoint continuation is limited to that fraction.
+`heading_column()` uses circular distance and half the smallest observed step
+(B5). Symmetry is not inferred. Unsupported directions raise.
 
-## 3. Method and governing standards
+Catalogue values are retained unchanged in table B6. DNV compliance is not
+established: alpha duration/design-Hs/forecast-table provenance remains open
+under [2769](https://github.com/vamseeachanta/digitalmodel/issues/2769).
+The upstream spectrum's DNV-RP-C205 section 3.5.2 attribution is not independently
+qualified here. The basis supplies explicit equations and public corroboration,
+not an assertion that a licensed standard was checked.
 
-The calculation generates a discrete JONSWAP spectrum, interpolates each magnitude column onto its frequency grid, forms response spectral density from squared RAO magnitude, integrates its zeroth moment and evaluates significant single amplitude. [src/digitalmodel/marine_ops/operation_envelope.py:L184-L202] [src/digitalmodel/marine_ops/operation_envelope.py:L269-L288] [src/digitalmodel/hydrodynamics/seakeeping.py:L30-L104]
+## 4. Worked examples and executable tests
 
-In code notation, `S_response = magnitude**2 * S_wave`, `m0 = integral(S_response dω)`, `s = 2*sqrt(m0)` and `Hs_allow = alpha*Hs_ref*C/s`; the governing result is the smallest candidate below the cap. [src/digitalmodel/hydrodynamics/seakeeping.py:L30-L104] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L214]
+All fixtures are synthetic arrays. Unit heave gain gives significant amplitude
+0.5 m at Hs=1 m, hence forecast limits 5.4, 3.6, 2.55 and 4.5 m for the four
+catalogue operations. Gain two at 90 degrees gives 2.7 m for transit. The
+frequency-dependent PM low-pass case gives 10.0873 m at Tp=4 s, within 1% of
+the independently integrated value in B3. This is a quadrature check, not a
+measured-response qualification.
 
-The spectrum generator normalizes the discrete variance to `Hs**2/16`; the constant unit-gain case therefore gives `s = Hs_ref/2` and `Hs_allow = 2*alpha*C`, independently of the envelope output. [src/digitalmodel/hydrodynamics/wave_spectra.py:L29-L44] [src/digitalmodel/hydrodynamics/seakeeping.py:L85-L104] [tests/marine_ops/test_operation_envelope.py:L73-L83]
-
-| Standard named by code | Located use | Qualification limit |
-|---|---|---|
-| DNV-ST-N001 | Indicative catalogue basis for transit, station keeping and offloading | Title, edition and clause unrecorded; clause text not checked against the licensed copy. [src/digitalmodel/marine_ops/operation_envelope.py:L66-L112] |
-| DNV-RP-H103 | Indicative lifting basis; crane-tip refinement deferred | Title, edition and clause unrecorded; clause text not checked against the licensed copy. [src/digitalmodel/marine_ops/operation_envelope.py:L90-L99] |
-| DNV-RP-C205, Environmental Conditions and Environmental Loads | Upstream `WaveSpectra.jonswap` names Section 3.5.2 | Edition and clause title unrecorded; clause text not checked against the licensed copy. [src/digitalmodel/hydrodynamics/wave_spectra.py:L12-L23] [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L73] |
-
-UNVERIFIED: U2 — standard compliance of screening criteria and their editions, clause titles and derivation is not established; `Operation.basis` is free text and no `Citation` sidecar is returned, issue pending (2). [src/digitalmodel/marine_ops/operation_envelope.py:L55-L112] [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165]
-
-The adjacent derivative-quantity plan names DNV-RP-N103, while the catalogue names DNV-RP-H103; these designations are not silently treated as equivalent, issue pending (2). [docs/plans/2026-07-04-issue-1359-derived-quantities-go-no-go.md:L23-L24] [src/digitalmodel/marine_ops/operation_envelope.py:L90-L99]
-
-A nearby plan calls the Hs limit dimensionally wrong without an associated derivation, whereas the implementation explicitly scales a motion criterion by its reference response; that plan statement is not adopted as a numerical reference. [docs/plans/2026-07-04-issue-1359-derived-quantities-go-no-go.md:L6-L15] [src/digitalmodel/marine_ops/operation_envelope.py:L198-L202]
-
-## 4. Validated worked examples and regression examples
-
-The following node IDs are from the dedicated direct-package test file; all inputs are synthetic in-memory RAO arrays rather than a measured response dataset. [tests/marine_ops/test_operation_envelope.py:L24-L56]
-
-Required run form: `PYTHONPATH=src uv run --no-sources --extra test python -m pytest tests/marine_ops/test_operation_envelope.py -q -rA -p no:cacheprovider --basetemp=<scratch>`; the configured interpreter and cache/environment locations are external to the repository.
-
-| Case / classification | Independent basis or regression criterion | Input / expected / tolerance | Existing test node ID | BASE / after |
-|---|---|---|---|---|
-| V1 — validated analytical constant gain | Closed form `s=Hs_ref/2`; expected `Hs_limit=2*alpha*C`; no numerical envelope output supplies the oracle | Synthetic unit heave gain, zero roll/pitch; three periods; relative tolerance 0.1 % | `tests/marine_ops/test_operation_envelope.py::test_constant_heave_rao_gives_closed_form_limit` [tests/marine_ops/test_operation_envelope.py:L73-L83] | PASS / PASS |
-| R1 — regression catalogue | Exact set of four operation keys | 0 missing and 0 extra keys | `tests/marine_ops/test_operation_envelope.py::test_available_operations_are_the_four_requested` [tests/marine_ops/test_operation_envelope.py:L59-L65] | PASS / PASS |
-| R2 — regression invalid key | Unknown operation raises `KeyError` | 1 caught exception; 0 accepted unknown keys | `tests/marine_ops/test_operation_envelope.py::test_unknown_operation_raises` [tests/marine_ops/test_operation_envelope.py:L68-L70] | PASS / PASS |
-| R3 — regression stricter limit | Compare catalogue envelopes | Heavy-lift Hs minus transit Hs below 0 m | `tests/marine_ops/test_operation_envelope.py::test_stricter_operation_gives_lower_envelope` [tests/marine_ops/test_operation_envelope.py:L86-L90] | PASS / PASS |
-| R4 — regression scaling | Doubling criterion doubles the limit; halving alpha restores it | Ratios 2 and 1; relative tolerance 0.1 % | `tests/marine_ops/test_operation_envelope.py::test_limit_scales_linearly_with_criterion_and_alpha` [tests/marine_ops/test_operation_envelope.py:L93-L113] | PASS / PASS |
-| R5 — regression heading selection | Twice the heave gain at the transverse heading halves the limit | Governing heading 90 deg; default `pytest.approx` heading tolerance; Hs relative tolerance 0.1 % | `tests/marine_ops/test_operation_envelope.py::test_worst_case_heading_governs` [tests/marine_ops/test_operation_envelope.py:L116-L126] | PASS / PASS |
-| R6 — regression plot | Four operations, three positive limits each and an image file | 4 keys; 3 points per key; Hs greater than 0 m; 1 file | `tests/marine_ops/test_operation_envelope.py::test_envelope_for_all_operations_and_plot` [tests/marine_ops/test_operation_envelope.py:L129-L139] | PASS / PASS |
-| R7 — regression dictionary | Preserve operation, count and exact lookup at a stored period | 2 points; 0 m difference between stored and serialized limit | `tests/marine_ops/test_operation_envelope.py::test_envelope_to_dict_roundtrips_points` [tests/marine_ops/test_operation_envelope.py:L142-L148] | PASS / PASS |
-
-UNVERIFIED: U3 — physical response accuracy for frequency-dependent measured RAOs is not established by these constant-gain synthetic cases; an independently sourced public benchmark remains required, issue pending (4). [tests/marine_ops/test_operation_envelope.py:L24-L56] [tests/marine_ops/test_operation_envelope.py:L73-L148]
+Dedicated run: `PYTHONPATH=src python -m pytest tests/marine_ops/test_operation_envelope.py tests/marine_ops/test_envelope_validation.py tests/marine_ops/test_envelope_pack.py`.
+The environment shall prevent commercial solver API loading. No native solve
+is needed. A broader pamphlet test with an insufficient RAO band shall fail
+loudly until qualified wider-band input is supplied; numerical gates shall not
+be relaxed to preserve a historical output.
 
 ## 5. QA gates
 
-Required gate set: AQG r0, section 10, Python calculations; G5 applies through AQG r0, section 9.
+G0 covers input, unit and citation-status checks; G1 covers package calculation
+entry; G2 covers independent numbers; G5 covers result serialization and plots.
+G3 (time simulation) and G4 (native mesh/solver execution) do not apply to this
+spectral consumer. Every check below calls or asserts a named package function
+or output. Test names resolve in the dedicated files above.
 
-| Gate | Applicability | Module route / limit |
-|---|---|---|
-| G0 | Applicable: inputs, units and citations | C0-1/C0-2 check key catalogue and error reporting; input-unit/convention and standards-provenance qualification remains open in section 10. [tests/marine_ops/test_operation_envelope.py:L59-L70] |
-| G1 | Applicable: imports and tests | C1-1 runs the Python API through the dedicated offline tests; this path writes a plot and a Python mapping, not a native solver input deck. [tests/marine_ops/test_operation_envelope.py:L15-L22] [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165] [src/digitalmodel/marine_ops/operation_envelope.py:L234-L262] |
-| G2 | Applicable: hand or published check | C2-1 uses the analytical constant-gain oracle; C2-2/C2-3/C2-4 check scaling, heading and ordering. [tests/marine_ops/test_operation_envelope.py:L73-L126] |
-| G3 | NOT_APPLICABLE: no time-domain simulation in this direct-package path | Spectrum integration and closed-form limit calculation only. [src/digitalmodel/marine_ops/operation_envelope.py:L184-L217] [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288] |
-| G4 | NOT_APPLICABLE: no mesh, hydrostatics or diffraction solve in this path | Consumes already assembled RAO magnitudes. [src/digitalmodel/marine_ops/operation_envelope.py:L178-L183] [src/digitalmodel/marine_ops/operation_envelope.py:L269-L288] |
-| G5 | Applicable: result evidence and QA appendix | C5-1/C5-2 check serializable point evidence and image production; fingerprinted signed appendix generation is absent from the output contract and remains open under #1556. [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165] [src/digitalmodel/marine_ops/operation_envelope.py:L234-L262] |
-
-The checks below are executable as their section-4 test nodes using the stated run form; G0 and G5 smoke checks do not qualify missing unit validation or a missing signed appendix.
-
-| Check ID | Function / output checked | Numeric pass criterion and unit | Executable case / evidence |
+| Check ID | Package function or output | Pass criterion | Executable check |
 |---|---|---|---|
-| C0-1 / G0 | `available_operations()` keys | 4 keys; 0 missing/extra keys (count) | R1; pytest assertion record. [tests/marine_ops/test_operation_envelope.py:L59-L65] |
-| C0-2 / G0 | `resolve_operation()` unknown key | 1 `KeyError`, 0 accepted unknown keys (count) | R2; pytest exception assertion. [tests/marine_ops/test_operation_envelope.py:L68-L70] |
-| C1-1 / G1 | Imported envelope API and dedicated suite | 8 passed, 0 failed, 0 skipped tests (count) | V1 and R1–R7; collected nodes and pytest outcomes. [tests/marine_ops/test_operation_envelope.py:L59-L148] |
-| C2-1 / G2 | `operation_envelope()` constant heave gain | Relative Hs error at most 0.1 % against `2*alpha*C` in m | V1; three period comparisons. [tests/marine_ops/test_operation_envelope.py:L73-L83] |
-| C2-2 / G2 | `operation_envelope()` criterion / alpha scaling | Ratios 2 and 1; relative Hs error at most 0.1 % | R4; two numerical assertions. [tests/marine_ops/test_operation_envelope.py:L93-L113] |
-| C2-3 / G2 | `operation_envelope()` governing heading | 90 deg under `pytest.approx`; relative Hs error at most 0.1 % against half the constant-gain case in m | R5; heading and Hs assertions. [tests/marine_ops/test_operation_envelope.py:L116-L126] |
-| C2-4 / G2 | `operation_envelope()` operation ordering | `Hs_heavy - Hs_transit < 0` m | R3; strict inequality. [tests/marine_ops/test_operation_envelope.py:L86-L90] |
-| C5-1 / G5 | `to_dict()` and `hs_limit_at()` | 2 points; stored-to-dictionary difference exactly 0 m | R7; dictionary assertions. [tests/marine_ops/test_operation_envelope.py:L142-L148] |
-| C5-2 / G5 | `envelope_for_operations()` / `plot_envelopes()` | 4 operations; 3 positive Hs points per operation; 1 existing image (counts, m) | R6; file and point assertions. [tests/marine_ops/test_operation_envelope.py:L129-L139] |
+| C0-1 / G0 | `available_operations()` | Exactly four specified keys | `test_available_operations_are_the_four_requested` |
+| C0-2 / G0 | `resolve_operation()` | Unknown key raises KeyError | `test_unknown_operation_raises` |
+| C0-3 / G0 | `OPERATIONS` limits and `EnvelopeResult.to_dict()` | 12 limits, zero unit mismatches; explicit screening and forecast fields | `test_forecast_sidecar_and_catalogue_units` |
+| C0-4 / G0 | `RAOSet.from_dict()` and `operation_envelope()` | rad/m declaration preserved then rejected; Hz rejected | `test_declared_units_survive_roundtrip_and_are_rejected` |
+| C0-5 / G0 | `operation_envelope()` | Invalid units, DOFs, ranges, grids and non-finite arrays raise | `test_invalid_criterion`, `test_invalid_calculation_inputs`, `test_invalid_alpha`, `test_invalid_limit`, `test_nonfinite_rao_is_not_silently_dropped`, `test_bad_or_ambiguous_shape` |
+| C1-1 / G1 | `operation_envelope()` point status | Evaluated full-band result 5.4 m, relative error at most 0.1% | `test_full_band_retains_hand_value_and_records_energy` |
+| C2-1 / G2 | `operation_envelope()` constant gain | 5.4 m, relative error at most 0.1% | `test_constant_heave_rao_gives_closed_form_limit` |
+| C2-2 / G2 | `operation_envelope()` scaling | Ratios 2 and 1, relative error at most 0.1% | `test_limit_scales_linearly_with_criterion_and_alpha` |
+| C2-3 / G2 | `operation_envelope()` governing heading | 2.7 m at 90 degrees; circular 350 selects zero; unsupported 270 raises | `test_worst_case_heading_governs`, `test_circular_heading_and_incomplete_heading_domain` |
+| C2-4 / G2 | `operation_envelope()` ordering | Heavy-lift limit below transit | `test_stricter_operation_gives_lower_envelope` |
+| C2-5 / G2 | `operation_envelope()` frequency-dependent response | 10.0873 m within 1%; captured variance 0.99969487 within 1e-5 | `test_short_period_low_pass_hand_integral` |
+| C2-6 / G2 | `operation_envelope()` coverage | 0.2–1.2 rad/s at Tp=4 s raises | `test_inadequate_band_is_rejected` |
+| C5-1 / G5 | `EnvelopeResult.to_dict()` and `hs_limit_at()` | Independent 3.6 m within 0.1%, expected keys/values, absent 11 s returns None | `test_envelope_to_dict_roundtrips_points` |
+| C5-2 / G5 | `envelope_for_operations()` and `plot_envelopes()` | 5.4/3.6/2.55/4.5 m within 0.1%, heave governs each, one image exists | `test_envelope_for_all_operations_and_plot` |
+| C5-3 / G5 | `EnvelopeResult`, `plot_envelopes()`, `compute_envelopes()` | Unevaluated points rejected by each consumer | `test_consumers_reject_unevaluated_point` |
 
-## 6. Known failure modes and pitfalls
+The following historical inventory retains the original source pins and search
+evidence. Its pre-fix symptoms are not current runtime claims. Current behavior
+and gates are defined in sections 1–5; remaining work is tracked by the concrete
+issues in the final register.
+
+## 6. Historical failure inventory (revision 0)
 
 sweep: 16 found
 
@@ -133,28 +126,28 @@ rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.0
 
 | ID | Symptom / cause at the code pin | Detection check in section 5 | Disposition |
 |---|---|---|---|
-| S01 | `hs_limit_at()` returns `None` for an absent period; strict lookup threshold can surprise off-grid callers. [src/digitalmodel/marine_ops/operation_envelope.py:L145-L149] | C5-1 covers the present period only; no detection check exists for absent/off-grid periods | Intended sentinel; issue pending (1) for missing negative coverage |
-| S02 | Directly constructed `EnvelopeResult` defaults to an empty point list; serialization accepts it without qualification. [src/digitalmodel/marine_ops/operation_envelope.py:L138-L165] | no detection check exists | Empty-result validity; issue pending (1) |
-| S03 | Empty `tp_range_s` silently selects the full default grid via `or`. [src/digitalmodel/marine_ops/operation_envelope.py:L184-L190] | no detection check exists | Input intent lost; issue pending (1) |
-| S04 | No candidate below the cap leaves capped Hs, `none` DOF and NaN heading; a large physical limit and an unevaluated point share this state. [src/digitalmodel/marine_ops/operation_envelope.py:L190-L214] | no detection check exists | Missing coverage/status distinction; issue pending (1) |
-| S05 | Missing or misspelled DOF resolves to `None` and is skipped. [src/digitalmodel/marine_ops/operation_envelope.py:L194-L197] [src/digitalmodel/marine_ops/operation_envelope.py:L265-L266] | no detection check exists | Partial criteria silently accepted; issue pending (1) |
-| S06 | Nonresponding DOF is skipped when response is nonpositive. [src/digitalmodel/marine_ops/operation_envelope.py:L198-L201] | C2-1 covers intended zero-response axes only; no detection check exists for invalid response | Preserve valid zero response, distinguish invalid data; issue pending (1) |
-| S07 | Nonpositive zeroth moment becomes `0.0`, obscuring a negative variance as a nonresponding axis. [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288] | no detection check exists | Numerical validation gap; issue pending (1) |
-| S08 | All plotting import exceptions become `None`; initialization errors and an absent optional dependency are indistinguishable. [src/digitalmodel/marine_ops/operation_envelope.py:L237-L243] | C5-2 covers successful plotting only; no detection check exists for the fallback | Observable fallback/status gap; issue pending (1) |
-| S09 | Empty plot input leaves an empty metadata string and generates an empty figure. [src/digitalmodel/marine_ops/operation_envelope.py:L247-L260] | no detection check exists | Empty-result validity; issue pending (1) |
-| S10 | `operations=[]` returns `{}`; repeated operation keys overwrite earlier results. [src/digitalmodel/marine_ops/operation_envelope.py:L220-L231] | C5-2 covers four distinct default keys only; no detection check exists for empty/duplicate keys | Explicit empty semantics and duplicate detection needed; issue pending (1) |
-| S11 | External frequency, heading and magnitude arrays are cast to float without locale-aware parsing; malformed text raises and non-finite values are not rejected locally. [src/digitalmodel/marine_ops/operation_envelope.py:L269-L280] | no detection check exists | No thousands/decimal separator contract; issue pending (1) |
-| S12 | Requested heading uses nearest absolute angular difference, without circular wrap or a maximum mismatch check. [src/digitalmodel/marine_ops/operation_envelope.py:L275-L280] | C2-3 covers an exact available heading only; no detection check exists for wrap/off-grid targets | Heading coverage limit; issue pending (1) |
-| S13 | Frequencies outside the supplied RAO band use endpoint-clamped magnitude. [src/digitalmodel/marine_ops/operation_envelope.py:L273-L280] | no detection check exists | Extrapolation hidden by interpolation; issue pending (1) |
-| S14 | Unit strings, origin and phase are not checked by the response calculation. [src/digitalmodel/marine_ops/operation_envelope.py:L46-L63] [src/digitalmodel/marine_ops/operation_envelope.py:L269-L288] | no detection check exists | U1; issue pending (1) |
-| S15 | Limit, alpha, reference Hs, gamma and cap have no local range validation; float conversion and rounding of output do not reject NaN. [src/digitalmodel/marine_ops/operation_envelope.py:L46-L63] [src/digitalmodel/marine_ops/operation_envelope.py:L168-L214] | C2-2 covers valid scaling only; no detection check exists for invalid ranges | Numeric acceptance gap; issue pending (1) |
-| S16 | Unknown catalogue key is caught and re-raised with context, rather than swallowed; direct `Operation` objects bypass catalogue checks. [src/digitalmodel/marine_ops/operation_envelope.py:L119-L127] | C0-2 detects unknown-key rejection; no detection check exists for malformed objects | Re-raise is intentional; object validation gap, issue pending (1) |
+| S01 | `hs_limit_at()` returns `None` for an absent period; strict lookup threshold can surprise off-grid callers. [src/digitalmodel/marine_ops/operation_envelope.py:L145-L149] | C5-1 covers the present period only; no detection check exists for absent/off-grid periods | Intended sentinel; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) for missing negative coverage |
+| S02 | Directly constructed `EnvelopeResult` defaults to an empty point list; serialization accepts it without qualification. [src/digitalmodel/marine_ops/operation_envelope.py:L138-L165] | no detection check exists | Empty-result validity; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S03 | Empty `tp_range_s` silently selects the full default grid via `or`. [src/digitalmodel/marine_ops/operation_envelope.py:L184-L190] | no detection check exists | Input intent lost; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S04 | No candidate below the cap leaves capped Hs, `none` DOF and NaN heading; a large physical limit and an unevaluated point share this state. [src/digitalmodel/marine_ops/operation_envelope.py:L190-L214] | no detection check exists | Missing coverage/status distinction; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S05 | Missing or misspelled DOF resolves to `None` and is skipped. [src/digitalmodel/marine_ops/operation_envelope.py:L194-L197] [src/digitalmodel/marine_ops/operation_envelope.py:L265-L266] | no detection check exists | Partial criteria silently accepted; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S06 | Nonresponding DOF is skipped when response is nonpositive. [src/digitalmodel/marine_ops/operation_envelope.py:L198-L201] | C2-1 covers intended zero-response axes only; no detection check exists for invalid response | Preserve valid zero response, distinguish invalid data; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S07 | Nonpositive zeroth moment becomes `0.0`, obscuring a negative variance as a nonresponding axis. [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288] | no detection check exists | Numerical validation gap; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S08 | All plotting import exceptions become `None`; initialization errors and an absent optional dependency are indistinguishable. [src/digitalmodel/marine_ops/operation_envelope.py:L237-L243] | C5-2 covers successful plotting only; no detection check exists for the fallback | Observable fallback/status gap; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S09 | Empty plot input leaves an empty metadata string and generates an empty figure. [src/digitalmodel/marine_ops/operation_envelope.py:L247-L260] | no detection check exists | Empty-result validity; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S10 | `operations=[]` returns `{}`; repeated operation keys overwrite earlier results. [src/digitalmodel/marine_ops/operation_envelope.py:L220-L231] | C5-2 covers four distinct default keys only; no detection check exists for empty/duplicate keys | Explicit empty semantics and duplicate detection needed; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S11 | External frequency, heading and magnitude arrays are cast to float without locale-aware parsing; malformed text raises and non-finite values are not rejected locally. [src/digitalmodel/marine_ops/operation_envelope.py:L269-L280] | no detection check exists | No thousands/decimal separator contract; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S12 | Requested heading uses nearest absolute angular difference, without circular wrap or a maximum mismatch check. [src/digitalmodel/marine_ops/operation_envelope.py:L275-L280] | C2-3 covers an exact available heading only; no detection check exists for wrap/off-grid targets | Heading coverage limit; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S13 | Frequencies outside the supplied RAO band use endpoint-clamped magnitude. [src/digitalmodel/marine_ops/operation_envelope.py:L273-L280] | no detection check exists | Extrapolation hidden by interpolation; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S14 | Unit strings, origin and phase are not checked by the response calculation. [src/digitalmodel/marine_ops/operation_envelope.py:L46-L63] [src/digitalmodel/marine_ops/operation_envelope.py:L269-L288] | no detection check exists | U1; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S15 | Limit, alpha, reference Hs, gamma and cap have no local range validation; float conversion and rounding of output do not reject NaN. [src/digitalmodel/marine_ops/operation_envelope.py:L46-L63] [src/digitalmodel/marine_ops/operation_envelope.py:L168-L214] | C2-2 covers valid scaling only; no detection check exists for invalid ranges | Numeric acceptance gap; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S16 | Unknown catalogue key is caught and re-raised with context, rather than swallowed; direct `Operation` objects bypass catalogue checks. [src/digitalmodel/marine_ops/operation_envelope.py:L119-L127] | C0-2 detects unknown-key rejection; no detection check exists for malformed objects | Re-raise is intentional; object validation gap, [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
 
 No cache write or epoch fallback occurs in the scoped source; the entire implementation consists of the catalogue, result objects, spectral envelope helpers and plotting function. [src/digitalmodel/marine_ops/__init__.py:L1-L1] [src/digitalmodel/marine_ops/operation_envelope.py:L1-L288]
 
 | Additional limitation | Detection / issue | Evidence |
 |---|---|---|
-| Standards basis without edition, clause or sidecar | no detection check exists; U2; issue pending (2) | [src/digitalmodel/marine_ops/operation_envelope.py:L55-L112] [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165] |
+| Standards basis without edition, clause or sidecar | no detection check exists; U2; [2769](https://github.com/vamseeachanta/digitalmodel/issues/2769) | [src/digitalmodel/marine_ops/operation_envelope.py:L55-L112] [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165] |
 | Vessel-level screening is not a crane-tip or relative-motion check | C2-1 verifies only constant-gain vessel response; no detection check exists for geometry-dependent correctness; #1359 | [src/digitalmodel/marine_ops/operation_envelope.py:L21-L24] [docs/plans/2026-07-04-issue-1359-derived-quantities-go-no-go.md:L10-L23] |
 | Upstream normalization defect must not be transferred between implementations | Top-level path calls normalized `WaveSpectra.jonswap`; the installation-local spectrum is a different implementation; #2543 remains an adjacent-method caution | [src/digitalmodel/marine_ops/operation_envelope.py:L184-L190] [src/digitalmodel/hydrodynamics/wave_spectra.py:L29-L44] [src/digitalmodel/hydrodynamics/wave_spectra.py:L93-L96] [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L171-L201] |
 | QA provenance and signed appendix not produced by `to_dict` | C5-1 checks only point serialization; no detection check exists for appendix completeness; #1556 | [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165] |
@@ -167,13 +160,13 @@ Append-only log; future entries shall retain evidence and issue references witho
 
 | Date | Entry | Lesson / evidence | Pack change | Shared-log entry |
 |---|---|---|---|---|
-| 2026-10-16 | Initial pack revision | A capped limit can coexist with an unset governing DOF and NaN heading; it is not proof of evaluated motion coverage. [src/digitalmodel/marine_ops/operation_envelope.py:L190-L214] | Sections 2, 5 and 6 distinguish smoke checks from qualification | Not registered; issue pending (4) |
+| 2026-10-16 | Initial pack revision | A capped limit can coexist with an unset governing DOF and NaN heading; it is not proof of evaluated motion coverage. [src/digitalmodel/marine_ops/operation_envelope.py:L190-L214] | Sections 2, 5 and 6 distinguish smoke checks from qualification | Not registered; [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771) |
 
-## 8. Ownership
+## 8. Maintenance and review
 
 Required reviewer: engineering calculations family quality manager, on a provider independent of the producer. Required deputy role: deputy engineering calculations quality manager; the assignment remains unverified. Required producing discipline: marine operations calculations. Ambiguous criteria, input conventions and tolerances shall be referred to the family quality manager; cross-family scope shall be referred to the maintainers.
 
-UNVERIFIED: U4 — a deputy quality manager assignment and shared-log entry are not established in this repository; nomination and registration remain required, issue pending (4).
+UNVERIFIED: U4 — a deputy quality manager assignment and shared-log entry are not established in this repository; nomination and registration remain required, [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771).
 
 ## 9. Dependencies and other implementations
 
@@ -381,7 +374,7 @@ rg -n 'operation_envelope|operability envelope' scripts src --glob '*.py'
 | `OperabilityAnalyzer.generate_operability_envelope` | Polar tension plotting against load limits outside the package, rather than an Hs–Tp spectral limit solver. [src/digitalmodel/solvers/orcaflex/operability_analysis.py:L83-L122] |
 | `scripts/drilling_riser/build_operability_explorer.py`, `build_results` | Delegates per-cell decisions to `screen_operability` and serializes the atlas; presentation helper, not another spectral-envelope solver. [scripts/drilling_riser/build_operability_explorer.py:L43-L80] |
 
-Map follow-up, issue pending (3): add or classify envelope criterion aggregation, RAO heading/frequency interpolation, result lookup and envelope presentation families. The latter helper methods and map families with zero direct-package rows are not counted by A8; independent methods outside the package are map follow-up, not A8 misses. [src/digitalmodel/marine_ops/operation_envelope.py:L145-L165] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L214] [src/digitalmodel/marine_ops/operation_envelope.py:L234-L280]
+Map follow-up, [2770](https://github.com/vamseeachanta/digitalmodel/issues/2770): add or classify envelope criterion aggregation, RAO heading/frequency interpolation, result lookup and envelope presentation families. The latter helper methods and map families with zero direct-package rows are not counted by A8; independent methods outside the package are map follow-up, not A8 misses. [src/digitalmodel/marine_ops/operation_envelope.py:L145-L165] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L214] [src/digitalmodel/marine_ops/operation_envelope.py:L234-L280]
 
 ## 10. Coverage and open items
 
@@ -391,7 +384,7 @@ Direct Python files read in full: `__init__.py` and `operation_envelope.py`; ded
 
 Dependency excerpts, downstream calculation, adjacent implementation routes and mapped rows are cited in sections 2, 3 and 9; reading an inventory row does not establish numerical correctness of that implementation.
 
-The documentation discovery command was `rg -l 'marine_ops|operation_envelope|OperationEnvelope' docs --glob '*.md'`; the package README/doc discovery also enumerated sub-package READMEs and their existing packs. Identifying locators are withheld for codenaming under issue pending (3); no client-derived values or private sidecar content are included.
+The documentation discovery command was `rg -l 'marine_ops|operation_envelope|OperationEnvelope' docs --glob '*.md'`; the package README/doc discovery also enumerated sub-package READMEs and their existing packs. Identifying locators are withheld for codenaming under [2770](https://github.com/vamseeachanta/digitalmodel/issues/2770); no client-derived values or private sidecar content are included.
 
 | Documentation file read or discovered | Evidence at code pin |
 |---|---|
@@ -479,20 +472,20 @@ The documentation discovery command was `rg -l 'marine_ops|operation_envelope|Op
 | `src/digitalmodel/marine_ops/marine_analysis/README.md` | [src/digitalmodel/marine_ops/marine_analysis/README.md:L1-L1] |
 | `src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md` | [src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md:L1-L1] |
 | `src/digitalmodel/marine_ops/reservoir/README.md` | [src/digitalmodel/marine_ops/reservoir/README.md:L1-L1] |
-| 1 discovery file with identifying names | Locator withheld; issue pending (3) |
+| 1 discovery file with identifying names | Locator withheld; [2770](https://github.com/vamseeachanta/digitalmodel/issues/2770) |
 
 ### Open-item register
 
-Required accountable discipline: engineering calculations quality manager; maintainers shall open the drafts, replace pending markers with issue numbers and arrange the independent review before clearance.
+Required accountable discipline: engineering calculations quality manager; maintainers shall resolve the filed follow-ups and arrange independent review before design qualification.
 
 | Item | Evidence / unresolved limit | Issue |
 |---|---|---|
-| U1 / S01–S16: input semantics and negative-path coverage | Conventions, units, missing response coverage, non-finite output, caps, casts, interpolation, empty mappings and plot fallbacks remain unqualified. [src/digitalmodel/marine_ops/operation_envelope.py:L119-L288] | issue pending (1) |
-| U2: standards provenance | Screening criteria have no verified edition/clause or `Citation` sidecar; title and clause-title gaps remain. [src/digitalmodel/marine_ops/operation_envelope.py:L55-L112] [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L73] | issue pending (2) |
-| Method-map follow-up and public documentation locators | Additional method-family mapping and codenaming remain required; inventory alone is not qualification. [src/digitalmodel/marine_ops/operation_envelope.py:L145-L165] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L280] | issue pending (3) |
-| U3: frequency-dependent independent benchmark | The dedicated tests use synthetic, mostly constant gains. [tests/marine_ops/test_operation_envelope.py:L24-L56] [tests/marine_ops/test_operation_envelope.py:L73-L148] | issue pending (4) |
-| U4: deputy and shared lessons-log registration | Required assignments remain unverified, as stated in section 8 | issue pending (4) |
+| U1 / S01–S16: input semantics and negative-path coverage | Units, numeric validity, coverage and evaluated status are addressed by revision 1. Upstream conventions, empty mappings and plot fallbacks remain open. [src/digitalmodel/marine_ops/operation_envelope.py:L119-L288] | [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| U2: standards provenance | The screening sidecar now exposes missing edition/clause/table qualification; standards provenance remains open. [src/digitalmodel/marine_ops/operation_envelope.py:L55-L112] [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L73] | [2769](https://github.com/vamseeachanta/digitalmodel/issues/2769) |
+| Method-map follow-up and public documentation locators | Additional method-family mapping and codenaming remain required; inventory alone is not qualification. [src/digitalmodel/marine_ops/operation_envelope.py:L145-L165] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L280] | [2770](https://github.com/vamseeachanta/digitalmodel/issues/2770) |
+| U3: frequency-dependent independent benchmark | The dedicated tests include synthetic constant gains and an analytical low-pass integral; an independent physical benchmark remains open. [tests/marine_ops/test_operation_envelope.py:L24-L56] [tests/marine_ops/test_operation_envelope.py:L73-L148] | [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771) |
+| U4: deputy and shared lessons-log registration | Required assignments remain unverified, as stated in section 8 | [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771) |
 | QA appendix and input fingerprints | Output mapping has no input fingerprint, standard revision or signature. [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165] | #1556 |
 | Geometry-dependent operating criteria | Top-level path explicitly defers crane-tip and relative-motion refinements. [src/digitalmodel/marine_ops/operation_envelope.py:L21-L24] [docs/plans/2026-07-04-issue-1359-derived-quantities-go-no-go.md:L10-L23] | #1359 |
 | Adjacent spectrum normalization review | The local envelope delegates to the normalized upstream spectrum; excluded installation-local normalization remains a distinct route. [src/digitalmodel/hydrodynamics/wave_spectra.py:L29-L44] [src/digitalmodel/marine_ops/installation/crane_tip_motion.py:L171-L201] | #2543 |
-| Registry duplicate key outside this package | The solver domain has repeated `submodules` keys; strict YAML parsing rejects the baseline document, while ordinary parsing shadows its first mapping. [docs/registry/module-routing.yaml:L303-L325] | issue pending (5) |
+| Registry duplicate key outside this package | The solver domain has repeated `submodules` keys; strict YAML parsing rejects the baseline document, while ordinary parsing shadows its first mapping. [docs/registry/module-routing.yaml:L303-L325] | [2772](https://github.com/vamseeachanta/digitalmodel/issues/2772) |

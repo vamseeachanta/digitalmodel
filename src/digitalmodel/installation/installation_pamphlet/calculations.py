@@ -391,10 +391,14 @@ def compute_envelopes(
     env_out: dict[str, Any] = {}
     for op in operations:
         env = operation_envelope(rset, op, tp_range_s=tp_grid)
+        env.require_evaluated()
         hs_by_tp = {f"{round(p.tp_s, 1):.1f}": round(p.hs_limit_m, 2) for p in env.points}
         gov_by_tp = {f"{round(p.tp_s, 1):.1f}": p.governing_dof for p in env.points}
         env_out[op] = {
             "alpha": env.alpha,
+            "criterion_type": env.criterion_type,
+            "alpha_source": env.alpha_source,
+            "citation_sidecar": env.citation_sidecar,
             "hs_by_tp": hs_by_tp,
             "gov_by_tp": gov_by_tp,
         }
