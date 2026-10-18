@@ -4,6 +4,7 @@ import logging
 import math
 import os
 import re
+from .dat_frequency import parse_frequency_records, parse_frequency_grids
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -41,6 +42,8 @@ FLOAT_PATTERN = re.compile(
 class DATFrequencyGrid:
     frequencies: List[float] = field(default_factory=list)
     periods: List[float] = field(default_factory=list)
+    directions_deg: List[float] = field(default_factory=list)
+    frequency_unit: str = "rad/s"
 
     def as_array(self) -> "np.ndarray":  # pragma: no cover - thin wrapper
         if np is None:
@@ -73,6 +76,7 @@ class DATInspectionResult:
     mass: float = 0.0
     inertia: Dict[str, float] = field(default_factory=dict)
     restoring: Dict[str, float] = field(default_factory=dict)
+    frequency_grids: Dict[int, DATFrequencyGrid] = field(default_factory=dict)
 
 
 class AqwaDATFiles:
@@ -235,6 +239,9 @@ class AqwaDATFiles:
     def get_dc_07_body(self, cfg, dc_cfg):
         raw_data = dc_cfg["data"]["raw"]
         element_type = dc_cfg["data"]["element_type"]
+        for value in raw_data["added_damping"].values():
+            if not math.isfinite(float(value)) or float(value) < 0:
+                raise ValueError("Additional damping must be finite and nonnegative")
         body = []
         for body_item_idx in range(0, 6):
             if body_item_idx in [0, 1, 2, 5]:
@@ -531,6 +538,10 @@ class AqwaDATFiles:
             decks=decks,
             options=options,
             frequency_grid=frequency_grid,
+            frequency_grids={key: DATFrequencyGrid(
+                frequencies=values[0], periods=[2*math.pi / w for w in values[0]],
+                directions_deg=values[1])
+                for key, values in parse_frequency_grids(decks.get(6, [])).items()},
             drag_matrix=drag_matrix,
             deck_one=deck_one,
             mass=total_mass,
@@ -551,11 +562,14 @@ class AqwaDATFiles:
         """Raise an error if the expected CoG element is missing from Deck 1."""
 
         inspection = self.inspect_dat_file(dat_path)
-        if inspection.deck_one.cog_element != expected_element:
+        metadata = self._parse_deck1(inspection.decks.get(1, []), expected_element)
+        if metadata.cog_element != expected_element:
             raise ValueError(
                 "CoG element validation failed. "
                 f"Expected element {expected_element} not located in Deck 1 for {dat_path}."
             )
+
+        return metadata
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -592,27 +606,11 @@ class AqwaDATFiles:
                         options[token] = True
         return options
 
-    def _parse_deck6(self, deck_lines: Iterable[str]) -> DATFrequencyGrid:
-        grid = DATFrequencyGrid()
-        for line in deck_lines:
-            tokens = line.split()
-            if not tokens:
-                continue
-            # Frequency is typically the last entry on the line
-            try:
-                freq = float(tokens[-1])
-            except (ValueError, IndexError):
-                continue
-
-            if freq <= 0:
-                period = math.inf
-            else:
-                period = 1.0 / freq
-
-            grid.frequencies.append(freq)
-            grid.periods.append(period)
-
-        return grid
+    def _parse_deck6(self, deck_lines: Iterable[str], structure: int = 1) -> DATFrequencyGrid:
+        frequencies, directions = parse_frequency_records(deck_lines, structure=structure)
+        return DATFrequencyGrid(frequencies=frequencies,
+                                periods=[2*math.pi / w for w in frequencies],
+                                directions_deg=directions)
 
     def _parse_deck7(self, deck_lines: Iterable[str]) -> Optional[DATDragMatrix]:
         if np is None:
@@ -658,7 +656,7 @@ class AqwaDATFiles:
         return total_mass
 
     def _parse_deck4(self, deck_lines: Iterable[str]) -> Dict[str, float]:
-        inertia_map = {"I44": 0.0, "I55": 0.0, "I66": 0.0}
+        inertia_map = {}
         for line in deck_lines:
             floats = FLOAT_PATTERN.findall(line)
             if len(floats) < 6:
@@ -667,9 +665,9 @@ class AqwaDATFiles:
                 Ixx, _, _, Iyy, _, Izz = [float(val) for val in floats[-6:]]
             except ValueError:
                 continue
-            inertia_map["I44"] += Ixx
-            inertia_map["I55"] += Iyy
-            inertia_map["I66"] += Izz
+            inertia_map["I44"] = inertia_map.get("I44", 0.0) + Ixx
+            inertia_map["I55"] = inertia_map.get("I55", 0.0) + Iyy
+            inertia_map["I66"] = inertia_map.get("I66", 0.0) + Izz
         return inertia_map
 
     def _parse_deck5(self, deck_lines: Iterable[str]) -> Dict[str, float]:
@@ -701,31 +699,23 @@ class AqwaDATFiles:
         except ValueError:
             return False
 
-    def _parse_deck1(self, deck_lines: Iterable[str]) -> DATDeckOneMetadata:
+    def _parse_deck1(self, deck_lines, expected_element=98000):
+        """Read the package writer's I2 structure / I5 node and F10 coordinates."""
         lines = list(deck_lines)
-        cog_element = None
-        cog_coordinates: Optional[Tuple[float, float, float]] = None
-
         for line in lines:
-            ints = re.findall(r"\d+", line)
-            if not ints:
+            if not line.strip() or line.lstrip().startswith("*"):
                 continue
-            element_id = int(ints[0])
-            if element_id == 98000:
-                cog_element = element_id
-                floats = FLOAT_PATTERN.findall(line)
-                if len(floats) >= 3:
-                    try:
-                        coords: Tuple[float, float, float] = tuple(
-                            float(value) for value in floats[-3:]
-                        )
-                        cog_coordinates = coords
-                    except ValueError:
-                        cog_coordinates = None
-                break
-
-        return DATDeckOneMetadata(
-            cog_element=cog_element,
-            cog_coordinates=cog_coordinates,
-            raw_lines=lines,
-        )
+            try:
+                int(line[4:6])
+                node = int(line[6:11])
+            except ValueError:
+                continue
+            if node == expected_element:
+                try:
+                    coords = tuple(float(line[i:i+10]) for i in (20, 30, 40))
+                except ValueError as exc:
+                    raise ValueError("Invalid CoG coordinate fields") from exc
+                if not all(math.isfinite(v) for v in coords):
+                    raise ValueError("CoG coordinates must be finite")
+                return DATDeckOneMetadata(node, coords, lines)
+        return DATDeckOneMetadata(None, None, lines)

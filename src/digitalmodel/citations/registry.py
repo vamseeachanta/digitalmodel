@@ -190,3 +190,26 @@ def get_ittc78_transfer_reference(*, repo_root: Optional[Path] = None) -> CitedV
     )
     validate_citation(citation, repo_root=repo_root)
     return CitedValue(value=1.0, citation=citation, units="reference")
+
+
+def get_pianc_depth_band_reference(*, repo_root: Optional[Path] = None) -> CitedValue:
+    """Validate the published PIANC depth-band reference against a wiki record.
+
+    PIANC (1992) attribution is verified in ITTC (2002), Appendix A.1, p. 201,
+    and Rzeszutko et al. (2026), section 1. No unverified PIANC clause is claimed.
+    A maintainer must provision the wiki target; missing records fail closed.
+    """
+    citation = Citation(
+        code_id="PIANC-DEPTH-BANDS",
+        publisher="ITTC",
+        revision="2002",
+        section="23rd ITTC, volume I, Appendix A.1, p. 201 (PIANC 1992 attribution)",
+        wiki_path="wikis/marine-engineering/wiki/standards/pianc-depth-bands.md",
+        source_sibling="generic",
+        note=("h/T cutoffs 3.0, 1.5, 1.2; equalities assigned locally to shallower class. "
+              "https://www.vliz.be/imisdocs/publications/139636.pdf; "
+              "Rzeszutko, Zentari, Stachel, el Moctar (2026), Applied Ocean Research "
+              "176, 105289, section 1, https://doi.org/10.1016/j.apor.2026.105289"),
+    )
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=1.0, citation=citation, units="reference")

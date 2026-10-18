@@ -126,6 +126,7 @@ def run_parametric_sweep(
         rao_result = compute_rao(bem_result)
 
         # 6. Classify depth
+        # PIANC bands and equality convention are centralized in classify_depth.
         depth_class = classify_depth(config.water_depth, profile.draft)
 
         # 7. Build result entry
