@@ -19,10 +19,12 @@ CITATION = re.compile(r"\[([^\]\n]+):L(\d+)-L(\d+)\]")
 @lru_cache(maxsize=None)
 def source_at(revision, path):
     try:
-        return subprocess.check_output(
+        source = subprocess.check_output(
             ["git", "show", f"{revision}:{path}"], cwd=ROOT, text=True,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.PIPE, encoding="utf-8",
         )
+        assert isinstance(source, str), "Citation source must be text"
+        return source
     except (subprocess.CalledProcessError, FileNotFoundError):
         pytest.fail(
             f"Citation source unavailable: {path} at {revision}. "
@@ -195,3 +197,22 @@ def test_missing_citation_history_reports_recovery(tmp_path, monkeypatch):
     monkeypatch.setattr(sys.modules[__name__], "ROOT", tmp_path)
     with pytest.raises(pytest.fail.Exception, match="Fetch.*history.*source archives"):
         source_at("0" * 40, "pyproject.toml")
+
+
+@pytest.mark.parametrize("locale_encoding", ["cp1252", "ascii"])
+def test_citation_source_uses_utf8_under_other_locales(monkeypatch, locale_encoding):
+    pack = PACK.read_text(encoding="utf-8")
+    pin = re.search(r"^\| Code revision \| `([0-9a-f]{40})`", pack, re.MULTILINE)[1]
+    path = "docs/domains/orcawave/L01_aqwa_benchmark/SESSION_SUMMARY.md"
+    expected = subprocess.check_output(
+        ["git", "show", f"{pin}:{path}"], cwd=ROOT,
+    ).decode("utf-8")
+    assert not expected.isascii(), "regression needs non-ASCII citation evidence"
+    monkeypatch.setattr(subprocess, "_text_encoding", lambda: locale_encoding)
+    assert source_at.__wrapped__(pin, path) == expected
+
+
+def test_citation_source_rejects_non_text_output(monkeypatch):
+    monkeypatch.setattr(subprocess, "check_output", lambda *args, **kwargs: None)
+    with pytest.raises(AssertionError, match="Citation source must be text"):
+        source_at.__wrapped__("unused", "example.py")
