@@ -23,6 +23,7 @@ pipe_py_21OD_0875in_Drilling_Riser,drilling,config/pipe/pipe_py_21OD_0875in_Dril
 pipe_py_21OD_1in_Drilling_Riser,drilling,config/pipe/pipe_py_21OD_1in_Drilling_Riser.yml,,533.4,25.4,API 5L X80,pipe_design:drilling,seeded from the pipe capacity configs
 riser_drilling,drilling,examples/riser_input/riser_drilling.yml,2500,533.4,22.2,X80,statics,seeded from the unified riser input schema examples
 riser_flexible,flexible,examples/riser_input/riser_flexible.yml,1200,300,20,X65,statics,seeded from the unified riser input schema examples
+riser_lift_screen,lift,docs/domains/risers/mining-lift-screening.md,,,,,axial_screen,Public-source screening reference; physical dimensions unspecified
 riser_scr,SCR,examples/riser_input/riser_scr.yml,1500,273.1,25.4,X65,statics,seeded from the unified riser input schema examples
 riser_slwr,SLWR,examples/riser_input/riser_slwr.yml,1500,273.1,25.4,X65,statics,seeded from the unified riser input schema examples
 riser_ttr,TTR,examples/riser_input/riser_ttr.yml,1500,273.1,25.4,X70,statics,seeded from the unified riser input schema examples

@@ -1,0 +1,112 @@
+{
+  "criteria_revision": "2",
+  "comparison_kind": "repository-module outputs; standard conformity not established",
+  "limit": 1.0,
+  "codes": {
+    "API RP 1111": {
+      "code_id": "api-rp-1111",
+      "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)",
+      "revision": "strategy default metadata: 2015; publisher edition unqualified",
+      "publisher": "API",
+      "source_sibling": "generic",
+      "source_project": null,
+      "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+      "module_sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+      "checks": {
+        "burst": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned utilisation <= unity"
+        },
+        "collapse": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned utilisation <= unity"
+        },
+        "propagation": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned utilisation <= unity"
+        }
+      },
+      "constants": [
+        "_check_burst.p_b coefficients and branch threshold",
+        "EDITION_FACTORS.f_d",
+        "EDITION_FACTORS.f_c",
+        "EDITION_FACTORS.f_p",
+        "_check_collapse.p_el coefficient",
+        "_check_collapse.p_y coefficient",
+        "_check_propagation.p_pr coefficient and exponent"
+      ],
+      "qualification": "Module metadata only; edition label conflicts with the standards inventory; standard conformity not established"
+    },
+    "API RP 2RD": {
+      "code_id": "api-rp-2rd",
+      "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)",
+      "revision": "legacy; exact edition not established by the strategy",
+      "publisher": "API",
+      "source_sibling": "generic",
+      "source_project": null,
+      "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+      "module_sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+      "checks": {
+        "burst": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned pressure utilisation <= unity"
+        },
+        "collapse": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned external-pressure utilisation <= unity"
+        },
+        "hoop": {
+          "section": "Clause number and title not established",
+          "criterion": "Returned hoop-stress utilisation <= unity"
+        }
+      },
+      "constants": [
+        "_check_burst.p_b coefficient",
+        "C_A (burst and collapse)",
+        "_check_hoop.sigma_allow coefficient",
+        "_check_collapse.p_el coefficient",
+        "_check_collapse.p_y coefficient"
+      ],
+      "reference_edition": "1st edition, June 1998; implemented edition not established",
+      "metadata_source": "https://www.govinfo.gov/content/pkg/CFR-2011-title30-vol2/pdf/CFR-2011-title30-vol2-sec250-198.pdf"
+    },
+    "API STD 2RD": {
+      "code_id": "api-std-2rd",
+      "title": "Dynamic Risers for Floating Production Systems",
+      "revision": "2e-2013",
+      "publisher": "API",
+      "source_sibling": "generic",
+      "source_project": null,
+      "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+      "module_sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f",
+      "checks": {
+        "burst": {
+          "section": "5.3.2 (burst)",
+          "criterion": "Returned pressure utilisation <= unity"
+        },
+        "collapse": {
+          "section": "5.3.3 (collapse)",
+          "criterion": "Returned external-pressure utilisation <= unity"
+        },
+        "combined": {
+          "section": "Section 5 (dynamic riser design criteria), Method 1",
+          "criterion": "Returned moment-tension-pressure utilisation <= unity"
+        }
+      },
+      "constants": [
+        "_check_burst.p_b coefficient",
+        "_check_burst.f_d",
+        "_check_collapse.f_c",
+        "_check_combined.p_b coefficient",
+        "COMBINED_DESIGN_FACTOR",
+        "_check_collapse.p_el coefficient",
+        "_check_collapse.p_y coefficient"
+      ]
+    }
+  },
+  "locator_evidence": [
+    "src/digitalmodel/drilling_riser/postprocess/pressure.py",
+    "src/digitalmodel/riser_database/getters.py"
+  ],
+  "qualification": "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established."
+}

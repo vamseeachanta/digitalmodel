@@ -7,7 +7,7 @@ import shutil
 
 import pytest
 
-from digitalmodel.marine_ops.vessel_db.loader import vessels_dir
+from digitalmodel.marine_ops.vessel_db.loader import validate_provenance, vessels_dir
 from digitalmodel.marine_ops.vessel_db.promote import promote
 
 
@@ -34,9 +34,14 @@ def test_promote_writes_all_outputs(tmp_base):
     assert result["metocean"] > 0
 
 
-def test_promote_provenance_clean(tmp_base):
+def test_promote_reports_withheld_public_provenance(tmp_base):
+    """Private citations must not silently qualify uncited public numeric data."""
     result = promote(base=tmp_base)
-    assert result["provenance_violations"] == 0
+    violations = validate_provenance(tmp_base)
+    assert result["provenance_violations"] == len(violations) == 11
+    assert all(v.record == "HLV-A" for v in violations)
+    report = (tmp_base / "processed" / "PROVENANCE_REPORT.md").read_text(encoding="utf-8")
+    assert "HLV-A" in report
 
 
 def test_estimated_gyradii_carry_basis(tmp_base):

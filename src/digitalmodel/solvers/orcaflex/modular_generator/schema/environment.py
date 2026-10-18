@@ -100,6 +100,14 @@ class WaveTrain(BaseModel):
         default=3.3, gt=1, le=7, description="JONSWAP gamma (typically 1-7)"
     )
 
+    @field_validator("type")
+    @classmethod
+    def _reject_no_waves(cls, value: str) -> str:
+        """Still water uses zero-height Airy, not a native No waves enum."""
+        if value.strip().casefold() == "no waves":
+            raise ValueError("No waves is not a native wave type; use zero-height Airy")
+        return value
+
     @field_validator("direction", mode="before")
     @classmethod
     def _normalize_direction(cls, v: Any) -> float:

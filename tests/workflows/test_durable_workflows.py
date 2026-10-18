@@ -1,4 +1,8 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 import json
+import logging
 import math
 from pathlib import Path
 
@@ -7,6 +11,7 @@ import pytest
 import yaml
 
 from digitalmodel.engine import engine
+from digitalmodel.citations import CitationResolutionError
 from digitalmodel.marine_ops.artificial_lift.field_health import STATUS_RANK
 from tests.workflows.field_dev_production_assertions import (
     FIELD_DEV_PRODUCTION_WORKFLOWS,
@@ -49,12 +54,36 @@ def _workflow_params():
 
 
 @pytest.mark.parametrize("workflow", _workflow_params())
-def test_workflow_registry(workflow, monkeypatch):
+def test_workflow_registry(workflow, monkeypatch, tmp_path):
     if workflow.get("runtime", "offline") != "offline":
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
 
     input_path = REPO_ROOT / workflow["input"]
-    cfg = engine(inputfile=str(input_path))
+    if workflow["id"] == "fowt-mooring":
+        (tmp_path / "wikis").mkdir()
+        monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
+        # Detach and close file streams before the engine replaces its handlers.
+        for handler in list(logging.root.handlers):
+            if isinstance(handler, logging.FileHandler):
+                logging.root.removeHandler(handler)
+                handler.close()
+        with pytest.raises(CitationResolutionError) as exc_info:
+            engine(inputfile=str(input_path))
+        assert exc_info.value.code_id == "DNV-RP-0360"
+        assert exc_info.value.reason == "page_missing"
+
+        page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+        page.parent.mkdir(parents=True)
+        page.write_text(
+            "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+            encoding="utf-8",
+        )
+        cfg = engine(inputfile=str(input_path))
+        citations = cfg["fowt_mooring"]["result"]["citations"]
+        assert len(citations) == 1
+        assert citations[0]["code_id"] == "DNV-RP-0360"
+    else:
+        cfg = engine(inputfile=str(input_path))
 
     assert isinstance(cfg, dict)
     assert cfg["basename"] == workflow["basename"]
@@ -434,9 +463,15 @@ def test_workflow_registry(workflow, monkeypatch):
         shedding = pd.read_csv(result_dir / "input_vs_frequencies.csv")
         safety = pd.read_csv(result_dir / "input_safety_factors.csv")
 
-        assert natural.loc[0, "mode 1"] == pytest.approx(2.623697)
-        assert shedding.loc[0, "shredding_frequency_inline"] == pytest.approx(0.564706)
-        assert safety.loc[0, "safety_factor_inline"] == pytest.approx(4.646130)
+        # Hand calculation: E=30e6 psi, I=361.5439319 in^4, L=720 in,
+        # w=5.589872732 lb/in, w_a=.03721*pi*12.75^2/4=4.750834711 lb/in.
+        # C205 (2010) effective mass / App. D; f=pi/(2 L^2)*sqrt(EIg/(w+w_a)).
+        assert natural.loc[0, "mode 1"] == pytest.approx(1.9290322268, abs=1e-9)
+        assert shedding.loc[0, "shredding_frequency_inline"] == pytest.approx(1.1294117647, abs=1e-9)
+        assert shedding.loc[0, "shredding_frequency_crossflow"] == pytest.approx(.56470588235, abs=1e-9)
+        assert pd.isna(shedding.loc[0, "KC"])
+        assert safety.loc[0, "safety_factor_inline"] == pytest.approx(1.70799728415, abs=1e-9)
+        assert safety.loc[0, "safety_factor_crossflow"] == pytest.approx(3.4159945683, abs=1e-9)
     elif workflow["id"] == "viv-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(
@@ -769,6 +804,36 @@ def test_workflow_registry(workflow, monkeypatch):
         assert result["required_submerged_weight_N_m"] == pytest.approx(2075.914365)
         assert result["lateral_utilization"] == pytest.approx(0.964701)
         assert result["is_laterally_stable"] is True
+    elif workflow["id"] == "on-bottom-stability-e305":
+        result = cfg["on_bottom_stability_e305_result"]
+        # Independent annulus weights and phase-zero Morison demands from the
+        # invented input; R acts on wave only and current is counted once.
+        expected = {
+            "synthetic_a": {
+                "extreme_wave": (80.424772, 72.0, 0.895247, 6.666667, 0.5),
+                "extreme_current": (80.424772, 112.5, 1.398823, 6.666667, 2.0),
+            },
+            "synthetic_b": {
+                "extreme_wave": (158.022110, 84.0, 0.531571, 5.714286, 0.5),
+                "extreme_current": (158.022110, 131.25, 0.830580, 5.714286, 2.0),
+            },
+        }
+        assert len(result["segments"]) == len(expected)
+        assert {segment["id"] for segment in result["segments"]} == set(expected)
+        for segment in result["segments"]:
+            assert len(segment["cases"]) == 2
+            assert {case["role"] for case in segment["cases"]} == set(expected[segment["id"]])
+            for case in segment["cases"]:
+                weight, required, utilization, K, M = expected[segment["id"]][case["role"]]
+                assert segment["weight"]["submerged_weight_n_m"] == pytest.approx(weight, rel=0, abs=5e-7)
+                for key, value in zip(
+                    ("available_weight_n_m", "required_weight_n_m", "utilization", "K", "M"),
+                    (weight, required, utilization, K, M),
+                ):
+                    assert case[key] == pytest.approx(value, rel=0, abs=5e-7)
+                assert case["qualified"] is False
+                assert case["os_f101_status"] == "not_established"
+                assert case["factor_source"] == "typed_parity"
     elif workflow["id"] == "free-span-f105":
         result = cfg["free_span"]["result"]
         assert result["fn_IL_hz"] == pytest.approx(0.427094447363)
@@ -817,6 +882,9 @@ def test_workflow_registry(workflow, monkeypatch):
         assert content.count("HRTZ") == 3
         assert content.count("DIRN") == 5
         assert content.count("QPPL") == 5
+        assert "SYMX" not in content
+        assert [float(line.split()[-1]) for line in content.splitlines()
+                if "DIRN" in line] == [-180, -90, 0, 90, 180]
         assert "could not be loaded" not in content
     elif workflow["id"] == "dynacard-diagnostics":
         results = cfg["results"]

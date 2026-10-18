@@ -1,0 +1,130 @@
+metadata:
+  name: generic_slwr
+  description: Generic steel riser from assumed repository defaults and public buoy observations;
+    retained solver example host redistribution UNCONFIRMED; no host motion or native equilibrium
+    established
+  structure: riser
+  operation: production
+  project: Generic steel riser
+  version: '1.0'
+environment:
+  water:
+    depth: 1500.0
+    density: 1.025
+  seabed:
+    type: flat
+    stiffness:
+      normal: 100
+      shear: 100
+  waves:
+    type: jonswap
+    height: 11.2
+    period: 12.9
+    direction: 180.0
+    gamma: 3.3
+  current:
+    speed: 0.0
+    direction: 180
+    profile:
+    - - 0.0
+      - 1.0
+    - - 1050.0
+      - 0.9
+    - - 1500.0
+      - 0.3
+  wind:
+    speed: 0
+    direction: 0
+  raw_properties:
+    WaveTrains:
+    - WaveTp: 12.9
+riser:
+  vessel:
+    name: GenericHost
+    type_name: Vessel Type1
+    length: 103.0
+    position:
+    - 0
+    - 0
+    - 0
+    orientation:
+    - 0
+    - 0
+    - 0
+    primary_motion: None
+    superimposed_motion: None
+    included_in_statics: None
+  line_types:
+  - name: SteelPipe
+    description: Generic coated steel pipe; nominal section; no code limits
+    outer_diameter: 0.3531
+    inner_diameter: 0.2223
+    mass_per_length: 0.1905705905878617
+    bending_stiffness: 31709.1642788524
+    axial_stiffness: 4091475.3720468036
+    torsional_stiffness: 24391.66482988646
+    poisson_ratio: 0.3
+    added_mass_coefficient: 1.0
+    drag_coefficient: 1.2
+    axial_drag_coefficient: 0.008
+    stress_od: 0.2731
+    stress_id: 0.2223
+  - name: SteelPipeBuoyed
+    description: Distributed module equivalent; pipe EI and EA retained
+    outer_diameter: 0.8067265744972084
+    inner_diameter: 0.2223
+    mass_per_length: 0.37651962993320043
+    bending_stiffness: 31709.1642788524
+    axial_stiffness: 4091475.3720468036
+    torsional_stiffness: 24391.66482988646
+    poisson_ratio: 0.3
+    added_mass_coefficient: 1.0
+    drag_coefficient: 1.2
+    axial_drag_coefficient: 0.008
+    stress_od: 0.2731
+    stress_id: 0.2223
+    contact_diameter: 1.2
+  lines:
+  - name: SLWR
+    configuration: lazy_wave
+    end_a:
+      type: vessel
+      name: GenericHost
+      position:
+      - 0
+      - 0
+      - -10.0
+      declination: 172.0
+      azimuth: 0
+      bending_stiffness: 0.0
+    end_b:
+      type: anchor
+      position:
+      - 2102.44554107421
+      - 0
+      - 0.17655
+      declination: 90
+      azimuth: 0
+      bending_stiffness: 0
+    sections:
+    - line_type: SteelPipe
+      length: 2155.737643585302
+      segment_length: 0.5
+    - line_type: SteelPipeBuoyed
+      length: 1068.878677772088
+      segment_length: 0.5
+    - line_type: SteelPipe
+      length: 526.3004480016975
+      segment_length: 0.5
+    - line_type: SteelPipe
+      length: 27.9
+      segment_length: 0.5
+    contents:
+      density: 0.8
+      pressure: 0
+    statics_method: Catenary
+    statics_step2: Full statics
+    lay_azimuth: 0
+simulation:
+  duration: 42
+  time_step: 0.1

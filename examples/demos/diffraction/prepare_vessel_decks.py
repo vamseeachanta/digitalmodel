@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Prepare a representative set of OrcaWave diffraction decks from the vessel DB.
 # ABOUTME: Thin CLI over hydrodynamics.diffraction.vessel_deck_builder (#896).
-"""
-Prepare vessel diffraction decks
-================================
+"""Prepare representative diffraction decks from vessel records.
 
 Builds a representative cross-scope set of OrcaWave diffraction decks from the
 vessel database — one per hull form (FPSO, drillship, tanker, semisub, monohull
@@ -37,7 +38,7 @@ _TARGETS = [
     ("FPSO", "floating", ("fpso",), "box"),
     ("drillship", "floating", ("drillship", "drill"), "ship"),
     ("tanker / gas carrier", "tanker", (), "full"),
-    ("semisubmersible", None, ("semi", "sscv", "column"), "placeholder"),
+    ("semisubmersible", None, ("semi", "column", "pontoon"), "column_pontoon"),
     (
         "monohull crane / construction",
         "install",
@@ -64,6 +65,7 @@ def _has_dims(r):
 
 
 def select_representative():
+    """Select dimension-complete records matching each required hull form."""
     chosen, used = [], set()
     for label, scope_filter, keywords, req_form in _TARGETS:
         pick = None
@@ -85,6 +87,7 @@ def select_representative():
 
 
 def main() -> None:
+    """Write selected decks and their aggregate index."""
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -105,7 +108,7 @@ def main() -> None:
             continue
         panels = f"{res.n_panels} panels" if res.n_panels else "mesh-to-supply"
         print(
-            f"  [{res.form:11}] {rec.name[:32]:32} {res.mesh_kind:11} {panels:16} "
+            f"  [{res.form:11}] {res.vessel:32} {res.mesh_kind:11} {panels:16} "
             f"mass={res.mass_basis}"
         )
         for n in res.notes:
@@ -113,7 +116,7 @@ def main() -> None:
         index.append(
             {
                 "form_label": label,
-                "vessel": rec.name,
+                "vessel": res.vessel,
                 "form": res.form,
                 "deck_dir": res.deck_path.parent.name,
                 "deck": res.deck_path.name,

@@ -16,7 +16,7 @@ inputs:
     protection_potential: 0.8
     closed_circuit_anode_potential: -1.09
     anode_density: 2750
-    anode_current_capacity: 2270
+    alloy: A1
     anode_Utilisation_factor: 0.85
     physical_properties:
       mean_length: 1.4
@@ -91,15 +91,21 @@ report:
     approved_by: Pending
     checked_by: Pending
     client: Internal module review - no client issuance
-    date: '2026-10-03'
+    date: '2026-10-14'
     number: R2281-CP-004-00
     prepared_by: Automated regression report
     project: Digitalmodel CP regression portfolio
-    revision: '00'
+    revision: '01'
     revision_history:
     - approved: Pending
       checked: Pending
       date: '2026-10-03'
       description: Internal review draft
       rev: '00'
-    title: 'CP module review: Ship hull'
+    - rev: '01'
+      date: '2026-10-14'
+      description: 'Internal draft: clarify hull provenance and remove ignored capacity
+        input'
+      checked: Pending
+      approved: Pending
+    title: Hull cathodic protection analysis

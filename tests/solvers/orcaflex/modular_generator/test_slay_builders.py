@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for S-lay pipeline installation builders."""
 
 from __future__ import annotations
@@ -174,7 +177,7 @@ class TestWinchBuilder:
         builder = WinchBuilder(slay_spec, ctx)
         result = builder.build()
         winch = result["Winches"][0]
-        assert winch["StageTension"][1] == 585.4
+        assert winch["StageMode, StageValue"][1][1] == 585.4
 
     def test_winch_connects_vessel_to_pipeline(self, slay_spec):
         ctx = BuilderContext()
@@ -182,7 +185,8 @@ class TestWinchBuilder:
         builder = WinchBuilder(slay_spec, ctx)
         result = builder.build()
         winch = result["Winches"][0]
-        assert winch["Connection"] == ["Eclipse", "SB-SA Pipeline"]
+        connections = winch["Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo"]
+        assert [row[0] for row in connections] == [slay_spec.equipment.vessel.name, ctx.main_pipeline_name]
 
     def test_registers_winch_name(self, slay_spec):
         ctx = BuilderContext()
@@ -195,7 +199,7 @@ class TestWinchBuilder:
 class TestLinesBuilderSlay:
     """Tests for LinesBuilder S-lay vs floating connection logic."""
 
-    def test_slay_end_a_connects_to_vessel(self, slay_spec):
+    def test_slay_end_a_is_free_for_tension_control(self, slay_spec):
         ctx = BuilderContext()
         builder = LinesBuilder(slay_spec, ctx)
         result = builder.build()
@@ -208,7 +212,7 @@ class TestLinesBuilderSlay:
         )
         connections = line[conn_key]
         end_a = connections[0]
-        assert end_a[0] == "Eclipse"  # Connected to vessel
+        assert end_a[0] == "Free"
 
     def test_slay_end_b_is_anchored(self, slay_spec):
         ctx = BuilderContext()

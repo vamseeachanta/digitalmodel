@@ -1,0 +1,492 @@
+[
+  {
+    "id": "sec-ffs",
+    "title": "Fitness-for-service",
+    "summary": "Remaining-strength assessment of corroded and metal-loss components with an inspector decision layer — benchmarked to standard worked examples and published ratings across the three governing FFS codes. Built to slot behind inspection, mechanical-integrity and RBI service programs: thickness and defect data in, code-cited verdict and report out.",
+    "key_figure": {
+      "value": "3",
+      "label": "governing FFS codes"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-structural",
+    "title": "Ship structural strength",
+    "summary": "Plate and stiffened-panel buckling for ship structure — plate-field, column and tripping interaction explored against the governing class code.",
+    "key_figure": {
+      "value": "215.61 MPa",
+      "label": "panel tripping f_T"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-hydro",
+    "title": "Hydrodynamics & diffraction",
+    "summary": "Panel-method diffraction / radiation RAOs cross-checked between solvers, a 3-way unit-box benchmark, environmental load coefficients and a closed-form passing-ship interaction.",
+    "key_figure": {
+      "value": "3",
+      "label": "diffraction solvers"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-risers",
+    "title": "Risers & pipelines",
+    "summary": "OrcaFlex riser global-analysis verification — a validation report against reference cases and a mesh / segmentation convergence study.",
+    "key_figure": null,
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-subsea",
+    "title": "Subsea",
+    "summary": "To-scale cross-section schematics for offshore cables, umbilicals and pipelines, generated deterministically from a layer specification.",
+    "key_figure": null,
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-installation",
+    "title": "Installation",
+    "summary": "Marine-installation suitability — a crane-vessel pamphlet with lift envelopes, splash-zone operability and weather windows, a provenance-audited installation fleet database with confidence-weighted suitability ranking, and a DNV 2.7-1 offshore-container screen.",
+    "key_figure": null,
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-wind",
+    "title": "Floating wind",
+    "summary": "Floating-wind concept screening and economics — parametric floater archetypes screened across site load cases as the licence-free first tier, and an LCOE / TOTEX trade space with reliability, qualification and industrialisation levers.",
+    "key_figure": {
+      "value": "4",
+      "label": "floater archetypes"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-validation",
+    "title": "Validated against published references",
+    "summary": "Every strength / FFS result reproduces a standard's worked example, a published rating, or the governing closed form, and carries a code_reference naming its governing code — kept in sync with the codes register by a CI test.",
+    "key_figure": {
+      "value": "16",
+      "label": "validated cases"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "ffs-showcase",
+    "title": "FFS decision-layer showcase",
+    "summary": "Interactive remaining-strength and inspector-verdict walkthrough across the three governing FFS codes.",
+    "key_figure": null,
+    "link": "docs/api/ffs/ffs-showcase.html"
+  },
+  {
+    "id": "ffs-field-dashboard",
+    "title": "FFS inspector field dashboard",
+    "summary": "Accept / re-rate / take-more-measurements / escalate, driven by measurement sufficiency on real defect data.",
+    "key_figure": null,
+    "link": "docs/api/ffs/ffs-field-dashboard.html"
+  },
+  {
+    "id": "riser-joint-acceptance",
+    "title": "Riser-joint flaw-acceptance explorer",
+    "summary": "Level-1 acceptable flaw length-vs-depth envelopes for a drilling-riser joint with campaign-end growth allowance, collapse-limited water depth and string-zone placement — demonstrated on real anonymized inspection data.",
+    "key_figure": null,
+    "link": "docs/api/ffs/riser-joint-acceptance-explorer.html"
+  },
+  {
+    "id": "buckling-plate",
+    "title": "Ship plate buckling explorer",
+    "summary": "Plate capacity vs geometry and combined in-plane loading, with the Johnson-Ostenfeld inelastic correction.",
+    "key_figure": null,
+    "link": "docs/api/buckling/ship-plate-buckling.html"
+  },
+  {
+    "id": "buckling-panel",
+    "title": "Stiffened-panel buckling explorer",
+    "summary": "Plate-field / column / torsional-tripping interaction for a stiffened panel, swept over scantlings and load.",
+    "key_figure": {
+      "value": "215.61 MPa",
+      "label": "tripping f_T"
+    },
+    "link": "docs/api/buckling/ship-panel-buckling.html"
+  },
+  {
+    "id": "rao-comparison",
+    "title": "AQWA vs OrcaWave RAO comparison",
+    "summary": "Interactive 6-DOF RAO overlay between two diffraction solvers on the same vessel model.",
+    "key_figure": null,
+    "link": "docs/api/hydro/rao-comparison/index.html"
+  },
+  {
+    "id": "unitbox-report",
+    "title": "Unit-box 3-way diffraction benchmark",
+    "summary": "Added-mass, damping and RAO amplitude & phase compared across three diffraction solvers.",
+    "key_figure": {
+      "value": "3",
+      "label": "solvers"
+    },
+    "link": "docs/api/hydro/unit-box-benchmark/benchmark_report.html"
+  },
+  {
+    "id": "unitbox-amplitude",
+    "title": "RAO amplitude overlay",
+    "summary": "Per-DOF RAO amplitude overlay for the unit-box benchmark across the three solvers.",
+    "key_figure": null,
+    "link": "docs/api/hydro/unit-box-benchmark/benchmark_amplitude.html"
+  },
+  {
+    "id": "unitbox-phase",
+    "title": "RAO phase overlay",
+    "summary": "Per-DOF RAO phase overlay for the unit-box benchmark across the three solvers.",
+    "key_figure": null,
+    "link": "docs/api/hydro/unit-box-benchmark/benchmark_phase.html"
+  },
+  {
+    "id": "unitbox-combined",
+    "title": "Combined solver comparison",
+    "summary": "Combined amplitude-and-phase view of the three-solver unit-box diffraction comparison.",
+    "key_figure": null,
+    "link": "docs/api/hydro/unit-box-benchmark/benchmark_combined.html"
+  },
+  {
+    "id": "unitbox-heatmap",
+    "title": "Solver correlation heatmap",
+    "summary": "Heatmap of cross-solver agreement across DOFs and frequencies for the unit-box benchmark.",
+    "key_figure": null,
+    "link": "docs/api/hydro/unit-box-benchmark/benchmark_heatmap.html"
+  },
+  {
+    "id": "ocimf",
+    "title": "OCIMF coefficient explorer",
+    "summary": "Wind & current force / moment coefficients interpolated by heading and loading condition.",
+    "key_figure": null,
+    "link": "docs/api/hydro/ocimf-coefficient-explorer.html"
+  },
+  {
+    "id": "passing-ship",
+    "title": "Passing-ship interaction benchmark",
+    "summary": "Sway-force and yaw-moment interaction validated against the published closed-form solution.",
+    "key_figure": null,
+    "link": "docs/api/hydro/passing-ship-benchmark.html"
+  },
+  {
+    "id": "drilling-riser-operability",
+    "title": "Drilling-riser operability envelope explorer",
+    "summary": "Governing utilisation across vessel offset and surface current for a generic drilling-riser stack-up per operating mode; operable when utilisation is at or below 1.0, with near-boundary points escalating to the exact analytical screen.",
+    "key_figure": null,
+    "link": "docs/api/drilling/drilling-riser-operability-explorer.html"
+  },
+  {
+    "id": "drilling-riser-operability-monitor",
+    "title": "Operability & integrity monitor",
+    "summary": "Live-style playback of a generic drilling-riser scenario: telemetry and metocean drive the operability margin, the flex-joint response (physics plus a measured-tracking correction), a wellhead bending-moment indicator, and the drift-off time-to-limit — every value pre-computed by the analytical seams and played back (the page does no physics).",
+    "key_figure": null,
+    "link": "docs/api/drilling/operability-monitor.html"
+  },
+  {
+    "id": "riser-validation",
+    "title": "Riser validation report",
+    "summary": "Riser global-analysis results verified against reference cases from the tier-2 fast model library.",
+    "key_figure": null,
+    "link": "docs/api/orcaflex/riser-validation-report.html"
+  },
+  {
+    "id": "riser-mesh",
+    "title": "Riser mesh sensitivity report",
+    "summary": "Segmentation / mesh-density convergence study quantifying discretisation effect on riser response.",
+    "key_figure": null,
+    "link": "docs/api/orcaflex/riser-mesh-sensitivity.html"
+  },
+  {
+    "id": "subsea-xsection",
+    "title": "Offshore cross-section report",
+    "summary": "Layer-by-layer cross-section schematics for cable, umbilical and pipeline bundles with envelope geometry.",
+    "key_figure": null,
+    "link": "docs/api/subsea/offshore-cross-section-report.html"
+  },
+  {
+    "id": "installation-hlv-a",
+    "title": "Installation vessel pamphlet — HLV-A",
+    "summary": "Crane lift suitability, operational + per-structure splash-zone Hs/Tp envelopes, weather-window operability and DP/mooring failure-risk, generated by the installation-pamphlet engine.",
+    "key_figure": null,
+    "link": "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/installation/installation_pamphlet"
+  },
+  {
+    "id": "sec-manoeuvring",
+    "title": "Manoeuvring & station-keeping",
+    "summary": "Low-speed manoeuvring and station-keeping screens — turning circle against the IMO criteria, minimum steerage speed by loading condition, the rudder angle needed to hold heading against a current, built on a researched rudder-type database, and a mooring-system resilience traffic-light composed from the pre-computed mooring atlases.",
+    "key_figure": null,
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "rudder-explorer",
+    "title": "Rudder & low-speed manoeuvring explorer",
+    "summary": "Interactive turning circle vs the 5·L limit, steerage-threshold speed vs wind (laden / ballast / kick-ahead), and the engine-on rudder angle to balance the current yaw moment.",
+    "key_figure": null,
+    "link": "docs/api/hydro/rudder-maneuvering-explorer.html"
+  },
+  {
+    "id": "rudder-database",
+    "title": "Rudder-type database",
+    "summary": "Nine rudder types (spade, semi-balanced horn, flap/Becker, Schilling, fishtail, Kort nozzle, twisted, gate) with area ratios, aspect ratios, lift coefficients and a class-rule area sizing check.",
+    "key_figure": null,
+    "link": "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_database.yml"
+  },
+  {
+    "id": "diffraction-deck-prep",
+    "title": "Diffraction deck generation — spec to solver input",
+    "summary": "One canonical vessel spec (YAML) deterministically prepared into a solver-ready AQWA diffraction deck offline; the OrcaWave solve runs on the licensed lane with provenance carried through.",
+    "key_figure": null,
+    "link": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/aqwa-diffraction-deck-prep"
+  },
+  {
+    "id": "vessel-suitability",
+    "title": "Installation vessel database & suitability ranking",
+    "summary": "Curated + worldenergydata installation crane fleet (crane curves, deck, DP) with cited / estimated / gap provenance on every field; ranks vessels for a lift by capability margin weighted by data confidence.",
+    "key_figure": null,
+    "link": "https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels"
+  },
+  {
+    "id": "container-utilization",
+    "title": "Offshore container utilization — DNV 2.7-1",
+    "summary": "Clause-traced offshore-lift screening for CCUs — 2.5·R·g primary load, 3·R·g pad-eye set, 0.85·Re allowable — swept into utilization curves across rating, aspect ratio and sling angle.",
+    "key_figure": null,
+    "link": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization"
+  },
+  {
+    "id": "wind-sizing",
+    "title": "Floating-wind sizing & concept screening",
+    "summary": "Parametric floater archetypes swept across site load cases and screened on stability, motion, modal separation and mooring offset — the closed-form first tier ahead of the licensed OrcaWave/OrcaFlex pass.",
+    "key_figure": {
+      "value": "4",
+      "label": "floater archetypes"
+    },
+    "link": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-sizing"
+  },
+  {
+    "id": "wind-economics",
+    "title": "Floating-wind LCOE / TOTEX tradespace",
+    "summary": "Levelised-cost engine with capex breakdown, availability / reliability scenarios, qualification levers and turbine- / farm-scale economies swept over the concept trade space.",
+    "key_figure": null,
+    "link": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics"
+  },
+  {
+    "id": "mooring-resilience",
+    "title": "Mooring resilience screen",
+    "summary": "Intact / one-line-damaged tension, anchor-foundation and chain-fatigue checks composed from the pre-computed mooring and anchor atlases into a single traffic-light — out-of-range cases are escalated, never extrapolated.",
+    "key_figure": null,
+    "link": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/mooring_resilience"
+  },
+  {
+    "id": "short-horizon-motion-forecast",
+    "title": "Short-horizon motion forecast",
+    "summary": "Live vessel & structure motions from an onboard MMS / MRU, plus a phase-resolved wave forecast transferred through the asset RAO to predict the next few motions — a rolling go / no-go with lead time for crane lifts, walk-to-work gangways and helideck landings, bounded honestly by the predictable zone.",
+    "key_figure": null,
+    "link": "docs/api/hydro/short-horizon-motion-forecast.html"
+  },
+  {
+    "id": "sec-artificial-lift",
+    "title": "Artificial lift — rod-pump diagnostics",
+    "summary": "Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole wave-equation solvers, a 20-mode failure-signature library plus a 346-card example library, ML card classification with a CI drift-guard on every published diagnosis, recommended controller setpoints & alarms, and a field-wide health screen.",
+    "key_figure": {
+      "value": "346",
+      "label": "example cards"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "dynacard-troubleshooting",
+    "title": "Dynacard troubleshooting explorer",
+    "summary": "Eight curated rod-pump troubleshooting cases, a 346-card example library behind phenomenon dropdowns (multiple cards per phenomenon), a 28-entry troubleshooting guide, and recommended controller setpoints & alarms computed per well.",
+    "key_figure": {
+      "value": "346",
+      "label": "example cards"
+    },
+    "link": "docs/api/artificial-lift/dynacard-troubleshooting.html"
+  },
+  {
+    "id": "sec-well",
+    "title": "Well construction — casing & tubulars",
+    "summary": "Production-casing design checks on the API 5C3 / API 5CT product catalog — burst (tubing leak + frac screen-out), full-evacuation collapse, buoyed-weight tension and Von Mises triaxial against published operator design-factor minimums, plus the maximum allowable frac surface pressure, the NACE MR0175 sour-service screen and the connection-class tension efficiencies.",
+    "key_figure": {
+      "value": "4",
+      "label": "design-check modes"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "casing-design",
+    "title": "Casing design explorer",
+    "summary": "Eight candidate products checked against a reference frac'd well — per-mode design factors with governing depth and pass/fail, max allowable frac surface pressure, the golden Barlow worked example (5-1/2\" 23# P110 → 14,520 psi), the NACE sour-service screen and the connection-class table.",
+    "key_figure": {
+      "value": "8",
+      "label": "candidate products"
+    },
+    "link": "docs/api/well/casing-design-explorer.html"
+  },
+  {
+    "id": "dynacard-field-health",
+    "title": "Field-wide dynacard health rollup",
+    "summary": "Every well's dynamometer card classified and ranked into normal / warning / critical / failure, with the worst wells surfaced and a fail-closed field screening verdict as JSON + CSV.",
+    "key_figure": null,
+    "link": "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/artificial-lift-field-health"
+  },
+  {
+    "id": "sec-corrosion-production",
+    "title": "Corrosion & production chemistry",
+    "summary": "Screening-level materials-compatibility and produced-water scaling checks that sit alongside the integrity workflow — dissimilar-metal galvanic risk on the published anodic-index method, and mineral-scale saturation tendency in the Oddo–Tomson conditional-solubility framework. Both run from public constants with every coefficient documented and overridable; parameterized for calibration before quantitative use.",
+    "key_figure": {
+      "value": "3",
+      "label": "galvanic environment classes"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "galvanic-explorer",
+    "title": "Galvanic compatibility explorer",
+    "summary": "Dissimilar-metal couple screening (OK / marginal / protect) against the environment-dependent allowable potential difference, identifying the anodic (sacrificial) member with area-ratio guidance — a per-environment compatibility heatmap over the common construction metals.",
+    "key_figure": {
+      "value": "0.15–0.50 V",
+      "label": "allowable ΔV by environment"
+    },
+    "link": "docs/api/corrosion/galvanic-compatibility-explorer.html"
+  },
+  {
+    "id": "scale-si-explorer",
+    "title": "Mineral-scale saturation explorer",
+    "summary": "Saturation index per scale family (calcite, sulfates, halite) swept over temperature and pressure, bottomhole→wellhead trending, and a formation-water × seawater mixing sweep for waterflood compatibility — the Oddo–Tomson conditional-solubility framework with documented, overridable coefficients.",
+    "key_figure": {
+      "value": "7",
+      "label": "scale families"
+    },
+    "link": "docs/api/production/scale-si-explorer.html"
+  },
+  {
+    "id": "wall-thickness-explorer",
+    "title": "Wall-thickness multi-code explorer",
+    "summary": "One 12.75-inch X65 deepwater line sized under all nine registered design codes at once — a wall-thickness slider drives each code's governing utilization against the 1.0 limit, with the minimum wall to pass per code. Every point is a live WallThicknessAnalyzer evaluation (369 in total), not a mock.",
+    "key_figure": {
+      "value": "9",
+      "label": "design codes"
+    },
+    "link": "docs/api/structural/wall-thickness-explorer.html"
+  },
+  {
+    "id": "sloshing-explorer",
+    "title": "Tank sloshing natural-period & resonance explorer",
+    "summary": "Fundamental sloshing natural period across tank shapes — rectangular, upright cylinder, horizontal cylinder (road tanker) and elliptical/obround fuel tanks — as a normalized master curve that collapses every size onto one dimensionless family, a shape-selector lookup for real periods, and a resonance screen showing partial-fill coupling with vessel roll. Backed by a worldwide relationship survey.",
+    "key_figure": {
+      "value": "4",
+      "label": "tank shapes"
+    },
+    "link": "docs/api/structural/sloshing-explorer.html"
+  },
+  {
+    "id": "cathodic-protection-explorer",
+    "title": "Cathodic-protection anode explorer",
+    "summary": "DNV-RP-B401 sacrificial-anode design for a jacket or monopile — structure and seawater-climate selectors and a design-life slider drive total anode mass by external-coating quality. Every value is a live marine_structure_current_demand run (current demand → anode mass → anode count).",
+    "key_figure": {
+      "value": "31.7 → 18.6 t",
+      "label": "bare vs premium coating"
+    },
+    "link": "docs/api/structural/cathodic-protection-explorer.html"
+  },
+  {
+    "id": "sec-fatigue",
+    "title": "Fatigue & fracture — S-N life and crack growth",
+    "summary": "A code-referenced fatigue toolkit: a 221-curve S-N library spanning DNV-RP-C203, API RP 2A-WSD, BS 7608, Eurocode 3 and NORSOK N-004; Efthymiou stress-concentration factors for tubular joints; rainflow counting into Miner's-rule damage; hotspot-stress extrapolation; and Paris'-law crack growth. Every curve, SCF equation and read-out formula carries its clause reference in-code, with numeric checks pinned to published tables and hand calculations.",
+    "key_figure": {
+      "value": "221",
+      "label": "S-N curves, 6 standards"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-cfd",
+    "title": "Computational fluid dynamics (CFD)",
+    "summary": "Open-source CFD (OpenFOAM) verified against classical analytical and benchmark solutions — known-answer verification across steady-laminar, transient-laminar, turbulent (RANS), free-surface (VOF), wave-generation, 6-DOF floating-body and wave-body interaction (overset) regimes, computed on real OpenFOAM v2312, not mocked. Reports are interactive: live charts, scrubbable animations and a member VIV lock-in screening calculator.",
+    "key_figure": {
+      "value": "9",
+      "label": "verification cases + RAO spot-check"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-wall-thickness",
+    "title": "Wall thickness — sizing & code checks",
+    "summary": "Pipeline and riser wall-thickness sizing and pressure-integrity code checks — one geometry / material / loads spec dispatched across ten registered design codes (edition-aware: DNV-OS-F101 2007 vs DNV-ST-F101 2021, API RP 1111 3rd vs 4th edition), with burst, collapse (solved from the cubic, not tabulated), propagation-buckling and combined-loading utilizations, minimum-thickness solvers and cross-code comparison reports. Every result carries a code_reference kept in sync with the codes register.",
+    "key_figure": {
+      "value": "10",
+      "label": "registered design codes"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-viv",
+    "title": "Vortex-induced vibration — screening, frequency & fatigue",
+    "summary": "A first-pass VIV toolkit for tubular members and risers: natural-frequency calculation (Euler-Bernoulli beam + tension-controlled string, five boundary conditions, fluid added mass), vortex-shedding frequency from the Strouhal relation, reduced-velocity lock-in screening with a safety factor, and VIV-induced fatigue on DNV-RP-C203 S-N curves — the full-member generalization of the lock-in check the CFD Re=100 cylinder card exposes. Backed by unit, CLI and integration tests and a standalone CI workflow.",
+    "key_figure": {
+      "value": "4–8",
+      "label": "cross-flow lock-in V_r band"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-field-development",
+    "title": "Field development — concept screening, cost & economics",
+    "summary": "The oil-and-gas concept-select twin of the floating-wind LCOE work: screen an offshore prospect across four decision axes (schedule, rig-days, driver-level CAPEX and lifecycle intervention), rank host concepts (TLP / spar / semi / FPSO / subsea tieback), and run pre-tax discounted-cash-flow economics on the survivors. All parameters are generic Gulf-of-Mexico defaults from a reviewable YAML; every field is an INPUT — no reservoir, flow-assurance or structural simulation is solved. Rig demand is reported in days, never $/day.",
+    "key_figure": {
+      "value": "4",
+      "label": "decision axes"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-naval-architecture",
+    "title": "Naval architecture — stability, resistance & hull strength",
+    "summary": "A ship-design suite beyond the rudder / manoeuvring tools: Holtrop-Mennen resistance and powering, IMO intact and damage stability with GZ-curve area criteria, IACS hull-girder longitudinal strength and class-rule scantlings, and floating-platform stability for FPSO, semi-sub, spar, TLP and barge hulls. Every method carries its standard in the code and is pinned to published worked examples in dedicated tests.",
+    "key_figure": {
+      "value": "3",
+      "label": "hull forms, live explorer"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-geotechnical",
+    "title": "Geotechnical — pile, anchor & foundation capacity",
+    "summary": "Standards-referenced calculators for the seabed side of an offshore mooring or foundation problem — the engines that size and check the anchors the mooring-resilience atlases place. Pile axial capacity, drag- and suction-anchor holding, mudmat bearing and sliding, plus liquefaction triggering and scour screening. Each function is a dataclass-returning engine with input validation and its governing standard stamped on the result.",
+    "key_figure": {
+      "value": "α / β",
+      "label": "clay / sand skin friction"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-production-engineering",
+    "title": "Production engineering — nodal analysis & well deliverability",
+    "summary": "A node-based well-performance engine: intersect an inflow (IPR) curve with a vertical-lift (VLP) pressure traverse to find the operating point, then bound it with a confidence band derived from the underlying test-quality score. The outflow is a simplified homogeneous lift traverse (published methods not yet implemented); the distinctive layer is physics-based data reconciliation — GIGO divergence and nonlinearity flags that catch a bad test record before it corrupts the nodal model. Distinct from the rod-pump dynacard diagnostics under Artificial lift.",
+    "key_figure": {
+      "value": "±5 / ±15 / ±30%",
+      "label": "confidence bands (G/A/R)"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-drilling-engineering",
+    "title": "Drilling engineering — pore pressure, hydraulics & well control",
+    "summary": "Closed-form, license-free drilling-geomechanics and hydraulics engines: multi-method pore-pressure prediction with explicit P10/P50/P90 uncertainty and a communicated safe mud-weight window, swab/surge tripping limits, annular hydraulics and ECD, ROP models, and a real-time dysfunction / kick detector. Every method is a published closed form with unit tests pinned to hand calcs and standard limiting cases — distinct from the casing-design explorer under Well construction, which covers tubular strength.",
+    "key_figure": {
+      "value": "P10/P50/P90",
+      "label": "pore-pressure uncertainty"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  },
+  {
+    "id": "sec-cathodic",
+    "title": "Cathodic protection",
+    "summary": "Sacrificial-anode and impressed-current CP design across structure types — current demand with coating breakdown, anode mass / resistance / output and spacing, protected length, depletion & retrofit remaining life, survey interpretation (CIS / DCVG) and stray-current screens. Edition-aware DNV-RP-B401 (2017 / 2021) backed by doc-verified test vectors — 500+ tests across the module.",
+    "key_figure": {
+      "value": "18",
+      "label": "CP engine modules"
+    },
+    "link": "https://www.aceengineer.com/capabilities/"
+  }
+]

@@ -904,7 +904,7 @@ object_types:
       spec_count: 27
       common_properties:
       - ExpansionTableTemperature, ExpansionTablePressure, ExpansionTableExpansionFactor
-  PyModels:
+  P-yModels:
     section_type: list
     schema_class: GenericObject
     typed_fields:
@@ -1082,7 +1082,7 @@ metadata:
   - StiffenerTypes
   - SupportTypes
   - MorisonElementTypes
-  - PyModels
+  - P-yModels
   - WakeModels
   - Vessels
   - Lines

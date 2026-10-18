@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Synthetic dynacard generators for all 20 pump failure modes.
 # ABOUTME: Every generator returns a DOWNHOLE (pump) card; see the module note.
 """Synthetic pump cards, and the forward model that lifts them to the surface.
@@ -17,6 +20,18 @@ the other direction -- pump upward to the polished rod -- so a generated pump
 card can be turned into the surface card that would have produced it. Feed
 *that* to the workflow and the surface-to-downhole solver has real work to do
 and returns the pump card it started from.
+
+Dimensioned envelope basis
+-------------------------
+Stroke, load and resulting card-area limits are **not established** as
+rod-pump operating envelopes. The retained draws are assumed, based on previous
+experience; their provenance is the original synthetic implementation here.
+The adjacent ``reference_data/v1/manifest.yml`` declares the surface-unit
+dimensions as ``unverified_source_unit`` and the tubing table as unavailable.
+The CC0 diagnostic plate supplies normalised shape coordinates, not inches,
+pounds or dimensioned work. Neither source establishes these absolute limits.
+Area is derived from each generated loop, rather than sampled independently.
+These limits shall not be treated as qualified well inputs or field evidence.
 """
 
 from __future__ import annotations
@@ -153,6 +168,8 @@ def _base_card(
 
 def generate_normal_card(seed: int = 0, noise_pct: float = 0.03) -> CardData:
     """Normal operation: clean rectangular card, moderate loads."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -203,6 +220,8 @@ def generate_gas_interference_card(seed: int = 0, severity: float = 0.5) -> Card
         severity: 0-1. Scales how much load survives into the downstroke and
             how far down the stroke the travelling valve finally opens.
     """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(10000, 16000)
     low = rng.uniform(500, 2500)  # Very low min load
@@ -238,6 +257,8 @@ def generate_fluid_pound_card(seed: int = 0, drop_position: float = 0.35) -> Car
             fluid. Lower means poorer fillage.
     """
 
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -285,6 +306,8 @@ def generate_pump_tagging_up_card(seed: int = 0) -> CardData:
     distinct peak, not a doubling of the card, and the card body underneath it
     stays a recognisable card (plate fill ratio 0.72).
     """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(14000, 19000)
     low = rng.uniform(4000, 7000)
@@ -322,6 +345,8 @@ def generate_pump_tagging_down_card(seed: int = 0) -> CardData:
     different repair -- re-space up rather than down -- which is why the two
     are separate classes here.
     """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(14000, 19000)
     low = rng.uniform(4000, 7000)
@@ -367,6 +392,8 @@ def generate_plunger_out_of_barrel_card(seed: int = 0) -> CardData:
     the top-right corner of the card is missing entirely (plate corner
     clearance 0.46 there, against 0.07 for a normal card).
     """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -388,11 +415,26 @@ def generate_plunger_out_of_barrel_card(seed: int = 0) -> CardData:
 
 
 def generate_tubing_movement_card(seed: int = 0) -> CardData:
-    """Tubing movement: elongated card, excessive position range vs ideal."""
+    """Legacy tubing-movement card: travel direction not established.
+
+    The public SWPSC paper, "Over-travel Can Occur On Both The Upstroke And
+    Down Stroke" (2017), section "Definition of Over Travel and Under Travel",
+    describes unanchored tubing as consuming part of the surface stroke:
+    https://www.swpshortcourse.org/paper/17-over-travel-can-occur-both-upstroke-and-down-stroke
+
+    At otherwise matched inputs, eliminating tubing stretch recovers lost
+    plunger travel. This mechanism does not establish this generator's travel
+    relative to NORMAL: the two independent absolute draws have no matched
+    surface stroke or tubing-compliance inputs. The legacy interval is
+    retained as not established, rather than assigning a new interval from
+    one example well.
+    """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
-    stroke = rng.uniform(130, 180)  # Elongated stroke
+    stroke = rng.uniform(130, 180)  # Retained assumption; pump travel not established.
     pos, load = _base_card(rng, stroke=stroke, high_load=high, low_load=low, noise_pct=0.03)
 
     # Add slope to load (tubing stretching effect)
@@ -413,6 +455,8 @@ def generate_valve_leak_tv_card(seed: int = 0) -> CardData:
     plunger speeds up. The card's top-left corner is rounded away while its
     lower-right stays square (plate clearances 0.20 and 0.03).
     """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -441,6 +485,8 @@ def generate_valve_leak_sv_card(seed: int = 0) -> CardData:
     plunger is moving down fast enough to out-run the leak. The lower-right
     corner opens up (plate clearance 0.23) while the top stays square.
     """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -476,6 +522,8 @@ def generate_rod_parting_card(seed: int = 0) -> CardData:
     ``pos = (1-cos t)/2``, a 1:2 Lissajous figure-eight enclosing essentially
     no area (fill ratio 0.01 against the plate's 0.73). It was not a card.
     """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     stroke = rng.uniform(80, 120)
     theta = _crank_phase()
@@ -502,6 +550,8 @@ def generate_rod_parting_card(seed: int = 0) -> CardData:
 
 def generate_stuck_pump_card(seed: int = 0) -> CardData:
     """Stuck pump: near-zero position range, tiny collapsed card."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     n = _NUM_POINTS
     t = np.linspace(0, 2 * np.pi, n)
@@ -520,6 +570,8 @@ def generate_stuck_pump_card(seed: int = 0) -> CardData:
 
 def generate_worn_barrel_card(seed: int = 0) -> CardData:
     """Worn barrel: gradual area loss, upstroke load decay."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -538,6 +590,8 @@ def generate_worn_barrel_card(seed: int = 0) -> CardData:
 
 def generate_gas_lock_card(seed: int = 0) -> CardData:
     """Gas lock: extreme gas interference, near-zero card area."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     n = _NUM_POINTS
     t = np.linspace(0, 2 * np.pi, n)
@@ -554,6 +608,8 @@ def generate_gas_lock_card(seed: int = 0) -> CardData:
 
 def generate_delayed_tv_closure_card(seed: int = 0) -> CardData:
     """Delayed traveling valve closure: exponential curve on top-left of card."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -573,6 +629,8 @@ def generate_delayed_tv_closure_card(seed: int = 0) -> CardData:
 
 def generate_excessive_friction_card(seed: int = 0) -> CardData:
     """Excessive friction: large hysteresis, thick card loop."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -591,6 +649,8 @@ def generate_excessive_friction_card(seed: int = 0) -> CardData:
 
 def generate_plunger_undertravel_card(seed: int = 0) -> CardData:
     """Plunger undertravel: short net stroke, truncated position range."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -602,6 +662,8 @@ def generate_plunger_undertravel_card(seed: int = 0) -> CardData:
 
 def generate_paraffin_restriction_card(seed: int = 0) -> CardData:
     """Paraffin restriction: thin card with concave dents, increased friction."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(11000, 15000)
     low = rng.uniform(5000, 8000)
@@ -630,6 +692,8 @@ def generate_paraffin_restriction_card(seed: int = 0) -> CardData:
 
 def generate_bent_barrel_card(seed: int = 0) -> CardData:
     """Bent barrel: asymmetric quadrant distribution, shifted centroid."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -656,6 +720,8 @@ def generate_sand_abrasion_card(seed: int = 0) -> CardData:
     stochastic -- see the module's regression test for why that means this
     class is checked on its texture statistic rather than on loop shape.
     """
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
@@ -679,6 +745,8 @@ def generate_sand_abrasion_card(seed: int = 0) -> CardData:
 
 def generate_excessive_vibration_card(seed: int = 0) -> CardData:
     """Excessive vibration: sloping wave pattern, high-freq load oscillation."""
+    # Stroke, load and area bounds: not established.
+    # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)

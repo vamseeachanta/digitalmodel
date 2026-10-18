@@ -1,0 +1,22 @@
+{
+  "description": "Synthetic test fixture; no engineering result",
+  "lower_mean_deg": 0.5,
+  "lower_max_deg": 1.0,
+  "upper_mean_deg": 0.5,
+  "upper_max_deg": 1.0,
+  "top_min_kn": 10000.0,
+  "top_max_kn": 11000.0,
+  "stroke_min_m": -1.0,
+  "stroke_max_m": 1.0,
+  "stress_max_mpa": 100.0,
+  "solver_version": "synthetic",
+  "native_state": "SimulationStopped",
+  "wall_seconds": 2.0,
+  "support_intact_min_kn": 12000,
+  "support_loss_min_kn": 9000,
+  "bottom_sum_min_kn": 300,
+  "member_min_kn": 1,
+  "table_clearance_min_m": 1,
+  "ring_equilibrium_max_abs_kn": 0.0,
+  "ring_equilibrium_max_fraction": 0.0
+}

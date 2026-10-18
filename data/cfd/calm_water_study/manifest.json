@@ -1,4 +1,317 @@
 {
+  "case_evidence": {
+    "coarse": {
+      "dictionary_sha256": {
+        "blockMeshDict": "ef918c9a04c865c1f47629ce1c5d43495e775cec133cbef4957a071eb4990b94",
+        "controlDict": "e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809",
+        "decomposeParDict": "3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373",
+        "fvSchemes": "6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad",
+        "fvSolution": "a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942",
+        "meshQualityDict": "764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90",
+        "refineMeshDict": "ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0",
+        "setFieldsDict": "d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4",
+        "snappyHexMeshDict": "3d7cb50c60864c15c34d6a351c1459ef5121d2de8171e280e746ae499fb43103",
+        "surfaceFeatureExtractDict": "cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813",
+        "topoSetDict.1": "5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439",
+        "topoSetDict.2": "01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2",
+        "topoSetDict.3": "8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09",
+        "topoSetDict.4": "07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547",
+        "topoSetDict.5": "7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882",
+        "topoSetDict.6": "5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000"
+      },
+      "generator_revision": "not recorded in the retained case",
+      "method_readback": {
+        "local_time_stepping": true,
+        "turbulence_model": "kOmegaSST",
+        "two_phase_vof": "phases (water air)"
+      },
+      "regeneration": {
+        "command_sequence": "not recorded: run.log records utility order; native log Exec lines record individual commands, not a complete launch script",
+        "configuration": {
+          "criterion_recorded_at": "2026-10-14T11:18:13.865756+00:00",
+          "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+          "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+          "iterations": 100,
+          "lateral_reference_divisions": 20,
+          "mesh": "coarse",
+          "mesh_scale": 0.5,
+          "ranks": 8,
+          "velocity_m_per_s": 2.1966335492849054
+        },
+        "fields": "not recorded: initial-field setup and complete launch sequence are absent from run.log",
+        "logged_steps": [
+          "surfaceFeatureExtract",
+          "blockMesh",
+          "topoSet.1",
+          "refineMesh.1",
+          "topoSet.2",
+          "refineMesh.2",
+          "topoSet.3",
+          "refineMesh.3",
+          "topoSet.4",
+          "refineMesh.4",
+          "topoSet.5",
+          "refineMesh.5",
+          "topoSet.6",
+          "refineMesh.6",
+          "snappyHexMesh",
+          "checkMesh"
+        ],
+        "mesh_and_fields_retained": false,
+        "mesh_commands_in_logged_order": [
+          "surfaceFeatureExtract",
+          "blockMesh",
+          "topoSet -dict system/topoSetDict.1",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.2",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.3",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.4",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.5",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.6",
+          "refineMesh -overwrite",
+          "snappyHexMesh -overwrite",
+          "checkMesh"
+        ],
+        "native_commands": [
+          "blockMesh",
+          "checkMesh",
+          "decomposePar",
+          "interFoam -parallel",
+          "interFoam -parallel",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "setFields",
+          "snappyHexMesh -overwrite",
+          "surfaceFeatureExtract",
+          "topoSet -dict system/topoSetDict.1",
+          "topoSet -dict system/topoSetDict.2",
+          "topoSet -dict system/topoSetDict.3",
+          "topoSet -dict system/topoSetDict.4",
+          "topoSet -dict system/topoSetDict.5",
+          "topoSet -dict system/topoSetDict.6"
+        ],
+        "working_directory": "restored case folder"
+      },
+      "solver_version_banner": [
+        "|  \\\\    /   O peration     | Version:  2312                                  |",
+        "Build  : _9a9aeb73-20260127 OPENFOAM=2312 patch=260127 version=2312"
+      ]
+    },
+    "fine": {
+      "dictionary_sha256": {
+        "blockMeshDict": "f9586ec32e06eba7a44617724727e402dad46b27e25e26845e573e385789886a",
+        "controlDict": "1718127a7fcc3fd5113c8b2a6460b60e3cf55bbee6b053b37638a5c345056447",
+        "decomposeParDict": "3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373",
+        "fvSchemes": "6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad",
+        "fvSolution": "a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942",
+        "meshQualityDict": "764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90",
+        "refineMeshDict": "ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0",
+        "setFieldsDict": "d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4",
+        "snappyHexMeshDict": "f1c08937d925a355fa5d4c99d497a35d087cebbec8523830b9e3814d8988aa74",
+        "surfaceFeatureExtractDict": "cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813",
+        "topoSetDict.1": "5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439",
+        "topoSetDict.2": "01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2",
+        "topoSetDict.3": "8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09",
+        "topoSetDict.4": "07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547",
+        "topoSetDict.5": "7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882",
+        "topoSetDict.6": "5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000"
+      },
+      "generator_revision": "not recorded in the retained case",
+      "method_readback": {
+        "local_time_stepping": true,
+        "turbulence_model": "kOmegaSST",
+        "two_phase_vof": "phases (water air)"
+      },
+      "regeneration": {
+        "command_sequence": "not recorded: run.log records utility order; native log Exec lines record individual commands, not a complete launch script",
+        "configuration": {
+          "criterion_recorded_at": "2026-10-14T11:18:15.525856+00:00",
+          "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+          "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+          "iterations": 100,
+          "lateral_reference_divisions": 20,
+          "mesh": "fine",
+          "mesh_scale": 2.0,
+          "ranks": 8,
+          "velocity_m_per_s": 2.1966335492849054
+        },
+        "fields": "not recorded: initial-field setup and complete launch sequence are absent from run.log",
+        "logged_steps": [
+          "surfaceFeatureExtract",
+          "blockMesh",
+          "topoSet.1",
+          "refineMesh.1",
+          "topoSet.2",
+          "refineMesh.2",
+          "topoSet.3",
+          "refineMesh.3",
+          "topoSet.4",
+          "refineMesh.4",
+          "topoSet.5",
+          "refineMesh.5",
+          "topoSet.6",
+          "refineMesh.6",
+          "snappyHexMesh",
+          "checkMesh"
+        ],
+        "mesh_and_fields_retained": false,
+        "mesh_commands_in_logged_order": [
+          "surfaceFeatureExtract",
+          "blockMesh",
+          "topoSet -dict system/topoSetDict.1",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.2",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.3",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.4",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.5",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.6",
+          "refineMesh -overwrite",
+          "snappyHexMesh -overwrite",
+          "checkMesh"
+        ],
+        "native_commands": [
+          "blockMesh",
+          "checkMesh",
+          "decomposePar",
+          "interFoam -parallel",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "setFields",
+          "snappyHexMesh -overwrite",
+          "surfaceFeatureExtract",
+          "topoSet -dict system/topoSetDict.1",
+          "topoSet -dict system/topoSetDict.2",
+          "topoSet -dict system/topoSetDict.3",
+          "topoSet -dict system/topoSetDict.4",
+          "topoSet -dict system/topoSetDict.5",
+          "topoSet -dict system/topoSetDict.6"
+        ],
+        "working_directory": "restored case folder"
+      },
+      "solver_version_banner": []
+    },
+    "medium": {
+      "dictionary_sha256": {
+        "blockMeshDict": "93ead106108b286f42df36913754f1fe857cfa11c9f96cc9f6526d4c2159c34c",
+        "controlDict": "e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809",
+        "decomposeParDict": "3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373",
+        "fvSchemes": "6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad",
+        "fvSolution": "a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942",
+        "meshQualityDict": "764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90",
+        "refineMeshDict": "ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0",
+        "setFieldsDict": "d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4",
+        "snappyHexMeshDict": "3d7cb50c60864c15c34d6a351c1459ef5121d2de8171e280e746ae499fb43103",
+        "surfaceFeatureExtractDict": "cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813",
+        "topoSetDict.1": "5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439",
+        "topoSetDict.2": "01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2",
+        "topoSetDict.3": "8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09",
+        "topoSetDict.4": "07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547",
+        "topoSetDict.5": "7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882",
+        "topoSetDict.6": "5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000"
+      },
+      "generator_revision": "not recorded in the retained case",
+      "method_readback": {
+        "local_time_stepping": true,
+        "turbulence_model": "kOmegaSST",
+        "two_phase_vof": "phases (water air)"
+      },
+      "regeneration": {
+        "command_sequence": "not recorded: run.log records utility order; native log Exec lines record individual commands, not a complete launch script",
+        "configuration": {
+          "criterion_recorded_at": "2026-10-14T11:18:14.695213+00:00",
+          "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+          "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+          "iterations": 100,
+          "lateral_reference_divisions": 20,
+          "mesh": "medium",
+          "mesh_scale": 1.0,
+          "ranks": 8,
+          "velocity_m_per_s": 2.1966335492849054
+        },
+        "fields": "not recorded: initial-field setup and complete launch sequence are absent from run.log",
+        "logged_steps": [
+          "surfaceFeatureExtract",
+          "blockMesh",
+          "topoSet.1",
+          "refineMesh.1",
+          "topoSet.2",
+          "refineMesh.2",
+          "topoSet.3",
+          "refineMesh.3",
+          "topoSet.4",
+          "refineMesh.4",
+          "topoSet.5",
+          "refineMesh.5",
+          "topoSet.6",
+          "refineMesh.6",
+          "snappyHexMesh",
+          "checkMesh"
+        ],
+        "mesh_and_fields_retained": false,
+        "mesh_commands_in_logged_order": [
+          "surfaceFeatureExtract",
+          "blockMesh",
+          "topoSet -dict system/topoSetDict.1",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.2",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.3",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.4",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.5",
+          "refineMesh -overwrite",
+          "topoSet -dict system/topoSetDict.6",
+          "refineMesh -overwrite",
+          "snappyHexMesh -overwrite",
+          "checkMesh"
+        ],
+        "native_commands": [
+          "blockMesh",
+          "checkMesh",
+          "decomposePar",
+          "interFoam -parallel",
+          "interFoam -parallel",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "refineMesh -overwrite",
+          "setFields",
+          "snappyHexMesh -overwrite",
+          "surfaceFeatureExtract",
+          "topoSet -dict system/topoSetDict.1",
+          "topoSet -dict system/topoSetDict.2",
+          "topoSet -dict system/topoSetDict.3",
+          "topoSet -dict system/topoSetDict.4",
+          "topoSet -dict system/topoSetDict.5",
+          "topoSet -dict system/topoSetDict.6"
+        ],
+        "working_directory": "restored case folder"
+      },
+      "solver_version_banner": [
+        "|  \\\\    /   O peration     | Version:  2312                                  |",
+        "Build  : _9a9aeb73-20260127 OPENFOAM=2312 patch=260127 version=2312"
+      ]
+    }
+  },
   "criteria": {
     "appendages": "none",
     "averaging_iterations": 4000,
@@ -62,12 +375,54 @@
       "size_bytes": 5328,
       "source_force_sha256": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c"
     },
+    "data/cfd/calm_water_study/raw/coarse-face-resolution.txt": {
+      "kind": "native hull-face inspection",
+      "sha256": "2dc747def20096998070c0d31a7aac353df48f0f4403bf96a55810a07220fca5",
+      "size_bytes": 150
+    },
     "data/cfd/calm_water_study/raw/coarse-force.dat": {
       "header_redaction": "none",
       "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
       "sha256": "1040ae6cbf473bfd6ad041abf800dfbf397b072b7d23a012eab77770cbeea711",
       "size_bytes": 13860,
       "source_force_sha256": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c"
+    },
+    "data/cfd/calm_water_study/raw/coarse-full-window-coefficients.csv": {
+      "bytes": 226696,
+      "first_iteration": 21001,
+      "header_redaction": "fixed header",
+      "last_iteration": 25000,
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged.",
+      "row_count": 4000,
+      "sha256": "d0806c2d85e6436871335cb5a902db92582417e124a5c617344db49ef78aa23a"
+    },
+    "data/cfd/calm_water_study/raw/coarse-full-window-force.dat": {
+      "bytes": 548192,
+      "first_iteration": 21001,
+      "header_redaction": "fixed header",
+      "last_iteration": 25000,
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged.",
+      "row_count": 4000,
+      "sha256": "cb5774e28e0360976deacde55d757fa62f6dae2f325883f14d2007cc33dc89fc"
+    },
+    "data/cfd/calm_water_study/raw/fine-coefficients.csv": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "58e26a535a4d2210f8d5f20b3566ddd89be8037ec9ea9a4bb5bad4da3b5395a2",
+      "size_bytes": 5374,
+      "source_force_sha256": "21fe85937ded4094111720b6cec0f418575c8f12d9896ebe33fe73bd8f85d290"
+    },
+    "data/cfd/calm_water_study/raw/fine-face-resolution.txt": {
+      "kind": "native hull-face inspection",
+      "sha256": "c65fd3200f71eb9cd85b855e8b4ed0060ee9ac141284d5262cbc6b6c88a7471a",
+      "size_bytes": 155
+    },
+    "data/cfd/calm_water_study/raw/fine-force.dat": {
+      "header_redaction": "none",
+      "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
+      "sha256": "1ced54aae94bf36034dae43e0db24650d6d1e4c36f2f2591b5963c41c2e9ebb7",
+      "size_bytes": 13767,
+      "source_force_sha256": "21fe85937ded4094111720b6cec0f418575c8f12d9896ebe33fe73bd8f85d290"
     },
     "data/cfd/calm_water_study/raw/medium-coefficients.csv": {
       "header_redaction": "none",
@@ -76,15 +431,426 @@
       "size_bytes": 5368,
       "source_force_sha256": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f"
     },
+    "data/cfd/calm_water_study/raw/medium-face-resolution.txt": {
+      "kind": "native hull-face inspection",
+      "sha256": "c0b14f6b959835a1721dd5c6daf2cf56e7521171f83045b050eb5353b792f4ef",
+      "size_bytes": 152
+    },
     "data/cfd/calm_water_study/raw/medium-force.dat": {
       "header_redaction": "none",
       "normalisation": "Trailing whitespace is removed from comment headers; numerical rows are unchanged.",
       "sha256": "f8228e65181ecaf91e5928c2efbb7abf6c2254bb4971b2b9e500735e7ef49625",
       "size_bytes": 13791,
       "source_force_sha256": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f"
+    },
+    "data/cfd/calm_water_study/raw/medium-full-window-coefficients.csv": {
+      "bytes": 230684,
+      "first_iteration": 21001,
+      "header_redaction": "fixed header",
+      "last_iteration": 25000,
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged.",
+      "row_count": 4000,
+      "sha256": "17baadc32b576fa40e5c074fa87cc1b8c178afb41d44921abbf347cee7a6b586"
+    },
+    "data/cfd/calm_water_study/raw/medium-full-window-force.dat": {
+      "bytes": 548192,
+      "first_iteration": 21001,
+      "header_redaction": "fixed header",
+      "last_iteration": 25000,
+      "normalisation": "Restart segments are joined in order; comment headers are replaced by a fixed header; numerical rows are unchanged.",
+      "row_count": 4000,
+      "sha256": "18c76f871702ee3db3592efbf6c93a26ce56fe4fcef0affa1d542fe520596779"
+    },
+    "data/cfd/calm_water_study/run-log.jsonl": {
+      "kind": "native run log",
+      "sha256": "5b31c942f74651b8bb07e83462761a592cf314135bf4d035bff27a55050d9763",
+      "size_bytes": 16010
     }
   },
-  "intended_use": "Native start cost only; settled resistance is not established.",
+  "full_runs": [
+    {
+      "cells": 118364,
+      "checkpoint_interval": 1000,
+      "completed_continuation_iterations": 24900,
+      "control_dict_sha256": "e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809",
+      "criterion_recorded_at": "2026-10-14T11:20:20.599360+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 24900,
+      "last_iteration": 25000,
+      "measured_wall_seconds": 4660.87,
+      "mesh": "coarse",
+      "native_log": "cases/coarse/log.interFoam.full",
+      "native_log_sha256": "6df3113a9987b1f746177003b09e039111b762a73a31ee2971e0393c79c756a8",
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "ranks": 8,
+      "readback_at": "2026-10-15T02:36:20.280203+00:00",
+      "requested_end_iteration": 25000,
+      "return_code": 0,
+      "source_force_digests": {
+        "0": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c",
+        "100": "b0c2c3cbc66b1849aadcdaba9d5e42fcdda1a82d1e9e93bd8f1326edc4083418"
+      },
+      "start_iteration": 100,
+      "start_time_basis": "Native banner and log creation time; the short-start criterion record is unchanged.",
+      "started_at": "2026-10-15T01:18:39+00:00",
+      "statistics": {
+        "first_iteration": 21001.0,
+        "last_iteration": 25000.0,
+        "mean_cp": 0.0015499971875521977,
+        "mean_ct": 0.003911737579727195,
+        "mean_cv": 0.00236174039723159,
+        "mean_resistance_n": 88.962595065,
+        "samples": 4000,
+        "standard_deviation_cp": 8.880557372619284e-05,
+        "standard_deviation_ct": 8.462334550985382e-05,
+        "standard_deviation_cv": 1.1325954498087862e-05
+      },
+      "status": "complete",
+      "wall_time_basis": "Elapsed real time measured around the parallel launcher; native completion is checked separately."
+    },
+    {
+      "available_memory_bytes_before_full": 59935952896,
+      "cells": 915357,
+      "checkpoint_interval": 1000,
+      "completed_continuation_iterations": 24900,
+      "control_dict_sha256": "e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809",
+      "criterion_recorded_at": "2026-10-14T11:27:06.812293+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "disk_free_bytes_before_full": 45823160320,
+      "full_launch_recorded_at": "2026-10-15T02:37:04.900952+00:00",
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 24900,
+      "last_iteration": 25000,
+      "measured_wall_seconds": 54492.49,
+      "mesh": "medium",
+      "native_log": "cases/medium/log.interFoam.full",
+      "native_log_sha256": "3aa5d5b4dfce5a60491162656b2db665a5a08fc6957c13ab943991c3c8cf30c0",
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "ranks": 8,
+      "readback_at": "2026-10-15T17:45:17.981900+00:00",
+      "requested_end_iteration": 25000,
+      "return_code": 0,
+      "source_force_digests": {
+        "0": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f",
+        "100": "c40f4e4c864a0ffdb21f6bb8da74e19c8bfabd9ffd6663cc081fde8b6dccdff9"
+      },
+      "start_iteration": 100,
+      "started_at": "2026-10-15T02:37:05+00:00",
+      "statistics": {
+        "first_iteration": 21001.0,
+        "last_iteration": 25000.0,
+        "mean_cp": 0.0008994584046465938,
+        "mean_ct": 0.00352475658663521,
+        "mean_cv": 0.0026252981833077126,
+        "mean_resistance_n": 80.16168941,
+        "samples": 4000,
+        "standard_deviation_cp": 1.4377124357335387e-06,
+        "standard_deviation_ct": 6.580072858662562e-06,
+        "standard_deviation_cv": 6.419621007590226e-06
+      },
+      "status": "complete",
+      "wall_time_basis": "Elapsed real time measured around the parallel launcher; native completion is checked separately."
+    }
+  ],
+  "intended_use": "Native execution cost and descriptive force histories; experimental validation and grid uncertainty are not established.",
+  "model_basis": {
+    "air_density_kg_per_m3": 1.0,
+    "air_kinematic_viscosity_m2_per_s": 1.48e-05,
+    "area_m2": 9.4379,
+    "beam_m": 1.019,
+    "case_gravity_m_per_s2": 9.81,
+    "density_kg_per_m3": 998.8,
+    "domain_bounds_m": {
+      "x": [
+        -31.8599,
+        19.6061
+      ],
+      "y": [
+        -23.2822,
+        0.0
+      ],
+      "z": [
+        -19.6061,
+        4.90152
+      ]
+    },
+    "draft_m": 0.3418,
+    "executed_froude": 0.25995518270129314,
+    "executed_reynolds": 13999974.709946323,
+    "geometry_bounds_m": {
+      "x": [
+        -0.1232909531748,
+        7.566695518825
+      ],
+      "y": [
+        -0.5095092786,
+        0.5095092786
+      ],
+      "z": [
+        -0.04279581393734,
+        0.4319071994627
+      ]
+    },
+    "input_basis": "assumed, based on previous experience; retained model geometry and case configuration",
+    "kinematic_viscosity_m2_per_s": 1.14203e-06,
+    "lpp_m": 7.2786,
+    "nominal_froude": 0.26,
+    "plan_envelope_xy_m": [
+      [
+        -0.1232909531748,
+        -0.491887788
+      ],
+      [
+        -0.1122274811748,
+        -0.4928776776
+      ],
+      [
+        -0.1008000791748,
+        -0.4938748458
+      ],
+      [
+        -0.0888631751748,
+        -0.4948647354
+      ],
+      [
+        -0.0764895551748,
+        -0.4958473464
+      ],
+      [
+        -0.0636064331748,
+        -0.4968226788
+      ],
+      [
+        -0.0501410231748,
+        -0.4978125684
+      ],
+      [
+        -0.0361661111748,
+        -0.4987951794
+      ],
+      [
+        -0.0216816971748,
+        -0.4997777904
+      ],
+      [
+        -0.0066149951748,
+        -0.5007385656
+      ],
+      [
+        0.009106780825199,
+        -0.5016556692
+      ],
+      [
+        0.0254836308252,
+        -0.5025582156
+      ],
+      [
+        0.0424427688252,
+        -0.5034534834
+      ],
+      [
+        0.0601297668252,
+        -0.5042905224
+      ],
+      [
+        0.0785446248252,
+        -0.5050911684
+      ],
+      [
+        0.0976873428252,
+        -0.5058481428
+      ],
+      [
+        0.1168300608252,
+        -0.5065032168
+      ],
+      [
+        0.1352449188252,
+        -0.5070563904
+      ],
+      [
+        0.1529319168252,
+        -0.507536778
+      ],
+      [
+        0.1699638408252,
+        -0.507937101
+      ],
+      [
+        0.1862679048252,
+        -0.5082791952
+      ],
+      [
+        0.2020624668252,
+        -0.5085703392
+      ],
+      [
+        0.2171291688252,
+        -0.5087886972
+      ],
+      [
+        0.2457340668252,
+        -0.5091453486
+      ],
+      [
+        0.2591266908252,
+        -0.5092545276
+      ],
+      [
+        0.2720825988252,
+        -0.5093491494
+      ],
+      [
+        0.2845290048252,
+        -0.509429214
+      ],
+      [
+        0.2964659088252,
+        -0.5094728856
+      ],
+      [
+        0.3079660968252,
+        -0.5095092786
+      ],
+      [
+        5.088550576825,
+        -0.509502
+      ],
+      [
+        5.190305404825,
+        -0.5094947214
+      ],
+      [
+        5.286018994825,
+        -0.5090143338
+      ],
+      [
+        5.378020498825,
+        -0.5073766488
+      ],
+      [
+        5.466528274825,
+        -0.5040576072
+      ],
+      [
+        5.551469536825,
+        -0.4988097366
+      ],
+      [
+        5.632989856825,
+        -0.4917858876
+      ],
+      [
+        5.711234806825,
+        -0.4833427116
+      ],
+      [
+        5.786277172825,
+        -0.4737422382
+      ],
+      [
+        5.858262526825,
+        -0.4632610542
+      ],
+      [
+        5.927336440825,
+        -0.452146632
+      ],
+      [
+        5.993571700825,
+        -0.440464479
+      ],
+      [
+        6.057041092825,
+        -0.4282437096
+      ],
+      [
+        6.117890188825,
+        -0.4154406522
+      ],
+      [
+        6.176191774825,
+        -0.4020771426
+      ],
+      [
+        6.232018636825,
+        -0.388204131
+      ],
+      [
+        7.497767176825,
+        -0.06840646638
+      ],
+      [
+        7.507811644825,
+        -0.06510998844
+      ],
+      [
+        7.517564968825,
+        -0.06110457486
+      ],
+      [
+        7.526372074825,
+        -0.05675051634
+      ],
+      [
+        7.534305748825,
+        -0.05185129068
+      ],
+      [
+        7.541729920825,
+        -0.04638069492
+      ],
+      [
+        7.548062302825,
+        -0.04054762488
+      ],
+      [
+        7.553594038825,
+        -0.03430258608
+      ],
+      [
+        7.558106770825,
+        -0.02769070584
+      ],
+      [
+        7.561673284825,
+        -0.0207840423
+      ],
+      [
+        7.564002436825,
+        -0.01375582614
+      ],
+      [
+        7.565530942825,
+        -0.006778705752
+      ],
+      [
+        7.566695518825,
+        0.0
+      ],
+      [
+        -0.1232909531748,
+        0.0
+      ]
+    ],
+    "speed_m_per_s": 2.19663,
+    "surface_tension_n_per_m": 0.0
+  },
   "qualified_results": 0,
   "readiness_status": "partial",
   "runs": [
@@ -94,6 +860,15 @@
       "completed_iterations": 100,
       "criterion_recorded_at": "2026-10-14T11:20:20.599360+00:00",
       "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "face_resolution": {
+        "area_ratio_1": 2.9,
+        "faces": 6100,
+        "limit_1": 8.0,
+        "maximum_face_area_m2": 0.004258,
+        "mean_face_area_m2": 0.001542,
+        "source_sha256": "2dc747def20096998070c0d31a7aac353df48f0f4403bf96a55810a07220fca5",
+        "target_cell_length_m": 0.03829
+      },
       "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
       "iterations": 100,
       "lateral_reference_divisions": 20,
@@ -101,6 +876,289 @@
       "memory_fits": true,
       "mesh": "coarse",
       "mesh_scale": 0.5,
+      "model_basis": {
+        "air_density_kg_per_m3": 1.0,
+        "air_kinematic_viscosity_m2_per_s": 1.48e-05,
+        "area_m2": 9.4379,
+        "beam_m": 1.019,
+        "case_gravity_m_per_s2": 9.81,
+        "density_kg_per_m3": 998.8,
+        "domain_bounds_m": {
+          "x": [
+            -31.8599,
+            19.6061
+          ],
+          "y": [
+            -23.2822,
+            0.0
+          ],
+          "z": [
+            -19.6061,
+            4.90152
+          ]
+        },
+        "draft_m": 0.3418,
+        "executed_froude": 0.25995518270129314,
+        "executed_reynolds": 13999974.709946323,
+        "geometry_bounds_m": {
+          "x": [
+            -0.1232909531748,
+            7.566695518825
+          ],
+          "y": [
+            -0.5095092786,
+            0.5095092786
+          ],
+          "z": [
+            -0.04279581393734,
+            0.4319071994627
+          ]
+        },
+        "input_basis": "assumed, based on previous experience; retained model geometry and case configuration",
+        "kinematic_viscosity_m2_per_s": 1.14203e-06,
+        "lpp_m": 7.2786,
+        "nominal_froude": 0.26,
+        "plan_envelope_xy_m": [
+          [
+            -0.1232909531748,
+            -0.491887788
+          ],
+          [
+            -0.1122274811748,
+            -0.4928776776
+          ],
+          [
+            -0.1008000791748,
+            -0.4938748458
+          ],
+          [
+            -0.0888631751748,
+            -0.4948647354
+          ],
+          [
+            -0.0764895551748,
+            -0.4958473464
+          ],
+          [
+            -0.0636064331748,
+            -0.4968226788
+          ],
+          [
+            -0.0501410231748,
+            -0.4978125684
+          ],
+          [
+            -0.0361661111748,
+            -0.4987951794
+          ],
+          [
+            -0.0216816971748,
+            -0.4997777904
+          ],
+          [
+            -0.0066149951748,
+            -0.5007385656
+          ],
+          [
+            0.009106780825199,
+            -0.5016556692
+          ],
+          [
+            0.0254836308252,
+            -0.5025582156
+          ],
+          [
+            0.0424427688252,
+            -0.5034534834
+          ],
+          [
+            0.0601297668252,
+            -0.5042905224
+          ],
+          [
+            0.0785446248252,
+            -0.5050911684
+          ],
+          [
+            0.0976873428252,
+            -0.5058481428
+          ],
+          [
+            0.1168300608252,
+            -0.5065032168
+          ],
+          [
+            0.1352449188252,
+            -0.5070563904
+          ],
+          [
+            0.1529319168252,
+            -0.507536778
+          ],
+          [
+            0.1699638408252,
+            -0.507937101
+          ],
+          [
+            0.1862679048252,
+            -0.5082791952
+          ],
+          [
+            0.2020624668252,
+            -0.5085703392
+          ],
+          [
+            0.2171291688252,
+            -0.5087886972
+          ],
+          [
+            0.2457340668252,
+            -0.5091453486
+          ],
+          [
+            0.2591266908252,
+            -0.5092545276
+          ],
+          [
+            0.2720825988252,
+            -0.5093491494
+          ],
+          [
+            0.2845290048252,
+            -0.509429214
+          ],
+          [
+            0.2964659088252,
+            -0.5094728856
+          ],
+          [
+            0.3079660968252,
+            -0.5095092786
+          ],
+          [
+            5.088550576825,
+            -0.509502
+          ],
+          [
+            5.190305404825,
+            -0.5094947214
+          ],
+          [
+            5.286018994825,
+            -0.5090143338
+          ],
+          [
+            5.378020498825,
+            -0.5073766488
+          ],
+          [
+            5.466528274825,
+            -0.5040576072
+          ],
+          [
+            5.551469536825,
+            -0.4988097366
+          ],
+          [
+            5.632989856825,
+            -0.4917858876
+          ],
+          [
+            5.711234806825,
+            -0.4833427116
+          ],
+          [
+            5.786277172825,
+            -0.4737422382
+          ],
+          [
+            5.858262526825,
+            -0.4632610542
+          ],
+          [
+            5.927336440825,
+            -0.452146632
+          ],
+          [
+            5.993571700825,
+            -0.440464479
+          ],
+          [
+            6.057041092825,
+            -0.4282437096
+          ],
+          [
+            6.117890188825,
+            -0.4154406522
+          ],
+          [
+            6.176191774825,
+            -0.4020771426
+          ],
+          [
+            6.232018636825,
+            -0.388204131
+          ],
+          [
+            7.497767176825,
+            -0.06840646638
+          ],
+          [
+            7.507811644825,
+            -0.06510998844
+          ],
+          [
+            7.517564968825,
+            -0.06110457486
+          ],
+          [
+            7.526372074825,
+            -0.05675051634
+          ],
+          [
+            7.534305748825,
+            -0.05185129068
+          ],
+          [
+            7.541729920825,
+            -0.04638069492
+          ],
+          [
+            7.548062302825,
+            -0.04054762488
+          ],
+          [
+            7.553594038825,
+            -0.03430258608
+          ],
+          [
+            7.558106770825,
+            -0.02769070584
+          ],
+          [
+            7.561673284825,
+            -0.0207840423
+          ],
+          [
+            7.564002436825,
+            -0.01375582614
+          ],
+          [
+            7.565530942825,
+            -0.006778705752
+          ],
+          [
+            7.566695518825,
+            0.0
+          ],
+          [
+            -0.1232909531748,
+            0.0
+          ]
+        ],
+        "speed_m_per_s": 2.19663,
+        "surface_tension_n_per_m": 0.0
+      },
       "normalisation": {
         "area_m2": 9.4379,
         "basis": "assumed, based on previous experience; existing case configuration",
@@ -124,6 +1182,15 @@
       "completed_iterations": 100,
       "criterion_recorded_at": "2026-10-14T11:27:06.812293+00:00",
       "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "face_resolution": {
+        "area_ratio_1": 2.88,
+        "faces": 24211,
+        "limit_1": 8.0,
+        "maximum_face_area_m2": 0.001057,
+        "mean_face_area_m2": 0.000393,
+        "source_sha256": "c0b14f6b959835a1721dd5c6daf2cf56e7521171f83045b050eb5353b792f4ef",
+        "target_cell_length_m": 0.01915
+      },
       "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
       "iterations": 100,
       "lateral_reference_divisions": 20,
@@ -131,6 +1198,289 @@
       "memory_fits": true,
       "mesh": "medium",
       "mesh_scale": 1.0,
+      "model_basis": {
+        "air_density_kg_per_m3": 1.0,
+        "air_kinematic_viscosity_m2_per_s": 1.48e-05,
+        "area_m2": 9.4379,
+        "beam_m": 1.019,
+        "case_gravity_m_per_s2": 9.81,
+        "density_kg_per_m3": 998.8,
+        "domain_bounds_m": {
+          "x": [
+            -31.8599,
+            19.6061
+          ],
+          "y": [
+            -23.2822,
+            0.0
+          ],
+          "z": [
+            -19.6061,
+            4.90152
+          ]
+        },
+        "draft_m": 0.3418,
+        "executed_froude": 0.25995518270129314,
+        "executed_reynolds": 13999974.709946323,
+        "geometry_bounds_m": {
+          "x": [
+            -0.1232909531748,
+            7.566695518825
+          ],
+          "y": [
+            -0.5095092786,
+            0.5095092786
+          ],
+          "z": [
+            -0.04279581393734,
+            0.4319071994627
+          ]
+        },
+        "input_basis": "assumed, based on previous experience; retained model geometry and case configuration",
+        "kinematic_viscosity_m2_per_s": 1.14203e-06,
+        "lpp_m": 7.2786,
+        "nominal_froude": 0.26,
+        "plan_envelope_xy_m": [
+          [
+            -0.1232909531748,
+            -0.491887788
+          ],
+          [
+            -0.1122274811748,
+            -0.4928776776
+          ],
+          [
+            -0.1008000791748,
+            -0.4938748458
+          ],
+          [
+            -0.0888631751748,
+            -0.4948647354
+          ],
+          [
+            -0.0764895551748,
+            -0.4958473464
+          ],
+          [
+            -0.0636064331748,
+            -0.4968226788
+          ],
+          [
+            -0.0501410231748,
+            -0.4978125684
+          ],
+          [
+            -0.0361661111748,
+            -0.4987951794
+          ],
+          [
+            -0.0216816971748,
+            -0.4997777904
+          ],
+          [
+            -0.0066149951748,
+            -0.5007385656
+          ],
+          [
+            0.009106780825199,
+            -0.5016556692
+          ],
+          [
+            0.0254836308252,
+            -0.5025582156
+          ],
+          [
+            0.0424427688252,
+            -0.5034534834
+          ],
+          [
+            0.0601297668252,
+            -0.5042905224
+          ],
+          [
+            0.0785446248252,
+            -0.5050911684
+          ],
+          [
+            0.0976873428252,
+            -0.5058481428
+          ],
+          [
+            0.1168300608252,
+            -0.5065032168
+          ],
+          [
+            0.1352449188252,
+            -0.5070563904
+          ],
+          [
+            0.1529319168252,
+            -0.507536778
+          ],
+          [
+            0.1699638408252,
+            -0.507937101
+          ],
+          [
+            0.1862679048252,
+            -0.5082791952
+          ],
+          [
+            0.2020624668252,
+            -0.5085703392
+          ],
+          [
+            0.2171291688252,
+            -0.5087886972
+          ],
+          [
+            0.2457340668252,
+            -0.5091453486
+          ],
+          [
+            0.2591266908252,
+            -0.5092545276
+          ],
+          [
+            0.2720825988252,
+            -0.5093491494
+          ],
+          [
+            0.2845290048252,
+            -0.509429214
+          ],
+          [
+            0.2964659088252,
+            -0.5094728856
+          ],
+          [
+            0.3079660968252,
+            -0.5095092786
+          ],
+          [
+            5.088550576825,
+            -0.509502
+          ],
+          [
+            5.190305404825,
+            -0.5094947214
+          ],
+          [
+            5.286018994825,
+            -0.5090143338
+          ],
+          [
+            5.378020498825,
+            -0.5073766488
+          ],
+          [
+            5.466528274825,
+            -0.5040576072
+          ],
+          [
+            5.551469536825,
+            -0.4988097366
+          ],
+          [
+            5.632989856825,
+            -0.4917858876
+          ],
+          [
+            5.711234806825,
+            -0.4833427116
+          ],
+          [
+            5.786277172825,
+            -0.4737422382
+          ],
+          [
+            5.858262526825,
+            -0.4632610542
+          ],
+          [
+            5.927336440825,
+            -0.452146632
+          ],
+          [
+            5.993571700825,
+            -0.440464479
+          ],
+          [
+            6.057041092825,
+            -0.4282437096
+          ],
+          [
+            6.117890188825,
+            -0.4154406522
+          ],
+          [
+            6.176191774825,
+            -0.4020771426
+          ],
+          [
+            6.232018636825,
+            -0.388204131
+          ],
+          [
+            7.497767176825,
+            -0.06840646638
+          ],
+          [
+            7.507811644825,
+            -0.06510998844
+          ],
+          [
+            7.517564968825,
+            -0.06110457486
+          ],
+          [
+            7.526372074825,
+            -0.05675051634
+          ],
+          [
+            7.534305748825,
+            -0.05185129068
+          ],
+          [
+            7.541729920825,
+            -0.04638069492
+          ],
+          [
+            7.548062302825,
+            -0.04054762488
+          ],
+          [
+            7.553594038825,
+            -0.03430258608
+          ],
+          [
+            7.558106770825,
+            -0.02769070584
+          ],
+          [
+            7.561673284825,
+            -0.0207840423
+          ],
+          [
+            7.564002436825,
+            -0.01375582614
+          ],
+          [
+            7.565530942825,
+            -0.006778705752
+          ],
+          [
+            7.566695518825,
+            0.0
+          ],
+          [
+            -0.1232909531748,
+            0.0
+          ]
+        ],
+        "speed_m_per_s": 2.19663,
+        "surface_tension_n_per_m": 0.0
+      },
       "normalisation": {
         "area_m2": 9.4379,
         "basis": "assumed, based on previous experience; existing case configuration",
@@ -147,7 +1497,1832 @@
       "seconds_per_iteration": 2.3268769888207315,
       "timed_start_started_at": "2026-10-14T11:27:06.812350+00:00",
       "velocity_m_per_s": 2.19663
+    },
+    {
+      "available_memory_bytes_before": 58707357696,
+      "cells": 7194074,
+      "completed_iterations": 100,
+      "criterion_recorded_at": "2026-10-14T12:49:35.048389+00:00",
+      "criterion_sha256": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
+      "face_resolution": {
+        "area_ratio_1": 4.69,
+        "faces": 95717,
+        "limit_1": 8.0,
+        "maximum_face_area_m2": 0.0004296,
+        "mean_face_area_m2": 9.845e-05,
+        "source_sha256": "c65fd3200f71eb9cd85b855e8b4ed0060ee9ac141284d5262cbc6b6c88a7471a",
+        "target_cell_length_m": 0.009573
+      },
+      "geometry_sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+      "iterations": 100,
+      "lateral_reference_divisions": 20,
+      "measured_wall_seconds": 2716.0701515860856,
+      "memory_fits": true,
+      "mesh": "fine",
+      "mesh_scale": 2.0,
+      "model_basis": {
+        "air_density_kg_per_m3": 1.0,
+        "air_kinematic_viscosity_m2_per_s": 1.48e-05,
+        "area_m2": 9.4379,
+        "beam_m": 1.019,
+        "case_gravity_m_per_s2": 9.81,
+        "density_kg_per_m3": 998.8,
+        "domain_bounds_m": {
+          "x": [
+            -31.8599,
+            19.6061
+          ],
+          "y": [
+            -23.2822,
+            0.0
+          ],
+          "z": [
+            -19.6061,
+            4.90152
+          ]
+        },
+        "draft_m": 0.3418,
+        "executed_froude": 0.25995518270129314,
+        "executed_reynolds": 13999974.709946323,
+        "geometry_bounds_m": {
+          "x": [
+            -0.1232909531748,
+            7.566695518825
+          ],
+          "y": [
+            -0.5095092786,
+            0.5095092786
+          ],
+          "z": [
+            -0.04279581393734,
+            0.4319071994627
+          ]
+        },
+        "input_basis": "assumed, based on previous experience; retained model geometry and case configuration",
+        "kinematic_viscosity_m2_per_s": 1.14203e-06,
+        "lpp_m": 7.2786,
+        "nominal_froude": 0.26,
+        "plan_envelope_xy_m": [
+          [
+            -0.1232909531748,
+            -0.491887788
+          ],
+          [
+            -0.1122274811748,
+            -0.4928776776
+          ],
+          [
+            -0.1008000791748,
+            -0.4938748458
+          ],
+          [
+            -0.0888631751748,
+            -0.4948647354
+          ],
+          [
+            -0.0764895551748,
+            -0.4958473464
+          ],
+          [
+            -0.0636064331748,
+            -0.4968226788
+          ],
+          [
+            -0.0501410231748,
+            -0.4978125684
+          ],
+          [
+            -0.0361661111748,
+            -0.4987951794
+          ],
+          [
+            -0.0216816971748,
+            -0.4997777904
+          ],
+          [
+            -0.0066149951748,
+            -0.5007385656
+          ],
+          [
+            0.009106780825199,
+            -0.5016556692
+          ],
+          [
+            0.0254836308252,
+            -0.5025582156
+          ],
+          [
+            0.0424427688252,
+            -0.5034534834
+          ],
+          [
+            0.0601297668252,
+            -0.5042905224
+          ],
+          [
+            0.0785446248252,
+            -0.5050911684
+          ],
+          [
+            0.0976873428252,
+            -0.5058481428
+          ],
+          [
+            0.1168300608252,
+            -0.5065032168
+          ],
+          [
+            0.1352449188252,
+            -0.5070563904
+          ],
+          [
+            0.1529319168252,
+            -0.507536778
+          ],
+          [
+            0.1699638408252,
+            -0.507937101
+          ],
+          [
+            0.1862679048252,
+            -0.5082791952
+          ],
+          [
+            0.2020624668252,
+            -0.5085703392
+          ],
+          [
+            0.2171291688252,
+            -0.5087886972
+          ],
+          [
+            0.2457340668252,
+            -0.5091453486
+          ],
+          [
+            0.2591266908252,
+            -0.5092545276
+          ],
+          [
+            0.2720825988252,
+            -0.5093491494
+          ],
+          [
+            0.2845290048252,
+            -0.509429214
+          ],
+          [
+            0.2964659088252,
+            -0.5094728856
+          ],
+          [
+            0.3079660968252,
+            -0.5095092786
+          ],
+          [
+            5.088550576825,
+            -0.509502
+          ],
+          [
+            5.190305404825,
+            -0.5094947214
+          ],
+          [
+            5.286018994825,
+            -0.5090143338
+          ],
+          [
+            5.378020498825,
+            -0.5073766488
+          ],
+          [
+            5.466528274825,
+            -0.5040576072
+          ],
+          [
+            5.551469536825,
+            -0.4988097366
+          ],
+          [
+            5.632989856825,
+            -0.4917858876
+          ],
+          [
+            5.711234806825,
+            -0.4833427116
+          ],
+          [
+            5.786277172825,
+            -0.4737422382
+          ],
+          [
+            5.858262526825,
+            -0.4632610542
+          ],
+          [
+            5.927336440825,
+            -0.452146632
+          ],
+          [
+            5.993571700825,
+            -0.440464479
+          ],
+          [
+            6.057041092825,
+            -0.4282437096
+          ],
+          [
+            6.117890188825,
+            -0.4154406522
+          ],
+          [
+            6.176191774825,
+            -0.4020771426
+          ],
+          [
+            6.232018636825,
+            -0.388204131
+          ],
+          [
+            7.497767176825,
+            -0.06840646638
+          ],
+          [
+            7.507811644825,
+            -0.06510998844
+          ],
+          [
+            7.517564968825,
+            -0.06110457486
+          ],
+          [
+            7.526372074825,
+            -0.05675051634
+          ],
+          [
+            7.534305748825,
+            -0.05185129068
+          ],
+          [
+            7.541729920825,
+            -0.04638069492
+          ],
+          [
+            7.548062302825,
+            -0.04054762488
+          ],
+          [
+            7.553594038825,
+            -0.03430258608
+          ],
+          [
+            7.558106770825,
+            -0.02769070584
+          ],
+          [
+            7.561673284825,
+            -0.0207840423
+          ],
+          [
+            7.564002436825,
+            -0.01375582614
+          ],
+          [
+            7.565530942825,
+            -0.006778705752
+          ],
+          [
+            7.566695518825,
+            0.0
+          ],
+          [
+            -0.1232909531748,
+            0.0
+          ]
+        ],
+        "speed_m_per_s": 2.19663,
+        "surface_tension_n_per_m": 0.0
+      },
+      "normalisation": {
+        "area_m2": 9.4379,
+        "basis": "assumed, based on previous experience; existing case configuration",
+        "density_kg_per_m3": 998.8,
+        "full_hull_force_multiplier": 2.0,
+        "half_domain": true,
+        "speed_m_per_s": 2.19663
+      },
+      "peak_aggregate_rss_bytes": 16009441280,
+      "projected_full_seconds": 679017.5378965214,
+      "ranks": 8,
+      "requested_velocity_m_per_s": 2.1966335492849054,
+      "return_code": 0,
+      "seconds_per_iteration": 27.160701515860854,
+      "timed_start_started_at": "2026-10-14T12:49:35.048458+00:00",
+      "velocity_m_per_s": 2.19663
     }
   ],
-  "schema_version": 1
+  "schema_version": 1,
+  "store": {
+    "cases": {
+      "coarse": [
+        {
+          "bytes": 1514,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/0.orig/U",
+          "sha256": "f778bd3bb73481f72387bbf753a46ec70b3ac042dfd71513e4f4c7e0a5cd43b9",
+          "store_id": "blobs/sha256/f7/f778bd3bb73481f72387bbf753a46ec70b3ac042dfd71513e4f4c7e0a5cd43b9.txt"
+        },
+        {
+          "bytes": 1432,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/0.orig/alpha.water",
+          "sha256": "e88fbf76c143424bd0048716fc38a283e54266a8f01c71a0b6ecdfa123c43b16",
+          "store_id": "blobs/sha256/e8/e88fbf76c143424bd0048716fc38a283e54266a8f01c71a0b6ecdfa123c43b16.water"
+        },
+        {
+          "bytes": 1450,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/0.orig/k",
+          "sha256": "2235132bb0a58db8e94a743d9db84bb81766b22f2530905c89638bcd09888e27",
+          "store_id": "blobs/sha256/22/2235132bb0a58db8e94a743d9db84bb81766b22f2530905c89638bcd09888e27.txt"
+        },
+        {
+          "bytes": 1296,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/0.orig/nut",
+          "sha256": "7cf7f4eaa6317feabb755d06f6699f36f531b2c62e0107b8311ff21760a98641",
+          "store_id": "blobs/sha256/7c/7cf7f4eaa6317feabb755d06f6699f36f531b2c62e0107b8311ff21760a98641.txt"
+        },
+        {
+          "bytes": 1450,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/0.orig/omega",
+          "sha256": "1f9f8113e10909f6be2ee44f1df4ecb937c256bc77f1c3e1ba74b9a7c4e54b30",
+          "store_id": "blobs/sha256/1f/1f9f8113e10909f6be2ee44f1df4ecb937c256bc77f1c3e1ba74b9a7c4e54b30.txt"
+        },
+        {
+          "bytes": 1339,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/0.orig/p_rgh",
+          "sha256": "dad7223ff78bc7ae7f0570df86badd8af6c346243453d57a25868842247098f4",
+          "store_id": "blobs/sha256/da/dad7223ff78bc7ae7f0570df86badd8af6c346243453d57a25868842247098f4.txt"
+        },
+        {
+          "bytes": 1346,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/0.orig/pointDisplacement",
+          "sha256": "3ef8efe129ed4510d1e29f410128ed32f2117dec3ad3e6574e59e9c5cd0eb4c4",
+          "store_id": "blobs/sha256/3e/3ef8efe129ed4510d1e29f410128ed32f2117dec3ad3e6574e59e9c5cd0eb4c4.txt"
+        },
+        {
+          "bytes": 79285,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs.extendedFeatureEdgeMesh",
+          "sha256": "00c6d1e7d2aa490bebc8493ee81c13890d3d711a453462e7afc617c843d7a524",
+          "store_id": "blobs/sha256/00/00c6d1e7d2aa490bebc8493ee81c13890d3d711a453462e7afc617c843d7a524.txt"
+        },
+        {
+          "bytes": 61,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_concaveFeaturePts.obj",
+          "sha256": "0452e4359bafc0786540fede504aff120c9398df2ddd5973047aeb54be5aa231",
+          "store_id": "blobs/sha256/04/0452e4359bafc0786540fede504aff120c9398df2ddd5973047aeb54be5aa231.obj"
+        },
+        {
+          "bytes": 293,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_convexFeaturePts.obj",
+          "sha256": "55c3c3f039e84b3add73deaf3bb2c33b8de21370767aae151c462a1fc981d1f5",
+          "store_id": "blobs/sha256/55/55c3c3f039e84b3add73deaf3bb2c33b8de21370767aae151c462a1fc981d1f5.obj"
+        },
+        {
+          "bytes": 47741,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_edgeDirections.obj",
+          "sha256": "dabf72ddf195fecaa5fc57c3b0f43bd63f06ba5ce1aa7309b8ba16aa9ba318f4",
+          "store_id": "blobs/sha256/da/dabf72ddf195fecaa5fc57c3b0f43bd63f06ba5ce1aa7309b8ba16aa9ba318f4.obj"
+        },
+        {
+          "bytes": 25783,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_edgeMesh.obj",
+          "sha256": "905084049ed087fc0e8ce23281ce8a122abe67aecf2393b4a479c93eb8f384c9",
+          "store_id": "blobs/sha256/90/905084049ed087fc0e8ce23281ce8a122abe67aecf2393b4a479c93eb8f384c9.obj"
+        },
+        {
+          "bytes": 41988,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_externalEdges.obj",
+          "sha256": "37e5bb04a44d54bde67c6c551c4b3329f8017df9a8ef8f0dac648be3a051ec94",
+          "store_id": "blobs/sha256/37/37e5bb04a44d54bde67c6c551c4b3329f8017df9a8ef8f0dac648be3a051ec94.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_flatEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 5612,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_internalEdges.obj",
+          "sha256": "1647e4517c014b8876052123b923339cec6af27b0a90172334e2483940a78368",
+          "store_id": "blobs/sha256/16/1647e4517c014b8876052123b923339cec6af27b0a90172334e2483940a78368.obj"
+        },
+        {
+          "bytes": 1472,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_mixedFeaturePts.obj",
+          "sha256": "4e1d8f2882dd2ab5991f1dd6b7ef83a85b4dc48a5f3bd4658916b28802dea5b3",
+          "store_id": "blobs/sha256/4e/4e1d8f2882dd2ab5991f1dd6b7ef83a85b4dc48a5f3bd4658916b28802dea5b3.obj"
+        },
+        {
+          "bytes": 14244,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_mixedFeaturePtsStructure.obj",
+          "sha256": "5b11ec6e6753cbf63485f2243ec35e90a130bfa08d03cb2ec3de1298dbb8e6a0",
+          "store_id": "blobs/sha256/5b/5b11ec6e6753cbf63485f2243ec35e90a130bfa08d03cb2ec3de1298dbb8e6a0.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_multipleEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_openEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/extendedFeatureEdgeMesh/kcs_regionEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 909,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/g",
+          "sha256": "5ab0306a034f756f7c11c8aa3ee07294946abda3c14592ac24cbe5ad76d160f3",
+          "store_id": "blobs/sha256/5a/5ab0306a034f756f7c11c8aa3ee07294946abda3c14592ac24cbe5ad76d160f3.txt"
+        },
+        {
+          "bytes": 908,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/hRef",
+          "sha256": "ba38db7567c63bf67250cc87d3efefb11bc77a0c3b10822ff11a55f91e2be56a",
+          "store_id": "blobs/sha256/ba/ba38db7567c63bf67250cc87d3efefb11bc77a0c3b10822ff11a55f91e2be56a.txt"
+        },
+        {
+          "bytes": 1090,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/transportProperties",
+          "sha256": "2a657e467f62c0d05d181195fa2e4e2af1eb921b824fdcfe4aeefedc3d96f231",
+          "store_id": "blobs/sha256/2a/2a657e467f62c0d05d181195fa2e4e2af1eb921b824fdcfe4aeefedc3d96f231.txt"
+        },
+        {
+          "bytes": 22705,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/triSurface/kcs.eMesh",
+          "sha256": "1763cfe74ca6868788a1d2f68fe258aa3bbd60f19c40bf65c62ed9c62dbc3409",
+          "store_id": "blobs/sha256/17/1763cfe74ca6868788a1d2f68fe258aa3bbd60f19c40bf65c62ed9c62dbc3409.emesh"
+        },
+        {
+          "bytes": 15534527,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/triSurface/kcs.stl",
+          "sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+          "store_id": "blobs/sha256/7b/7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190.stl"
+        },
+        {
+          "bytes": 961,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/constant/turbulenceProperties",
+          "sha256": "174ec3ba6d15a197b68c6e0b3cb302fc7e5983851379313d5bac353deae78b17",
+          "store_id": "blobs/sha256/17/174ec3ba6d15a197b68c6e0b3cb302fc7e5983851379313d5bac353deae78b17.txt"
+        },
+        {
+          "bytes": 1038,
+          "class": "CASE-RECORD",
+          "path": "data/cfd/calm_water_study/cases/coarse/full-run.json",
+          "sha256": "ece73cb4f1539f8c3c4006d04af27b3b65a2175664dbd35a541b73a9d66983f1",
+          "store_id": "blobs/sha256/ec/ece73cb4f1539f8c3c4006d04af27b3b65a2175664dbd35a541b73a9d66983f1.json"
+        },
+        {
+          "bytes": 3833,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.blockMesh",
+          "sha256": "25ce877dfee1ccf25dd765c14c256e91ee939fcad8c8dd63eb4856139944aaca",
+          "store_id": "blobs/sha256/25/25ce877dfee1ccf25dd765c14c256e91ee939fcad8c8dd63eb4856139944aaca.log"
+        },
+        {
+          "bytes": 4661,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.checkMesh",
+          "sha256": "bbc6a94cd8f88fc431bca2219922ce80084402547e0459db97d970c549f69fdd",
+          "store_id": "blobs/sha256/bb/bbc6a94cd8f88fc431bca2219922ce80084402547e0459db97d970c549f69fdd.log"
+        },
+        {
+          "bytes": 5391,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.decomposePar",
+          "sha256": "08d5d06a6a8f4a9b55c93c9cfe6c2912e8f7c4754082b10a9ff548d2e0459726",
+          "store_id": "blobs/sha256/08/08d5d06a6a8f4a9b55c93c9cfe6c2912e8f7c4754082b10a9ff548d2e0459726.log"
+        },
+        {
+          "bytes": 150,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.face-resolution",
+          "sha256": "2dc747def20096998070c0d31a7aac353df48f0f4403bf96a55810a07220fca5",
+          "store_id": "blobs/sha256/2d/2dc747def20096998070c0d31a7aac353df48f0f4403bf96a55810a07220fca5.log"
+        },
+        {
+          "bytes": 41892051,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.interFoam.full",
+          "sha256": "6df3113a9987b1f746177003b09e039111b762a73a31ee2971e0393c79c756a8",
+          "store_id": "blobs/sha256/6d/6df3113a9987b1f746177003b09e039111b762a73a31ee2971e0393c79c756a8.log"
+        },
+        {
+          "bytes": 171470,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.interFoam.start",
+          "sha256": "b14e442bc8a389ce79208fe6d0a5d394f6e1b09c21c9edb3e1b02a5be3ab5cbb",
+          "store_id": "blobs/sha256/b1/b14e442bc8a389ce79208fe6d0a5d394f6e1b09c21c9edb3e1b02a5be3ab5cbb.log"
+        },
+        {
+          "bytes": 2872,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.refineMesh.1",
+          "sha256": "4c3514a1b08974083ec00d298c0742d1f4956c786fcfa77ac3280bfc84e6fee7",
+          "store_id": "blobs/sha256/4c/4c3514a1b08974083ec00d298c0742d1f4956c786fcfa77ac3280bfc84e6fee7.log"
+        },
+        {
+          "bytes": 2875,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.refineMesh.2",
+          "sha256": "e8e04dff2aef1d7eaf0f1e75bd6998def6609adcdb7fabf4f65aff4662b1156c",
+          "store_id": "blobs/sha256/e8/e8e04dff2aef1d7eaf0f1e75bd6998def6609adcdb7fabf4f65aff4662b1156c.log"
+        },
+        {
+          "bytes": 2876,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.refineMesh.3",
+          "sha256": "90d8431de50b3935609202b7862d7c2d078ed8c98d25301654986fd0f3326930",
+          "store_id": "blobs/sha256/90/90d8431de50b3935609202b7862d7c2d078ed8c98d25301654986fd0f3326930.log"
+        },
+        {
+          "bytes": 2880,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.refineMesh.4",
+          "sha256": "4b9fe42dd85bed909f74bb2ee9fa0d9363df4d6caa9393a28415e9ebb03b1615",
+          "store_id": "blobs/sha256/4b/4b9fe42dd85bed909f74bb2ee9fa0d9363df4d6caa9393a28415e9ebb03b1615.log"
+        },
+        {
+          "bytes": 2881,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.refineMesh.5",
+          "sha256": "6f86a5a0a95e39d7bcab969ee5b6b56c643314bdb615daef9c19c96bb1b07fb9",
+          "store_id": "blobs/sha256/6f/6f86a5a0a95e39d7bcab969ee5b6b56c643314bdb615daef9c19c96bb1b07fb9.log"
+        },
+        {
+          "bytes": 2888,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.refineMesh.6",
+          "sha256": "050c4bf6ea9109f666200ffe538dc7db994dd0ea2447de6619a3ed03b27dd87f",
+          "store_id": "blobs/sha256/05/050c4bf6ea9109f666200ffe538dc7db994dd0ea2447de6619a3ed03b27dd87f.log"
+        },
+        {
+          "bytes": 2272,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.setFields",
+          "sha256": "36ac65cf40d3b285f6b009b1e203ab2208f7d2eaf08acc47bf2caa464c30a586",
+          "store_id": "blobs/sha256/36/36ac65cf40d3b285f6b009b1e203ab2208f7d2eaf08acc47bf2caa464c30a586.log"
+        },
+        {
+          "bytes": 145514,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.snappyHexMesh",
+          "sha256": "0b6dcf54127d176bfb570ce8b23469a63f64ededd86f2803aec3c317cc184386",
+          "store_id": "blobs/sha256/0b/0b6dcf54127d176bfb570ce8b23469a63f64ededd86f2803aec3c317cc184386.log"
+        },
+        {
+          "bytes": 4781,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.surfaceFeatureExtract",
+          "sha256": "a5093a6ad34201110851cb63cacff05d4e4727b8e62e7d24e0ca1348b2610cf9",
+          "store_id": "blobs/sha256/a5/a5093a6ad34201110851cb63cacff05d4e4727b8e62e7d24e0ca1348b2610cf9.log"
+        },
+        {
+          "bytes": 2239,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.topoSet.1",
+          "sha256": "1165021a844b5078718bbdcfdd1f6b5ab3aec445b101ff92f7f6f822302c2176",
+          "store_id": "blobs/sha256/11/1165021a844b5078718bbdcfdd1f6b5ab3aec445b101ff92f7f6f822302c2176.log"
+        },
+        {
+          "bytes": 2238,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.topoSet.2",
+          "sha256": "a4de933ea24d7da4ea52b11db3dc748f67fd7ebe0c83e6607c853b0c4a9c7bb5",
+          "store_id": "blobs/sha256/a4/a4de933ea24d7da4ea52b11db3dc748f67fd7ebe0c83e6607c853b0c4a9c7bb5.log"
+        },
+        {
+          "bytes": 2238,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.topoSet.3",
+          "sha256": "5e99b139c7af49822b59a10e6beb77ffea049081280c18524e0420d4ac2952e0",
+          "store_id": "blobs/sha256/5e/5e99b139c7af49822b59a10e6beb77ffea049081280c18524e0420d4ac2952e0.log"
+        },
+        {
+          "bytes": 2239,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.topoSet.4",
+          "sha256": "d573677019c3af2b1431accc21003ad28791292401f6bc32b32f96c07d13c2c2",
+          "store_id": "blobs/sha256/d5/d573677019c3af2b1431accc21003ad28791292401f6bc32b32f96c07d13c2c2.log"
+        },
+        {
+          "bytes": 2242,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.topoSet.5",
+          "sha256": "c208f875ad39cac000ef7c233b1d2b8af1f26851e960f8cb3b0f67b4b36b61f4",
+          "store_id": "blobs/sha256/c2/c208f875ad39cac000ef7c233b1d2b8af1f26851e960f8cb3b0f67b4b36b61f4.log"
+        },
+        {
+          "bytes": 2244,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/log.topoSet.6",
+          "sha256": "6125e37e0113994c813c67aa1779b562fd65330bbe71ba86efdb39cb2f6c36dc",
+          "store_id": "blobs/sha256/61/6125e37e0113994c813c67aa1779b562fd65330bbe71ba86efdb39cb2f6c36dc.log"
+        },
+        {
+          "bytes": 13867,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/coarse/postProcessing/forces/0/force.dat",
+          "sha256": "607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c",
+          "store_id": "blobs/sha256/60/607de2e869aae62d053d32450f22f576b0b2e602b0e14cee7f628ec827e62f4c.dat"
+        },
+        {
+          "bytes": 13715,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/coarse/postProcessing/forces/0/moment.dat",
+          "sha256": "898e9ba0ac6668c44e740009267091d23df5eae3f446bb56a135d675b7344449",
+          "store_id": "blobs/sha256/89/898e9ba0ac6668c44e740009267091d23df5eae3f446bb56a135d675b7344449.dat"
+        },
+        {
+          "bytes": 3405294,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/coarse/postProcessing/forces/100/force.dat",
+          "sha256": "b0c2c3cbc66b1849aadcdaba9d5e42fcdda1a82d1e9e93bd8f1326edc4083418",
+          "store_id": "blobs/sha256/b0/b0c2c3cbc66b1849aadcdaba9d5e42fcdda1a82d1e9e93bd8f1326edc4083418.dat"
+        },
+        {
+          "bytes": 3377913,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/coarse/postProcessing/forces/100/moment.dat",
+          "sha256": "8564fea0c966fadbd3ad809461ff5e8bfc6acc47fcd11a3d293c2e436ea5bca5",
+          "store_id": "blobs/sha256/85/8564fea0c966fadbd3ad809461ff5e8bfc6acc47fcd11a3d293c2e436ea5bca5.dat"
+        },
+        {
+          "bytes": 1414,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/coarse/run.log",
+          "sha256": "66eea5ce345c697a60f096e30308d524e907222d0c47e7a17b8017b359b03932",
+          "store_id": "blobs/sha256/66/66eea5ce345c697a60f096e30308d524e907222d0c47e7a17b8017b359b03932.log"
+        },
+        {
+          "bytes": 400,
+          "class": "CASE-RECORD",
+          "path": "data/cfd/calm_water_study/cases/coarse/study-input.json",
+          "sha256": "f95ce1ab62704ffea62d6ba5931e0c215f7c5d3af6b945042c7376e4e1ce103c",
+          "store_id": "blobs/sha256/f9/f95ce1ab62704ffea62d6ba5931e0c215f7c5d3af6b945042c7376e4e1ce103c.json"
+        },
+        {
+          "bytes": 3259,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/blockMeshDict",
+          "sha256": "ef918c9a04c865c1f47629ce1c5d43495e775cec133cbef4957a071eb4990b94",
+          "store_id": "blobs/sha256/ef/ef918c9a04c865c1f47629ce1c5d43495e775cec133cbef4957a071eb4990b94.txt"
+        },
+        {
+          "bytes": 2009,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/controlDict",
+          "sha256": "e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809",
+          "store_id": "blobs/sha256/e7/e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809.txt"
+        },
+        {
+          "bytes": 935,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/decomposeParDict",
+          "sha256": "3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373",
+          "store_id": "blobs/sha256/36/3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373.txt"
+        },
+        {
+          "bytes": 1487,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/fvSchemes",
+          "sha256": "6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad",
+          "store_id": "blobs/sha256/6f/6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad.txt"
+        },
+        {
+          "bytes": 2394,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/fvSolution",
+          "sha256": "a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942",
+          "store_id": "blobs/sha256/a1/a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942.txt"
+        },
+        {
+          "bytes": 3697,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/meshQualityDict",
+          "sha256": "764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90",
+          "store_id": "blobs/sha256/76/764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90.txt"
+        },
+        {
+          "bytes": 1138,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/refineMeshDict",
+          "sha256": "ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0",
+          "store_id": "blobs/sha256/ab/ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0.txt"
+        },
+        {
+          "bytes": 1341,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/setFieldsDict",
+          "sha256": "d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4",
+          "store_id": "blobs/sha256/d7/d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4.txt"
+        },
+        {
+          "bytes": 8497,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/snappyHexMeshDict",
+          "sha256": "3d7cb50c60864c15c34d6a351c1459ef5121d2de8171e280e746ae499fb43103",
+          "store_id": "blobs/sha256/3d/3d7cb50c60864c15c34d6a351c1459ef5121d2de8171e280e746ae499fb43103.txt"
+        },
+        {
+          "bytes": 1511,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/surfaceFeatureExtractDict",
+          "sha256": "cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813",
+          "store_id": "blobs/sha256/cb/cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813.txt"
+        },
+        {
+          "bytes": 1021,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/topoSetDict.1",
+          "sha256": "5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439",
+          "store_id": "blobs/sha256/5d/5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439.1"
+        },
+        {
+          "bytes": 1020,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/topoSetDict.2",
+          "sha256": "01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2",
+          "store_id": "blobs/sha256/01/01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2.2"
+        },
+        {
+          "bytes": 1021,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/topoSetDict.3",
+          "sha256": "8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09",
+          "store_id": "blobs/sha256/80/8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09.3"
+        },
+        {
+          "bytes": 1022,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/topoSetDict.4",
+          "sha256": "07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547",
+          "store_id": "blobs/sha256/07/07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547.4"
+        },
+        {
+          "bytes": 1024,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/topoSetDict.5",
+          "sha256": "7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882",
+          "store_id": "blobs/sha256/7c/7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882.5"
+        },
+        {
+          "bytes": 1024,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/coarse/system/topoSetDict.6",
+          "sha256": "5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000",
+          "store_id": "blobs/sha256/5a/5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000.6"
+        },
+        {
+          "bytes": 788,
+          "class": "CASE-RECORD",
+          "path": "data/cfd/calm_water_study/cases/coarse/timed-start.json",
+          "sha256": "c255c24d26f26ab9026bb312dbbd946a0c452a337055aa9dc4704f6f95ba6995",
+          "store_id": "blobs/sha256/c2/c255c24d26f26ab9026bb312dbbd946a0c452a337055aa9dc4704f6f95ba6995.json"
+        }
+      ],
+      "fine": [
+        {
+          "bytes": 1514,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/0.orig/U",
+          "sha256": "f778bd3bb73481f72387bbf753a46ec70b3ac042dfd71513e4f4c7e0a5cd43b9",
+          "store_id": "blobs/sha256/f7/f778bd3bb73481f72387bbf753a46ec70b3ac042dfd71513e4f4c7e0a5cd43b9.txt"
+        },
+        {
+          "bytes": 1432,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/0.orig/alpha.water",
+          "sha256": "e88fbf76c143424bd0048716fc38a283e54266a8f01c71a0b6ecdfa123c43b16",
+          "store_id": "blobs/sha256/e8/e88fbf76c143424bd0048716fc38a283e54266a8f01c71a0b6ecdfa123c43b16.water"
+        },
+        {
+          "bytes": 1450,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/0.orig/k",
+          "sha256": "2235132bb0a58db8e94a743d9db84bb81766b22f2530905c89638bcd09888e27",
+          "store_id": "blobs/sha256/22/2235132bb0a58db8e94a743d9db84bb81766b22f2530905c89638bcd09888e27.txt"
+        },
+        {
+          "bytes": 1296,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/0.orig/nut",
+          "sha256": "7cf7f4eaa6317feabb755d06f6699f36f531b2c62e0107b8311ff21760a98641",
+          "store_id": "blobs/sha256/7c/7cf7f4eaa6317feabb755d06f6699f36f531b2c62e0107b8311ff21760a98641.txt"
+        },
+        {
+          "bytes": 1450,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/0.orig/omega",
+          "sha256": "1f9f8113e10909f6be2ee44f1df4ecb937c256bc77f1c3e1ba74b9a7c4e54b30",
+          "store_id": "blobs/sha256/1f/1f9f8113e10909f6be2ee44f1df4ecb937c256bc77f1c3e1ba74b9a7c4e54b30.txt"
+        },
+        {
+          "bytes": 1339,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/0.orig/p_rgh",
+          "sha256": "dad7223ff78bc7ae7f0570df86badd8af6c346243453d57a25868842247098f4",
+          "store_id": "blobs/sha256/da/dad7223ff78bc7ae7f0570df86badd8af6c346243453d57a25868842247098f4.txt"
+        },
+        {
+          "bytes": 1346,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/0.orig/pointDisplacement",
+          "sha256": "3ef8efe129ed4510d1e29f410128ed32f2117dec3ad3e6574e59e9c5cd0eb4c4",
+          "store_id": "blobs/sha256/3e/3ef8efe129ed4510d1e29f410128ed32f2117dec3ad3e6574e59e9c5cd0eb4c4.txt"
+        },
+        {
+          "bytes": 79285,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs.extendedFeatureEdgeMesh",
+          "sha256": "00c6d1e7d2aa490bebc8493ee81c13890d3d711a453462e7afc617c843d7a524",
+          "store_id": "blobs/sha256/00/00c6d1e7d2aa490bebc8493ee81c13890d3d711a453462e7afc617c843d7a524.txt"
+        },
+        {
+          "bytes": 61,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_concaveFeaturePts.obj",
+          "sha256": "0452e4359bafc0786540fede504aff120c9398df2ddd5973047aeb54be5aa231",
+          "store_id": "blobs/sha256/04/0452e4359bafc0786540fede504aff120c9398df2ddd5973047aeb54be5aa231.obj"
+        },
+        {
+          "bytes": 293,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_convexFeaturePts.obj",
+          "sha256": "55c3c3f039e84b3add73deaf3bb2c33b8de21370767aae151c462a1fc981d1f5",
+          "store_id": "blobs/sha256/55/55c3c3f039e84b3add73deaf3bb2c33b8de21370767aae151c462a1fc981d1f5.obj"
+        },
+        {
+          "bytes": 47741,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_edgeDirections.obj",
+          "sha256": "dabf72ddf195fecaa5fc57c3b0f43bd63f06ba5ce1aa7309b8ba16aa9ba318f4",
+          "store_id": "blobs/sha256/da/dabf72ddf195fecaa5fc57c3b0f43bd63f06ba5ce1aa7309b8ba16aa9ba318f4.obj"
+        },
+        {
+          "bytes": 25783,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_edgeMesh.obj",
+          "sha256": "4ebad4946f24bbd16c349c059e9c45e25683c6a56dd1a72407361c9c381722c9",
+          "store_id": "blobs/sha256/4e/4ebad4946f24bbd16c349c059e9c45e25683c6a56dd1a72407361c9c381722c9.obj"
+        },
+        {
+          "bytes": 41988,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_externalEdges.obj",
+          "sha256": "37e5bb04a44d54bde67c6c551c4b3329f8017df9a8ef8f0dac648be3a051ec94",
+          "store_id": "blobs/sha256/37/37e5bb04a44d54bde67c6c551c4b3329f8017df9a8ef8f0dac648be3a051ec94.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_flatEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 5612,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_internalEdges.obj",
+          "sha256": "1647e4517c014b8876052123b923339cec6af27b0a90172334e2483940a78368",
+          "store_id": "blobs/sha256/16/1647e4517c014b8876052123b923339cec6af27b0a90172334e2483940a78368.obj"
+        },
+        {
+          "bytes": 1472,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_mixedFeaturePts.obj",
+          "sha256": "4e1d8f2882dd2ab5991f1dd6b7ef83a85b4dc48a5f3bd4658916b28802dea5b3",
+          "store_id": "blobs/sha256/4e/4e1d8f2882dd2ab5991f1dd6b7ef83a85b4dc48a5f3bd4658916b28802dea5b3.obj"
+        },
+        {
+          "bytes": 14244,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_mixedFeaturePtsStructure.obj",
+          "sha256": "5b11ec6e6753cbf63485f2243ec35e90a130bfa08d03cb2ec3de1298dbb8e6a0",
+          "store_id": "blobs/sha256/5b/5b11ec6e6753cbf63485f2243ec35e90a130bfa08d03cb2ec3de1298dbb8e6a0.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_multipleEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_openEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/extendedFeatureEdgeMesh/kcs_regionEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 909,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/g",
+          "sha256": "5ab0306a034f756f7c11c8aa3ee07294946abda3c14592ac24cbe5ad76d160f3",
+          "store_id": "blobs/sha256/5a/5ab0306a034f756f7c11c8aa3ee07294946abda3c14592ac24cbe5ad76d160f3.txt"
+        },
+        {
+          "bytes": 908,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/hRef",
+          "sha256": "ba38db7567c63bf67250cc87d3efefb11bc77a0c3b10822ff11a55f91e2be56a",
+          "store_id": "blobs/sha256/ba/ba38db7567c63bf67250cc87d3efefb11bc77a0c3b10822ff11a55f91e2be56a.txt"
+        },
+        {
+          "bytes": 1090,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/transportProperties",
+          "sha256": "2a657e467f62c0d05d181195fa2e4e2af1eb921b824fdcfe4aeefedc3d96f231",
+          "store_id": "blobs/sha256/2a/2a657e467f62c0d05d181195fa2e4e2af1eb921b824fdcfe4aeefedc3d96f231.txt"
+        },
+        {
+          "bytes": 22705,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/triSurface/kcs.eMesh",
+          "sha256": "1763cfe74ca6868788a1d2f68fe258aa3bbd60f19c40bf65c62ed9c62dbc3409",
+          "store_id": "blobs/sha256/17/1763cfe74ca6868788a1d2f68fe258aa3bbd60f19c40bf65c62ed9c62dbc3409.emesh"
+        },
+        {
+          "bytes": 15534527,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/triSurface/kcs.stl",
+          "sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+          "store_id": "blobs/sha256/7b/7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190.stl"
+        },
+        {
+          "bytes": 961,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/constant/turbulenceProperties",
+          "sha256": "174ec3ba6d15a197b68c6e0b3cb302fc7e5983851379313d5bac353deae78b17",
+          "store_id": "blobs/sha256/17/174ec3ba6d15a197b68c6e0b3cb302fc7e5983851379313d5bac353deae78b17.txt"
+        },
+        {
+          "bytes": 3884,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.blockMesh",
+          "sha256": "c147fe2dfa4f8fd27b0ebbedc567ab5d0550e6a886c7759401c2ab364ec0d975",
+          "store_id": "blobs/sha256/c1/c147fe2dfa4f8fd27b0ebbedc567ab5d0550e6a886c7759401c2ab364ec0d975.log"
+        },
+        {
+          "bytes": 4809,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.checkMesh",
+          "sha256": "0d56ac6375e00ba3444349751cab8e05b244b5b81eafc1ea6706ed6b68e8b13e",
+          "store_id": "blobs/sha256/0d/0d56ac6375e00ba3444349751cab8e05b244b5b81eafc1ea6706ed6b68e8b13e.log"
+        },
+        {
+          "bytes": 5562,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.decomposePar",
+          "sha256": "c99eb303bb7b3c0058c1dfb61116d126582e24f9db71fe47545d9117a91a9fb6",
+          "store_id": "blobs/sha256/c9/c99eb303bb7b3c0058c1dfb61116d126582e24f9db71fe47545d9117a91a9fb6.log"
+        },
+        {
+          "bytes": 155,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.face-resolution",
+          "sha256": "c65fd3200f71eb9cd85b855e8b4ed0060ee9ac141284d5262cbc6b6c88a7471a",
+          "store_id": "blobs/sha256/c6/c65fd3200f71eb9cd85b855e8b4ed0060ee9ac141284d5262cbc6b6c88a7471a.log"
+        },
+        {
+          "bytes": 177376,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.interFoam.start",
+          "sha256": "68b0589508d24b0da40dfda037518415b84a77715fb3b19f89b5cc54e11b0b5e",
+          "store_id": "blobs/sha256/68/68b0589508d24b0da40dfda037518415b84a77715fb3b19f89b5cc54e11b0b5e.log"
+        },
+        {
+          "bytes": 2897,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.refineMesh.1",
+          "sha256": "fafa77c725585a96729712ab24c3136dfa1f9fcfe6235fe7e10b4bec3dcbbd18",
+          "store_id": "blobs/sha256/fa/fafa77c725585a96729712ab24c3136dfa1f9fcfe6235fe7e10b4bec3dcbbd18.log"
+        },
+        {
+          "bytes": 2899,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.refineMesh.2",
+          "sha256": "dea6a1bcb10b8daff7115e789605c85db0042ad89e1eb3313ed52ecdfef806a6",
+          "store_id": "blobs/sha256/de/dea6a1bcb10b8daff7115e789605c85db0042ad89e1eb3313ed52ecdfef806a6.log"
+        },
+        {
+          "bytes": 2903,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.refineMesh.3",
+          "sha256": "f7f852e42dc06f02086ad582e11c55c12210391275efc06d0ed1fea5e52df383",
+          "store_id": "blobs/sha256/f7/f7f852e42dc06f02086ad582e11c55c12210391275efc06d0ed1fea5e52df383.log"
+        },
+        {
+          "bytes": 2904,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.refineMesh.4",
+          "sha256": "ef9e796824f9fe5f7bf111f31499557192775eed5d65978a650c08e39738b0c5",
+          "store_id": "blobs/sha256/ef/ef9e796824f9fe5f7bf111f31499557192775eed5d65978a650c08e39738b0c5.log"
+        },
+        {
+          "bytes": 2907,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.refineMesh.5",
+          "sha256": "7b1182e4e4e5410a50da8f4d575655fcdba9b133cc311a59e30d03e9929e1bdf",
+          "store_id": "blobs/sha256/7b/7b1182e4e4e5410a50da8f4d575655fcdba9b133cc311a59e30d03e9929e1bdf.log"
+        },
+        {
+          "bytes": 2913,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.refineMesh.6",
+          "sha256": "636a3c3848dbb2a4bd40a600989484f4d3d8213c938b132a6819fb05d2d0d26c",
+          "store_id": "blobs/sha256/63/636a3c3848dbb2a4bd40a600989484f4d3d8213c938b132a6819fb05d2d0d26c.log"
+        },
+        {
+          "bytes": 2279,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.setFields",
+          "sha256": "7d6f518c562e817573761d6fc81a0ceebca2769ffb067ef982ce87126f040522",
+          "store_id": "blobs/sha256/7d/7d6f518c562e817573761d6fc81a0ceebca2769ffb067ef982ce87126f040522.log"
+        },
+        {
+          "bytes": 185905,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.snappyHexMesh",
+          "sha256": "6157997cbec4e360b4f0b4dfdedfd38bc186ea7d8db99782060d969a672eed4c",
+          "store_id": "blobs/sha256/61/6157997cbec4e360b4f0b4dfdedfd38bc186ea7d8db99782060d969a672eed4c.log"
+        },
+        {
+          "bytes": 4751,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.surfaceFeatureExtract",
+          "sha256": "beec81938526300553a0b56a1d1839ae86ba7d6aedd512d5e6b489c7646192b1",
+          "store_id": "blobs/sha256/be/beec81938526300553a0b56a1d1839ae86ba7d6aedd512d5e6b489c7646192b1.log"
+        },
+        {
+          "bytes": 2244,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.topoSet.1",
+          "sha256": "21eb69cef16cc511bdd28ad885f2d8ea09d22b62c3c3a252745ed4d4b3b81ae6",
+          "store_id": "blobs/sha256/21/21eb69cef16cc511bdd28ad885f2d8ea09d22b62c3c3a252745ed4d4b3b81ae6.log"
+        },
+        {
+          "bytes": 2243,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.topoSet.2",
+          "sha256": "58376ae1e8cfc788719aa01475d8ab4fb02a604859acfd3bded49db2fd2067e9",
+          "store_id": "blobs/sha256/58/58376ae1e8cfc788719aa01475d8ab4fb02a604859acfd3bded49db2fd2067e9.log"
+        },
+        {
+          "bytes": 2244,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.topoSet.3",
+          "sha256": "cc27e66fc452a0e995839ae990d9d6e7ba147b353b66de8d112026656824dfb9",
+          "store_id": "blobs/sha256/cc/cc27e66fc452a0e995839ae990d9d6e7ba147b353b66de8d112026656824dfb9.log"
+        },
+        {
+          "bytes": 2246,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.topoSet.4",
+          "sha256": "7fa72a483efc43e7827c3c262ec56fe9c1dc5a0a08acd0fe74de21ceed3ab8b7",
+          "store_id": "blobs/sha256/7f/7fa72a483efc43e7827c3c262ec56fe9c1dc5a0a08acd0fe74de21ceed3ab8b7.log"
+        },
+        {
+          "bytes": 2248,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.topoSet.5",
+          "sha256": "91e2ef90a639778e51fb5a78ab9e03d6262c8f49b76ca6da8a21892868463038",
+          "store_id": "blobs/sha256/91/91e2ef90a639778e51fb5a78ab9e03d6262c8f49b76ca6da8a21892868463038.log"
+        },
+        {
+          "bytes": 2250,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/log.topoSet.6",
+          "sha256": "f10896302c7420bc86b8d331257f5f988f5a76d8d7d22ee5c8aa95f78c0ab016",
+          "store_id": "blobs/sha256/f1/f10896302c7420bc86b8d331257f5f988f5a76d8d7d22ee5c8aa95f78c0ab016.log"
+        },
+        {
+          "bytes": 13774,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/fine/postProcessing/forces/0/force.dat",
+          "sha256": "21fe85937ded4094111720b6cec0f418575c8f12d9896ebe33fe73bd8f85d290",
+          "store_id": "blobs/sha256/21/21fe85937ded4094111720b6cec0f418575c8f12d9896ebe33fe73bd8f85d290.dat"
+        },
+        {
+          "bytes": 13739,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/fine/postProcessing/forces/0/moment.dat",
+          "sha256": "b7fad5773e2a6b040b26830e49d332bc8e085017cab8317658838d4b1c3d2ee7",
+          "store_id": "blobs/sha256/b7/b7fad5773e2a6b040b26830e49d332bc8e085017cab8317658838d4b1c3d2ee7.dat"
+        },
+        {
+          "bytes": 1412,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/fine/run.log",
+          "sha256": "2c9f143623f5c4d57b1f4fa50346734335906a093896973caa110308701c9d23",
+          "store_id": "blobs/sha256/2c/2c9f143623f5c4d57b1f4fa50346734335906a093896973caa110308701c9d23.log"
+        },
+        {
+          "bytes": 398,
+          "class": "CASE-RECORD",
+          "path": "data/cfd/calm_water_study/cases/fine/study-input.json",
+          "sha256": "38e0d96814ad1f24e39372ae176e7c05ab3c6a6ea9cba54927fe5a774731c2c7",
+          "store_id": "blobs/sha256/38/38e0d96814ad1f24e39372ae176e7c05ab3c6a6ea9cba54927fe5a774731c2c7.json"
+        },
+        {
+          "bytes": 3261,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/blockMeshDict",
+          "sha256": "f9586ec32e06eba7a44617724727e402dad46b27e25e26845e573e385789886a",
+          "store_id": "blobs/sha256/f9/f9586ec32e06eba7a44617724727e402dad46b27e25e26845e573e385789886a.txt"
+        },
+        {
+          "bytes": 2005,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/controlDict",
+          "sha256": "1718127a7fcc3fd5113c8b2a6460b60e3cf55bbee6b053b37638a5c345056447",
+          "store_id": "blobs/sha256/17/1718127a7fcc3fd5113c8b2a6460b60e3cf55bbee6b053b37638a5c345056447.txt"
+        },
+        {
+          "bytes": 935,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/decomposeParDict",
+          "sha256": "3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373",
+          "store_id": "blobs/sha256/36/3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373.txt"
+        },
+        {
+          "bytes": 1487,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/fvSchemes",
+          "sha256": "6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad",
+          "store_id": "blobs/sha256/6f/6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad.txt"
+        },
+        {
+          "bytes": 2394,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/fvSolution",
+          "sha256": "a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942",
+          "store_id": "blobs/sha256/a1/a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942.txt"
+        },
+        {
+          "bytes": 3697,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/meshQualityDict",
+          "sha256": "764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90",
+          "store_id": "blobs/sha256/76/764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90.txt"
+        },
+        {
+          "bytes": 1138,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/refineMeshDict",
+          "sha256": "ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0",
+          "store_id": "blobs/sha256/ab/ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0.txt"
+        },
+        {
+          "bytes": 1341,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/setFieldsDict",
+          "sha256": "d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4",
+          "store_id": "blobs/sha256/d7/d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4.txt"
+        },
+        {
+          "bytes": 8498,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/snappyHexMeshDict",
+          "sha256": "f1c08937d925a355fa5d4c99d497a35d087cebbec8523830b9e3814d8988aa74",
+          "store_id": "blobs/sha256/f1/f1c08937d925a355fa5d4c99d497a35d087cebbec8523830b9e3814d8988aa74.txt"
+        },
+        {
+          "bytes": 1511,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/surfaceFeatureExtractDict",
+          "sha256": "cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813",
+          "store_id": "blobs/sha256/cb/cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813.txt"
+        },
+        {
+          "bytes": 1021,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/topoSetDict.1",
+          "sha256": "5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439",
+          "store_id": "blobs/sha256/5d/5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439.1"
+        },
+        {
+          "bytes": 1020,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/topoSetDict.2",
+          "sha256": "01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2",
+          "store_id": "blobs/sha256/01/01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2.2"
+        },
+        {
+          "bytes": 1021,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/topoSetDict.3",
+          "sha256": "8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09",
+          "store_id": "blobs/sha256/80/8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09.3"
+        },
+        {
+          "bytes": 1022,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/topoSetDict.4",
+          "sha256": "07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547",
+          "store_id": "blobs/sha256/07/07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547.4"
+        },
+        {
+          "bytes": 1024,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/topoSetDict.5",
+          "sha256": "7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882",
+          "store_id": "blobs/sha256/7c/7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882.5"
+        },
+        {
+          "bytes": 1024,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/fine/system/topoSetDict.6",
+          "sha256": "5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000",
+          "store_id": "blobs/sha256/5a/5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000.6"
+        },
+        {
+          "bytes": 788,
+          "class": "CASE-RECORD",
+          "path": "data/cfd/calm_water_study/cases/fine/timed-start.json",
+          "sha256": "aece654b0ad8f5a53498d1d0a767fc659a0a8a4a8a1d652ac07a177d6eb5a339",
+          "store_id": "blobs/sha256/ae/aece654b0ad8f5a53498d1d0a767fc659a0a8a4a8a1d652ac07a177d6eb5a339.json"
+        }
+      ],
+      "medium": [
+        {
+          "bytes": 1514,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/0.orig/U",
+          "sha256": "f778bd3bb73481f72387bbf753a46ec70b3ac042dfd71513e4f4c7e0a5cd43b9",
+          "store_id": "blobs/sha256/f7/f778bd3bb73481f72387bbf753a46ec70b3ac042dfd71513e4f4c7e0a5cd43b9.txt"
+        },
+        {
+          "bytes": 1432,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/0.orig/alpha.water",
+          "sha256": "e88fbf76c143424bd0048716fc38a283e54266a8f01c71a0b6ecdfa123c43b16",
+          "store_id": "blobs/sha256/e8/e88fbf76c143424bd0048716fc38a283e54266a8f01c71a0b6ecdfa123c43b16.water"
+        },
+        {
+          "bytes": 1450,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/0.orig/k",
+          "sha256": "2235132bb0a58db8e94a743d9db84bb81766b22f2530905c89638bcd09888e27",
+          "store_id": "blobs/sha256/22/2235132bb0a58db8e94a743d9db84bb81766b22f2530905c89638bcd09888e27.txt"
+        },
+        {
+          "bytes": 1296,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/0.orig/nut",
+          "sha256": "7cf7f4eaa6317feabb755d06f6699f36f531b2c62e0107b8311ff21760a98641",
+          "store_id": "blobs/sha256/7c/7cf7f4eaa6317feabb755d06f6699f36f531b2c62e0107b8311ff21760a98641.txt"
+        },
+        {
+          "bytes": 1450,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/0.orig/omega",
+          "sha256": "1f9f8113e10909f6be2ee44f1df4ecb937c256bc77f1c3e1ba74b9a7c4e54b30",
+          "store_id": "blobs/sha256/1f/1f9f8113e10909f6be2ee44f1df4ecb937c256bc77f1c3e1ba74b9a7c4e54b30.txt"
+        },
+        {
+          "bytes": 1339,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/0.orig/p_rgh",
+          "sha256": "dad7223ff78bc7ae7f0570df86badd8af6c346243453d57a25868842247098f4",
+          "store_id": "blobs/sha256/da/dad7223ff78bc7ae7f0570df86badd8af6c346243453d57a25868842247098f4.txt"
+        },
+        {
+          "bytes": 1346,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/0.orig/pointDisplacement",
+          "sha256": "3ef8efe129ed4510d1e29f410128ed32f2117dec3ad3e6574e59e9c5cd0eb4c4",
+          "store_id": "blobs/sha256/3e/3ef8efe129ed4510d1e29f410128ed32f2117dec3ad3e6574e59e9c5cd0eb4c4.txt"
+        },
+        {
+          "bytes": 79285,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs.extendedFeatureEdgeMesh",
+          "sha256": "00c6d1e7d2aa490bebc8493ee81c13890d3d711a453462e7afc617c843d7a524",
+          "store_id": "blobs/sha256/00/00c6d1e7d2aa490bebc8493ee81c13890d3d711a453462e7afc617c843d7a524.txt"
+        },
+        {
+          "bytes": 61,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_concaveFeaturePts.obj",
+          "sha256": "0452e4359bafc0786540fede504aff120c9398df2ddd5973047aeb54be5aa231",
+          "store_id": "blobs/sha256/04/0452e4359bafc0786540fede504aff120c9398df2ddd5973047aeb54be5aa231.obj"
+        },
+        {
+          "bytes": 293,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_convexFeaturePts.obj",
+          "sha256": "55c3c3f039e84b3add73deaf3bb2c33b8de21370767aae151c462a1fc981d1f5",
+          "store_id": "blobs/sha256/55/55c3c3f039e84b3add73deaf3bb2c33b8de21370767aae151c462a1fc981d1f5.obj"
+        },
+        {
+          "bytes": 47741,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_edgeDirections.obj",
+          "sha256": "dabf72ddf195fecaa5fc57c3b0f43bd63f06ba5ce1aa7309b8ba16aa9ba318f4",
+          "store_id": "blobs/sha256/da/dabf72ddf195fecaa5fc57c3b0f43bd63f06ba5ce1aa7309b8ba16aa9ba318f4.obj"
+        },
+        {
+          "bytes": 25783,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_edgeMesh.obj",
+          "sha256": "b566e2935cd2d2e009886b54ffe84b58869c0dddab47507663c3edd51ed0e969",
+          "store_id": "blobs/sha256/b5/b566e2935cd2d2e009886b54ffe84b58869c0dddab47507663c3edd51ed0e969.obj"
+        },
+        {
+          "bytes": 41988,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_externalEdges.obj",
+          "sha256": "37e5bb04a44d54bde67c6c551c4b3329f8017df9a8ef8f0dac648be3a051ec94",
+          "store_id": "blobs/sha256/37/37e5bb04a44d54bde67c6c551c4b3329f8017df9a8ef8f0dac648be3a051ec94.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_flatEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 5612,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_internalEdges.obj",
+          "sha256": "1647e4517c014b8876052123b923339cec6af27b0a90172334e2483940a78368",
+          "store_id": "blobs/sha256/16/1647e4517c014b8876052123b923339cec6af27b0a90172334e2483940a78368.obj"
+        },
+        {
+          "bytes": 1472,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_mixedFeaturePts.obj",
+          "sha256": "4e1d8f2882dd2ab5991f1dd6b7ef83a85b4dc48a5f3bd4658916b28802dea5b3",
+          "store_id": "blobs/sha256/4e/4e1d8f2882dd2ab5991f1dd6b7ef83a85b4dc48a5f3bd4658916b28802dea5b3.obj"
+        },
+        {
+          "bytes": 14244,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_mixedFeaturePtsStructure.obj",
+          "sha256": "5b11ec6e6753cbf63485f2243ec35e90a130bfa08d03cb2ec3de1298dbb8e6a0",
+          "store_id": "blobs/sha256/5b/5b11ec6e6753cbf63485f2243ec35e90a130bfa08d03cb2ec3de1298dbb8e6a0.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_multipleEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_openEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 0,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/extendedFeatureEdgeMesh/kcs_regionEdges.obj",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "store_id": "blobs/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.obj"
+        },
+        {
+          "bytes": 909,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/g",
+          "sha256": "5ab0306a034f756f7c11c8aa3ee07294946abda3c14592ac24cbe5ad76d160f3",
+          "store_id": "blobs/sha256/5a/5ab0306a034f756f7c11c8aa3ee07294946abda3c14592ac24cbe5ad76d160f3.txt"
+        },
+        {
+          "bytes": 908,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/hRef",
+          "sha256": "ba38db7567c63bf67250cc87d3efefb11bc77a0c3b10822ff11a55f91e2be56a",
+          "store_id": "blobs/sha256/ba/ba38db7567c63bf67250cc87d3efefb11bc77a0c3b10822ff11a55f91e2be56a.txt"
+        },
+        {
+          "bytes": 1090,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/transportProperties",
+          "sha256": "2a657e467f62c0d05d181195fa2e4e2af1eb921b824fdcfe4aeefedc3d96f231",
+          "store_id": "blobs/sha256/2a/2a657e467f62c0d05d181195fa2e4e2af1eb921b824fdcfe4aeefedc3d96f231.txt"
+        },
+        {
+          "bytes": 22705,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/triSurface/kcs.eMesh",
+          "sha256": "1763cfe74ca6868788a1d2f68fe258aa3bbd60f19c40bf65c62ed9c62dbc3409",
+          "store_id": "blobs/sha256/17/1763cfe74ca6868788a1d2f68fe258aa3bbd60f19c40bf65c62ed9c62dbc3409.emesh"
+        },
+        {
+          "bytes": 15534527,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/triSurface/kcs.stl",
+          "sha256": "7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190",
+          "store_id": "blobs/sha256/7b/7b29ed953c71ca29b094bd9b5e530a38c1ca579175213fa465fa9f778f145190.stl"
+        },
+        {
+          "bytes": 961,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/constant/turbulenceProperties",
+          "sha256": "174ec3ba6d15a197b68c6e0b3cb302fc7e5983851379313d5bac353deae78b17",
+          "store_id": "blobs/sha256/17/174ec3ba6d15a197b68c6e0b3cb302fc7e5983851379313d5bac353deae78b17.txt"
+        },
+        {
+          "bytes": 1187,
+          "class": "CASE-RECORD",
+          "path": "data/cfd/calm_water_study/cases/medium/full-run.json",
+          "sha256": "2bf37ff67c3c3cdc1fe53f977a4576744f75185b960813650b4b277ad532c21d",
+          "store_id": "blobs/sha256/2b/2bf37ff67c3c3cdc1fe53f977a4576744f75185b960813650b4b277ad532c21d.json"
+        },
+        {
+          "bytes": 3853,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.blockMesh",
+          "sha256": "f323812605517c658a27f80bbe7732dc79fcb82aabb3f2f09e701397f118bf1c",
+          "store_id": "blobs/sha256/f3/f323812605517c658a27f80bbe7732dc79fcb82aabb3f2f09e701397f118bf1c.log"
+        },
+        {
+          "bytes": 4671,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.checkMesh",
+          "sha256": "ed8714af1aac9293cba4dafebcc39a1f363fe3a959797e5274a84771c8ddd298",
+          "store_id": "blobs/sha256/ed/ed8714af1aac9293cba4dafebcc39a1f363fe3a959797e5274a84771c8ddd298.log"
+        },
+        {
+          "bytes": 5534,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.decomposePar",
+          "sha256": "8984f46606666d5093fed32430031558093c86379c46061c19244c17720536bb",
+          "store_id": "blobs/sha256/89/8984f46606666d5093fed32430031558093c86379c46061c19244c17720536bb.log"
+        },
+        {
+          "bytes": 152,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.face-resolution",
+          "sha256": "c0b14f6b959835a1721dd5c6daf2cf56e7521171f83045b050eb5353b792f4ef",
+          "store_id": "blobs/sha256/c0/c0b14f6b959835a1721dd5c6daf2cf56e7521171f83045b050eb5353b792f4ef.log"
+        },
+        {
+          "bytes": 42514506,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.interFoam.full",
+          "sha256": "3aa5d5b4dfce5a60491162656b2db665a5a08fc6957c13ab943991c3c8cf30c0",
+          "store_id": "blobs/sha256/3a/3aa5d5b4dfce5a60491162656b2db665a5a08fc6957c13ab943991c3c8cf30c0.log"
+        },
+        {
+          "bytes": 175107,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.interFoam.start",
+          "sha256": "e6993f1ee96217f12a314569c1cd42a66cee391edea2a5bd8478d6b363e336a8",
+          "store_id": "blobs/sha256/e6/e6993f1ee96217f12a314569c1cd42a66cee391edea2a5bd8478d6b363e336a8.log"
+        },
+        {
+          "bytes": 2884,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.refineMesh.1",
+          "sha256": "d79bf49246bd2d959ee59a85e7d8c6555a3a144b02a1d5b9a5f98b347b1acbc0",
+          "store_id": "blobs/sha256/d7/d79bf49246bd2d959ee59a85e7d8c6555a3a144b02a1d5b9a5f98b347b1acbc0.log"
+        },
+        {
+          "bytes": 2887,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.refineMesh.2",
+          "sha256": "4033c3c9f9cf197a77d65bc3f5c8aacd1552473a6cb1dce99974909854c983c3",
+          "store_id": "blobs/sha256/40/4033c3c9f9cf197a77d65bc3f5c8aacd1552473a6cb1dce99974909854c983c3.log"
+        },
+        {
+          "bytes": 2889,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.refineMesh.3",
+          "sha256": "e9bc9200f47a207a76547fd79f9e76ba9566454af701cadb3c6b08fcd6c19d4f",
+          "store_id": "blobs/sha256/e9/e9bc9200f47a207a76547fd79f9e76ba9566454af701cadb3c6b08fcd6c19d4f.log"
+        },
+        {
+          "bytes": 2892,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.refineMesh.4",
+          "sha256": "f7b06d460563939c5fd90d979b6ef7843a3860353000b38e7ee7d217f3328722",
+          "store_id": "blobs/sha256/f7/f7b06d460563939c5fd90d979b6ef7843a3860353000b38e7ee7d217f3328722.log"
+        },
+        {
+          "bytes": 2894,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.refineMesh.5",
+          "sha256": "3dfcb1e6579e96da46ec10ca036419b05214c0868f59c673184aa7ccbf8c7dd6",
+          "store_id": "blobs/sha256/3d/3dfcb1e6579e96da46ec10ca036419b05214c0868f59c673184aa7ccbf8c7dd6.log"
+        },
+        {
+          "bytes": 2901,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.refineMesh.6",
+          "sha256": "9de31c01e26a7c07dd5a14b19c6ba687975df4e7f5fa5b44d839a148c15c989a",
+          "store_id": "blobs/sha256/9d/9de31c01e26a7c07dd5a14b19c6ba687975df4e7f5fa5b44d839a148c15c989a.log"
+        },
+        {
+          "bytes": 2278,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.setFields",
+          "sha256": "83a7c428c8bb2895045e48a715c9e504c64eecf9602c786e89bb8e3cf146ee93",
+          "store_id": "blobs/sha256/83/83a7c428c8bb2895045e48a715c9e504c64eecf9602c786e89bb8e3cf146ee93.log"
+        },
+        {
+          "bytes": 238441,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.snappyHexMesh",
+          "sha256": "da97861c295187ce40c53b0d74579200e4b6caa18054a34136c21ac368fc8031",
+          "store_id": "blobs/sha256/da/da97861c295187ce40c53b0d74579200e4b6caa18054a34136c21ac368fc8031.log"
+        },
+        {
+          "bytes": 4781,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.surfaceFeatureExtract",
+          "sha256": "6380b61dcaa64e0cb6d11c90c69ae8558361fa0e57dd0d528c82f9f4f8416eb2",
+          "store_id": "blobs/sha256/63/6380b61dcaa64e0cb6d11c90c69ae8558361fa0e57dd0d528c82f9f4f8416eb2.log"
+        },
+        {
+          "bytes": 2242,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.topoSet.1",
+          "sha256": "b7a4d2f42e2bef24703a245de948d4913ac8c39f51fd7bbab00ccd2472a45b58",
+          "store_id": "blobs/sha256/b7/b7a4d2f42e2bef24703a245de948d4913ac8c39f51fd7bbab00ccd2472a45b58.log"
+        },
+        {
+          "bytes": 2240,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.topoSet.2",
+          "sha256": "2b0926cf970a25790df5fae2f71f5026ddd565edc017e429f3a3cf79693d318b",
+          "store_id": "blobs/sha256/2b/2b0926cf970a25790df5fae2f71f5026ddd565edc017e429f3a3cf79693d318b.log"
+        },
+        {
+          "bytes": 2242,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.topoSet.3",
+          "sha256": "6e6cc1804d6301f5fe44a941b08007616b2d26d9853242cfa6915b96a2d05866",
+          "store_id": "blobs/sha256/6e/6e6cc1804d6301f5fe44a941b08007616b2d26d9853242cfa6915b96a2d05866.log"
+        },
+        {
+          "bytes": 2243,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.topoSet.4",
+          "sha256": "3c98ac349e1f4a80a122a682be7e43f9820ec221cea944a9234bcb0ac9d0b7b3",
+          "store_id": "blobs/sha256/3c/3c98ac349e1f4a80a122a682be7e43f9820ec221cea944a9234bcb0ac9d0b7b3.log"
+        },
+        {
+          "bytes": 2245,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.topoSet.5",
+          "sha256": "a8c3ee1ebca9803f4d6889433b9e9f0f1b2ecea20af35abbc11169b181d9560a",
+          "store_id": "blobs/sha256/a8/a8c3ee1ebca9803f4d6889433b9e9f0f1b2ecea20af35abbc11169b181d9560a.log"
+        },
+        {
+          "bytes": 2248,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/log.topoSet.6",
+          "sha256": "36cd27790f991b30d6699848eb4612c3bef6e949bc138f317b36128c536263a0",
+          "store_id": "blobs/sha256/36/36cd27790f991b30d6699848eb4612c3bef6e949bc138f317b36128c536263a0.log"
+        },
+        {
+          "bytes": 13798,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/medium/postProcessing/forces/0/force.dat",
+          "sha256": "0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f",
+          "store_id": "blobs/sha256/0a/0a164dcdaf0dcbb4e8c7ed54135ef8dd76095da4256ad122d251b1754c8ce70f.dat"
+        },
+        {
+          "bytes": 13722,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/medium/postProcessing/forces/0/moment.dat",
+          "sha256": "95b441ff8ecaab426b30c78f8ffbe13b4a1810dab72c1b7e648ff79db867d3a5",
+          "store_id": "blobs/sha256/95/95b441ff8ecaab426b30c78f8ffbe13b4a1810dab72c1b7e648ff79db867d3a5.dat"
+        },
+        {
+          "bytes": 3411476,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/medium/postProcessing/forces/100/force.dat",
+          "sha256": "c40f4e4c864a0ffdb21f6bb8da74e19c8bfabd9ffd6663cc081fde8b6dccdff9",
+          "store_id": "blobs/sha256/c4/c40f4e4c864a0ffdb21f6bb8da74e19c8bfabd9ffd6663cc081fde8b6dccdff9.dat"
+        },
+        {
+          "bytes": 3362372,
+          "class": "CASE-POST",
+          "path": "data/cfd/calm_water_study/cases/medium/postProcessing/forces/100/moment.dat",
+          "sha256": "a16687898cd95ced2c8639f3934179f16b48b480aa0b7e8827514d8971d909f5",
+          "store_id": "blobs/sha256/a1/a16687898cd95ced2c8639f3934179f16b48b480aa0b7e8827514d8971d909f5.dat"
+        },
+        {
+          "bytes": 1588,
+          "class": "CASE-LOG",
+          "path": "data/cfd/calm_water_study/cases/medium/run.log",
+          "sha256": "a221b36947c7ddb6d6c54eba74066e5983c0c0d1051152d8ab0de72addbd90a1",
+          "store_id": "blobs/sha256/a2/a221b36947c7ddb6d6c54eba74066e5983c0c0d1051152d8ab0de72addbd90a1.log"
+        },
+        {
+          "bytes": 400,
+          "class": "CASE-RECORD",
+          "path": "data/cfd/calm_water_study/cases/medium/study-input.json",
+          "sha256": "ff0dc05edf7b9ac53f6573c39590b5d786e321a9474b952691ab4d1caf3d1c62",
+          "store_id": "blobs/sha256/ff/ff0dc05edf7b9ac53f6573c39590b5d786e321a9474b952691ab4d1caf3d1c62.json"
+        },
+        {
+          "bytes": 3259,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/blockMeshDict",
+          "sha256": "93ead106108b286f42df36913754f1fe857cfa11c9f96cc9f6526d4c2159c34c",
+          "store_id": "blobs/sha256/93/93ead106108b286f42df36913754f1fe857cfa11c9f96cc9f6526d4c2159c34c.txt"
+        },
+        {
+          "bytes": 2009,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/controlDict",
+          "sha256": "e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809",
+          "store_id": "blobs/sha256/e7/e7560a331e4e22c84e0e8de5bb699d05dbd831ddb515fd2485a49142f3629809.txt"
+        },
+        {
+          "bytes": 935,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/decomposeParDict",
+          "sha256": "3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373",
+          "store_id": "blobs/sha256/36/3683eeefb748d3f5b5ea203135c343a19a94d6c957cdfcf419310f21a827f373.txt"
+        },
+        {
+          "bytes": 1487,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/fvSchemes",
+          "sha256": "6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad",
+          "store_id": "blobs/sha256/6f/6f26ac2b8fa1fe602e95dc6807c40ef04097ac0384ab7a5824223d1b15f703ad.txt"
+        },
+        {
+          "bytes": 2394,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/fvSolution",
+          "sha256": "a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942",
+          "store_id": "blobs/sha256/a1/a18510265ca51552ae3c81082a3b3be63d2f63e8ff682687cc87153325bf8942.txt"
+        },
+        {
+          "bytes": 3697,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/meshQualityDict",
+          "sha256": "764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90",
+          "store_id": "blobs/sha256/76/764a13546f7997f40f8850da0f9bbd074c992cc21ff151bfc0f09dd1bb3a0e90.txt"
+        },
+        {
+          "bytes": 1138,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/refineMeshDict",
+          "sha256": "ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0",
+          "store_id": "blobs/sha256/ab/ab64cccb6d1aea21fb209245b46b1cf8b07dca4e8a82f07b1118359ee17e7ab0.txt"
+        },
+        {
+          "bytes": 1341,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/setFieldsDict",
+          "sha256": "d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4",
+          "store_id": "blobs/sha256/d7/d7318fbbd86c2afcc35ad65e36bdc0b8d6fdb367b74ebcf1d2dbe0efbad3dbd4.txt"
+        },
+        {
+          "bytes": 8497,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/snappyHexMeshDict",
+          "sha256": "3d7cb50c60864c15c34d6a351c1459ef5121d2de8171e280e746ae499fb43103",
+          "store_id": "blobs/sha256/3d/3d7cb50c60864c15c34d6a351c1459ef5121d2de8171e280e746ae499fb43103.txt"
+        },
+        {
+          "bytes": 1511,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/surfaceFeatureExtractDict",
+          "sha256": "cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813",
+          "store_id": "blobs/sha256/cb/cb4c412d66f0a8e6934588fd4caccc89b511a6037b6c0798257d2c31f4985813.txt"
+        },
+        {
+          "bytes": 1021,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/topoSetDict.1",
+          "sha256": "5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439",
+          "store_id": "blobs/sha256/5d/5d90eee731c9b99ea4fa4bc412c5b8cf83ac4ed9ff6ac0ff93ffe64944229439.1"
+        },
+        {
+          "bytes": 1020,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/topoSetDict.2",
+          "sha256": "01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2",
+          "store_id": "blobs/sha256/01/01f613c56cf3b2b631c988be6650eba1616930f0733aebb75a264e290fd9e5b2.2"
+        },
+        {
+          "bytes": 1021,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/topoSetDict.3",
+          "sha256": "8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09",
+          "store_id": "blobs/sha256/80/8047d02f075c5f8ee4817bad4874f76dd2fa8bd6d94e71fe657cad7badc75e09.3"
+        },
+        {
+          "bytes": 1022,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/topoSetDict.4",
+          "sha256": "07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547",
+          "store_id": "blobs/sha256/07/07e66b7a3ddd1b198b8c048eba050d7c1fa1837667f226d7be04bf1833120547.4"
+        },
+        {
+          "bytes": 1024,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/topoSetDict.5",
+          "sha256": "7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882",
+          "store_id": "blobs/sha256/7c/7c09442cc2fcb37b11bf6ad1405ec195f16694b48dec52c1bb5338c646738882.5"
+        },
+        {
+          "bytes": 1024,
+          "class": "CASE-INPUT",
+          "path": "data/cfd/calm_water_study/cases/medium/system/topoSetDict.6",
+          "sha256": "5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000",
+          "store_id": "blobs/sha256/5a/5a780bd11079a341b184fade88f44d3b47c645d3528af2006287ff76cf2a6000.6"
+        },
+        {
+          "bytes": 789,
+          "class": "CASE-RECORD",
+          "path": "data/cfd/calm_water_study/cases/medium/timed-start.json",
+          "sha256": "cb33f33ed2666fdf95e3ec74cae434762f7c6ec52314c5c7407df384130def13",
+          "store_id": "blobs/sha256/cb/cb33f33ed2666fdf95e3ec74cae434762f7c6ec52314c5c7407df384130def13.json"
+        }
+      ]
+    },
+    "histories": [
+      {
+        "bytes": 1402981,
+        "history_sha256": "b00d9cc4b32cce2fa2526ab2f1b195a46cb224865637ab11306ad0de4b7b97e1",
+        "path": "data/cfd/calm_water_study/raw/coarse-full-coefficients.csv",
+        "sha256": "b00d9cc4b32cce2fa2526ab2f1b195a46cb224865637ab11306ad0de4b7b97e1",
+        "store_id": "blobs/sha256/b0/b00d9cc4b32cce2fa2526ab2f1b195a46cb224865637ab11306ad0de4b7b97e1.csv"
+      },
+      {
+        "bytes": 3419001,
+        "history_sha256": "3e9a7bed018f8e88ba70381fe14ca0e3085a5a318ff5813c32012a2875135449",
+        "path": "data/cfd/calm_water_study/raw/coarse-full-force.dat",
+        "sha256": "3e9a7bed018f8e88ba70381fe14ca0e3085a5a318ff5813c32012a2875135449",
+        "store_id": "blobs/sha256/3e/3e9a7bed018f8e88ba70381fe14ca0e3085a5a318ff5813c32012a2875135449.dat"
+      },
+      {
+        "bytes": 1429129,
+        "history_sha256": "7d4bfc84a9e4d3b45078bfaa36d53c6600e483d95be164e7b9da7d79f005e161",
+        "path": "data/cfd/calm_water_study/raw/medium-full-coefficients.csv",
+        "sha256": "7d4bfc84a9e4d3b45078bfaa36d53c6600e483d95be164e7b9da7d79f005e161",
+        "store_id": "blobs/sha256/7d/7d4bfc84a9e4d3b45078bfaa36d53c6600e483d95be164e7b9da7d79f005e161.csv"
+      },
+      {
+        "bytes": 3425114,
+        "history_sha256": "efd28d7a460f3586d965129845224752e19b21ed68b62dd52aa2dd1d2deb25a6",
+        "path": "data/cfd/calm_water_study/raw/medium-full-force.dat",
+        "sha256": "efd28d7a460f3586d965129845224752e19b21ed68b62dd52aa2dd1d2deb25a6",
+        "store_id": "blobs/sha256/ef/efd28d7a460f3586d965129845224752e19b21ed68b62dd52aa2dd1d2deb25a6.dat"
+      }
+    ]
+  }
 }

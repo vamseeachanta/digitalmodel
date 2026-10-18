@@ -1,0 +1,10 @@
+basename: on_bottom_stability_e305
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+Analysis:
+  fe_folder: null

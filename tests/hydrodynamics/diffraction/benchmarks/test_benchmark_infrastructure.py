@@ -9,6 +9,7 @@ import pytest
 
 from tests.hydrodynamics.diffraction.benchmarks.golden_capture import (
     enumerate_byte_identity_fixtures,
+    expected_refusal,
     golden_path_for,
     render_orcawave_bytes,
 )
@@ -27,6 +28,11 @@ def test_enumerate_byte_identity_fixtures_covers_l00_sub_specs():
     "spec_path", FIXTURES, ids=[golden_path_for(p).stem for p in FIXTURES]
 )
 def test_benchmark_infrastructure_generates_golden_from_pre_change_tree(spec_path):
+    refusal = expected_refusal(spec_path)
+    if refusal:
+        with pytest.raises(ValueError, match=refusal):
+            render_orcawave_bytes(spec_path)
+        return
     golden = golden_path_for(spec_path)
     assert golden.exists(), (
         f"golden missing for {spec_path}; run "

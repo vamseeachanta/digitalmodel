@@ -96,8 +96,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 21
-    assert len(outputs) == 21  # the 36 capabilities/api envelope pages were removed
+    assert len(checker.GENERATORS) == 23
+    assert len(outputs) == 23  # the 36 capabilities/api envelope pages were removed
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
@@ -163,7 +163,13 @@ def build_output_registry(tmp_path, monkeypatch):
         monkeypatch.setattr(checker, name, {})
     monkeypatch.setattr(checker, "discover_candidate_generators", lambda repo: {script})
     monkeypatch.setattr(checker, "build_output_pages", lambda repo: set())
-    entries = {script: dict(ownership.BUILD_OUTPUT_GENERATORS[script])}
+    entries = {script: {
+        "command": "python3 " + script,
+        "output_pattern": "docs/api/capabilities/pdf/<specification-id>.html",
+        "reason": "synthetic working-tree print source",
+    }}
+    monkeypatch.setattr(ownership, "BUILD_OUTPUT_GENERATORS", entries)
+    monkeypatch.setattr(ownership, "DISCOVERY_FALSE_POSITIVES", {})
     monkeypatch.setattr(checker, "BUILD_OUTPUT_GENERATORS", entries, raising=False)
     return tmp_path, script, entries, ownership
 
@@ -265,7 +271,7 @@ def test_real_build_output_pages_match_specifications():
     from scripts.capabilities.build_onepagers import SPECS
     from scripts.generated_html_ownership import build_output_pages
 
-    assert build_output_pages(checker.REPO) == {f"docs/api/capabilities/pdf/{spec['id']}.html" for spec in SPECS}
+    assert build_output_pages(checker.REPO) == set()
     assert checker.validate_page_census(checker.REPO) == []
 
 
@@ -295,9 +301,14 @@ def test_check_reports_unsupported_specs_without_traceback(
     )
 
 
-def test_build_output_enumeration_accepts_repository_root(tmp_path):
+def test_build_output_enumeration_accepts_repository_root(tmp_path, monkeypatch):
     from scripts import generated_html_ownership as ownership
 
+    monkeypatch.setattr(ownership, "BUILD_OUTPUT_GENERATORS", {
+        "scripts/capabilities/build_onepagers.py": {
+            "output_pattern": "docs/api/capabilities/pdf/<specification-id>.html",
+        },
+    })
     script = tmp_path / "scripts/capabilities/build_onepagers.py"
     script.parent.mkdir(parents=True)
     script.write_text('SPECS: list = [dict(id="temporary-root")]\n', encoding="utf-8")

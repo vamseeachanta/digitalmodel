@@ -1,36 +1,2449 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<title>Calm-water resistance study (indicative)</title>
-<style>body{font:16px/1.5 system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:1rem;color:#182f40}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbc;padding:.4rem;text-align:left}caption{caption-side:bottom;text-align:left}h2{margin-top:2rem}@media print{body{font-size:11pt}}</style>
-</head><body>
-<h1>Calm-water resistance study (indicative)</h1>
-<p>Readiness: partial. Qualified resistance results: 0</p>
-<h2>Summary</h2>
-<p>The retained short starts provide indicative computation-cost evidence only. Resistance prediction cannot yet support an engineering decision. Settled runs, numerical uncertainty and experimental agreement are not established.</p>
-<h2>Revision history</h2>
-<p>The retained starts were recorded on 2026-10-14. This report is regenerated from the committed manifest and its recorded criterion snapshot.</p>
-<h2>Study basis and criteria</h2>
-<p>A generic benchmark hull is fixed at even keel without appendages in calm water at a requested Froude number of 0.26. Geometry and fluid particulars are inherited case inputs, not independently verified experimental inputs. Each run records the geometry digest and coefficient normalisation inputs; the rendered flow speed, rather than the unrounded request, is used.</p>
-<p>The planned mesh multipliers are 0.5, 1.0, 2.0. Only the coarse and medium starts are retained; a fine-mesh start is not retained. A constant division-count ratio does not demonstrate uniform realised mesh refinement or asymptotic grid convergence.</p>
-<p>The proposed total-resistance comparison tolerance is 3.0 percent and the medium-mesh grid uncertainty target is 1.0 percent. These are assumed study criteria recorded before the starts, not a standard requirement or a demonstrated validation threshold. An opened experimental table and page are required; no experimental comparison value is retained.</p>
-<h2>Method and resource measurements</h2>
-<p>The OpenFOAM force histories contain 100 iterations per start at 8 ranks. The intended full length is 25000 iterations, with the final 4000 iterations proposed for averaging. These lengths do not establish convergence.</p>
-<p>Peak memory is the recorded sampled aggregate resident memory of the launcher and descendants at the time of measurement. Sampling implementation and native solver logs are not retained here; transient peaks, kernel memory and independent log verification are not established. Solver version is not established by the retained files.</p>
-<p>Projected duration is the measured short-start wall time divided by completed iterations and multiplied by intended full iterations. Mesh construction is excluded. Projections are indicative; steady-run performance is not established.</p>
-<table><tr><th>Mesh</th><th>Cells</th><th>Iterations</th><th>Ranks</th><th>Wall time (s)</th><th>Sampled peak memory (GB)</th><th>Time per iteration (s)</th><th>Projected full run (h)</th></tr>
-<tr><td>coarse</td><td>118364</td><td>100</td><td>8</td><td>20.8</td><td>0.9</td><td>0.21</td><td>1.4</td></tr>
-<tr><td>medium</td><td>915357</td><td>100</td><td>8</td><td>232.7</td><td>2.7</td><td>2.33</td><td>16.2</td></tr>
-<caption>Recorded short-start measurements and indicative arithmetic projections; decimal GB is used.</caption></table>
-<h2>Findings and limitations</h2>
-<p>The coarse streamwise force history becomes unstable and changes sign. The medium history still drifts; neither history establishes settled resistance. A successful process return code does not establish a physical solution. Full-duration results and a fine-mesh start are absent from this evidence set.</p>
-<p>Resistance comparison: not available. Grid uncertainty: not established; 3 completed settled meshes with a justified refinement relationship are required. No accepted resistance coefficient, numerical uncertainty or experimental validation is reported.</p>
-<h2>Next evidence required</h2>
-<p>The unstable coarse history requires diagnosis before extending it. Settled force histories, complete mesh evidence and an opened tabulated experimental reference are needed before the proposed criteria can be evaluated. Resource policy calls for 6 GB memory reserve, 15 GB free disk and no more than 80 projected solver hours in total. The incomplete mesh set cannot establish a total resource projection.</p>
-<h2>Evidence and sources</h2>
-<ul><li><a href="../../../data/cfd/calm_water_study/manifest.json">Run records and SHA-256 digest manifest</a>: measured resource values, timestamps, geometry identity, coefficient normalisation and frozen study criteria.</li>
-<li><a href="../../../config/cfd/calm_water_study.json">Original study criteria</a>: the exact bytes are bound by each run's criterion digest. Resource limits and tolerance values are declared policy, not measurements.</li>
-<li><a href="../../../data/cfd/calm_water_study/raw/coarse-force.dat">Coarse native force history</a> and <a href="../../../data/cfd/calm_water_study/raw/medium-force.dat">medium native force history</a>.</li>
-<li><a href="../../../data/cfd/calm_water_study/raw/coarse-coefficients.csv">Coarse derived coefficients</a> and <a href="../../../data/cfd/calm_water_study/raw/medium-coefficients.csv">medium derived coefficients</a>.</li></ul>
-<p>Force comment-header trailing whitespace is normalised; numerical force rows are unchanged according to the import record. Original source digests are retained, but original unnormalised files, solver logs, meshes and fields are not committed. Independent reproduction of the solves or measurement procedure is not established.</p>
-<p>Full-hull coefficients double half-domain streamwise forces and reverse the streamwise sign, using the density, area and executed speed declared in each run. The coefficient histories are initialization evidence, not accepted resistance estimates. No public-source experimental numbers are used.</p>
+<html lang="en"><head><meta charset="utf-8"><title>Calm-water resistance analysis</title><style>body{font:16px/1.5 system-ui,sans-serif;max-width:1050px;margin:2rem auto;padding:1rem;color:#182f40}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #bbc;padding:.4rem;text-align:left;overflow-wrap:anywhere}h2{margin-top:2rem}p,li{font-weight:400}.caption,figcaption{font-size:.9em;text-align:left;margin:.4rem 0 1rem}.table-wrap{max-width:100%}figure{margin:1rem 0}svg{width:100%;height:auto}code{overflow-wrap:anywhere}.equation{text-align:center}@media print{body{font-size:10pt;margin:0;max-width:none}h2,h3{break-after:avoid}figure,.table-wrap{break-inside:avoid}}</style></head><body><h1>Calm-water resistance analysis</h1><p>Internal computational record</p><h2 id="summary">1 Executive Summary</h2><p>The results support computational workflow development only. Engineering resistance acceptance remains on hold until a matched experimental reference and a three-mesh uncertainty bound are available.</p><p>Primary geometry-source access and the required experimental table are unavailable, and numerical uncertainty is not established; the affected absolute resistance values remain unqualified.</p><ul><li>Completed full native continuations: 2; three completed meshes are required for the declared grid-uncertainty method.</li><li>Mean coefficients are descriptive values from the final 4000 iterations, not experimental validation.</li><li>The next action is to obtain a matched published table and the additional full mesh identified in <a href="#recommendations">Section 8</a>.</li></ul><p>Qualified resistance results: 0</p><h2>Revision history</h2><div class="table-wrap"><table aria-describedby="revision-table"><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody><tr><td>0</td><td>2026-10-14</td><td>Native start evidence and criteria are retained to distinguish computation cost from settled resistance.</td></tr><tr><td>1</td><td>2026-10-15</td><td>Native continuation outcomes are added to distinguish completion from resistance qualification.</td></tr><tr><td>2</td><td>2026-10-15</td><td>Case inputs and native logs become retrievable; averaging windows replace split histories, and the referent and component limitations are identified.</td></tr></tbody></table><p class="caption" id="revision-table">Table 0.1. Revision history.</p></div><nav aria-label="Contents"><h2>Contents</h2><ol><li><a href="#summary">1 Executive Summary</a></li><li><a href="#introduction">2 Introduction</a></li><li><a href="#design-data">3 Design Data</a></li><li><a href="#methodology">4 Analysis Methodology</a></li><li><a href="#results">5 Detailed Results</a></li><li><a href="#findings">6 Key Findings</a></li><li><a href="#limitations">7 Limitations</a></li><li><a href="#recommendations">8 Recommendations</a></li><li><a href="#references">9 References</a></li><li><a href="#symbols">10 Acronyms and Symbols</a></li><li><a href="#appendix-a">Appendix A – Native execution and model detail</a></li><li><a href="#appendix-b">Appendix B – Interpretation and missing evidence</a></li></ol></nav><h2 id="introduction">2 Introduction</h2><p>The analysis concerns one laboratory-scale bare-hull calm-water condition at nominal Froude number 0.26. The hull is fixed at even keel; sinkage, trim response, appendages, incident waves and full-scale extrapolation are excluded.</p><h2 id="design-data">3 Design Data</h2><p>The defined model inputs and their qualification are presented in <a href="#table-3-1">Table 3.1</a> and <a href="#table-3-2">Table 3.2</a>.</p>
+<h3>3.1 Site or field data</h3><p>Not applicable: the configuration is a laboratory-scale benchmark without a site.</p>
+<h3>3.2 Structure or equipment data</h3><p>Not applicable: no supporting structure or equipment is analysed.</p>
+<h3>3.3 Environmental data</h3><p>Calm water without incident waves is modelled; surface tension is set to zero. Fluid inputs and case gravity are stated in <a href="#table-3-1">Table 3.1</a>.</p>
+<h3>3.4 Vessel data</h3><p>The hull is fixed at even keel without appendages. Flow is in negative x, z is upward, and the computational half-domain occupies y ≤ 0 with symmetry at y = 0.</p><div class="table-wrap"><table aria-describedby="table-3-1"><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Basis</th></tr></thead><tbody><tr><td>Length between perpendiculars</td><td>7.279</td><td>m</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Nominal full beam</td><td>1.019</td><td>m</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Nominal draft</td><td>0.3418</td><td>m</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Reference wetted area</td><td>9.438</td><td>m²</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Executed inlet speed</td><td>2.197</td><td>m/s</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Water density</td><td>998.8</td><td>kg/m³</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Water kinematic viscosity</td><td>1.142e-06</td><td>m²/s</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Air density</td><td>1</td><td>kg/m³</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Air kinematic viscosity</td><td>1.48e-05</td><td>m²/s</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Surface tension</td><td>0</td><td>N/m</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Case gravity</td><td>9.81</td><td>m/s²</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Nominal Froude number</td><td>0.26</td><td>1</td><td><a href="#ref-i1">[I1]</a></td></tr><tr><td>Executed Reynolds number</td><td>1.4e+07</td><td>1</td><td><a href="#ref-i1">[I1]</a></td></tr></tbody></table><p class="caption" id="table-3-1">Table 3.1. Defined model and normalization inputs; source qualification is recorded in the assumption ledger.</p></div><div class="table-wrap"><table aria-describedby="table-3-2"><thead><tr><th>Assumption</th><th>Basis and confirmation</th><th>Affected result and sensitivity</th></tr></thead><tbody><tr><td>Geometry and model particulars</td><td>ASSUMED - to be confirmed: assumed, based on previous experience; retained geometry and configuration. Confirm against an opened primary geometry source.</td><td>Resistance and physical model identity; source-error sensitivity is not bounded.</td></tr><tr><td>Fluid properties and normalization</td><td>ASSUMED - to be confirmed: assumed, based on previous experience; existing case configuration. Confirm the intended experimental condition and reference area.</td><td>Absolute coefficients and any future experimental error; property sensitivity was not calculated.</td></tr><tr><td>Comparison and uncertainty targets</td><td>Assumed, based on previous experience; predeclared targets in <a href='#ref-i2'>[I2]</a>, without a claimed standard clause.</td><td>Acceptance thresholds; no empirical acceptance is inferred without a matched reference.</td></tr><tr><td>Gravity convention</td><td>The case uses g = 9.81 m/s²; the basis module and fixture use 9.80665 m/s². The executed Froude number is 0.25996.</td><td>The reported executed speed is used for normalization; this difference is retained, not silently matched.</td></tr><tr><td>Inherited domain placement</td><td>The executed extents are retained; a domain-size sensitivity investigation is required.</td><td>Domain-truncation influence is not bounded.</td></tr></tbody></table><p class="caption" id="table-3-2">Table 3.2. Assumption ledger and affected conclusions.</p></div>
+<figure id="figure-3-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" role="img" aria-label="Plan projection envelope of the analysed half hull">
+<defs><marker id="hull-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#245b77"/></marker></defs>
+<path d="M650 40 L150 40" stroke="#245b77" stroke-width="2" marker-end="url(#hull-arrow)"/><text x="290" y="28">Flow in negative x</text>
+<polygon points="80.000,234.812 80.921,235.104 81.872,235.397 82.865,235.689 83.895,235.978 84.967,236.265 86.088,236.556 87.251,236.846 88.456,237.135 89.710,237.418 91.019,237.688 92.382,237.954 93.793,238.217 95.265,238.464 96.798,238.699 98.391,238.922 99.984,239.115 101.517,239.278 102.989,239.419 104.406,239.537 105.763,239.638 107.078,239.724 108.332,239.788 110.712,239.893 111.827,239.925 112.905,239.953 113.941,239.976 114.934,239.989 115.891,240.000 513.756,239.998 522.225,239.996 530.190,239.854 537.847,239.372 545.213,238.395 552.283,236.850 559.067,234.782 565.579,232.297 571.824,229.470 577.815,226.384 583.564,223.112 589.077,219.673 594.359,216.075 599.423,212.306 604.275,208.372 608.921,204.288 714.263,110.139 715.099,109.168 715.911,107.989 716.644,106.707 717.304,105.265 717.922,103.655 718.449,101.937 718.910,100.099 719.285,98.152 719.582,96.119 719.776,94.050 719.903,91.996 720.000,90.000 80.000,90.000" fill="#e0edf2" stroke="#245b77" stroke-width="2"/>
+<path d="M70 90 L730 90" stroke="#556" stroke-dasharray="5 4"/><text x="290" y="78">Symmetry plane y = 0</text>
+<text x="65" y="275">x = -0.1233 m</text><text x="625" y="275">x = 7.567 m</text>
+<text x="180" y="305">Convex plan envelope; transverse scale is enlarged for readability.</text></svg><figcaption>Figure 3.1. Convex envelope of the executed surface plan projection in the computational half-domain; cell faces and vertical geometry are not shown.</figcaption></figure>
+<h3>3.5 Criteria and source clauses</h3><p>The targets in <a href="#table-3-3">Table 3.3</a> are assumed limits, not values attributed to a standard clause.</p><div class="table-wrap"><table aria-describedby="table-3-3"><thead><tr><th>Quantity</th><th>Criterion</th><th>Rationale and source</th></tr></thead><tbody><tr><td>Experimental total-coefficient difference</td><td>3.0 %</td><td>Comparison target; assumed, based on previous experience. An opened printed number and matched condition are required. <a href='#ref-i2'>[I2]</a></td></tr><tr><td>Medium-grid numerical uncertainty</td><td>1.0 %</td><td>Target GCI; three completed meshes with nominal linear refinement ratio r = 2 are required. <a href='#ref-i2'>[I2]</a></td></tr><tr><td>Force-history scope</td><td>25000 iterations; final 4000 averaged</td><td>Declared execution and averaging scope; this is not a temporal-stationarity tolerance. <a href='#ref-i2'>[I2]</a></td></tr></tbody></table><p class="caption" id="table-3-3">Table 3.3. Predeclared comparison criteria and their applicability.</p></div>
+<h3>3.6 Method</h3><p>The governing method is given in <a href="#methodology">Section 4</a>.</p>
+<h3>3.7 Load cases</h3><p>The mesh labels in <a href="#table-3-4">Table 3.4</a> identify the discretizations used in the subsequent results.</p><div class="table-wrap"><table aria-describedby="table-3-4"><thead><tr><th>Mesh designation</th><th>Cells</th><th>Density multiplier (1)</th><th>Target hull cell length (mm)</th><th>Target length/Lpp (%)</th></tr></thead><tbody><tr><td>coarse</td><td>118364</td><td>0.5</td><td>38.29</td><td>0.5</td></tr><tr><td>medium</td><td>915357</td><td>1.0</td><td>19.15</td><td>0.3</td></tr><tr><td>fine</td><td>7194074</td><td>2.0</td><td>9.573</td><td>0.1</td></tr></tbody></table><p class="caption" id="table-3-4">Table 3.4. Alternative discretizations of one fixed even-keel, bare-hull calm-water case; the stated targets are not measurements of minimum cell-edge length. The geometric gate is reported in <a href='#table-a-4'>Table A.4</a>.</p></div><h2 id="methodology">4 Analysis Methodology</h2><p>The free surface and hull forces are calculated with OpenFOAM v2312 using a two-phase volume-of-fluid model, the k–ω SST turbulence model and local pseudo-time stepping; these are read from the retained case, including the native solver banner and phase, turbulence and time-discretization dictionaries <a href="#ref-i3">[I3]</a>. The following boundary description is stated, not read by this report renderer: the inlet prescribes negative-x velocity, the outlet uses a phase-mean velocity condition, the atmosphere permits pressure-driven inflow or outflow, and the fixed hull has zero wall motion.</p><p>The executed inlet speed and water properties in <a href="#table-3-1">Table 3.1</a> define the normalization. Half-domain forces are converted to full-hull resistance by <a href="#equation-1">Equation (1)</a>.</p><p class="equation" id="equation-1">R<sub>T</sub> = −2 F<sub>x,half</sub> &nbsp; (1)</p><p class="equation" id="equation-2">C<sub>T</sub> = R<sub>T</sub> / (½ ρ S U²) = C<sub>P</sub> + C<sub>V</sub> &nbsp; (2)</p><p class="equation" id="equation-3">Fr = U / √(g L<sub>pp</sub>), &nbsp; Re = U L<sub>pp</sub> / ν &nbsp; (3)</p><p class="equation" id="equation-4">Mean C<sub>T</sub> = Σ C<sub>T,i</sub> / N; &nbsp; σ<sub>Ct</sub> = √[Σ(C<sub>T,i</sub> − Mean C<sub>T</sub>)² / N] &nbsp; (4)</p><p>The force window contains iterations 21001–25000 after completion at iteration 25000. Dispersion in <a href="#equation-4">Equation (4)</a> is descriptive; a separate temporal-stationarity limit is not established. Three full meshes at nominal refinement ratio r = 2 are required before the grid-convergence-index method <a href="#ref-i5">[I5]</a> can be applied. Validation is planned against the matched towing-tank data described in <a href="#results">Section 5</a>.</p><h2 id="results">5 Detailed Results</h2><p>The final-window force coefficients are summarized in <a href="#table-5-1">Table 5.1</a>. Native completion and descriptive averages do not establish experimental agreement.</p><div class="table-wrap"><table aria-describedby="table-5-1"><thead><tr><th>Mesh</th><th>Mean resistance (N)</th><th>Mean Ct (×10⁻³)</th><th>Mean Cp (×10⁻³)</th><th>Mean Cv (×10⁻³)</th><th>Ct dispersion (1)</th><th>Samples</th></tr></thead><tbody><tr><td>coarse</td><td>88.96</td><td>3.912</td><td>1.55</td><td>2.362</td><td>8.5e-05</td><td>4000</td></tr><tr><td>medium</td><td>80.16</td><td>3.525</td><td>0.8995</td><td>2.625</td><td>6.6e-06</td><td>4000</td></tr></tbody></table><p class="caption" id="table-5-1">Table 5.1. Descriptive final-window coefficients; dispersion is population standard deviation, not numerical uncertainty.</p></div>
+<p>The medium final-window mean total coefficient differs by -9.9% from the coarse final-window mean, which is the reference. This difference is not a grid-uncertainty estimate; three completed meshes are required.</p><figure id="figure-5-1"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="576pt" height="252pt" viewBox="0 0 576 252" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 252
+L 576 252
+L 576 0
+L 0 0
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 39.58149 218.64351
+L 572.99976 218.64351
+L 572.99976 3.00024
+L 39.58149 3.00024
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="FillBetweenPolyCollection_1">
+    <defs>
+     <path id="mf30f3a66bf" d="M 63.827775 -226.112961
+L 63.827775 -198.708881
+L 66.264588 -213.808739
+L 68.7014 -208.015021
+L 71.138213 -193.913793
+L 73.575025 -201.999336
+L 76.011838 -199.264236
+L 78.44865 -207.655093
+L 80.885463 -195.146233
+L 83.322276 -187.241421
+L 85.759088 -189.721215
+L 88.195901 -185.524252
+L 90.632713 -177.695987
+L 93.069526 -176.415074
+L 95.506338 -174.797922
+L 97.943151 -135.365983
+L 100.379963 -165.087549
+L 102.816776 -160.513111
+L 105.253589 -154.97733
+L 107.690401 -156.812501
+L 110.127214 -139.521931
+L 112.564026 -156.137609
+L 115.000839 -147.390991
+L 117.437651 -136.141988
+L 119.874464 -117.500318
+L 122.311277 -151.223202
+L 124.748089 -93.783689
+L 127.184902 -43.158457
+L 129.621714 -128.143301
+L 132.058527 -154.116662
+L 134.495339 -144.954844
+L 136.932152 -140.35584
+L 139.368964 -143.48991
+L 141.805777 -143.922218
+L 144.24259 -141.325298
+L 146.679402 -109.206187
+L 149.116215 -137.823405
+L 151.553027 -135.165072
+L 153.98984 -148.952652
+L 156.426652 -146.833882
+L 158.863465 -148.857242
+L 161.300278 -151.078003
+L 163.73709 -151.680295
+L 166.173903 -153.258845
+L 168.610715 -132.630883
+L 171.047528 -163.544532
+L 173.48434 -159.698941
+L 175.921153 -159.751143
+L 178.357965 -129.015374
+L 180.794778 -187.489488
+L 183.231591 -189.078346
+L 185.668403 -187.4261
+L 188.105216 -179.462726
+L 190.542028 -175.818266
+L 192.978841 -175.363366
+L 195.415653 -180.335677
+L 197.852466 -184.791017
+L 200.289279 -179.67219
+L 202.726091 -188.059099
+L 205.162904 -186.946197
+L 207.599716 -193.57865
+L 210.036529 -194.611715
+L 212.473341 -189.586544
+L 214.910154 -199.874863
+L 217.346966 -195.500896
+L 219.783779 -201.716614
+L 222.220592 -202.322196
+L 224.657404 -207.745678
+L 227.094217 -207.479845
+L 229.531029 -184.74057
+L 231.967842 -212.850906
+L 234.404654 -208.020066
+L 236.841467 -213.429729
+L 239.27828 -212.423642
+L 241.715092 -215.138783
+L 244.151905 -213.140208
+L 246.588717 -211.156109
+L 249.02553 -213.306244
+L 251.462342 -214.31255
+L 253.899155 -212.562481
+L 256.335967 -210.577285
+L 258.77278 -209.655862
+L 261.209593 -211.16554
+L 263.646405 -204.986013
+L 266.083218 -199.731638
+L 268.52003 -207.050169
+L 270.956843 -182.22612
+L 273.393655 -200.177764
+L 275.830468 -183.40592
+L 278.267281 -198.223714
+L 280.704093 -192.179296
+L 283.140906 -170.532745
+L 285.577718 -187.35043
+L 288.014531 -190.200461
+L 290.451343 -141.434308
+L 292.888156 -192.150125
+L 295.324968 -139.380022
+L 297.761781 -190.986775
+L 300.198594 -180.269877
+L 302.635406 -168.233243
+L 305.072219 -176.310013
+L 307.509031 -103.945013
+L 309.945844 -164.651074
+L 312.382656 -170.508618
+L 314.819469 -168.817989
+L 317.256282 -158.225014
+L 319.693094 -132.810517
+L 322.129907 -161.963789
+L 324.566719 -160.771925
+L 327.003532 -156.968886
+L 329.440344 -154.643722
+L 331.877157 -156.033425
+L 334.313969 -128.236079
+L 336.750782 -140.168529
+L 339.187595 -151.393406
+L 341.624407 -160.899359
+L 344.06122 -153.301834
+L 346.498032 -141.774934
+L 348.934845 -146.617838
+L 351.371657 -153.916629
+L 353.80847 -146.270193
+L 356.245283 -150.969432
+L 358.682095 -157.635882
+L 361.118908 -153.008803
+L 363.55572 -155.475877
+L 365.992533 -121.023267
+L 368.429345 -156.619925
+L 370.866158 -159.623929
+L 373.30297 -170.05328
+L 375.739783 -159.998114
+L 378.176596 -175.195137
+L 380.613408 -168.670815
+L 383.050221 -168.513991
+L 385.487033 -164.429327
+L 387.923846 -178.773358
+L 390.360658 -171.705965
+L 392.797471 -176.490306
+L 395.234284 -178.41343
+L 397.671096 -168.986657
+L 400.107909 -168.484162
+L 402.544721 -189.913352
+L 404.981534 -184.332827
+L 407.418346 -182.851443
+L 409.855159 -177.245475
+L 412.291971 -187.413818
+L 414.728784 -184.87568
+L 417.165597 -180.022687
+L 419.602409 -189.919713
+L 422.039222 -190.274158
+L 424.476034 -193.59817
+L 426.912847 -194.11558
+L 429.349659 -194.976906
+L 431.786472 -193.322906
+L 434.223285 -193.310842
+L 436.660097 -195.030424
+L 439.09691 -198.322195
+L 441.533722 -198.958923
+L 443.970535 -199.339248
+L 446.407347 -176.261102
+L 448.84416 -187.918506
+L 451.280972 -201.073087
+L 453.717785 -202.052854
+L 456.154598 -196.851119
+L 458.59141 -198.585615
+L 461.028223 -202.446559
+L 463.465035 -181.761351
+L 465.901848 -203.734271
+L 468.33866 -199.119475
+L 470.775473 -189.088655
+L 473.212286 -178.101975
+L 475.649098 -205.423804
+L 478.085911 -196.690566
+L 480.522723 -195.753131
+L 482.959536 -198.850133
+L 485.396348 -198.169538
+L 487.833161 -181.143705
+L 490.269973 -123.340755
+L 492.706786 -190.972957
+L 495.143599 -191.079992
+L 497.580411 -186.96155
+L 500.017224 -183.918504
+L 502.454036 -149.766822
+L 504.890849 -177.132737
+L 507.327661 -146.326781
+L 509.764474 -174.772698
+L 512.201287 -171.287036
+L 514.638099 -171.241634
+L 517.074912 -151.447142
+L 519.511724 -167.470179
+L 521.948537 -172.538997
+L 524.385349 -172.238947
+L 526.822162 -165.422911
+L 529.258974 -98.600272
+L 531.695787 -166.542833
+L 534.1326 -170.054157
+L 536.569412 -143.790178
+L 539.006225 -163.28155
+L 541.443037 -142.694603
+L 543.87985 -165.45647
+L 546.316662 -168.942132
+L 548.753475 -154.542828
+L 548.753475 -176.12972
+L 548.753475 -176.12972
+L 546.316662 -173.573597
+L 543.87985 -173.22354
+L 541.443037 -173.361282
+L 539.006225 -171.298661
+L 536.569412 -175.837786
+L 534.1326 -185.021099
+L 531.695787 -186.685408
+L 529.258974 -176.92393
+L 526.822162 -172.416608
+L 524.385349 -176.125992
+L 521.948537 -181.459546
+L 519.511724 -185.018247
+L 517.074912 -184.59208
+L 514.638099 -182.126542
+L 512.201287 -188.717322
+L 509.764474 -192.057566
+L 507.327661 -196.816683
+L 504.890849 -199.868941
+L 502.454036 -186.137072
+L 500.017224 -186.539551
+L 497.580411 -191.658377
+L 495.143599 -205.950865
+L 492.706786 -227.052151
+L 490.269973 -219.150409
+L 487.833161 -204.634639
+L 485.396348 -205.294836
+L 482.959536 -204.935127
+L 480.522723 -201.295931
+L 478.085911 -208.347312
+L 475.649098 -214.369797
+L 473.212286 -214.088391
+L 470.775473 -207.352412
+L 468.33866 -205.867956
+L 465.901848 -214.837198
+L 463.465035 -216.027307
+L 461.028223 -209.0698
+L 458.59141 -201.958759
+L 456.154598 -202.14651
+L 453.717785 -203.392987
+L 451.280972 -205.18144
+L 448.84416 -209.145032
+L 446.407347 -203.304376
+L 443.970535 -200.537253
+L 441.533722 -200.885775
+L 439.09691 -199.776163
+L 436.660097 -200.951356
+L 434.223285 -200.768651
+L 431.786472 -196.715132
+L 429.349659 -197.282769
+L 426.912847 -197.112785
+L 424.476034 -195.831433
+L 422.039222 -193.644889
+L 419.602409 -193.947789
+L 417.165597 -192.466624
+L 414.728784 -192.196624
+L 412.291971 -190.950365
+L 409.855159 -189.652344
+L 407.418346 -185.862246
+L 404.981534 -195.357671
+L 402.544721 -200.280193
+L 400.107909 -203.823979
+L 397.671096 -185.862685
+L 395.234284 -187.948116
+L 392.797471 -188.000318
+L 390.360658 -185.045006
+L 387.923846 -184.81646
+L 385.487033 -187.019674
+L 383.050221 -175.762555
+L 380.613408 -177.149187
+L 378.176596 -197.49333
+L 375.739783 -180.154287
+L 373.30297 -176.115683
+L 370.866158 -178.392813
+L 368.429345 -178.600084
+L 365.992533 -167.034142
+L 363.55572 -164.368352
+L 361.118908 -159.339452
+L 358.682095 -163.830105
+L 356.245283 -166.649868
+L 353.80847 -161.755421
+L 351.371657 -161.54486
+L 348.934845 -166.185757
+L 346.498032 -164.53022
+L 344.06122 -164.666646
+L 341.624407 -168.98578
+L 339.187595 -162.989177
+L 336.750782 -168.73179
+L 334.313969 -192.163285
+L 331.877157 -166.26713
+L 329.440344 -161.799726
+L 327.003532 -163.609455
+L 324.566719 -166.444352
+L 322.129907 -195.788663
+L 319.693094 -201.362828
+L 317.256282 -168.318784
+L 314.819469 -174.793316
+L 312.382656 -182.262749
+L 309.945844 -191.614729
+L 307.509031 -193.128575
+L 305.072219 -191.580513
+L 302.635406 -189.610452
+L 300.198594 -197.73723
+L 297.761781 -201.565054
+L 295.324968 -200.470795
+L 292.888156 -201.202714
+L 290.451343 -193.8651
+L 288.014531 -194.059869
+L 285.577718 -204.561381
+L 283.140906 -194.681902
+L 280.704093 -198.789377
+L 278.267281 -209.058833
+L 275.830468 -212.858363
+L 273.393655 -209.94977
+L 270.956843 -211.545647
+L 268.52003 -211.357677
+L 266.083218 -209.926959
+L 263.646405 -213.448373
+L 261.209593 -213.536326
+L 258.77278 -212.883148
+L 256.335967 -215.549596
+L 253.899155 -215.52854
+L 251.462342 -215.898777
+L 249.02553 -215.865438
+L 246.588717 -217.574053
+L 244.151905 -218.564786
+L 241.715092 -218.470692
+L 239.27828 -215.434007
+L 236.841467 -215.607501
+L 234.404654 -216.288534
+L 231.967842 -216.267258
+L 229.531029 -226.843783
+L 227.094217 -209.154024
+L 224.657404 -210.640454
+L 222.220592 -208.668637
+L 219.783779 -205.168938
+L 217.346966 -201.826501
+L 214.910154 -202.097598
+L 212.473341 -200.809228
+L 210.036529 -195.585559
+L 207.599716 -194.923828
+L 205.162904 -194.190812
+L 202.726091 -189.286495
+L 200.289279 -189.241531
+L 197.852466 -186.970323
+L 195.415653 -185.126818
+L 192.978841 -180.580454
+L 190.542028 -180.252549
+L 188.105216 -188.384153
+L 185.668403 -188.87283
+L 183.231591 -198.075444
+L 180.794778 -239.197793
+L 178.357965 -212.143114
+L 175.921153 -172.789257
+L 173.48434 -167.909944
+L 171.047528 -169.131418
+L 168.610715 -176.857911
+L 166.173903 -160.404979
+L 163.73709 -156.821493
+L 161.300278 -156.926555
+L 158.863465 -154.859109
+L 156.426652 -149.848853
+L 153.98984 -154.785193
+L 151.553027 -157.151153
+L 149.116215 -153.040607
+L 146.679402 -156.836847
+L 144.24259 -150.749001
+L 141.805777 -149.534546
+L 139.368964 -145.302708
+L 136.932152 -144.197482
+L 134.495339 -156.210208
+L 132.058527 -172.671036
+L 129.621714 -186.75384
+L 127.184902 -194.819644
+L 124.748089 -152.84847
+L 122.311277 -156.600185
+L 119.874464 -168.86054
+L 117.437651 -157.93988
+L 115.000839 -161.308637
+L 112.564026 -162.018183
+L 110.127214 -177.714631
+L 107.690401 -170.488001
+L 105.253589 -165.040392
+L 102.816776 -182.98743
+L 100.379963 -185.517452
+L 97.943151 -193.365018
+L 95.506338 -182.590873
+L 93.069526 -183.907976
+L 90.632713 -184.881821
+L 88.195901 -191.322137
+L 85.759088 -192.918892
+L 83.322276 -194.296092
+L 80.885463 -208.220976
+L 78.44865 -215.153698
+L 76.011838 -227.888692
+L 73.575025 -220.196854
+L 71.138213 -212.954651
+L 68.7014 -217.586116
+L 66.264588 -226.325715
+L 63.827775 -226.112961
+z
+" style="stroke: #1f77b4; stroke-opacity: 0.18"/>
+    </defs>
+    <g clip-path="url(#pad51bdb6b4)">
+     <use xlink:href="#mf30f3a66bf" x="0" y="252" style="fill: #1f77b4; fill-opacity: 0.18; stroke: #1f77b4; stroke-opacity: 0.18"/>
+    </g>
+   </g>
+   <g id="FillBetweenPolyCollection_2">
+    <defs>
+     <path id="mf5e810695c" d="M 63.827775 -89.501185
+L 63.827775 -89.094539
+L 66.264588 -89.529698
+L 68.7014 -89.846856
+L 71.138213 -89.136212
+L 73.575025 -89.138844
+L 76.011838 -89.955865
+L 78.44865 -89.715255
+L 80.885463 -87.673252
+L 83.322276 -87.261342
+L 85.759088 -85.777544
+L 88.195901 -85.924279
+L 90.632713 -85.381207
+L 93.069526 -85.509298
+L 95.506338 -86.117074
+L 97.943151 -87.397768
+L 100.379963 -87.227564
+L 102.816776 -87.292048
+L 105.253589 -87.303673
+L 107.690401 -87.689702
+L 110.127214 -86.549382
+L 112.564026 -85.93042
+L 115.000839 -86.028244
+L 117.437651 -86.054125
+L 119.874464 -88.568575
+L 122.311277 -89.729512
+L 124.748089 -87.541432
+L 127.184902 -87.118994
+L 129.621714 -86.536003
+L 132.058527 -86.368212
+L 134.495339 -85.587381
+L 136.932152 -85.567203
+L 139.368964 -88.274886
+L 141.805777 -87.156719
+L 144.24259 -86.726166
+L 146.679402 -87.549766
+L 149.116215 -88.517689
+L 151.553027 -88.942759
+L 153.98984 -88.200532
+L 156.426652 -88.482596
+L 158.863465 -87.379344
+L 161.300278 -87.103201
+L 163.73709 -86.216652
+L 166.173903 -86.496961
+L 168.610715 -86.660804
+L 171.047528 -85.876903
+L 173.48434 -86.095141
+L 175.921153 -87.305208
+L 178.357965 -87.549766
+L 180.794778 -89.164726
+L 183.231591 -89.566766
+L 185.668403 -92.560461
+L 188.105216 -90.108302
+L 190.542028 -87.023583
+L 192.978841 -87.005598
+L 195.415653 -86.9852
+L 197.852466 -84.912051
+L 200.289279 -84.665738
+L 202.726091 -85.398973
+L 205.162904 -85.576634
+L 207.599716 -86.786263
+L 210.036529 -86.276749
+L 212.473341 -86.170372
+L 214.910154 -85.944239
+L 217.346966 -87.354778
+L 219.783779 -86.112687
+L 222.220592 -86.703355
+L 224.657404 -87.55196
+L 227.094217 -88.155568
+L 229.531029 -88.820371
+L 231.967842 -86.513631
+L 234.404654 -85.338656
+L 236.841467 -85.200914
+L 239.27828 -85.06076
+L 241.715092 -85.125244
+L 244.151905 -86.133524
+L 246.588717 -86.685589
+L 249.02553 -86.166205
+L 251.462342 -85.66349
+L 253.899155 -85.268031
+L 256.335967 -85.665903
+L 258.77278 -84.926308
+L 261.209593 -85.104407
+L 263.646405 -85.475302
+L 266.083218 -85.494164
+L 268.52003 -85.714595
+L 270.956843 -86.191867
+L 273.393655 -85.26145
+L 275.830468 -85.064927
+L 278.267281 -86.462306
+L 280.704093 -86.213362
+L 283.140906 -86.308992
+L 285.577718 -86.233979
+L 288.014531 -86.49411
+L 290.451343 -84.81993
+L 292.888156 -84.597964
+L 295.324968 -84.373146
+L 297.761781 -84.101172
+L 300.198594 -84.226631
+L 302.635406 -84.766193
+L 305.072219 -84.81686
+L 307.509031 -83.902893
+L 309.945844 -84.385429
+L 312.382656 -84.456932
+L 314.819469 -84.74097
+L 317.256282 -84.360205
+L 319.693094 -84.983115
+L 322.129907 -86.227399
+L 324.566719 -85.083351
+L 327.003532 -85.1066
+L 329.440344 -85.092124
+L 331.877157 -84.080554
+L 334.313969 -84.450791
+L 336.750782 -85.92384
+L 339.187595 -87.639035
+L 341.624407 -87.313324
+L 344.06122 -86.151729
+L 346.498032 -86.555304
+L 348.934845 -86.631194
+L 351.371657 -86.940455
+L 353.80847 -86.300218
+L 356.245283 -86.178488
+L 358.682095 -86.328951
+L 361.118908 -87.595827
+L 363.55572 -86.027586
+L 365.992533 -85.491094
+L 368.429345 -85.473108
+L 370.866158 -84.466802
+L 373.30297 -83.506775
+L 375.739783 -83.69321
+L 378.176596 -83.013054
+L 380.613408 -83.599773
+L 383.050221 -84.406704
+L 385.487033 -84.652798
+L 387.923846 -85.01777
+L 390.360658 -85.361906
+L 392.797471 -85.64726
+L 395.234284 -86.097773
+L 397.671096 -86.15129
+L 400.107909 -86.259861
+L 402.544721 -86.448488
+L 404.981534 -86.196473
+L 407.418346 -86.191648
+L 409.855159 -84.881563
+L 412.291971 -84.345071
+L 414.728784 -82.907334
+L 417.165597 -82.999674
+L 419.602409 -83.748043
+L 422.039222 -85.878
+L 424.476034 -86.854915
+L 426.912847 -86.450462
+L 429.349659 -84.799752
+L 431.786472 -84.621871
+L 434.223285 -84.921921
+L 436.660097 -85.237982
+L 439.09691 -85.442182
+L 441.533722 -85.782589
+L 443.970535 -86.057196
+L 446.407347 -86.022322
+L 448.84416 -86.487968
+L 451.280972 -88.497291
+L 453.717785 -89.184466
+L 456.154598 -88.195267
+L 458.59141 -88.011685
+L 461.028223 -86.592152
+L 463.465035 -86.179146
+L 465.901848 -86.69853
+L 468.33866 -87.074469
+L 470.775473 -86.5632
+L 473.212286 -85.640022
+L 475.649098 -84.94868
+L 478.085911 -84.9024
+L 480.522723 -84.182764
+L 482.959536 -85.345675
+L 485.396348 -86.382907
+L 487.833161 -85.974726
+L 490.269973 -86.280478
+L 492.706786 -85.625326
+L 495.143599 -85.602735
+L 497.580411 -86.777709
+L 500.017224 -87.061528
+L 502.454036 -87.422772
+L 504.890849 -88.06915
+L 507.327661 -88.005105
+L 509.764474 -86.826401
+L 512.201287 -86.305263
+L 514.638099 -87.125793
+L 517.074912 -87.256736
+L 519.511724 -86.10194
+L 521.948537 -86.052809
+L 524.385349 -85.500964
+L 526.822162 -86.206782
+L 529.258974 -86.167521
+L 531.695787 -85.291719
+L 534.1326 -84.145696
+L 536.569412 -84.190221
+L 539.006225 -84.446404
+L 541.443037 -83.895655
+L 543.87985 -84.656526
+L 546.316662 -84.227289
+L 548.753475 -85.062734
+L 548.753475 -85.851021
+L 548.753475 -85.851021
+L 546.316662 -85.160118
+L 543.87985 -86.34233
+L 541.443037 -85.316723
+L 539.006225 -85.764823
+L 536.569412 -84.880028
+L 534.1326 -85.46609
+L 531.695787 -86.133524
+L 529.258974 -86.807539
+L 526.822162 -86.88277
+L 524.385349 -86.225206
+L 521.948537 -86.702039
+L 519.511724 -87.311131
+L 517.074912 -87.739271
+L 514.638099 -87.463787
+L 512.201287 -86.984761
+L 509.764474 -89.24237
+L 507.327661 -88.578664
+L 504.890849 -88.634594
+L 502.454036 -88.279931
+L 500.017224 -87.981197
+L 497.580411 -87.378247
+L 495.143599 -86.974014
+L 492.706786 -86.268853
+L 490.269973 -86.975768
+L 487.833161 -86.919399
+L 485.396348 -86.826621
+L 482.959536 -86.429626
+L 480.522723 -85.22548
+L 478.085911 -85.430996
+L 475.649098 -85.622475
+L 473.212286 -87.228661
+L 470.775473 -87.393381
+L 468.33866 -87.767565
+L 465.901848 -87.141146
+L 463.465035 -87.052974
+L 461.028223 -87.972862
+L 458.59141 -88.401442
+L 456.154598 -89.369584
+L 453.717785 -90.655103
+L 451.280972 -90.439936
+L 448.84416 -88.51089
+L 446.407347 -87.472999
+L 443.970535 -87.45304
+L 441.533722 -86.537757
+L 439.09691 -86.158748
+L 436.660097 -85.817025
+L 434.223285 -86.650715
+L 431.786472 -84.907445
+L 429.349659 -86.562323
+L 426.912847 -87.394697
+L 424.476034 -87.616444
+L 422.039222 -88.018703
+L 419.602409 -85.493287
+L 417.165597 -84.644682
+L 414.728784 -84.365031
+L 412.291971 -84.924553
+L 409.855159 -86.157651
+L 407.418346 -87.135224
+L 404.981534 -87.092673
+L 402.544721 -87.233486
+L 400.107909 -87.149042
+L 397.671096 -87.016345
+L 395.234284 -86.768278
+L 392.797471 -86.623956
+L 390.360658 -86.759504
+L 387.923846 -86.009381
+L 385.487033 -85.659104
+L 383.050221 -85.423539
+L 380.613408 -84.758517
+L 378.176596 -84.554974
+L 375.739783 -84.811596
+L 373.30297 -84.832432
+L 370.866158 -85.62094
+L 368.429345 -85.902346
+L 365.992533 -86.577457
+L 363.55572 -87.617541
+L 361.118908 -88.002473
+L 358.682095 -88.006421
+L 356.245283 -86.682299
+L 353.80847 -87.605697
+L 351.371657 -88.740094
+L 348.934845 -87.571261
+L 346.498032 -87.381318
+L 344.06122 -87.213527
+L 341.624407 -87.764933
+L 339.187595 -88.325333
+L 336.750782 -87.767565
+L 334.313969 -85.911558
+L 331.877157 -85.128973
+L 329.440344 -86.305921
+L 327.003532 -85.595058
+L 324.566719 -87.231951
+L 322.129907 -86.932559
+L 319.693094 -86.168398
+L 317.256282 -84.889679
+L 314.819469 -86.067724
+L 312.382656 -84.995398
+L 309.945844 -84.952408
+L 307.509031 -84.786153
+L 305.072219 -85.596813
+L 302.635406 -85.549656
+L 300.198594 -86.185068
+L 297.761781 -84.994301
+L 295.324968 -84.89253
+L 292.888156 -85.120199
+L 290.451343 -86.687782
+L 288.014531 -86.949448
+L 285.577718 -86.47086
+L 283.140906 -87.598897
+L 280.704093 -87.456769
+L 278.267281 -88.059938
+L 275.830468 -86.222355
+L 273.393655 -86.492794
+L 270.956843 -86.624614
+L 268.52003 -86.904704
+L 266.083218 -86.877945
+L 263.646405 -85.866813
+L 261.209593 -86.130892
+L 258.77278 -85.629274
+L 256.335967 -86.271485
+L 253.899155 -85.75912
+L 251.462342 -86.831666
+L 249.02553 -86.66541
+L 246.588717 -89.036196
+L 244.151905 -87.954438
+L 241.715092 -86.179584
+L 239.27828 -85.467625
+L 236.841467 -85.787195
+L 234.404654 -86.376327
+L 231.967842 -88.78769
+L 229.531029 -89.978676
+L 227.094217 -89.617212
+L 224.657404 -89.17986
+L 222.220592 -87.734007
+L 219.783779 -87.255639
+L 217.346966 -88.162806
+L 214.910154 -87.714486
+L 212.473341 -86.550917
+L 210.036529 -87.338986
+L 207.599716 -87.145972
+L 205.162904 -87.06087
+L 202.726091 -85.802987
+L 200.289279 -86.408131
+L 197.852466 -87.089164
+L 195.415653 -87.465981
+L 192.978841 -87.523885
+L 190.542028 -89.89796
+L 188.105216 -93.591552
+L 185.668403 -93.660862
+L 183.231591 -92.493125
+L 180.794778 -89.948627
+L 178.357965 -89.552289
+L 175.921153 -87.628946
+L 173.48434 -87.339863
+L 171.047528 -86.568026
+L 168.610715 -87.15979
+L 166.173903 -87.36399
+L 163.73709 -87.223177
+L 161.300278 -87.999841
+L 158.863465 -89.359495
+L 156.426652 -88.917536
+L 153.98984 -89.259917
+L 151.553027 -90.339481
+L 149.116215 -89.168235
+L 146.679402 -89.215172
+L 144.24259 -87.941498
+L 141.805777 -88.16478
+L 139.368964 -88.883978
+L 136.932152 -87.58157
+L 134.495339 -86.432258
+L 132.058527 -86.920935
+L 129.621714 -87.432422
+L 127.184902 -87.776339
+L 124.748089 -89.755393
+L 122.311277 -90.542804
+L 119.874464 -90.582942
+L 117.437651 -88.245934
+L 115.000839 -87.254104
+L 112.564026 -86.390365
+L 110.127214 -88.127055
+L 107.690401 -87.99677
+L 105.253589 -88.736585
+L 102.816776 -89.123052
+L 100.379963 -87.836436
+L 97.943151 -87.984487
+L 95.506338 -87.395136
+L 93.069526 -86.533371
+L 90.632713 -86.046229
+L 88.195901 -86.384223
+L 85.759088 -87.216597
+L 83.322276 -87.751335
+L 80.885463 -89.678187
+L 78.44865 -91.332407
+L 76.011838 -92.506066
+L 73.575025 -89.862867
+L 71.138213 -90.273242
+L 68.7014 -90.409668
+L 66.264588 -90.459018
+L 63.827775 -89.501185
+z
+" style="stroke: #ff7f0e; stroke-opacity: 0.18"/>
+    </defs>
+    <g clip-path="url(#pad51bdb6b4)">
+     <use xlink:href="#mf5e810695c" x="0" y="252" style="fill: #ff7f0e; fill-opacity: 0.18; stroke: #ff7f0e; stroke-opacity: 0.18"/>
+    </g>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 62.548448 218.64351
+L 62.548448 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="me969820181" d="M 0 0
+L 0 3.5
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#me969820181" x="62.548448" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <!-- 21000 -->
+      <g transform="translate(46.642198 233.241948) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-32" d="M 1228 531
+L 3431 531
+L 3431 0
+L 469 0
+L 469 531
+Q 828 903 1448 1529
+Q 2069 2156 2228 2338
+Q 2531 2678 2651 2914
+Q 2772 3150 2772 3378
+Q 2772 3750 2511 3984
+Q 2250 4219 1831 4219
+Q 1534 4219 1204 4116
+Q 875 4013 500 3803
+L 500 4441
+Q 881 4594 1212 4672
+Q 1544 4750 1819 4750
+Q 2544 4750 2975 4387
+Q 3406 4025 3406 3419
+Q 3406 3131 3298 2873
+Q 3191 2616 2906 2266
+Q 2828 2175 2409 1742
+Q 1991 1309 1228 531
+z
+" transform="scale(0.015625)"/>
+        <path id="DejaVuSans-31" d="M 794 531
+L 1825 531
+L 1825 4091
+L 703 3866
+L 703 4441
+L 1819 4666
+L 2450 4666
+L 2450 531
+L 3481 531
+L 3481 0
+L 794 0
+L 794 531
+z
+" transform="scale(0.015625)"/>
+        <path id="DejaVuSans-30" d="M 2034 4250
+Q 1547 4250 1301 3770
+Q 1056 3291 1056 2328
+Q 1056 1369 1301 889
+Q 1547 409 2034 409
+Q 2525 409 2770 889
+Q 3016 1369 3016 2328
+Q 3016 3291 2770 3770
+Q 2525 4250 2034 4250
+z
+M 2034 4750
+Q 2819 4750 3233 4129
+Q 3647 3509 3647 2328
+Q 3647 1150 3233 529
+Q 2819 -91 2034 -91
+Q 1250 -91 836 529
+Q 422 1150 422 2328
+Q 422 3509 836 4129
+Q 1250 4750 2034 4750
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-31" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 123.468762 218.64351
+L 123.468762 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#me969820181" x="123.468762" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <!-- 21500 -->
+      <g transform="translate(107.562512 233.241948) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-35" d="M 691 4666
+L 3169 4666
+L 3169 4134
+L 1269 4134
+L 1269 2991
+Q 1406 3038 1543 3061
+Q 1681 3084 1819 3084
+Q 2600 3084 3056 2656
+Q 3513 2228 3513 1497
+Q 3513 744 3044 326
+Q 2575 -91 1722 -91
+Q 1428 -91 1123 -41
+Q 819 9 494 109
+L 494 744
+Q 775 591 1075 516
+Q 1375 441 1709 441
+Q 2250 441 2565 725
+Q 2881 1009 2881 1497
+Q 2881 1984 2565 2268
+Q 2250 2553 1709 2553
+Q 1456 2553 1204 2497
+Q 953 2441 691 2322
+L 691 4666
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-31" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-35" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 184.389077 218.64351
+L 184.389077 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#me969820181" x="184.389077" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <!-- 22000 -->
+      <g transform="translate(168.482827 233.241948) scale(0.1 -0.1)">
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-32" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 245.309391 218.64351
+L 245.309391 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#me969820181" x="245.309391" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <!-- 22500 -->
+      <g transform="translate(229.403141 233.241948) scale(0.1 -0.1)">
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-32" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-35" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_9">
+      <path d="M 306.229705 218.64351
+L 306.229705 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#me969820181" x="306.229705" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <!-- 23000 -->
+      <g transform="translate(290.323455 233.241948) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-33" d="M 2597 2516
+Q 3050 2419 3304 2112
+Q 3559 1806 3559 1356
+Q 3559 666 3084 287
+Q 2609 -91 1734 -91
+Q 1441 -91 1130 -33
+Q 819 25 488 141
+L 488 750
+Q 750 597 1062 519
+Q 1375 441 1716 441
+Q 2309 441 2620 675
+Q 2931 909 2931 1356
+Q 2931 1769 2642 2001
+Q 2353 2234 1838 2234
+L 1294 2234
+L 1294 2753
+L 1863 2753
+Q 2328 2753 2575 2939
+Q 2822 3125 2822 3475
+Q 2822 3834 2567 4026
+Q 2313 4219 1838 4219
+Q 1578 4219 1281 4162
+Q 984 4106 628 3988
+L 628 4550
+Q 988 4650 1302 4700
+Q 1616 4750 1894 4750
+Q 2613 4750 3031 4423
+Q 3450 4097 3450 3541
+Q 3450 3153 3228 2886
+Q 3006 2619 2597 2516
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-33" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_11">
+      <path d="M 367.150019 218.64351
+L 367.150019 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#me969820181" x="367.150019" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <!-- 23500 -->
+      <g transform="translate(351.243769 233.241948) scale(0.1 -0.1)">
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-33" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-35" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_7">
+     <g id="line2d_13">
+      <path d="M 428.070333 218.64351
+L 428.070333 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <g>
+       <use xlink:href="#me969820181" x="428.070333" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <!-- 24000 -->
+      <g transform="translate(412.164083 233.241948) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-34" d="M 2419 4116
+L 825 1625
+L 2419 1625
+L 2419 4116
+z
+M 2253 4666
+L 3047 4666
+L 3047 1625
+L 3713 1625
+L 3713 1100
+L 3047 1100
+L 3047 0
+L 2419 0
+L 2419 1100
+L 313 1100
+L 313 1709
+L 2253 4666
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-34" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_8">
+     <g id="line2d_15">
+      <path d="M 488.990647 218.64351
+L 488.990647 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_16">
+      <g>
+       <use xlink:href="#me969820181" x="488.990647" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <!-- 24500 -->
+      <g transform="translate(473.084397 233.241948) scale(0.1 -0.1)">
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-34" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-35" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_9">
+     <g id="line2d_17">
+      <path d="M 549.910961 218.64351
+L 549.910961 3.00024
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_18">
+      <g>
+       <use xlink:href="#me969820181" x="549.910961" y="218.64351" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <!-- 25000 -->
+      <g transform="translate(534.004711 233.241948) scale(0.1 -0.1)">
+       <use xlink:href="#DejaVuSans-32"/>
+       <use xlink:href="#DejaVuSans-35" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(127.246094 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(190.869141 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(254.492188 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="text_10">
+     <!-- Iteration (1) -->
+     <g transform="translate(276.410156 246.920073) scale(0.1 -0.1)">
+      <defs>
+       <path id="DejaVuSans-49" d="M 628 4666
+L 1259 4666
+L 1259 0
+L 628 0
+L 628 4666
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-74" d="M 1172 4494
+L 1172 3500
+L 2356 3500
+L 2356 3053
+L 1172 3053
+L 1172 1153
+Q 1172 725 1289 603
+Q 1406 481 1766 481
+L 2356 481
+L 2356 0
+L 1766 0
+Q 1100 0 847 248
+Q 594 497 594 1153
+L 594 3053
+L 172 3053
+L 172 3500
+L 594 3500
+L 594 4494
+L 1172 4494
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-65" d="M 3597 1894
+L 3597 1613
+L 953 1613
+Q 991 1019 1311 708
+Q 1631 397 2203 397
+Q 2534 397 2845 478
+Q 3156 559 3463 722
+L 3463 178
+Q 3153 47 2828 -22
+Q 2503 -91 2169 -91
+Q 1331 -91 842 396
+Q 353 884 353 1716
+Q 353 2575 817 3079
+Q 1281 3584 2069 3584
+Q 2775 3584 3186 3129
+Q 3597 2675 3597 1894
+z
+M 3022 2063
+Q 3016 2534 2758 2815
+Q 2500 3097 2075 3097
+Q 1594 3097 1305 2825
+Q 1016 2553 972 2059
+L 3022 2063
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-72" d="M 2631 2963
+Q 2534 3019 2420 3045
+Q 2306 3072 2169 3072
+Q 1681 3072 1420 2755
+Q 1159 2438 1159 1844
+L 1159 0
+L 581 0
+L 581 3500
+L 1159 3500
+L 1159 2956
+Q 1341 3275 1631 3429
+Q 1922 3584 2338 3584
+Q 2397 3584 2469 3576
+Q 2541 3569 2628 3553
+L 2631 2963
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-61" d="M 2194 1759
+Q 1497 1759 1228 1600
+Q 959 1441 959 1056
+Q 959 750 1161 570
+Q 1363 391 1709 391
+Q 2188 391 2477 730
+Q 2766 1069 2766 1631
+L 2766 1759
+L 2194 1759
+z
+M 3341 1997
+L 3341 0
+L 2766 0
+L 2766 531
+Q 2569 213 2275 61
+Q 1981 -91 1556 -91
+Q 1019 -91 701 211
+Q 384 513 384 1019
+Q 384 1609 779 1909
+Q 1175 2209 1959 2209
+L 2766 2209
+L 2766 2266
+Q 2766 2663 2505 2880
+Q 2244 3097 1772 3097
+Q 1472 3097 1187 3025
+Q 903 2953 641 2809
+L 641 3341
+Q 956 3463 1253 3523
+Q 1550 3584 1831 3584
+Q 2591 3584 2966 3190
+Q 3341 2797 3341 1997
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-69" d="M 603 3500
+L 1178 3500
+L 1178 0
+L 603 0
+L 603 3500
+z
+M 603 4863
+L 1178 4863
+L 1178 4134
+L 603 4134
+L 603 4863
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-6f" d="M 1959 3097
+Q 1497 3097 1228 2736
+Q 959 2375 959 1747
+Q 959 1119 1226 758
+Q 1494 397 1959 397
+Q 2419 397 2687 759
+Q 2956 1122 2956 1747
+Q 2956 2369 2687 2733
+Q 2419 3097 1959 3097
+z
+M 1959 3584
+Q 2709 3584 3137 3096
+Q 3566 2609 3566 1747
+Q 3566 888 3137 398
+Q 2709 -91 1959 -91
+Q 1206 -91 779 398
+Q 353 888 353 1747
+Q 353 2609 779 3096
+Q 1206 3584 1959 3584
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-6e" d="M 3513 2113
+L 3513 0
+L 2938 0
+L 2938 2094
+Q 2938 2591 2744 2837
+Q 2550 3084 2163 3084
+Q 1697 3084 1428 2787
+Q 1159 2491 1159 1978
+L 1159 0
+L 581 0
+L 581 3500
+L 1159 3500
+L 1159 2956
+Q 1366 3272 1645 3428
+Q 1925 3584 2291 3584
+Q 2894 3584 3203 3211
+Q 3513 2838 3513 2113
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-20" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-28" d="M 1984 4856
+Q 1566 4138 1362 3434
+Q 1159 2731 1159 2009
+Q 1159 1288 1364 580
+Q 1569 -128 1984 -844
+L 1484 -844
+Q 1016 -109 783 600
+Q 550 1309 550 2009
+Q 550 2706 781 3412
+Q 1013 4119 1484 4856
+L 1984 4856
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-29" d="M 513 4856
+L 1013 4856
+Q 1481 4119 1714 3412
+Q 1947 2706 1947 2009
+Q 1947 1309 1714 600
+Q 1481 -109 1013 -844
+L 513 -844
+Q 928 -128 1133 580
+Q 1338 1288 1338 2009
+Q 1338 2731 1133 3434
+Q 928 4138 513 4856
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#DejaVuSans-49"/>
+      <use xlink:href="#DejaVuSans-74" transform="translate(29.492188 0)"/>
+      <use xlink:href="#DejaVuSans-65" transform="translate(68.701172 0)"/>
+      <use xlink:href="#DejaVuSans-72" transform="translate(130.224609 0)"/>
+      <use xlink:href="#DejaVuSans-61" transform="translate(171.337891 0)"/>
+      <use xlink:href="#DejaVuSans-74" transform="translate(232.617188 0)"/>
+      <use xlink:href="#DejaVuSans-69" transform="translate(271.826172 0)"/>
+      <use xlink:href="#DejaVuSans-6f" transform="translate(299.609375 0)"/>
+      <use xlink:href="#DejaVuSans-6e" transform="translate(360.791016 0)"/>
+      <use xlink:href="#DejaVuSans-20" transform="translate(424.169922 0)"/>
+      <use xlink:href="#DejaVuSans-28" transform="translate(455.957031 0)"/>
+      <use xlink:href="#DejaVuSans-31" transform="translate(494.970703 0)"/>
+      <use xlink:href="#DejaVuSans-29" transform="translate(558.59375 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_19">
+      <path d="M 39.58149 196.363435
+L 572.99976 196.363435
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_20">
+      <defs>
+       <path id="mc8c31555ef" d="M 0 0
+L -3.5 0
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#mc8c31555ef" x="39.58149" y="196.363435" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_11">
+      <!-- 3.4 -->
+      <g transform="translate(16.678365 200.162654) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-2e" d="M 684 794
+L 1344 794
+L 1344 0
+L 684 0
+L 684 794
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-33"/>
+       <use xlink:href="#DejaVuSans-2e" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-34" transform="translate(95.410156 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_21">
+      <path d="M 39.58149 171.422399
+L 572.99976 171.422399
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_22">
+      <g>
+       <use xlink:href="#mc8c31555ef" x="39.58149" y="171.422399" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_12">
+      <!-- 3.5 -->
+      <g transform="translate(16.678365 175.221618) scale(0.1 -0.1)">
+       <use xlink:href="#DejaVuSans-33"/>
+       <use xlink:href="#DejaVuSans-2e" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-35" transform="translate(95.410156 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_23">
+      <path d="M 39.58149 146.481363
+L 572.99976 146.481363
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_24">
+      <g>
+       <use xlink:href="#mc8c31555ef" x="39.58149" y="146.481363" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_13">
+      <!-- 3.6 -->
+      <g transform="translate(16.678365 150.280581) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-36" d="M 2113 2584
+Q 1688 2584 1439 2293
+Q 1191 2003 1191 1497
+Q 1191 994 1439 701
+Q 1688 409 2113 409
+Q 2538 409 2786 701
+Q 3034 994 3034 1497
+Q 3034 2003 2786 2293
+Q 2538 2584 2113 2584
+z
+M 3366 4563
+L 3366 3988
+Q 3128 4100 2886 4159
+Q 2644 4219 2406 4219
+Q 1781 4219 1451 3797
+Q 1122 3375 1075 2522
+Q 1259 2794 1537 2939
+Q 1816 3084 2150 3084
+Q 2853 3084 3261 2657
+Q 3669 2231 3669 1497
+Q 3669 778 3244 343
+Q 2819 -91 2113 -91
+Q 1303 -91 875 529
+Q 447 1150 447 2328
+Q 447 3434 972 4092
+Q 1497 4750 2381 4750
+Q 2619 4750 2861 4703
+Q 3103 4656 3366 4563
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-33"/>
+       <use xlink:href="#DejaVuSans-2e" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-36" transform="translate(95.410156 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_25">
+      <path d="M 39.58149 121.540326
+L 572.99976 121.540326
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_26">
+      <g>
+       <use xlink:href="#mc8c31555ef" x="39.58149" y="121.540326" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_14">
+      <!-- 3.7 -->
+      <g transform="translate(16.678365 125.339545) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-37" d="M 525 4666
+L 3525 4666
+L 3525 4397
+L 1831 0
+L 1172 0
+L 2766 4134
+L 525 4134
+L 525 4666
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-33"/>
+       <use xlink:href="#DejaVuSans-2e" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-37" transform="translate(95.410156 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_27">
+      <path d="M 39.58149 96.59929
+L 572.99976 96.59929
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_28">
+      <g>
+       <use xlink:href="#mc8c31555ef" x="39.58149" y="96.59929" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_15">
+      <!-- 3.8 -->
+      <g transform="translate(16.678365 100.398509) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-38" d="M 2034 2216
+Q 1584 2216 1326 1975
+Q 1069 1734 1069 1313
+Q 1069 891 1326 650
+Q 1584 409 2034 409
+Q 2484 409 2743 651
+Q 3003 894 3003 1313
+Q 3003 1734 2745 1975
+Q 2488 2216 2034 2216
+z
+M 1403 2484
+Q 997 2584 770 2862
+Q 544 3141 544 3541
+Q 544 4100 942 4425
+Q 1341 4750 2034 4750
+Q 2731 4750 3128 4425
+Q 3525 4100 3525 3541
+Q 3525 3141 3298 2862
+Q 3072 2584 2669 2484
+Q 3125 2378 3379 2068
+Q 3634 1759 3634 1313
+Q 3634 634 3220 271
+Q 2806 -91 2034 -91
+Q 1263 -91 848 271
+Q 434 634 434 1313
+Q 434 1759 690 2068
+Q 947 2378 1403 2484
+z
+M 1172 3481
+Q 1172 3119 1398 2916
+Q 1625 2713 2034 2713
+Q 2441 2713 2670 2916
+Q 2900 3119 2900 3481
+Q 2900 3844 2670 4047
+Q 2441 4250 2034 4250
+Q 1625 4250 1398 4047
+Q 1172 3844 1172 3481
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-33"/>
+       <use xlink:href="#DejaVuSans-2e" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-38" transform="translate(95.410156 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_29">
+      <path d="M 39.58149 71.658254
+L 572.99976 71.658254
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_30">
+      <g>
+       <use xlink:href="#mc8c31555ef" x="39.58149" y="71.658254" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_16">
+      <!-- 3.9 -->
+      <g transform="translate(16.678365 75.457472) scale(0.1 -0.1)">
+       <defs>
+        <path id="DejaVuSans-39" d="M 703 97
+L 703 672
+Q 941 559 1184 500
+Q 1428 441 1663 441
+Q 2288 441 2617 861
+Q 2947 1281 2994 2138
+Q 2813 1869 2534 1725
+Q 2256 1581 1919 1581
+Q 1219 1581 811 2004
+Q 403 2428 403 3163
+Q 403 3881 828 4315
+Q 1253 4750 1959 4750
+Q 2769 4750 3195 4129
+Q 3622 3509 3622 2328
+Q 3622 1225 3098 567
+Q 2575 -91 1691 -91
+Q 1453 -91 1209 -44
+Q 966 3 703 97
+z
+M 1959 2075
+Q 2384 2075 2632 2365
+Q 2881 2656 2881 3163
+Q 2881 3666 2632 3958
+Q 2384 4250 1959 4250
+Q 1534 4250 1286 3958
+Q 1038 3666 1038 3163
+Q 1038 2656 1286 2365
+Q 1534 2075 1959 2075
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#DejaVuSans-33"/>
+       <use xlink:href="#DejaVuSans-2e" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-39" transform="translate(95.410156 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_31">
+      <path d="M 39.58149 46.717217
+L 572.99976 46.717217
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_32">
+      <g>
+       <use xlink:href="#mc8c31555ef" x="39.58149" y="46.717217" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_17">
+      <!-- 4.0 -->
+      <g transform="translate(16.678365 50.516436) scale(0.1 -0.1)">
+       <use xlink:href="#DejaVuSans-34"/>
+       <use xlink:href="#DejaVuSans-2e" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-30" transform="translate(95.410156 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_8">
+     <g id="line2d_33">
+      <path d="M 39.58149 21.776181
+L 572.99976 21.776181
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #b0b0b0; stroke-opacity: 0.25; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_34">
+      <g>
+       <use xlink:href="#mc8c31555ef" x="39.58149" y="21.776181" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_18">
+      <!-- 4.1 -->
+      <g transform="translate(16.678365 25.5754) scale(0.1 -0.1)">
+       <use xlink:href="#DejaVuSans-34"/>
+       <use xlink:href="#DejaVuSans-2e" transform="translate(63.623047 0)"/>
+       <use xlink:href="#DejaVuSans-31" transform="translate(95.410156 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="text_19">
+     <!-- Total resistance coefficient (×10⁻³) -->
+     <g transform="translate(10.598677 198.138281) rotate(-90) scale(0.1 -0.1)">
+      <defs>
+       <path id="DejaVuSans-54" d="M -19 4666
+L 3928 4666
+L 3928 4134
+L 2272 4134
+L 2272 0
+L 1638 0
+L 1638 4134
+L -19 4134
+L -19 4666
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-6c" d="M 603 4863
+L 1178 4863
+L 1178 0
+L 603 0
+L 603 4863
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-73" d="M 2834 3397
+L 2834 2853
+Q 2591 2978 2328 3040
+Q 2066 3103 1784 3103
+Q 1356 3103 1142 2972
+Q 928 2841 928 2578
+Q 928 2378 1081 2264
+Q 1234 2150 1697 2047
+L 1894 2003
+Q 2506 1872 2764 1633
+Q 3022 1394 3022 966
+Q 3022 478 2636 193
+Q 2250 -91 1575 -91
+Q 1294 -91 989 -36
+Q 684 19 347 128
+L 347 722
+Q 666 556 975 473
+Q 1284 391 1588 391
+Q 1994 391 2212 530
+Q 2431 669 2431 922
+Q 2431 1156 2273 1281
+Q 2116 1406 1581 1522
+L 1381 1569
+Q 847 1681 609 1914
+Q 372 2147 372 2553
+Q 372 3047 722 3315
+Q 1072 3584 1716 3584
+Q 2034 3584 2315 3537
+Q 2597 3491 2834 3397
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-63" d="M 3122 3366
+L 3122 2828
+Q 2878 2963 2633 3030
+Q 2388 3097 2138 3097
+Q 1578 3097 1268 2742
+Q 959 2388 959 1747
+Q 959 1106 1268 751
+Q 1578 397 2138 397
+Q 2388 397 2633 464
+Q 2878 531 3122 666
+L 3122 134
+Q 2881 22 2623 -34
+Q 2366 -91 2075 -91
+Q 1284 -91 818 406
+Q 353 903 353 1747
+Q 353 2603 823 3093
+Q 1294 3584 2113 3584
+Q 2378 3584 2631 3529
+Q 2884 3475 3122 3366
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-66" d="M 2375 4863
+L 2375 4384
+L 1825 4384
+Q 1516 4384 1395 4259
+Q 1275 4134 1275 3809
+L 1275 3500
+L 2222 3500
+L 2222 3053
+L 1275 3053
+L 1275 0
+L 697 0
+L 697 3053
+L 147 3053
+L 147 3500
+L 697 3500
+L 697 3744
+Q 697 4328 969 4595
+Q 1241 4863 1831 4863
+L 2375 4863
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-d7" d="M 4488 3438
+L 3059 2003
+L 4488 575
+L 4116 197
+L 2681 1631
+L 1247 197
+L 878 575
+L 2303 2003
+L 878 3438
+L 1247 3816
+L 2681 2381
+L 4116 3816
+L 4488 3438
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-207b" d="M 428 3359
+L 2950 3359
+L 2950 3063
+L 428 3063
+L 428 3359
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-b3" d="M 1638 3500
+Q 1925 3444 2083 3273
+Q 2241 3103 2241 2847
+Q 2241 2459 1944 2250
+Q 1647 2041 1094 2041
+Q 916 2041 720 2073
+Q 525 2106 306 2169
+L 306 2547
+Q 469 2463 655 2422
+Q 841 2381 1050 2381
+Q 1391 2381 1578 2504
+Q 1766 2628 1766 2847
+Q 1766 3078 1592 3197
+Q 1419 3316 1081 3316
+L 813 3316
+L 813 3653
+L 1106 3653
+Q 1400 3653 1551 3751
+Q 1703 3850 1703 4038
+Q 1703 4219 1547 4314
+Q 1391 4409 1094 4409
+Q 969 4409 809 4381
+Q 650 4353 397 4281
+L 397 4641
+Q 625 4694 825 4722
+Q 1025 4750 1197 4750
+Q 1647 4750 1911 4565
+Q 2175 4381 2175 4072
+Q 2175 3856 2034 3706
+Q 1894 3556 1638 3500
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#DejaVuSans-54"/>
+      <use xlink:href="#DejaVuSans-6f" transform="translate(44.083984 0)"/>
+      <use xlink:href="#DejaVuSans-74" transform="translate(105.265625 0)"/>
+      <use xlink:href="#DejaVuSans-61" transform="translate(144.474609 0)"/>
+      <use xlink:href="#DejaVuSans-6c" transform="translate(205.753906 0)"/>
+      <use xlink:href="#DejaVuSans-20" transform="translate(233.537109 0)"/>
+      <use xlink:href="#DejaVuSans-72" transform="translate(265.324219 0)"/>
+      <use xlink:href="#DejaVuSans-65" transform="translate(304.1875 0)"/>
+      <use xlink:href="#DejaVuSans-73" transform="translate(365.710938 0)"/>
+      <use xlink:href="#DejaVuSans-69" transform="translate(417.810547 0)"/>
+      <use xlink:href="#DejaVuSans-73" transform="translate(445.59375 0)"/>
+      <use xlink:href="#DejaVuSans-74" transform="translate(497.693359 0)"/>
+      <use xlink:href="#DejaVuSans-61" transform="translate(536.902344 0)"/>
+      <use xlink:href="#DejaVuSans-6e" transform="translate(598.181641 0)"/>
+      <use xlink:href="#DejaVuSans-63" transform="translate(661.560547 0)"/>
+      <use xlink:href="#DejaVuSans-65" transform="translate(716.541016 0)"/>
+      <use xlink:href="#DejaVuSans-20" transform="translate(778.064453 0)"/>
+      <use xlink:href="#DejaVuSans-63" transform="translate(809.851562 0)"/>
+      <use xlink:href="#DejaVuSans-6f" transform="translate(864.832031 0)"/>
+      <use xlink:href="#DejaVuSans-65" transform="translate(926.013672 0)"/>
+      <use xlink:href="#DejaVuSans-66" transform="translate(987.537109 0)"/>
+      <use xlink:href="#DejaVuSans-66" transform="translate(1022.742188 0)"/>
+      <use xlink:href="#DejaVuSans-69" transform="translate(1057.947266 0)"/>
+      <use xlink:href="#DejaVuSans-63" transform="translate(1085.730469 0)"/>
+      <use xlink:href="#DejaVuSans-69" transform="translate(1140.710938 0)"/>
+      <use xlink:href="#DejaVuSans-65" transform="translate(1168.494141 0)"/>
+      <use xlink:href="#DejaVuSans-6e" transform="translate(1230.017578 0)"/>
+      <use xlink:href="#DejaVuSans-74" transform="translate(1293.396484 0)"/>
+      <use xlink:href="#DejaVuSans-20" transform="translate(1332.605469 0)"/>
+      <use xlink:href="#DejaVuSans-28" transform="translate(1364.392578 0)"/>
+      <use xlink:href="#DejaVuSans-d7" transform="translate(1403.40625 0)"/>
+      <use xlink:href="#DejaVuSans-31" transform="translate(1487.195312 0)"/>
+      <use xlink:href="#DejaVuSans-30" transform="translate(1550.818359 0)"/>
+      <use xlink:href="#DejaVuSans-207b" transform="translate(1614.441406 0)"/>
+      <use xlink:href="#DejaVuSans-b3" transform="translate(1667.224609 0)"/>
+      <use xlink:href="#DejaVuSans-29" transform="translate(1707.3125 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="line2d_35">
+    <path d="M 63.827775 32.978877
+L 66.264588 34.005724
+L 68.7014 39.386359
+L 71.138213 43.328983
+L 73.575025 38.508089
+L 76.011838 38.060757
+L 78.44865 41.130057
+L 80.885463 52.519544
+L 83.322276 61.377112
+L 85.759088 60.789855
+L 88.195901 62.990865
+L 90.632713 70.703276
+L 93.069526 71.765908
+L 95.506338 72.96026
+L 97.943151 80.222148
+L 100.379963 74.408471
+L 102.816776 81.589051
+L 105.253589 90.300213
+L 107.690401 87.627887
+L 110.127214 86.92651
+L 112.564026 92.846412
+L 115.000839 97.708145
+L 117.437651 100.921899
+L 119.874464 102.616553
+L 122.311277 98.94121
+L 124.748089 108.193064
+L 127.184902 116.177933
+L 129.621714 85.643272
+L 132.058527 90.453287
+L 134.495339 100.461976
+L 136.932152 109.302875
+L 139.368964 107.606301
+L 141.805777 106.495954
+L 144.24259 103.812891
+L 146.679402 108.797638
+L 149.116215 102.763299
+L 151.553027 105.177578
+L 153.98984 99.582292
+L 156.426652 104.185803
+L 158.863465 100.722063
+L 161.300278 98.334202
+L 163.73709 98.043036
+L 166.173903 95.196514
+L 168.610715 89.468771
+L 171.047528 85.003134
+L 173.48434 87.401918
+L 175.921153 84.20094
+L 178.357965 90.522651
+L 180.794778 51.912997
+L 183.231591 58.092491
+L 185.668403 63.484126
+L 188.105216 69.909856
+L 190.542028 74.287749
+L 192.978841 72.996045
+L 195.415653 69.407317
+L 197.852466 66.142196
+L 200.289279 66.784319
+L 202.726091 63.228579
+L 205.162904 62.017524
+L 207.599716 57.72118
+L 210.036529 56.785236
+L 212.473341 56.847231
+L 214.910154 50.66131
+L 217.346966 52.973402
+L 219.783779 48.73585
+L 222.220592 47.018933
+L 224.657404 42.556202
+L 227.094217 43.505909
+L 229.531029 43.735662
+L 231.967842 36.517739
+L 234.404654 38.003576
+L 236.841467 37.494326
+L 239.27828 38.395702
+L 241.715092 35.280507
+L 244.151905 35.432714
+L 246.588717 37.24661
+L 249.02553 37.489281
+L 251.462342 37.147745
+L 253.899155 37.615519
+L 256.335967 38.679466
+L 258.77278 40.760204
+L 261.209593 39.296191
+L 266.083218 44.911426
+L 268.52003 42.780493
+L 270.956843 51.209964
+L 273.393655 45.159449
+L 275.830468 49.32042
+L 278.267281 48.036557
+L 280.704093 55.740426
+L 283.140906 62.812568
+L 285.577718 58.032339
+L 288.014531 60.028962
+L 290.451343 67.307914
+L 292.888156 56.583668
+L 295.324968 66.187126
+L 297.761781 54.9618
+L 300.198594 60.989065
+L 302.635406 71.638606
+L 305.072219 67.245195
+L 307.509031 81.911374
+L 309.945844 74.795387
+L 312.382656 76.099956
+L 314.819469 80.719983
+L 317.256282 86.96553
+L 319.693094 83.50519
+L 322.129907 83.064635
+L 324.566719 88.150528
+L 327.003532 90.664999
+L 329.440344 94.322982
+L 331.877157 91.473367
+L 334.313969 87.127618
+L 336.750782 89.262838
+L 339.187595 92.402523
+L 341.624407 87.564104
+L 344.06122 92.625048
+L 346.498032 94.058552
+L 348.934845 91.550365
+L 351.371657 93.678128
+L 353.80847 94.486419
+L 356.245283 93.357965
+L 358.682095 92.056369
+L 361.118908 95.444932
+L 363.55572 91.577211
+L 365.992533 92.69949
+L 368.429345 85.843711
+L 370.866158 82.084659
+L 373.30297 80.388722
+L 375.739783 80.160208
+L 378.176596 70.535365
+L 380.613408 79.054653
+L 383.050221 78.953321
+L 385.487033 74.114486
+L 387.923846 70.739039
+L 390.360658 71.958418
+L 392.797471 69.365995
+L 395.234284 68.106796
+L 397.671096 74.175318
+L 400.107909 63.362878
+L 402.544721 55.887731
+L 404.981534 63.280978
+L 407.418346 68.032792
+L 409.855159 66.404147
+L 412.291971 62.991994
+L 414.728784 62.950288
+L 417.165597 63.876734
+L 419.602409 59.786751
+L 422.039222 60.596347
+L 424.476034 57.750132
+L 426.912847 56.336763
+L 429.349659 55.836363
+L 431.786472 57.518153
+L 434.223285 55.978744
+L 436.660097 52.746084
+L 439.09691 52.871466
+L 441.533722 51.794556
+L 443.970535 52.001772
+L 446.407347 53.213836
+L 448.84416 49.136015
+L 451.280972 49.298914
+L 453.717785 49.172556
+L 456.154598 52.737365
+L 458.59141 51.197495
+L 461.028223 45.849157
+L 463.465035 51.688354
+L 465.901848 45.25883
+L 468.33866 48.916965
+L 470.775473 49.870971
+L 473.212286 49.340972
+L 475.649098 40.175272
+L 478.085911 47.592328
+L 480.522723 54.253295
+L 482.959536 50.409459
+L 485.396348 49.923568
+L 487.833161 56.82192
+L 490.269973 56.888126
+L 492.706786 39.43787
+L 495.143599 54.187977
+L 497.580411 63.05615
+L 500.017224 66.755586
+L 502.454036 74.061626
+L 504.890849 62.043143
+L 507.327661 69.047631
+L 509.764474 68.205518
+L 512.201287 72.522776
+L 514.638099 74.352694
+L 517.074912 74.128095
+L 519.511724 76.75332
+L 521.948537 73.518543
+L 524.385349 78.438707
+L 526.822162 82.108567
+L 529.258974 83.645333
+L 531.695787 76.175275
+L 534.1326 72.859191
+L 536.569412 83.758301
+L 539.006225 84.228949
+L 541.443037 85.798473
+L 543.87985 82.575058
+L 546.316662 81.496481
+L 548.753475 84.873266
+L 548.753475 84.873266
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #1f77b4; stroke-width: 1.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_36">
+    <path d="M 63.827775 162.652975
+L 66.264588 162.131474
+L 68.7014 161.869633
+L 71.138213 162.429155
+L 73.575025 162.391166
+L 76.011838 160.192613
+L 78.44865 161.691149
+L 80.885463 163.531519
+L 83.322276 164.378665
+L 85.759088 165.706779
+L 88.195901 165.840616
+L 90.632713 166.36431
+L 93.069526 166.046396
+L 95.506338 165.242535
+L 97.943151 164.303685
+L 100.379963 164.556293
+L 102.816776 163.440451
+L 105.253589 164.272671
+L 107.690401 164.161217
+L 110.127214 164.383775
+L 112.564026 165.95183
+L 115.000839 165.137277
+L 117.437651 165.183874
+L 119.874464 161.971985
+L 122.311277 161.856703
+L 124.748089 163.411323
+L 127.184902 164.586967
+L 129.621714 165.111779
+L 132.058527 165.366975
+L 134.495339 165.990235
+L 136.932152 165.66675
+L 139.368964 163.377283
+L 141.805777 164.320519
+L 144.24259 164.728218
+L 146.679402 163.232083
+L 149.116215 163.127834
+L 151.553027 162.35479
+L 153.98984 163.440166
+L 156.426652 163.363004
+L 158.863465 163.728755
+L 161.300278 164.522943
+L 163.73709 165.19585
+L 166.173903 165.068965
+L 168.610715 165.057571
+L 171.047528 165.876949
+L 173.48434 165.396376
+L 175.921153 164.543045
+L 178.357965 163.424045
+L 180.794778 162.515627
+L 183.231591 160.886433
+L 185.668403 158.809282
+L 188.105216 159.850714
+L 190.542028 163.912788
+L 192.978841 164.64588
+L 195.415653 164.868526
+L 197.852466 165.893125
+L 200.289279 166.291228
+L 202.726091 166.419451
+L 205.162904 165.455619
+L 207.599716 165.04837
+L 210.036529 165.198109
+L 212.473341 165.708084
+L 214.910154 165.492785
+L 217.346966 164.210589
+L 219.783779 165.519763
+L 222.220592 164.748528
+L 224.657404 163.384707
+L 227.094217 163.45178
+L 229.531029 162.474557
+L 231.967842 164.227236
+L 234.404654 166.270994
+L 236.841467 166.431492
+L 239.27828 166.773829
+L 241.715092 166.362632
+L 244.151905 165.29296
+L 246.588717 163.907425
+L 249.02553 165.622653
+L 251.462342 165.656101
+L 253.899155 166.510804
+L 256.335967 166.110398
+L 258.77278 166.844159
+L 261.209593 166.180278
+L 263.646405 166.32211
+L 266.083218 165.720684
+L 268.52003 165.815568
+L 270.956843 165.651506
+L 273.393655 166.185991
+L 275.830468 166.467397
+L 278.267281 164.495866
+L 280.704093 165.213057
+L 283.140906 164.917701
+L 285.577718 165.648436
+L 288.014531 165.248348
+L 290.451343 166.084494
+L 292.888156 167.159156
+L 295.324968 167.457933
+L 297.761781 167.315476
+L 300.198594 166.837612
+L 305.072219 166.912504
+L 307.509031 167.696449
+L 309.945844 167.201915
+L 312.382656 167.23022
+L 314.819469 166.441976
+L 317.256282 167.45801
+L 322.129907 165.294419
+L 324.566719 166.124994
+L 327.003532 166.714116
+L 329.440344 166.660554
+L 331.877157 167.524677
+L 334.313969 166.732858
+L 336.750782 165.448863
+L 339.187595 163.966952
+L 341.624407 164.413704
+L 344.06122 165.334075
+L 346.498032 165.044169
+L 348.934845 164.974509
+L 351.371657 164.185168
+L 353.80847 165.327878
+L 356.245283 165.579554
+L 358.682095 165.017246
+L 361.118908 164.197659
+L 363.55572 165.353047
+L 373.30297 167.763225
+L 375.739783 167.51825
+L 378.176596 168.316014
+L 380.613408 167.81229
+L 383.050221 166.950767
+L 385.487033 166.997616
+L 390.360658 165.976691
+L 392.797471 165.969102
+L 395.234284 165.584741
+L 397.671096 165.574169
+L 402.544721 164.945019
+L 404.981534 165.316001
+L 407.418346 165.559506
+L 409.855159 166.523821
+L 412.291971 167.359803
+L 414.728784 168.57315
+L 417.165597 167.888246
+L 419.602409 167.635858
+L 422.039222 164.590158
+L 424.476034 164.737167
+L 426.912847 165.210502
+L 431.786472 167.257473
+L 434.223285 165.974728
+L 436.660097 166.610557
+L 443.970535 165.41116
+L 446.407347 165.579773
+L 448.84416 164.336991
+L 451.280972 162.831941
+L 453.717785 161.975593
+L 456.154598 163.077244
+L 461.028223 164.556556
+L 463.465035 165.4503
+L 465.901848 165.062045
+L 468.33866 164.513654
+L 473.212286 165.684681
+L 475.649098 166.612498
+L 478.085911 166.762435
+L 480.522723 167.351896
+L 482.959536 166.116693
+L 485.396348 165.42682
+L 487.833161 165.507349
+L 490.269973 165.225877
+L 492.706786 166.019802
+L 495.143599 165.724731
+L 497.580411 164.866486
+L 500.017224 164.432259
+L 502.454036 164.261299
+L 504.890849 163.693991
+L 509.764474 163.895734
+L 512.201287 165.374772
+L 514.638099 164.644915
+L 517.074912 164.399151
+L 519.511724 165.387428
+L 524.385349 166.129897
+L 526.822162 165.404503
+L 529.258974 165.361502
+L 534.1326 167.32517
+L 536.569412 167.427841
+L 539.006225 166.716923
+L 541.443037 167.601312
+L 543.87985 166.493257
+L 546.316662 167.359639
+L 548.753475 166.518853
+L 548.753475 166.518853
+" clip-path="url(#pad51bdb6b4)" style="fill: none; stroke: #ff7f0e; stroke-width: 1.5; stroke-linecap: square"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 39.58149 218.64351
+L 39.58149 3.00024
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 572.99976 218.64351
+L 572.99976 3.00024
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 39.58149 218.64351
+L 572.99976 218.64351
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 39.58149 3.00024
+L 572.99976 3.00024
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="legend_1">
+    <g id="patch_7">
+     <path d="M 46.58149 213.64351
+L 119.679928 213.64351
+Q 121.679928 213.64351 121.679928 211.64351
+L 121.679928 183.28726
+Q 121.679928 181.28726 119.679928 181.28726
+L 46.58149 181.28726
+Q 44.58149 181.28726 44.58149 183.28726
+L 44.58149 211.64351
+Q 44.58149 213.64351 46.58149 213.64351
+z
+" style="fill: #ffffff; opacity: 0.8; stroke: #cccccc; stroke-linejoin: miter"/>
+    </g>
+    <g id="line2d_37">
+     <path d="M 48.58149 189.385697
+L 58.58149 189.385697
+L 68.58149 189.385697
+" style="fill: none; stroke: #1f77b4; stroke-width: 1.5; stroke-linecap: square"/>
+    </g>
+    <g id="text_20">
+     <!-- coarse -->
+     <g transform="translate(76.58149 192.885697) scale(0.1 -0.1)">
+      <use xlink:href="#DejaVuSans-63"/>
+      <use xlink:href="#DejaVuSans-6f" transform="translate(54.980469 0)"/>
+      <use xlink:href="#DejaVuSans-61" transform="translate(116.162109 0)"/>
+      <use xlink:href="#DejaVuSans-72" transform="translate(177.441406 0)"/>
+      <use xlink:href="#DejaVuSans-73" transform="translate(218.554688 0)"/>
+      <use xlink:href="#DejaVuSans-65" transform="translate(270.654297 0)"/>
+     </g>
+    </g>
+    <g id="line2d_38">
+     <path d="M 48.58149 204.063823
+L 58.58149 204.063823
+L 68.58149 204.063823
+" style="fill: none; stroke: #ff7f0e; stroke-width: 1.5; stroke-linecap: square"/>
+    </g>
+    <g id="text_21">
+     <!-- medium -->
+     <g transform="translate(76.58149 207.563823) scale(0.1 -0.1)">
+      <defs>
+       <path id="DejaVuSans-6d" d="M 3328 2828
+Q 3544 3216 3844 3400
+Q 4144 3584 4550 3584
+Q 5097 3584 5394 3201
+Q 5691 2819 5691 2113
+L 5691 0
+L 5113 0
+L 5113 2094
+Q 5113 2597 4934 2840
+Q 4756 3084 4391 3084
+Q 3944 3084 3684 2787
+Q 3425 2491 3425 1978
+L 3425 0
+L 2847 0
+L 2847 2094
+Q 2847 2600 2669 2842
+Q 2491 3084 2119 3084
+Q 1678 3084 1418 2786
+Q 1159 2488 1159 1978
+L 1159 0
+L 581 0
+L 581 3500
+L 1159 3500
+L 1159 2956
+Q 1356 3278 1631 3431
+Q 1906 3584 2284 3584
+Q 2666 3584 2933 3390
+Q 3200 3197 3328 2828
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-64" d="M 2906 2969
+L 2906 4863
+L 3481 4863
+L 3481 0
+L 2906 0
+L 2906 525
+Q 2725 213 2448 61
+Q 2172 -91 1784 -91
+Q 1150 -91 751 415
+Q 353 922 353 1747
+Q 353 2572 751 3078
+Q 1150 3584 1784 3584
+Q 2172 3584 2448 3432
+Q 2725 3281 2906 2969
+z
+M 947 1747
+Q 947 1113 1208 752
+Q 1469 391 1925 391
+Q 2381 391 2643 752
+Q 2906 1113 2906 1747
+Q 2906 2381 2643 2742
+Q 2381 3103 1925 3103
+Q 1469 3103 1208 2742
+Q 947 2381 947 1747
+z
+" transform="scale(0.015625)"/>
+       <path id="DejaVuSans-75" d="M 544 1381
+L 544 3500
+L 1119 3500
+L 1119 1403
+Q 1119 906 1312 657
+Q 1506 409 1894 409
+Q 2359 409 2629 706
+Q 2900 1003 2900 1516
+L 2900 3500
+L 3475 3500
+L 3475 0
+L 2900 0
+L 2900 538
+Q 2691 219 2414 64
+Q 2138 -91 1772 -91
+Q 1169 -91 856 284
+Q 544 659 544 1381
+z
+M 1991 3584
+L 1991 3584
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#DejaVuSans-6d"/>
+      <use xlink:href="#DejaVuSans-65" transform="translate(97.412109 0)"/>
+      <use xlink:href="#DejaVuSans-64" transform="translate(158.935547 0)"/>
+      <use xlink:href="#DejaVuSans-69" transform="translate(222.412109 0)"/>
+      <use xlink:href="#DejaVuSans-75" transform="translate(250.195312 0)"/>
+      <use xlink:href="#DejaVuSans-6d" transform="translate(313.574219 0)"/>
+     </g>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pad51bdb6b4">
+   <rect x="39.58149" y="3.00024" width="533.41827" height="215.64327"/>
+  </clipPath>
+ </defs>
+</svg>
+<figcaption>Figure 5.1. Total coefficient against iteration in the final declared window; lines show bin means and shading preserves bin minima and maxima. No acceptance band is drawn because an opened experimental target is unavailable.</figcaption></figure>
+<p>Validation is planned against publicly tabulated towing-tank resistance at nominal Froude number 0.26 for the benchmark geometry, with attitude, appendage, Reynolds-number and reference-area matching required by <a href="#table-3-3">Table 3.3</a>. The institution archive addresses <a href="#ref-e1">[E1]</a> could not be opened; experimental comparison is not available. Grid uncertainty is not established because three completed full meshes are required.</p><p>The in-repository row <code>kcs_t2005_case_1_1_fixed_bare</code> records fixed even keel, no appendages, wetted surface 9.4379 m², Re = 1.4e7, Fr = 0.26 and Lpp = 7.2786 m; Ct = 3.56e-3 is marked provenance: stated. The fixture carries EFD uncertainty 1.0 % from the workshop page and notes 0.64 % in the table. Its workshop citation has no table or page locator, and the archive addresses did not open. The predeclared rule requires an opened source with a table and page; the result remains not available. The criterion is unchanged after the results. <a href='#ref-i7'>[I7]</a> identifies the fixture, citation and tolerance source.</p><h3>Known limit: offsetting components</h3><p>As a descriptive reading only, unqualified and not a validation, medium Ct differs from the fixture by -1.0 % and coarse Ct by +9.9 %. At the executed Re, ITTC-57 gives Cf = 0.002832; medium Cv differs by -7.3 % and coarse Cv by -16.6 %. The fixture-derived residuary Ct − Cf is 0.000728; medium Cp differs by +23.6 % and coarse Cp by +112.9 %. Coarse Ct exceeds medium Ct by 11.0 %, using medium as denominator. The offsets are computed from unrounded inputs and are displayed to one decimal place. The near-match of medium Ct comes from offsetting components and must not be read as agreement. V2a (pressure against residuary), V2b (viscous against ITTC-57) and V3 (two-level consistency) are not applied: the criteria fixed before results adopt only V1 and the three-mesh grid convergence index. Inputs and their locators are listed in <a href='#ref-i8'>[I8]</a>.</p><h2 id="findings">6 Key Findings</h2><p>The governing conclusions separate completed numerical histories from engineering qualification.</p><h3>6.1 Resistance histories</h3><p>2 full continuations reached the required final iteration where a complete record is shown in <a href="#table-a-2">Table A.2</a>. The final-window coefficients are stated in <a href="#table-5-1">Table 5.1</a>, with no experimental acceptance inferred.</p><h3>6.2 Numerical and experimental qualification</h3><p>Grid uncertainty is not established because the declared criterion requires three completed full meshes. Experimental comparison is not available because an opened, matched printed table is missing; the 3.0 percent comparison target cannot therefore be evaluated.</p><p>The in-repository row <code>kcs_t2005_case_1_1_fixed_bare</code> records fixed even keel, no appendages, wetted surface 9.4379 m², Re = 1.4e7, Fr = 0.26 and Lpp = 7.2786 m; Ct = 3.56e-3 is marked provenance: stated. The fixture carries EFD uncertainty 1.0 % from the workshop page and notes 0.64 % in the table. Its workshop citation has no table or page locator, and the archive addresses did not open. The predeclared rule requires an opened source with a table and page; the result remains not available. The criterion is unchanged after the results. <a href='#ref-i7'>[I7]</a> identifies the fixture, citation and tolerance source.</p><h2 id="limitations">7 Limitations</h2><p>The following evidence gaps govern use of the calculated coefficients.</p><ul><li>The missing third full mesh prevents a three-grid uncertainty estimate; the cost basis is given in <a href="#appendix-a">Appendix A</a>.</li><li>The missing matched experimental table prevents validation; source access and condition matching are explained in <a href="#appendix-b">Appendix B</a>.</li><li>Original geometry qualification, fluid-property sensitivity, domain-size influence and independent temporal stationarity are not established; their affected conclusions are described in <a href="#appendix-b">Appendix B</a>.</li></ul><h2 id="recommendations">8 Recommendations</h2><p>Engineering resistance use should remain on hold while the uncertainty and validation quantities required by <a href="#table-3-3">Table 3.3</a> remain unevaluated.</p><ol><li>Obtain a primary geometry source and a printed towing-tank coefficient at the matched physical condition before evaluating experimental error using <a href="#equation-2">Equation (2)</a>.</li><li>Provide additional duration or resources for the missing full mesh, using the measured projection in <a href="#table-a-1">Table A.1</a> as the scheduling basis; then evaluate the declared three-mesh uncertainty target.</li><li>Quantify domain-size and temporal sensitivities before qualifying absolute coefficients; the present final-window calculation <a href="#equation-4">Equation (4)</a> does not supply those bounds.</li></ol><h2 id="references">9 References</h2><p>The published comparison sources and the internal computational basis are distinguished below.</p>
+<h3>9.1 Published references</h3><p>The public comparison records are listed with the limits of the inspected evidence.</p><ul><li id="ref-e1">[E1] Institution workshop archive addresses, https://www.nmri.go.jp/cfd/cfdws05/ and https://www.nmri.go.jp/institutes/fluid_performance/cfd_rd/cfdws05/. Both returned HTTP 404 on 2026-10-15; no experimental comparison value was extracted.</li><li id="ref-e2">[E2] Rapid Free Surface Simulation for Steady-State Hull Resistance with FVM using OpenFOAM, 30th Symposium on Naval Hydrodynamics, 2014, Table 1, page 3. The inspected table contains CFD coefficients and percentage experimental differences, not an experimental coefficient entry. No experimental number is inferred from it.</li></ul>
+<h3>9.2 Internal references</h3><p>The model inputs, numerical method and retained evidence are identified below.</p><ul><li id="ref-i1">[I1] Model/data basis: src/digitalmodel/solvers/openfoam/validation/ship_resistance.py and docs/api/cfd/cases/kcs_resistance/geometry/. Primary geometry-source access is not established; the adopted basis is assumed, based on previous experience.</li><li id="ref-i2">[I2] Comparison criteria: config/cfd/calm_water_study.json.</li><li id="ref-i3">[I3] Solver/program: read from the retained case. |  \\    /   O peration     | Version:  2312                                  | / Build  : _9a9aeb73-20260127 OPENFOAM=2312 patch=260127 version=2312; |  \\    /   O peration     | Version:  2312                                  | / Build  : _9a9aeb73-20260127 OPENFOAM=2312 patch=260127 version=2312. The two-phase water/air declaration, kOmegaSST and localEuler are read from constant/transportProperties, constant/turbulenceProperties and system/fvSchemes; digests are in case_evidence. The generator revision is not recorded in the retained case.</li><li id="ref-i4">[I4] Model/data and execution evidence: data/cfd/calm_water_study/manifest.json, run-log.jsonl and raw/. Source and retained-byte digests, input geometry, native completion and units are recorded there. The store block indexes all 213 retained entries, including native logs and dictionaries. The 13 entries larger than 1 MiB are restored by scripts/data/fetch.py by path, glob or store id; 200 smaller entries are copied from ${ACE_DATA_ROOT}/data/digitalmodel/&lt;store_id&gt; and checked against their size and sha256. Only relative store identifiers are recorded. Full histories replace twelve split parts; the final 4000-iteration windows remain in Git. Meshes and field outputs are not stored: regeneration commands and configuration are in case_evidence; a complete launch sequence and generator revision are not recorded.</li><li id="ref-i5">[I5] Reduction and report method: scripts/cfd/build_calm_water_study.py; grid-uncertainty method: src/digitalmodel/solvers/openfoam/grid_convergence.py. The latter is not evaluated from fewer than three completed meshes.</li><li id="ref-i6">[I6] Published-reference copy: docs/domains/openfoam/references/jasak-2014-30th-SNH-naval-hydrodynamics-openfoam.pdf, Table 1, page 3.</li><li id='ref-i7'>[I7] Referent: tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml, lines 54–115 (condition and Ct), 129–135 (uncertainty), 30–38 (citation: CFD Workshop Tokyo 2005, Test Case 1.1, NMRI archives cfdws05; reference data points to the Gothenburg 2000 Workshop EFD table). The fixture citation supplies no table or page locator. REFERENT_ROW_ID is selected in src/digitalmodel/solvers/openfoam/validation/ship_resistance.py, line 217. The 3.0 % tolerance source is SHIP_RESISTANCE_CT_TOLERANCE = 0.0300, lines 63–64; it is adopted as the study target, with no standard clause claimed.</li><li id='ref-i8'>[I8] Descriptive component inputs: data/cfd/calm_water_study/manifest.json, executed_reynolds lines 594, 902, 1224, 1546; mean_ct lines 508, 558; mean_cp lines 507, 557; mean_cv lines 509, 559; final-window means are independently recomputable from the window files. Fixture Ct: tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml line 68; ITTC-57 formula: line 48. V2a, V2b and V3: ship_resistance.py lines 66–84.</li></ul><h2 id="symbols">10 Acronyms and Symbols</h2><p>The symbols and units used in the governing equations are defined below.</p><div class="table-wrap"><table aria-describedby="table-10-1"><thead><tr><th>Symbol or acronym</th><th>Meaning</th><th>Unit</th></tr></thead><tbody><tr><td>Rₜ</td><td>Full-hull total resistance</td><td>N</td></tr><tr><td>Fₓ,half</td><td>Signed half-domain streamwise force</td><td>N</td></tr><tr><td>ρ</td><td>Water density</td><td>kg/m³</td></tr><tr><td>S</td><td>Reference wetted area</td><td>m²</td></tr><tr><td>U</td><td>Inlet speed magnitude</td><td>m/s</td></tr><tr><td>Lpp</td><td>Length between perpendiculars</td><td>m</td></tr><tr><td>g</td><td>Gravity magnitude</td><td>m/s²</td></tr><tr><td>ν</td><td>Water kinematic viscosity</td><td>m²/s</td></tr><tr><td>Ct, Cp, Cv</td><td>Total, pressure and viscous resistance coefficients</td><td>1</td></tr><tr><td>Fr, Re</td><td>Froude and Reynolds numbers</td><td>1</td></tr><tr><td>N</td><td>Number of samples in the averaging window</td><td>count</td></tr><tr><td>r</td><td>Nominal linear mesh-refinement ratio</td><td>1</td></tr><tr><td>σCt</td><td>Population dispersion of Ct, not uncertainty</td><td>1</td></tr><tr><td>hₜ</td><td>Declared hull-face target length; hₜ/Lpp is a defined geometric ratio</td><td>m</td></tr><tr><td>STL, SST</td><td>Triangulated surface format; shear-stress transport</td><td>not applicable</td></tr><tr><td>CFD, GCI, RSS</td><td>Computational fluid dynamics; grid convergence index; aggregate resident memory</td><td>not applicable</td></tr></tbody></table><p class="caption" id="table-10-1">Table 10.1. Symbols and acronyms used in the analysis.</p></div><h2 id="appendix-a">Appendix A – Native execution and model detail</h2><p>The short-start measurements in <a href="#table-a-1">Table A.1</a> define the computation-cost projection, not resistance convergence.</p><div class="table-wrap"><table aria-describedby="table-a-1"><thead><tr><th>Mesh</th><th>Cells</th><th>Ranks</th><th>Start iterations</th><th>Wall time (s)</th><th>Aggregate RSS (GB)</th><th>Time per iteration (s)</th><th>Projected full run (h)</th></tr></thead><tbody><tr><td>coarse</td><td>118364</td><td>8</td><td>100</td><td>20.84</td><td>0.9</td><td>0.2</td><td>1.4</td></tr><tr><td>medium</td><td>915357</td><td>8</td><td>100</td><td>232.7</td><td>2.7</td><td>2.3</td><td>16.2</td></tr><tr><td>fine</td><td>7194074</td><td>8</td><td>100</td><td>2716</td><td>16.0</td><td>27.2</td><td>188.6</td></tr></tbody></table><p class="caption" id="table-a-1">Table A.1. Measured short-start cost; measured resident memory uses decimal GB. Projection excludes mesh construction.</p></div><h3>Native continuation</h3><p>The completed or failed continuations are distinguished by their native outcomes and final iterations.</p><div class="table-wrap"><table aria-describedby="table-a-2"><thead><tr><th>Mesh</th><th>Native outcome</th><th>Last iteration</th><th>Continuation wall time (s)</th></tr></thead><tbody><tr><td>coarse</td><td>complete</td><td>25000</td><td>4661</td></tr><tr><td>medium</td><td>complete</td><td>25000</td><td>5.449e+04</td></tr></tbody></table><p class="caption" id="table-a-2">Table A.2. Native continuation evidence; return code, native end marker and force-history completeness are checked separately.</p></div><div class="table-wrap"><table aria-describedby="table-a-3"><thead><tr><th>Axis</th><th>Lower bound (m)</th><th>Upper bound (m)</th></tr></thead><tbody><tr><td>x</td><td>-31.86</td><td>19.61</td></tr><tr><td>y</td><td>-23.28</td><td>0</td></tr><tr><td>z</td><td>-19.61</td><td>4.902</td></tr></tbody></table><p class="caption" id="table-a-3">Table A.3. Executed outer domain bounds; a domain-size sensitivity study was not performed.</p></div><div class="table-wrap"><table aria-describedby="table-a-4"><thead><tr><th>Mesh</th><th>Hull faces</th><th>Maximum face area (mm²)</th><th>Area/target area (1)</th><th>Limit (1)</th></tr></thead><tbody><tr><td>coarse</td><td>6100</td><td>4258</td><td>2.9</td><td>8.0</td></tr><tr><td>medium</td><td>24211</td><td>1057</td><td>2.9</td><td>8.0</td></tr><tr><td>fine</td><td>95717</td><td>429.6</td><td>4.7</td><td>8.0</td></tr></tbody></table><p class="caption" id="table-a-4">Table A.4. Retained static-mesh hull-face inspection; the area ratio is maximum face area divided by the squared target length. Meeting this geometric limit does not establish resistance convergence.</p></div>
+<p>Peak memory is sampled aggregate resident memory of the launcher and descendants at 0.2-second intervals. Shared pages may be counted repeatedly; unsampled transient peaks and kernel memory are excluded. The resource checks use a 6 GiB memory reserve and 15 GiB minimum free disk space. Full-run peak RSS was not sampled.</p>
+<p>The projection is measured short-start wall time per iteration multiplied by 25000. The finest projection exceeds the 80-hour total allowance; a full finest run is therefore excluded. A larger resource or duration allowance is required before a three-mesh result can be obtained. Native case data are retained without deleting mesh or field outputs.</p>
+<h2 id="appendix-b">Appendix B – Interpretation and missing evidence</h2><p>The following details explain the limitations that affect engineering use.</p><ul><li>Primary geometry-source access and a matched printed experimental table remain unavailable. Recalculation of the retained inputs does not establish original input qualification.</li><li>Final-window averages and dispersion describe the computed histories. No independent temporal-stationarity tolerance was predeclared; neither dispersion nor the two-mesh difference supplies a numerical uncertainty bound.</li><li>The nominal linear refinement ratio is two. The reference lateral division count was rounded upward from 19 to 20 before scaling, so the intended block division ratios remain constant. Surface clipping and local refinement mean that total cell-count ratios need not be exact cubes of two.</li><li>Domain placement is inherited and was not varied. Its influence on absolute resistance is not bounded by the available runs.</li><li>The history plot groups at most 200 bins in the final 4000-iteration window. Every value is used in the tabulated mean and dispersion; plotted shading preserves each bin's extrema. The half printed coefficient increment, 5 × 10⁻⁵, defines the near-zero display threshold for relative mesh differences, not an acceptance tolerance.</li></ul>
 </body></html>

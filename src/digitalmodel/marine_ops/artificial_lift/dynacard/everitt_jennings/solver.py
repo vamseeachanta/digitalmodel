@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Everitt-Jennings space-marching finite-difference rod-string solver.
 # ABOUTME: Converts a surface dynamometer card to a downhole pump card in SI units.
 """Surface-to-downhole card conversion by space-marching finite differences.
@@ -39,6 +42,7 @@ import numpy as np
 from scipy.signal import savgol_filter
 
 from .damping import estimate_damping_profile
+from ..solver_guards import deviation_metadata, validate_stroke
 
 # ---------------------------------------------------------------------------
 # Optional numba acceleration. The kernel is a doubly-nested Python loop, so
@@ -568,6 +572,8 @@ class DownholeCard:
     full_position: Optional[np.ndarray] = None
     full_load: Optional[np.ndarray] = None
     simulation: Optional[Simulation] = None
+    solver_flags: list[str] = field(default_factory=list)
+    max_inclination_deg: Optional[float] = None
 
     @property
     def stroke(self) -> float:
@@ -720,10 +726,17 @@ class EverittJenningsSolver:
                 full_load[interfaces - 1, :] + full_load[interfaces + 1, :]
             ) / 2.0
 
+        validate_stroke(position, dh_position, dh_load, "everitt_jennings")
+        flags, maximum = deviation_metadata(
+            np.rad2deg(survey.inclination), self.include_gravity,
+        )
+
         return DownholeCard(
             position=dh_position,
             load=dh_load,
             full_position=full_position,
             full_load=full_load,
             simulation=sim,
+            solver_flags=flags,
+            max_inclination_deg=maximum,
         )

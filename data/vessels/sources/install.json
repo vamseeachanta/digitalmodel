@@ -41,17 +41,8 @@
       "notes": "Pioneering Spirit, Solitaire, Audacia, Lorelay, Fortitude. Gives LOA/beam/depth, S-lay tension capacity, topside/jacket lift capacity (Pioneering Spirit 48,000t/25,000t), pipe hold capacity. Per-vessel pages are HTML; downloadable detailed spec sheets are limited. No RAO/mass props."
     },
     {
-      "name": "Boskalis \u2014 Heavy Lift Vessels equipment sheets",
-      "url": "https://boskalis.com/about-us/fleet-and-equipment/offshore-vessels/heavy-lift-vessels",
-      "layers_covered": [
-        "principal particulars",
-        "crane capacity curves & deck data"
-      ],
-      "access": "brochure-pdf",
-      "format": "HTML + per-vessel equipment-sheet PDFs",
-      "freshness": "Current",
-      "reliability": "high",
-      "notes": "Bokalift 1 (https://boskalis.com/media/5rbfb1cp/bokalift_1_03.pdf) and Bokalift 2 (https://boskalis.com/media/cafdcmsf/bokalift-2.pdf) equipment sheets: dims, draft, crane capacity vs radius (e.g. 4000t @ 28m), lift height, deck area + deck loading (t/m2), accommodation, DP. Among the better public sources for deck-loading data."
+      "source": "private provenance",
+      "access": "private"
     },
     {
       "name": "Subsea7 \u2014 Vessel datasheets",
@@ -230,7 +221,7 @@
     "Heerema Marine Contractors \u2014 Fleet & Equipment Folders",
     "Saipem \u2014 Fleet & Yards vessel datasheets",
     "Allseas \u2014 Our Fleet vessel pages",
-    "Boskalis \u2014 Heavy Lift Vessels equipment sheets",
+    "private provenance",
     "Subsea7 \u2014 Vessel datasheets",
     "DNV \u2014 DNV-RP-C205 Environmental Conditions and Environmental Loads",
     "DNV \u2014 DNV-ST-N001 Marine Operations and Marine Warranty",

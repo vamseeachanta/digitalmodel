@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
 # File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/Step2.yml
@@ -42,7 +42,7 @@ General:
     - 50
   # Restart state
   RestartStateRecordingPeriodicCount: 0
-  RestartStateRecordingTest: 
+  RestartStateRecordingTest:
   # Default view parameters
   DefaultViewMode: Wire frame
   DefaultViewSize: 121.58906265110264
@@ -5388,7 +5388,7 @@ Vessels:
       - [3, 7, ~]
       - [4, 8, ~]
     # Shaded drawing
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
   - Name: UTA-Stub
     BuoyType: Lumped buoy
     Connection: UTA

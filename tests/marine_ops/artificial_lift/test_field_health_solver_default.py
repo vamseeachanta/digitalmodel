@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: Guards the solver default in the field-health entry point against
 ABOUTME: silently falling back to a solver documented as unusable for diagnosis.
@@ -9,7 +12,9 @@ import inspect
 import pytest
 
 from digitalmodel.marine_ops.artificial_lift import field_health
-from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.marine_ops.artificial_lift.dynacard.solver import (
+    DynacardWorkflow, perform_well_troubleshooting,
+)
 
 
 # The solvers that actually reconstruct a downhole card. 'gibbs' does not
@@ -62,6 +67,7 @@ class TestFieldHealthSolverDefault:
         """Neither non-diagnostic solver may be a default in this call path."""
         workflow_default = _default_of(DynacardWorkflow.__init__, "solver_method")
         assert workflow_default != bad_solver
+        assert _default_of(perform_well_troubleshooting, "solver_method") == workflow_default
 
         source = inspect.getsource(field_health.run_field_troubleshooter)
         assert f'"solver_method", "{bad_solver}"' not in source

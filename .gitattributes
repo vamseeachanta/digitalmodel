@@ -87,3 +87,10 @@ tests/fixtures/cathodic_protection/workflow_inputs/*.yml text eol=lf
 # Preserve raw-byte provenance hashes and the riser-joint report golden.
 tests/asset_integrity/test_data/real_inspection/** -text
 examples/workflows/riser-joint-ffs/report.html -text
+
+# BHA manifest hashes pin exact YAML bytes on every checkout.
+data/bha_database/*.yml -text
+data/bha_database/*.yaml -text
+
+# B3 benchmark inputs are bound by raw-byte MANIFEST digests.
+docs/benchmarks/catenary_closed_form/inputs/* text eol=lf
