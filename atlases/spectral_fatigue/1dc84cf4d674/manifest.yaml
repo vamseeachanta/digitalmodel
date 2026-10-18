@@ -1,0 +1,48 @@
+atlas_id: 1dc84cf4d674
+basename: spectral_fatigue
+physics: log_log
+response: annual_damage
+axes:
+- name: Hs
+  scale: log
+  grid:
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.5
+  - 6.0
+  - 8.0
+- name: Tp
+  scale: linear
+  grid:
+  - 6.0
+  - 7.0
+  - 8.0
+  - 9.0
+  - 10.0
+  - 11.0
+  - 12.0
+  - 13.0
+  - 14.0
+  - 16.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.002007433784008335
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: spectral_fatigue
+  code_version: 50ff7030
+  standards:
+  - id: DNV-RP-C203
+    edition: 2021-09
+  - id: DNV-RP-C205
+    edition: 2021-09
+  response_kwargs:
+    gamma: 3.3
+    stress_gain_MPa_per_m: 20.0
+    sn_slope: 3.0
+    sn_intercept: 12.164
+  workflow_id: spectral-fatigue
+  content_fingerprint: 1dc84cf4d6747fc64c64926c3a33af6418ee8eaab23487a6aff4a793c0ccda98
+  input_template_sha256: 65980c96420d302017d35e589af2add3e869de0aa082832034ed89fd08ddc406

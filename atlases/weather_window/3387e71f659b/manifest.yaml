@@ -1,0 +1,38 @@
+atlas_id: 3387e71f659b
+basename: weather_window
+physics: linear
+response: operability_pct
+axes:
+- name: hs_limit_m
+  scale: linear
+  grid:
+  - 2.0
+  - 2.5
+  - 3.0
+  - 3.5
+  - 4.0
+- name: required_window_hours
+  scale: linear
+  grid:
+  - 12.0
+  - 24.0
+  - 36.0
+  - 48.0
+  - 72.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.09212107938615736
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: weather_window
+  code_version: 50ff7030
+  standards:
+  - id: DNV-OS-H101
+    edition: 2011-10
+  - id: DNV-RP-H103
+    edition: 2014-04
+  response_kwargs: {}
+  workflow_id: weather-window
+  content_fingerprint: 3387e71f659b5d12c631d49642d5821da803d8f1fd4e2f0444ae38c0634638c0
+  input_template_sha256: c521a3af5322d13c5c943d563dd897e7e950ad3863ffa9fd181cda47439e2968

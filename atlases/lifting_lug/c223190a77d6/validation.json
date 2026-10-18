@@ -1,0 +1,177 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.020833333333333447,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 40,
+  "worst_samples": [
+    {
+      "point": {
+        "static_load_kN": 230.81060873288703,
+        "plate_thickness_mm": 35.0
+      },
+      "predicted": 0.7449872934453514,
+      "actual": 0.7297834711301401,
+      "rel_error": 0.020833333333333447,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 200.0,
+        "plate_thickness_mm": 35.0
+      },
+      "predicted": 0.6455399061032865,
+      "actual": 0.6323656223052603,
+      "rel_error": 0.02083333333333326,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 400.0,
+        "plate_thickness_mm": 35.0
+      },
+      "predicted": 1.291079812206573,
+      "actual": 1.2647312446105206,
+      "rel_error": 0.02083333333333326,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 564.0027815812,
+        "plate_thickness_mm": 35.0
+      },
+      "predicted": 1.820431513319601,
+      "actual": 1.7832798497824665,
+      "rel_error": 0.020833333333333214,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 600.0,
+        "plate_thickness_mm": 35.0
+      },
+      "predicted": 1.936619718309859,
+      "actual": 1.8970968669157806,
+      "rel_error": 0.020833333333333145,
+      "in_range": true
+    },
+    {
+      "point": {
+        "plate_thickness_mm": 35.25501975590219,
+        "static_load_kN": 250.0
+      },
+      "predicted": 0.80104540301198,
+      "actual": 0.7847391993369526,
+      "rel_error": 0.02077913743674968,
+      "in_range": true
+    },
+    {
+      "point": {
+        "plate_thickness_mm": 32.68360479128069,
+        "static_load_kN": 350.0
+      },
+      "predicted": 1.2044611129574894,
+      "actual": 1.1850710658614434,
+      "rel_error": 0.01636192769751837,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 200.0,
+        "plate_thickness_mm": 45.0
+      },
+      "predicted": 0.49798792756539245,
+      "actual": 0.4918399284596468,
+      "rel_error": 0.01250000000000013,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 400.0,
+        "plate_thickness_mm": 45.0
+      },
+      "predicted": 0.9959758551307849,
+      "actual": 0.9836798569192936,
+      "rel_error": 0.01250000000000013,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 600.0,
+        "plate_thickness_mm": 45.0
+      },
+      "predicted": 1.4939637826961771,
+      "actual": 1.4755197853789404,
+      "rel_error": 0.012500000000000018,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 423.21116433125843,
+        "plate_thickness_mm": 45.0
+      },
+      "predicted": 1.0537702532393005,
+      "actual": 1.04076074394005,
+      "rel_error": 0.012499999999999976,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 232.37171649276718,
+        "plate_thickness_mm": 45.0
+      },
+      "predicted": 0.5785915476052301,
+      "actual": 0.5714484420792397,
+      "rel_error": 0.012499999999999832,
+      "in_range": true
+    },
+    {
+      "point": {
+        "plate_thickness_mm": 44.74436626035009,
+        "static_load_kN": 450.0
+      },
+      "predicted": 1.1268379628333351,
+      "actual": 1.1129622993603128,
+      "rel_error": 0.012467325695576185,
+      "in_range": true
+    },
+    {
+      "point": {
+        "plate_thickness_mm": 45.89560883953339,
+        "static_load_kN": 550.0
+      },
+      "predicted": 1.3422110991993108,
+      "actual": 1.3261658944254697,
+      "rel_error": 0.012098942403274736,
+      "in_range": true
+    },
+    {
+      "point": {
+        "static_load_kN": 600.0,
+        "plate_thickness_mm": 55.0
+      },
+      "predicted": 1.2173038229376258,
+      "actual": 1.2072434607645874,
+      "rel_error": 0.00833333333333348,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "static_load_kN": [
+        0.020833333333333447,
+        0.01636192769751837,
+        0.02083333333333326,
+        0.020833333333333214
+      ],
+      "plate_thickness_mm": [
+        0.020833333333333447,
+        0.01250000000000013,
+        0.00833333333333348,
+        0.005952380952381045
+      ]
+    }
+  },
+  "densification_log": []
+}

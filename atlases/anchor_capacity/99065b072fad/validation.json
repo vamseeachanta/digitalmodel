@@ -1,0 +1,198 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.024224516406876357,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 132,
+  "worst_samples": [
+    {
+      "point": {
+        "length_m": 10.0,
+        "su_kpa": 60.0,
+        "diameter_m": 2.75
+      },
+      "predicted": 10086.63299306441,
+      "actual": 9848.068300932433,
+      "rel_error": 0.024224516406876357,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 10.0,
+        "su_kpa": 20.0,
+        "diameter_m": 2.75
+      },
+      "predicted": 3362.2109976881366,
+      "actual": 3282.6894336441446,
+      "rel_error": 0.024224516406876263,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 10.0,
+        "su_kpa": 100.0,
+        "diameter_m": 2.75
+      },
+      "predicted": 16811.05498844068,
+      "actual": 16413.447168220722,
+      "rel_error": 0.024224516406876097,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 12.627509877951095,
+        "su_kpa": 58.14848564026015,
+        "diameter_m": 2.75
+      },
+      "predicted": 11466.38041617789,
+      "actual": 11235.177489932736,
+      "rel_error": 0.020578484536832933,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 2.853176982088709,
+        "su_kpa": 43.75141388025181,
+        "length_m": 12.5
+      },
+      "predicted": 8971.60525694689,
+      "actual": 8800.938443572053,
+      "rel_error": 0.019391888088876156,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 2.620710287523754,
+        "length_m": 17.14016002498501,
+        "su_kpa": 50.0
+      },
+      "predicted": 11652.986056399006,
+      "actual": 11460.09000818319,
+      "rel_error": 0.016831983699785693,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 2.4826193834837356,
+        "length_m": 17.547198970489006,
+        "su_kpa": 30.0
+      },
+      "predicted": 6662.552886620529,
+      "actual": 6558.431039208344,
+      "rel_error": 0.01587602992083189,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 20.0,
+        "su_kpa": 60.0,
+        "diameter_m": 2.75
+      },
+      "predicted": 16727.331544222514,
+      "actual": 16488.76685209054,
+      "rel_error": 0.014468316173791268,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 20.0,
+        "su_kpa": 100.0,
+        "diameter_m": 2.75
+      },
+      "predicted": 27878.88590703752,
+      "actual": 27481.27808681756,
+      "rel_error": 0.014468316173791226,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 20.0,
+        "su_kpa": 20.0,
+        "diameter_m": 2.75
+      },
+      "predicted": 5575.777181407504,
+      "actual": 5496.255617363513,
+      "rel_error": 0.014468316173791157,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 20.875653065475863,
+        "su_kpa": 25.367209582561394,
+        "diameter_m": 2.75
+      },
+      "predicted": 7317.943760194939,
+      "actual": 7217.08175112309,
+      "rel_error": 0.01397545608460842,
+      "in_range": true
+    },
+    {
+      "point": {
+        "diameter_m": 2.5564370813430184,
+        "su_kpa": 20.386752163735995,
+        "length_m": 22.5
+      },
+      "predicted": 5731.662934485098,
+      "actual": 5656.002755698349,
+      "rel_error": 0.013376969929960297,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 10.0,
+        "su_kpa": 20.0,
+        "diameter_m": 4.25
+      },
+      "predicted": 6071.834661409333,
+      "actual": 5992.3130973653415,
+      "rel_error": 0.01327059563675927,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 10.0,
+        "su_kpa": 60.0,
+        "diameter_m": 4.25
+      },
+      "predicted": 18215.503984228,
+      "actual": 17976.939292096024,
+      "rel_error": 0.01327059563675922,
+      "in_range": true
+    },
+    {
+      "point": {
+        "length_m": 10.0,
+        "su_kpa": 100.0,
+        "diameter_m": 4.25
+      },
+      "predicted": 30359.17330704666,
+      "actual": 29961.565486826705,
+      "rel_error": 0.01327059563675918,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "diameter_m": [
+        0.024224516406876357,
+        0.01327059563675927,
+        0.00851580996917487,
+        0.005970052448016411
+      ],
+      "length_m": [
+        0.024224516406876357,
+        0.016831983699785693,
+        0.014468316173791268,
+        0.010314319331326654
+      ],
+      "su_kpa": [
+        0.024224516406876263,
+        0.020578484536832933,
+        0.024224516406876357,
+        0.024224516406876097
+      ]
+    }
+  },
+  "densification_log": []
+}

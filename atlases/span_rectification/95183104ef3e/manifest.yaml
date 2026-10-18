@@ -1,0 +1,36 @@
+atlas_id: 95183104ef3e
+basename: span_rectification
+physics: utilization_threshold
+response: governing_utilisation
+axes:
+- name: actual_span_length_m
+  scale: linear
+  grid:
+  - 8.0
+  - 10.5
+  - 13.0
+  - 15.5
+  - 18.0
+- name: current_velocity_ms
+  scale: linear
+  grid:
+  - 0.4
+  - 0.6
+  - 0.8
+  - 1.0
+  - 1.2
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.026252535081307544
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: span_rectification
+  code_version: 50ff7030
+  standards:
+  - id: DNV-RP-F105
+    edition: 2017-06
+  response_kwargs: {}
+  workflow_id: span-rectification
+  content_fingerprint: 95183104ef3e2f4d406c93e553ca8796a948353dc20a9d37127c55e7deb18661
+  input_template_sha256: fefd4523ad0baf6f8bdfc0a28f0b3634c3979976c40f2918c605056a0810298b

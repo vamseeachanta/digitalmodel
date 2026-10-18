@@ -1,0 +1,173 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 1.016883732331738e-07,
+  "threshold": 0.05,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 17,
+  "worst_samples": [
+    {
+      "point": {
+        "frequency_rad_s": 0.6264968297590281,
+        "heading_deg": 45.0
+      },
+      "predicted": 0.7270296029175933,
+      "actual": 0.7270295289871432,
+      "rel_error": 1.016883732331738e-07,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 90.0,
+        "frequency_rad_s": 0.538559
+      },
+      "predicted": 0.7999997483678818,
+      "actual": 0.7999997110236036,
+      "rel_error": 4.668036464356242e-08,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 48.94043879464139,
+        "frequency_rad_s": 0.538559
+      },
+      "predicted": 0.8228106157041921,
+      "actual": 0.8228105783599138,
+      "rel_error": 4.5386239942109186e-08,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 6.038110780381566,
+        "frequency_rad_s": 0.538559
+      },
+      "predicted": 0.846645242378781,
+      "actual": 0.8466452050345026,
+      "rel_error": 4.4108533569087094e-08,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 0.0,
+        "frequency_rad_s": 0.538559
+      },
+      "predicted": 0.8499997483678818,
+      "actual": 0.8499997110236035,
+      "rel_error": 4.393446003808309e-08,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 0.0,
+        "frequency_rad_s": 0.3989325
+      },
+      "predicted": 0.9849999199330308,
+      "actual": 0.9849999301326167,
+      "rel_error": 1.0354910219345849e-08,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 11.823794450779928,
+        "frequency_rad_s": 0.3989325
+      },
+      "predicted": 0.9790880217223148,
+      "actual": 0.9790880315959608,
+      "rel_error": 1.0084533456924903e-08,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 42.91704634529267,
+        "frequency_rad_s": 0.3989325
+      },
+      "predicted": 0.9635413931839285,
+      "actual": 0.9635414022004439,
+      "rel_error": 9.357683440053414e-09,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 90.0,
+        "frequency_rad_s": 0.3989325
+      },
+      "predicted": 0.9399999124329563,
+      "actual": 0.9399999201515621,
+      "rel_error": 8.211283415112425e-09,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 33.17482408578771,
+        "frequency_rad_s": 0.8377585000000001
+      },
+      "predicted": 0.5315691038210526,
+      "actual": 0.5315691038210527,
+      "rel_error": 2.088577038515959e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "frequency_rad_s": 0.8305319258722508,
+        "heading_deg": 45.0
+      },
+      "predicted": 0.5319004316107981,
+      "actual": 0.531900431610798,
+      "rel_error": 2.0872760363494656e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "frequency_rad_s": 0.628319,
+        "heading_deg": 45.0
+      },
+      "predicted": 0.7249995518686605,
+      "actual": 0.7249995518686604,
+      "rel_error": 1.5313430494730604e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 90.0,
+        "frequency_rad_s": 0.8377585000000001
+      },
+      "predicted": 0.49999956164649023,
+      "actual": 0.4999995616464903,
+      "rel_error": 1.1102239979663288e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 0.0,
+        "frequency_rad_s": 0.8377585000000001
+      },
+      "predicted": 0.5499995616464903,
+      "actual": 0.5499995616464903,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "heading_deg": 0.9396858740409886,
+        "frequency_rad_s": 0.8377585000000001
+      },
+      "predicted": 0.5494775139386897,
+      "actual": 0.5494775139386897,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "frequency_rad_s": [
+        1.0354910219345849e-08,
+        1.016883732331738e-07,
+        2.088577038515959e-16
+      ],
+      "heading_deg": [
+        1.016883732331738e-07
+      ]
+    }
+  },
+  "densification_log": []
+}

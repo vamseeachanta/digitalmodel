@@ -1,0 +1,177 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.01443457830687906,
+  "threshold": 0.1,
+  "passes": true,
+  "failures": [],
+  "n_holdout": 40,
+  "worst_samples": [
+    {
+      "point": {
+        "scf": 1.0,
+        "viv_stress_scale": 1.1
+      },
+      "predicted": 0.0003297135713059334,
+      "actual": 0.0003250220155707182,
+      "rel_error": 0.01443457830687906,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.0323717164927673,
+        "viv_stress_scale": 1.1
+      },
+      "predicted": 0.0003717375011752209,
+      "actual": 0.0003666578512263849,
+      "rel_error": 0.013853923847111916,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.0080999154015242,
+        "viv_stress_scale": 1.2999999999999998
+      },
+      "predicted": 0.0004501475923818173,
+      "actual": 0.0004444858207510967,
+      "rel_error": 0.012737800322073885,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.0,
+        "viv_stress_scale": 0.9
+      },
+      "predicted": 0.00027514212785019075,
+      "actual": 0.00027187736461501387,
+      "rel_error": 0.012008220102471134,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.0,
+        "viv_stress_scale": 1.2999999999999998
+      },
+      "predicted": 0.0004396426699743857,
+      "actual": 0.0004345614138788806,
+      "rel_error": 0.011692837728389228,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.1768606896276044,
+        "viv_stress_scale": 1.2999999999999998
+      },
+      "predicted": 0.0007460969294559905,
+      "actual": 0.00073775652936071,
+      "rel_error": 0.011305084758121652,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.2,
+        "viv_stress_scale": 1.2999999999999998
+      },
+      "predicted": 0.0008013651026479803,
+      "actual": 0.0007934130831227791,
+      "rel_error": 0.010022546507429658,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.2,
+        "viv_stress_scale": 1.5
+      },
+      "predicted": 0.0010044590968985609,
+      "actual": 0.0009956099266375303,
+      "rel_error": 0.008888190067486383,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.2,
+        "viv_stress_scale": 1.1
+      },
+      "predicted": 0.0006897482028611227,
+      "actual": 0.0006838736848146168,
+      "rel_error": 0.00859006301448538,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.3601610356428089,
+        "viv_stress_scale": 1.5
+      },
+      "predicted": 0.0015311093938773154,
+      "actual": 0.0015181048723630509,
+      "rel_error": 0.00856628665845857,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.030810608732887,
+        "viv_stress_scale": 0.9
+      },
+      "predicted": 0.00031402175922951465,
+      "actual": 0.0003113818614812129,
+      "rel_error": 0.008478007472060154,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.3672504549586701,
+        "viv_stress_scale": 1.5
+      },
+      "predicted": 0.0015606757983963316,
+      "actual": 0.0015476637453095533,
+      "rel_error": 0.008407545325147888,
+      "in_range": true
+    },
+    {
+      "point": {
+        "viv_stress_scale": 0.9051003951180439,
+        "scf": 1.05
+      },
+      "predicted": 0.00034188072497587,
+      "actual": 0.00033937383063618957,
+      "rel_error": 0.007386822769984977,
+      "in_range": true
+    },
+    {
+      "point": {
+        "scf": 1.4,
+        "viv_stress_scale": 1.5
+      },
+      "predicted": 0.0017048431287465156,
+      "actual": 0.0016924040407939795,
+      "rel_error": 0.007349951697527456,
+      "in_range": true
+    },
+    {
+      "point": {
+        "viv_stress_scale": 1.2350261226190347,
+        "scf": 1.15
+      },
+      "predicted": 0.0006390455731897913,
+      "actual": 0.0006346655360132888,
+      "rel_error": 0.006901331375287935,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "scf": [
+        0.01443457830687906,
+        0.011305084758121652,
+        0.010022546507429658,
+        0.00856628665845857
+      ],
+      "viv_stress_scale": [
+        0.012008220102471134,
+        0.01443457830687906,
+        0.012737800322073885,
+        0.008888190067486383
+      ]
+    }
+  },
+  "densification_log": []
+}

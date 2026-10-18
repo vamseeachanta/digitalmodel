@@ -1,0 +1,26 @@
+{
+  "basename": "rao_tabulation",
+  "atlas_id": "7bfb648a16ac",
+  "physics": "linear",
+  "response": "heave_m",
+  "axes": [
+    {
+      "name": "frequency_rad_s",
+      "scale": "linear",
+      "grid": [
+        0.349066,
+        0.448799,
+        0.628319,
+        1.047198
+      ]
+    },
+    {
+      "name": "heading_deg",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        90.0
+      ]
+    }
+  ]
+}
