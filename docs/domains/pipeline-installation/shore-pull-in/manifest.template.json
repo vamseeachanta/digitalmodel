@@ -1,16 +1,16 @@
 {
   "approved_manifest_digest": null,
-  "case_table_sha256": "2419f4f642dc38e4f71e1f988ad0e023c110494007a1a6ddb6cc04f339c2ef1c",
+  "case_table_sha256": "7794dcb93fcf06bf8cb2d4d7c355b94e6d924199ee655a10a81d3b1a35a95cc1",
   "completed_cases": [],
-  "criteria_digest": "639b6631be24d932315766c67bbd1d122ee9c59a3590466ed9505c4eb9f0867f",
-  "criteria_revision": "5",
+  "criteria_digest": "3fcdde8e11fa21a2cba037eb194b62ba50fb9a9538af4196f65bab91750551b2",
+  "criteria_revision": "6",
   "expected_cases": [
     "level-initial",
     "level-drained",
     "incline-aided"
   ],
   "first_timed_case": "level-initial",
-  "input_digest": "06d41f2148a8265dac811c06d950a579facfe440d84e3d18f1c0703e8d4e8f37",
+  "input_digest": "9239c6ee8e867f512554de42501ffdf5f62a45108c0881d5cac133a39a44e8cd",
   "input_revision": null,
   "launch_enabled": false,
   "native_criteria": {

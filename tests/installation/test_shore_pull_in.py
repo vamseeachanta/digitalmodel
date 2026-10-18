@@ -355,6 +355,13 @@ def test_preparation_reproduces_across_shared_generator_schema_variants(tmp_path
     ("Name", None),
     ("UnitsSystem", None),
     ("Category", None),
+    ("Symmetry", ("Draughts",)),
+    ("WaterSurfaceZ", ("NominalDepth", "SeabedOrigin", "SeabedOriginDepth")),
+    ("TopEnd", (
+        "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, "
+        "ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo",
+        "ConnectionxBendingStiffness, ConnectionyBendingStiffness",
+    )),
     ("SeabedType", ("SeabedSlope", "SeabedOriginDepth")),
     ("WaveType", ("WaveHeight", "WavePeriod")),
     ("WinchType", ("WinchControlType", "StageMode, StageValue")),
@@ -382,3 +389,30 @@ def test_prepared_models_write_selectors_before_dependents(tmp_path, selector, d
 
     for files in bundle["cases"].values():
         assert sum(check(yaml.safe_load(text)) for text in files.values()) > 0
+
+
+def test_prepared_groups_keep_generator_browser_order(tmp_path, monkeypatch):
+    import yaml
+    d = driver()
+    original = d.ModularModelGenerator.generate
+    expected = {}
+
+    def capture_groups(generator, folder):
+        result = original(generator, folder)
+        groups = yaml.safe_load((folder / "includes/10_groups.yml").read_text())["Groups"]
+        expected[folder.name] = (
+            list(groups),
+            [name for name in groups["Structure"] if name not in {"Ramp inclined", "Ramp-curve"}],
+        )
+        return result
+
+    monkeypatch.setattr(d.ModularModelGenerator, "generate", capture_groups)
+    output = tmp_path / "output"
+    d.prepare(CAMPAIGN, output)
+    bundle = json.loads((output / "models.json").read_text())
+    for identity, files in bundle["cases"].items():
+        text = files["includes/10_groups.yml"]
+        assert text == (output / "models" / identity / "includes/10_groups.yml").read_text()
+        groups = yaml.safe_load(text)["Groups"]
+        assert (list(groups), list(groups["Structure"])) == expected[identity]
+        assert groups["State"]["Collapsed"] == []

@@ -68,7 +68,7 @@ def test_ruled_geometry_passes_at_clearance_and_rise_boundaries():
 
 def test_geometry_and_hand_pulls(tmp_path):
     table = json.loads((CAMPAIGN / "case-table.json").read_text())
-    assert table["revision"] == "5"
+    assert table["revision"] == "6"
     assert table["basis"]["water_depth_m"] == 21
     assert table["basis"]["pipeline"]["segments"][0]["length"] == 2000
     assert [c["rise_m"] for c in table["cases"]] == [0, 0, 21]

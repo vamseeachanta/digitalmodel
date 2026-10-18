@@ -305,14 +305,14 @@ def selector_first(value: Any) -> Any:
     """
     selectors = (
         "Name", "UnitsSystem", "LengthUnits", "MassUnits", "ForceUnits", "g",
-        "Category", "Representation", "Geometry", "VesselType", "Connection",
+        "Category", "Representation", "Geometry", "Symmetry", "VesselType", "Connection",
         "PrimaryMotion", "SuperimposedMotion", "IncludedInStatics",
         "DynamicsSolutionMethod", "ImplicitUseVariableTimeStep",
-        "VerticalDensityVariation", "SeabedType", "SeabedModel",
+        "WaterSurfaceZ", "VerticalDensityVariation", "SeabedType", "SeabedModel",
         "MultipleCurrentDataCanBeDefined", "CurrentModel",
         "VerticalCurrentVariationMethod", "WindType", "WaveType",
         "WaveCalculationMethod", "WinchType", "WinchControlType",
-        "LengthAndEndOrientations", "IncludeTorsion", "PreBendSpecifiedBy",
+        "TopEnd", "LengthAndEndOrientations", "IncludeTorsion", "PreBendSpecifiedBy",
     )
     if isinstance(value, list):
         return [selector_first(child) for child in value]
@@ -353,6 +353,12 @@ def canonicalize_surface_components(folder: Path, spec: ProjectInputSpec) -> Non
     groups = components["10_groups.yml"]["Groups"]["Structure"]
     for name in removed:
         groups.pop(name, None)
+    # Retain the generator's browser order for the three preparation entities,
+    # including when a schema variant serialized its mappings alphabetically.
+    group_names = (spec.pipeline.name, spec.equipment.vessel.name, spec.equipment.tensioner.name)
+    ordered_groups = {name: groups[name] for name in group_names if name in groups}
+    ordered_groups.update(groups)
+    components["10_groups.yml"]["Groups"]["Structure"] = ordered_groups
     stage_rows = len(components["01_general.yml"]["General"]["StageDuration"]) + 1
     for winch in components["11_winches.yml"]["Winches"]:
         # This one-segment, surface-origin preparation has no declared stinger.
@@ -368,7 +374,13 @@ def canonicalize_surface_components(folder: Path, spec: ProjectInputSpec) -> Non
                                       for _ in range(stage_rows)],
         })
     for path in paths:
-        path.write_text(yaml.dump(selector_first(components[path.name]), Dumper=PreparationDumper, sort_keys=False), encoding="utf-8")
+        data = components[path.name]
+        if path.name == "10_groups.yml":
+            groups = data["Groups"]
+            data = {"Groups": {"Structure": groups["Structure"], "State": groups["State"]}}
+        else:
+            data = selector_first(data)
+        path.write_text(yaml.dump(data, Dumper=PreparationDumper, sort_keys=False), encoding="utf-8")
     # Supports precede vessels; groups follow every entity they reference.
     order = ("01_general.yml", "02_var_data.yml", "03_environment.yml", "04_vessel_types.yml",
              "05_line_types.yml", "13_supports.yml", "06_vessels.yml", "14_morison.yml",

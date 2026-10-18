@@ -1,6 +1,6 @@
 {
   "analytical_before_models": true,
-  "case_table_sha256": "2419f4f642dc38e4f71e1f988ad0e023c110494007a1a6ddb6cc04f339c2ef1c",
+  "case_table_sha256": "7794dcb93fcf06bf8cb2d4d7c355b94e6d924199ee655a10a81d3b1a35a95cc1",
   "cases": [
     {
       "analytical_pull_kn": 3246.4479420446132,
@@ -8,13 +8,13 @@
       "files": {
         "includes/01_general.yml": "742a54a2c132035c8dea02f957b128f853eb3d5c07d819c5141940fd32d598dc",
         "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
-        "includes/03_environment.yml": "c38a4559a04374ac9f525bc98045d9e1324601834d8ac6fea24bf7690d9c7a58",
-        "includes/04_vessel_types.yml": "0302b99550615c8169369da6b6b9a6afc33c17dedd866874be3fa4cd9684e290",
+        "includes/03_environment.yml": "fc8a9a7c285d4b1f95b14ede33b9802c8799d4119012d3bd0c5a0aab6ec25484",
+        "includes/04_vessel_types.yml": "76bfeaa7fdc39077f0668fe57f05b457795702f7d5c134910b7f2718af51ab8c",
         "includes/05_line_types.yml": "01f672a95fa058713054a31b725f9a9512c0bb328ce2c48bb71bc3bbb5848b4a",
         "includes/06_vessels.yml": "030aab8749adcef986112400be69cbf763e213ede2de49cf457d49a0f8168e80",
-        "includes/07_lines.yml": "0d2112221bfb3eb0190ed4aada956b58ab9ecab6233b55f21638dee549543d8d",
+        "includes/07_lines.yml": "46b2c90de9a824e5061e4c89c947d8bdeccc0790517d5482420051a6fcf04000",
         "includes/09_shapes.yml": "db692531c46bf8a7d4543221103dc533b1c798fe30b2328e3c8f4e313c544436",
-        "includes/10_groups.yml": "0bc8c77bd2a3e3c5f3cbcf7ed02c186a8212e63bb03d3ef10d64525a4e77e6d4",
+        "includes/10_groups.yml": "f53754046eecf61ce543c9149c86140cafa5066a05de5c6b4c40c58c3fe61f99",
         "includes/11_winches.yml": "d035026d0b42a2c923d07a40ec223dff5a4b63951c526813a717483abe40eb7b",
         "includes/13_supports.yml": "a31555f114cddd45f0e567d104e5757beebce46f9041df116a5c163609ded178",
         "includes/14_morison.yml": "3b20fc0331dc877c7f94ed2ddca518b9f8a3f0dba764f70e804af393f977c44f",
@@ -49,13 +49,13 @@
       "files": {
         "includes/01_general.yml": "742a54a2c132035c8dea02f957b128f853eb3d5c07d819c5141940fd32d598dc",
         "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
-        "includes/03_environment.yml": "c38a4559a04374ac9f525bc98045d9e1324601834d8ac6fea24bf7690d9c7a58",
-        "includes/04_vessel_types.yml": "0302b99550615c8169369da6b6b9a6afc33c17dedd866874be3fa4cd9684e290",
+        "includes/03_environment.yml": "fc8a9a7c285d4b1f95b14ede33b9802c8799d4119012d3bd0c5a0aab6ec25484",
+        "includes/04_vessel_types.yml": "76bfeaa7fdc39077f0668fe57f05b457795702f7d5c134910b7f2718af51ab8c",
         "includes/05_line_types.yml": "1a3c99545751117d52f3623d6a61a6a3dfb7515664cacf720b0df825c56ce4e8",
         "includes/06_vessels.yml": "030aab8749adcef986112400be69cbf763e213ede2de49cf457d49a0f8168e80",
-        "includes/07_lines.yml": "0d2112221bfb3eb0190ed4aada956b58ab9ecab6233b55f21638dee549543d8d",
+        "includes/07_lines.yml": "46b2c90de9a824e5061e4c89c947d8bdeccc0790517d5482420051a6fcf04000",
         "includes/09_shapes.yml": "db692531c46bf8a7d4543221103dc533b1c798fe30b2328e3c8f4e313c544436",
-        "includes/10_groups.yml": "0bc8c77bd2a3e3c5f3cbcf7ed02c186a8212e63bb03d3ef10d64525a4e77e6d4",
+        "includes/10_groups.yml": "f53754046eecf61ce543c9149c86140cafa5066a05de5c6b4c40c58c3fe61f99",
         "includes/11_winches.yml": "319ea042f54e79f186af69838af202bd19bbc43a49e4f916c4a3ddfe8ac572af",
         "includes/13_supports.yml": "a31555f114cddd45f0e567d104e5757beebce46f9041df116a5c163609ded178",
         "includes/14_morison.yml": "3b20fc0331dc877c7f94ed2ddca518b9f8a3f0dba764f70e804af393f977c44f",
@@ -90,13 +90,13 @@
       "files": {
         "includes/01_general.yml": "742a54a2c132035c8dea02f957b128f853eb3d5c07d819c5141940fd32d598dc",
         "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
-        "includes/03_environment.yml": "c38a4559a04374ac9f525bc98045d9e1324601834d8ac6fea24bf7690d9c7a58",
-        "includes/04_vessel_types.yml": "0302b99550615c8169369da6b6b9a6afc33c17dedd866874be3fa4cd9684e290",
+        "includes/03_environment.yml": "fc8a9a7c285d4b1f95b14ede33b9802c8799d4119012d3bd0c5a0aab6ec25484",
+        "includes/04_vessel_types.yml": "76bfeaa7fdc39077f0668fe57f05b457795702f7d5c134910b7f2718af51ab8c",
         "includes/05_line_types.yml": "01f672a95fa058713054a31b725f9a9512c0bb328ce2c48bb71bc3bbb5848b4a",
         "includes/06_vessels.yml": "030aab8749adcef986112400be69cbf763e213ede2de49cf457d49a0f8168e80",
-        "includes/07_lines.yml": "0d2112221bfb3eb0190ed4aada956b58ab9ecab6233b55f21638dee549543d8d",
+        "includes/07_lines.yml": "46b2c90de9a824e5061e4c89c947d8bdeccc0790517d5482420051a6fcf04000",
         "includes/09_shapes.yml": "db692531c46bf8a7d4543221103dc533b1c798fe30b2328e3c8f4e313c544436",
-        "includes/10_groups.yml": "0bc8c77bd2a3e3c5f3cbcf7ed02c186a8212e63bb03d3ef10d64525a4e77e6d4",
+        "includes/10_groups.yml": "f53754046eecf61ce543c9149c86140cafa5066a05de5c6b4c40c58c3fe61f99",
         "includes/11_winches.yml": "8e0780732698be427ac0aaca88af1acb48576f857bc44473b79972c68c970080",
         "includes/13_supports.yml": "a31555f114cddd45f0e567d104e5757beebce46f9041df116a5c163609ded178",
         "includes/14_morison.yml": "3b20fc0331dc877c7f94ed2ddca518b9f8a3f0dba764f70e804af393f977c44f",
@@ -130,12 +130,12 @@
     "first_generation_utc": "2026-10-18T02:35:09.158275+00:00",
     "qualification": "Recorded declarations; not independent historical ordering evidence.",
     "recorded_utc": "2026-10-18T02:35:09.158264+00:00",
-    "sha256": "639b6631be24d932315766c67bbd1d122ee9c59a3590466ed9505c4eb9f0867f"
+    "sha256": "3fcdde8e11fa21a2cba037eb194b62ba50fb9a9538af4196f65bab91750551b2"
   },
   "files": {
-    "analysis.html": "d816e76d0a24ea6f57b39c5c6f85c179a022ef4145d97bdd24d40fedb7e0c27e",
-    "manifest.template.json": "c349b082e846a4ead40279d00b32e8c8c66eef3fa2391e41240c8e061efaa610",
-    "models.json": "06d41f2148a8265dac811c06d950a579facfe440d84e3d18f1c0703e8d4e8f37"
+    "analysis.html": "d6f9f36e1f40d0dd90399cfaf51f641cbbf1b14da640bb41a52116e692f04a6a",
+    "manifest.template.json": "d9d2b13c43130fe882694df7c90f87c41888bf058751ee50b5b5dd2b25020caa",
+    "models.json": "9239c6ee8e867f512554de42501ffdf5f62a45108c0881d5cac133a39a44e8cd"
   },
   "native_attempted": 0,
   "native_completed": 0,

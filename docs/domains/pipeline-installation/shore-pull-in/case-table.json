@@ -1,5 +1,5 @@
 {
-  "revision": "5",
+  "revision": "6",
   "revisions": [
     {
       "revision": "1",
@@ -25,6 +25,11 @@
       "revision": "5",
       "date": "2026-10-18",
       "change": "Pin surface endpoints, hull and winch formats, remove undeclared ramps and regenerate reproducible bundles; replace copy links with official bibliography, audit geometry evidence and qualify unavailable primary texts as assumptions."
+    },
+    {
+      "revision": "6",
+      "date": "2026-10-18",
+      "change": "Place hull symmetry, water-surface and line-end selectors before dependent fields, retain generator browser group order and regenerate model bytes and digests for the serialization changes."
     }
   ],
   "public_dataset": {
@@ -374,7 +379,7 @@
     "The geometry primary texts were not retrieved: the PIANC section and USACE table locators are unconfirmed. The depth/draft ratio and profile coefficients are assumed, based on previous experience. Official publisher metadata confirms only that the 1997 PIANC WG 30 report is superseded by WG 121; it supplies no numerical geometry evidence."
   ],
   "criteria_evidence": {
-    "sha256": "639b6631be24d932315766c67bbd1d122ee9c59a3590466ed9505c4eb9f0867f",
+    "sha256": "3fcdde8e11fa21a2cba037eb194b62ba50fb9a9538af4196f65bab91750551b2",
     "recorded_utc": "2026-10-18T02:35:09.158264+00:00",
     "first_generation_utc": "2026-10-18T02:35:09.158275+00:00",
     "qualification": "Recorded declarations; not independent historical ordering evidence."
