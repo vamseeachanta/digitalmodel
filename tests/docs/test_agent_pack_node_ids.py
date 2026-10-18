@@ -55,3 +55,18 @@ def test_pack_without_citations_passes(tmp_path: Path, capsys) -> None:
 @pytest.mark.parametrize("pack", PACKS, ids=lambda path: path.relative_to(ROOT).as_posix())
 def test_agent_pack_node_ids(pack: Path, tmp_path: Path) -> None:
     collect_pack(pack, ROOT, tmp_path / "collection")
+
+
+def test_power_pack_has_five_collectable_examples(tmp_path, capsys):
+    """Issue 2735: the documented five examples must reach collection."""
+    pack = ROOT / "src/digitalmodel/power/analysis/docs/agent-pack.md"
+    collect_pack(pack, ROOT, tmp_path / "collection")
+    assert "power/analysis/docs/agent-pack.md: 5 ids" in capsys.readouterr().out
+
+
+def test_power_gate_distinguishes_structural_and_solved_checks():
+    text = (ROOT / "src/digitalmodel/power/analysis/docs/agent-pack.md").read_text()
+    for check in ("C5", "C6"):
+        assert f"| G1 | {check} |" in text
+    assert "test_independently_derived_solved_network" in text
+    assert "test_reference_criteria_reject_one_iteration" in text

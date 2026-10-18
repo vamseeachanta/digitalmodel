@@ -17,7 +17,7 @@ from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -46,6 +46,7 @@ class PipelayPipeProperties(BaseModel):
 
     Reference: DNV-OS-F101 Section 5.
     """
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
     outer_diameter: float = Field(0.3238, gt=0.0, description="Outer diameter (m)")
     wall_thickness: float = Field(0.0206, gt=0.0, description="Wall thickness (m)")
     steel_density: float = Field(7850.0, gt=0.0, description="Steel density (kg/m^3)")
@@ -55,6 +56,13 @@ class PipelayPipeProperties(BaseModel):
     coating_thickness: float = Field(0.06, ge=0.0, description="Concrete + anti-corrosion coating (m)")
     coating_density: float = Field(2400.0, ge=0.0, description="Coating density (kg/m^3)")
     seawater_density: float = Field(1025.0, gt=0.0, description="Seawater density (kg/m^3)")
+
+    @model_validator(mode='after')
+    def validate_annulus(self):
+        # screening-basis.md E1: inner diameter D - 2t must be positive.
+        if self.wall_thickness >= self.outer_diameter / 2:
+            raise ValueError('wall_thickness must be less than outer_diameter / 2')
+        return self
 
     @property
     def inner_diameter(self) -> float:
@@ -213,50 +221,53 @@ class JLayConfig(BaseModel):
 
     Reference: Bai & Bai (2014) Chapter 5.
     """
-    water_depth: float = Field(1500.0, gt=0.0, description="Water depth (m)")
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    water_depth: float = Field(gt=0.0, description="Water depth (m)")
     pipe: PipelayPipeProperties = Field(default_factory=PipelayPipeProperties)
-    tower_angle: float = Field(0.0, ge=0.0, le=15.0,
+    tower_angle: float = Field(gt=0.0, le=15.0,
                                description="J-lay tower angle from vertical (deg)")
-    top_tension: float = Field(800.0, gt=0.0, description="Top tension (kN)")
+    top_tension: Optional[float] = Field(None, gt=0.0, description="Top tension check (kN)")
 
     def calculate_sagbend(self) -> Dict[str, float]:
         """Calculate sagbend geometry for J-Lay.
 
-        In J-Lay, the pipe departs near-vertically so the sagbend
-        is the primary stress concern.
-
-        Returns:
-            Dict with sagbend analysis results.
+        Governing derivation: pipelay/docs/screening-basis.md E2-E5, V1.
+        Depth and angle solve the curve; optional tension checks closure.
         """
         w = self.pipe.submerged_weight_per_m
-        T = self.top_tension * 1000.0
+        if not math.isfinite(w) or w <= 0:
+            raise ValueError('submerged weight must be finite and positive for a J-lay catenary')
         D = self.pipe.outer_diameter
         E = self.pipe.youngs_modulus
-
         theta = math.radians(self.tower_angle)
-        H = T * math.sin(theta) if theta > 0 else T * 0.01  # small horizontal for near-vertical
-        V = T * math.cos(theta)
-
-        # Catenary parameter
-        a = H / w if w > 0 else float("inf")
-
-        # Sagbend radius
-        R_sag = a  # at TDP, radius = a for catenary
-
-        bending_strain = D / (2.0 * R_sag) if R_sag > 0 else 0
+        # screening-basis.md E2-E4: H=T*sin(theta), T=H+w*h, a=H/w.
+        a = self.water_depth * math.sin(theta) / (1.0 - math.sin(theta))
+        derived_tension = w * (a + self.water_depth)
+        closure_error = 0.0
+        if self.top_tension is not None:
+            supplied_tension = self.top_tension * 1000.0
+            if supplied_tension <= w * self.water_depth:
+                raise ValueError('top_tension must exceed suspended weight w * water_depth')
+            closure_error = (supplied_tension - derived_tension) / derived_tension
+            # V1: fixed screening consistency tolerance; not a standard allowable.
+            if abs(closure_error) > 0.001:
+                raise ValueError('top_tension closure error exceeds 0.1% of derived tension')
+        bending_strain = D / (2.0 * a)  # E5: touchdown curvature = 1/a.
         bending_stress = E * bending_strain
-
-        # TDP location
-        x_tdp = a * math.acosh(1.0 + self.water_depth / a) if a > 0 and self.water_depth / a > 0 else 0
-        s_suspended = a * math.sinh(x_tdp / a) if a > 0 else self.water_depth
-
+        # E4: h=a*(cosh(x/a)-1), s^2=h^2+2*a*h.
+        x_tdp = a * math.acosh(1.0 + self.water_depth / a)
+        s_suspended = math.sqrt(self.water_depth**2 + 2.0 * a * self.water_depth)
         return {
-            "catenary_parameter_m": round(a, 1),
-            "sagbend_radius_m": round(R_sag, 1),
-            "sagbend_bending_strain": round(bending_strain, 6),
+            "catenary_parameter_m": a,
+            "sagbend_radius_m": a,
+            "sagbend_bending_strain": bending_strain,
             "sagbend_bending_stress_MPa": round(bending_stress / 1e6, 1),
             "horizontal_offset_m": round(x_tdp, 1),
             "suspended_length_m": round(s_suspended, 1),
+            "derived_top_tension_kN": derived_tension / 1000.0,
+            "horizontal_tension_kN": w * a / 1000.0,
+            "tension_closure_relative_error": closure_error,
+            "tension_closure_relative_tolerance": 0.001,
         }
 
 
@@ -269,6 +280,7 @@ class LayOperability(BaseModel):
 
     Reference: DNV-OS-F101 Section 11.
     """
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
     max_hs_lay: float = Field(2.5, gt=0.0, description="Max Hs for lay operations (m)")
     max_hs_welding: float = Field(2.0, gt=0.0, description="Max Hs for welding/connection (m)")
     max_hs_aband_recovery: float = Field(3.5, gt=0.0,
@@ -277,7 +289,7 @@ class LayOperability(BaseModel):
     lay_rate_degradation: float = Field(0.5, ge=0.0,
                                          description="Lay rate reduction per m Hs (km/day/m)")
 
-    def lay_rate_at_hs(self, hs: float) -> float:
+    def lay_rate_at_hs(self, hs: float, *, welding_required: bool = False) -> float:
         """Calculate lay rate at given Hs.
 
         Args:
@@ -286,12 +298,14 @@ class LayOperability(BaseModel):
         Returns:
             Lay rate (km/day). Zero if above operational limit.
         """
-        if hs > self.max_hs_lay:
+        # screening-basis.md E7: J-lay requires both joining and laying.
+        limit = min(self.max_hs_lay, self.max_hs_welding) if welding_required else self.max_hs_lay
+        if hs > limit:
             return 0.0
         rate = self.lay_rate_calm - self.lay_rate_degradation * hs
         return max(0.0, round(rate, 2))
 
-    def generate_operability_table(self) -> List[Dict[str, float]]:
+    def generate_operability_table(self, *, welding_required: bool = False) -> List[Dict[str, float]]:
         """Generate Hs vs lay rate table.
 
         Returns:
@@ -299,7 +313,8 @@ class LayOperability(BaseModel):
         """
         hs_values = np.arange(0.0, self.max_hs_lay + 0.5 + 0.01, 0.5)
         return [
-            {"hs_m": round(float(hs), 1), "lay_rate_km_per_day": self.lay_rate_at_hs(float(hs))}
+            {"hs_m": round(float(hs), 1), "lay_rate_km_per_day": self.lay_rate_at_hs(
+                float(hs), welding_required=welding_required)}
             for hs in hs_values
         ]
 
@@ -321,4 +336,9 @@ def calculate_stinger_radius(
 
     Reference: DNV-OS-F101 Section 11.
     """
+    # screening-basis.md E5, V3: finite positive diameter and strain in (0, 1).
+    if not math.isfinite(max_overbend_strain) or not 0 < max_overbend_strain < 1:
+        raise ValueError('allowable_overbend_strain must be finite and in (0, 1)')
+    if not math.isfinite(pipe_od) or pipe_od <= 0:
+        raise ValueError('pipe_od must be finite and positive')
     return pipe_od / (2.0 * max_overbend_strain)
