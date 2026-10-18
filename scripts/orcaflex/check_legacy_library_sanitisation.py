@@ -65,7 +65,7 @@ def inventory(root: Path) -> list[dict]:
             "size_bytes": path.stat().st_size,
             "model_type": model_type(path),
         }
-        for path in sorted(paths)
+        for path in sorted(paths, key=lambda path: path.relative_to(root).as_posix())
     ]
 
 
@@ -210,18 +210,20 @@ def publication_records(report: dict, root: Path = ROOT) -> dict:
         return found
 
     models, retained, excluded = [], set(), 0
-    failed_models, missing_models, unknown_models = 0, 0, 0
+    failed_models, missing_models, escaped_models, unknown_models = 0, 0, 0, 0
     for relative, item in items.items():
         if item["model_type"] in ("include_fragment", "parameters"):
             continue
         inputs = closure(relative)
         failed = any(name in items and items[name]["status"] != "pass" for name in inputs)
-        missing = bool(inputs - items.keys())
+        escaped = "[outside-library]" in inputs
+        missing = bool(inputs - items.keys() - {"[outside-library]"})
         dependencies_unknown = bool(inputs & unknown)
         failed_models += int(failed)
         missing_models += int(missing)
+        escaped_models += int(escaped)
         unknown_models += int(dependencies_unknown)
-        if failed or missing or dependencies_unknown:
+        if failed or missing or escaped or dependencies_unknown:
             excluded += 1
             continue
         recorded = sorted(inputs & items.keys())
@@ -242,6 +244,7 @@ def publication_records(report: dict, root: Path = ROOT) -> dict:
             "excluded_models": excluded, "published_models": len(models),
             "models_with_failed_inputs": failed_models,
             "models_with_missing_inputs": missing_models,
+            "models_with_escaped_inputs": escaped_models,
             "models_with_unknown_dependencies": unknown_models,
         },
         "inputs": [items[name] for name in sorted(retained)],

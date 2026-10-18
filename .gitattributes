@@ -87,3 +87,16 @@ tests/fixtures/cathodic_protection/workflow_inputs/*.yml text eol=lf
 # Preserve raw-byte provenance hashes and the riser-joint report golden.
 tests/asset_integrity/test_data/real_inspection/** -text
 examples/workflows/riser-joint-ffs/report.html -text
+
+# Legacy-library evidence binds exact source blobs, including existing CRLF.
+docs/domains/orcaflex/jumper/** -text
+docs/domains/orcaflex/mooring/** -text
+docs/domains/orcaflex/installation/** -text
+docs/domains/orcaflex/training/** -text
+# Keep hash-bound implementation sources and generated records in LF form.
+src/digitalmodel/solvers/orcaflex/yaml_validator.py text eol=lf
+src/digitalmodel/solvers/orcaflex/yaml_timestep_validation.py text eol=lf
+scripts/orcaflex/check_legacy_library_sanitisation.py text eol=lf
+scripts/legal/check_identifiers.py text eol=lf
+.legal-deny-list.yaml text eol=lf
+docs/domains/orcaflex/library/legacy-round-trip/** text eol=lf

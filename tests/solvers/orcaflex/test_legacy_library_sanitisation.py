@@ -156,6 +156,7 @@ def test_publication_counts_account_for_entire_library(tmp_path):
         "library_inputs": 4, "published_inputs": 1, "excluded_inputs": 3,
         "failed_inspections": 1, "excluded_models": 3, "published_models": 1,
         "models_with_failed_inputs": 3, "models_with_missing_inputs": 0,
+        "models_with_escaped_inputs": 0,
         "models_with_unknown_dependencies": 0,
     }
     assert counts["published_inputs"] + counts["excluded_inputs"] == len(report["models"])
@@ -199,6 +200,7 @@ def test_publication_omits_models_with_absent_inputs(tmp_path):
     assert published["models"] == []
     assert published["inputs"] == []
     assert published["counts"]["models_with_missing_inputs"] == 1
+    assert published["counts"]["models_with_escaped_inputs"] == 0
     assert "absent.dat" not in json.dumps(published)
 
 
@@ -219,4 +221,5 @@ def test_reference_outside_library_is_not_silently_accepted(tmp_path, levels):
     assert result["models"] == []
     assert result["inputs"] == []
     assert result["counts"]["excluded_models"] == 1
-    assert result["counts"]["models_with_missing_inputs"] == 1
+    assert result["counts"]["models_with_missing_inputs"] == (levels == 5)
+    assert result["counts"]["models_with_escaped_inputs"] == (levels == 6)
