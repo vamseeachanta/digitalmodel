@@ -54,6 +54,8 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("cathodic-protection",),
     ),
     ("src/digitalmodel/orcaflex/", ("orcaflex",)),
+    ("src/digitalmodel/orcaflex/installation_analysis.py",
+     ("orcaflex", "marine-ops-other", "workflows")),
     ("src/digitalmodel/visualization/agent_dashboard.py", ("workflows",)),
     ("src/digitalmodel/workflows/", ("workflows",)),
     # The capabilities census SSOT and its builder live outside src/ and tests/,

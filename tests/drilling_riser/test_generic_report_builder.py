@@ -145,3 +145,25 @@ def test_report_holds_production_and_grades_both_binding_checks():
         rows = spec.sections[4].blocks[1].rows
         assert next(row for row in rows if row[1]=='check B one link lost')[0] == 'o5-c3'
         assert next(row for row in rows if row[1]=='check A member nonnegative')[0] == 'o4-c2'
+
+
+
+def test_report_build_accepts_default_windows_text_checkout(tmp_path):
+    from digitalmodel.drilling_riser import generic_campaign
+    builder = module('scripts/reporting/build_generic_riser_report.py', 'crlf_report')
+    driver = module('scripts/orcaflex/run_generic_drilling_riser_campaign.py', 'crlf_driver')
+    copied = tmp_path / 'inputs'
+    shutil.copytree(ROOT / generic_campaign.DEST, copied)
+    output = tmp_path / 'results'
+    fixture = json.loads((Path(__file__).parent/'fixtures/generic_synthetic_result.json').read_text())
+    def fake(model, simulation):
+        simulation.write_text('synthetic only', encoding='utf-8')
+        return dict(fixture)
+    assert driver.run_campaign(copied, output, criteria_file=CRITERIA, case_runner=fake) == 0
+    before = {p.relative_to(copied): generic_campaign.digest(p) for p in copied.rglob('*') if p.is_file()}
+    for path in copied.rglob('*'):
+        if path.is_file():
+            path.write_bytes(path.read_bytes().replace(b'\r\n', b'\n').replace(b'\n', b'\r\n'))
+    assert {p.relative_to(copied): generic_campaign.digest(p) for p in copied.rglob('*') if p.is_file()} == before
+    assert builder.build_spec(copied, output, criteria_file=CRITERIA, allow_synthetic=True)
+    assert '<html' in builder.render(copied, output, criteria_file=CRITERIA, allow_synthetic=True)

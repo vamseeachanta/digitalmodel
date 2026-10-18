@@ -91,3 +91,6 @@ examples/workflows/riser-joint-ffs/report.html -text
 # BHA manifest hashes pin exact YAML bytes on every checkout.
 data/bha_database/*.yml -text
 data/bha_database/*.yaml -text
+
+# B3 benchmark inputs are bound by raw-byte MANIFEST digests.
+docs/benchmarks/catenary_closed_form/inputs/* text eol=lf

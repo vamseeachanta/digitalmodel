@@ -7,6 +7,17 @@
 # variants break case-sensitive globs, and an explicit list keeps regeneration
 # deterministic.
 
+reference_config_rows:
+  - config_id: riser_lift_screen
+    riser_type: lift
+    source_path: docs/domains/risers/mining-lift-screening.md
+    water_depth_m: ''
+    od_mm: ''
+    wt_mm: ''
+    material_grade: ''
+    analysis_kind: axial_screen
+    notes: Public-source screening reference; physical dimensions unspecified
+
 riser_input_files:  # unified riser input schema (#809); depths/OD/WT in metres
   - examples/riser_input/riser_drilling.yml
   - examples/riser_input/riser_flexible.yml

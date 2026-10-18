@@ -37,3 +37,65 @@ def test_lifting_lug_hand_calculation():
     assert checks["pin_bearing"].demand_mpa == pytest.approx(924000 / (75 * 40))
     assert checks["net_tension"].demand_mpa == pytest.approx(924000 / (2 * 40 * 70))
     assert checks["shear_tearout"].utilization == pytest.approx(165 / (0.4 * 355))
+
+
+def _example_config(tmp_path):
+    path = Path(__file__).resolve().parents[2] / "examples/workflows/lifting-lug-design/input.yml"
+    cfg = yaml.safe_load(path.read_text())
+    cfg["lifting_lug"]["outputs"]["directory"] = str(tmp_path)
+    return cfg
+
+
+def test_omitted_skew_factor_is_an_error(tmp_path):
+    cfg = _example_config(tmp_path)
+    del cfg["lifting_lug"]["load"]["skew_load_factor"]
+    with pytest.raises(ValueError, match="skew_load_factor.*required"):
+        router(cfg)
+    assert not (tmp_path / "lifting_lug_summary.json").exists()
+
+
+@pytest.mark.parametrize("legs,minimum", [(2, 1.1), (3, 1.1), (4, 1.33)])
+def test_leg_count_floor_blocks_even_a_strong_lug(tmp_path, legs, minimum):
+    cfg = _example_config(tmp_path)
+    load = cfg["lifting_lug"]["load"]
+    load.update(num_slings=legs, skew_load_factor=1.1 if legs == 4 else 1.0,
+                static_load_kN=1.0)
+    result = router(cfg)["lifting_lug"]
+    # DNVGL-ST-E273, April 2016, §3.5.5: P = P_static * DAF * SKL.
+    assert result["design_load_kN"] == pytest.approx(2 * minimum)
+    assert all(check["passes"] for check in result["checks"])
+    assert result["skew_load_factor_input"] == load["skew_load_factor"]
+    assert result["skew_load_factor"] == minimum
+    assert result["skew_load_factor_below_minimum"] is True
+    assert result["screening_status"] == "fail"
+    summary = json.loads(Path(result["summary_json"]).read_text())
+    assert summary["skew_load_factor"] == minimum
+    assert summary["skew_load_factor_below_minimum"] is True
+
+
+@pytest.mark.parametrize("factor", [float("nan"), float("inf"), 0.9])
+def test_invalid_skew_factor_fails_closed(tmp_path, factor):
+    cfg = _example_config(tmp_path)
+    cfg["lifting_lug"]["load"]["skew_load_factor"] = factor
+    with pytest.raises(ValueError, match="skew_load_factor"):
+        router(cfg)
+
+
+@pytest.mark.parametrize("legs", [0, 5, 4.0, True, "4"])
+def test_unsupported_leg_count_fails_closed(tmp_path, legs):
+    cfg = _example_config(tmp_path)
+    cfg["lifting_lug"]["load"]["num_slings"] = legs
+    with pytest.raises(ValueError, match="num_slings"):
+        router(cfg)
+
+
+def test_lifting_lug_atlas_query_has_current_basis(tmp_path):
+    from digitalmodel.parametric.query import router as query_router
+    example = Path(__file__).resolve().parents[2] / "examples/workflows/lifting-lug-atlas-query/input.yml"
+    cfg = yaml.safe_load(example.read_text())
+    cfg["parametric_query"]["output_dir"] = str(tmp_path)
+    result = query_router(cfg)["parametric_query"]["result"]
+    assert result["in_range"] is True
+    assert result["response"] == "utilisation"
+    assert result["screening_status"] == "pass"
+    assert 0 < result["value"] < 1
