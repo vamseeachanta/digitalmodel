@@ -358,6 +358,9 @@ modules:
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
     submodules:
+      gmsh_meshing:
+        agent_pack: src/digitalmodel/solvers/gmsh_meshing/docs/agent-pack.md
+        qa_family: FE
       mystran:
         agent_pack: src/digitalmodel/solvers/mystran/docs/agent-pack.md
         qa_family: FE
