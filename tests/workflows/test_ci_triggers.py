@@ -146,6 +146,20 @@ def test_full_sweep_keeps_nightly_schedule() -> None:
     assert "workflow_dispatch" in triggers
 
 
+@pytest.mark.parametrize("filename,job_id", (
+    ("quality-gates-by-domain.yml", "domain-tests"),
+    ("full-matrix-sweep.yml", "sweep-tests"),
+))
+def test_subsea_checkout_includes_pinned_manifest_history(filename: str, job_id: str) -> None:
+    """Both executions of the manifest contract need older commit objects."""
+    steps = load_workflow(filename)["jobs"][job_id]["steps"]
+    checkout = next(step for step in steps if step.get("uses", "").startswith("actions/checkout@"))
+    depth = checkout.get("with", {}).get("fetch-depth", 1)
+    if isinstance(depth, str) and depth.startswith("${{"):
+        depth = evaluate_expression(depth[3:-2], {"matrix.domain": "subsea"})
+    assert int(depth) == 0, "Subsea must fetch history to verify the pinned manifest commit"
+
+
 @pytest.mark.parametrize("event", ("push", "schedule", "workflow_dispatch"))
 def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
     """Every sweep keeps its own group and cannot cancel another sweep."""

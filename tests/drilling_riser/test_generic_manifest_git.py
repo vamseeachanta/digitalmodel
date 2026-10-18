@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import unittest
+import warnings
 
 import pytest
 
@@ -49,14 +50,14 @@ def repository(tmp_path):
     return root, data, empty_ref
 
 
-def run_contract(root, data, monkeypatch):
+def run_contract(root, data, monkeypatch, method='test_required_contract_and_placeholders'):
     base = root / 'manifest'
     base.mkdir(exist_ok=True)
     (base / 'manifest.campaign.json').write_text(json.dumps(data))
     monkeypatch.setattr(contract, 'ROOT', root)
     monkeypatch.setattr(contract, 'BASE', base)
-    case = contract.ManifestTests('test_required_contract_and_placeholders')
-    case.test_required_contract_and_placeholders()
+    case = contract.ManifestTests(method)
+    getattr(case, method)()
 
 
 def current_digest(root):
@@ -105,7 +106,7 @@ def test_missing_pinned_spec_is_rejected(repository, monkeypatch):
 def test_no_git_metadata_skips_pin_validation(repository, monkeypatch):
     root, data, _ = repository
     shutil.rmtree(root / '.git')
-    with pytest.raises(unittest.SkipTest, match='Git metadata'):
+    with pytest.raises(unittest.SkipTest, match='pinned blob NOT verified: Git metadata unavailable'):
         run_contract(root, data, monkeypatch)
 
 
@@ -156,3 +157,53 @@ def test_worktree_git_file_is_supported(repository, tmp_path, monkeypatch):
         run_contract(worktree, data, monkeypatch)
     finally:
         git(root, 'worktree', 'remove', '--force', str(worktree))
+
+
+def test_shallow_clone_requires_fetching_pin(repository, tmp_path, monkeypatch):
+    source, data, _ = repository
+    shallow = tmp_path / 'shallow'
+    # file:// makes --depth effective; a local-path clone would copy all objects.
+    git(tmp_path, 'clone', '--quiet', '--depth=1', source.as_uri(), str(shallow))
+    assert git(shallow, 'rev-parse', '--is-shallow-repository').strip() == b'true'
+    with pytest.raises(AssertionError, match=f'Pinned commit unavailable in shallow clone: {data["ref"]}'):
+        run_contract(shallow, data, monkeypatch)
+    git(shallow, 'fetch', '--quiet', '--depth=1', 'origin', data['ref'])
+    run_contract(shallow, data, monkeypatch)
+    data['env']['SOURCE_SHA256'] = current_digest(shallow)
+    with pytest.raises(AssertionError, match='SOURCE_SHA256'):
+        run_contract(shallow, data, monkeypatch)
+    data['ref'] = git(shallow, 'rev-parse', f'HEAD:{SPEC_PATH}').decode().strip()
+    with pytest.raises(AssertionError, match='Pinned ref does not resolve to a commit'):
+        run_contract(shallow, data, monkeypatch)
+
+
+@pytest.mark.parametrize('warning_filter', ['ignore', 'error'])
+def test_checkout_drift_is_advisory_and_visible(repository, monkeypatch, warning_filter):
+    root, data, _ = repository
+    for content in (b'component: second\n', b'uncommitted: change\n'):
+        (root / SPEC_PATH).write_bytes(content)
+        # The advisory must remain visible even under the suite's warning filters.
+        with pytest.warns(UserWarning, match='Advisory: checkout specification differs from pinned blob'):
+            warnings.simplefilter(warning_filter, UserWarning)
+            run_contract(root, data, monkeypatch, 'test_checkout_spec_matches_pin_advisory')
+        run_contract(root, data, monkeypatch)
+
+
+def test_matching_checkout_has_no_drift_advisory(repository, monkeypatch):
+    root, data, _ = repository
+    (root / SPEC_PATH).write_bytes(git(root, 'cat-file', 'blob', f'{data["ref"]}:{SPEC_PATH}'))
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        run_contract(root, data, monkeypatch, 'test_checkout_spec_matches_pin_advisory')
+    assert not caught
+
+
+def test_missing_git_executable_explicitly_skips_verification(repository, monkeypatch):
+    root, data, _ = repository
+
+    def missing_git(*args, **kwargs):
+        raise FileNotFoundError('git')
+
+    monkeypatch.setattr(contract.subprocess, 'run', missing_git)
+    with pytest.raises(unittest.SkipTest, match='pinned blob NOT verified: git executable missing'):
+        run_contract(root, data, monkeypatch)
