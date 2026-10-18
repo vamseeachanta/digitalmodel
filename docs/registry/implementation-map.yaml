@@ -15550,18 +15550,18 @@ families:
     body_sha256: 6b0e14ce9297e0888146ba625023b51daff41bfce722237472b309374827b204
   - path: &a46141f3b4e scripts/capabilities/build_onepagers.py
     symbol:
-    line: 36
+    line: 3
     kind: script
-    what: &a7ae0a82610 Evaluates wind or current loading inputs and forces.
+    what: Projects authored capability metadata into deterministic JSON index cards.
     signals: *ac7e985efc8
     relation: independent
     module: scripts
-    file_sha256: 8d849561bfc979bf71cf5ad50666fef7a0a8a9840690ab2f2b767146971a985d
+    file_sha256: c57ae6050c92ec1574651c90e583af76c0cf1d9a76c4c0fd54a6a12cd32399e2
   - path: &ae8921bb332 scripts/python/digitalmodel/legacy/extract_ocimf_database.py
     symbol:
     line: 25
     kind: script
-    what: *a7ae0a82610
+    what: &a7ae0a82610 Evaluates wind or current loading inputs and forces.
     signals: *ac7e985efc8
     relation: independent
     module: scripts
@@ -17145,13 +17145,13 @@ families:
     body_sha256: a507d33cf30bdbd6dff0f8abcd66d26177bddf5d6bf2ac451fb656ea0e53279d
   - path: *a46141f3b4e
     symbol:
-    line: 36
+    line: 3
     kind: script
-    what: *a0b83b0ff16
+    what: Projects authored capability metadata into deterministic JSON index cards.
     signals: *a3c15e3ae40
     relation: independent
     module: scripts
-    file_sha256: 8d849561bfc979bf71cf5ad50666fef7a0a8a9840690ab2f2b767146971a985d
+    file_sha256: c57ae6050c92ec1574651c90e583af76c0cf1d9a76c4c0fd54a6a12cd32399e2
   - path: *a63ad6eec82
     symbol:
     line: 3
@@ -39046,13 +39046,6 @@ rejected_candidates:
 - path: scripts/capabilities/build_installation_heading_explorer.py
   symbol: validate_data
   line: 45
-  families:
-  - irregular-frequency-treatment
-  disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: scripts/capabilities/build_onepagers.py
-  symbol: _validate_brand_css
-  line: 718
   families:
   - irregular-frequency-treatment
   disposition: needs_review

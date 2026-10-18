@@ -264,8 +264,6 @@ node_modules/
 /output/
 /results/
 /data/steel_shapes_local/
-# Build output: one-pager print sources written beside committed PDFs.
-/docs/api/capabilities/pdf/*.html
 reports/
 !docs/reports/
 docs/reports/*
