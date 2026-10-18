@@ -439,6 +439,9 @@ modules:
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
     submodules:
+      flexible_pipes:
+        agent_pack: src/digitalmodel/subsea/flexible_pipes/docs/agent-pack.md
+        qa_family: EC
       catenary_riser:
         agent_pack: src/digitalmodel/subsea/catenary_riser/docs/agent-pack.md
         qa_family: MR
