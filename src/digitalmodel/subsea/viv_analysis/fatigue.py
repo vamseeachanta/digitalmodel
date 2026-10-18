@@ -36,6 +36,7 @@ class VIVFatigueCalculator:
 
     def __init__(self):
         self.citations = (SN_CITATION,)
+        self._citation_validated = False
 
     def calculate_allowable_cycles(self, stress_range: float, sn_curve: str = "DNV-D") -> float:
         """Endurance in cycles, with stress range in MPa (C203 Eq. 2.4.1).
@@ -46,7 +47,9 @@ class VIVFatigueCalculator:
         """
         if sn_curve not in self.SN_CURVES:
             raise ValueError(f"Unknown S-N curve: {sn_curve}")
-        validate_citation(SN_CITATION)
+        if not self._citation_validated:
+            validate_citation(SN_CITATION)
+            self._citation_validated = True
         if not math.isfinite(stress_range) or stress_range < 0:
             raise ValueError("stress_range must be finite and nonnegative")
         if stress_range == 0:
@@ -142,7 +145,7 @@ class VIVFatigueCalculator:
 
         Args:
             stress_range: Stress range (MPa)
-            frequency: VIV frequency (Hz)
+            frequency: VIV frequency (Hz); zero produces no damage
             duration: Duration of VIV exposure (seconds)
             sn_curve: S-N curve name
             thickness_correction: Apply thickness effect correction
@@ -154,8 +157,8 @@ class VIVFatigueCalculator:
         stress_range = self._corrected_stress(
             stress_range, sn_curve, thickness_correction, thickness,
         )
-        if not math.isfinite(frequency) or frequency <= 0:
-            raise ValueError("frequency must be finite and positive")
+        if not math.isfinite(frequency) or frequency < 0:
+            raise ValueError("frequency must be finite and nonnegative")
         if not math.isfinite(duration) or duration < 0:
             raise ValueError("duration must be finite and nonnegative")
         allowable_cycles = self.calculate_allowable_cycles(stress_range, sn_curve)
@@ -176,7 +179,7 @@ class VIVFatigueCalculator:
 
         Args:
             stress_range: Stress range (MPa)
-            frequency: VIV frequency (Hz)
+            frequency: VIV frequency (Hz); zero gives infinite fatigue life
             sn_curve: S-N curve name
             target_damage: Target damage (default 1.0 for failure)
 
@@ -186,11 +189,13 @@ class VIVFatigueCalculator:
         stress_range = self._corrected_stress(
             stress_range, sn_curve, thickness_correction, thickness,
         )
-        if not math.isfinite(frequency) or frequency <= 0:
-            raise ValueError("frequency must be finite and positive")
+        if not math.isfinite(frequency) or frequency < 0:
+            raise ValueError("frequency must be finite and nonnegative")
         if not math.isfinite(target_damage) or target_damage <= 0:
             raise ValueError("target_damage must be finite and positive")
         allowable_cycles = self.calculate_allowable_cycles(stress_range, sn_curve)
+        if frequency == 0:
+            return math.inf
         # C203 (2011) Eq. (2.2.1), rearranged: t = D*N/f.
         return target_damage * allowable_cycles / frequency / (365.25 * 24 * 3600)
 

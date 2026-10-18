@@ -85,7 +85,7 @@ def test_missing_citation_fails_closed(tmp_path, monkeypatch):
 
 
 def test_independent_pinned_frequency(member):
-    # Euler-Bernoulli pinned beam; A=.03730641276 m², I=.001055092005 m⁴,
+    # Euler-Bernoulli pinned beam; A=.03730641276 m², I=.001055071986 m⁴,
     # m=292.8553402 kg/m, added mass=201.2582794 kg/m, E=207 GPa.
     result = FrequencyCalculator().calculate_natural_frequency(member)
     assert result.frequency == pytest.approx(.41773, abs=1e-4)
@@ -141,3 +141,75 @@ def test_zero_flow_remains_valid(member):
     result = VIVScreening().screen_member(member, 0.)
     assert result.lock_in_status == 'safe'
     assert result.shedding_frequency == 0.
+
+
+@pytest.mark.parametrize('stress', [0., 100.])
+def test_zero_frequency_has_no_damage_or_life_limit(stress):
+    calc = VIVFatigueCalculator()
+    assert calc.calculate_damage(stress, 0., 3600.) == 0.
+    assert calc.calculate_fatigue_life(stress, 0.) == math.inf
+
+
+def test_zero_flow_complete_fatigue(member):
+    result = VIVFatigueCalculator().analyze_viv_fatigue(member, 0., 0., 24.)
+    assert result.num_cycles == 0.
+    assert result.fatigue_damage == 0.
+    assert result.fatigue_life_years == math.inf
+
+
+@pytest.mark.parametrize('frequency', [-1., math.nan, math.inf, -math.inf])
+@pytest.mark.parametrize('method', ['calculate_damage', 'calculate_fatigue_life'])
+def test_fatigue_rejects_invalid_frequency(method, frequency):
+    args = [100., frequency]
+    if method == 'calculate_damage':
+        args.append(3600.)
+    with pytest.raises(ValueError, match='frequency'):
+        getattr(VIVFatigueCalculator(), method)(*args)
+
+
+@pytest.mark.parametrize('stress', [-1., math.nan, math.inf])
+@pytest.mark.parametrize('method', ['calculate_damage', 'calculate_fatigue_life'])
+def test_zero_frequency_still_validates_stress(method, stress):
+    args = [stress, 0.]
+    if method == 'calculate_damage':
+        args.append(3600.)
+    with pytest.raises(ValueError, match='stress_range'):
+        getattr(VIVFatigueCalculator(), method)(*args)
+
+
+def test_zero_frequency_still_requires_citation(tmp_path, monkeypatch):
+    empty = tmp_path / 'unprovisioned'
+    (empty / 'wikis').mkdir(parents=True)
+    monkeypatch.setenv('LLM_WIKI_PATH', str(empty))
+    with pytest.raises(CitationResolutionError):
+        VIVFatigueCalculator().calculate_damage(100., 0., 3600.)
+
+
+def test_citation_validated_once_per_calculator(monkeypatch):
+    from unittest.mock import Mock
+    from digitalmodel.subsea.viv_analysis import fatigue
+
+    validate = Mock(wraps=fatigue.validate_citation)
+    monkeypatch.setattr(fatigue, 'validate_citation', validate)
+    calc = VIVFatigueCalculator()
+    expected = sum(1800. / calc.calculate_allowable_cycles(s) for s in (100., 30.))
+    assert calc.cumulative_damage([100., 30.], [.5, .5], [3600., 3600.]) == pytest.approx(expected)
+    calc.calculate_fatigue_life(100., .5)
+    assert validate.call_count == 1
+    VIVFatigueCalculator().calculate_damage(100., .5, 3600.)
+    assert validate.call_count == 2
+
+
+def test_failed_citation_validation_is_retried(tmp_path, monkeypatch):
+    from digitalmodel.subsea.viv_analysis.sn_parameters import SN_CITATION
+
+    base = tmp_path / 'metadata'
+    (base / 'wikis').mkdir(parents=True)
+    monkeypatch.setenv('LLM_WIKI_PATH', str(base))
+    calc = VIVFatigueCalculator()
+    with pytest.raises(CitationResolutionError):
+        calc.calculate_allowable_cycles(100.)
+    page = base / SN_CITATION.wiki_path
+    page.parent.mkdir(parents=True)
+    page.write_text('---\ncode_id: DNV-RP-C203\npublisher: DNV\nrevision: 2011-10\n---\n')
+    assert calc.calculate_allowable_cycles(100.) == pytest.approx(1.46e6, rel=.01)

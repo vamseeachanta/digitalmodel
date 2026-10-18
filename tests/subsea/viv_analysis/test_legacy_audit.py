@@ -1,4 +1,5 @@
 """Hand-calculated imperial tubular regressions; no solver or engine import."""
+from copy import deepcopy
 from pathlib import Path
 
 import pandas as pd
@@ -18,7 +19,7 @@ def legacy_cfg():
 
 def test_legacy_wet_frequencies_and_excitation(legacy_cfg):
     # C205 (2010) §9.1.11 / App. D: m_a=Ca*rho*pi*D²/4.
-    # E=30e6 psi, I=361.5439319 in^4, L=720 in,
+    # E=30e6 psi, I=361.5439319 in^4, L=720 in, g=386.4 in/s²,
     # weight=5.589872732 lb/in (steel+coating), added=4.750834711 lb/in.
     # Euler-Bernoulli pinned beam f=pi/(2 L²)*sqrt(E I g / (w+w_a)).
     route = VIVTubularMembers()
@@ -54,4 +55,12 @@ def test_legacy_added_mass_coefficient(legacy_cfg):
     assert dry.loc[0, 'mode 1'] == pytest.approx(2.6236968182, rel=1e-8)
     legacy_cfg['viv']['added_mass_coefficient'] = -1.
     with pytest.raises(ValueError, match='added.mass'):
+        VIVTubularMembers().get_natural_frequencies(legacy_cfg)
+
+
+def test_legacy_rejects_multiple_sections(legacy_cfg):
+    inner = deepcopy(legacy_cfg['pipeline']['crossection'][0])
+    inner['Nominal_OD'] = 6.0
+    legacy_cfg['pipeline']['crossection'].append(inner)
+    with pytest.raises(ValueError, match='exactly one.*section'):
         VIVTubularMembers().get_natural_frequencies(legacy_cfg)

@@ -70,6 +70,10 @@ class VIVTubularMembers:
 
     def get_natural_frequencies(self, cfg):
 
+        sections = cfg["pipeline"]["crossection"]
+        if len(sections) != 1:
+            raise ValueError("Legacy VIV requires exactly one cross-section")
+
         pipe_properties = cfg["pipeline"]["pipe_properties"]
         system_properties = cfg["pipeline"]["system_properties"]
 
@@ -91,15 +95,14 @@ class VIVTubularMembers:
         ca = cfg["viv"].get("added_mass_coefficient", 1.0)
         if not math.isfinite(ca) or ca < 0:
             raise ValueError("added_mass_coefficient must be finite and nonnegative")
-        added_weight = 0.0
-        for section in cfg["pipeline"]["crossection"]:
-            fluid = section["external_fluid"]
-            if fluid["unit"] != "lb/inch^3":
-                raise ValueError("external fluid density unit must be lb/inch^3")
-            rho, diameter = fluid["density"], section["Nominal_OD"]
-            if not math.isfinite(rho) or rho <= 0 or not math.isfinite(diameter) or diameter <= 0:
-                raise ValueError("External density and diameter must be finite and positive")
-            added_weight += ca * rho * math.pi * diameter**2 / 4
+        section = sections[0]
+        fluid = section["external_fluid"]
+        if fluid["unit"] != "lb/inch^3":
+            raise ValueError("external fluid density unit must be lb/inch^3")
+        rho, diameter = fluid["density"], section["Nominal_OD"]
+        if not math.isfinite(rho) or rho <= 0 or not math.isfinite(diameter) or diameter <= 0:
+            raise ValueError("External density and diameter must be finite and positive")
+        added_weight = ca * rho * math.pi * diameter**2 / 4
         mass_without_internal_fluid += added_weight
         mass_with_internal_fluid += added_weight
 
