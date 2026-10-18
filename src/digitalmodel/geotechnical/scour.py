@@ -147,9 +147,13 @@ def monopile_scour_depth(
         MonopileScourResult with scour depth and ratio.
     """
     if pile_diameter_m <= 0:
-        raise ValueError(f"pile_diameter_m must be positive, got {pile_diameter_m}")
+        raise ValueError(
+            f"pile_diameter_m must be positive, got {pile_diameter_m}"
+        )
     if water_depth_m <= 0:
-        raise ValueError(f"water_depth_m must be positive, got {water_depth_m}")
+        raise ValueError(
+            f"water_depth_m must be positive, got {water_depth_m}"
+        )
 
     if current_velocity_ms == 0.0:
         return MonopileScourResult(
@@ -211,7 +215,9 @@ def rock_armour_thickness(
     delta = (rock_density_kg_m3 / water_density_kg_m3) - 1.0
 
     # Stability number: Ns = U / sqrt(g * d50 * delta)
-    stability_number = current_velocity_ms / math.sqrt(GRAVITY * rock_d50_m * delta)
+    stability_number = current_velocity_ms / math.sqrt(
+        GRAVITY * rock_d50_m * delta
+    )
 
     # Minimum armour thickness: 2 stone layers
     thickness = 2.0 * rock_d50_m
@@ -242,6 +248,9 @@ class RiprapResidualScourResult:
     scour_depth_m: float | None
     scour_to_diameter_ratio: float | None
     pile_diameter_m: float
+    sediment_d90_m: float
+    d90_source: str
+    critical_shields: float
     chezy_coefficient_m_half_s: float
     approach_shear_pa: float
     shear_amplification: float
@@ -288,13 +297,19 @@ def approach_bed_shear_stress(
     *,
     sediment_d90_m: float | None = None,
 ) -> float:
-    """Return approach-bed shear in Pa, rho*g*(V/C)**2; d90 defaults to 2*d50."""
+    """Return approach-bed shear in Pa, rho*g*(V/C)**2.
+
+    Supply measured or explicitly assumed d90 in metres. No source has been
+    established for inferring d90 from d50, so omission is rejected.
+    """
     _riprap_number("current_velocity_ms", current_velocity_ms, positive=False)
     if current_velocity_ms < 0:
         raise ValueError("current_velocity_ms must be nonnegative")
     _riprap_number("sediment_d50_m", sediment_d50_m)
     _riprap_number("water_density_kg_m3", water_density_kg_m3)
-    d90 = 2 * sediment_d50_m if sediment_d90_m is None else sediment_d90_m
+    if sediment_d90_m is None:
+        raise ValueError("sediment_d90_m must be supplied; no default ratio is sourced")
+    d90 = sediment_d90_m
     chezy = grain_chezy_coefficient(water_depth_m, d90)
     return water_density_kg_m3 * GRAVITY * (current_velocity_ms / chezy) ** 2
 
@@ -305,7 +320,11 @@ def critical_shear_stress(
     water_density_kg_m3: float,
     critical_shields: float = 0.045,
 ) -> float:
-    """Return theta_c*(rho_p-rho_w)*g*d in Pa; default theta_c is for riprap."""
+    """Return theta_c*(rho_p-rho_w)*g*d in Pa.
+
+    The default theta_c = 0.045 is an unverified screening assumption;
+    its source equation remains to be checked before design use.
+    """
     _riprap_number("grain_diameter_m", grain_diameter_m)
     _riprap_number("particle_density_kg_m3", particle_density_kg_m3)
     _riprap_number("water_density_kg_m3", water_density_kg_m3)
@@ -401,7 +420,8 @@ def riprap_residual_scour_depth(
 
     Source: Yang X., Qin Y., Yang S., Zhang M., Yu G., Applied Ocean Research
     176 (2026), 105302, https://doi.org/10.1016/j.apor.2026.105302.
-    SI inputs; densities and viscosity must be supplied for the actual fluid and
+    SI inputs; d90 is required explicitly because no d90/d50 ratio is sourced.
+    Densities and viscosity must be supplied for the actual fluid and
     grains. K = 1 + 3.17*(dr/d50)**0.35*(D/h)**(-0.02), tau_max = K*tau_a,
     tau' = (tau_max-tau_c)/tau_c, with riprap theta_c = 0.045.
 
@@ -427,7 +447,9 @@ def riprap_residual_scour_depth(
         raise ValueError("rock_density_kg_m3 must exceed water_density_kg_m3")
     if sediment_density_kg_m3 <= water_density_kg_m3:
         raise ValueError("sediment_density_kg_m3 must exceed water_density_kg_m3")
-    d90 = 2 * sediment_d50_m if sediment_d90_m is None else sediment_d90_m
+    if sediment_d90_m is None:
+        raise ValueError("sediment_d90_m must be supplied; no default ratio is sourced")
+    d90 = sediment_d90_m
     chezy = grain_chezy_coefficient(water_depth_m, d90)
     approach = approach_bed_shear_stress(
         current_velocity_ms,
@@ -465,6 +487,9 @@ def riprap_residual_scour_depth(
         ),
         scour_to_diameter_ratio=estimate.scour_to_diameter_ratio,
         pile_diameter_m=pile_diameter_m,
+        sediment_d90_m=d90,
+        d90_source="supplied",
+        critical_shields=0.045,
         chezy_coefficient_m_half_s=chezy,
         approach_shear_pa=approach,
         shear_amplification=amplification,

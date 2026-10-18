@@ -20,6 +20,7 @@ def inputs():
         water_depth_m=0.3,
         current_velocity_ms=0.4,
         sediment_d50_m=0.0003,
+        sediment_d90_m=0.0006,
         rock_d50_m=0.005,
         sediment_density_kg_m3=2650.0,
         rock_density_kg_m3=2250.0,
@@ -30,14 +31,16 @@ def inputs():
 
 def test_shear_and_grain_units():
     assert grain_chezy_coefficient(0.3, 0.0006) == pytest.approx(59.44999454)
-    assert approach_bed_shear_stress(0.4, 0.3, 0.0003, 1000) == pytest.approx(
+    assert approach_bed_shear_stress(
+        0.4, 0.3, 0.0003, 1000, sediment_d90_m=0.0006
+    ) == pytest.approx(
         0.4441046822
     )
     assert critical_shear_stress(0.005, 2250, 1000) == pytest.approx(2.7590625)
     assert dimensionless_grain_size(0.0003, 2650, 1000, 1.01e-6) == pytest.approx(
         7.538610807
     )
-    # Explicit roughness overrides the default d90 = 2*d50.
+    # Larger supplied roughness increases approach shear.
     assert (
         approach_bed_shear_stress(0.4, 0.3, 0.0003, 1000, sediment_d90_m=0.0012)
         > 0.4441046822
@@ -166,6 +169,9 @@ def test_workflow_optional_riprap_block_and_json_null(tmp_path):
     assert output["results"]["riprap"]["scour_depth_m"] > 0
     written = json.loads((tmp_path / "scour_summary.json").read_text())
     assert written["results"]["riprap"]["source"].endswith("105302")
+    assert written["results"]["riprap"]["sediment_d90_m"] == 0.0006
+    assert written["results"]["riprap"]["d90_source"] == "supplied"
+    assert written["results"]["riprap"]["critical_shields"] == 0.045
     cfg["scour"]["riprap"]["current_velocity_ms"] = 0
     output = ScourWorkflow().router(cfg)["scour"]
     assert output["results"]["riprap"]["scour_depth_m"] is None
@@ -210,3 +216,23 @@ def test_checked_in_example(tmp_path):
     assert results["monopile"]["scour_depth_m"] == pytest.approx(7.8)
     assert results["riprap"]["in_calibration_range"]
     assert results["riprap"]["scour_depth_m"] == pytest.approx(0.0289772316)
+
+
+def test_explicit_roughness_is_required():
+    physical = inputs()
+    physical.pop("sediment_d90_m")
+    with pytest.raises(ValueError, match="sediment_d90_m must be supplied"):
+        riprap_residual_scour_depth(**physical)
+    with pytest.raises(ValueError, match="sediment_d90_m must be supplied"):
+        approach_bed_shear_stress(0.4, 0.3, 0.0003, 1000)
+
+
+@pytest.mark.parametrize("d90", [0.0006, 0.0012])
+def test_roughness_and_shields_are_recorded(d90):
+    result = riprap_residual_scour_depth(**(inputs() | {"sediment_d90_m": d90}))
+    assert result.sediment_d90_m == d90
+    assert result.d90_source == "supplied"
+    assert result.critical_shields == 0.045
+    assert result.approach_shear_pa == pytest.approx(
+        approach_bed_shear_stress(0.4, 0.3, 0.0003, 1000, sediment_d90_m=d90)
+    )
