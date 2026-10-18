@@ -37,7 +37,10 @@ References:
 from __future__ import annotations
 
 import math
+import warnings
 from dataclasses import dataclass
+
+from digitalmodel.naval_architecture.depth_validity import turning_depth_warning
 
 from digitalmodel.hydrodynamics.propeller_rudder import (
     RudderForces,
@@ -191,17 +194,32 @@ class IMOTurningVerdict:
     advance_pass: bool
     tactical_diameter_pass: bool
     overall_pass: bool
+    depth_applicability: str = "unverified"
 
 
-def imo_turning_compliance(advance_m: float, tactical_diameter_m: float, lbp_m: float) -> IMOTurningVerdict:
-    """Check turning ability against IMO MSC.137(76): advance ≤ 4.5L, TD ≤ 5L."""
+def imo_turning_compliance(
+    advance_m: float, tactical_diameter_m: float, lbp_m: float, *,
+    water_depth_m: float | None = None, draft_m: float | None = None,
+) -> IMOTurningVerdict:
+    """Screen advance <= 4.5L and TD <= 5L, subject to depth applicability.
+
+    Refuse known h/T <= 4 per IMO MSC/Circ.1053 (2002), Annex 2.1.2.
+    Missing depth warns and returns depth_applicability='unverified'; pass
+    flags then describe the numerical limits only, not IMO compliance.
+    """
+    depth_warning = turning_depth_warning(water_depth_m, draft_m)
+    if depth_warning:
+        warnings.warn(depth_warning, UserWarning, stacklevel=2)
     if lbp_m <= 0:
         raise ValueError("lbp_m must be > 0")
     a_ratio = advance_m / lbp_m
     td_ratio = tactical_diameter_m / lbp_m
     a_pass = a_ratio <= IMO_ADVANCE_LIMIT_L
     td_pass = td_ratio <= IMO_TACTICAL_DIAMETER_LIMIT_L
-    return IMOTurningVerdict(a_ratio, td_ratio, a_pass, td_pass, a_pass and td_pass)
+    return IMOTurningVerdict(
+        a_ratio, td_ratio, a_pass, td_pass, a_pass and td_pass,
+        "unverified" if depth_warning else "screen_passed",
+    )
 
 
 # ---------------------------------------------------------------------------

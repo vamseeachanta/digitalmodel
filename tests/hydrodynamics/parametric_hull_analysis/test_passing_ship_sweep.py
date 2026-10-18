@@ -271,10 +271,10 @@ class TestClassifyDepth:
         assert classify_depth(25.0, 10.0) == DepthClassification.MEDIUM
 
     def test_shallow_water(self):
-        assert classify_depth(17.0, 10.0) == DepthClassification.SHALLOW
+        assert classify_depth(14.0, 10.0) == DepthClassification.SHALLOW
 
     def test_very_shallow_water(self):
-        assert classify_depth(14.0, 10.0) == DepthClassification.VERY_SHALLOW
+        assert classify_depth(11.0, 10.0) == DepthClassification.VERY_SHALLOW
 
     def test_infinite_depth(self):
         assert classify_depth(float("inf"), 10.0) == DepthClassification.DEEP
@@ -431,3 +431,20 @@ class TestPhysicsSanity:
         for e in entries:
             expected = 5000 * e.speed_ms**2 / sep
             assert e.peak_yaw_Nm == pytest.approx(expected, rel=1e-6)
+
+
+@pytest.mark.parametrize("depth, expected", [(18, "medium"), (14, "shallow"), (12, "very_shallow")])
+def test_sweep_propagates_pianc_depth_bands(depth, expected):
+    forces = SimpleNamespace(peak_surge=1, peak_sway=2, peak_yaw=3)
+    config = PassingShipSweepConfig(
+        separations_m=[50], speeds_ms=[3], water_depths_m=[depth],
+    )
+    with patch("digitalmodel.hydrodynamics.passing_ship.force_time_history.generate_time_history",
+               return_value=forces), patch(
+                   "digitalmodel.hydrodynamics.passing_ship.calculator.PassingShipCalculator"
+               ):
+        entries = run_passing_ship_sweep(
+            [("synthetic", _make_hull_profile(draft=10))], MagicMock(), config,
+        )
+    assert entries[0].depth_class.value == expected
+    assert passing_ship_to_dataframe(entries).iloc[0]["depth_class"] == expected
