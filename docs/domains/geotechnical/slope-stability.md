@@ -14,6 +14,7 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | 3 | 2026-10-18 | Isolate seed refinements to prevent cache sharing; preserve thin user-circle mechanisms; disclose group minima, the coarse filter and per-search unsolved counts; require explicit search mode in result records. |
 | 4 | 2026-10-18 | Distinguish isolated search metadata; run preflight before the sweep to preserve input diagnostics; clarify thin grid-seeded mechanisms and search cost. |
 | 5 | 2026-10-18 | Document the unimplemented datum-below-layer warning and retain its open reference in #2704. |
+| 6 | 2026-10-18 | Track the datum-below-layer diagnostic separately in #2785 so the remaining warning has a dedicated acceptance criterion. |
 
 ## Basis and boundaries
 
@@ -90,8 +91,8 @@ reference_elevation_m is rejected before importing the solver. Constant strength
 An explicit datum below the layer bottom leaves a positive gradient inert
 throughout that layer and currently produces no warning. Check the datum against
 the layer elevations before relying on the gradient. The datum-below-layer
-warning remains an open part of #2704; rejecting an omitted datum does not
-resolve that behaviour.
+warning is tracked separately in #2785; rejecting an omitted datum in #2704
+does not resolve that behaviour.
 For example, su_kpa=5, gradient=1.5 and reference=-100 m give Su=20 kPa at
 z=-110 m; the same relative geometry at a +100 m datum gives the same strength.
 Undrained layers use total stress; drained layers use the piezometric line when
