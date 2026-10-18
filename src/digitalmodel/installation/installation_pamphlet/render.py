@@ -40,13 +40,16 @@ const ENV = __ENV_JS__;
 const TPGRID = __TP_JS__;
 // interpolate limiting Hs at a given Tp for an operation
 function hsLimitAt(op, tp){
-  const e = ENV[op].hs_by_tp; const ks = TPGRID;
-  if(tp<=ks[0]) return e[ks[0].toFixed(1)];
-  if(tp>=ks[ks.length-1]) return e[ks[ks.length-1].toFixed(1)];
+  const e = ENV[op].hs_by_tp, status = ENV[op].status_by_tp; const ks = TPGRID;
+  const at = t => { const k=t.toFixed(1);
+    return e[k] != null && (!status || status[k]==='evaluated') ? e[k] : NaN; };
+  for(const t of ks){ if(tp===t) return at(t); }
+  if(tp<=ks[0]) return at(ks[0]);
+  if(tp>=ks[ks.length-1]) return at(ks[ks.length-1]);
   for(let i=0;i<ks.length-1;i++){ if(tp>=ks[i]&&tp<=ks[i+1]){
-    const a=e[ks[i].toFixed(1)], b=e[ks[i+1].toFixed(1)];
+    const a=at(ks[i]), b=at(ks[i+1]);
     return a+(b-a)*(tp-ks[i])/(ks[i+1]-ks[i]); } }
-  return e[ks[0].toFixed(1)];
+  return NaN;
 }
 const SAMPLE = { // 48h demo forecast (calm-ish window mid-series)
   hours: Array.from({length:48},(_,i)=>i),
@@ -144,6 +147,14 @@ def _live_monitor_script(envelopes: dict[str, Any], tp_grid: list[float], dpclas
     )
 
 
+def forecast_cell(value, status=None):
+    """Keep unavailable points and display caps distinct from forecast limits."""
+    if value is None:
+        return '<td>Unavailable (insufficient coverage)</td>'
+    suffix = ' (capped display bound)' if status == 'capped' else ''
+    return f'<td>{value:.2f}{suffix}</td>'
+
+
 def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = None) -> str:
     """Render the full self-contained pamphlet HTML. Deterministic."""
     GEN = generated_label if generated_label is not None else DEFAULT_GENERATED_LABEL
@@ -237,11 +248,24 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         leg = ""
         for i, (op, e) in enumerate(d["envelopes"].items()):
             col = colors.get(op, "#0a6cbf")
-            pts = " ".join(f"{X(t):.1f},{Y(e['hs_by_tp'][str(float(t))]):.1f}" for t in TP)
-            series += f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="2.2"/>'
+            segments, segment = [], []
+            for t in TP:
+                hs = e['hs_by_tp'].get(str(float(t)))
+                if hs is None:
+                    if segment:
+                        segments.append(segment)
+                        segment = []
+                else:
+                    segment.append(f"{X(t):.1f},{Y(hs):.1f}")
+            if segment:
+                segments.append(segment)
+            series += ''.join(
+                f'<polyline points="{" ".join(points)}" fill="none" stroke="{col}" stroke-width="2.2"/>'
+                for points in segments
+            )
             series += "".join(
                 f'<circle cx="{X(t):.1f}" cy="{Y(e["hs_by_tp"][str(float(t))]):.1f}" r="2.6" fill="{col}"/>'
-                for t in TP
+                for t in TP if e['hs_by_tp'].get(str(float(t))) is not None
             )
             ly = mt + 4 + i * 16
             leg += (
@@ -275,7 +299,8 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         }
         return "".join(
             f"<tr><td class='l'>{labels.get(op, op)} <small>&alpha;={e['alpha']}</small></td>"
-            + "".join(f"<td>{e['hs_by_tp'][str(float(t))]:.2f}</td>" for t in TP)
+            + "".join(forecast_cell(e['hs_by_tp'].get(str(float(t))),
+                                    e.get('status_by_tp', {}).get(str(float(t)))) for t in TP)
             + "</tr>"
             for op, e in d["envelopes"].items()
         )
@@ -423,7 +448,7 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
             comb = s.get("combined_hs_by_tp")
             if not comb:
                 continue
-            cells = "".join(f"<td>{comb[f'{float(t):.1f}']:.2f}</td>" for t in TP)
+            cells = "".join(forecast_cell(comb.get(f'{float(t):.1f}')) for t in TP)
             out += f"<tr><td class='l'>{s['item']}</td>{cells}</tr>"
         return out
 
@@ -476,6 +501,8 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         def cell(b, t):
             lo = b["hs_by_tp_low"][str(float(t))]
             hi = b["hs_by_tp_high"][str(float(t))]
+            if lo is None or hi is None:
+                return forecast_cell(None)
             return f"<td>{lo:.2f}&ndash;{hi:.2f}</td>"
 
         rows = "".join(

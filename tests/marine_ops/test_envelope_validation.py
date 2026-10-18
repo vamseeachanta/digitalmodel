@@ -102,8 +102,14 @@ def test_declared_units_survive_roundtrip_and_are_rejected():
 def test_inadequate_band_is_rejected():
     rao = full_rao()
     rao.heave.frequencies.values = np.linspace(.2, 1.2, 6)
+    result = operation_envelope(rao, 'transit', tp_range_s=[4.])
+    point = result.points[0]
+    assert point.status == 'insufficient_coverage'
+    assert not point.evaluated and point.hs_limit_m is None
+    assert point.extrapolated_energy_fraction > .01
+    # Strict consumers still reject inadequate coverage; the grid itself survives.
     with pytest.raises(ValueError, match='coverage'):
-        operation_envelope(rao, 'transit', tp_range_s=[4.])
+        result.require_evaluated()
 
 
 def test_full_band_retains_hand_value_and_records_energy():

@@ -1,6 +1,6 @@
 # Envelope calculation basis
 
-Revision 1, audit [2747](https://github.com/vamseeachanta/digitalmodel/issues/2747).
+Revision 2, audit [2747](https://github.com/vamseeachanta/digitalmodel/issues/2747).
 This calculation is linear spectral screening. Standards compliance is not
 established for the catalogue motion limits or operational alpha factors.
 No licensed-standard clause is asserted for these screening inputs.
@@ -41,7 +41,7 @@ The existing JONSWAP generator still normalizes the retained spectrum to
 The 4097-point grid over `.01 <= x <= 8` is a numerical integration choice,
 checked by the independent low-pass test, not a standard requirement.
 For gamma=1, gain one below x=1 and zero above, the significant response is
-`0.5 sqrt(F(1)/F(8))` at Hs=1 m. B2 gives `10.0873 m` for transit,
+`0.5 sqrt(F(1)/F(8))` at Hs=1 m. B2 gives `10.0870 m` analytically for transit,
 with relative acceptance tolerance 1%. This test distinguishes a frequency-
 dependent response from the constant-gain normalization identity.
 
@@ -53,14 +53,30 @@ and [random-sea documentation](https://www.orcina.com/webhelp/OrcaFlex/Content/h
 No solver execution is required or represented by these analytical tests.
 
 **B4 — RAO coverage.**
-`extrapolated_energy_fraction = 1 - integral(S_wave, RAO_min, RAO_max) / integral(S_wave)`.
-The integral clips to the calculation grid and interpolates spectral density
-at the boundary cells. Every required DOF shall cover at least 99% of retained
-wave variance. This is the explicit numerical screening tolerance selected
-for audit section 4, not a DNV limit. Endpoint continuation is used only in
-the remaining fraction, which is reported as the maximum across required DOFs.
-Wave-energy coverage alone does not bound response error for unknown large
-out-of-band resonances; qualified RAOs remain necessary for design acceptance.
+`extrapolated_energy_fraction = integral_outside(|RAO_held|^2 S_wave) / integral_all(|RAO_held|^2 S_wave)`.
+The compatibility field now measures response moment rather than wave variance.
+For each required DOF and selected heading, RAO magnitudes are interpolated in
+band and held at the respective edge outside the band. Integrals clip to the
+calculation grid and include the boundary cells. Every required combination
+shall retain at least 99% of this bounded response moment. A zero response has
+zero excluded fraction; no overlap with nonzero response has fraction one.
+This is a numerical screening tolerance, not a DNV limit. The maximum fraction
+over all required DOFs and selected headings is reported, including combinations
+that do not govern the Hs limit. Decaying band edges can therefore pass despite
+substantial wave energy outside the band.
+
+A point exceeding 1% carries `status="insufficient_coverage"`, `evaluated=False`,
+null Hs fields and null heading. Other periods continue. Serialization retains
+the status and nulls; lookup returns `None`; plots leave gaps. Strict
+`require_evaluated()` still rejects any unavailable point. Unknown unevaluated
+states remain errors for every consumer. The pamphlet carries `status_by_tp`
+alongside the numeric/null `hs_by_tp` grid and labels capped display bounds.
+Combined lowering limits and damping bands remain unavailable wherever a
+required motion limit is unavailable.
+
+Held edges bound response only under the assumption of no unseen out-of-band
+resonance. This screening assumption does not qualify missing response data;
+qualified RAOs remain necessary for design acceptance.
 
 **B5 — headings and dimensional contracts.**
 `distance = abs((available - requested + 180) mod 360 - 180)`.

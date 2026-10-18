@@ -378,8 +378,10 @@ def compute_envelopes(
     """Operation envelopes (limiting Hs vs Tp) for each operation.
 
     Returns an ordered dict keyed by operation name, each value being
-    ``{"alpha", "hs_by_tp", "gov_by_tp"}``. ``hs_by_tp`` / ``gov_by_tp`` keys are
+    forecast provenance plus ``alpha``, ``hs_by_tp``, ``gov_by_tp`` and
+    ``status_by_tp``. ``hs_by_tp`` / ``gov_by_tp`` keys are
     one-decimal Tp strings (e.g. ``"6.0"``) so JSON round-trips stably.
+    Insufficient coverage produces a null Hs; capped Hs is a display bound.
 
     When ``rao_basis == "vessel"`` and ``rao_artifact`` is supplied, the envelopes
     are driven by the REAL ingested vessel RAO instead of the parametric proxy.
@@ -391,8 +393,9 @@ def compute_envelopes(
     env_out: dict[str, Any] = {}
     for op in operations:
         env = operation_envelope(rset, op, tp_range_s=tp_grid)
-        env.require_evaluated()
-        hs_by_tp = {f"{round(p.tp_s, 1):.1f}": round(p.hs_limit_m, 2) for p in env.points}
+        env.require_valid_points()
+        hs_by_tp = {f"{round(p.tp_s, 1):.1f}": round(p.hs_limit_m, 2) if p.evaluated else None
+                    for p in env.points}
         gov_by_tp = {f"{round(p.tp_s, 1):.1f}": p.governing_dof for p in env.points}
         env_out[op] = {
             "alpha": env.alpha,
@@ -401,6 +404,7 @@ def compute_envelopes(
             "citation_sidecar": env.citation_sidecar,
             "hs_by_tp": hs_by_tp,
             "gov_by_tp": gov_by_tp,
+            "status_by_tp": {f"{round(p.tp_s, 1):.1f}": p.status for p in env.points},
         }
     return env_out
 
@@ -439,12 +443,16 @@ def compute_envelope_band(
     band: dict[str, Any] = {}
     for op in operations:
         lo, hi = low[op], high[op]
-        hs_low: dict[str, float] = {}
-        hs_high: dict[str, float] = {}
+        hs_low: dict[str, float | None] = {}
+        hs_high: dict[str, float | None] = {}
         gov_low: dict[str, str] = {}
         gov_high: dict[str, str] = {}
         for key, a in lo["hs_by_tp"].items():
             b = hi["hs_by_tp"][key]
+            if a is None or b is None:
+                hs_low[key] = hs_high[key] = None
+                gov_low[key] = gov_high[key] = 'coverage'
+                continue
             # order the band by Hs so hs_by_tp_low <= hs_by_tp_high always holds;
             # track which damping case supplied each bound for the governing DOF.
             if a <= b:
@@ -596,10 +604,10 @@ def compute_splashzone_set(
         env["item"] = it.get("item")
         env["kind"] = it.get("kind")
         if hl:
-            combined: dict[str, float] = {}
+            combined: dict[str, float | None] = {}
             for key, hs in env["hs_by_tp"].items():
                 v = hl.get(key)
-                combined[key] = round(min(hs, v), 2) if v is not None else hs
+                combined[key] = round(min(hs, v), 2) if v is not None else None
             env["combined_hs_by_tp"] = combined
         out.append(env)
     return out

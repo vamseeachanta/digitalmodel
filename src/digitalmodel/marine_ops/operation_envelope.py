@@ -39,7 +39,7 @@ from digitalmodel.hydrodynamics.seakeeping import (
 )
 from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 from .envelope_numerics import (
-    extrapolated_fraction, finite_grid, heading_column, positive, spectrum,
+    MAX_EXTRAPOLATED_ENERGY, extrapolated_fraction, finite_grid, heading_column, positive, spectrum,
     validate_component, validate_operation,
 )
 
@@ -134,7 +134,7 @@ def resolve_operation(operation: Union[str, Operation]) -> Operation:
 @dataclass
 class EnvelopePoint:
     tp_s: float
-    hs_limit_m: float
+    hs_limit_m: Optional[float]
     governing_dof: str
     governing_heading_deg: Optional[float]
     evaluated: bool = False
@@ -158,22 +158,36 @@ class EnvelopeResult:
     alpha_source: dict = field(default_factory=dict)
     citation_sidecar: dict = field(default_factory=dict)
 
-    def require_evaluated(self):
-        if not self.points or any(not p.evaluated or p.status not in ('evaluated', 'capped')
-                                  for p in self.points):
+    def require_valid_points(self):
+        """Accept explicit coverage gaps; reject unknown or contradictory states."""
+        if not self.points:
             raise ValueError('envelope contains unevaluated points')
-        if any(not np.isfinite(p.hs_limit_m) or p.hs_limit_m <= 0 for p in self.points):
-            raise ValueError('envelope contains invalid forecast limits')
+        for p in self.points:
+            if (p.status == 'insufficient_coverage' and not p.evaluated
+                    and p.hs_limit_m is None and p.governing_heading_deg is None
+                    and MAX_EXTRAPOLATED_ENERGY < p.extrapolated_energy_fraction <= 1):
+                continue
+            if not p.evaluated or p.status not in ('evaluated', 'capped'):
+                raise ValueError('envelope contains unevaluated points')
+            if p.hs_limit_m is None or not np.isfinite(p.hs_limit_m) or p.hs_limit_m <= 0:
+                raise ValueError('envelope contains invalid forecast limits')
+            if not 0 <= p.extrapolated_energy_fraction <= MAX_EXTRAPOLATED_ENERGY:
+                raise ValueError('envelope contains insufficient coverage')
+
+    def require_evaluated(self):
+        self.require_valid_points()
+        if any(not p.evaluated for p in self.points):
+            raise ValueError('envelope contains unevaluated points: insufficient coverage')
 
     def hs_limit_at(self, tp_s: float) -> Optional[float]:
-        self.require_evaluated()
+        self.require_valid_points()
         for p in self.points:
             if abs(p.tp_s - tp_s) < 1e-9:
                 return p.hs_limit_m
         return None
 
     def to_dict(self) -> dict:
-        self.require_evaluated()
+        self.require_valid_points()
         return {
             "vessel": self.vessel,
             "operation": self.operation,
@@ -245,8 +259,8 @@ def _evaluate_point(rao_set, op, tp, headings, hs_ref, gamma, hs_cap_m, spectra)
     best_hs, gov_dof, gov_hdg, excluded = hs_cap_m, 'cap', None, 0.
     for limit in op.limits:
         component = _component_for(rao_set, limit.dof)
-        excluded = max(excluded, extrapolated_fraction(component, omega, s_wave))
         for hdg, rao_at_hdg in _rao_by_heading(component, omega, headings):
+            excluded = max(excluded, extrapolated_fraction(component, omega, s_wave, rao_at_hdg))
             s_ref = _significant_response(rao_at_hdg, omega, s_wave)
             if s_ref == 0:
                 continue  # Evaluated zero response is distinct from absent input.
@@ -255,6 +269,9 @@ def _evaluate_point(rao_set, op, tp, headings, hs_ref, gamma, hs_cap_m, spectra)
                 raise ValueError('invalid forecast limit from response')
             if hs_allow < best_hs:
                 best_hs, gov_dof, gov_hdg = hs_allow, limit.dof, hdg
+    if excluded > MAX_EXTRAPOLATED_ENERGY:
+        return EnvelopePoint(float(tp), None, 'coverage', None, False,
+                             'insufficient_coverage', excluded, captured)
     return EnvelopePoint(float(tp), float(best_hs), gov_dof, gov_hdg, True,
                          'capped' if gov_dof == 'cap' else 'evaluated', excluded, captured)
 
@@ -277,7 +294,7 @@ def plot_envelopes(results: dict[str, EnvelopeResult], out_path) -> Optional[obj
     """Plot Hs limit vs Tp, one curve per operation. Returns the path, or None
     if matplotlib is unavailable (plotting is a convenience, not a contract)."""
     for result in results.values():
-        result.require_evaluated()
+        result.require_valid_points()
     try:
         import matplotlib
 
@@ -294,7 +311,7 @@ def plot_envelopes(results: dict[str, EnvelopeResult], out_path) -> Optional[obj
         vessel = env.vessel
         label = OPERATIONS[op_key].label if op_key in OPERATIONS else op_key
         tps = [p.tp_s for p in env.points]
-        hs = [p.hs_limit_m for p in env.points]
+        hs = [p.hs_limit_m if p.evaluated else np.nan for p in env.points]
         ax.plot(tps, hs, marker="o", markersize=3, label=label)
     ax.set_xlabel("Peak period Tp (s)")
     ax.set_ylabel("Forecast Hs limit (m)")
@@ -320,7 +337,7 @@ def _rao_by_heading(component, omega, headings):
     for hdg in targets:
         col = heading_column(avail, hdg)
         mag = np.asarray(component.magnitude, dtype=float)[:, col][order]
-        # Endpoint extrapolation is permitted only after the <=1% energy gate (B4).
+        # Held-edge continuation supplies the per-heading response bound (B4).
         yield float(avail[col]), np.interp(omega, freqs_sorted, mag)
 
 

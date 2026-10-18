@@ -5,7 +5,7 @@
 | Module / repository | `marine_ops` / `digitalmodel` |
 | Package path | `src/digitalmodel/marine_ops/` |
 | Scope | Direct Python files; sub-packages retain separate qualification |
-| Pack revision / status | 1 / DRAFT — unverified screening inputs |
+| Pack revision / status | 2 / DRAFT — unverified screening inputs |
 | Current code reference | Functions in the same Git revision as this pack |
 | Prior discovery code pin | `7aad603be1c6136106dbb2381ce5096b050654f8` |
 | Prior implementation-map pin | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
@@ -45,9 +45,12 @@ DOF `cap` and null heading. `hs_forecast_limit_m` names the criterion explicitly
 `criterion_type`, `alpha_source` and `citation_sidecar`. Both catalogue and
 custom inputs remain `unverified_screening`; no table or clause is invented.
 
-`EnvelopeResult.require_evaluated()`, `to_dict()`, `hs_limit_at()`,
-`plot_envelopes()` and the installation pamphlet `compute_envelopes()` reject
-unevaluated results. Lookup at an absent period returns `None` for valid results.
+`EnvelopeResult.require_evaluated()` rejects every unevaluated point.
+`to_dict()`, `hs_limit_at()`, `plot_envelopes()` and the installation pamphlet
+`compute_envelopes()` accept explicit `insufficient_coverage` points with null
+Hs and `evaluated=False`; unknown unevaluated states still raise. Lookup at an
+unavailable or absent period returns `None`. Plots leave gaps and the pamphlet
+preserves `status_by_tp`, including `capped` display bounds.
 No rounding is applied to the calculation result; presentation controls rounding.
 
 ## 3. Method and governing basis
@@ -55,9 +58,11 @@ No rounding is applied to the calculation result; presentation controls rounding
 Equations B1 and B2 define response integration and linear forecast scaling.
 `envelope_numerics.spectrum()` uses a peak-scaled `.01–8 omega_peak` grid and
 records the pre-normalization variance fraction (B3), which shall exceed 99%.
-`extrapolated_fraction()` integrates boundary cells and rejects RAOs covering
-less than 99% of retained wave energy (B4). The maximum missing fraction over
-required DOFs is reported; endpoint continuation is limited to that fraction.
+`extrapolated_fraction()` integrates response-moment boundary cells using held
+edge magnitudes (B4). A point with more than 1% out-of-band response moment is
+unavailable; other periods continue. The maximum fraction over required DOFs
+and selected headings is reported. This bound assumes no unseen out-of-band
+resonance and does not qualify missing response data.
 `heading_column()` uses circular distance and half the smallest observed step
 (B5). Symmetry is not inferred. Unsupported directions raise.
 
@@ -103,11 +108,12 @@ or output. Test names resolve in the dedicated files above.
 | C2-2 / G2 | `operation_envelope()` scaling | Ratios 2 and 1, relative error at most 0.1% | `test_limit_scales_linearly_with_criterion_and_alpha` |
 | C2-3 / G2 | `operation_envelope()` governing heading | 2.7 m at 90 degrees; circular 350 selects zero; unsupported 270 raises | `test_worst_case_heading_governs`, `test_circular_heading_and_incomplete_heading_domain` |
 | C2-4 / G2 | `operation_envelope()` ordering | Heavy-lift limit below transit | `test_stricter_operation_gives_lower_envelope` |
-| C2-5 / G2 | `operation_envelope()` frequency-dependent response | 10.0873 m within 1%; captured variance 0.99969487 within 1e-5 | `test_short_period_low_pass_hand_integral` |
-| C2-6 / G2 | `operation_envelope()` coverage | 0.2–1.2 rad/s at Tp=4 s raises | `test_inadequate_band_is_rejected` |
+| C2-5 / G2 | `operation_envelope()` frequency-dependent response | 10.0870 m analytical; legacy 10.0873 m oracle within 1%; captured variance 0.99969487 within 1e-5 | `test_short_period_low_pass_hand_integral` |
+| C2-6 / G2 | `operation_envelope()` coverage | 0.2–1.2 rad/s at Tp=4 s is unavailable; strict consumption raises | `test_inadequate_band_is_rejected` |
 | C5-1 / G5 | `EnvelopeResult.to_dict()` and `hs_limit_at()` | Independent 3.6 m within 0.1%, expected keys/values, absent 11 s returns None | `test_envelope_to_dict_roundtrips_points` |
 | C5-2 / G5 | `envelope_for_operations()` and `plot_envelopes()` | 5.4/3.6/2.55/4.5 m within 0.1%, heave governs each, one image exists | `test_envelope_for_all_operations_and_plot` |
-| C5-3 / G5 | `EnvelopeResult`, `plot_envelopes()`, `compute_envelopes()` | Unevaluated points rejected by each consumer | `test_consumers_reject_unevaluated_point` |
+| C5-3 / G5 | `EnvelopeResult`, `plot_envelopes()`, `compute_envelopes()` | Unknown unevaluated states rejected by each consumer | `test_consumers_reject_unevaluated_point` |
+| C5-4 / G5 | `operation_envelope()`, partial-result consumers | Response-bound gaps survive without publishing numeric limits; realistic decaying bands pass | `test_bad_period_does_not_abort_good_periods`, `test_realistic_decaying_band_on_default_periods`, `test_pamphlet_carries_partial_and_capped_status` |
 
 The following historical inventory retains the original source pins and search
 evidence. Its pre-fix symptoms are not current runtime claims. Current behavior

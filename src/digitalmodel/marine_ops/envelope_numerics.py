@@ -2,7 +2,7 @@
 import numpy as np
 
 DOF_UNITS = dict(surge='m', sway='m', heave='m', roll='deg', pitch='deg', yaw='deg')
-MAX_EXTRAPOLATED_ENERGY = .01  # Numerical screening tolerance, basis B4.
+MAX_EXTRAPOLATED_ENERGY = .01  # Response-moment screening tolerance, basis B4.
 
 
 def positive(value, name):
@@ -82,19 +82,35 @@ def spectrum(spectra, hs, tp, gamma):
     return omega, density, float(fraction)
 
 
-def extrapolated_fraction(component, omega, density):
-    """Integrate boundary cells, not an index-count approximation (B4)."""
+def extrapolated_fraction(component, omega, density, rao_on_omega):
+    """Out-of-band response-moment share under held-edge continuation (B4).
+
+    This bound assumes no unseen out-of-band resonance. The caller gates each
+    required heading, including headings that do not govern the forecast limit.
+    """
     freqs = np.asarray(component.frequencies.values)
     low = max(float(freqs.min()), float(omega[0]))
     high = min(float(freqs.max()), float(omega[-1]))
+    grid = np.unique(np.r_[omega, low, high]) if low < high else omega
+    magnitude = np.interp(grid, omega, rao_on_omega)
+    if low < high:
+        # At an inserted boundary use the held edge, not an interpolation across
+        # the last in-band and first out-of-band calculation samples.
+        magnitude[grid <= low] = rao_on_omega[0]
+        magnitude[grid >= high] = rao_on_omega[-1]
+    with np.errstate(over='ignore', invalid='ignore'):
+        response = magnitude**2 * np.interp(grid, omega, density)
+    total = integrate(grid, response)
+    if not np.isfinite(total) or total < 0:
+        raise ValueError('response moment must be finite and non-negative')
+    if total == 0:
+        return 0.0
     if low >= high:
-        raise ValueError('RAO spectral coverage is empty')
-    grid = np.r_[low, omega[(omega > low) & (omega < high)], high]
-    covered = integrate(grid, np.interp(grid, omega, density))
-    fraction = float(np.clip(1 - covered / integrate(omega, density), 0, 1))
-    if fraction > MAX_EXTRAPOLATED_ENERGY:
-        raise ValueError(f'RAO spectral coverage below 99%; extrapolated fraction={fraction:.6g}')
-    return fraction
+        return 1.0
+    # Integrate both tails explicitly to avoid cancellation for decaying edges.
+    below, above = grid <= low, grid >= high
+    excluded = integrate(grid[below], response[below]) + integrate(grid[above], response[above])
+    return float(np.clip(excluded / total, 0, 1))
 
 
 def heading_column(available, target):
