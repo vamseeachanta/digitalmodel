@@ -158,6 +158,17 @@ The entries below distinguish source-confirmed behavior from an executed detecti
 | FOWT unit-test preamble prints an inconsistent half-angle and radius | Independently evaluate the chord relation; no detection check exists for the preamble arithmetic | issue pending (12), 2026-10-15 | [tests/orcaflex/test_mooring_design_fowt.py:L5-L12] |
 
 The API names retained for compatibility must not be used to infer a standard edition or treat these simplified checks as full pressure-sensitive acceptance calculations. [src/digitalmodel/orcaflex/code_check_engine.py:L3-L18] [docs/domains/codes-register.md:L99-L105]
+
+The zero-location `fit_weibull` finding recorded in sections 3 and 6 is
+historical. [#2618](https://github.com/vamseeachanta/digitalmodel/issues/2618)
+is addressed by estimating all three parameters; shifted synthetic samples in
+`tests/orcaflex/test_postprocessor.py::TestExtremeValueAnalysis::test_weibull_recovers_three_parameters`
+check shape, location, scale and return values. The callable consumer is
+`examples/workflows/extreme-value-post/run.py::run`, which expects three
+parameters. The package facade re-exports the helper, and
+`tests/orcaflex/test_postprocessor.py` calls it directly. The workflow is
+also exercised by `tests/orcaflex/test_extreme_value_post_example.py`.
+
 ## 7. Lessons log
 
 | Date | Record ID | Lesson / evidence | Pack change | Shared-log reference |

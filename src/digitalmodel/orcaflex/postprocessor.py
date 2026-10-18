@@ -224,7 +224,10 @@ def fit_weibull(
     maxima: np.ndarray,
     return_periods: Optional[List[float]] = None,
 ) -> ExtremeValueResult:
-    """Fit 3-parameter Weibull distribution to maxima.
+    """Fit a 3-parameter Weibull distribution to maxima by maximum likelihood.
+
+    Shape, location and scale are all estimated; the location is not fixed
+    at zero. The support is ``x >= location``.
 
     Args:
         maxima: Array of extreme values.
@@ -241,7 +244,7 @@ def fit_weibull(
     maxima = np.asarray(maxima, dtype=float)
 
     # Fit Weibull (3-param: shape c, loc, scale)
-    shape, loc, scale = sp_stats.weibull_min.fit(maxima, floc=0)
+    shape, loc, scale = sp_stats.weibull_min.fit(maxima)
 
     return_values = {}
     for T in return_periods:

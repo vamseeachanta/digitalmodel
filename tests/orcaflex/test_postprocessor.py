@@ -121,6 +121,24 @@ class TestExtremeValueAnalysis:
         # p-value should be decent for a correct distribution
         assert result.ks_pvalue > 0.01
 
+    @pytest.mark.parametrize("location", [7.0, -7.0])
+    def test_weibull_recovers_three_parameters(self, location):
+        """Shifted synthetic maxima recover shape, location and scale."""
+        shape, scale = 2.5, 3.0
+        rng = np.random.default_rng(2026)
+        data = location + scale * rng.weibull(shape, size=20000)
+
+        result = fit_weibull(data, return_periods=[10, 100, 1000])
+
+        assert result.location == pytest.approx(location, abs=0.08)
+        assert result.shape == pytest.approx(shape, rel=0.05)
+        assert result.scale == pytest.approx(scale, rel=0.03)
+        for period in (10, 100, 1000):
+            expected = location + scale * math.log(period) ** (1 / shape)
+            assert result.return_values[str(period)] == pytest.approx(
+                expected, abs=0.15
+            )
+
 
 class TestMultiSeed:
     """Tests for multi-seed processing."""

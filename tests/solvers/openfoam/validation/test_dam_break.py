@@ -6,15 +6,18 @@ VOF case.
 
 CONDITIONALLY (solver-capable host only): the case is solved via
 OpenFOAMRunner (blockMesh -> setFields -> interFoam) and the surge front is
-compared to Martin & Moyce (1952) with mass conservation asserted; otherwise
-skipped.
+compared to Martin & Moyce (1952) with mass conservation and interface
+sharpness asserted; otherwise skipped.
 """
 
 from __future__ import annotations
 
 import json
 import math
+import sys
+from types import SimpleNamespace
 
+import numpy as np
 import pytest
 
 from digitalmodel.solvers.openfoam.runner import (
@@ -39,9 +42,12 @@ from digitalmodel.solvers.openfoam.validation import (
     martin_moyce_front,
 )
 from digitalmodel.solvers.openfoam.validation.dam_break import (
+    DAM_BREAK_INTERFACE_TOLERANCE_CELLS,
     GRAVITY,
     extract_front_history,
+    extract_interface_width,
     extract_mass_drift,
+    interface_band_width,
 )
 
 from .conftest import assert_valid_case_dir, solver_capable
@@ -134,6 +140,90 @@ def test_validation_case_registered_with_issue_gate() -> None:
     assert not DAM_BREAK_CASE.within_tolerance("front_z_at_T1p97", 2.33 * 1.11)
 
 
+@pytest.mark.parametrize("transpose", [False, True])
+def test_interface_sharpness_rejects_mass_conserving_smear(transpose) -> None:
+    """Equal water volume does not make an eight-cell interface acceptable."""
+    dx = 0.01
+    sharp = np.zeros((16, 32))
+    sharp[:8] = 1
+    smeared = np.repeat(
+        (1 - np.clip((np.arange(16) + 0.5 - 4) / 8, 0, 1))[:, None],
+        32, axis=1,
+    )
+    if transpose:
+        sharp, smeared = sharp.T, smeared.T
+    assert smeared.sum() == pytest.approx(sharp.sum())
+    sharp_width = interface_band_width(sharp, dx) / dx
+    assert sharp_width <= DAM_BREAK_INTERFACE_TOLERANCE_CELLS
+    width = interface_band_width(smeared, dx) / dx
+    assert width == pytest.approx(8.0)
+    assert width > DAM_BREAK_INTERFACE_TOLERANCE_CELLS
+
+
+@pytest.mark.parametrize("dx", [0.001, 0.01, 0.1])
+def test_resolved_interface_width_scales_with_mesh(dx) -> None:
+    profile = [1, 1, 1, 0.75, 0.25, 0, 0, 0]
+    alpha = np.repeat(np.array(profile)[:, None], 8, axis=1)
+    assert interface_band_width(alpha, dx) == pytest.approx(2 * dx)
+    width_cells = interface_band_width(alpha, dx) / dx
+    assert width_cells <= DAM_BREAK_INTERFACE_TOLERANCE_CELLS
+
+
+@pytest.mark.parametrize("alpha", [
+    [], [0, 1], [[0, 1]], [[0, float("nan")], [1, 0]],
+    [[0, float("inf")], [1, 0]], [[0, -0.1], [1, 0]],
+    [[0, 1.1], [1, 0]], [[0, 0], [0, 0]], [[0.5, 0.5], [0.5, 0.5]],
+])
+def test_interface_width_rejects_invalid_or_unresolved_fields(alpha) -> None:
+    with pytest.raises(ValueError):
+        interface_band_width(alpha, 0.01)
+
+
+@pytest.mark.parametrize("dx", [0, -1, float("nan"), float("inf")])
+def test_interface_width_rejects_invalid_cell_size(dx) -> None:
+    with pytest.raises(ValueError, match="cell_size"):
+        interface_band_width([[0, 0], [1, 1]], dx)
+
+
+def test_extract_interface_width_checks_all_written_fields(tmp_path, monkeypatch) -> None:
+    """A smeared middle frame must fail even if the final field is sharp."""
+    cfg = DamBreakConfig(cells_per_width=4)
+    x, y = np.meshgrid(
+        (np.arange(cfg.nx) + 0.5) * cfg.cell_size,
+        (np.arange(cfg.ny) + 0.5) * cfg.cell_size,
+    )
+    points = np.column_stack((x.ravel(), y.ravel(), np.zeros(x.size)))
+    # Exercise reconstruction from arbitrary field ordering.
+    order = np.random.default_rng(42).permutation(x.size)
+    sharp = np.where(y < 8 * cfg.cell_size, 1.0, 0.0)
+    smeared = 1 - np.clip((y / cfg.cell_size - 4) / 8, 0, 1)
+
+    class SavedFieldReader:
+        time_values = [0.0, 0.1, 0.2]
+
+        def set_active_time_value(self, t):
+            self.t = t
+
+        def read(self):
+            field = smeared if self.t == 0.1 else sharp
+            mesh = SimpleNamespace(
+                cell_data={"alpha.water": field.ravel()[order]},
+                cell_centers=lambda: SimpleNamespace(points=points[order]),
+            )
+            return {"internalMesh": mesh}
+
+    monkeypatch.setitem(sys.modules, "pyvista", SimpleNamespace(
+        OpenFOAMReader=lambda path: SavedFieldReader(),
+    ))
+    dat = tmp_path / "postProcessing/waterVolume/0/volFieldValue.dat"
+    dat.parent.mkdir(parents=True)
+    dat.write_text("# Time volume\n0 1\n0.1 1\n0.2 1\n")
+    assert extract_mass_drift(tmp_path) == 0
+    width = extract_interface_width(tmp_path, cfg)
+    assert width == pytest.approx(8.0)
+    assert width > DAM_BREAK_INTERFACE_TOLERANCE_CELLS
+
+
 # --------------------------------------------------------------------------- #
 #  Config consistency — always run                                            #
 # --------------------------------------------------------------------------- #
@@ -187,6 +277,9 @@ def test_build_stamps_provenance_with_citation(tmp_path) -> None:
     assert any("10.1098/rsta.1952.0006" in c for c in prov["citations"])
     assert any("damBreak" in c for c in prov["citations"])
     assert prov["gate_release_time_shift"] == GATE_RELEASE_TIME_SHIFT
+    assert prov["tolerances"]["interface_band_width_cells"] == (
+        DAM_BREAK_INTERFACE_TOLERANCE_CELLS
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -217,6 +310,12 @@ def test_dam_break_solve_matches_martin_moyce(tmp_path) -> None:
     drift = extract_mass_drift(case_dir)
     assert drift <= DAM_BREAK_MASS_TOLERANCE, (
         f"water volume drift {drift:.2%} exceeds {DAM_BREAK_MASS_TOLERANCE:.0%}"
+    )
+
+    width = extract_interface_width(case_dir, cfg)
+    assert width <= DAM_BREAK_INTERFACE_TOLERANCE_CELLS, (
+        f"effective interface band width {width:.2f} cells exceeds "
+        f"{DAM_BREAK_INTERFACE_TOLERANCE_CELLS:.0f} cells"
     )
 
     # Surge front vs the digitized experiment, with the standard gate-release
