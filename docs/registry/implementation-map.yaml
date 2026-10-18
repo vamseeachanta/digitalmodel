@@ -12707,30 +12707,6 @@ families:
     file_sha256: f95365b6740a060de5685ad470e6a7de68b7abe02fef3690f644996ddea4b38a
     defects:
     - {issue: 2107, affected: not_checked, evidence: 'tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py:L18-L347'}
-  - path: &a2b28b1cae6 tests/hydrodynamics/aqwa/test_viscous_damping_determination.py
-    symbol: _FakeLISParser.parse_lis_file
-    line: 49
-    kind: reader
-    what: *a7503bcdb06
-    signals: *a721041d87f
-    relation: test_helper
-    module: tests
-    file_sha256: 50a0a6a165b3c09ebae133993528f7ddacd229c2d16e7a8efd48a885c19519f7
-    defects:
-    - {issue: 2107, affected: not_checked, evidence: 'tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L49-L63'}
-    body_sha256: aa681eb96722495195e17dc9f24f3edb62ac66662f64deb8fc89b47d02298212
-  - path: *a2b28b1cae6
-    symbol: _run_case
-    line: 99
-    kind: reader
-    what: *a7503bcdb06
-    signals: *aa78a02b006
-    relation: test_helper
-    module: tests
-    file_sha256: 50a0a6a165b3c09ebae133993528f7ddacd229c2d16e7a8efd48a885c19519f7
-    defects:
-    - {issue: 2107, affected: not_checked, evidence: 'tests/hydrodynamics/aqwa/test_viscous_damping_determination.py:L99-L129'}
-    body_sha256: 33383af404ee6b3db881f7701f29f395467a7aed92e94f4fe332a39f9a979158
   - path: &adec05e854f tests/hydrodynamics/bemrosetta/conftest.py
     symbol: sample_aqwa_file
     line: 20
@@ -33159,10 +33135,6 @@ rejected_candidates:
   line: 21
   reason: *a0957e52299
   families: [*ada1ca9f368, *a453a1f09d6]
-- path: tests/hydrodynamics/aqwa/test_aqwa_anl_raos.py
-  symbol:
-  families: [*a4a6997f7bf]
-  reason: *aba6a311013
 - path: &a472208ab0e tests/hydrodynamics/aqwa/test_aqwa_cli_integration.py
   symbol: TestAQWACLIBasic
   line: 25

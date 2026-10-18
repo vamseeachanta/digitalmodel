@@ -112,8 +112,10 @@ class TestGenerateWithOverrides:
             InstallationSection,
         )
 
+        # Remove dependent lines too, preserving valid references in the remaining model.
         sections = [
             InstallationSection(builder_file="08_buoys.yml", enabled=False),
+            InstallationSection(builder_file="07_lines.yml", enabled=False),
         ]
 
         gen = ModularModelGenerator.from_spec(validated_spec)
@@ -136,7 +138,10 @@ class TestGenerateWithOverrides:
         template_dir = tmp_path / "templates"
         template_dir.mkdir()
         template_file = template_dir / "custom_buoys.yml"
-        template_file.write_text("buoy_depth: ${water_depth}\nbuoy_name: ${name}")
+        template_file.write_text(
+            "6DBuoys:\n  - Name: 6D buoy1\n"
+            "buoy_depth: ${water_depth}\nbuoy_name: ${name}"
+        )
 
         sections = [
             InstallationSection(
@@ -192,8 +197,10 @@ class TestGenerateWithOverrides:
             InstallationSection,
         )
 
+        # Remove dependent lines too, preserving valid references in the remaining model.
         sections = [
             InstallationSection(builder_file="08_buoys.yml", enabled=False),
+            InstallationSection(builder_file="07_lines.yml", enabled=False),
         ]
 
         out_dir = tmp_path / "out"

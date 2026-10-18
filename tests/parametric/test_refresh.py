@@ -67,6 +67,27 @@ def test_ci_gate_is_green_on_the_committed_state():
     assert refresh.main([]) == 0
 
 
+def test_viv_atlas_tracks_c205_edition():
+    assert {"id": "DNV-RP-C205", "edition": "2010-10"} in refresh.STANDARDS["viv_analysis"]
+
+
+def test_viv_atlas_matches_corrected_legacy_response():
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "viv_analysis")
+    point = {"span_length_ft": 60.0, "current_speed_in_s": 36.0}
+    prediction = atlas.predict(point)
+    # The atlas selects the minimum over empty and flooded cases.
+    # Flooded f_n = 1.7375267386 Hz; in-line excitation = 2 * St * U / D.
+    expected = 1.7375267386 / (2 * 0.2 * 36 / 12.75)
+    assert prediction.in_range
+    assert prediction.value == pytest.approx(expected, abs=1e-9)
+    assert prediction.value == pytest.approx(RESPONSE_FUNCS["viv_analysis"](point), abs=1e-9)
+    assert refresh.refresh_status("viv-analysis")["stale"] is False
+    assert atlas.validation["passes"] is True
+
+
 def test_ci_gate_fails_on_a_stale_computed_atlas(monkeypatch):
     monkeypatch.setattr(refresh, "parametric_workflow_ids", lambda: ["w"])
     monkeypatch.setattr(refresh, "refresh_status",

@@ -83,7 +83,7 @@ class TestJLayConfig:
 
     def test_sagbend_calculation(self):
         """J-Lay sagbend should produce valid results."""
-        jlay = JLayConfig(water_depth=1500.0, top_tension=800.0, tower_angle=3.0)
+        jlay = JLayConfig(water_depth=1500.0, top_tension=2624.9, tower_angle=3.0)
         result = jlay.calculate_sagbend()
         assert result["sagbend_radius_m"] > 0
         assert result["suspended_length_m"] > 0
@@ -96,8 +96,8 @@ class TestJLayConfig:
 
     def test_deeper_water_longer_span(self):
         """Deeper water should give longer horizontal offset."""
-        jlay_deep = JLayConfig(water_depth=2000.0)
-        jlay_shallow = JLayConfig(water_depth=500.0)
+        jlay_deep = JLayConfig(water_depth=2000.0, tower_angle=3.0)
+        jlay_shallow = JLayConfig(water_depth=500.0, tower_angle=3.0)
         deep_result = jlay_deep.calculate_sagbend()
         shallow_result = jlay_shallow.calculate_sagbend()
         assert deep_result["horizontal_offset_m"] > shallow_result["horizontal_offset_m"]

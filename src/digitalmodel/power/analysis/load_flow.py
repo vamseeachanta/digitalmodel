@@ -207,8 +207,9 @@ def build_ybus(network: Network) -> np.ndarray:
         b_half = 1j * br.b_pu / 2.0
         tap = br.tap_ratio
 
-        # Pi-model with tap ratio
-        ybus[i, i] += y_series / (tap * tap) + b_half
+        # Real ideal tap ahead of the pi section: reference-cases.md T1.
+        # MATPOWER manual section 3.2, equations (3.1)-(3.2).
+        ybus[i, i] += (y_series + b_half) / (tap * tap)
         ybus[j, j] += y_series + b_half
         ybus[i, j] -= y_series / tap
         ybus[j, i] -= y_series / tap
@@ -412,12 +413,12 @@ def solve_power_flow(
         vi = v[i] * np.exp(1j * theta[i])
         vj = v[j] * np.exp(1j * theta[j])
 
-        # Current from i to j
-        i_ij = (vi / tap - vj) * y_series + vi * b_half / (tap * tap)
+        # Bus-side terminal current (reference-cases.md T2-T3).
+        i_ij = ((vi / tap - vj) * y_series + (vi / tap) * b_half) / tap
         # Current from j to i
         i_ji = (vj - vi / tap) * y_series + vj * b_half
 
-        s_ij = vi / tap * np.conj(i_ij)
+        s_ij = vi * np.conj(i_ij)
         s_ji = vj * np.conj(i_ji)
 
         p_loss = float(s_ij.real + s_ji.real)
