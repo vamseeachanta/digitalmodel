@@ -16,8 +16,9 @@ from types import MappingProxyType
 from . import grades
 from .database_schema import MaterialRecord, RepositoryProvenance, Strengths
 
-# Revision containing the source bytes identified by the normalized digest.
-_SOURCE_REVISION = "5f162c4da02d599f55894d1dd7f310a8c48cf68e"
+# Revision status: assigned after merge, when the source is reachable from main.
+# Until then, provenance is pinned by the mandatory normalized digest only.
+_SOURCE_REVISION = None
 # SHA-256 of UTF-8-decoded grade text, CRLF and lone CR replaced by LF,
 # then encoded as UTF-8.
 _SOURCE_SHA256 = "8e5623d320dc3648da5f20093dfc0a9dbe9383fad8ea212954c371c5005273af"

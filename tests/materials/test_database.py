@@ -77,23 +77,44 @@ def test_provenance_pins_the_repository_source(database):
         provenance = record.provenance
         assert provenance.repository_path == "src/digitalmodel/materials/grades.py"
         assert provenance.sha256 == digest
-        assert provenance.repository_revision
+        # A revision will be assigned after merge; the digest is mandatory now.
+        if provenance.repository_revision is None:
+            assert provenance.sha256 == digest
         assert provenance.retrieved_on_utc
         assert provenance.repository_terms == "MIT License"
         assert provenance.original_source_terms == "not re-verified in this job"
 
 
+def test_source_revision_is_unassigned_until_merge(database):
+    assert all(record.provenance.repository_revision is None
+               for record in database.values())
+
+
+def test_digest_only_provenance_needs_no_git_history(monkeypatch):
+    def unexpected_git(*args, **kwargs):
+        pytest.fail("digest-only provenance must not require Git history")
+
+    monkeypatch.setattr(database_module, "_SOURCE_REVISION", None)
+    monkeypatch.setattr(subprocess, "run", unexpected_git)
+    database = load_database()
+    test_provenance_pins_the_repository_source(database)
+    test_pinned_revision_matches_source_digest(database)
+    assert database.source_digest_matches
+
+
 def test_pinned_revision_matches_source_digest(database):
-    """A revision pin must identify the exact normalized source bytes."""
+    """Digest-only and revision pins must identify the inspected source bytes."""
     provenance = database.lookup("X52").provenance
-    if provenance.repository_revision is not None:
+    if provenance.repository_revision is None:
+        source = Path(grades.__file__).read_bytes()
+    else:
         source = subprocess.run(
             ["git", "show", f"{provenance.repository_revision}:{provenance.repository_path}"],
             cwd=Path(__file__).resolve().parents[2],
             check=True,
             capture_output=True,
         ).stdout
-        assert database_module.normalised_source_digest(source) == provenance.sha256
+    assert database_module.normalised_source_digest(source) == provenance.sha256
 
 
 def test_edition_metadata_is_not_inferred(database):
@@ -156,7 +177,9 @@ def test_missing_provenance_is_rejected(database):
 
 @pytest.mark.parametrize(
     "field,value",
-    [("repository_revision", "HEAD"), ("sha256", "unestablished"),
+    [("repository_revision", "HEAD"), ("repository_revision", ""),
+     ("repository_revision", " "), ("repository_revision", 123),
+     ("sha256", "unestablished"),
      ("retrieved_on_utc", "unestablished"), ("repository_path", "../grades.py")],
 )
 def test_malformed_provenance_is_rejected(database, field, value):
