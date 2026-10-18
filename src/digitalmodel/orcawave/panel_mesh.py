@@ -231,13 +231,14 @@ def compute_panel_quality(panel: PanelQuad, panel_index: int = 0) -> MeshQuality
 
 
 def _is_closed_submerged(mesh: GDFMesh) -> bool:
-    """Establish zero waterplane only for a closed surface wholly below z=0.
+    """Establish zero waterplane only below the C4-WATERLINE 1 mm band.
 
     Exact shared vertices and opposite directed edges are required. Unmatched
+    edges on declared symmetry planes close under reflection. Other unmatched
     edges remain unqualified; no coordinate snapping hides gaps in a mesh.
     """
     if not mesh.panels or any(
-        v[2] >= -1e-9 for panel in mesh.panels for v in panel.vertices
+        v[2] >= -0.001 for panel in mesh.panels for v in panel.vertices
     ):
         return False
     edges = {}
@@ -249,7 +250,13 @@ def _is_closed_submerged(mesh: GDFMesh) -> bool:
             if a != b:  # Triangles may repeat their final vertex in GDF.
                 edges[(a, b)] = edges.get((a, b), 0) + 1
     return bool(edges) and all(
-        count == 1 and edges.get((b, a), 0) == 1
+        count == 1 and (
+            edges.get((b, a), 0) == 1
+            or (edges.get((b, a), 0) == 0 and (
+                (mesh.isx == 1 and a[0] == b[0] == 0)
+                or (mesh.isy == 1 and a[1] == b[1] == 0)
+            ))
+        )
         for (a, b), count in edges.items()
     )
 
@@ -368,7 +375,8 @@ def compute_waterplane_area(mesh: GDFMesh) -> float:
 
     Returns:
         Waterplane area in m^2 (accounting for symmetry). A closed surface
-        wholly below z=0 has zero area; an unavailable waterline raises.
+        wholly below z=-1 mm has zero area (including declared symmetry
+        closure); an unavailable waterline raises.
     """
     summary = compute_mesh_summary(mesh)
     if summary.waterplane_area <= 0 and not _is_closed_submerged(mesh):

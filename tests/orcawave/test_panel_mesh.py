@@ -146,18 +146,21 @@ class TestMeshSummary:
         assert any("fewer than 100" in s for s in summary.refinement_suggestions)
 
 
-def test_missing_waterline_is_flagged_at_summary_and_scalar_producer():
+@pytest.mark.parametrize("lid", [False, True])
+@pytest.mark.parametrize("depth", [1e-7, 0.000999, 0.001])
+def test_missing_waterline_is_flagged_at_summary_and_scalar_producer(lid, depth):
     mesh = _make_box_mesh()
-    mesh.panels.pop()  # An open surface with an offset rim has a missing waterline.
+    if not lid:
+        mesh.panels.pop()
     for panel in mesh.panels:
-        panel.vertices = [[x, y, z - 1e-7] for x, y, z in panel.vertices]
+        panel.vertices = [[x, y, z - depth] for x, y, z in panel.vertices]
     summary = compute_mesh_summary(mesh)
     assert any("waterline" in s.lower() for s in summary.refinement_suggestions)
     with pytest.raises(ValueError, match="waterline"):
         compute_waterplane_area(mesh)
 
 
-@pytest.mark.parametrize("depth", [1e-7, 1.0, 10.0])
+@pytest.mark.parametrize("depth", [0.01, 1.0, 10.0])
 def test_closed_submerged_mesh_has_established_zero_waterplane(depth):
     from tests.orcawave.test_audit_p1 import box
 
@@ -201,3 +204,37 @@ def test_nonpositive_volume_is_rejected_by_scalar_producer(inward):
             panel.vertices.reverse()
     with pytest.raises(ValueError, match="Positive signed volume"):
         compute_displaced_volume(mesh)
+
+
+@pytest.mark.parametrize("axis", ["x", "y"])
+@pytest.mark.parametrize("defect", [None, "undeclared", "off_plane", "open", "duplicate"])
+def test_submerged_symmetry_boundary_requires_declared_plane_and_closed_rest(axis, defect):
+    from tests.orcawave.test_audit_p1 import box
+
+    mesh = box(half=True)
+    mesh.panels.pop(3)  # Omit the artificial closure face on y=0.
+    if defect == "open":
+        mesh.panels.pop(0)  # A bottom gap is not a symmetry boundary.
+    if defect == "duplicate":
+        mesh.panels.append(mesh.panels[0].model_copy(deep=True))
+    if defect == "undeclared":
+        mesh.isy = 0
+    for panel in mesh.panels:
+        panel.vertices = [
+            [x, y + (1e-9 if defect == "off_plane" else 0), z - 0.01]
+            for x, y, z in panel.vertices
+        ]
+    if axis == "x":
+        mesh.isx, mesh.isy = mesh.isy, 0
+        for panel in mesh.panels:
+            panel.vertices = [[y, x, z] for x, y, z in panel.vertices[::-1]]
+    summary = compute_mesh_summary(mesh)
+    flagged = any("waterline" in s.lower() for s in summary.refinement_suggestions)
+    if defect is None:
+        assert not flagged
+        assert compute_waterplane_area(mesh) == 0
+        assert compute_displaced_volume(mesh) == pytest.approx(8, rel=1e-12)
+    else:
+        assert flagged
+        with pytest.raises(ValueError, match="waterline"):
+            compute_waterplane_area(mesh)

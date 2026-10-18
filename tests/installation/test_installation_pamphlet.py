@@ -1,8 +1,9 @@
 """Tests for the deterministic, config-driven installation-pamphlet workflow.
 
-Golden numbers are taken from the validated upstream prototype (compute_pamphlet):
-  * rao_basis="barge"     -> transit Hs limit at Tp=6 s ~= 0.52 m
-  * rao_basis="drillship" -> transit Hs limit at Tp=6 s ~= 1.84 m
+Transit goldens use the synthetic R4 response and the discrete response integral
+recorded in src/digitalmodel/orcawave/docs/engineering-citations.md (R4-P):
+  * rao_basis="barge"     -> transit Hs limit at Tp=6 s ~= 0.30 m
+  * rao_basis="drillship" -> transit Hs limit at Tp=6 s ~= 2.17 m
   * small 50 te mudmat is defensible with crane utilisation < 5 %
 """
 
@@ -261,7 +262,8 @@ def test_splashzone_absent_when_no_catalog_records(vessel_info, lifts):
 def test_golden_barge_transit_hs_and_lift(vessel_info, lifts):
     res = _assemble(vessel_info, lifts, "barge")
     hs6 = res["envelopes"]["transit"]["hs_by_tp"]["6.0"]
-    assert hs6 == pytest.approx(0.52, abs=0.02)
+    # R4-P: pitch m0=14.227770329103 at Hs=1; 0.9*2.5/(2*sqrt(m0)).
+    assert hs6 == pytest.approx(0.30, abs=0.02)
     small = res["lifts"][0]
     assert small["item"] == "Mudmat (small)"
     assert small["mass_air_te"] == pytest.approx(50.0)
@@ -272,7 +274,8 @@ def test_golden_barge_transit_hs_and_lift(vessel_info, lifts):
 def test_golden_drillship_transit_hs(vessel_info, lifts):
     res = _assemble(vessel_info, lifts, "drillship", runs=[DRILLSHIP_RUN])
     hs6 = res["envelopes"]["transit"]["hs_by_tp"]["6.0"]
-    assert hs6 == pytest.approx(1.84, abs=0.05)
+    # R4-P: pitch m0=0.269737076803 at Hs=1; shared with PR #2773.
+    assert hs6 == pytest.approx(2.17, abs=0.05)
     assert res["rao_provenance"] == "ship_proxy"
     assert res["provenance"]["basis_run_id"] == "lr_acma_8de9c018adbd"
 
