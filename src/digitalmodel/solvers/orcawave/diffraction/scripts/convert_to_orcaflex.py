@@ -123,24 +123,24 @@ class OrcaFlexConverter:
         logger.info(f"Loading from CSV directory: {csv_dir}")
 
         # agent-pack section 5, G0-COMPONENTS; issue 2723: absence is not zero.
-        if not any(path.is_file() for path in csv_dir.glob("*.csv")):
+        freq_file = csv_dir / "frequencies.csv"
+        dir_file = csv_dir / "directions.csv"
+        coefficient_names = (
+            [f"{family}_{i}{j}.csv" for family in ("added_mass", "damping")
+             for i in range(1, 7) for j in range(1, 7)]
+            + [f"excitation_force_{i}.csv" for i in range(1, 7)]
+        )
+        if not (freq_file.is_file() and dir_file.is_file()
+                and any((csv_dir / name).is_file() for name in coefficient_names)):
             raise FileNotFoundError(
-                f"No CSV results in {csv_dir}; conversion refused before export"
+                f"No CSV results in {csv_dir}; frequencies.csv, directions.csv and "
+                "at least one supported coefficient file are required; conversion "
+                "refused before export"
             )
         
         # Load frequency and direction data
-        freq_file = csv_dir / "frequencies.csv"
-        dir_file = csv_dir / "directions.csv"
-        
-        if freq_file.exists():
-            frequencies = pd.read_csv(freq_file)['frequency'].values
-        else:
-            frequencies = np.logspace(-2, np.log10(3), 100)
-        
-        if dir_file.exists():
-            directions = pd.read_csv(dir_file)['direction'].values
-        else:
-            directions = np.arange(0, 195, 15)
+        frequencies = pd.read_csv(freq_file)['frequency'].values
+        directions = pd.read_csv(dir_file)['direction'].values
         
         n_freq = len(frequencies)
         n_dir = len(directions)

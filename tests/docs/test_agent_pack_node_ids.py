@@ -18,7 +18,7 @@ PACKS = sorted((ROOT / "src/digitalmodel").glob("**/docs/agent-pack.md"))
 
 def collect_pack(pack: Path, root: Path, basetemp: Path) -> None:
     text = pack.read_text(encoding="utf-8")
-    section = re.search(r"(?ms)^## 4\..*?(?=^## 5\.|\Z)", text)
+    section = re.search(r"(?ms)^## [45]\..*?(?=^## 6\.|\Z)", text)
     ids = list(dict.fromkeys(re.findall(
         r"`(tests/[^`\n]+::[^`\n]+)`", section[0] if section else ""
     )))
@@ -45,9 +45,20 @@ def test_missing_citation_fails(tmp_path: Path) -> None:
         collect_pack(pack, tmp_path, tmp_path / "collection")
 
 
+def test_missing_gate_citation_fails(tmp_path: Path) -> None:
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "test_example.py").write_text("def test_exists():\n    pass\n")
+    pack = tmp_path / "agent-pack.md"
+    pack.write_text("## 4. Examples\nNone.\n## 5. Gates\n"
+                    "`tests/test_example.py::test_missing`\n## 6. Pitfalls\n")
+    with pytest.raises(AssertionError, match="test_missing"):
+        collect_pack(pack, tmp_path, tmp_path / "collection")
+
+
 def test_pack_without_citations_passes(tmp_path: Path, capsys) -> None:
     pack = tmp_path / "agent-pack.md"
-    pack.write_text("## 4. Examples\nNone.\n## 5. Limits\n`tests/missing.py::test_no`\n")
+    pack.write_text("## 4. Examples\nNone.\n## 5. Limits\nNone.\n")
     collect_pack(pack, tmp_path, tmp_path / "collection")
     assert "agent-pack.md: 0 ids" in capsys.readouterr().out
 

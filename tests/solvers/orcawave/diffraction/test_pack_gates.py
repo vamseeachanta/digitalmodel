@@ -79,16 +79,57 @@ def test_g0_components_direct_csv_rejected(tmp_path):
         converter._load_from_csv(tmp_path)
 
 
+def test_g0_components_properties_only_csv_rejected(tmp_path):
+    csv_dir = tmp_path / "csv_outputs"
+    csv_dir.mkdir()
+    properties = ["displacement", "cog_x", "cog_y", "cog_z", "cob_x",
+                  "cob_y", "cob_z", "waterplane_area", "metacentric_height"]
+    (csv_dir / "vessel_properties.csv").write_text(
+        "property,value\n" + "".join(f"{key},1\n" for key in properties),
+        encoding="utf-8",
+    )
+    converter = OrcaFlexConverter(str(tmp_path), str(tmp_path / "out"))
+    with pytest.raises(FileNotFoundError, match="No CSV results"):
+        converter.load_orcawave_results()
+    assert converter.vessel_data is None
+    assert not list(converter.output_dir.iterdir())
+
+
+@pytest.mark.parametrize("files", [
+    {"unrelated.csv"},
+    {"frequencies.csv", "directions.csv"},
+    {"directions.csv", "added_mass_11.csv"},
+    {"frequencies.csv", "added_mass_11.csv"},
+    {"frequencies.csv", "directions.csv", "added_mass_unused.csv"},
+])
+def test_g0_components_missing_sources_rejected_before_allocation(tmp_path, monkeypatch, files):
+    contents = {"frequencies.csv": "frequency\n0.5\n",
+                "directions.csv": "direction\n30\n"}
+    for name in files:
+        (tmp_path / name).write_text(contents.get(name, "value\n1\n"), encoding="utf-8")
+
+    def unexpected_allocation(*args, **kwargs):
+        pytest.fail("coefficient allocation preceded source validation")
+
+    monkeypatch.setattr(np, "zeros", unexpected_allocation)
+    converter = OrcaFlexConverter(str(tmp_path), str(tmp_path / "out"))
+    with pytest.raises(FileNotFoundError, match="No CSV results"):
+        converter._load_from_csv(tmp_path)
+
+
 @pytest.mark.parametrize("value", [0.0, 7.25])
-def test_nonempty_csv_values_are_preserved(tmp_path, value):
+@pytest.mark.parametrize("family", ["added_mass", "damping", "excitation_force"])
+def test_nonempty_csv_values_are_preserved(tmp_path, value, family):
     """Nonempty legacy input is readable; this does not qualify missing channels."""
     (tmp_path / "frequencies.csv").write_text("frequency\n0.5\n", encoding="utf-8")
     (tmp_path / "directions.csv").write_text("direction\n30\n", encoding="utf-8")
-    (tmp_path / "added_mass_11.csv").write_text(f"value\n{value}\n", encoding="utf-8")
+    component = "1" if family == "excitation_force" else "11"
+    content = f"real,imag\n{value},0\n" if family == "excitation_force" else f"value\n{value}\n"
+    (tmp_path / f"{family}_{component}.csv").write_text(content, encoding="utf-8")
     result = OrcaFlexConverter(str(tmp_path), str(tmp_path / "out"))._load_from_csv(tmp_path)
     np.testing.assert_array_equal(result.frequencies, [0.5])
     np.testing.assert_array_equal(result.directions, [30])
-    assert result.added_mass[0, 0, 0] == value
+    assert getattr(result, family).flat[0] == value
 
 
 def test_g0_components_phase3_refuses_empty_output(workflow, monkeypatch, caplog):
@@ -115,39 +156,61 @@ def test_g0_components_phase3_refuses_empty_output(workflow, monkeypatch, caplog
     assert not list((workflow.results_dir / "orcaflex").iterdir())
 
 
-@pytest.mark.parametrize("source", ["hdf5", "excel"])
+@pytest.mark.parametrize("source", ["hdf5", "csv", "excel"])
 def test_format_selection_preserved(tmp_path, monkeypatch, source):
     converter = OrcaFlexConverter(str(tmp_path), str(tmp_path / "out"))
     expected = object()
     if source == "hdf5":
         (tmp_path / "results.h5").touch()
         (tmp_path / "csv_outputs").mkdir()
+    elif source == "csv":
+        csv_dir = tmp_path / "csv_outputs"
+        csv_dir.mkdir()
+        (csv_dir / "frequencies.csv").write_text("frequency\n0.5\n", encoding="utf-8")
+        (csv_dir / "directions.csv").write_text("direction\n30\n", encoding="utf-8")
+        (csv_dir / "added_mass_11.csv").write_text("value\n7.25\n", encoding="utf-8")
     (tmp_path / "results.xlsx").touch()
     monkeypatch.setattr(converter, f"_load_from_{source}", lambda path: expected)
+    for other in {"hdf5", "csv", "excel"} - {source}:
+        monkeypatch.setattr(converter, f"_load_from_{other}",
+                            lambda path: pytest.fail("lower-priority format selected"))
     assert converter.load_orcawave_results() is expected
 
 
-@pytest.mark.xfail(
-    strict=True, raises=AssertionError,
-    reason="https://github.com/vamseeachanta/digitalmodel/issues/2738: G4-CLOSURE",
-)
-def test_g4_closure_rejects_open_triangle(tmp_path):
-    vertices = np.eye(3)
-    faces = np.array([[0, 1, 2]])
-    edges = Counter(tuple(sorted(edge)) for edge in [(0, 1), (1, 2), (2, 0)])
-    assert sum(count == 1 for count in edges.values()) == 3
-    stats = GeometryValidator(str(tmp_path))._compute_mesh_statistics(
+@pytest.fixture
+def open_triangle():
+    return np.eye(3), np.array([[0, 1, 2]])
+
+
+@pytest.fixture
+def open_triangle_stats(tmp_path, open_triangle):
+    vertices, faces = open_triangle
+    return GeometryValidator(str(tmp_path))._compute_mesh_statistics(
         "synthetic.obj", "obj", vertices, faces
     )
-    assert stats.volume == pytest.approx(1 / 6)
-    assert not stats.is_watertight
+
+
+def test_g4_open_triangle_preconditions(open_triangle, open_triangle_stats):
+    _, faces = open_triangle
+    edges = Counter(tuple(sorted((face[i], face[(i + 1) % 3])))
+                    for face in faces for i in range(3))
+    assert sum(count == 1 for count in edges.values()) == 3
+    assert open_triangle_stats.volume == pytest.approx(1 / 6)
+
+
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="#2738: G4-CLOSURE")
+def test_g4_closure_rejects_open_triangle(open_triangle_stats):
+    assert not open_triangle_stats.is_watertight
+
+
+def test_g5_incomplete_results_precondition(workflow):
+    assert workflow._check_data_completeness() is False
 
 
 @pytest.mark.xfail(
     strict=True, raises=AssertionError,
-    reason="https://github.com/vamseeachanta/digitalmodel/issues/2738: G5-STATE",
+    reason="#2738: G5-STATE",
 )
 def test_g5_state_refuses_incomplete_results(workflow):
-    assert workflow._check_data_completeness() is False
     success = workflow._phase4_quality_assurance()
     assert (success, workflow.workflow_state["quality_checked"]) == (False, False)
