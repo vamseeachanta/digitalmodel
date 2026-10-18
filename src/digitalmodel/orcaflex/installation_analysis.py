@@ -202,6 +202,8 @@ class SlingConfig(BaseModel):
     Supply the most-loaded quasi-static share at the extreme CoG, or supply
     lift-point coordinates and the extreme CoG offset for 2/3-leg statics.
     Four-leg reactions are indeterminate: supply an independently assessed PL.
+    Missing PL/geometry returns an estimate with load_share_assumed=True and
+    pass=False unless allow_equal_load_share=True explicitly accepts that basis.
 
     This is a hook-load tension screen, not the standard's full RSF padeye
     design check (which includes 1.2 and a separate design-load basis).
@@ -218,6 +220,10 @@ class SlingConfig(BaseModel):
     skew_load_factor: Optional[float] = Field(
         None, ge=1.0, allow_inf_nan=False,
         description="Sling-length/fabrication tolerance factor in indeterminate rigging; excludes CoG offset. None selects leg-count default",
+    )
+    allow_equal_load_share: bool = Field(
+        False, strict=True,
+        description="Explicitly accept equal-share PL; otherwise an assumed load share cannot pass (§3.5.5)",
     )
     most_loaded_share: Optional[float] = Field(
         None, gt=0.0, le=1.0, allow_inf_nan=False,
@@ -347,6 +353,10 @@ class SlingConfig(BaseModel):
             raise ValueError("hook_load_kN must be finite and non-negative")
         self._select_skew_default()
         share, share_basis = self._load_share()
+        # §3.5.5 requires PL at the extreme CoG; SKL covers length tolerances.
+        # Retain the estimate for diagnostics but block unstated equal-share PL.
+        share_assumed = (self.most_loaded_share is None
+                         and self.lift_points_m is None and self.cog_offset_m is None)
         theta_rad = math.radians(self.sling_angle_deg)
         sin_theta = math.sin(theta_rad)
         minimum = _SKL_BY_LEG_COUNT.get(self.num_slings, 1.0)
@@ -363,7 +373,10 @@ class SlingConfig(BaseModel):
             "sling_tension_per_leg_kN": round(sling_tension, 1),
             "sling_utilisation": round(utilisation, 4),
             "achieved_safety_factor": round(achieved_sf, 2),
-            "pass": achieved_sf >= self.safety_factor and not below_minimum,
+            "pass": (achieved_sf >= self.safety_factor and not below_minimum
+                     and (not share_assumed or self.allow_equal_load_share)),
+            "load_share_assumed": share_assumed,
+            "allow_equal_load_share": self.allow_equal_load_share,
             "most_loaded_share": share,
             "load_share_basis": share_basis,
             "skew_load_factor_input": self.skew_load_factor,

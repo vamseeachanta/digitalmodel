@@ -72,7 +72,7 @@ def _bounds(value, name):
 def _validate(settings):
     allowed = {
         "lift_points_m", "hook_height_m", "weight_N", "sling_EA_N",
-        "sling_length_m", "cog_envelope_xy_m", "code_minimum_skl",
+        "sling_length_m", "cog_envelope_xy_m", "cog_z_m", "code_minimum_skl",
         "code_minimum_source", "payload_warp_stiffness_N_per_m", "tolerances",
     }
     if set(settings) - allowed:
@@ -110,6 +110,8 @@ def _validate(settings):
     cogs = np.asarray(settings["cog_envelope_xy_m"], dtype=float)
     if cogs.ndim != 2 or cogs.shape[1] != 2 or not len(cogs) or not np.isfinite(cogs).all():
         raise ValueError("cog_envelope_xy_m must be a nonempty list of finite xy corners")
+    cog_z = float(_array(settings["cog_z_m"], (), "cog_z_m"))
+    cogs = np.column_stack((cogs, np.full(len(cogs), cog_z)))
     kw = settings.get("payload_warp_stiffness_N_per_m")
     if kw is not None:
         kw = _scalar(kw, "payload_warp_stiffness_N_per_m")
@@ -117,7 +119,7 @@ def _validate(settings):
         radii = np.linalg.norm(points[:, :2] - centre, axis=1)
         if not (np.allclose(points[0, :2] + points[2, :2], 2 * centre, atol=1e-9, rtol=0)
                 and np.allclose(radii, radii[0], atol=1e-9, rtol=0)
-                and np.allclose(cogs, centre, atol=1e-9, rtol=0)):
+                and np.allclose(cogs[:, :2], centre, atol=1e-9, rtol=0)):
             raise ValueError("Finite payload warp stiffness requires a centred rectangular lift")
     tolerances = settings.get("tolerances", {})
     names = {"general_length_m", "matched_pair_difference_m", "padeye_elevation_m"}
@@ -154,8 +156,9 @@ def _reference_misfit(points, height, lengths):
     return lengths - np.linalg.norm(hook - points, axis=1), hook
 
 
-def _tilt(cog, hook, eye_z):
-    tilt = float(np.degrees(np.arctan2(np.linalg.norm(cog - hook[:2]), hook[2] - eye_z)))
+def _tilt(cog, hook):
+    # Concurrent-force moment equilibrium: (H-C) x Wg=0, g=(H-C)/|H-C|.
+    tilt = float(np.degrees(np.arctan2(np.linalg.norm(cog[:2] - hook[:2]), hook[2] - cog[2])))
     return {"tilt_deg": tilt, "tilt_exceeds_3_deg": tilt > 3.0}
 
 
@@ -165,7 +168,10 @@ def _system(points, height, weight, ea, lengths, cog, kw, misfit, hook):
     arms = hook - points
     distances = np.linalg.norm(arms, axis=1)
     directions = arms / distances[:, None]
-    vertical = hook - np.r_[cog, points[0, 2]]
+    if cog[2] >= hook[2]:
+        raise ValueError("CoG must be below the fitted hook for a suspended equilibrium")
+    # Sum(T_i u_i)=Wg, with the full 3-D CoG in g=(H-C)/|H-C|.
+    vertical = hook - cog
     vertical /= np.linalg.norm(vertical)
     cosine = directions @ vertical
     if np.any(cosine <= 0):
@@ -224,15 +230,17 @@ def solve_case(settings, *, length_errors_m=(0, 0, 0, 0),
     minus fitted body-frame hook distance is included as initial axial misfit.
     """
     points, height, weight, ea, lengths, cogs, kw, *_ = _validate(settings)
-    cog = cogs[0] if cog_xy_m is None else _array(cog_xy_m, (2,), "cog_xy_m")
-    if kw is not None and not np.allclose(cog, points[:, :2].mean(axis=0), atol=1e-9, rtol=0):
+    cog = (cogs[0] if cog_xy_m is None else
+           np.r_[_array(cog_xy_m, (2,), "cog_xy_m"), settings["cog_z_m"]])
+    if kw is not None and not np.allclose(cog[:2], points[:, :2].mean(axis=0), atol=1e-9, rtol=0):
         raise ValueError("Finite payload warp stiffness requires centred CoG")
     misfit, hook = _reference_misfit(points, height, lengths)
     system = _system(points, height, weight, ea, lengths, cog, kw, misfit, hook)
     result = _solve(system, _array(length_errors_m, (4,), "length_errors_m"),
                     _array(elevation_errors_m, (4,), "elevation_errors_m"))
-    result["cog_xy_m"] = cog.tolist()
-    result.update(_tilt(cog, hook, points[0, 2]))
+    result["cog_xy_m"] = cog[:2].tolist()
+    result["cog_xyz_m"] = cog.tolist()
+    result.update(_tilt(cog, hook))
     return result
 
 
@@ -293,8 +301,9 @@ def calculate_skew(settings):
         nominals.append(nominal)
         for length_error, elevation_error in corners:
             case = _solve(system, np.array(length_error), np.array(elevation_error))
-            case["cog_xy_m"] = cog.tolist()
-            case.update(_tilt(cog, hook, points[0, 2]))
+            case["cog_xy_m"] = cog[:2].tolist()
+            case["cog_xyz_m"] = cog.tolist()
+            case.update(_tilt(cog, hook))
             case["nominal_tensions_N"] = nominal["tensions_N"]
             case["effective_skl"] = max(1.0, float(np.max(
                 np.array(case["tensions_N"]) / nominal["tensions_N"])))
@@ -306,7 +315,7 @@ def calculate_skew(settings):
     shares = [max(row["vertical_load_share"]) for row in nominals]
     cog_governing = int(np.argmax(shares))
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "method": "finite_rotation_pose_linear_axial_springs_single_self_stress_mode",
         "qa_status": "pending_family_clearance",
         "engineering_use_allowed": False,
@@ -316,7 +325,8 @@ def calculate_skew(settings):
         "code_minimum_source": settings.get("code_minimum_source", FOUR_LEG_MINIMUM_SOURCE),
         "design_skl": design,
         "max_nominal_vertical_share": max(shares),
-        "governing_cog_xy_m": cogs[cog_governing].tolist(),
+        "governing_cog_xy_m": cogs[cog_governing, :2].tolist(),
+        "governing_cog_xyz_m": cogs[cog_governing].tolist(),
         "design_leg_tensions_N": (np.max([row["tensions_N"] for row in nominals], axis=0) * design).tolist(),
         "tilt_exceeds_3_deg": any(case["tilt_exceeds_3_deg"] for case in cases),
         "governing_case_index": governing,

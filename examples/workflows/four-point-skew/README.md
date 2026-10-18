@@ -26,8 +26,10 @@ uses 100,000 kg multiplied by 9.81 m/s², matching the issue's illustration.
 - `hook_height_m` is an absolute z coordinate in the lift-point coordinate frame.
   A hook point H* is fitted once in the payload frame from the reference sling
   lengths. At each `cog_envelope_xy_m` corner the rigid payload rotates so that
-  H* minus CoG is vertical. CoG z is assumed to equal the nominal eye plane;
-  other CoG heights are outside this input model.
+  H* minus CoG is vertical. `cog_z_m` is required and uses the same absolute
+  z datum as the lift points and hook. It applies to every xy corner; run
+  separate envelopes for different CoG heights. There is no eye-plane default.
+  CoG at or above the fitted hook is rejected for suspended equilibrium.
 - Each `sling_EA_N` and `sling_length_m` specifies its axial spring compliance
   L/EA. Gauss–Newton fits H* to the four hook-to-eye lengths; initial misfit is
   `L_i - |H* - P_i|`, reused at every CoG corner. Equal reference slings therefore
@@ -71,7 +73,7 @@ nominal eyes, nonconvex ordering, horizontal applied loads and CoG outside the
 support polygon are rejected. Material nonlinearity, friction, dynamics,
 strength, payload bending/racking and lift stability require separate analysis.
 
-Every case reports `tilt_deg = atan(|CoG_xy - H*_xy| / clearance)` in degrees
+Every case reports `tilt_deg = atan2(|CoG_xy - H*_xy|, H*_z - CoG_z)` in degrees
 and `tilt_exceeds_3_deg`. The summary also flags any tilt above 3°. The previous
 level-geometry calculation at CoG (0.7, 0) gave about 331.6 kN versus 338.0 kN
 from finite-rotation body statics (about 2% low at approximately 4.7° tilt).
@@ -83,7 +85,7 @@ the >3° flag still calls for a separate large-displacement assessment.
 ## Equilibrium, compatibility and slack
 
 Let `u_i = (H* - P_i)/|H* - P_i|` in payload axes and let
-`g = (H* - CoG)/|H* - CoG|` be world vertical expressed in those axes.
+`g = (H* - CoG)/|H* - CoG|` use the full three-dimensional CoG and be world vertical expressed in those axes.
 The equilibrium equations are `A T = W g`, where A has columns u_i, and
 `c_i = u_i · g` gives vertical load share. Rigidly rotating this configuration
 puts hook-to-CoG on world vertical while preserving all four geometric sling
@@ -111,7 +113,7 @@ within 10⁻⁹ W, a numerical flag rather than a dynamic slack/snap criterion.
 
 All vertices of the length-bound polytope, including the matched-pair constraints,
 are crossed with the elevation-box vertices and each supplied CoG corner.
-The JSON retains every case, its input errors, four tensions, vertical shares,
+Schema version 3 retains every case, its `cog_xyz_m`, input errors, four tensions, vertical shares,
 nominal tensions and slack flags. For fixed CoG each tension is an affine function
 of one projected misfit, clipped to its feasible interval, so tolerance vertices
 cover its extrema. CoG evaluation covers the **supplied corners only**; no claim
@@ -125,8 +127,8 @@ can still compute that individual static state. `design_skl` is always
 `max(code_minimum_skl, effective_skl)` for an accepted envelope. `design_leg_tensions_N` gives, for each leg, the maximum nominal tension over
 all supplied CoG corners multiplied by the global design factor.
 `max_nominal_vertical_share` is the largest nominal vertical share over those
-corners and feeds PR #2678's `most_loaded_share`. `governing_cog_xy_m` identifies
-the corner governing that share; `governing_case_index` separately identifies
+corners and feeds PR #2678's `most_loaded_share`. `governing_cog_xyz_m` identifies
+the full corner governing that share (`governing_cog_xy_m` is retained); `governing_case_index` separately identifies
 tolerance SKL. For the centred example these are 0.25 and 433190.307 N per design
 leg. Multiplying the factor by an equal split would discard the CoG calculation.
 
@@ -226,3 +228,13 @@ hashes, and the dispositions of the second-provider reviews, including `b942066b
 Maintainer review of these corrections and formal family clearance remain open.
 No licensed solver execution is included. Issue acceptance criterion 5 remains
 open despite numerical checks for criteria 1–4.
+
+## CoG height audit correction (#2714)
+
+The concurrent-force equations above require the complete CoG vector. The
+independent stretched-length reference now takes the same 3-D CoG. Regressions
+at (0.7, 0, z) m for z = 0, +2 and -2 m compare all four tensions within 0.3%.
+That tolerance is a check of these examples only; frozen axial directions still
+approximate elastic displacement. A separate +4 m exploratory case exceeded
+0.3% on the less-loaded legs, so that height is not qualified by these receipts.
+`engineering_use_allowed` remains false pending installation-family clearance.
