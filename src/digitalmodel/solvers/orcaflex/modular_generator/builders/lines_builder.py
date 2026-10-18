@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Builder for the Lines section of OrcaFlex models.
 
 This builder generates Lines with pipeline configuration including:
@@ -6,6 +9,7 @@ This builder generates Lines with pipeline configuration including:
 - Attachments at arc-length positions based on buoyancy module spacing
 """
 
+import math
 from typing import Any
 
 from .base import BaseBuilder
@@ -107,7 +111,7 @@ class LinesBuilder(BaseBuilder):
 
         line_def = {
             "Name": name,
-            "IncludeTorsion": "Yes",
+            "IncludeTorsion": "No" if self.spec.is_s_lay() else "Yes",
             "TopEnd": "End A",
             "LengthAndEndOrientations": "Explicit",
             "Representation": "Finite element",
@@ -122,8 +126,10 @@ class LinesBuilder(BaseBuilder):
             "ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, "
             "ConnectionReleaseStage, ConnectionzRelativeTo": connection_data["connections"],
             # Connection stiffness
-            "ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
-            "ConnectionTwistingStiffness, ConnectionDamping": connection_data["stiffness"],
+            ("ConnectionxBendingStiffness, ConnectionyBendingStiffness"
+             if self.spec.is_s_lay() else
+             "ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
+             "ConnectionTwistingStiffness, ConnectionDamping"): connection_data["stiffness"],
             # Connection arclength settings
             "ConnectionInitialArclength, ConnectionPayoutRate, "
             "ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, "
@@ -178,31 +184,7 @@ class LinesBuilder(BaseBuilder):
         is_s_lay = self.spec.is_s_lay()
 
         if is_s_lay:
-            vessel_name = self.spec.equipment.vessel.name
-
-            # End A: Free - pipeline pays out from vessel
-            end_a = [
-                vessel_name,  # Connected to vessel
-                0,  # X offset
-                0,  # Y offset
-                0,  # Z offset
-                0,  # Azimuth
-                90,  # Declination
-                0,  # Gamma
-                None,  # ReleaseStage
-            ]
-
-            # End B: Anchored at seabed
-            end_b = [
-                "Anchored",  # Anchored at seabed
-                0,  # X position
-                0,  # Y position
-                0,  # Z position (at seabed)
-                0,  # Azimuth
-                90 + seabed_slope,  # Declination
-                0,  # Gamma
-                None,  # ReleaseStage
-            ]
+            end_a, end_b = self._slay_endpoints()
         else:
             # Floating installation (existing logic)
             end_a = [
@@ -228,10 +210,12 @@ class LinesBuilder(BaseBuilder):
             ]
 
         # Connection stiffness (End A, End B)
-        stiffness = [
+        stiffness: list[list[Any]] = [
             ["Infinity", None, "Infinity"],  # End A: rigid
             ["Infinity", None, "Infinity"],  # End B: rigid
         ]
+        if is_s_lay:
+            stiffness = [[], [0, None]]
 
         # Arclength settings (End A, End B)
         arclength = [
@@ -244,6 +228,84 @@ class LinesBuilder(BaseBuilder):
             "stiffness": stiffness,
             "arclength": arclength,
         }
+
+    def _slay_endpoints(self) -> list[list]:
+        """Seed a free upper end and a separated seabed anchor.
+        Declared anchors override the weight-only fallback. Neither supplies a
+        solved contact state. The seed requires a planar, level hull; on sloping
+        seabeds the span is approximate and End B z is relative to local seabed.
+        """
+        vessel = self.spec.equipment.vessel
+        stinger = self.spec.equipment.stinger
+        pipeline = self.spec.pipeline
+        if vessel is None or pipeline is None:
+            raise ValueError("S-lay endpoints require vessel and pipeline")
+        if any(vessel.orientation[:2]):
+            raise ValueError("S-lay endpoint seed requires level hull")
+        origin = list(stinger.origin_position) if stinger else [0, 0, 0]
+        if stinger:
+            origin[0] += stinger.firing_line_length
+        heading = math.radians(vessel.orientation[2])
+        c, s = math.cos(heading), math.sin(heading)
+        x = vessel.position[0] + c * origin[0] - s * origin[1]
+        y = vessel.position[1] + s * origin[0] + c * origin[1]
+        z = vessel.position[2] + origin[2]
+        height = self.spec.environment.water.depth + z
+        span = sum(segment.length for segment in pipeline.segments) - height
+        if self.spec.equipment.slay_end_b_x is not None:
+            span = origin[0] - self.spec.equipment.slay_end_b_x
+        elif stinger is not None and stinger.sections and self.spec.equipment.tensioner is not None:
+            span = self._slay_taut_span(height)
+        coated_radius = pipeline.dimensions.outer_diameter / 2
+        coated_radius += pipeline.coatings.corrosion.thickness
+        coated_radius += sum(coating.thickness for coating in pipeline.coatings.weight)
+        if height <= 0 or span <= 0:
+            raise ValueError("S-lay endpoint height must be positive and below pipe length")
+        # Necessary seed-geometry screen; this does not establish static closure.
+        length = sum(segment.length for segment in pipeline.segments)
+        if math.hypot(span, height - coated_radius) > length:
+            raise ValueError("S-lay End B is beyond pipe reach: endpoint chord exceeds pipe length")
+        return [["Free", x, y, z, 180, 90, 0, None],
+                ["Anchored", x - span * c, y - span * s, coated_radius, 180,
+                 90 + self.spec.environment.seabed.slope, 0, None]]
+
+    def _slay_taut_span(self, height: float) -> float:
+        """Close the supported arc plus weight-only suspended/grounded lengths.
+
+        Equations and limitations: slay-campaign/case-table.yml,
+        static_equilibrium_screen. The seed uses an empty uniform coated pipe.
+        """
+        from digitalmodel.installation.pipelay.integrity import G_STANDARD
+        from .linetype_builder import MATERIAL_PROPERTIES
+
+        pipe = self.spec.pipeline
+        stinger = self.spec.equipment.stinger
+        od = pipe.dimensions.outer_diameter
+        wall = pipe.dimensions.wall_thickness
+        density = MATERIAL_PROPERTIES.get(pipe.material, MATERIAL_PROPERTIES["X65"])["MaterialDensity"]
+        mass = density * math.pi / 4 * (od**2 - (od - 2 * wall)**2)
+        for coating in [pipe.coatings.corrosion, *pipe.coatings.weight]:
+            outer = od + 2 * coating.thickness
+            mass += coating.density * math.pi / 4 * (outer**2 - od**2)
+            od = outer
+        weight = (mass - self.spec.environment.water.density * math.pi / 4 * od**2) * G_STANDARD
+        arc = sum(section.length for section in stinger.sections)
+        radius = stinger.radius
+        drop = radius * (1 - math.cos(arc / radius))
+        hanging_height = height - drop
+        tension = self.spec.equipment.tensioner.tension_value
+        horizontal = tension - weight * height
+        if min(weight, hanging_height, horizontal) <= 0:
+            raise ValueError("S-lay seed requires positive weight, hanging height and horizontal tension")
+        a = horizontal / weight
+        suspended = math.sqrt(hanging_height**2 + 2 * a * hanging_height)
+        suspended_span = a * math.acosh(1 + hanging_height / a)
+        length = sum(segment.length for segment in pipe.segments)
+        if arc + suspended >= length:
+            raise ValueError("S-lay seed requires a positive grounded remainder")
+        span = radius * math.sin(arc / radius) + suspended_span + length - arc - suspended
+        # Round toward shorter spans so numerical roundoff cannot imply extension.
+        return math.nextafter(span, 0.0)
 
     def _build_attachments(self, bm_buoy_name: str) -> list[dict[str, Any]]:
         """Build attachment list for buoyancy modules.

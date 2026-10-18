@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Pydantic data models for dynacard analysis.
 # ABOUTME: Includes surface card, rod string, pump, and analysis result structures.
 
@@ -475,6 +478,10 @@ class AnalysisResults(BaseModel):
     inferred_production: float = 0.0
     buckling_detected: bool = False
     diagnostic_message: str = "Analysis not yet performed"
+
+    # Result restrictions are serialized independently of diagnostic prose.
+    solver_flags: List[str] = Field(default_factory=list)
+    max_inclination_deg: Optional[float] = None
 
     # Solver metadata
     # Reporting metadata only -- always overwritten by the solver that ran

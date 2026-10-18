@@ -1,0 +1,101 @@
+{
+  "artifacts": {
+    "riser-pipe-comparison.citations.json": {
+      "sha256": "f3181c12f1a29c3dba7456421774d598b1224ed1ee7fb5d48a08d34312c8f91d",
+      "size_bytes": 13471
+    },
+    "riser-pipe-comparison.html": {
+      "sha256": "f54ae72052596c3c2fafd27f6ab6a3314d737ddc6bcecf70b4c4a72b7c2b0a2f",
+      "size_bytes": 17194
+    }
+  },
+  "basis_commit": "fcfff5631bd3535147af43f1afc9c8f6c0524ee8",
+  "criteria_recorded_at": "2026-10-16T08:02:05Z",
+  "criteria_revision": "2",
+  "inputs": {
+    "scripts/reporting/build_riser_pipe_comparison.py": "ba33c9cfebfc149d002704c12c031cd3eb1a005d9b6e04b467442ab005a32bb4",
+    "scripts/reporting/riser_pipe_comparison.criteria.json": "644f15e3d4f459a52c01a4a528ed424a5683a4424de1d9069708771ec597f527",
+    "scripts/reporting/riser_pipe_comparison.revisions.json": "7449702b237f107ea4f6b7f2076df5fc41934e3ae58e028a0a5625c641530206",
+    "scripts/reporting/riser_pipe_comparison.yml": "57fa40293b029da07adfdbffcf9a0b5bc9d8d002529ac775a6876ec262f62b44",
+    "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+    "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+    "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f"
+  },
+  "minimum_wall": {
+    "API RP 1111": {
+      "case": "operating",
+      "state": "propagation",
+      "status": "found",
+      "wall_mm": 21.3
+    },
+    "API RP 2RD": {
+      "case": "operating",
+      "state": "collapse",
+      "status": "found",
+      "wall_mm": 10.5
+    },
+    "API STD 2RD": {
+      "case": "operating",
+      "state": "combined",
+      "status": "found",
+      "wall_mm": 42.2
+    }
+  },
+  "precision": "0.1 percent; dispositions use unrounded module results",
+  "qualification": "partial; standard conformity not established",
+  "results": {
+    "API RP 1111": {
+      "burst": {
+        "case": "operating",
+        "utilisation_percent": 27.6,
+        "within_module_limit": true
+      },
+      "collapse": {
+        "case": "operating",
+        "utilisation_percent": 33.7,
+        "within_module_limit": true
+      },
+      "propagation": {
+        "case": "operating",
+        "utilisation_percent": 97.8,
+        "within_module_limit": true
+      }
+    },
+    "API RP 2RD": {
+      "burst": {
+        "case": "operating",
+        "utilisation_percent": 29.8,
+        "within_module_limit": true
+      },
+      "collapse": {
+        "case": "operating",
+        "utilisation_percent": 40.4,
+        "within_module_limit": true
+      },
+      "hoop": {
+        "case": "operating",
+        "utilisation_percent": 37.4,
+        "within_module_limit": true
+      }
+    },
+    "API STD 2RD": {
+      "burst": {
+        "case": "operating",
+        "utilisation_percent": 24.9,
+        "within_module_limit": true
+      },
+      "collapse": {
+        "case": "operating",
+        "utilisation_percent": 44.9,
+        "within_module_limit": true
+      },
+      "combined": {
+        "case": "operating",
+        "utilisation_percent": 174.0,
+        "within_module_limit": false
+      }
+    }
+  },
+  "revision": "3",
+  "wall_search": "0.1 mm grid; positive wall strictly below half the outside diameter; all returned checks and supplied cases"
+}

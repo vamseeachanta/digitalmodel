@@ -138,6 +138,25 @@ def test_is_weld_repair_acceptable():
     assert is_weld_repair_acceptable(0.04, 1.0, 0.30) is False  # under minimum
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="governing interpretation not established",
+    raises=pytest.fail.Exception,
+)
+def test_weld_repair_minimum_fraction_interpretation_unresolved():
+    """Record conflicting contracts without selecting an engineering criterion."""
+    # Synthetic lengths put the fractional limit below the minimum repair.
+    total_length, fraction, minimum = 1.0, 0.1, 0.2
+    allowable = weld_repair_allowable_length(total_length, fraction, minimum)
+    accepted = is_weld_repair_acceptable(
+        allowable, total_length, fraction, minimum
+    )
+    pytest.fail(
+        f"Returned allowable length {allowable:g} gives acceptance {accepted}; "
+        "governing interpretation not established"
+    )
+
+
 # --- 4. S-lay submerged weight and lay tension ------------------------------
 
 

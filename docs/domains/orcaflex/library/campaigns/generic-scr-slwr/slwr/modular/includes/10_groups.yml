@@ -1,0 +1,6 @@
+Groups:
+  Structure:
+    SLWR: Model
+    GenericHost: Model
+  State:
+    Collapsed: []

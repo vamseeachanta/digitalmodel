@@ -31,6 +31,16 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/capabilities/build_onepagers.py": (
+        "writes JSON capability cards, not docs/api HTML"
+    ),
+    "scripts/cfd/build_calm_water_study.py": (
+        "writes native records and docs/domains HTML, not docs/api pages"
+    ),
+    "scripts/reporting/build_reference_jacket_analysis.py": (
+        "renders the reference-jacket analysis under docs/domains, not docs/api; "
+        "dedicated reporting tests verify byte reproduction"
+    ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
     ),
@@ -67,6 +77,9 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/debug_html_report.py": (
         "debugs an existing docs/reports HTML file; it does not target docs/api"
     ),
+    "scripts/generate_implementation_map.py": (
+        "writes a YAML implementation inventory, not committed docs/api HTML pages"
+    ),
     "scripts/generated_html_ownership.py": (
         "contains this ownership census; it does not write HTML"
     ),
@@ -96,6 +109,9 @@ DISCOVERY_FALSE_POSITIVES = {
 
 # Active generators which cannot run from repository-owned deterministic inputs.
 EXCLUDED_GENERATORS = {
+    "scripts/cfd/generate-kcs-verification.py": (
+        "requires a caller-supplied solved OpenFOAM case"
+    ),
     "docs/api/cfd/report_build/build_dam_break.py": (
         "requires a caller-supplied solved OpenFOAM case"
     ),
@@ -193,6 +209,10 @@ PAGE_EXCLUSIONS = {
 # than source-text heuristics alone, prevents new docs/api output from silently
 # bypassing ownership.
 MANUAL_PAGES = {
+    "docs/api/cfd/kcs-calm-water-resistance-verification.html": (
+        "emitted from a solved case by scripts/cfd/generate-kcs-verification.py; "
+        "the solve output is not in the repo, so CI cannot regenerate it"
+    ),
     "docs/api/buckling/ship-panel-buckling.html": (
         "hand-maintained interactive report; no scripts producer found"
     ),
@@ -227,15 +247,8 @@ MANUAL_PAGES = {
 }
 
 
-# Build-output pages are generated working-tree print sources of committed PDFs;
-# they are not committed pages and are not included in byte-for-byte drift checks.
-BUILD_OUTPUT_GENERATORS = {
-    "scripts/capabilities/build_onepagers.py": {
-        "command": "python3 scripts/capabilities/build_onepagers.py",
-        "output_pattern": "docs/api/capabilities/pdf/<specification-id>.html",
-        "reason": "kept self-contained print sources beside committed one-pager PDFs",
-    },
-}
+# No current generators emit uncommitted docs/api HTML print sources.
+BUILD_OUTPUT_GENERATORS = {}
 
 
 def _specification_ids(script, label: str) -> set[str]:

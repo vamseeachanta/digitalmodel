@@ -347,12 +347,60 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-load-per-core", type=float, choices=(1.5,), default=1.5)
     parser.add_argument("--repo-dir", default="~/digitalmodel")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--poll",
+        metavar="CASE_DIR",
+        default=None,
+        help=(
+            "Poll a detached run instead of dispatching: report elapsed time "
+            "and iteration count, and TERMINATE the process group if the "
+            "wall-clock budget declared at launch has been exceeded. This is "
+            "the out-of-band enforcement point for detached runs -- a "
+            "subprocess timeout cannot bound a process that has already been "
+            "reparented into its own session. Short, idempotent and "
+            "re-connectable, so it can be driven from cron on the execution "
+            "host rather than from the session that launched the run."
+        ),
+    )
+    parser.add_argument(
+        "--no-terminate",
+        action="store_true",
+        help="With --poll, report an over-budget run but do not kill it.",
+    )
     parser.add_argument("remote_command", nargs=argparse.REMAINDER)
     return parser
 
 
+def poll_case(case_dir: str, *, terminate: bool = True) -> int:
+    """Report on a detached run, enforcing its declared wall-clock budget.
+
+    Returns 0 while the run is healthy or has finished within budget, and 2 if
+    the budget was exceeded and the process group was terminated -- so a cron
+    entry or a shell loop can act on the exit status without parsing output.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "src"))
+    from digitalmodel.solvers.openfoam.runner import poll_detached_run
+
+    result = poll_detached_run(case_dir, terminate_over_budget=terminate)
+    payload = {
+        "case": str(case_dir),
+        "pid": result.pid,
+        "running": result.running,
+        "elapsed_hours": round(result.elapsed_seconds / 3600.0, 3),
+        "budget_hours": round(result.budget_seconds / 3600.0, 3),
+        "iterations": result.iterations,
+        "over_budget": result.over_budget,
+        "terminated": result.terminated,
+        "reason": result.reason,
+    }
+    print(json.dumps(payload, indent=2))
+    return 2 if result.terminated else 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.poll:
+        return poll_case(args.poll, terminate=not args.no_terminate)
     remote_command = list(args.remote_command)
     if remote_command and remote_command[0] == "--":
         remote_command = remote_command[1:]

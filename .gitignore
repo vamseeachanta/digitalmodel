@@ -263,8 +263,7 @@ node_modules/
 
 /output/
 /results/
-# Build output: one-pager print sources written beside committed PDFs.
-/docs/api/capabilities/pdf/*.html
+/data/steel_shapes_local/
 reports/
 !docs/reports/
 docs/reports/*
@@ -438,7 +437,7 @@ docs/api/structural/wall-thickness-3d.json
 # Retain the reviewed offline cylinder engineering report.
 !docs/reports/2026-09-14-issue-2121-b1-preparation.html
 
-# Owner board O04 reconciliation evidence (authored, not generated output).
+# Maintainer board O04 reconciliation evidence (authored, not generated output).
 !docs/reports/o04-ecosystem-reconciliation.html
 # Retain A07 DWG conversion qualification evidence; staging DXFs stay outside Git.
 !docs/reports/dwg-conversion/
@@ -462,3 +461,123 @@ docs/reports/abstracted-hulls/*
 # Retain the synthetic worked pipeline assessment.
 !docs/reports/pipeline-ffs-assessment.html
 !docs/reports/pipeline-ffs-assessment.manifest.json
+
+# scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
+# build output. The bare `lib/` above is packaging boilerplate and matches any
+# directory named lib at ANY depth -- it silently swallowed the files that fix
+# the "chain is not reproducible from a clean checkout" defect (#2023), so the
+# remediation was itself invisible to git. Negation must follow the pattern it
+# overrides, and the DIRECTORY must be re-included before git will descend.
+!scripts/cfd/lib/
+
+# fetched by scripts/data/fetch.py
+/docs/cad-inventory/cad-file-manifest-deidentified.csv.gz
+/docs/domains/aqwa/examples/00_docs/2021 Aqwa_Intro/M04_Hydrodynamic_Diffraction/ship_model/ship.igs
+/docs/domains/aqwa/examples/00_docs/2021_training/FPSOTurret.scdoc
+/docs/domains/aqwa/examples/00_docs/2021_training/ship.igs
+/docs/domains/aqwa/examples/01_geometry/superseded/02_ship_with_pier_rev0.scdoc
+/docs/domains/aqwa/workflows/external-forces/v222/AD_PYTHONUSERFORCE_UDF3.LIS
+/docs/domains/guides/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft1).docx
+/docs/domains/guides/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft2).docx
+/docs/domains/guides/legacy/apirp2rd/PRE/0119-001 PRE-0001-01 API_STD_2RD Methods  (Draft1).pptx
+/docs/domains/guides/legacy/apirp2rd/Ref/hand-calculations_ref.jpg
+/docs/domains/installation/image-2.png
+/docs/domains/installation/image-4.png
+/docs/domains/installation/image-5.png
+/docs/domains/installation/image-6.png
+/docs/domains/installation/image-7.png
+/docs/domains/installation/image.png
+/docs/domains/installation/wave_shielding_installations.png
+/docs/domains/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft1).docx
+/docs/domains/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft2).docx
+/docs/domains/legacy/apirp2rd/PRE/0119-001 PRE-0001-01 API_STD_2RD Methods  (Draft1).pptx
+/docs/domains/legacy/apirp2rd/Ref/hand-calculations_ref.jpg
+/docs/domains/modal-analysis/time_vs_frequency_domain.gif
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_HWL.QTF
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_HWL.dat
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_LWL.LIS
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_LWL.QTF
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_LWL.dat
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_hwl.dat
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_lwl.dat
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/template_fsts_lngc.yml
+/docs/domains/orcaflex/aqwa/to_orcawave/multibody_test1/aqwa_input/AL_FST2F_FST1F_LWL.LIS
+/docs/domains/orcaflex/aqwa/to_orcawave/multibody_test1/aqwa_input/AL_FST2F_FST1F_LWL.dat
+/docs/domains/orcaflex/library/model_library/k03_15mw_semi_sub_fowt/monolithic/K03 15MW semi-sub FOWT.yml
+/docs/domains/orcaflex/library/model_library/l04_sectional_bodies/monolithic/L04 Sectional bodies.yml
+/docs/domains/orcaflex/library/model_library/l05_panel_pressures/monolithic/L05 Panel pressures.yml
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/_ss/vessel_end_fixed_converged.yml
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1250kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1250kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1250kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1250kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1500kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1500kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1500kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1500kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2000kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2000kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2000kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2000kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2500kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2500kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2500kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2500kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/900kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/900kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/900kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/900kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_A_0deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_A_50deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_C_0deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_C_50deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_D_0deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_D_50deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/vessel_end_winch_combined_report.html
+/docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_2p0_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_2p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_3p0_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_3p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/ConfigurationSensitivity/SCR_16OD_SCR_100yr Wave, Far BeamSea PS.yml
+/docs/domains/orcaflex/risers/production/slwr/ConfigurationSensitivity/SCR_16OD_SCR_No Load, No Offset.yml
+/docs/domains/orcaflex/risers/production/slwr/ConfigurationSensitivity/SLWR_16OD_SE0500_HE0800_100yr Wave, Far BeamSea PS.yml
+/docs/domains/orcaflex/risers/production/slwr/Declination_Angle/SLWR_16OD_SE1200_HE1500_Ang06_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/Declination_Angle/SLWR_16OD_SE1200_HE1500_Ang10_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/Declination_Angle/SLWR_16OD_SE1200_HE1500_Ang12_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/Declination_Angle/SLWR_16OD_SE1200_HE1500_Ang14_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/DesignPressure_8000Psi/SLWR_16OD_SE1200_HE1500_8000psi.yml
+/docs/domains/orcaflex/risers/production/slwr/DesignPressure_8000Psi/SLWR_16OD_SE1200_HE1500_8000psi_No Load, No Offset.yml
+/docs/domains/orcaflex/risers/production/slwr/FlexJoint_Stiffness/SLWR_16OD_SE1200_HE1500_FJ_X1p5.yml
+/docs/domains/orcaflex/risers/production/slwr/Fluid_Sensitivity/SLWR_16OD_SE1200_HE1500_Int_Fluid_Max.yml
+/docs/domains/orcaflex/risers/production/slwr/Fluid_Sensitivity/SLWR_16OD_SE1200_HE1500_Int_Fluid_Min.yml
+/docs/domains/orcaflex/risers/production/slwr/MooringCondition/SLWR_16OD_SE1200_HE1500_8percent_Offset_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/PressureTest/SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_No Load, No Offset.yml
+/docs/domains/orcaflex/risers/production/slwr/PressureTest/SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_Water_Filled.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed1/GA-06_H_R_SubCase-3.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed2/GA-08a_H_R_SubCase-2.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed3/GA-01_H_R_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed3/GA-05_H_R_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed4/GA-03b_R_SubCase-3.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed4/GA-04a_R_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed5/GA-02_R_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed5/GA-07b_H_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Static/SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Static/SLWR_16OD_SE1200_HE1500_1LC_No Load, No Offset.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ2p0in_30ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ2p25in_30ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ2p5in_30ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ3p0in_12ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ3p0in_20ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ3p0in_30ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TopTension_Sensitivity/SLWR_16OD_SE0500_HE0800_BF_2p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TopTension_Sensitivity/SLWR_16OD_SE1200_HE1500_BF_2p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TopTension_Sensitivity/SLWR_16OD_SE2000_HE2300_BF_2p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/WaveHeight/SLWR_16OD_SE1200_HE1500_HS_10_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/WaveHeight/SLWR_16OD_SE1200_HE1500_HS_12_GA2_Driving.yml
+/docs/domains/orcaflex/training/hulls/monolithic/NeptuneBatchTestCase.yml
+/docs/domains/orcawave/L00_validation_wamit/3.1/benchmark/qtf_sum_freq_surge.html
+/docs/domains/pipelines/plem/image.png
+
+# Retain the small native force evidence used by the indicative study.
+!data/cfd/calm_water_study/raw/
+!data/cfd/calm_water_study/raw/*

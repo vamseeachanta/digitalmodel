@@ -19,9 +19,11 @@ lifting_lug:
     outer_radius_mm: 110.0             # hole centre to loaded edge
     yield_strength_mpa: 355.0          # S355
   load:
-    static_load_kN: 420.0              # sling load (SWL share)
+    num_slings: 2                     # determinate two-leg rigging, no spreader
+    static_load_kN: 420.0              # most-loaded leg static tension at extreme CoG; includes angle
     dynamic_amplification_factor: 2.0  # DAF
     skew_load_factor: 1.1
+    skew_load_factor_source: "DNVGL-ST-E273, 2.7-3 Portable offshore units, Edition April 2016, section 3.5.5 (two-leg minimum)"
   design:
     standard: AISC ASD
   outputs:

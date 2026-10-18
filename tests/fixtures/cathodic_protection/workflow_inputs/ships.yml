@@ -21,7 +21,7 @@ inputs:
     protection_potential: 0.8
     closed_circuit_anode_potential: -1.09
     anode_density: 2750
-    anode_current_capacity: 2270
+    alloy: A1
     anode_Utilisation_factor: 0.85
     physical_properties:
       mean_length: 1.4

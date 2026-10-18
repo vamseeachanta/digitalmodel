@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Aggregate CFD runtime / mesh / throughput into a committed compute manifest (#1439).
 
 Compute optimization: turn the sloshing CFD case tree into a reusable
@@ -10,7 +13,7 @@ reads mesh size (blockMeshDict) and sim time / step count (controlDict + solver
 log), classifies by case-class, and writes the small derived manifest
 ``docs/api/cfd/sloshing-compute.json`` (the committed, reproducible artifact).
 
-    uv run python scripts/cfd/collect_compute_stats.py --work-dir /mnt/local-analysis/sloshing_cfd_work
+    uv run python scripts/cfd/collect_compute_stats.py --work-dir data/sloshing_cfd_work
 """
 from __future__ import annotations
 
@@ -23,12 +26,28 @@ import statistics as st
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from digitalmodel.solvers.openfoam.lane_config import load_lanes
+
 _REPO = Path(__file__).resolve().parents[2]
 _OUT = _REPO / "docs" / "api" / "cfd" / "sloshing-compute.json"
 
-# Machine this study ran on (dev-secondary).
-MACHINE = {"host": "dev-secondary", "cores": 32, "ram_gb": 31,
-           "solver": "interFoam (VOF), OpenFOAM ESI v2312 — single-threaded per case"}
+
+def _lane_metadata() -> Dict[str, Any]:
+    """Return public lane-class metadata selected by configuration."""
+    lanes = load_lanes()
+    lane_id = os.environ.get("DM_CFD_LANE", "lane-B")
+    if lane_id not in lanes:
+        raise ValueError(f"DM_CFD_LANE {lane_id!r} is not present in the lane configuration")
+    lane = lanes[lane_id]
+    return {
+        "lane_id": lane_id,
+        "architecture": lane.get("architecture"),
+        "physical_cores": lane.get("physical_cores"),
+        "ranks_used": lane.get("ranks_used"),
+        "us_per_cell_iteration": lane.get("us_per_cell_iteration"),
+        "solver": "interFoam (VOF), OpenFOAM ESI v2312 — single-threaded per case",
+    }
+
 
 # Per-case uncontended baseline wall time (s) for the forced 60x60 case, measured
 # single (the smoke run) — used to separate contention from raw cost.
@@ -87,7 +106,7 @@ def _stats(v: List[float]) -> Dict[str, float]:
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Aggregate CFD compute stats (#1439)")
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path(os.environ.get("DM_CFD_WORK_DIR", "data/sloshing_cfd_work")))
     args = ap.parse_args(argv)
 
     buckets: Dict[str, List[Dict[str, Any]]] = {}
@@ -160,7 +179,7 @@ def main(argv: List[str] | None = None) -> int:
         "meta": {"generated_by": "scripts/cfd/collect_compute_stats.py", "epic": "#1429",
                  "issue": "#1439",
                  "note": "Derived compute characterization; case trees are not committed."},
-        "machine": MACHINE,
+        "lane": _lane_metadata(),
         "classes": classes,
         "parallel_efficiency": parallel,
         "runtime_model": {

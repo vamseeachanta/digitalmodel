@@ -278,6 +278,29 @@ class EnvironmentSpec(BaseModel):
         description="Current direction (deg, meteorological convention)",
     )
 
+    @field_validator("water_density")
+    @classmethod
+    def validate_water_density(cls, v: float) -> float:
+        """Screen 958.65 <= density <= 1214 kg/m^3, inclusive.
+
+        This input envelope spans hot fresh water to observed dense brine; it
+        is not an equation of state or a bound on every possible salt solution.
+        USGS Water Science School, "Water Density", temperature table: fresh
+        water at 100 C is 0.95865 g/cm^3 (958.65 kg/m^3):
+        https://www.usgs.gov/water-science-school/science/water-density
+        USGS, density and salinity data release, DOI 10.5066/P96MNH8J,
+        description: supported upper density 1.214 g/cm^3 (1214 kg/m^3):
+        https://www.usgs.gov/data/density-and-salinity-data-validate-equation-state-hypersaline-water-great-salt-lake-utah-2021
+        Both accessed 2026-10-13. Conditions outside this screening envelope
+        require a separately qualified fluid model, not silent acceptance.
+        """
+        if not (958.65 <= v <= 1214.0):
+            raise ValueError(
+                f"water_density={v} kg/m³ is outside the screening range "
+                "[958.65, 1214] kg/m^3; supply kg/m^3, not t/m^3."
+            )
+        return v
+
     @field_validator("water_depth", mode="before")
     @classmethod
     def validate_water_depth(cls, v: Any) -> Union[float, str]:

@@ -1,0 +1,27 @@
+{
+  "revision": "3",
+  "history": [
+    {
+      "revision": "0",
+      "date": "2026-10-14",
+      "change": "First issue: compare the two eligible riser modules for one public nominal pipe; expose edition and combined-load gaps."
+    },
+    {
+      "revision": "1",
+      "date": "2026-10-14",
+      "change": "Generic assumed properties replace nominal size and grade values; evaluation wording identifies the missing comparisons."
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-16",
+      "change": "Add the RP 1111 module with unqualified edition metadata, propagation results and a minimum passing wall search to complete the three-module comparison."
+    },
+    {
+      "revision": "3",
+      "date": "2026-10-16",
+      "change": "Disclose fixed implementation factors and empty-pipe screening, distinguish wall-search criteria, and retain input precision to prevent design interpretations beyond the module basis."
+    }
+  ],
+  "criteria_sha256": "644f15e3d4f459a52c01a4a528ed424a5683a4424de1d9069708771ec597f527",
+  "criteria_recorded_at": "2026-10-16T08:02:05Z"
+}

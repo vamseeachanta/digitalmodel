@@ -16,9 +16,10 @@ Environment:
 
   # Wave parameters (will be populated from component lookup)
   WaveType: JONSWAP
-  WaveHeight: 14.5
-  WavePeriod: 15.0
+  WaveJONSWAPParameters: Partially specified
   WaveGamma: 3.3
+  WavePeriod: 15.0
+  WaveHeight: 14.5
   WaveDirection: 180.0
 
   # Current profile (will be populated from component lookup)

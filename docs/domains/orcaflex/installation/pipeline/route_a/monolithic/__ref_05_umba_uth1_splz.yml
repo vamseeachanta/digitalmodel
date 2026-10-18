@@ -1,10 +1,10 @@
-﻿%YAML 1.1
+%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
 # File: <private-data>/__05_umba_uth1_splz.yml
 # Created: 6:20 PM on 7/11/2023
-# User: 
-# Machine: 
+# User:
+# Machine:
 ---
 BaseFile: __03_draft_wd925m_bgc.yml
 General:
@@ -380,7 +380,7 @@ StiffenerTypes:
       - [2, 6, ~]
       - [3, 7, ~]
       - [4, 8, ~]
-    ShadedDrawingFileName: null
+    ShadedDrawingFileName: ~
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored
@@ -458,7 +458,7 @@ StiffenerTypes:
       - [2, 6, ~]
       - [3, 7, ~]
       - [4, 8, ~]
-    ShadedDrawingFileName: 
+    ShadedDrawingFileName:
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored
@@ -734,7 +734,7 @@ Shapes:
     OutsidePen: [1, Solid, Gray]
     InsidePen: [1, Solid, $FF6000]
     NumberOfLines: 10
-    ShadedDrawingFileName: 
+    ShadedDrawingFileName:
     ShadedDrawingDrawSize: ~
     ShadedDrawingCullingMode: No culling
     ShadedDrawingMirrorInPlane: Not mirrored

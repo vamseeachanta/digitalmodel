@@ -73,4 +73,3 @@ openfoam not creating 0 folders
 cannot find file "`<home>`/openfoam_others/wigley_hull/wigleyHull_LTS/processor0/0/p_rgh"
 cannot find file "`<home>`/openfoam_others/wigley_hull/wigleyHull_LTS/processor2/0/p_rgh"
 cannot find file "`<home>`/openfoam_others/wigley_hull/wigleyHull_LTS/processor3/0/p_rgh"
-

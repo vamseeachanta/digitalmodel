@@ -78,7 +78,7 @@ Bodies:
   - 0.0
   BodyIncludedInAnalysis: Yes
   BodyMeshFileName: aqwa_001_ship_raos_rev2.dat
-  BodyMeshFormat: Wamit dat
+  BodyMeshFormat: Aqwa dat
   BodyMeshLengthUnits: m
   BodyMeshSymmetry: None
   BodyAddInteriorSurfacePanels: Yes

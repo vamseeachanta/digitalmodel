@@ -20,6 +20,10 @@ from .models import (
 from .frequency_calculator import FrequencyCalculator
 from .vortex_shedding import VortexSheddingAnalyzer
 
+from .validation import (
+    require_positive, require_nonnegative, validate_lock_in_inputs,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -67,12 +71,12 @@ class VIVScreening:
         Returns:
             Reduced velocity (dimensionless)
         """
-        if natural_frequency <= 0:
-            raise ValueError("Natural frequency must be positive")
-        if diameter <= 0:
-            raise ValueError("Diameter must be positive")
+        require_positive("Natural frequency", natural_frequency)
+        require_positive("Diameter", diameter)
+        require_nonnegative("Current velocity", current_velocity)
 
         V_r = current_velocity / (natural_frequency * diameter)
+        require_nonnegative("Reduced velocity", V_r)
         return V_r
 
     def check_lock_in(
@@ -95,6 +99,7 @@ class VIVScreening:
             - margin: Distance from lock-in range (positive = inside)
             - status: "safe", "marginal", or "lock-in"
         """
+        validate_lock_in_inputs(reduced_velocity, vr_min, vr_max)
         # Check if in lock-in range
         in_range = bool(vr_min <= reduced_velocity <= vr_max)
 
@@ -144,7 +149,8 @@ class VIVScreening:
         Returns:
             Safety factor (> 1.0 is safe)
         """
-        if reduced_velocity <= 0:
+        validate_lock_in_inputs(reduced_velocity, vr_min, vr_max)
+        if reduced_velocity == 0:
             return 0.0
 
         if reduced_velocity < vr_min:

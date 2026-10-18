@@ -66,13 +66,24 @@ class TestSLayConfig:
             assert "water_depth_m" in row
             assert "departure_angle_deg" in row
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason="S-lay departure-angle table does not recompute angle with depth",
+        raises=AssertionError,
+    )
+    def test_departure_angle_recomputed_with_depth(self):
+        """A depth sweep must recompute the departure angle for each depth."""
+        table = SLayConfig(water_depth=200.0).calculate_departure_angle_table()
+        assert len({row["water_depth_m"] for row in table}) > 1
+        assert len({row["departure_angle_deg"] for row in table}) > 1
+
 
 class TestJLayConfig:
     """Tests for J-Lay configuration."""
 
     def test_sagbend_calculation(self):
         """J-Lay sagbend should produce valid results."""
-        jlay = JLayConfig(water_depth=1500.0, top_tension=800.0, tower_angle=3.0)
+        jlay = JLayConfig(water_depth=1500.0, top_tension=2624.9, tower_angle=3.0)
         result = jlay.calculate_sagbend()
         assert result["sagbend_radius_m"] > 0
         assert result["suspended_length_m"] > 0
@@ -85,8 +96,8 @@ class TestJLayConfig:
 
     def test_deeper_water_longer_span(self):
         """Deeper water should give longer horizontal offset."""
-        jlay_deep = JLayConfig(water_depth=2000.0)
-        jlay_shallow = JLayConfig(water_depth=500.0)
+        jlay_deep = JLayConfig(water_depth=2000.0, tower_angle=3.0)
+        jlay_shallow = JLayConfig(water_depth=500.0, tower_angle=3.0)
         deep_result = jlay_deep.calculate_sagbend()
         shallow_result = jlay_shallow.calculate_sagbend()
         assert deep_result["horizontal_offset_m"] > shallow_result["horizontal_offset_m"]
