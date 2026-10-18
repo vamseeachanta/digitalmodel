@@ -44,27 +44,71 @@ def sections(line: dict) -> list[tuple]:
     return [(r['LineType'], float(r['Length'])) for r in p['Sections']]
 
 
+def column_geometry(spec: dict) -> dict:
+    """ABS 2017 §3/3 iii, Eqs (3.1)-(3.2): Hm and Hw are vertical heads.
+
+    Narrow hand model: straight members, horizontal mean sea level z=0,
+    attachment elevations relative to the ring and lower flex joint.
+    Unsupported topology must be qualified by another calculation.
+    """
+    buoys = {b['name']: b for b in spec['generic']['buoys_6d']}
+    # z_global=z_reference+z_local requires unrotated attachment frames.
+    if any(any(float(angle) != 0 for angle in buoys[name]['properties'].get('InitialAttitude', [0, 0, 0]))
+           for name in ('Tensioner Ring', 'Flex Joint')):
+        raise ValueError('Hand geometry requires unrotated attachment frames')
+    top = float(buoys['Tensioner Ring']['initial_position'][2])
+    bottom = float(buoys['Flex Joint']['initial_position'][2])
+    if not all(math.isfinite(v) for v in (top, bottom)) or not bottom < 0 <= top:
+        raise ValueError('Hand basis requires ring at/above sea level and flex joint below it')
+    return dict(ring_elevation_m=top, point_z_m=bottom, hm_m=top-bottom,
+                hw_m=-bottom, datum='mean sea level z=0 m; positive z upward')
+
+
 def member_basis(spec: dict, name: str) -> dict:
     """Flooded steel Ws, fluid head once, with actual above-water steel weight."""
-    line = next(l for l in spec['generic']['lines'] if l['name'] == name)
+    line = next(member for member in spec['generic']['lines'] if member['name'] == name)
     types = {t['name']: t for t in spec['generic']['line_types']}
     rho_w = spec['environment']['water']['density']
-    weights, areas, rigidities, spans = [], [], [], []
+    geometry = column_geometry(spec)
+    ends = next(v for k, v in line['properties'].items() if k.startswith('Connection, '))
+    if [e[0] for e in ends] != ['Tensioner Ring', 'Flex Joint']:
+        raise ValueError('Hand basis requires ring-to-flex-joint members')
+    top = geometry['ring_elevation_m'] + float(ends[0][3])
+    bottom = geometry['point_z_m'] + float(ends[1][3])
+    if not bottom < 0 <= top:
+        raise ValueError('Member attachments must span mean sea level')
+    total_length = math.fsum(span for _, span in sections(line))
+    if total_length <= 0 or any(span <= 0 for _, span in sections(line)):
+        raise ValueError('Member section lengths must be positive')
+    # Straight reference chord, parameterised by unstretched section arclength.
+    dz_ds = (top-bottom)/total_length
+    weights, areas, rigidities, spans, drag, wet_spans = [], [], [], [], [], []
     for ref, span in sections(line):
         t = types[ref]
         bore = math.pi / 4 * t['inner_diameter']**2
         steel = math.pi / 4 * (t['outer_diameter']**2 - t['inner_diameter']**2)
-        # Lower flex joint at -1000 m; the upper 20 m is in air.
-        wet = min(span, max(0, 1000 - math.fsum(spans)))
+        # z(s)=z_A-(z_A-z_B)*s/L; wet arclength intersects z<=0.
+        # Archimedes: flooded steel Ws=g*As*(rho_s*L-rho_w*Lwet).
+        z_top = top - dz_ds*math.fsum(spans)
+        wet = min(span, max(0, span-z_top/dz_ds))
+        wet_spans.append(wet)
+        # Morison drag per unit length: q=0.5*rho_w*Cd*D*U^2.
+        drag.append(float(t['properties']['Cdn']) * float(t['outer_diameter']) * wet)
         weights.append(G * steel * (t['properties']['MaterialDensity'] * span - rho_w * wet))
         areas.append(bore * span)
         rigidities.append(float(t['properties']['E']) * steel * span)
         spans.append(span)
     length = math.fsum(spans)
     ai = math.fsum(areas) / length
-    head = G * ai * (line['properties']['ContentsDensity'] * length - rho_w * 1000)
+    if len({types[ref]['inner_diameter'] for ref, _ in sections(line)}) != 1:
+        raise ValueError('Hand pressure-head basis requires constant member bore')
+    density = float(line['properties']['ContentsDensity'])
+    if not math.isfinite(density) or density < 0:
+        raise ValueError('ContentsDensity must be finite and nonnegative')
+    head = G * ai * (density * (top-bottom) - rho_w * (-bottom))
     return dict(ws_kn=math.fsum(weights), internal_area_m2=ai, head_kn=head, length_m=length,
-                ea_kn=math.fsum(rigidities) / length)
+                ea_kn=math.fsum(rigidities) / length, mud_density_te_m3=density,
+                hm_m=top-bottom, hw_m=-bottom, wet_section_lengths_m=wet_spans, cd_d_wet_integral_m2=math.fsum(drag))
 
 
 def link_geometry(spec: dict, ring_z: float, factor: float) -> tuple:
@@ -97,14 +141,22 @@ def link_geometry(spec: dict, ring_z: float, factor: float) -> tuple:
 def tension_basis(spec: dict) -> dict:
     """Derive acceptance inputs; half slip weight is a HAND assumption only."""
     parts = [member_basis(spec, name) for name in MEMBERS]
+    geometry = column_geometry(spec)
+    densities = {p['mud_density_te_m3'] for p in parts}
+    if len(densities) != 1:
+        raise ValueError('Member ContentsDensity values must agree')
+    mud_density = densities.pop()
     arrangement = spec['tensioner_arrangement']
     share = surviving_share(basis=arrangement)
     weight_reserve(basis=arrangement)
     ws = math.fsum(p['ws_kn'] for p in parts)
     ai = math.fsum(p['internal_area_m2'] for p in parts)
+    # Equivalent heads preserve sum(Ai_i * rho * g * H_i) at offset attachments.
+    geometry['hm_m'] = math.fsum(p['internal_area_m2']*p['hm_m'] for p in parts)/ai
+    geometry['hw_m'] = math.fsum(p['internal_area_m2']*p['hw_m'] for p in parts)/ai
     rho_w = spec['environment']['water']['density']
-    tsr = minimum_slip_ring_tension(ws, 0, ai, 2.2*G, 1020, rho_w*G, 1000, f_wt=arrangement['fwt'])
-    slip = next(l for l in spec['generic']['lines'] if l['name'] == 'Riser Slip Joint')
+    tsr = minimum_slip_ring_tension(ws, 0, ai, mud_density*G, geometry['hm_m'], rho_w*G, geometry['hw_m'], f_wt=arrangement['fwt'])
+    slip = next(member for member in spec['generic']['lines'] if member['name'] == 'Riser Slip Joint')
     st = next(t for t in spec['generic']['line_types'] if t['name'] == 'Slip Joint')
     ring = next(b for b in spec['generic']['buoys_6d'] if b['name'] == 'Tensioner Ring')
     slip_mass = st['mass_per_length'] + math.pi/4*st['inner_diameter']**2*slip['properties']['ContentsDensity']
@@ -122,9 +174,9 @@ def tension_basis(spec: dict) -> dict:
                 effective_weight_kn=weight, stiffness_kn_m=stiffness,
                 required_vertical_kn=target, spring_table_factor=arrangement['spring_table_factor'],
                 fleet_cosine=cosine, system_factor=1/share, fleet_adjusted_system_factor=fleet_adjusted,
-                mechanical_hydraulic_efficiency=1, point_z_m=-1000,
+                mechanical_hydraulic_efficiency=1, **geometry,
                 n_units=arrangement['n_units'], n_fail=arrangement['n_fail'],
-                fwt=arrangement['fwt'], buoyancy_kn=0, mud_density_te_m3=2.2,
+                fwt=arrangement['fwt'], buoyancy_kn=0, mud_density_te_m3=mud_density,
                 member_basis=parts, source=BASIS, carried_weight_basis='hand estimate: ring plus half dry slip-joint and contents weight; native uses End B global reaction')
 
 
@@ -148,12 +200,20 @@ def hand_estimate(spec: dict, basis: dict, offset: float, speed: float, *, facto
     Current sag uses q²L³/(24T²); native reactions and profiles remain required.
     """
     factor = basis['spring_table_factor'] if factor is None else factor
-    length = 1020.0
-    q = 0.5 * spec['environment']['water']['density'] * 1.2 * (0.65+2*0.1651) * speed**2
+    geometry = column_geometry(spec)
+    lengths = {p['length_m'] for p in basis['member_basis']}
+    if len(lengths) != 1:
+        raise ValueError('Hand sag basis requires equal member lengths')
+    length = lengths.pop()
+    # Equivalent uniform q conserves the integrated wet-member Morison drag.
+    # The sag equation q²L³/(24T²) remains an explicitly approximate hand rule.
+    parts = [member_basis(spec, name) for name in MEMBERS]
+    q = (0.5 * spec['environment']['water']['density'] * speed**2
+         * math.fsum(p['cd_d_wet_integral_m2'] for p in parts) / length)
     def state(vertical):
         top = vertical - basis['carried_weight_kn']
         mean = max(1, top-basis['effective_weight_kn']/2)
-        z = 20 + mean/basis['stiffness_kn_m'] - offset**2/(2*length) - q*q*length**3/(24*mean**2)
+        z = geometry['ring_elevation_m'] + mean/basis['stiffness_kn_m'] - offset**2/(2*length) - q*q*length**3/(24*mean**2)
         force, lengths, _ = link_geometry(spec, z, factor)
         return force-vertical, lengths, z
     low, high = basis['effective_weight_kn']+basis['carried_weight_kn'], 18000.0

@@ -20,11 +20,13 @@ import time
 from typing import Any, Callable
 
 import yaml
-from digitalmodel.drilling_riser.generic_tension_channels import FIELDS, extract
+from digitalmodel.drilling_riser.generic_tension_channels import (
+    EQUILIBRIUM_FIELDS, EQUILIBRIUM_TOLERANCE, FIELDS, extract,
+)
 
 METRICS = ('lower_mean_deg', 'lower_max_deg', 'upper_mean_deg', 'upper_max_deg',
-           'top_min_kn', 'top_max_kn', 'stroke_min_m', 'stroke_max_m', 'stress_max_mpa', *FIELDS)
-EXTRACTION_VERSION = 'connection-angles-tension-ab-2'
+           'top_min_kn', 'top_max_kn', 'stroke_min_m', 'stroke_max_m', 'stress_max_mpa', *FIELDS, *EQUILIBRIUM_FIELDS)
+EXTRACTION_VERSION = 'connection-angles-tension-ab-equilibrium-3'
 LICENCE_EXIT = 12
 CONFIGURATION_EXIT = 13
 # Current ramp from drilling_riser/campaign.py::CURRENT_RAMP / _statics_path.
@@ -58,7 +60,7 @@ def input_digest(campaign: Path, case_id: str) -> str:
     identity = hashlib.sha256(EXTRACTION_VERSION.encode('ascii'))
     for path in files:
         label = path.relative_to(campaign).as_posix() if path.is_relative_to(campaign) else path.name
-        identity.update(label.encode('utf-8') + b'\0' + path.read_bytes() + b'\0')
+        identity.update(label.encode('utf-8') + b'\0' + path.read_text(encoding='utf-8').encode('utf-8') + b'\0')
     return identity.hexdigest()
 
 
@@ -70,6 +72,9 @@ def validate_result(result: dict[str, Any]) -> None:
         value = result.get(name)
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
             raise ValueError(f'Missing or nonfinite result: {name}')
+    if (result['ring_equilibrium_max_abs_kn'] < 0
+            or not 0 <= result['ring_equilibrium_max_fraction'] <= EQUILIBRIUM_TOLERANCE):
+        raise ValueError('Ring vertical equilibrium evidence exceeds tolerance')
     for low, high in [('lower_mean_deg', 'lower_max_deg'), ('upper_mean_deg', 'upper_max_deg'),
                       ('top_min_kn', 'top_max_kn'), ('stroke_min_m', 'stroke_max_m')]:
         if result[low] > result[high]:
@@ -180,7 +185,7 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
     try:
         model = OrcFxAPI.Model(str(model_path))
         calculate_staged_statics(model)
-        static_tension = extract(model, None, OrcFxAPI.oeEndB, static=True, basis=basis)
+        static_tension = extract(model, None, OrcFxAPI.oeEndB, end_a=OrcFxAPI.oeEndA, static=True, basis=basis)
         model.RunSimulation()
         if getattr(model.state, 'name', '') != 'SimulationStopped':
             raise ValueError('Dynamics did not complete normally')
@@ -203,9 +208,10 @@ def run_case(model_path: Path, simulation_path: Path) -> dict[str, Any]:
         stress = [float(v) / 1000 for v in model['Riser'].RangeGraph('Max von Mises stress', period).Max]
         if not stress or not all(math.isfinite(v) for v in stress):
             raise ValueError('Empty or nonfinite stress channel')
-        dynamic_tension = extract(model, period, OrcFxAPI.oeEndB, basis=basis)
+        dynamic_tension = extract(model, period, OrcFxAPI.oeEndB, end_a=OrcFxAPI.oeEndA, basis=basis)
         tension_evidence = {key: min(static_tension[key], dynamic_tension[key]) for key in FIELDS}
-        result = {**tension_evidence, 'lower_mean_deg': math.fsum(lower) / len(lower), 'lower_max_deg': max(lower),
+        equilibrium_evidence = {key: max(static_tension[key], dynamic_tension[key]) for key in EQUILIBRIUM_FIELDS}
+        result = {**tension_evidence, **equilibrium_evidence, 'lower_mean_deg': math.fsum(lower) / len(lower), 'lower_max_deg': max(lower),
             'upper_mean_deg': math.fsum(upper) / len(upper), 'upper_max_deg': max(upper),
             'top_min_kn': min(tension), 'top_max_kn': max(tension),
             'stroke_min_m': min(stroke), 'stroke_max_m': max(stroke), 'stress_max_mpa': max(stress),

@@ -127,6 +127,7 @@ class DriverTests(unittest.TestCase):
                 calls.append(model)
                 simulation.write_text('synthetic', encoding='utf-8')
                 return {**{name: 1.0 for name in driver.METRICS},
+                        **{name: 0.0 for name in driver.EQUILIBRIUM_FIELDS},
                         'solver_version': 'synthetic', 'native_state': 'SimulationStopped',
                         'wall_seconds': 2.0}
             self.assertEqual(driver.run_campaign(campaign, output, criteria_file=CRITERIA, case_runner=fake), 0)
@@ -414,3 +415,42 @@ def test_restore_failure_preserves_original_error_and_blocks_dynamics():
 
 if __name__ == '__main__':
     unittest.main()
+
+
+
+def test_input_identity_normalizes_campaign_and_implementation_crlf(tmp_path, monkeypatch):
+    import shutil
+    from digitalmodel.drilling_riser import generic_campaign as campaign
+    driver = load_driver()
+    copied = tmp_path / 'inputs'
+    shutil.copytree(ROOT / campaign.DEST, copied)
+    driver_path = tmp_path / 'scripts/orcaflex/driver.py'
+    driver_path.parent.mkdir(parents=True)
+    driver_path.write_bytes(DRIVER.read_bytes())
+    sources = tmp_path / 'src/digitalmodel/drilling_riser'
+    sources.mkdir(parents=True)
+    for name in ('generic_tension_channels.py', 'generic_tension.py'):
+        shutil.copyfile(ROOT / 'src/digitalmodel/drilling_riser' / name, sources / name)
+    monkeypatch.setattr(driver, '__file__', str(driver_path))
+    identity = driver.input_digest(copied, 'o0-c0')
+    for path in [*copied.rglob('*.yml'), driver_path, *sources.glob('*.py')]:
+        path.write_bytes(path.read_bytes().replace(b'\r\n', b'\n').replace(b'\n', b'\r\n'))
+    assert driver.input_digest(copied, 'o0-c0') == identity
+    path = copied / 'models/o0-c0/master.yml'
+    path.write_bytes(path.read_bytes()+b'# changed content\r\n')
+    assert driver.input_digest(copied, 'o0-c0') != identity
+
+
+def test_summary_requires_equilibrium_evidence():
+    import pytest
+    driver = load_driver()
+    result = json.loads((Path(__file__).parent/'fixtures/generic_synthetic_result.json').read_text())
+    driver.validate_result(result)
+    for field in ('ring_equilibrium_max_abs_kn', 'ring_equilibrium_max_fraction'):
+        incomplete = dict(result)
+        del incomplete[field]
+        with pytest.raises(ValueError, match='Missing or nonfinite'):
+            driver.validate_result(incomplete)
+    result['ring_equilibrium_max_fraction'] = 0.001001
+    with pytest.raises(ValueError, match='equilibrium evidence'):
+        driver.validate_result(result)
