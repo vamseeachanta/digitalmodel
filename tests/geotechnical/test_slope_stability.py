@@ -10,7 +10,6 @@ import json
 import pytest
 
 pytest.importorskip("xslope")
-pytest.importorskip("gmsh")
 
 from xslope.fileio import load_slope_data
 from digitalmodel.geotechnical.slope_stability import (
@@ -60,6 +59,7 @@ def test_readme_bishop_and_equivalent_si_profile(tmp_path):
     original = analyze_model(workbook, methods=("bishop",), search=False, num_slices=20)
     mapped = build_slope_model(equivalent_profile(), tmp_path)
     result = analyze_model(mapped, methods=("bishop",), search=False, num_slices=20)
+    assert original.methods["bishop"].search_mode == "fixed_circle"
     assert original.methods["bishop"].factor_of_safety == pytest.approx(1.279, rel=0.01)
     assert result.methods["bishop"].factor_of_safety == pytest.approx(
         original.methods["bishop"].factor_of_safety, rel=1e-8
@@ -68,6 +68,7 @@ def test_readme_bishop_and_equivalent_si_profile(tmp_path):
 
 
 def test_seep_one_discharge():
+    pytest.importorskip("gmsh")
     """SEEP-1 prints total discharge 40.111 m³/yr per m at tri3 size 0.5 m.
 
     https://xslope.org/en/latest/tutorials/seep01_sheetpile/ read 2026-10-14.
@@ -118,6 +119,7 @@ def test_both_circular_searches(tmp_path):
     result = analyze_model(model, num_slices=20)
     assert set(result.methods) == {"bishop", "spencer"}
     for method in result.methods.values():
+        assert method.search_mode == "grid"
         assert method.factor_of_safety > 0
         assert method.search_converged is True
         assert method.critical_circle is not None
@@ -127,11 +129,7 @@ def test_both_circular_searches(tmp_path):
 
 @pytest.mark.parametrize("source", ["workbook", "profile"])
 def test_readme_bishop_search_minimum(source, tmp_path):
-    """README minimum FS = 1.215; xslope 1.0.3 search defaults to 40 slices.
-
-    The README call omits num_slices. All other search settings remain the
-    upstream defaults; 1% relative tolerance allows published-value rounding.
-    """
+    """Re-baseline README geometry with explicit grid seeding at 40 slices."""
     model = (load_slope_data(FIXTURES / "xslope_simple1.xlsx")
              if source == "workbook" else build_slope_model(equivalent_profile(), tmp_path))
     result = analyze_model(model, methods=("bishop",), num_slices=40)
@@ -152,6 +150,7 @@ def seepage_profile():
 
 
 def test_profile_seepage_then_both_methods(tmp_path, monkeypatch):
+    pytest.importorskip("gmsh")
     from digitalmodel.geotechnical import slope_stability
 
     real_analyze = slope_stability.analyze_model
@@ -174,6 +173,7 @@ def test_profile_seepage_then_both_methods(tmp_path, monkeypatch):
     assert result.seepage.converged
     assert set(result.methods) == {"bishop", "spencer"}
     for method in result.methods.values():
+        assert method.search_mode == "grid"
         assert method.factor_of_safety > 0
         assert method.search_converged is True
         assert method.critical_circle is not None
@@ -181,6 +181,7 @@ def test_profile_seepage_then_both_methods(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("flow", [0.0, float("nan")])
 def test_nonconverged_seepage_rejected_before_stability(tmp_path, monkeypatch, flow):
+    pytest.importorskip("gmsh")
     from xslope import seep
 
     model = build_slope_model(seepage_profile(), tmp_path)
@@ -244,3 +245,39 @@ def test_rejected_search_surface_is_not_reported(monkeypatch):
     monkeypatch.setattr(search, "circular_search", rejected)
     with pytest.raises(RuntimeError, match="rejected"):
         analyze_model({"unit_system": "si"}, methods=("bishop",))
+
+
+def test_grid_search_resolves_lower_foundation_family(tmp_path):
+    """Synthetic fill over a stiff crust and weak undrained foundation.
+
+    xslope 1.0.3 circular_search's grid rule retains competing tangent families.
+    A shallow user seed alone refines to FS=1.158. The independent deep trial
+    below has FS=0.689; the search must find a surface at least that low within
+    1% numerical search tolerance. These values are regression bounds, not a
+    design acceptance threshold or a proof of a global minimum.
+    """
+    data = {
+        "units": "SI", "water_unit_weight_kn_m3": 9.81,
+        "ground_surface_m": [[-50, 0], [0, 0], [20, 10], [100, 10]],
+        "bottom_elevation_m": -20,
+        "layers": [
+            {"unit_weight_kn_m3": 20, "c_kpa": 2, "phi_deg": 25},
+            {"top_boundary_m": [[-50, -1], [100, -1]],
+             "unit_weight_kn_m3": 20, "c_kpa": 20, "phi_deg": 35},
+            {"top_boundary_m": [[-50, -5], [100, -5]],
+             "unit_weight_kn_m3": 20, "su_kpa": 1},
+        ],
+        "circles": [{"x_m": 10, "y_m": 15, "radius_m": 14}],
+    }
+    model = build_slope_model(data, tmp_path)
+    result = analyze_model(model, methods=("bishop",), num_slices=20).methods["bishop"]
+    # Evaluate a deep competitor directly, without any search.
+    model["circles"] = [{"Xo": 13.365017361111114, "Yo": 89.921875,
+                         "Depth": -20, "R": 109.921875}]
+    deep = analyze_model(model, methods=("bishop",), search=False,
+                         num_slices=20).methods["bishop"]
+    assert deep.factor_of_safety == pytest.approx(0.688645, rel=0.001)
+    assert result.factor_of_safety <= deep.factor_of_safety * 1.01
+    assert result.critical_circle["Depth"] < -5
+    assert result.search_converged is True
+    assert result.search_mode == "grid"

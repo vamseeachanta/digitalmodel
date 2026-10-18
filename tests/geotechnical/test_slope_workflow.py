@@ -29,6 +29,7 @@ def test_workflow_writes_versioned_json(tmp_path, monkeypatch):
     routed = SlopeStabilityWorkflow().router(cfg)
     summary = json.loads((tmp_path / "slope_stability_summary.json").read_text())
     assert summary["result"]["xslope_version"] == "1.0.3"
+    assert summary["result"]["methods"]["bishop"]["search_mode"] == "grid"
     assert summary["result"]["methods"]["spencer"]["search_converged"] is False
     assert summary["screening_status"] == "not_converged"
     assert routed["outputs"]["summary_json"] == str(tmp_path / "slope_stability_summary.json")

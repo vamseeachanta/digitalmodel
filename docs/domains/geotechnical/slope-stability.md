@@ -9,6 +9,7 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | Revision | Date | Change and purpose |
 | --- | --- | --- |
 | 0 | 2026-10-14 | Add the SI profile interface and public benchmark reproductions for slope screening. |
+| 2 | 2026-10-18 | Require an explicit positive-gradient datum; use and report multi-seed grid search. |
 | 1 | 2026-10-15 | Add the Bishop search benchmark, seepage handoff and example tests, and hosted solver execution; clarify validation limits. |
 
 ## Basis and boundaries
@@ -67,7 +68,7 @@ angles degrees, conductivity m/s and seismic coefficient dimensionless.
 | c_kpa, phi_deg | Drained effective cohesion and friction angle |
 | su_kpa | Alternative undrained strength; existing Su_kpa spelling accepted |
 | su_gradient_kpa_per_m | Non-negative strength gradient; default zero |
-| reference_elevation_m | Strength datum; default zero |
+| reference_elevation_m | Required explicit strength datum when the gradient is positive; immaterial at zero gradient |
 | permeability_m_s | Optional positive isotropic conductivity |
 | top_boundary_m | Lower layers only: full-width increasing-x polyline |
 | water_table_m | Optional full-width piezometric line |
@@ -78,7 +79,12 @@ angles degrees, conductivity m/s and seismic coefficient dimensionless.
 
 Undrained strength maps to upstream cp behavior:
 Su(y) = su_kpa + su_gradient_kpa_per_m × max(0, reference_elevation_m − y).
-Select the reference elevation explicitly for a meaningful gradient.
+This is the governing cp equation in xslope 1.0.3, `xslope/slice.py`
+(strength at the slice base). A positive gradient without an explicit
+reference_elevation_m is rejected before importing the solver. Constant strength
+(gradient zero) may omit the datum because the equation is independent of it.
+For example, su_kpa=5, gradient=1.5 and reference=-100 m give Su=20 kPa at
+z=-110 m; the same relative geometry at a +100 m datum gives the same strength.
 Undrained layers use total stress; drained layers use the piezometric line when
 supplied. Seepage supplies its nodal pore pressures to drained layers on the
 same model before stability runs. Every seepage layer requires conductivity.
@@ -104,17 +110,29 @@ result = engine("examples/workflows/slope-stability/input.yml")
 Set slope_stability.outputs.directory to the output directory. Temporary workbooks
 are populated from the installed upstream template there and removed after
 loading; source workbooks are untouched. The JSON summary records xslope_version,
-units, requested slices, each method's FS, critical circle and search convergence.
+units, requested slices, each method's FS, critical circle, search_mode and search convergence.
 Seepage adds discharge per unit out-of-plane width, length/time units,
 convergence and relative mass-balance error. No design report is generated.
 A failed seepage convergence stops calculation. A non-converged search is
 labelled not_converged; a converged search is screening_only. Geometry bounds
 and soil properties require engineering review. Each method searches independently.
+The fixed adapter policy is `seed="grid"`, recorded as search_mode="grid";
+fixed-circle evaluations record "fixed_circle". The governing search rule is
+xslope 1.0.3 `circular_search` and `_grid_seed_circles` in
+[xslope/search.py](https://github.com/njones61/xslope/blob/v1.0.3/xslope/search.py):
+a geometry-based grid-and-tangent sweep supplies competing families, user circles
+remain extra seeds, and up to four starts within 15% of the best coarse FS are
+refined. The upstream grid mode also excludes surfaces thinner than 5% of the
+ground elevation range. Convergence describes the selected refinement, and does
+not certify a global minimum; grid bounds, retained families, the thin-surface
+filter and unsolved trials can omit mechanisms. Screening still requires review
+of shallow mechanisms and sensitivity to geometry and soil properties.
 
 ## Benchmarks and limits
 
-Tests quote README Bishop FS = 1.279 at 20 slices, its circular-search minimum
-FS = 1.215 at the upstream default of 40 slices, and
+Tests reproduce README Bishop FS = 1.279 at 20 slices, its circular-search minimum
+FS = 1.214733 with explicit grid multi-seed mode at 40 slices (still rounding
+to the published 1.215), and
 [SEEP-1](https://xslope.org/en/latest/tutorials/seep01_sheetpile/) discharge
 40.111 m³/yr per m on a 0.5 m linear-triangle mesh. A 1% relative tolerance
 allows mesh/platform variation and printed-value rounding. The equivalent SI
@@ -123,6 +141,12 @@ result is also compared directly with the README workbook at 1e-8 relative
 tolerance. Spencer searches are exercised for convergence and serialization;
 no published Spencer benchmark is established here. Fixture provenance,
 digests and upstream licence notices accompany the workbooks.
+
+The synthetic two-family regression uses a shallow fill above a stiff crust
+and a weak undrained foundation. A shallow seed alone returns FS=1.158; grid
+multi-seed search finds FS=0.689, checked against an independently evaluated
+deep trial circle within 1%. These synthetic values are test bounds only.
+Stability tests run without Gmsh; only seepage solves skip when it is absent.
 
 The SI profile-driven seepage test checks metre/second units and the drained
 material pore-pressure handoff before both stability searches solve. Failed

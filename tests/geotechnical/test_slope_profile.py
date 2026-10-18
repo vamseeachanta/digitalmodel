@@ -106,3 +106,26 @@ def test_unsupported_layer_fields_rejected():
     data["layers"][0]["N1_60cs"] = 10
     with pytest.raises(ValueError, match="unsupported"):
         validate_profile(data)
+
+
+@pytest.mark.parametrize("datum", [-100, 100])
+def test_positive_strength_gradient_requires_explicit_datum(datum):
+    data = profile()
+    data["ground_surface_m"] = [[x, y + datum] for x, y in data["ground_surface_m"]]
+    data["bottom_elevation_m"] += datum
+    data["layers"] = [{"unit_weight_kn_m3": 18, "su_kpa": 5,
+                       "su_gradient_kpa_per_m": 1.5}]
+    with pytest.raises(ValueError, match="reference_elevation_m"):
+        validate_profile(data)
+    data["layers"][0]["reference_elevation_m"] = datum
+    layer = validate_profile(data)["layers"][0]
+    # xslope cp equation at 10 m below the chosen reference: 5 + 1.5*10.
+    assert layer["su_kpa"] + layer["su_gradient_kpa_per_m"] * max(
+        0, layer["reference_elevation_m"] - (datum - 10)
+    ) == 20
+
+
+def test_constant_undrained_strength_needs_no_datum():
+    data = profile()
+    data["layers"] = [{"unit_weight_kn_m3": 18, "su_kpa": 5}]
+    assert validate_profile(data)["layers"][0]["su_gradient_kpa_per_m"] == 0

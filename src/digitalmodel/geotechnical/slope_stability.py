@@ -22,6 +22,7 @@ class MethodResult:
     search_converged: bool | None
     critical_circle: dict[str, float] | None
     unsolved_trials: dict[str, Any] = field(default_factory=dict)
+    search_mode: str = "grid"
 
 
 @dataclass(frozen=True)
@@ -159,7 +160,9 @@ def _solve_method(model: dict[str, Any], method: str, search: bool, slices: int)
     unsolved: dict[str, Any] = {}
     if search:
         cache, converged, _, _ = circular_search(
-            model, method, num_slices=slices, unsolved_out=unsolved
+            # xslope 1.0.3 circular_search: grid seeds competing tangent
+            # families and refines up to four starts within 15% of the best.
+            model, method, num_slices=slices, seed="grid", unsolved_out=unsolved
         )
         if not cache or not isinstance(cache[0].get("solver_result"), dict):
             raise RuntimeError(f"{method} search found no solved surface")
@@ -179,7 +182,8 @@ def _solve_method(model: dict[str, Any], method: str, search: bool, slices: int)
     if not solved or not solved.get("success", True):
         raise RuntimeError(f"{method} did not produce a solution")
     fs = _number(float(solved["FS"]), "factor_of_safety", 0)
-    return MethodResult(fs, None if converged is None else bool(converged), circle, unsolved)
+    return MethodResult(fs, None if converged is None else bool(converged), circle, unsolved,
+                        "grid" if search else "fixed_circle")
 
 
 def analyze_model(
@@ -192,7 +196,7 @@ def analyze_model(
     Args:
         model: Model loaded by xslope or built from a validated SI profile.
         methods: Bishop and/or Spencer method names.
-        search: Search from starting circles; false evaluates the first circle.
+        search: Multi-seed grid search plus user circles; false evaluates the first circle.
         num_slices: Requested slice count; xslope may split at layer boundaries.
         seepage: Optional record of the seepage solve already applied to the model.
 
