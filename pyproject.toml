@@ -280,6 +280,7 @@ digitalmodel = [
     "py.typed",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
+    "hydrodynamics/aqwa/docs/damping-basis.md",
     "data_systems/data/*.yml",
     "data_systems/data/steel_shapes*.json",
     "data_systems/data/steel_shapes_provenance.yaml",
