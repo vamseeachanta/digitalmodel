@@ -23,6 +23,8 @@ pytestmark = pytest.mark.xdist_group(name="wheel_build")
 
 
 BASE_CASE = {
+    "water_depth_m": 50.0,
+    "draft_m": 10.0,
     "speed_m_s": 7.5,
     "rudder_angle_deg": 20.0,
     "K_per_s": 0.12,
@@ -180,7 +182,8 @@ def test_output_artifacts_and_charts(tmp_path):
     with open(manifest["tables"]["json"], encoding="utf-8") as stream:
         payload = json.load(stream)
 
-    assert set(payload) == {"metadata", "provenance", "cases", "metrics", "time_history", "artifacts"}
+    assert any("applicability is unverified" in w for w in payload["warnings"])
+    assert set(payload) == {"metadata", "provenance", "cases", "metrics", "time_history", "artifacts", "warnings"}
     assert set(manifest["charts"]) == {
         "trajectory_by_case",
         "yaw_rate_vs_time",
