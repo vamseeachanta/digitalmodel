@@ -90,9 +90,25 @@ def report(table: dict, records: list[dict]) -> str:
     cases = {c["id"]: c for c in table["cases"]}
     length = table["basis"]["pipeline"]["segments"][0]["length"]
     rows = "".join(f'<tr><td>{r["id"]}</td><td>{cases[r["id"]]["friction"]:.5f}</td><td>{cases[r["id"]]["rise_m"]}</td><td>{cases[r["id"]]["buoyancy_fraction"]}</td><td>{r["submerged_weight_kn_m"]:.4f}</td><td>{length}</td><td>{r["method"]["pipe_head_tension_kn"]:.1f}</td><td>{r["analytical_pull_kn"]:.1f}</td><td>{r["method"]["winch_demand_kn"]:.1f}</td><td>Not Evaluated</td></tr>' for r in records)
-    limits = "".join(f"<li>{escape(s)}</li>" for s in table["known_limits"])
+    public_limits = [re.sub(r"https://github.com/[^/]+/[^/]+/issues/([0-9]+)", r"#\1", s)
+                     for s in table["known_limits"]]
+    limits = "".join(f"<li>{escape(s)}</li>" for s in public_limits)
     sources = "".join(f'<li>{escape(source_locator(s))} — <a href="{escape(s["url"], quote=True)}">Source</a>; retrieved {escape(s["retrieval_date"])}; SHA-256 {s["sha256"]}</li>' for s in table["sources"].values())
-    geometry = "".join(f'<li>{escape(v["locator"])} <a href="{escape(v["url"], quote=True)}">Reference</a>. {escape(v["qualification"])} {escape(v.get("derivation", ""))}</li>' for v in table["geometry_basis"].values())
+    geometry_rows = []
+    for reference in table["geometry_basis"].values():
+        link = (f' <a href="{escape(reference["url"], quote=True)}">Official reference</a>.'
+                if "url" in reference else "")
+        if reference["evidence_status"] == "retrieved":
+            evidence = (f'Retrieved {escape(reference["retrieval_date"])}; '
+                        f'SHA-256 {reference["sha256"]}')
+        else:
+            evidence = (f'Primary text unavailable; attempted {escape(reference["attempt_date"])}. '
+                        f'{escape(reference["reason"])} {escape(reference["basis"])}')
+        geometry_rows.append(f'<li>{escape(reference.get("citation", ""))} '
+                             f'{escape(reference["locator"])}{link} {evidence} '
+                             f'{escape(reference["qualification"])} '
+                             f'{escape(reference.get("derivation", ""))}</li>')
+    geometry = "".join(geometry_rows)
     assumptions = "".join(f'<tr><td>{escape(r["input"])}</td><td>{r["value"]} {escape(r["unit"])}</td><td>{escape(r["label"])}</td><td>{escape(r["basis"])}</td></tr>' for r in table["assumed_inputs"])
     study_rows = []
     for path in STUDY_PARAMETER_INPUTS:
@@ -135,8 +151,8 @@ def audit_geometry(table: dict) -> None:
     values = [depth, length, draft, minimum, radius, *(case["rise_m"] for case in table["cases"])]
     if any(isinstance(v, bool) or not math.isfinite(v) for v in values):
         raise ValueError("Geometry inputs must be finite numbers")
-    # PIANC (1997), section 5.3.2 Depth; concept-design ratio for waves <= 1 m.
-    # This is a preparation criterion, not a moored-hull clearance qualification.
+    # Depth/draft ratio 1.3 is assumed, based on previous experience.
+    # The unavailable PIANC primary text is not evidence for this criterion.
     if depth <= 0 or minimum <= 0 or draft <= 0 or depth < max(minimum, 1.3 * draft):
         raise ValueError("Hull clearance requires depth >= max(minimum lay depth, 1.3 * draft)")
     if length <= depth:
@@ -207,12 +223,13 @@ def evaluate_cases(table: dict, criteria: dict) -> tuple[list, list]:
 
 
 def generate_models(table: dict, output: Path, records: list, specs: list, provenance: dict) -> dict:
-    """Generate solver-free models and retain their validated components."""
+    """Generate models and retain components checked by the solver-free validator."""
     output.mkdir(parents=True, exist_ok=True)
     bundle: dict = {"schema": "shore-pull-in-model-bundle-1", "provenance": provenance, "cases": {}}
     for record, spec, case in zip(records, specs, table["cases"]):
         folder = output / "models" / record["id"]
         ModularModelGenerator.from_spec(spec).generate(folder)
+        pin_surface_seed(table, folder)
         # Preparation does not assign standard design factors or strain limits.
         # Remove optional design-check settings emitted by the shared builder;
         # retain structural properties and run the unmodified validator below.
@@ -230,6 +247,7 @@ def generate_models(table: dict, output: Path, records: list, specs: list, prove
                 if key.startswith("DNVSTF101"):
                     del line_type[key]
         types_path.write_text(yaml.dump(types_data, Dumper=PreparationDumper, sort_keys=False), encoding="utf-8")
+        canonicalize_surface_components(folder, spec)
         for path in sorted(folder.rglob("*.yml")):
             path.write_text(path.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8")
         findings = PostGenerationValidator().validate_directory(folder / "includes")
@@ -241,6 +259,98 @@ def generate_models(table: dict, output: Path, records: list, specs: list, prove
         record["validator_errors"] = 0
         record["validator_warnings"] = [f.category for f in findings]
     return bundle
+
+
+def pin_surface_seed(table: dict, folder: Path) -> None:
+    """Set the admitted surface-origin seed explicitly, before validation.
+
+    The preparation owns these endpoint and stiffness settings rather than
+    inheriting changing shared-generator defaults. This is an unsolved seed;
+    the geometry audit screens its chord before any model is written.
+    """
+    basis = table["basis"]
+    pipe = basis["pipeline"]
+    depth = basis["water_depth_m"]
+    span = pipe["segments"][0]["length"] - depth
+    radius = pipe["dimensions"]["outer_diameter"] / 2 + sum(
+        coat["thickness"] for coat in [pipe["coatings"]["corrosion"], *pipe["coatings"]["weight"]])
+    path = folder / "includes/07_lines.yml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    for index, line in enumerate(data["Lines"]):
+        if line["Name"] != pipe["name"]:
+            continue
+        line["IncludeTorsion"] = "No"
+        connection = next(key for key in line if key.startswith("Connection, ConnectionX"))
+        line[connection] = [
+            ["Free", 0.0, 0.0, 0, 180, 90, 0, None],
+            ["Anchored", -float(span), 0.0, radius, 180, 90 + basis["seabed"]["slope"], 0, None],
+        ]
+        # Replace the stiffness column set in place to preserve component order.
+        data["Lines"][index] = {
+            ("ConnectionxBendingStiffness, ConnectionyBendingStiffness"
+             if key.startswith("ConnectionxBendingStiffness,") else key):
+            ([[], [0, None]] if key.startswith("ConnectionxBendingStiffness,") else value)
+            for key, value in line.items()
+        }
+    path.write_text(yaml.dump(data, Dumper=PreparationDumper, sort_keys=False), encoding="utf-8")
+
+
+def canonicalize_surface_components(folder: Path, spec: ProjectInputSpec) -> None:
+    """Retain one preparation format across the reviewed generator variants.
+
+    Convert legacy hull and winch columns to the named-draught and staged
+    tension forms. Remove undeclared default ramps and their group references.
+    These corrections are local to the surface preparation; the shared
+    generator and the post-generation validator remain unchanged.
+    """
+    paths = sorted((folder / "includes").glob("*.yml"))
+    components = {path.name: yaml.safe_load(path.read_text(encoding="utf-8")) for path in paths}
+    for hull in components["04_vessel_types.yml"]["VesselTypes"]:
+        if "Displacement" in hull:
+            mass = hull.pop("Displacement")[0]
+            inertia = hull.pop("MomentsOfInertia")[0]
+            for key in ("CalculationMethod", "WaveReferencePoint", "CentreOfGravityRelativeToCoG"):
+                del hull[key]
+            hull["Draughts"] = [{
+                "Name": "Draught1", "Mass": mass,
+                "MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ":
+                    [[inertia[0], 0, 0], [0, inertia[1], 0], [0, 0, inertia[2]]],
+                "CentreOfMass": [0, 0, 0], "DisplacementRAOs": {"RAOOrigin": [0, 0, 0]},
+            }]
+    for hull in components["06_vessels.yml"]["Vessels"]:
+        hull.pop("WaveCalculationMethod", None)
+    shapes = components["09_shapes.yml"]["Shapes"]
+    removed = {shape["Name"] for shape in shapes if shape["Name"] in {"Ramp inclined", "Ramp-curve"}}
+    components["09_shapes.yml"]["Shapes"] = [shape for shape in shapes if shape["Name"] not in removed]
+    groups = components["10_groups.yml"]["Groups"]["Structure"]
+    for name in removed:
+        groups.pop(name, None)
+    stage_rows = len(components["01_general.yml"]["General"]["StageDuration"]) + 1
+    for winch in components["11_winches.yml"]["Winches"]:
+        # This one-segment, surface-origin preparation has no declared stinger.
+        position = spec.equipment.tensioner.position_on_vessel or [10, 0, 0]
+        for key in ("Connection", "ConnectionPoint", "ConnectionzRelativeTo", "StageMode",
+                    "StageTension", "StageValue", "WireType", "StaticsStep1"):
+            winch.pop(key, None)
+        winch.update({
+            "WinchType": "Simple", "WinchControlType": "By stage",
+            "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo":
+                [[spec.equipment.vessel.name, *position], [spec.pipeline.name, 0, 0, 0, "End A"]],
+            "StageMode, StageValue": [["Specified tension", spec.equipment.tensioner.tension_value]
+                                      for _ in range(stage_rows)],
+        })
+    for path in paths:
+        path.write_text(yaml.dump(components[path.name], Dumper=PreparationDumper, sort_keys=True), encoding="utf-8")
+    # Supports precede vessels; groups follow every entity they reference.
+    order = ("01_general.yml", "02_var_data.yml", "03_environment.yml", "04_vessel_types.yml",
+             "05_line_types.yml", "13_supports.yml", "06_vessels.yml", "14_morison.yml",
+             "09_shapes.yml", "07_lines.yml", "11_winches.yml", "10_groups.yml")
+    master = folder / "master.yml"
+    header, body = master.read_text(encoding="utf-8").split("---\n", 1)
+    includes = yaml.safe_load(body)
+    rank = {name: index for index, name in enumerate(order)}
+    includes.sort(key=lambda item: (rank.get(Path(item["includefile"]).name, len(rank)), item["includefile"]))
+    master.write_text(header + "---\n" + yaml.dump(includes, Dumper=PreparationDumper, sort_keys=True), encoding="utf-8")
 
 
 def write_deliverables(campaign: Path, output: Path, table: dict, criteria: dict,

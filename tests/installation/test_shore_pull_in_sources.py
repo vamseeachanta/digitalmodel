@@ -262,3 +262,62 @@ def test_report_displays_case_definitions_and_ideal_efficiency(tmp_path):
         assert f"<th>{heading}</th>" in page
     assert "efficiency 1.0 is ideal" in page
     assert "Recorded declarations" in page
+
+
+@pytest.mark.parametrize("reference", ["pianc", "profile"])
+@pytest.mark.parametrize("field", ["url", "retrieval_date", "sha256", "record_count", "locator"])
+def test_retrieved_geometry_references_require_full_source_metadata(traced_table, reference, field):
+    entry = traced_table["geometry_basis"][reference]
+    entry.update(evidence_status="retrieved", url="https://example.org/manual.pdf",
+                 retrieval_date="2026-10-18", sha256="a" * 64, record_count=1)
+    entry.pop(field)
+    with pytest.raises(ValueError, match="provenance|locator"):
+        driver().audit_input_sources(traced_table)
+
+
+@pytest.mark.parametrize("reference", ["pianc", "profile"])
+@pytest.mark.parametrize("field", ["citation", "locator", "attempt_date", "reason", "basis", "qualification"])
+def test_unavailable_geometry_references_require_explicit_assumptions(traced_table, reference, field):
+    traced_table["geometry_basis"][reference] = {
+        "evidence_status": "unavailable", "citation": "Engineering manual",
+        "locator": "Unconfirmed section", "attempt_date": "2026-10-18",
+        "reason": "Primary text unavailable", "qualification": LABEL,
+        "basis": "Geometry retained as a generic study assumption",
+    }
+    traced_table["geometry_basis"][reference].pop(field)
+    with pytest.raises(ValueError, match="geometry reference"):
+        driver().audit_input_sources(traced_table)
+
+
+@pytest.mark.parametrize("status", [None, "", "transcription"])
+def test_geometry_reference_requires_a_known_evidence_status(traced_table, status):
+    traced_table["geometry_basis"]["pianc"]["evidence_status"] = status
+    with pytest.raises(ValueError, match="geometry reference"):
+        driver().audit_input_sources(traced_table)
+
+
+def test_unavailable_reference_cannot_claim_retrieved_bytes(traced_table):
+    traced_table["geometry_basis"]["pianc"] = {
+        "evidence_status": "unavailable", "citation": "Engineering manual",
+        "locator": "Unconfirmed section", "attempt_date": "2026-10-18",
+        "reason": "Primary text unavailable", "qualification": LABEL,
+        "basis": "Generic study assumption", "sha256": "a" * 64,
+    }
+    with pytest.raises(ValueError, match="geometry reference"):
+        driver().audit_input_sources(traced_table)
+
+
+def test_geometry_bibliography_is_not_presented_as_confirmed_text():
+    table = json.loads((CAMPAIGN / "case-table.json").read_text())
+    pianc, profile = (table["geometry_basis"][key] for key in ("pianc", "profile"))
+    assert "url" not in pianc
+    assert "MarCom WG 30 (2)" in pianc["citation"]
+    assert "superseded" in pianc["citation"]
+    assert profile["url"].startswith("https://www.publications.usace.army.mil/")
+    for entry in (pianc, profile):
+        assert entry["evidence_status"] == "unavailable"
+        assert entry["qualification"] == LABEL
+        assert "unconfirmed" in entry["locator"].lower()
+    page = driver().report(table, [])
+    assert "scribd.com" not in page
+    assert "Primary text unavailable" in page

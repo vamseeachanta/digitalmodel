@@ -1,23 +1,23 @@
 {
   "analytical_before_models": true,
-  "case_table_sha256": "6954174cb2d6253ac94faa870e8c7b05258363491fd93b7a3bfccc789dc4312d",
+  "case_table_sha256": "2419f4f642dc38e4f71e1f988ad0e023c110494007a1a6ddb6cc04f339c2ef1c",
   "cases": [
     {
       "analytical_pull_kn": 3246.4479420446132,
       "analytical_relative_error": 2.381281050267232e-15,
       "files": {
-        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
-        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
-        "includes/03_environment.yml": "935bf590e693278b17c0d3430008e05db8f13cc3380088fe967fa9b5f56750ab",
-        "includes/04_vessel_types.yml": "f0e995d090a9814b6845cb7d00a07b8a132e3cbc06a8d67073ca710187774ba8",
-        "includes/05_line_types.yml": "73474f54106f3f3cafcf486defab6a4eea3b0530ed80b79b972a1752586968b6",
-        "includes/06_vessels.yml": "2700db5050152278ffe1f90b607c2ea3cc0fc833ddb451c7cc2047c8c7deba2e",
-        "includes/07_lines.yml": "6ba8b9736331f7d6a6bf883887e50790663615ed2060a169ba799d74e02700b4",
+        "includes/01_general.yml": "cd76a53803e737ff3b9594ee762b4e03e29152b7a89068ff6ed2f70d8fa5b88b",
+        "includes/02_var_data.yml": "e8281a96419a16523637e9e9697848ff6fb652d439e6ab049e09a3113d8c227a",
+        "includes/03_environment.yml": "c31e8dd28ce2ed15ba6fe2c860a3ba0ea091293eea278a33ac29dbed05f69b07",
+        "includes/04_vessel_types.yml": "7d45e98c1ba7e5d7666f7806ffd5942fcdca5eeedde6757ca0d54c1b847ef356",
+        "includes/05_line_types.yml": "d43ef8bb835be28b3e4cc7128ee47a834d7f6939392482defa7c338c6dfcaffe",
+        "includes/06_vessels.yml": "b1beb535cf6a4bf46502076dc1b1530842df70887af8fea0e67953fb0515cadb",
+        "includes/07_lines.yml": "1ffd6a04072f8e48de9438952c87e8623c5773b5bca09b8b6ad71b2ba6f5968b",
         "includes/09_shapes.yml": "db692531c46bf8a7d4543221103dc533b1c798fe30b2328e3c8f4e313c544436",
-        "includes/10_groups.yml": "f53754046eecf61ce543c9149c86140cafa5066a05de5c6b4c40c58c3fe61f99",
-        "includes/11_winches.yml": "77f9d15de845b08bb8cc02ae4da291fc58550fc2fcbf3ea4084a8690da97e2ac",
-        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
-        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "includes/10_groups.yml": "0bc8c77bd2a3e3c5f3cbcf7ed02c186a8212e63bb03d3ef10d64525a4e77e6d4",
+        "includes/11_winches.yml": "3dbfd4029f452e202098226f0b4d8a00840e7e66f15f0a7cbdb2b73f891b975e",
+        "includes/13_supports.yml": "0e09af9724c944cc29e4bdc2542eaa43f4fe50e6100ff2dd12467e4b8ab44b03",
+        "includes/14_morison.yml": "068fdf219f0ebcae5da967b5d0e067a0d55e340859786dd80a18a5eec36541ff",
         "inputs/parameters.yml": "af66db798391550c2e4e0afb9f526532a6b3c3857790cba64a7d8aef865248f5",
         "master.yml": "c72d099bf9a2880c737ebae1f5099e9813912a11533106213e5486df62262581"
       },
@@ -47,18 +47,18 @@
       "analytical_pull_kn": 4411.236687085792,
       "analytical_relative_error": 2.4741217022488186e-15,
       "files": {
-        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
-        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
-        "includes/03_environment.yml": "935bf590e693278b17c0d3430008e05db8f13cc3380088fe967fa9b5f56750ab",
-        "includes/04_vessel_types.yml": "f0e995d090a9814b6845cb7d00a07b8a132e3cbc06a8d67073ca710187774ba8",
-        "includes/05_line_types.yml": "4aac916e1ef9bf38d464b4734dee8ce77427bf9b52cc1013899b7e752dbe6125",
-        "includes/06_vessels.yml": "2700db5050152278ffe1f90b607c2ea3cc0fc833ddb451c7cc2047c8c7deba2e",
-        "includes/07_lines.yml": "6ba8b9736331f7d6a6bf883887e50790663615ed2060a169ba799d74e02700b4",
+        "includes/01_general.yml": "cd76a53803e737ff3b9594ee762b4e03e29152b7a89068ff6ed2f70d8fa5b88b",
+        "includes/02_var_data.yml": "e8281a96419a16523637e9e9697848ff6fb652d439e6ab049e09a3113d8c227a",
+        "includes/03_environment.yml": "c31e8dd28ce2ed15ba6fe2c860a3ba0ea091293eea278a33ac29dbed05f69b07",
+        "includes/04_vessel_types.yml": "7d45e98c1ba7e5d7666f7806ffd5942fcdca5eeedde6757ca0d54c1b847ef356",
+        "includes/05_line_types.yml": "1bb5fd1f2e9cd25aa3c03d3bbfaafb0a1cbb357c3975e18ca0b348cf5a810861",
+        "includes/06_vessels.yml": "b1beb535cf6a4bf46502076dc1b1530842df70887af8fea0e67953fb0515cadb",
+        "includes/07_lines.yml": "1ffd6a04072f8e48de9438952c87e8623c5773b5bca09b8b6ad71b2ba6f5968b",
         "includes/09_shapes.yml": "db692531c46bf8a7d4543221103dc533b1c798fe30b2328e3c8f4e313c544436",
-        "includes/10_groups.yml": "f53754046eecf61ce543c9149c86140cafa5066a05de5c6b4c40c58c3fe61f99",
-        "includes/11_winches.yml": "fb91a04d17fbe1f49f489b35b168ac64394787e3ee215afbe97fc417b421ffe1",
-        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
-        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "includes/10_groups.yml": "0bc8c77bd2a3e3c5f3cbcf7ed02c186a8212e63bb03d3ef10d64525a4e77e6d4",
+        "includes/11_winches.yml": "e540adcfb531917625b1da2c2dc6f1c3f87d1d0028e6779d88651ff5ca39c781",
+        "includes/13_supports.yml": "0e09af9724c944cc29e4bdc2542eaa43f4fe50e6100ff2dd12467e4b8ab44b03",
+        "includes/14_morison.yml": "068fdf219f0ebcae5da967b5d0e067a0d55e340859786dd80a18a5eec36541ff",
         "inputs/parameters.yml": "af66db798391550c2e4e0afb9f526532a6b3c3857790cba64a7d8aef865248f5",
         "master.yml": "c72d099bf9a2880c737ebae1f5099e9813912a11533106213e5486df62262581"
       },
@@ -88,18 +88,18 @@
       "analytical_pull_kn": 1676.396524883639,
       "analytical_relative_error": 2.441383107891052e-15,
       "files": {
-        "includes/01_general.yml": "596e2441caabc48a03c635b826da21472faa1aacb97f8ff9b0d9c17a165d899e",
-        "includes/02_var_data.yml": "b51c7b1eee0b8f8fc8403f3aaaa7d6845948b3c847f298d84de495572c31cd4b",
-        "includes/03_environment.yml": "935bf590e693278b17c0d3430008e05db8f13cc3380088fe967fa9b5f56750ab",
-        "includes/04_vessel_types.yml": "f0e995d090a9814b6845cb7d00a07b8a132e3cbc06a8d67073ca710187774ba8",
-        "includes/05_line_types.yml": "73474f54106f3f3cafcf486defab6a4eea3b0530ed80b79b972a1752586968b6",
-        "includes/06_vessels.yml": "2700db5050152278ffe1f90b607c2ea3cc0fc833ddb451c7cc2047c8c7deba2e",
-        "includes/07_lines.yml": "6ba8b9736331f7d6a6bf883887e50790663615ed2060a169ba799d74e02700b4",
+        "includes/01_general.yml": "cd76a53803e737ff3b9594ee762b4e03e29152b7a89068ff6ed2f70d8fa5b88b",
+        "includes/02_var_data.yml": "e8281a96419a16523637e9e9697848ff6fb652d439e6ab049e09a3113d8c227a",
+        "includes/03_environment.yml": "c31e8dd28ce2ed15ba6fe2c860a3ba0ea091293eea278a33ac29dbed05f69b07",
+        "includes/04_vessel_types.yml": "7d45e98c1ba7e5d7666f7806ffd5942fcdca5eeedde6757ca0d54c1b847ef356",
+        "includes/05_line_types.yml": "d43ef8bb835be28b3e4cc7128ee47a834d7f6939392482defa7c338c6dfcaffe",
+        "includes/06_vessels.yml": "b1beb535cf6a4bf46502076dc1b1530842df70887af8fea0e67953fb0515cadb",
+        "includes/07_lines.yml": "1ffd6a04072f8e48de9438952c87e8623c5773b5bca09b8b6ad71b2ba6f5968b",
         "includes/09_shapes.yml": "db692531c46bf8a7d4543221103dc533b1c798fe30b2328e3c8f4e313c544436",
-        "includes/10_groups.yml": "f53754046eecf61ce543c9149c86140cafa5066a05de5c6b4c40c58c3fe61f99",
-        "includes/11_winches.yml": "d19bca6a5aa91cdeb50db3208952376e3ef4f0fc16ed45775f6f99f91dcff8a0",
-        "includes/13_supports.yml": "b7a4da7cf390d86cd511efbcf1e6bda8ef1d726f814faf941d9311c349a9d87c",
-        "includes/14_morison.yml": "bd71e051228d0af1cd1c69c6809f5a8be6052f400cf85ff61ad0fdebe525116b",
+        "includes/10_groups.yml": "0bc8c77bd2a3e3c5f3cbcf7ed02c186a8212e63bb03d3ef10d64525a4e77e6d4",
+        "includes/11_winches.yml": "45c5be250af22359754f5ea78cecce5529b20efdb8c995a2e181875a4b68acee",
+        "includes/13_supports.yml": "0e09af9724c944cc29e4bdc2542eaa43f4fe50e6100ff2dd12467e4b8ab44b03",
+        "includes/14_morison.yml": "068fdf219f0ebcae5da967b5d0e067a0d55e340859786dd80a18a5eec36541ff",
         "inputs/parameters.yml": "af66db798391550c2e4e0afb9f526532a6b3c3857790cba64a7d8aef865248f5",
         "master.yml": "c72d099bf9a2880c737ebae1f5099e9813912a11533106213e5486df62262581"
       },
@@ -127,15 +127,15 @@
     }
   ],
   "criteria_evidence": {
-    "first_generation_utc": "2026-10-17T23:50:38.416013+00:00",
+    "first_generation_utc": "2026-10-18T02:35:09.158275+00:00",
     "qualification": "Recorded declarations; not independent historical ordering evidence.",
-    "recorded_utc": "2026-10-17T23:50:38.415993+00:00",
-    "sha256": "717891ed5076e2393a8314cc8fe7ade57e9cee8ae858be178f942210f88a4f99"
+    "recorded_utc": "2026-10-18T02:35:09.158264+00:00",
+    "sha256": "639b6631be24d932315766c67bbd1d122ee9c59a3590466ed9505c4eb9f0867f"
   },
   "files": {
-    "analysis.html": "712827e3f1bb9bae7d656571d13152e09386fbdac419e56d8b7b9d312d9df64e",
-    "manifest.template.json": "ddab65c6cd5bddcfff86dc24ae688aa16518d83a295daf078ad9f10d31a12c7d",
-    "models.json": "56035cb524044a169653c7af1a8da5052dde3ebe9d2648d674bd6ff7c4f027f6"
+    "analysis.html": "d816e76d0a24ea6f57b39c5c6f85c179a022ef4145d97bdd24d40fedb7e0c27e",
+    "manifest.template.json": "db239151b31e89c58a9e7271cd69e3ee7f40e45eb8860c72066d0eab287f6d03",
+    "models.json": "3d4277fb6019ef8f566ecbef16ec5d19c7e300370717038037d03483b4060b77"
   },
   "native_attempted": 0,
   "native_completed": 0,
@@ -179,15 +179,25 @@
     ],
     "geometry_basis": {
       "pianc": {
-        "locator": "Approach Channels: A Guide for Design (1997), section 5.3.2 Depth, p. 20; ratio 1.3 for waves up to 1 m. Primary-text transcription opened 2026-10-17.",
-        "qualification": "The 1 m pull weather limit and applicability to a stationary hull are assumed; concept-study criterion only.",
-        "url": "https://www.scribd.com/document/857415592/Marcom-WG30-Superseded-WG49-Approach-Channels-a-Guide-for-Design1997a"
+        "attempt_date": "2026-10-18",
+        "basis": "The depth/draft ratio 1.3 and weather limit 1 m are retained as generic study assumptions; no value is attributed to the unavailable report.",
+        "citation": "PIANC/IAPH (1997), Approach Channels - A Guide for Design, MarCom WG 30 (2), publisher PIANC; superseded by MarCom WG 121 (2014), Harbour Approach Channels - Design Guidelines.",
+        "evidence_status": "unavailable",
+        "locator": "Section 5.3.2 Depth, p. 20: unconfirmed against primary text.",
+        "metadata_source": "pianc-catalog",
+        "qualification": "assumed, based on previous experience",
+        "reason": "The publisher catalogue was retrieved, but the 1997 primary text was not publicly accessible; no copy link is retained."
       },
       "profile": {
-        "derivation": "h = A*x^(2/3) gives x = (21/A)^(3/2) = 1656.5 to 3043.2 m for A = 0.15 to 0.10 m^(1/3); 2000 m implies A = 0.13229 m^(1/3). At 21 m this is an order-of-magnitude extrapolation; closure depth and site profile are not established.",
-        "locator": "USACE EM 1110-2-1100, Part III, Chapter 3, change 2 dated 1 Aug 2008; section III-3-3c(2), equation III-3-14, p. III-3-22; Table III-3-3, p. III-3-24. Primary-text transcription opened 2026-10-17.",
-        "qualification": "A = 0.10 m^(1/3) is tabulated at D = 0.20 mm. A = 0.15 m^(1/3) is assumed, retained from the ruling as a rounded endpoint: the table gives 0.1498 at D = 0.43 mm and 0.1514 at D = 0.44 mm. The selected coefficient range is assumed, not a site measurement.",
-        "url": "https://www.scribd.com/document/572707631/EM-1110-2-1100P3"
+        "attempt_date": "2026-10-18",
+        "basis": "The profile equation and coefficients A = 0.10 to 0.15 m^(1/3) are generic study assumptions, not transcriptions or site measurements.",
+        "citation": "USACE, Coastal Engineering Manual, EM 1110-2-1100, Part III, Chapter 3, publisher U.S. Army Corps of Engineers.",
+        "derivation": "For the assumed h = A*x^(2/3), x = (21/A)^(3/2) gives 1656.5 to 3043.2 m. The selected 2000 m length is an order-of-magnitude study value; closure depth and site profile are not established.",
+        "evidence_status": "unavailable",
+        "locator": "Section III-3-3c(2), equation III-3-14, p. III-3-22, and Table III-3-3, p. III-3-24: unconfirmed against primary text.",
+        "qualification": "assumed, based on previous experience",
+        "reason": "The official publications document and catalogue requests returned HTTP 403; no primary-text digest or retrieval claim is recorded.",
+        "url": "https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-2-1100_Part-III.pdf"
       }
     },
     "input_sources": {
@@ -224,7 +234,7 @@
         "source": "friction"
       },
       "cases.2.rise_m": {
-        "basis": "Rise from the 21 m hull standoff depth to mean sea level over 2000 m, mean slope 1:95.24 (0.602 degrees); analytical comparison only, absent from the flat native geometry.",
+        "basis": "Rise from the 21 m hull standoff depth to mean sea level over 2000 m, mean slope 1:95.2 (0.6 degrees); analytical comparison only, absent from the flat native geometry.",
         "qualification": "study parameter chosen for this preparation; not sourced or measured"
       },
       "equipment.vessel.properties.beam": {
@@ -343,7 +353,7 @@
         "source": "assumptions"
       },
       "water_depth_m": {
-        "basis": "Round max(10.7 m minimum lay depth, 1.3 times 15.5 m draft = 20.15 m) up to 21 m. PIANC (1997), section 5.3.2 Depth, ratio 1.3 for waves up to 1 m; the weather limit and transfer to a stationary hull are assumed study conditions, not an operational clearance qualification.",
+        "basis": "Round max(10.7 m minimum lay depth, 1.3 times 15.5 m draft = 20.2 m) up to 21 m. The depth/draft ratio and the 1 m weather limit are assumed, based on previous experience; the unavailable PIANC primary text is not numerical evidence. This is a study condition, not an operational clearance qualification.",
         "qualification": "study parameter chosen for this preparation; not sourced or measured",
         "unit": "m"
       },
@@ -407,6 +417,20 @@
         "retrieval_date": "2026-10-15",
         "sha256": "75c5212a12cf67a51e4bb90907670b587c30cc8914014ff903e001c4b818a489",
         "url": "https://api.research-repository.uwa.edu.au/ws/files/7389516/geolett.14.pdf"
+      },
+      "pianc-catalog": {
+        "locator": "Official publisher catalogue, MarCom WG 121, description: supersedes the joint PIANC-IAPH report Approach Channels - A Guide for Design (1997), MarCom WG 30. Bibliographic metadata only; no primary-text locator or numerical criterion is confirmed.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-18",
+        "sha256": "3998899e51c721893d3aa31b26a69f5dcd05eb4222c3bb54ea417d4c2cf4868d",
+        "url": "https://www.pianc.org/publication/harbour-approach-channels-design-guidelines/"
+      },
+      "pianc-publication-list": {
+        "locator": "Official publisher publication list, 1997 row: MarCom WG 30 (2), Approach Channels - A Guide for Design, joint PIANC-IAPH report. Bibliographic metadata only; no numerical criterion or primary-text locator is confirmed.",
+        "record_count": 1,
+        "retrieval_date": "2026-10-18",
+        "sha256": "6932f058087272353a124571137597f9706479de97907bd186449dc2dd9daf70",
+        "url": "https://www.pianc.org/wp-content/uploads/2026/09/Searchable-List-of-All-PIANC-Publications-September-2026.pdf"
       },
       "pull-paper": {
         "locator": "The algorithm for determining the pulling force while dragging a pipeline (2018), pp. 38-39, equations (5)-(6) and force summation. Context only; no numeric input or surface pull-in validation is transferred.",

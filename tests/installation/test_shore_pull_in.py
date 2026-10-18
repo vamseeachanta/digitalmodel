@@ -262,3 +262,90 @@ def test_each_prepared_pipe_model_carries_its_case_friction(tmp_path, distinct_f
         carried.append(pipe_types[0]["SeabedAxialFrictionCoefficient"])
     assert carried == [case["friction"] for case in table["cases"]]
     assert len(set(carried)) == (3 if distinct_friction else 2)
+
+
+def test_preparation_pins_surface_seed_independently_of_generator_defaults(tmp_path, monkeypatch):
+    import yaml
+    d = driver()
+    original = d.ModularModelGenerator.generate
+
+    def changed_defaults(generator, folder):
+        result = original(generator, folder)
+        path = folder / "includes/07_lines.yml"
+        data = yaml.safe_load(path.read_text())
+        line = data["Lines"][0]
+        line["IncludeTorsion"] = "Yes"
+        connection = next(key for key in line if key.startswith("Connection, ConnectionX"))
+        line[connection] = [["Fixed", 1, 2, 3, 0, 0, 0, None]] * 2
+        path.write_text(yaml.safe_dump(data, sort_keys=False))
+        return result
+
+    monkeypatch.setattr(d.ModularModelGenerator, "generate", changed_defaults)
+    output = tmp_path / "output"
+    d.prepare(CAMPAIGN, output)
+    bundle = json.loads((output / "models.json").read_text())
+    for files in bundle["cases"].values():
+        line = yaml.safe_load(files["includes/07_lines.yml"])["Lines"][0]
+        connection = next(key for key in line if key.startswith("Connection, ConnectionX"))
+        assert line["IncludeTorsion"] == "No"
+        assert line[connection] == [
+            ["Free", 0, 0, 0, 180, 90, 0, None],
+            ["Anchored", -1979, 0, 0.5612, 180, 90, 0, None],
+        ]
+        assert line["ConnectionxBendingStiffness, ConnectionyBendingStiffness"] == [[], [0, None]]
+        assert not any("ConnectionTwistingStiffness" in key for key in line)
+
+
+def test_preparation_reproduces_across_shared_generator_schema_variants(tmp_path, monkeypatch):
+    import yaml
+    d = driver()
+    original = d.ModularModelGenerator.generate
+    d.prepare(CAMPAIGN, tmp_path / "original")
+
+    def updated_schema(generator, folder):
+        result = original(generator, folder)
+        includes = folder / "includes"
+        for path in includes.glob("*.yml"):
+            data = yaml.safe_load(path.read_text())
+            if path.name == "04_vessel_types.yml":
+                for hull in data["VesselTypes"]:
+                    if "Displacement" in hull:
+                        mass = hull.pop("Displacement")[0]
+                        inertia = hull.pop("MomentsOfInertia")[0]
+                        for key in ("CalculationMethod", "WaveReferencePoint", "CentreOfGravityRelativeToCoG"):
+                            hull.pop(key)
+                        hull["Draughts"] = [{
+                            "Name": "Draught1", "Mass": mass,
+                            "MomentOfInertiaTensorX, MomentOfInertiaTensorY, MomentOfInertiaTensorZ":
+                                [[inertia[0], 0, 0], [0, inertia[1], 0], [0, 0, inertia[2]]],
+                            "CentreOfMass": [0, 0, 0], "DisplacementRAOs": {"RAOOrigin": [0, 0, 0]},
+                        }]
+            elif path.name == "06_vessels.yml":
+                for hull in data["Vessels"]:
+                    hull.pop("WaveCalculationMethod", None)
+            elif path.name == "09_shapes.yml":
+                data["Shapes"] = []
+            elif path.name == "10_groups.yml":
+                for name in ("Ramp inclined", "Ramp-curve"):
+                    data["Groups"]["Structure"].pop(name, None)
+            elif path.name == "11_winches.yml":
+                for winch in data["Winches"]:
+                    if "StageTension" in winch:
+                        tension = winch["StageTension"][-1]
+                        winch.clear()
+                        winch.update({
+                            "Name": "Tensioner", "WinchType": "Simple", "WinchControlType": "By stage",
+                            "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo":
+                                [["Generic lay hull", 10, 0, 0], ["Generic pipe", 0, 0, 0, "End A"]],
+                            "StageMode, StageValue": [["Specified tension", tension]] * 3,
+                        })
+            path.write_text(yaml.safe_dump(data, sort_keys=True))
+        master = folder / "master.yml"
+        header, body = master.read_text().split("---\n", 1)
+        master.write_text(header + "---\n" + "\n".join(reversed(body.strip().splitlines())) + "\n")
+        return result
+
+    monkeypatch.setattr(d.ModularModelGenerator, "generate", updated_schema)
+    d.prepare(CAMPAIGN, tmp_path / "updated")
+    for name in d.DELIVERABLES:
+        assert (tmp_path / "original" / name).read_bytes() == (tmp_path / "updated" / name).read_bytes()

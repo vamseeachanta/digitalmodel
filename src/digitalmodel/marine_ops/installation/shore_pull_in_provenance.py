@@ -71,6 +71,41 @@ def audit_source(source: dict) -> None:
     source_locator(source)
 
 
+def audit_geometry_basis(table: dict) -> None:
+    """Audit retrieved geometry sources or explicitly unconfirmed bibliography.
+
+    Retrieved texts obey exactly the public-source metadata rules. An
+    unavailable primary text cannot claim retrieved bytes: its numerical use
+    must instead be labelled as an assumption, with a basis and access reason.
+    Publisher metadata may be linked through an independently audited source;
+    that metadata does not confirm an equation, value or primary-text locator.
+    """
+    references = table.get("geometry_basis")
+    if not isinstance(references, dict) or set(references) != {"pianc", "profile"}:
+        raise ValueError("Missing geometry references")
+    for reference in references.values():
+        status = reference.get("evidence_status")
+        if status == "retrieved":
+            audit_source(reference)
+            continue
+        try:
+            date.fromisoformat(reference["attempt_date"])
+            complete = (status == "unavailable"
+                        and reference["qualification"] == ASSUMPTION_LABEL
+                        and all(isinstance(reference.get(key), str) and reference[key].strip()
+                                for key in ("citation", "locator", "basis", "reason"))
+                        and not {"sha256", "retrieval_date", "record_count"}.intersection(reference))
+            if "url" in reference:
+                url = urlsplit(reference["url"])
+                complete = complete and url.scheme in {"http", "https"} and bool(url.netloc)
+            if "metadata_source" in reference:
+                complete = complete and reference["metadata_source"] in table["sources"]
+        except (KeyError, TypeError, ValueError):
+            complete = False
+        if not complete:
+            raise ValueError("Incomplete or unqualified geometry reference")
+
+
 def audit_dataset_anchors(table: dict) -> None:
     """Compare numeric anchors with the retained dataset columns in metres."""
     columns = table["public_dataset"]["columns"]
@@ -98,6 +133,7 @@ def audit_input_sources(table: dict) -> list[dict]:
     """
     for source in table["sources"].values():
         audit_source(source)
+    audit_geometry_basis(table)
     audit_dataset_anchors(table)
     required = numeric_paths(table["basis"]) | numeric_paths(table["cases"], "cases")
     if not required <= set(table["input_sources"]):

@@ -1,5 +1,5 @@
 {
-  "revision": "4",
+  "revision": "5",
   "revisions": [
     {
       "revision": "1",
@@ -20,6 +20,11 @@
       "revision": "4",
       "date": "2026-10-17",
       "change": "Apply the ruled 21 m depth, 2000 m supported length and 21 m incline rise; gate geometry, pin hand forces, verify dataset anchors and clarify source limits."
+    },
+    {
+      "revision": "5",
+      "date": "2026-10-18",
+      "change": "Pin surface endpoints, hull and winch formats, remove undeclared ramps and regenerate reproducible bundles; replace copy links with official bibliography, audit geometry evidence and qualify unavailable primary texts as assumptions."
     }
   ],
   "public_dataset": {
@@ -91,6 +96,20 @@
       "record_count": 1,
       "sha256": "2d81029862cdcfbb480238ab4a5ad07e22d4fc3f1558a176df77d6a0c72634bc",
       "locator": "Pipe OD conversion from inch to m, line 195; metre-per-inch factor also used at line 199."
+    },
+    "pianc-catalog": {
+      "url": "https://www.pianc.org/publication/harbour-approach-channels-design-guidelines/",
+      "retrieval_date": "2026-10-18",
+      "record_count": 1,
+      "sha256": "3998899e51c721893d3aa31b26a69f5dcd05eb4222c3bb54ea417d4c2cf4868d",
+      "locator": "Official publisher catalogue, MarCom WG 121, description: supersedes the joint PIANC-IAPH report Approach Channels - A Guide for Design (1997), MarCom WG 30. Bibliographic metadata only; no primary-text locator or numerical criterion is confirmed."
+    },
+    "pianc-publication-list": {
+      "url": "https://www.pianc.org/wp-content/uploads/2026/09/Searchable-List-of-All-PIANC-Publications-September-2026.pdf",
+      "retrieval_date": "2026-10-18",
+      "record_count": 1,
+      "sha256": "6932f058087272353a124571137597f9706479de97907bd186449dc2dd9daf70",
+      "locator": "Official publisher publication list, 1997 row: MarCom WG 30 (2), Approach Channels - A Guide for Design, joint PIANC-IAPH report. Bibliographic metadata only; no numerical criterion or primary-text locator is confirmed."
     }
   },
   "input_sources": {
@@ -243,7 +262,7 @@
     },
     "cases.2.rise_m": {
       "qualification": "study parameter chosen for this preparation; not sourced or measured",
-      "basis": "Rise from the 21 m hull standoff depth to mean sea level over 2000 m, mean slope 1:95.24 (0.602 degrees); analytical comparison only, absent from the flat native geometry."
+      "basis": "Rise from the 21 m hull standoff depth to mean sea level over 2000 m, mean slope 1:95.2 (0.6 degrees); analytical comparison only, absent from the flat native geometry."
     },
     "cases.2.buoyancy_fraction": {
       "qualification": "study parameter chosen for this preparation; not sourced or measured",
@@ -252,7 +271,7 @@
     "water_depth_m": {
       "qualification": "study parameter chosen for this preparation; not sourced or measured",
       "unit": "m",
-      "basis": "Round max(10.7 m minimum lay depth, 1.3 times 15.5 m draft = 20.15 m) up to 21 m. PIANC (1997), section 5.3.2 Depth, ratio 1.3 for waves up to 1 m; the weather limit and transfer to a stationary hull are assumed study conditions, not an operational clearance qualification."
+      "basis": "Round max(10.7 m minimum lay depth, 1.3 times 15.5 m draft = 20.2 m) up to 21 m. The depth/draft ratio and the 1 m weather limit are assumed, based on previous experience; the unavailable PIANC primary text is not numerical evidence. This is a study condition, not an operational clearance qualification."
     }
   },
   "basis": {
@@ -349,14 +368,15 @@
     "Optional standard design-factor and strain-limit settings from the shared builder are omitted; no standard-based acceptance check is performed.",
     "The unchanged dataset record (CSV line 68; header is line 1) is internally inconsistent: draft 15.5 m exceeds minimum lay depth 10.7 m. The 21 m depth meets both numerical requirements using max(10.7, 1.3*15.5); the incorrect field is not established.",
     "Winch efficiency 1.0 is ideal: winch demand equals head tension. No shore winch capacity is supplied; the capacity comparison is Not Evaluated. Generated tensioner capacity is a schema placeholder equal to demand, not equipment capability.",
-    "Builder defaults outside the numeric-input audit include elastic modulus 207 GPa, Poisson ratio 0.293, drag coefficients, other line-type friction, winch wire, supports and ramp shapes. The defaults source identifies the schema entry point only; these defaults are not qualified design inputs.",
+    "Builder defaults outside the numeric-input audit include elastic modulus 207 GPa, Poisson ratio 0.293, drag coefficients, other line-type friction, winch wire and supports. The defaults source identifies the schema entry point only; these defaults are not qualified design inputs. Undeclared fixed ramp shapes are removed from the surface preparation.",
     "Recorded declarations of criteria timestamps are not independent proof of historical ordering. Geometry criteria are specific to the one-segment, surface-origin template and the assumed wave limit of 1 m; no wider topology or clearance acceptance is claimed.",
-    "Model bundles are generated and reproduced with the current main shared generator at d4246f224520a65529124de192816f4c03e2e960, combined with this correction. The earlier branch-only generator emits different endpoint seeds; reproduce on the integration tree."
+    "Model bundles are reproduced on this branch. Preparation explicitly sets surface-origin endpoints, released anchor bending, named hull draughts and staged winch tension; undeclared ramps are removed. Canonical serialization and schema-variant tests check independence from the reviewed shared-generator differences. A future integration tree still requires its own full check.",
+    "The geometry primary texts were not retrieved: the PIANC section and USACE table locators are unconfirmed. The depth/draft ratio and profile coefficients are assumed, based on previous experience. Official publisher metadata confirms only that the 1997 PIANC WG 30 report is superseded by WG 121; it supplies no numerical geometry evidence."
   ],
   "criteria_evidence": {
-    "sha256": "717891ed5076e2393a8314cc8fe7ade57e9cee8ae858be178f942210f88a4f99",
-    "recorded_utc": "2026-10-17T23:50:38.415993+00:00",
-    "first_generation_utc": "2026-10-17T23:50:38.416013+00:00",
+    "sha256": "639b6631be24d932315766c67bbd1d122ee9c59a3590466ed9505c4eb9f0867f",
+    "recorded_utc": "2026-10-18T02:35:09.158264+00:00",
+    "first_generation_utc": "2026-10-18T02:35:09.158275+00:00",
     "qualification": "Recorded declarations; not independent historical ordering evidence."
   },
   "assumed_inputs": [
@@ -398,15 +418,25 @@
   ],
   "geometry_basis": {
     "pianc": {
-      "url": "https://www.scribd.com/document/857415592/Marcom-WG30-Superseded-WG49-Approach-Channels-a-Guide-for-Design1997a",
-      "locator": "Approach Channels: A Guide for Design (1997), section 5.3.2 Depth, p. 20; ratio 1.3 for waves up to 1 m. Primary-text transcription opened 2026-10-17.",
-      "qualification": "The 1 m pull weather limit and applicability to a stationary hull are assumed; concept-study criterion only."
+      "citation": "PIANC/IAPH (1997), Approach Channels - A Guide for Design, MarCom WG 30 (2), publisher PIANC; superseded by MarCom WG 121 (2014), Harbour Approach Channels - Design Guidelines.",
+      "locator": "Section 5.3.2 Depth, p. 20: unconfirmed against primary text.",
+      "evidence_status": "unavailable",
+      "attempt_date": "2026-10-18",
+      "metadata_source": "pianc-catalog",
+      "reason": "The publisher catalogue was retrieved, but the 1997 primary text was not publicly accessible; no copy link is retained.",
+      "qualification": "assumed, based on previous experience",
+      "basis": "The depth/draft ratio 1.3 and weather limit 1 m are retained as generic study assumptions; no value is attributed to the unavailable report."
     },
     "profile": {
-      "url": "https://www.scribd.com/document/572707631/EM-1110-2-1100P3",
-      "locator": "USACE EM 1110-2-1100, Part III, Chapter 3, change 2 dated 1 Aug 2008; section III-3-3c(2), equation III-3-14, p. III-3-22; Table III-3-3, p. III-3-24. Primary-text transcription opened 2026-10-17.",
-      "qualification": "A = 0.10 m^(1/3) is tabulated at D = 0.20 mm. A = 0.15 m^(1/3) is assumed, retained from the ruling as a rounded endpoint: the table gives 0.1498 at D = 0.43 mm and 0.1514 at D = 0.44 mm. The selected coefficient range is assumed, not a site measurement.",
-      "derivation": "h = A*x^(2/3) gives x = (21/A)^(3/2) = 1656.5 to 3043.2 m for A = 0.15 to 0.10 m^(1/3); 2000 m implies A = 0.13229 m^(1/3). At 21 m this is an order-of-magnitude extrapolation; closure depth and site profile are not established."
+      "citation": "USACE, Coastal Engineering Manual, EM 1110-2-1100, Part III, Chapter 3, publisher U.S. Army Corps of Engineers.",
+      "url": "https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-2-1100_Part-III.pdf",
+      "locator": "Section III-3-3c(2), equation III-3-14, p. III-3-22, and Table III-3-3, p. III-3-24: unconfirmed against primary text.",
+      "evidence_status": "unavailable",
+      "attempt_date": "2026-10-18",
+      "reason": "The official publications document and catalogue requests returned HTTP 403; no primary-text digest or retrieval claim is recorded.",
+      "qualification": "assumed, based on previous experience",
+      "basis": "The profile equation and coefficients A = 0.10 to 0.15 m^(1/3) are generic study assumptions, not transcriptions or site measurements.",
+      "derivation": "For the assumed h = A*x^(2/3), x = (21/A)^(3/2) gives 1656.5 to 3043.2 m. The selected 2000 m length is an order-of-magnitude study value; closure depth and site profile are not established."
     }
   }
 }
