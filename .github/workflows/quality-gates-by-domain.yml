@@ -137,6 +137,7 @@ jobs:
         run: |
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
+            tests/scripts/test_audit_solver_controls.py \
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
             tests/scripts/test_ci_baseline.py \
