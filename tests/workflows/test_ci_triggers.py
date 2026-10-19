@@ -18,6 +18,20 @@ GATES = (
     "parametric-atlas-drift.yml",
     "gmsh-meshing-tests.yml",
 )
+PUSH_PR_WORKFLOWS = GATES + (
+    "docs.yml",
+    "full-matrix-sweep.yml",
+    "pages.yml",
+    "repo-structure.yml",
+    "store-data-tests.yml",
+    "workflow-automation-tests.yml",
+)
+WRITERS = {
+    "full-matrix-sweep.yml",  # Publishes the baseline and updates main health.
+    "pages.yml",  # Deploys Pages.
+    "quality-gates.yml",  # Posts pull request comments.
+    "workflow-automation-tests.yml",  # Publishes coverage to Codecov.
+}
 
 
 def load_workflow(filename: str) -> dict:
@@ -59,7 +73,8 @@ def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
 
 
 def concurrency_result(
-    filename: str, event: str, run_id: int, number: int = 1
+    filename: str, event: str, run_id: int, number: int = 1,
+    ref: str = "refs/heads/main",
 ) -> tuple[str, bool]:
     """Render the actual workflow group and cancellation expression."""
     workflow = load_workflow(filename)
@@ -67,8 +82,8 @@ def concurrency_result(
     context = {
         "github.workflow": workflow["name"],
         "github.event_name": event,
-        "github.event.pull_request.number": number,
-        "github.ref": "refs/heads/main",
+        "github.event.pull_request.number": number if event == "pull_request" else None,
+        "github.ref": ref,
         "github.run_id": run_id,
     }
     group = re.sub(
@@ -77,6 +92,8 @@ def concurrency_result(
         concurrency["group"],
     )
     cancel = concurrency["cancel-in-progress"]
+    if isinstance(cancel, bool):
+        return group, cancel
     assert isinstance(cancel, str)
     assert cancel.startswith("${{") and cancel.endswith("}}")
     result = evaluate_expression(cancel[3:-2], context)
@@ -84,7 +101,7 @@ def concurrency_result(
     return group, result
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", PUSH_PR_WORKFLOWS)
 def test_pull_request_concurrency(filename: str) -> None:
     """Only updates of the same pull request supersede earlier runs."""
     first = concurrency_result(filename, "pull_request", 101, number=1)
@@ -92,18 +109,46 @@ def test_pull_request_concurrency(filename: str) -> None:
     other = concurrency_result(filename, "pull_request", 103, number=2)
     assert first == update
     assert first[0] != other[0]
-    assert first[1] is True
-    assert other[1] is True
+    assert first[0] == f"{load_workflow(filename)['name']}-1"
+    assert first[1] is (filename not in WRITERS)
+    assert other[1] is (filename not in WRITERS)
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", PUSH_PR_WORKFLOWS)
 @pytest.mark.parametrize("event", ("push", "workflow_dispatch"))
 def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
-    """Push and manual runs keep separate groups identified by run ID."""
+    """Retain the test name; only workflows with external writes avoid cancellation."""
     first = concurrency_result(filename, event, 101)
     second = concurrency_result(filename, event, 102)
-    assert first == (f"{load_workflow(filename)['name']}-run-101", False)
-    assert second == (f"{load_workflow(filename)['name']}-run-102", False)
+    expected = (f"{load_workflow(filename)['name']}-refs/heads/main", filename not in WRITERS)
+    assert first == expected
+    assert second == expected
+
+
+@pytest.mark.parametrize("filename", PUSH_PR_WORKFLOWS)
+def test_concurrency_isolates_refs(filename: str) -> None:
+    """Different branches and pull requests cannot supersede one another."""
+    main = concurrency_result(filename, "push", 101)
+    branch = concurrency_result(filename, "push", 102, ref="refs/heads/develop")
+    pull_request = concurrency_result(filename, "pull_request", 103)
+    assert len({main[0], branch[0], pull_request[0]}) == 3
+
+
+def test_push_pr_workflow_inventory() -> None:
+    """Every push or pull request workflow has the exact requested policy."""
+    found = set()
+    for path in WORKFLOWS.iterdir():
+        if path.suffix not in {".yml", ".yaml"}:
+            continue
+        workflow = load_workflow(path.name)
+        triggers = workflow.get("on", workflow.get(True))
+        if {"push", "pull_request"}.intersection(triggers):
+            found.add(path.name)
+            assert workflow["concurrency"] == {
+                "group": "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
+                "cancel-in-progress": path.name not in WRITERS,
+            }
+    assert found == set(PUSH_PR_WORKFLOWS)
 
 
 @pytest.mark.parametrize(
@@ -163,11 +208,13 @@ def test_subsea_checkout_includes_pinned_manifest_history(filename: str, job_id:
 
 @pytest.mark.parametrize("event", ("push", "schedule", "workflow_dispatch"))
 def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
-    """Every sweep keeps its own group and cannot cancel another sweep."""
+    """Retain the test name; sweeps share a ref group without interrupting writes."""
     concurrency = load_workflow("full-matrix-sweep.yml")["concurrency"]
     groups = []
     for run_id in (101, 102):
         context = {
+            "github.workflow": load_workflow("full-matrix-sweep.yml")["name"],
+            "github.event.pull_request.number": None,
             "github.ref": "refs/heads/main",
             "github.event_name": event,
             "github.run_id": run_id,
@@ -180,8 +227,8 @@ def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
             )
         )
     assert groups == [
-        "full-matrix-sweep-refs/heads/main-101",
-        "full-matrix-sweep-refs/heads/main-102",
+        "Full Matrix Sweep-refs/heads/main",
+        "Full Matrix Sweep-refs/heads/main",
     ]
     assert concurrency["cancel-in-progress"] is False
 

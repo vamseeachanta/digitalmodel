@@ -27,8 +27,8 @@ permissions:
   actions: read
 
 concurrency:
-  # Each sweep keeps a separate group because cancelled runs publish no baseline.
-  group: full-matrix-sweep-${{ github.ref }}-${{ github.run_id }}
+  # Finish baseline publication and main health updates before the next sweep.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
