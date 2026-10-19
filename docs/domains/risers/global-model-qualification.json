@@ -1,0 +1,781 @@
+{
+  "title": "Global-riser qualification evidence gaps",
+  "snapshot_revision": "6476218e8f5af3fa7d16c3dafc60b6a9084c6e6c",
+  "issue": 2530,
+  "related_issues": [
+    2531,
+    2532
+  ],
+  "qualification_status": "NOT_EVALUATED",
+  "aqg_source_status": "REFERENCED_ONLY",
+  "numeric_acceptance_limits": {},
+  "appointments": {
+    "independent_quality_manager": "UNCONFIRMED",
+    "deputy": "UNCONFIRMED"
+  },
+  "sources": {
+    "pack": {
+      "path": "src/digitalmodel/drilling_riser/global_model/docs/agent-pack.md",
+      "sha256": "80995a053b14e0c4686358577920d1dccab4cf4e545e5669625dff13f06b0322"
+    },
+    "wrapper": {
+      "path": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "sha256": "bc6032fc83247abf3868b1adeaf6d12eaaf6e6c44587630decec9e7846e7938b"
+    },
+    "scalar_gate": {
+      "path": "src/digitalmodel/drilling_riser/global_model/qualification.py",
+      "sha256": "d08fbd85c771dfbd4e2d0a3d2c1b94509787fa4fd793a8818ce0e74039ec8b17"
+    },
+    "builder": {
+      "path": "src/digitalmodel/drilling_riser/global_model/build.py",
+      "sha256": "f39e9f8e874f9aa801edec9b0d0d4da98fbec4020f1c2c35b30616961381bbdb"
+    },
+    "schema": {
+      "path": "src/digitalmodel/drilling_riser/global_model/spec.py",
+      "sha256": "e5b4d316898c3392738a3ab484bfce61a12f0606ce1cea854ba27f860f45746f"
+    },
+    "hand_checks": {
+      "path": "src/digitalmodel/drilling_riser/global_model/hand_checks.py",
+      "sha256": "b3779964c2a1aaa1629487b83c66ffaea413a4c641f6e57ee79ccfc4ddf86bf5"
+    },
+    "stroke": {
+      "path": "src/digitalmodel/drilling_riser/postprocess/checks.py",
+      "sha256": "715ef764c9d9d2598b8efdbffab5d4fc5638a7d18e96f1a286ac88751c374062"
+    },
+    "clearance": {
+      "path": "src/digitalmodel/drilling_riser/postprocess/clearance.py",
+      "sha256": "bef5c4aa18cb6cb90cae2a62a38cee6d810fb2b040faf3bde275e0589f257653"
+    }
+  },
+  "requirements": [
+    {
+      "id": "appointments",
+      "gates": [],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Independent quality manager",
+      "evidence_records": [],
+      "missing_evidence": "Role titles are present, but appointments and independence are unconfirmed.",
+      "required_record": "Appointment references for an independent quality manager and deputy; producing and reviewing responsibilities and escalation route.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 8, Ownership"
+        }
+      ]
+    },
+    {
+      "id": "target-version",
+      "gates": [
+        "G0",
+        "G1",
+        "G2",
+        "G3",
+        "G4",
+        "G5"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "A wrapper version request is not an eligible-version record.",
+      "required_record": "Actual solver and binding versions, eligibility decision, model revision and scope of each native run.",
+      "basis": [
+        {
+          "source": "wrapper",
+          "locator": "module docstring"
+        },
+        {
+          "source": "pack",
+          "locator": "sections 1 and 5"
+        }
+      ]
+    },
+    {
+      "id": "gate-reconciliation",
+      "gates": [
+        "G0",
+        "G1",
+        "G2",
+        "G3",
+        "G4",
+        "G5"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "AQG r0 is referenced by the pack; its primary text and completed gate records are not retained here.",
+      "required_record": "Verified AQG edition and clauses; applicability decision per gate; criterion, units, comparator, governing case and signed evidence references. G4 requires an explicit applicability decision.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 5, QA gates"
+        }
+      ]
+    },
+    {
+      "id": "input-fingerprint",
+      "gates": [
+        "G0"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "No production input-validation and fingerprint record is supplied.",
+      "required_record": "Parsed model manifest and input-file digests bound to the version and cases used for qualification.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 5, INPUT and GEOMETRY"
+        },
+        {
+          "source": "wrapper",
+          "locator": "model_files_sha256"
+        }
+      ]
+    },
+    {
+      "id": "native-load",
+      "gates": [
+        "G1"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "No target-version native load record is supplied.",
+      "required_record": "Native load log, warnings, errors and object inventory reconciled with generated inputs.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 5, LOAD"
+        },
+        {
+          "source": "wrapper",
+          "locator": "load_model"
+        }
+      ]
+    },
+    {
+      "id": "independent-hand-comparison",
+      "gates": [
+        "G2"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "A scalar demand/reference PASS does not establish independent gate evidence.",
+      "required_record": "Independent hand derivation and expected values, native values, units, governing case and criterion. The positive-bore drilling stack reference remains excluded pending issue 2532.",
+      "basis": [
+        {
+          "source": "scalar_gate",
+          "locator": "evaluate_gate"
+        },
+        {
+          "source": "hand_checks",
+          "locator": "tension_references"
+        },
+        {
+          "source": "pack",
+          "locator": "section 5, EQUILIBRIUM and STACK-CONTENTS"
+        }
+      ]
+    },
+    {
+      "id": "offset-sweep",
+      "gates": [
+        "G2"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "No declared-heading sweep or first-step native restoring-reaction comparison is supplied.",
+      "required_record": "Declared heading and offset cases through the design maximum, convergence and compression disposition, native reaction readback and independent first-step comparison.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 5, SWEEP and proposed first-step riser estimate"
+        }
+      ]
+    },
+    {
+      "id": "component-inventory",
+      "gates": [
+        "G2"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "as_analysed_sections reads line sections; it is not an every-object inventory.",
+      "required_record": "Every native object and connection reconciled with generated intent, properties, ranges, checked status and case. Include vessel/type, line types, inner barrel, riser, stack, ring, slip joint, tensioners and flex joints; conditional released body, open-water, foundation, hang-off and variable-property objects require explicit applicability and evidence.",
+      "basis": [
+        {
+          "source": "wrapper",
+          "locator": "as_analysed_sections"
+        },
+        {
+          "source": "builder",
+          "locator": "build_generic_spec"
+        },
+        {
+          "source": "pack",
+          "locator": "section 5, COMPONENTS"
+        }
+      ]
+    },
+    {
+      "id": "short-dynamics",
+      "gates": [
+        "G3"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "No native short-dynamics record is supplied.",
+      "required_record": "Production time step, requested and achieved duration, native log, warnings/errors, finite response histories, static-to-dynamic comparisons and no-new-compression criterion from the verified gate basis.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 5, SHORT"
+        },
+        {
+          "source": "wrapper",
+          "locator": "set_time_step and run_dynamics"
+        }
+      ]
+    },
+    {
+      "id": "diffraction-provenance",
+      "gates": [
+        "G4"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "Applicability cannot be inferred without the vessel-data provenance.",
+      "required_record": "If new diffraction-derived vessel data are used, link the version-bound G4 record; otherwise record the existing-data basis and reviewed NOT_APPLICABLE decision. Missing provenance remains NOT_EVALUATED.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 5, DIFFRACTION"
+        },
+        {
+          "source": "schema",
+          "locator": "VesselMotion.provenance"
+        }
+      ]
+    },
+    {
+      "id": "fingerprint-appendix",
+      "gates": [
+        "G5"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "Model-file digests alone do not link results to cleared gates.",
+      "required_record": "Appendix linking input fingerprints, native result digests, solver version, governing cases, gate criteria and decisions, images and independent signatures. A changed input or version requires evidence reconciliation.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 5, APPENDIX"
+        },
+        {
+          "source": "wrapper",
+          "locator": "model_files_sha256"
+        }
+      ]
+    },
+    {
+      "id": "directional-stroke",
+      "gates": [
+        "G2",
+        "G3"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "Extension/collapse datum travel and tensioner design limits are not declared.",
+      "required_record": "Design-basis references and units for datum and directional usable travel; direction-specific extrema and comparisons. Distinguish telescopic-joint directional travel from the tensioner mid-stroke assumption.",
+      "basis": [
+        {
+          "source": "stroke",
+          "locator": "tj_stroke and tensioner_stroke"
+        },
+        {
+          "source": "pack",
+          "locator": "section 5, STROKE"
+        }
+      ]
+    },
+    {
+      "id": "joint-angle",
+      "gates": [
+        "G2",
+        "G3"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "Joint-specific design limits and angle conventions are missing.",
+      "required_record": "Design-basis references, units, upper/lower joint limits, connection-relative versus global angle definition and governing-case extrema.",
+      "basis": [
+        {
+          "source": "pack",
+          "locator": "section 5, ANGLE-CLEARANCE and EQUILIBRIUM"
+        },
+        {
+          "source": "wrapper",
+          "locator": "governing_responses and static_responses"
+        }
+      ]
+    },
+    {
+      "id": "clearance",
+      "gates": [
+        "G2",
+        "G3"
+      ],
+      "status": "NOT_EVALUATED",
+      "responsible_role": "Riser analysis discipline",
+      "evidence_records": [],
+      "missing_evidence": "Opening/member geometry, offsets and clearance criteria are not supplied.",
+      "required_record": "Declared geometry, pivot, direction, units and design-basis clearance criterion; governing-case excursion and contact comparison. Applicability of the straight-member geometric reduction requires review.",
+      "basis": [
+        {
+          "source": "clearance",
+          "locator": "module docstring and reach"
+        },
+        {
+          "source": "pack",
+          "locator": "section 5, ANGLE-CLEARANCE"
+        }
+      ]
+    }
+  ],
+  "test_coverage": [
+    {
+      "file": "tests/drilling_riser/global_model/test_batch_params.py",
+      "sha256": "e1e194ab9d4cfae1252332fff1377e0e84a792e6acf1bf9ea66868123b58062c",
+      "classification": "NO_DIRECT_COLLECTION_PROBE_FOUND",
+      "collection_availability_probe": false,
+      "solver_marked_tests": [],
+      "other_tests": [
+        "test_effective_vertical_target_with_a_failed_tensioner",
+        "test_failed_count_must_leave_a_tensioner",
+        "test_failed_tensioner_is_removed_and_the_others_keep_their_tension",
+        "test_flex_joint_curve_override",
+        "test_physical_checks_use_the_remaining_tensioners",
+        "test_section_stiffness_factors_scale_ei_and_ea",
+        "test_tensioner_representation_and_rao_origin_shift",
+        "test_unknown_section_name_is_rejected"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_campaign.py",
+      "sha256": "478d442856c41bcca77713a0b00dd7052c29eaeff0f39b4c9e3dc79b942ab68d",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_runner_with_campaign_adapter_statics_modal_regular_and_proxies",
+        "test_seeded_statics_matches_direct_statics_on_the_fixed_base_model",
+        "test_statics_settings_change_the_path_not_the_static_state"
+      ],
+      "other_tests": [
+        "test_case_sets_environment_tension_and_mud",
+        "test_coupling_segment_m_refines_only_the_riser_and_keeps_its_length",
+        "test_coupling_segments_split_every_joint_end_into_short_pieces",
+        "test_disconnect_tension_factor_default_when_absent",
+        "test_disconnect_tension_factor_zero_is_honoured_not_defaulted",
+        "test_offset_is_along_the_heading",
+        "test_physical_state_checks_trip_on_the_yawed_branch",
+        "test_stack_segment_refinement_caps_every_stack_segment",
+        "test_statics_case_carries_no_wave_or_dynamics_from_the_case"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_damping_offset_current.py",
+      "sha256": "8cbb768c9a6958ad5c375c5cf810854e007a4725ef56eddbf37d4ac7635f236f",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_static_offset_and_current_rotate_the_flex_joints",
+        "test_text_model_carries_the_damping_set"
+      ],
+      "other_tests": [
+        "test_current_profile_is_emitted_as_reference_speed_and_factors",
+        "test_current_profile_validation",
+        "test_current_profile_with_a_subsurface_maximum_is_normalised_by_the_maximum",
+        "test_default_vessel_offset_is_zero",
+        "test_flooded_foundation_gives_the_conductor_seawater_contents_from_the_sea_surface",
+        "test_force_class_names_carry_a_unit_suffix_and_legacy_names_still_load",
+        "test_no_current_emits_no_current",
+        "test_no_structural_damping_emits_no_damping_set",
+        "test_structural_damping_is_emitted_and_referenced_by_every_line_type",
+        "test_structural_damping_is_stiffness_proportional_rayleigh",
+        "test_structural_damping_rejects_non_positive_values",
+        "test_tension_ring_starts_under_the_offset_vessel",
+        "test_vessel_offset_moves_the_vessel_in_statics"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_event_models.py",
+      "sha256": "f832aaed294c68e0f1d1db5d457e282772fc5b09d849f439b85670be6087e0a3",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_recoil_lifts_the_lmrp_off_the_bop",
+        "test_vessel_follows_the_prescribed_trajectory"
+      ],
+      "other_tests": [
+        "test_calibrated_line_tension_keeps_the_anti_recoil_schedule",
+        "test_recoil_hold_factor_scales_the_hold_tension",
+        "test_recoil_hold_tension_is_the_released_weight",
+        "test_recoil_splits_the_lmrp_off_the_bop_and_steps_the_tensioners",
+        "test_vessel_trajectory_is_a_primary_time_history_from_the_offset",
+        "test_wave_phase_sets_the_regular_wave_time_origin"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_events.py",
+      "sha256": "cad1c466ebc9131963c7ef0a60e7190840f4dd71ae6288c80e22192d7441e4ee",
+      "classification": "NO_DIRECT_COLLECTION_PROBE_FOUND",
+      "collection_availability_probe": false,
+      "solver_marked_tests": [],
+      "other_tests": [
+        "test_anti_recoil_schedule_closes_to_the_hold_tension",
+        "test_beam_environment_drifts_in_sway_with_the_sway_added_mass",
+        "test_constant_force_from_rest_follows_the_closed_form",
+        "test_current_drag_limits_the_drift_speed_to_the_current",
+        "test_drive_off_thrust_ramps_then_holds",
+        "test_initial_velocity_is_applied_along_the_environment",
+        "test_wave_drift_force_is_the_reflection_limit_in_short_waves_and_falls_in_long_waves"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_fatigue_channels.py",
+      "sha256": "77d65a09ccf84de64e35526a51c659a44c7cffb269fcc8f54a548b0bb26a813b",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_fatigue_channels_of_a_short_irregular_window"
+      ],
+      "other_tests": [
+        "test_extract_counts_the_time_history_and_keeps_the_orcaflex_count_for_information",
+        "test_half_cycles_hold_the_counting_contract_on_its_signals",
+        "test_histogram_bins_every_half_cycle_on_a_range_from_the_observed_maximum",
+        "test_histogram_of_no_cycles_is_empty_and_valid",
+        "test_peak_to_valley_invariant",
+        "test_stations_cover_riser_boundaries_and_spacing_and_the_stack_connectors"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_hand_checks.py",
+      "sha256": "02cdb0cf25c72752c951a9934b93177f00b399fcd50db4cff6c92ee3c57892f8",
+      "classification": "NO_DIRECT_COLLECTION_PROBE_FOUND",
+      "collection_availability_probe": false,
+      "solver_marked_tests": [],
+      "other_tests": [
+        "test_effective_tension_chain_top_and_bottom",
+        "test_negative_tension_rejected_in_wkb",
+        "test_point_mass_lengthens_first_period",
+        "test_stiff_end_springs_approach_clamped_beam",
+        "test_submerged_weight_counts_buoyancy_only_below_msl",
+        "test_submerged_weight_fully_submerged_section_includes_contents_and_buoyancy",
+        "test_tensioned_string_limit_matches_closed_form",
+        "test_untensioned_pinned_beam_matches_closed_form",
+        "test_wkb_uniform_string_is_exact"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_hang_off.py",
+      "sha256": "8f63f2b8696ea7941d889189059f34e8a5df555fe30509ed299936aa13a9294d",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_hang_off_case_through_the_adapter_extracts_a_complete_w5_set",
+        "test_hard_hang_off_statics_carry_the_string_weight_on_the_vessel",
+        "test_soft_hang_off_statics_hang_the_string_on_the_spring_at_mid_stroke"
+      ],
+      "other_tests": [
+        "test_campaign_case_builds_hang_off_and_running_and_damping",
+        "test_current_direction_can_differ_from_the_wave_heading",
+        "test_hang_off_statics_accept_an_inclined_ring_and_reject_the_flipped_branch",
+        "test_hang_off_w5_channel_set_completeness",
+        "test_hang_off_without_lmrp_ends_the_string_at_the_riser_adaptor",
+        "test_hard_hang_off_objects",
+        "test_hard_hang_off_with_lmrp_keeps_the_lmrp_below_the_lfj_and_drops_the_rest",
+        "test_running_string_trims_the_upper_joints_to_the_deployed_length",
+        "test_soft_hang_off_objects",
+        "test_soft_hang_off_spring_carries_the_hung_weight_at_mid_stroke"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_irregular_wave.py",
+      "sha256": "172e91a1f569895a9e08f7b34f77e0d0cb26a3d22e2086b9e33885a5a1c17b4f",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_irregular_wave_loads_in_orcaflex_as_specified"
+      ],
+      "other_tests": [
+        "test_gamma_one_pierson_moskowitz_limit_builds",
+        "test_irregular_wave_emits_a_jonswap_train_with_tp_gamma_and_seed",
+        "test_irregular_wave_rejects_invalid_values",
+        "test_regular_and_irregular_waves_are_exclusive"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_nonlinear_vessel_foundation.py",
+      "sha256": "0fb6538f692d028729197ccb3b948eb7b218c7f08f26e01f7deb41c2afb9b4a0",
+      "classification": "NO_DIRECT_COLLECTION_PROBE_FOUND",
+      "collection_availability_probe": false,
+      "solver_marked_tests": [],
+      "other_tests": [
+        "test_fixed_base_model_is_unchanged_without_foundation",
+        "test_flex_joint_curve_must_be_monotonic",
+        "test_flex_joint_from_secants_builds_moment_rotation_curve",
+        "test_flex_joint_small_rotation_stiffness_must_match_the_curve",
+        "test_foundation_emits_conductor_line_links_and_no_seabed_stiffness",
+        "test_foundation_sections_must_mesh_on_whole_segments",
+        "test_no_vessel_motion_keeps_a_fixed_vessel",
+        "test_nonlinear_flex_joints_emit_bending_connection_stiffness_variable_data",
+        "test_parse_direction_grouped_rao_text",
+        "test_parse_rejects_inconsistent_frequency_grids",
+        "test_py_interpolates_linearly_in_depth",
+        "test_py_interpolation_on_the_union_of_y_points",
+        "test_regular_wave_and_dynamics_settings",
+        "test_spring_stations_are_the_nodes_with_tributary_lengths",
+        "test_tensioner_rating_is_recorded_and_checked",
+        "test_vessel_type_carries_displacement_raos_with_conventions"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_open_water.py",
+      "sha256": "88d194b329b41f64c2df4ab49dedc4ac42ea389df71d1b28419554bd864fe324",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_campaign_adapter_statics_and_extraction_on_open_water",
+        "test_campaign_open_water_statics_default_to_direct",
+        "test_edp_release_momentum_matches_the_closed_form",
+        "test_hollow_stack_statics_and_modes_match_the_references",
+        "test_modes_match_the_beam_reference",
+        "test_physical_checks_hold_at_an_offset_in_current",
+        "test_statics_match_hand_tensions_and_frame_balances",
+        "test_von_mises_static_and_dynamic_extraction_match_the_tube_benchmark"
+      ],
+      "other_tests": [
+        "test_beam_periods_clamped_pinned_matches_analytic",
+        "test_campaign_case_spec_loads_open_water_and_sets_the_edp_release",
+        "test_campaign_rejects_the_drilling_disconnect_proxy_on_open_water",
+        "test_edp_release_default_steps_below_the_released_weight_and_the_gate_factor_is_kept",
+        "test_edp_release_sets_release_stage_and_anti_recoil_tension",
+        "test_generic_spec_objects",
+        "test_geometry_closes_and_interface_elevation",
+        "test_geometry_that_does_not_close_is_rejected",
+        "test_hollow_stack_contents_enter_the_stack_bottom_reference",
+        "test_reference_periods_are_positive_and_ascending",
+        "test_release_reference_small_waterplane_limit",
+        "test_release_tension_above_the_rating_is_rejected",
+        "test_stack_line_carries_the_contents_like_the_hand_checks",
+        "test_tension_above_the_rating_is_rejected",
+        "test_tension_references_close_form",
+        "test_write_model_dispatches_on_the_spec_type"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_open_water_campaign.py",
+      "sha256": "3b976a2a77de18227ea674d52a9c9c1b84d36949891366816572e74a17d44406",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_open_water_case_extracts_a_complete_w5_channel_set"
+      ],
+      "other_tests": [
+        "test_open_water_channel_set_is_complete_without_the_drilling_keys",
+        "test_open_water_channel_set_names_what_is_missing",
+        "test_open_water_collapsed_frame_branch_is_rejected_and_the_next_route_tried",
+        "test_open_water_points_cover_frame_rotary_riser_boundaries_edp_and_stack",
+        "test_open_water_seeded_statics_request_uses_the_frame_continuation",
+        "test_open_water_statics_falls_back_to_frame_continuation",
+        "test_open_water_zero_offset_statics_fall_back_to_the_seeded_continuation",
+        "test_stack_stiffness_factor_applies_to_open_water_stack_sections"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_orcaflex_dynamics.py",
+      "sha256": "dc8b9004119aa32c3d9cbb7621235d0304d59529fc79c7b08dcc0ed2671de3d2",
+      "classification": "SOLVER_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_foundation_statics_carry_the_stack_into_the_conductor",
+        "test_log_interval_time_step_and_damping_can_be_changed",
+        "test_nonlinear_flex_joint_small_rotation_matches_linear_statics",
+        "test_regular_wave_dynamics_give_governing_responses"
+      ],
+      "other_tests": [],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_orcaflex_solver.py",
+      "sha256": "8c85f54575d0231876a1e22eac2741d95a0421e97e847b6c15bd41e8640fea96",
+      "classification": "SOLVER_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_as_analysed_sections_read_back_the_spec",
+        "test_statics_tension_and_modes_agree_with_hand_checks"
+      ],
+      "other_tests": [],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_parallel_runner.py",
+      "sha256": "10f343fc0af1d2e2c6bfebc81de086ed2457d1de09a6b8f425f10574ab512b6e",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_reextract_a_kept_sim_appends_a_ledger_record_and_refuses_a_changed_file",
+        "test_runner_round_trip_two_workers"
+      ],
+      "other_tests": [
+        "test_a_pool_that_keeps_breaking_ends_the_batch_cleanly",
+        "test_broken_pool_is_replaced_and_the_lost_case_retried",
+        "test_case_failed_carries_its_status_and_is_never_retried",
+        "test_case_ids_must_be_unique_and_safe",
+        "test_early_stop_leaves_unsubmitted_cases_not_run",
+        "test_failed_case_leaves_no_orphan_sim_when_not_kept",
+        "test_fault_class_retries_infrastructure_only",
+        "test_guard_stops_on_two_consecutive_licence_faults",
+        "test_guard_stops_on_version_drift",
+        "test_guard_stops_when_more_than_5_percent_of_the_batch_fails",
+        "test_in_flight_cases_never_exceed_the_worker_slots",
+        "test_input_digest_covers_model_files_and_case",
+        "test_input_digest_covers_non_yaml_model_files",
+        "test_unstable_simulation_is_not_retried",
+        "test_worker_count_is_capped"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_qualification.py",
+      "sha256": "accda1ae882cc1d64653f535758bb001e4399489fefd41137ebffcc3f6473800",
+      "classification": "NO_DIRECT_COLLECTION_PROBE_FOUND",
+      "collection_availability_probe": false,
+      "solver_marked_tests": [],
+      "other_tests": [
+        "test_boundary_is_pass",
+        "test_fail_outside_tolerance_keeps_sign",
+        "test_missing_or_degenerate_values_are_not_evaluated",
+        "test_pass_within_tolerance"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_spec_and_build.py",
+      "sha256": "63001fbf1d0c2dff28db85d58fa77f15ffc3f193f8ab3d5ac6be87ff996e9ac5",
+      "classification": "NO_DIRECT_COLLECTION_PROBE_FOUND",
+      "collection_availability_probe": false,
+      "solver_marked_tests": [],
+      "other_tests": [
+        "test_build_is_deterministic",
+        "test_flex_joint_stiffness_in_kn_m_per_degree",
+        "test_hydrodynamic_od_reproduces_displaced_volume",
+        "test_initial_state_is_the_expected_tensioned_state",
+        "test_line_types_carry_units_in_te_and_kn",
+        "test_riser_contents_only_on_riser_and_inner_barrel",
+        "test_slip_joint_is_a_constraint_free_only_along_z",
+        "test_spec_rejects_bore_larger_than_buoyancy_diameter",
+        "test_spec_rejects_length_mismatch_at_lower_flex_joint",
+        "test_spec_rejects_stack_not_reaching_datum",
+        "test_stack_has_no_seabed_contact",
+        "test_stack_line_runs_up_from_the_datum",
+        "test_topology_ring_riser_stack",
+        "test_tube_section_properties",
+        "test_winch_tensions_sum_to_the_vertical_target",
+        "test_winches_are_specified_tension_from_vessel_to_ring",
+        "test_write_model_is_text_yaml_without_user_or_machine"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_statics_path.py",
+      "sha256": "a518ea46f6c810abf2f5a3b43c2d589f9214b14e0a9d60046f757aa68b3f2e4e",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_calibration_case_then_a_case_with_the_calibrated_tension",
+        "test_continuation_paths_reach_the_directly_solved_state"
+      ],
+      "other_tests": [
+        "test_a_yaw_flip_rejects_the_path",
+        "test_all_paths_failing_is_statics_diverged",
+        "test_branch_tolerance_and_ring_buoyancy",
+        "test_calibration_scales_every_line_to_the_vertical_target",
+        "test_direct_path_solves_once_at_the_target",
+        "test_explicit_line_tension_is_applied_in_prepare",
+        "test_fallback_ramps_the_current_at_the_seed_after_a_divergence",
+        "test_first_path_is_the_full_current_continuation_from_the_seed",
+        "test_heading_walk_moves_to_the_next_start_heading_when_a_walk_step_fails",
+        "test_heading_walk_needs_an_offset_or_a_current",
+        "test_heading_walk_starts_at_a_converging_heading_and_turns_offset_and_current_to_the_case_heading",
+        "test_licence_error_is_not_swallowed",
+        "test_mud_walk_solves_with_heavier_contents_then_steps_down_to_the_case_density",
+        "test_neighbour_walk_starts_at_the_nearest_converging_offset_and_walks_in_quarter_steps",
+        "test_path_orders",
+        "test_tension_ramp_solves_at_a_higher_line_tension_then_steps_down_to_the_case_value",
+        "test_tension_walk_steps_down_in_one_percent_steps_at_the_case_offset",
+        "test_the_last_successful_path_of_a_variant_is_tried_first",
+        "test_without_current_an_aiding_current_is_used_then_removed"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_tensioner_representation.py",
+      "sha256": "caaa3e8da45b7d13d8b1f8a176a9a383444e9125a5fb0d1adef152b6a3ac00d6",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_equivalent_string_matches_the_lines_tension_and_removes_the_lateral_tie",
+        "test_tensioner_vertical_sum_is_invariant_to_a_vessel_offset"
+      ],
+      "other_tests": [
+        "test_default_representation_is_lines",
+        "test_equivalent_string_restrains_ring_yaw_through_riser_torsion",
+        "test_equivalent_string_topology",
+        "test_g3_hand_reference_rejects_the_equivalent_string",
+        "test_top_tension_adds_the_inner_barrel_weight_carried_by_the_vessel_in_the_lines_model",
+        "test_unknown_representation_is_rejected",
+        "test_vertical_force_rating_check_uses_the_vertical_share_per_tensioner"
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "file": "tests/drilling_riser/global_model/test_w5_channels.py",
+      "sha256": "f541e81e416a5e7376654cd48c1135ce160bc94624b819e2f1c053aec266de9e",
+      "classification": "MIXED_WITH_COLLECTION_PROBE",
+      "collection_availability_probe": true,
+      "solver_marked_tests": [
+        "test_campaign_extraction_carries_the_w5_channel_set"
+      ],
+      "other_tests": [
+        "test_compact_rounds_to_significant_digits_recursively",
+        "test_convex_hull_of_a_square_with_interior_points",
+        "test_extreme_rows_carry_coincident_values",
+        "test_missing_channels_reports_absent_required_keys",
+        "test_stats",
+        "test_tm_hull_rows_contain_the_extremes_and_all_vector_components"
+      ],
+      "execution_status": "NOT_RUN"
+    }
+  ]
+}
