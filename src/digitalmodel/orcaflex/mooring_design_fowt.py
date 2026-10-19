@@ -76,6 +76,9 @@ or mismatched frontmatter raises CitationResolutionError. With no wiki configure
 the geometric screen warns once and returns an empty sidecar:
 no universal standards-derived MBR is computed, and the caller supplies the
 cable-specific limit. This exception does not establish standards compliance.
+Unreadable pages also raise CitationResolutionError with reason
+``page_unreadable:<exception type>``; file contents and local paths from the
+underlying read error are omitted from the displayed exception.
 * DNV-OS-E301 (position mooring), API RP 2SK (mooring) — covered in
   ``mooring_design.py``.
 """
@@ -288,7 +291,17 @@ class WatchCircleConstraint(BaseModel):
             source_sibling="generic",
             note="MBR limit is a cable-specific design input supplied by caller",
         )
-        validate_citation(citation, repo_root=wiki_base)
+        try:
+            validate_citation(citation, repo_root=wiki_base)
+        except (OSError, UnicodeError) as error:
+            # Calculation Output Citation Contract, section 4.1: resolution
+            # failures identify the citation at calc time, including read errors.
+            # Do not expose file contents or local paths from the original error.
+            raise CitationResolutionError(
+                code_id=citation.code_id,
+                wiki_path=citation.wiki_path,
+                reason=f"page_unreadable:{type(error).__name__}",
+            ) from None
         return [citation]
 
 

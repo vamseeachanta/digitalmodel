@@ -119,3 +119,41 @@ def test_invalid_frontmatter_fails_at_calc_time(
     with pytest.raises(CitationResolutionError) as caught:
         check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
     assert caught.value.reason.startswith("frontmatter_")
+
+
+@pytest.mark.parametrize("layout", ["", "knowledge"])
+@pytest.mark.parametrize("failure", ["permission", "encoding"])
+def test_unreadable_page_fails_with_citation_identity(
+    tmp_path: Path, monkeypatch, layout: str, failure: str
+) -> None:
+    """Apply calc-output-citation.md section 4.1 to read failures.
+
+    Independent oracle: a page that cannot be read cannot establish provenance;
+    The contract requires CitationResolutionError carrying the code identifier.
+    Geometry is the existing synthetic cable input, with no numerical assertion.
+    The invalid byte is a text-decoding fault, not a standards-derived value.
+    """
+    page = tmp_path / layout / WIKI_PATH
+    page.parent.mkdir(parents=True)
+    page.write_bytes(b"\xff")
+    read_text = Path.read_text
+
+    def denied_read(path, *args, **kwargs):
+        if path == page:
+            raise PermissionError("synthetic private read diagnostic")
+        return read_text(path, *args, **kwargs)
+
+    if failure == "permission":
+        monkeypatch.setattr(Path, "read_text", denied_read)
+        error_type = "PermissionError"
+    else:
+        error_type = "UnicodeDecodeError"
+
+    with pytest.raises(CitationResolutionError) as caught:
+        check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+    assert caught.value.code_id == "DNV-RP-0360"
+    assert caught.value.wiki_path == WIKI_PATH
+    assert caught.value.reason == f"page_unreadable:{error_type}"
+    assert caught.value.__suppress_context__
+    assert "synthetic private read diagnostic" not in str(caught.value)
+    assert str(page) not in str(caught.value)
