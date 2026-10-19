@@ -5,7 +5,7 @@
 | Module | power/protocols |
 | Repository | digitalmodel |
 | Path | src/digitalmodel/power/protocols |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | `f4032a2ecaac110244919db23c5656d1c0d1cd5a` |
 | Analysis family | Engineering calculations (EC); AQG r0 Python calculations |
 | Quality manager role | Engineering calculations quality manager |
@@ -31,7 +31,7 @@ Scope includes both package Python files and the module test file; adjacent powe
 | `GOOSEDataAttribute.name`, `da_type`, `value` | Name and enum: dimensionless; payload unit unspecified | Annotations only; no runtime type or payload-unit validation | Required | Caller; [src/digitalmodel/power/protocols/iec61850_goose.py:L77-L93] |
 | `GOOSEDataset.dataset_ref`, `attributes` | Reference and collection: dimensionless | Construction rejects an empty collection; `validate_dataset` flags duplicate names | Empty list factory, rejected on construction | Caller; [src/digitalmodel/power/protocols/iec61850_goose.py:L96-L115] [src/digitalmodel/power/protocols/iec61850_goose.py:L232-L241] |
 | `GOOSEControlBlock.cb_ref`, `dataset_ref` | Dimensionless strings | No reference-syntax check | Required | Caller; [src/digitalmodel/power/protocols/iec61850_goose.py:L138-L150] |
-| `GOOSEControlBlock.app_id` | Dimensionless identifier | Constructor compares against the bounds in code; this pack does not reproduce the standards-attributed bounds | Required | Caller; [src/digitalmodel/power/protocols/iec61850_goose.py:L145-L150] |
+| `GOOSEControlBlock.app_id` | Dimensionless identifier | For integer input, inclusive range 0x0000–0x3FFF (0–16383); out-of-range integers raise `ValueError`; no integer-type enforcement | Required | Caller; [src/digitalmodel/power/protocols/iec61850_goose.py:L145-L150] |
 | `GOOSEControlBlock.conf_rev` | Dimensionless revision | No revision or integer-type check | Required | Caller; [src/digitalmodel/power/protocols/iec61850_goose.py:L138-L150] |
 | `max_time_ms`, `min_time_ms` | ms, by docstring convention | No sign, integer-type or ordering check | Required | Caller; [src/digitalmodel/power/protocols/iec61850_goose.py:L132-L150] |
 | `GOOSEPublisher` identity and object references | Dimensionless strings and model objects | No cross-check between dataset reference and control-block reference | Required | Caller; [src/digitalmodel/power/protocols/iec61850_goose.py:L153-L175] |
@@ -50,21 +50,21 @@ No coordinate frame, origin, geometric sign or phase convention participates in 
 
 UNVERIFIED: U1 payload engineering units are not established; issue pending (1). [src/digitalmodel/power/protocols/iec61850_goose.py:L77-L93]
 
-UNVERIFIED: U3 interoperability with an external SCL schema or network peer is not established; issue pending (3). [src/digitalmodel/power/protocols/iec61850_goose.py:L282-L330]
+UNVERIFIED: U3 interoperability with an external SCL schema or network peer is not established; dictionary key names, nesting and the meaning of `appID` are not checked against the SCL part of the standard; issue pending (3). [src/digitalmodel/power/protocols/iec61850_goose.py:L282-L330]
 
 ## 3. Method and governing standards
 
 | Method | Implementation and coverage | Reference and provenance limit |
 | --- | --- | --- |
-| Model vocabulary | `LogicalNodeType` and `DAType` enumerate the supported symbols; dataclasses retain caller data. [src/digitalmodel/power/protocols/iec61850_goose.py:L20-L216] | IEC 61850 is named generically; no edition or numbered clause is supplied. [src/digitalmodel/power/protocols/iec61850_goose.py:L1-L11] |
+| Model vocabulary | `LogicalNodeType` and `DAType` enumerate the supported symbols; dataclasses retain caller data. [src/digitalmodel/power/protocols/iec61850_goose.py:L20-L216] | IEC 61850 parts 7-2 and 8-1 are named; no edition or clause is supplied. [src/digitalmodel/power/protocols/iec61850_goose.py:L1-L11] |
 | Dataset acceptance | Constructor rejects an initially empty attribute list; validator accumulates repeated names using a set. [src/digitalmodel/power/protocols/iec61850_goose.py:L108-L115] [src/digitalmodel/power/protocols/iec61850_goose.py:L232-L241] | IEC 61850-7-2, Abstract communication service interface (ACSI), is named in the module reference list without edition or numbered clause. [src/digitalmodel/power/protocols/iec61850_goose.py:L7-L11] |
-| Control-block acceptance | Constructor checks application-ID bounds only. [src/digitalmodel/power/protocols/iec61850_goose.py:L145-L150] | IEC 61850-8-1, Specific communication service mapping (SCSM), is named beside the application-ID description; no edition or numbered clause is provided. [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L135] |
+| Control-block acceptance | For integer input, constructor checks application-ID bounds and raises `ValueError` outside them; it does not enforce integer type. [src/digitalmodel/power/protocols/iec61850_goose.py:L145-L150] | IEC 61850-8-1, Specific communication service mapping (SCSM), is named beside the application-ID description; no edition or numbered clause is provided. [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L135] |
 | Binding acceptance | Two equality comparisons: subscribed application ID and dataset reference against the control block. [src/digitalmodel/power/protocols/iec61850_goose.py:L261-L279] | No function-level clause or equation citation is provided. [src/digitalmodel/power/protocols/iec61850_goose.py:L244-L279] |
 | SCL-like representation | Builds dictionaries and maps attribute enums to their values; does not emit a `Citation` sidecar. [src/digitalmodel/power/protocols/iec61850_goose.py:L296-L330] | IEC 61850-8-1 refers to mappings to MMS and ISO/IEC 8802-3; the latter is a reference-list mention, without a separate implementation, edition or clause. [src/digitalmodel/power/protocols/iec61850_goose.py:L7-L11] |
 
 The code names parts 7-2 and 8-1 rather than just the broad parts 7 and 8; the test docstring names 8-1 and supplies no edition either, so there is no recorded pair of conflicting editions to reconcile. [src/digitalmodel/power/protocols/iec61850_goose.py:L7-L11] [tests/power/protocols/test_iec61850_goose.py:L7-L10]
 
-UNVERIFIED: U2 standard editions, clause identifiers, standards conformance and standards-derived constant provenance remain unestablished; clause text not checked against the licensed copy; issue pending (2). [src/digitalmodel/power/protocols/iec61850_goose.py:L7-L11] [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L150]
+UNVERIFIED: U2 standard editions, clause identifiers, standards conformance and standards-derived constant provenance remain unestablished, including the docstring attribution of the application-ID range to IEC 61850-8-1; SCL dictionary key names, nesting and the meaning of `appID` are not checked against the SCL part of the standard; clause text not checked against the licensed copy; issue pending (2). [src/digitalmodel/power/protocols/iec61850_goose.py:L7-L11] [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L150]
 
 The application-ID validator returns no calculation-output citation sidecar; the only returned dictionaries belong to the validators and structure generator. [src/digitalmodel/power/protocols/iec61850_goose.py:L145-L150] [src/digitalmodel/power/protocols/iec61850_goose.py:L219-L330]
 
@@ -94,21 +94,21 @@ Gate selection: AQG r0, section 10, Python calculations, with G5 from section 9;
 | --- | --- | --- |
 | G0 inputs, units, citations | Applicable; model construction, reference consistency and provenance boundary | C01, C02, C03 |
 | G1 imports and tests | Applicable; Python import and offline test execution, with no external program writer | C04 |
-| G2 hand or published check | Applicable; independent set-cardinality and equality reasoning for the implemented predicates | C05 |
+| G2 hand or published check | Applicable; set-cardinality and equality reasoning for the implemented predicates; no independent validation claimed | C05 |
 | G3 short dynamics | NOT_APPLICABLE; no dynamic solver or time integration is implemented. [src/digitalmodel/power/protocols/iec61850_goose.py:L219-L330] | None |
 | G4 diffraction | NOT_APPLICABLE; outputs are diagnostic and protocol-structure dictionaries. [src/digitalmodel/power/protocols/iec61850_goose.py:L219-L330] | None |
 | G5 evidence appendix | Applicable; pin, test results, checks and known gaps accompany model claims | C06 |
 
 | Check | Function, output and executable route | Numeric pass criterion and unit | Evidence and gate |
 | --- | --- | --- | --- |
-| C01 | Run `tests/power/protocols/test_iec61850_goose.py::TestGOOSEDataset::test_empty_attributes_raises` and the R1 node for initial emptiness and duplicate rejection. [tests/power/protocols/test_iec61850_goose.py:L127-L132] [tests/power/protocols/test_iec61850_goose.py:L244-L254] | 2 passed tests; 0 unexpected acceptances, count | Test results; G0 |
+| C01 | Run `tests/power/protocols/test_iec61850_goose.py::TestGOOSEDataset::test_empty_attributes_raises` and the R1 node for initial-emptiness rejection and duplicate flagging. [tests/power/protocols/test_iec61850_goose.py:L127-L132] [tests/power/protocols/test_iec61850_goose.py:L244-L254] | 2 passed tests; empty construction raises `ValueError` and duplicate validation returns `pass=False` with a duplicate diagnostic, exact outcomes | Test results; G0 |
 | C02 | Run R2, R3 and R4 for `validate_binding` reference predicates. [tests/power/protocols/test_iec61850_goose.py:L261-L295] | 3 passed tests; 0 incorrect Boolean results, count | Test results; G0 |
 | C03 | Inspect `GOOSEControlBlock` timing units and constructor bounds; retain missing edition, clause and citation metadata in section 10 rather than asserting conformance. [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L150] | 2 time fields documented as ms; 0 untracked provenance gaps, count | Input table and issue pending (2); G0; documentation check only |
 | C04 | Run the complete module test file, including its import and structure checks. [tests/power/protocols/test_iec61850_goose.py:L17-L29] [tests/power/protocols/test_iec61850_goose.py:L76-L328] | 25 passed tests; 0 failures, skips or NOT_RUN, count | Baseline and after results; G1 |
-| C05 | For the R1 names, independently compute `len(names)-len(set(names))`; require 1 repeat, `pass=False` and 1 diagnostic from `validate_dataset`. For the matching R2 references require 0 unequal pairs and `pass=True`. [tests/power/protocols/test_iec61850_goose.py:L244-L271] | Repeat-count difference 0 attributes; mismatch-count difference 0 reference pairs; 0 Boolean discrepancies | Hand-check record; G2; verifies these predicates only |
+| C05 | Reasoning: the two equal R1 names imply 1 repeat; the cited test asserts `pass=False` and a diagnostic containing duplicate, without asserting diagnostic count. The matching R2 references imply 0 unequal pairs; the cited test asserts `pass=True`. [tests/power/protocols/test_iec61850_goose.py:L244-L271] | 0 contradictions with the cited Boolean and substring assertions; diagnostic cardinality is not tested | Reasoning recorded in this row; G2; no independent reference check |
 | C06 | Resolve all ranged citations at the declared code or explicit map pin; require the five R1–R5 nodes in both module run logs, and retain every section-10 item with a draft reference | 0 unresolved citations; 0 missing example results; 0 untracked open items, count | Citation resolver, offline logs and draft list; G5 |
 
-Recorded results: C01–C06 PASS for their stated criteria; C03 records absent provenance and C05 checks the implemented predicates, neither establishes IEC conformance. [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L150] [tests/power/protocols/test_iec61850_goose.py:L244-L271]
+Recorded results: C01–C06 PASS for their stated criteria; C03 records absent provenance and C05 records reasoning consistent with the cited assertions; neither establishes IEC conformance. [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L150] [tests/power/protocols/test_iec61850_goose.py:L244-L271]
 
 ## 6. Known failure modes and pitfalls
 
@@ -128,9 +128,9 @@ No incident issue was specified, and read-only searches for GOOSE and IEC 61850 
 | S4 empty input default | Subscriber inputs default to an empty list; binding acceptance ignores the list and whether its names occur in the dataset. [src/digitalmodel/power/protocols/iec61850_goose.py:L194-L197] [src/digitalmodel/power/protocols/iec61850_goose.py:L261-L279] | no detection check exists | issue pending (1); 2026-10-18 |
 | S5 dataset success predicate | `len(issues)==0` tests only repeated names; a dataset cleared after construction passes; types, payload values and reference syntax are unchecked. [src/digitalmodel/power/protocols/iec61850_goose.py:L232-L241] | C01/C05 cover duplicates only; no detection check exists for the other accepted states | issue pending (1); 2026-10-18 |
 | S6 binding success predicate | `len(issues)==0` reflects only two control-block comparisons; actual publisher dataset consistency is unchecked. [src/digitalmodel/power/protocols/iec61850_goose.py:L261-L279] [src/digitalmodel/power/protocols/iec61850_goose.py:L296-L323] | C02/C05 cover the compared references only; no detection check exists for publisher inconsistency | issue pending (1); 2026-10-18 |
-| Additional type boundary | Application-ID comparison does not enforce integer type; data-attribute annotations do not validate payload type. [src/digitalmodel/power/protocols/iec61850_goose.py:L91-L93] [src/digitalmodel/power/protocols/iec61850_goose.py:L145-L150] | no detection check exists | issue pending (1); 2026-10-18 |
+| Additional type boundary | Application-ID comparison does not enforce integer type: NaN, `True` and `1.5` are accepted at construction; NaN and `1.5` later raise `TypeError` in `generate_scl_structure` at `hex(cb.app_id)`, while `True` serialises as `0x1`. Out-of-range float `1e5` raises `TypeError` while formatting the constructor error, rather than `ValueError`. Data-attribute annotations do not validate payload type. [src/digitalmodel/power/protocols/iec61850_goose.py:L91-L93] [src/digitalmodel/power/protocols/iec61850_goose.py:L145-L150] [src/digitalmodel/power/protocols/iec61850_goose.py:L313-L319] | no detection check exists | issue pending (1); 2026-10-18 |
 | Standards provenance | References do not supply editions or clauses; constructor does not produce citation metadata. [src/digitalmodel/power/protocols/iec61850_goose.py:L7-L11] [src/digitalmodel/power/protocols/iec61850_goose.py:L145-L150] | C03/C06 track the gap; no conformance detection check exists | issue pending (2); 2026-10-18 |
-| Representation boundary | Local dictionary assertions do not establish XML/schema or peer interoperability. [src/digitalmodel/power/protocols/iec61850_goose.py:L282-L330] [tests/power/protocols/test_iec61850_goose.py:L301-L328] | C04 exercises dictionaries; no interoperability detection check exists | issue pending (3); 2026-10-18 |
+| Representation boundary | Local dictionary assertions do not establish XML/schema or peer interoperability; dictionary key names, nesting and the meaning of `appID` are not checked against the SCL part of the standard. [src/digitalmodel/power/protocols/iec61850_goose.py:L282-L330] [tests/power/protocols/test_iec61850_goose.py:L301-L328] | C04 exercises dictionaries; no interoperability detection check exists | issue pending (3); 2026-10-18 |
 
 ## 7. Lessons log
 
@@ -175,8 +175,8 @@ The module's tests comprise 25 nodes across enum, data-attribute, dataset, contr
 | Open item | Responsible function | Reference |
 | --- | --- | --- |
 | U1 payload units; constructor and validator type, timing, mutability, mapped-input and publisher-consistency boundaries | Protocol maintainers | issue pending (1); [src/digitalmodel/power/protocols/iec61850_goose.py:L77-L197] [src/digitalmodel/power/protocols/iec61850_goose.py:L219-L279] |
-| U2 governing editions, clauses, conformance and standards-derived constant citation metadata; clause text not checked against the licensed copy | Protocol maintainers and engineering calculations quality manager | issue pending (2); [src/digitalmodel/power/protocols/iec61850_goose.py:L7-L11] [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L150] |
-| U3 external schema/peer interoperability; independent worked example missing; current examples remain regressions | Protocol maintainers | issue pending (3); [tests/power/protocols/test_iec61850_goose.py:L301-L328] |
+| U2 governing editions, clauses, conformance and standards-derived constant citation metadata, including the application-ID range attribution; clause text not checked against the licensed copy | Protocol maintainers and engineering calculations quality manager | issue pending (2); [src/digitalmodel/power/protocols/iec61850_goose.py:L7-L11] [src/digitalmodel/power/protocols/iec61850_goose.py:L126-L150] |
+| U3 external schema/peer interoperability; SCL dictionary key names, nesting and `appID` meaning unchecked; independent worked example missing; current examples remain regressions | Protocol maintainers | issue pending (3); [tests/power/protocols/test_iec61850_goose.py:L301-L328] |
 | Protocol method families absent from the accepted implementation inventory; review excluded candidates and add appropriate rows first | Implementation-map maintainers | issue pending (4); [docs/registry/implementation-map.yaml@3256bab95f84da3d9fadce8d5dcf8458d66d1eb4:L42693-L42706] |
 
 No private-sidecar content or client-derived values are included; all examples refer to the local test fixtures. [tests/power/protocols/test_iec61850_goose.py:L35-L70]
