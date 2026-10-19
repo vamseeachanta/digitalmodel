@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runtime evidence integrity audit</title>
+<style>
+body { font: 1rem/1.6 system-ui, sans-serif; max-width: 75rem; margin: auto; padding: 2rem; color: #18232d; }
+table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+th, td { padding: .5rem; border: 1px solid #b7c1ca; text-align: left; vertical-align: top; }
+code { overflow-wrap: anywhere; }
+caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+</style>
+</head>
+<body>
+<h1>Runtime evidence integrity audit</h1>
+<h2>Summary</h2>
+<p>The monitoring JSON export readback uses an explicit exception, preserving refusal
+of a changed payload under normal Python execution, <code>-O</code> and <code>-OO</code>.
+The regression reproduced acceptance of a changed export under optimization before the fix.
+Retained-reference digest, identity and availability checks already use explicit exceptions;
+their refusal behavior is covered in each interpreter mode. No engineering calculation,
+acceptance criterion or solver execution is changed.</p>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-19</td><td>An assertion inventory, export refusal fix and optimization regressions are added to prevent optimized execution from removing evidence readback.</td></tr></tbody>
+<caption>Table 1. Initial audit revision for <a href="https://github.com/vamseeachanta/digitalmodel/issues/2127">issue 2127</a>.</caption>
+</table>
+<h2>Scope and method</h2>
+<p>The inventory is produced from Python syntax trees without importing scanned modules.
+Comments and docstrings are excluded. Paths, source lines, enclosing definitions and
+assertion expressions are retained by the utility for contextual review. Missing or
+unparseable input refuses the inventory rather than reporting successful coverage.
+Equivalent lexical paths are normalized before enumeration.</p>
+<p>The bounded command is <code>python scripts/audit_runtime_asserts.py src/digitalmodel
+scripts/review/results/issue-2089/replay-synthetic-example.py</code>.
+The observed set comprises 2,556 package source files and one selected synthetic replay
+source: 2,557 files, with 43 assertions across 20 files after the export fix.
+Traversal does not follow directory symlinks. This is a source inventory, not proof that
+all evidence entry points or dynamically generated code have been reviewed.</p>
+<h2>Reviewed findings</h2>
+<table>
+<thead><tr><th>Component</th><th>Finding</th><th>Disposition</th></tr></thead>
+<tbody>
+<tr><td><code>installation_monitoring_demo.main</code></td><td>JSON readback equality was an assertion removed by optimization.</td><td>An explicit conditional raises <code>ValueError</code> on disagreement. Prior-output refusal is preserved.</td></tr>
+<tr><td><code>ansys.analysis_records.verify_reference</code></td><td>Digest syntax, source identity, availability and content agreement use explicit conditional exceptions.</td><td>Positive and negative subprocess tests preserve the existing behavior in all tested interpreter modes.</td></tr>
+<tr><td><code>workflow_api.golden</code></td><td>Assertions are test verdicts against committed goldens, not production intake gates.</td><td>The test-harness role is recorded; its optimization behavior is not certified by this change.</td></tr>
+<tr><td>Synthetic replay example</td><td>Assertions check a synthetic integration rehearsal; its outputs disclaim native qualification.</td><td>The rehearsal is distinguished from production evidence intake. No native replay or numerical acceptance change is made.</td></tr>
+</tbody>
+<caption>Table 2. Bounded review findings and dispositions.</caption>
+</table>
+<h2>Remaining assertion inventory</h2>
+<table>
+<thead><tr><th>Source</th><th>Assertions (count)</th><th>Review status</th></tr></thead>
+<tbody>
+<tr><td><code>scripts/review/results/issue-2089/replay-synthetic-example.py</code></td><td>6</td><td>Test harness; no production intake qualification</td></tr>
+<tr><td><code>src/digitalmodel/ansys/runner.py</code></td><td>4</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/asset_integrity/common/data.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/cathodic_protection/b401_anode_families.py</code></td><td>5</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/cathodic_protection/b401_family_route.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/cathodic_protection/dnv_rp_f103.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/cathodic_protection/marine_structure_cp.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/cathodic_protection/stray_current.py</code></td><td>3</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/fatigue/sn_library.py</code></td><td>5</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/field_development/subsea_bridge.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/hydrodynamics/diffraction/output_schemas.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/hydrodynamics/hull_library/_cutout_geometry.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/infrastructure/utils/ETL_components.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/infrastructure/utils/data.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/solvers/openfoam/pressure_taps.py</code></td><td>2</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/solvers/orcaflex/model_catalogue.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/solvers/orcaflex/orcaflex_analysis.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/structural/parametric_coordinator.py</code></td><td>3</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/subsea/pipeline/free_span/__init__.py</code></td><td>1</td><td>Context review deferred; no vulnerability verdict</td></tr>
+<tr><td><code>src/digitalmodel/workflow_api/golden.py</code></td><td>3</td><td>Test harness; no production intake qualification</td></tr>
+</tbody>
+<caption>Table 3. Remaining assertions in the bounded source set; presence alone establishes no vulnerability.</caption>
+</table>
+<h2>Verification</h2>
+<p>The new tests and all existing tests for the touched monitoring module pass:
+45 tests comprising nine inventory cases, nine export cases, fifteen retained-reference
+cases and twelve existing monitoring cases. Ruff passes on all four Python files.</p>
+<p>Export tests independently substitute the literal JSON value <code>tampered</code>
+for <code>synthetic</code>. Valid exports remain readable, changed exports refuse, and
+an existing output remains unchanged. Reference tests pin the original synthetic bytes
+using the standard-library SHA-256 implementation, then alter the bytes, source identity,
+digest syntax or availability. The expected refusal is independent of the verifier.
+Child test oracles use conditional exceptions and emitted JSON rather than assertions
+that optimization could remove. No engineering constants or tolerances are introduced.</p>
+<h2>Baseline</h2>
+<p>The default full-tree inventory command <code>python scripts/audit_runtime_asserts.py</code>
+stops at <code>scripts/python/digitalmodel/analysis/2058095_HydFilePreSolve.py:58</code>:
+<code>SyntaxError: invalid hexadecimal literal</code>.
+The Python 2 integer suffix is confirmed in <code>origin/main</code> using <code>git show</code>;
+the file is unchanged. Full scripts-tree coverage is therefore not established.
+The bounded package and selected replay-source inventory succeeds.</p>
+<h2>Known limits and later slices</h2>
+<p>Thirty-four remaining assertion contexts require further review before any trust-gate
+classification. A readback compares parsed JSON values, not byte identity; it neither
+establishes source authenticity nor protects the file from later modification. A refused
+export remains on disk for inspection, as before; no atomic publication guarantee is added.
+The optimized tests cover a reusable retained-reference primitive, not every canary path.
+Independent provider review remains pending before merge.</p>
+<h2>Sources</h2>
+<ul>
+<li><a href="https://docs.python.org/3/reference/simple_stmts.html#the-assert-statement">Python Language Reference, section 7.3, The assert statement</a>, Python 3.15.0 documentation, retrieved 2026-10-19, HTTP 200.</li>
+<li><a href="https://docs.python.org/3/using/cmdline.html#cmdoption-O">Python command-line documentation, optimization options</a>, retrieved 2026-10-19, HTTP 200. The additional <code>-OO</code> behavior removes docstrings.</li>
+<li><a href="https://github.com/vamseeachanta/digitalmodel/issues/2121">Retained diagnostic replay context</a>; no canary execution or engineering criteria are extended.</li>
+</ul>
+</body>
+</html>
