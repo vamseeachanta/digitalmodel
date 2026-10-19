@@ -4,13 +4,22 @@ import re
 import subprocess
 from pathlib import Path
 
-import yaml
+import pytest
+from ruamel.yaml import YAML
+from ruamel.yaml.constructor import DuplicateKeyError
 
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS_README = ROOT / "docs" / "README.md"
 OPERATOR_MAP = ROOT / "docs" / "maps" / "digitalmodel-operator-map.md"
 REGISTRY = ROOT / "docs" / "registry" / "module-routing.yaml"
+
+
+def load_registry(text: str) -> dict:
+    """Parse the routing registry without silently shadowing mapping entries."""
+    loader = YAML(typ="safe")
+    loader.allow_duplicate_keys = False
+    return loader.load(text)
 
 
 def package_domains() -> set[str]:
@@ -33,7 +42,7 @@ def operator_map_domains() -> set[str]:
 
 
 def registry_domains() -> set[str]:
-    data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
+    data = load_registry(REGISTRY.read_text(encoding="utf-8"))
     return {entry["module"] for entry in data["modules"]}
 
 
@@ -44,7 +53,7 @@ def test_required_routing_surfaces_exist() -> None:
 
 
 def test_ffs_report_navigation_is_linked_and_qualification_is_explicit() -> None:
-    data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
+    data = load_registry(REGISTRY.read_text(encoding="utf-8"))
     entry = next(row for row in data['modules'] if row['module'] == 'asset_integrity')
     assert entry['screening_study']['status'] == 'unqualified-preparation'
     for path in entry['report_navigation'] + [entry['screening_study']['spec'],
@@ -95,7 +104,7 @@ def test_operator_map_has_required_columns_and_slice_link() -> None:
 
 
 def test_registry_covers_operator_map_rows_and_required_fields() -> None:
-    data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
+    data = load_registry(REGISTRY.read_text(encoding="utf-8"))
     assert data["repo"] == "digitalmodel"
     assert data["schema_version"] == 1
     assert registry_domains() == operator_map_domains()
@@ -144,7 +153,7 @@ def test_no_tracked_source_hygiene_violations() -> None:
 
 
 def test_ffs_preliminary_evidence_has_pinned_owner_and_qualification() -> None:
-    data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
+    data = load_registry(REGISTRY.read_text(encoding="utf-8"))
     entry = next(row for row in data["modules"] if row["module"] == "asset_integrity")
     evidence = entry["screening_study"]["canonical_preliminary_results"]
     assert evidence["owner_repo"] == "vamseeachanta/digitalmodel-data"
@@ -158,3 +167,66 @@ def test_ffs_preliminary_evidence_has_pinned_owner_and_qualification() -> None:
     assert evidence["engineering_qualified"] is False
     assert evidence["api579_allowable_remaining_wall_in"] is None
     assert evidence["asset_acceptance"] is None
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "modules: []\nmodules: []\n",
+        (
+            "modules:\n  - module: solvers\n"
+            "    submodules:\n      openfoam: {qa_family: CF}\n"
+            "    submodules:\n      top_level: {qa_family: DF}\n"
+        ),
+        (
+            "modules:\n  - module: solvers\n    submodules:\n"
+            "      orcaflex:\n        qa_family: MR\n        qa_family: DF\n"
+        ),
+    ],
+    ids=["root", "repeated-solver-submodules", "submodule-metadata"],
+)
+def test_registry_rejects_duplicate_mapping_keys(text: str) -> None:
+    """YAML 1.2.2 (2021), section 3.2.1.1: mapping keys must be unique.
+
+    Each literal repeats a key in the same mapping; each must be rejected.
+    The solver case reproduces the shadowing structure reported in issue #2772.
+    Source: https://yaml.org/spec/1.2.2/#3211-nodes
+    """
+    with pytest.raises(DuplicateKeyError):
+        load_registry(text)
+
+
+def test_registry_preserves_solver_submodule_routes() -> None:
+    """Expect the manually enumerated routes in the registry at 272a424107ab.
+
+    Independent inventory: calculix, ghs, mystran, openfoam, orcaflex,
+    seven orcaflex child packages, orcawave and top_level make fourteen routes.
+    Paths and QA families are transcribed from docs/registry/module-routing.yaml
+    at that revision; these are routing metadata, not engineering limits.
+    """
+    expected_families = {
+        "calculix": "FE",
+        "ghs": "EC",
+        "mystran": "FE",
+        "openfoam": "CF",
+        "orcaflex": "MR",
+        "orcaflex/format_converter": "MR",
+        "orcaflex/model_generator": "MR",
+        "orcaflex/modular_generator": "MR",
+        "orcaflex/modular_input_validation": "MR",
+        "orcaflex/mooring_analysis": "MR",
+        "orcaflex/results_analysis": "MR",
+        "orcaflex/universal": "MR",
+        "orcawave": "DF",
+        "top_level": "DF",
+    }
+    data = load_registry(REGISTRY.read_text(encoding="utf-8"))
+    solver = next(entry for entry in data["modules"] if entry["module"] == "solvers")
+    expected = {}
+    for name, family in expected_families.items():
+        package = "solvers" if name == "top_level" else f"solvers/{name}"
+        expected[name] = {
+            "agent_pack": f"src/digitalmodel/{package}/docs/agent-pack.md",
+            "qa_family": family,
+        }
+    assert solver["submodules"] == expected
