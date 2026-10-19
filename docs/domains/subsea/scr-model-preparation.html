@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SCR model preparation analysis</title>
+  <style>
+    body { font: 1rem/1.6 system-ui, sans-serif; max-width: 64rem; margin: auto; padding: 2rem; color: #172b3a; }
+    h1, h2 { line-height: 1.3; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; border-bottom: 1px solid #ccd6dd; padding: .6rem; vertical-align: top; }
+    caption { caption-side: bottom; text-align: left; padding: .6rem; }
+    code, pre { background: #f1f5f8; }
+    pre { padding: 1rem; overflow-x: auto; }
+    .limit { border-left: .3rem solid #ac5800; padding-left: 1rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>SCR model preparation analysis</h1>
+  <h2>Summary</h2>
+  <p>The preparation module calculates a uniform analytical catenary, an equal-arc
+    mesh, and translated hang-off boundary positions. It renders explicitly supplied
+    <code>mdl</code>, <code>inf</code>, and <code>off</code> templates for storm,
+    fatigue, or VIV selection. The worked case gives a suspended length of 4.6 m,
+    a horizontal span of 3.1 m and a mean top tension of 50.0 N. These results are
+    checked against the hand calculation below.</p>
+  <p class="limit">The legacy workbook and archived model outputs are absent from
+    the inspected checkout. Workbook extraction, sheet-to-file mapping, native
+    model validity, and response calculations are <strong>NOT_EVALUATED</strong>.
+    Template expansion does not establish a runnable finite-element model.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <caption>Table 1. Initial issue of the preparation analysis.</caption>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>1</td><td>2026-10-19</td><td>Analytical preparation, explicit templates,
+      and a synthetic hand case are introduced to provide a tested foundation while
+      workbook conversion evidence is unavailable.</td></tr></tbody>
+  </table>
+
+  <h2>Scope and source mapping</h2>
+  <p>The import path is
+    <code>digitalmodel.subsea.flexcom_tools.scr_model_creator</code>, following the
+    current package layout rather than creating a second, non-importable source tree.
+    The existing catenary and pipe-property modules are left unchanged. The new
+    calculation uses supplied submerged weight; it selects no material, density,
+    gravity, hydrodynamic coefficient, environmental condition, or safety factor.</p>
+  <table>
+    <caption>Table 2. Preparation slices and the remaining conversion evidence.</caption>
+    <thead><tr><th>Slice</th><th>Implemented basis</th><th>Evidence still required</th></tr></thead>
+    <tbody>
+      <tr><td>1: analytical seed</td><td>Positive finite SI inputs; catenary coordinates,
+        arc mesh, connectivity, and tension.</td><td>Workbook formulas, nonuniform
+        sections, seabed tail, stiffness effects and mesh convergence.</td></tr>
+      <tr><td>2: offsets</td><td>Cartesian translations of the mean hang-off position,
+        with signed components and displacement magnitude.</td><td>Re-equilibrated
+        offset configurations, porch rotations and boundary conventions.</td></tr>
+      <tr><td>3: template bundle</td><td>Mode-specific Jinja templates; strict missing-value
+        errors; three nonempty strings; explicit template provenance.</td><td>Recovered
+        native syntax, all sheet mappings, archived-file comparison and storm,
+        fatigue and VIV response qualification.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Inputs and method</h2>
+  <p>The uniform, inextensible, perfectly flexible cable has a horizontal tangent
+    at the touchdown origin. Z is upward; the mean hang-off lies in the positive
+    X/Z plane. The model contains only the suspended segment. Height h, horizontal
+    tension H and submerged weight per unit length w shall be positive. The number
+    of elements shall be a positive integer. A caller-supplied offset list is required;
+    an explicit zero offset represents the mean condition.</p>
+  <p>From <a href="https://www.mygeodesy.id.au/documents/Catenary%20Curve.pdf">Catenary
+    Curve (2019), equations (1), (3), (4), (9), (10)</a>, the catenary parameter is
+    <code>a=H/w</code>, the suspended length is <code>S=sqrt(h(h+2a))</code>, and
+    <code>x(s)=a asinh(s/a)</code>. Height above touchdown is
+    <code>z(s)=sqrt(a²+s²)-a</code>. The implementation uses its rationalized form
+    <code>z=s[s/(hypot(a,s)+a)]</code> to retain shallow heights. Top vertical tension
+    is <code>V=wS</code>; total tension is <code>T=hypot(H,V)</code>.</p>
+  <p>Mesh stations are <code>s=iS/N</code> for indices from zero through N.
+    Element lengths are arc lengths <code>S/N</code>, rather than straight-line
+    distances. Cartesian translation gives offset boundary coordinates
+    <code>(x_top+dx, dy, h)</code> and magnitude <code>hypot(dx,dy)</code>.
+    This is geometry, with no empirical coefficient. Offsets do not modify the
+    mean mesh or recompute equilibrium; mean tension does not represent an offset case.</p>
+
+  <h2>Worked example</h2>
+  <p>All example values are synthetic supplied inputs. They are neither operating
+    measurements nor material properties or prescribed design values.</p>
+  <table>
+    <caption>Table 3. Synthetic inputs for the hand calculation.</caption>
+    <thead><tr><th>Input</th><th>Value</th><th>Unit</th></tr></thead>
+    <tbody>
+      <tr><td>Hang-off height h</td><td>3.0</td><td>m</td></tr>
+      <tr><td>Horizontal tension H</td><td>20.0</td><td>N</td></tr>
+      <tr><td>Submerged weight w</td><td>10.0</td><td>N/m</td></tr>
+      <tr><td>Element count N</td><td>2</td><td>dimensionless</td></tr>
+      <tr><td>Far offset (dx, dy)</td><td>(3.0, -4.0)</td><td>m</td></tr>
+    </tbody>
+  </table>
+  <p>The independent worksheet gives <code>a=20/10=2</code>,
+    <code>S²=3(3+4)=21</code>,
+    <code>x_top=2 ln((sqrt(21)+5)/2)</code>, and
+    <code>T=10(a+h)=50</code>. The midpoint has
+    <code>s=S/2</code> and <code>z=sqrt(37)/2-2</code>.
+    The far boundary is <code>(x_top+3,-4,3)</code>, with displacement magnitude
+    <code>sqrt(3²+4²)=5</code>. Each expected value is calculated independently in
+    the test docstrings; none is copied from the implementation.</p>
+  <table>
+    <caption>Table 4. Analytical results rounded to one decimal for presentation.</caption>
+    <thead><tr><th>Answer</th><th>Value</th><th>Unit</th></tr></thead>
+    <tbody>
+      <tr><td>Suspended length</td><td>4.6</td><td>m</td></tr>
+      <tr><td>Horizontal span</td><td>3.1</td><td>m</td></tr>
+      <tr><td>Mean top tension</td><td>50.0</td><td>N</td></tr>
+      <tr><td>Far boundary (X, Y, Z)</td><td>(6.1, -4.0, 3.0)</td><td>m</td></tr>
+    </tbody>
+  </table>
+  <pre><code>PYTHONPATH=src python examples/subsea/scr_model_preparation.py</code></pre>
+  <p>The example prints its inputs, method, answer, qualification statuses and
+    rendered strings to standard output. The teaching templates are explicitly
+    marked <code>PREPARATION ONLY</code>; their text is not Flexcom syntax.</p>
+
+  <h2>API and template contract</h2>
+  <p><code>SCRModelConfig</code> requires <code>analysis_type</code>,
+    <code>height_m</code>, <code>horizontal_tension_n</code>,
+    <code>submerged_weight_n_m</code>, <code>element_count</code>,
+    <code>offsets</code>, <code>template_sets</code>, <code>template_source</code>,
+    and <code>parameters</code>. Offset names shall be nonempty, unique and
+    single-line. Supplied extra parameters are named finite numeric values or text;
+    their physical meaning, units and sources remain the caller's responsibility.</p>
+  <p><code>build_model_context(config)</code> returns geometry, <code>nodes</code>,
+    <code>elements</code>, offset boundary coordinates, supplied parameters and
+    qualification statuses. Nodes contain one-based <code>id</code> and
+    <code>s_m/x_m/y_m/z_m</code>; elements contain one-based
+    <code>id/start/end</code> and <code>arc_length_m</code>. Offset records contain
+    <code>name/dx_m/dy_m/x_m/y_m/z_m/magnitude_m</code>.</p>
+  <p><code>generate_flexcom_model(config)</code> returns exactly
+    <code>{"mdl": text, "inf": text, "off": text}</code>. Each selected mode
+    requires its own template set with exactly those keys. Missing modes, missing
+    variables and empty results fail. There is no automatic file write, template
+    filesystem loader or solver execution. LF line endings are used by Jinja.
+    Templates are trusted application inputs; native keyword completeness is not
+    parsed. <code>template_source</code> shall identify the supplied template basis
+    and revision. The existing Jinja dependency is reused.</p>
+  <p>The public <a href="https://flexcom.fea.solutions/kwd.html">Flexcom Data Inputs
+    documentation (accessed 2026-10-19)</a> describes keyword sections for model,
+    analysis and fatigue processing. That page does not establish the unavailable
+    workbook's legacy three-file mapping. No native deck grammar is inferred from it.</p>
+
+  <h2>Qualification and way forward</h2>
+  <p><code>qualification_status()</code> returns <code>NOT_EVALUATED</code> for workbook
+    extraction, archive equivalence, native model validity, storm response, fatigue
+    damage and VIV response. Rendering success cannot change those dispositions.
+    The analytical test suite establishes only the stated cable equations,
+    connectivity, translations and template behavior. It does not establish a mesh
+    convergence criterion, bending response, stress, fatigue life or VIV response.</p>
+  <p>To complete conversion, the missing workbook and matched archived input/output
+    files shall be made available through an authorized source. VBA routines and
+    sheet formulas shall then be inventoried and mapped to input parameters and
+    templates. Generated files shall be compared against those retained references;
+    native qualification remains a separate review step. No licensed solver is
+    required by the preparation module or its tests.</p>
+</main>
+</body>
+</html>
