@@ -52,6 +52,7 @@ from .models import (
     OpenFOAMCase,
 )
 from .motion import MotionType, PrescribedMotion
+from .partial_fill import snap_fill_to_cell_face
 from .sloshing_sweep import SweepCase
 
 Vec3 = Tuple[float, float, float]
@@ -72,11 +73,14 @@ _ROUND = 6
 # Explicit, recorded motion/flow phase convention for the coupled exchange.
 PHASE_CONVENTION = (
     "roll x(t)=A*sin(omega*t) [deg]; conduit pulse Q(t)=Q_peak*sin(omega*t) is "
-    "taken in phase with roll velocity (positive Q = source->dest inflow at the "
+    "taken in phase with roll angle (positive Q = source->dest inflow at the "
     "inlet patch). Over one half-cycle V_transfer=integral_0^{T/2} Q dt="
     "Q_peak*T/pi, i.e. Q_peak=pi*f*V_transfer. The inlet is specified as a "
     "VOLUMETRIC flow rate (flowRateInletVelocity), area-independent, at the mean "
     "half-cycle rate 2*f*V_transfer so the integral over T/2 equals V_transfer. "
+    "This is a constant-inflow comparison, limited by default to at most T/2 "
+    "with planned inflow checked against initialized tank headroom (#1978); "
+    "no reversing drain pulse is imposed. "
     "The outlet patch is a closed no-slip wall; the atmospheric opening is on "
     "the top patch (z=max), above the quiescent free surface for any fill "
     "fraction below 1.0 (#1528 slice 7)."
@@ -172,6 +176,10 @@ class VerificationResult:
             convention are present and consistent.
         phase_convention: The recorded motion/flow phase convention string.
         checks: Ordered mapping of check name -> pass/fail.
+        planned_inflow_m3: Actual constant inlet rate times elapsed run time.
+        headroom_m3: Capacity minus the mesh-snapped initial liquid volume.
+        headroom_exhaustion_time_s: Absolute time the headroom would be consumed
+            if inflow continued; None for a zero-flow control.
     """
 
     case_id: str
@@ -186,6 +194,9 @@ class VerificationResult:
     boundary_conditions_ok: bool
     phase_convention: str
     checks: Dict[str, bool] = field(default_factory=dict)
+    planned_inflow_m3: float = 0.0
+    headroom_m3: float = 0.0
+    headroom_exhaustion_time_s: float | None = None
 
 
 @dataclass(frozen=True)
@@ -281,7 +292,9 @@ def map_sweep_case_to_openfoam_case(
     the sweep roll period and the spec amplitude, the domain box from the tank
     dimensions, inlet/outlet boundary conditions for the conduit exchange, and
     metadata carrying the case id, conduit capacity, the flow-law scalars, and an
-    explicit motion/flow phase convention.
+    explicit motion/flow phase convention. The constant-inflow comparison ends
+    at the earlier of the solver default and one half-cycle, and is rejected
+    if its inflow would exceed the primary tank's initialized headroom (#1978).
 
     Args:
         sweep_case: One deterministic sweep row.
@@ -334,6 +347,13 @@ def map_sweep_case_to_openfoam_case(
     v_peak = q_peak / spec.conduit.area
 
     case.boundary_conditions = _exchange_boundary_conditions(q_mean)
+    # Issue #1978 (2026), option 1: a fill event occupies T/2. Retain a
+    # shorter solver default. Q=V/(T/2), hence Q*duration <= V_transfer;
+    # OpenStax, University Physics Vol. 1 (2016), section 14.5, Q=dV/dt.
+    case.solver_config.end_time = min(
+        case.solver_config.end_time, sweep_case.roll_period_s / 2.0
+    )
+    _verify_inflow_inventory(case, q_mean)
 
     case.metadata = {
         "case_id": sweep_case.case_id,
@@ -384,7 +404,8 @@ def _exchange_boundary_conditions(flow_rate: float) -> list[BoundaryCondition]:
         BoundaryCondition(
             "inlet", BoundaryType.FLOW_RATE_INLET_VELOCITY, "U",
             value="uniform (0 0 0)",
-            extra={"volumetricFlowRate": f"constant {flow_rate:.10g}"},
+            # Round-trip the Python float so the gate checks the emitted rate.
+            extra={"volumetricFlowRate": f"constant {flow_rate!r}"},
         ),
         BoundaryCondition("inlet", BoundaryType.ZERO_GRADIENT, "p_rgh"),
         BoundaryCondition(
@@ -414,6 +435,72 @@ def _exchange_boundary_conditions(flow_rate: float) -> list[BoundaryCondition]:
 # ============================================================================
 
 
+def _verify_inflow_inventory(
+    case: OpenFOAMCase, expected_rate: float
+) -> tuple[float, float, float | None]:
+    """Bound the actual constant inlet against the mesh-initialized inventory.
+
+    Source: OpenStax, University Physics Vol. 1 (2016), section 14.5,
+    Q=dV/dt. With no liquid drain, V_in=Q*(endTime-startTime) and
+    t_full=startTime+headroom/Q. The acceptance limit is physical capacity,
+    with no empirical allowance. Unsupported inlet laws cannot be evaluated.
+    """
+    sc = case.solver_config
+    if not (math.isfinite(sc.start_time) and math.isfinite(sc.end_time)) or (
+        sc.start_time < 0.0 or sc.end_time <= sc.start_time
+    ):
+        raise ValueError(
+            "coupled startTime/endTime must be finite, with 0 <= startTime < endTime"
+        )
+
+    inlet = [
+        bc for bc in case.boundary_conditions
+        if bc.patch_name == "inlet" and bc.field == "U"
+    ]
+    if len(inlet) != 1 or inlet[0].bc_type is not BoundaryType.FLOW_RATE_INLET_VELOCITY:
+        raise ValueError("coupled inlet needs exactly one flowRateInletVelocity U boundary")
+    encoded = str(inlet[0].extra.get("volumetricFlowRate", "")).split()
+    if len(encoded) != 2 or encoded[0] != "constant":
+        raise ValueError(
+            "inlet inventory NOT_EVALUATED: volumetricFlowRate must be 'constant <rate>'; "
+            "provide a supported constant-inflow comparison case"
+        )
+    try:
+        rate = float(encoded[1])
+    except ValueError as exc:
+        raise ValueError("inlet volumetricFlowRate constant must be numeric") from exc
+    if not math.isfinite(rate) or rate < 0.0:
+        raise ValueError("inlet volumetricFlowRate must be finite and non-negative")
+
+    dc = case.domain
+    dimensions = [hi - lo for lo, hi in zip(dc.min_coords, dc.max_coords)]
+    if len(dimensions) != 3 or any(not math.isfinite(d) or d <= 0.0 for d in dimensions):
+        raise ValueError("coupled inventory needs three finite positive domain dimensions")
+    if case.fill_level is None or not math.isfinite(case.fill_level):
+        raise ValueError("coupled inventory needs a finite initial fill_level")
+    snap = snap_fill_to_cell_face(
+        dimensions[2], dc.cell_counts()[2], case.fill_level, warn=False
+    )
+    headroom = math.prod(dimensions) * (1.0 - snap.fill_level)
+    if not math.isfinite(headroom):
+        raise ValueError("coupled inventory needs finite tank headroom")
+    planned = rate * (sc.end_time - sc.start_time)
+    exhaustion = sc.start_time + headroom / rate if rate > 0.0 else None
+    if not math.isfinite(planned) or planned > headroom:
+        raise ValueError(
+            f"planned inlet inflow={planned:.6g} m^3 exceeds initialized "
+            f"headroom={headroom:.6g} m^3, exhausted at t={exhaustion:.6g} s "
+            f"before endTime={sc.end_time:.6g} s; shorten endTime to the "
+            "half-cycle or reduce the transfer volume (no liquid drain is imposed)"
+        )
+    if rate != expected_rate:
+        raise ValueError(
+            f"inlet rate={rate:.6g} m^3/s disagrees with planned mean "
+            f"rate={expected_rate:.6g} m^3/s; re-map the coupled case"
+        )
+    return planned, headroom, exhaustion
+
+
 def verify_coupling(
     case: OpenFOAMCase, sweep_case: SweepCase, spec: CouplingSpec
 ) -> VerificationResult:
@@ -439,7 +526,9 @@ def verify_coupling(
     Raises:
         ValueError: On any failing check, with an actionable diagnostic (dry-out,
             overflow, non-conserving plan, missing/inconsistent boundary
-            conditions or phase convention).
+            conditions or phase convention). Actual inlet rate, elapsed runtime
+            and mesh-snapped initial fill also bound planned inflow by tank
+            headroom; an overflow diagnostic names the exhaustion time (#1978).
     """
     checks: Dict[str, bool] = {}
 
@@ -473,6 +562,14 @@ def verify_coupling(
                 "pulse integral is inconsistent with the requested transfer."
             )
     checks["metadata_flow_law_consistent"] = True
+
+    # Check actual runtime, boundary flux and mesh-snapped primary inventory,
+    # independently of the paired-tank reduced-order feasibility check below.
+    planned_inflow, headroom, exhaustion = _verify_inflow_inventory(
+        case, mean_flow_rate(v_transfer, sweep_case.roll_period_s)
+    )
+    checks["planned_inflow_within_headroom"] = True
+    checks["inlet_mean_rate_consistent"] = True
 
     # --- (2) Dry-out / overflow feasibility of the requested transfer ---------
     source = TankState(
@@ -578,6 +675,9 @@ def verify_coupling(
         boundary_conditions_ok=True,
         phase_convention=str(phase),
         checks=checks,
+        planned_inflow_m3=planned_inflow,
+        headroom_m3=headroom,
+        headroom_exhaustion_time_s=exhaustion,
     )
 
 
@@ -623,6 +723,10 @@ def build_case_manifest(
         "solver_name": sc.solver_name,
         "is_multiphase": bool(sc.is_multiphase),
         "end_time_s": sc.end_time,
+        "start_time_s": sc.start_time,
+        "planned_inflow_m3": verification.planned_inflow_m3,
+        "headroom_m3": verification.headroom_m3,
+        "headroom_exhaustion_time_s": verification.headroom_exhaustion_time_s,
         "delta_t_s": sc.delta_t,
         "write_interval": sc.write_interval,
     }
