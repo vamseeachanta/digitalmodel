@@ -86,6 +86,7 @@ def test_equal_arc_mesh_and_connectivity(config):
 def test_offsets_are_boundary_coordinates_not_re_equilibrated_geometry(config):
     """Translation: (x_top,0)+(3,-4)=(x_top+3,-4); magnitude=5 by 3-4-5."""
     context = build_model_context(config)
+    assert context["offsets"][0]["x_m"] == context["nodes"][-1]["x_m"]
     far = context["offsets"][1]
     assert far["x_m"] == pytest.approx(context["horizontal_span_m"] + 3)
     assert far["y_m"] == -4
@@ -214,6 +215,7 @@ def test_missing_evidence_never_becomes_pass(config):
         "storm_response",
         "fatigue_damage",
         "viv_response",
+        "wall_tension",
     } == set(status)
     assert build_model_context(config)["qualification"] == status
 
@@ -282,5 +284,48 @@ def test_expected_example_is_independently_checked():
         2 * math.log((math.sqrt(21) + 5) / 2)
     )
     assert result["answer"]["top_tension_n"] == pytest.approx(50)
-    assert result["files"]["inf"] == "PREPARATION ONLY: storm; H=20.0; T=50.0\n"
+    assert result["files"]["inf"] == "PREPARATION ONLY: storm; H_eff=20.0; T_eff=50.0\n"
     assert set(result["qualification"].values()) == {"NOT_EVALUATED"}
+
+
+def test_mesh_allocation_limit_is_enforced(config):
+    with pytest.raises(ValueError, match="element_count"):
+        build_model_context(replace(config, element_count=10_001))
+
+
+def test_mesh_allocation_limit_is_inclusive(config):
+    context = build_model_context(replace(config, element_count=10_000))
+    assert len(context["elements"]) == 10_000
+    assert len(context["nodes"]) == 10_001
+
+
+@pytest.mark.parametrize("extra_dx", [0.0, -1.0])
+def test_reject_hangoff_at_or_behind_touchdown(config, extra_dx):
+    span = build_model_context(config)["horizontal_span_m"]
+    offsets = (Offset("crossed", -span + extra_dx, 0.0),)
+    with pytest.raises(ValueError, match="touchdown"):
+        build_model_context(replace(config, offsets=offsets))
+
+
+def test_hangoff_ahead_of_touchdown_is_allowed(config):
+    span = build_model_context(config)["horizontal_span_m"]
+    offsets = (Offset("near", -span / 2, 0.0),)
+    context = build_model_context(replace(config, offsets=offsets))
+    assert context["offsets"][0]["x_m"] == pytest.approx(span / 2)
+
+
+@pytest.mark.parametrize("control", ["\r", "\n", "\x00"])
+def test_reject_control_characters_in_parameter_text(config, control):
+    parameters = {"value": f"first{control}injected"}
+    with pytest.raises(ValueError, match="parameters.*single-line"):
+        generate_flexcom_model(replace(config, parameters=parameters))
+
+
+def test_single_line_parameter_text_is_preserved(config):
+    templates = dict(config.template_sets["storm"], inf="{{ parameters.value }}")
+    cfg = replace(
+        config,
+        parameters={"value": "explicit text"},
+        template_sets={"storm": templates},
+    )
+    assert generate_flexcom_model(cfg)["inf"] == "explicit text"

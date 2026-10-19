@@ -22,7 +22,7 @@ def _teaching_templates() -> dict[str, str]:
         "{% for n in nodes %}{{ n.id }} {{ '%.1f'|format(n.s_m) }} "
         "{{ '%.1f'|format(n.x_m) }} {{ '%.1f'|format(n.z_m) }}\n{% endfor %}",
         "inf": "PREPARATION ONLY: {{ analysis_type }}; "
-        "H={{ horizontal_tension_n }}; T={{ top_tension_n }}\n",
+        "H_eff={{ horizontal_tension_n }}; T_eff={{ top_tension_n }}\n",
         "off": "PREPARATION ONLY: hang-off boundary coordinates\n"
         "{% for o in offsets %}{{ o.name }} {{ '%.1f'|format(o.x_m) }} "
         "{{ '%.1f'|format(o.y_m) }} {{ '%.1f'|format(o.z_m) }}\n{% endfor %}",
@@ -52,7 +52,7 @@ def worked_example() -> dict:
             "submerged_weight_n_m": config.submerged_weight_n_m,
             "element_count": config.element_count,
         },
-        "method": "Uniform inextensible catenary; equal arc mesh; Cartesian offsets; explicit templates",
+        "method": "Uniform effective-tension catenary; equal arc mesh; Cartesian offsets; explicit templates",
         "answer": {
             key: context[key]
             for key in (

@@ -8,6 +8,13 @@ to a horizontal seabed at the origin. Coordinates are metres, Z upward, with
 the mean hang-off in the positive X/Z plane. No seabed tail is generated.
 Rendering does not establish native syntax, analysis completeness, or agreement
 with the unavailable workbook. Always consult qualification_status().
+
+Submerged weight is pipe plus contents weight less displaced-water weight. Forces
+are effective tensions under the closed-end pressure-force convention, not wall
+tensions. Basis: OrcaFlex, Line theory: Line pressure effects (accessed 2026-10-19):
+https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linetheory,Linepressureeffects.htm
+No internal/external pressures or pressure areas are supplied; wall tension is
+NOT_EVALUATED.
 """
 
 from collections.abc import Mapping
@@ -16,6 +23,10 @@ import math
 
 from jinja2 import StrictUndefined
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+
+
+# Allocation bound for the preparation mesh, not an engineering convergence limit.
+MAX_ELEMENT_COUNT = 10_000
 
 
 @dataclass(frozen=True)
@@ -31,6 +42,10 @@ class Offset:
 class SCRModelConfig:
     """Explicit SI inputs and caller-supplied templates, with no design defaults.
 
+    horizontal_tension_n is the horizontal effective tension. submerged_weight_n_m
+    is the uniform weight of pipe plus contents less displaced-water weight.
+    element_count is limited to 1..MAX_ELEMENT_COUNT to bound list allocation;
+    this limit does not establish mesh convergence.
     template_sets maps each supported analysis type to mdl/inf/off template text.
     parameters carries additional explicit template inputs, such as stiffness or
     hydrodynamic coefficients; no engineering value is inferred from the mode.
@@ -58,6 +73,7 @@ def qualification_status() -> dict[str, str]:
             "storm_response",
             "fatigue_damage",
             "viv_response",
+            "wall_tension",
         ),
         "NOT_EVALUATED",
     )
@@ -84,8 +100,11 @@ def _validate(config: SCRModelConfig) -> None:
         raise ValueError("analysis_type must be storm, fatigue or viv")
     for name in ("height_m", "horizontal_tension_n", "submerged_weight_n_m"):
         _finite_number(getattr(config, name), name, positive=True)
-    if type(config.element_count) is not int or config.element_count <= 0:
-        raise ValueError("element_count must be a positive integer")
+    if (
+        type(config.element_count) is not int
+        or not 1 <= config.element_count <= MAX_ELEMENT_COUNT
+    ):
+        raise ValueError(f"element_count must be an integer in 1..{MAX_ELEMENT_COUNT}")
     if not config.offsets:
         raise ValueError("offsets must contain at least one explicit boundary position")
     names = set()
@@ -106,11 +125,16 @@ def _validate(config: SCRModelConfig) -> None:
     for key, value in config.parameters.items():
         if not isinstance(key, str) or not key.strip():
             raise ValueError("parameters keys must be nonempty strings")
-        if not isinstance(value, str):
+        if isinstance(value, str):
+            if any(character in value for character in "\r\n\x00"):
+                raise ValueError("parameters text must be single-line without NUL")
+        else:
             _finite_number(value, f"parameters {key}")
 
 
 def _geometry(config: SCRModelConfig) -> dict:
+    # With uniform submerged weight, H, V and T below are effective tensions;
+    # the module basis documents the pressure-force convention.
     # Catenary Curve (2019), eq. (4): a=H/w; eqs. (9), (10):
     # y=a*cosh(x/a), s=a*sinh(x/a), with y=a+z, hence s²=h(h+2a).
     a = config.horizontal_tension_n / config.submerged_weight_n_m
@@ -138,6 +162,9 @@ def _geometry(config: SCRModelConfig) -> dict:
 def build_model_context(config: SCRModelConfig) -> dict:
     """Calculate equal-arc mean geometry and translated hang-off boundaries.
 
+    top_tension_n is mean top effective tension; top_vertical_tension_n and
+    horizontal_tension_n are its effective-force components. Wall tension is
+    NOT_EVALUATED because pressures and pressure areas are not supplied.
     Element lengths are arc lengths, not chord lengths. Offsets do not solve
     equilibrium again and do not change the mean mesh or its tension result.
     The calling application is responsible for mesh convergence and native
@@ -202,6 +229,8 @@ def _offset_coordinates(config: SCRModelConfig, span: float) -> list[dict]:
             raise ValueError(
                 "derived offset coordinates are outside the finite numeric range"
             )
+        if x <= 0:
+            raise ValueError("offset hang-off must remain ahead of touchdown (x > 0)")
         positions.append(
             {
                 "name": offset.name,
