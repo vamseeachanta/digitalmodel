@@ -5,8 +5,10 @@ The issue requires all pending rows to remain NOT_EVALUATED until published
 references exist; the follow-up identifies the proposed bands as unsourced.
 """
 
+import hashlib
 import json
 import re
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -22,6 +24,41 @@ PENDING = {
     "Sag-bend strain": ("sag_bend_strain", ("strain measure", "bending stiffness")),
     "Stiff closure": ("stiff_closure", ("length closure", "end conditions")),
 }
+
+
+def test_preparation_binds_committed_case_table():
+    preparation = json.loads((CAMPAIGN / "preparation.json").read_text())
+    assert (
+        preparation["case_table_sha256"]
+        == hashlib.sha256((CAMPAIGN / "case-table.yml").read_bytes()).hexdigest()
+    )
+
+
+@pytest.mark.parametrize("addition", ["edition 2021", "clause or table 4.2"])
+def test_pending_evidence_allows_reference_numbers(tmp_path, monkeypatch, addition):
+    report = (CAMPAIGN / "analysis.html").read_text(encoding="utf-8")
+    report = report.replace(
+        "published reference pending,", f"{addition}; published reference pending,"
+    )
+    (tmp_path / "analysis.html").write_text(report, encoding="utf-8")
+    (tmp_path / "criteria.json").write_bytes((CAMPAIGN / "criteria.json").read_bytes())
+    monkeypatch.setattr(sys.modules[__name__], "CAMPAIGN", tmp_path)
+    for label in PENDING:
+        test_pending_report_rows_require_specific_published_evidence(label)
+
+
+@pytest.mark.parametrize("band", ["10 m", "20 %", "0-10 m", "5.0 metres", "3 degrees"])
+def test_pending_evidence_rejects_numerical_bands(tmp_path, monkeypatch, band):
+    report = (CAMPAIGN / "analysis.html").read_text(encoding="utf-8")
+    report = report.replace(
+        "published reference pending,", f"{band}; published reference pending,"
+    )
+    (tmp_path / "analysis.html").write_text(report, encoding="utf-8")
+    (tmp_path / "criteria.json").write_bytes((CAMPAIGN / "criteria.json").read_bytes())
+    monkeypatch.setattr(sys.modules[__name__], "CAMPAIGN", tmp_path)
+    for label in PENDING:
+        with pytest.raises(AssertionError):
+            test_pending_report_rows_require_specific_published_evidence(label)
 
 
 class TableRows(HTMLParser):
@@ -64,8 +101,11 @@ def test_pending_report_rows_require_specific_published_evidence(label):
     assert "published reference pending, #2608" in evidence
     for term in (*required_terms, "edition", "clause or table", "comparison tolerance"):
         assert term in evidence
-    # Issue numbers identify the gap; numerical engineering bands remain absent.
-    assert re.search(r"\d", re.sub(r"#\d+", "", evidence)) is None
+    # Reference years and clause numbers are allowed; unit-bearing bands are not.
+    assert (
+        re.search(r"\d+(?:\.\d+)?\s*(?:%|(?:m|metres?|meters?|degrees?)\b)", evidence)
+        is None
+    )
 
 
 def test_pending_prose_has_no_unsourced_comparison_bands():
