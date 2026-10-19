@@ -2,7 +2,9 @@
 name: Quality Gates
 
 on:
+  workflow_dispatch:
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
   push:
     branches: [main, develop]
 
@@ -20,7 +22,7 @@ jobs:
     name: Run Quality Gates
     permissions: {}
     needs: quality-gates
-    if: always()
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (always())
     runs-on: ubuntu-latest
     steps:
       - name: Verify matrix result
@@ -29,6 +31,7 @@ jobs:
         run: test "$QUALITY_GATES_RESULT" = success
 
   quality-gates:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: Quality Gates (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:

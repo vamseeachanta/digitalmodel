@@ -11,7 +11,9 @@
 name: Parametric atlas drift
 
 on:
+  workflow_dispatch:
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
   push:
     branches: [main, develop]
 
@@ -24,6 +26,7 @@ permissions:
 
 jobs:
   atlas-drift:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: Atlas staleness check
     runs-on: ubuntu-latest
     steps:

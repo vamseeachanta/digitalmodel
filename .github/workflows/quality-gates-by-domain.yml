@@ -16,6 +16,7 @@ name: Quality Gates by Domain
 
 "on":
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
   push:
     branches: [main, develop]
   workflow_dispatch:
@@ -30,6 +31,7 @@ permissions:
 
 jobs:
   detect-domains:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: Detect touched test domains
     runs-on: ubuntu-latest
     outputs:
@@ -116,6 +118,7 @@ jobs:
           uv run --no-sources python scripts/ci/report_shard_scope.py
 
   ci-harness-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     name: CI harness and compliance tests
     needs: detect-domains
     runs-on: ubuntu-latest
@@ -145,6 +148,7 @@ jobs:
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
+            tests/workflows/test_ci_draft_policy.py \
             -q --tb=line
 
       - name: Report implementation map staleness
@@ -153,7 +157,7 @@ jobs:
   domain-tests:
     name: tests-${{ matrix.domain }}
     needs: detect-domains
-    if: needs.detect-domains.outputs.has-domains == 'true'
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (needs.detect-domains.outputs.has-domains == 'true')
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -259,7 +263,7 @@ jobs:
   domain-tests-required:
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
-    if: always()
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && (always())
     runs-on: ubuntu-latest
     steps:
       - name: Report scope of this result
