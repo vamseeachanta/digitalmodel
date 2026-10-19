@@ -3,8 +3,11 @@
 Format basis: ANSYS Mechanical APDL Command Reference, 2024 R2, PRNSOL,
 Notes and Table 223 (component labels, averaging and surface limitations):
 https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_PRNSOL.html
-All numbers below are synthetic inputs; no engineering acceptance limit is used.
+Inputs are synthetic except for the retained native fixture regressions;
+no engineering acceptance limit is used.
 """
+
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -92,10 +95,128 @@ NODE SX SEQV
     ]
 
 
-def test_unknown_text_after_page_banner_is_rejected():
+def test_non_row_text_after_page_banner_preserves_rows():
     text = "NODE SEQV\n1 5\nTIME= 1.0000\nunknown annotation\nNODE SEQV\n2 9"
+    result = ResultsExtractor().parse_prnsol_block(text, expected_node_ids=[1, 2])
+    assert result["value"].tolist() == [5, 9]
+
+
+@pytest.mark.parametrize("pages", [1, 2, 9])
+def test_native_page_preamble_preserves_scalar_rows(pages):
+    """Retained n4_recovery page layout with synthetic space-separated rows."""
+    text = "".join(
+        f"""***** POST1 NODAL STRESS LISTING *****
+LOAD STEP= 1 SUBSTEP= 1
+TIME= 1.0000 LOAD CASE= 0
+THE FOLLOWING X,Y,Z VALUES ARE IN GLOBAL COORDINATES
+NODE SX SY SZ SXY SYZ SXZ
+{node} -12 3 4 5 6 7
+
+"""
+        for node in range(1, pages + 1)
+    )
+    result = ResultsExtractor().parse_prnsol_block(
+        text, "SX", expected_node_ids=range(1, pages + 1),
+    )
+    assert result["value"].tolist() == [-12] * pages
+
+
+@pytest.mark.parametrize("row", ["2 9", "0 9", "-2 9", "+2 9", "2 *****"])
+def test_row_after_page_preamble_requires_a_fresh_header(row):
+    text = (
+        "NODE SEQV\n1 5\nTIME= 1.0000\n"
+        f"THE FOLLOWING X,Y,Z VALUES ARE IN GLOBAL COORDINATES\n{row}\n"
+    )
     with pytest.raises(ValueError, match="NODE header"):
         ResultsExtractor().parse_prnsol_block(text)
+
+
+@pytest.mark.parametrize("later_banner, field", [
+    ("LOAD STEP= 2 SUBSTEP= 1\nTIME= 1.0000", "LOAD STEP"),
+    ("LOAD STEP= 1 SUBSTEP= 2\nTIME= 1.0000", "SUBSTEP"),
+    ("LOAD STEP= 1 SUBSTEP= 1\nTIME= 2.0000", "TIME"),
+    ("TIME= 2.0000", "TIME"),
+    ("SUBSTEP= 2", "SUBSTEP"),
+])
+def test_pages_with_different_step_identity_are_rejected(later_banner, field):
+    text = (
+        "LOAD STEP= 1 SUBSTEP= 1\nTIME= 1.0000\nNODE SEQV\n1 5\n"
+        f"{later_banner}\nNODE SEQV\n2 9\n3 12\n"
+    )
+    with pytest.raises(ValueError, match=field):
+        ResultsExtractor().parse_prnsol_block(text)
+
+
+def test_page_identity_is_captured_before_the_first_node_header():
+    text = "LOAD STEP= 1\nLOAD STEP= 2\nNODE SEQV\n1 5\n"
+    with pytest.raises(ValueError, match="LOAD STEP"):
+        ResultsExtractor().parse_prnsol_block(text)
+
+
+@pytest.mark.parametrize("banner, field", [
+    ("LOAD STEP= invalid", "LOAD STEP"),
+    ("SUBSTEP= 1.5", "SUBSTEP"),
+    ("TIME= NaN", "TIME"),
+    ("TIME= inf", "TIME"),
+    ("TIME= *****", "TIME"),
+])
+def test_invalid_explicit_page_identity_is_rejected(banner, field):
+    with pytest.raises(ValueError, match=field):
+        ResultsExtractor().parse_prnsol_block(f"{banner}\nNODE SEQV\n1 5\n")
+
+
+def test_time_identity_comparison_preserves_decimal_precision():
+    text = (
+        "TIME= 1.00000000000000000001\nNODE SEQV\n1 5\n"
+        "TIME= 1.00000000000000000002\nNODE SEQV\n2 9\n"
+    )
+    with pytest.raises(ValueError, match="TIME"):
+        ResultsExtractor().parse_prnsol_block(text)
+
+
+def test_equivalent_page_identity_notation_is_accepted():
+    text = (
+        "LOAD STEP= 01 SUBSTEP= 01\nTIME= 1.0000\nNODE SEQV\n1 5\n"
+        "load step = 1 substep = 1\ntime = 1.0D+00\nNODE SEQV\n2 9\n"
+    )
+    result = ResultsExtractor().parse_prnsol_block(text, expected_node_ids=[1, 2])
+    assert result["value"].tolist() == [5, 9]
+
+
+def test_missing_page_identity_is_not_inferred():
+    text = (
+        "NODE SEQV\n1 5\nLOAD STEP= 2 SUBSTEP= 3\nTIME= 4\nNODE SEQV\n2 9\n"
+        "***** POST1 NODAL STRESS LISTING *****\nNODE SEQV\n3 12\n"
+    )
+    result = ResultsExtractor().parse_prnsol_block(text, expected_node_ids=[1, 2, 3])
+    assert result["value"].tolist() == [5, 9, 12]
+
+
+@pytest.mark.parametrize("component, expected", [
+    ("SX", -0.9986391738718805E+001),
+    ("SZ", 0.1301786994303694E+003),
+    ("SXY", -0.8493660944317938E-010),
+])
+def test_native_full_precision_fields_preserve_component_values(component, expected):
+    text = (Path(__file__).parent / "fixtures/n4_recovery/stress.txt").read_text()
+    result = ResultsExtractor().parse_prnsol_block(
+        text, component, expected_node_ids=[85, 89, 93, 169, 173, 177, 253, 257, 261],
+    )
+    assert result.loc[result["node_id"] == 85, "value"].item() == expected
+
+
+@pytest.mark.parametrize("mutation", ["truncate", "overflow", "missing_exponent"])
+def test_native_full_precision_fields_reject_malformed_rows(mutation):
+    text = (Path(__file__).parent / "fixtures/n4_recovery/stress.txt").read_text()
+    row = next(line for line in text.splitlines() if line.split()[:1] == ["85"])
+    if mutation == "truncate":
+        row = row[:-1]
+    elif mutation == "overflow":
+        row = row[:10] + "*" * 24 + row[34:]
+    else:
+        row = row[:10] + "1.25-02".rjust(24) + row[34:]
+    with pytest.raises(ValueError, match="column count|numeric"):
+        ResultsExtractor().parse_prnsol_block(f"NODE SX SY SZ SXY SYZ SXZ\n{row}", "SX")
 
 
 @pytest.mark.parametrize("dtype", [np.int32, np.int64, np.uint64])

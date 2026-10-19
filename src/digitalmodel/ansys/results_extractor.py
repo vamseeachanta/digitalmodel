@@ -22,6 +22,7 @@ import re
 import math
 from collections.abc import Iterable
 from dataclasses import dataclass
+from decimal import Decimal
 from numbers import Integral
 from typing import Any, Optional
 
@@ -126,8 +127,11 @@ class ComparisonRow:
 _PRNSOL_HEADER_RE = re.compile(r"^\s*NODE\s+[A-Z]", re.IGNORECASE)
 _PRNSOL_PAGE_RE = re.compile(
     r"^\s*(?:\*+\s+POST1\s+NODAL\s+STRESS\s+LISTING\s+\*+\s*|"
-    r"(?:LOAD\s+STEP|TIME)\s*=.*)$",
+    r"(?:LOAD\s+STEP|SUBSTEP|TIME)\s*=.*)$",
     re.IGNORECASE,
+)
+_PRNSOL_IDENTITY_RE = re.compile(
+    r"\b(LOAD\s+STEP|SUBSTEP|TIME)\s*=\s*(\S+)", re.IGNORECASE,
 )
 # Intel Fortran Developer Guide, 2023.0, "E and D Editing": explicit E/D
 # exponents and overflow asterisks. Exponent-letter omission is deliberately
@@ -175,6 +179,14 @@ _REACTION_TOTAL_RE = re.compile(
 def _parse_prnsol_row(line: str, labels: list[str]) -> tuple[int, list[float]]:
     """Reject truncated, overflowed or ambiguous scalar listing rows."""
     tokens = line.split()
+    # The retained native stress listing uses a 10-character node field and
+    # E24.16 values. Adjacent negative fields can have no separating space.
+    # Use only that complete observed layout, never guess exponent boundaries.
+    native = line.rstrip()
+    if len(tokens) != len(labels) and len(native) == 10 + 24 * (len(labels) - 1):
+        tokens = [native[:10].strip()] + [
+            native[start:start + 24].strip() for start in range(10, len(native), 24)
+        ]
     if not re.fullmatch(r"[0-9]+", tokens[0]) or int(tokens[0]) <= 0:
         raise ValueError("PRNSOL row requires a positive integer node ID")
     if len(tokens) != len(labels):
@@ -270,10 +282,14 @@ class ResultsExtractor:
         Source: ANSYS Mechanical APDL Command Reference, 2024 R2, PRNSOL,
         Notes and Table 223. PRNSOL can average results and omit interior
         nodes; this method does not establish unaveraged tensor, coordinate
-        system, load-step or shell-surface identity. Repeated node IDs are
-        rejected because this scalar interface cannot distinguish surfaces.
-        Unsupported page annotations and malformed rows raise ValueError.
-        Recognized page banners require a fresh NODE header before more rows.
+        system or shell-surface identity. Explicit LOAD STEP, SUBSTEP and TIME
+        values must agree across pages; missing values remain unverified.
+        Repeated node IDs are rejected because this scalar interface cannot
+        distinguish surfaces.
+        Space-separated rows and the retained native 10-character node plus
+        E24.16 field layout are supported; malformed rows raise ValueError.
+        Recognized page banners allow non-row preamble text but require a fresh
+        NODE header before more rows.
 
         Unlike the earlier last-column fallback, the requested component must
         appear in the header. The default SEQV therefore raises ValueError for
@@ -301,6 +317,7 @@ class ResultsExtractor:
         component = component.upper()
         in_data = False
         awaiting_header = False
+        page_identity: dict[str, Decimal] = {}
 
         for line in text_block.splitlines():
             if not line.strip():
@@ -315,11 +332,23 @@ class ResultsExtractor:
                 awaiting_header = False
                 continue
             if _PRNSOL_PAGE_RE.fullmatch(line):
+                for match in _PRNSOL_IDENTITY_RE.finditer(line):
+                    field = " ".join(match[1].upper().split())
+                    token = match[2].upper().replace("D", "E")
+                    pattern = _PRNSOL_NUMBER_RE if field == "TIME" else r"[0-9]+"
+                    if not re.fullmatch(pattern, token):
+                        raise ValueError(f"PRNSOL invalid {field} value")
+                    identity_value = Decimal(token)
+                    if field in page_identity and page_identity[field] != identity_value:
+                        raise ValueError(f"PRNSOL {field} differs between pages")
+                    page_identity.setdefault(field, identity_value)
                 in_data = False
                 awaiting_header = True
                 continue
             if awaiting_header:
-                raise ValueError("PRNSOL page requires a fresh NODE header")
+                if re.match(r"^\s*[+-]?[0-9]+(?:\s|$)", line):
+                    raise ValueError("PRNSOL page requires a fresh NODE header")
+                continue
             if in_data:
                 if line.strip().upper().startswith(("MINIMUM", "MAXIMUM")):
                     in_data = False

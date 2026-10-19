@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   must request a listed component, for example `component="SX"`. Recognized
   page banners require a fresh NODE header; integral NumPy node IDs are accepted
   in independently supplied coverage manifests.
+  Non-row page preambles are accepted, while differing explicit load steps,
+  substeps or times are rejected. Native full-precision E24.16 stress fields
+  are supported even when adjacent negative values have no separating space.
 
 - Correct PIANC depth bands to 3.0/1.5/1.2; h/T=1.8 is medium-deep and
   h/T=1.4 is shallow. Document exact boundaries and uncited x1.2/x1.5 bank
