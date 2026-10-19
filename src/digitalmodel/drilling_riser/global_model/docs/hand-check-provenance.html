@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riser hand-check method provenance</title>
+<style>
+body { max-width: 76rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 sans-serif; color: #172635; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #bbc8d2; padding: .5rem; text-align: left; vertical-align: top; }
+code, pre { background: #f1f4f7; overflow-wrap: anywhere; }
+pre { padding: 1rem; white-space: pre-wrap; }
+.notice { border-left: .3rem solid #986700; padding-left: 1rem; }
+a { color: #174e85; }
+</style>
+</head>
+<body>
+<h1>Riser hand-check method provenance</h1>
+<h2>Summary</h2>
+<p class="notice">Standards assessment: <strong>NOT_EVALUATED</strong>. The inventory covers implementation
+identities in <a href="../hand_checks.py">hand_checks.py</a>. It does not establish compliance with
+API RP 16Q or ISO 13624-1. An independent continuous-beam reference supports the fixed-end regression;
+no solver result, design acceptance or engineering qualification follows from that regression.</p>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>Initial</td><td>2026-10-19</td><td>Separate implementation equations from unverified standards context and derive the fixed-end beam test reference.</td></tr></tbody>
+</table>
+<p>Table 1. Initial issue of the provenance note.</p>
+<h2>Evidence and use</h2>
+<p>The machine-readable companion is <a href="../provenance.py">provenance.hand_check_provenance()</a>.
+It returns a fresh JSON-compatible sidecar. Numeric functions retain their existing outputs; callers
+may store this sidecar beside them. Its empty <code>citations</code> list means that no resolved
+standards Citation is supplied, rather than that standards applicability has been established.</p>
+<p>API RP 16Q and ISO 13624-1 occur as context in <a href="../hang_off.py">hang_off.py</a> and
+<a href="../events.py">events.py</a>. The parent <a href="../../stackup.py">stackup.py</a> names
+ABS Guidance Notes on Drilling Riser Analysis (2017) and an API edition for a separate minimum-tension
+method. That parent reference does not establish a clause mapping for these hand checks.
+The earlier first-edition assertion in the pinned agent pack is not evidence of the current parent implementation.</p>
+<p>Missing evidence comprises the governing edition, clause title, exact equation applicability,
+source rights and a resolvable <code>digitalmodel.citations.schema.Citation</code>. Those fields
+remain unverified. Standards-derived methods will require that evidence and fail-closed Citation
+resolution before a standards-compliance statement can be made. This contribution introduces no
+standards factor, allowable or licensed table value.</p>
+<h2>Method inventory</h2>
+<p>All equations below are implementation evidence, sourced to the named functions in
+<a href="../hand_checks.py">hand_checks.py</a>. They are not transcriptions of standards.
+SI units apply: length (m), mass (kg), force (N), bending stiffness (N m²), period (s).
+Here A is bore area, V′ is displaced volume per length, m′ is mass per length,
+ρc and ρw are contents and water densities, and g is the repository gravity convention.</p>
+<table>
+<thead><tr><th>Functions</th><th>Equation or construction</th><th>Independent basis and limitation</th></tr></thead>
+<tbody>
+<tr><td><code>_bore_area</code>, <code>submerged_length_m</code></td><td>A = πd²/4; wet length is the overlap of a vertical section with z ≤ 0.</td><td>Circle area and interval intersection; flat mean sea level. No standard requirement is asserted.</td></tr>
+<tr><td><code>submerged_weight_n</code>, <code>ring_weight_n</code></td><td>W = g[(m′ + ρc A)L − ρw V′ Lwet]; Wring = g[mring − ρw Vring I(z &lt; 0)].</td><td>Mass balance and displaced-water weight. Test docstrings give independent synthetic free bodies. Ring immersion is binary; gravity is an implementation convention, not a measured site value.</td></tr>
+<tr><td><code>effective_tension_chain</code>, <code>tension_references</code></td><td>Tbottom = Ttop − W; Triser,top = Tvertical − Wring; sections are accumulated downward.</td><td>Vertical static free-body balance. Positive stack bore and contents differ from generated drilling-stack contents under the stack-contents issue (2532); a general pressure/end-load check is not established.</td></tr>
+<tr><td><code>tensioned_beam_periods</code></td><td>(Kb + Kg + Kspring)q = ω²Mq; P = 2π/ω.</td><td>Linear Hermite-element construction detailed below; pinned and fixed-end continuous references are derived from the public MIT source. Variable-section, added-mass and numerical regularization effects are not independently qualified here.</td></tr>
+<tr><td><code>wkb_string_periods</code>, <code>wkb_reference_periods</code></td><td>Pn = (2/n) Σ L / √(Tmean/m′).</td><td>The uniform-string limit follows from a standing wave with speed √(T/m′). The variable-tension travel-time approximation is information only; positive, slowly varying tension is required. It is not an acceptance method.</td></tr>
+<tr><td><code>tensioner_lateral_stiffness_n_m</code></td><td>Kx = Σ (Tline/Lline)(1 − ux²).</td><td>For constant Tline, differentiating the direction component x/√(x²+y²+z²) gives (1−ux²)/Lline. Fixed anchors and a small-displacement linearization are assumed; no standard prescription is asserted.</td></tr>
+<tr><td><code>_split</code>, <code>beam_model</code>, <code>reference_periods</code></td><td>n = max(1, ceil(L/Lmax − ε)); build section elements, ring mass and springs, then solve the assembled eigenproblem.</td><td>Implementation topology only. Mesh epsilon, axial-stiffness cutoff and inertia regularization are numerical choices. The line-tensioner representation is required; the stack is rigid. These conventions have no verified standards mapping.</td></tr>
+</tbody>
+</table>
+<p>Table 2. Complete function inventory and limits on interpretation.</p>
+<h2>Reproducible beam reference</h2>
+<p><a href="https://ocw.mit.edu/courses/2-002-mechanics-and-materials-ii-spring-2004/resources/lec2/">MIT OpenCourseWare,
+Mechanics and Materials II (2004), Lecture 2, Applications: Beam Bending, Buckling and Vibration</a>,
+page 15, supplies v'''' = β⁴v with β⁴ = m′ω²/EI and its sine, cosine, hyperbolic-sine and
+hyperbolic-cosine solution. Page 16 supplies the pinned/pinned conditions and period relation.
+The following fixed/fixed extension is derived here; it is not claimed to be a published worked example.</p>
+<pre>Set b = βL and impose v(0) = v′(0) = 0:
+v(x) = A[cosh(βx) − cos(βx)] + B[sinh(βx) − sin(βx)].
+
+Then v(L) = v′(L) = 0 requires:
+(cosh b − cos b)² − (sinh b − sin b)(sinh b + sin b)
+  = 2(1 − cosh b cos b) = 0.
+
+Exclude b = 0. Bisect cosh b cos b − 1 on (3π/2, 2π).
+ω = b² √(EI/m′) / L²; P = 2π/ω.</pre>
+<p>The test helper performs bisection without calling the finite-element implementation or using a
+tabulated root. A separate residual assertion checks the boundary determinant. The existing
+finite-spring comparison retains its synthetic dimensions, stiffnesses, mesh and numerical tolerance;
+that tolerance is not a design acceptance limit.</p>
+<p>The element matrix coefficients can be reproduced algebraically, without attributing them to a standard.
+With ξ = x/L, take H = [1−3ξ²+2ξ³, L(ξ−2ξ²+ξ³), 3ξ²−2ξ³, L(−ξ²+ξ³)].
+For constant element properties, Kb = ∫ EI H″ᵀH″ dx, Kg = ∫ Tmean H′ᵀH′ dx,
+and M = ∫ m′ HᵀH dx over the element. These polynomial integrals define the implementation identity;
+the present contribution does not independently qualify every assembled model case.</p>
+<h2>Source record</h2>
+<p>The public course page and linked PDF were read on 2026-10-19 with HTTP status 200.
+Only the pages needed for the beam equations were rendered after text extraction identified them.
+No raw source PDF is included in this contribution.</p>
+<p><a href="https://ocw.mit.edu/courses/2-002-mechanics-and-materials-ii-spring-2004/bc25a56b5a91ad29ca5c7419616686f7_lec2.pdf">Retrieved PDF</a>
+SHA-256: <code>d84ee48d3c8eb17613447e5611454732c96379680a6b9d8db41b00324a7392ae</code>.
+This digest identifies the inspected source, not the calculation output.</p>
+<h2>Verification and remaining scope</h2>
+<p>The provenance tests compare the inventory with the implementation AST, require explicit missing metadata,
+check repository context paths, and check JSON serialization and independence between returned sidecars.
+The hand-check tests document independent free-body, string and beam calculations with synthetic inputs.
+No standards clause, solver result, certification or measured engineering input is qualified by these tests.</p>
+<p>Later work will establish licensed-edition clause titles and applicability, resolve actual Citation objects,
+and wire the sidecar into any report that needs a standards assessment. The current API is opt-in.
+Period-ordering wording remains under the ordering issue (2529);
+that return order is unchanged. The external source catalogs were unavailable in the inspected checkout;
+no replacement catalog or standards evidence has been invented.</p>
+</body>
+</html>
