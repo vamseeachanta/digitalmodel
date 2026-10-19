@@ -5,12 +5,19 @@
 | Module | `field_development/schematics` |
 | Repository | `digitalmodel` |
 | Package | `src/digitalmodel/field_development/schematics` |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | `f1d58a2ac0db65e68b5b690f0a609ef4746d114e` |
 | Implementation-map data pin | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` on `codex/implmap-work`; map citations use this pin |
 | Analysis family | Engineering calculations (`EC`); AQG r0, Python calculations |
 | Quality role | Engineering calculations quality manager |
 | Status | DRAFT; clearance remains with the independent quality manager |
+
+## Revision history
+
+| Revision | Date | Change and reason |
+|---|---|---|
+| 0 | 2026-10-18 | Initial package inventory and check coverage were recorded. |
+| 1 | 2026-10-19 | Saturation, projection overlap, transparency and test limits are clarified; map citations are pinned to prevent revision drift. |
 
 ## 1. Purpose and scope
 
@@ -42,9 +49,9 @@ The direct constructors accept the following inputs; clamping describes implemen
 | `n_mooring_lines`, spread | count; minimum 3, no upper cap | Required directly; parent defaults to 8 | [src/digitalmodel/field_development/schematics/fpso_spread.py:L63-L90] [src/digitalmodel/field_development/schematic_generator.py:L166-L172] |
 | `n_subsea_wells`, spread | count; minimum 1, no upper cap | Required directly; parent uses wells times maximum of templates and 1 | [src/digitalmodel/field_development/schematics/fpso_spread.py:L63-L72] [src/digitalmodel/field_development/schematic_generator.py:L166-L172] |
 | `field_name`, `figsize`, `facecolor`, render methods | Text, inches, Matplotlib color respectively | Name required; size `(12, 7)` inches; background `#f0f4f8` | [src/digitalmodel/field_development/schematics/subsea_tieback.py:L147-L178] [src/digitalmodel/field_development/schematics/platform_standalone.py:L81-L107] [src/digitalmodel/field_development/schematics/fpso_spread.py:L92-L118] |
-| `fig`, `output_path`, `output_format`, `dpi`, `transparent`, renderer | Figure; destination text; `svg` or `png` after normalization; dots/inch; boolean | First three required; DPI `None` becomes 300 for PNG; transparency false; SVG ignores DPI | [src/digitalmodel/field_development/schematics/renderer.py:L16-L27] [src/digitalmodel/field_development/schematics/renderer.py:L53-L74] |
+| `fig`, `output_path`, `output_format`, `dpi`, `transparent`, renderer | Figure; destination text; `svg` or `png` after normalization; dots/inch; boolean | First three required; DPI `None` becomes 300 for PNG; transparency false; explicit figure face color keeps PNG background opaque even with `transparent=True`; SVG ignores DPI | [src/digitalmodel/field_development/schematics/renderer.py:L16-L27] [src/digitalmodel/field_development/schematics/renderer.py:L53-L74] |
 
-The parent API reads a dictionary, requires `name`, `water_depth_m` and `output_path`, converts counts with `int`, and validates the output format; zero templates or a fixed/jacket host infer a platform, otherwise a tieback, while spread mooring requires the explicit development type. [src/digitalmodel/field_development/schematic_generator.py:L82-L111] [src/digitalmodel/field_development/schematic_generator.py:L133-L172]
+The parent API reads a dictionary, requires `name`, `water_depth_m` and `output_path`, converts counts with `int`, and validates the output format; zero templates or a fixed/jacket host infer a platform, otherwise a tieback, while spread mooring requires the explicit development type. An unrecognized `development_type` silently selects the tieback branch. [src/digitalmodel/field_development/schematic_generator.py:L82-L111] [src/digitalmodel/field_development/schematic_generator.py:L133-L181]
 
 | Output | Unit / convention | Return and evidence |
 |---|---|---|
@@ -63,7 +70,7 @@ Method basis is the following drawing construction; no standard compliance or li
 | Method | Implementation and basis |
 |---|---|
 | Water-column height | `compute_water_column_height` computes `clip(water_depth_m / fig_height_m, min_frac, max_frac)`, default limits 0.15 and 0.75; this is a dimensionless drawing ratio [src/digitalmodel/field_development/schematics/elements/seabed.py:L27-L53] |
-| Seabed placement | Tieback uses `fig_height_m = max(1.25 * depth, 500)` and clips `1-frac` to 0.18–0.60; platform uses floor 200 m and range 0.18–0.65; spread uses floor 800 m and range 0.15–0.55 [src/digitalmodel/field_development/schematics/subsea_tieback.py:L87-L94] [src/digitalmodel/field_development/schematics/platform_standalone.py:L74-L79] [src/digitalmodel/field_development/schematics/fpso_spread.py:L74-L79] |
+| Seabed placement | Tieback uses `fig_height_m = max(1.25 * depth, 500)` and nominally clips `1-frac` to 0.18–0.60; platform uses floor 200 m and nominal range 0.18–0.65; spread uses floor 800 m and nominal range 0.15–0.55. For positive finite depths the reached ranges are 0.25–0.60, 0.25–0.65 and 0.25–0.55 respectively: the lower clamps are unreachable. Positions vary only over 200–375 m, 70–150 m and 360–600 m respectively, and saturate outside those bands; tiebacks at 400 m and 3000 m have the same seabed position [src/digitalmodel/field_development/schematics/subsea_tieback.py:L87-L94] [src/digitalmodel/field_development/schematics/platform_standalone.py:L74-L79] [src/digitalmodel/field_development/schematics/fpso_spread.py:L74-L79] |
 | Template placement | Even interpolation from x=0.12 to `0.82-0.10`, or midpoint for one template; y is seabed minus 0.04 axes fraction [src/digitalmodel/field_development/schematics/subsea_tieback.py:L45-L51] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L96-L113] |
 | Wells | Tieback spacing is three well radii about the template centre, below the template; platform conductors divide jacket width by `n_wells+1`; spread wells use 0.06 axes-fraction spacing [src/digitalmodel/field_development/schematics/subsea_tieback.py:L135-L141] [src/digitalmodel/field_development/schematics/platform_standalone.py:L128-L140] [src/digitalmodel/field_development/schematics/fpso_spread.py:L171-L189] |
 | Flowline | `_draw_flowline` uses a degree-2 interpolating spline through three canvas control points and samples 60 points; the import occurs before the exception handler, which affects the advertised straight-line fallback [src/digitalmodel/field_development/schematics/subsea_tieback.py:L273-L308] |
@@ -73,15 +80,15 @@ Method basis is the following drawing construction; no standard compliance or li
 
 Citation-sidecar disposition: no standards-derived engineering constant is introduced by this pack; the listed constants control drawing dimensions and the code returns figures, positions or paths. [src/digitalmodel/field_development/schematics/elements/icons.py:L15-L23] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L45-L51] [src/digitalmodel/field_development/schematics/renderer.py:L63-L74]
 
-## 4. Validated worked examples and regression examples
+## 4. Worked regression examples
 
-The validated case below checks the closed form for equal division of a circle, independently of the layout implementation: eight equally spaced directions give `360/8 = 45.0` degrees; it validates angular spacing only. [tests/test_field_development_schematic.py:L404-L414]
+V1 is a regression check: its expected adjacent gap `360/8 = 45.0` degrees repeats the implementation formula. It checks neither the start angle nor the wrap-around gap and provides no independent validation. [tests/test_field_development_schematic.py:L404-L414]
 
 Results in this section are from the offline runs at the header code revision; named receipts are local check records, not bundled output data. [tests/test_field_development_schematic.py:L210-L285] [tests/test_field_development_schematic.py:L358-L414] [tests/test_field_development_schematic.py:L421-L442]
 
 | ID / kind | Source and input | Expected value, unit and tolerance basis | Existing test node ID | Offline result |
 |---|---|---|---|---|
-| V1 validated | Equal-angle closed form; count 8, inline test input | 8 angles; adjacent gaps 45.0 degrees; absolute error less than 0.01 degrees, as asserted by the test | `tests/test_field_development_schematic.py::TestFpsoSpreadSchematic::test_mooring_line_angles_evenly_distributed` | PASS at BASE and AFTER [tests/test_field_development_schematic.py:L404-L414] |
+| V1 regression | Equal-angle closed form; count 8, inline test input | 8 angles; adjacent gaps 45.0 degrees; absolute error less than 0.01 degrees, as asserted by the test | `tests/test_field_development_schematic.py::TestFpsoSpreadSchematic::test_mooring_line_angles_evenly_distributed` | PASS at BASE and AFTER [tests/test_field_development_schematic.py:L404-L414] |
 | R1 regression | Inline layout fixture, four templates | 4 positions; every adjacent x-gap differs from the first by less than `1e-6` axes fraction; internal consistency, not an independent location benchmark | `tests/test_field_development_schematic.py::TestLayoutMath::test_template_x_positions_evenly_spaced` | PASS at BASE and AFTER [tests/test_field_development_schematic.py:L213-L223] |
 | R2 regression | Inline template centre and four wells | Mean x within 0.01 axes fraction of 0.5; assertion tolerance is schematic rather than surveying accuracy | `tests/test_field_development_schematic.py::TestLayoutMath::test_well_positions_symmetric_around_template` | PASS at BASE and AFTER [tests/test_field_development_schematic.py:L272-L285] |
 | R3 regression | Inline platform with two satellite wells | 1 non-null figure; no image-content or dimensional acceptance assertion | `tests/test_field_development_schematic.py::TestPlatformSchematic::test_render_with_satellite_wells` | PASS at BASE and AFTER [tests/test_field_development_schematic.py:L372-L383] |
@@ -97,8 +104,8 @@ Gate applicability follows AQG r0, section 10, `Python calculations`, with G5 re
 | Gate | Disposition and route | Checks |
 |---|---|---|
 | G0 | Applicable: dictionary inputs, constructor boundaries, units and citation ranges | C01, C02, C03, C10 |
-| G1 | Applicable: Python import and pytest route; SVG/PNG are loaded as file bytes in tests, with no solver load route | C04, C05 |
-| G2 | Applicable: elementary closed-form angular spacing and schematic layout invariants | C06, C07, C08 |
+| G1 | Applicable: Python import and pytest route; SVG/PNG checks assert file existence and size; one SVG is read as text, and no PNG content is loaded, with no solver load route | C04, C05 |
+| G2 | Applicable: regression angular spacing and schematic layout invariants | C06, C07, C08 |
 | G3 | NOT_APPLICABLE: drawing methods contain no time integration | [src/digitalmodel/field_development/schematics/fpso_spread.py:L140-L213] [src/digitalmodel/field_development/schematics/platform_standalone.py:L102-L201] |
 | G4 | NOT_APPLICABLE: symbol and line construction does not produce a diffraction mesh | [src/digitalmodel/field_development/schematics/elements/icons.py:L33-L166] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L273-L308] |
 | G5 | Applicable: record pin, node IDs, output checks and explicit limits in the evidence appendix | C09 |
@@ -112,11 +119,11 @@ Check definitions below are acceptance proposals for this package; their numeric
 | C03 | Every bracketed source locator resolves at its declared pin with 0 missing files and 0 out-of-range lines; unit: citation failures | Read each cited file using `git show`, assert `1 <= start <= end <= line_count`; code pin in header, map pin in section 9; retain count and ten read-back excerpts | G0 |
 | C04 | Imports and all 70 solver-free module/API tests pass; exactly 0 failures, skips or NOT_RUN cases; unit: test count | Test command below; section-4 node receipts and complete pytest result list [tests/test_field_development_schematic.py:L84-L608] [tests/field_development/test_field_development.py:L23-L184] | G1 |
 | C05 | `render_figure` produces both formats with size greater than 0 bytes and rejects BMP with exactly 1 `ValueError`; unit: byte and exception counts | R4, R5 and `tests/test_field_development_schematic.py::TestRenderer::test_render_invalid_format_raises`; PASS; directory creation also exercised [tests/test_field_development_schematic.py:L424-L465] | G1 |
-| C06 | `compute_mooring_angles`: 8 outputs, adjacent gap error less than 0.01 degrees against `360/8`; unit: degrees | V1; closed-form comparison; PASS [tests/test_field_development_schematic.py:L404-L414] | G2 |
+| C06 | `compute_mooring_angles`: 8 outputs, adjacent gap error less than 0.01 degrees against `360/8`; unit: degrees | V1; regression comparison; start angle and wrap-around gap unchecked; PASS [tests/test_field_development_schematic.py:L404-L414] | G2 |
 | C07 | `compute_template_positions`: 4 positions with gap mismatch less than `1e-6` axes fraction, and 3-template positions each within 0–1 axes fraction; unit: dimensionless | R1 and `tests/test_field_development_schematic.py::TestLayoutMath::test_template_positions_within_canvas`; PASS [tests/test_field_development_schematic.py:L213-L235] | G2 |
-| C08 | `compute_well_positions`: mean x error less than 0.01 axes fraction for 4 wells; `compute_water_column_height(100,500)` less than `(400,500)` and deep clamp within 0–1; tieback seabed y at 1000 m less than at 100 m; unit: dimensionless | R2, `tests/test_field_development_schematic.py::TestSeabedElements::test_compute_water_column_height_scaling`, `tests/test_field_development_schematic.py::TestSeabedElements::test_compute_water_column_clamped_to_range` and `tests/test_field_development_schematic.py::TestLayoutMath::test_seabed_y_increases_with_water_depth`; PASS; monotonicity and broad bounds only [tests/test_field_development_schematic.py:L184-L191] [tests/test_field_development_schematic.py:L237-L246] [tests/test_field_development_schematic.py:L272-L285] | G2 |
+| C08 | `compute_well_positions`: mean x error less than 0.01 axes fraction for 4 wells; `compute_water_column_height(100,500)` less than `(400,500)` and deep clamp within 0–1; tieback seabed y at 1000 m less than at 100 m; unit: dimensionless | R2, `tests/test_field_development_schematic.py::TestSeabedElements::test_compute_water_column_height_scaling`, `tests/test_field_development_schematic.py::TestSeabedElements::test_compute_water_column_clamped_to_range` and `tests/test_field_development_schematic.py::TestLayoutMath::test_seabed_y_increases_with_water_depth`; PASS; shallow/deep ordering and broad bounds only; cannot detect saturation at 400 m versus 3000 m [tests/test_field_development_schematic.py:L184-L191] [tests/test_field_development_schematic.py:L237-L246] [tests/test_field_development_schematic.py:L272-L285] | G2 |
 | C09 | Evidence appendix has 6 example rows with node IDs, 6 recorded results per run, 2 complete module-run summaries and 0 unresolved citations; unit: record count | Compare section 4 against pytest PASS lists and section-10 coverage; preserve code pin, exact command form and exception reasons; independent image acceptance remains open | G5 |
-| C10 | `add_depth_label` for 450 m produces text containing `450`; exactly 1 matching label, unit: label count | `tests/test_field_development_schematic.py::TestAnnotationElements::test_depth_label_contains_depth_value`; PASS; integer display only [tests/test_field_development_schematic.py:L147-L152] | G0 |
+| C10 | `add_depth_label` for 450 m produces text with substring `450`; no exact text or matching-label count assertion, unit: substring presence | `tests/test_field_development_schematic.py::TestAnnotationElements::test_depth_label_contains_depth_value`; PASS; integer display only [tests/test_field_development_schematic.py:L147-L152] | G0 |
 
 Use the following generic command form with a fresh persistent temporary directory per run; the executable placeholder denotes the installed uv executable and the temporary-root placeholder denotes external scratch storage:
 
@@ -127,11 +134,11 @@ PYTHONPATH=src <uv> run --no-sources python -m pytest \
   -q -rA -p no:cacheprovider --basetemp=<temporary-root>/bt-<run>
 ```
 
-Do not replace the scale test with a reference check: its assertion ends in `or True` and cannot detect a broken scale factor; no detection check exists for scale fidelity. [tests/test_field_development_schematic.py:L248-L257]
+Do not treat the scale test as a reference check: its assertion ends in `or True` and cannot detect a broken scale factor; no detection check exists for scale fidelity. [tests/test_field_development_schematic.py:L248-L257]
 
 ## 6. Known failure modes and silent-failure sweep
 
-sweep: 28 found
+sweep: 31 found (30 package sites and 1 parent-dispatch boundary site)
 
 The count is of classified sites below, including intentional defaults and unit assumptions, rather than raw grep matches; the exception handler is the only swallowed-error construct, and no `continue`, explicit `return None`, empty return on an error path or cache write occurs in the package's Python definitions. [src/digitalmodel/field_development/schematics/subsea_tieback.py:L273-L308] [src/digitalmodel/field_development/schematics/renderer.py:L21-L74] [src/digitalmodel/field_development/schematics/elements/seabed.py:L27-L131]
 
@@ -141,7 +148,7 @@ Reproduce the textual sweep over the whole package, then inspect each hit and al
 rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|int\(|float\(|clip\(|min\(|max\(|_m\b|_km\b|cache' src/digitalmodel/field_development/schematics --glob '*.py'
 ```
 
-All rows below were inspected on 2026-10-18 at the header pin; a check named in the table detects only its stated symptom, and `no detection check exists` denotes a missing executable guard rather than a passing gate.
+The original rows were inspected on 2026-10-18 and all rows were re-inspected on 2026-10-19 at the header pin; a check named in the table detects only its stated symptom, and `no detection check exists` denotes a missing executable guard rather than a passing gate.
 
 | Site | Symptom / cause and evidence | Detection / follow-up |
 |---|---|---|
@@ -159,9 +166,9 @@ All rows below were inspected on 2026-10-18 at the header pin; a check named in 
 | S12 | Satellite distance assumes km and defaults to 3.0; conversion accepts no locale normalization [src/digitalmodel/field_development/schematics/platform_standalone.py:L65-L71] | no detection check exists; issue pending (2) |
 | S13 | Spread depth conversion assumes metres without finite/positive validation [src/digitalmodel/field_development/schematics/fpso_spread.py:L69-L69] | no detection check exists for direct constructor; issue pending (2) |
 | S14 | Water ratio assumes matching metre units; zero figure height divides by zero, and default 0.15–0.75 clamp can conceal implausible depths [src/digitalmodel/field_development/schematics/elements/seabed.py:L27-L53] | C08 covers monotonicity and broad clamp bounds only; no detection check exists for zero/non-finite input; issue pending (2) |
-| S15 | Tieback notional height floor 500 m, multiplier 1.25 and secondary clamp compress depth changes [src/digitalmodel/field_development/schematics/subsea_tieback.py:L87-L94] | C08 detects shallow/deep ordering; no detection check exists for physical scale; issue pending (3) |
-| S16 | Platform floor 200 m, multiplier 1.25 and secondary clamp have schematic scale only [src/digitalmodel/field_development/schematics/platform_standalone.py:L74-L79] | no detection check exists; issue pending (3) |
-| S17 | Spread floor 800 m, multiplier 1.25 and secondary clamp have schematic scale only [src/digitalmodel/field_development/schematics/fpso_spread.py:L74-L79] | no detection check exists; issue pending (3) |
+| S15 | Tieback notional height floor 500 m, multiplier 1.25 and secondary clamp saturate depth changes outside 200–375 m; reached y range 0.25–0.60, lower clamp unreachable [src/digitalmodel/field_development/schematics/subsea_tieback.py:L87-L94] | C08 detects shallow/deep ordering; no detection check exists for physical scale; issue pending (3) |
+| S16 | Platform floor 200 m, multiplier 1.25 and secondary clamp saturate depth changes outside 70–150 m; reached y range 0.25–0.65, lower clamp unreachable [src/digitalmodel/field_development/schematics/platform_standalone.py:L74-L79] | no detection check exists; issue pending (3) |
+| S17 | Spread floor 800 m, multiplier 1.25 and secondary clamp saturate depth changes outside 360–600 m; reached y range 0.25–0.55, lower clamp unreachable [src/digitalmodel/field_development/schematics/fpso_spread.py:L74-L79] | no detection check exists; issue pending (3) |
 | S18 | Any unrecognized tieback host type draws a platform; TLP and SPAR share that symbol [src/digitalmodel/field_development/schematics/subsea_tieback.py:L310-L318] | no detection check exists for unknown host fallback; issue pending (2) |
 | S19 | Icon width, height and radius are axes fractions, not metres; factories do not set the transform themselves [src/digitalmodel/field_development/schematics/elements/icons.py:L15-L23] [src/digitalmodel/field_development/schematics/elements/icons.py:L58-L70] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L332-L335] | no detection check exists for physical interpretation; issue pending (3) |
 | S20 | Scale bar has fixed 0.12 axes-fraction length and rounds the supplied km label to a whole number; it does not calibrate the drawing [src/digitalmodel/field_development/schematics/elements/annotations.py:L19-L73] | no detection check exists; issue pending (3) |
@@ -171,8 +178,11 @@ All rows below were inspected on 2026-10-18 at the header pin; a check named in 
 | S24 | Seabed extents default to 0.0–1.0, water/sediment fills default true; solid water alpha 0.35 differs from the gradient description [src/digitalmodel/field_development/schematics/elements/seabed.py:L56-L65] [src/digitalmodel/field_development/schematics/elements/seabed.py:L90-L119] | no detection check exists for gradient or physical extents; issue pending (3) |
 | S25 | Template patch uses `label or ""`, so falsy labels silently become empty [src/digitalmodel/field_development/schematics/elements/icons.py:L109-L140] | no detection check exists; issue pending (2) |
 | S26 | PNG DPI defaults to 300 when `None`; SVG ignores supplied DPI, and tight bounds can alter final pixel dimensions [src/digitalmodel/field_development/schematics/renderer.py:L63-L74] | C05 checks nonempty files only; no detection check exists for resolution metadata; issue pending (6) |
-| S27 | Figure size defaults to inches and transparency defaults false; face color is passed explicitly to save [src/digitalmodel/field_development/schematics/platform_standalone.py:L81-L107] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L147-L175] [src/digitalmodel/field_development/schematics/fpso_spread.py:L92-L115] [src/digitalmodel/field_development/schematics/renderer.py:L21-L27] [src/digitalmodel/field_development/schematics/renderer.py:L63-L71] | no detection check exists for dimensions/transparency semantics; issue pending (6) |
+| S27 | Figure size defaults to inches and transparency defaults false; face color is passed explicitly to save, overriding transparent background intent: `transparent=True` still gives an opaque PNG background (alpha 1.0 at every pixel in the inspected default-color output) [src/digitalmodel/field_development/schematics/platform_standalone.py:L81-L107] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L147-L175] [src/digitalmodel/field_development/schematics/fpso_spread.py:L92-L115] [src/digitalmodel/field_development/schematics/renderer.py:L21-L27] [src/digitalmodel/field_development/schematics/renderer.py:L63-L71] | no detection check exists for dimensions/transparency semantics; issue pending (6) |
 | S28 | Platform scale annotation has minimum 1.0 km, independent of fixed satellite positions; tieback scale factor is stored but layout positions stay fixed [src/digitalmodel/field_development/schematics/platform_standalone.py:L187-L187] [src/digitalmodel/field_development/schematics/platform_standalone.py:L203-L208] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L80-L80] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L103-L110] | no detection check exists; issue pending (3) |
+| S29 | Side-view mooring endpoints use only cosine; `dy` is unused and every anchor y is seabed plus 0.01, so mirrored lines overlap: 8 lines give 5 distinct anchor positions [src/digitalmodel/field_development/schematics/fpso_spread.py:L140-L169] | no detection check exists; issue pending (3) |
+| S30 | At high template/well counts, tieback well rows belonging to neighbouring templates overlap: spacing 0.024 gives a 0.168-wide row for 8 wells, exceeding the 0.12 template gap at 6 templates [src/digitalmodel/field_development/schematics/subsea_tieback.py:L96-L141] | no detection check exists; issue pending (3) |
+| S31 | Parent dispatch boundary: unknown `development_type` silently selects a tieback rather than rejecting the value [src/digitalmodel/field_development/schematic_generator.py:L156-L181] | no detection check exists; issue pending (2) |
 
 Additional pitfalls: the spread module's opening text says plan view while its class text and implementation describe/project a side view; the flowline-scale assertion is tautological, and the PNG DPI test checks existence without reading resolution metadata; issue pending (3) and issue pending (6). [src/digitalmodel/field_development/schematics/fpso_spread.py:L1-L10] [src/digitalmodel/field_development/schematics/fpso_spread.py:L45-L51] [src/digitalmodel/field_development/schematics/fpso_spread.py:L140-L149] [tests/test_field_development_schematic.py:L248-L257] [tests/test_field_development_schematic.py:L444-L450]
 
@@ -204,16 +214,16 @@ Keep status DRAFT until the quality manager resolves the cited coverage and issu
 
 Inventory boundary: only this package and its `elements/` subpackage; adjacent economic, terrain, catenary and workflow calculations retain their separate scope.
 
-Implementation-map data pin is the header map revision; its declared searched-code revision is `270c8759c374b67a7f032953e7fcdb14e0224461`, distinct from this pack's code pin. [docs/registry/implementation-map.yaml:L1-L4]
+Implementation-map data pin is the header map revision; its declared searched-code revision is `270c8759c374b67a7f032953e7fcdb14e0224461`, distinct from this pack's code pin. [docs/registry/implementation-map.yaml@3256bab9:L1-L4]
 
-There are **0 module map families and 0 implementation rows** whose `path` lies inside this package in the map's family `implementations` lists; consequently the required section-9 implementation inventory is empty and the ranked counted-family set is empty. [docs/registry/implementation-map.yaml:L345-L27163]
+There are **0 module map families and 0 implementation rows** whose `path` lies inside this package in the map's family `implementations` lists; consequently the required section-9 implementation inventory is empty and the ranked counted-family set is empty. [docs/registry/implementation-map.yaml@3256bab9:L345-L26502]
 
-The map does contain four `rejected_candidates`: `draw_seabed_line` and the three `_compute_seabed_y` methods, associated with `linear-wave-kinematics` and explicitly excluded from implementation counts pending inspection; they are not family implementation rows. [docs/registry/implementation-map.yaml:L53340-L53367]
+The map does contain four `rejected_candidates`: `draw_seabed_line` and the three `_compute_seabed_y` methods, associated with `linear-wave-kinematics` and explicitly excluded from implementation counts pending inspection; they are not family implementation rows. [docs/registry/implementation-map.yaml@3256bab9:L53340-L53367]
 
 | A8 step | Result |
 |---|---|
-| Inventory and ranking | PASS: 0 in-package implementation rows, 0 module families, 0 counted families [docs/registry/implementation-map.yaml:L345-L27163] |
-| Counted-family Python `re` grep | NOT_APPLICABLE: no module map family exists; no family signals are selected or excluded [docs/registry/implementation-map.yaml:L345-L27163] |
+| Inventory and ranking | PASS: 0 in-package implementation rows, 0 module families, 0 counted families [docs/registry/implementation-map.yaml@3256bab9:L345-L26502] |
+| Counted-family Python `re` grep | NOT_APPLICABLE: no module map family exists; no family signals are selected or excluded [docs/registry/implementation-map.yaml@3256bab9:L345-L26502] |
 | Further second implementations | No counted-family search is applicable; no numerical miss count is asserted for an unsearched family |
 
 Reproduce the A8 inventory by parsing the map at its named data pin, filtering each family's `implementations` by the package prefix, sorting families by descending in-package row count with stable file-order ties, and selecting at most three families; do not include `rejected_candidates`.
@@ -226,7 +236,7 @@ git grep -n -I -E 'compute_water_column_height|compute_mooring_angles|compute_te
 
 The matched parent API and CLI delegate to the listed definitions; the two metric-layout modules draw separate layouts and delegate file export, so their renderer calls are helpers, not additional file-export implementations. [src/digitalmodel/field_development/schematic_generator.py:L113-L130] [scripts/generate_schematic.py:L121-L148] [src/digitalmodel/field_development/visualization.py:L198-L205] [src/digitalmodel/field_development/onshore_layout.py:L458-L464]
 
-Map follow-up: classify depth-ratio canvas mapping, template/well placement, spline drawing, equal-angle distribution and figure export before adding any family rows; these are the section-3 methods absent as in-package implementations, issue pending (5). [docs/registry/implementation-map.yaml:L345-L27163] [src/digitalmodel/field_development/schematics/elements/seabed.py:L27-L53] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L96-L141] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L273-L308] [src/digitalmodel/field_development/schematics/fpso_spread.py:L81-L90] [src/digitalmodel/field_development/schematics/renderer.py:L53-L74]
+Map follow-up: classify depth-ratio canvas mapping, template/well placement, spline drawing, equal-angle distribution and figure export before adding any family rows; these are the section-3 methods absent as in-package implementations, issue pending (5). [docs/registry/implementation-map.yaml@3256bab9:L345-L26502] [src/digitalmodel/field_development/schematics/elements/seabed.py:L27-L53] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L96-L141] [src/digitalmodel/field_development/schematics/subsea_tieback.py:L273-L308] [src/digitalmodel/field_development/schematics/fpso_spread.py:L81-L90] [src/digitalmodel/field_development/schematics/renderer.py:L53-L74]
 
 ## 10. Coverage and open items
 
@@ -268,12 +278,16 @@ Open items below require maintainer issue creation from the accompanying numbere
 | Item | Responsibility | Tracking and limit |
 |---|---|---|
 | Fallback handler does not enclose SciPy import | Maintainer | issue pending (1); S01; no dependency-failure check exists |
-| Constructor units, finite values, counts, unknown labels and empty helper results | Maintainer | issue pending (2); S02–S14, S18, S25; partial coverage C01/C02 only |
-| Drawing scale/view conventions and tautological scale assertion | Maintainer | issue pending (3); S15–S24, S28; do not use schematic coordinates as physical geometry |
+| Constructor units, finite values, counts, unknown labels and empty helper results | Maintainer | issue pending (2); S02–S14, S18, S25, S31; partial coverage C01/C02 only |
+| Drawing scale/view conventions and tautological scale assertion | Maintainer | issue pending (3); S15–S24, S28–S30; do not use schematic coordinates as physical geometry |
 | Identifying discovery content and missing neutral document locator | Maintainer | issue pending (4); second unverified claim above; parent template/fixture values excluded |
 | Map coverage and rejected-candidate classification | Maintainer | issue pending (5); section-3 method families must be classified before being counted |
-| Independent image/geometry references | Engineering calculations quality manager | issue pending (6); first unverified claim in section 4; 1 angular validated example and 5 render/layout regressions only |
+| Independent image/geometry references | Engineering calculations quality manager | issue pending (6); first unverified claim in section 4; 6 regression examples only; no independent validated example |
 | Output resolution, figure dimensions, transparency checks and durable fingerprinted appendix | Maintainer | issue pending (6); S26–S27; byte-existence checks alone are insufficient |
 | Pack index, shared-log entry and independent clearance | Maintainer and family quality manager | issue pending (6); initial lesson has no shared-log ID; status remains DRAFT |
+
+The 2026-10-19 documentation audit confirms 31 classified sweep sites (30 package sites plus the parent dispatch boundary), 10 check definitions and 6 regression examples. The package grep returned 91 matching lines, classified by definition and symptom rather than counted as separate sites. Direct probes confirm saturation bands, overlapping well rows, 5 distinct anchor projections for 8 lines and PNG alpha 1.0 throughout a default-color output requested with transparency. These probes are temporary inspection evidence, not new repository detection tests; the section-6 missing-check dispositions remain applicable.
+
+The map inventory was parsed at `3256bab9`: 0 in-package implementation rows. At that revision the four rejected schematics candidates are at L53340–L53367; the explicit revision pin is required. Section-4 and section-5 collection resolves all 16 cited node IDs. The pack-lint executable was not found in the available repository or shared tooling; no new `pack_lint: clean` result is claimed.
 
 No client-derived values or private sidecar entry is included; do not copy identifying example values into subsequent evidence.
