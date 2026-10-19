@@ -128,7 +128,11 @@ supplied limit, P10/P50/P90 are calculated over resolved draws only. The band
 reports `RESOLVED_DRAWS_ONLY` if any draws are unresolved, otherwise
 `ALL_DRAWS_RESOLVED`. `quantile_basis` explicitly labels the conditional
 population. These percentiles do not estimate unconditional collapse quantiles;
-resolution can depend on the input realization and bias the retained subset.
+unresolved draws are the weakest realisations, with collapse above their own
+fracture-initiation pressure if a solution exists. Excluding them biases the
+resolved-only percentiles low, toward a lower mud-weight floor. The collapse
+band reports this direction in `bias_direction`; a supplied fraction limit
+does not correct the bias.
 
 Above the supplied limit, or with no resolved draws, the band is
 `INDETERMINATE` with null percentiles and an explicit `indeterminate_reason`.
@@ -137,6 +141,9 @@ If unresolved draws exist but the limit is omitted or null, the band is also
 All-resolved ensembles retain their percentiles without a supplied limit.
 Counts, fraction and the supplied limit remain visible for indeterminate bands.
 Other curves and the ceiling retain the requirement that every draw resolve.
+Their `unresolved_fraction_check` is `ALL_DRAWS_REQUIRED`, and any unresolved
+draw gives `indeterminate_reason: ALL_DRAWS_REQUIRED`; the collapse fraction
+limit does not apply to them.
 
 Interpolation follows *Sample Quantiles in Statistical Packages* (1996),
 equation (1) and Definition 7, pages 361 and 363,

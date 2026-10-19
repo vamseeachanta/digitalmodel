@@ -356,8 +356,11 @@ def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monke
     cfg["ensemble"] = {"samples": 4, "sigma": {}, "max_unresolved_fraction": 0.25}
     cfg["polar"] = {"inclinations_deg": []}
     pressures = iter([100, None, 150, 200, 150])
+    calls = []
 
     def scripted_bounds(*args, **kwargs):
+        calls.append(args[0])
+        assert len(calls) <= 5, "expected four draws followed by one nominal call"
         pressure = next(pressures)
         return {
             "collapse": {"pressure_psi": pressure},
@@ -370,14 +373,19 @@ def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monke
         "digitalmodel.well.drilling.wellbore_stability.pressure_bounds", scripted_bounds
     )
     result = run_workflow(cfg, tmp_path)
+    assert len(calls) == 5, "expected four draws followed by one nominal call"
     row = result["window"][0]
     band = row["curves"]["collapse"]
+    assert band["bias_direction"] == "low (unresolved draws are the weakest realisations)"
+    assert "biased low" in result["uncertainty"]["failed_draw_policy"]
     assert [band[name + "_psi"] for name in ("p10", "p50", "p90")] == pytest.approx(
         [110, 150, 190]
     )
     assert band["numerical_status"] == "RESOLVED_DRAWS_ONLY"
     assert band["unresolved_draws"] == row["failed_draws"] == 1
     assert band["unresolved_fraction"] == 0.25
+    for name in ("pore", "fracture_initiation", "minimum_horizontal_stress"):
+        assert row["curves"][name]["unresolved_fraction_check"] == "ALL_DRAWS_REQUIRED"
     assert row["conservative_window"]["low_psi"] is None
     assert row["conservative_window"]["high_psi"] is None
     assert row["conservative_window"]["feasible"] is False
@@ -464,3 +472,13 @@ def test_cli_runs_without_engine_or_licensed_solver(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     assert (tmp_path / "summary.json").is_file()
+
+
+@pytest.mark.parametrize("values", [[100, 150], [100, None], [None, None]])
+def test_all_draws_required_band_reports_its_policy(values):
+    band = _band(values, 1000, require_all_draws=True)
+    assert band["unresolved_fraction_check"] == "ALL_DRAWS_REQUIRED"
+    assert band["indeterminate_reason"] == (
+        "ALL_DRAWS_REQUIRED" if None in values else None
+    )
+    assert band["p50_psi"] == (None if None in values else 125)
