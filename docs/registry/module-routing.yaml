@@ -415,6 +415,9 @@ modules:
       orcaflex/modular_input_validation:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_input_validation/docs/agent-pack.md
         qa_family: MR
+      orcaflex/universal:
+        agent_pack: src/digitalmodel/solvers/orcaflex/universal/docs/agent-pack.md
+        qa_family: MR
       orcaflex/results_analysis:
         agent_pack: src/digitalmodel/solvers/orcaflex/results_analysis/docs/agent-pack.md
         qa_family: MR
