@@ -5,12 +5,12 @@
 | Module | field_development (top level) |
 | Repository | digitalmodel |
 | Package | `src/digitalmodel/field_development/` (direct Python files only) |
-| Pack revision | 0, 2026-10-18 |
+| Pack revision | 1, 2026-10-18 |
 | Code revision | `7d15df7734aaa1e3e74035789661abd37d866597` |
 | Analysis family | Engineering calculations (EC) |
 | Quality role | Engineering calculations quality manager |
 | Status | DRAFT |
-| Implementation-map ref | `origin/codex/implmap-work`, commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
+| Implementation-map ref | Default branch at the code revision, commit `7d15df7734aaa1e3e74035789661abd37d866597` |
 | Implementation-map data revision | `270c8759c374b67a7f032953e7fcdb14e0224461` |
 
 ## 1. Purpose and scope
@@ -19,7 +19,7 @@ The public facade exposes concept selection, capital and operating cost estimate
 
 `evaluate_field_development` ranks concepts, converts the selected host to an economics input and evaluates it; `compare_concepts` evaluates positive-score candidates and selects the highest NPV through its result property. [src/digitalmodel/field_development/workflow.py:L143-L174] [src/digitalmodel/field_development/workflow.py:L197-L268]
 
-The registry marks this domain beta; the four-axis concept screen is parameter based and excludes reservoir, flow-assurance and structural simulation, with production and well count supplied as inputs. [docs/registry/module-routing.yaml:L134-L139] [src/digitalmodel/field_development/concept_screening.py:L20-L30]
+The registry marks this domain beta; the four-axis concept screen is parameter based and excludes reservoir, flow-assurance and structural simulation, with production and well count supplied as inputs. [docs/registry/module-routing.yaml:L134-L143] [src/digitalmodel/field_development/concept_screening.py:L20-L30]
 
 Layout routing is piecewise straight in plan over a sampled surface; its optional catenary is screening geometry, and cable ampacity omits dielectric and sheath/armour losses. [src/digitalmodel/field_development/layout_model.py:L37-L46] [src/digitalmodel/field_development/screening.py:L33-L39]
 
@@ -531,16 +531,16 @@ UNVERIFIED: individual role appointments and the shared pack-index/log destinati
 
 ### Counted family and exact search
 
-For this section only, citations to `docs/registry/implementation-map.yaml` resolve at the map commit in the header; all other citations resolve at the code pin. The map's data revision is distinct from its containing commit.
+Implementation-map citations resolve at the code pin on the default branch, as do source and test citations. Routing-registry citations resolve at this pack revision, including its added submodule entry. The map's data revision is distinct from its containing commit.
 
-The module has one map family, `catenary-mooring-line-statics`, with one in-package implementation row; ranking by in-package row count therefore counts that family alone, and the inventory below contains all 140 of its rows in map order. [docs/registry/implementation-map.yaml:L345-L351] [docs/registry/implementation-map.yaml:L674-L686]
+The module has one map family, `catenary-mooring-line-statics`, with one in-package implementation row; ranking by in-package row count therefore counts that family alone, and the inventory below contains all 139 of its rows in map order. The in-package row is `layout_model.py::_catenary_riser_polyline`. [docs/registry/implementation-map.yaml:L345-L351] [docs/registry/implementation-map.yaml:L674-L685]
 
 All three signals are retained because none matches `field_development` under case-insensitive path comparison; the actual code search uses Python `re` with case-sensitive matching, without modifying patterns. [docs/registry/implementation-map.yaml:L348-L351]
 
 ```python
-algorithm = r'\b(?:acosh|arccosh|asinh|arcsinh|sinh|cosh)\s*\(|solve_catenary|catenary_forces|catenaryForces|CatenarySolver|LazyWaveSolver|_catnry|_fulcat|_catinb|_stretc|touchdown_length|\b(?:ea|EA)\b|catenaryEquation|safe_sinh|safe_cosh|\bea\d?\b|table\.h|interp_table|anchor_pull|build_line_table|horizontal_lb|horizontal_distance_ft'
-vocabulary = r'catenary|dynmoor|mooring.?static|_fulcat|_catnry|_stretc'
-constants_or_keys = r'horizontal_tension|weight_per_length|axial_stiffness|w_per_length|weight_per_unit_length'
+algorithm = '\\b(?:acosh|arccosh|asinh|arcsinh|sinh|cosh)\\s*\\(|solve_catenary|catenary_forces|catenaryForces|CatenarySolver|LazyWaveSolver|_catnry|_fulcat|_catinb|_stretc|touchdown_length|\\b(?:ea|EA)\\b|catenaryEquation|safe_sinh|safe_cosh|\\bea\\d?\\b|table\\.h|interp_table|anchor_pull|build_line_table|horizontal_lb|horizontal_distance_ft'
+vocabulary = 'catenary|dynmoor|mooring.?static|_fulcat|_catnry|_stretc'
+constants_or_keys = 'horizontal_tension|weight_per_length|axial_stiffness|w_per_length|weight_per_unit_length'
 ```
 
 | Enclosing definition at code pin | Classification and counted misses | Hit lines / evidence |
@@ -549,7 +549,7 @@ constants_or_keys = r'horizontal_tension|weight_per_length|axial_stiffness|w_per
 | `layout_model.py`, `_catenary_riser_polyline` | Listed implementation and section-3 method; 0 further misses | 443, 450, 465, 485. [src/digitalmodel/field_development/layout_model.py:L443-L490] |
 | `layout_model.py`, `route_connection` | Delegates to the listed polyline routine and joins the resulting geometry; 0 misses | 506–507, 512, 517, 520, 525, 527, 547, 549. [src/digitalmodel/field_development/layout_model.py:L493-L560] |
 
-Self-check result: inventory 140/140; counted families 1; further in-package implementations 0, against the acceptance limit of 1. The repository-wide Python search, including `scripts/`, examined 5,723 tracked files at the code pin and found 3,373 matching lines in 363 files; these outside-package search hits are discovery candidates, not additional counted implementations.
+Self-check result: inventory 139/139; counted families 1; further in-package implementations 0, against the acceptance limit of 1. Outside-package implementations are retained in the full inventory; the in-package search does not establish completeness outside this scope.
 
 ### Full map inventory
 
@@ -630,73 +630,72 @@ Self-check result: inventory 140/140; counted families 1; further in-package imp
 | 71 | `src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py` | `lineTypes` | [docs/registry/implementation-map.yaml:L1223-L1234] |
 | 72 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer.analyze_riser` | [docs/registry/implementation-map.yaml:L1235-L1249] |
 | 73 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer._solve_catenary_from_H` | [docs/registry/implementation-map.yaml:L1250-L1261] |
-| 74 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer._solve_H_from_top_tension.calc_top_tension` | [docs/registry/implementation-map.yaml:L1262-L1273] |
-| 75 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer._solve_H_from_geometry` | [docs/registry/implementation-map.yaml:L1274-L1285] |
-| 76 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.solve_catenary` | [docs/registry/implementation-map.yaml:L1286-L1297] |
-| 77 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.solve_for_horizontal_tension` | [docs/registry/implementation-map.yaml:L1298-L1311] |
-| 78 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.calculate_stiffness` | [docs/registry/implementation-map.yaml:L1312-L1323] |
-| 79 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.check_touchdown` | [docs/registry/implementation-map.yaml:L1324-L1335] |
-| 80 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.check_touchdown.s_from_a` | [docs/registry/implementation-map.yaml:L1336-L1347] |
-| 81 | `src/digitalmodel/subsea/mooring_analysis/cli.py` | `catenary_analysis` | [docs/registry/implementation-map.yaml:L1348-L1361] |
-| 82 | `src/digitalmodel/subsea/mooring_analysis/designer.py` | `MooringDesigner.analyze_line_tension` | [docs/registry/implementation-map.yaml:L1362-L1373] |
-| 83 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_catinb` | [docs/registry/implementation-map.yaml:L1374-L1387] |
-| 84 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_stretc` | [docs/registry/implementation-map.yaml:L1388-L1399] |
-| 85 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_fulcat` | [docs/registry/implementation-map.yaml:L1400-L1411] |
-| 86 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_catnry` | [docs/registry/implementation-map.yaml:L1412-L1425] |
-| 87 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_sub` | [docs/registry/implementation-map.yaml:L1426-L1437] |
-| 88 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `build_line_table` | [docs/registry/implementation-map.yaml:L1438-L1453] |
-| 89 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `interp_table` | [docs/registry/implementation-map.yaml:L1454-L1465] |
-| 90 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `anchor_pull` | [docs/registry/implementation-map.yaml:L1466-L1477] |
-| 91 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `solve_pretension` | [docs/registry/implementation-map.yaml:L1478-L1489] |
-| 92 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `restoring_force` | [docs/registry/implementation-map.yaml:L1490-L1503] |
-| 93 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `_geometry` | [docs/registry/implementation-map.yaml:L1504-L1515] |
-| 94 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `_derive.primitive` | [docs/registry/implementation-map.yaml:L1516-L1527] |
-| 95 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `test_elastic_fixture_geometry_and_force_identities` | [docs/registry/implementation-map.yaml:L1528-L1541] |
-| 96 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `test_inextensible_chord_arc_and_end_forces` | [docs/registry/implementation-map.yaml:L1542-L1553] |
-| 97 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `test_superseded_answers_fail_geometry_and_touchdown_diagnosis` | [docs/registry/implementation-map.yaml:L1554-L1565] |
-| 98 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `test_solver_against_reconciled_fixture` | [docs/registry/implementation-map.yaml:L1566-L1579] |
-| 99 | `tests/marine_ops/marine_engineering/catenary/test_run_quick.py` | `<module>` | [docs/registry/implementation-map.yaml:L1580-L1590] |
-| 100 | `tests/marine_ops/marine_engineering/catenary/test_simplified.py` | `expected_from_angle` | [docs/registry/implementation-map.yaml:L1591-L1602] |
-| 101 | `tests/marine_ops/marine_engineering/catenary/test_simplified.py` | `expected_from_force` | [docs/registry/implementation-map.yaml:L1603-L1614] |
-| 102 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `CatenarySolver.solve.length_error` | [docs/registry/implementation-map.yaml:L1615-L1626] |
-| 103 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `CatenarySolver.solve.length_error_derivative` | [docs/registry/implementation-map.yaml:L1627-L1638] |
-| 104 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `CatenarySolver._compute_results` | [docs/registry/implementation-map.yaml:L1639-L1652] |
-| 105 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `CatenarySolver._calculate_touchdown` | [docs/registry/implementation-map.yaml:L1653-L1664] |
-| 106 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `_signed_anchor_coordinate` | [docs/registry/implementation-map.yaml:L1665-L1676] |
-| 107 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `TestCatenarySolver.test_shape_coordinates` | [docs/registry/implementation-map.yaml:L1677-L1690] |
-| 108 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `TestCatenaryPerformance.test_batch_processing` | [docs/registry/implementation-map.yaml:L1691-L1702] |
-| 109 | `tests/marine_ops/marine_engineering/test_adapter_manual.py` | `test_angle_method` | [docs/registry/implementation-map.yaml:L1703-L1716] |
-| 110 | `tests/marine_ops/marine_engineering/test_adapter_manual.py` | `test_forces` | [docs/registry/implementation-map.yaml:L1717-L1730] |
-| 111 | `tests/marine_ops/marine_engineering/test_catenary_adapter.py` | `TestCatenaryEquationAngleMethod.test_angle_method_exact_legacy_match` | [docs/registry/implementation-map.yaml:L1731-L1743] |
-| 112 | `tests/marine_ops/marine_engineering/test_catenary_adapter.py` | `TestCatenaryForces.test_basic_forces_calculation` | [docs/registry/implementation-map.yaml:L1744-L1756] |
-| 113 | `tests/marine_ops/marine_engineering/test_catenary_adapter.py` | `TestCatenaryForces.test_forces_exact_legacy_match` | [docs/registry/implementation-map.yaml:L1757-L1769] |
-| 114 | `tests/marine_ops/marine_engineering/test_catenary_adapter.py` | `TestCatenaryForces.test_forces_various_scenarios` | [docs/registry/implementation-map.yaml:L1770-L1782] |
-| 115 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `CatenarySolver.solve.length_error` | [docs/registry/implementation-map.yaml:L1783-L1794] |
-| 116 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `CatenarySolver.solve.length_error_derivative` | [docs/registry/implementation-map.yaml:L1795-L1806] |
-| 117 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `CatenarySolver._compute_results` | [docs/registry/implementation-map.yaml:L1807-L1820] |
-| 118 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `CatenarySolver._calculate_touchdown` | [docs/registry/implementation-map.yaml:L1821-L1832] |
-| 119 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `_signed_anchor_coordinate` | [docs/registry/implementation-map.yaml:L1833-L1844] |
-| 120 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `TestCatenarySolver.test_shape_coordinates` | [docs/registry/implementation-map.yaml:L1845-L1858] |
-| 121 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `TestCatenaryPerformance.test_batch_processing` | [docs/registry/implementation-map.yaml:L1859-L1870] |
-| 122 | `tests/riser_configuration_screen/test_static.py` | `test_scr_matches_independent_inextensible_catenary` | [docs/registry/implementation-map.yaml:L1871-L1882] |
-| 123 | `tests/solve_catenary_correct.py` | `catenary_system` | [docs/registry/implementation-map.yaml:L1883-L1894] |
-| 124 | `tests/solve_general_catenary.py` | `catenary_system` | [docs/registry/implementation-map.yaml:L1895-L1906] |
-| 125 | `tests/structural/analysis/validate_imports.py` | `test_marine_engineering_imports` | [docs/registry/implementation-map.yaml:L1907-L1918] |
-| 126 | `tests/subsea/catenary_riser/test_static_reconciliation.py` | `lazy_results` | [docs/registry/implementation-map.yaml:L1919-L1932] |
-| 127 | `tests/subsea/catenary_riser/test_static_reconciliation.py` | `test_scr_design_and_general_solver_in_inextensible_limit` | [docs/registry/implementation-map.yaml:L1933-L1946] |
-| 128 | `tests/subsea/mooring_analysis/test_dynmoor.py` | `TestLibraryVsOracle.test_catinb_sloped_bottom_matches_oracle` | [docs/registry/implementation-map.yaml:L1947-L1960] |
-| 129 | `tests/test_catenary_module.py` | `test_excel_validation_case` | [docs/registry/implementation-map.yaml:L1961-L1972] |
-| 130 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_hangoff_section_calculation` | [docs/registry/implementation-map.yaml:L1973-L1984] |
-| 131 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_sag_to_buoyancy_segment` | [docs/registry/implementation-map.yaml:L1985-L1996] |
-| 132 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_buoyancy_to_hog_segment` | [docs/registry/implementation-map.yaml:L1997-L2008] |
-| 133 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_hog_to_buoyancy_segment` | [docs/registry/implementation-map.yaml:L2009-L2020] |
-| 134 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_buoyancy_to_touchdown_segment` | [docs/registry/implementation-map.yaml:L2021-L2032] |
-| 135 | `tests/test_lazy_wave_force_equilibrium.py` | `test_hangoff_vertical_force_balances_suspended_weight` | [docs/registry/implementation-map.yaml:L2033-L2046] |
-| 136 | `tests/test_lazy_wave_force_equilibrium.py` | `test_hangoff_total_tension_matches_catenary_and_force_triangle` | [docs/registry/implementation-map.yaml:L2047-L2060] |
-| 137 | `tests/test_lazy_wave_kernel_defects.py` | `solver` | [docs/registry/implementation-map.yaml:L2061-L2074] |
-| 138 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer.calculate_tension_along_riser` | [docs/registry/implementation-map.yaml:L2075-L2090] |
-| 139 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer.calculate_angle_along_riser` | [docs/registry/implementation-map.yaml:L2091-L2106] |
-| 140 | `src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py` | `SimplifiedCatenarySolver.calculate_forces` | [docs/registry/implementation-map.yaml:L2107-L2123] |
+| 74 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer._solve_H_from_geometry` | [docs/registry/implementation-map.yaml:L1262-L1273] |
+| 75 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.solve_catenary` | [docs/registry/implementation-map.yaml:L1274-L1285] |
+| 76 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.solve_for_horizontal_tension` | [docs/registry/implementation-map.yaml:L1286-L1299] |
+| 77 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.calculate_stiffness` | [docs/registry/implementation-map.yaml:L1300-L1311] |
+| 78 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.check_touchdown` | [docs/registry/implementation-map.yaml:L1312-L1323] |
+| 79 | `src/digitalmodel/subsea/mooring_analysis/catenary.py` | `CatenaryAnalyzer.check_touchdown.s_from_a` | [docs/registry/implementation-map.yaml:L1324-L1335] |
+| 80 | `src/digitalmodel/subsea/mooring_analysis/cli.py` | `catenary_analysis` | [docs/registry/implementation-map.yaml:L1336-L1349] |
+| 81 | `src/digitalmodel/subsea/mooring_analysis/designer.py` | `MooringDesigner.analyze_line_tension` | [docs/registry/implementation-map.yaml:L1350-L1361] |
+| 82 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_catinb` | [docs/registry/implementation-map.yaml:L1362-L1375] |
+| 83 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_stretc` | [docs/registry/implementation-map.yaml:L1376-L1387] |
+| 84 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_fulcat` | [docs/registry/implementation-map.yaml:L1388-L1399] |
+| 85 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_catnry` | [docs/registry/implementation-map.yaml:L1400-L1413] |
+| 86 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `_sub` | [docs/registry/implementation-map.yaml:L1414-L1425] |
+| 87 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `build_line_table` | [docs/registry/implementation-map.yaml:L1426-L1441] |
+| 88 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `interp_table` | [docs/registry/implementation-map.yaml:L1442-L1453] |
+| 89 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `anchor_pull` | [docs/registry/implementation-map.yaml:L1454-L1465] |
+| 90 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `solve_pretension` | [docs/registry/implementation-map.yaml:L1466-L1477] |
+| 91 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `restoring_force` | [docs/registry/implementation-map.yaml:L1478-L1491] |
+| 92 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `_geometry` | [docs/registry/implementation-map.yaml:L1492-L1503] |
+| 93 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `_derive.primitive` | [docs/registry/implementation-map.yaml:L1504-L1515] |
+| 94 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `test_elastic_fixture_geometry_and_force_identities` | [docs/registry/implementation-map.yaml:L1516-L1529] |
+| 95 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `test_inextensible_chord_arc_and_end_forces` | [docs/registry/implementation-map.yaml:L1530-L1541] |
+| 96 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `test_superseded_answers_fail_geometry_and_touchdown_diagnosis` | [docs/registry/implementation-map.yaml:L1542-L1553] |
+| 97 | `tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py` | `test_solver_against_reconciled_fixture` | [docs/registry/implementation-map.yaml:L1554-L1567] |
+| 98 | `tests/marine_ops/marine_engineering/catenary/test_run_quick.py` | `<module>` | [docs/registry/implementation-map.yaml:L1568-L1578] |
+| 99 | `tests/marine_ops/marine_engineering/catenary/test_simplified.py` | `expected_from_angle` | [docs/registry/implementation-map.yaml:L1579-L1590] |
+| 100 | `tests/marine_ops/marine_engineering/catenary/test_simplified.py` | `expected_from_force` | [docs/registry/implementation-map.yaml:L1591-L1602] |
+| 101 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `CatenarySolver.solve.length_error` | [docs/registry/implementation-map.yaml:L1603-L1614] |
+| 102 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `CatenarySolver.solve.length_error_derivative` | [docs/registry/implementation-map.yaml:L1615-L1626] |
+| 103 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `CatenarySolver._compute_results` | [docs/registry/implementation-map.yaml:L1627-L1640] |
+| 104 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `CatenarySolver._calculate_touchdown` | [docs/registry/implementation-map.yaml:L1641-L1652] |
+| 105 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `_signed_anchor_coordinate` | [docs/registry/implementation-map.yaml:L1653-L1664] |
+| 106 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `TestCatenarySolver.test_shape_coordinates` | [docs/registry/implementation-map.yaml:L1665-L1678] |
+| 107 | `tests/marine_ops/marine_engineering/legacy/test_mooring_catenary.py` | `TestCatenaryPerformance.test_batch_processing` | [docs/registry/implementation-map.yaml:L1679-L1690] |
+| 108 | `tests/marine_ops/marine_engineering/test_adapter_manual.py` | `test_angle_method` | [docs/registry/implementation-map.yaml:L1691-L1704] |
+| 109 | `tests/marine_ops/marine_engineering/test_adapter_manual.py` | `test_forces` | [docs/registry/implementation-map.yaml:L1705-L1718] |
+| 110 | `tests/marine_ops/marine_engineering/test_catenary_adapter.py` | `TestCatenaryEquationAngleMethod.test_angle_method_exact_legacy_match` | [docs/registry/implementation-map.yaml:L1719-L1731] |
+| 111 | `tests/marine_ops/marine_engineering/test_catenary_adapter.py` | `TestCatenaryForces.test_basic_forces_calculation` | [docs/registry/implementation-map.yaml:L1732-L1744] |
+| 112 | `tests/marine_ops/marine_engineering/test_catenary_adapter.py` | `TestCatenaryForces.test_forces_exact_legacy_match` | [docs/registry/implementation-map.yaml:L1745-L1757] |
+| 113 | `tests/marine_ops/marine_engineering/test_catenary_adapter.py` | `TestCatenaryForces.test_forces_various_scenarios` | [docs/registry/implementation-map.yaml:L1758-L1770] |
+| 114 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `CatenarySolver.solve.length_error` | [docs/registry/implementation-map.yaml:L1771-L1782] |
+| 115 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `CatenarySolver.solve.length_error_derivative` | [docs/registry/implementation-map.yaml:L1783-L1794] |
+| 116 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `CatenarySolver._compute_results` | [docs/registry/implementation-map.yaml:L1795-L1808] |
+| 117 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `CatenarySolver._calculate_touchdown` | [docs/registry/implementation-map.yaml:L1809-L1820] |
+| 118 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `_signed_anchor_coordinate` | [docs/registry/implementation-map.yaml:L1821-L1832] |
+| 119 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `TestCatenarySolver.test_shape_coordinates` | [docs/registry/implementation-map.yaml:L1833-L1846] |
+| 120 | `tests/marine_ops/marine_engineering/test_mooring_catenary.py` | `TestCatenaryPerformance.test_batch_processing` | [docs/registry/implementation-map.yaml:L1847-L1858] |
+| 121 | `tests/riser_configuration_screen/test_static.py` | `test_scr_matches_independent_inextensible_catenary` | [docs/registry/implementation-map.yaml:L1859-L1870] |
+| 122 | `tests/solve_catenary_correct.py` | `catenary_system` | [docs/registry/implementation-map.yaml:L1871-L1882] |
+| 123 | `tests/solve_general_catenary.py` | `catenary_system` | [docs/registry/implementation-map.yaml:L1883-L1894] |
+| 124 | `tests/structural/analysis/validate_imports.py` | `test_marine_engineering_imports` | [docs/registry/implementation-map.yaml:L1895-L1906] |
+| 125 | `tests/subsea/catenary_riser/test_static_reconciliation.py` | `lazy_results` | [docs/registry/implementation-map.yaml:L1907-L1920] |
+| 126 | `tests/subsea/catenary_riser/test_static_reconciliation.py` | `test_scr_design_and_general_solver_in_inextensible_limit` | [docs/registry/implementation-map.yaml:L1921-L1934] |
+| 127 | `tests/subsea/mooring_analysis/test_dynmoor.py` | `TestLibraryVsOracle.test_catinb_sloped_bottom_matches_oracle` | [docs/registry/implementation-map.yaml:L1935-L1948] |
+| 128 | `tests/test_catenary_module.py` | `test_excel_validation_case` | [docs/registry/implementation-map.yaml:L1949-L1960] |
+| 129 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_hangoff_section_calculation` | [docs/registry/implementation-map.yaml:L1961-L1972] |
+| 130 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_sag_to_buoyancy_segment` | [docs/registry/implementation-map.yaml:L1973-L1984] |
+| 131 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_buoyancy_to_hog_segment` | [docs/registry/implementation-map.yaml:L1985-L1996] |
+| 132 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_hog_to_buoyancy_segment` | [docs/registry/implementation-map.yaml:L1997-L2008] |
+| 133 | `tests/test_lazy_wave_catenary.py` | `TestLazyWaveSolver.test_buoyancy_to_touchdown_segment` | [docs/registry/implementation-map.yaml:L2009-L2020] |
+| 134 | `tests/test_lazy_wave_force_equilibrium.py` | `test_hangoff_vertical_force_balances_suspended_weight` | [docs/registry/implementation-map.yaml:L2021-L2034] |
+| 135 | `tests/test_lazy_wave_force_equilibrium.py` | `test_hangoff_total_tension_matches_catenary_and_force_triangle` | [docs/registry/implementation-map.yaml:L2035-L2048] |
+| 136 | `tests/test_lazy_wave_kernel_defects.py` | `solver` | [docs/registry/implementation-map.yaml:L2049-L2062] |
+| 137 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer.calculate_tension_along_riser` | [docs/registry/implementation-map.yaml:L2063-L2078] |
+| 138 | `src/digitalmodel/subsea/catenary_riser/simple_catenary.py` | `SimpleCatenaryAnalyzer.calculate_angle_along_riser` | [docs/registry/implementation-map.yaml:L2079-L2094] |
+| 139 | `src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py` | `SimplifiedCatenarySolver.calculate_forces` | [docs/registry/implementation-map.yaml:L2095-L2111] |
 
 ### Map follow-up
 
@@ -788,7 +787,7 @@ Documentation discovery found the following Markdown files naming field developm
 
 3 discovery files with identifying names are withheld from this list; #2155 holds codenaming follow-up. Additional catalog data filenames also carry identifying names and are not reproduced; no source-derived field values from those records are included.
 
-Registry and parameter data read: `docs/registry/workflows.yaml` (the four durable routes), `docs/registry/module-routing.yaml`, and the module data YAML files for concept defaults, screening defaults and the synthetic layouts. [docs/registry/workflows.yaml:L1010-L1046] [docs/registry/module-routing.yaml:L134-L139] [src/digitalmodel/field_development/concept_screening.py:L166-L175] [src/digitalmodel/field_development/layout_model.py:L48-L57]
+Registry and parameter data read: `docs/registry/workflows.yaml` (the four durable routes), `docs/registry/module-routing.yaml`, and the module data YAML files for concept defaults, screening defaults and the synthetic layouts. [docs/registry/workflows.yaml:L1010-L1046] [docs/registry/module-routing.yaml:L134-L143] [src/digitalmodel/field_development/concept_screening.py:L166-L175] [src/digitalmodel/field_development/layout_model.py:L48-L57]
 
 UNVERIFIED: empirical calibration, uncertainty coverage and cost-year comparability of the generic cost/schedule/access assumptions are not established by their regression tests; #1742 and #1794 remain the source-data follow-up. [src/digitalmodel/field_development/capex_estimator.py:L68-L86] [src/digitalmodel/field_development/opex_estimator.py:L71-L87] [src/digitalmodel/field_development/data/concept_params.yml:L17-L38]
 
