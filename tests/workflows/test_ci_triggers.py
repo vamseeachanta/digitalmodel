@@ -116,8 +116,8 @@ def test_pull_request_concurrency(filename: str) -> None:
 
 @pytest.mark.parametrize("filename", PUSH_PR_WORKFLOWS)
 @pytest.mark.parametrize("event", ("push", "workflow_dispatch"))
-def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
-    """Retain the test name; only workflows with external writes avoid cancellation."""
+def test_non_pr_runs_cancel_only_non_writers(filename: str, event: str) -> None:
+    """Only workflows with external writes avoid cancellation."""
     first = concurrency_result(filename, event, 101)
     second = concurrency_result(filename, event, 102)
     expected = (f"{load_workflow(filename)['name']}-refs/heads/main", filename not in WRITERS)
@@ -142,7 +142,8 @@ def test_push_pr_workflow_inventory() -> None:
             continue
         workflow = load_workflow(path.name)
         triggers = workflow.get("on", workflow.get(True))
-        if {"push", "pull_request"}.intersection(triggers):
+        names = {triggers} if isinstance(triggers, str) else set(triggers)
+        if {"push", "pull_request"}.intersection(names):
             found.add(path.name)
             assert workflow["concurrency"] == {
                 "group": "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
@@ -207,8 +208,8 @@ def test_subsea_checkout_includes_pinned_manifest_history(filename: str, job_id:
 
 
 @pytest.mark.parametrize("event", ("push", "schedule", "workflow_dispatch"))
-def test_full_sweep_separates_nightly_from_pushes(event: str) -> None:
-    """Retain the test name; sweeps share a ref group without interrupting writes."""
+def test_full_sweep_shares_ref_group_across_events(event: str) -> None:
+    """Sweeps share a ref group without interrupting writes."""
     concurrency = load_workflow("full-matrix-sweep.yml")["concurrency"]
     groups = []
     for run_id in (101, 102):
@@ -249,3 +250,39 @@ def test_manifest_history_requirement_matches_domain_mapping() -> None:
         if "`tests/drilling_riser/`" in row
     ]
     assert owners == ["subsea"]
+
+
+def test_workflow_automation_installs_coverage_plugin() -> None:
+    """The coverage flags require pytest-cov in the workflow environment."""
+    steps = load_workflow("workflow-automation-tests.yml")["jobs"]["test"]["steps"]
+    install = next(step["run"] for step in steps if step.get("name") == "Install dependencies")
+    assert "pytest-cov" in install
+
+
+def test_pages_deploy_is_restricted_to_main() -> None:
+    """Manual runs from other refs cannot deploy to the shared Pages site."""
+    deploy = load_workflow("pages.yml")["jobs"]["deploy"]
+    assert deploy.get("if") == "github.ref == 'refs/heads/main'"
+
+
+@pytest.mark.parametrize("triggers", ("push", ["push"]))
+@pytest.mark.parametrize("corrupt_policy", (False, True))
+def test_workflow_inventory_handles_shorthand_triggers(monkeypatch, triggers, corrupt_policy) -> None:
+    """Scalar and sequence triggers must receive the same concurrency checks."""
+    original = load_workflow
+
+    def shorthand_workflow(filename):
+        workflow = original(filename)
+        if filename == "docs.yml":
+            workflow.pop(True, None)
+            workflow["on"] = triggers
+            if corrupt_policy:
+                workflow["concurrency"]["cancel-in-progress"] = False
+        return workflow
+
+    monkeypatch.setitem(globals(), "load_workflow", shorthand_workflow)
+    if corrupt_policy:
+        with pytest.raises(AssertionError):
+            test_push_pr_workflow_inventory()
+    else:
+        test_push_pr_workflow_inventory()
