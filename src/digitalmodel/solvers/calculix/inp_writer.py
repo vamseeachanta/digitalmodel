@@ -4,6 +4,8 @@ ABOUTME: CalculiX INP file writer — converts mesh data (nodes + elements) into
 Abaqus-format .inp files for CalculiX ccx solver.
 """
 
+import re
+from numbers import Integral
 from pathlib import Path
 from typing import Optional
 
@@ -40,6 +42,7 @@ class INPWriter:
         self._node_sets: list[dict] = []
         self._element_sets: list[dict] = []
         self._beam_sections: list[dict] = []
+        self._solid_sections: list[dict] = []
         self._boundary_conditions: list[dict] = []
         self._loads: list[dict] = []
         self._steps: list[dict] = []
@@ -59,8 +62,27 @@ class INPWriter:
         self._node_sets.append({"name": name, "ids": node_ids})
 
     def add_element_set(self, name: str, element_ids: list[int]):
-        """Define a named element set. element_ids are 0-based."""
+        """Define a named element set using global zero-based element indices.
+
+        Indices follow element-block insertion order, then connectivity row
+        order within each block, including beams. EALL and generated beam-set
+        names are reserved. Names use ASCII letters, digits and underscores,
+        start with a letter, and are compared without case distinctions.
+        """
         self._element_sets.append({"name": name, "ids": element_ids})
+
+    def add_solid_section(self, elset: str, material: str):
+        """Assign a material to a solid element set, checked during write.
+
+        Explicit sections must cover every solid exactly once, without beam
+        members. Without explicit sections, a single defined material applies
+        to EALL for compatibility. Multiple materials require explicit sections.
+        EALL contains solids only. References are case insensitive.
+
+        Source: CalculiX CrunchiX User's Manual 2.22 (2024), sections 7.53
+        (*ELSET) and 7.118 (*SOLID SECTION).
+        """
+        self._solid_sections.append({"elset": elset, "material": material})
 
     def add_boundary_condition(
         self, node_set: str, dof: int, value: float = 0.0
@@ -121,6 +143,12 @@ class INPWriter:
 
     def write(self, filepath: Path) -> Path:
         """Write the .inp file and return its path."""
+        # Validate before touching the destination: unsupported physics must
+        # never silently disappear from an otherwise valid-looking deck.
+        for name in self.elements:
+            if name not in ELEMENT_TYPE_MAP:
+                raise ValueError(f"Unsupported element type: {name!r}")
+        solid_sections = self._resolve_solid_sections()
         filepath = Path(filepath)
         lines: list[str] = []
 
@@ -130,7 +158,7 @@ class INPWriter:
         self._write_node_sets(lines)
         self._write_element_sets(lines)
         self._write_materials(lines)
-        self._write_solid_sections(lines)
+        self._write_solid_sections(lines, solid_sections)
         self._write_beam_sections(lines)
         self._write_steps(lines)
 
@@ -140,6 +168,94 @@ class INPWriter:
     # ------------------------------------------------------------------
     # Private section writers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _identity(name: str, kind: str) -> str:
+        # CalculiX 2.22 (2024), section 7: names are case insensitive and at
+        # most 80 characters. This adapter accepts a narrower ASCII subset
+        # to prevent whitespace/delimiters from changing keyword identity.
+        if (
+            not isinstance(name, str)
+            or len(name) > 80
+            or re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", name) is None
+        ):
+            raise ValueError(f"Invalid {kind} name: {name!r}")
+        return name.upper()
+
+    def _resolve_solid_sections(self) -> list[dict]:
+        """Resolve set identities and require a disjoint, complete partition."""
+        materials = {}
+        for mat in self._materials:
+            key = self._identity(mat["name"], "material")
+            if key in materials:
+                raise ValueError(f"Duplicate material name: {mat['name']!r}")
+            materials[key] = mat["name"]
+
+        # Same traversal as _write_elements: beams participate in global IDs.
+        element_sets = {"EALL": set()}
+        element_count = 0
+        for name, data in self.elements.items():
+            ccx_type = ELEMENT_TYPE_MAP[name]
+            key = f"EBEAM_{ccx_type}" if ccx_type in BEAM_ELEMENT_TYPES else "EALL"
+            count = len(data["connectivity"])
+            element_sets.setdefault(key, set()).update(
+                range(element_count, element_count + count)
+            )
+            element_count += count
+
+        reserved = {"EALL"} | {f"EBEAM_{t}" for t in BEAM_ELEMENT_TYPES}
+        set_names = {key: key for key in element_sets}
+        for region in self._element_sets:
+            key = self._identity(region["name"], "element set")
+            if key in reserved:
+                raise ValueError(f"Reserved element set name: {region['name']!r}")
+            if key in element_sets:
+                raise ValueError(f"Duplicate element set name: {region['name']!r}")
+            for eid in region["ids"]:
+                if (
+                    isinstance(eid, (bool, np.bool_))
+                    or not isinstance(eid, Integral)
+                    or not 0 <= eid < element_count
+                ):
+                    raise ValueError(
+                        f"Invalid element ID in set {region['name']!r}: {eid!r}"
+                    )
+            element_sets[key] = set(region["ids"])
+            set_names[key] = region["name"]
+
+        solid_ids = element_sets["EALL"]
+        if not self._solid_sections:
+            if not solid_ids:
+                return []
+            if len(materials) != 1:
+                raise ValueError("Every solid requires an unambiguous material assignment")
+            return [{"elset": "EALL", "material": next(iter(materials.values()))}]
+
+        assigned = set()
+        sections = []
+        for section in self._solid_sections:
+            key = self._identity(section["elset"], "element set")
+            material = self._identity(section["material"], "material")
+            if key not in element_sets:
+                raise ValueError(f"Unknown element set: {section['elset']!r}")
+            if material not in materials:
+                raise ValueError(f"Unknown material: {section['material']!r}")
+            ids = element_sets[key]
+            if not ids:
+                raise ValueError(
+                    f"Solid section references an empty set: {section['elset']!r}"
+                )
+            if ids - solid_ids:
+                raise ValueError(
+                    f"Solid section contains non-solid elements: {section['elset']!r}"
+                )
+            if assigned & ids:
+                raise ValueError("Elements assigned to multiple solid sections")
+            assigned.update(ids)
+            sections.append({"elset": set_names[key], "material": materials[material]})
+        if assigned != solid_ids:
+            raise ValueError("Unassigned solid elements require explicit material sections")
+        return sections
 
     def _write_heading(self, lines: list[str]):
         lines.append("*HEADING")
@@ -153,9 +269,7 @@ class INPWriter:
     def _write_elements(self, lines: list[str]):
         elem_id = 1
         for gmsh_name, data in self.elements.items():
-            ccx_type = ELEMENT_TYPE_MAP.get(gmsh_name)
-            if ccx_type is None:
-                continue
+            ccx_type = ELEMENT_TYPE_MAP[gmsh_name]
             if ccx_type in BEAM_ELEMENT_TYPES:
                 elset = f"EBEAM_{ccx_type}"
             else:
@@ -186,15 +300,12 @@ class INPWriter:
             lines.append("*ELASTIC")
             lines.append(f"{mat['E']}, {mat['nu']}")
 
-    def _write_solid_sections(self, lines: list[str]):
-        has_solid = any(
-            ELEMENT_TYPE_MAP.get(name) not in BEAM_ELEMENT_TYPES
-            for name in self.elements
-            if ELEMENT_TYPE_MAP.get(name) is not None
-        )
-        if self._materials and has_solid:
-            mat_name = self._materials[0]["name"]
-            lines.append(f"*SOLID SECTION, ELSET=EALL, MATERIAL={mat_name}")
+    def _write_solid_sections(self, lines: list[str], sections: list[dict]):
+        for section in sections:
+            lines.append(
+                f"*SOLID SECTION, ELSET={section['elset']}, "
+                f"MATERIAL={section['material']}"
+            )
 
     def _write_beam_sections(self, lines: list[str]):
         for bs in self._beam_sections:
