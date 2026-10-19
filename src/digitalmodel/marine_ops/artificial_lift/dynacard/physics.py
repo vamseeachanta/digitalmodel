@@ -4,6 +4,7 @@
 import numpy as np
 from .calculations import calculate_pump_fillage
 from .exceptions import PhysicsError
+from .everitt_jennings.adapter import _effective_density_lb_ft3
 from .solver_guards import annotate_results, validate_stroke
 from .models import DynacardAnalysisContext, CardData, AnalysisResults
 from .constants import (
@@ -51,6 +52,7 @@ class DynacardPhysicsSolver:
                 section.modulus_of_elasticity,
                 section.speed_of_sound,
                 section.density,
+                section.weight_per_foot,
             ]
             if (
                 not np.all(np.isfinite(positive))
@@ -63,22 +65,43 @@ class DynacardPhysicsSolver:
                 )
         return u, f
 
-    def solve_wave_equation(self):
+    def solve_wave_equation(self, *, harmonic_count=None):
         """Propagate displacement AND tensile force through every rod section.
 
         Basis: Applied Mechanics of Solids (online edition read 2026-10-19), section 4.3.3:
         https://solidmechanics.org/Text/Chapter4_3/Chapter4_3.php
+        Damped rod model and boundary conditions: SPE-588-PA (1963),
+        Predicting the Behavior of Sucker-Rod Pumping Systems,
+        The Mathematical Model. https://doi.org/10.2118/588-PA
         With x downward, u upward, F=-EA*u_x. Fourier substitution in
         u_tt+c*u_t=a²*u_xx gives gamma²=(-omega²+i*omega*c)/a².
         Differentiating the displacement solution gives the companion force
         equation (also specified in #1955). See gibbs-transfer.md for derivation.
+
+        harmonic_count retains that many positive-frequency harmonics, plus DC.
+        None retains all; zero retains only static load. The damping-factor
+        conversion from a dimensionless coefficient is NOT_EVALUATED.
         """
         u_surf, f_surf = self._validate_inputs()
         count = len(u_surf)
+        if harmonic_count is not None and (
+            isinstance(harmonic_count, (bool, np.bool_))
+            or not isinstance(harmonic_count, (int, np.integer))
+            or not 0 <= harmonic_count <= count // 2
+        ):
+            raise PhysicsError(
+                "harmonic_count must be an integer from zero to sample_count//2",
+                solver="gibbs",
+            )
         period = SECONDS_PER_MINUTE / self.ctx.spm
         omega = 2 * np.pi * np.fft.rfftfreq(count, d=period / count)
         displacement = np.fft.rfft(u_surf)
         force = np.fft.rfft(f_surf)
+        if harmonic_count is not None:
+            # Discard before propagation so rejected noise cannot overflow.
+            omega = omega[: harmonic_count + 1]
+            displacement = displacement[: harmonic_count + 1]
+            force = force[: harmonic_count + 1]
 
         # Section matrices enforce continuity of displacement and total force
         # at each taper. Geometric A=pi*d²/4 and unit conversions are exact.
@@ -104,17 +127,18 @@ class DynacardPhysicsSolver:
                     displacement[1:] = cosine * old_u - compliance * old_f
                     force[1:] = cosine * old_f - ea * gamma * sine * old_u
 
-                    # Static equilibrium: F_bottom=F_top-W_b. Integrating
-                    # u_x=-F/EA gives -(F_top-W_b/2)*L/EA. Archimedes plus
-                    # weight/volume input densities gives W_b=(rho_s-rho_f)*A*L.
+                    # Static equilibrium includes the supplied coupling weight,
+                    # using the same effective density as the default solver.
                     weight = (
-                        (section.density - self.ctx.fluid_density)
+                        (_effective_density_lb_ft3(section) - self.ctx.fluid_density)
                         * area
                         * section.length
                         / SQUARE_FEET_TO_SQUARE_INCHES
                     )
-                    displacement[0] -= (force[0] - count * weight / 2) * length / ea
                     force[0] -= count * weight
+                # Absolute static stretch is not returned: position uses a
+                # zero-minimum datum. Remove DC before inverse transformation.
+                displacement[0] = 0
                 dh_pos = np.fft.irfft(displacement, n=count)
                 dh_load = np.fft.irfft(force, n=count)
                 dh_pos -= np.min(dh_pos)

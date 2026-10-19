@@ -82,7 +82,7 @@ def create_test_context(
 # Both phases are retained. Elastic overtravel is permitted now that the
 # coupled wave equation replaces the empirical stroke scaling (#1857).
 STROKE_CASES = pytest.mark.parametrize(
-    "load_phase", [np.pi / 4, -np.pi / 8], ids=["overtravel", "shorter-stroke"],
+    "load_phase", [np.pi / 4, -np.pi / 8], ids=["positive-phase", "negative-phase"],
 )
 
 

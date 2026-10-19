@@ -127,6 +127,7 @@ def test_taper_interface_hand_solution():
     ctx, t = quarter_wave_context()
     second = ctx.rod_string[0].model_copy(deep=True)
     second.diameter *= np.sqrt(2)
+    second.weight_per_foot *= 2
     ctx.rod_string.append(second)
     card = solve(ctx)
     expected_u = -np.cos(t)
@@ -160,6 +161,50 @@ def test_static_buoyancy_and_elastic_limit():
     np.testing.assert_allclose(card.load, 5, atol=1e-12)
     ctx.fluid_density = 144
     np.testing.assert_allclose(solve(ctx).load, 20, atol=1e-12)
+
+
+def test_static_weight_uses_supplied_weight_per_foot():
+    """A=1 in², weight=2 lb/ft implies effective density=288 lb/ft³.
+
+    Fluid density=72 displaces 0.5 lb/ft, so 15 ft weighs 22.5 lb
+    submerged, independently of the prescribed bare-material density=144.
+    """
+    ctx, _ = quarter_wave_context()
+    ctx.rod_string[0].weight_per_foot = 2
+    ctx.fluid_density = 72
+    np.testing.assert_allclose(np.mean(solve(ctx).load), -2.5, atol=1e-12)
+
+
+@pytest.mark.parametrize("samples", [63, 64])
+def test_harmonic_limit_removes_high_frequency_displacement(samples):
+    """Discarding harmonic 3 recovers the independent quarter-wave solution."""
+    ctx, t = quarter_wave_context(samples)
+    ctx.surface_card.position = (2 * np.cos(t) + 0.01 * np.cos(3 * t)).tolist()
+    with pytest.warns(UserWarning, match="comparison only"):
+        card = DynacardPhysicsSolver(ctx).solve_wave_equation(
+            harmonic_count=1
+        ).downhole_card
+    expected = -3 / np.pi * np.sin(t)
+    np.testing.assert_allclose(card.position, expected - expected.min(), atol=1e-12)
+    np.testing.assert_allclose(card.load, 5 + 8 * np.pi * np.cos(t), atol=1e-12)
+    assert not np.allclose(solve(ctx).load, card.load)
+
+
+def test_zero_harmonics_retains_static_load_only():
+    ctx, _ = quarter_wave_context()
+    with pytest.warns(UserWarning, match="comparison only"):
+        card = DynacardPhysicsSolver(ctx).solve_wave_equation(
+            harmonic_count=0
+        ).downhole_card
+    np.testing.assert_allclose(card.position, 0, atol=1e-12)
+    np.testing.assert_allclose(card.load, 5, atol=1e-12)
+
+
+@pytest.mark.parametrize("value", [-1, 1.5, True, 33])
+def test_invalid_harmonic_limit_rejected(value):
+    ctx, _ = quarter_wave_context()
+    with pytest.raises(PhysicsError, match="harmonic_count"):
+        DynacardPhysicsSolver(ctx).solve_wave_equation(harmonic_count=value)
 
 
 @pytest.mark.parametrize(

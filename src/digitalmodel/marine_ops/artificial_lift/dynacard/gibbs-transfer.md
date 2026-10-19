@@ -10,6 +10,7 @@ calibration and diagnostic accuracy remain **NOT_EVALUATED**.
 | Revision | Date | What changed and why |
 |---|---|---|
 | 1 | 2026-10-19 | Replaced affine load scaling with coupled section transfers and independent analytical cases. |
+| 2 | 2026-10-19 | Used supplied rod weight for static tension, added harmonic selection and clarified the damping basis and relative displacement datum. |
 
 ## Equations and source
 
@@ -18,8 +19,19 @@ The public textbook [Applied Mechanics of Solids, section 4.3.3,
 provides the thin-rod wave equation and axial stress/displacement relation.
 This is the undated online edition, read on 2026-10-19; a publication year is
 not established by that page. The following transfer equations are derived
-here from that rod model, with a prescribed linear viscous term. They also
+here from that rod model. The damped rod model is cited separately below. They also
 implement the companion force equation specified in issue #1955.
+
+[SPE-588-PA, Predicting the Behavior of Sucker-Rod Pumping Systems
+(1963), The Mathematical Model](https://doi.org/10.2118/588-PA) supplies the
+viscously damped rod model and its boundary conditions. Its forward formulation
+specifies initial stress and velocity, polished-rod motion and pump operation.
+This inverse comparison path instead takes both measured surface displacement
+and surface tension as boundary inputs and reconstructs the pump card; it does
+not implement a forward pump-valve boundary model. The dimensionless damping
+coefficient conversion to the rate c is **NOT_EVALUATED**. Callers shall supply
+an independently established rate in inverse seconds; a dimensionless damping
+factor cannot be passed unchanged.
 
 Let x increase from surface to pump, u be upward displacement in inches,
 F be tensile force in pounds, E be the section modulus in psi, A its area
@@ -48,15 +60,18 @@ Archimedes' displaced-fluid weight give, for weight/volume densities in lb/ft³:
 
 ```text
 A = pi d²/4
-W = (density_rod - density_fluid) A L_ft / 144
+rho_effective = weight_per_foot * 144 / A
+W = (rho_effective - density_fluid) A L_ft / 144
 F_out = F_in - W
-U_out = U_in - (F_in - W/2) L_in/(EA)
 ```
 
-The divisor is the exact square-inch to square-foot conversion. The half-weight
-term is the integral of the linear static tension profile. These equilibrium
+The divisor is the exact square-inch to square-foot conversion. Effective
+density is derived by the same adapter helper as the default solver, so supplied
+coupling-inclusive weight is retained. When omitted, weight per foot is derived
+from the section's material density by the input model. These equilibrium
 relations are independent hand derivations, not fitted calibration factors.
-Displacement is shifted to a zero minimum only after reconstruction.
+Static displacement is omitted because the returned card uses a zero-minimum
+datum; absolute elastic stretch cannot be recovered from this card.
 
 ## Inputs and numerical interpretation
 
@@ -72,7 +87,16 @@ Displacement is shifted to a zero minimum only after reconstruction.
   experience** until independently supplied. The synthetic example prescribes
   every property used by the transfer; its numbers are mathematical inputs,
   not recommended rod properties.
-- The real FFT retains all resolved harmonics. At even sample counts the unpaired
+- Material density, modulus and wave speed are independent inputs; their mass
+  consistency is not checked. The defaults do not imply a single consistent
+  dynamic mass. Static tension uses the supplied weight per foot, while dynamic
+  response continues to use the prescribed wave speed.
+- `solve_wave_equation(harmonic_count=None)` retains all resolved harmonics.
+  An integer from zero through half the sample count (rounded down) retains DC
+  and that many positive-frequency harmonics. Zero returns static load and zero
+  relative motion. Discarded coefficients are removed before propagation.
+  No automatic or field-calibrated bandwidth is selected.
+  At even sample counts the unpaired
   Nyquist coefficient is reconstructed by its real projection. Noise and high
   damping can make inverse propagation ill-conditioned; non-finite solutions
   raise PhysicsError. No denoising bandwidth or field accuracy is inferred.

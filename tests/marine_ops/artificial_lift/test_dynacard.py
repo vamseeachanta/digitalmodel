@@ -148,6 +148,7 @@ def test_compare_solvers(sample_context):
     # The coupled solution now passes this synthetic comparison envelope.
     # The legacy finite-difference candidate still fails the aggregate gate.
     assert gibbs['load_nrmse_pct'] < comparison['threshold_load_nrmse_pct']
+    assert gibbs['load_nrmse_pct'] == pytest.approx(2.3214701, abs=1e-6)
     assert gibbs['within_threshold'] is True
     assert comparison['comparisons']['finite_difference']['within_threshold'] is False
     assert caught.value.details['comparisons']['gibbs'] == gibbs
