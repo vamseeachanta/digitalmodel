@@ -10,6 +10,7 @@ the omitted second moment; it does not establish compliance with a design standa
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Derive a peak-relative cutoff and independent regression moments to address the truncated tail. |
+| 2 | 2026-10-19 | Preserve the fatigue workflow grid, document reduced peak resolution and confirm source equation references to bound the effect of the automatic cutoff. |
 
 ## Sources and independent calculation
 
@@ -19,6 +20,11 @@ spectrum. Equations (5.115)-(5.118) define spectral moments, significant
 height and zero-crossing period. The [public spectrum definition](https://www.orcina.com/webhelp/OrcaFlex/Content/html/Waves%2CWavespectra.htm),
 section ISSC, also states the height-and-peak-frequency form. These sources were
 accessed on 2026-10-19; no licensed standard was used to obtain coefficients.
+
+The open textbook's [Part 1](https://ocw.tudelft.nl/wp-content/uploads/Part_1.pdf)
+was inspected at printed pages 5-41, 5-42 and 5-44 to confirm these equation
+references. Its period relations are rounded; the peak-frequency expression
+and exact moments below are independent derivations.
 
 Write the spectrum as
 
@@ -72,6 +78,14 @@ bounds and reject invalid inputs to the automatic grid.
 - The cutoff is finite and does not eliminate the entire moment tail.
 - The default point count and lower frequency remain unchanged. Extreme periods
   or coarse caller-specified grids need a separate convergence assessment.
+- With 100 points the new spacing is approximately `0.1 wp`. At `Tp = 5 s`
+  it is `10.1 %` of the peak frequency, versus `1.6 %` previously. Resolving a
+  narrow-band response can therefore require more points or explicit bounds,
+  even when the zeroth-to-second-moment budgets pass.
+- The spectral fatigue workflow explicitly retains its former `0.02-2.0 rad/s`
+  grid with 100 points. Its clamped stress RAO, fourth moment and default Dirlik
+  damage therefore retain their pre-cutoff-change values. Selecting a grid from
+  the RAO bandwidth and assessing tail convergence remain separate work.
 - JONSWAP, Bretschneider and ISSC defaults are unchanged. Parameter objects
   still pass their explicit bounds to `generate_spectrum`.
 - Energy period, wave power, other spectrum defaults and the caller audit remain
