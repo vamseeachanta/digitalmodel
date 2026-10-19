@@ -16,17 +16,19 @@ Stresses in Beams (2000), equations 4 and 7; see the calculation module.
 import json
 import math
 
-from digitalmodel.subsea.structural_checks import api_rp2a_check
+from digitalmodel.subsea.structural_checks import elastic_tubular_demands
 
 
 def main() -> None:
     """Print demands and the explicitly incomplete acceptance disposition."""
-    result = api_rp2a_check(
+    result = elastic_tubular_demands(
         diameter=10,
         thickness=1,
         yield_strength=100,  # Illustrative input; no API 5L material grade assumed.
         axial_force=90 * math.pi,
         bending_moment=369 * math.pi / 2,
+        force_unit="N",
+        moment_unit="N mm",
     )
     print(json.dumps({
         "area_mm2": round(result.area, 3),

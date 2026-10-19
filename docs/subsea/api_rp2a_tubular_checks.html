@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>API RP 2A tubular check development</title>
+<title>Elastic tubular demands</title>
 <style>
 body { max-width: 64rem; margin: 2rem auto; padding: 0 1rem;
        font: 1rem/1.6 system-ui, sans-serif; color: #1c2936; }
@@ -12,21 +12,26 @@ code, pre { background: #eef3f6; } pre { padding: 1rem; overflow-x: auto; }
 a { color: #155b92; }
 </style>
 <main>
-<h1>API RP 2A tubular check development</h1>
+<h1>Elastic tubular demands</h1>
 <p>The interface calculates elastic tubular normal stresses and compares them
-with supplied, citation-validated allowables. Eight requested check records are
-returned. With no allowables, all eight remain <code>NOT_EVALUATED</code>.
-API RP 2A compliance and spreadsheet equivalence are not established.</p>
+with supplied, citation-validated allowables. Nine tracked check records are
+returned. With no allowables, all nine remain <code>NOT_EVALUATED</code>.
+API RP 2A compliance and spreadsheet equivalence are not established.
+API allowable and interaction implementation remains open on #1643; qualified
+sources are required before that scope can be completed.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>0</td><td>2026-10-19</td><td>A sourced calculation interface was added
-to expose missing design evidence.</td></tr></table>
-<p>Table 1. Initial development revision.</p>
+to expose missing design evidence.</td></tr>
+<tr><td>1</td><td>2026-10-19</td><td>The interface was named for elastic demands,
+load units made explicit, the compression and bending gap added, and both
+references retained to avoid overstating code coverage.</td></tr></table>
+<p>Table 1. Calculation revision history.</p>
 <h2>Plan-lite</h2>
 <ol>
 <li>Slice 1 will implement annular geometry and axial and bending demands in
 <code>src/digitalmodel/subsea/structural_checks/api_rp2a.py</code>.</li>
-<li>Slice 2 will return all eight requested check records. Only axial and bending
+<li>Slice 2 will return all nine tracked check records. Only axial and bending
 comparisons with explicit cited allowables will be evaluated.</li>
 <li>Slice 3 will add independent hand-calculation tests in
 <code>tests/subsea/structural_checks/test_api_rp2a.py</code>, this document and
@@ -48,8 +53,13 @@ results unevaluated. Cross-provider review remains a maintainer checkpoint;
 no second-provider review is represented by this local review.</p>
 <h2>Inputs and method</h2>
 <p>The interface is
-<code>digitalmodel.subsea.structural_checks.api_rp2a_check</code>. Dimensions use
-mm, forces N, moments N mm, and stresses and pressure MPa. Axial force is positive
+<code>digitalmodel.subsea.structural_checks.elastic_tubular_demands</code>. Dimensions use
+mm and stresses and pressure MPa. Required keyword tags <code>force_unit</code>
+(<code>N</code> or <code>kN</code>, for axial and shear forces) and
+<code>moment_unit</code> (<code>N mm</code> or <code>kN m</code>) select load units.
+Omitting a tag or supplying an unsupported unit raises an error. Results store
+loads normalized to N and N mm. For example, 500 kN m is converted to
+500,000,000 N mm before calculating stress. Axial force is positive
 in tension and negative in compression. Bending moment is the signed resultant
 about any centroidal axis of the circular tube; its magnitude determines peak
 elastic stress. Pressure is nonnegative external gauge pressure. Shear force is
@@ -59,8 +69,8 @@ A = π(D² − d²)/4 and I = π(D⁴ − d⁴)/64. With Z = I/(D/2), normal dem
 is σ = N/A and peak bending demand is σ<sub>b</sub> = |M|/Z. Geometry factors
 follow integration; no standard coefficient is introduced. Axial force is the
 effective section force supplied by the caller. Pressure end thrust is not
-calculated or added. Yield strength is a required positive input retained as
-metadata; no API 5L grade or allowable is selected from it.</p>
+calculated or added. Yield strength is a required positive input that bounds
+supplied elastic allowables; no API 5L grade or allowable is selected from it.</p>
 <table>
 <tr><th>Check</th><th>Demand (MPa)</th><th>Capacity basis</th></tr>
 <tr><td>Axial tension</td><td>max(N/A, 0)</td><td>Supplied cited allowable</td></tr>
@@ -70,6 +80,7 @@ slenderness and buckling applicability require separate qualification</td></tr>
 section applicability requires separate qualification</td></tr>
 <tr><td>Shear</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
 <tr><td>Hydrostatic pressure</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
+<tr><td>Compression + bending (§3.3.1, unverified)</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
 <tr><td>Tension + bending</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
 <tr><td>Tension + hydrostatic</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
 <tr><td>Compression + hydrostatic</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
@@ -82,17 +93,27 @@ For a supplied allowable, unity is demand/allowable and the comparison passes
 when demand ≤ allowable. A failed comparison makes the aggregate
 <code>FAIL</code>. Otherwise any missing check makes it
 <code>NOT_EVALUATED</code>, with <code>passes=None</code>. The maximum unity
-ratio describes evaluated checks only and cannot establish full acceptance.</p>
+ratio describes evaluated checks only and cannot establish full acceptance.
+Aggregate <code>PASS</code> is unreachable from this callable: shear, pressure
+and four interactions always remain unevaluated, even at zero load with all
+three supported allowables supplied. The generic result reducer retains a
+PASS branch for independently assembled, fully evaluated records.</p>
 <h2>Supplied allowables and citation sidecars</h2>
 <p>The optional <code>allowables</code> mapping accepts
 <code>axial_tension</code>, <code>axial_compression</code> and
 <code>bending</code> keys. Each value is a
 <code>digitalmodel.citations.schema.CitedValue</code> with positive finite value,
-units <code>MPa</code> and a <code>Citation</code>. Citations are validated against
+units <code>MPa</code> and a <code>Citation</code>. A supplied allowable greater
+than yield strength raises an error; this elastic guard does not derive a code
+capacity. Citations are validated against
 their wiki source through the existing resolver, or the explicit
 <code>citation_root</code>. A missing page or mismatched source identity raises
 <code>CitationResolutionError</code>, including when the demand is zero.</p>
-<p>The result carries citations separately from the numeric check records.
+<p>Each evaluated record retains the unverified requested API locator alongside
+the supplied source identity, revision and section. The result also carries
+complete citations separately from the numeric check records. Generic cited
+sources are permitted because the interface claims elastic demands and supplied
+comparisons only; citation validation does not turn them into API allowables.
 Citation identity validation does not establish the supplied allowable's
 correctness, clause applicability, effective length, buckling qualification,
 load combination or code edition. Those require engineering review. The unit
@@ -122,7 +143,10 @@ that malformed allowable containers could be converted silently and missing
 citation objects could raise an incidental error. Regression tests reproduced
 those defects before validation was added. Tests also cover invalid finite
 domains, floating-point overflow, incomplete aggregate disposition and the
-executable example.</p>
+executable example. Regression tests require explicit load tags, compare an
+independent kN m vector with its N mm equivalent, reject conversion overflow
+and allowables above yield strength, retain both references, and include the
+compression plus bending evidence gap.</p>
 <h2>Known limits and way forward</h2>
 <p>The source workbook and its input/output vectors were not found in this
 checkout. The standards catalog and domain index were unavailable in the

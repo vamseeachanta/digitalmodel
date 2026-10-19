@@ -9,8 +9,8 @@ I = pi*(D⁴-d⁴)/64. All test dimensions, forces, yield strengths and
 allowables are illustrative inputs, with no API or material-grade status.
 """
 
-import math
 import json
+import math
 import runpy
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from digitalmodel.citations.schema import Citation, CitationResolutionError, CitedValue
-from digitalmodel.subsea.structural_checks.api_rp2a import api_rp2a_check
+from digitalmodel.subsea.structural_checks.api_rp2a import elastic_tubular_demands
 
 
 @pytest.fixture
@@ -48,8 +48,13 @@ def test_annular_geometry_and_tension():
     N=90*pi N => sigma=10 MPa; M=369*pi/2 N mm => sigma_b=10 MPa.
     The denominators come from integration, not the implementation.
     """
-    result = api_rp2a_check(10, 1, 100, axial_force=90 * math.pi,
-                           bending_moment=369 * math.pi / 2)
+    result = elastic_tubular_demands(
+        10, 1, 100,
+        axial_force=90 * math.pi,
+        bending_moment=369 * math.pi / 2,
+        force_unit="N",
+        moment_unit="N mm",
+    )
     assert result.area == pytest.approx(9 * math.pi)
     assert result.second_moment == pytest.approx(369 * math.pi / 4)
     assert result.section_modulus == pytest.approx(369 * math.pi / 20)
@@ -65,8 +70,13 @@ def test_compression_and_negative_bending():
     N=-100*pi => compression 20 MPa; M=-325*pi/2 => bending 30 MPa.
     MIT equations 1 and 7 apply by the source in the module docstring.
     """
-    result = api_rp2a_check(6, 1, 100, axial_force=-100 * math.pi,
-                           bending_moment=-325 * math.pi / 2)
+    result = elastic_tubular_demands(
+        6, 1, 100,
+        axial_force=-100 * math.pi,
+        bending_moment=-325 * math.pi / 2,
+        force_unit="N",
+        moment_unit="N mm",
+    )
     checks = {check.name: check for check in result.checks}
     assert checks["axial_tension"].calculated_stress == 0
     assert checks["axial_compression"].calculated_stress == pytest.approx(20)
@@ -75,9 +85,9 @@ def test_compression_and_negative_bending():
 
 def test_zero_load_does_not_establish_code_compliance():
     """Zero demand / unknown capacity is unknown, not a passing check."""
-    result = api_rp2a_check(10, 1, 100)
-    assert len(result.checks) == 8
-    assert len({check.name for check in result.checks}) == 8
+    result = elastic_tubular_demands(10, 1, 100, force_unit="N", moment_unit="N mm")
+    assert len(result.checks) == 9
+    assert len({check.name for check in result.checks}) == 9
     assert result.status == "NOT_EVALUATED"
     assert result.passes is None
     assert result.max_unity_ratio is None
@@ -99,15 +109,28 @@ def test_zero_load_does_not_establish_code_compliance():
 def test_supplied_limit_and_citation_sidecar(name, load, cited_limit):
     """Hand stress=10 MPa, supplied allowable=20 MPa => unity=0.5."""
     limit, root = cited_limit
-    result = api_rp2a_check(10, 1, 100, **load, allowables={name: limit},
-                           citation_root=root)
+    result = elastic_tubular_demands(
+        10, 1, 100,
+        **load,
+        allowables={name: limit},
+        citation_root=root,
+        force_unit="N",
+        moment_unit="N mm",
+    )
     check = next(check for check in result.checks if check.name == name)
     assert check.calculated_stress == pytest.approx(10)
     assert check.allowable_stress == 20
     assert check.unity_ratio == pytest.approx(0.5)
     assert check.passes is True
     assert check.status == "PASS"
-    assert check.code_reference == limit.citation.section
+    locator = {
+        "axial_tension": "3.2.1", "axial_compression": "3.2.2", "bending": "3.2.3",
+    }[name]
+    assert f"API RP 2A §{locator}" in check.code_reference
+    assert "unverified" in check.code_reference
+    assert limit.citation.code_id in check.code_reference
+    assert limit.citation.section in check.code_reference
+    assert f"({limit.citation.revision})" in check.code_reference
     assert result.citations == (limit.citation,)
     assert result.max_unity_ratio == pytest.approx(0.5)
     assert result.status == "NOT_EVALUATED"
@@ -119,8 +142,14 @@ def test_supplied_limit_and_citation_sidecar(name, load, cited_limit):
 def test_acceptance_boundary(stress, expected, cited_limit):
     """N=stress*9*pi => demand=stress; unity=stress/20, limit unity=1."""
     limit, root = cited_limit
-    result = api_rp2a_check(10, 1, 100, axial_force=stress * 9 * math.pi,
-                           allowables={"axial_tension": limit}, citation_root=root)
+    result = elastic_tubular_demands(
+        10, 1, 100,
+        axial_force=stress * 9 * math.pi,
+        allowables={"axial_tension": limit},
+        citation_root=root,
+        force_unit="N",
+        moment_unit="N mm",
+    )
     check = result.checks[0]
     assert check.unity_ratio == pytest.approx(stress / 20)
     assert check.passes is expected
@@ -131,10 +160,17 @@ def test_acceptance_boundary(stress, expected, cited_limit):
 def test_hydrostatic_and_shear_remain_unevaluated_with_cited_normal_limits(cited_limit):
     """P=2 MPa and V=100 N have no qualified pressure or shear equations."""
     limit, root = cited_limit
-    result = api_rp2a_check(10, 1, 100, pressure=2, shear_force=-100,
-                           allowables={name: limit for name in
-                                       ("axial_tension", "axial_compression", "bending")},
-                           citation_root=root)
+    result = elastic_tubular_demands(
+        10, 1, 100,
+        pressure=2,
+        shear_force=-100,
+        allowables={
+            name: limit for name in ("axial_tension", "axial_compression", "bending")
+        },
+        citation_root=root,
+        force_unit="N",
+        moment_unit="N mm",
+    )
     assert result.inputs.pressure == 2
     assert result.inputs.shear_force == -100
     assert result.status == "NOT_EVALUATED"
@@ -152,7 +188,7 @@ def test_hydrostatic_and_shear_remain_unevaluated_with_cited_normal_limits(cited
 def test_rejects_nonfinite_and_nonnumeric_inputs(field, bad):
     values = {"diameter": 10, "thickness": 1, "yield_strength": 100, field: bad}
     with pytest.raises(ValueError, match=field):
-        api_rp2a_check(**values)
+        elastic_tubular_demands(**values, force_unit="N", moment_unit="N mm")
 
 
 @pytest.mark.parametrize("values", [
@@ -163,65 +199,105 @@ def test_rejects_nonfinite_and_nonnumeric_inputs(field, bad):
 def test_rejects_invalid_physical_inputs(values):
     inputs = {"diameter": 10, "thickness": 1, "yield_strength": 100, **values}
     with pytest.raises(ValueError):
-        api_rp2a_check(**inputs)
+        elastic_tubular_demands(**inputs, force_unit="N", moment_unit="N mm")
 
 
 @pytest.mark.parametrize("bad", [0, -1, float("nan"), float("inf"), True])
 def test_rejects_invalid_allowables(bad, cited_limit):
     limit, root = cited_limit
     with pytest.raises(ValueError, match="allowable"):
-        api_rp2a_check(10, 1, 100, allowables={"bending": replace(limit, value=bad)},
-                       citation_root=root)
+        elastic_tubular_demands(
+            10, 1, 100,
+            allowables={"bending": replace(limit, value=bad)},
+            citation_root=root,
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 def test_rejects_wrong_allowable_units(cited_limit):
     limit, root = cited_limit
     with pytest.raises(ValueError, match="MPa"):
-        api_rp2a_check(10, 1, 100, allowables={"bending": replace(limit, units="psi")},
-                       citation_root=root)
+        elastic_tubular_demands(
+            10, 1, 100,
+            allowables={"bending": replace(limit, units="psi")},
+            citation_root=root,
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 @pytest.mark.parametrize("allowables", [{"shear": 1}, {"unknown": 1}, {"bending": 20}])
 def test_rejects_unsupported_or_uncited_allowables(allowables):
     with pytest.raises(ValueError):
-        api_rp2a_check(10, 1, 100, allowables=allowables)
+        elastic_tubular_demands(
+            10, 1, 100,
+            allowables=allowables,
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 @pytest.mark.parametrize("allowables", [[], 20, "bending"])
 def test_rejects_nonmapping_allowables(allowables):
     with pytest.raises(ValueError, match="mapping"):
-        api_rp2a_check(10, 1, 100, allowables=allowables)
+        elastic_tubular_demands(
+            10, 1, 100,
+            allowables=allowables,
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 def test_rejects_missing_citation_object(cited_limit):
     limit, root = cited_limit
     with pytest.raises(ValueError, match="Citation"):
-        api_rp2a_check(10, 1, 100,
-                       allowables={"bending": replace(limit, citation=None)},
-                       citation_root=root)
+        elastic_tubular_demands(
+            10, 1, 100,
+            allowables={"bending": replace(limit, citation=None)},
+            citation_root=root,
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 def test_rejects_unrepresentable_unity_ratio(cited_limit):
     limit, root = cited_limit
     with pytest.raises(ValueError, match="representable"):
-        api_rp2a_check(10, 1, 100, axial_force=90 * math.pi,
-                       allowables={"axial_tension": replace(limit, value=1e-308)},
-                       citation_root=root)
+        elastic_tubular_demands(
+            10, 1, 100,
+            axial_force=90 * math.pi,
+            allowables={"axial_tension": replace(limit, value=1e-308)},
+            citation_root=root,
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 def test_missing_citation_fails_closed(cited_limit):
     limit, root = cited_limit
     # An empty sibling folder models an unavailable source without deleting data.
     with pytest.raises(CitationResolutionError):
-        api_rp2a_check(10, 1, 100, allowables={"bending": limit},
-                       citation_root=root / "missing")
+        elastic_tubular_demands(
+            10, 1, 100,
+            allowables={"bending": limit},
+            citation_root=root / "missing",
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 def test_mismatched_citation_fails_closed(cited_limit):
     limit, root = cited_limit
     invalid = replace(limit, citation=replace(limit.citation, revision="unmatched"))
     with pytest.raises(CitationResolutionError, match="frontmatter_mismatch"):
-        api_rp2a_check(10, 1, 100, allowables={"bending": invalid}, citation_root=root)
+        elastic_tubular_demands(
+            10, 1, 100,
+            allowables={"bending": invalid},
+            citation_root=root,
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 @pytest.mark.parametrize("diameter,thickness,force", [
@@ -230,7 +306,12 @@ def test_mismatched_citation_fails_closed(cited_limit):
 ])
 def test_rejects_unrepresentable_geometry_or_stress(diameter, thickness, force):
     with pytest.raises(ValueError, match="representable"):
-        api_rp2a_check(diameter, thickness, 100, axial_force=force)
+        elastic_tubular_demands(
+            diameter, thickness, 100,
+            axial_force=force,
+            force_unit="N",
+            moment_unit="N mm",
+        )
 
 
 def test_worked_example(capsys):
@@ -242,3 +323,96 @@ def test_worked_example(capsys):
     assert result["stress_mpa"]["bending"] == 10
     assert result["status"] == "NOT_EVALUATED"
     assert result["passes"] is None
+
+
+def test_public_interface_names_elastic_demands():
+    """The exported callable makes no claim to implement API capacity checks."""
+    from digitalmodel.subsea import structural_checks
+
+    assert callable(getattr(structural_checks, "elastic_tubular_demands", None))
+    assert not hasattr(structural_checks, "api_rp2a_check")
+
+
+def test_compression_bending_gap_is_explicit():
+    """A compression member must retain the unqualified interaction record."""
+    result = elastic_tubular_demands(
+        10, 1, 100,
+        axial_force=-90 * math.pi,
+        bending_moment=369 * math.pi / 2,
+        force_unit="N",
+        moment_unit="N mm",
+    )
+    check = next(check for check in result.checks if check.name == "compression_bending")
+    assert check.status == "NOT_EVALUATED"
+    assert check.calculated_stress is None
+    assert check.unity_ratio is None
+    assert check.passes is None
+    assert "API RP 2A §3.3.1" in check.code_reference
+    assert result.status == "NOT_EVALUATED"
+
+
+def test_load_unit_tags_are_required():
+    """Bare load values must not silently be interpreted in the wrong units."""
+    with pytest.raises(TypeError, match="force_unit.*moment_unit"):
+        elastic_tubular_demands(500, 25, 355, bending_moment=500)
+
+
+def test_tagged_load_conversion_matches_independent_hand_vector():
+    """500 kN m / (I/250) gives about 118 MPa for D=500, d=450 mm."""
+    tagged = elastic_tubular_demands(
+        500, 25, 355, axial_force=-100, bending_moment=-500, shear_force=20,
+        force_unit="kN", moment_unit="kN m",
+    )
+    coherent = elastic_tubular_demands(
+        500, 25, 355, axial_force=-100_000, bending_moment=-500_000_000,
+        shear_force=20_000, force_unit="N", moment_unit="N mm",
+    )
+    expected_modulus = math.pi * (500**4 - 450**4) / (64 * 250)
+    checks = {check.name: check for check in tagged.checks}
+    assert checks["bending"].calculated_stress == pytest.approx(500_000_000 / expected_modulus)
+    assert checks["axial_compression"].calculated_stress == pytest.approx(
+        100_000 / (math.pi * (500**2 - 450**2) / 4)
+    )
+    assert tagged == coherent
+    assert tagged.inputs.shear_force == 20_000
+
+
+@pytest.mark.parametrize("units", [
+    {"force_unit": "lbf", "moment_unit": "N mm"},
+    {"force_unit": "N", "moment_unit": "kN mm"},
+    {"force_unit": None, "moment_unit": "N mm"},
+    {"force_unit": "N", "moment_unit": []},
+])
+def test_rejects_unsupported_load_units(units):
+    with pytest.raises(ValueError, match="unit"):
+        elastic_tubular_demands(10, 1, 100, **units)
+
+
+@pytest.mark.parametrize("load,units", [
+    ({"axial_force": 1e308}, {"force_unit": "kN", "moment_unit": "N mm"}),
+    ({"shear_force": 1e308}, {"force_unit": "kN", "moment_unit": "N mm"}),
+    ({"bending_moment": 1e308}, {"force_unit": "N", "moment_unit": "kN m"}),
+])
+def test_rejects_unit_conversion_overflow(load, units):
+    with pytest.raises(ValueError, match="finite"):
+        elastic_tubular_demands(10, 1, 100, **load, **units)
+
+
+@pytest.mark.parametrize("name", ["axial_tension", "axial_compression", "bending"])
+def test_rejects_allowable_above_yield(name, cited_limit):
+    limit, root = cited_limit
+    with pytest.raises(ValueError, match="yield_strength"):
+        elastic_tubular_demands(
+            10, 1, 100, force_unit="N", moment_unit="N mm",
+            allowables={name: replace(limit, value=101)}, citation_root=root,
+        )
+
+
+def test_allowable_may_equal_yield(cited_limit):
+    limit, root = cited_limit
+    result = elastic_tubular_demands(
+        10, 1, 100, force_unit="N", moment_unit="N mm",
+        allowables={"bending": replace(limit, value=100)}, citation_root=root,
+    )
+    assert result.checks[2].status == "PASS"
+    assert result.status == "NOT_EVALUATED"

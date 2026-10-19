@@ -7,8 +7,10 @@ No API coefficient, material property, allowable or interaction is inferred.
 Normal-stress comparisons require caller-supplied, citation-validated allowables.
 Unsupported checks remain NOT_EVALUATED, including for zero applied load.
 
-Units: mm, N, N mm, MPa (= N/mm²). Positive axial force is tension; pressure
-is nonnegative external gauge pressure. Axial force is the effective section
+Dimensions use mm and pressure/strength use MPa (= N/mm²). Force and moment
+unit tags are required; loads are normalized to N and N mm. Positive axial
+force is tension; pressure is nonnegative external gauge pressure.
+Axial force is the effective section
 force supplied by the caller; pressure end thrust is not added. Bending moment
 is the signed resultant about any centroidal axis of the circular section.
 
@@ -37,7 +39,7 @@ DEMAND_SOURCES = (
     "MIT, Stresses in Beams (2000), Normal Stresses, equations 4 and 7",
 )
 
-# Requested locators are transcribed from the issue, not verified clause text.
+# Tracked locators identify unresolved code scope, not verified clause text.
 # No standard-derived numeric coefficient is supplied by this table.
 _REQUESTED_CHECKS = (
     ("axial_tension", "3.2.1"),
@@ -45,6 +47,7 @@ _REQUESTED_CHECKS = (
     ("bending", "3.2.3"),
     ("shear", "3.2.4"),
     ("hydrostatic_pressure", "3.2.5"),
+    ("compression_bending", "3.3.1"),
     ("tension_bending", "3.3.2"),
     ("tension_hydrostatic", "3.3.3"),
     ("compression_hydrostatic", "3.3.4"),
@@ -54,10 +57,11 @@ _NORMAL_CHECKS = frozenset(("axial_tension", "axial_compression", "bending"))
 
 @dataclass(frozen=True)
 class TubularInputs:
-    """Original section and load inputs in the documented coherent units.
+    """Normalized section and load inputs in coherent units.
 
-    Yield strength is explicit metadata, not an inferred API 5L grade or an
-    allowable. Slenderness, boundary conditions and local buckling are absent.
+    Stored dimensions use mm, loads N and N mm, and pressure/strength MPa.
+    Yield strength bounds supplied elastic allowables; no API 5L grade or
+    capacity is inferred. Slenderness and local buckling are absent.
     """
 
     diameter: float
@@ -94,6 +98,9 @@ class UnityChecks:
 
     Area is mm², second moment mm⁴ and elastic section modulus mm³.
     max_unity_ratio covers evaluated checks only; use status for completeness.
+    The demand callable always leaves six code records unevaluated, so its
+    aggregate cannot be PASS. The generic reducer supports fully evaluated
+    records supplied independently; that does not qualify code compliance.
     """
 
     inputs: TubularInputs
@@ -106,7 +113,7 @@ class UnityChecks:
 
     @property
     def status(self) -> Status:
-        """Report failure before incompleteness; never turn a gap into a pass."""
+        """Report failure before gaps; PASS is unreachable from the demand callable."""
         if any(check.status == "FAIL" for check in self.checks):
             return "FAIL"
         if not self.checks or any(check.status == "NOT_EVALUATED" for check in self.checks):
@@ -159,6 +166,7 @@ def _geometry(inputs: TubularInputs) -> tuple[float, float, float]:
 
 def _validate_allowables(
     allowables: Mapping[str, CitedValue], citation_root: Path | None,
+    yield_strength: float,
 ) -> None:
     """Validate every supplied allowable, including allowances for zero demands."""
     if not isinstance(allowables, Mapping):
@@ -174,6 +182,8 @@ def _validate_allowables(
             raise ValueError(f"allowable for {name} must be positive")
         if allowable.units != "MPa":
             raise ValueError(f"allowable for {name} must have units MPa")
+        if allowable.value > yield_strength:
+            raise ValueError(f"allowable for {name} must not exceed yield_strength")
         validate_citation(allowable.citation, repo_root=citation_root)
 
 
@@ -196,12 +206,13 @@ def _check(
     passes = stress <= allowable.value
     return CheckResult(
         name, stress, allowable.value, ratio, passes, "PASS" if passes else "FAIL",
-        allowable.citation.section,
+        f"{reference}; supplied allowable: {allowable.citation.code_id} "
+        f"({allowable.citation.revision}), {allowable.citation.section}",
         "Compared with supplied allowable; code applicability is caller responsibility",
     )
 
 
-def api_rp2a_check(
+def elastic_tubular_demands(
     diameter: float,
     thickness: float,
     yield_strength: float,
@@ -210,23 +221,41 @@ def api_rp2a_check(
     bending_moment: float = 0.0,
     shear_force: float = 0.0,
     *,
+    force_unit: Literal["N", "kN"],
+    moment_unit: Literal["N mm", "kN m"],
     allowables: Mapping[str, CitedValue] | None = None,
     citation_root: Path | None = None,
 ) -> UnityChecks:
-    """Calculate elastic demands and the eight requested check records.
+    """Calculate elastic demands and the nine tracked check records.
 
+    Force units (axial and shear) must be N or kN; moment units must be N mm
+    or kN m. Dimensions remain mm and pressure/strength remain MPa. The result
+    stores normalized N and N mm loads. Bare, untagged loads are rejected.
     This does not select a code edition or derive capacity from yield strength.
     Optional allowables may address axial_tension, axial_compression and bending;
-    each requires a positive CitedValue in MPa and a resolvable Citation. The
-    citation's source must establish applicability to the case independently.
+    each requires a positive CitedValue in MPa no greater than yield strength
+    and a resolvable Citation. The citation's source must establish applicability
+    to the case independently.
     Without these inputs, normal stresses are returned without an acceptance
     claim. Shear, hydrostatic and interactions always remain NOT_EVALUATED.
+    Aggregate PASS is therefore unreachable from this callable, even with
+    every supported allowable supplied and every normal comparison passing.
     """
     values = {
         "diameter": diameter, "thickness": thickness, "yield_strength": yield_strength,
         "pressure": pressure, "axial_force": axial_force,
         "bending_moment": bending_moment, "shear_force": shear_force,
     }
+    if force_unit not in ("N", "kN"):
+        raise ValueError("force_unit must be N or kN")
+    if moment_unit not in ("N mm", "kN m"):
+        raise ValueError("moment_unit must be N mm or kN m")
+    # Exact SI prefix and length conversions, independent of code capacities.
+    force_scale = 1_000 if force_unit == "kN" else 1
+    moment_scale = 1_000_000 if moment_unit == "kN m" else 1
+    for name, scale in (("axial_force", force_scale), ("shear_force", force_scale),
+                        ("bending_moment", moment_scale)):
+        values[name] = _finite(name, values[name]) * scale
     inputs = TubularInputs(**{name: _finite(name, value) for name, value in values.items()})
     if inputs.yield_strength <= 0:
         raise ValueError("yield_strength must be positive")
@@ -240,7 +269,7 @@ def api_rp2a_check(
     if not all(math.isfinite(value) for value in (axial_stress, bending_stress)):
         raise ValueError("calculated stress is not representable")
     provided = {} if allowables is None else allowables
-    _validate_allowables(provided, citation_root)
+    _validate_allowables(provided, citation_root, inputs.yield_strength)
     supplied = dict(provided)
     demands = {
         "axial_tension": max(axial_stress, 0.0),
