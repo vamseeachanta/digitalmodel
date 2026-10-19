@@ -103,6 +103,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+reliability = [
+    # OpenTURNS 1.26 Normal API; required only for random fatigue margins.
+    "openturns>=1.26,<2",
+]
 fowt = [
     "capytaine==3.0.0",
     "moorpy==1.3.0",
