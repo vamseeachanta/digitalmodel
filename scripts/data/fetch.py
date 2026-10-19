@@ -9,6 +9,7 @@ import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -21,6 +22,20 @@ class StoreUnavailable(FileNotFoundError):
 def store_configured():
     """Return whether a mounted or remote store has been configured."""
     return bool(os.environ.get("ACE_DATA_ROOT") or os.environ.get("ACE_DATA_REMOTE"))
+
+
+def manifest_path(value):
+    """Validate a portable payload path without permitting Git metadata."""
+    path = PurePosixPath(value)
+    if (path.is_absolute() or ".." in path.parts or "\\" in value
+            or ":" in value or str(path) != value or not path.parts):
+        raise ValueError("Invalid manifest path")
+    # Git repository-layout (Git 2.51.1): .git is a directory or a gitfile.
+    # https://git-scm.com/docs/gitrepository-layout
+    # Fold case and Windows trailing-dot/space aliases for portable manifests.
+    if any(part.rstrip(" .").casefold() == ".git" for part in path.parts):
+        raise ValueError("Git metadata destination is not permitted")
+    return path
 
 
 def read_manifest(root):
@@ -36,10 +51,8 @@ def read_manifest(root):
             value is None for value in row.values()
         ):
             raise ValueError("Invalid manifest row")
-        path = PurePosixPath(row["path"])
-        if (path.is_absolute() or ".." in path.parts or "\\" in row["path"]
-                or ":" in row["path"] or str(path) != row["path"]
-                or not path.parts or row["path"] in seen):
+        manifest_path(row["path"])
+        if row["path"] in seen:
             raise ValueError("Invalid or duplicate manifest path")
         seen.add(row["path"])
         digest = row["sha256"]
@@ -63,7 +76,7 @@ def select_rows(rows, selector):
 
 def destination(root, row):
     """Reject symlinks and paths that escape the repository root."""
-    target = root / row["path"]
+    target = root / manifest_path(row["path"])
     current = target
     while current != root:
         if current.is_symlink():
@@ -118,6 +131,10 @@ def fetch_row(root, row):
     with tempfile.TemporaryDirectory(prefix="store-fetch-") as temp_dir:
         staged = Path(temp_dir) / "blob"
         stage_blob(row, staged)
+        # Python 3.11 stat permission flags: ensure creator read/write even
+        # when umask removes creator read; retain group/other restrictions.
+        # https://docs.python.org/3.11/library/stat.html#stat.S_IRUSR
+        staged.chmod(staged.stat().st_mode | stat.S_IRUSR | stat.S_IWUSR)
         digest = hashlib.sha256()
         with staged.open("rb") as stream:
             for chunk in iter(lambda: stream.read(1024 * 1024), b""):
