@@ -1,8 +1,8 @@
 # OrcaFlex Integration Module
 
 **Version**: 1.0.0
-**Status**: ✅ Production Ready
-**Standards**: OrcaFlex API, Offshore Engineering Best Practices
+**Status**: beta (parent solvers group in [module routing](../../../../docs/registry/module-routing.yaml))
+**Qualification**: Route-specific evidence is required; see the [helper evidence](docs/helper-evidence.html).
 
 ---
 
@@ -594,7 +594,7 @@ OrcaFlex Demo is a GUI application that cannot be used for headless/automated fi
 
 ---
 
-**Module Status**: ✅ Production Ready
-**Test Coverage**: >85%
+**Module Status**: beta (parent solvers group; source cited above)
+**Test Coverage**: UNVERIFIED; no module-wide coverage measurement is supplied here
 **CLI Commands**: 2 registered
 **Integration**: Compatible with all digitalmodel modules
