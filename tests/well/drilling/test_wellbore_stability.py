@@ -16,6 +16,7 @@ import yaml
 
 from digitalmodel.well.drilling.wellbore_stability import (
     StabilityInput,
+    _band,
     failure_margin,
     kirsch_wall,
     pressure_bounds,
@@ -286,7 +287,7 @@ def test_uncertainty_does_not_discard_failed_draws(tmp_path):
     assert row["conservative_window"]["feasible"] is False
 
 
-def test_partially_unresolved_ensemble_invalidates_collapse_band(tmp_path):
+def test_partially_unresolved_ensemble_without_limit_is_indeterminate(tmp_path):
     cfg = yaml.safe_load(INPUT.read_text())
     cfg["profile"] = [cfg["profile"][0]]
     cfg["profile"][0]["ucs_psi"] = 3400
@@ -294,8 +295,107 @@ def test_partially_unresolved_ensemble_invalidates_collapse_band(tmp_path):
     row = run_workflow(cfg, tmp_path)["window"][0]
     assert 0 < row["failed_draws"] < 16
     assert row["curves"]["collapse"]["p50_psi"] is None
+    assert row["curves"]["collapse"]["numerical_status"] == "INDETERMINATE"
+    assert row["curves"]["collapse"]["unresolved_fraction_check"] == "NOT_EVALUATED"
     assert row["curves"]["fracture_initiation"]["p50_psi"] == pytest.approx(4320)
     assert row["conservative_window"]["feasible"] is False
+
+
+@pytest.mark.parametrize(
+    "values, limit, expected, status",
+    [
+        ([100, 150, 200], None, [110, 150, 190], "ALL_DRAWS_RESOLVED"),
+        ([100, None, 150, 200], 0.25, [110, 150, 190], "RESOLVED_DRAWS_ONLY"),
+        ([100, None, 150, 200], 0.2, [None] * 3, "INDETERMINATE"),
+        ([100, None, 150, 200], None, [None] * 3, "INDETERMINATE"),
+        ([None] * 4, 1, [None] * 3, "INDETERMINATE"),
+        ([150, None], 0.5, [150] * 3, "RESOLVED_DRAWS_ONLY"),
+        ([150, None], 0, [None] * 3, "INDETERMINATE"),
+    ],
+)
+def test_resolved_draw_band_hand_calculation(values, limit, expected, status):
+    """Synthetic arithmetic oracle; no engineering acceptance limit is assumed.
+
+    Sample Quantiles in Statistical Packages (1996), eq. (1), Definition 7:
+    for sorted [100, 150, 200], zero-based h=(n-1)*p is 0.2, 1, 1.8;
+    linear interpolation gives 110, 150, 190 psi. One resolved value gives
+    that same value at every quantile. One missing of four means f=1/4=0.25;
+    the caller's illustrative limit 0.25 includes equality, 0.2 excludes it.
+    Missing policy and zero resolved values cannot establish a usable band.
+    EMW uses the existing workflow README conversion: 0.052*1000=52 psi/ppg.
+    """
+    band = _band(values, 1000, max_unresolved_fraction=limit)
+    assert band["numerical_status"] == status
+    assert band["validation_status"] == "NOT_VALIDATED"
+    assert band["quantile_basis"] == "resolved_draws_only"
+    assert band["resolved_draws"] == len(values) - values.count(None)
+    assert band["unresolved_draws"] == values.count(None)
+    assert band["unresolved_fraction"] == values.count(None) / len(values)
+    assert band["max_unresolved_fraction"] == limit
+    assert band["unresolved_fraction_check"] == (
+        "NOT_EVALUATED" if limit is None else "EVALUATED"
+    )
+    for name, value in zip(("p10", "p50", "p90"), expected):
+        assert band[name + "_psi"] == pytest.approx(value)
+        assert band[name + "_emw_ppg"] == pytest.approx(
+            None if value is None else value / 52
+        )
+    json.dumps(band, allow_nan=False)
+
+
+def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monkeypatch):
+    """Scripted draws [100, None, 150, 200] give f=1/4, Q=[110,150,190].
+
+    Independent interpolation is written out in the band test above (1996,
+    Definition 7). The illustrative caller limit is 1/4. The upper-bound
+    fixture has one unresolved value too; conditional collapse quantiles
+    must not establish a window. Nominal output is a separate fifth call.
+    """
+    cfg = yaml.safe_load(INPUT.read_text())
+    cfg["profile"] = [cfg["profile"][0]]
+    cfg["ensemble"] = {"samples": 4, "sigma": {}, "max_unresolved_fraction": 0.25}
+    cfg["polar"] = {"inclinations_deg": []}
+    pressures = iter([100, None, 150, 200, 150])
+
+    def scripted_bounds(*args, **kwargs):
+        pressure = next(pressures)
+        return {
+            "collapse": {"pressure_psi": pressure},
+            "fracture_initiation": {"pressure_psi": 300},
+            "conservative_ceiling_psi": None if pressure is None else 300,
+            "feasible": pressure is not None,
+        }
+
+    monkeypatch.setattr(
+        "digitalmodel.well.drilling.wellbore_stability.pressure_bounds", scripted_bounds
+    )
+    result = run_workflow(cfg, tmp_path)
+    row = result["window"][0]
+    band = row["curves"]["collapse"]
+    assert [band[name + "_psi"] for name in ("p10", "p50", "p90")] == pytest.approx(
+        [110, 150, 190]
+    )
+    assert band["numerical_status"] == "RESOLVED_DRAWS_ONLY"
+    assert band["unresolved_draws"] == row["failed_draws"] == 1
+    assert band["unresolved_fraction"] == 0.25
+    assert row["conservative_window"]["low_psi"] is None
+    assert row["conservative_window"]["high_psi"] is None
+    assert row["conservative_window"]["feasible"] is False
+    assert result["screening_only"] is True
+    assert result["validation_status"] == "NOT_VALIDATED"
+    assert result["uncertainty"]["max_unresolved_fraction"] == 0.25
+    assert json.loads((tmp_path / "summary.json").read_text()) == result
+    assert json.loads((tmp_path / "window.json").read_text()) == result["window"]
+
+
+@pytest.mark.parametrize("limit", [-0.1, 1.1, math.nan, math.inf, "0.25", True])
+def test_invalid_unresolved_fraction_limit_rejected_before_output(tmp_path, limit):
+    """Fractions lie in [0,1] by definition; nonnumeric policies have no meaning."""
+    cfg = yaml.safe_load(INPUT.read_text())
+    cfg["ensemble"]["max_unresolved_fraction"] = limit
+    with pytest.raises(ValueError, match="max_unresolved_fraction"):
+        run_workflow(cfg, tmp_path)
+    assert not (tmp_path / "summary.json").exists()
 
 
 def test_breakout_grid_refinement_and_pressure_scan_agree_with_edge_formula():
