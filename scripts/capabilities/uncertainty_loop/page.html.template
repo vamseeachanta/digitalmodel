@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Uncertainty loop — evidence before inspection decisions</title>
+<style>
+:root { color-scheme: light dark; --bg: #f5f7fa; --panel: #fff; --ink: #172b40;
+  --muted: #46576b; --line: #516d80; --accent: #005c57; --tint: #e2f2ed; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #111b26; --panel: #1a2a39; --ink: #edf2f6; --muted: #c1cfdb;
+    --line: #a4bfce; --accent: #8fe3cd; --tint: #173e3c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 1rem/1.6 system-ui, sans-serif; }
+main { max-width: 74rem; margin: auto; padding: 2rem; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.8rem); line-height: 1.2; }
+h2 { line-height: 1.3; }
+.eyebrow, .badge { font-weight: bold; color: var(--accent); }
+.badge { display: inline-block; border: 2px solid currentColor; padding: .2rem .6rem; }
+.muted, .unit, caption { color: var(--muted); }
+section { margin-block: 2rem; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+caption { text-align: left; caption-side: bottom; padding-block: .6rem; }
+th, td { border: 1px solid var(--line); padding: .7rem; text-align: left;
+  vertical-align: top; overflow-wrap: anywhere; }
+th { background: var(--tint); }
+.workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 2rem; }
+.loop { list-style: none; margin: 0; padding: 0 0 0 1.2rem;
+  border-left: .3rem solid var(--accent); }
+details { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; }
+summary { cursor: pointer; padding: .9rem; font-weight: bold; }
+summary:focus-visible { outline: .2rem solid var(--accent); outline-offset: .2rem; }
+details[open] summary { border-bottom: 1px solid var(--line); }
+dl { padding: 0 1rem; }
+dt { font-weight: bold; color: var(--accent); }
+dd { margin: 0 0 .8rem; overflow-wrap: anywhere; }
+.flow { margin: .4rem 0; color: var(--muted); }
+.return { color: var(--accent); font-weight: bold; }
+.feedback { border: 2px dashed var(--accent); }
+.feedback p { padding: 0 1rem; }
+.notice { background: var(--tint); border-left: .3rem solid var(--accent); padding: 1rem; }
+footer { border-top: 1px solid var(--line); padding-block: 1rem; }
+@media (max-width: 44rem) {
+  main { padding: 1rem; }
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  #evidence table, #evidence tbody, #evidence tr { display: block; width: 100%; }
+  #evidence thead { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); }
+  #evidence tr { margin-block: 1rem; }
+  #evidence th, #evidence td { display: block; width: 100%; }
+  #evidence td::before { content: attr(data-label); display: block; font-weight: bold; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+<p class="eyebrow">Uncertainty precursor / qualitative workflow</p>
+<h1>Evidence before inspection decisions</h1>
+<p class="badge">SYNTHETIC — decision NOT_EVALUATED</p>
+<p>Measure → Model → Quantify uncertainty → Decide → Reinspect → Measure.</p>
+<p>Monitoring evidence, prediction assumptions and uncertainty inform a decision and the next inspection.
+This chart exposes what is required before that decision can be evaluated.</p>
+</header>
+<section id="revision-history" aria-labelledby="revision-title">
+<h2 id="revision-title">Revision history</h2>
+<table>
+<thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and reason</th></tr></thead>
+<tbody><tr><td>@@REVISION@@</td><td>@@DATE@@</td><td>@@CHANGE@@</td></tr></tbody>
+</table>
+</section>
+<section id="evidence" aria-labelledby="evidence-title">
+<h2 id="evidence-title">Common evidence table → Measure</h2>
+<p>Synthetic evidence requirements only. No numerical readings are supplied. Every stream retains its gaps.</p>
+<table role="table">
+<caption>All streams enter one evidence register. Units describe required future inputs, not measured values.</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Evidence stream</th><th scope="col" role="columnheader">Quantity / unit</th><th scope="col" role="columnheader">Required input</th><th scope="col" role="columnheader">Status / missing evidence</th></tr></thead>
+<tbody role="rowgroup">
+@@EVIDENCE_ROWS@@
+</tbody>
+</table>
+</section>
+<div class="workspace">
+<section aria-labelledby="loop-title">
+<h2 id="loop-title">Uncertainty loop</h2>
+<p>Expand a step by clicking its name or by focusing it with Tab and pressing Enter or Space.
+The arrows show the workflow order; they do not execute a model.</p>
+<ol class="loop" aria-label="Uncertainty workflow in order">
+@@STEPS@@
+</ol>
+<p class="return"><span aria-hidden="true">↰ </span>Return to Measure with new inspection evidence.</p>
+</section>
+<aside aria-labelledby="feedback-title">
+<h2 id="feedback-title">Process-change feedback → Model</h2>
+<details id="process-change" class="feedback">
+<summary>Process change: reassess the historical trend</summary>
+<p><strong>Trigger:</strong> @@TRIGGER@@</p>
+<p><strong>Feedback path: Operations → Model → Quantify uncertainty → Decide.</strong></p>
+<p>@@ACTION@@</p>
+</details>
+<p class="notice"><strong>Decision supported:</strong> identify missing evidence and review the historical trend
+basis before choosing the next inspection. An inspection date or intervention is not selected here.</p>
+<h2>Assumptions and limitations</h2>
+<p>No forecast is calculated. No trend uncertainty band, end-of-life threshold, remaining-life range,
+probability of failure or risk reclassification is established.</p>
+<p>Remaining life is not probability of failure. A short-record fit alone does not establish forecast skill.</p>
+<p>Missing engineering criteria remain required inputs. Numerical comparisons and the heading animation
+are later work; this page is the first precursor only.</p>
+</aside>
+</div>
+<footer>
+<h2>Provenance, rights and method</h2>
+<p>@@SOURCE@@</p>
+<p>@@RIGHTS@@</p>
+<p><strong>Workflow source:</strong> @@BASIS@@</p>
+<p><strong>Method:</strong> qualitative directed cycle with process-change feedback. @@EQUATIONS@@</p>
+<p>@@AI_USE@@</p>
+<p>Reproduce with <code>python scripts/capabilities/build_uncertainty_loop.py</code>.
+The adjacent <code>uncertainty-loop.manifest.json</code> records input and output digests and graph edges.
+The complete synthetic workflow is also embedded below as inert JSON. Maintainer review is required before operational use.</p>
+</footer>
+<script id="workflow-data" type="application/json">@@DATA@@</script>
+</main>
+</body>
+</html>

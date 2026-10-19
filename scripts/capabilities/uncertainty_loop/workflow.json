@@ -1,0 +1,100 @@
+{
+  "revision": "A",
+  "date": "2026-10-19",
+  "change": "Initial qualitative uncertainty loop to expose missing evidence before forecasting or inspection decisions.",
+  "status": "synthetic",
+  "decision_status": "NOT_EVALUATED",
+  "provenance": {
+    "source": "Original synthetic workflow context. No measured readings, private case data or external dataset is included.",
+    "rights": "Original schematic and synthetic context are supplied under the repository MIT licence; no third-party data or chart design is reproduced.",
+    "basis": "Issue #2695 (2026), Purpose and deliverable 1: uncertainty loop and process-change feedback.",
+    "equations": "None. No numerical engineering constant, coefficient, acceptance limit or forecasting equation is used. Engineering criteria are required inputs.",
+    "ai_use": "AI-assisted chart implementation. This page illustrates an evidence workflow; it performs no AI prediction, agentic monitoring or automated engineering decision."
+  },
+  "evidence": [
+    {
+      "id": "inspection",
+      "label": "Inspection readings",
+      "quantity": "Wall thickness",
+      "unit": "mm",
+      "required": "Dated, located readings with method, calibration and measurement uncertainty.",
+      "missing": "All numerical readings and their qualification records are required inputs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "id": "survey",
+      "label": "Survey evidence",
+      "quantity": "Condition and coverage",
+      "unit": "not applicable (categorical)",
+      "required": "Dated observations with location, coverage and detection limitations.",
+      "missing": "Survey observations, coverage and detection evidence are required inputs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "id": "metocean",
+      "label": "Metocean records",
+      "quantity": "Significant wave height; peak period",
+      "unit": "m; s",
+      "required": "Time-aligned conditions with source, sampling basis and coverage.",
+      "missing": "Metocean time series and applicability evidence are required inputs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "id": "operations",
+      "label": "Operations records",
+      "quantity": "Operating state and process changes",
+      "unit": "not applicable (categorical)",
+      "required": "Dated operating states, interventions and process-change records.",
+      "missing": "Operating history and change records are required inputs.",
+      "status": "NOT_EVALUATED"
+    }
+  ],
+  "steps": [
+    {
+      "id": "measure",
+      "label": "Measure",
+      "input": "Inspection readings, survey evidence, metocean and operations records enter the common evidence table.",
+      "output": "A time-aligned evidence register retaining units, provenance and qualification gaps.",
+      "missing": "Dated readings, coverage, calibration and process history are absent in this synthetic schematic.",
+      "criterion": "Required input: maintainer-defined evidence quality and coverage criteria before fitting a trend."
+    },
+    {
+      "id": "model",
+      "label": "Model",
+      "input": "Qualified evidence register and a documented process-history basis.",
+      "output": "A proposed trend model with its validity period, assumptions and validation needs.",
+      "missing": "A common dated thickness record and an independently tested forecasting basis are required.",
+      "criterion": "Required input: a validation method and acceptance criteria; a short-record fit alone does not establish forecast skill."
+    },
+    {
+      "id": "quantify",
+      "label": "Quantify uncertainty",
+      "input": "Proposed model, measurement uncertainty and model assumptions.",
+      "output": "A proposed uncertainty definition separating latent trend from future observation uncertainty.",
+      "missing": "Coverage, noise assumptions, uncertainty propagation and validation evidence are required.",
+      "criterion": "Required input: the band meaning, coverage and validation criteria before interpreting any uncertainty range."
+    },
+    {
+      "id": "decide",
+      "label": "Decide",
+      "input": "Evidence gaps, validated forecasts if available, and stated decision criteria.",
+      "output": "NOT_EVALUATED: collect missing evidence and obtain maintainer review before choosing an inspection or intervention.",
+      "missing": "An engineering threshold, inspection policy and validated likelihood mapping are absent.",
+      "criterion": "Required input: applicable engineering limits and an inspection decision rule. Remaining life is not probability of failure."
+    },
+    {
+      "id": "reinspect",
+      "label": "Reinspect",
+      "input": "A reviewed inspection plan with its scope, timing and required measurement quality.",
+      "output": "New dated readings and coverage evidence return to Measure for reconciliation with the historical record.",
+      "missing": "An approved inspection plan and new observations are required; no inspection date is calculated.",
+      "criterion": "Required input: a reviewed inspection interval and evidence collection plan; reconcile new observations before reusing a trend."
+    }
+  ],
+  "feedback": {
+    "source": "process-change",
+    "target": "model",
+    "trigger": "A process change, intervention or changed operating state is recorded in the operations evidence.",
+    "action": "Reassess the historical trend at Model: review whether earlier readings represent the changed conditions, document the valid period and re-quantify uncertainty before deciding again. No change point is detected by this page."
+  }
+}

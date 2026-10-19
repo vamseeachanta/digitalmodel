@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Uncertainty loop — evidence before inspection decisions</title>
+<style>
+:root { color-scheme: light dark; --bg: #f5f7fa; --panel: #fff; --ink: #172b40;
+  --muted: #46576b; --line: #516d80; --accent: #005c57; --tint: #e2f2ed; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #111b26; --panel: #1a2a39; --ink: #edf2f6; --muted: #c1cfdb;
+    --line: #a4bfce; --accent: #8fe3cd; --tint: #173e3c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 1rem/1.6 system-ui, sans-serif; }
+main { max-width: 74rem; margin: auto; padding: 2rem; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.8rem); line-height: 1.2; }
+h2 { line-height: 1.3; }
+.eyebrow, .badge { font-weight: bold; color: var(--accent); }
+.badge { display: inline-block; border: 2px solid currentColor; padding: .2rem .6rem; }
+.muted, .unit, caption { color: var(--muted); }
+section { margin-block: 2rem; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+caption { text-align: left; caption-side: bottom; padding-block: .6rem; }
+th, td { border: 1px solid var(--line); padding: .7rem; text-align: left;
+  vertical-align: top; overflow-wrap: anywhere; }
+th { background: var(--tint); }
+.workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 2rem; }
+.loop { list-style: none; margin: 0; padding: 0 0 0 1.2rem;
+  border-left: .3rem solid var(--accent); }
+details { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; }
+summary { cursor: pointer; padding: .9rem; font-weight: bold; }
+summary:focus-visible { outline: .2rem solid var(--accent); outline-offset: .2rem; }
+details[open] summary { border-bottom: 1px solid var(--line); }
+dl { padding: 0 1rem; }
+dt { font-weight: bold; color: var(--accent); }
+dd { margin: 0 0 .8rem; overflow-wrap: anywhere; }
+.flow { margin: .4rem 0; color: var(--muted); }
+.return { color: var(--accent); font-weight: bold; }
+.feedback { border: 2px dashed var(--accent); }
+.feedback p { padding: 0 1rem; }
+.notice { background: var(--tint); border-left: .3rem solid var(--accent); padding: 1rem; }
+footer { border-top: 1px solid var(--line); padding-block: 1rem; }
+@media (max-width: 44rem) {
+  main { padding: 1rem; }
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  #evidence table, #evidence tbody, #evidence tr { display: block; width: 100%; }
+  #evidence thead { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); }
+  #evidence tr { margin-block: 1rem; }
+  #evidence th, #evidence td { display: block; width: 100%; }
+  #evidence td::before { content: attr(data-label); display: block; font-weight: bold; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+<p class="eyebrow">Uncertainty precursor / qualitative workflow</p>
+<h1>Evidence before inspection decisions</h1>
+<p class="badge">SYNTHETIC — decision NOT_EVALUATED</p>
+<p>Measure → Model → Quantify uncertainty → Decide → Reinspect → Measure.</p>
+<p>Monitoring evidence, prediction assumptions and uncertainty inform a decision and the next inspection.
+This chart exposes what is required before that decision can be evaluated.</p>
+</header>
+<section id="revision-history" aria-labelledby="revision-title">
+<h2 id="revision-title">Revision history</h2>
+<table>
+<thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">Change and reason</th></tr></thead>
+<tbody><tr><td>A</td><td>2026-10-19</td><td>Initial qualitative uncertainty loop to expose missing evidence before forecasting or inspection decisions.</td></tr></tbody>
+</table>
+</section>
+<section id="evidence" aria-labelledby="evidence-title">
+<h2 id="evidence-title">Common evidence table → Measure</h2>
+<p>Synthetic evidence requirements only. No numerical readings are supplied. Every stream retains its gaps.</p>
+<table role="table">
+<caption>All streams enter one evidence register. Units describe required future inputs, not measured values.</caption>
+<thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Evidence stream</th><th scope="col" role="columnheader">Quantity / unit</th><th scope="col" role="columnheader">Required input</th><th scope="col" role="columnheader">Status / missing evidence</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><th scope="row" role="rowheader">Inspection readings</th><td role="cell" data-label="Quantity / unit">Wall thickness<br><span class="unit">mm</span></td><td role="cell" data-label="Required input">Dated, located readings with method, calibration and measurement uncertainty.</td><td role="cell" data-label="Status / missing evidence"><strong>NOT_EVALUATED</strong><br>All numerical readings and their qualification records are required inputs.</td></tr>
+<tr role="row"><th scope="row" role="rowheader">Survey evidence</th><td role="cell" data-label="Quantity / unit">Condition and coverage<br><span class="unit">not applicable (categorical)</span></td><td role="cell" data-label="Required input">Dated observations with location, coverage and detection limitations.</td><td role="cell" data-label="Status / missing evidence"><strong>NOT_EVALUATED</strong><br>Survey observations, coverage and detection evidence are required inputs.</td></tr>
+<tr role="row"><th scope="row" role="rowheader">Metocean records</th><td role="cell" data-label="Quantity / unit">Significant wave height; peak period<br><span class="unit">m; s</span></td><td role="cell" data-label="Required input">Time-aligned conditions with source, sampling basis and coverage.</td><td role="cell" data-label="Status / missing evidence"><strong>NOT_EVALUATED</strong><br>Metocean time series and applicability evidence are required inputs.</td></tr>
+<tr role="row"><th scope="row" role="rowheader">Operations records</th><td role="cell" data-label="Quantity / unit">Operating state and process changes<br><span class="unit">not applicable (categorical)</span></td><td role="cell" data-label="Required input">Dated operating states, interventions and process-change records.</td><td role="cell" data-label="Status / missing evidence"><strong>NOT_EVALUATED</strong><br>Operating history and change records are required inputs.</td></tr>
+</tbody>
+</table>
+</section>
+<div class="workspace">
+<section aria-labelledby="loop-title">
+<h2 id="loop-title">Uncertainty loop</h2>
+<p>Expand a step by clicking its name or by focusing it with Tab and pressing Enter or Space.
+The arrows show the workflow order; they do not execute a model.</p>
+<ol class="loop" aria-label="Uncertainty workflow in order">
+<li><details id="measure"><summary>Measure</summary><dl><dt>Input</dt><dd>Inspection readings, survey evidence, metocean and operations records enter the common evidence table.</dd><dt>Output</dt><dd>A time-aligned evidence register retaining units, provenance and qualification gaps.</dd><dt>Missing evidence</dt><dd>Dated readings, coverage, calibration and process history are absent in this synthetic schematic.</dd><dt>Decision criterion</dt><dd>Required input: maintainer-defined evidence quality and coverage criteria before fitting a trend.</dd></dl></details><p class="flow"><span aria-hidden="true">↓ </span>Next: Model</p></li>
+<li><details id="model"><summary>Model</summary><dl><dt>Input</dt><dd>Qualified evidence register and a documented process-history basis.</dd><dt>Output</dt><dd>A proposed trend model with its validity period, assumptions and validation needs.</dd><dt>Missing evidence</dt><dd>A common dated thickness record and an independently tested forecasting basis are required.</dd><dt>Decision criterion</dt><dd>Required input: a validation method and acceptance criteria; a short-record fit alone does not establish forecast skill.</dd></dl></details><p class="flow"><span aria-hidden="true">↓ </span>Next: Quantify uncertainty</p></li>
+<li><details id="quantify"><summary>Quantify uncertainty</summary><dl><dt>Input</dt><dd>Proposed model, measurement uncertainty and model assumptions.</dd><dt>Output</dt><dd>A proposed uncertainty definition separating latent trend from future observation uncertainty.</dd><dt>Missing evidence</dt><dd>Coverage, noise assumptions, uncertainty propagation and validation evidence are required.</dd><dt>Decision criterion</dt><dd>Required input: the band meaning, coverage and validation criteria before interpreting any uncertainty range.</dd></dl></details><p class="flow"><span aria-hidden="true">↓ </span>Next: Decide</p></li>
+<li><details id="decide"><summary>Decide</summary><dl><dt>Input</dt><dd>Evidence gaps, validated forecasts if available, and stated decision criteria.</dd><dt>Output</dt><dd>NOT_EVALUATED: collect missing evidence and obtain maintainer review before choosing an inspection or intervention.</dd><dt>Missing evidence</dt><dd>An engineering threshold, inspection policy and validated likelihood mapping are absent.</dd><dt>Decision criterion</dt><dd>Required input: applicable engineering limits and an inspection decision rule. Remaining life is not probability of failure.</dd></dl></details><p class="flow"><span aria-hidden="true">↓ </span>Next: Reinspect</p></li>
+<li><details id="reinspect"><summary>Reinspect</summary><dl><dt>Input</dt><dd>A reviewed inspection plan with its scope, timing and required measurement quality.</dd><dt>Output</dt><dd>New dated readings and coverage evidence return to Measure for reconciliation with the historical record.</dd><dt>Missing evidence</dt><dd>An approved inspection plan and new observations are required; no inspection date is calculated.</dd><dt>Decision criterion</dt><dd>Required input: a reviewed inspection interval and evidence collection plan; reconcile new observations before reusing a trend.</dd></dl></details><p class="flow"><span aria-hidden="true">↓ </span>Next: Measure</p></li>
+</ol>
+<p class="return"><span aria-hidden="true">↰ </span>Return to Measure with new inspection evidence.</p>
+</section>
+<aside aria-labelledby="feedback-title">
+<h2 id="feedback-title">Process-change feedback → Model</h2>
+<details id="process-change" class="feedback">
+<summary>Process change: reassess the historical trend</summary>
+<p><strong>Trigger:</strong> A process change, intervention or changed operating state is recorded in the operations evidence.</p>
+<p><strong>Feedback path: Operations → Model → Quantify uncertainty → Decide.</strong></p>
+<p>Reassess the historical trend at Model: review whether earlier readings represent the changed conditions, document the valid period and re-quantify uncertainty before deciding again. No change point is detected by this page.</p>
+</details>
+<p class="notice"><strong>Decision supported:</strong> identify missing evidence and review the historical trend
+basis before choosing the next inspection. An inspection date or intervention is not selected here.</p>
+<h2>Assumptions and limitations</h2>
+<p>No forecast is calculated. No trend uncertainty band, end-of-life threshold, remaining-life range,
+probability of failure or risk reclassification is established.</p>
+<p>Remaining life is not probability of failure. A short-record fit alone does not establish forecast skill.</p>
+<p>Missing engineering criteria remain required inputs. Numerical comparisons and the heading animation
+are later work; this page is the first precursor only.</p>
+</aside>
+</div>
+<footer>
+<h2>Provenance, rights and method</h2>
+<p>Original synthetic workflow context. No measured readings, private case data or external dataset is included.</p>
+<p>Original schematic and synthetic context are supplied under the repository MIT licence; no third-party data or chart design is reproduced.</p>
+<p><strong>Workflow source:</strong> Issue #2695 (2026), Purpose and deliverable 1: uncertainty loop and process-change feedback.</p>
+<p><strong>Method:</strong> qualitative directed cycle with process-change feedback. None. No numerical engineering constant, coefficient, acceptance limit or forecasting equation is used. Engineering criteria are required inputs.</p>
+<p>AI-assisted chart implementation. This page illustrates an evidence workflow; it performs no AI prediction, agentic monitoring or automated engineering decision.</p>
+<p>Reproduce with <code>python scripts/capabilities/build_uncertainty_loop.py</code>.
+The adjacent <code>uncertainty-loop.manifest.json</code> records input and output digests and graph edges.
+The complete synthetic workflow is also embedded below as inert JSON. Maintainer review is required before operational use.</p>
+</footer>
+<script id="workflow-data" type="application/json">{
+  "revision": "A",
+  "date": "2026-10-19",
+  "change": "Initial qualitative uncertainty loop to expose missing evidence before forecasting or inspection decisions.",
+  "status": "synthetic",
+  "decision_status": "NOT_EVALUATED",
+  "provenance": {
+    "source": "Original synthetic workflow context. No measured readings, private case data or external dataset is included.",
+    "rights": "Original schematic and synthetic context are supplied under the repository MIT licence; no third-party data or chart design is reproduced.",
+    "basis": "Issue #2695 (2026), Purpose and deliverable 1: uncertainty loop and process-change feedback.",
+    "equations": "None. No numerical engineering constant, coefficient, acceptance limit or forecasting equation is used. Engineering criteria are required inputs.",
+    "ai_use": "AI-assisted chart implementation. This page illustrates an evidence workflow; it performs no AI prediction, agentic monitoring or automated engineering decision."
+  },
+  "evidence": [
+    {
+      "id": "inspection",
+      "label": "Inspection readings",
+      "quantity": "Wall thickness",
+      "unit": "mm",
+      "required": "Dated, located readings with method, calibration and measurement uncertainty.",
+      "missing": "All numerical readings and their qualification records are required inputs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "id": "survey",
+      "label": "Survey evidence",
+      "quantity": "Condition and coverage",
+      "unit": "not applicable (categorical)",
+      "required": "Dated observations with location, coverage and detection limitations.",
+      "missing": "Survey observations, coverage and detection evidence are required inputs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "id": "metocean",
+      "label": "Metocean records",
+      "quantity": "Significant wave height; peak period",
+      "unit": "m; s",
+      "required": "Time-aligned conditions with source, sampling basis and coverage.",
+      "missing": "Metocean time series and applicability evidence are required inputs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "id": "operations",
+      "label": "Operations records",
+      "quantity": "Operating state and process changes",
+      "unit": "not applicable (categorical)",
+      "required": "Dated operating states, interventions and process-change records.",
+      "missing": "Operating history and change records are required inputs.",
+      "status": "NOT_EVALUATED"
+    }
+  ],
+  "steps": [
+    {
+      "id": "measure",
+      "label": "Measure",
+      "input": "Inspection readings, survey evidence, metocean and operations records enter the common evidence table.",
+      "output": "A time-aligned evidence register retaining units, provenance and qualification gaps.",
+      "missing": "Dated readings, coverage, calibration and process history are absent in this synthetic schematic.",
+      "criterion": "Required input: maintainer-defined evidence quality and coverage criteria before fitting a trend."
+    },
+    {
+      "id": "model",
+      "label": "Model",
+      "input": "Qualified evidence register and a documented process-history basis.",
+      "output": "A proposed trend model with its validity period, assumptions and validation needs.",
+      "missing": "A common dated thickness record and an independently tested forecasting basis are required.",
+      "criterion": "Required input: a validation method and acceptance criteria; a short-record fit alone does not establish forecast skill."
+    },
+    {
+      "id": "quantify",
+      "label": "Quantify uncertainty",
+      "input": "Proposed model, measurement uncertainty and model assumptions.",
+      "output": "A proposed uncertainty definition separating latent trend from future observation uncertainty.",
+      "missing": "Coverage, noise assumptions, uncertainty propagation and validation evidence are required.",
+      "criterion": "Required input: the band meaning, coverage and validation criteria before interpreting any uncertainty range."
+    },
+    {
+      "id": "decide",
+      "label": "Decide",
+      "input": "Evidence gaps, validated forecasts if available, and stated decision criteria.",
+      "output": "NOT_EVALUATED: collect missing evidence and obtain maintainer review before choosing an inspection or intervention.",
+      "missing": "An engineering threshold, inspection policy and validated likelihood mapping are absent.",
+      "criterion": "Required input: applicable engineering limits and an inspection decision rule. Remaining life is not probability of failure."
+    },
+    {
+      "id": "reinspect",
+      "label": "Reinspect",
+      "input": "A reviewed inspection plan with its scope, timing and required measurement quality.",
+      "output": "New dated readings and coverage evidence return to Measure for reconciliation with the historical record.",
+      "missing": "An approved inspection plan and new observations are required; no inspection date is calculated.",
+      "criterion": "Required input: a reviewed inspection interval and evidence collection plan; reconcile new observations before reusing a trend."
+    }
+  ],
+  "feedback": {
+    "source": "process-change",
+    "target": "model",
+    "trigger": "A process change, intervention or changed operating state is recorded in the operations evidence.",
+    "action": "Reassess the historical trend at Model: review whether earlier readings represent the changed conditions, document the valid period and re-quantify uncertainty before deciding again. No change point is detected by this page."
+  }
+}</script>
+</main>
+</body>
+</html>
