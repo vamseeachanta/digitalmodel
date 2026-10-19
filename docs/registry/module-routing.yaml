@@ -399,6 +399,9 @@ modules:
       orcaflex/modular_generator:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_generator/docs/agent-pack.md
         qa_family: MR
+      orcaflex/mooring_analysis:
+        agent_pack: src/digitalmodel/solvers/orcaflex/mooring_analysis/docs/agent-pack.md
+        qa_family: MR
       orcaflex/modular_input_validation:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_input_validation/docs/agent-pack.md
         qa_family: MR
