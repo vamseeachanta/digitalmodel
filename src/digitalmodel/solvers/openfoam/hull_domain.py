@@ -34,6 +34,7 @@ from .hull_placement import (
     hull_x_centre,
     offset_interp as _offset_interp,
 )
+from .hull_refinement_edges import RefinementZEdgePolicy, place_refinement_z_edges
 from .models import DomainConfig
 
 __all__ = [
@@ -283,6 +284,8 @@ def refinement_boxes(
     inner_margin_x_lpp: float = INNER_MARGIN_X_LPP,
     inner_margin_y_beam: float = INNER_MARGIN_Y_BEAM,
     inner_margin_z_lpp: float = INNER_MARGIN_Z_LPP,
+    *,
+    z_edge_policy: Optional[RefinementZEdgePolicy] = None,
 ) -> List[Box]:
     """The nested topoSet boxes, outermost first.
 
@@ -297,6 +300,13 @@ def refinement_boxes(
     symmetric intervals about x = 0 over a bounding box translated by its own
     centre. Nothing translates the hull, so the staging sat half an Lpp aft of
     it: levels went on open water and the finest box stopped short of the bow.
+
+    With ``z_edge_policy``, expand z edges onto actual cell faces using the
+    caller's angle limit and achieved background cell sizes. Supply every
+    vertical cell face, including grading, after finalising block divisions.
+    No quality check is evaluated when the policy is absent. The Cartesian
+    angle model and its OpenFOAM 13 (2025) source are in
+    :mod:`hull_refinement_edges`; post-snap quality still needs checkMesh.
     """
     if stages < 1:
         raise HullDomainError(f"stages must be >= 1, got {stages}")
@@ -323,6 +333,14 @@ def refinement_boxes(
             _offset_interp(outer[1][2], inner[1][2], t, ref_z),
         )
         boxes.append((lo, hi))
+    if z_edge_policy is not None:
+        if (z_edge_policy.z_faces[0] != domain.z_levels[0]
+                or z_edge_policy.z_faces[-1] != domain.z_levels[-1]):
+            raise HullDomainError("z-edge policy must span both domain walls")
+        try:
+            boxes = place_refinement_z_edges(boxes, z_edge_policy)
+        except ValueError as exc:
+            raise HullDomainError(f"cannot place refinement z edges: {exc}") from exc
     assert_boxes_contain_hull(manifest, domain, boxes)
     return boxes
 
