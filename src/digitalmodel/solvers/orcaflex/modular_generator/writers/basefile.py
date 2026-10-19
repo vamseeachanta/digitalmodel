@@ -44,9 +44,9 @@ are rejected rather than inferred. Format source: Orcina, OrcaFlex online help,
 2026-10-19:
 https://www.orcina.com/webhelp/OrcaFlex/Content/html/Variationmodels.htm
 
-This is a syntax guard for the known top-level object sections, not a solver
-comparison. Object existence, nested named collections and preservation of all
-unselected data after native resolution still require separate qualification.
+This syntax guard covers registered named collections and per-type VariableData
+collections, not a solver comparison. Object existence, deeper nested collections
+and native preservation of unselected data still require separate qualification.
 """
 
 from __future__ import annotations
@@ -62,6 +62,7 @@ from .. import _NoAliasDumper
 from ..builders import BuilderRegistry  # noqa: F401  (import registers builders)
 from ..builders.generic_builder import _SECTION_ORDER
 from ..post_validator import _KNOWN_TOP_LEVEL_KEYS, _OBJECT_SECTIONS
+from ..schema.generic import SECTION_REGISTRY
 
 __all__ = [
     "build_variation_document",
@@ -70,6 +71,10 @@ __all__ = [
     "write_variation_model",
 ]
 
+_NAMED_COLLECTIONS = frozenset(_OBJECT_SECTIONS) | frozenset(
+    section for section, (_, named) in SECTION_REGISTRY.items() if named
+)
+
 _COMPOSITION_DIRECTIVES = frozenset({"basefile", "basefilenotracking", "includefile"})
 
 
@@ -77,16 +82,24 @@ def _validate_object_modifications(section: str, objects: Mapping[str, Any]) -> 
     """Reject structural operations in a name-keyed property override."""
     # Orcina's Text data format reserves these mapping keys for structural
     # operations. This writer only modifies properties of existing objects.
+    seen: set[str] = set()
     for name, properties in objects.items():
         if not isinstance(name, str) or not name.strip():
             raise ValueError(f"{section}: object names must be nonempty text")
-        if name.casefold() in {"new", "deleted", "order"}:
+        folded = name.casefold()
+        if folded in seen:
+            raise ValueError(f"{section}: duplicate object name")
+        seen.add(folded)
+        if folded in {"new", "deleted", "order"}:
             raise ValueError(f"{section}: structural directives are not property overrides")
         if not isinstance(properties, Mapping):
             raise ValueError(f"{section}: each named object needs a property mapping")
         # Change tracking also permits a trailing '*' on a data item name
         # (Orcina, Variation models, Change tracking); it must not bypass this.
-        if "Name" in properties or "Name*" in properties:
+        if any(
+            isinstance(key, str) and key.casefold().removesuffix("*") == "name"
+            for key in properties
+        ):
             raise ValueError(f"{section}: renaming is not a property override")
 
 
@@ -98,13 +111,21 @@ def _object_modifications(section: str, value: Any) -> dict[str, Any]:
             if not isinstance(item, Mapping) or "Name" not in item:
                 raise ValueError(f"{section}: each object needs a Name")
             name = item["Name"]
+            if type(name) is int:
+                name = str(name)
             if not isinstance(name, str) or not name.strip():
                 raise ValueError(f"{section}: object names must be nonempty text")
             if name in objects:
                 raise ValueError(f"{section}: duplicate object name")
             objects[name] = {key: val for key, val in item.items() if key != "Name"}
     elif isinstance(value, Mapping):
-        objects = dict(value)
+        objects = {}
+        for name, properties in value.items():
+            if type(name) is int:
+                name = str(name)
+            if name in objects:
+                raise ValueError(f"{section}: duplicate object name")
+            objects[name] = properties
     else:
         raise ValueError(f"{section}: expected a named object list or mapping")
 
@@ -116,14 +137,15 @@ def validate_variation_document(document: Mapping[str, Any]) -> None:
     """Check parsed, property-only variation syntax without resolving a model.
 
     Unlike writer input, an artifact must already use name-keyed mappings for
-    the known top-level object sections. Lists are rejected, never repaired:
+    registered named collections, including per-type VariableData collections.
+    Lists are rejected, never repaired:
     a dictionary merge cannot demonstrate native object identity preservation.
     BaseFile must precede edits; extra composition directives are forbidden.
     Unknown top-level sections are rejected, including legacy singular-object
     creation and deletion syntax, rather than passed through unchecked.
     Raises ValueError on a syntax violation and leaves the document unchanged.
 
-    This guard does not check object existence, nested named collections,
+    This guard does not check object existence, deeper nested named collections,
     duplicate YAML keys lost during parsing, or native resolved-model data.
     """
     if not isinstance(document, Mapping) or not document:
@@ -140,10 +162,25 @@ def validate_variation_document(document: Mapping[str, Any]) -> None:
             raise ValueError("Variation must not contain extra composition directives")
         if section not in _KNOWN_TOP_LEVEL_KEYS:
             raise ValueError("Unrecognised variation section; use a supported section")
-        if section in _OBJECT_SECTIONS:
-            if not isinstance(value, Mapping):
-                raise ValueError(f"{section}: artifact must use named-object mappings")
-            _validate_object_modifications(section, value)
+        if section in _NAMED_COLLECTIONS:
+            for collection, objects in _named_collections(section, value).items():
+                if not isinstance(objects, Mapping):
+                    raise ValueError(f"{collection}: artifact must use named-object mappings")
+                _validate_object_modifications(collection, objects)
+
+
+def _named_collections(section: str, value: Any) -> dict[str, Any]:
+    """Expose per-type VariableData collections without descending into tables."""
+    if section != "VariableData":
+        return {section: value}
+    if not isinstance(value, Mapping):
+        raise ValueError("VariableData: expected a mapping of data types")
+    for data_type in value:
+        if not isinstance(data_type, str) or not data_type.strip():
+            raise ValueError("VariableData: data type names must be nonempty text")
+        if data_type.casefold() in {"new", "deleted", "order"}:
+            raise ValueError("VariableData: structural directives are not property overrides")
+    return {f"VariableData.{data_type}": objects for data_type, objects in value.items()}
 
 
 def _check_source_destination(base_path: Path, out_path: Path) -> None:
@@ -255,7 +292,8 @@ def build_variation_document(
             because ``BaseFile`` accepts both.  The file need not exist — only
             its path is used.
         overrides: Sections to emit after the base reference.  Object sections
-            accept lists with unique Name fields or name-keyed property mappings.
+            accept lists with unique text or integer Name fields or name-keyed
+            property mappings; integer names emit text keys.
             Both emit name-keyed modifications in dependency order. Structural
             directives and renaming raise ValueError. Other supported sections
             are emitted ahead of objects, in the order supplied; property tables
@@ -288,13 +326,22 @@ def build_variation_document(
 
     object_sections = set(_OBJECT_SECTIONS)
 
-    # Non-object sections (General, Environment, VariableData, …) declare no
-    # named objects, so reference-before-use does not order them.  They are
+    # Sections outside the object dependency order (including registered
+    # auxiliary named collections and VariableData) are
     # emitted first, in the order supplied, rather than dropped: iterating the
     # object sections alone would silently discard them.
     for section, value in overrides.items():
         if section not in object_sections:
-            document[section] = deepcopy(value)
+            if section == "VariableData":
+                _named_collections(section, value)
+                document[section] = {
+                    data_type: _object_modifications(f"{section}.{data_type}", objects)
+                    for data_type, objects in value.items()
+                }
+            elif section in _NAMED_COLLECTIONS:
+                document[section] = _object_modifications(section, value)
+            else:
+                document[section] = deepcopy(value)
 
     # Object sections in dependency order, so a referenced object is always
     # declared before the object that references it.

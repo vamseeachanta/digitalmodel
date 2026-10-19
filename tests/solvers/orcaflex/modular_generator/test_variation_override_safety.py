@@ -261,3 +261,73 @@ def test_no_overrides_emits_only_the_base_reference(tmp_path, overrides):
     assert build_variation_document(
         tmp_path / "master.dat", overrides, tmp_path / "case.yml"
     ) == {"BaseFile": "master.dat"}
+
+
+@pytest.mark.parametrize("section", ["ExpansionTables", "BrowserGroups", "VariableData"])
+def test_additional_named_collections_use_modification_mappings(tmp_path, section):
+    properties = {"SelectedTable": [["first", "second"]]}
+    objects = [{"Name": "Existing", **properties}]
+    value = {"Dragcoefficient": objects} if section == "VariableData" else objects
+    overrides = {section: value}
+    before = deepcopy(overrides)
+    document = build_variation_document(
+        tmp_path / "master.yml", overrides, tmp_path / "case.yml"
+    )
+    expected = {"Existing": properties}
+    if section == "VariableData":
+        expected = {"Dragcoefficient": expected}
+    assert document[section] == expected
+    assert overrides == before
+
+
+@pytest.mark.parametrize(
+    "section,value",
+    [
+        ("ExpansionTables", [{"Name": "Existing"}]),
+        ("BrowserGroups", [{"Name": "Existing"}]),
+        ("VariableData", [{"Name": "Existing"}]),
+        ("VariableData", {"Dragcoefficient": [{"Name": "Existing"}]}),
+    ],
+)
+def test_artifact_guard_rejects_additional_collection_lists(section, value):
+    from digitalmodel.solvers.orcaflex.modular_generator.writers.basefile import (
+        validate_variation_document,
+    )
+
+    with pytest.raises(ValueError, match=section):
+        validate_variation_document({"BaseFile": "master.yml", section: value})
+
+
+@pytest.mark.parametrize("as_list", [True, False])
+@pytest.mark.parametrize("names", [("Body", "body"), ("Straße", "STRASSE")])
+def test_duplicate_names_are_casefolded(tmp_path, as_list, names):
+    objects = (
+        [{"Name": name} for name in names]
+        if as_list else {name: {} for name in names}
+    )
+    with pytest.raises(ValueError, match="duplicate"):
+        build_variation_document(
+            tmp_path / "master.yml", {"6DBuoys": objects}, tmp_path / "case.yml"
+        )
+
+
+@pytest.mark.parametrize("key", ["name", "NAME", "name*", "NaMe*"])
+@pytest.mark.parametrize("as_list", [True, False])
+def test_rename_guard_ignores_case_and_change_tracking(tmp_path, key, as_list):
+    properties = {key: "Changed"}
+    objects = [{"Name": "Body", **properties}] if as_list else {"Body": properties}
+    with pytest.raises(ValueError, match="renaming"):
+        build_variation_document(
+            tmp_path / "master.yml", {"6DBuoys": objects}, tmp_path / "case.yml"
+        )
+
+
+@pytest.mark.parametrize("as_list", [True, False])
+def test_integer_names_emit_text_keys(tmp_path, as_list):
+    objects = [{"Name": 1, "SelectedField": "changed"}] if as_list else {
+        1: {"SelectedField": "changed"}
+    }
+    document = build_variation_document(
+        tmp_path / "master.yml", {"6DBuoys": objects}, tmp_path / "case.yml"
+    )
+    assert document["6DBuoys"] == {"1": {"SelectedField": "changed"}}
