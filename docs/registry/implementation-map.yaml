@@ -1280,18 +1280,6 @@ families:
     - {issue: 2050, affected: not_applicable, evidence: 'src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L103-L172'}
     body_sha256: c6959f245e0d6dad906437214cba4be1f51013a3bab9d0f17e55a8cd9e7794fe
   - path: *adbef44984c
-    symbol: SimpleCatenaryAnalyzer._solve_H_from_top_tension.calc_top_tension
-    line: 200
-    kind: function
-    what: *a072da784e4
-    signals: *a345cf3fd76
-    relation: independent
-    module: subsea/catenary_riser
-    file_sha256: edb9abcc818b1b743792427e351ba6eae31ff0669208f1ddc7320b77cf605229
-    defects:
-    - {issue: 2050, affected: not_applicable, evidence: 'src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L200-L219'}
-    body_sha256: 4074bdd6bd4071e3778db5d04148abafe585a135110ad6aa51ac409427b1a003
-  - path: *adbef44984c
     symbol: *a4d3eee9bb6
     line: 279
     kind: function
@@ -36770,13 +36758,6 @@ rejected_candidates:
 - path: src/digitalmodel/subsea/catenary_riser/effective_weight.py
   symbol: EffectiveWeightCalculator.calculate_with_buoyancy_module
   line: 58
-  families:
-  - effective-tension-riser-stack-up
-  disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: *adbef44984c
-  symbol: SimpleCatenaryAnalyzer._solve_H_from_top_tension.calc_top_tension
-  line: 200
   families:
   - effective-tension-riser-stack-up
   disposition: needs_review

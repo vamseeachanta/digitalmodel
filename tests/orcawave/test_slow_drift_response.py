@@ -86,6 +86,7 @@ def test_newman_and_full_spectra_agree_in_every_beat_bin():
     spectrum = np.exp(-((omega - .65) / .15)**2)
     qtf = make_qtf(omega, (diagonal[:, None] + diagonal[None, :]) / 2)
     coeffs = MeanDriftCoefficients(
+        frame="x_forward_y_port_z_up", heading_convention="from_clockwise_bow",
         heading_deg=0., frequencies_rad_s=omega.tolist(),
         surge_kn_m2=diagonal.tolist(), sway_kn_m2=diagonal.tolist(),
         yaw_knm_m2=diagonal.tolist(),

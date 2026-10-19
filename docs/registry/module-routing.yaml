@@ -23,6 +23,9 @@ modules:
       common:
         agent_pack: src/digitalmodel/asset_integrity/common/docs/agent-pack.md
         qa_family: EC
+      custom:
+        agent_pack: src/digitalmodel/asset_integrity/custom/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/asset_integrity/
     maturity: stable
     owner_wiki: docs/domains/README.md
@@ -97,6 +100,10 @@ modules:
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#data_models
   - module: data_systems
+    submodules:
+      data_procurement:
+        agent_pack: src/digitalmodel/data_systems/data_procurement/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/data_systems/
     maturity: beta
     owner_wiki: docs/domains/data_systems/
@@ -166,6 +173,9 @@ modules:
       hull_library:
         agent_pack: src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md
         qa_family: DF
+      parametric_hull_analysis:
+        agent_pack: src/digitalmodel/hydrodynamics/parametric_hull_analysis/docs/agent-pack.md
+        qa_family: DF
       diffraction:
         agent_pack: src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md
         qa_family: DF
@@ -204,6 +214,12 @@ modules:
       vessel_db:
         agent_pack: src/digitalmodel/marine_ops/vessel_db/docs/agent-pack.md
         qa_family: EC
+      reservoir:
+        agent_pack: src/digitalmodel/marine_ops/reservoir/docs/agent-pack.md
+        qa_family: EC
+      artificial_lift:
+        agent_pack: src/digitalmodel/marine_ops/artificial_lift/docs/agent-pack.md
+        qa_family: EC
   - module: floating_wind
     entry_point: src/digitalmodel/floating_wind/
     maturity: beta
@@ -234,12 +250,20 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#foam_system
   - module: mooring_resilience
     entry_point: src/digitalmodel/mooring_resilience/
+    submodules:
+      mooring_resilience:
+        agent_pack: src/digitalmodel/mooring_resilience/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#mooring_resilience
   - module: motion_forecast
     entry_point: src/digitalmodel/motion_forecast/
+    submodules:
+      motion_forecast:
+        agent_pack: src/digitalmodel/motion_forecast/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/motion_forecast/]
@@ -305,6 +329,9 @@ modules:
       datacenter:
         agent_pack: src/digitalmodel/power/datacenter/docs/agent-pack.md
         qa_family: EC
+      microgrid:
+        agent_pack: src/digitalmodel/power/microgrid/docs/agent-pack.md
+        qa_family: EC
   - module: process_diagrams
     entry_point: src/digitalmodel/process_diagrams/
     maturity: beta
@@ -358,6 +385,12 @@ modules:
     key_tests: [tests/solvers/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#solvers
     submodules:
+      calculix:
+        agent_pack: src/digitalmodel/solvers/calculix/docs/agent-pack.md
+        qa_family: FE
+      ghs:
+        agent_pack: src/digitalmodel/solvers/ghs/docs/agent-pack.md
+        qa_family: EC
       mystran:
         agent_pack: src/digitalmodel/solvers/mystran/docs/agent-pack.md
         qa_family: FE
@@ -372,6 +405,9 @@ modules:
         qa_family: MR
       orcaflex/modular_generator:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_generator/docs/agent-pack.md
+        qa_family: MR
+      orcaflex/mooring_analysis:
+        agent_pack: src/digitalmodel/solvers/orcaflex/mooring_analysis/docs/agent-pack.md
         qa_family: MR
       orcaflex/modular_input_validation:
         agent_pack: src/digitalmodel/solvers/orcaflex/modular_input_validation/docs/agent-pack.md
@@ -404,6 +440,9 @@ modules:
     key_tests: [tests/structural/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
     submodules:
+      top_level:
+        agent_pack: src/digitalmodel/structural/docs/agent-pack.md
+        qa_family: EC
       pipe_capacity:
         agent_pack: src/digitalmodel/structural/pipe_capacity/docs/agent-pack.md
         qa_family: EC
@@ -416,6 +455,12 @@ modules:
       fatigue_apps:
         agent_pack: src/digitalmodel/structural/fatigue_apps/docs/agent-pack.md
         qa_family: EC
+      offshore_resilience:
+        agent_pack: src/digitalmodel/structural/offshore_resilience/docs/agent-pack.md
+        qa_family: EC
+      jacket_topside:
+        agent_pack: src/digitalmodel/structural/jacket_topside/docs/agent-pack.md
+        qa_family: EC
   - module: subsea
     entry_point: src/digitalmodel/subsea/
     maturity: stable
@@ -423,6 +468,12 @@ modules:
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
     submodules:
+      riser:
+        agent_pack: src/digitalmodel/subsea/riser/docs/agent-pack.md
+        qa_family: EC
+      flexible_pipes:
+        agent_pack: src/digitalmodel/subsea/flexible_pipes/docs/agent-pack.md
+        qa_family: EC
       catenary_riser:
         agent_pack: src/digitalmodel/subsea/catenary_riser/docs/agent-pack.md
         qa_family: MR
@@ -480,6 +531,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#base_configs
   - module: code_checks
     entry_point: src/digitalmodel/code_checks/
+    submodules:
+      code_checks:
+        agent_pack: src/digitalmodel/code_checks/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/code_checks/]
@@ -509,6 +564,10 @@ modules:
     key_tests: [tests/hydrodynamics/test_wang_passing_ship.py, tests/hydrodynamics/test_passing_ship_forces_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#passing_ship_forces
   - module: hull_girder_screening
+    submodules:
+      hull_girder_screening:
+        agent_pack: src/digitalmodel/hull_girder_screening/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/hull_girder_screening/
     maturity: development
     owner_wiki: docs/domains/ship-design/hull-girder-strength-screening.md

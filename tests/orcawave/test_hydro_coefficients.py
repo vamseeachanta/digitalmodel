@@ -8,11 +8,11 @@ from digitalmodel.orcawave.hydro_coefficients import (
     HydroCoefficients,
     HydroMatrix6x6,
     create_hydrostatic_restoring,
-    from_wamit_added_mass,
+    from_native_added_mass,
     interpolate_excitation_at_frequency,
     interpolate_matrix_at_frequency,
-    to_wamit_added_mass,
-    to_wamit_damping,
+    to_native_added_mass,
+    to_native_damping,
 )
 
 
@@ -103,8 +103,8 @@ class TestWAMITFormat:
 
     def test_wamit_roundtrip(self):
         coeffs = _make_coefficients()
-        text = to_wamit_added_mass(coeffs)
-        matrices = from_wamit_added_mass(text)
+        text = to_native_added_mass(coeffs)
+        matrices = from_native_added_mass(text)
         assert len(matrices) == len(coeffs.added_mass)
         # Check first matrix diagonal
         orig = coeffs.added_mass[0].to_numpy()
@@ -113,7 +113,7 @@ class TestWAMITFormat:
 
     def test_wamit_damping_export(self):
         coeffs = _make_coefficients()
-        text = to_wamit_damping(coeffs)
+        text = to_native_damping(coeffs)
         lines = [l for l in text.strip().splitlines() if l.strip()]
         assert len(lines) > 0
 
@@ -134,3 +134,19 @@ class TestWAMITFormat:
         assert arr[4, 4] > 0
         # Surge restoring = 0
         assert arr[0, 0] == 0.0
+
+
+@pytest.mark.parametrize("row,reason", [
+    ("1 3 3", "four columns"), ("1 3 3 4 extra", "four columns"),
+    ("1 0 3 4", "indices"), ("1 3 7 4", "indices"),
+    ("1 bad 3 4", "numeric"), ("nan 3 3 4", "finite"), ("1 3 3 inf", "finite"),
+])
+def test_native_parser_rejects_invalid_row_with_line_context(row, reason):
+    with pytest.raises(ValueError, match=rf"line 3:.*{reason}"):
+        from_native_added_mass("1 3 3 4\n\n" + row + "\n")
+
+
+def test_native_parser_preserves_valid_rows_among_blank_lines():
+    matrices = from_native_added_mass("\n1 3 3 4\n\n")
+    assert len(matrices) == 1
+    assert matrices[0].values[2][2] == 4

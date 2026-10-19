@@ -9,6 +9,11 @@
       "change": "The pinned source digest of the mooring design module is updated because merged change #2481 added a licence header and one module-docstring sentence. No numerical result changed. Python 3.11.14 replaces 3.11.15 as patch-version run metadata only.",
       "date": "2026-10-15",
       "revision": "R2"
+    },
+    {
+      "change": "The citation-registry source pin is refreshed after a depth-band reference getter is added. The run-record link is made relative and the website export includes the linked record archive. Static solutions and acceptance criteria remain unchanged.",
+      "date": "2026-10-18",
+      "revision": "R3"
     }
   ]
 }

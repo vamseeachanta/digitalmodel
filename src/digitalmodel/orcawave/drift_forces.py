@@ -4,7 +4,7 @@ Implements Newman's approximation for QTF, full QTF double-sum integration,
 mean drift force coefficient handling, and wind/current drift estimation.
 """
 
-from typing import List, Tuple
+from typing import Dict, List, Literal, Optional, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -22,10 +22,15 @@ from digitalmodel.orcawave.slow_drift_response import (
 # Pydantic models
 # ---------------------------------------------------------------------------
 
+
 class MeanDriftCoefficients(BaseModel):
     """Frequency-dependent mean drift force coefficients for one heading."""
 
-    heading_deg: float = Field(..., description="Wave heading in degrees")
+    heading_deg: float = Field(
+        ..., ge=0, lt=360, description="Direction from, clockwise from bow"
+    )
+    frame: Literal["x_forward_y_port_z_up"]
+    heading_convention: Literal["from_clockwise_bow"]
     frequencies_rad_s: List[float] = Field(..., description="Frequency vector")
     surge_kn_m2: List[float] = Field(
         ...,
@@ -80,6 +85,8 @@ class DriftForceResult(BaseModel):
 class WindCurrentDrift(BaseModel):
     """Steady drift force from wind and current."""
 
+    frame: str = "x_forward_y_port_z_up"
+    heading_convention: str = "from_clockwise_bow"
     wind_speed_m_s: float
     current_speed_m_s: float
     heading_deg: float
@@ -97,6 +104,7 @@ class WindCurrentDrift(BaseModel):
 # ---------------------------------------------------------------------------
 # Mean drift forces
 # ---------------------------------------------------------------------------
+
 
 def compute_mean_drift_force(
     drift_coeffs: MeanDriftCoefficients,
@@ -132,6 +140,7 @@ def compute_mean_drift_force(
 # ---------------------------------------------------------------------------
 # Newman's approximation
 # ---------------------------------------------------------------------------
+
 
 def newman_approximation(
     drift_coeffs: MeanDriftCoefficients,
@@ -240,6 +249,7 @@ def full_qtf_slowly_varying(
 # Wind and current drift
 # ---------------------------------------------------------------------------
 
+
 def compute_wind_current_drift(
     wind_speed_m_s: float,
     current_speed_m_s: float,
@@ -262,7 +272,10 @@ def compute_wind_current_drift(
     Args:
         wind_speed_m_s: Wind speed (m/s).
         current_speed_m_s: Current speed (m/s).
-        heading_deg: Environmental heading (deg, 0=head, 90=beam).
+        heading_deg: Direction FROM, clockwise from bow in [0,360).
+            Frame: +x forward, +y port, +z up; 0=head, 90=from starboard.
+            Positive yaw is bow to port. Lever arm is assumed +0.1*L in x.
+            Imported diffraction coefficients must be transformed to this frame.
         projected_wind_area_m2: Projected above-water area (m^2).
         projected_current_area_m2: Projected below-water area (m^2).
         vessel_length_m: Vessel length for yaw moment arm.
@@ -276,21 +289,27 @@ def compute_wind_current_drift(
     Returns:
         WindCurrentDrift with all force components.
     """
+    if not np.isfinite(heading_deg) or not 0 <= heading_deg < 360:
+        raise ValueError("Heading must be finite in [0, 360)")
     theta = np.deg2rad(heading_deg)
     cos_t = np.cos(theta)
     sin_t = np.sin(theta)
 
     # Wind forces
     q_wind = 0.5 * rho_air * wind_speed_m_s**2
-    fw_surge = q_wind * cx_wind * projected_wind_area_m2 * abs(cos_t) * np.sign(cos_t)
+    fw_surge = -q_wind * cx_wind * projected_wind_area_m2 * abs(cos_t) * np.sign(cos_t)
     fw_sway = q_wind * cy_wind * projected_wind_area_m2 * abs(sin_t) * np.sign(sin_t)
     # Yaw moment: assume moment arm ~ 0.1 * vessel length
     mw_yaw = fw_sway * 0.1 * vessel_length_m
 
     # Current forces
     q_curr = 0.5 * rho_water * current_speed_m_s**2
-    fc_surge = q_curr * cx_current * projected_current_area_m2 * abs(cos_t) * np.sign(cos_t)
-    fc_sway = q_curr * cy_current * projected_current_area_m2 * abs(sin_t) * np.sign(sin_t)
+    fc_surge = (
+        -q_curr * cx_current * projected_current_area_m2 * abs(cos_t) * np.sign(cos_t)
+    )
+    fc_sway = (
+        q_curr * cy_current * projected_current_area_m2 * abs(sin_t) * np.sign(sin_t)
+    )
     mc_yaw = fc_sway * 0.1 * vessel_length_m
 
     # Convert to kN

@@ -51,17 +51,20 @@ def test_force_method():
     assert abs(result['W'] - data['w'] * result['S']) < 1e-6, "W should equal w * S"
     print(f"\n[OK] W = w * S verified: {result['W']:.2f} ~= {data['w'] * result['S']:.2f}")
 
-    # Verify exact match with legacy formula
+    # Verify vertex-catenary geometry and force equilibrium
     F = data["F"]
     w = data["w"]
     d = data["d"]
 
-    expected_S = d * (2 * F / w - d)
-    expected_X = ((F/w) - d) * math.log((expected_S + (F/w)) / ((F/w) - d))
+    expected_S = math.sqrt(d * (2 * F / w - d))
+    expected_X = ((F / w) - d) * math.acosh(F / (F - w * d))
 
     assert abs(result['S'] - expected_S) < 1e-9, f"S mismatch: {result['S']} vs {expected_S}"
     assert abs(result['X'] - expected_X) < 1e-9, f"X mismatch: {result['X']} vs {expected_X}"
-    print(f"[OK] Results match legacy formulas exactly")
+    assert abs(result["THorizontal"] - 10000.0) < 1e-9
+    assert abs(result["S"] - 97.97958971132712) < 1e-9
+    assert abs(F**2 - (result["THorizontal"]**2 + result["W"]**2)) < 1e-6
+    print("[OK] Geometry and force equilibrium verified")
 
     return True
 
@@ -183,7 +186,7 @@ def test_error_handling():
             catenaryEquation({"F": 1000.0, "w": 100.0, "d": 100.0, "X": None, "q": None})
         assert False, "Should have raised ValueError"
     except ValueError as e:
-        assert "F/w" in str(e) and "must be > d" in str(e)
+        assert "F must exceed w*d" in str(e)
         print(f"[OK] Invalid force parameters error: {e}")
 
     return True

@@ -30,21 +30,10 @@ def catenaryEquation(data):
     )
 
     if data["F"] != None:
-        S = data["d"] * (2 * data["F"] / data["w"] - data["d"])
-        # Horizontal Distance.
-        X = ((data["F"] / data["w"]) - data["d"]) * math.log(
-            (S + (data["F"] / data["w"])) / ((data["F"] / data["w"]) - data["d"])
-        )
-
-        # weight of the suspended chain
-        W = data["w"] * S
-
-        # normalized horizontal tension component
-        THorizontal = data["F"] * X / math.sqrt(S**2 + X**2)
-
-        # catenary shape parameter
-        b = data["w"] * 9.81 / THorizontal
-        data.update({"S": S, "X": X, "W": W, "THorizontal": THorizontal})
+        # Share the corrected E1-E2 force route, with w already in N/m.
+        from .catenary_equation import CatenaryCalculator
+        CatenaryCalculator().calculate(data)
+        data["W"] = data["w"] * data["S"]
 
         return data
 

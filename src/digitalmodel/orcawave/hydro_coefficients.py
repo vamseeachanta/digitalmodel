@@ -9,12 +9,13 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
+
 
 class HydroMatrix6x6(BaseModel):
     """A single 6x6 hydrodynamic matrix at a specific frequency."""
@@ -24,6 +25,16 @@ class HydroMatrix6x6(BaseModel):
         ...,
         description="6x6 matrix values (row-major)",
     )
+
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def finite_matrix(self):
+        values = np.asarray(self.values)
+        if values.shape != (6, 6) or not np.all(np.isfinite(values)):
+            raise ValueError("Require a finite 6 by 6 matrix")
+        # Preserve solver discretisation differences for the reciprocity gate.
+        return self
 
     def to_numpy(self) -> np.ndarray:
         """Return values as a 6x6 numpy array."""
@@ -73,6 +84,7 @@ class HydroCoefficients(BaseModel):
 # ---------------------------------------------------------------------------
 # Interpolation helpers
 # ---------------------------------------------------------------------------
+
 
 def interpolate_matrix_at_frequency(
     matrices: List[HydroMatrix6x6],
@@ -156,40 +168,30 @@ def interpolate_excitation_at_frequency(
 
 
 # ---------------------------------------------------------------------------
-# Format conversion: WAMIT
+# Native dimensional coefficient interchange (NOT WAMIT)
 # ---------------------------------------------------------------------------
 
-def to_wamit_added_mass(coeffs: HydroCoefficients) -> str:
-    """Export added mass in WAMIT .1 file format.
 
-    WAMIT .1 format: ``freq  i  j  A_ij``  (non-dimensionalised).
+def to_native_added_mass(coeffs: HydroCoefficients) -> str:
+    """Export native dimensional rows: omega(rad/s), i, j, A(SI).
 
-    Args:
-        coeffs: Hydrodynamic coefficients.
-
-    Returns:
-        Text in WAMIT .1 format.
+    This is not WAMIT .1. See WAMIT 7.5 manual sections 3.2 and 5.2.
     """
     lines = []
-    rho = 1025.0  # kg/m^3 seawater
     for mat in coeffs.added_mass:
         omega = mat.frequency_rad_s
         arr = mat.to_numpy()
         for i in range(6):
             for j in range(6):
                 if abs(arr[i, j]) > 1e-30:
-                    lines.append(f" {omega:12.6E}  {i+1}  {j+1}  {arr[i,j]:14.6E}")
+                    lines.append(f" {omega:12.6E}  {i + 1}  {j + 1}  {arr[i, j]:14.6E}")
     return "\n".join(lines) + "\n"
 
 
-def to_wamit_damping(coeffs: HydroCoefficients) -> str:
-    """Export radiation damping in WAMIT .3 file format.
+def to_native_damping(coeffs: HydroCoefficients) -> str:
+    """Export native dimensional rows: omega(rad/s), i, j, B(SI).
 
-    Args:
-        coeffs: Hydrodynamic coefficients.
-
-    Returns:
-        Text in WAMIT .3 format.
+    WAMIT .3 is exciting force output, not damping (manual section 5.2).
     """
     lines = []
     for mat in coeffs.radiation_damping:
@@ -198,32 +200,40 @@ def to_wamit_damping(coeffs: HydroCoefficients) -> str:
         for i in range(6):
             for j in range(6):
                 if abs(arr[i, j]) > 1e-30:
-                    lines.append(f" {omega:12.6E}  {i+1}  {j+1}  {arr[i,j]:14.6E}")
+                    lines.append(f" {omega:12.6E}  {i + 1}  {j + 1}  {arr[i, j]:14.6E}")
     return "\n".join(lines) + "\n"
 
 
-def from_wamit_added_mass(text: str) -> List[HydroMatrix6x6]:
-    """Parse WAMIT .1 added-mass output.
+def from_native_added_mass(text: str) -> List[HydroMatrix6x6]:
+    """Parse native dimensional added-mass rows (omega, i, j, A).
 
     Args:
-        text: Content of WAMIT .1 file.
+        text: Native dimensional text; never pass a WAMIT file.
 
     Returns:
         List of HydroMatrix6x6 sorted by frequency.
     """
     data: Dict[float, np.ndarray] = {}
-    for line in text.strip().splitlines():
+    for line_number, line in enumerate(text.splitlines(), start=1):
         parts = line.split()
-        if len(parts) < 4:
+        if not parts:
             continue
-        omega = float(parts[0])
-        i = int(parts[1]) - 1
-        j = int(parts[2]) - 1
-        val = float(parts[3])
+        context = f"Native coefficient line {line_number}: "
+        if len(parts) != 4:
+            raise ValueError(context + "expected four columns: omega, i, j, value")
+        try:
+            omega = float(parts[0])
+            i, j = int(parts[1]) - 1, int(parts[2]) - 1
+            val = float(parts[3])
+        except ValueError as exc:
+            raise ValueError(context + "invalid numeric field") from exc
+        if not np.isfinite(omega) or omega < 0 or not np.isfinite(val):
+            raise ValueError(context + "finite nonnegative frequency and finite value required")
+        if not (0 <= i < 6 and 0 <= j < 6):
+            raise ValueError(context + "indices must be integers in 1..6")
         if omega not in data:
             data[omega] = np.zeros((6, 6))
-        if 0 <= i < 6 and 0 <= j < 6:
-            data[omega][i, j] = val
+        data[omega][i, j] = val
 
     matrices = []
     for omega in sorted(data.keys()):
@@ -236,6 +246,23 @@ def from_wamit_added_mass(text: str) -> List[HydroMatrix6x6]:
     return matrices
 
 
+def to_wamit_added_mass(*args, **kwargs):
+    """Removed mislabeled format. Use to_native_added_mass for native SI rows."""
+    raise ValueError("Not a WAMIT writer; use to_native_added_mass for native SI rows")
+
+
+def to_wamit_damping(*args, **kwargs):
+    """Removed mislabeled format. Use to_native_damping for native SI rows."""
+    raise ValueError("Not a WAMIT writer; use to_native_damping for native SI rows")
+
+
+def from_wamit_added_mass(*args, **kwargs):
+    """Refuse WAMIT data rather than silently treating period as frequency."""
+    raise ValueError(
+        "WAMIT import unsupported; from_native_added_mass accepts native SI rows only"
+    )
+
+
 def create_hydrostatic_restoring(
     displaced_volume_m3: float,
     waterplane_area_m2: float,
@@ -244,7 +271,13 @@ def create_hydrostatic_restoring(
     rho: float = 1025.0,
     g: float = 9.81,
 ) -> List[List[float]]:
-    """Build a 6x6 hydrostatic restoring matrix.
+    """Build diagonal restoring about the centre of flotation, in SI units.
+
+    WAMIT 7.5 manual 3.1: C33=rho*g*Awp; C44/55=rho*g*V*GM.
+    Assumes principal horizontal axes and coincident reference/centre of
+    flotation. C35/C53 and all other off-diagonal coupling are omitted;
+    transform a full matrix externally for an offset reference.
+
 
     Args:
         displaced_volume_m3: Displaced volume.
@@ -259,7 +292,7 @@ def create_hydrostatic_restoring(
     """
     c = np.zeros((6, 6))
     mass = rho * displaced_volume_m3
-    c[2, 2] = rho * g * waterplane_area_m2       # heave
-    c[3, 3] = mass * g * gm_t                     # roll
-    c[4, 4] = mass * g * gm_l                     # pitch
+    c[2, 2] = rho * g * waterplane_area_m2  # heave
+    c[3, 3] = mass * g * gm_t  # roll
+    c[4, 4] = mass * g * gm_l  # pitch
     return c.tolist()
