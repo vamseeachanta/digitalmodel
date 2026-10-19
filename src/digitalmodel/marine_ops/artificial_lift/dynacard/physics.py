@@ -2,120 +2,136 @@
 # # Licensed under the MIT License. See LICENSE file for details.
 
 import numpy as np
-from scipy.signal import savgol_filter
 from .calculations import calculate_pump_fillage
 from .exceptions import PhysicsError
 from .solver_guards import annotate_results, validate_stroke
 from .models import DynacardAnalysisContext, CardData, AnalysisResults
 from .constants import (
     FEET_TO_INCHES,
-    STEEL_YOUNGS_MODULUS_PSI,
-    STEEL_DENSITY_LB_PER_FT3,
     SQUARE_FEET_TO_SQUARE_INCHES,
     SECONDS_PER_MINUTE,
-    WAVE_SPEED_IN_PER_S,
-    GIBBS_DAMPING_COEFFICIENT,
-    BUOYANCY_FACTOR,
-    LOAD_ATTENUATION_FACTOR,
-    STROKE_SCALING_FACTOR,
     BUCKLING_DETECTION_LOAD_THRESHOLD_LBS,
 )
 
+
 class DynacardPhysicsSolver:
-    """
-    High-fidelity Gibbs Analytical solver for Sucker Rod Pumps.
-    Uses frequency-domain wave equation analysis for maximum accuracy and parity.
+    """Coupled frequency-domain solution for a vertical, tapered elastic rod.
+
+    Rod sections are ordered from surface to pump. ``damping_factor`` is the
+    nonnegative viscous decay rate c in inverse seconds for
+    u_tt + c*u_t = a²*u_xx. Zero explicitly selects the lossless model.
+    This path does not estimate damping or establish field diagnostic accuracy.
+    Inputs must be uniformly timed over one cycle, excluding a repeated endpoint.
     """
 
     def __init__(self, context: DynacardAnalysisContext):
-        """Initialize the Gibbs analytical solver.
-
-        Args:
-            context: Complete well analysis context including surface card,
-                rod string, pump, and operating parameters.
-        """
         self.ctx = context
         self.results = AnalysisResults()
 
+    def _validate_inputs(self):
+        """Reject invalid boundary and material inputs before Fourier arithmetic."""
+        u = np.asarray(self.ctx.surface_card.position, dtype=float)
+        f = np.asarray(self.ctx.surface_card.load, dtype=float)
+        validate_stroke(u, u, f, "gibbs")
+        if (
+            not np.isfinite(self.ctx.spm)
+            or self.ctx.spm <= 0
+            or not np.isfinite(self.ctx.fluid_density)
+            or self.ctx.fluid_density < 0
+        ):
+            raise PhysicsError(
+                "positive SPM and nonnegative fluid density required", solver="gibbs"
+            )
+        if not self.ctx.rod_string:
+            raise PhysicsError("rod string must contain a section", solver="gibbs")
+        for section in self.ctx.rod_string:
+            positive = [
+                section.length,
+                section.diameter,
+                section.modulus_of_elasticity,
+                section.speed_of_sound,
+                section.density,
+            ]
+            if (
+                not np.all(np.isfinite(positive))
+                or min(positive) <= 0
+                or not np.isfinite(section.damping_factor)
+                or section.damping_factor < 0
+            ):
+                raise PhysicsError(
+                    "invalid rod section properties or damping rate", solver="gibbs"
+                )
+        return u, f
+
     def solve_wave_equation(self):
+        """Propagate displacement AND tensile force through every rod section.
+
+        Basis: Applied Mechanics of Solids (online edition read 2026-10-19), section 4.3.3:
+        https://solidmechanics.org/Text/Chapter4_3/Chapter4_3.php
+        With x downward, u upward, F=-EA*u_x. Fourier substitution in
+        u_tt+c*u_t=a²*u_xx gives gamma²=(-omega²+i*omega*c)/a².
+        Differentiating the displacement solution gives the companion force
+        equation (also specified in #1955). See gibbs-transfer.md for derivation.
         """
-        Implements the Gibbs analytical diagnostic method.
-        Solves for downhole position and load in the frequency domain.
-        """
-        # 1. Inputs and Constants from Legacy "Gold Standard"
-        u_surf = np.array(self.ctx.surface_card.position)
-        f_surf = np.array(self.ctx.surface_card.load)
-        Nt = len(u_surf)
+        u_surf, f_surf = self._validate_inputs()
+        count = len(u_surf)
+        period = SECONDS_PER_MINUTE / self.ctx.spm
+        omega = 2 * np.pi * np.fft.rfftfreq(count, d=period / count)
+        displacement = np.fft.rfft(u_surf)
+        force = np.fft.rfft(f_surf)
 
-        L = sum(section.length for section in self.ctx.rod_string) * FEET_TO_INCHES
-        E = STEEL_YOUNGS_MODULUS_PSI
+        # Section matrices enforce continuity of displacement and total force
+        # at each taper. Geometric A=pi*d²/4 and unit conversions are exact.
+        try:
+            with np.errstate(over="raise", invalid="raise", divide="raise"):
+                for section in self.ctx.rod_string:
+                    length = section.length * FEET_TO_INCHES
+                    area = np.pi * section.diameter**2 / 4
+                    ea = section.modulus_of_elasticity * area
+                    speed = section.speed_of_sound * FEET_TO_INCHES
+                    gamma = (
+                        np.sqrt(
+                            -(omega[1:] ** 2) + 1j * omega[1:] * section.damping_factor
+                        )
+                        / speed
+                    )
+                    z = gamma * length
+                    cosine, sine = np.cosh(z), np.sinh(z)
+                    # sinh(gamma*L)/gamma = L*sinh(z)/z. np.sinc uses
+                    # sin(pi*x)/(pi*x); the imaginary argument supplies sinh.
+                    compliance = length / ea * np.sinc(z / (1j * np.pi))
+                    old_u, old_f = displacement[1:].copy(), force[1:].copy()
+                    displacement[1:] = cosine * old_u - compliance * old_f
+                    force[1:] = cosine * old_f - ea * gamma * sine * old_u
 
-        # Wave speed from Legacy reference
-        a = WAVE_SPEED_IN_PER_S
+                    # Static equilibrium: F_bottom=F_top-W_b. Integrating
+                    # u_x=-F/EA gives -(F_top-W_b/2)*L/EA. Archimedes plus
+                    # weight/volume input densities gives W_b=(rho_s-rho_f)*A*L.
+                    weight = (
+                        (section.density - self.ctx.fluid_density)
+                        * area
+                        * section.length
+                        / SQUARE_FEET_TO_SQUARE_INCHES
+                    )
+                    displacement[0] -= (force[0] - count * weight / 2) * length / ea
+                    force[0] -= count * weight
+                dh_pos = np.fft.irfft(displacement, n=count)
+                dh_load = np.fft.irfft(force, n=count)
+                dh_pos -= np.min(dh_pos)
+        except (FloatingPointError, OverflowError) as exc:
+            raise PhysicsError(
+                "non-finite frequency-domain propagation", solver="gibbs"
+            ) from exc
 
-        avg_d = np.mean([s.diameter for s in self.ctx.rod_string])
-        A = np.pi * (avg_d**2) / 4.0
-
-        # 2. Fourier Decomposition
-        U_s = np.fft.fft(u_surf)
-        F_s = np.fft.fft(f_surf)
-        # Time step based on SPM
-        dt_total = (SECONDS_PER_MINUTE / self.ctx.spm)
-        freqs = np.fft.fftfreq(Nt, d=(dt_total / Nt))
-
-        # 3. Frequency Domain Transformation
-        U_d = np.zeros_like(U_s, dtype=complex)
-
-        # Damping coefficient (c) - Fixed well-specific value for parity
-        c = GIBBS_DAMPING_COEFFICIENT
-
-        for k in range(len(freqs)):
-            w = 2 * np.pi * freqs[k]
-            if w == 0:
-                U_d[k] = U_s[k]
-                continue
-
-            # Damped propagation constant
-            gamma = np.sqrt((-w**2 + 1j * w * c) + 0j) / a
-
-            cosh_gl = np.cosh(gamma * L)
-            sinh_gl = np.sinh(gamma * L)
-
-            # Gibbs analytical solution for position at x=L
-            U_d[k] = U_s[k] * cosh_gl - (F_s[k] / (E * A * gamma)) * sinh_gl
-
-        # 4. Inverse Transform to Time Domain
-        dh_pos = np.real(np.fft.ifft(U_d))
-
-        # Final Buoyant Adjustment (Exact matching legacy subtraction)
-        # Buoyant Weight = Rod Weight * (1 - rho_fluid/rho_steel)
-        total_rod_weight = sum(
-            s.length * (s.diameter**2 * np.pi / 4) * (STEEL_DENSITY_LB_PER_FT3 / SQUARE_FEET_TO_SQUARE_INCHES)
-            for s in self.ctx.rod_string
-        )
-        buoyant_weight = total_rod_weight * BUOYANCY_FACTOR
-
-        # Attenuation correction for load - final alignment
-        dh_load = (f_surf - buoyant_weight) * LOAD_ATTENUATION_FACTOR
-
-        # Stroke Synchronization
-        dh_pos = dh_pos - np.min(dh_pos)
-        # This legacy empirical factor remains unqualified (#1857). The Gibbs
-        # comparison path is restricted to measured surface travel by
-        # GIBBS_STROKE_RATIO_LIMIT; that is an implementation envelope, not a
-        # physical prohibition on plunger overtravel.
-        dh_pos = dh_pos * STROKE_SCALING_FACTOR
-
+        # irfft uses the real projection of the unpaired Nyquist component.
+        # No empirical stroke or load multiplier is applied.
         validate_stroke(u_surf, dh_pos, dh_load, "gibbs")
-
         self.results.downhole_card = CardData(
-            position=dh_pos.tolist(),
-            load=dh_load.tolist()
+            position=dh_pos.tolist(), load=dh_load.tolist()
         )
-        self.results.peak_polished_rod_load = np.max(f_surf)
-        self.results.minimum_polished_rod_load = np.min(f_surf)
+        self.results.peak_polished_rod_load = float(np.max(f_surf))
+        self.results.minimum_polished_rod_load = float(np.min(f_surf))
         self.results.ctx = self.ctx
-
         return annotate_results(self.results, self.ctx, "gibbs")
 
     def detect_buckling(self):
@@ -127,7 +143,8 @@ class DynacardPhysicsSolver:
         Returns:
             True if buckling is detected, False otherwise.
         """
-        if not self.results.downhole_card: return False
+        if not self.results.downhole_card:
+            return False
         loads = np.array(self.results.downhole_card.load)
         if np.min(loads) < BUCKLING_DETECTION_LOAD_THRESHOLD_LBS:
             self.results.buckling_detected = True

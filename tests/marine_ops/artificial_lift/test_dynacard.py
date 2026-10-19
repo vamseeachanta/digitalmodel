@@ -9,6 +9,10 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
 from digitalmodel.marine_ops.artificial_lift.dynacard.physics import DynacardPhysicsSolver
 
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import AnalysisResults
+from digitalmodel.marine_ops.artificial_lift.dynacard.solver import perform_well_troubleshooting
+from digitalmodel.marine_ops.artificial_lift.dynacard.finite_difference import FiniteDifferenceSolver
+
 @pytest.fixture
 def sample_context():
     """Provides a standard well context for testing."""
@@ -37,9 +41,9 @@ def test_physics_solver_attenuation(sample_context):
     surf_stroke = max(sample_context.surface_card.position)
     dh_stroke = max(results.downhole_card.position)
     
-    # Updated for high-fidelity physics: 0.92 attenuation for this configuration
+    # This boundary has a shorter pump stroke; exact analytical values are
+    # independently checked in test_gibbs_transfer.py, without fitted scaling.
     assert dh_stroke < surf_stroke
-    assert dh_stroke == pytest.approx(surf_stroke * 0.92, rel=1e-2)
 
 def test_buckling_detection(sample_context):
     """Ensures buckling is detected when loads are sufficiently negative."""
@@ -80,18 +84,11 @@ def test_full_workflow_integration(sample_context):
 
 # --- Additional solver.py coverage tests ---
 
-from digitalmodel.marine_ops.artificial_lift.dynacard.models import AnalysisResults
-from digitalmodel.marine_ops.artificial_lift.dynacard.solver import perform_well_troubleshooting
-from digitalmodel.marine_ops.artificial_lift.dynacard.finite_difference import FiniteDifferenceSolver
-
-
 def test_workflow_init_without_context():
     """Init DynacardWorkflow with no context, verify solver is None.
 
-    The default solver is 'everitt_jennings': it is the only one that
-    reproduces the reference downhole cards (0.9% median nRMSE across the
-    fixture wells, against 17.3% for gibbs and divergence for
-    finite_difference). See issue #1857.
+    The default remains everitt_jennings. The coupled Gibbs implementation
+    is tested analytically and remains unqualified for field diagnosis.
     """
     workflow = DynacardWorkflow()
     assert workflow.ctx is None
@@ -148,9 +145,11 @@ def test_compare_solvers(sample_context):
     assert comparison['threshold_load_nrmse_pct'] == pytest.approx(4.4)
     assert comparison['comparisons']['gibbs']['stroke_error_pct'] < 20.0
     gibbs = comparison['comparisons']['gibbs']
-    assert gibbs['load_nrmse_pct'] == pytest.approx(16.8, abs=0.05)
-    assert gibbs['load_nrmse_pct'] > comparison['threshold_load_nrmse_pct']
-    assert gibbs['within_threshold'] is False
+    # The coupled solution now passes this synthetic comparison envelope.
+    # The legacy finite-difference candidate still fails the aggregate gate.
+    assert gibbs['load_nrmse_pct'] < comparison['threshold_load_nrmse_pct']
+    assert gibbs['within_threshold'] is True
+    assert comparison['comparisons']['finite_difference']['within_threshold'] is False
     assert caught.value.details['comparisons']['gibbs'] == gibbs
 
 
