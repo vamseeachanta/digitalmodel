@@ -180,19 +180,20 @@ class _Parser:
         return value
 
     def atom(self, depth):
-        token = self.pop()
-        if token == "(":
+        # Grammar lexeme, not an authentication token (Bandit 1.7.5 B105).
+        lexeme = self.pop()
+        if lexeme == "(":
             value = self.expression(depth + 1)
             self.require(")")
             return value
-        if token == "sqrt":
+        if lexeme == "sqrt":
             self.require("(")
             value = self.expression(depth + 1)
             self.require(")")
             return _sqrt(value)
-        if token in self.values:
-            return self.values[token]
-        return _number(token)
+        if lexeme in self.values:
+            return self.values[lexeme]
+        return _number(lexeme)
 
 
 def evaluate_expression(expression, symbols):
