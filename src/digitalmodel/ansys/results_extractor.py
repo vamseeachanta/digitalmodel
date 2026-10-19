@@ -127,6 +127,8 @@ class ComparisonRow:
 _PRNSOL_HEADER_RE = re.compile(r"^\s*NODE\s+[A-Z]", re.IGNORECASE)
 _PRNSOL_PAGE_RE = re.compile(
     r"^\s*(?:\*+\s+POST1\s+NODAL\s+STRESS\s+LISTING\s+\*+\s*|"
+    r"\*+\s+MAPDL\s+-\s+ENGINEERING\s+ANALYSIS\s+SYSTEM\b.*|"
+    r"[0-9]+\s+VERSION=.*|"
     r"(?:LOAD\s+STEP|SUBSTEP|TIME)\s*=.*)$",
     re.IGNORECASE,
 )
@@ -309,7 +311,10 @@ class ResultsExtractor:
         Returns
         -------
         pd.DataFrame
-            Columns: node_id, value.
+            Columns: node_id, value. attrs["result_identity"] contains the
+            explicitly captured LOAD STEP, SUBSTEP and TIME as Decimal values.
+            Missing fields are omitted; identity completeness across pages is
+            not established by this metadata.
         """
         records: list[dict] = []
         seen: set[int] = set()
@@ -332,7 +337,11 @@ class ResultsExtractor:
                 awaiting_header = False
                 continue
             if _PRNSOL_PAGE_RE.fullmatch(line):
-                for match in _PRNSOL_IDENTITY_RE.finditer(line):
+                identity_line = re.match(
+                    r"^\s*(?:LOAD\s+STEP|SUBSTEP|TIME)\s*=", line, re.IGNORECASE,
+                )
+                matches = _PRNSOL_IDENTITY_RE.finditer(line) if identity_line else ()
+                for match in matches:
                     field = " ".join(match[1].upper().split())
                     token = match[2].upper().replace("D", "E")
                     pattern = _PRNSOL_NUMBER_RE if field == "TIME" else r"[0-9]+"
@@ -362,7 +371,9 @@ class ResultsExtractor:
 
         if expected_node_ids is not None:
             _check_prnsol_coverage(seen, expected_node_ids)
-        return pd.DataFrame(records, columns=["node_id", "value"])
+        result = pd.DataFrame(records, columns=["node_id", "value"])
+        result.attrs["result_identity"] = page_identity.copy()
+        return result
 
     def parse_element_table(
         self, text_block: str

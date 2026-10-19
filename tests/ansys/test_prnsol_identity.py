@@ -183,13 +183,16 @@ def test_equivalent_page_identity_notation_is_accepted():
     assert result["value"].tolist() == [5, 9]
 
 
-def test_missing_page_identity_is_not_inferred():
+def test_missing_page_identity_exposes_captured_metadata():
     text = (
         "NODE SEQV\n1 5\nLOAD STEP= 2 SUBSTEP= 3\nTIME= 4\nNODE SEQV\n2 9\n"
         "***** POST1 NODAL STRESS LISTING *****\nNODE SEQV\n3 12\n"
     )
     result = ResultsExtractor().parse_prnsol_block(text, expected_node_ids=[1, 2, 3])
     assert result["value"].tolist() == [5, 9, 12]
+    assert result.attrs["result_identity"] == {
+        "LOAD STEP": 2, "SUBSTEP": 3, "TIME": 4,
+    }
 
 
 @pytest.mark.parametrize("component, expected", [
@@ -283,3 +286,37 @@ def test_expected_node_manifest_requires_exact_coverage(text, expected, reason):
     """Exact set difference gives the absent or extra synthetic node IDs."""
     with pytest.raises(ValueError, match=reason):
         ResultsExtractor().parse_prnsol_block(text, expected_node_ids=expected)
+
+
+@pytest.mark.parametrize("pages", [2, 9])
+def test_complete_native_page_header_preserves_rows(pages):
+    """Repeat the retained element-listing page preamble with scalar rows."""
+    fixtures = Path(__file__).parent / "fixtures/n4_recovery"
+    native = (fixtures / "presol.txt").read_text()
+    page = native[native.index(" *** MAPDL"):]
+    preamble = page[:page.index("  ELEMENT=")]
+    text = "".join(
+        f"{preamble}NODE SX SY SZ SXY SYZ SXZ\n{node} -12 3 4 5 6 7\n"
+        for node in range(1, pages + 1)
+    )
+    result = ResultsExtractor().parse_prnsol_block(
+        text, "SX", expected_node_ids=range(1, pages + 1),
+    )
+    assert result["value"].tolist() == [-12] * pages
+    assert result.attrs["result_identity"]["TIME"] == 1
+
+
+def test_native_stress_rows_survive_a_complete_page_break():
+    fixtures = Path(__file__).parent / "fixtures/n4_recovery"
+    lines = (fixtures / "stress.txt").read_text().splitlines()
+    split = next(i for i, line in enumerate(lines) if line.split()[:1] == ["169"]) + 1
+    text = "\n".join(lines[:split] + lines[3:19] + lines[split:])
+    result = ResultsExtractor().parse_prnsol_block(
+        text, "SX", expected_node_ids=[85, 89, 93, 169, 173, 177, 253, 257, 261],
+    )
+    assert result.loc[result["node_id"] == 85, "value"].item() == -0.9986391738718805E+001
+
+
+def test_absent_page_identity_is_exposed_as_empty_metadata():
+    result = ResultsExtractor().parse_prnsol_block("NODE SEQV\n1 5\n")
+    assert result.attrs["result_identity"] == {}
