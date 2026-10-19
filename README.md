@@ -170,3 +170,331 @@ Lead developer: Vamsee Achanta ([email removed])
 ## License
 
 MIT -- see [LICENSE](LICENSE)
+
+<!-- repo-architecture:start -->
+## Capability architecture and provenance
+
+This drawing inventories the observed domain pages and capability work declarations.
+Amber nodes have inline data or incomplete reproduction evidence. Solid arrows
+show local production or routing; dotted arrows show licensed execution dependencies
+or intended downstream integration, without asserting a live remote result.
+Generators can emit embedded HTML and JSON as sibling outputs; an adjacent JSON file
+is not assumed to be the page's input. Page generation and upstream solver execution
+are separate operations.
+
+[Evidence inventory and worked example](docs/capability-map/repo-architecture.html) ·
+[Machine-readable inventory](docs/capability-map/repo-architecture.json) ·
+[Mermaid source](docs/capability-map/repo-architecture.mmd)
+
+```mermaid
+flowchart LR
+  pages["GitHub Pages: configured docs/api root<br/>remote status NOT_EVALUATED"]
+  hf["Hugging Face: preparation implemented for integrity and corrosion<br/>remaining coverage not established; remote status NOT_EVALUATED"]
+  web["aceengineer.com: canonical capabilities redirect configured<br/>downstream hydration NOT_EVALUATED"]
+  tidy["scripts/hf/build_capability_datasets.py<br/>tidy JSON preparation; publication separate"]
+  licenses["Licensed solve boundary<br/>OrcaFlex / OrcaWave: Windows solver execution<br/>AQWA: licensed execution<br/>Reading committed output does not require a solve"]
+  retired["capabilities/api wrappers: absent in this snapshot<br/>work declarations retained in build_onepagers.py"]
+  portal["docs/api/capabilities/index.html<br/>canonical redirect"]
+  tidy --> hf
+  pages --> portal
+  portal --> web
+  hf -.-> web
+  subgraph g_artificial_lift["artificial-lift"]
+    p0["docs/api/artificial-lift/dynacard-troubleshooting.html<br/>registered generator"]
+    p0 --> pages
+    sp0["scripts/capabilities/build_dynacard_troubleshooting.py<br/>src/digitalmodel/marine_ops/artificial_lift/dynacard/calculations.py<br/>src/digitalmodel/marine_ops/artificial_lift/dynacard/card_generators.py<br/>src/digitalmodel/marine_ops/artificial_lift/dynacard/diagnostics.py<br/>src/digitalmodel/marine_ops/artificial_lift/dynacard/example_cards.py<br/>src/digitalmodel/marine_ops/artificial_lift/dynacard/models.py<br/>src/digitalmodel/marine_ops/artificial_lift/dynacard/poc_settings.py<br/>src/digitalmodel/marine_ops/artificial_lift/dynacard/troubleshooting.py<br/>src/digitalmodel/marine_ops/artificial_lift/field_health.py"]
+    sp0 --> p0
+    ap0_0["docs/api/artificial-lift/dynacard-troubleshooting.json<br/>committed"]
+    sp0 --> ap0_0
+  end
+  subgraph g_buckling["buckling"]
+    p1["docs/api/buckling/ship-panel-buckling.html<br/>inline, no generator"]
+    p1 --> pages
+    p2["docs/api/buckling/ship-plate-buckling.html<br/>inline, no generator"]
+    p2 --> pages
+  end
+  subgraph g_cfd["cfd"]
+    p3["docs/api/cfd/cfd-runtime-estimator.html<br/>registered generator"]
+    p3 --> pages
+    sp3["scripts/capabilities/build_cfd_runtime_estimator.py<br/>direct calculation import not established"]
+    sp3 --> p3
+    p4["docs/api/cfd/cylinder-re100-verification.html<br/>external input or non-reproducible copy"]
+    p4 --> pages
+    p5["docs/api/cfd/dam-break-verification.html<br/>external input or non-reproducible copy"]
+    p5 --> pages
+    p6["docs/api/cfd/flat-plate-blasius-verification.html<br/>external input or non-reproducible copy"]
+    p6 --> pages
+    p7["docs/api/cfd/floating-body-decay-verification.html<br/>external input or non-reproducible copy"]
+    p7 --> pages
+    p8["docs/api/cfd/index.html<br/>inline, no generator"]
+    p8 --> pages
+    p9["docs/api/cfd/kcs-calm-water-resistance-verification.html<br/>external input or non-reproducible copy"]
+    p9 --> pages
+    p10["docs/api/cfd/kleefsman-impact-verification.html<br/>external input or non-reproducible copy"]
+    p10 --> pages
+    p11["docs/api/cfd/maccamy-fuchs-cylinder-verification.html<br/>registered generator"]
+    p11 --> pages
+    sp11["docs/api/cfd/report_build/build_maccamy_fuchs.py<br/>src/digitalmodel/solvers/openfoam/validation/maccamy_fuchs.py<br/>src/digitalmodel/solvers/openfoam/validation/wave_tank.py"]
+    sp11 --> p11
+    ip11_0["docs/api/cfd/cases/maccamy_fuchs/mf_results.json<br/>registered input"]
+    ip11_0 --> sp11
+    p12["docs/api/cfd/naca0012-airfoil-verification.html<br/>external input or non-reproducible copy"]
+    p12 --> pages
+    p13["docs/api/cfd/sloshing-cfd-study.html<br/>registered generator"]
+    p13 --> pages
+    sp13["scripts/capabilities/build_sloshing_cfd_showcase.py<br/>direct calculation import not established"]
+    sp13 --> p13
+    p14["docs/api/cfd/tank-sloshing-verification.html<br/>inline, no generator"]
+    p14 --> pages
+    p15["docs/api/cfd/turbulent-flat-plate-verification.html<br/>external input or non-reproducible copy"]
+    p15 --> pages
+    p16["docs/api/cfd/wave-excited-body-decay-verification.html<br/>external input or non-reproducible copy"]
+    p16 --> pages
+    p17["docs/api/cfd/wave-excited-body-rao-verification.html<br/>external input or non-reproducible copy"]
+    p17 --> pages
+    p18["docs/api/cfd/wave-excited-body-verification.html<br/>external input or non-reproducible copy"]
+    p18 --> pages
+    p19["docs/api/cfd/wave-tank-verification.html<br/>external input or non-reproducible copy"]
+    p19 --> pages
+  end
+  subgraph g_corrosion["corrosion"]
+    p20["docs/api/corrosion/galvanic-compatibility-explorer.html<br/>registered generator"]
+    p20 --> pages
+    sp20["scripts/corrosion/build_galvanic_explorer.py<br/>src/digitalmodel/corrosion/galvanic_screening.py"]
+    sp20 --> p20
+    ap20_0["docs/api/corrosion/galvanic-compatibility-explorer.json<br/>committed"]
+    sp20 --> ap20_0
+    ap20_0 --> tidy
+  end
+  subgraph g_drilling["drilling"]
+    p21["docs/api/drilling/drilling-riser-operability-explorer.html<br/>registered generator"]
+    p21 --> pages
+    sp21["scripts/drilling_riser/build_operability_explorer.py<br/>src/digitalmodel/drilling_riser/__init__.py<br/>src/digitalmodel/drilling_riser/operability_screening.py<br/>src/digitalmodel/parametric/atlas.py"]
+    sp21 --> p21
+    ap21_0["docs/api/drilling/results.json<br/>committed"]
+    sp21 --> ap21_0
+    p22["docs/api/drilling/operability-monitor.html<br/>registered generator"]
+    p22 --> pages
+    sp22["scripts/drilling_riser/build_operability_monitor.py<br/>src/digitalmodel/decision_spine.py<br/>src/digitalmodel/drilling_riser/__init__.py<br/>src/digitalmodel/drilling_riser/drift_off.py<br/>src/digitalmodel/drilling_riser/envelope.py<br/>src/digitalmodel/drilling_riser/operability_screening.py<br/>src/digitalmodel/drilling_riser/response_correction.py<br/>src/digitalmodel/drilling_riser/telemetry_inputs.py<br/>src/digitalmodel/drilling_riser/twin_loop.py<br/>src/digitalmodel/parametric/atlas.py<br/>src/digitalmodel/subsea/mooring_analysis/models.py"]
+    sp22 --> p22
+    ap22_0["docs/api/drilling/operability-monitor.results.json<br/>committed"]
+    sp22 --> ap22_0
+  end
+  subgraph g_ffs["ffs"]
+    p23["docs/api/ffs/build-wave-2026-07.html<br/>inline, no generator"]
+    p23 --> pages
+    p24["docs/api/ffs/ffs-field-dashboard.html<br/>inline, no generator"]
+    p24 --> pages
+    p25["docs/api/ffs/ffs-showcase.html<br/>inline, no generator"]
+    p25 --> pages
+    p26["docs/api/ffs/riser-joint-acceptance-explorer.html<br/>registered generator"]
+    p26 --> pages
+    sp26["scripts/ffs/build_riser_joint_explorer.py<br/>src/digitalmodel/asset_integrity/riser_joint_ffs.py"]
+    sp26 --> p26
+  end
+  subgraph g_hydro["hydro"]
+    p27["docs/api/hydro/ocimf-coefficient-explorer.html<br/>external input or non-reproducible copy"]
+    p27 --> pages
+    p28["docs/api/hydro/passing-ship-benchmark.html<br/>external input or non-reproducible copy"]
+    p28 --> pages
+    p29["docs/api/hydro/rao-comparison/index.html<br/>external input or non-reproducible copy"]
+    p29 --> pages
+    licenses -.-> p29
+    p30["docs/api/hydro/rudder-maneuvering-explorer.html<br/>inline, no generator"]
+    p30 --> pages
+    p31["docs/api/hydro/short-horizon-motion-forecast.html<br/>inline, no generator"]
+    p31 --> pages
+    p32["docs/api/hydro/unit-box-benchmark/benchmark_amplitude.html<br/>external input or non-reproducible copy"]
+    p32 --> pages
+    licenses -.-> p32
+    p33["docs/api/hydro/unit-box-benchmark/benchmark_combined.html<br/>external input or non-reproducible copy"]
+    p33 --> pages
+    licenses -.-> p33
+    p34["docs/api/hydro/unit-box-benchmark/benchmark_heatmap.html<br/>external input or non-reproducible copy"]
+    p34 --> pages
+    licenses -.-> p34
+    p35["docs/api/hydro/unit-box-benchmark/benchmark_phase.html<br/>external input or non-reproducible copy"]
+    p35 --> pages
+    licenses -.-> p35
+    p36["docs/api/hydro/unit-box-benchmark/benchmark_report.html<br/>external input or non-reproducible copy"]
+    p36 --> pages
+    licenses -.-> p36
+  end
+  subgraph g_installation["installation"]
+    p37["docs/api/installation/installation-heading-explorer.html<br/>registered generator"]
+    p37 --> pages
+    sp37["scripts/capabilities/build_installation_heading_explorer.py<br/>direct calculation import not established"]
+    sp37 --> p37
+    ip37_0["scripts/capabilities/installation_heading/limits.json<br/>registered input"]
+    ip37_0 --> sp37
+    ip37_1["scripts/capabilities/installation_heading/page.html.template<br/>registered input"]
+    ip37_1 --> sp37
+    ip37_2["scripts/capabilities/installation_heading/revisions.json<br/>registered input"]
+    ip37_2 --> sp37
+    ap37_0["docs/api/installation/installation-heading-explorer.manifest.json<br/>committed"]
+    sp37 --> ap37_0
+  end
+  subgraph g_orcaflex["orcaflex"]
+    p38["docs/api/orcaflex/riser-mesh-sensitivity.html<br/>external input or non-reproducible copy"]
+    p38 --> pages
+    licenses -.-> p38
+    p39["docs/api/orcaflex/riser-validation-report.html<br/>external input or non-reproducible copy"]
+    p39 --> pages
+    licenses -.-> p39
+  end
+  subgraph g_production["production"]
+    p40["docs/api/production/scale-si-explorer.html<br/>registered generator"]
+    p40 --> pages
+    sp40["scripts/production_chemistry/build_scale_si_explorer.py<br/>src/digitalmodel/production_chemistry/scale_si.py"]
+    sp40 --> p40
+  end
+  subgraph g_structural["structural"]
+    p41["docs/api/structural/anchor-holding-explorer.html<br/>registered generator"]
+    p41 --> pages
+    sp41["scripts/capabilities/build_anchor_holding_explorer.py<br/>src/digitalmodel/geotechnical/anchors.py"]
+    sp41 --> p41
+    ap41_0["docs/api/structural/anchor-holding-explorer.json<br/>committed"]
+    sp41 --> ap41_0
+    p42["docs/api/structural/cathodic-protection-explorer.html<br/>registered generator"]
+    p42 --> pages
+    sp42["scripts/capabilities/build_cathodic_protection_explorer.py<br/>src/digitalmodel/cathodic_protection/marine_structure_cp.py"]
+    sp42 --> p42
+    ap42_0["docs/api/structural/cathodic-protection-explorer.json<br/>committed"]
+    sp42 --> ap42_0
+    ap42_0 --> tidy
+    p43["docs/api/structural/field-economics-explorer.html<br/>registered generator"]
+    p43 --> pages
+    sp43["scripts/capabilities/build_field_economics_explorer.py<br/>src/digitalmodel/field_development/economics.py"]
+    sp43 --> p43
+    ap43_0["docs/api/structural/field-economics-explorer.json<br/>committed"]
+    sp43 --> ap43_0
+    p44["docs/api/structural/ipr-explorer.html<br/>registered generator"]
+    p44 --> pages
+    sp44["scripts/capabilities/build_ipr_explorer.py<br/>src/digitalmodel/production_engineering/ipr_models.py"]
+    sp44 --> p44
+    ap44_0["docs/api/structural/ipr-explorer.json<br/>committed"]
+    sp44 --> ap44_0
+    p45["docs/api/structural/pore-pressure-explorer.html<br/>registered generator"]
+    p45 --> pages
+    sp45["scripts/capabilities/build_pore_pressure_explorer.py<br/>src/digitalmodel/well/drilling/pore_pressure.py"]
+    sp45 --> p45
+    ap45_0["docs/api/structural/pore-pressure-explorer.json<br/>committed"]
+    sp45 --> ap45_0
+    p46["docs/api/structural/ship-resistance-explorer.html<br/>registered generator"]
+    p46 --> pages
+    sp46["scripts/capabilities/build_ship_resistance_explorer.py<br/>src/digitalmodel/naval_architecture/__init__.py"]
+    sp46 --> p46
+    ap46_0["docs/api/structural/ship-resistance-explorer.json<br/>committed"]
+    sp46 --> ap46_0
+    p47["docs/api/structural/sloshing-explorer.html<br/>registered generator"]
+    p47 --> pages
+    sp47["scripts/capabilities/build_sloshing_explorer.py<br/>direct calculation import not established"]
+    sp47 --> p47
+    ap47_0["docs/api/structural/sloshing-explorer.json<br/>committed"]
+    sp47 --> ap47_0
+    p48["docs/api/structural/viv-explorer.html<br/>registered generator"]
+    p48 --> pages
+    sp48["scripts/capabilities/build_viv_explorer.py<br/>src/digitalmodel/subsea/viv_analysis/screening.py"]
+    sp48 --> p48
+    ap48_0["docs/api/structural/viv-explorer.json<br/>committed"]
+    sp48 --> ap48_0
+    p49["docs/api/structural/wall-thickness-3d-explorer.html<br/>registered generator"]
+    p49 --> pages
+    sp49["scripts/capabilities/build_wall_thickness_3d_page.py<br/>direct calculation import not established"]
+    sp49 --> p49
+    ap49_0["docs/api/structural/wall-thickness-3d.json<br/>generated prerequisite"]
+    rp49["scripts/capabilities/build_wall_thickness_3d.py"]
+    rp49 --> ap49_0
+    ap49_0 --> sp49
+    ap49_0 --> tidy
+    p50["docs/api/structural/wall-thickness-explorer.html<br/>registered generator"]
+    p50 --> pages
+    sp50["scripts/capabilities/build_wall_thickness_explorer.py<br/>src/digitalmodel/structural/analysis/wall_thickness.py"]
+    sp50 --> p50
+    ap50_0["docs/api/structural/wall-thickness-explorer.json<br/>committed"]
+    sp50 --> ap50_0
+    ap50_0 --> tidy
+  end
+  subgraph g_subsea["subsea"]
+    p51["docs/api/subsea/offshore-cross-section-report.html<br/>inline, no generator"]
+    p51 --> pages
+  end
+  subgraph g_well["well"]
+    p52["docs/api/well/casing-design-explorer.html<br/>registered generator"]
+    p52 --> pages
+    sp52["scripts/capabilities/build_casing_design_explorer.py<br/>src/digitalmodel/well/tubulars/casing.py<br/>src/digitalmodel/well/tubulars/casing_design.py"]
+    sp52 --> p52
+    ap52_0["docs/api/well/casing-design-explorer.json<br/>committed"]
+    sp52 --> ap52_0
+  end
+  subgraph declarations["Capability work declarations: inventory, not proof of execution"]
+    c0["ffs-showcase"]
+    c0 --> p25
+    c1["ffs-field-dashboard"]
+    c1 --> p24
+    c2["riser-joint-acceptance"]
+    c2 --> p26
+    c3["buckling-plate"]
+    c3 --> p2
+    c4["buckling-panel"]
+    c4 --> p1
+    c5["rao-comparison"]
+    c5 --> p29
+    c6["unitbox-report"]
+    c6 --> p36
+    c7["unitbox-amplitude"]
+    c7 --> p32
+    c8["unitbox-phase"]
+    c8 --> p35
+    c9["unitbox-combined"]
+    c9 --> p33
+    c10["unitbox-heatmap"]
+    c10 --> p34
+    c11["ocimf"]
+    c11 --> p27
+    c12["passing-ship"]
+    c12 --> p28
+    c13["drilling-riser-operability"]
+    c13 --> p21
+    c14["drilling-riser-operability-monitor"]
+    c14 --> p22
+    c15["riser-validation"]
+    c15 --> p39
+    c16["riser-mesh"]
+    c16 --> p38
+    c17["subsea-xsection"]
+    c17 --> p51
+    c18["installation-hlv-a<br/>src/digitalmodel/installation/installation_pamphlet<br/>source target; lineage NOT_EVALUATED"]
+    c19["rudder-explorer"]
+    c19 --> p30
+    c20["rudder-database<br/>src/digitalmodel/naval_architecture/data/rudder_database.yml<br/>source target; lineage NOT_EVALUATED"]
+    c21["diffraction-deck-prep<br/>examples/workflows/aqwa-diffraction-deck-prep<br/>source target; lineage NOT_EVALUATED"]
+    c22["vessel-suitability<br/>data/vessels<br/>source target; lineage NOT_EVALUATED"]
+    c23["container-utilization<br/>examples/structural/offshore_container_utilization<br/>source target; lineage NOT_EVALUATED"]
+    c24["wind-sizing<br/>examples/workflows/floating-wind-sizing<br/>source target; lineage NOT_EVALUATED"]
+    c25["wind-economics<br/>examples/workflows/floating-wind-economics<br/>source target; lineage NOT_EVALUATED"]
+    c26["mooring-resilience<br/>examples/marine_ops/mooring_resilience<br/>source target; lineage NOT_EVALUATED"]
+    c27["short-horizon-motion-forecast"]
+    c27 --> p31
+    c28["dynacard-troubleshooting"]
+    c28 --> p0
+    c29["casing-design"]
+    c29 --> p52
+    c30["dynacard-field-health<br/>examples/workflows/artificial-lift-field-health<br/>source target; lineage NOT_EVALUATED"]
+    c31["galvanic-explorer"]
+    c31 --> p20
+    c32["scale-si-explorer"]
+    c32 --> p40
+    c33["wall-thickness-explorer"]
+    c33 --> p50
+    c34["sloshing-explorer"]
+    c34 --> p47
+    c35["cathodic-protection-explorer"]
+    c35 --> p42
+  end
+  classDef gap fill:#fff1d6,stroke:#875800,color:#191919
+  classDef licensed fill:#fce4e4,stroke:#9c2020,color:#191919
+  class licenses licensed
+  class p1,p2,p4,p5,p6,p7,p8,p9,p10,p12,p14,p15,p16,p17,p18,p19,p23,p24,p25,p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p38,p39,p51 gap
+```
+<!-- repo-architecture:end -->
