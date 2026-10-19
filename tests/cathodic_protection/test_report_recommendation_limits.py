@@ -65,7 +65,8 @@ def test_missing_sizing_does_not_suppress_monitoring():
     installed = text.split("**Installed structure:**")[1].split("**Retrofit:**")[0]
     assert "NOT_EVALUATED" in initial
     assert "potential survey" in installed
-    assert "remote or shielded" in installed
+    assert "remote or shielded" not in installed
+    assert "locations distant from anodes" not in installed
     assert "[2.4.2]" in installed
     assert "additional count:" not in initial
 
@@ -73,11 +74,15 @@ def test_missing_sizing_does_not_suppress_monitoring():
 @pytest.mark.parametrize("key", ["spatial_protection", "continuity"])
 def test_unsupported_failure_explicitly_names_missing_method(key):
     text = recommendation_block(sizing_result(), key).markdown
-    for phase in ("Initial design", "Installed structure", "Retrofit"):
+    for phase in ("Initial design", "Retrofit"):
         detail = text.split(f"**{phase}:**")[1].split("\n\n")[0]
         assert "NOT_EVALUATED" in detail
         assert "method" in detail
         assert "citation" in detail
+    installed = text.split("**Installed structure:**")[1].split("**Retrofit:**")[0]
+    assert "potential survey" in installed
+    assert "[2.4.2]" in installed
+    assert "NOT_EVALUATED" not in installed
 
 
 def test_missing_edition_does_not_select_a_default_criterion():
@@ -106,9 +111,37 @@ def test_conclusions_preserve_unevaluated_disposition(key):
     assert "should use the sizing quantities" not in text
 
 
-def test_missing_edition_conclusion_agrees_with_detailed_recommendation():
+@pytest.mark.parametrize("key", ["mass", "spatial_protection"])
+def test_missing_edition_conclusion_agrees_with_detailed_recommendation(key):
     result = sizing_result()
-    result["status"] = {"result": "FAIL", "checks": {"mass": False}}
+    result["status"] = {"result": "FAIL", "checks": {key: False}}
     del result["edition"]
-    assert "initial design quantity is NOT_EVALUATED" in conclusions_block(result).markdown
-    assert "additional anodes" not in conclusions_block(result).markdown
+    text = conclusions_block(result).markdown
+    assert "initial design quantity is NOT_EVALUATED" in text
+    assert "additional anodes" not in text
+    assert "potential survey" not in text
+    assert (
+        "installed-structure monitoring is NOT_EVALUATED (edition required)" in text
+    )
+
+
+@pytest.mark.parametrize("edition", ["2005", "2010"])
+def test_older_edition_monitoring_explains_citation_source(edition):
+    result = sizing_result()
+    result["edition"] = edition
+    text = recommendation_block(result, "mass").markdown
+    assert "dnv-rp-b401 2011 Sec. 5" in text
+    assert "October 2010 protective-potential source (printed 2011)" in text
+    if edition == "2005":
+        assert "2005 with 2008 amendments uses the" in text
+
+
+def test_spatial_failure_conclusion_retains_cited_monitoring():
+    result = sizing_result()
+    result["status"] = {"result": "FAIL", "checks": {"spatial_protection": False}}
+    text = conclusions_block(result).markdown.split(
+        "Recommendation for spatial protection:"
+    )[1]
+    assert "potential survey" in text
+    assert "initial design quantity is NOT_EVALUATED" in text
+    assert "Retrofit quantity and timing: NOT_EVALUATED" in text

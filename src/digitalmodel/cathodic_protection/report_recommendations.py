@@ -262,12 +262,23 @@ def _installed_structure(results: Mapping[str, Any]) -> str:
     cited = protection_potential(edition)
     criterion = cited.value
     citation = f" (`{citation_label(cited.citation)}`)"
+    source_note = ""
+    if edition == "2005":
+        source_note = (
+            " The selected edition 2005 with 2008 amendments uses the "
+            "October 2010 protective-potential source (printed 2011) "
+            "in the repository lookup."
+        )
+    elif edition == "2010":
+        source_note = (
+            " The citation identifies the October 2010 protective-potential "
+            "source (printed 2011)."
+        )
     return (
         f"A structure-to-seawater potential survey is recommended against "
         f"{criterion:.3f} V versus Ag/AgCl/seawater{citation}; a measured potential "
         f"above {criterion:.3f} V should trigger investigation of protection "
-        "performance. The survey should include remote or shielded members and "
-        "locations distant from anodes to assess spatial protection. "
+        f"performance.{source_note} "
         "Anode remaining mass should be measured to assess depletion. "
         "See Appendix A for monitoring intervals, depletion criteria and condition data."
     )
@@ -284,7 +295,7 @@ def recommendation_block(results: Mapping[str, Any], key: str) -> TextBlock:
         "NOT_EVALUATED: the applicable check method, quantities and governing "
         "citation are required. See Appendix A."
     )
-    initial = installed = retrofit = missing_method
+    initial = retrofit = missing_method
     if supported:
         try:
             initial = _initial_design(results, key)
@@ -293,18 +304,18 @@ def recommendation_block(results: Mapping[str, Any], key: str) -> TextBlock:
                 "NOT_EVALUATED: complete routed sizing quantities and the "
                 "applicable edition are required. See Appendix A."
             )
-        try:
-            installed = _installed_structure(results)
-        except (KeyError, TypeError, ValueError, OverflowError):
-            installed = (
-                "NOT_EVALUATED: the applicable edition and its cited monitoring "
-                "criterion are required. See Appendix A."
-            )
         retrofit = (
             "Quantity and latest intervention year: NOT_EVALUATED. Confirmed "
             "installed count and net mass, elapsed service, measured remaining mass, "
             "measured potentials and historical and future current demand are "
             "required. See Appendix A for method limitations."
+        )
+    try:
+        installed = _installed_structure(results)
+    except (KeyError, TypeError, ValueError, OverflowError):
+        installed = (
+            "NOT_EVALUATED: the applicable edition and its cited monitoring "
+            "criterion are required. See Appendix A."
         )
     return TextBlock(
         markdown=(
@@ -331,19 +342,24 @@ def conclusions_block(results: Mapping[str, Any]) -> TextBlock:
         )
     except (KeyError, TypeError, ValueError, OverflowError):
         initial = "initial design quantity is NOT_EVALUATED (see Appendix A)"
+    try:
+        protection_potential(normalize_edition(str(results.get("edition"))))
+        installed = (
+            "an installed structure should receive a potential survey against "
+            "the criterion and action trigger in that block"
+        )
+    except (KeyError, TypeError, ValueError, OverflowError):
+        installed = "installed-structure monitoring is NOT_EVALUATED (edition required)"
     for key in keys:
         title = f"Recommendation for {key.replace('_', ' ')}"
+        design = initial
         if key not in _CHECKS and key != "overall_status":
-            lines.append(
-                f"- {title}: initial design, monitoring and Retrofit recommendations "
-                "are NOT_EVALUATED; the applicable method and citation are required "
-                "(Appendix A)."
+            design = (
+                "initial design quantity is NOT_EVALUATED; the applicable "
+                "method and citation are required (Appendix A)"
             )
-            continue
         lines.append(
-            f"- {title}: {initial}; an installed "
-            "structure should receive a potential survey against the criterion "
-            "and action trigger in that block. Retrofit quantity and timing: "
+            f"- {title}: {design}; {installed}. Retrofit quantity and timing: "
             "NOT_EVALUATED (Appendix A)."
         )
     return TextBlock(markdown="\n".join(lines))
