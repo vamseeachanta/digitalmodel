@@ -4,7 +4,7 @@
 |---|---|
 | Module / repository | `well_access` / `digitalmodel` |
 | Package scope | `src/digitalmodel/well_access` (all eight Python files; no excluded subpackages) |
-| Pack revision / date | 0 / 2026-10-18 |
+| Pack revision / date | 1 / 2026-10-19 |
 | Code revision | `f1d58a2ac0db65e68b5b690f0a609ef4746d114e` |
 | Analysis family | Engineering calculations (`EC`); AQG r0 Python calculations |
 | Quality role | Engineering calculations quality manager; independent provider required |
@@ -12,6 +12,13 @@
 | Implementation-map revision | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, ref `origin/codex/implmap-work`; data revision `270c8759c374b67a7f032953e7fcdb14e0224461` |
 
 Citation coordinates refer to the code revision above; map inventory refers separately to the map revision above. Test outcomes below are execution records, not claims of source-code behaviour.
+
+## Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 0 | 2026-10-18 | Initial package inventory, examples, gates and failure-mode sweep |
+| 1 | 2026-10-19 | Distinguish historical floors from assumed central values; correct validation, payload and rounding descriptions; record local test execution and broaden identifier cleanup |
 
 ## 1. Purpose and scope
 
@@ -23,7 +30,7 @@ Resource waiting is a comparative screening measure rather than a commitment sch
 
 The routing registry records maturity `beta` and routes module tests to `tests/well_access/`. [docs/registry/module-routing.yaml:L698-L703]
 
-UNVERIFIED: empirical accuracy, representativeness and current applicability of the supplied calibration have not been established independently; the adapter preserves caveats but does not establish those properties (section 10, issue pending (2)).
+UNVERIFIED: empirical accuracy, representativeness and current applicability of the supplied calibration have not been established independently; the adapter preserves caveats but does not establish those properties (section 10, issue pending (2)). The snapshot records source commit `adbd44c0` as an unmerged feature-branch revision; its current upstream merge status has not been verified. Only `bands.*.empirical` supplies the historical floor; central demand, supply, gaps and utilisation ratios depend on assumed intervention frequency and resource utilisation. [src/digitalmodel/base_configs/modules/well_access/wed_intervention_snapshot.yml:L12-L18] [src/digitalmodel/base_configs/modules/well_access/wed_intervention_snapshot.yml:L44-L64]
 
 ## 2. Inputs and outputs
 
@@ -31,7 +38,7 @@ Input constraints below distinguish implemented validation from preflight requir
 
 | Input | Unit | Implemented range / default | Source and citation |
 |---|---|---|---|
-| `n_wells`, `field_life_years` | wells; yr | Required; both > 0; router applies `int()` | [src/digitalmodel/well_access/models.py:L69-L85] [src/digitalmodel/well_access/router.py:L168-L174] |
+| `n_wells`, `field_life_years` | wells; yr | Required; direct dataclass construction rejects values <= 0 but accepts NaN and positive infinity, without enforcing integer types; router applies `int()`, rejecting nonfinite values | [src/digitalmodel/well_access/models.py:L69-L85] [src/digitalmodel/well_access/router.py:L168-L174] |
 | `access_class` | enum | Required; four architecture values | [src/digitalmodel/well_access/models.py:L25-L31] [src/digitalmodel/well_access/router.py:L171-L171] |
 | `first_production_year` | yr offset | 0; stored, not used in the age integral | [src/digitalmodel/well_access/models.py:L73-L77] [src/digitalmodel/well_access/intervention_rates.py:L38-L56] |
 | `facility_availability` | fraction (1) | (0, 1]; default 0.95 | [src/digitalmodel/well_access/models.py:L77-L90] |
@@ -44,7 +51,7 @@ Input constraints below distinguish implemented validation from preflight requir
 | `deferred_loss_per_event_days` | well-days/event | Router default 30.0; core requires argument | [src/digitalmodel/well_access/router.py:L179-L179] [src/digitalmodel/well_access/uptime_rollup.py:L29-L47] |
 | Calibration location | YAML mapping | `calibration_path` takes precedence over inline `calibration`, otherwise empty mapping | [src/digitalmodel/well_access/router.py:L55-L61] |
 | Optional `wed_calibration` | YAML snapshot / mapping | Off unless truthy; `use_wed_supply` supplies pools only when no pools are already supplied | [src/digitalmodel/well_access/router.py:L187-L202] |
-| Adapter band quantities | counts; rig-days/yr; days; USD/yr; USD; fractions | Missing optional empirical values remain None; missing supply values can become zero | [src/digitalmodel/well_access/wed_calibration.py:L74-L110] [src/digitalmodel/well_access/wed_calibration.py:L136-L234] |
+| Adapter band quantities | counts; rig-days/yr; days; USD/yr; USD; dimensionless utilisation ratios (can exceed 1) | Missing optional historical-floor values remain None; missing supply values can become zero; central values depend on frequency and utilisation assumptions | [src/digitalmodel/well_access/wed_calibration.py:L74-L110] [src/digitalmodel/well_access/wed_calibration.py:L136-L234] [src/digitalmodel/base_configs/modules/well_access/wed_intervention_snapshot.yml:L44-L64] |
 | `outputs` | file paths | Directory `results`; JSON `well_access_summary.json`; Markdown `well_access_lifecycle_note.md` | [src/digitalmodel/well_access/router.py:L238-L244] |
 
 No coordinate frame, spatial origin or phase is consumed by the scalar event/day/fraction calculations; age overlap starts at 0 yr and uptime uses 365.0 days/yr. [src/digitalmodel/well_access/intervention_rates.py:L38-L42] [src/digitalmodel/well_access/uptime_rollup.py:L53-L76]
@@ -56,7 +63,7 @@ No coordinate frame, spatial origin or phase is consumed by the scalar event/day
 | `UptimeResult` | Availability and losses as fractions; output rounded to four or six decimal places | [src/digitalmodel/well_access/uptime_rollup.py:L78-L82] |
 | `LifecycleSummary` | Architecture, basis, component records, totals and confidence notes | [src/digitalmodel/well_access/lifecycle_summary.py:L71-L88] |
 | Architecture deltas | Uptime: dry minus subsea; backlog and mobilisation: subsea minus dry | [src/digitalmodel/well_access/lifecycle_summary.py:L121-L140] |
-| Router payload / files | UTF-8 JSON and Markdown; payload gains file paths after writing, then replaces `cfg["well_access"]` | [src/digitalmodel/well_access/router.py:L208-L249] |
+| Router payload / files | UTF-8 JSON and Markdown; payload gains file paths after writing, then merges as `{**params, **payload}` into `cfg["well_access"]`; payload keys overwrite matching input keys, including `wed_calibration` when engaged | [src/digitalmodel/well_access/router.py:L208-L249] |
 | Snapshot provenance | Source identifiers, revision/date and confidence copied to provenance mapping | [src/digitalmodel/well_access/wed_calibration.py:L249-L261] |
 
 ## 3. Method and governing standards
@@ -76,16 +83,16 @@ The elementary closed-form checks are documented in the tests: 10 × 0.1 + 15 ×
 
 ## 4. Validated worked examples and regression examples
 
-Execution record: BASE test setup failed before collection while installing `h5netcdf==1.8.1`: `No space left on device (os error 28)`; no test body ran, and every node below is `NOT_RUN` for that environment failure. The environment is not retried at another location. No validated example is claimed; the first two cases provide independently calculable elementary references, pending execution and qualification.
+Execution record: the initial pack recorded a setup failure installing `h5netcdf==1.8.1` before collection. This revision used the isolated C04 command with pytest and the declared PyYAML dependency: BASE and after each gave 27 passed, 0 failed and 0 skipped. The six cited nodes collect. C03's two elementary references were replayed independently; C05 remains a defined procedure, not an executed qualification. No validated example is claimed pending independent qualification.
 
 | Case / classification | Input / expected value and tolerance basis | Existing test node ID | BASE / after |
 |---|---|---|---|
-| E1 band integral; regression pending qualification | In-code fixture, 25 yr; 10 × 0.1 + 15 × 0.2 = 4.0 events/well; `pytest.approx` default comparison; independent replay uses C03 | `tests/well_access/test_well_access.py::TestNHPP::test_demand_integrates_over_bands` | NOT_RUN / NOT_RUN; environment failure. [tests/well_access/test_well_access.py:L108-L116] |
-| E2 life cap; regression pending qualification | In-code fixture, 5 yr at 0.1 events/(well yr); 0.5 events/well; same approximate comparison; replay uses C03 | `tests/well_access/test_well_access.py::TestNHPP::test_life_caps_band_integration` | NOT_RUN / NOT_RUN; environment failure. [tests/well_access/test_well_access.py:L118-L122] |
-| E3 uptime bounds; regression | Fixture program and rates; uptime between 0 and facility availability (fraction), zero bound violations | `tests/well_access/test_well_access.py::TestUptime::test_uptime_bracket_bounded` | NOT_RUN / NOT_RUN; environment failure. [tests/well_access/test_well_access.py:L173-L181] |
-| E4 determinism; regression | Same fixture inputs twice; exactly equal demand, realized events and uptime, zero mismatches | `tests/well_access/test_well_access.py::TestComparisonAndDeterminism::test_run_lifecycle_deterministic` | NOT_RUN / NOT_RUN; environment failure. [tests/well_access/test_well_access.py:L201-L208] |
-| E5 optional adapter; regression | Inline synthetic config, no adapter block; adapter payload key count = 0 | `tests/well_access/test_wed_calibration.py::TestRouterIntegrationAdditive::test_router_wed_block_optional_and_off_by_default` | NOT_RUN / NOT_RUN; environment failure. [tests/well_access/test_wed_calibration.py:L128-L164] |
-| E6 supply adapter; regression | Inline synthetic config plus shipped snapshot; available pool-days = snapshot central capacity × 20 yr; test uses default approximate comparison; snapshot is not independent validation | `tests/well_access/test_wed_calibration.py::TestRouterIntegrationAdditive::test_router_wed_block_engages_when_requested` | NOT_RUN / NOT_RUN; environment failure. [tests/well_access/test_wed_calibration.py:L166-L215] |
+| E1 band integral; regression pending qualification | In-code fixture, 25 yr; 10 × 0.1 + 15 × 0.2 = 4.0 events/well; `pytest.approx` default comparison; independent replay uses C03 | `tests/well_access/test_well_access.py::TestNHPP::test_demand_integrates_over_bands` | PASS / PASS. [tests/well_access/test_well_access.py:L108-L116] |
+| E2 life cap; regression pending qualification | In-code fixture, 5 yr at 0.1 events/(well yr); 0.5 events/well; same approximate comparison; replay uses C03 | `tests/well_access/test_well_access.py::TestNHPP::test_life_caps_band_integration` | PASS / PASS. [tests/well_access/test_well_access.py:L118-L122] |
+| E3 uptime bounds; regression | Fixture program and rates; uptime between 0 and facility availability (fraction), zero bound violations | `tests/well_access/test_well_access.py::TestUptime::test_uptime_bracket_bounded` | PASS / PASS. [tests/well_access/test_well_access.py:L173-L181] |
+| E4 determinism; regression | Same fixture inputs twice; exactly equal demand, realized events and uptime, zero mismatches | `tests/well_access/test_well_access.py::TestComparisonAndDeterminism::test_run_lifecycle_deterministic` | PASS / PASS. [tests/well_access/test_well_access.py:L201-L208] |
+| E5 optional adapter; regression | Inline synthetic config, no adapter block; adapter payload key count = 0 | `tests/well_access/test_wed_calibration.py::TestRouterIntegrationAdditive::test_router_wed_block_optional_and_off_by_default` | PASS / PASS. [tests/well_access/test_wed_calibration.py:L128-L164] |
+| E6 supply adapter; regression | Inline synthetic config plus shipped snapshot; assumed-utilisation capacity = 2 × 0.7 × 365 = 511 rig-days/yr, then × 20 yr for available pool-days; test uses default approximate comparison; snapshot is not independent validation | `tests/well_access/test_wed_calibration.py::TestRouterIntegrationAdditive::test_router_wed_block_engages_when_requested` | PASS / PASS. [tests/well_access/test_wed_calibration.py:L166-L215] [src/digitalmodel/base_configs/modules/well_access/wed_intervention_snapshot.yml:L57-L64] |
 
 Use the explicit absolute criterion C03 for independent replay; the existing tests do not specify their approximate-comparison tolerance arguments. [tests/well_access/test_well_access.py:L115-L122]
 
@@ -95,9 +102,9 @@ The gate selection is AQG r0 section 10, Python calculations, with G5 from secti
 
 | Gate | Applicability | Module-specific check / numeric criterion / unit | Evidence / current result |
 |---|---|---|---|
-| G0 inputs, units, citations | Applicable | C01 and C02 | Input audit plus validation test records; C01 NOT_RUN, C02 defined for each submitted input |
-| G1 imports and tests | Applicable; Python route, no solver model format | C04 | Full `tests/well_access/` pytest record; NOT_RUN, environment build failed |
-| G2 hand or published check | Applicable | C03 and C05 | Independent arithmetic worksheet against output; NOT_RUN |
+| G0 inputs, units, citations | Applicable | C01 and C02 | C01 PASS (2 rejection fixtures); C02 remains a manual audit for each submitted input |
+| G1 imports and tests | Applicable; Python route, no solver model format | C04 | PASS; full `tests/well_access/` record: 27 passed at BASE and after |
+| G2 hand or published check | Applicable | C03 and C05 | C03 PASS for the two elementary references; C05 NOT_RUN; G2 qualification remains open |
 | G3 short dynamics | NOT_APPLICABLE | No time-domain dynamics integration in this chain | [src/digitalmodel/well_access/lifecycle_summary.py:L57-L69] |
 | G4 diffraction | NOT_APPLICABLE | No diffraction calculation in this chain | [src/digitalmodel/well_access/lifecycle_summary.py:L57-L69] |
 | G5 evidence appendix | Applicable | C06 | Retained input/provenance/gate record; no generated QA appendix in current router; issue pending (2). [src/digitalmodel/well_access/router.py:L208-L249] |
@@ -107,8 +114,8 @@ The gate selection is AQG r0 section 10, Python calculations, with G5 from secti
 | C01 | Run both `TestProgramValidation` nodes: exactly 2 rejected invalid fixtures, 0 unexpected exceptions | G0 / cases | [tests/well_access/test_well_access.py:L97-L104] |
 | C02 | Before calling `run_lifecycle` or `router`, audit the submitted mapping against section 2: missing required fields = 0; numeric nonfinite values = 0; noninteger well/life inputs = 0; bands with lower < 0 yr, upper <= lower, negative rates or overlaps = 0; negative durations/leads/losses = 0 days; capacity <= 0 = 0 pools; multipliers outside [0,1] = 0; missing event-type/pool joins = 0; duplicate event/type/pool names = 0; nonboolean flags = 0; unacknowledged defaults = 0; unit/provenance omissions = 0. Repeat for custom snapshots, requiring explicit None reasons and valid supply-scope enum. This is a manual mapping audit with a counted exception list, not implemented runtime validation. | G0 / fields, values, bands, days, pools, fraction | Input and conversion sites requiring audit. [src/digitalmodel/well_access/models.py:L34-L90] [src/digitalmodel/well_access/intervention_rates.py:L81-L88] [src/digitalmodel/well_access/intervention_rates.py:L142-L158] [src/digitalmodel/well_access/wed_calibration.py:L136-L234] |
 | C03 | For E1 and E2, compute reference counts on paper without calling module functions: 4.0 and 0.5 events/well; compare `expected_demand_per_well` outputs with absolute error <= 1e-6 events/well (one output rounding increment). Run both `TestNHPP` nodes as an additional regression record. | G2 / events/well | [src/digitalmodel/well_access/intervention_rates.py:L45-L56] [tests/well_access/test_well_access.py:L108-L122] |
-| C04 | Run every node in `tests/well_access/` using `PYTHONPATH=src uv run --no-sources python -m pytest tests/well_access/ -q -rA -p no:cacheprovider --basetemp=<scratch>`; collect 27 nodes, require 27 passed, 0 failed, 0 skipped, 0 NOT_RUN before reporting G1 PASS. | G1 / test cases | The 11 core and 16 adapter test definitions. [tests/well_access/test_well_access.py:L97-L208] [tests/well_access/test_wed_calibration.py:L22-L215] |
-| C05 | Independently sum supplied events × durations, campaigns × lead and annual capacity × life; compare pool demand/available/wait/mobilisation within 0.01 days, rho within 0.0001 (1). Independently divide losses by wells × life × 365 and compare loss fractions within 0.000001 (1), uptime within 0.0001 (1); these are output rounding increments. Check 0 <= uptime <= facility availability, 0 violations; explicitly exclude waiting from uptime. | G2 / days; fractions (1) | [src/digitalmodel/well_access/resource_queue.py:L46-L90] [src/digitalmodel/well_access/uptime_rollup.py:L53-L82] |
+| C04 | Run every node in `tests/well_access/` using `PYTHONPATH=src uv run --no-project --with pytest --with pyyaml python -m pytest tests/well_access/ -q -rA -p no:cacheprovider --basetemp=<scratch>`; collect 27 nodes, require 27 passed, 0 failed, 0 skipped, 0 NOT_RUN before reporting G1 PASS. | G1 / test cases | The 11 core and 16 adapter test definitions. [tests/well_access/test_well_access.py:L97-L208] [tests/well_access/test_wed_calibration.py:L22-L215] |
+| C05 | Use the module's rounded `EventExpectation` records as inputs to the independent worksheet, rather than unrounded rate integrals. Sum realized events × durations and campaigns × lead; round mobilisation to two decimals before adding it to base demand, then round demand and annual capacity × life to two decimals. From those rounded totals compute wait and rho with the source's rounding order; compare pool demand/available/wait/mobilisation within 0.01 days, rho within 0.0001 (1). Independently divide losses from those same events by wells × life × 365 and compare loss fractions within 0.000001 (1), uptime within 0.0001 (1). These criteria apply to the staged, rounded worksheet, not cumulative error against unrounded inputs. Check 0 <= uptime <= facility availability, 0 violations; explicitly exclude waiting from uptime. | G2 / days; fractions (1) | [src/digitalmodel/well_access/resource_queue.py:L46-L90] [src/digitalmodel/well_access/uptime_rollup.py:L53-L82] |
 | C06 | Retain code pin, input bytes/digests, calibration revision/units/confidence, reference arithmetic, every required gate result and reviewer disposition together; require 0 missing evidence fields and 0 result rows lacking an input digest before issuing a report. Count omissions manually against this list; do not treat router JSON as a signed QA record. | G5 / fields, result rows | Existing output lacks such an appendix; provenance block is conditional. [src/digitalmodel/well_access/router.py:L187-L215] [src/digitalmodel/well_access/router.py:L236-L249] |
 
 ## 6. Known failure modes and pitfalls
@@ -124,7 +131,7 @@ rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.9
 rg -n '365|days|year|rate|unit|cache|write|default|or \[\]|or \{\}' src/digitalmodel/well_access --glob '*.py'
 ```
 
-Rows with C02 refer to the explicit preflight mapping audit, not to a claim that the package rejects the input; runtime regression coverage for these malformed-input paths is absent unless specified. The date of this source inspection is 2026-10-18.
+Rows with C02 refer to the explicit preflight mapping audit, not to a claim that the package rejects the input; runtime regression coverage for these malformed-input paths is absent unless specified. The source inspection was repeated on 2026-10-19 at the same code pin.
 
 | ID | Symptom / cause / exact source location | Detection / disposition |
 |---|---|---|
@@ -148,7 +155,7 @@ Rows with C02 refer to the explicit preflight mapping audit, not to a claim that
 | S18 | Duration is resource-days/event; confidence defaults False without independent qualification. [src/digitalmodel/well_access/models.py:L54-L56] | C02; issue pending (1) |
 | S19 | Capacity assumes days/yr; lead defaults 0.0 days and batching defaults False. [src/digitalmodel/well_access/models.py:L64-L66] | C02; issue pending (1) |
 | S20 | First-production offset defaults 0; integral uses age rather than calendar offset. [src/digitalmodel/well_access/models.py:L76-L76] | C02; issue pending (1) |
-| S21 | Facility availability defaults 0.95; only its range and positive wells/life are checked. [src/digitalmodel/well_access/models.py:L77-L90] | C01, C02; issue pending (1) |
+| S21 | Facility availability defaults 0.95 and is range-checked; wells/life are checked only with <= 0, so direct construction accepts NaN and positive infinity. Router int() conversions reject those nonfinite values. [src/digitalmodel/well_access/models.py:L77-L90] [src/digitalmodel/well_access/router.py:L169-L170] | C01 covers two existing invalid fixtures only; C02 audits nonfinite inputs; no nonfinite runtime regression check exists; issue pending (1) |
 | S22 | Result container defaults empty event/resource/notes lists, uptime None and three zero totals; direct construction can look complete without a run. [src/digitalmodel/well_access/models.py:L132-L138] | C06; issue pending (2) |
 | S23 | Duplicate type/event names collapse in dictionaries before aggregation. [src/digitalmodel/well_access/resource_queue.py:L46-L48] | C02; issue pending (1) |
 | S24 | Unknown event type defaults to modu and duration 0.0; accumulator zeros are intentional but unknown joins hide service days. [src/digitalmodel/well_access/resource_queue.py:L54-L58] | C02; issue pending (1) |
@@ -157,7 +164,7 @@ Rows with C02 refer to the explicit preflight mapping audit, not to a claim that
 | S27 | Capacity rounds before division; zero/negative capacity returns infinity; wait is excess days clipped at zero. [src/digitalmodel/well_access/resource_queue.py:L74-L78] | C02, C05; issue pending (1) |
 | S28 | Unknown event duration is 0.0 days; duplicate type names collapse. [src/digitalmodel/well_access/uptime_rollup.py:L53-L62] | C02; issue pending (1) |
 | S29 | Well-time assumes exactly 365.0 days/yr and identical whole-life exposure per well. [src/digitalmodel/well_access/uptime_rollup.py:L55-L58] | C05; issue pending (2) |
-| S30 | Deferred losses assume days/event; invalid nonpositive total well-days silently return zero loss fractions. [src/digitalmodel/well_access/uptime_rollup.py:L63-L72] | C02; issue pending (1) |
+| S30 | Deferred losses assume days/event; direct construction with NaN wells or life makes total_well_days > 0 false, silently returning zero loss fractions and facility availability as uptime. Ordinary nonpositive wells/life are rejected earlier; positive infinity is also accepted by direct construction. [src/digitalmodel/well_access/uptime_rollup.py:L55-L82] [src/digitalmodel/well_access/models.py:L79-L90] | C02; no nonfinite runtime regression check exists; issue pending (1) |
 | S31 | Negative uptime bracket clamps to zero; negative losses can instead exceed availability because the upper bound is not clamped. [src/digitalmodel/well_access/uptime_rollup.py:L74-L82] | C02, C05; issue pending (1) |
 | S32 | Missing config base defaults to current directory, permitting outputs at an unintended relative location. [src/digitalmodel/well_access/router.py:L48-L52] | C02; issue pending (1) |
 | S33 | Missing inline calibration becomes empty mapping; YAML load does not validate schema. [src/digitalmodel/well_access/router.py:L55-L61] | C02; issue pending (1) |
@@ -232,7 +239,7 @@ The code exports models, intervention functions, resource calculation, uptime ca
 
 The router uses YAML loading, dataclass/enum serialization, filesystem output and the adapter; the engine dispatches `basename == "well_access"` to that router. [src/digitalmodel/well_access/router.py:L23-L45] [src/digitalmodel/engine.py:L748-L751]
 
-The adapter's default snapshot is in `src/digitalmodel/base_configs/modules/well_access/wed_intervention_snapshot.yml`; the adapter loads it as YAML without importing the upstream empirical-extraction package. A supplied snapshot remains a data dependency, not a verified engineering reference. [src/digitalmodel/well_access/wed_calibration.py:L7-L17] [src/digitalmodel/well_access/wed_calibration.py:L45-L52] [src/digitalmodel/well_access/wed_calibration.py:L128-L134]
+The adapter's default snapshot is in `src/digitalmodel/base_configs/modules/well_access/wed_intervention_snapshot.yml`; the adapter loads it as YAML without importing the upstream extraction package. Only `bands.*.empirical` is the historical floor; central demand, supply, gaps and utilisation ratios depend on assumed frequency and utilisation. A supplied snapshot remains a data dependency, not a verified engineering reference. [src/digitalmodel/well_access/wed_calibration.py:L7-L17] [src/digitalmodel/well_access/wed_calibration.py:L45-L52] [src/digitalmodel/well_access/wed_calibration.py:L128-L134] [src/digitalmodel/base_configs/modules/well_access/wed_intervention_snapshot.yml:L44-L64]
 
 The model describes economics as a downstream consumer; the lifecycle function itself returns a summary and does not invoke an economics module. [src/digitalmodel/well_access/models.py:L11-L15] [src/digitalmodel/well_access/lifecycle_summary.py:L78-L88]
 
@@ -281,11 +288,11 @@ The test definitions provide 11 core and 16 adapter nodes, 27 total; none is lic
 | Open item | Required disposition / responsible role | Issue |
 |---|---|---|
 | Input/default sweep | Add negative-path coverage and strict preflight for the section-6 sites; retain intended zero/default semantics separately; calculation maintainer | issue pending (1) |
-| Empirical qualification | UNVERIFIED claim from section 1: qualify source revision, coverage, units, intended use and freshness; do not promote snapshot regressions to validation; calibration-data maintainer | issue pending (2); related #890 |
-| Offline execution | Baseline setup failed installing h5netcdf==1.8.1 with `No space left on device (os error 28)` before collection; after tests and the tests-contracts/routing domain were NOT_RUN because the prescribed environment could not be built; restore that environment and run C01, C03–C05 without changing module code; calculation maintainer | issue pending (2) |
+| Empirical qualification | UNVERIFIED claim from section 1: qualify source revision (recorded as unmerged), coverage, units, intended use and freshness; central demand/supply/gap/ratio depend on frequency/utilisation assumptions; revise the adapter's "REAL" / "rather than an assumed capacity" wording and matching router comment; do not promote snapshot regressions to validation; calibration-data maintainer. [src/digitalmodel/well_access/wed_calibration.py:L9-L14] [src/digitalmodel/well_access/wed_calibration.py:L313-L318] [src/digitalmodel/well_access/router.py:L181-L186] | issue pending (2); related #890 |
+| Execution qualification | Local BASE and after each pass all 27 module tests, the pack node-ID check (6 IDs), and 10 routing-contract tests. C01 and C03 executed; C05 still needs an independent resource/uptime worksheet; calculation maintainer | issue pending (2) |
 | Independent worked examples | Six regression examples and zero validated examples recorded; qualify the two elementary closed-form references and a resource/uptime independent example after execution; family quality manager | issue pending (2) |
 | QA retention / review | C06 is a pack requirement, not an automatic output appendix; provide input digests, result records, independent review, named deputy and shared-log IDs before qualified issue; family quality manager | issue pending (2) |
-| Identifying fixture text | One adapter test node contains an identifying name and another assertion names an identifiable unit; node names and identifying values are not reproduced here; replace those identifiers with codenames before reusing fixture text; calibration-data maintainer | issue pending (2) |
+| Identifying snapshot and fixture text | Two discovery files contain identifying names: one adapter test node and another assertion identify units, and the shipped snapshot also contains unit/operator identifiers exposed through `FleetSupply`. No identifying values are reproduced here; replace them with codenames before reusing snapshot or fixture text; calibration-data maintainer. [src/digitalmodel/well_access/wed_calibration.py:L101-L110] [src/digitalmodel/well_access/wed_calibration.py:L206-L212] | issue pending (2) |
 | Method-map coverage | Enroll all method families listed in section 9; package rejected candidates alone do not count as mapped implementations; map maintainer | issue pending (3) |
 
-The standards-citation contract was readable; no licensed clause or licensed document was opened. No restricted sidecar values or independently verified empirical values are supplied by this pack. Test setup failure is a limitation of execution evidence, not a numerical failure of the module.
+The standards-citation contract was readable; no licensed clause or licensed document was opened. No restricted sidecar values or independently verified empirical values are supplied by this pack. Passing regressions establish execution at the code pin; independent calibration and C05 qualification remain open.
