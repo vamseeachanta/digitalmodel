@@ -217,6 +217,9 @@ modules:
       reservoir:
         agent_pack: src/digitalmodel/marine_ops/reservoir/docs/agent-pack.md
         qa_family: EC
+      artificial_lift:
+        agent_pack: src/digitalmodel/marine_ops/artificial_lift/docs/agent-pack.md
+        qa_family: EC
   - module: floating_wind
     entry_point: src/digitalmodel/floating_wind/
     maturity: beta
