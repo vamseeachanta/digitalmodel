@@ -366,13 +366,12 @@ def riser_citations(repo_root: Optional[Path] = None) -> dict:
     """Return ``{"dff", "scf", "f_wt", "f_bt", "von_mises_df"}`` CitedValues for
     the riser design factors.
 
-    Consumer-wrapper degradation (template:
-    ``mooring_resilience.screening.safety_factor_citations``): where the wiki
-    resolves, a missing or mismatched page fails closed (raises); in
-    standalone mode (no resolvable wiki at all) it emits a one-shot
-    ``RuntimeWarning`` and returns ``{}``. (The parameterized flex-joint angle
-    operating limit is resolved via ``get_flexjoint_angle_limit``, not bundled
-    here.)
+    An explicit root or configured wiki is validated fail-closed: invalid
+    configuration and missing or mismatched pages raise. Only exhausted wiki
+    discovery (``resolver_unconfigured:``) permits standalone mode, which emits
+    a one-shot ``RuntimeWarning`` and returns ``{}``. The parameterized
+    flex-joint angle operating limit is resolved via
+    ``get_flexjoint_angle_limit``, not bundled here.
     """
     global _CITATION_WARNED
     try:
@@ -384,6 +383,14 @@ def riser_citations(repo_root: Optional[Path] = None) -> dict:
             "von_mises_df": get_von_mises_design_factor(repo_root=repo_root),
         }
     except CitationResolutionError as exc:
+        # Only exhausted discovery permits standalone operation. Configured
+        # roots and page validation failures retain the fail-closed contract.
+        if (
+            repo_root is not None
+            or exc.code_id != "<resolver>"
+            or not exc.reason.startswith("resolver_unconfigured:")
+        ):
+            raise
         if not _CITATION_WARNED:
             warnings.warn(
                 "Riser design-factor citations unavailable (standalone mode): "
