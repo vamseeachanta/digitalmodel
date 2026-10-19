@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import json
+import threading
+import time as _time
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from digitalmodel.solvers.orcaflex import orcaflex_api
 from digitalmodel.solvers.orcaflex import parallel_runner as pr
+from tests.solvers.orcaflex.qa_fixtures import control_fingerprint, make_qa
 
 # --------------------------------------------------------------------------- fault classes (W306)
 
@@ -106,6 +112,25 @@ def test_case_ids_must_be_unique_and_safe():
 solver = pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
 
 
+def _native_qa(cases, root):
+    """Synthetic approval controls for round-trip mechanics, not qualification.
+
+    Fingerprints are independently prepared before worker execution. These
+    fixtures test the contract and do not authenticate real engineering QA.
+    """
+    from tests.drilling_riser.global_model.runner_adapter import ADAPTER
+
+    fingerprints = {}
+    for case in cases:
+        # A deliberately broken builder still needs an independently admitted
+        # candidate identity to exercise the worker's build-failure path.
+        if case.get("params", {}).get("break_build"):
+            continue
+        master = ADAPTER.build(case, root / case["case_id"] / "model")
+        fingerprints[case["case_id"]] = control_fingerprint(master, case)
+    return make_qa(cases, root / "qa", fingerprints, version="11.6c")
+
+
 @solver
 @pytest.mark.solver
 def test_runner_round_trip_two_workers(tmp_path: Path):
@@ -115,15 +140,17 @@ def test_runner_round_trip_two_workers(tmp_path: Path):
         {"case_id": "D-1", "analysis": "dynamics", "params": {"wave_height_m": 3.0}},
     ]
     out = pr.run_cases(cases, adapter=adapter, out_dir=tmp_path, max_workers=2, keep_sim=False,
-                       pin="11.6", expected_dll="11.6c")
+                       pin="11.6", expected_dll="11.6c", qa=_native_qa(cases, tmp_path / "controls"))
     assert out["stop_reason"] is None
     by = {r["case_id"]: r for r in out["results"]}
     assert by["S-1"]["status"] == "ok" and by["D-1"]["status"] == "ok"
-    bad = pr.run_cases([{"case_id": "BAD-1", "analysis": "statics", "params": {"break_build": True}}],
-                       adapter=adapter, out_dir=tmp_path, max_workers=1)
+    bad_cases = [{"case_id": "BAD-1", "analysis": "statics", "params": {"break_build": True}}]
+    bad = pr.run_cases(bad_cases, adapter=adapter, out_dir=tmp_path, max_workers=1,
+                       qa=_native_qa(bad_cases, tmp_path / "bad-controls"))
     assert bad["results"][0]["status"] == "build_failed" and bad["results"][0]["attempt"] == 1  # no retry
-    odd = pr.run_cases([{"case_id": "ODD-1", "analysis": "statics", "params": {"nonphysical": True}}],
-                       adapter=adapter, out_dir=tmp_path, max_workers=1)
+    odd_cases = [{"case_id": "ODD-1", "analysis": "statics", "params": {"nonphysical": True}}]
+    odd = pr.run_cases(odd_cases, adapter=adapter, out_dir=tmp_path, max_workers=1,
+                       qa=_native_qa(odd_cases, tmp_path / "odd-controls"))
     assert odd["results"][0]["status"] == "nonphysical_static" and odd["results"][0]["retry"] is False
     ledger = [json.loads(x) for x in (tmp_path / "ledger.jsonl").read_text(encoding="utf-8").splitlines()]
     assert sorted(r["case_id"] for r in ledger) == ["BAD-1", "D-1", "ODD-1", "S-1"]
@@ -146,7 +173,8 @@ def test_reextract_a_kept_sim_appends_a_ledger_record_and_refuses_a_changed_file
 
     adapter = "tests.drilling_riser.global_model.runner_adapter:ADAPTER"
     case = {"case_id": "S-2", "analysis": "statics", "params": {}}
-    out = pr.run_cases([case], adapter=adapter, out_dir=tmp_path, max_workers=1, keep_sim=True)
+    out = pr.run_cases([case], adapter=adapter, out_dir=tmp_path, max_workers=1, keep_sim=True,
+                       qa=_native_qa([case], tmp_path / "controls"))
     rec = out["results"][0]
     assert rec["status"] == "ok" and (tmp_path / rec["sim_kept"]).exists()
     re = pr.reextract(case, adapter=adapter, out_dir=tmp_path, ledger_record=rec)
@@ -160,13 +188,6 @@ def test_reextract_a_kept_sim_appends_a_ledger_record_and_refuses_a_changed_file
 
 
 # --------------------------------------------------------------------------- scheduling (no solver)
-
-import threading
-import time as _time
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures.process import BrokenProcessPool
-from types import SimpleNamespace
-
 
 class _CountingPool(ThreadPoolExecutor):
     """Thread pool that records how many futures are outstanding (submitted, not yet done)."""
@@ -214,7 +235,8 @@ def _cases(n):
 
 def test_in_flight_cases_never_exceed_the_worker_slots(monkeypatch, counting_pool, tmp_path):
     monkeypatch.setattr(pr, "run_one", _ok)
-    out = pr.run_cases(_cases(12), adapter="x:y", out_dir=tmp_path, max_workers=2)
+    out = pr.run_cases(_cases(12), adapter="x:y", out_dir=tmp_path, max_workers=2,
+                       qa=make_qa(_cases(12), tmp_path / "qa", version="11.6c"))
     assert [r["status"] for r in out["results"]] == ["ok"] * 12
     (pool,) = counting_pool.created
     assert len(pool.submitted) == 12 and pool.max_outstanding <= 2
@@ -225,7 +247,8 @@ def test_early_stop_leaves_unsubmitted_cases_not_run(monkeypatch, counting_pool,
         return {"case_id": case["case_id"], "attempt": attempt, "status": "version_drift", "retry": False}
 
     monkeypatch.setattr(pr, "run_one", drift)
-    out = pr.run_cases(_cases(6), adapter="x:y", out_dir=tmp_path, max_workers=1)
+    out = pr.run_cases(_cases(6), adapter="x:y", out_dir=tmp_path, max_workers=1,
+                       qa=make_qa(_cases(6), tmp_path / "qa", version="11.6c"))
     assert out["stop_reason"] == "solver version drift from the pin"
     (pool,) = counting_pool.created
     assert pool.submitted == [("C00", 1)]  # nothing submitted after the stop rule tripped
@@ -241,7 +264,8 @@ def test_broken_pool_is_replaced_and_the_lost_case_retried(monkeypatch, counting
         return _ok(case, attempt=attempt)
 
     monkeypatch.setattr(pr, "run_one", flaky)
-    out = pr.run_cases(_cases(5), adapter="x:y", out_dir=tmp_path, max_workers=2)
+    out = pr.run_cases(_cases(5), adapter="x:y", out_dir=tmp_path, max_workers=2,
+                       qa=make_qa(_cases(5), tmp_path / "qa", version="11.6c"))
     assert out["stop_reason"] is None
     assert [r["status"] for r in out["results"]] == ["ok"] * 5
     assert {r["case_id"]: r["attempt"] for r in out["results"]}["C01"] == 2
@@ -258,7 +282,8 @@ def test_a_pool_that_keeps_breaking_ends_the_batch_cleanly(monkeypatch, counting
     monkeypatch.setattr(pr.BatchGuard, "__init__", lambda self, n, fail_fraction=1.0: (
         setattr(self, "limit", n), setattr(self, "failed", 0), setattr(self, "licence_run", 0),
         setattr(self, "stop_reason", None))[0])
-    out = pr.run_cases(_cases(8), adapter="x:y", out_dir=tmp_path, max_workers=2, max_attempts=10)
+    out = pr.run_cases(_cases(8), adapter="x:y", out_dir=tmp_path, max_workers=2, max_attempts=10,
+                       qa=make_qa(_cases(8), tmp_path / "qa", version="11.6c"))
     assert out["stop_reason"] == f"worker pool broken {pr.MAX_POOL_RESTARTS + 1} times"
     assert len(counting_pool.created) == pr.MAX_POOL_RESTARTS + 1
     assert len(out["results"]) == 8 and all(r["status"] in ("infra_fault", "not_run") for r in out["results"])
@@ -299,7 +324,11 @@ def test_failed_case_leaves_no_orphan_sim_when_not_kept(monkeypatch, tmp_path):
 
     monkeypatch.setattr(pr, "_api", lambda pin, dll: (ofx, "11.6c"))
     monkeypatch.setattr(pr, "_adapter", lambda path: Adapter())
-    rec = pr.run_one({"case_id": "F1", "analysis": "statics"}, adapter="x:y", out_dir=str(tmp_path))
+    case = {"case_id": "F1", "analysis": "statics"}
+    prepared = Adapter().build(case, tmp_path / "prepared")
+    rec = pr.run_one(case, adapter="x:y", out_dir=str(tmp_path),
+                     admitted_input_sha256=control_fingerprint(prepared, case),
+                     qa_evidence_sha256="synthetic-approved-record")
     assert rec["status"] == "extraction_failed" and rec["sim_kept"] is None
     assert not (tmp_path / "work" / "F1" / "F1.sim").exists()
     assert not (tmp_path / "work" / "F1" / "model").exists()
