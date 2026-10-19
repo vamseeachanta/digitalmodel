@@ -567,6 +567,9 @@ modules:
       pipelay:
         agent_pack: src/digitalmodel/installation/pipelay/docs/agent-pack.md
         qa_family: IN
+      jumper_installation:
+        agent_pack: src/digitalmodel/installation/jumper_installation/docs/agent-pack.md
+        qa_family: IN
   - module: lifting_lug
     entry_point: src/digitalmodel/lifting_lug/
     maturity: development
