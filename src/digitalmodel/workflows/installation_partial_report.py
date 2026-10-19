@@ -11,8 +11,12 @@ import json
 import os
 from pathlib import Path
 
+from digitalmodel.infrastructure.persistence.provenance import compute_hash
 from digitalmodel.workflows.installation_seastate_report import _case, _read
 from digitalmodel.workflows.installation_report_sections import front_sections, pending_sections, marketing_section
+from digitalmodel.workflows.installation_trace_extract import (
+    verify_profile_arrays, verify_profile_metadata,
+)
 
 
 def collect_cases(snapshot, matrix, *, workers=1):
@@ -48,6 +52,19 @@ def _collect_case(index, case, current, matrix):
             metadata = json.loads(raw)
             if metadata['trace_sha256'] != row['trace_sha256']:
                 raise ValueError('Metadata changed during verification')
+            try:
+                # Issue 2138: present channels alone do not establish expected coverage.
+                run = Path(current['run_dir'])
+                receipt = _read(run / 'run.json')
+                verify_profile_metadata(run, receipt, metadata)
+                traces = run / 'installation_traces/traces.npz'
+                verify_profile_arrays(traces, receipt, metadata)
+                if compute_hash(traces) != row['trace_sha256']:
+                    raise ValueError('Traces changed during profile verification')
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                return dict(index=index, **{k: case[k] for k in ('hs_m', 'tp_s', 'seed')},
+                            run_dir=str(run), status='FAILED',
+                            reason=f'Expected trace-profile verification failed: {error}')
             row.update(status='VERIFIED', channels=_compact_channels(metadata['channels']),
                        metadata_sha256=sha256(raw).hexdigest(),
                        limitations=metadata.get('limitations', []))
