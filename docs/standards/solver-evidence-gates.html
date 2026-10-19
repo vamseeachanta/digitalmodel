@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solver retrieval and export evidence gates</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 72rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #999; padding: .5rem; text-align: left; vertical-align: top; }
+pre { overflow-x: auto; padding: 1rem; background: #f3f3f3; }
+code { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<h1>Solver retrieval and export evidence gates</h1>
+<h2>Summary</h2>
+<p>The provider-neutral <code>digitalmodel.infrastructure.solver_evidence</code> API
+checks supplied retrieval metadata, keyed records and decimal representations.
+A PASS applies only to the named gate and its supplied policy. Native provenance,
+stored-result precision, engineering acceptance and adapter adoption are not established.
+No engineering tolerance is supplied by this module.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-19</td><td>Add retrieval, decimal precision and independent
+readback contracts to prevent missing or rounded evidence from appearing as a valid zero.</td></tr>
+</table>
+<p>Table 1. Initial contract revision.</p>
+
+<h2>Scope and implementation slices</h2>
+<ol>
+<li>Retrieval validity: explicit case, active result set, recovery source, frame,
+response unit and coordinate unit; complete keyed records; coordinate comparison;
+separate unavailable, invalid and numerically failed states.</li>
+<li>Export precision: exact decimal parsing, a last-place rounding bound and a
+caller-selected known formatting witness.</li>
+<li>Independent readback: complete matching keys and result identity, distinct
+capture identifiers, and fixed subfloor precision/readback limits.</li>
+</ol>
+<p>The API does not select recovery sources, convert units, invoke solvers, read
+files, repair inputs or change the signed-residual acceptance operators.
+Inputs must be frozen before a comparison. A source citation is an attributed
+claim supplied by the caller; its authority and suitability require separate review.</p>
+
+<h2>Retrieval contract</h2>
+<p><code>check_retrieval</code> takes a <code>RetrievalEnvelope</code>, an expected
+<code>EvidenceIdentity</code>, an explicit sequence of <code>ExpectedRecord</code>
+objects, a coordinate tolerance and its criterion source. Expected records must
+be nonempty, uniquely keyed by the pair (entity/station, component), and carry
+nonempty coordinate tuples. Each coordinate tuple must use the declared coordinate unit
+and frame. Each response uses the declared response unit. Automatic/default
+recovery-source labels are refused. Adapters must record the actual selected
+source and active set, rather than copying requested settings into observed metadata.</p>
+<p>Coverage requires equality of observed and expected key sets, with duplicates
+refused before constructing a map. Each coordinate dimension is checked by
+<code>abs(observed - expected) &lt;= coordinate_tolerance</code>. Coordinates are
+identity checks; their printed precision requires adapter-specific checks.
+No default tolerance or unit conversion is inferred.</p>
+<table>
+<tr><th>Evidence condition</th><th>Gate status</th><th>Usable values</th></tr>
+<tr><td>Complete matching evidence, including a genuine zero</td><td>PASS</td><td>Exact rational values</td></tr>
+<tr><td>Absent envelope, declared missing value, or absent numeric payload</td><td>NOT_EVALUATED</td><td>None</td></tr>
+<tr><td>Defaulted/invalid value, wrong metadata, malformed number, missing/duplicate/unexpected record, or coordinate mismatch</td><td>INVALID_EVIDENCE</td><td>None</td></tr>
+<tr><td>Explicit native numerical failure with otherwise valid structure</td><td>NUMERICAL_FAILURE</td><td>None</td></tr>
+</table>
+<p>Table 2. Structural invalidity takes precedence over numerical failure,
+which takes precedence over unavailable values. No failing gate exposes a partial numeric result.</p>
+<p>Invalid caller policy raises <code>ValueError</code> before evidence evaluation.
+Malformed supplied evidence returns INVALID_EVIDENCE. A declared native failure
+is preserved as an input state; this helper does not diagnose a solver failure.</p>
+
+<h2>Decimal precision basis</h2>
+<p>The paper <a href="https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html#689">
+What Every Computer Scientist Should Know About Floating-Point Arithmetic</a>
+(1991), section <em>Relative Error and Ulps</em>, gives the half-unit-last-place
+bound for rounding to nearest. For a decimal mantissa with <var>d</var> fractional
+places and an explicit exponent <var>e</var> (zero if absent), the implemented bound is</p>
+<pre>half_quantum = 10^(e - d) / 2</pre>
+<p>The decimal radix and factor one-half follow from the printed decimal place
+and the cited nearest-rounding bound. This is a bound on representation rounding,
+not a bound on source arithmetic, discretization error or native storage error.
+Truncation and unknown rounding modes do not satisfy the assumption; their adapter
+must refuse this gate until a reviewed representation contract is supplied.</p>
+<p>Independent hand calculation: <code>1.234E+2 = 123.4 = 617/5</code> has last
+place <code>0.1</code> and half quantum <code>0.05 = 1/20</code>.
+Likewise <code>0.000E+0</code> has half quantum <code>0.0005 = 1/2000</code>;
+<code>0E+0</code> has half quantum <code>0.5</code> despite having the same numeric zero.
+Negative signs do not change the quantum. All examples are mathematical fixtures,
+with no engineering acceptance limit implied.</p>
+<p>Exact decimal string construction and rational arithmetic avoid dependence
+on ambient Decimal precision, rounding, exponent bounds or traps. Floating-point
+inputs, nonfinite values, whitespace, underscores, non-ASCII digits, solver-specific
+exponents and overflow markers are refused. A native parser must perform any
+source-backed format normalization before calling the helper.</p>
+
+<h3 id="representation-limits">Representation limits</h3>
+<p>This revision sets software resource bounds of 128 characters per decimal literal
+and an absolute explicit exponent of at most 1000. These are implementation limits,
+not engineering constants or acceptance criteria. A format outside this bounded
+representation requires a reviewed contract change; its values are not silently clipped.</p>
+
+<h2>Precision and readback contract</h2>
+<p><code>PrecisionPolicy</code> requires a response unit, positive dimensional floor,
+positive maximum half quantum, nonnegative absolute readback limit and criterion
+source. Both budgets must be strictly below the dimensional floor. The budget
+magnitudes require a justified caller criterion; being below the floor alone does
+not establish suitability. The module supplies no stress, displacement or relative-error constants.</p>
+<p><code>check_export_precision</code> requires exact expected keys, matching export,
+readback and expected identities, and a policy unit equal to the response unit.
+Export and listing half quanta must each be at most the fixed precision budget.
+For every key, <code>abs(export - readback) &lt;= readback_limit</code> is required.
+A formatting witness must equal its predeclared exact value and meet its separate
+caller-supplied half-quantum budget. A mismatch is INVALID_EVIDENCE, not an
+engineering numerical failure. An absent capture or witness is NOT_EVALUATED.</p>
+<p>Mappings are accepted only after native duplicate-key refusal. Different capture
+identifiers are required, and the same mapping object cannot serve as its own
+readback. Distinct labels alone do not prove independent retrieval. Adapters must
+retain the independent native captures, verify their attribution and prevent copied
+or relabeled exports from becoming independent evidence. No JSON decoding or repair
+is performed here; duplicate JSON fields and byte-order marks require refusal at ingestion.</p>
+
+<h2>Caller sequence</h2>
+<ol>
+<li>Freeze the expected identity, station/component inventory, sourced limits,
+rounding contract, formatting witness and warning/reference-disagreement policy.</li>
+<li>Retain byte-exact native evidence and source-specific configuration/status,
+including stored-result precision before and after result creation. Verify its
+provenance and distinguish absent stream capture from a retained empty stream.</li>
+<li>Parse source-specific records without discarding duplicates, missing-value
+indicators or diagnostic state. Call <code>check_retrieval</code>.</li>
+<li>When retrieval passes, call <code>check_export_precision</code> with independently
+attributed, matching export/listing captures. The response unit and coordinate unit
+remain explicit; no conversion or contribution averaging is performed.</li>
+<li>Expose each gate status. Perform engineering comparisons only after all
+separate required gates are established. PASS for these helpers does not replace
+storage precision, diagnostic, provenance, reference or engineering criteria.</li>
+</ol>
+
+<h2>Inspected adapter candidates</h2>
+<p>The following six source families were inspected as candidates. This is a bounded
+source inventory, not an exhaustive adapter census or a coverage claim. No listed
+adapter calls this API in this revision.</p>
+<table>
+<tr><th>Source family</th><th>Inspected repository paths</th><th>Observed interface and remaining adoption work</th></tr>
+<tr><td>ANSYS</td><td><code>src/digitalmodel/ansys/cylinder_results.py</code>,
+<code>cylinder_results_state.py</code>, <code>cylinder_results_native_listings.py</code>,
+<code>cylinder_results_native_status.py</code>, <code>cylinder_deck_exports.py</code></td>
+<td>Existing keyed E24 exports, state/witness checks and native status readers remain unchanged.
+Source-specific stored-result status and recovery interpretation cannot be replaced by generic formatting checks.</td></tr>
+<tr><td>CalculiX</td><td><code>src/digitalmodel/solvers/calculix/result_parser.py</code></td>
+<td>FRD/DAT node fields and reactions need an explicit set/recovery/precision mapping.</td></tr>
+<tr><td>MYSTRAN</td><td><code>src/digitalmodel/solvers/mystran/result_parser.py</code></td>
+<td>F06/OP2 parsing needs source-backed result attribution, diagnostics and independent readback.</td></tr>
+<tr><td>AQWA</td><td><code>src/digitalmodel/hydrodynamics/diffraction/aqwa_lis_parser.py</code></td>
+<td>Listing extraction needs a frequency/heading/component key contract and source-specific precision policy.</td></tr>
+<tr><td>OrcaFlex</td><td><code>src/digitalmodel/solvers/orcaflex/results_analysis/csv_parser.py</code></td>
+<td>CSV column/unit parsing needs native retrieval, missing-value and capture provenance mapping.</td></tr>
+<tr><td>OpenFOAM</td><td><code>src/digitalmodel/solvers/openfoam/smoke_evidence.py</code></td>
+<td>Existing evidence-schema checks remain separate from a field-export identity and precision contract.</td></tr>
+</table>
+<p>Table 3. Inspected source candidates; actual adoption in this change is zero adapters.</p>
+
+<h2>Verification and remaining work</h2>
+<p>Refusal-first tests in <code>tests/infrastructure/test_solver_evidence.py</code>
+cover unavailable/defaulted results, positive and negative readback mismatches,
+key coverage, coordinate boundaries, result/source/frame/unit attribution,
+coarse zero representations, formatting witnesses and hostile Decimal context.
+Expected numbers are independent hand calculations in the tests, with illustrative
+caller-supplied limits. No native solve or measured dataset is used.</p>
+<p>Later slices will address native storage-configuration evidence, authenticated
+capture provenance, exact-byte review receipts, source-specific diagnostic policy,
+reference-disagreement disposition and reviewed adapter integration. Existing
+signed-residual work remains separate. Independent provider review of these exact
+artifacts is pending; no independent review verdict is claimed.</p>
+</body>
+</html>
