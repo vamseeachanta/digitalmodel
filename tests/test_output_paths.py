@@ -25,7 +25,10 @@ def test_directory_symlink_aliases_are_rejected(tmp_path):
     directory = tmp_path / "details"
     directory.mkdir()
     alias = tmp_path / "alias"
-    alias.symlink_to(directory, target_is_directory=True)
+    try:
+        alias.symlink_to(directory, target_is_directory=True)
+    except OSError:
+        pytest.skip("Symlink creation is unavailable")
     with pytest.raises(ValueError, match="distinct"):
         validate_output_paths(directory / "report", alias / "report")
     assert not list(directory.iterdir())
@@ -42,3 +45,17 @@ def test_distinct_existing_files_are_not_changed(tmp_path):
 
 def test_empty_output_set_is_valid():
     validate_output_paths()
+
+
+@pytest.mark.parametrize("existing", [False, True])
+def test_case_only_destinations_are_rejected(tmp_path, existing):
+    first, second = tmp_path / "analysis.HTML", tmp_path / "analysis.html"
+    if existing:
+        first.write_bytes(b"retained input")
+    with pytest.raises(ValueError, match="distinct"):
+        validate_output_paths(first, second)
+    if existing:
+        assert first.read_bytes() == b"retained input"
+    else:
+        assert not first.exists()
+        assert not second.exists()

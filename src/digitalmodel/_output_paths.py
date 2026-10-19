@@ -14,10 +14,11 @@ def validate_output_paths(*paths: Path) -> None:
     https://docs.python.org/3.11/library/pathlib.html#pathlib.Path.samefile
 
     This preflight does not lock paths against concurrent filesystem changes.
+    Case-only aliases are rejected conservatively on every filesystem.
     It preserves the caller's policy for replacing distinct existing files.
     """
     resolved = [Path(path).resolve() for path in paths]
-    if len(set(resolved)) != len(resolved):
+    if len({str(path).casefold() for path in resolved}) != len(resolved):
         raise ValueError("Output destinations must be distinct")
     existing = [path for path in resolved if path.exists()]
     for first, second in combinations(existing, 2):

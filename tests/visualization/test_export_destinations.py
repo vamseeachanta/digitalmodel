@@ -28,7 +28,10 @@ def test_all_destinations_validated_before_first_export(tmp_path, pair):
     retained.write_bytes(b"retained input")
     before = sha256(retained.read_bytes()).digest()
     for suffix in pair:
-        (tmp_path / f"analysis.{suffix}").symlink_to(retained.name)
+        try:
+            (tmp_path / f"analysis.{suffix}").symlink_to(retained.name)
+        except OSError:
+            pytest.skip("Symlink creation is unavailable")
 
     with pytest.raises(ValueError, match="distinct"):
         export_all_formats(_report(), tmp_path / "analysis")
@@ -43,7 +46,10 @@ def test_all_destinations_validated_before_first_export(tmp_path, pair):
 
 
 def test_unselected_formats_do_not_create_false_collisions(tmp_path):
-    (tmp_path / "analysis.json").symlink_to("analysis.html")
+    try:
+        (tmp_path / "analysis.json").symlink_to("analysis.html")
+    except OSError:
+        pytest.skip("Symlink creation is unavailable")
     files = export_all_formats(_report(), tmp_path / "analysis", formats=["html"])
     assert files == {"html": tmp_path / "analysis.html"}
     assert files["html"].read_text(encoding="utf-8").lstrip().lower().startswith("<!doctype html>")

@@ -49,7 +49,10 @@ def test_colliding_bundle_outputs_preserve_all_files(tmp_path, monkeypatch, pair
         if alias == "hardlink":
             destination.hardlink_to(retained)
         else:
-            destination.symlink_to(retained.name)
+            try:
+                destination.symlink_to(retained.name)
+            except OSError:
+                pytest.skip("Symlink creation is unavailable")
 
     with pytest.raises(ValueError, match="distinct"):
         write_report(_spec(), tmp_path, "analysis", pdf="auto")
@@ -64,7 +67,10 @@ def test_colliding_bundle_outputs_preserve_all_files(tmp_path, monkeypatch, pair
 
 
 def test_disabled_pdf_is_not_a_destination(tmp_path):
-    (tmp_path / "analysis.pdf").symlink_to("analysis.html")
+    try:
+        (tmp_path / "analysis.pdf").symlink_to("analysis.html")
+    except OSError:
+        pytest.skip("Symlink creation is unavailable")
     artifacts = write_report(_spec(), tmp_path, "analysis", pdf="off")
     assert artifacts.html_path.is_file()
     assert artifacts.pdf_path is None
@@ -76,8 +82,14 @@ def test_cross_directory_artifacts_keep_resolvable_manifest_links(tmp_path):
     details = tmp_path / "details"
     summary.mkdir()
     details.mkdir()
-    (summary / "analysis.html").symlink_to(details / "report.html")
-    (summary / "analysis_citations.json").symlink_to(details / "citations.json")
+    try:
+        (summary / "analysis.html").symlink_to(details / "report.html")
+    except OSError:
+        pytest.skip("Symlink creation is unavailable")
+    try:
+        (summary / "analysis_citations.json").symlink_to(details / "citations.json")
+    except OSError:
+        pytest.skip("Symlink creation is unavailable")
 
     artifacts = write_report(_spec(), summary, "analysis", pdf="off")
     manifest = json.loads(artifacts.manifest_path.read_text(encoding="utf-8"))

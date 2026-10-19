@@ -22,8 +22,9 @@ def _data():
 
 
 @pytest.mark.parametrize("existing", [False, True])
-def test_markdown_destination_collision_is_rejected_before_writing(tmp_path, existing):
-    output = tmp_path / "analysis.md"
+@pytest.mark.parametrize("name", ["analysis.md", "analysis.MD"])
+def test_markdown_destination_collision_is_rejected_before_writing(tmp_path, existing, name):
+    output = tmp_path / name
     if existing:
         output.write_bytes(b"retained input")
     before = sha256(output.read_bytes()).digest() if existing else None
@@ -46,7 +47,10 @@ def test_aliased_destinations_preserve_existing_bytes(tmp_path, alias):
     if alias == "hardlink":
         twin.hardlink_to(output)
     else:
-        twin.symlink_to(output.name)
+        try:
+            twin.symlink_to(output.name)
+        except OSError:
+            pytest.skip("Symlink creation is unavailable")
     before = sha256(output.read_bytes()).digest() if output.exists() else None
 
     with pytest.raises(ValueError, match="distinct"):
