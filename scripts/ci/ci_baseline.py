@@ -106,10 +106,15 @@ def summary_id(text: str) -> str:
 
 def parse_log(path: Path) -> tuple[list[str], list[str], int]:
     """Read pytest short summaries from raw or timestamped hosted logs."""
+    return parse_log_text(path.read_text(encoding="utf-8"))
+
+
+def parse_log_text(content: str) -> tuple[list[str], list[str], int]:
+    """Extract exact failed and errored IDs from pytest short-summary lines."""
     failed: set[str] = set()
     errored: set[str] = set()
     collected = 0
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in content.splitlines():
         line = re.sub(r"\x1b\[[0-9;]*m", "", line)
         line = re.sub(r"^\d{4}-\d\d-\d\dT[\d:.]+Z ", "", line)
         match = re.match(r"^(FAILED|ERROR) (.+)$", line)
@@ -217,21 +222,25 @@ def classify(row: dict[str, Any], baseline: dict[str, Any], max_age: float, now:
     return True, "all failing ids are pre-existing on main"
 
 
-def verified_evidence(url: str, shard: str) -> bool:
-    """Require a completed failing same-shard job from this repository's main."""
+def verified_evidence(url: str, shard: str, node: str) -> bool:
+    """Require this exact ID to fail in a same-shard job on this repository's main."""
     repository = os.environ.get("GITHUB_REPOSITORY", "")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
         return False
     escaped = re.escape(repository)
     match = re.fullmatch(
-        rf"https://(?:github\.com/{escaped}|api\.github\.com/(?:repos/{escaped}|repositories/[0-9]+))"
+        rf"https://(?:github\.com/{escaped}|api\.github\.com/(?:repos/{escaped}|repositories/([0-9]+)))"
         r"/actions/(runs|jobs)/([0-9]+)", url)
     if not match:
         return False
-    kind, number = match.groups()
+    repository_id, kind, number = match.groups()
     prefix = f"repos/{repository}/actions"
     try:
+        if repository_id is not None and str(gh_json(f"repos/{repository}")["id"]) != repository_id:
+            return False
         job = gh_json(f"{prefix}/jobs/{number}") if kind == "jobs" else None
+        if job is not None and str(job.get("id")) != number:
+            return False
         run_id = job["run_id"] if job is not None else int(number)
         run = gh_json(f"{prefix}/runs/{run_id}")
         if (str(run.get("id")) != str(run_id) or run.get("head_branch") != "main"
@@ -240,11 +249,17 @@ def verified_evidence(url: str, shard: str) -> bool:
                 or run["head_repository"].get("full_name") != repository):
             return False
         jobs = [job] if job is not None else gh_json(f"{prefix}/runs/{run_id}/jobs?per_page=100")["jobs"]
-        return any(isinstance(item, dict)
-                   and item.get("name") in {f"tests-{shard}", f"sweep-tests-{shard}"}
-                   and item.get("status") == "completed" and item.get("conclusion") == "failure"
-                   and str(item.get("run_id")) == str(run_id)
-                   and item.get("head_sha") == run.get("head_sha") for item in jobs)
+        for item in jobs:
+            if (isinstance(item, dict)
+                    and item.get("name") in {f"tests-{shard}", f"sweep-tests-{shard}"}
+                    and item.get("status") == "completed" and item.get("conclusion") == "failure"
+                    and str(item.get("run_id")) == str(run_id)
+                    and item.get("head_sha") == run.get("head_sha")
+                    and re.fullmatch(r"[0-9]+", str(item.get("id")))):
+                failed, errored, _ = parse_log_text(gh_text(f"{prefix}/jobs/{item['id']}/logs"))
+                if node in failed or node in errored:
+                    return True
+        return False
     except (OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError):
         return False
 
@@ -268,7 +283,7 @@ def register_decisions(path: Path, ids: list[str], shard: str) -> dict[str, str]
     except yaml.YAMLError:
         return {node: "register unreadable" for node in ids}
     decisions = {}
-    checked: dict[str, bool] = {}
+    checked: dict[tuple[str, str], bool] = {}
     for node in ids:
         row = entries.get(node, {})
         evidence = row.get("evidence")
@@ -276,9 +291,9 @@ def register_decisions(path: Path, ids: list[str], shard: str) -> dict[str, str]
                     and all(isinstance(item, str) and item.strip() for item in evidence))
         if approved:
             for url in evidence:
-                if url not in checked:
-                    checked[url] = verified_evidence(url, shard)
-            approved = all(checked[url] for url in evidence)
+                if (url, node) not in checked:
+                    checked[url, node] = verified_evidence(url, shard, node)
+            approved = all(checked[url, node] for url in evidence)
         decisions[node] = "registered with evidence" if approved else "missing open entry with evidence"
     return decisions
 
@@ -351,11 +366,14 @@ def compare_results(baseline_path: Path, results: Path, max_age: float, summary:
     return 0 if report["passed"] else 1
 
 
+def gh_text(endpoint: str) -> str:
+    """Read authenticated GitHub metadata or job logs through the hosted CLI."""
+    return subprocess.check_output(["gh", "api", endpoint], text=True)
+
+
 def gh_json(endpoint: str) -> dict[str, Any]:
     """Read authenticated workflow metadata through the hosted CLI."""
-    value: dict[str, Any] = json.loads(
-        subprocess.check_output(["gh", "api", endpoint], text=True)
-    )
+    value: dict[str, Any] = json.loads(gh_text(endpoint))
     return value
 
 

@@ -22,12 +22,17 @@ NOW = datetime(2026, 10, 15, 12, tzinfo=timezone.utc)
 
 
 EVIDENCE_URL = "https://github.com/example/repository/actions/runs/99"
+EVIDENCE_NODE = "tests/test_new.py::test_racy"
 
 
 def evidence_response(endpoint, **changes):
+    if endpoint == "repos/example/repository":
+        return {"id": 123}
     if "/jobs?" in endpoint:
-        return {"jobs": [dict(name="tests-example", run_id=99, head_sha="mainsha",
+        return {"jobs": [dict(id=7, name="tests-example", run_id=99, head_sha="mainsha",
                               status="completed", conclusion="failure")]}
+    if endpoint == "repos/example/repository/actions/jobs/7":
+        return evidence_response("/jobs?")["jobs"][0]
     return dict(dict(id=99, event="push", head_branch="main", status="completed",
                      head_sha="mainsha", head_repository={"full_name": "example/repository"}), **changes)
 
@@ -37,6 +42,7 @@ def evidence_metadata(monkeypatch):
     monkeypatch.delenv("GITHUB_EVENT_NAME", raising=False)
     monkeypatch.setenv("GITHUB_REPOSITORY", "example/repository")
     monkeypatch.setattr(ci, "gh_json", evidence_response)
+    monkeypatch.setattr(ci, "gh_text", lambda endpoint: f"FAILED {EVIDENCE_NODE} - assertion\n")
 
 
 def run_health_writer(body, *, active=True, existing=True):
@@ -830,20 +836,72 @@ def test_evidence_requires_failed_same_shard_job(monkeypatch, field, value):
             response["jobs"][0][field] = value
         return response
     monkeypatch.setattr(ci, "gh_json", metadata)
-    assert ci.verified_evidence(EVIDENCE_URL, "example") is False
+    assert ci.verified_evidence(EVIDENCE_URL, "example", EVIDENCE_NODE) is False
 
 
 @pytest.mark.parametrize("event", ["push", "schedule"])
-def test_main_run_evidence_is_accepted(monkeypatch, event):
+@pytest.mark.parametrize("url", [
+    EVIDENCE_URL,
+    "https://github.com/example/repository/actions/jobs/7",
+    "https://api.github.com/repos/example/repository/actions/runs/99",
+    "https://api.github.com/repos/example/repository/actions/jobs/7",
+    "https://api.github.com/repositories/123/actions/runs/99",
+    "https://api.github.com/repositories/123/actions/jobs/7",
+])
+def test_main_run_evidence_is_accepted(monkeypatch, event, url):
     monkeypatch.setattr(ci, "gh_json", lambda endpoint: evidence_response(endpoint, event=event))
-    assert ci.verified_evidence(EVIDENCE_URL, "example") is True
+    assert ci.verified_evidence(url, "example", EVIDENCE_NODE) is True
 
 
 def test_evidence_transport_failure_cannot_authorize_recovery(monkeypatch):
     def unavailable(endpoint):
         raise subprocess.CalledProcessError(1, ["gh", "api"])
     monkeypatch.setattr(ci, "gh_json", unavailable)
-    assert ci.verified_evidence(EVIDENCE_URL, "example") is False
+    assert ci.verified_evidence(EVIDENCE_URL, "example", EVIDENCE_NODE) is False
+
+
+@pytest.mark.parametrize("kind,number", [("runs", 99), ("jobs", 7)])
+def test_evidence_rejects_wrong_repository_id(tmp_path, kind, number):
+    path = tmp_path / "register.yml"
+    url = f"https://api.github.com/repositories/456/actions/{kind}/{number}"
+    path.write_text(json.dumps([dict(id=EVIDENCE_NODE, status="open", evidence=[url])]))
+    assert ci.register_decisions(path, [EVIDENCE_NODE], "example")[EVIDENCE_NODE] == (
+        "missing open entry with evidence")
+
+
+@pytest.mark.parametrize("different", ["tests/test_new.py::test_other", EVIDENCE_NODE + "[case]"])
+def test_same_shard_evidence_of_different_test_is_rejected(tmp_path, different):
+    path = tmp_path / "register.yml"
+    nodes = [EVIDENCE_NODE, different]
+    path.write_text(json.dumps([dict(id=node, status="open", evidence=[EVIDENCE_URL])
+                                for node in nodes]))
+    decisions = ci.register_decisions(path, nodes, "example")
+    assert decisions[EVIDENCE_NODE] == "registered with evidence"
+    assert decisions[different] == "missing open entry with evidence"
+
+
+@pytest.mark.parametrize("outcome", ["FAILED", "ERROR"])
+@pytest.mark.parametrize("node", [EVIDENCE_NODE, EVIDENCE_NODE + "[with space.a]"])
+def test_evidence_accepts_exact_failed_or_errored_id(monkeypatch, outcome, node):
+    log = f"2026-10-15T12:00:00.000Z \x1b[31m{outcome} {node} - assertion\x1b[0m\n"
+    monkeypatch.setattr(ci, "gh_text", lambda endpoint: log)
+    assert ci.verified_evidence(EVIDENCE_URL, "example", node) is True
+
+
+@pytest.mark.parametrize("log", [
+    "", f"PASSED {EVIDENCE_NODE}\n", f"{EVIDENCE_NODE} PASSED [100%]\n",
+    f"FAILED {EVIDENCE_NODE}[other] - assertion\n",
+])
+def test_evidence_without_exact_failure_summary_is_rejected(monkeypatch, log):
+    monkeypatch.setattr(ci, "gh_text", lambda endpoint: log)
+    assert ci.verified_evidence(EVIDENCE_URL, "example", EVIDENCE_NODE) is False
+
+
+def test_evidence_log_transport_failure_cannot_authorize_recovery(monkeypatch):
+    def unavailable(endpoint):
+        raise subprocess.CalledProcessError(1, ["gh", "api"])
+    monkeypatch.setattr(ci, "gh_text", unavailable)
+    assert ci.verified_evidence(EVIDENCE_URL, "example", EVIDENCE_NODE) is False
 
 
 @pytest.mark.parametrize("changes", [{"parsed": False}, {"exit_code": 2},
