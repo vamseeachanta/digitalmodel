@@ -1,7 +1,7 @@
 """Regression checks for the synthetic pore-pressure explorer.
 
-Input source: the committed explorer JSON and builder's synthetic trend;
-assumed, based on previous experience, rather than measured well data.
+Input basis: synthetic illustrative inputs defined in the builder, assumed
+and unsourced, based on previous experience rather than measured well data.
 Equation source: Eaton (1975), SPE 5544, sonic relation documented in
 src/digitalmodel/well/drilling/pore_pressure.py (Methods).
 """
@@ -16,6 +16,17 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/capabilities/build_pore_pressure_explorer.py"
 OUTPUT = ROOT / "docs/api/structural"
+
+
+@pytest.fixture
+def non_utf8_default(monkeypatch):
+    """Emulate a platform whose default text decoding uses a legacy codepage."""
+    original = Path.read_text
+
+    def read_text(path, encoding=None, errors=None):
+        return original(path, encoding=encoding or "cp1252", errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
 
 
 @pytest.fixture
@@ -73,14 +84,19 @@ def test_uncalibrated_bowers_is_not_evaluated(builder, monkeypatch):
     assert all(p["pp"] == p["eaton"] for p in study["series"])
 
 
-def test_generated_page_and_json_expose_missing_calibration(builder, monkeypatch, tmp_path):
+def test_generated_page_and_json_expose_missing_calibration(
+    builder, monkeypatch, tmp_path, non_utf8_default
+):
     """Generated files agree and the page handles a missing Bowers number."""
     monkeypatch.setattr(builder, "_REPO", tmp_path)
     monkeypatch.setattr(builder, "_OUT_DIR", tmp_path)
     builder.main()
-    study = json.loads((tmp_path / "pore-pressure-explorer.json").read_text())
-    page = (tmp_path / "pore-pressure-explorer.html").read_text()
+    study = json.loads((tmp_path / "pore-pressure-explorer.json").read_text(encoding="utf-8"))
+    page = (tmp_path / "pore-pressure-explorer.html").read_text(encoding="utf-8")
     payload = page.split("const DATA = ", 1)[1].split(";\nconst M", 1)[0]
+    assert page == builder._HTML.replace(
+        "{data}", json.dumps(study, separators=(",", ":"))
+    )
     assert json.loads(payload) == study
     assert "p.bowers === null" in page
     assert "NOT_EVALUATED" in page
@@ -88,12 +104,24 @@ def test_generated_page_and_json_expose_missing_calibration(builder, monkeypatch
     assert "assumed, based on previous experience" in page
 
 
-def test_committed_outputs_match_builder(builder):
+def test_committed_outputs_match_builder(builder, non_utf8_default):
     """A regenerated page and JSON must carry the same prediction and status."""
     study = builder.build_study()
-    assert (OUTPUT / "pore-pressure-explorer.json").read_text() == (
+    assert (OUTPUT / "pore-pressure-explorer.json").read_text(encoding="utf-8") == (
         json.dumps(study, indent=2) + "\n"
     )
-    assert (OUTPUT / "pore-pressure-explorer.html").read_text() == (
+    assert (OUTPUT / "pore-pressure-explorer.html").read_text(encoding="utf-8") == (
         builder._HTML.replace("{data}", json.dumps(study, separators=(",", ":")))
     )
+
+
+def test_page_labels_band_as_illustrative(builder):
+    """The display supplies no evaluated fracture or stability boundary."""
+    page = builder._HTML
+    assert 'Mud-weight indicator<b id="rM"' in page
+    assert "Shaded: illustrative band" in page
+    assert "assumed 0.3 ppg margin" in page
+    assert "no fracture or stability criterion is evaluated" in page
+    assert "safe band" not in page
+    assert "ceiling" not in page
+    assert "Min. mud weight" not in page

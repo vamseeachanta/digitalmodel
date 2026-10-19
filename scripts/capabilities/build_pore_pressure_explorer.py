@@ -27,9 +27,9 @@ warnings.filterwarnings("ignore")
 _REPO = Path(__file__).resolve().parents[2]
 _OUT_DIR = _REPO / "docs" / "api" / "structural"
 
-# Source for the unchanged illustrative inputs and trend coefficients below:
-# the repository's synthetic explorer fixture (pore-pressure-explorer.json).
-# All are assumed, based on previous experience; none is a calibrated field value.
+# Synthetic illustrative inputs and trend coefficients are defined in this file.
+# Introduced in commit 19e8eae30; assumed and unsourced, based on previous
+# experience. None is a calibrated field value; generated JSON is an output.
 _PN = 8.6                         # normal pore-pressure gradient, ppg
 _ONSET_FT = 8000.0                # overpressure onset depth
 _DEPTH = [float(5000 + 500 * i) for i in range(0, 19)]   # 5000 .. 14000 ft
@@ -138,7 +138,7 @@ Every evaluated point uses <code>eaton_pore_pressure</code>.</p>
   <div class="reads">
     <div class="read">Eaton pore<b id="rE">&mdash;</b></div>
     <div class="read">Bowers pore<b id="rB">&mdash;</b></div>
-    <div class="read">Min. mud weight<b id="rM" style="color:var(--mw)">&mdash;</b></div>
+    <div class="read">Mud-weight indicator<b id="rM" style="color:var(--mw)">&mdash;</b></div>
     <div class="read">Overburden<b id="rS">&mdash;</b></div>
   </div>
   <div class="scale"><div class="win" id="win"></div>
@@ -146,7 +146,7 @@ Every evaluated point uses <code>eaton_pore_pressure</code>.</p>
     <div class="tick mw" id="tmw"><span style="color:var(--mw)">mud</span></div>
     <div class="tick sv" id="tsv"><span style="color:var(--navy)">S_v</span></div></div>
   <div class="scalelab"><span>8 ppg</span><span>12</span><span>16</span><span>20 ppg</span></div>
-  <div class="cap">Mud-weight window at this depth: keep mud above the <i style="color:var(--bad)">pore</i> gradient (kick) and below the <i style="color:var(--navy)">overburden</i> ceiling. Shaded = the safe band above min mud weight.</div>
+  <div class="cap">Shaded: illustrative band between the pore estimate plus the assumed 0.3 ppg margin and overburden; no fracture or stability criterion is evaluated.</div>
 </div>
 
 <p class="foot">Built by <code>scripts/capabilities/build_pore_pressure_explorer.py</code> from
