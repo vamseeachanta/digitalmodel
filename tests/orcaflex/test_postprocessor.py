@@ -139,6 +139,40 @@ class TestExtremeValueAnalysis:
                 expected, abs=0.15
             )
 
+    def test_weibull_rejects_degenerate_ten_maxima_fit(self):
+        """A small sample with a boundary MLE must not yield return values."""
+        data = 7 + 3 * np.random.default_rng(2).weibull(2.5, size=10)
+        with pytest.raises(ValueError, match="degenerate Weibull fit"):
+            fit_weibull(data)
+
+    @pytest.mark.parametrize("offset", [0.0, 1000.0])
+    def test_weibull_rejects_location_at_sample_minimum(self, monkeypatch, offset):
+        """The location guard also catches boundary fits with shape >= 1."""
+        data = offset + np.linspace(1.0, 4.0, 20)
+        monkeypatch.setattr(
+            "digitalmodel.orcaflex.postprocessor.sp_stats.weibull_min.fit",
+            lambda maxima: (2.5, float(maxima.min()) - 1e-7, 3.0),
+        )
+        with pytest.raises(ValueError, match="degenerate Weibull fit"):
+            fit_weibull(data)
+
+    def test_weibull_rejects_subunit_shape_away_from_boundary(self, monkeypatch):
+        monkeypatch.setattr(
+            "digitalmodel.orcaflex.postprocessor.sp_stats.weibull_min.fit",
+            lambda maxima: (0.8, 0.0, 3.0),
+        )
+        with pytest.raises(ValueError, match="degenerate Weibull fit"):
+            fit_weibull(np.linspace(1.0, 4.0, 20))
+
+    @pytest.mark.parametrize("data", [
+        np.arange(9.0), np.ones(10), np.zeros((2, 10)),
+        np.append(np.arange(9.0), np.nan),
+        np.append(np.arange(9.0), np.inf),
+    ])
+    def test_weibull_requires_ten_finite_nonconstant_maxima(self, data):
+        with pytest.raises(ValueError, match="at least 10 finite, nonconstant"):
+            fit_weibull(data)
+
 
 class TestMultiSeed:
     """Tests for multi-seed processing."""

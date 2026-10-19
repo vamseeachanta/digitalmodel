@@ -6,8 +6,8 @@ VOF case.
 
 CONDITIONALLY (solver-capable host only): the case is solved via
 OpenFOAMRunner (blockMesh -> setFields -> interFoam) and the surge front is
-compared to Martin & Moyce (1952) with mass conservation and interface
-sharpness asserted; otherwise skipped.
+compared to Martin & Moyce (1952) with mass conservation asserted and interface
+mixing width recorded as a diagnostic; otherwise skipped.
 """
 
 from __future__ import annotations
@@ -156,7 +156,8 @@ def test_interface_sharpness_rejects_mass_conserving_smear(transpose) -> None:
     sharp_width = interface_band_width(sharp, dx) / dx
     assert sharp_width <= DAM_BREAK_INTERFACE_TOLERANCE_CELLS
     width = interface_band_width(smeared, dx) / dx
-    assert width == pytest.approx(8.0)
+    # Midpoint-sampled linear ramp: 4 * sum(alpha * (1 - alpha)) / length.
+    assert width == pytest.approx(5.375)
     assert width > DAM_BREAK_INTERFACE_TOLERANCE_CELLS
 
 
@@ -164,9 +165,31 @@ def test_interface_sharpness_rejects_mass_conserving_smear(transpose) -> None:
 def test_resolved_interface_width_scales_with_mesh(dx) -> None:
     profile = [1, 1, 1, 0.75, 0.25, 0, 0, 0]
     alpha = np.repeat(np.array(profile)[:, None], 8, axis=1)
-    assert interface_band_width(alpha, dx) == pytest.approx(2 * dx)
+    assert interface_band_width(alpha, dx) == pytest.approx(1.5 * dx)
     width_cells = interface_band_width(alpha, dx) / dx
     assert width_cells <= DAM_BREAK_INTERFACE_TOLERANCE_CELLS
+
+
+@pytest.mark.parametrize("angle", [0, 15, 30, 45])
+@pytest.mark.parametrize("profile", ["tanh", "linear"])
+def test_interface_mixing_width_for_rotated_profiles(angle, profile) -> None:
+    """Rotation preserves a tanh width; a 3-cell ramp has sampling error."""
+    dx = 0.01
+    x, y = np.meshgrid(np.arange(256) + 0.5 - 128, np.arange(256) + 0.5 - 128)
+    radians = math.radians(angle)
+    normal_distance = x * math.sin(radians) + y * math.cos(radians)
+    if profile == "tanh":
+        # Half-width one cell: the continuous weighted width is 2 cells.
+        alpha = 0.5 * (1 - np.tanh(normal_distance))
+        relative_tolerance = 0.02
+    else:
+        # Continuous width = 2/3 of the 3-cell linear ramp. Cell sampling
+        # causes up to 12% error, largest for this axis-aligned phase.
+        alpha = 1 - np.clip(normal_distance / 3 + 0.5, 0, 1)
+        relative_tolerance = 0.12
+    width_cells = interface_band_width(alpha, dx) / dx
+    assert width_cells == pytest.approx(2.0, rel=relative_tolerance)
+    assert width_cells < DAM_BREAK_INTERFACE_TOLERANCE_CELLS
 
 
 @pytest.mark.parametrize("alpha", [
@@ -186,7 +209,7 @@ def test_interface_width_rejects_invalid_cell_size(dx) -> None:
 
 
 def test_extract_interface_width_checks_all_written_fields(tmp_path, monkeypatch) -> None:
-    """A smeared middle frame must fail even if the final field is sharp."""
+    """The diagnostic captures a smeared middle frame despite a sharp final one."""
     cfg = DamBreakConfig(cells_per_width=4)
     x, y = np.meshgrid(
         (np.arange(cfg.nx) + 0.5) * cfg.cell_size,
@@ -220,7 +243,7 @@ def test_extract_interface_width_checks_all_written_fields(tmp_path, monkeypatch
     dat.write_text("# Time volume\n0 1\n0.1 1\n0.2 1\n")
     assert extract_mass_drift(tmp_path) == 0
     width = extract_interface_width(tmp_path, cfg)
-    assert width == pytest.approx(8.0)
+    assert width == pytest.approx(5.375)
     assert width > DAM_BREAK_INTERFACE_TOLERANCE_CELLS
 
 
@@ -277,8 +300,10 @@ def test_build_stamps_provenance_with_citation(tmp_path) -> None:
     assert any("10.1098/rsta.1952.0006" in c for c in prov["citations"])
     assert any("damBreak" in c for c in prov["citations"])
     assert prov["gate_release_time_shift"] == GATE_RELEASE_TIME_SHIFT
-    assert prov["tolerances"]["interface_band_width_cells"] == (
-        DAM_BREAK_INTERFACE_TOLERANCE_CELLS
+    assert "interface_band_width_cells" not in prov["tolerances"]
+    assert prov["diagnostics"]["interface_band_width_cells"]["gate_qualified"] is False
+    assert prov["diagnostics"]["interface_band_width_cells"]["definition"] == (
+        "4 * integral(alpha * (1 - alpha)) / integral(abs(grad(alpha))) / cell_size"
     )
 
 
@@ -287,7 +312,7 @@ def test_build_stamps_provenance_with_citation(tmp_path) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_dam_break_solve_matches_martin_moyce(tmp_path) -> None:
+def test_dam_break_solve_matches_martin_moyce(tmp_path, record_property) -> None:
     """End-to-end: mesh + setFields + solve, then compare the surge front to
     Martin & Moyce (1952) and assert mass conservation. Gated to
     solver-capable hosts (skipped in dry-run CI). The case is the one
@@ -313,10 +338,8 @@ def test_dam_break_solve_matches_martin_moyce(tmp_path) -> None:
     )
 
     width = extract_interface_width(case_dir, cfg)
-    assert width <= DAM_BREAK_INTERFACE_TOLERANCE_CELLS, (
-        f"effective interface band width {width:.2f} cells exceeds "
-        f"{DAM_BREAK_INTERFACE_TOLERANCE_CELLS:.0f} cells"
-    )
+    # No solved-field cutoff has been calibrated for the curved front.
+    record_property("interface_band_width_cells", width)
 
     # Surge front vs the digitized experiment, with the standard gate-release
     # shift (the experiment's diaphragm removal is not instantaneous).

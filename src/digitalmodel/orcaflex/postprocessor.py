@@ -227,7 +227,11 @@ def fit_weibull(
     """Fit a 3-parameter Weibull distribution to maxima by maximum likelihood.
 
     Shape, location and scale are all estimated; the location is not fixed
-    at zero. The support is ``x >= location``.
+    at zero. The support is ``x >= location``. At least 10 finite, nonconstant
+    maxima are required; 50 or more are recommended because small samples
+    often yield a degenerate MLE. Sample count alone does not establish fit
+    reliability. Fits with shape < 1 or location within one millionth of the
+    sample range of its minimum are rejected before return values are computed.
 
     Args:
         maxima: Array of extreme values.
@@ -236,15 +240,33 @@ def fit_weibull(
     Returns:
         ExtremeValueResult with fitted parameters.
 
+    Raises:
+        ValueError: If the input is invalid or the fitted Weibull is degenerate.
+
     Reference: DNV-RP-C205 Section 3.4.
     """
     if return_periods is None:
         return_periods = [10, 50, 100, 1000]
 
     maxima = np.asarray(maxima, dtype=float)
+    if (
+        maxima.ndim != 1 or maxima.size < 10
+        or not np.isfinite(maxima).all() or np.ptp(maxima) <= 0
+    ):
+        raise ValueError("Weibull fitting requires at least 10 finite, nonconstant maxima")
 
     # Fit Weibull (3-param: shape c, loc, scale)
     shape, loc, scale = sp_stats.weibull_min.fit(maxima)
+    location_tolerance = 1e-6 * float(np.ptp(maxima))
+    if (
+        not np.isfinite([shape, loc, scale]).all() or scale <= 0
+        or shape < 1 or float(np.min(maxima)) - loc <= location_tolerance
+    ):
+        raise ValueError(
+            "degenerate Weibull fit: nonfinite parameters, nonpositive scale, "
+            "shape < 1 or location at the sample minimum; use more maxima "
+            "or a different extreme-value model"
+        )
 
     return_values = {}
     for T in return_periods:
