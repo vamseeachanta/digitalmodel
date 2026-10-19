@@ -8,6 +8,8 @@ No engineering constants or numerical acceptance criteria are involved.
 """
 
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -63,6 +65,29 @@ def test_snapshot_detects_template_and_copy_edits(sample):
     page = sample / "reference/manual.html"
     page.write_text(page.read_text() + "\n<p>amended</p>", encoding="utf-8")
     assert after["consumers"] != inventory.build_inventory(sample)["consumers"]
+
+
+@pytest.mark.parametrize("relative", [inventory.TEMPLATE, "reference/manual.html"])
+def test_snapshot_ignores_git_checkout_crlf(sample, relative):
+    """Git checkout conversion alone must not invalidate source or copy hashes."""
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
+
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=sample, env=env, check=True, capture_output=True,
+        ).stdout
+
+    git("init")
+    git("-c", "core.autocrlf=false", "add", "--", relative)
+    before = inventory.build_inventory(sample)
+    converted = git("-c", "core.autocrlf=true", "cat-file", "--filters", f":{relative}")
+    original = (sample / relative).read_bytes()
+    assert b"\r\n" in converted
+    assert converted != original
+    assert converted.replace(b"\r\n", b"\n") == original
+    (sample / relative).write_bytes(converted)
+    assert inventory.build_inventory(sample) == before
 
 
 def test_marker_removed_from_template_requires_signature_review(sample):

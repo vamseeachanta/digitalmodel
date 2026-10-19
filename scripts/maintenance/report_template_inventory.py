@@ -6,10 +6,17 @@ Run from the repository root:
     python scripts/maintenance/report_template_inventory.py
     python scripts/maintenance/report_template_inventory.py --check
 
+After inspecting intentional template or consumer edits, refresh the snapshot:
+    python scripts/maintenance/report_template_inventory.py > config/report_template_consumers.json
+
 The first command prints JSON for review; the second compares it with the
 committed manifest. Neither command writes files or executes report builders.
 The census uses every tracked HTML path, including manually maintained pages.
-Hashes record the inspected bytes, not proof of derivation or regeneration.
+Hashes record working-tree bytes with CRLF normalized to LF, so Git checkout
+line-ending conversion does not cause drift. Other edits, including unstaged
+edits to the template or any matching HTML copy, intentionally fail --check
+and the repository snapshot test until the inspected snapshot is refreshed.
+Hashes do not prove derivation or regeneration.
 
 Scope is deliberately one template family. Matching literal CSS markers is
 discovery evidence, not proof that all other template families or heavily
@@ -57,12 +64,12 @@ def tracked_html_paths(repo: Path) -> list[str]:
 
 def build_inventory(repo: Path) -> dict:
     """Record one template and matching tracked consumers without rendering."""
-    source = (repo / TEMPLATE).read_bytes()
+    source = (repo / TEMPLATE).read_bytes().replace(b"\r\n", b"\n")
     if not all(marker in source.decode("utf-8") for marker in MARKERS):
         raise ValueError("template evidence markers changed; review the signature")
     consumers = []
     for relative in sorted(tracked_html_paths(repo)):
-        content = (repo / relative).read_bytes()
+        content = (repo / relative).read_bytes().replace(b"\r\n", b"\n")
         text = content.decode("utf-8", errors="replace")
         if all(marker in text for marker in MARKERS):
             consumers.append({
