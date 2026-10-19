@@ -16,6 +16,7 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | 5 | 2026-10-18 | Document the unimplemented datum-below-layer warning and retain its open reference in #2704. |
 | 6 | 2026-10-18 | Track the datum-below-layer diagnostic separately in #2785 so the remaining warning has a dedicated acceptance criterion. |
 | 7 | 2026-10-19 | Reject positive-gradient datums below the minimum elevation of each layer lower boundary to diagnose a gradient that cannot affect strength. |
+| 8 | 2026-10-19 | Also reject positive-gradient datums equal to the lower-boundary minimum because the gradient remains inert; format the diagnostic minimum consistently. |
 
 ## Basis and boundaries
 
@@ -89,20 +90,21 @@ This is the governing cp equation in xslope 1.0.3, `xslope/slice.py`
 (strength at the slice base). A positive gradient without an explicit
 reference_elevation_m is rejected before importing the solver. Constant strength
 (gradient zero) may omit the datum because the equation is independent of it.
-An explicit datum strictly below the minimum elevation of a layer's lower
+An explicit datum at or below the minimum elevation of a layer's lower
 boundary is also rejected when the gradient is positive (Refs #2785). The lower
 boundary is the next layer's top polyline, or bottom_elevation_m for the lowest
 layer. Piecewise-linear boundary minima occur at vertices, including interior
 vertices. The diagnostic raises ValueError with the layer index and lower
 minimum before importing the solver; it does not emit a warning or adjust inputs.
-Equality is accepted. Constant strength remains datum-independent, including an
-explicit datum below the layer. A datum above the minimum but below other parts
+Equality is rejected because the gradient term is zero throughout the layer.
+Constant strength remains datum-independent, including an explicit datum at or
+below the layer minimum. A datum above the minimum but below other parts
 of a sloping boundary is accepted; growth can be inactive in part of that layer.
 
 The zero floor in the existing cp equation is documented in the public
 [XSLOPE Tutorial 7, undrained strength section](https://xslope.org/en/latest/tutorials/lem07_strength_envelopes/)
-(accessed 2026-10-19). If R is below the lower-boundary minimum, every layer
-point y satisfies R-y < 0, so max(0, R-y) vanishes throughout the layer.
+(accessed 2026-10-19). If R is at or below the lower-boundary minimum, every layer
+point y satisfies R-y <= 0, so max(0, R-y) vanishes throughout the layer.
 This diagnostic adds no empirical coefficient, tolerance or design acceptance
 limit. It detects an inert gradient rather than establishing that a datum is
 appropriate for the soil profile.

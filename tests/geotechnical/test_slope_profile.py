@@ -148,9 +148,9 @@ def test_strength_datum_relative_to_model_bottom(elevation_shift, datum_offset):
     """Hand calculation using the guide's xslope 1.0.3 cp equation (2026).
 
     Synthetic geometry: lower elevation B is the elevation shift; datum R is
-    B + offset. For offset -1, every layer point y >= B has R-y <= -1,
-    so max(0, R-y) = 0 and the positive gradient is inert. Offset 0 is the
-    exact boundary; offset 1 permits a positive depth term near the bottom.
+    B + offset. For offsets -1 and 0, every layer point y >= B has R-y <= 0,
+    so max(0, R-y) = 0 and the positive gradient is inert. Offset 1 permits
+    a positive depth term near the bottom.
     The guide's illustrative Su_ref=5 kPa and gradient=1.5 kPa/m are reused;
     these are synthetic inputs, not design coefficients or acceptance limits.
     """
@@ -163,8 +163,10 @@ def test_strength_datum_relative_to_model_bottom(elevation_shift, datum_offset):
                        "su_gradient_kpa_per_m": 1.5,
                        "reference_elevation_m": elevation_shift + datum_offset}]
     before = deepcopy(data)
-    if datum_offset < 0:
-        with pytest.raises(ValueError, match=r"layers\[0\].reference_elevation_m.*below"):
+    if datum_offset <= 0:
+        with pytest.raises(
+            ValueError, match=r"layers\[0\].reference_elevation_m.*at or below"
+        ):
             validate_profile(data)
     else:
         result = validate_profile(data)
@@ -184,8 +186,8 @@ def test_strength_datum_uses_each_layer_lower_minimum(
     Synthetic layer tops: ground, horizontal -5 m, then a V with elevations
     -10, -20, -10 m at x=0,40,100 m; model bottom=-30 m. Linear segments
     attain their minima at vertices, so the three lower minima are -5, -20,
-    -30 m. R=min+(-1) lies below the whole layer, making max(0,R-y)=0.
-    R=min is the permitted equality. R=min+1 or min+5 permits growth in
+    -30 m. R=min+(-1) and R=min both make max(0,R-y)=0 throughout the layer
+    and are rejected. R=min+1 or min+5 permits growth in
     part of the layer, even below the V's -10 m endpoints. The cp equation
     and illustrative strength inputs are from the slope guide (xslope 1.0.3,
     2026); all geometry is synthetic, not a design recommendation.
@@ -201,9 +203,9 @@ def test_strength_datum_uses_each_layer_lower_minimum(
     layer.update(su_kpa=5, su_gradient_kpa_per_m=1.5,
                  reference_elevation_m=lower_minimum + datum_offset)
     before = deepcopy(data)
-    if datum_offset < 0:
+    if datum_offset <= 0:
         with pytest.raises(
-            ValueError, match=rf"layers\[{layer_index}\].reference_elevation_m.*below"
+            ValueError, match=rf"layers\[{layer_index}\].reference_elevation_m.*at or below"
         ):
             validate_profile(data)
     else:
@@ -212,6 +214,17 @@ def test_strength_datum_uses_each_layer_lower_minimum(
             lower_minimum + datum_offset
         )
     assert data == before
+
+
+@pytest.mark.parametrize(("bottom", "display"), [(-20.0, "-20"), (-5 - 1e-15, "-5")])
+def test_inert_strength_datum_diagnostic_formats_lower_minimum(bottom, display):
+    data = profile()
+    data["bottom_elevation_m"] = bottom
+    data["layers"] = [{"unit_weight_kn_m3": 20, "su_kpa": 5,
+                       "su_gradient_kpa_per_m": 1.5,
+                       "reference_elevation_m": bottom - 1}]
+    with pytest.raises(ValueError, match=rf"minimum \({display} m\)"):
+        validate_profile(data)
 
 
 @pytest.mark.parametrize("gradient", [None, 0])
