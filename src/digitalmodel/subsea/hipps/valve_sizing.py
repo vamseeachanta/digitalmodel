@@ -3,10 +3,12 @@
 
 """Caller-coefficient valve sizing and actuator closure laws.
 
-Public equation basis: Emerson, Control Valve Handbook, sixth edition,
+Public equation basis: Emerson/Fisher, Control Valve Handbook, sixth edition
+(August 2023), section 5.5 (fully turbulent, single-phase Newtonian flow),
 sections 5.8.2, 5.8.3 and 5.9.2–5.9.3, available at
-https://www.emerson.com/is/content/emerson/en/final-control/flow-controls/documents/d101881x012.pdf
-(read 2026-10-14). The liquid worked arithmetic is in section 5.8.4.
+https://www.emerson.com/is/content/emerson/es/final-control/isolation-valves/documents/control-valve-handbook-en-3661206.pdf
+(liquid equations and example rechecked 2026-10-18, pp. 113–115).
+The liquid worked arithmetic is in section 5.8.4.
 
 The handbook describes the ISA-75.01 / IEC 60534-2-1 sizing method. This
 module does not certify standards compliance. Unit constants N1/N6, adjusted
@@ -21,6 +23,12 @@ x_sizing = min((p1-p2)/p1, x_choked), Y = 1-x_sizing/(3*x_choked).
 Gas output is mass rate, not standard or actual volume rate. Returned units
 are those specified by N1/N6. Factors remain fixed during coefficient inversion;
 a catalogue-dependent iteration is the caller's responsibility.
+
+Liquid results outside floating-point range raise ValueError; no infinity or
+underflowed positive flow/coefficient is returned as a sizing result. Rescaling
+units may be necessary even when the final real-valued result is representable.
+API 17O/IEC 61511 compliance, cavitation adequacy and viscous/multiphase
+applicability remain NOT_EVALUATED; choking status is not an adequacy verdict.
 """
 
 from __future__ import annotations
@@ -74,7 +82,8 @@ def liquid_capacity(
         Capacity, sizing pressure drop and whether liquid flow is choked.
 
     Raises:
-        ValueError: For invalid, reverse-flow or flashing-inlet inputs.
+        ValueError: For invalid, reverse-flow or flashing-inlet inputs, or
+            liquid arithmetic outside floating-point range.
     """
     _positive(p_upstream=p_upstream, specific_gravity=specific_gravity,
               unit_constant=unit_constant, piping_factor=piping_factor,
@@ -84,7 +93,9 @@ def liquid_capacity(
                  vapor_pressure=vapor_pressure)
     if p_downstream > p_upstream or vapor_pressure >= p_upstream:
         raise ValueError("forward flow and a liquid inlet are required")
-    limit = (recovery_factor / piping_factor)**2 * (
+    # Squared FLP/Fp: Handbook, 6th ed. (2023), §5.8.2, p. 113.
+    recovery_ratio = recovery_factor / piping_factor
+    limit = recovery_ratio * recovery_ratio * (
         p_upstream - critical_pressure_ratio * vapor_pressure
     )
     _positive(choked_pressure_drop=limit)
@@ -93,6 +104,10 @@ def liquid_capacity(
     rate = unit_constant * piping_factor * coefficient * math.sqrt(
         effective / specific_gravity
     )
+    _nonnegative(capacity_rate=rate)
+    # Positive factors imply positive q (Handbook, 6th ed., 2023, §5.8.3).
+    if coefficient > 0 and effective > 0 and rate == 0:
+        raise ValueError("liquid capacity underflow; rescale the input units")
     return ValveCapacity(rate, effective, drop >= limit)
 
 
@@ -107,15 +122,20 @@ def required_liquid_coefficient(*, rate: float, **inputs: float) -> float:
         Required Cv or Kv in the coefficient convention defined by N1.
 
     Raises:
-        ValueError: If a positive rate is requested at zero pressure drop.
+        ValueError: For invalid inputs, positive rate at zero drop, or liquid
+            capacity/coefficient arithmetic outside floating-point range.
     """
     _nonnegative(rate=rate)
+    # Unit C for linear inversion: Handbook, 6th ed. (2023), §5.8.3.
     unit = liquid_capacity(coefficient=1.0, **inputs).rate
+    # True zero demand implies zero C (same relation); not an acceptance limit.
     if rate == 0:
         return 0.0
     if unit == 0:
         raise ValueError("positive flow requires positive pressure drop")
-    return rate / unit
+    coefficient = rate / unit
+    _positive(required_coefficient=coefficient)
+    return coefficient
 
 
 def gas_mass_capacity(
