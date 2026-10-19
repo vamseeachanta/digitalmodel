@@ -14,6 +14,7 @@ coefficients, default inputs or generated models. Numerical behaviour is unchang
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Inventory the standards-labelled inputs and evidence gaps so that publication metadata cannot be mistaken for engineering qualification. |
+| 2 | 2026-10-19 | Record the separate uncited strength fallback, confirm the catalogue title wording and extend the inventory checks for portable paths and citation syntax. |
 
 ## Publication identities and edition boundaries
 
@@ -44,7 +45,7 @@ The JSON file is an assessment artifact, not a runtime `Citation` sidecar. Its
 
 | Inventory entry | Consumer and quantities | Basis and unresolved limitation |
 | --- | --- | --- |
-| `pipe-material` | [`linetype_builder.py`](../../../src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py), `MATERIAL_PROPERTIES`: density, modulus, Poisson ratio and yield input | Yield follows the canonical materials unit view. Other entries are modelling defaults without a qualified standard clause. Unknown material strings fall back to the default grade. |
+| `pipe-material` | [`linetype_builder.py`](../../../src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py), `MATERIAL_PROPERTIES`: density, modulus, Poisson ratio and yield input | Yield follows the canonical materials unit view. Other entries are modelling defaults without a qualified standard clause. Unknown material strings fall back to the default grade. Separately, `LineTypeBuilder.build` uses `material_props.get("DNVSTF101Fy", 450e3)` when the yield key is absent: an uncited strength fallback in kN/m2 with no qualified standard basis. |
 | `pipe-code-inputs` | `LineTypeBuilder._build_line_type_entry`: every emitted `DNVSTF101*` key | Includes the simplified strain limit, material/safety factors, strength inputs and zero/null entries. No governing clause or solver sentinel interpretation is established. Generating these fields is not an evaluated code check. |
 | `chain-defaults` | [`mooring_router.py`](../../../src/digitalmodel/solvers/orcaflex/modular_generator/routers/mooring_router.py), `CHAIN_DATABASE`: breaking-load coefficient, mass, stiffness, drag and added mass | The code attributes only the breaking-load relation to a standard. The remaining defaults and nearby curated-library examples are not independent standard evidence. |
 | `chain-breaking-load` | `MooringRouter._chain_linetype`: diameter and grade coefficient to computed breaking load, then `AllowableTension`; explicit breaking-load override takes precedence | The existing relation can be denoted symbolically as `MBL = c_grade d² (a − b d)`. The edition and clause for all coefficients and diameter bounds are unresolved. No numerical coefficient is qualified or reproduced here. Assignment to `AllowableTension` applies no cited design factor. |

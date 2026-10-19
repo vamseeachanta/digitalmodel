@@ -83,7 +83,7 @@
       ],
       "basis": "repository defaults; not qualified standard values",
       "status": "NOT_EVALUATED",
-      "limitation": "Yield is imported from the canonical materials unit view. Density, modulus and Poisson ratio are modelling defaults; no normative clause is established for this group. Unknown grades fall back to a default grade."
+      "limitation": "Yield is imported from the canonical materials unit view. Density, modulus and Poisson ratio are modelling defaults; no normative clause is established for this group. Unknown grades fall back to a default grade. Separately, LineTypeBuilder.build uses material_props.get(\"DNVSTF101Fy\", 450e3) when the yield key is absent; this uncited strength fallback is in kN/m2 and has no qualified standard basis."
     },
     {
       "id": "pipe-code-inputs",
@@ -200,7 +200,7 @@
       "checked_on": "2026-10-19",
       "http_status": 200,
       "result": "publications catalogue",
-      "supports": "API RP 2SK title and edition, printed page 6, RP 2SK entry.",
+      "supports": "Printed page 6, RP 2SK entry: \"Design and Analysis of Stationkeeping Systems for Floating Offshore Structures\"; \"4th Edition | February 2024\".",
       "limitation": "The catalogue is dated 2025; it is not evidence of a governing edition or a chain-grade clause."
     },
     "dnv-e302-unavailable": {

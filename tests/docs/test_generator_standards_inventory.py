@@ -11,7 +11,7 @@ calculation is performed; no numerical standard value is used as an oracle.
 
 import ast
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from urllib.parse import urlsplit
 
 import pytest
@@ -64,7 +64,7 @@ def test_issue_sites_have_explicit_unresolved_governing_locators(inventory):
         "API Spec 5L",
     }
     assert {row["path"] for row in inventory["uses"]} == {
-        str(path.relative_to(ROOT))
+        path.relative_to(ROOT).as_posix()
         for path in (
             PACKAGE / "builders/linetype_builder.py",
             PACKAGE / "routers/mooring_router.py",
@@ -94,6 +94,16 @@ def test_inventory_symbols_and_parameters_resolve_without_importing_solver(inven
         assert row["limitation"].strip()
         assert set(row["standards"]) <= inventory["standards"].keys()
         assert row["standards"]
+
+
+@pytest.mark.parametrize("path_type", [PurePosixPath, PureWindowsPath])
+def test_issue_site_paths_are_portable(inventory, monkeypatch, path_type):
+    root = path_type("checkout")
+    monkeypatch.setitem(globals(), "ROOT", root)
+    monkeypatch.setitem(
+        globals(), "PACKAGE", root / "src/digitalmodel/solvers/orcaflex/modular_generator"
+    )
+    test_issue_sites_have_explicit_unresolved_governing_locators(inventory)
 
 
 def test_all_emitted_dnv_inputs_are_inventoried(inventory):
@@ -129,6 +139,34 @@ def test_material_and_chain_defaults_are_distinguished_from_standard_rules(inven
     )
 
 
+def test_build_strength_fallback_is_explicitly_unqualified(inventory):
+    row = use(inventory, "pipe-material")
+    build = node_at(row["path"], "LineTypeBuilder.build")
+    fallback = next(
+        node
+        for node in ast.walk(build)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "get"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and node.args[0].value == "DNVSTF101Fy"
+    )
+    expression = ast.get_source_segment(
+        (ROOT / row["path"]).read_text(encoding="utf-8"), fallback
+    )
+    assert expression in row["limitation"]
+    assert "kN/m2" in row["limitation"]
+    assert "uncited" in row["limitation"]
+    report = INVENTORY.with_suffix(".md").read_text(encoding="utf-8")
+    material_row = next(
+        line for line in report.splitlines() if line.startswith("| `pipe-material` |")
+    )
+    assert expression in material_row
+    assert "kN/m2" in material_row
+    assert "uncited" in material_row
+
+
 def test_catalogue_editions_do_not_select_the_governing_edition(inventory):
     """Metadata only: DNV product heading and API catalogue printed page 6."""
     f101 = inventory["standards"]["DNV-ST-F101"]
@@ -139,6 +177,9 @@ def test_catalogue_editions_do_not_select_the_governing_edition(inventory):
         "Design and Analysis of Stationkeeping Systems for Floating Offshore Structures"
     )
     assert api["catalogue_edition"] == "4th edition, February 2024"
+    supports = inventory["sources"]["api-publications-catalogue"]["supports"]
+    assert f'"{api["title"]}"' in supports
+    assert '"4th Edition | February 2024"' in supports
     assert inventory["standards"]["API Spec 5L"]["repository_edition"] == "46th edition"
     assert inventory["standards"]["DNV-OS-E302"]["title"] is None
 
@@ -179,5 +220,55 @@ def test_missing_sidecar_assessment_matches_current_package():
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Name):
                 assert node.id not in {"Citation", "CitedValue"}, path
-            if isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.startswith("digitalmodel.citations"), path
+            if isinstance(node, ast.Attribute):
+                assert node.attr not in {"Citation", "CitedValue"}, path
+            if isinstance(node, ast.Import):
+                assert all(
+                    alias.name.split(".")[:2] != ["digitalmodel", "citations"]
+                    for alias in node.names
+                ), path
+            if isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                assert not module.startswith("digitalmodel.citations"), path
+                if node.level > 0:
+                    assert "citations" not in module.split("."), path
+                if node.level > 0 or module == "digitalmodel":
+                    assert all(alias.name != "citations" for alias in node.names), path
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "value = Citation()",
+        "value = CitedValue()",
+        "import digitalmodel.citations",
+        "import digitalmodel.citations.schema as schema",
+        "import pathlib, digitalmodel.citations.schema as schema",
+        "from digitalmodel.citations.schema import validate_citation",
+        "from ...citations import schema",
+        "from .citations.schema import validate_citation",
+        "from . import citations",
+        "from digitalmodel import citations as schema",
+        "value = schema.Citation()",
+        "value = schema.CitedValue()",
+    ],
+)
+def test_sidecar_tripwire_rejects_citation_syntax(tmp_path, monkeypatch, source):
+    (tmp_path / "consumer.py").write_text(source, encoding="utf-8")
+    monkeypatch.setitem(globals(), "PACKAGE", tmp_path)
+    with pytest.raises(AssertionError):
+        test_missing_sidecar_assessment_matches_current_package()
+
+
+def test_sidecar_tripwire_allows_unrelated_syntax(tmp_path, monkeypatch):
+    (tmp_path / "consumer.py").write_text(
+        "import pathlib\n"
+        "import digitalmodel.citations_extra\n"
+        "from .utils import Schema\n"
+        "from . import utilities\n"
+        "value = schema.OtherValue()\n"
+        "label = 'Citation'\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setitem(globals(), "PACKAGE", tmp_path)
+    test_missing_sidecar_assessment_matches_current_package()
