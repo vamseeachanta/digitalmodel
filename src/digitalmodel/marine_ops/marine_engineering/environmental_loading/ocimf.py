@@ -876,7 +876,8 @@ class EnvironmentalForces:
 
 
 def create_sample_database(output_path: Union[str, Path, TextIO], num_vessels: int = 5,
-                          num_headings: int = 13, num_displacements: int = 3):
+                          num_headings: int = 13, num_displacements: int = 3,
+                          *, verbose: bool = True):
     """
     Create a sample OCIMF database for testing/demo purposes.
 
@@ -885,6 +886,7 @@ def create_sample_database(output_path: Union[str, Path, TextIO], num_vessels: i
         num_vessels: Number of vessel types to generate
         num_headings: Number of heading angles (0-180)
         num_displacements: Number of displacement values per vessel
+        verbose: Print creation details; disable for compute-only streams
     """
     vessel_types = ['VLCC', 'Suezmax', 'Aframax', 'Panamax', 'Handymax'][:num_vessels]
     base_displacements = {
@@ -942,8 +944,9 @@ def create_sample_database(output_path: Union[str, Path, TextIO], num_vessels: i
 
     df = pd.DataFrame(data)
     df.to_csv(output_path, index=False)
-    print(f"Created sample OCIMF database: {output_path}")
-    print(f"  Vessels: {num_vessels}")
-    print(f"  Total entries: {len(df)}")
+    if verbose:
+        print(f"Created sample OCIMF database: {output_path}")
+        print(f"  Vessels: {num_vessels}")
+        print(f"  Total entries: {len(df)}")
 
     return df

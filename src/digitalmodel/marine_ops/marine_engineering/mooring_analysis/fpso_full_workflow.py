@@ -22,6 +22,7 @@ from digitalmodel.marine_ops.marine_engineering.mooring_analysis import (
 from .component_database import ChainGrade, ChainProperties, ComponentDatabase, LinkType
 from .fpso_full_catenary import baseline_bounds
 from .fpso_full_output import (
+    configured_result_folder,
     json_safe,
     print_self_check,
     result_folder,
@@ -106,15 +107,13 @@ class FPSOMooringFullWorkflow:
         The existing generator and CSV parser are retained for numerical parity.
         These samples are not qualified engineering coefficient data.
         """
-        if not (
-            cfg.get("Analysis", {}).get("result_folder")
-            or cfg.get("_config_dir_path")
-        ):
+        folder = configured_result_folder(cfg)
+        if folder is None:
             with StringIO() as stream:
-                create_sample_database(stream)
+                create_sample_database(stream, verbose=False)
                 stream.seek(0)
                 return OCIMFDatabase(stream)
-        path = result_folder(cfg) / "ocimf_coefficients_sample.csv"
+        path = folder / "ocimf_coefficients_sample.csv"
         if not path.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
             create_sample_database(str(path))

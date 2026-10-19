@@ -37,6 +37,7 @@ import sys
 from digitalmodel.parametric.generate import RESPONSE_FUNCS
 # Load dependencies before observing the first computation, not just imports.
 from digitalmodel.marine_ops.marine_engineering.mooring_analysis import fpso_full_workflow
+from io import StringIO
 
 def reject_write(event, args):
     if event == "open":
@@ -46,6 +47,9 @@ def reject_write(event, args):
     assert event not in {"os.mkdir", "os.remove", "os.rename", "os.rmdir"}, event
 
 assert list(Path.cwd().iterdir()) == []
+# A compute-only response must also work when stdout has been closed.
+sys.stdout = StringIO()
+sys.stdout.close()
 sys.addaudithook(reject_write)
 value = RESPONSE_FUNCS["fpso_mooring_full"](
     {"Hs": 4.0, "Tp": 11.0, "water_depth_m": 1000.0}
@@ -141,6 +145,91 @@ def test_explicit_directory_preserves_sample_and_force_values(
     )
     assert sample.read_bytes() == before
     assert list(expected_folder.iterdir()) == [sample]
+
+
+def test_compute_only_sample_is_silent(capsys):
+    from importlib import import_module
+
+    workflow = import_module(WORKFLOW).FPSOMooringFullWorkflow()
+    capsys.readouterr()
+    workflow._ocimf_database({})
+    workflow._ocimf_database({})
+    assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize("destination", ["stream", "path"])
+def test_sample_generation_can_be_silent(tmp_path, capsys, destination):
+    from digitalmodel.marine_ops.marine_engineering.environmental_loading import (
+        create_sample_database,
+    )
+
+    target = io.StringIO() if destination == "stream" else tmp_path / "sample.csv"
+    capsys.readouterr()
+    frame = create_sample_database(target, verbose=False)
+    assert capsys.readouterr().out == ""
+    if destination == "stream":
+        assert not target.closed
+        contents = target.getvalue()
+    else:
+        contents = target.read_bytes().decode("utf-8")
+    assert contents == frame.to_csv(index=False)
+
+
+def test_sample_path_output_keeps_creation_message(tmp_path, capsys):
+    from digitalmodel.marine_ops.marine_engineering.environmental_loading import (
+        create_sample_database,
+    )
+
+    target = tmp_path / "sample.csv"
+    capsys.readouterr()
+    frame = create_sample_database(target)
+    assert capsys.readouterr().out == (
+        f"Created sample OCIMF database: {target}\n"
+        "  Vessels: 5\n"
+        f"  Total entries: {len(frame)}\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "cfg,expected",
+    [
+        ({}, None),
+        ({"Analysis": {}}, None),
+        ({"Analysis": {"result_folder": ""}, "_config_dir_path": ""}, None),
+        ({"Analysis": {"result_folder": "chosen"}}, Path("chosen")),
+        ({"_config_dir_path": "config"}, Path("config/results")),
+        (
+            {"Analysis": {"result_folder": ""}, "_config_dir_path": "config"},
+            Path("config/results"),
+        ),
+        (
+            {"Analysis": {"result_folder": Path("chosen")}, "_config_dir_path": "config"},
+            Path("chosen"),
+        ),
+    ],
+)
+def test_configured_result_folder_matches_output_routing(cfg, expected):
+    from digitalmodel.marine_ops.marine_engineering.mooring_analysis.fpso_full_output import (
+        configured_result_folder,
+        result_folder,
+    )
+
+    assert configured_result_folder(cfg) == expected
+    assert result_folder(cfg) == (expected if expected is not None else Path("results"))
+
+
+def test_unconfigured_sample_ignores_existing_working_directory_csv(tmp_path, monkeypatch):
+    from importlib import import_module
+
+    workflow = import_module(WORKFLOW).FPSOMooringFullWorkflow()
+    expected = workflow._ocimf_database({}).data.to_csv(index=False)
+    sample = tmp_path / "results" / "ocimf_coefficients_sample.csv"
+    sample.parent.mkdir()
+    original = "unrelated\nignored\n"
+    sample.write_text(original, encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    assert workflow._ocimf_database({}).data.to_csv(index=False) == expected
+    assert sample.read_text(encoding="utf-8") == original
 
 
 def test_explicit_router_writes_configured_outputs(tmp_path):
