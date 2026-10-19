@@ -16,12 +16,13 @@ from types import MappingProxyType
 from . import grades
 from .database_schema import MaterialRecord, RepositoryProvenance, Strengths
 
-# Inspected source text, not a standards-derived numerical dataset.
-_SOURCE_REVISION = "f21a12af5349c1656137a7b9daa091ec8f968738"
+# Revision status: assigned after merge, when the source is reachable from main.
+# Until then, provenance is pinned by the mandatory normalized digest only.
+_SOURCE_REVISION = None
 # SHA-256 of UTF-8-decoded grade text, CRLF and lone CR replaced by LF,
 # then encoded as UTF-8.
-_SOURCE_SHA256 = "3cc745f599faefdb3c6b08218c383026445662796faa23fba0806691de4017ab"
-_RETRIEVED_ON_UTC = "2026-10-11"
+_SOURCE_SHA256 = "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90"
+_RETRIEVED_ON_UTC = "2026-10-18"
 _SOURCE_PATH = "src/digitalmodel/materials/grades.py"
 _LINK_FIELDS = ("sn_curve_ids", "standards_registry_id", "structural_shape_id")
 
@@ -76,16 +77,12 @@ class MaterialDatabase(Mapping[str, MaterialRecord]):
         return len(self._records)
 
     def lookup(self, name: str, *, psl: str = "PSL2") -> MaterialRecord:
-        """Match grades.smts_mpa selection, including its PSL1 fallback.
-
-        Missing PSL1 data returns the stored PSL2 record, without asserting
-        PSL1 product qualification. Other PSL strings select the canonical
-        value, exactly as grades.smts_mpa does. Non-API levels remain None.
-        """
+        """Match grades.smts_mpa, rejecting unsupported API product levels."""
         grade = grades.get(name)
         level = None
         if grade.standard == "API 5L":
-            level = "PSL1" if psl.upper() == "PSL1" and grade.smts_psl1_mpa is not None else "PSL2"
+            grades.smts_mpa(grade.name, psl=psl)  # Validate against the cited table.
+            level = psl.upper()
         return self._by_grade[(grade.name, level)]
 
 
@@ -96,17 +93,18 @@ def _edition(citation: str) -> str | None:
 
 
 def _record(grade: grades.MaterialGrade, level: str | None) -> MaterialRecord:
+    citation = grade.source_psl1 if level == "PSL1" else grade.source
     return MaterialRecord(
         designation=grade.name,
         specification=grade.standard,
-        edition=_edition(grade.source),
+        edition=_edition(citation),
         product_level=level,
         strengths=Strengths(
             smys_mpa=grades.smys_mpa(grade.name),
             smts_mpa=grades.smts_mpa(grade.name, psl=level or "PSL2"),
         ),
         provenance=RepositoryProvenance(
-            citation=grade.source,
+            citation=citation,
             repository_path=_SOURCE_PATH,
             repository_revision=_SOURCE_REVISION,
             sha256=_SOURCE_SHA256,
@@ -134,7 +132,11 @@ def load_database() -> MaterialDatabase:
     records = []
     for grade in grades.all_grades():
         if grade.standard == "API 5L":
-            levels = ("PSL1", "PSL2") if grade.smts_psl1_mpa is not None else ("PSL2",)
+            levels = tuple(
+                level for level, strength in (
+                    ("PSL1", grade.smts_psl1_mpa), ("PSL2", grade.smts_mpa)
+                ) if strength is not None
+            )
         else:
             levels = (None,)
         records.extend(_record(grade, level) for level in levels)
