@@ -15,13 +15,47 @@ G0_M_S2 = 9.80665
 
 @dataclass(frozen=True)
 class AccelerogramRecord:
-    """A single-component accelerogram with SI acceleration values."""
+    """A single-component accelerogram with immutable SI sample snapshots."""
 
     time_s: np.ndarray
     acceleration_m_s2: np.ndarray
     units: str
     source_path: Path
     source_digest: str
+
+    def __post_init__(self) -> None:
+        # NumPy ndarray.flags (stable reference, Notes): write protection needs
+        # immutable ultimate backing, rather than just setflags(write=False).
+        # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.flags.html
+        for name in ("time_s", "acceleration_m_s2"):
+            value = np.asarray(object.__getattribute__(self, name))
+            if value.dtype.hasobject:
+                raise TypeError("accelerogram arrays cannot contain object references")
+            snapshot = np.ndarray(value.shape, dtype=value.dtype, buffer=value.tobytes())
+            object.__setattr__(self, name, snapshot)
+
+    def __getattribute__(self, name: str):
+        value = object.__getattribute__(self, name)
+        if name in ("time_s", "acceleration_m_s2"):
+            # NumPy ndarray reference, buffer parameter: a fresh header may share
+            # immutable bytes without exposing the retained header via .base.
+            # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
+            return np.ndarray(value.shape, dtype=value.dtype, buffer=value.base)
+        return value
+
+    def __reduce__(self):
+        # Python pickle reference, object.__reduce__: reconstruct through the
+        # constructor; copy/deepcopy also use this protocol.
+        # https://docs.python.org/3/library/pickle.html#object.__reduce__
+        return type(self), (
+            self.time_s, self.acceleration_m_s2, self.units,
+            self.source_path, self.source_digest,
+        )
+
+    def __setstate__(self, state: dict) -> None:
+        """Snapshot arrays when loading the former default dict-state pickle."""
+        self.__dict__.update(state)
+        self.__post_init__()
 
     @property
     def npts(self) -> int:
