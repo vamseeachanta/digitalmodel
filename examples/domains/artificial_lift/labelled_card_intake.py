@@ -66,7 +66,7 @@ def run_example() -> dict:
     )
     # This public example key is deliberately non-secret. Real intake requires
     # a custodian-supplied private, unpredictable key retained outside releases.
-    prepared = prepare_intake([base, after, other], alias_key=b"public-example-only")
+    prepared = prepare_intake([base, after, other], alias_key=b"public-example-only" * 2)
     try:
         prepared.benchmark_set(prepared.card_ids())
     except ValueError:

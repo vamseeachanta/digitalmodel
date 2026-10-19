@@ -11,29 +11,21 @@ permission and disclosure review.
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-10-19 | Add intake, collection accounting and a benchmark adapter so independently labelled cards can be collected without exporting raw identities. |
+| 2 | 2026-10-19 | Require alias keys of at least 32 bytes, accept CSV byte order marks, reject future review dates and clarify the numeric contract. Remove contributor process guidance from the engineering method. |
 
 ## Collection and custody
 
-Ask for one exported card **and what was found on the pull**, or an independently
-confirmed healthy inspection. Offer assistance with export extraction. Prioritise
-institutional custodians and aggregators with existing controller or survey data.
-A before/after pair and confirmed healthy examples are useful alongside failures.
-No outreach is sent by this workflow.
-
 Keep original files, identity mappings, reports and permission records in the
-owning private repository. Record their digests there. A file path or an assertion
-that data is retained does not prove retention: the custodian verifies it before
-setting `original_retained`. Do not put received originals, private references,
-controller headers or workover notes in this public repository.
+custodian's private repository. Record their digests there. A file path or an
+assertion that data is retained does not prove retention: the custodian verifies
+it before setting `original_retained`. Do not put received originals, private
+references, controller headers or workover notes in this public repository.
 
 Agree analysis and publication rights separately before use, including whether
 anonymised geometry and derived results may be published. An opaque reference is
 an audit link into the custodian's records, not proof that permission was granted.
-Do not promise a delivery date until a usable labelled set and analysis capacity
-exist. Keep a private receipt and delivery record; return each contributor's
-analysis first, including the downhole card, ranked conditions with limitations,
-and the accuracy measured on the authorised held-out real set when available.
-Until then, field accuracy remains **NOT_EVALUATED**.
+Field accuracy remains **NOT_EVALUATED** until an authorised held-out real set
+has been evaluated.
 
 ## Input contract
 
@@ -41,8 +33,9 @@ Import `prepare_intake` and `read_card_csv` from
 `digitalmodel.marine_ops.artificial_lift.dynacard.intake`.
 `prepare_intake(records, alias_key=private_key_bytes)` validates the entire batch
 before returning an `IntakeBatch`. The caller supplies a private, unpredictable
-key and keeps it and the original identity mapping outside releases. Use the
-same key and stable private identifiers across batches for repeat linkage.
+key of at least 32 bytes and keeps it and the original identity mapping outside
+releases. Length alone does not establish unpredictability. Use the same key and
+stable private identifiers across batches for repeat linkage.
 
 Each record is a dictionary with these required fields:
 
@@ -52,7 +45,7 @@ Each record is a dictionary with these required fields:
 | `kind` | `real`, `synthetic`, or `plate`; a custodian assertion requiring review. |
 | `acquisition` | `recorded` or `generated`; real cards require `recorded`. |
 | `card_space` | `surface` or `pump`; surface intake does not perform inversion. |
-| `position`, `load` | Finite numeric lists, paired in traversal order, in inches and lbf. The existing card validator requires at least three samples. |
+| `position`, `load` | Lists of finite built-in Python `int` or `float` values, paired in traversal order, in inches and lbf. Booleans and NumPy scalars are rejected; convert NumPy arrays with `tolist()` first. The existing card validator requires at least three samples. |
 | `relative_day` | Nonnegative elapsed day from a private well-specific origin; no calendar capture date is exported. |
 | `context` | Numeric fields listed below; no automatic conversion or assumed inputs. |
 | `label` | Current diagnostic mode or null, independent basis and private evidence references. |
@@ -68,7 +61,8 @@ These are schema domains, not performance acceptance limits.
 `label` requires `mode` to be a current `ALL_GENERATORS` mode or null. Its
 `basis` is `pulling_report`, `workover_report`, `independent_inspection`, or
 `unconfirmed`. Confirmed bases require nonempty `evidence_ref`, `reviewer_ref`
-and ISO `reviewed_on`. Use opaque private references; names are unnecessary.
+and ISO `reviewed_on`, no later than the local calendar date at intake.
+Use opaque private references; names are unnecessary.
 The inspection must establish the condition independently of this classifier.
 Unconfirmed labels must use a null mode and cannot enter a benchmark.
 External taxonomies require a documented human crosswalk before assigning a
@@ -76,17 +70,20 @@ current mode; ambiguous outcomes remain unconfirmed.
 
 Optional `time_s` values must be nonnegative and strictly increasing, with one
 value per position/load pair. `read_card_csv(text)` requires unique column names
-`time_s,position_in,load_lbf`; other columns are discarded. It returns the three
-numeric arrays suitable for merging into a record. No unit inference occurs.
+`time_s,position_in,load_lbf`; a single leading UTF-8 byte order mark is accepted
+and other columns are discarded. It returns the three numeric arrays suitable
+for merging into a record. No unit inference occurs. Numeric context and
+`time_s` values also require built-in Python `int` or `float` values.
 Negative loads are permitted; timing is retained without resampling.
 Proprietary binary exports and digitised graphics require a separate authorised
 conversion and provenance workflow; this adapter does not support them.
 
 Optional `stage` is `standalone` (default), `before` or `after`. Before/after
 records require a common private `event_id` on the same well and increasing
-`relative_day` (fractional elapsed days are permitted). Duplicate event stages are rejected. A complete pair records
-chronology; review the rod string, intervention and operating context before
-attributing a condition change to the intervention.
+`relative_day` (fractional elapsed days are permitted). Duplicate event stages
+are rejected. A complete pair records chronology; review the rod string,
+intervention and operating context before attributing a condition change to the
+intervention.
 
 ## Projection and collection accounting
 
@@ -101,6 +98,10 @@ The HMAC construction is specified by [RFC 2104, section 2 (1997)](https://www.r
 using the standard library's HMAC-SHA256 implementation. This is pseudonymisation,
 not guaranteed anonymity: geometry, dimensions, review dates and linked repeats
 can still identify a well indirectly. Review all output before any release.
+
+[RFC 2104, section 3 (1997)](https://www.rfc-editor.org/rfc/rfc2104#section-3)
+discourages keys shorter than the hash output length; intake enforces the
+SHA-256 output length of 32 bytes as the minimum key length.
 
 `summary()` counts real cards, distinct real wells, repeat wells, complete real
 pairs, eligible cards/wells, and eligible healthy wells. It reports synthetic and
@@ -178,5 +179,5 @@ nor these fixtures measures classifier field performance.
 No real cards have been received by this change. Acceptance of #1865 still
 requires authorised originals, independent labels and a confirmed healthy
 baseline; a study sufficient for the requested confidence; running the real
-benchmark; and returning the promised analysis to contributors. External
-permissions, contact and data delivery cannot be replaced by generated examples.
+benchmark. Permissions and independent evidence cannot be replaced by generated
+examples. Contributor contact and delivery records belong in private custody.

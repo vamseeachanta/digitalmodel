@@ -4,6 +4,7 @@
 
 import copy
 import json
+from datetime import date
 
 import pytest
 
@@ -52,7 +53,7 @@ def record(well="private-well", card="private-card", **updates):
 
 
 def batch(*records):
-    return prepare_intake(records, alias_key=b"illustrative-test-key")
+    return prepare_intake(records, alias_key=b"illustrative-test-key" * 2)
 
 
 def test_projection_removes_identifiers_and_preserves_samples(tmp_path):
@@ -75,14 +76,16 @@ def test_projection_removes_identifiers_and_preserves_samples(tmp_path):
     assert private == before
     assert batch(private).publication_document() == result
     assert (
-        prepare_intake([private], alias_key=b"different-key").publication_document()
+        prepare_intake([private], alias_key=b"different-key" * 3).publication_document()
         != result
     )
 
 
-def test_csv_preserves_order_and_only_numeric_columns():
+@pytest.mark.parametrize("prefix", ["", "\ufeff"])
+def test_csv_preserves_order_and_only_numeric_columns(prefix):
     data = read_card_csv(
-        "time_s,position_in,load_lbf,well\n0,0,-1,private\n1,2,3,private\n2,0,-1,private\n"
+        prefix
+        + "time_s,position_in,load_lbf,well\n0,0,-1,private\n1,2,3,private\n2,0,-1,private\n"
     )
     assert data == {"time_s": [0, 1, 2], "position": [0, 2, 0], "load": [-1, 3, -1]}
 
@@ -155,6 +158,17 @@ def test_empty_key_and_duplicate_cards_are_rejected():
         batch(record(), record(well="other", card="other"))
 
 
+@pytest.mark.parametrize("key", [b"", b"x", b"x" * 31, "x" * 32, None])
+def test_alias_key_rejects_short_or_non_bytes_keys(key):
+    with pytest.raises(ValueError, match="RFC 2104.*section 3"):
+        prepare_intake([record()], alias_key=key)
+
+
+@pytest.mark.parametrize("length", [32, 33, 64, 65])
+def test_alias_key_accepts_digest_length_and_longer(length):
+    assert prepare_intake([record()], alias_key=b"x" * length).summary()["cards"] == 1
+
+
 def test_missing_evidence_and_permissions_block_scoring():
     for field, value in [
         ("original_retained", False),
@@ -189,6 +203,33 @@ def test_confirmed_label_requires_report_reviewer_and_date():
     r["rights"]["analysis"] = "yes"
     with pytest.raises(ValueError):
         batch(r)
+
+
+@pytest.mark.parametrize(
+    "reviewed_on,accepted",
+    [
+        ("2026-10-18", True),
+        ("2026-10-19", True),
+        ("2026-10-20", False),
+        ("2099-01-01", False),
+    ],
+)
+def test_review_date_cannot_follow_intake_date(monkeypatch, reviewed_on, accepted):
+    from digitalmodel.marine_ops.artificial_lift.dynacard import intake
+
+    class IntakeDate(date):
+        @classmethod
+        def today(cls):
+            return cls(2026, 10, 19)
+
+    monkeypatch.setattr(intake, "date", IntakeDate)
+    r = record()
+    r["label"]["reviewed_on"] = reviewed_on
+    if accepted:
+        assert batch(r).summary()["eligible_cards"] == 1
+    else:
+        with pytest.raises(ValueError, match="Invalid intake record"):
+            batch(r)
 
 
 def test_pairs_repeats_and_healthy_baseline_are_counted_by_well():
@@ -228,10 +269,9 @@ def test_pair_order_and_duplicate_stages_are_rejected():
 def test_benchmark_adapter_and_independent_expected_score():
     """Hand calculation: NORMAL prediction on NORMAL and FLUID_POUND = 1/2.
 
-    At z=1, NIST section 7.2.4.1 Wilson formula gives centre=1/2,
-    radius=sqrt((1/4)/2 + 1/16)/(3/2) = sqrt(3)/6.
-    The existing scorer reports intervals by class: one success out of one
-    yields [1/2, 1], one failure out of one yields [0, 1/2] at z=1.
+    At z=1, the NIST section 7.2.4.1 Wilson formula is checked by class:
+    one success out of one yields [1/2, 1], one failure out of one yields
+    [0, 1/2] at z=1.
     The sample threshold of one is an illustrative test input, not acceptance.
     """
     from statistics import NormalDist

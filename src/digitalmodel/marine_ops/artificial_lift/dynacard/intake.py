@@ -80,7 +80,7 @@ def read_card_csv(text: str) -> dict:
     Exceptions never include a private cell, filename or identifier.
     """
     try:
-        reader = csv.DictReader(io.StringIO(text), strict=True)
+        reader = csv.DictReader(io.StringIO(text.removeprefix("\ufeff")), strict=True)
         columns = {"time_s": "time_s", "position_in": "position", "load_lbf": "load"}
         if (
             reader.fieldnames is None
@@ -123,13 +123,22 @@ def prepare_intake(records: list[dict], *, alias_key: bytes) -> IntakeBatch:
     """Validate all records before returning a projection with no raw identities.
 
     A custodian supplies a private, unpredictable key, retained outside public
-    storage. HMAC-SHA256 (RFC 2104, 1997, section 2) namespaces wells, cards,
-    events and evidence separately. The key and identity mapping are not stored.
+    storage, at least 32 bytes long (RFC 2104, 1997, section 3).
+    HMAC-SHA256 (section 2) namespaces wells, cards, events and evidence
+    separately. The key and identity mapping are not stored.
+    Confirmed review dates cannot follow the local intake date.
     Retain originals before intake; this function does not write or send data.
     Unknown input keys are discarded, including nested context metadata.
     """
-    if not isinstance(alias_key, bytes) or not alias_key:
-        raise ValueError("A nonempty private alias key is required")
+    if (
+        not isinstance(alias_key, bytes)
+        or len(alias_key) < hashlib.sha256().digest_size
+    ):
+        raise ValueError(
+            "A private alias key of at least 32 bytes is required "
+            "(RFC 2104, section 3)"
+        )
+    intake_date = date.today()
 
     def alias(namespace: str, value: object) -> str:
         message = (namespace + "\0" + _text(value)).encode("utf-8")
@@ -163,10 +172,13 @@ def prepare_intake(records: list[dict], *, alias_key: bytes) -> IntakeBatch:
                 raise ValueError("Unconfirmed labels must have a null mode")
             evidence = {}
             if basis in CONFIRMED_BASES:
+                reviewed_on = date.fromisoformat(label["reviewed_on"])
+                if reviewed_on > intake_date:
+                    raise ValueError("A review date cannot follow the intake date")
                 evidence = {
                     "evidence_ref": alias("evidence", label["evidence_ref"]),
                     "reviewer_ref": alias("reviewer", label["reviewer_ref"]),
-                    "reviewed_on": date.fromisoformat(label["reviewed_on"]).isoformat(),
+                    "reviewed_on": reviewed_on.isoformat(),
                 }
             for flag in (
                 rights["analysis"],
