@@ -5,7 +5,7 @@
 | Module | `viv_screening` |
 | Repository | `digitalmodel` |
 | Package | `src/digitalmodel/viv_screening` |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | `f1d58a2ac0db65e68b5b690f0a609ef4746d114e` |
 | Analysis family | Engineering calculations; EC |
 | Review role | Engineering calculations quality manager |
@@ -21,7 +21,7 @@ The engine dispatches `basename: viv_screening` to this router and calls its ech
 
 The registry records development maturity; the numerical scope is a uniform beam, envelope current and supplied modal stress, with cross-flow damage only and in-line flags retained as unassessed. [docs/registry/module-routing.yaml:L686-L691] [src/digitalmodel/viv_screening/workflow.py:L173-L191] [src/digitalmodel/viv_screening/workflow.py:L43-L54]
 
-Missing modal stress with lock-in, excessive amplitude, multiple locked modes, insufficient frequency coverage and an out-of-window Reynolds number produce escalation reasons and suppress calculated damage and life. [src/digitalmodel/viv_screening/workflow.py:L110-L125] [src/digitalmodel/viv_screening/workflow.py:L34-L54]
+Missing modal stress with lock-in, excessive amplitude, three or more unique modes (CF and IL combined), insufficient frequency coverage and an out-of-window Reynolds number produce escalation reasons and suppress calculated damage and life. [src/digitalmodel/viv_screening/workflow.py:L110-L125] [src/digitalmodel/viv_screening/workflow.py:L34-L54]
 
 ## 2. Inputs and outputs
 
@@ -33,11 +33,11 @@ Inputs are mapping fields under `viv_screening`; numeric parsing rejects boolean
 | `n_modes` | count | Integer at least 1; default 10 | Configuration; [src/digitalmodel/viv_screening/inputs.py:L92-L95] |
 | `structure.length_m`, `outer_diameter_m` | m | Required, positive | Configuration; [src/digitalmodel/viv_screening/inputs.py:L63-L79] |
 | `structure.inner_diameter_m` | m | Required, nonnegative and smaller than outer diameter | Configuration; [src/digitalmodel/viv_screening/inputs.py:L63-L79] |
-| `structure.youngs_modulus_Pa`, `mass_per_length_kg_m` | Pa; kg/m | Required, positive; mass includes added mass in the core model | Configuration; [src/digitalmodel/viv_screening/inputs.py:L63-L85] [src/digitalmodel/orcaflex/viv_screening.py:L153-L158] |
+| `structure.youngs_modulus_Pa`, `mass_per_length_kg_m` | Pa; kg/m | Required, positive; mass includes added mass in the core model; independent of `mass_ratio`, without a consistency check (S30) | Configuration; [src/digitalmodel/viv_screening/inputs.py:L63-L85] [src/digitalmodel/orcaflex/viv_screening.py:L153-L158] |
 | `structure.effective_tension_N` | N | Required, nonnegative; positive means tensile | Configuration; [src/digitalmodel/viv_screening/inputs.py:L71-L73] [src/digitalmodel/orcaflex/viv_screening.py:L158-L159] |
-| `structure.boundary` | enum | Required; pinned/pinned, fixed/fixed, fixed/free or fixed/pinned | Configuration; [src/digitalmodel/viv_screening/inputs.py:L74-L85] [src/digitalmodel/orcaflex/viv_screening.py:L33-L38] |
+| `structure.boundary` | enum | Required; `pinned_pinned`, `fixed_fixed`, `fixed_free` or `fixed_pinned`; higher-mode scaling is exact only for `pinned_pinned`; alternative boundaries and tension factors remain unqualified (S29) | Configuration; [src/digitalmodel/viv_screening/inputs.py:L74-L85] [src/digitalmodel/orcaflex/viv_screening.py:L33-L38] |
 | `environment.current.speed_m_s` or `profile` | m/s; depth in m | Exactly one; nonnegative speeds, positive maximum; nonempty profile with nonnegative depths | Configuration; [src/digitalmodel/viv_screening/inputs.py:L39-L60] |
-| `environment.kinematic_viscosity_m2_s`, `mass_ratio` | m²/s; 1 | Required, positive | Configuration; [src/digitalmodel/viv_screening/inputs.py:L118-L124] |
+| `environment.kinematic_viscosity_m2_s`, `mass_ratio` | m²/s; 1 | Required, positive; `mass_ratio` is independent of beam mass, without a consistency check (S30) | Configuration; [src/digitalmodel/viv_screening/inputs.py:L118-L124] |
 | `environment.damping_ratio`, `exposure_fraction` | 1 | Required; damping nonnegative; exposure positive and at most 1 | Configuration; [src/digitalmodel/viv_screening/inputs.py:L102-L105] [src/digitalmodel/viv_screening/inputs.py:L118-L124] |
 | `unit_modal_stress_MPa` | MPa | Positive when supplied; absent stress triggers escalation if any mode locks | Configuration; [src/digitalmodel/viv_screening/inputs.py:L106-L110] [src/digitalmodel/viv_screening/workflow.py:L110-L118] |
 | `sn_curve.curve`, `sn_curve.environment` | identifiers | Defaults F1 and `seawater_cp`; unsupported selections raise | Configuration / fatigue library; [src/digitalmodel/viv_screening/inputs.py:L111-L117] [src/digitalmodel/viv_screening/workflow.py:L29-L33] |
@@ -67,17 +67,30 @@ The method associations below are source claims; clause text not checked against
 | Annual fatigue | `_damage_rate` constructs stress range and annual cycles, calls `miner_damage` and sums modal damage; `router` uses reciprocal rate for life and compares against design life times DFF | DNV-RP-C203, *Fatigue Design of Offshore Steel Structures*, edition unspecified in workflow, S-N/Miner association; [src/digitalmodel/viv_screening/workflow.py:L128-L147] [src/digitalmodel/viv_screening/workflow.py:L29-L54] [docs/domains/risers/scr-slwr-coverage-2026-10.md:L50-L55] |
 | S-N dependency | `get_sn_curve` constructs a pyLife curve; `miner_damage` obtains allowable cycles and divides applied cycles by allowable cycles | Library heading names 2021 while its data provenance says verified against 2011; the workflow does not resolve this edition distinction; [src/digitalmodel/fatigue/sn_curves.py:L1-L20] [src/digitalmodel/fatigue/sn_curves.py:L80-L99] [src/digitalmodel/fatigue/damage.py:L13-L39] |
 
+The following are implemented screening criteria, not independently qualified standard requirements. [src/digitalmodel/viv_screening/workflow.py:L60-L125]
+
+| Criterion | Implemented condition / calculation | Pinned evidence |
+| --- | --- | --- |
+| CF lock-in | Reduced-velocity envelope intersects inclusive [4, 8]; governing velocity is clamped to the intersection nearest peak 6.0 | [src/digitalmodel/viv_screening/workflow.py:L60-L81] |
+| IL lock-in | Reduced-velocity envelope intersects inclusive [1, 3.5]; governing velocity is clamped to the intersection nearest peak 2.25 | [src/digitalmodel/viv_screening/workflow.py:L60-L81] |
+| Stability and CF amplitude | Ks = 2·mass_ratio·damping_ratio; A/D = exp(-0.15·Ks)·max(0, 1 - ((Vr - 6.0)/2.0)²), rounded to 4 decimals; zero outside [4, 8] | [src/digitalmodel/orcaflex/viv_screening.py:L106-L109] [src/digitalmodel/orcaflex/viv_screening.py:L315-L332] |
+| T1 | Any locked mode with absent `unit_modal_stress_MPa` escalates | [src/digitalmodel/viv_screening/workflow.py:L110-L114] |
+| T2 | Any CF-locked mode with rounded A/D > 0.8 escalates | [src/digitalmodel/viv_screening/workflow.py:L115-L116] |
+| T3 | Three or more unique locked modes, counting CF and IL together, escalate; a mode locked in both directions counts once | [src/digitalmodel/viv_screening/workflow.py:L111-L118] |
+| T4 | Last checked modal frequency below shedding frequency escalates | [src/digitalmodel/viv_screening/workflow.py:L119-L120] |
+| T5 | Reynolds number at maximum envelope speed outside inclusive [300, 1e7] escalates | [src/digitalmodel/viv_screening/inputs.py:L118-L124] [src/digitalmodel/orcaflex/viv_screening.py:L87-L90] [src/digitalmodel/viv_screening/workflow.py:L121-L124] |
+
 UNVERIFIED: exact licensed clause titles, edition equivalence and independent physical accuracy of these standard associations remain unchecked; workflow provenance is a string/mapping rather than a checked `Citation` sidecar, and its C203 edition is absent; issue pending (1). [src/digitalmodel/viv_screening/workflow.py:L18-L22] [src/digitalmodel/viv_screening/workflow.py:L173-L191] [src/digitalmodel/fatigue/sn_curves.py:L1-L20]
 
 ## 4. Validated worked examples and regression examples
 
 V1 validates only the zero-tension pinned-beam frequency against a separately evaluated closed form; the synthetic damage and deterministic outputs below are regression evidence, with corpus validation deferred. [tests/workflows/test_durable_workflows.py:L193-L227] [examples/workflows/riser-viv-screening/README.md:L76-L81]
 
-Execution record at the header code revision: BASE completed with 50 workflow tests, 17 core tests, 1 selected durable-workflow test and 497 contract/routing tests passing; no failures, skips or NOT_RUN cases occurred. AFTER repeated the same commands with identical counts. The durable case ran against a scratch copy to contain its output writes. [tests/workflows/test_viv_screening_workflow.py:L49-L52] [tests/workflows/test_durable_workflows.py:L54-L86]
+Execution requires UTF-8 mode (`PYTHONUTF8=1`). The focused paths are `tests/workflows/test_viv_screening_workflow.py`, `tests/orcaflex/test_viv_screening.py` and `tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-viv-screening]` (50 + 17 + 1 tests). Contract/routing coverage is `tests/contracts` plus `tests/docs/test_digitalmodel_routing_contract.py` (497 collected tests). Run the workflow tests in a disposable repository copy because the durable node writes example outputs. These counts define the selected checks, rather than guaranteeing that unrelated contract checks pass. [tests/workflows/test_viv_screening_workflow.py:L49-L52] [tests/workflows/test_durable_workflows.py:L54-L86]
 
 | Case / classification | Input and independent or regression basis | Expected quantity and tolerance | Existing test node ID | Offline result at code pin |
 | --- | --- | --- | --- | --- |
-| V1 / validated component | Synthetic `examples/workflows/riser-viv-screening/input.yml`; independently evaluated closed form `f₁ = π/(2L²) sqrt(EI/m)`, `I = π(OD⁴-ID⁴)/64` | First modal frequency equals the closed form in Hz under the test's `pytest.approx` comparison; supplemental check requires 0 Hz discrepancy after both values use CSV's `.12g` formatting | `tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-viv-screening]` | PASS, including supplemental closed-form check; [examples/workflows/riser-viv-screening/input.yml:L10-L17] [tests/workflows/test_durable_workflows.py:L222-L224] [src/digitalmodel/viv_screening/workflow.py:L238-L243] |
+| V1 / validated component | Synthetic `examples/workflows/riser-viv-screening/input.yml`; independently evaluated closed form `f₁ = π/(2L²) sqrt(EI/m)`, `I = π(OD⁴-ID⁴)/64` | First modal frequency equals the closed form in Hz within `pytest.approx` default relative tolerance 1e-6 or absolute tolerance 1e-12 Hz | `tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-viv-screening]` | PASS; [examples/workflows/riser-viv-screening/input.yml:L10-L17] [tests/workflows/test_durable_workflows.py:L222-L224] [src/digitalmodel/viv_screening/workflow.py:L238-L243] |
 | R1 / regression | Same synthetic input; aggregate rate is a golden module output, not independent fatigue validation | `fail`, locked modes `[1, 2]`, positive annual damage matching the stored test literal within default approximate tolerance; reciprocal life in years | `tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-viv-screening]` | PASS; [tests/workflows/test_durable_workflows.py:L203-L221] |
 | R2 / regression | Same input, two engine runs | 3 unchanged artifact hashes; 0 temporary-directory strings and 0 `start_time` strings in echo | `tests/workflows/test_viv_screening_workflow.py::test_committed_example_runs_through_engine_and_is_stable` | PASS; [tests/workflows/test_viv_screening_workflow.py:L223-L238] |
 | R3 / regression | Test fixture with in-line-only scalar current; supplied modal stress retained | 0 cross-flow flags, 1 in-line flag, 0.0/year cross-flow damage, infinite life in years, `pass` plus unassessed flag | `tests/workflows/test_viv_screening_workflow.py::test_il_only_lock_in_is_unassessed` | PASS; [tests/workflows/test_viv_screening_workflow.py:L241-L251] |
@@ -93,7 +106,7 @@ Review criteria use the Python-calculations family of AQG r0, section 10; G5 use
 | G0 | Applicable: C0 required-input and finite-number checks in `parse_inputs` | 0 accepted invalid configurations, count | Run all required-input, invalid-settings, invalid-current and invalid-physics parameterizations; [tests/workflows/test_viv_screening_workflow.py:L99-L180] |
 | G1 | Applicable: C1 imports and workflow/core execution | 68 passed tests, 0 failures and 0 skips, count | Full workflow and core files plus the selected durable node from section 4; imports are Python calculations, not a solver load; [tests/workflows/test_viv_screening_workflow.py:L7-L14] [tests/orcaflex/test_viv_screening.py:L7-L15] [docs/registry/workflows.yaml:L454-L463] |
 | G1 | Applicable: C2 `_write_outputs` and `save_echo` location contract | 3 files in the requested directory, 0 in the default directory when overridden, count | `tests/workflows/test_viv_screening_workflow.py::test_custom_output_dir_contains_all_workflow_files[relative]` and `[absolute]`; [tests/workflows/test_viv_screening_workflow.py:L281-L306] |
-| G2 | Applicable: C3 `BeamProperties.natural_frequency` against independent zero-tension closed form | 0 Hz discrepancy after `.12g` formatting; 0 differing CSV frequency characters, count | V1 durable node plus independent evaluation of the same closed form against the scratch CSV, without importing production calculations; [tests/workflows/test_durable_workflows.py:L222-L224] [src/digitalmodel/viv_screening/workflow.py:L238-L243] |
+| G2 | Applicable: C3 `BeamProperties.natural_frequency` against independent zero-tension closed form | Frequency discrepancy within relative tolerance 1e-6 or absolute tolerance 1e-12 Hz (`pytest.approx` defaults) | V1 durable node evaluates the closed form separately from production calculations and compares the first CSV modal frequency; [tests/workflows/test_durable_workflows.py:L222-L224] [src/digitalmodel/viv_screening/workflow.py:L238-L243] |
 | G3 | NOT_APPLICABLE: no time-marching dynamics in this screening route | NOT_APPLICABLE | Modal calculations and annual-rate assembly only; [src/digitalmodel/viv_screening/workflow.py:L25-L57] [src/digitalmodel/viv_screening/workflow.py:L69-L147] |
 | G4 | NOT_APPLICABLE: no diffraction mesh/body calculation in this route | NOT_APPLICABLE | Beam/current and fatigue inputs only; [src/digitalmodel/viv_screening/inputs.py:L63-L125] |
 | G5 | Applicable: C4 reproducible result evidence and echo hygiene | 3 identical artifact hashes across 2 runs; 0 timestamp or scratch-path occurrences, count | R2 test; retain test outcomes, code pin and input digest with the evidence bundle; [tests/workflows/test_viv_screening_workflow.py:L223-L238] |
@@ -102,15 +115,16 @@ These checks address screening evidence; a complete report appendix and independ
 
 ## 6. Known failure modes and pitfalls
 
-sweep: 28 found
+sweep: 30 found
 
-The sweep counts 28 reviewed behavior sites below, including intentional sentinels and fail-closed handlers; the count is not a count of confirmed defects. [src/digitalmodel/viv_screening/inputs.py:L8-L125] [src/digitalmodel/viv_screening/workflow.py:L15-L273]
+The sweep counts 30 reviewed package and analytical-dependency behavior sites below, including intentional sentinels and fail-closed handlers; the count is not a count of confirmed defects. [src/digitalmodel/viv_screening/inputs.py:L8-L125] [src/digitalmodel/viv_screening/workflow.py:L15-L273]
 
 Exact commands used, followed by reading every Python file and its branches:
 
 ```bash
-rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|int\(|float\(|default|units|depth_m|SECONDS_PER_YEAR|\.get\(' src/digitalmodel/viv_screening
+rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|int\(|float\(|default|units|depth_m|SECONDS_PER_YEAR|\.get\(' src/digitalmodel/viv_screening --glob '*.py'
 rg -n 'None|0\.0|\[\]|\{\}|write|cache|except|continue|year|MPa|Hz|m_s|_N|_Pa' src/digitalmodel/viv_screening --glob '*.py'
+rg -n 'boundary_constants|mode\*\*2|C_t|mass_per_length|mass_ratio|stability_parameter' src/digitalmodel/orcaflex/viv_screening.py
 ```
 
 | Site | Symptom / cause and disposition | Detection check / tracking | Pinned evidence |
@@ -129,24 +143,26 @@ rg -n 'None|0\.0|\[\]|\{\}|write|cache|except|continue|year|MPa|Hz|m_s|_N|_Pa' s
 | S12 calendar conversion | Annual cycles use the module's fixed seconds-per-year conversion and supplied exposure, without a design-life multiplier | C1 includes annual-rate independence check | [src/digitalmodel/viv_screening/workflow.py:L16-L16] [src/digitalmodel/viv_screening/workflow.py:L134-L135] [tests/workflows/test_viv_screening_workflow.py:L183-L192] |
 | S13 curve lookup exception | Unsupported curve selections re-raise with workflow context | no detection check exists for this handler; issue pending (2) | [src/digitalmodel/viv_screening/workflow.py:L29-L33] |
 | S14 escalation null rate/life | Out-of-applicability leaves damage/life/margin null instead of guessed results | C1 checks null result and CSV damage fields | [src/digitalmodel/viv_screening/workflow.py:L34-L54] [tests/workflows/test_viv_screening_workflow.py:L55-L68] |
-| S15 zero rate / infinite life | Reciprocal life becomes infinity at zero damage; in-line-only response can still return `pass` with unassessed flag | C1 includes R3 and no-lock-in cases; #812 | [src/digitalmodel/viv_screening/workflow.py:L34-L54] [tests/workflows/test_viv_screening_workflow.py:L211-L220] [tests/workflows/test_viv_screening_workflow.py:L241-L251] |
+| S15 zero rate / infinite life | Reciprocal life becomes infinity at zero damage; in-line-only response can still return `pass` with unassessed flag | C1 includes R3 and no-lock-in cases; #812 | [src/digitalmodel/viv_screening/workflow.py:L34-L54] [tests/workflows/test_viv_screening_workflow.py:L211-L220] [tests/workflows/test_viv_screening_workflow.py:L241-L251] [docs/domains/risers/scr-slwr-coverage-2026-10.md:L229-L229] |
 | S16 `_intersection` null | Disjoint intervals return None; this is a no-lock-in sentinel | C1 exercises no-lock-in and profile cases | [src/digitalmodel/viv_screening/workflow.py:L60-L66] |
-| S17 absent cross-flow amplitude | No cross-flow intersection sets amplitude to zero; in-line damage is not calculated | C1 / R3; #812 | [src/digitalmodel/viv_screening/workflow.py:L80-L88] |
+| S17 absent cross-flow amplitude | No cross-flow intersection sets amplitude to zero; in-line damage is not calculated | C1 / R3; #812 | [src/digitalmodel/viv_screening/workflow.py:L80-L88] [docs/domains/risers/scr-slwr-coverage-2026-10.md:L229-L229] |
 | S18 initial per-mode null values | Stress, cycles and damage start null; escalation preserves them | C1 checks damage columns on escalation; all three fields: no detection check exists; issue pending (2) | [src/digitalmodel/viv_screening/workflow.py:L101-L105] |
 | S19 empty escalation list | Empty reasons means applicable under these workflow criteria, not physical validation | C1 checks applicable and T1–T5 cases; #808, #816 | [src/digitalmodel/viv_screening/workflow.py:L110-L125] |
 | S20 `_damage_rate` zero accumulator | Total starts at zero before modal accumulation | C1 compares mixed and no-lock-in totals | [src/digitalmodel/viv_screening/workflow.py:L128-L131] |
 | S21 per-row zero damage defaults | Applicable rows start with zero stress, cycles and damage before cross-flow assessment | C1 checks totals; per-row zero completeness: no detection check exists; issue pending (2) | [src/digitalmodel/viv_screening/workflow.py:L130-L131] |
-| S22 non-cross-flow `continue` | In-line-only rows skip fatigue accumulation; unassessed flag is essential | C1 / R3; #812 | [src/digitalmodel/viv_screening/workflow.py:L132-L133] |
+| S22 non-cross-flow `continue` | In-line-only rows skip fatigue accumulation; unassessed flag is essential | C1 / R3; #812 | [src/digitalmodel/viv_screening/workflow.py:L132-L133] [docs/domains/risers/scr-slwr-coverage-2026-10.md:L229-L229] |
 | S23 zero-stress `continue` | Zero amplitude leaves zero damage without calling Miner calculation | no detection check exists for an exact cross-flow interval endpoint; issue pending (2) | [src/digitalmodel/viv_screening/workflow.py:L134-L140] |
 | S24 critical-mode fallback | No cross-flow row gives null critical mode/velocity; first cross-flow row is selected rather than ranked by damage | C1 checks null and mixed-mode cases | [src/digitalmodel/viv_screening/workflow.py:L150-L157] |
 | S25 empty reason fallback | Non-escalating result has a null reason, with required=false | C1 checks applicability/status; exact null-reason assertion: no detection check exists; issue pending (2) | [src/digitalmodel/viv_screening/workflow.py:L163-L170] |
 | S26 directory/stem fallbacks | Missing directory selects `results`; missing configuration paths select current directory; missing file stem selects basename | C2 tests configured relative/absolute/default locations; current-directory/stem fallbacks: no detection check exists; issue pending (2) | [src/digitalmodel/viv_screening/workflow.py:L206-L227] |
 | S27 `_display_path` caught ValueError | Outside-repository result paths become absolute strings in returned mapping/CSV path metadata | C2 exercises external outputs; explicit display policy: no detection check exists; issue pending (2) | [src/digitalmodel/viv_screening/workflow.py:L246-L251] |
 | S28 `save_echo` caught ValueError | An output outside the config directory is reduced to its basename in echo; location context can be lost | C4 tests ordinary echo hygiene; external-directory basename fallback: no detection check exists; issue pending (2) | [src/digitalmodel/viv_screening/workflow.py:L254-L265] |
+| S29 non-pinned higher-mode scaling / tension factors | Core scales every boundary as n²·C1; zero-tension higher-mode scaling is exact only for `pinned_pinned`; other boundaries can misplace lock-in windows; tension factors 0.9 and 0.95 have no documented derivation | C3 qualifies only the zero-tension pinned first mode; no detection check exists for alternative-boundary higher modes or tension-factor accuracy; issue pending (5) | [src/digitalmodel/orcaflex/viv_screening.py:L172-L218] |
+| S30 independent mass inputs | `mass_ratio` controls Ks/amplitude while added-mass-inclusive beam mass controls frequency; inconsistent inputs can silently change screening results because no consistency check exists | C0 validates each positive input separately; no detection check exists for consistency between the two inputs; issue pending (6) | [src/digitalmodel/viv_screening/inputs.py:L63-L85] [src/digitalmodel/viv_screening/inputs.py:L118-L124] [src/digitalmodel/orcaflex/viv_screening.py:L106-L109] [src/digitalmodel/orcaflex/viv_screening.py:L153-L158] |
 
 The package writes CSV and YAML results rather than a result cache; an empty CSV row set raises, and the three validation handlers above re-raise errors instead of swallowing them. [src/digitalmodel/viv_screening/workflow.py:L230-L273] [src/digitalmodel/viv_screening/inputs.py:L25-L26] [src/digitalmodel/viv_screening/inputs.py:L82-L85] [src/digitalmodel/viv_screening/workflow.py:L29-L33]
 
-No incident issue was prescribed; #812 supplies the workflow boundary, while missing corpus qualification, schema alignment and report evidence are recorded by the example as #808, #816, #809 and #814; no independent corpus detection check exists in this package. [examples/workflows/riser-viv-screening/README.md:L76-L81]
+No incident issue was prescribed; #812 supplies the VIV integration boundary, while missing corpus qualification, schema alignment and report evidence are recorded by the example as #808, #816, #809 and #814; no independent corpus detection check exists in this package. [docs/domains/risers/scr-slwr-coverage-2026-10.md:L229-L229] [examples/workflows/riser-viv-screening/README.md:L76-L81]
 
 ## 7. Lessons log
 
@@ -1340,10 +1356,12 @@ The separate parametric workflow/API publication tests exercise another router a
 | --- | --- | --- | --- |
 | Licensed-source qualification, complete clause titles/C203 edition and checked citation metadata; section 3 UNVERIFIED claim | Engineering calculations quality manager | issue pending (1) | No licensed text or coefficient table is reproduced; [src/digitalmodel/viv_screening/workflow.py:L18-L22] [src/digitalmodel/viv_screening/workflow.py:L173-L191] [src/digitalmodel/fatigue/sn_curves.py:L1-L20] |
 | Missing targeted sweep-site assertions in section 6 | Maintainers | issue pending (2) | Existing checks do not cover every fallback; no detection check exists at the explicitly marked sites; [tests/workflows/test_viv_screening_workflow.py:L71-L306] |
+| Non-pinned higher-mode frequencies and undocumented tension factors | Maintainers | issue pending (5) | No detection check exists beyond C3 zero-tension pinned first-mode validation; [src/digitalmodel/orcaflex/viv_screening.py:L172-L218] |
+| Mass-ratio and added-mass-inclusive beam-mass consistency | Maintainers | issue pending (6) | No consistency check or corresponding detection check exists; [src/digitalmodel/viv_screening/inputs.py:L63-L85] [src/digitalmodel/viv_screening/inputs.py:L118-L124] |
 | Implementation-map relation corrections, external discovery identities and VIV family coverage | Maintainers | issue pending (3) | Six in-package map rows retained in section 9; `_beam` parses, and `save_echo` serializes; [src/digitalmodel/viv_screening/inputs.py:L63-L85] [src/digitalmodel/viv_screening/workflow.py:L254-L273] |
 | Deputy assignment, shared-log/index entry and replacement of draft references by issue numbers; section 8 UNVERIFIED claim | Maintainers | issue pending (4) | Routing entry provides module references but no deputy or shared-log record; [docs/registry/module-routing.yaml:L686-L691] |
 | Independent corpus and nonuniform/detailed response validation | Engineering calculations quality manager | #808, #816 | Synthetic analytic goldens do not establish corpus validity; [examples/workflows/riser-viv-screening/README.md:L76-L81] [src/digitalmodel/viv_screening/workflow.py:L179-L190] |
 | Unified riser schema, unit/coordinate contract and shear representation | Maintainers | #809 | Workflow-local parser uses a speed envelope; [src/digitalmodel/viv_screening/inputs.py:L39-L60] [examples/workflows/riser-viv-screening/README.md:L36-L49] [examples/workflows/riser-viv-screening/README.md:L79-L80] |
-| Report appendix and detailed-response handoff | Maintainers | #814, #812 | This route writes tables/echo and a detailed-tool recommendation; [src/digitalmodel/viv_screening/workflow.py:L163-L169] [src/digitalmodel/viv_screening/workflow.py:L194-L203] [examples/workflows/riser-viv-screening/README.md:L79-L81] |
+| Report appendix and detailed-response handoff | Maintainers | #814, #812 | This route writes tables/echo and a detailed-tool recommendation; [src/digitalmodel/viv_screening/workflow.py:L163-L169] [src/digitalmodel/viv_screening/workflow.py:L194-L203] [examples/workflows/riser-viv-screening/README.md:L79-L81] [docs/domains/risers/scr-slwr-coverage-2026-10.md:L229-L229] |
 
 Only synthetic example inputs and public source behavior are recorded; the example explicitly identifies its numbers as synthetic. [examples/workflows/riser-viv-screening/README.md:L15-L19]
