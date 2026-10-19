@@ -121,11 +121,11 @@ def test_hydrotest_can_govern_and_has_no_corrosion_addition(tank):
     assert row.selected_mm == 18
 
 
-def test_independent_fill_levels_and_dry_courses(tank):
-    """Design H=1 m, test H=2 m at bottom; dry upper courses use floor."""
+def test_design_level_sizes_both_cases_and_dry_courses(tank):
+    """Both sizing heads use design H=1 m; dry upper courses use floor."""
     result = design_shell(replace(tank, design_level_m=1, test_level_m=2))
     assert result.courses[0].design_head_m == 1
-    assert result.courses[0].test_head_m == 2
+    assert result.courses[0].test_head_m == 1
     assert result.courses[-1].design_mm == 1.5
     assert result.courses[-1].test_mm == 0
     assert result.courses[-1].selected_mm == 6
@@ -248,3 +248,18 @@ def test_mismatched_citation_metadata_fails_closed(tank, tmp_path):
             replace(tank, basis=replace(tank.basis, citation=citation)),
             wiki_root=tmp_path,
         )
+
+
+@pytest.mark.parametrize("test_level", [0, 9, 18])
+def test_lower_test_fill_does_not_reduce_hydrotest_sizing(tank, test_level):
+    """At design H=18 m: 4.9*30*(18-0.3)/160 = 16.261875 mm.
+
+    With synthetic G=0.1, hydrotest governs and needs an 18 mm plate
+    regardless of the separately supplied fill used by the pressure plot.
+    """
+    result = design_shell(replace(tank, specific_gravity=0.1, test_level_m=test_level))
+    row = result.courses[0]
+    assert row.test_head_m == 18
+    assert row.test_mm == pytest.approx(16.261875)
+    assert row.governing_case == "hydrostatic test"
+    assert row.selected_mm == 18

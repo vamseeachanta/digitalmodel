@@ -13,10 +13,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import math
 
 from digitalmodel.reporting.figures import figure_from_columns
 from digitalmodel.reporting.provenance import Provenance
 from digitalmodel.reporting.spec import DocumentMeta, Section, TableBlock
+
+
+def validate_number(name: str, value: float, *, zero: bool = False) -> None:
+    """Reject nonfinite or nonpositive inputs; optionally permit zero."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a finite number")
+    if not math.isfinite(value) or (value < 0 if zero else value <= 0):
+        raise ValueError(
+            f"{name} must be finite and {'nonnegative' if zero else 'positive'}"
+        )
 
 
 @dataclass(frozen=True)

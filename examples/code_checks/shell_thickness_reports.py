@@ -41,10 +41,10 @@ ASSUMED = (
 )
 
 
-def _document(title: str, sequence: str) -> DocumentMeta:
+def _document(title: str, sequence: str, *, revision: str = "00") -> DocumentMeta:
     return DocumentMeta(
-        number=f"T0000-RPT-{sequence}-00",
-        revision="00",
+        number=f"T0000-RPT-{sequence}-{revision}",
+        revision=revision,
         title=title,
         project="Generic shell sizing",
         client="Public illustration",
@@ -56,7 +56,18 @@ def _document(title: str, sequence: str) -> DocumentMeta:
                 description=(
                     "Initial illustration of shell sizing, sources, hand arithmetic and governing cases."
                 ),
-            )
+            ),
+            *(
+                [RevisionRow(
+                    rev=revision,
+                    date="2026-10-19",
+                    description=(
+                        "Use design liquid level in both sizing cases and distinguish "
+                        "pressure-governed utilisation from the nominal floor."
+                    ),
+                )]
+                if revision != "00" else []
+            ),
         ],
     )
 
@@ -85,7 +96,7 @@ def example_specs():
     result = design_shell(inputs)
     tank = tank_report(
         result,
-        _document("Atmospheric tank shell analysis", "001"),
+        _document("Atmospheric tank shell analysis", "001", revision="01"),
         water_unit_weight_kn_m3=9.8,
         pressure_source=ASSUMED,
     )
@@ -203,6 +214,7 @@ def generate(output: Path, *, compact: bool = False) -> list[Path]:
     path.write_text(
         json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     if json.loads(path.read_text(encoding="utf-8")) != manifest:
         raise OSError("manifest readback differs from source values")

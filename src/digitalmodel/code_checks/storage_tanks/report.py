@@ -20,9 +20,10 @@ from digitalmodel.reporting.thickness import (
     limit_figure,
     revision_section,
     thickness_table,
+    validate_number,
 )
 
-from .one_foot import ShellResult, _number
+from .one_foot import ShellResult
 
 
 def _courses(result: ShellResult) -> TableBlock:
@@ -81,7 +82,10 @@ def _pressure(result: ShellResult, unit_weight: float) -> FigureBlock:
         title="Hydrostatic pressure against height",
         figure_id="tank-pressure",
         plotly=figure,
-        caption="Separate design and hydrotest levels; gauge pressure.",
+        caption=(
+            "Separate applied fill levels; gauge pressure. "
+            "Both shell sizing cases use the design liquid level."
+        ),
     )
 
 
@@ -204,7 +208,7 @@ def tank_report(
     pressure_source: str,
 ) -> ReportSpec:
     """Expose arithmetic and evidence gaps; never turn missing sources into PASS."""
-    _number("water unit weight", water_unit_weight_kn_m3)
+    validate_number("water unit weight", water_unit_weight_kn_m3)
     if not pressure_source.strip():
         raise ValueError("pressure source is required")
     inputs = json.loads(json.dumps(asdict(result.inputs), allow_nan=False))
@@ -212,6 +216,23 @@ def tank_report(
         water_unit_weight_kn_m3=water_unit_weight_kn_m3, pressure_source=pressure_source
     )
     worst = max(result.courses, key=lambda row: row.utilisation)
+    pressure_courses = [
+        row for row in result.courses if row.governing_case != "minimum nominal"
+    ]
+    pressure_worst = max(pressure_courses, key=lambda row: row.utilisation, default=None)
+    pressure_course = (
+        str(pressure_worst.course)
+        if pressure_worst is not None
+        else "None (nominal floor governs all courses)"
+    )
+    pressure_utilisation = (
+        f"{pressure_worst.utilisation:.1%}" if pressure_worst is not None else "Not applicable"
+    )
+    pressure_summary = (
+        f"Pressure-governed utilisation is {pressure_utilisation} in course {pressure_course}. "
+        if pressure_worst is not None
+        else "Pressure-governed course: none; the nominal floor governs all courses. "
+    )
     summary = Section(
         key="summary",
         title="Summary",
@@ -220,7 +241,7 @@ def tank_report(
                 markdown=(
                     f"Shell-equation status: {result.status}. Governing nominal utilisation is "
                     f"{worst.utilisation:.1%} in course {worst.course}, compared with 100.0 %. "
-                    f"Approximate nominal shell mass is {result.shell_mass_kg:.1f} kg. "
+                    f"{pressure_summary}Approximate nominal shell mass is {result.shell_mass_kg:.1f} kg. "
                     "This scope covers shell hydrostatic sizing only; wind, seismic, roof, "
                     "bottom, stability, fabrication tolerances and full tank compliance are not evaluated.\n\n"
                     + "\n".join(f"- {gap}" for gap in result.not_evaluated)
@@ -235,8 +256,8 @@ def tank_report(
             TextBlock(
                 markdown=(
                     "API 650 5.6.3 equation form from the public issue brief (edition unverified): "
-                    "td = c D max(H-a,0) G / Sd + CA; tt = c D max(Ht-a,0) / St. "
-                    "H and Ht are measured from each course bottom to its liquid surface. "
+                    "td = c D max(H-a,0) G / Sd + CA; tt = c D max(H-a,0) / St. "
+                    "Both sizing cases use H from the course bottom to the design liquid surface. The separate test fill level is used only for the applied-pressure plot. "
                     "The maximum of td, tt and the supplied nominal floor is rounded upward "
                     "to a plate in the supplied catalogue. Mass uses pi D sum(height * nominal wall) "
                     "and the supplied steel density; specified diameter approximates the mid-surface. "
@@ -280,6 +301,8 @@ def tank_report(
                     ["Governing course", str(worst.course)],
                     ["Governing case", worst.governing_case],
                     ["Maximum nominal utilisation", f"{worst.utilisation:.1%}"],
+                    ["Pressure-governed course", pressure_course],
+                    ["Maximum pressure-governed utilisation", pressure_utilisation],
                     ["Approximate shell mass [kg]", f"{result.shell_mass_kg:.1f}"],
                     ["Code qualification", result.status],
                 ],

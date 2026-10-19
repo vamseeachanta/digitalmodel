@@ -156,7 +156,7 @@
   "qualified_engineering_input": false,
   "schema": "shell-thickness-examples/v1",
   "sha256": {
-    "one-foot-worked-example.html": "c893e3031bb1b99ac2c84b7382d33f5fcc70607c903c25f2acc1c099ed283abd",
+    "one-foot-worked-example.html": "d4f2faa72ef63ac48efd77dcb01757f017f85e9d4428ec07e9c4402275cdacbf",
     "pressure-vessel-example.html": "74ed2c5329a4c49b6db8522ed23e6039f8d74f233e22a12139a06f65fff412b0"
   },
   "shell_mass_kg": 165404.8532115026,

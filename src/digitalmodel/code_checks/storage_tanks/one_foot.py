@@ -22,6 +22,7 @@ import math
 from pathlib import Path
 
 from digitalmodel.citations.schema import Citation, validate_citation
+from digitalmodel.reporting.thickness import validate_number
 
 
 @dataclass(frozen=True)
@@ -52,6 +53,11 @@ class OneFootBasis:
 
 @dataclass(frozen=True)
 class TankDesign:
+    """Shell sizing inputs; test_level_m describes the pressure plot fill only.
+
+    Both one-foot thickness equations use design_level_m as their liquid level.
+    """
+
     diameter_m: float
     course_heights_m: tuple[float, ...]
     design_level_m: float
@@ -92,43 +98,34 @@ class ShellResult:
         return {"citations": [asdict(item) for item in self.citations]}
 
 
-def _number(name: str, value: float, *, zero: bool = False) -> None:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{name} must be a finite number")
-    if not math.isfinite(value) or (value < 0 if zero else value <= 0):
-        raise ValueError(
-            f"{name} must be finite and {'nonnegative' if zero else 'positive'}"
-        )
-
-
 def _validate(inputs: TankDesign) -> None:
     for name in ("diameter_m", "specific_gravity", "density_kg_m3"):
-        _number(name, getattr(inputs, name))
+        validate_number(name, getattr(inputs, name))
     for name in ("design_level_m", "test_level_m", "corrosion_allowance_mm"):
-        _number(name, getattr(inputs, name), zero=True)
+        validate_number(name, getattr(inputs, name), zero=True)
     for name in ("course_heights_m", "plate_sizes_mm"):
         values = getattr(inputs, name)
         if not values:
             raise ValueError(f"{name} must not be empty")
         for value in values:
-            _number(name, value)
+            validate_number(name, value)
     if any(a >= b for a, b in zip(inputs.plate_sizes_mm, inputs.plate_sizes_mm[1:])):
         raise ValueError("plate sizes must be strictly increasing")
     total_height = math.fsum(inputs.course_heights_m)
     if max(inputs.design_level_m, inputs.test_level_m) > total_height:
         raise ValueError("liquid level exceeds shell height")
-    _number("design allowable", inputs.material.design_mpa)
-    _number("test allowable", inputs.material.test_mpa)
+    validate_number("design allowable", inputs.material.design_mpa)
+    validate_number("test allowable", inputs.material.test_mpa)
     if not inputs.material.name.strip() or not inputs.material.source.strip():
         raise ValueError("material name and source are required")
     basis = inputs.basis
-    _number("coefficient", basis.coefficient)
-    _number("head_offset_m", basis.head_offset_m, zero=True)
+    validate_number("coefficient", basis.coefficient)
+    validate_number("head_offset_m", basis.head_offset_m, zero=True)
     if not basis.source.strip():
         raise ValueError("method source is required")
     for name in ("diameter_limit_m", "minimum_nominal_mm"):
         if getattr(basis, name) is not None:
-            _number(name, getattr(basis, name))
+            validate_number(name, getattr(basis, name))
     if (
         basis.diameter_limit_m is not None
         and inputs.diameter_m > basis.diameter_limit_m
@@ -159,7 +156,7 @@ def _course(
 ) -> CourseResult:
     basis, material = inputs.basis, inputs.material
     design_head = max(inputs.design_level_m - bottom, 0)
-    test_head = max(inputs.test_level_m - bottom, 0)
+    test_head = design_head  # API 650 5.6.3.2 uses the same design liquid level H.
     # API 650 5.6.3.2 equation form, public issue 2958 (edition unverified).
     # Both standards-derived coefficients are explicit, upstream-sourced inputs.
     design = (
@@ -204,8 +201,9 @@ def _course(
 def design_shell(inputs: TankDesign, *, wiki_root: Path | None = None) -> ShellResult:
     """Size courses from the bottom up; retain unrounded arithmetic.
 
-    Hydrotest uses water (the equation's unit specific gravity), its separate
-    liquid level, and no design corrosion addition. Utilisation compares the
+    Hydrotest sizing uses water (unit specific gravity), the design liquid
+    level H, and no design corrosion addition. The separate test fill level
+    is retained for the applied-pressure plot only. Utilisation compares the
     governing nominal requirement with the selected nominal plate. Shell mass
     uses circumference at the specified diameter (thin-shell approximation),
     excludes roof/bottom/appurtenances, and uses caller-supplied density.

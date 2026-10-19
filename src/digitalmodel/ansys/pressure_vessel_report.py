@@ -16,7 +16,6 @@ from digitalmodel.ansys.pressure_vessel import (
     DesignConditions,
     VesselGeometry,
 )
-from digitalmodel.code_checks.storage_tanks.one_foot import _number
 from digitalmodel.reporting.spec import (
     DocumentMeta,
     FigureBlock,
@@ -31,34 +30,35 @@ from digitalmodel.reporting.thickness import (
     limit_figure,
     revision_section,
     thickness_table,
+    validate_number,
 )
 
 
 def _validate(geometry, conditions, factor, test_stress, points, source):
     for name in ("inner_diameter_mm", "shell_length_mm", "wall_thickness_mm"):
-        _number(name, getattr(geometry, name))
-    _number("corrosion allowance", geometry.corrosion_allowance_mm, zero=True)
+        validate_number(name, getattr(geometry, name))
+    validate_number("corrosion allowance", geometry.corrosion_allowance_mm, zero=True)
     head = geometry.head_thickness_mm
     if head is None:
         head = geometry.wall_thickness_mm
-    _number("head wall", head)
+    validate_number("head wall", head)
     if min(head, geometry.wall_thickness_mm) <= geometry.corrosion_allowance_mm:
         raise ValueError("corrosion allowance consumes nominal wall")
     if geometry.head_type not in ("2:1_ellipsoidal", "hemispherical"):
         raise ValueError("unsupported head type; supply an evaluated head model")
     for name in ("design_pressure_mpa", "allowable_stress_mpa", "joint_efficiency"):
-        _number(name, getattr(conditions, name))
+        validate_number(name, getattr(conditions, name))
     # Efficiency is a fraction by definition; its code selection is not qualified here.
     if conditions.joint_efficiency > 1:
         raise ValueError("joint efficiency exceeds unity")
     if conditions.hydrotest_pressure_mpa is not None:
-        _number("supplied hydrotest pressure", conditions.hydrotest_pressure_mpa)
-    _number("test factor", factor)
-    _number("test allowable", test_stress)
+        validate_number("supplied hydrotest pressure", conditions.hydrotest_pressure_mpa)
+    validate_number("test factor", factor)
+    validate_number("test allowable", test_stress)
     if not source.strip() or not points:
         raise ValueError("source and pressure sweep are required")
     for value in points:
-        _number("pressure sweep", value, zero=True)
+        validate_number("pressure sweep", value, zero=True)
     if any(a >= b for a, b in zip(points, points[1:])):
         raise ValueError("pressure sweep must be strictly increasing")
     # Denominator from inherited UG-27(c)(1) equation (edition unspecified).

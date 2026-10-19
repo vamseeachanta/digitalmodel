@@ -238,3 +238,40 @@ def test_failed_wall_is_visible_in_margin_and_utilisation():
     )
     assert table.rows[0][table.columns.index("Margin [mm]")] == "-2.000"
     assert table.rows[0][table.columns.index("Utilisation")] == "120.0%"
+
+
+@pytest.mark.parametrize("floor", [6, 20])
+def test_pressure_governed_summary_is_separate_from_nominal_floor(floor):
+    original = shell_result().inputs
+    result = design_shell(replace(original, basis=replace(original.basis, minimum_nominal_mm=floor)))
+    spec = tank_report(
+        result, document("Tank shell analysis"),
+        water_unit_weight_kn_m3=9.8, pressure_source="Assumed illustration",
+    )
+    table = next(b for b in blocks(spec, TableBlock) if b.title == "Governing-case summary")
+    assert ["Maximum nominal utilisation", "100.0%"] in table.rows
+    if floor == 6:
+        # Course 6: (18.846 - 5*2.205) / 8 = 97.7625 percent.
+        assert ["Pressure-governed course", "6"] in table.rows
+        assert ["Maximum pressure-governed utilisation", "97.8%"] in table.rows
+    else:
+        assert ["Pressure-governed course", "None (nominal floor governs all courses)"] in table.rows
+    summary = spec.sections[0].blocks[0].markdown
+    assert "Pressure-governed" in summary
+
+
+@pytest.mark.parametrize("value", [True, "1", float("nan"), float("inf"), -1, 0])
+def test_shared_number_validator_rejects_invalid_positive_inputs(value):
+    from digitalmodel.reporting.thickness import validate_number
+
+    with pytest.raises(ValueError, match="wall"):
+        validate_number("wall", value)
+
+
+def test_shared_number_validator_accepts_zero_only_when_requested():
+    from digitalmodel.reporting.thickness import validate_number
+
+    validate_number("wall", 1)
+    validate_number("wall", 0, zero=True)
+    with pytest.raises(ValueError):
+        validate_number("wall", -1, zero=True)
