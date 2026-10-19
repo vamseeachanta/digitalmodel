@@ -1394,3 +1394,16 @@ def test_bha_database_owned_and_executed_by_subsea():
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
     assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
+
+
+def test_parametric_tests_are_enrolled_in_the_hosted_shard():
+    """Issue 2451: the ownership table and executable gate must both enroll parametric tests."""
+    root = SCRIPT.parents[2]
+    detector = load_detector_module()
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    selected = detector.touched_domains(["tests/parametric/test_refresh.py"], domains)
+    assert [domain.name for domain in selected] == ["solver-smoke"]
+    gate = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"][
+        "tests-solver-smoke"]
+    assert "tests/parametric/" in gate["test_roots"]
+    assert "tests/parametric/" in shlex.split(gate["command"])
