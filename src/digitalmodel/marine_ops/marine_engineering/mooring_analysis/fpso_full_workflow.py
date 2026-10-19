@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import asdict
-from pathlib import Path
+from io import StringIO
 from typing import Any
 import numpy as np
 
@@ -81,7 +81,7 @@ class FPSOMooringFullWorkflow:
         environment: dict,
         spectrum: dict,
     ) -> dict:
-        database = OCIMFDatabase(str(self._ocimf_database_path(cfg)))
+        database = self._ocimf_database(cfg)
         calculator = EnvironmentalForces(database)
         conditions = EnvironmentalConditions(
             wind_speed=float(environment["wind_speed"]),
@@ -100,17 +100,25 @@ class FPSOMooringFullWorkflow:
         total_fy = steady.total_fy + wave["force_N"] * wave["unit_y"]
         return self._force_output(steady, wave, total_fx, total_fy)
 
-    def _ocimf_database_path(self, cfg: dict) -> Path:
+    def _ocimf_database(self, cfg: dict) -> OCIMFDatabase:
+        """Use synthetic demo coefficients; persist only to configured output.
+
+        The existing generator and CSV parser are retained for numerical parity.
+        These samples are not qualified engineering coefficient data.
+        """
+        if not (
+            cfg.get("Analysis", {}).get("result_folder")
+            or cfg.get("_config_dir_path")
+        ):
+            with StringIO() as stream:
+                create_sample_database(stream)
+                stream.seek(0)
+                return OCIMFDatabase(stream)
         path = result_folder(cfg) / "ocimf_coefficients_sample.csv"
         if not path.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
-            create_sample_database(
-                str(path),
-                num_vessels=5,
-                num_headings=13,
-                num_displacements=3,
-            )
-        return path
+            create_sample_database(str(path))
+        return OCIMFDatabase(path)
 
     def _vessel_geometry(self, vessel: dict) -> VesselGeometry:
         loa = float(vessel["loa"])
