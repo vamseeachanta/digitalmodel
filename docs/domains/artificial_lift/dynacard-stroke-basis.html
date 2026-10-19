@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dynacard synthetic stroke analysis</title>
+  <style>
+    body { max-width: 58rem; margin: 2rem auto; padding: 0 1rem; font-family: sans-serif; line-height: 1.5; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #bbb; padding: .5rem; text-align: left; }
+    caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+    code, pre { background: #f3f4f5; }
+    pre { padding: 1rem; overflow: auto; }
+  </style>
+</head>
+<body>
+<h1>Dynacard synthetic stroke analysis</h1>
+<h2>Summary</h2>
+<p>The normal, tubing-movement and plunger-undertravel generators now share the
+same default stroke draw. Absolute stroke therefore cannot separate these labels
+by construction. Explicit matched pump travel and lost-motion inputs allow a
+reduced-travel comparison without inventing tubing compliance. Field diagnosis
+and the dimensioned operating envelope remain <strong>NOT_EVALUATED</strong>.</p>
+<h2>Revision history</h2>
+<table>
+  <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+  <tr><td>1</td><td>2026-10-19</td><td>Shared synthetic travel and explicit lost motion remove disjoint-range label cues.</td></tr>
+  <caption>Table 1. Initial issue of the synthetic stroke basis.</caption>
+</table>
+<h2>Method and source</h2>
+<p>The public SWPSC paper
+<a href="https://www.swpshortcourse.org/sites/default/files/papers/2017017.pdf">Over-travel
+Can Occur On Both The Upstroke And Down Stroke (2017)</a>, section “Definition of
+Over Travel and Under Travel”, Figure 1, identifies unanchored tubing as a source
+of stretch that consumes stroke. The matched comparison is:</p>
+<pre>pump travel = otherwise matched anchored pump travel − specified additional lost motion</pre>
+<p>The anchored input includes rod stretch and dynamic effects. It is not the
+surface stroke. The comparison holds those effects fixed; it does not solve
+coupled rod and tubing dynamics. It establishes the loss direction for matched
+inputs, not an ordering of absolute travel across different installations.</p>
+<h2>Worked example</h2>
+<table>
+  <tr><th>Input</th><th>Travel (in)</th><th>Basis</th></tr>
+  <tr><td>Surface travel</td><td>45.4</td><td>SWPSC (2017), Figure 1 discussion</td></tr>
+  <tr><td>Rod stretch</td><td>30.7</td><td>Same source</td></tr>
+  <tr><td>Dynamic overtravel</td><td>12.2</td><td>Same source</td></tr>
+  <tr><td>Tubing stretch</td><td>8.3</td><td>Same source</td></tr>
+  <caption>Table 2. Published example values; these are not operating limits.</caption>
+</table>
+<p>The otherwise matched anchored travel is reconstructed as
+45.4 − 30.7 + 12.2 = 26.9 in. The generator applies the specified loss:
+26.9 − 8.3 = <strong>18.6 in</strong>, matching the source's stated downhole
+travel at its published precision. A normal card from another installation can
+also have 18.6 in of travel; absolute travel alone cannot identify tubing movement.</p>
+<pre>PYTHONPATH=src python examples/domains/artificial_lift/dynacard_stroke_basis.py</pre>
+<p>The executable example reports the inputs, resulting travel and the sampled
+scale audit. Its synthetic loads and shape are not a reproduction of Figure 1.</p>
+<h2>Scale audit and regression criteria</h2>
+<p><code>audit_generator_scale_ranges</code> enumerates the generator registry
+and records observed minimum and maximum stroke, load range and absolute loop
+area for each mode. These metrics use geometric range and shoelace identities.
+Every pair with disjoint sampled envelopes is reported; touching endpoints count
+as overlap. Samples do not establish distribution support or field validity.
+Rounded display values are not used to decide disjointness.</p>
+<p>Regressions require equal default positions for the three affected generators
+at matched seeds, equal default noise for normal and undertravel, reduced travel
+for a positive specified loss, rejection of incomplete or invalid loss inputs,
+and complete registry coverage. Independent rectangles check the audit: widths
+3.0 and 4.0 in with a 200.0 lbf height have areas 600.0 and 800.0 in·lbf.</p>
+<h2>Known limits and way forward</h2>
+<ul>
+  <li>The retained common default travel bounds are assumed, based on previous
+  experience. The repository's original normal-generator implementation is the
+  provenance, not a qualified dimensional source. They shall not be used as a
+  field operating envelope.</li>
+  <li>Default calls specify no physical loss. Loss magnitude is NOT_EVALUATED;
+  default normal and undertravel cards are intentionally identical. Explicit
+  loss requires a supplied anchored travel and cannot be inferred from the label.</li>
+  <li>Other generators retain their existing assumptions. Disjoint load, stroke
+  or area envelopes reported elsewhere remain review findings.</li>
+  <li>The shipped classifier, stored examples and previously published
+  confidences are not regenerated or revalidated by this change. Their earlier
+  synthetic accuracy does not describe the revised generator population.
+  Retraining requires an explicit data basis; field scoring remains tracked by
+  issue 1864 on labelled real-card validation.</li>
+  <li>Solver round-trip classification remains a separate limitation under
+  issue 1885 on round-trip label collapse.</li>
+</ul>
+<p>Scope: issue 1891, synthetic stroke ranges and tubing travel direction.</p>
+</body>
+</html>

@@ -8,6 +8,20 @@ Usage:
     PYTHONPATH="src:../assetutilities/src" python3 -m \
         digitalmodel.marine_ops.artificial_lift.dynacard.training
 
+Current generator population
+----------------------------
+The stroke-basis correction gives NORMAL, TUBING_MOVEMENT and
+PLUNGER_UNDERTRAVEL the same default stroke draw, and aligns NORMAL and
+PLUNGER_UNDERTRAVEL noise. Those two default card populations are intentionally
+identical. Physical loss requires explicit matched travel and lost-motion
+inputs; it cannot be inferred from a synthetic condition label.
+
+The numerical comparisons below describe the historical, disjoint-range
+generators and the stored model trained on them. They do not score the current
+generator population. The stored model, its confidence values and published
+examples require separate revalidation; no retrain is performed by the stroke
+correction. See docs/domains/artificial_lift/dynacard-stroke-basis.html.
+
 What ``cv_accuracy`` in the exported model means
 ------------------------------------------------
 It is five-fold cross-validation on cards drawn from :mod:`card_generators`,
