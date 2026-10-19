@@ -1,0 +1,165 @@
+{
+  "citations": [],
+  "compact": true,
+  "courses": [
+    {
+      "bottom_m": 0.0,
+      "course": 1,
+      "design_head_m": 18.0,
+      "design_mm": 18.846,
+      "governing_case": "design",
+      "required_mm": 18.846,
+      "selected_mm": 20,
+      "test_head_m": 18.0,
+      "test_mm": 16.261875,
+      "top_m": 2.25,
+      "utilisation": 0.9423
+    },
+    {
+      "bottom_m": 2.25,
+      "course": 2,
+      "design_head_m": 15.75,
+      "design_mm": 16.641,
+      "governing_case": "design",
+      "required_mm": 16.641,
+      "selected_mm": 18,
+      "test_head_m": 15.75,
+      "test_mm": 14.1946875,
+      "top_m": 4.5,
+      "utilisation": 0.9244999999999999
+    },
+    {
+      "bottom_m": 4.5,
+      "course": 3,
+      "design_head_m": 13.5,
+      "design_mm": 14.436,
+      "governing_case": "design",
+      "required_mm": 14.436,
+      "selected_mm": 16,
+      "test_head_m": 13.5,
+      "test_mm": 12.1275,
+      "top_m": 6.75,
+      "utilisation": 0.90225
+    },
+    {
+      "bottom_m": 6.75,
+      "course": 4,
+      "design_head_m": 11.25,
+      "design_mm": 12.231,
+      "governing_case": "design",
+      "required_mm": 12.231,
+      "selected_mm": 14,
+      "test_head_m": 11.25,
+      "test_mm": 10.060312499999998,
+      "top_m": 9.0,
+      "utilisation": 0.8736428571428572
+    },
+    {
+      "bottom_m": 9.0,
+      "course": 5,
+      "design_head_m": 9.0,
+      "design_mm": 10.026,
+      "governing_case": "design",
+      "required_mm": 10.026,
+      "selected_mm": 12,
+      "test_head_m": 9.0,
+      "test_mm": 7.993124999999999,
+      "top_m": 11.25,
+      "utilisation": 0.8355
+    },
+    {
+      "bottom_m": 11.25,
+      "course": 6,
+      "design_head_m": 6.75,
+      "design_mm": 7.821,
+      "governing_case": "design",
+      "required_mm": 7.821,
+      "selected_mm": 8,
+      "test_head_m": 6.75,
+      "test_mm": 5.9259375,
+      "top_m": 13.5,
+      "utilisation": 0.977625
+    },
+    {
+      "bottom_m": 13.5,
+      "course": 7,
+      "design_head_m": 4.5,
+      "design_mm": 5.616,
+      "governing_case": "minimum nominal",
+      "required_mm": 6,
+      "selected_mm": 6,
+      "test_head_m": 4.5,
+      "test_mm": 3.8587499999999997,
+      "top_m": 15.75,
+      "utilisation": 1.0
+    },
+    {
+      "bottom_m": 15.75,
+      "course": 8,
+      "design_head_m": 2.25,
+      "design_mm": 3.4109999999999996,
+      "governing_case": "minimum nominal",
+      "required_mm": 6,
+      "selected_mm": 6,
+      "test_head_m": 2.25,
+      "test_mm": 1.7915625,
+      "top_m": 18.0,
+      "utilisation": 1.0
+    }
+  ],
+  "data_basis": "assumed, based on previous experience; illustrative input, not a code-table value",
+  "inputs": {
+    "basis": {
+      "citation": null,
+      "coefficient": 4.9,
+      "diameter_limit_m": 60,
+      "head_offset_m": 0.3,
+      "minimum_nominal_mm": 6,
+      "source": "Public issue 2958 equation; limits and floor assumed, based on previous experience; illustrative input, not a code-table value"
+    },
+    "corrosion_allowance_mm": 1.5,
+    "course_heights_m": [
+      2.25,
+      2.25,
+      2.25,
+      2.25,
+      2.25,
+      2.25,
+      2.25,
+      2.25
+    ],
+    "density_kg_m3": 7800,
+    "design_level_m": 18,
+    "diameter_m": 30,
+    "material": {
+      "citation": null,
+      "design_mpa": 150,
+      "name": "Illustrative steel",
+      "source": "assumed, based on previous experience; illustrative input, not a code-table value",
+      "test_mpa": 160
+    },
+    "plate_sizes_mm": [
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20
+    ],
+    "pressure_source": "assumed, based on previous experience; illustrative input, not a code-table value",
+    "specific_gravity": 1,
+    "test_level_m": 18,
+    "water_unit_weight_kn_m3": 9.8
+  },
+  "qualified_engineering_input": false,
+  "schema": "shell-thickness-examples/v1",
+  "sha256": {
+    "one-foot-worked-example.html": "c893e3031bb1b99ac2c84b7382d33f5fcc70607c903c25f2acc1c099ed283abd",
+    "pressure-vessel-example.html": "74ed2c5329a4c49b6db8522ed23e6039f8d74f233e22a12139a06f65fff412b0"
+  },
+  "shell_mass_kg": 165404.8532115026,
+  "source": "Public issue 2958; standard edition unverified",
+  "status": "NOT_EVALUATED"
+}
